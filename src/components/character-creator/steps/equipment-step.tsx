@@ -2,60 +2,40 @@
  * Equipment Step - Unified List Style
  * ===================================
  * Select starting equipment with real data from Codex.
- * Uses ListHeader, GridListRow, design tokens, and steppers on the right
- * to match Library/Codex and the rest of the site.
- * - Weapons and Armor come from user's item library (Supabase)
- * - General equipment comes from Codex items
- * Supports quantity selection for equipment items
+ * Facade: data/hooks/handlers wire to catalog lib; presentation lives under `./equipment/`.
  */
 
 'use client';
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
-import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
-import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useEquipment, useUserItems, useItemProperties, useOfficialLibrary, usePowerParts, useTechniqueParts, useMergedSpecies, useCodexSkills, useTraits, useCreatorPathData } from '@/hooks';
 import {
-  formatRange,
-  trainingPointsForItemPropertyRef,
-  type ItemPropertyPayload,
-} from '@/lib/calculators/item-calc';
-import {
-  buildEntityMetadataDetailSections,
-  mergeDetailSections,
-} from '@/lib/chip/list-row-metadata';
-import { toggleSort, sortByColumn } from '@/hooks/use-sort';
-import {
-  InfoTippy,
-  SearchInput,
-  GridListRow,
-  QuantitySelector,
-  ListHeader,
-  SourceFilter,
-  type ChipData,
-  type ListColumn,
-  type SortState,
-} from '@/components/shared';
-import { resolveListRowThumbnail } from '@/lib/list-row-image';
+  useEquipment,
+  useUserItems,
+  useItemProperties,
+  useOfficialLibrary,
+  usePowerParts,
+  useTechniqueParts,
+  useMergedSpecies,
+  useCodexSkills,
+  useTraits,
+  useCreatorPathData,
+} from '@/hooks';
+import { sortByColumn } from '@/hooks/use-sort';
+import type { SortState } from '@/components/shared';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { FilterSection } from '@/components/shared/filters';
-import { Spinner, Button, EmptyState, Card, DescriptorChip } from '@/components/ui';
-import { TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui/tab-navigation';
-import { AlertCircle, Swords, Check, X, ShoppingBag, ChevronLeft } from 'lucide-react';
-import { IconButton } from '@/components/ui';
+import { Spinner, Button } from '@/components/ui';
+import { useTabGroup } from '@/components/ui/tab-navigation';
 import type { Item } from '@/types';
 import type { PathItemRecommendation } from '@/types/archetype';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import {
   computeRemainingCurrency,
   computeSpentCurrency,
   computeStartingCurrency,
 } from '@/lib/guided-creator/equipment-currency';
-import { equipmentCurrencyHelp } from '../../../../public/tooltip-text';
 import {
   addAdvancedEquipmentToInventory,
   availableUnarmedProwessLevels,
@@ -64,7 +44,6 @@ import {
   computeUnarmedProwessTpCost,
   filterAdvancedEquipmentCatalog,
   filterPathRecommendedForPhase,
-  isPathRecommendedItem,
   pathRecommendedMergeKey,
   recommendationIdSet,
   recommendedItemsInInventory,
@@ -72,50 +51,17 @@ import {
   replaceRecommendedInventory,
   resolvePathRecommendedEquipment,
   selectedItemsFromInventory,
-  UNARMED_PROWESS_BASE_TP,
-  UNARMED_PROWESS_UPGRADE_TP,
   type AdvancedEquipmentItem,
   type AdvancedEquipmentTabId,
   type AdvancedLoadoutPhase,
 } from '@/lib/creator/advanced-equipment-catalog';
-
-// List column definitions and grid (unified with Library/Codex); name column wider for readability
-const WEAPON_LIST_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1.8fr' },
-  { key: 'damage', label: 'Damage', width: '0.9fr', align: 'center' },
-  { key: 'gold_cost', label: 'Cost', width: '0.6fr', align: 'right' },
-  { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
-];
-const WEAPON_LIST_GRID = '1.8fr 0.9fr 0.6fr 0.6fr';
-
-const ARMOR_LIST_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1.8fr' },
-  { key: 'armor_value', label: 'Damage Reduction', width: '1fr', align: 'center' },
-  { key: 'gold_cost', label: 'Cost', width: '0.6fr', align: 'right' },
-  { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
-];
-const ARMOR_LIST_GRID = '1.8fr 1fr 0.6fr 0.6fr';
-
-const EQUIPMENT_LIST_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1.8fr' },
-  { key: 'category', label: 'Category', width: '0.8fr', align: 'center' },
-  { key: 'gold_cost', label: 'Cost', width: '0.6fr', align: 'right' },
-  { key: 'source', label: 'Source', width: '0.6fr', align: 'center' },
-];
-const EQUIPMENT_LIST_GRID = '1.8fr 0.8fr 0.6fr 0.6fr';
-
-// Selected equipment summary — Name (with quantity stepper), Type, Cost; grid aligns with ListHeader
-const SELECTED_EQUIPMENT_COLUMNS: ListColumn[] = [
-  { key: 'name', label: 'Name', width: '1.6fr' },
-  { key: 'type', label: 'Type', width: '0.7fr', align: 'center' },
-  { key: 'cost', label: 'Cost', width: '0.6fr', align: 'right' },
-];
-const SELECTED_EQUIPMENT_GRID = '1.6fr 0.7fr 0.6fr';
+import { EquipmentStepHeader } from './equipment/step-header';
+import { PathLoadoutSection } from './equipment/path-loadout-section';
+import { UnarmedProwessPanel } from './equipment/unarmed-prowess-panel';
+import { SelectedEquipmentList } from './equipment/selected-equipment-list';
+import { EquipmentCatalogPanel } from './equipment/equipment-catalog-panel';
 
 const EMPTY_PATH_RECOMMENDATIONS: PathItemRecommendation[] = [];
-
-// Match GridListRow right slot (w-[4rem] mr-2) so header columns align with row columns
-const RIGHT_SLOT_WIDTH = '4.5rem';
 
 export function EquipmentStep() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
@@ -143,15 +89,12 @@ export function EquipmentStep() {
     () => getStepCompletion('equipment', draft, validationContext),
     [draft, validationContext]
   );
-  // Fetch user's item library (weapons/armor) from API
   const { data: userItems, isLoading: userItemsLoading } = useUserItems();
-  // Fetch general equipment from Codex
   const { data: codexEquipment, isLoading: codexLoading, error: codexError } = useEquipment();
-  // Fetch item properties for deriving display data from user items
   const { data: itemProperties } = useItemProperties();
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
-  
+
   const [activeTab, setActiveTab] = useState<AdvancedEquipmentTabId>('weapon');
   const [searchTerm, setSearchTerm] = useState('');
   const [sourceFilter, setSourceFilter] = useState<SourceFilterValue>('public');
@@ -162,10 +105,10 @@ export function EquipmentStep() {
   /** Path Layer 1: one decision at a time — weapon, then armor. */
   const [loadoutPhase, setLoadoutPhase] = useState<AdvancedLoadoutPhase>('weapon');
   const pathData = useCreatorPathData();
-  const pathArmamentRecs = pathData?.level1?.armamentRecommendations;
-  const pathEquipmentRecs = pathData?.level1?.equipmentRecommendations;
-  const pathArmamentRecommendations = pathArmamentRecs ?? EMPTY_PATH_RECOMMENDATIONS;
-  const pathEquipmentRecommendations = pathEquipmentRecs ?? EMPTY_PATH_RECOMMENDATIONS;
+  const pathArmamentRecommendations =
+    pathData?.level1?.armamentRecommendations ?? EMPTY_PATH_RECOMMENDATIONS;
+  const pathEquipmentRecommendations =
+    pathData?.level1?.equipmentRecommendations ?? EMPTY_PATH_RECOMMENDATIONS;
   const recommendedArmamentRefs = useMemo(
     () => recommendationIdSet(pathArmamentRecommendations),
     [pathArmamentRecommendations]
@@ -177,7 +120,6 @@ export function EquipmentStep() {
   const pathRecommendsUnarmedProwess = pathData?.level1?.recommendUnarmedProwess === true;
 
   const { data: publicItems = [], isLoading: publicItemsLoading } = useOfficialLibrary('items');
-
   const isLoading = userItemsLoading || codexLoading || publicItemsLoading;
   const error = codexError;
 
@@ -190,10 +132,10 @@ export function EquipmentStep() {
     () => availableUnarmedProwessLevels(draft.level || 1),
     [draft.level]
   );
-
-  const setUnarmedProwessLevel = useCallback((level: number) => {
-    updateDraft({ unarmedProwess: level });
-  }, [updateDraft]);
+  const setUnarmedProwessLevel = useCallback(
+    (level: number) => updateDraft({ unarmedProwess: level }),
+    [updateDraft]
+  );
 
   const allEquipment = useMemo(
     () =>
@@ -230,20 +172,15 @@ export function EquipmentStep() {
     () => computeStartingCurrency(draft.level || 1),
     [draft.level]
   );
-
   const selectedItems = useMemo(
     () => selectedItemsFromInventory(draft.equipment?.inventory),
     [draft.equipment?.inventory]
   );
-
   const spentCurrency = useMemo(
     () =>
-      computeSpentCurrency(
-        selectedItems.map(({ cost, quantity }) => ({ cost, quantity }))
-      ),
+      computeSpentCurrency(selectedItems.map(({ cost, quantity }) => ({ cost, quantity }))),
     [selectedItems]
   );
-
   const remainingCurrency = computeRemainingCurrency(startingCurrency, spentCurrency);
 
   const proficiencyTpSummary = useMemo(
@@ -272,50 +209,42 @@ export function EquipmentStep() {
       }),
     [allEquipment, activeTab, searchTerm, sourceFilter]
   );
-
   const sortedEquipment = useMemo(
     () => sortByColumn(filteredEquipment, equipmentSort),
     [filteredEquipment, equipmentSort]
   );
 
-  const addItemWithQuantity = useCallback((item: AdvancedEquipmentItem, qty: number) => {
-    const currentInventory: Item[] = draft.equipment?.inventory || [];
-    const next = addAdvancedEquipmentToInventory(
-      currentInventory,
-      item,
-      qty,
-      remainingCurrency
-    );
-    if (!next) return;
-    updateDraft({
-      equipment: {
-        ...draft.equipment,
-        inventory: next,
-      },
-    });
-  }, [draft.equipment, remainingCurrency, updateDraft]);
-
-  const addItem = useCallback((item: AdvancedEquipmentItem) => {
-    addItemWithQuantity(item, 1);
-  }, [addItemWithQuantity]);
-
-  const removeItem = useCallback((itemId: string) => {
-    const currentInventory: Item[] = draft.equipment?.inventory || [];
-    const next = removeAdvancedEquipmentFromInventory(currentInventory, itemId);
-    if (next === currentInventory) return;
-    updateDraft({
-      equipment: {
-        ...draft.equipment,
-        inventory: next,
-      },
-    });
-  }, [draft.equipment, updateDraft]);
-
-  const getItemQuantity = useCallback((itemId: string): number => {
-    const item = selectedItems.find(i => i.id === itemId);
-    return item?.quantity || 0;
-  }, [selectedItems]);
-
+  const addItemWithQuantity = useCallback(
+    (item: AdvancedEquipmentItem, qty: number) => {
+      const currentInventory: Item[] = draft.equipment?.inventory || [];
+      const next = addAdvancedEquipmentToInventory(
+        currentInventory,
+        item,
+        qty,
+        remainingCurrency
+      );
+      if (!next) return;
+      updateDraft({ equipment: { ...draft.equipment, inventory: next } });
+    },
+    [draft.equipment, remainingCurrency, updateDraft]
+  );
+  const addItem = useCallback(
+    (item: AdvancedEquipmentItem) => addItemWithQuantity(item, 1),
+    [addItemWithQuantity]
+  );
+  const removeItem = useCallback(
+    (itemId: string) => {
+      const currentInventory: Item[] = draft.equipment?.inventory || [];
+      const next = removeAdvancedEquipmentFromInventory(currentInventory, itemId);
+      if (next === currentInventory) return;
+      updateDraft({ equipment: { ...draft.equipment, inventory: next } });
+    },
+    [draft.equipment, updateDraft]
+  );
+  const getItemQuantity = useCallback(
+    (itemId: string): number => selectedItems.find((i) => i.id === itemId)?.quantity || 0,
+    [selectedItems]
+  );
   const addAllRecommendedEquipment = useCallback(() => {
     if (pathRecommendedItems.length === 0) return;
     const currentInventory: Item[] = draft.equipment?.inventory || [];
@@ -335,7 +264,6 @@ export function EquipmentStep() {
   );
   const hasMergedPathEquipmentRef = useRef<string | null>(null);
 
-  // Path Layer 1: pre-validated loadout — auto-add recommended gear once (confirm, not shop).
   useEffect(() => {
     if (!pathConfirmMode || !pathMergeKey) return;
     if (hasMergedPathEquipmentRef.current === pathMergeKey) return;
@@ -364,12 +292,8 @@ export function EquipmentStep() {
     recommendedInInventory.length,
   ]);
 
-  // Save currency and proceed to next step
   const handleContinue = useCallback(() => {
-    // Save the remaining currency to the draft
-    updateDraft({
-      currency: remainingCurrency,
-    });
+    updateDraft({ currency: remainingCurrency });
     nextStep();
   }, [remainingCurrency, updateDraft, nextStep]);
 
@@ -385,61 +309,25 @@ export function EquipmentStep() {
     return (
       <div className="max-w-5xl mx-auto text-center py-12">
         <p className="text-danger-700 dark:text-danger-400 mb-4">Failed to load equipment data.</p>
-        <Button variant="secondary" onClick={prevStep}>← Back</Button>
+        <Button variant="secondary" onClick={prevStep}>
+          ← Back
+        </Button>
       </div>
     );
   }
 
   return (
     <div className="max-w-5xl mx-auto flex flex-col flex-1 min-h-0">
-      <div className="flex items-start justify-between mb-6">
-        <div>
-          <div className="flex items-center gap-1 mb-2">
-            <h2 className="text-2xl font-bold text-text-primary">Choose Equipment</h2>
-            <InfoTippy content={equipmentCurrencyHelp} allowHTML label="Starting equipment budget help" size="inline" />
-          </div>
-          <p className="text-text-secondary">
-            Select your starting weapons, armor, and gear. Use + and - to adjust quantities.
-          </p>
-        </div>
-        
-        <div className="flex flex-col items-end gap-2">
-          {pathMode && layer === 1 ? (
-            <CreatorResourceBar
-              layer={layer}
-              creationMode={draft.creationMode}
-              trainingPoints={{
-                spent: proficiencyTpSummary.spent,
-                limit: proficiencyTpSummary.limit,
-              }}
-              currency={{
-                spent: startingCurrency - remainingCurrency,
-                limit: startingCurrency,
-              }}
-              className="mb-0"
-            />
-          ) : (
-            <>
-              <div className={cn(
-                'px-4 py-2 rounded-xl font-bold text-lg border',
-                remainingCurrency >= 0
-                  ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text'
-                  : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-fg'
-              )}>
-                {remainingCurrency} / {startingCurrency}c
-              </div>
-              <div className={cn(
-                'px-3 py-1.5 rounded-full text-sm font-semibold border',
-                proficiencyTpSummary.remaining >= 0
-                  ? 'bg-tp-light dark:bg-warning-900/30 border-tp-border text-tp-text'
-                  : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-fg'
-              )}>
-                Proficiency TP: {proficiencyTpSummary.spent} / {proficiencyTpSummary.limit}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+      <EquipmentStepHeader
+        pathMode={pathMode}
+        layer={layer}
+        creationMode={draft.creationMode}
+        remainingCurrency={remainingCurrency}
+        startingCurrency={startingCurrency}
+        proficiencyTpSpent={proficiencyTpSummary.spent}
+        proficiencyTpLimit={proficiencyTpSummary.limit}
+        proficiencyTpRemaining={proficiencyTpSummary.remaining}
+      />
 
       {pathMode && draft.archetype?.name && (
         <>
@@ -455,615 +343,75 @@ export function EquipmentStep() {
       )}
 
       {pathMode && !showFullEquipmentList && (
-        <div className="flex flex-wrap gap-2 mb-4">
-          <Button
-            variant={loadoutPhase === 'weapon' ? 'primary' : 'secondary'}
-            onClick={() => setLoadoutPhase('weapon')}
-            className="min-h-11"
-          >
-            1. Weapon
-          </Button>
-          <Button
-            variant={loadoutPhase === 'armor' ? 'primary' : 'secondary'}
-            onClick={() => setLoadoutPhase('armor')}
-            className="min-h-11"
-          >
-            2. Armor
-          </Button>
-        </div>
-      )}
-
-      {/* Path mode: recommended equipment = armaments (weapons, armor, shields) + general equipment from path. Show loading while public (official) library loads so recommended items can resolve. */}
-      {pathMode && !showFullEquipmentList && (pathRecommendedForPhase.length > 0 || pathArmamentRecommendations.length + pathEquipmentRecommendations.length > 0) && (
-        <div className="mb-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
-            <div>
-              <h3 className="text-lg font-semibold text-text-primary">
-                {loadoutPhase === 'weapon' ? 'Recommended weapons' : 'Recommended armor'}
-              </h3>
-              <p className="text-sm text-text-secondary mt-0.5">
-                {pathConfirmMode
-                  ? 'Included in your path. Review your loadout below. Expand to swap gear or browse the full catalog.'
-                  : pathRecommendedForPhase.length > 0
-                    ? 'Included in your path. Click to add, or add all at once.'
-                    : publicItemsLoading
-                      ? 'Loading recommended equipment from the library…'
-                      : 'Recommended items could not be found in the library.'}
-              </p>
-            </div>
-            {pathConfirmMode ? (
-              <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 text-sm font-medium min-h-11">
-                <Check className="w-4 h-4" aria-hidden />
-                {recommendedInInventory.length} / {pathRecommendedItems.length} confirmed
-              </span>
-            ) : pathRecommendedItems.length > 0 ? (
-              <Button
-                onClick={addAllRecommendedEquipment}
-                className="inline-flex items-center gap-2 shrink-0"
-                aria-label="Add all recommended equipment to inventory (replaces any previously added recommended items)"
-              >
-                <Check className="w-4 h-4" />
-                Add Recommended Equipment
-              </Button>
-            ) : null}
-          </div>
-          {pathConfirmMode && pathRecommendedForPhase.length > 0 && (
-            <ul className="space-y-2 mb-4">
-              {pathRecommendedForPhase.map(({ item, quantity }) => {
-                const inInventory = recommendedInInventory.some((r) => r.item.id === item.id);
-                return (
-                  <li
-                    key={`${item.id}-${quantity}`}
-                    className="flex items-center gap-2 text-sm text-text-primary min-h-11"
-                  >
-                    <span
-                      className={cn(
-                        'inline-flex w-6 h-6 items-center justify-center rounded-full text-xs font-bold',
-                        inInventory
-                          ? 'bg-success-100 dark:bg-success-900/40 text-success-700 dark:text-success-400'
-                          : 'bg-surface-alt text-text-muted'
-                      )}
-                      aria-hidden
-                    >
-                      {inInventory ? '✓' : '·'}
-                    </span>
-                    {item.name}
-                    {quantity > 1 ? ` ×${quantity}` : ''}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          {publicItemsLoading && pathRecommendedItems.length === 0 && (
-            <div className="flex items-center gap-2 py-4 text-text-secondary">
-              <Spinner className="w-5 h-5" />
-              <span>Loading recommended equipment…</span>
-            </div>
-          )}
-          {!publicItemsLoading && pathRecommendedForPhase.length > 0 && !pathConfirmMode && (
-            <div className="flex flex-wrap gap-2">
-              {pathRecommendedForPhase.map(({ item, quantity }) => {
-                const cost = item.gold_cost || item.currency || 0;
-                const totalCost = cost * quantity;
-                const canAfford = totalCost <= remainingCurrency;
-                return (
-                  <button
-                    key={`${item.id}-${quantity}`}
-                    type="button"
-                    onClick={() => canAfford && addItemWithQuantity(item, quantity)}
-                    disabled={!canAfford}
-                    className={cn(
-                      'inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors min-h-[44px]',
-                      canAfford
-                        ? 'bg-primary-subtle-bg border-primary-subtle-border text-primary-subtle-fg hover:bg-primary-subtle-bg-hover'
-                        : 'bg-surface-alt border-border-light text-text-muted dark:text-text-secondary cursor-not-allowed'
-                    )}
-                  >
-                    <span className="text-left">
-                      {item.name}
-                      {quantity > 1 ? ` ×${quantity}` : ''}
-                    </span>
-                    <span className="text-xs text-text-secondary flex-shrink-0">
-                      {totalCost}c
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Path simplified view: Unarmed Prowess section when path recommends it */}
-      {draft.creationMode === 'path' && !showFullEquipmentList && pathRecommendsUnarmedProwess && (
-        <div className="mb-6 border border-border-light rounded-lg p-4 bg-surface">
-          <h3 className="text-lg font-semibold text-text-primary mb-2">Unarmed Prowess</h3>
-          <p className="text-sm text-text-secondary mb-4">
-            Your path recommends Unarmed Prowess. Add it below if you want to use unarmed combat.
-          </p>
-          <div className="space-y-3">
-            {availableUnarmedLevels.map((prowessLevel) => {
-              const isAvailable = prowessLevel.charLevel <= (draft.level || 1);
-              const isSelected = currentUnarmedProwess >= prowessLevel.level;
-              const tpCost = prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;
-              const canSelect = isAvailable && (currentUnarmedProwess === prowessLevel.level - 1 || isSelected);
-              return (
-                <div
-                  key={prowessLevel.level}
-                  className={cn(
-                    'flex items-center gap-4 p-3 rounded-lg border transition-all',
-                    isSelected ? 'bg-primary-subtle-bg border-primary-subtle-border' : 'bg-surface-alt border-border-light',
-                    !isAvailable && 'opacity-50',
-                    canSelect && !isSelected && 'hover:border-primary-outline-border cursor-pointer'
-                  )}
-                  onClick={() => {
-                    if (!isAvailable) return;
-                    if (isSelected) setUnarmedProwessLevel(prowessLevel.level - 1);
-                    else if (currentUnarmedProwess === prowessLevel.level - 1) setUnarmedProwessLevel(prowessLevel.level);
-                  }}
-                >
-                  <div className={cn(
-                    'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
-                    isSelected ? 'bg-primary-button text-text-on-dark' : 'bg-surface border border-border-light'
-                  )}>
-                    {isSelected && <Check className="w-4 h-4" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <span className="font-medium text-text-primary">{prowessLevel.name}</span>
-                    {!isAvailable && (
-                      <DescriptorChip size="sm" className="ml-2">
-                        Level {prowessLevel.charLevel}
-                      </DescriptorChip>
-                    )}
-                  </div>
-                  <div className={cn(
-                    'px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0',
-                    isSelected ? 'bg-primary-subtle-bg text-primary-fg' : cn(statusPanel.warningBg, 'text-warning-fg')
-                  )}>
-                    {tpCost} TP
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {currentUnarmedProwess > 0 && (
-            <div className="mt-4 pt-3 border-t border-border-light flex items-center justify-between">
-              <span className="text-text-secondary">Total Unarmed Prowess:</span>
-              <span className="font-bold text-primary-link-fg">{unarmedProwessTPCost} TP</span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {pathMode && !showFullEquipmentList && (
-        <div className="mb-6 flex flex-wrap gap-3">
-          <Button
-            variant="secondary"
-            onClick={() => expandLayer('equipment')}
-            className="inline-flex items-center gap-2 min-h-11"
-          >
-            <ShoppingBag className="w-4 h-4" />
-            See all equipment
-          </Button>
-          {loadoutPhase === 'weapon' ? (
-            <Button variant="outline" onClick={() => setLoadoutPhase('armor')} className="min-h-11">
-              Next: Choose armor →
-            </Button>
+        <PathLoadoutSection
+          loadoutPhase={loadoutPhase}
+          onLoadoutPhaseChange={setLoadoutPhase}
+          pathConfirmMode={pathConfirmMode}
+          pathRecommendedForPhase={pathRecommendedForPhase}
+          pathRecommendedItems={pathRecommendedItems}
+          pathArmamentRecommendations={pathArmamentRecommendations}
+          pathEquipmentRecommendations={pathEquipmentRecommendations}
+          recommendedInInventory={recommendedInInventory}
+          publicItemsLoading={publicItemsLoading}
+          remainingCurrency={remainingCurrency}
+          onAddAllRecommended={addAllRecommendedEquipment}
+          onAddItemWithQuantity={addItemWithQuantity}
+          onExpandFullCatalog={() => expandLayer('equipment')}
+        >
+          {pathRecommendsUnarmedProwess ? (
+            <UnarmedProwessPanel
+              variant="path"
+              availableLevels={availableUnarmedLevels}
+              characterLevel={draft.level || 1}
+              currentUnarmedProwess={currentUnarmedProwess}
+              unarmedProwessTPCost={unarmedProwessTPCost}
+              onSetLevel={setUnarmedProwessLevel}
+            />
           ) : null}
-        </div>
+        </PathLoadoutSection>
       )}
 
-      {/* Selected Equipment — GridListRow: name only in name prop, type/cost/qty in columns, quantity stepper via quantity + onQuantityChange */}
-      {selectedItems.length > 0 && (
-        <Card className="bg-surface-alt dark:bg-surface overflow-hidden mb-6 p-0">
-          <h3 className="font-medium text-text-primary px-4 pt-4 pb-2">Selected Equipment ({selectedItems.reduce((sum, i) => sum + i.quantity, 0)} items)</h3>
-          <ListHeader
-            columns={SELECTED_EQUIPMENT_COLUMNS.map((c) => ({ ...c, align: (c.align as 'left' | 'center' | 'right') ?? 'left' }))}
-            gridColumns={SELECTED_EQUIPMENT_GRID}
-            rightSlotWidth={RIGHT_SLOT_WIDTH}
-            compact
-            hasThumbnailColumn
-          />
-          <div className="space-y-1 pb-2">
-            {selectedItems.map((item) => {
-              const fullItem = allEquipment.find((e) => e.id === item.id);
-              const typeLabel = item.type.charAt(0).toUpperCase() + item.type.slice(1);
-              const costTotal = item.cost * item.quantity;
-              const thumbnail = resolveListRowThumbnail(
-                'equipment',
-                fullItem ?? item,
-                item.name
-              );
-              return (
-                <GridListRow
-                  key={item.id}
-                  id={item.id}
-                  name={item.name}
-                  description={fullItem?.description || undefined}
-                  thumbnail={thumbnail}
-                  columns={[
-                    { key: 'type', value: typeLabel, align: 'center' as const },
-                    { key: 'cost', value: `${costTotal}c`, align: 'right' as const },
-                  ]}
-                  gridColumns={SELECTED_EQUIPMENT_GRID}
-                  quantity={item.quantity}
-                  onQuantityChange={(delta) => {
-                    if (delta > 0 && fullItem) {
-                      addItemWithQuantity(fullItem, delta);
-                    } else if (delta < 0) {
-                      for (let i = 0; i < -delta; i++) removeItem(item.id);
-                    }
-                  }}
-                  rightSlot={
-                    <IconButton
-                      variant="danger"
-                      size="sm"
-                      onClick={() => removeItem(item.id)}
-                      label={`Remove ${item.name}`}
-                    >
-                      <X className="w-4 h-4" />
-                    </IconButton>
-                  }
-                  compact
-                />
-              );
-            })}
-          </div>
-        </Card>
-      )}
-
-      {/* Full equipment list + tabs — hidden for path mode until "Get Your Own Equipment" is clicked */}
-      {(draft.creationMode !== 'path' || showFullEquipmentList) && (
-      <>
-      {pathMode && showFullEquipmentList && pathRecommendedItems.length > 0 && (
-        <div className="mb-4">
-          <Button
-            variant="secondary"
-            onClick={() => collapseLayer('equipment')}
-            className="inline-flex items-center gap-2 min-h-11"
-            aria-label="Back to recommended equipment view"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Back to path loadout
-          </Button>
-        </div>
-      )}
-      {/* Type Tabs */}
-      <TabNavigation
-        tabs={[
-          { id: 'weapon', label: 'Weapons', count: allEquipment.filter(e => e.type === 'weapon').length },
-          { id: 'armor', label: 'Armor', count: allEquipment.filter(e => e.type === 'armor').length },
-          { id: 'equipment', label: 'Equipment', count: allEquipment.filter(e => e.type === 'equipment').length },
-          { id: 'unarmed', label: currentUnarmedProwess > 0 ? `Unarmed Prowess (Lv ${currentUnarmedProwess})` : 'Unarmed Prowess' },
-        ]}
-        activeTab={activeTab}
-        onTabChange={(tabId) => setActiveTab(tabId as AdvancedEquipmentTabId)}
-        variant="pill"
-        className="mb-4"
-        tabGroupId={tabGroupId}
-        sharedTabPanelId={sharedPanelId}
+      <SelectedEquipmentList
+        selectedItems={selectedItems}
+        allEquipment={allEquipment}
+        onAddItemWithQuantity={addItemWithQuantity}
+        onRemoveItem={removeItem}
       />
 
-      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
-      {/* Unarmed Prowess Tab Content */}
-      {activeTab === 'unarmed' ? (
-        <div className="border border-border-light rounded-lg mb-8 p-6 bg-surface">
-          <div className="flex items-start gap-4 mb-6">
-            <div className="p-3 rounded-full bg-warning-light">
-              <Swords className="w-8 h-8 text-martial-dark" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-bold text-text-primary mb-1">Unarmed Prowess</h3>
-              <p className="text-text-secondary text-sm">
-                Master the art of unarmed combat. Your fists become deadly weapons, 
-                dealing increasing damage as you train. Upgrades become available at higher character levels.
-              </p>
-            </div>
-          </div>
-
-          {/* Prowess Levels - only show level 1 for character creation */}
-          <div className="space-y-3">
-            {availableUnarmedLevels.map((prowessLevel) => {
-              const isAvailable = prowessLevel.charLevel <= (draft.level || 1);
-              const isSelected = currentUnarmedProwess >= prowessLevel.level;
-              const tpCost = prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;
-              const canSelect = isAvailable && (currentUnarmedProwess === prowessLevel.level - 1 || isSelected);
-              
-              return (
-                <div
-                  key={prowessLevel.level}
-                  className={cn(
-                    'flex items-center gap-4 p-4 rounded-lg border transition-all',
-                    isSelected ? 'bg-primary-subtle-bg border-primary-subtle-border' : 'bg-surface border-border-light',
-                    !isAvailable && 'opacity-50',
-                    canSelect && !isSelected && 'hover:border-primary-outline-border cursor-pointer'
-                  )}
-                  onClick={() => {
-                    if (!isAvailable) return;
-                    if (isSelected) {
-                      // Deselect - set to previous level
-                      setUnarmedProwessLevel(prowessLevel.level - 1);
-                    } else if (currentUnarmedProwess === prowessLevel.level - 1) {
-                      // Select this level
-                      setUnarmedProwessLevel(prowessLevel.level);
-                    }
-                  }}
-                >
-                  {/* Selection indicator */}
-                  <div className={cn(
-                    'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
-                    isSelected ? 'bg-primary-button text-text-on-dark' : 'bg-surface-alt border border-border-light'
-                  )}>
-                    {isSelected && <Check className="w-4 h-4" />}
-                  </div>
-
-                  {/* Level info */}
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium text-text-primary">{prowessLevel.name}</span>
-                      {!isAvailable && (
-                        <DescriptorChip size="sm">
-                          Requires Level {prowessLevel.charLevel}
-                        </DescriptorChip>
-                      )}
-                    </div>
-                    <p className="text-sm text-text-secondary mt-1">{prowessLevel.description}</p>
-                  </div>
-
-                  {/* TP Cost */}
-                  <div className={cn(
-                    'px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0',
-                    isSelected ? 'bg-primary-subtle-bg text-primary-fg' : cn(statusPanel.warningBg, 'text-warning-fg')
-                  )}>
-                    {tpCost} TP
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Total TP Cost */}
-          {currentUnarmedProwess > 0 && (
-            <div className="mt-6 pt-4 border-t border-border-light flex items-center justify-between">
-              <span className="text-text-secondary">Total Unarmed Prowess Cost:</span>
-              <span className="text-lg font-bold text-primary-link-fg">{unarmedProwessTPCost} TP</span>
-            </div>
-          )}
-        </div>
-      ) : (
-        <>
-          {/* Search */}
-          <div className="mb-4">
-            <SearchInput
-              value={searchTerm}
-              onChange={setSearchTerm}
-              placeholder={`Search ${activeTab}s by name or description...`}
-            />
-          </div>
-
-          {/* Filters */}
-          <FilterSection>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <SourceFilter value={sourceFilter} onChange={setSourceFilter} />
-              
-              <div className="filter-group">
-                <label className="block text-sm font-medium text-text-secondary mb-1">
-                  Budget
-                </label>
-                <div className={cn(
-                  'px-3 py-2 rounded-lg border text-sm',
-                  remainingCurrency >= 0
-                    ? 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-600/50 text-success-fg'
-                    : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-fg'
-                )}>
-                  {remainingCurrency}c remaining of {startingCurrency}c
-                </div>
-              </div>
-            </div>
-          </FilterSection>
-
-          {/* Equipment List - ListHeader + GridListRow (unified with Library/Codex) */}
-          <div className="overflow-hidden bg-surface mb-8">
-            {activeTab === 'weapon' && sortedEquipment.length > 0 && (
-              <ListHeader
-                columns={WEAPON_LIST_COLUMNS}
-                gridColumns={WEAPON_LIST_GRID}
-                sortState={equipmentSort}
-                onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
-                rightSlotWidth={RIGHT_SLOT_WIDTH}
-                hasThumbnailColumn
-              />
-            )}
-            {activeTab === 'armor' && sortedEquipment.length > 0 && (
-              <ListHeader
-                columns={ARMOR_LIST_COLUMNS}
-                gridColumns={ARMOR_LIST_GRID}
-                sortState={equipmentSort}
-                onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
-                rightSlotWidth={RIGHT_SLOT_WIDTH}
-                hasThumbnailColumn
-              />
-            )}
-            {activeTab === 'equipment' && sortedEquipment.length > 0 && (
-              <ListHeader
-                columns={EQUIPMENT_LIST_COLUMNS}
-                gridColumns={EQUIPMENT_LIST_GRID}
-                sortState={equipmentSort}
-                onSort={(col) => setEquipmentSort(toggleSort(equipmentSort, col))}
-                rightSlotWidth={RIGHT_SLOT_WIDTH}
-                hasThumbnailColumn
-              />
-            )}
-            <div className="space-y-1 max-h-[400px] overflow-y-auto">
-              {sortedEquipment.length === 0 ? (
-                <EmptyState
-                  size="md"
-                  title={activeTab === 'weapon' || activeTab === 'armor' ? `No ${activeTab}s found` : 'No equipment found'}
-                  description={
-                    activeTab === 'weapon' || activeTab === 'armor'
-                      ? `Create ${activeTab}s in the Item Creator to add them here.`
-                      : undefined
-                  }
-                  icon={<AlertCircle className="w-8 h-8 text-text-muted" />}
-                  action={
-                    activeTab === 'weapon' || activeTab === 'armor'
-                      ? { label: 'Open Item Creator', onClick: () => window.open('/item-creator', '_blank'), variant: 'secondary' as const }
-                      : undefined
-                  }
-                />
-              ) : (
-                sortedEquipment.map(item => {
-                  const cost = item.gold_cost || item.currency || 0;
-                  const quantity = getItemQuantity(item.id);
-                  const canAfford = cost <= remainingCurrency;
-                  const isPathRecommended = isPathRecommendedItem(
-                    item,
-                    recommendedArmamentRefs,
-                    recommendedEquipmentRefs
-                  );
-
-                  // No damage/rarity badges — damage (and armor DR) are columns; keep list clean
-                  const badges: Array<{ label: string; color: 'amber' | 'blue' | 'red' | 'gray' }> = [];
-                  if (draft.creationMode === 'path' && isPathRecommended) {
-                    badges.push({ label: 'Path Recommended', color: 'blue' });
-                  }
-
-                  // Build property chips (TP matches item-calc / library)
-                  const chips: ChipData[] = (item.properties || []).map((prop) => {
-                    const propName = typeof prop === 'string' ? prop : (prop.name || 'Property');
-                    const dbProp = itemProperties?.find(
-                      (p) => String(p.name ?? '').toLowerCase() === String(propName).toLowerCase()
-                    );
-                    const tp = trainingPointsForItemPropertyRef(prop, itemProperties ?? []);
-                    const chip: ChipData = {
-                      name: dbProp?.name || propName,
-                      description: dbProp?.description,
-                      cost: tp > 0 ? tp : undefined,
-                      costLabel: 'Training Points',
-                      category: tp > 0 ? 'cost' : 'default',
-                    };
-                    if (!tp && !dbProp?.description) chip.kind = 'descriptor';
-                    return chip;
-                  });
-
-                  // Stepper on the right (unified with Library)
-                  const maxAffordable = cost > 0 ? quantity + Math.floor(remainingCurrency / cost) : 99;
-                  const rightSlotContent = (
-                    <QuantitySelector
-                      quantity={quantity}
-                      onChange={(newVal) => {
-                        const diff = newVal - quantity;
-                        if (diff > 0) {
-                          for (let i = 0; i < diff; i++) addItem(item);
-                        } else {
-                          for (let i = 0; i < -diff; i++) removeItem(item.id);
-                        }
-                      }}
-                      min={0}
-                      max={Math.min(99, maxAffordable)}
-                      size="sm"
-                    />
-                  );
-
-                  const sourceValue = item.source === 'library' ? 'Library' : 'Public';
-                  const costColumn = {
-                    key: 'gold_cost',
-                    value: `${cost}c`,
-                    highlight: !canAfford,
-                    className: canAfford ? 'text-tp-text font-bold' : 'text-danger-fg font-bold',
-                    align: 'right' as const,
-                  };
-                  const sourceColumn = {
-                    key: 'source',
-                    value: sourceValue,
-                    hideOnMobile: true,
-                    align: 'center' as const,
-                  };
-
-                  const propertySection =
-                    chips.length > 0
-                      ? [{ label: 'Properties', chips, hideLabelIfSingle: true as const }]
-                      : undefined;
-
-                  const thumbnail = resolveListRowThumbnail('equipment', item, item.name);
-
-                  if (activeTab === 'weapon') {
-                    const propPayloads = (item.properties ?? []) as ItemPropertyPayload[];
-                    const rangeLabel = formatRange(propPayloads);
-                    const rangeFacts = buildEntityMetadataDetailSections({
-                      range: rangeLabel && rangeLabel.toLowerCase() !== 'melee' ? rangeLabel : 'Melee',
-                    });
-                    return (
-                      <GridListRow
-                        key={item.id}
-                        id={item.id}
-                        name={item.name}
-                        description={item.description}
-                        thumbnail={thumbnail}
-                        columns={[
-                          { key: 'damage', value: item.damage ? formatDamageDisplay(item.damage) : '-', align: 'center' },
-                          costColumn,
-                          sourceColumn,
-                        ]}
-                        gridColumns={WEAPON_LIST_GRID}
-                        badges={badges}
-                        detailSections={mergeDetailSections(rangeFacts, propertySection)}
-                        rightSlot={rightSlotContent}
-                        compact
-                      />
-                    );
-                  }
-                  if (activeTab === 'armor') {
-                    return (
-                      <GridListRow
-                        key={item.id}
-                        id={item.id}
-                        name={item.name}
-                        description={item.description}
-                        thumbnail={thumbnail}
-                        columns={[
-                          {
-                            key: 'armor_value',
-                            value: item.armor_value != null ? String(item.armor_value) : '-',
-                            align: 'center',
-                          },
-                          costColumn,
-                          sourceColumn,
-                        ]}
-                        gridColumns={ARMOR_LIST_GRID}
-                        badges={badges}
-                        detailSections={propertySection}
-                        rightSlot={rightSlotContent}
-                        compact
-                      />
-                    );
-                  }
-                  const categoryColumn = { key: 'category', value: formatListCellLabel(item.category || item.type), align: 'center' as const };
-                  return (
-                    <GridListRow
-                      key={item.id}
-                      id={item.id}
-                      name={item.name}
-                      description={item.description}
-                      thumbnail={thumbnail}
-                      columns={[categoryColumn, costColumn, sourceColumn]}
-                      gridColumns={EQUIPMENT_LIST_GRID}
-                      badges={badges}
-                      detailSections={chips.length > 0 ? [{ label: 'Properties', chips, hideLabelIfSingle: true }] : undefined}
-                      rightSlot={rightSlotContent}
-                      compact
-                    />
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </>
+      {(draft.creationMode !== 'path' || showFullEquipmentList) && (
+        <EquipmentCatalogPanel
+          pathMode={pathMode}
+          showBackToPathLoadout={pathRecommendedItems.length > 0}
+          onCollapseToPathLoadout={() => collapseLayer('equipment')}
+          allEquipment={allEquipment}
+          sortedEquipment={sortedEquipment}
+          activeTab={activeTab}
+          onActiveTabChange={setActiveTab}
+          currentUnarmedProwess={currentUnarmedProwess}
+          tabGroupId={tabGroupId}
+          sharedPanelId={sharedPanelId}
+          searchTerm={searchTerm}
+          onSearchTermChange={setSearchTerm}
+          sourceFilter={sourceFilter}
+          onSourceFilterChange={setSourceFilter}
+          equipmentSort={equipmentSort}
+          onEquipmentSortChange={setEquipmentSort}
+          remainingCurrency={remainingCurrency}
+          startingCurrency={startingCurrency}
+          creationMode={draft.creationMode}
+          recommendedArmamentRefs={recommendedArmamentRefs}
+          recommendedEquipmentRefs={recommendedEquipmentRefs}
+          itemProperties={itemProperties}
+          getItemQuantity={getItemQuantity}
+          onAddItem={addItem}
+          onRemoveItem={removeItem}
+          availableUnarmedLevels={availableUnarmedLevels}
+          characterLevel={draft.level || 1}
+          unarmedProwessTPCost={unarmedProwessTPCost}
+          onSetUnarmedProwessLevel={setUnarmedProwessLevel}
+        />
       )}
-      </TabContentPanel>
-      </>
-      )}
-      
+
       <CreatorStepFooter
         onBack={prevStep}
         onContinue={handleContinue}

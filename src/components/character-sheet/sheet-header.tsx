@@ -12,25 +12,8 @@
 
 'use client';
 
-import { useState, useRef, KeyboardEvent, ChangeEvent, useMemo } from 'react';
-import Image from 'next/image';
-import { Camera, Pencil } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { formatSpeedForDisplay } from '@/lib/utils/number';
-import { Spinner } from '@/components/ui/spinner';
+import { useMemo } from 'react';
 import { Card } from '@/components/ui';
-import { HealthEnergyAllocator } from '@/components/creator';
-import {
-  ValueStepper,
-  DecrementButton,
-  IncrementButton,
-  ImageUploadModal,
-  RealmsImagePicker,
-  ExpandableImage,
-  SectionDualModeToggles,
-  TempModifierToggle,
-  type SectionEditMode,
-} from '@/components/shared';
 import { useGameRules } from '@/hooks';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { calculateAllStats } from '@/lib/game/calculations';
@@ -40,15 +23,16 @@ import {
   getEffectiveAbilities,
   getScalarTempModifier,
   shouldApplyAbilityTempsToResourceMaxima,
-  tempModifierValueClass,
   type TempModifierScalarKey,
 } from '@/lib/character/temp-modifiers';
+import { formatSpeedForDisplay } from '@/lib/utils/number';
 import { useCharacterSheetOptional } from './character-sheet-context';
 import { getEquippedArmorQuickRef } from './library-list-helpers';
 import type { Character, CharacterTempModifiers, Item } from '@/types';
-import { getEffectivePortrait, FALLBACK_PORTRAIT_DATA_URL } from '@/lib/portrait';
-import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
-import { ArchetypePathGuidance } from './archetype-path-identity';
+import { getHealthColor } from './sheet-resource-input';
+import { LargeStatBlock } from './sheet-large-stat-block';
+import { SheetHeaderIdentity } from './sheet-header-identity';
+import { SheetHeaderResources } from './sheet-header-resources';
 
 interface CalculatedStats {
   maxHealth: number;
@@ -99,348 +83,6 @@ interface SheetHeaderProps {
   enrichedArmor?: Item[];
 }
 
-/**
- * Get health color based on current health percentage
- * - Green: > 50% health
- * - Orange: <= 50% but > 25% (half health, rounded up)
- * - Red: <= 25% (terminal range, rounded up)
- */
-function getHealthColor(current: number, max: number): 'green' | 'orange' | 'red' {
-  if (max <= 0) return 'red';
-  const halfThreshold = Math.ceil(max / 2);
-  const terminalThreshold = Math.ceil(max / 4);
-  
-  if (current <= terminalThreshold) return 'red';
-  if (current <= halfThreshold) return 'orange';
-  return 'green';
-}
-
-/**
- * Smart Resource Input
- * - Click value to select all for easy editing
- * - Type a number and press Enter to set that value
- * - Type +N or -N and press Enter to modify by that amount
- * - Use stepper buttons with typed value (if not pressed Enter yet)
- */
-function ResourceInput({
-  label,
-  current,
-  max,
-  onChange,
-  colorVariant = 'default',
-  subLabel,
-  showBar = false,
-}: {
-  label: string;
-  current: number;
-  max: number;
-  onChange?: (value: number) => void;
-  colorVariant?: 'health' | 'energy' | 'default';
-  subLabel?: string;
-  showBar?: boolean;
-}) {
-  const [inputValue, setInputValue] = useState(String(current));
-  const [isEditing, setIsEditing] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const displayValue = isEditing ? inputValue : String(current);
-  
-  const handleFocus = () => {
-    setIsEditing(true);
-    setInputValue(String(current));
-    // Select all text when focused
-    setTimeout(() => inputRef.current?.select(), 0);
-  };
-  
-  const handleBlur = () => {
-    setIsEditing(false);
-    // Reset to current value if not committed
-    setInputValue(String(current));
-  };
-  
-  const applyValue = () => {
-    if (!onChange) return;
-    
-    const trimmed = inputValue.trim();
-    
-    // Check for +/- modifiers
-    if (trimmed.startsWith('+')) {
-      const delta = parseInt(trimmed.slice(1), 10);
-      if (!isNaN(delta)) {
-        // Allow values above max (no upper clamp)
-        const newValue = Math.max(0, current + delta);
-        onChange(newValue);
-        setInputValue(String(newValue));
-      }
-    } else if (trimmed.startsWith('-')) {
-      const delta = parseInt(trimmed.slice(1), 10);
-      if (!isNaN(delta)) {
-        const newValue = Math.max(0, current - delta);
-        onChange(newValue);
-        setInputValue(String(newValue));
-      }
-    } else {
-      // Direct value: allow any non-negative value including above max (e.g. temp HP/over-heal)
-      const newValue = parseInt(trimmed, 10);
-      if (!isNaN(newValue)) {
-        const value = Math.max(0, newValue);
-        onChange(value);
-        setInputValue(String(value));
-      }
-    }
-    
-    setIsEditing(false);
-    inputRef.current?.blur();
-  };
-  
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      applyValue();
-    } else if (e.key === 'Escape') {
-      setInputValue(String(current));
-      setIsEditing(false);
-      inputRef.current?.blur();
-    }
-  };
-  
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  };
-  
-  // Stepper: apply +/- one step to current, or to a typed draft value if the field is focused
-  const handleStepperChange = (newValue: number) => {
-    if (!onChange) return;
-
-    const stepperDelta = newValue - current;
-    let result = newValue;
-
-    if (isEditing) {
-      const trimmed = inputValue.trim();
-      if (trimmed.startsWith('+') || trimmed.startsWith('-')) {
-        result = newValue;
-      } else {
-        const parsed = parseInt(trimmed, 10);
-        if (!isNaN(parsed)) {
-          result = Math.max(0, parsed + stepperDelta);
-        }
-      }
-    }
-
-    onChange(result);
-    setInputValue(String(result));
-    setIsEditing(false);
-  };
-  
-  // Color classes: light = tinted panel; dark = same surface as UI, subtle colored border (no bright green/blue background)
-  const bgColor = colorVariant === 'health' 
-    ? 'bg-success-50 dark:bg-surface border-success-200 dark:border-success-800/50' 
-    : colorVariant === 'energy'
-      ? 'bg-info-50 dark:bg-surface border-info-200 dark:border-info-800/50'
-      : 'bg-surface-alt dark:bg-surface border-border-light dark:border-border';
-  
-  const labelColor = colorVariant === 'health'
-    ? 'text-success-fg'
-    : colorVariant === 'energy'
-      ? 'text-info-fg'
-      : 'text-text-secondary dark:text-text-primary';
-  
-  // Calculate bar percentage - cap at 100% for display but allow tracking above max
-  const isAboveMax = current > max;
-  const percentage = max > 0 ? Math.max(0, Math.min(100, (current / max) * 100)) : 0;
-  
-  // Bar color: gold when above max, otherwise normal colors; dark mode alternatives
-  // Half health = amber/yellow-orange (distinguishable from terminal red)
-  // Terminal = deep crimson red
-  const barColorClass = isAboveMax 
-    ? 'bg-warning-400 dark:bg-warning-500'
-    : colorVariant === 'health' 
-      ? (percentage > 50 ? 'bg-success-500 dark:bg-success-400' : percentage > 25 ? 'bg-warning-500 dark:bg-warning-400' : 'bg-danger-600 dark:bg-danger-500')
-      : colorVariant === 'energy' ? 'bg-info-500 dark:bg-info-400' : 'bg-primary-button';
-  
-  const inputBorderText = colorVariant === 'health'
-    ? 'border-success-300 dark:border-success-700/60 text-success-fg'
-    : colorVariant === 'energy'
-      ? 'border-info-300 dark:border-info-700/60 text-info-fg'
-      : 'border-border-light dark:border-border text-text-primary';
-  
-  return (
-    <div className={cn('flex flex-col p-3 rounded-lg border', bgColor)}>
-      <div className="flex items-center justify-between mb-1">
-        <span className={cn('text-xs font-semibold uppercase tracking-wide', labelColor)}>
-          {label}
-        </span>
-        {subLabel && (
-          <span className="text-xs text-text-muted dark:text-text-secondary">{subLabel}</span>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        <input
-          ref={inputRef}
-          type="text"
-          inputMode="numeric"
-          value={displayValue}
-          onChange={handleChange}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-          className={cn(
-            'w-12 text-center text-lg font-bold rounded border px-1 py-0.5 bg-surface dark:bg-surface-alt',
-            'focus:outline-none focus:ring-2 focus:ring-primary-outline-border dark:focus:ring-primary-outline-border',
-            inputBorderText
-          )}
-          aria-label={`Current ${label}`}
-        />
-        <span className={cn('text-base font-medium', labelColor)}>/ {max}</span>
-        {onChange && (
-          <ValueStepper
-            value={current}
-            onChange={handleStepperChange}
-            min={0}
-            // No max - allow incrementing above max (gold bar shows when above)
-            colorVariant={colorVariant === 'health' ? 'health' : colorVariant === 'energy' ? 'energy' : 'default'}
-            enableHoldRepeat
-            size="sm"
-            variant="compact"
-            hideValue
-            decrementTitle={`Decrease ${label.toLowerCase()}`}
-            incrementTitle={`Increase ${label.toLowerCase()}`}
-          />
-        )}
-      </div>
-      {/* Inline bar - dark mode track */}
-      {showBar && (
-        <div className="relative h-2 mt-2 bg-surface dark:bg-text-primary/30 rounded-full overflow-hidden">
-          <div
-            className={cn('absolute inset-y-0 left-0 transition-all duration-slow ease-standard rounded-full', barColorClass)}
-            style={{ width: `${percentage}%` }}
-          />
-        </div>
-      )}
-    </div>
-  );
-}
-
-/**
- * Large stat block for Speed / Evasion / DR / Critical Range.
- * Pencil = rules base (Speed/Evasion only); Temp Modifier = layered delta (ADR-0006).
- * `value` is the final display number/string (temps already applied by caller).
- */
-function LargeStatBlock({
-  label,
-  value,
-  valueSuffix,
-  valueAriaLabel,
-  baseValue,
-  isEditMode,
-  onBaseChange,
-  tempDelta = 0,
-  onTempDeltaChange,
-  minBase = 0,
-  maxBase = 20,
-}: {
-  label: string;
-  value: number | string;
-  valueSuffix?: string;
-  /** Optional accessible name for the value (e.g. read-only DR / Critical Range). */
-  valueAriaLabel?: string;
-  baseValue?: number;
-  isEditMode?: boolean;
-  onBaseChange?: (newBase: number) => void;
-  tempDelta?: number;
-  onTempDeltaChange?: (delta: number) => void;
-  minBase?: number;
-  maxBase?: number;
-}) {
-  const [mode, setMode] = useState<SectionEditMode>('none');
-  const [tempOnlyActive, setTempOnlyActive] = useState(false);
-  const canSpend = Boolean(isEditMode && onBaseChange && baseValue !== undefined);
-  const canTemp = Boolean(isEditMode && onTempDeltaChange);
-  const showSpendControls = canSpend && mode === 'spend';
-  const showTempControls =
-    canTemp && (canSpend ? mode === 'tempModifier' : tempOnlyActive);
-
-  return (
-    <Card className="flex flex-col items-center p-4 bg-surface-alt min-w-[100px] shadow-none">
-      <div className="flex items-center gap-1.5 w-full justify-center">
-        <span className="text-sm font-semibold text-text-secondary uppercase tracking-wide text-center">
-          {label}
-        </span>
-        {canSpend && canTemp && (
-          <SectionDualModeToggles
-            mode={mode}
-            onModeChange={setMode}
-            spendState="normal"
-            hasTempModifiers={tempDelta !== 0}
-            spendTitle={`Edit ${label} base`}
-          />
-        )}
-        {!canSpend && canTemp && (
-          <TempModifierToggle
-            isActive={tempOnlyActive}
-            hasModifiers={tempDelta !== 0}
-            onClick={() => setTempOnlyActive((prev) => !prev)}
-            title={tempOnlyActive ? 'Close Temp Modifier' : 'Temp Modifier'}
-          />
-        )}
-      </div>
-      <span
-        className={cn(
-          'text-4xl font-bold mt-1 tabular-nums',
-          tempModifierValueClass(tempDelta) || 'text-text-primary'
-        )}
-        aria-label={valueAriaLabel}
-      >
-        {value}
-        {valueSuffix ? (
-          <span className="text-xl font-semibold text-text-secondary ml-0.5">{valueSuffix}</span>
-        ) : null}
-      </span>
-
-      {showSpendControls && baseValue !== undefined && onBaseChange && (
-        <div className="flex items-center gap-1 mt-2">
-          <DecrementButton
-            size="sm"
-            onClick={() => onBaseChange(Math.max(minBase, baseValue - 1))}
-            disabled={baseValue <= minBase}
-            title={`Decrease ${label} base`}
-          />
-          <span className="text-xs min-w-[3rem] text-center text-text-muted dark:text-text-secondary">
-            Base: {baseValue}
-          </span>
-          <IncrementButton
-            size="sm"
-            onClick={() => onBaseChange(Math.min(maxBase, baseValue + 1))}
-            disabled={baseValue >= maxBase}
-            title={`Increase ${label} base`}
-          />
-        </div>
-      )}
-
-      {showTempControls && onTempDeltaChange && (
-        <div className="flex items-center gap-1 mt-2">
-          <DecrementButton
-            size="sm"
-            onClick={() => onTempDeltaChange(tempDelta - 1)}
-            title={`Decrease ${label} Temp Modifier`}
-          />
-          <span
-            className={cn(
-              'text-xs min-w-[3rem] text-center font-medium',
-              tempModifierValueClass(tempDelta) || 'text-text-muted dark:text-text-secondary'
-            )}
-          >
-            Temp: {tempDelta >= 0 ? `+${tempDelta}` : tempDelta}
-          </span>
-          <IncrementButton
-            size="sm"
-            onClick={() => onTempDeltaChange(tempDelta + 1)}
-            title={`Increase ${label} Temp Modifier`}
-          />
-        </div>
-      )}
-    </Card>
-  );
-}
-
 const DEFAULT_ACTION_POINTS = 4;
 
 export function SheetHeader({
@@ -483,49 +125,10 @@ export function SheetHeader({
   const currentHealth = character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
   const currentEnergy = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
   const actionPoints = character.actionPoints ?? DEFAULT_ACTION_POINTS;
-  
-  // State for editing character name
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState(character.name || '');
-  
-  // State for editing XP
-  const [isEditingXP, setIsEditingXP] = useState(false);
-  const [xpInput, setXpInput] = useState(String(character.experience ?? 0));
-  
-  // Check if character can level up (XP >= level * 4)
-  const xp = character.experience ?? 0;
-  const level = character.level || 1;
-  const canLevelUp = xp >= (level * 4);
 
-  // Handle XP submission
-  const handleXPSubmit = () => {
-    const value = parseInt(xpInput, 10);
-    if (!isNaN(value) && value >= 0 && onExperienceChange) {
-      onExperienceChange(value);
-    }
-    setIsEditingXP(false);
-  };
-
-  const totalHEPool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
+  const totalHEPool = calculateHealthEnergyPool(character.level || 1, 'PLAYER', false, rules);
   const healthPoints = character.healthPoints ?? 0;
   const energyPoints = character.energyPoints ?? 0;
-
-  // Image upload modal state
-  const [showUploadModal, setShowUploadModal] = useState(false);
-  const [showBankPicker, setShowBankPicker] = useState(false);
-  
-  // Handle portrait click - open the upload modal
-  const handlePortraitClick = () => {
-    if (!isEditMode || !onPortraitChange) return;
-    setShowUploadModal(true);
-  };
-  
-  // Handle cropped image from the modal - await upload so modal stays open until done
-  const handleCroppedImage = async (blob: Blob) => {
-    if (!onPortraitChange) return;
-    const file = new File([blob], 'portrait.jpg', { type: 'image/jpeg' });
-    await onPortraitChange(file);
-  };
 
   const displayStats = useMemo(() => {
     // Ability temps always cascade into speed/evasion (and thus crit via armor quick-ref).
@@ -549,54 +152,6 @@ export function SheetHeader({
 
   // Get health color for styling
   const healthColor = getHealthColor(currentHealth, displayStats.maxHealth);
-
-  const canChangePortrait = Boolean(isEditMode && onPortraitChange);
-  const effectivePortrait = getEffectivePortrait(character.portrait);
-  const portraitSrc =
-    effectivePortrait === FALLBACK_PORTRAIT_DATA_URL
-      ? effectivePortrait
-      : `${effectivePortrait}${portraitRefreshKey != null ? `?t=${portraitRefreshKey}` : ''}`;
-  const portraitFrameClass = cn(
-    'relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-xl border-3 bg-surface shadow-lg md:h-36 md:w-36',
-    healthColor === 'green' && 'border-success-400',
-    healthColor === 'orange' && 'border-warning-400',
-    healthColor === 'red' && 'border-danger-600',
-    canChangePortrait && 'group cursor-pointer'
-  );
-  const portraitImage = (
-    <>
-      <Image
-        key={`portrait-${character.portrait ?? ''}-${portraitRefreshKey ?? ''}`}
-        src={portraitSrc}
-        alt=""
-        fill
-        unoptimized
-        priority
-        className={cn(
-          'object-cover transition-opacity',
-          isUploadingPortrait && 'opacity-50'
-        )}
-        sizes="(max-width: 768px) 112px, 144px"
-        onError={(e) => {
-          (e.target as HTMLImageElement).src = FALLBACK_PORTRAIT_DATA_URL;
-        }}
-      />
-      {/* Upload overlay in edit mode — click opens ImageUploadModal, not ExpandableImage */}
-      {canChangePortrait && (
-        <div className="absolute inset-0 flex items-center justify-center bg-transparent transition-colors group-hover:bg-text-primary/40">
-          <Camera
-            className="h-8 w-8 text-text-on-dark opacity-0 transition-opacity group-hover:opacity-100"
-            aria-hidden
-          />
-        </div>
-      )}
-      {isUploadingPortrait && (
-        <div className="absolute inset-0 flex items-center justify-center bg-text-primary/30">
-          <Spinner size="md" variant="white" />
-        </div>
-      )}
-    </>
-  );
 
   // Speed display (spaces → value + unit per settings); temps applied in spaces first
   const speedTemp = getScalarTempModifier(tempModifiers, 'speed');
@@ -629,187 +184,22 @@ export function SheetHeader({
   const baseCriticalRange = armorQuickRef?.criticalRange ?? 0;
   const showCombatArmorStats = Boolean(armorQuickRef) || drTemp !== 0 || critTemp !== 0 || isEditMode;
 
-  // Handle name editing
-  const handleNameSubmit = () => {
-    if (nameInput.trim() && nameInput !== character.name && onNameChange) {
-      onNameChange(nameInput.trim());
-    }
-    setIsEditingName(false);
-  };
-
-  const normalizedPowerAbility = character.pow_abil?.trim().toLowerCase();
-  const normalizedMartialAbility = character.mart_abil?.trim().toLowerCase();
-  const showPowerAbility = Boolean(character.pow_abil?.trim());
-  const showMartialAbility = Boolean(character.mart_abil)
-    && normalizedMartialAbility !== normalizedPowerAbility;
-
   return (
     <Card className="shadow-md p-4 md:p-6 mb-4" data-tour-id="sheet-tour-header">
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Left: Portrait and Identity */}
-        <div className="flex gap-4 flex-shrink-0 items-center">
-          {/* Portrait — ExpandableImage in play view; edit mode click opens upload */}
-          {canChangePortrait ? (
-            <div
-              role="button"
-              tabIndex={0}
-              className={portraitFrameClass}
-              onClick={handlePortraitClick}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' || e.key === ' ') {
-                  e.preventDefault();
-                  handlePortraitClick();
-                }
-              }}
-              title="Click to change portrait"
-              aria-label={`Change portrait for ${character.name}`}
-            >
-              {portraitImage}
-            </div>
-          ) : (
-            <ExpandableImage
-              src={portraitSrc}
-              alt={character.name}
-              className={portraitFrameClass}
-            >
-              {portraitImage}
-            </ExpandableImage>
-          )}
-          
-          {/* Character Identity - Clean unified format */}
-          <div className="flex flex-col justify-center min-w-0">
-            {/* Editable Name - Always available with pencil icon */}
-            {isEditingName && onNameChange ? (
-              <input
-                type="text"
-                value={nameInput}
-                onChange={(e) => setNameInput(e.target.value)}
-                onBlur={handleNameSubmit}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleNameSubmit();
-                  if (e.key === 'Escape') {
-                    setNameInput(character.name || '');
-                    setIsEditingName(false);
-                  }
-                }}
-                className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-outline-border rounded-lg focus:ring-2 focus:ring-primary-outline-border"
-                autoFocus
-              />
-            ) : (
-              <h1 className="text-2xl md:text-3xl font-bold text-text-primary truncate flex items-center gap-2">
-                {character.name}
-                {onNameChange && isEditMode && (
-                  <button
-                    onClick={() => setIsEditingName(true)}
-                    className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
-                    title="Edit name"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                )}
-              </h1>
-            )}
-            
-            {/* Level and Species - separated */}
-            <p className="text-base text-text-primary flex items-center gap-2">
-              Level {character.level} · <span className="font-medium">{character.ancestry?.name || character.species || 'Unknown'}</span>
-              {onEditSpecies && (
-                <button
-                  onClick={onEditSpecies}
-                  className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
-                  title="Edit species and ancestry"
-                  aria-label="Edit species and ancestry"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              )}
-            </p>
-            
-            {/* Archetype: name and abilities */}
-            <div className="text-base text-text-primary">
-              <p className="flex flex-wrap items-center gap-2">
-                <span>
-                  {resolveArchetypeDisplayName(character) ||
-                    (character.archetype?.type
-                      ? character.archetype.type
-                          .split('-')
-                          .map((w: string) => w.charAt(0).toUpperCase() + w.slice(1))
-                          .join(' ')
-                      : 'No Archetype')}
-                  {(showPowerAbility || showMartialAbility) && ': '}
-                  {showPowerAbility && (
-                    <span className="text-power-fg capitalize">{character.pow_abil}</span>
-                  )}
-                  {showPowerAbility && showMartialAbility && ' / '}
-                  {showMartialAbility && (
-                    <span className="text-martial-fg capitalize">{character.mart_abil}</span>
-                  )}
-                </span>
-                {onEditArchetype && (
-                  <button
-                    onClick={onEditArchetype}
-                    className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
-                    title="Edit archetype and ability"
-                    aria-label="Edit archetype and ability"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                )}
-              </p>
-              <ArchetypePathGuidance character={character} />
-            </div>
-            
-            {/* XP Display - Always editable with pencil icon */}
-            <div className="text-base text-text-primary flex items-center gap-2">
-              {isEditingXP && onExperienceChange ? (
-                <div className="flex items-center gap-1">
-                  <span>XP:</span>
-                  <input
-                    type="number"
-                    value={xpInput}
-                    onChange={(e) => setXpInput(e.target.value)}
-                    onBlur={handleXPSubmit}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleXPSubmit();
-                      if (e.key === 'Escape') {
-                        setXpInput(String(character.experience ?? 0));
-                        setIsEditingXP(false);
-                      }
-                    }}
-                    className="w-16 px-1 py-0 text-base border-2 border-primary-outline-border rounded focus:ring-2 focus:ring-primary-outline-border"
-                    min={0}
-                    autoFocus
-                    aria-label="Experience points"
-                  />
-                </div>
-              ) : (
-                <>
-                  <span>XP: {character.experience ?? 0}</span>
-                  {onExperienceChange && (
-                    <button
-                      onClick={() => {
-                        setXpInput(String(character.experience ?? 0));
-                        setIsEditingXP(true);
-                      }}
-                      className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
-                      title="Edit XP"
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </button>
-                  )}
-                </>
-              )}
-              {canLevelUp && (
-                <span 
-                  className="text-success-fg animate-pulse text-sm font-medium" 
-                  title="Ready to level up!"
-                >
-                  ⬆ Level up!
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
+        <SheetHeaderIdentity
+          character={character}
+          isEditMode={isEditMode}
+          healthColor={healthColor}
+          onPortraitChange={onPortraitChange}
+          onPortraitUrlChange={onPortraitUrlChange}
+          isUploadingPortrait={isUploadingPortrait}
+          portraitRefreshKey={portraitRefreshKey}
+          onNameChange={onNameChange}
+          onExperienceChange={onExperienceChange}
+          onEditArchetype={onEditArchetype}
+          onEditSpecies={onEditSpecies}
+        />
 
         {/* Center section with Speed/Evasion - grows to fill available space */}
         <div className="flex-1 flex flex-wrap items-center justify-center gap-3 md:gap-4">
@@ -872,101 +262,25 @@ export function SheetHeader({
           />
         </div>
 
-        {/* Right: Action Points (left, spans vertically) + Health & Energy (right) */}
-        <div className="w-full min-w-0 md:min-w-[260px] lg:w-1/3 flex flex-col">
-          <div className="flex flex-col sm:flex-row gap-3 items-stretch">
-            {/* Action Points - left column, spans full height of Health+Energy */}
-            <div className={cn(
-              'flex flex-col justify-center p-3 rounded-lg border min-w-[72px]',
-              'bg-surface-alt dark:bg-surface border-border-light dark:border-border'
-            )}>
-              <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary dark:text-text-primary text-center mb-1.5">
-                Action Points
-              </span>
-              <div className="flex items-center justify-center">
-                {onActionPointsChange ? (
-                  <ValueStepper
-                    value={actionPoints}
-                    onChange={onActionPointsChange}
-                    min={0}
-                    max={10}
-                    colorVariant="default"
-                    enableHoldRepeat
-                    size="sm"
-                    variant="compact"
-                    hideValue={false}
-                    decrementTitle="Decrease action points"
-                    incrementTitle="Increase action points"
-                  />
-                ) : (
-                  <span className="text-lg font-bold text-text-primary">{actionPoints}</span>
-                )}
-              </div>
-            </div>
-
-            {/* Health & Energy stacked */}
-            <div className="flex flex-col gap-2 flex-1 min-w-0">
-              <ResourceInput
-                label="Health"
-                current={currentHealth}
-                max={displayStats.maxHealth}
-                onChange={onHealthChange}
-                colorVariant="health"
-                showBar
-              />
-              <ResourceInput
-                label="Energy"
-                current={currentEnergy}
-                max={displayStats.maxEnergy}
-                onChange={onEnergyChange}
-                colorVariant="energy"
-                subLabel={innateThreshold > 0 ? `Innate: ${innateThreshold}${innatePools > 1 ? ` (${innatePools}×)` : ''}` : undefined}
-                showBar
-              />
-            </div>
-          </div>
-
-          {/* Health-Energy Pool Allocation (edit mode only) */}
-          {isEditMode && onHealthPointsChange && onEnergyPointsChange && (
-            <div className="mt-2">
-              <HealthEnergyAllocator
-                hpBonus={healthPoints}
-                energyBonus={energyPoints}
-                poolTotal={totalHEPool}
-                maxHp={displayStats.maxHealth}
-                maxEnergy={displayStats.maxEnergy}
-                onHpChange={onHealthPointsChange}
-                onEnergyChange={onEnergyPointsChange}
-                variant="inline"
-                allowOverallocation
-                enableHoldRepeat
-              />
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Portrait Upload Modal */}
-      <ImageUploadModal
-        isOpen={showUploadModal}
-        onClose={() => setShowUploadModal(false)}
-        onConfirm={handleCroppedImage}
-        onChooseFromLibrary={onPortraitUrlChange ? () => setShowBankPicker(true) : undefined}
-        cropShape="rect"
-        aspect={1}
-        title="Upload Character Portrait"
-      />
-      {onPortraitUrlChange && (
-        <RealmsImagePicker
-          isOpen={showBankPicker}
-          onClose={() => setShowBankPicker(false)}
-          onSelect={({ image }) => { void onPortraitUrlChange(image.publicUrl); }}
-          categories="portrait"
-          allowAdminUpload={false}
-          title="Choose Character Portrait"
-          description="Pick species or creature art from the Realms Image Library."
+        <SheetHeaderResources
+          actionPoints={actionPoints}
+          onActionPointsChange={onActionPointsChange}
+          currentHealth={currentHealth}
+          maxHealth={displayStats.maxHealth}
+          onHealthChange={onHealthChange}
+          currentEnergy={currentEnergy}
+          maxEnergy={displayStats.maxEnergy}
+          onEnergyChange={onEnergyChange}
+          innateThreshold={innateThreshold}
+          innatePools={innatePools}
+          isEditMode={isEditMode}
+          healthPoints={healthPoints}
+          energyPoints={energyPoints}
+          totalHEPool={totalHEPool}
+          onHealthPointsChange={onHealthPointsChange}
+          onEnergyPointsChange={onEnergyPointsChange}
         />
-      )}
+      </div>
     </Card>
   );
 }

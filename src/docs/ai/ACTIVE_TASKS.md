@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-596, 594, 597, 584, 587, 586, 583, 581, 582, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-598, 596, 594, 597, 584, 587, 586, 583, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 3 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Audit multitask: TASK-593–597 done. Remaining from `/global-audit`: TASK-598–599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** Audit multitask: TASK-593–598 done. Remaining from `/global-audit`: TASK-599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -64,34 +64,6 @@ Do **not** read the done archive at session start.
 ---
 
 # Sheet / creator debt follow-ups (from `/global-audit` 2026-07-20)
-
-- id: TASK-598
-  title: Split oversized sheet + Advanced creator hot files
-  created_at: 2026-07-20
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/components/character-sheet/sheet-header.tsx
-    - src/components/character-sheet/library-section.tsx
-    - src/components/character-sheet/abilities-section.tsx
-    - src/components/character-creator/steps/equipment-step.tsx
-    - src/components/character-creator/steps/finalize-step.tsx
-    - src/components/character-creator/steps/powers-step.tsx
-    - src/components/character-creator/steps/feats-step.tsx
-  description: |
-    God-file hygiene after TASK-381 sheet facade: split sheet-header, library-section,
-    abilities-section and Advanced equipment/finalize/powers/feats steps along existing
-    section/action seams without behavior change. Coordinate with TASK-594/596 if they
-    already extract chunks.
-  acceptance_criteria:
-    - Target files under ~500 LOC where practical; no public API regressions.
-    - Parity smoke: sheet play/edit; Advanced create through equipment/powers/finalize.
-    - FEATURE_INDEX paths updated if files move.
-  notes: |
-    TASK-596 extracted catalog/budget (~1404→~1082 LOC) — still over ~500; UI split still needed.
-
----
 
 - id: TASK-599
   title: Single source of truth for archetype-category marketing copy

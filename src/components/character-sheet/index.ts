@@ -9,10 +9,8 @@ export { SheetHeader } from './sheet-header';
 export { AbilitiesSection } from './abilities-section';
 export { SkillsSection } from './skills-section';
 export { ArchetypeSection } from './archetype-section';
-export {
-  LibrarySection,
-  resolveLibraryActiveTab,
-} from './library-section';
+export { LibrarySection } from './library-section';
+export { resolveLibraryActiveTab } from './library-tab-config';
 export { CharacterSheetProvider } from './character-sheet-context';
 export { CharacterSheetBody } from './character-sheet-body';
 export {

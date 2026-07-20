@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T19:14:15.237Z",
+  "generated_at": "2026-07-20T19:49:33.568Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -27,24 +27,6 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-598",
-      "title": "Split oversized sheet + Advanced creator hot files",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-sheet/sheet-header.tsx",
-        "src/components/character-sheet/library-section.tsx",
-        "src/components/character-sheet/abilities-section.tsx",
-        "src/components/character-creator/steps/equipment-step.tsx",
-        "src/components/character-creator/steps/finalize-step.tsx",
-        "src/components/character-creator/steps/powers-step.tsx",
-        "src/components/character-creator/steps/feats-step.tsx"
-      ],
-      "related_overlap": []
-    },
-    {
       "id": "TASK-599",
       "title": "Single source of truth for archetype-category marketing copy",
       "status": "not-started",
@@ -60,12 +42,219 @@
       "related_overlap": []
     },
     {
+      "id": "TASK-598",
+      "title": "Split oversized sheet + Advanced creator hot files",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "60e4e05cc1491ed9f7f23dd9c1466f8d8deeaa82",
+          "subject": "TASK-598: Docs polish — FEATURE_INDEX paths, archive related_files, changelog",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "d31f6616851a3de12195997ca9cf3fdd9a12f4da",
+          "subject": "TASK-598: Split Advanced powers-step selectable + panels",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-creator/steps/powers/apply-path-power-recommendations.ts",
+            "src/components/character-creator/steps/powers/draft-power-selection.ts",
+            "src/components/character-creator/steps/powers/modal-columns.ts",
+            "src/components/character-creator/steps/powers/modal-empty-messages.ts",
+            "src/components/character-creator/steps/powers/powers-selected-section.tsx",
+            "src/components/character-creator/steps/powers/powers-selection-modals.tsx",
+            "src/components/character-creator/steps/powers/powers-step-chrome.tsx",
+            "src/components/character-creator/steps/powers/powers-step-proficiency-tp.ts",
+            "src/components/character-creator/steps/powers/techniques-selected-section.tsx",
+            "src/components/character-creator/steps/powers/use-powers-step-selectables.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/creator/advanced-powers-selectable.test.ts",
+            "src/lib/creator/advanced-powers-selectable.ts"
+          ]
+        },
+        {
+          "hash": "f4be1a17d1abef36885119b74995db82cfa828f6",
+          "subject": "TASK-598: Split Advanced equipment-step into UI panels",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/equipment/equipment-catalog-panel.tsx",
+            "src/components/character-creator/steps/equipment/list-columns.ts",
+            "src/components/character-creator/steps/equipment/path-loadout-section.tsx",
+            "src/components/character-creator/steps/equipment/selected-equipment-list.tsx",
+            "src/components/character-creator/steps/equipment/step-header.tsx",
+            "src/components/character-creator/steps/equipment/unarmed-prowess-panel.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md"
+          ]
+        },
+        {
+          "hash": "0bab445f693cd0a5d17e5ca9f70c14642738a1a1",
+          "subject": "TASK-598: Split library-section into panels and hooks",
+          "files": [
+            "src/components/character-sheet/library-inventory-panel.tsx",
+            "src/components/character-sheet/library-powers-panel.tsx",
+            "src/components/character-sheet/library-section-props.ts",
+            "src/components/character-sheet/library-section.tsx",
+            "src/components/character-sheet/library-tab-config.ts",
+            "src/components/character-sheet/use-library-section-rows.ts",
+            "src/components/character-sheet/use-library-tab-navigation.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md"
+          ]
+        },
+        {
+          "hash": "2ea489e7b42c7827f5bbcf2466cfbd693ed05b0a",
+          "subject": "TASK-598: Split Advanced finalize-step and feats-step",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/components/character-creator/steps/feats-step.tsx",
+            "src/components/character-creator/steps/feats/apply-recommended-path-feats.ts",
+            "src/components/character-creator/steps/feats/feat-list-columns.ts",
+            "src/components/character-creator/steps/feats/feat-row.tsx",
+            "src/components/character-creator/steps/feats/full-feat-catalog.tsx",
+            "src/components/character-creator/steps/feats/path-feat-lists.tsx",
+            "src/components/character-creator/steps/feats/path-mode-feat-families.ts",
+            "src/components/character-creator/steps/feats/selected-feat-chip-row.tsx",
+            "src/components/character-creator/steps/feats/selected-feats-summary.tsx",
+            "src/components/character-creator/steps/finalize-step.tsx",
+            "src/components/character-creator/steps/finalize/appearance-age.ts",
+            "src/components/character-creator/steps/finalize/build-summary.tsx",
+            "src/components/character-creator/steps/finalize/health-energy-section.tsx",
+            "src/components/character-creator/steps/finalize/identity-fields.tsx",
+            "src/components/character-creator/steps/finalize/portrait-upload.tsx",
+            "src/components/character-creator/steps/finalize/step-edit-link.tsx",
+            "src/components/character-creator/steps/finalize/validation-modal.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md"
+          ]
+        },
+        {
+          "hash": "0bdf4e00de5543ba6a43231fd5161bb0c34031a6",
+          "subject": "TASK-598: Drop accidental identity data attribute",
+          "files": [
+            "src/components/character-sheet/sheet-header-identity.tsx"
+          ]
+        },
+        {
+          "hash": "0b7c9f83ddfbf9ccc57c71a88e7ac64d378a5883",
+          "subject": "TASK-598: Split sheet-header and abilities-section",
+          "files": [
+            "src/components/character-sheet/abilities-section-model.ts",
+            "src/components/character-sheet/abilities-section.tsx",
+            "src/components/character-sheet/ability-stat-tile.tsx",
+            "src/components/character-sheet/defense-stat-tile.tsx",
+            "src/components/character-sheet/sheet-header-identity.tsx",
+            "src/components/character-sheet/sheet-header-resources.tsx",
+            "src/components/character-sheet/sheet-header.tsx",
+            "src/components/character-sheet/sheet-large-stat-block.tsx",
+            "src/components/character-sheet/sheet-resource-input.tsx"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/character-sheet/sheet-header.tsx",
+        "src/components/character-sheet/sheet-resource-input.tsx",
+        "src/components/character-sheet/sheet-large-stat-block.tsx",
+        "src/components/character-sheet/sheet-header-identity.tsx",
+        "src/components/character-sheet/sheet-header-resources.tsx",
+        "src/components/character-sheet/library-section.tsx",
+        "src/components/character-sheet/library-section-props.ts",
+        "src/components/character-sheet/library-tab-config.ts",
+        "src/components/character-sheet/use-library-section-rows.ts",
+        "src/components/character-sheet/use-library-tab-navigation.tsx",
+        "src/components/character-sheet/library-powers-panel.tsx",
+        "src/components/character-sheet/library-inventory-panel.tsx",
+        "src/components/character-sheet/abilities-section.tsx",
+        "src/components/character-sheet/abilities-section-model.ts",
+        "src/components/character-sheet/ability-stat-tile.tsx",
+        "src/components/character-sheet/defense-stat-tile.tsx",
+        "src/components/character-creator/steps/equipment-step.tsx",
+        "src/components/character-creator/steps/equipment/",
+        "src/components/character-creator/steps/finalize-step.tsx",
+        "src/components/character-creator/steps/finalize/",
+        "src/components/character-creator/steps/powers-step.tsx",
+        "src/components/character-creator/steps/powers/",
+        "src/lib/creator/advanced-powers-selectable.ts",
+        "src/lib/creator/advanced-powers-selectable.test.ts",
+        "src/components/character-creator/steps/feats-step.tsx",
+        "src/components/character-creator/steps/feats/",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ],
+      "related_overlap": [
+        "src/components/character-sheet/sheet-header.tsx",
+        "src/components/character-sheet/sheet-resource-input.tsx",
+        "src/components/character-sheet/sheet-large-stat-block.tsx",
+        "src/components/character-sheet/sheet-header-identity.tsx",
+        "src/components/character-sheet/sheet-header-resources.tsx",
+        "src/components/character-sheet/library-section.tsx",
+        "src/components/character-sheet/library-section-props.ts",
+        "src/components/character-sheet/library-tab-config.ts",
+        "src/components/character-sheet/use-library-section-rows.ts",
+        "src/components/character-sheet/use-library-tab-navigation.tsx",
+        "src/components/character-sheet/library-powers-panel.tsx",
+        "src/components/character-sheet/library-inventory-panel.tsx",
+        "src/components/character-sheet/abilities-section.tsx",
+        "src/components/character-sheet/abilities-section-model.ts",
+        "src/components/character-sheet/ability-stat-tile.tsx",
+        "src/components/character-sheet/defense-stat-tile.tsx",
+        "src/components/character-creator/steps/equipment-step.tsx",
+        "src/components/character-creator/steps/equipment/",
+        "src/components/character-creator/steps/finalize-step.tsx",
+        "src/components/character-creator/steps/finalize/",
+        "src/components/character-creator/steps/powers-step.tsx",
+        "src/components/character-creator/steps/powers/",
+        "src/lib/creator/advanced-powers-selectable.ts",
+        "src/lib/creator/advanced-powers-selectable.test.ts",
+        "src/components/character-creator/steps/feats-step.tsx",
+        "src/components/character-creator/steps/feats/",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ]
+    },
+    {
       "id": "TASK-596",
       "title": "Extract Advanced equipment-step catalog into lib (guided parity)",
       "status": "done",
       "completed_at": "2026-07-20",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "ccba826b0b83deb3fec34899ba01f947dbf645cf",
+          "subject": "Merge pull request #80 from MastersoftheRealm/cursor/task-596-advanced-equipment-catalog-6c97",
+          "files": []
+        },
+        {
+          "hash": "28d9924ea052b938e332ea66549c25739ae2f22e",
+          "subject": "TASK-596: cleanup — drop dead exports; wire currency to guided",
+          "files": [
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/lib/creator/advanced-equipment-catalog.test.ts",
+            "src/lib/creator/advanced-equipment-catalog.ts"
+          ]
+        },
+        {
+          "hash": "2c8088e12d82cb22e894d20d6fdcfa1d6387f951",
+          "subject": "TASK-596: Refresh task reconcile report after validate",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "902f1e8c0fc9099381b2062d1f8855819ffaabc2",
           "subject": "TASK-596: Extract Advanced equipment catalog/budget into lib",
