@@ -105,8 +105,7 @@ function collectEquipmentRefs(
   level1.equipmentRecommendations?.forEach(add);
   level1.sharedEquipment?.forEach(add);
   level1.guidance_groups?.forEach((g) => {
-    parseIdQuantityStrings((g.armaments ?? []).map(String)).forEach(add);
-    parseIdQuantityStrings((g.equipment ?? []).map(String)).forEach(add);
+    parseIdQuantityStrings([...(g.armaments ?? []), ...(g.equipment ?? [])]).forEach(add);
   });
 
   return Array.from(byId.values());

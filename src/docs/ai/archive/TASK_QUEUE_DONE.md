@@ -23,6 +23,8 @@
     - Deleted guided-path-detail-modal local parseItemRef.
     - Guidance-group armaments/equipment refs parse via parseIdQuantityStrings.
     - Added unit coverage for first-colon split (canonical vs former lastIndexOf).
+    - `/cleanup`: drop redundant .map(String); one parse call per guidance group;
+      FEATURE_INDEX “admin parsers” → shared parsers (TASK-476/570).
   notes: |
     Filed from /debt 2026-07-19. Lib consolidation — no manual QA suite.
   evidence: |
