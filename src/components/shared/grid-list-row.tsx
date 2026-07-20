@@ -1035,4 +1035,3 @@ export const GridListRow = memo(function GridListRow({
 
 GridListRow.displayName = 'GridListRow';
 
-export default GridListRow;

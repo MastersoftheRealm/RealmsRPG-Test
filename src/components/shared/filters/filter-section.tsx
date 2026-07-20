@@ -140,4 +140,3 @@ export function FilterSection({
 }
 
 export type { FilterSectionProps };
-export default FilterSection;

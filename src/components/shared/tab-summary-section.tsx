@@ -124,4 +124,3 @@ export function SummaryRow({ children, className }: SummaryRowProps) {
   );
 }
 
-export default TabSummarySection;

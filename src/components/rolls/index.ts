@@ -10,4 +10,3 @@ export type {
   CampaignRollContext,
 } from './roll-context';
 export { RollLog, RollEntryCard } from './roll-log';
-export type { DieType } from '@/lib/rolls/die';

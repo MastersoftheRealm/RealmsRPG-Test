@@ -233,4 +233,3 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
   );
 }
 
-export default CraftingItemSelectModal;

@@ -19,7 +19,7 @@ function snap(partial: Partial<InnatePowerSnapshot> & { id: string }): InnatePow
 }
 
 describe('innate-eligibility', () => {
-  it('getLevel1InnateBudget uses progression (Power 16 / PM 6), not getInnateEnergyMax', () => {
+  it('getLevel1InnateBudget uses progression (Power 16 / PM 6), not ARCHETYPE_CONFIGS.innateEnergy threshold', () => {
     expect(getLevel1InnateBudget('power')).toEqual({
       innateThreshold: 8,
       innatePools: 2,

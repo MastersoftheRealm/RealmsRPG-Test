@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 15 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 14 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` filed TASK-601–606. Quality pseudo `/global-audit` → TASK-607–613 ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` filed TASK-601–606. Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -339,30 +339,6 @@ Do **not** read the done archive at session start.
     Was TASK-605 pre-renumber. Prefer TASK-604 weapon-attack wire before splitting creature-stat-block.
     Default Implementer path = private co-located files (Architect if new barrel API).
 
----
-
-- id: TASK-612
-  title: Docs corpus hygiene — changelog rotation + archive index honesty
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/docs/ai/AI_CHANGELOG.md
-    - src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md
-    - src/docs/ai/archive/HISTORY_INDEX.md
-    - src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md
-    - src/docs/ai/ACTIVE_TASKS.md
-  description: |
-    Live AI_CHANGELOG is ~240KB; archive + docs tree are large. Rotate entries older than ~60 days
-    into AI_CHANGELOG_ARCHIVE per `/debt` checklist; ensure HISTORY_INDEX points at the quality
-    audit; scrub any live-sounding claims in hot-path docs that lag code (no theater-only rewrites).
-  acceptance_criteria:
-    - Entries older than ~60 days moved from AI_CHANGELOG.md → archive/AI_CHANGELOG_ARCHIVE.md.
-    - Live changelog remains the recent working set; HISTORY_INDEX lists QUALITY_GLOBAL_AUDIT_2026-07-20.
-    - No deletion of historical audit dumps without owner ack.
-    - `npm run tasks:validate-docs` (or full `tasks:validate`) passes.
-  notes: Was TASK-606 pre-renumber. First slice debt-safe under `/debt docs-only`. HISTORY_INDEX already lists the quality audit.
 
 ---
 

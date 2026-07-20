@@ -1176,4 +1176,3 @@ export function CreatureStatBlock({
   );
 }
 
-export default CreatureStatBlock;

@@ -2,7 +2,6 @@ export { formatTraitRecoveryLabel } from './format-recovery';
 export {
   traitToDetailOption,
   featToDetailOption,
-  propertyChipsFromRefs,
   factChip,
   usesFactChips,
   type DetailOptionTraitLike,
