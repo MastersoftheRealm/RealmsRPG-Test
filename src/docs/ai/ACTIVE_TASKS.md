@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 7 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 6 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Audit multitask: TASK-593 + TASK-595 done. Remaining from `/global-audit`: TASK-594, 596–599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** Audit multitask: TASK-593, 595, 597 done. Remaining from `/global-audit`: TASK-594, 596, 598–599. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -121,35 +121,6 @@ Do **not** read the done archive at session start.
     - No new parallel budget chrome; do not force LoadoutBudgetBar into Advanced without ack.
   notes: |
     Product decision: keep Advanced inline catalog vs migrate add onto USM — default keep list UX.
-
----
-
-- id: TASK-597
-  title: Campaign RM character view reuses sheet derived assemble
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
-    - src/components/character-sheet/use-character-sheet-derived.ts
-    - src/components/character-sheet/character-sheet-body.tsx
-    - src/app/(main)/characters/[id]/character-sheet-utils.ts
-    - src/app/(main)/characters/[id]/page.tsx
-  description: |
-    Campaign read-only character view (~355 LOC) re-assembles enrichment, calculateStats,
-    and section props instead of `useCharacterSheetDerived` / `CharacterSheetBody`. Wire
-    read-only mode through existing sheet assemble so Temp Modifier / library props stay
-    in parity with owner sheet.
-  acceptance_criteria:
-    - Campaign view uses sheet derived (or a read-only facade) — no parallel enrich/stats glue.
-    - Read-only: no edit/modals that mutate; rolls/log still work if currently present.
-    - Temp modifiers / library visibility match owner sheet display.
-    - Build + smoke open a campaign character view.
-  notes: |
-    Prefer extending CharacterSheetBody/context with isReadOnly over forking sections.
-
----
 
 - id: TASK-598
   title: Split oversized sheet + Advanced creator hot files

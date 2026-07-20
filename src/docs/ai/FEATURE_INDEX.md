@@ -38,7 +38,7 @@
 | Creature creator | `creature-creator/page.tsx` (shell) + `use-creature-creator-workspace.ts` + `creature-creator-editor.tsx` (TASK-381 Phases 4–5) + `creature-skill-utils.ts`; `CreatorPageShell` + reset confirm |
 | Crafting (sessions + enhanced items) | `crafting/page.tsx`, `crafting/[id]/page.tsx` |
 | Encounters | `encounters/page.tsx`, `encounters/[id]/page.tsx`, `encounters/[id]/combat/page.tsx`, `encounters/[id]/mixed/page.tsx`, `encounters/[id]/skill/page.tsx` |
-| Campaigns | `campaigns/page.tsx` |
+| Campaigns | `campaigns/page.tsx`; RM character view `campaigns/[id]/view/[userId]/[characterId]/page.tsx` — read-only `useCharacterSheetDerived` + `CharacterSheetBody` (TASK-597) |
 | Admin (official content, users, tooltips) | `admin/page.tsx` |
 | Account / profile | `my-account/page.tsx` — includes tutorials on/off (TASK-388 localStorage) |
 | Post-activation onboarding (play together, sheet tour, level-up guides) | `components/onboarding/` (`PlayTogetherModal`, `SheetTourOfferModal`, `SheetTour`, `LevelUpGuideCard`); prefs `lib/onboarding-preferences.ts`; guide builder `lib/level-up-guide.ts`; highlight helper `lib/sheet-tour-highlight.ts`; wired from guided `reveal-step` + advanced `finalize-step` + sheet page |

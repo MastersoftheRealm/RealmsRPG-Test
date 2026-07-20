@@ -1,3 +1,31 @@
+- id: TASK-597
+  title: Campaign RM character view reuses sheet derived assemble
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-20
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/components/character-sheet/use-character-sheet-derived.ts
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/app/(main)/characters/[id]/character-sheet-utils.ts
+    - src/app/(main)/characters/[id]/page.tsx
+  description: |
+    Campaign read-only character view (~355 LOC) re-assembles enrichment, calculateStats,
+    and section props instead of `useCharacterSheetDerived` / `CharacterSheetBody`. Wire
+    read-only mode through existing sheet assemble so Temp Modifier / library props stay
+    in parity with owner sheet.
+  acceptance_criteria:
+    - Campaign view uses sheet derived (or a read-only facade) — no parallel enrich/stats glue.
+    - Read-only: no edit/modals that mutate; rolls/log still work if currently present.
+    - Temp modifiers / library visibility match owner sheet display.
+    - Build + smoke open a campaign character view.
+  notes: |
+    Wired campaign RM view onto useCharacterSheetDerived + CharacterSheetProvider/Body;
+    read-only no-op handlers; rolls/log retained. verification_status pending-qa.
 - id: TASK-593
   title: Move RollProvider/RollLog out of character-sheet into shared roll domain
   created_at: 2026-07-20

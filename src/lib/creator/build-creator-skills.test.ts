@@ -22,8 +22,8 @@ describe('buildCreatorSkillSaveRows', () => {
       ])
     );
 
-    const lean = cleanForSave({ skills: rows } as Character);
-    const saved = lean.skills as Array<{ id?: string; skill_val?: number; prof?: boolean }>;
+    const lean = cleanForSave({ skills: rows } as unknown as Character);
+    const saved = lean.skills as unknown as Array<{ id?: string; skill_val?: number; prof?: boolean }>;
     expect(saved.find((s) => s.id === '10')).toMatchObject({ skill_val: 0, prof: true });
     expect(saved.find((s) => s.id === '20')).toMatchObject({ skill_val: 2, prof: true });
   });
