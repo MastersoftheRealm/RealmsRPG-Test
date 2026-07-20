@@ -25,5 +25,5 @@ TASK-586 wires v1 surfaces; this ADR locks the shared contract first.
 ## Consequences
 
 - Positive: one learn-once dual control; persist survives refresh/campaign; clear spend vs temp semantics for TASK-586.
-- Follow-ups: TASK-586 wires header (Speed/Evasion/DR/crit/Terminal), Abilities (+ resource-maxima toggle), Defenses, Skills; tighten pencil overspend locks.
+- Shipped: TASK-586 wired Abilities (+ resource-maxima), Defenses, Skills (dual pencil+Temp) and header scalars; TASK-600 removed header Speed/Evasion pencil so LargeStatBlocks are Temp-only.
 - Rejected: session-only temps (must persist); rewriting `speedBase`/`abilities` for temporary buffs; separate tip/tint systems per section.

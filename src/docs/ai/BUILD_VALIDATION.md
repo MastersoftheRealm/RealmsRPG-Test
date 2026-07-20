@@ -1397,18 +1397,6 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Expected** | All v1 surfaces support Temp Modifier with tint + persistence; ability cascade + HP/EN/TP toggle per ADR-0006; pencil spend locks on Abilities/Skills prevent intentional overspend; Speed/Evasion have no permanent-base pencil. |
 | **Report** | DEV-V-009-T034: PASS / FAIL / SKIP — |
 
-#### DEV-V-009-T038 — Speed/Evasion Temp Modifier only (TASK-600)
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-009 — Character sheet refactor |
-| **Task** | TASK-600 |
-| **Where** | `/characters/[id]` → Edit mode → header Speed / Evasion |
-| **Needs** | Editable character |
-| **Steps** | 1. Enter sheet edit mode. 2. On Speed and Evasion LargeStatBlocks, confirm only the Temp Modifier (sliders) control appears — no pencil. 3. Toggle Temp on Speed, adjust +/− — value tints; no “Base:” stepper appears. 4. Repeat for Evasion. 5. Confirm Abilities/Skills still show dual pencil+Temp. |
-| **Expected** | Speed/Evasion are Temp-only; rules `speedBase`/`evasionBase` are not editable from the sheet header; dual mode remains on Abilities/Skills. |
-| **Report** | DEV-V-009-T038: PASS / FAIL / SKIP — |
-
 #### DEV-V-009-T035 — Defense Score hover tip (TASK-587)
 
 | Field | Value |
@@ -1458,6 +1446,18 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Open Inventory on a character with Martial Proficiency set (Armament Proficiency shown). 2. Hover/focus the **i** beside the Armament Proficiency label. 3. Confirm tip explains the TP ceiling for weapons/armor (same copy as Path More details Weapons and Armor tip). 4. Optional ~360px: tip usable via touch-hold (`size="inline"`). |
 | **Expected** | Shared `armamentProficiencyHelp` from `tooltip-text.tsx`; no duplicate tip string; tip does not replace the numeric value. |
 | **Report** | DEV-V-009-T036: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T038 — Speed/Evasion Temp Modifier only (TASK-600)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-600 |
+| **Where** | `/characters/[id]` → Edit mode → header Speed / Evasion |
+| **Needs** | Editable character |
+| **Steps** | 1. Enter sheet edit mode. 2. On Speed and Evasion LargeStatBlocks, confirm only the Temp Modifier (sliders) control appears — no pencil. 3. Toggle Temp on Speed, adjust +/− — value tints; no “Base:” stepper appears. 4. Repeat for Evasion. 5. Confirm Abilities/Skills still show dual pencil+Temp. |
+| **Expected** | Speed/Evasion are Temp-only; rules `speedBase`/`evasionBase` are not editable from the sheet header; dual mode remains on Abilities/Skills. |
+| **Report** | DEV-V-009-T038: PASS / FAIL / SKIP — |
 
 ---
 
