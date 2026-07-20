@@ -22,24 +22,10 @@ import {
   pathCategoryGroupLabel,
 } from '@/lib/game/archetype-edit';
 import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
+import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy';
 import type { Archetype, ArchetypeCategory, AbilityName } from '@/types';
 import { InfoTippy } from '@/components/shared';
 import { chooseCharacterCreationStyle, martialAbility, powerAbility } from '../../../../public/tooltip-text';
-
-const ARCHETYPE_INFO: Record<ArchetypeCategory, { title: string; description: string }> = {
-  power: {
-    title: 'Power',
-    description: 'Focus on supernatural, magical, or extraordinary abilities. You excel at manipulating energy and casting powerful effects.',
-  },
-  'powered-martial': {
-    title: 'Powered-Martial',
-    description: 'A balanced blend of martial prowess and supernatural abilities. You can fight effectively while also wielding power.',
-  },
-  martial: {
-    title: 'Martial',
-    description: 'Master of physical combat and martial techniques. You rely on skill, training, and physical prowess.',
-  },
-};
 
 export function ArchetypeStep() {
   const {
@@ -153,8 +139,8 @@ export function ArchetypeStep() {
         <h2 className="text-2xl font-bold text-text-primary mb-2">Your Archetype</h2>
         
         <div className={cn('border-2 rounded-xl p-6 mb-6', statusPanel.complete)}>
-          <h3 className="text-xl font-bold text-success-fg mb-2">{draft.archetype?.name || ARCHETYPE_INFO[draft.archetype!.type].title}</h3>
-          <p className="text-success-fg mb-4">{draft.archetype?.description || ARCHETYPE_INFO[draft.archetype!.type].description}</p>
+          <h3 className="text-xl font-bold text-success-fg mb-2">{draft.archetype?.name || ARCHETYPE_CATEGORY_INFO[draft.archetype!.type].title}</h3>
+          <p className="text-success-fg mb-4">{draft.archetype?.description || ARCHETYPE_CATEGORY_INFO[draft.archetype!.type].description}</p>
           
           <div className="flex flex-wrap gap-2">
             {draft.creationMode && (
@@ -331,7 +317,7 @@ export function ArchetypeStep() {
             ← Back to guided paths
           </button>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {(Object.entries(ARCHETYPE_INFO) as [ArchetypeCategory, typeof ARCHETYPE_INFO.power][]).map(
+            {(Object.entries(ARCHETYPE_CATEGORY_INFO) as [ArchetypeCategory, typeof ARCHETYPE_CATEGORY_INFO.power][]).map(
               ([type, info]) => (
                 <button
                   key={type}

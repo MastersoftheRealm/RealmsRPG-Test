@@ -108,7 +108,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 
 **Expected**
 - **Forge Your Own** card shows selected styling.
-- Archetype type cards appear (**Power**, **Martial**, **Powered-Martial**).
+- Archetype type cards appear (**Power**, **Martial**, **Powered-Martial**) with fantasy category descriptions (supernatural focus / blend / martial master — shared `ARCHETYPE_CATEGORY_INFO`; TASK-599).
 - **Choose a Path** card is not selected.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -626,7 +626,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 |-------|-------|
 | **Suite** | DEV-V-008 — Archetype path completion |
 | **Section** | Edit archetype |
-| **Related task** | TASK-372, TASK-484, TASK-594 |
+| **Related task** | TASK-372, TASK-484, TASK-594, TASK-599 |
 | **Where** | Sheet edit mode → edit archetype |
 | **Needs** | Path character; edit mode enabled |
 
@@ -635,13 +635,14 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 2. Observe path view (read-only identity) — path name, abilities, proficiency; no creation chip.
 3. Click **Switch to Forge Your Own** or **Choose a Different Path**.
 4. On **Choose a Different Path**, confirm paths are grouped Power / Powered-Martial / Martial (`SelectionCard`, not GuidedChoiceCard); confirm before apply.
-5. On forge editor, ability picks use the same ability-button chrome as Advanced forge.
+5. On forge editor, ability picks use the same ability-button chrome as Advanced forge; type cards show the same fantasy category descriptions as Advanced forge (not proficiency-only blurbs).
 
 **Expected**
 - Path characters see read-only path card (not forge type picker first).
 - No **Forge Your Own Path** / **Archetype Path** creation chip on the path card.
 - Switch actions show **ConfirmActionModal** with data-loss warning before proceeding.
 - Path list grouping and forge ability buttons match Advanced creator (shared helpers).
+- Forge type card copy matches Advanced / creature selector (`ARCHETYPE_CATEGORY_INFO`).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

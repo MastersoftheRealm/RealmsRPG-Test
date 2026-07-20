@@ -15,6 +15,7 @@
  * | Privacy `/privacy` | `copy/privacy-copy.ts`        |
  * | Terms `/terms`     | `copy/terms-copy.ts`          |
  * | Character creator chooser + guided flow | `copy/guided-creator-copy.ts` |
+ * | Archetype category (Power / Martial / P-M) | `copy/archetype-category-copy.ts` |
  * | Footer             | `copy/footer-copy.ts`         |
  * | Tooltips           | `public/tooltip-text.tsx`     |
  *
@@ -41,6 +42,7 @@ export {
   RESOURCES_COPY,
   PRIVACY_COPY,
   TERMS_COPY,
+  ARCHETYPE_CATEGORY_INFO,
 } from './copy';
 
-export type { NavLink } from './copy';
+export type { NavLink, ArchetypeCategoryInfo } from './copy';

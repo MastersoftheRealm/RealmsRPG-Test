@@ -45,7 +45,8 @@
 | Account / profile | `my-account/page.tsx` — includes tutorials on/off (TASK-388 localStorage) |
 | Post-activation onboarding (play together, sheet tour, level-up guides) | `components/onboarding/` (`PlayTogetherModal`, `SheetTourOfferModal`, `SheetTour`, `LevelUpGuideCard`); prefs `lib/onboarding-preferences.ts`; guide builder `lib/level-up-guide.ts`; highlight helper `lib/sheet-tour-highlight.ts`; wired from guided `reveal-step` + advanced `finalize-step` + sheet page |
 | Rules / resources / about / privacy / terms | `rules`, `resources`, `about`, `privacy`, `terms` |
-| Site / marketing copy (edit prose here) | `lib/constants/copy/*-copy.ts` via `lib/constants/site-copy.ts` (landing, auth, about + carousel, nav, rules, resources, privacy, terms, footer, guided creator, onboarding; Discord URL + motto + contact email in `shared-copy.ts`). Tooltips: `public/tooltip-text.tsx`. Screenshot audit: `playwright.site-copy-audit.config.ts`. |
+| Site / marketing copy (edit prose here) | `lib/constants/copy/*-copy.ts` via `lib/constants/site-copy.ts` (landing, auth, about + carousel, nav, rules, resources, privacy, terms, footer, guided creator, onboarding, archetype category Power/Martial/P-M; Discord URL + motto + contact email in `shared-copy.ts`). Tooltips: `public/tooltip-text.tsx`. Screenshot audit: `playwright.site-copy-audit.config.ts`. |
+| Archetype category titles + descriptions (Power / Powered-Martial / Martial) | `lib/constants/copy/archetype-category-copy.ts` (`ARCHETYPE_CATEGORY_INFO`) — consumed by sheet Edit Archetype, Advanced forge step, creature `ArchetypeSelector` (icons stay local) |
 
 ## Data hooks (`src/hooks/`, import from `@/hooks`)
 

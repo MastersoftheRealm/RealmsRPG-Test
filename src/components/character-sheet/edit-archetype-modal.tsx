@@ -17,6 +17,7 @@ import { useCodexArchetypes } from '@/hooks';
 import { calculateProficiency } from '@/lib/game/formulas';
 import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
 import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
+import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy';
 import {
   ARCHETYPE_ABILITY_OPTIONS,
   PATH_CATEGORY_GROUPS,
@@ -30,23 +31,6 @@ import {
 } from '@/lib/game/archetype-edit';
 import { isPathCharacter } from '@/components/character-sheet/archetype-path-identity';
 import type { Character, ArchetypeCategory, AbilityName, Archetype } from '@/types';
-
-/** Sheet forge copy (proficiency-focused). Creator fantasy copy stays on Advanced until TASK-599. */
-const ARCHETYPE_INFO: Record<ArchetypeCategory, { title: string; description: string }> = {
-  power: {
-    title: 'Power',
-    description: 'All proficiency points in Power. Choose your Power ability.',
-  },
-  'powered-martial': {
-    title: 'Powered-Martial',
-    description:
-      'Proficiency split between Power and Martial (more in Martial if odd total). Choose both abilities.',
-  },
-  martial: {
-    title: 'Martial',
-    description: 'All proficiency points in Martial. Choose your Martial ability.',
-  },
-};
 
 const PATH_SWITCH_WARNING =
   'Changing your archetype path updates your identity and abilities. Existing feats, powers, techniques, armaments, and equipment may no longer match the new path. Nothing is removed automatically. Review your sheet afterward.';
@@ -345,7 +329,7 @@ export function EditArchetypeModal({
             <div>
               <h3 className="text-sm font-medium text-text-primary mb-2">Archetype Type</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {(Object.entries(ARCHETYPE_INFO) as [ArchetypeCategory, typeof ARCHETYPE_INFO.power][]).map(
+                {(Object.entries(ARCHETYPE_CATEGORY_INFO) as [ArchetypeCategory, typeof ARCHETYPE_CATEGORY_INFO.power][]).map(
                   ([type, info]) => (
                     <button
                       key={type}

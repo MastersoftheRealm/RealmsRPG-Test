@@ -11,6 +11,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { PoweredMartialSlider } from '@/components/shared';
+import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy';
 
 export type ArchetypeType = 'martial' | 'power' | 'powered-martial';
 
@@ -33,22 +34,11 @@ export interface ArchetypeSelectorProps {
   disabled?: boolean;
 }
 
-const ARCHETYPE_INFO: Record<ArchetypeType, { title: string; description: string; icon: string }> = {
-  martial: {
-    title: 'Martial',
-    description: 'Focus on physical combat, techniques, and weaponry. All proficiency goes to martial prowess.',
-    icon: '⚔️',
-  },
-  power: {
-    title: 'Power',
-    description: 'Focus on supernatural abilities and powers. All proficiency goes to power mastery.',
-    icon: '✨',
-  },
-  'powered-martial': {
-    title: 'Powered-Martial',
-    description: 'Balanced blend of martial prowess and supernatural abilities. Allocate proficiency between both.',
-    icon: '⚡',
-  },
+/** Selector-only icons; titles/descriptions come from ARCHETYPE_CATEGORY_INFO. */
+const ARCHETYPE_ICONS: Record<ArchetypeType, string> = {
+  martial: '⚔️',
+  power: '✨',
+  'powered-martial': '⚡',
 };
 
 export function ArchetypeSelector({
@@ -92,7 +82,7 @@ export function ArchetypeSelector({
         compact ? 'grid-cols-3' : 'grid-cols-1 sm:grid-cols-3'
       )}>
         {(['martial', 'power', 'powered-martial'] as ArchetypeType[]).map((type) => {
-          const info = ARCHETYPE_INFO[type];
+          const info = ARCHETYPE_CATEGORY_INFO[type];
           const isSelected = value === type;
 
           return (
@@ -109,7 +99,7 @@ export function ArchetypeSelector({
               )}
             >
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-2xl">{info.icon}</span>
+                <span className="text-2xl" aria-hidden="true">{ARCHETYPE_ICONS[type]}</span>
                 <h4 className="font-bold text-primary-fg">{info.title}</h4>
               </div>
               {!compact && (
