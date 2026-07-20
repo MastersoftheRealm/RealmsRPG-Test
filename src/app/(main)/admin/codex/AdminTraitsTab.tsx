@@ -400,12 +400,7 @@ export function AdminTraitsTab() {
             <p className="text-xs text-text-muted dark:text-text-secondary mb-2">
               When set, this trait becomes a choice trait: the player selects it then picks one option from this list. Expand rows to see descriptions.
             </p>
-            {/*
-              Intentional admin editor chrome (TASK-572): inline multi-select lives inside the
-              trait edit Modal — not an add-X selection modal. Do not wrap in UnifiedSelectionModal
-              (nested modal). useModalListState + ListHeader + GridListRow keep search/sort/GLR
-              grammar; AdminSpecies trait Add uses USM instead.
-            */}
+            {/* DESIGN_INTENT: choice options = inline editor chrome (not nested USM). TASK-572 */}
             <SearchInput
               value={choiceSearch}
               onChange={setChoiceSearch}

@@ -265,13 +265,11 @@ export function AdminSpeciesTab() {
     const ids = selected.map((s) => String(s.id));
     setForm((f) => {
       const existing = new Set(f[field].map(String));
-      const next = [...f[field]];
-      for (const id of ids) {
-        if (!existing.has(id)) next.push(id);
-      }
-      return { ...f, [field]: next };
+      return {
+        ...f,
+        [field]: [...f[field], ...ids.filter((id) => !existing.has(id))],
+      };
     });
-    // UnifiedSelectionModal closes via onClose after onConfirm — clear field there too.
   };
 
   const handleSave = async () => {

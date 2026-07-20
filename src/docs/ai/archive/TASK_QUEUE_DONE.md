@@ -11,6 +11,7 @@
     - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
     - src/app/(main)/admin/codex/AdminTraitsTab.tsx
     - src/hooks/use-modal-list-state.ts
+    - src/components/shared/grid-list-row-chrome.ts
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/guide/02-components-and-lists.md
     - src/docs/ai/BUILD_VALIDATION.md
