@@ -13,8 +13,15 @@ import { ChevronLeft } from 'lucide-react';
 import { apiFetch } from '@/lib/api-client';
 import { ProtectedRoute } from '@/components/layout';
 import { LoadingState, Alert, PageContainer } from '@/components/ui';
-import { SheetHeader, AbilitiesSection, SkillsSection, ArchetypeSection, LibrarySection, RollLog } from '@/components/character-sheet';
-import { RollProvider } from '@/components/character-sheet/roll-context';
+import {
+  SheetHeader,
+  AbilitiesSection,
+  SkillsSection,
+  ArchetypeSection,
+  LibrarySection,
+  RollLog,
+  RollProvider,
+} from '@/components/character-sheet';
 import { calculateStats } from '@/app/(main)/characters/[id]/character-sheet-utils';
 import { enrichCharacterData } from '@/lib/data-enrichment';
 import {

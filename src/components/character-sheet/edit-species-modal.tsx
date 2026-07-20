@@ -281,7 +281,7 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
       fullScreenOnMobile
       flexLayout
     >
-      <div className="space-y-4 md:max-h-[70vh] md:overflow-y-auto">
+      <div className="space-y-4">
         {step === 'species' && (
           <>
             <p className="text-sm text-text-secondary">

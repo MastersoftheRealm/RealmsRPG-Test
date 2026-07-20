@@ -350,7 +350,7 @@ export function EditArchetypeModal({
             ) : pathOptions.length === 0 ? (
               <p className="text-text-secondary text-sm">No other archetype paths are available in the codex.</p>
             ) : (
-              <div className="space-y-5 md:max-h-[50vh] md:overflow-y-auto pr-1">
+              <div className="space-y-5">
                 {(['power', 'powered-martial', 'martial'] as const).map((group) => {
                   const options = pathOptions.filter((option) => option.type === group);
                   if (options.length === 0) return null;
