@@ -116,6 +116,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-607** | DEV-V-019 **T011** (+ smoke) | Crafting session `/crafting/<id>`: load, change quantity/options (requirements update), enter roll, Complete Crafting; no blank flash |
 | **TASK-606** | DEV-V-001 **T014 / T016** | Advanced equipment/powers/finalize: Currency + Training Points (+ Energy on finalize) via LoadoutBudgetBar → PointStatus; no CreatorResourceBar / dual L1 chrome |
 | **TASK-604** | DEV-V-025 **T004** | CreatureStatBlock Weapons Attack: melee→STR, Finesse→AGI, ranged→ACU, Thrown→STR (+ martial prof); matches sheet helper |
 | **TASK-603** | DEV-V-026 **T005 / T010** | Advanced finalize + Guided reveal share CreatorPortraitUpload (crop + bank pick); save-time portrait upload/errors via getErrorMessage |

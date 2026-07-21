@@ -38,7 +38,7 @@
 | Item (armament) creator | `item-creator/page.tsx` (shell + bootstrap) + `use-item-creator-workspace.ts` + `item-creator-editor.tsx` (TASK-381) — chrome: `CreatorPageShell` |
 | Species creator | `species-creator/page.tsx` (shell) + `use-species-creator-workspace.ts` + `species-creator-editor.tsx` / bootstrap (TASK-601); Load ungated — chrome: `CreatorPageShell` |
 | Creature creator | `creature-creator/page.tsx` (shell) + `use-creature-creator-workspace.ts` + `creature-creator-editor.tsx` (TASK-381 Phases 4–5) + `creature-skill-utils.ts`; `CreatorPageShell` + reset confirm |
-| Crafting (sessions + enhanced items) | `crafting/page.tsx`, `crafting/[id]/page.tsx` |
+| Crafting (sessions + enhanced items) | `crafting/page.tsx`, `crafting/[id]/page.tsx` facade (TASK-607) + `_components/` (`use-crafting-tool-page`, helpers, summary sidebar, item-options / adjustments / rolls / optional-rules / outcome panels); item picker `components/crafting/CraftingItemSelectModal` |
 | Encounters | `encounters/page.tsx`, `encounters/[id]/page.tsx`, `encounters/[id]/combat/page.tsx`, `encounters/[id]/mixed/page.tsx`, `encounters/[id]/skill/page.tsx` |
 | Campaigns | `campaigns/page.tsx`; RM character view `campaigns/[id]/view/[userId]/[characterId]/page.tsx` — read-only `useCharacterSheetDerived` + `CharacterSheetBody` (TASK-597) |
 | Admin hub | `admin/page.tsx` — links Codex editor, public-library, images, users, roles, core-rules, changelogs (no tooltips admin) |

@@ -4336,7 +4336,7 @@ Verifies behavior parity after removing setState-in-effect / fixing exhaustive-d
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-019 |
-| **Related task** | TASK-430 |
+| **Related task** | TASK-430 · TASK-607 (facade smoke) |
 | **Where** | `/crafting/<sessionId>`, any large Modal, character sheet header HP/EN, Archetype PoweredMartialSlider |
 | **Needs** | Crafting session (or create one); character with powered-martial archetype |
 

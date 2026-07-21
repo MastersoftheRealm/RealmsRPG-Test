@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-606, 604, 603, 602, 601, 600, 599, 598, 596, 594, 597, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-607, 606, 604, 603, 602, 601, 600, 599, 598, 596, 594, 597, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 9 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 8 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` TASK-601–606 done; filed TASK-614 (LoadoutBudgetBar → shared, Architect). Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` TASK-601–606 done; filed TASK-614 (LoadoutBudgetBar → shared, Architect). Quality pseudo `/global-audit` → TASK-608–611, 613 (TASK-607/612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -60,29 +60,6 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
-
----
-
-- id: TASK-607
-  title: Split crafting [id] page under ~500 LOC facade
-  created_at: 2026-07-20
-  created_by: agent
-  priority: high
-  status: not-started
-  related_files:
-    - src/app/(main)/crafting/[id]/page.tsx
-    - src/services/crafting-service.ts
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    Crafting session page is the largest TSX hotspot (~2009 LOC). Follow TASK-598 pattern:
-    extract co-located panels/hooks/helpers; keep a thin page facade under ~500 LOC; no behavior
-    change; no parallel crafting UI system.
-  acceptance_criteria:
-    - `crafting/[id]/page.tsx` facade ≤ ~500 LOC (prefer net move of presentation/helpers out).
-    - Named exports / routes unchanged; FEATURE_INDEX updated if paths move.
-    - `npm run build` passes; smoke crafting session load/roll/save if touched.
-    - No new shared/ui barrel symbols unless Architect path.
-  notes: Largest single play-loop readability win (quality audit 2026-07-20). Was TASK-601 pre-renumber.
 
 ---
 
