@@ -1,3 +1,57 @@
+- id: TASK-611
+  title: Split shared + data-enrichment hot modules (co-located)
+  created_at: 2026-07-20
+  completed_at: 2026-07-21
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/creature-stat-block.tsx
+    - src/components/shared/creature-stat-block-types.ts
+    - src/components/shared/creature-stat-block-helpers.ts
+    - src/components/shared/creature-stat-block-section.tsx
+    - src/components/shared/creature-stat-block-display-data.ts
+    - src/components/shared/creature-stat-block-panels.tsx
+    - src/components/shared/entity-library-sections.tsx
+    - src/components/shared/entity-library-sections-types.ts
+    - src/components/shared/entity-library-sections-columns.ts
+    - src/components/shared/entity-library-sections-rows.tsx
+    - src/components/shared/entity-library-powers-techniques.tsx
+    - src/components/shared/entity-library-inventory.tsx
+    - src/components/shared/entity-library-feats.tsx
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/grid-list-row-types.ts
+    - src/components/shared/grid-list-row-columns.ts
+    - src/components/shared/grid-list-row-detail.tsx
+    - src/components/shared/grid-list-row-expanded.tsx
+    - src/components/shared/grid-list-row-collapsed.tsx
+    - src/components/shared/grid-list-row-chrome.ts
+    - src/lib/data-enrichment.ts
+    - src/lib/data-enrichment/types.ts
+    - src/lib/data-enrichment/find-in-library.ts
+    - src/lib/data-enrichment/enrich-powers.ts
+    - src/lib/data-enrichment/enrich-techniques.ts
+    - src/lib/data-enrichment/enrich-items.ts
+    - src/lib/data-enrichment/enrich-character.ts
+    - src/lib/data-enrichment/clean-for-save.ts
+    - src/docs/ai/ADR/0007-colocated-shared-hot-module-extracts.md
+    - scripts/shared-ui-allowlist.json
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  completed_work: |
+    Co-located private extracts for creature-stat-block, entity-library-sections, grid-list-row, and data-enrichment. Facades: 260 / 44 / 326 / 20 LOC. No new shared barrel exports; ADR-0007 + allowlist for private shared siblings. Vitest: grid-list-row-chrome + cleanForSave consumers. npm run build passes.
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T002
+      - DEV-V-009-T011
+      - DEV-V-009-T013
+      - DEV-V-009-T031
+  developer_test_plan: |
+    DEV-V-009 T002/T011/T013/T031 on character sheet Library + GridListRow parts collapse; smoke creature Library/CreatureStatBlock nested lists.
+
+---
 
 - id: TASK-610
   title: Split remaining creator hot files under ~500 LOC

@@ -29,3 +29,4 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0004 | PathGuidanceGroup audience (character vs archetype) | Accepted |
 | 0005 | Codex browse list shell | Accepted |
 | 0006 | Temp Modifier mode (dual affordance + persist) | Accepted |
+| 0007 | Co-located private extracts for shared hot modules | Accepted |
