@@ -94,6 +94,26 @@ export function getEffectiveCraftingEnergy(
     : energyCost;
 }
 
+/** Uses-count choices for full/partial recovery selects. */
+export function getUsesCountOptions(
+  rules: CraftingRules | undefined,
+  usesType: UsesType
+): number[] {
+  const table = rules?.multipleUseTable ?? [];
+  const values =
+    usesType === 'full'
+      ? table
+          .map((row) => (typeof row.fullRecovery === 'number' ? row.fullRecovery : null))
+          .filter((n): n is number => n != null)
+      : table
+          .map((row) =>
+            typeof row.partialRecovery === 'number' ? row.partialRecovery : null
+          )
+          .filter((n): n is number => n != null);
+  const unique = Array.from(new Set(values)).sort((a, b) => a - b);
+  return unique.length ? unique : [1];
+}
+
 export function getSessionDsForIndex(args: {
   index: number;
   effectiveDS: number;

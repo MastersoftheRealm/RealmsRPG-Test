@@ -7,7 +7,6 @@
 import { Button, Input } from '@/components/ui';
 import { ValueStepper } from '@/components/shared';
 import { CollapsibleSection } from '@/components/creator';
-import { getMultipleUseAdjustedEnergy } from '@/lib/game/crafting-utils';
 import type { CraftingRules } from '@/types/core-rules';
 import type {
   CraftingSession as CraftingSessionType,
@@ -19,6 +18,9 @@ import {
   type PowerOption,
   type UsesType,
   findMultipleUseIndexForConfig,
+  resolveMultipleUseIndex,
+  getEffectiveCraftingEnergy,
+  getUsesCountOptions,
 } from './crafting-tool-helpers';
 
 type Props = {
@@ -404,54 +406,28 @@ export function CraftingItemOptionsSection({
                             onChange={(e) => {
                               const nextType = e.target.value as UsesType;
                               if (nextType === 'permanent') {
-                                const idx = findMultipleUseIndexForConfig(
-                                  rulesData,
-                                  'permanent',
-                                  undefined
-                                );
                                 updateData({
                                   usesType: 'permanent',
                                   usesCount: undefined,
-                                  multipleUseTableIndex: idx >= 0 ? idx : session.data.multipleUseTableIndex ?? -1,
+                                  multipleUseTableIndex: resolveMultipleUseIndex(
+                                    rulesData,
+                                    'permanent',
+                                    undefined,
+                                    session.data.multipleUseTableIndex
+                                  ),
                                 });
                                 return;
                               }
-                              const table = rulesData.multipleUseTable ?? [];
-                              const counts =
-                                nextType === 'full'
-                                  ? Array.from(
-                                      new Set(
-                                        table
-                                          .map((row) =>
-                                            typeof row.fullRecovery === 'number'
-                                              ? row.fullRecovery
-                                              : null
-                                          )
-                                          .filter((n): n is number => n != null)
-                                      )
-                                    ).sort((a, b) => a - b)
-                                  : Array.from(
-                                      new Set(
-                                        table
-                                          .map((row) =>
-                                            typeof row.partialRecovery === 'number'
-                                              ? row.partialRecovery
-                                              : null
-                                          )
-                                          .filter((n): n is number => n != null)
-                                      )
-                                    ).sort((a, b) => a - b);
-                              const defaultCount = counts[0] ?? 1;
-                              const idx = findMultipleUseIndexForConfig(
-                                rulesData,
-                                nextType,
-                                defaultCount
-                              );
+                              const defaultCount = getUsesCountOptions(rulesData, nextType)[0] ?? 1;
                               updateData({
                                 usesType: nextType,
                                 usesCount: defaultCount,
-                                multipleUseTableIndex:
-                                  idx >= 0 ? idx : session.data.multipleUseTableIndex ?? -1,
+                                multipleUseTableIndex: resolveMultipleUseIndex(
+                                  rulesData,
+                                  nextType,
+                                  defaultCount,
+                                  session.data.multipleUseTableIndex
+                                ),
                               });
                             }}
                             className="w-full max-w-xs rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
@@ -474,44 +450,19 @@ export function CraftingItemOptionsSection({
                               value={usesCount}
                               onChange={(e) => {
                                 const nextCount = Number(e.target.value) || 1;
-                                const idx = findMultipleUseIndexForConfig(
-                                  rulesData,
-                                  usesType,
-                                  nextCount
-                                );
                                 updateData({
                                   usesCount: nextCount,
-                                  multipleUseTableIndex:
-                                    idx >= 0
-                                      ? idx
-                                      : session.data.multipleUseTableIndex ?? -1,
+                                  multipleUseTableIndex: resolveMultipleUseIndex(
+                                    rulesData,
+                                    usesType,
+                                    nextCount,
+                                    session.data.multipleUseTableIndex
+                                  ),
                                 });
                               }}
                               className="w-full max-w-[120px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
                             >
-                              {((): number[] => {
-                                const table = rulesData.multipleUseTable ?? [];
-                                const values =
-                                  usesType === 'full'
-                                    ? table
-                                        .map((row) =>
-                                          typeof row.fullRecovery === 'number'
-                                            ? row.fullRecovery
-                                            : null
-                                        )
-                                        .filter((n): n is number => n != null)
-                                    : table
-                                        .map((row) =>
-                                          typeof row.partialRecovery === 'number'
-                                            ? row.partialRecovery
-                                            : null
-                                        )
-                                        .filter((n): n is number => n != null);
-                                const unique = Array.from(new Set(values)).sort(
-                                  (a, b) => a - b
-                                );
-                                return unique.length ? unique : usesType === 'full' ? [1] : [1];
-                              })().map((count) => (
+                              {getUsesCountOptions(rulesData, usesType).map((count) => (
                                 <option key={count} value={count}>
                                   {count}
                                 </option>
@@ -522,29 +473,20 @@ export function CraftingItemOptionsSection({
                       </div>
                       <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
                         Effective crafting energy:{' '}
-                        {(() => {
-                          if (!rulesData || !resolvedPowerRef) {
-                            return `${resolvedPowerRef?.energyCost ?? 0} EN`;
-                          }
-                          const idxFromConfig = findMultipleUseIndexForConfig(
-                            rulesData,
-                            usesType,
-                            usesCount
-                          );
-                          const idx =
-                            idxFromConfig >= 0
-                              ? idxFromConfig
-                              : (session.data.multipleUseTableIndex ?? -1);
-                          const effective =
-                            idx >= 0
-                              ? getMultipleUseAdjustedEnergy(
-                                  resolvedPowerRef.energyCost,
-                                  idx,
-                                  rulesData
-                                )
-                              : resolvedPowerRef.energyCost;
-                          return `${Math.ceil(effective)} EN`;
-                        })()}
+                        {!rulesData || !resolvedPowerRef
+                          ? `${resolvedPowerRef?.energyCost ?? 0} EN`
+                          : `${Math.ceil(
+                              getEffectiveCraftingEnergy(
+                                resolvedPowerRef.energyCost,
+                                resolveMultipleUseIndex(
+                                  rulesData,
+                                  usesType,
+                                  usesCount,
+                                  session.data.multipleUseTableIndex
+                                ),
+                                rulesData
+                              )
+                            )} EN`}
                       </p>
                     </div>
                   ) : null}

@@ -38,6 +38,7 @@
     - Extracted helpers + `useCraftingToolPage` + six co-located panels under `crafting/[id]/_components/`.
     - Page facade ~190 LOC (was ~2009); default export / route unchanged; no new shared/ui symbols.
     - FEATURE_INDEX crafting row updated.
+    - /cleanup: deleted unused `CraftingToolPageModel`; wired panels onto shared helper APIs (energy/DS/uses counts).
   notes: |
     Largest single play-loop readability win (quality audit 2026-07-20). Was TASK-601 pre-renumber.
   evidence: |

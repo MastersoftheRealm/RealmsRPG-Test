@@ -13,6 +13,7 @@ import type {
   CraftingRollSession,
 } from '@/types/crafting';
 import type { RequirementsBreakdown } from './crafting-tool-helpers';
+import { getSessionDsForIndex } from './crafting-tool-helpers';
 
 type CraftSubSkill = { id: string; name: string };
 
@@ -94,18 +95,14 @@ export function CraftingRollsSection({
           const hasRoll = s.roll != null;
           const isSuccess = hasRoll && s.successes > 0;
           const isFailure = hasRoll && s.failures > 0;
-          let dsForSession = effectiveDS;
-          if (
-            isEnhanced &&
-            session.data.craftBaseItemAlso &&
-            requirementsBreakdown
-          ) {
-            const baseCount = requirementsBreakdown.baseItemReq.requiredSuccesses;
-            const baseDs = requirementsBreakdown.baseItemReq.difficultyScore;
-            const enhDs = requirementsBreakdown.enhancementReq.difficultyScore;
-            const baseOrEnhDs = i < baseCount ? baseDs : enhDs;
-            dsForSession = baseOrEnhDs + (session.data.dsModifier ?? 0);
-          }
+          const dsForSession = getSessionDsForIndex({
+            index: i,
+            effectiveDS,
+            dsModifier: session.data.dsModifier ?? 0,
+            isEnhanced,
+            craftBaseItemAlso: !!session.data.craftBaseItemAlso,
+            requirementsBreakdown,
+          });
           return (
             <div
               key={s.label}

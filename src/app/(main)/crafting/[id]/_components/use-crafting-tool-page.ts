@@ -640,5 +640,3 @@ export function useCraftingToolPage() {
     mods,
   };
 }
-
-export type CraftingToolPageModel = ReturnType<typeof useCraftingToolPage>;

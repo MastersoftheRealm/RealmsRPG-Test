@@ -8,9 +8,6 @@ import { Gauge, Coins, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
 import { CreatorSummaryPanel } from '@/components/creator';
-import {
-  getMultipleUseAdjustedEnergy,
-} from '@/lib/game/crafting-utils';
 import type { CraftingRequirements } from '@/lib/game/crafting-utils';
 import type {
   CraftingSession as CraftingSessionType,
@@ -20,7 +17,10 @@ import type {
 } from '@/types/crafting';
 import type { CraftingRules } from '@/types/core-rules';
 import type { RequirementsBreakdown, UsesType } from './crafting-tool-helpers';
-import { findMultipleUseIndexForConfig } from './crafting-tool-helpers';
+import {
+  resolveMultipleUseIndex,
+  getEffectiveCraftingEnergy,
+} from './crafting-tool-helpers';
 
 type LiveOutcome = {
   finalMaterialCost: number;
@@ -132,25 +132,20 @@ export function CraftingSummarySidebar({
                       },
                       {
                         label: 'Effective Energy',
-                        value: `${Math.ceil((() => {
-                          if (!rulesData) return resolvedPowerRef.energyCost;
-                          const idxFromConfig = findMultipleUseIndexForConfig(
-                            rulesData,
-                            usesType,
-                            usesCount
-                          );
-                          const idx =
-                            idxFromConfig >= 0
-                              ? idxFromConfig
-                              : (session.data.multipleUseTableIndex ?? -1);
-                          return idx >= 0
-                            ? getMultipleUseAdjustedEnergy(
+                        value: `${Math.ceil(
+                          rulesData
+                            ? getEffectiveCraftingEnergy(
                                 resolvedPowerRef.energyCost,
-                                idx,
+                                resolveMultipleUseIndex(
+                                  rulesData,
+                                  usesType,
+                                  usesCount,
+                                  session.data.multipleUseTableIndex
+                                ),
                                 rulesData
                               )
-                            : resolvedPowerRef.energyCost;
-                        })())} EN`,
+                            : resolvedPowerRef.energyCost
+                        )} EN`,
                       },
                       {
                         label: 'Base Craft Included',
