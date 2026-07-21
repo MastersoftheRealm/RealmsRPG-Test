@@ -116,6 +116,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-606** | DEV-V-001 **T014 / T016** | Advanced equipment/powers/finalize: Currency + Training Points (+ Energy on finalize) via LoadoutBudgetBar → PointStatus; no CreatorResourceBar / dual L1 chrome |
 | **TASK-604** | DEV-V-025 **T004** | CreatureStatBlock Weapons Attack: melee→STR, Finesse→AGI, ranged→ACU, Thrown→STR (+ martial prof); matches sheet helper |
 | **TASK-603** | DEV-V-026 **T005 / T010** | Advanced finalize + Guided reveal share CreatorPortraitUpload (crop + bank pick); save-time portrait upload/errors via getErrorMessage |
 | **TASK-602** | DEV-V-009 **T039** | Recovery modal: Full/Partial, 2/4/6h, Auto/Manual use SegmentedControl; preview + CTA still work; fullScreenOnMobile |
@@ -123,7 +124,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-600** | DEV-V-009 **T038** (+ T034) | Header Speed/Evasion: Temp Modifier only — no pencil / permanent base edit; Abilities/Skills still dual mode |
 | **TASK-599** | DEV-V-001 **T002** + DEV-V-008 **T008** | Forge type cards (Advanced + sheet Edit Archetype forge) share fantasy Power / Martial / Powered-Martial descriptions; creature ArchetypeSelector matches titles/descriptions (icons may differ) |
 | **TASK-598** | Smoke (Advanced create + sheet) | Advanced: equipment → powers (path Layer-1 auto-merge + USM source merge + innate toggle) → finalize; sheet play/edit Library powers/inventory still work after splits |
-| **TASK-596** | DEV-V-001 **T014–T015** | Advanced Equipment: 200c starting budget display; spend/add/remove/path recommend still match remainder; no LoadoutBudgetBar/USM forced onto Advanced |
+| **TASK-596** | DEV-V-001 **T014–T015** | Advanced Equipment: 200c starting budget display; spend/add/remove/path recommend still match remainder (budget chrome now LoadoutBudgetBar — see TASK-606) |
 | **TASK-594** | DEV-V-009 **T037** + DEV-V-008 **T008** | Sheet Edit Species: SelectionCard species grid + TraitSection ancestry; skill migration + mixed flaw scoping; Edit Archetype path groups SelectionCard + forge AbilityPickButton parity |
 | **TASK-597** | Smoke (campaign RM view) | Open campaign → player character view: sheet sections match owner display (temp mods / library tabs); no edit chrome; rolls/log still work |
 | **TASK-584** | DEV-V-009 **T032** | Skills catalog-all base skills; Proficient/All + Show sub-skills filters; − clears value→prof (subs remove); no Add Skill / per-row X; pencil top-right |

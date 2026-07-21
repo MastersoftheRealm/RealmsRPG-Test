@@ -4,17 +4,17 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-614
+**Next task ID:** TASK-615
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-604, 603, 602, 601, 600, 599, 598, 596, 594, 597, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-606, 604, 603, 602, 601, 600, 599, 598, 596, 594, 597, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
 **Counts:** 9 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` TASK-601–605 done; remaining TASK-606 (owner ack). Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` TASK-601–606 done; filed TASK-614 (LoadoutBudgetBar → shared, Architect). Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -60,30 +60,6 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
-
----
-
-- id: TASK-606
-  title: Owner ack — Advanced CreatorResourceBar → PointStatus / LoadoutBudgetBar grammar
-  created_at: 2026-07-20
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/components/character-creator/CreatorResourceBar.tsx
-    - src/components/guided-creator/loadout-budget-bar.tsx
-    - src/components/shared/point-status.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    Advanced creator still uses plain CreatorResourceBar (TP/currency/energy text) while Guided
-    uses LoadoutBudgetBar → PointStatus. Product split was noted in TASK-596. Needs owner ack
-    before unifying Advanced onto PointStatus grammar, or permanently document the fork.
-  acceptance_criteria:
-    - Owner chooses unify vs keep fork.
-    - If unify: Advanced equipment/powers/finalize use PointStatus (or LoadoutBudgetBar where TP+currency).
-    - If keep: FEATURE_INDEX states permanent Advanced vs Guided resource chrome split.
-  notes: |
-    From 2026-07-20 /global-audit. Pause for owner ack before implement.
 
 ---
 
@@ -240,5 +216,33 @@ Do **not** read the done archive at session start.
     - Prefer existing vitest + Playwright configs; no new parallel harness.
     - `npm test` (or targeted vitest) green for new files.
   notes: Was TASK-607 pre-renumber. Ship first slice + follow-ups — do not block on full API matrix.
+
+---
+
+- id: TASK-614
+  title: Move LoadoutBudgetBar into shared (Architect)
+  created_at: 2026-07-21
+  created_by: agent
+  priority: low
+  status: not-started
+  parent_task: TASK-606
+  related_files:
+    - src/components/guided-creator/loadout-budget-bar.tsx
+    - src/components/shared/index.ts
+    - src/components/shared/point-status.tsx
+    - scripts/shared-ui-allowlist.json
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    After TASK-606, Advanced imports `LoadoutBudgetBar` from `guided-creator/` while Guided uses
+    the same chrome. Leave it in place for now; later migrate the file into `shared/` so both
+    creators (and any post–Advanced-phase-out surfaces) import from the shared barrel.
+  acceptance_criteria:
+    - `LoadoutBudgetBar` lives under `src/components/shared/` and is exported from the shared barrel.
+    - Guided + Advanced call sites import from `@/components/shared` (no `guided-creator` path).
+    - ADR (or owner ack) + `scripts/shared-ui-allowlist.json` updated; `npm run tasks:validate-shared-ui` passes.
+    - FEATURE_INDEX + guide/04 path notes updated; `npm run build` passes; no behavior change.
+  notes: |
+    From TASK-606 /cleanup follow-up. Architect path — new shared UI file. Do not start until
+    prioritized; current cross-folder import is intentional interim.
 
 ---

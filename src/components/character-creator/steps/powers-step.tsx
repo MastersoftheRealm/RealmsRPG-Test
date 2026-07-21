@@ -358,7 +358,6 @@ export function PowersStep() {
         layer={layer}
         proficiencySpent={proficiencyTpSummary.spent}
         proficiencyLimit={proficiencyTpSummary.limit}
-        proficiencyRemaining={proficiencyTpSummary.remaining}
         onExpandLayer={() => expandLayer('powers')}
         onCollapseLayer={() => collapseLayer('powers')}
         pathRecommendationsLoading={pathRecommendationsLoading}

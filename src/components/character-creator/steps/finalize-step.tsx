@@ -26,7 +26,7 @@ import { getAllValidationIssues } from '@/lib/character-creator-validation';
 import { calculateMaxEnergy } from '@/lib/game/calculations';
 import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
-import { LoginPromptModal, InfoTippy } from '@/components/shared';
+import { LoginPromptModal, InfoTippy, PointStatus } from '@/components/shared';
 import { PlayTogetherModal } from '@/components/onboarding';
 import {
   characterSheetUrlWithTourOffer,
@@ -35,7 +35,7 @@ import {
 } from '@/lib/onboarding-preferences';
 import { finalizeSummaryHelp } from '../../../../public/tooltip-text';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
+import { LoadoutBudgetBar } from '@/components/guided-creator/loadout-budget-bar';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 import { ValidationModal } from './finalize/validation-modal';
 import { HealthEnergyAllocationSection } from './finalize/health-energy-section';
@@ -109,13 +109,12 @@ export function FinalizeStep() {
     return { spent, limit, remaining: limit - spent };
   }, [draft, powerPartsDb, techniquePartsDb, itemPropertiesDb]);
   
-  const energySummary = useMemo(() => {
+  const maxEnergy = useMemo(() => {
     const abilities = draft.abilities || {};
     const level = draft.level || 1;
     const powAbil = draft.pow_abil || draft.archetype?.pow_abil || draft.archetype?.ability;
     const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
-    const maxEnergy = calculateMaxEnergy(draft.energyPoints || 0, powAbil || martAbil, abilities, level);
-    return { current: maxEnergy, max: maxEnergy };
+    return calculateMaxEnergy(draft.energyPoints || 0, powAbil || martAbil, abilities, level);
   }, [draft]);
 
   const startingCurrency = useMemo(() => {
@@ -255,16 +254,21 @@ export function FinalizeStep() {
   
   return (
     <div className="max-w-2xl mx-auto flex flex-col flex-1 min-h-0">
-      <CreatorResourceBar
-        trainingPoints={{
-          spent: proficiencyTpSummary.spent,
-          limit: proficiencyTpSummary.limit,
-        }}
-        currency={{
-          spent: startingCurrency - remainingCurrency,
-          limit: startingCurrency,
-        }}
-        energy={energySummary}
+      <LoadoutBudgetBar
+        className="mb-6"
+        currencyTotal={startingCurrency}
+        currencySpent={startingCurrency - remainingCurrency}
+        tpTotal={proficiencyTpSummary.limit}
+        tpSpent={proficiencyTpSummary.spent}
+        trailing={
+          <PointStatus
+            total={maxEnergy}
+            spent={0}
+            label="Energy"
+            variant="inline"
+            className="text-base"
+          />
+        }
       />
 
       <div className="flex items-center gap-1 mb-2">
