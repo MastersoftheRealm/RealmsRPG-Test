@@ -4092,6 +4092,28 @@ islands (Phase 4) and workspace hook (Phase 5).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-018-T011 — CreatureStatBlock weapon attack ability parity (TASK-604)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-604 |
+| **Where** | Encounter or library creature view that shows `CreatureStatBlock` Weapons; optional: character sheet equipped weapon Attack column |
+| **Needs** | Creature (or draft) with known abilities + martial proficiency and weapons covering melee, Finesse, ranged, and Thrown when available |
+
+**Steps**
+1. Open a creature/stat-block with a plain melee weapon — confirm Attack = Strength + Martial Proficiency.
+2. Open (or add) a Finesse weapon — confirm Attack = Agility + Martial Proficiency.
+3. Open (or add) a ranged non-Thrown weapon — confirm Attack = Acuity + Martial Proficiency.
+4. If a Thrown weapon is available — confirm Attack uses Strength (not Acuity) + Martial Proficiency.
+5. Optional: same properties/abilities on a character sheet weapon row — Attack matches the creature display.
+
+**Expected**
+- No local attack-bonus fork in `creature-stat-block.tsx`; bonuses match `getWeaponAttackBonusFromProperties` / sheet helper for the same inputs.
+- Vitest `weapon-attack-ability.test.ts` covers the shared bonus path (melee / finesse / ranged / thrown).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-019 — React Compiler hook cleanup (TASK-430)

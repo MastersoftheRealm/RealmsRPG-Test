@@ -116,6 +116,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-604** | DEV-V-018 **T011** | CreatureStatBlock Weapons Attack: melee→STR, Finesse→AGI, ranged→ACU, Thrown→STR (+ martial prof); matches sheet helper |
 | **TASK-603** | DEV-V-026 **T005 / T010** | Advanced finalize + Guided reveal share CreatorPortraitUpload (crop + bank pick); save-time portrait upload/errors via getErrorMessage |
 | **TASK-602** | DEV-V-009 **T039** | Recovery modal: Full/Partial, 2/4/6h, Auto/Manual use SegmentedControl; preview + CTA still work; fullScreenOnMobile |
 | **TASK-601** | DEV-V-016 **T002 / T004 / T005** | Technique / empowered / species creators: Load from Library (columns + restore), save/reset/auth chrome unchanged after workspace extract |

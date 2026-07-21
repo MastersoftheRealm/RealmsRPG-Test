@@ -121,7 +121,7 @@
 | Species / trait catalogs | `DetailOptionList` + `traitToDetailOption` (deep-dive / species-modal). Selection picks: `GuidedChoiceCard`. (`ItemCard` / `SpeciesTraitCard` deleted — `/debt` 2026-07-19.) |
 | Damage dice/type split (list cells) | `splitDamageDiceAndType` from `@/lib/utils` (single helper; sheet + entity lists + quick armaments) |
 | Shared list filters | `@/components/shared/filters` (`ChipSelect`, `FilterSection`, …) — not `@/components/codex` |
-| Creature stat block | `CreatureStatBlock` |
+| Creature stat block | `CreatureStatBlock` — weapon Attack uses shared `getWeaponAttackBonusFromProperties` (`lib/game/weapon-attack-ability.ts`; same as sheet / quick armaments) |
 | Filters | `ChipSelect`, `TagFilter`, `SelectFilter`, `AbilityRequirementFilter`, `SourceFilter` (`shared/filters`) |
 | List states | `ListEmptyState`, `LoadingState`, `ErrorDisplay` |
 | Search box | `SearchInput` |
