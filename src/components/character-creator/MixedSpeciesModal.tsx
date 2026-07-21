@@ -1,7 +1,9 @@
 /**
- * Mixed Species Modal
- * ===================
- * Select two species (from any source) for a mixed-species character.
+ * MixedSpeciesModal — Mixed-species dual picker
+ * =============================================
+ * Intentional non-USM shell (TASK-605): ordered pair of distinct species via
+ * dual `<select>`s + source SegmentedControl — not list add-X / USM.
+ * Call sites: Advanced `species-step`, sheet `edit-species-modal`.
  */
 
 'use client';

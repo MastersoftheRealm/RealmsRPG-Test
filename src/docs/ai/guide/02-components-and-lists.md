@@ -26,6 +26,7 @@ Quick location table: [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) § Components. Unifi
 | Species detail view, level-up wizard | Custom layouts | Justified exceptions |
 | Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection |
 | Add combatant / session participant (encounters, VTT, downtime) | **AddCombatantModal** | Intentional non-USM shared shell (TASK-571); extend for new session-play surfaces |
+| Mixed species (exactly two species) | **MixedSpeciesModal** | Intentional non-USM dual `<select>` picker (TASK-605); Advanced species-step + sheet Edit Species — not list add-X / USM |
 | Entity **thumbnail** in list row (left of name, click to preview) | **GridListRow** `thumbnail` + **ListRowThumbnail** | See [`03-entity-card-art.md`](03-entity-card-art.md) § Adoption inventory (TASK-478) |
 
 **List item actions:** GridListRow uses a shared action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended catalog details.
