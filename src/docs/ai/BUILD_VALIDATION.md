@@ -376,17 +376,17 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 |-------|-------|
 | **Suite** | DEV-V-001 |
 | **Section** | 6. Equipment |
-| **Related task** | TASK-356 · TASK-596 |
-| **Where** | `/characters/new` → **7. Equipment** |
+| **Related task** | TASK-356 · TASK-596 · TASK-606 |
+| **Where** | `/characters/new` → **7. Equipment** (Forge / Advanced) |
 | **Needs** | Logged-in; reach Equipment without spending currency yet
 | **CI** | Partial — `src/lib/creator/advanced-equipment-catalog.test.ts` asserts `computeStartingCurrency(1) === 200` (display chrome stays human)
 
 **Steps**
-1. Reach **7. Equipment** with a fresh creator session (or after archetype reset).
-2. Find the currency / budget display on the step.
+1. Reach **7. Equipment** with a fresh Advanced creator session (or after archetype reset).
+2. Find the **Currency** PointStatus on the step header (`LoadoutBudgetBar`).
 
 **Expected**
-- Starting budget shows **200c** (not 500c or another value).
+- **Currency** remaining shows **200** / **200** (starting budget 200c; not 500c or another value).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -409,6 +409,29 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 
 **Expected**
 - Character **currency** = **200c − total spent** (matches remainder after purchases).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-001-T016 — Advanced equipment / powers / finalize use LoadoutBudgetBar PointStatus
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-001 |
+| **Section** | 6. Equipment · Powers · Finalize |
+| **Related task** | TASK-606 |
+| **Where** | `/characters/new` → **7. Equipment** → **8. Powers & Techniques** → **9. Finalize** (Forge / Advanced) |
+| **Needs** | Logged-in; path or forge Advanced session with budgets visible |
+
+**Steps**
+1. On **7. Equipment**, confirm header shows **Currency** and **Training Points** PointStatus pills (colored remaining grammar; TP tip on the Training Points label).
+2. On **8. Powers & Techniques**, confirm the same **Training Points** PointStatus pill (not a plain “Proficiency TP” chip / text bar).
+3. On **9. Finalize**, confirm **Currency**, **Training Points**, and **Energy** PointStatus pills together.
+
+**Expected**
+- All three steps use PointStatus via `LoadoutBudgetBar` (no plain text resource bar; no separate L1 vs non-L1 currency/TP chrome).
+- Labels spell **Currency** / **Training Points** / **Energy**.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

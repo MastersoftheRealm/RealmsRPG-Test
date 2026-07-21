@@ -3,9 +3,9 @@
 import Link from 'next/link';
 import { Plus, Wand2, ExternalLink } from 'lucide-react';
 import { InfoTippy } from '@/components/shared';
-import { Button, Spinner, DescriptorChip } from '@/components/ui';
+import { Button, Spinner } from '@/components/ui';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
-import { CreatorResourceBar } from '@/components/character-creator/CreatorResourceBar';
+import { LoadoutBudgetBar } from '@/components/guided-creator/loadout-budget-bar';
 import type { PathGuidanceGroup } from '@/types/archetype';
 import { powersSelectionHelp } from '../../../../../public/tooltip-text';
 
@@ -14,7 +14,6 @@ export interface PowersStepChromeProps {
   layer: number;
   proficiencySpent: number;
   proficiencyLimit: number;
-  proficiencyRemaining: number;
   onExpandLayer: () => void;
   onCollapseLayer: () => void;
   pathRecommendationsLoading: boolean;
@@ -35,7 +34,6 @@ export function PowersStepChrome({
   layer,
   proficiencySpent,
   proficiencyLimit,
-  proficiencyRemaining,
   onExpandLayer,
   onCollapseLayer,
   pathRecommendationsLoading,
@@ -66,22 +64,11 @@ export function PowersStepChrome({
           Select powers and techniques from your library for your character to know.
         </p>
         <div className="mt-4 flex flex-col items-center justify-center gap-3">
-          {pathMode && layer === 1 ? (
-            <CreatorResourceBar
-              trainingPoints={{
-                spent: proficiencySpent,
-                limit: proficiencyLimit,
-              }}
-            />
-          ) : (
-            <DescriptorChip
-              variant={proficiencyRemaining >= 0 ? 'tp' : 'danger'}
-              size="md"
-              className="font-semibold"
-            >
-              Proficiency TP: {proficiencySpent} / {proficiencyLimit}
-            </DescriptorChip>
-          )}
+          <LoadoutBudgetBar
+            tpTotal={proficiencyLimit}
+            tpSpent={proficiencySpent}
+            className="mb-0"
+          />
           {pathMode && (
             <div className="flex flex-wrap gap-2 justify-center">
               {layer === 1 ? (

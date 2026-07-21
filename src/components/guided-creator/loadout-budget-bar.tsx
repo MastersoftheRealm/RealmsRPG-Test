@@ -21,14 +21,18 @@ export interface LoadoutBudgetBarProps {
   currencyLabel?: string;
   trainingPointsLabel?: string;
   className?: string;
+  /** Budget row alignment (Guided default center; Advanced equipment header uses end). */
+  align?: 'center' | 'end';
+  /** Extra PointStatus (or similar) in the budget row — e.g. Advanced finalize Energy. */
+  trailing?: ReactNode;
   /** Extra content above the PointStatus row (e.g. L2 confirm error). */
   children?: ReactNode;
 }
 
 /**
- * Shared Currency + Training Points PointStatus chrome for guided Loadout
- * (L1 phase layout, L2 modal footer, powers/techniques step).
- * Training Points help sits inside the PointStatus label (TASK-465).
+ * Shared Currency + Training Points PointStatus chrome for Guided Loadout
+ * and Advanced creator equipment/powers/finalize (TASK-465 / TASK-606).
+ * Training Points help sits inside the PointStatus label.
  */
 export function LoadoutBudgetBar({
   currencyTotal,
@@ -38,11 +42,14 @@ export function LoadoutBudgetBar({
   currencyLabel = phaseCopy.currencyLabel,
   trainingPointsLabel = ptCopy.trainingPointsLabel,
   className,
+  align = 'center',
+  trailing,
   children,
 }: LoadoutBudgetBarProps) {
   const showCurrency = currencyTotal != null && currencySpent != null;
   const showTp = tpTotal != null && tpSpent != null;
-  if (!showCurrency && !showTp && !children) return null;
+  const showRow = showCurrency || showTp || trailing != null;
+  if (!showRow && !children) return null;
 
   const tpHelp = (
     <InfoTippy
@@ -57,8 +64,13 @@ export function LoadoutBudgetBar({
   return (
     <div className={cn('flex flex-col gap-2', className)}>
       {children}
-      {showCurrency || showTp ? (
-        <div className="flex flex-wrap items-center justify-center gap-3">
+      {showRow ? (
+        <div
+          className={cn(
+            'flex flex-wrap items-center gap-3',
+            align === 'end' ? 'justify-end' : 'justify-center'
+          )}
+        >
           {showCurrency ? (
             <PointStatus
               total={currencyTotal}
@@ -78,6 +90,7 @@ export function LoadoutBudgetBar({
               className="text-base"
             />
           ) : null}
+          {trailing}
         </div>
       ) : null}
     </div>

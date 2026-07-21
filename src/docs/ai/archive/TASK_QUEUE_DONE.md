@@ -1,3 +1,50 @@
+- id: TASK-606
+  title: Owner ack — Advanced CreatorResourceBar → PointStatus / LoadoutBudgetBar grammar
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-21
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-001
+    tests:
+      - DEV-V-001-T014
+      - DEV-V-001-T016
+  developer_test_plan: |
+    Suite DEV-V-001 T014 / T016 — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/guided-creator/loadout-budget-bar.tsx
+    - src/components/shared/point-status.tsx
+    - src/components/character-creator/steps/equipment/step-header.tsx
+    - src/components/character-creator/steps/powers/powers-step-chrome.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/character-creator/steps/powers-step.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Advanced creator still uses plain CreatorResourceBar (TP/currency/energy text) while Guided
+    uses LoadoutBudgetBar → PointStatus. Product split was noted in TASK-596. Needs owner ack
+    before unifying Advanced onto PointStatus grammar, or permanently document the fork.
+  acceptance_criteria:
+    - Owner chooses unify vs keep fork.
+    - If unify: Advanced equipment/powers/finalize use PointStatus (or LoadoutBudgetBar where TP+currency).
+    - If keep: FEATURE_INDEX states permanent Advanced vs Guided resource chrome split.
+  completed_work: |
+    - Owner chose **unify** (prefer Guided grammar so Advanced can be phased out later).
+    - Deleted CreatorResourceBar; wired Advanced equipment/powers/finalize onto LoadoutBudgetBar → PointStatus.
+    - Collapsed Advanced equipment L1 vs non-L1 dual chrome and powers DescriptorChip TP fork.
+    - Extended LoadoutBudgetBar with align + trailing (finalize Energy PointStatus).
+    - FEATURE_INDEX + GUIDED_EQUIPMENT_PHASED_SPEC + BV T014/T016 updated.
+  notes: |
+    From 2026-07-20 /global-audit. Keep-fork path not taken.
+  evidence: |
+    npm run build; npm run tasks:validate; verification_status pending-qa.
+
+---
+
 - id: TASK-605
   title: Document or redesign MixedSpeciesModal selection grammar
   created_at: 2026-07-20

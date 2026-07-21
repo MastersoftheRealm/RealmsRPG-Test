@@ -319,13 +319,10 @@ export function EquipmentStep() {
   return (
     <div className="max-w-5xl mx-auto flex flex-col flex-1 min-h-0">
       <EquipmentStepHeader
-        pathMode={pathMode}
-        layer={layer}
         remainingCurrency={remainingCurrency}
         startingCurrency={startingCurrency}
         proficiencyTpSpent={proficiencyTpSummary.spent}
         proficiencyTpLimit={proficiencyTpSummary.limit}
-        proficiencyTpRemaining={proficiencyTpSummary.remaining}
       />
 
       {pathMode && draft.archetype?.name && (
