@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 10 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 9 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` TASK-601–604 done; remaining TASK-605–606. Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` TASK-601–605 done; remaining TASK-606 (owner ack). Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -60,31 +60,6 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
-
----
-
-- id: TASK-605
-  title: Document or redesign MixedSpeciesModal selection grammar
-  created_at: 2026-07-20
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/components/character-creator/MixedSpeciesModal.tsx
-    - src/components/character-creator/steps/species-step.tsx
-    - src/components/character-sheet/edit-species-modal.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-    - .cursor/rules/realms-unification.mdc
-  description: |
-    MixedSpeciesModal is a dual-species picker (not list add-X). Either mark it an intentional
-    non-USM exception in FEATURE_INDEX + unification rule (like AddCombatantModal), or redesign
-    onto UnifiedSelectionModal / dual-select product grammar with owner ack.
-  acceptance_criteria:
-    - FEATURE_INDEX + realms-unification document the chosen path (exception or USM redesign).
-    - If redesign: Advanced species-step + sheet Edit Species keep mixed-species behavior.
-    - npm run build passes.
-  notes: |
-    From 2026-07-20 /global-audit. Prefer docs-only exception unless owner wants USM dual-select.
 
 ---
 

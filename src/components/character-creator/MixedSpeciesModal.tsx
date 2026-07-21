@@ -1,7 +1,15 @@
 /**
- * Mixed Species Modal
- * ===================
- * Select two species (from any source) for a mixed-species character.
+ * MixedSpeciesModal — Mixed-species dual picker
+ * =============================================
+ * Intentional non-USM selection shell (TASK-605). Dual ordered species picks
+ * (exactly two distinct species) via paired `<select>`s + source SegmentedControl —
+ * not list add-X. Call sites: Advanced `species-step`, sheet `edit-species-modal`.
+ * Do not fork a parallel mixed picker and do not migrate onto UnifiedSelectionModal
+ * unless owner redesigns USM for ordered pair selection.
+ *
+ * Why distinct from USM: USM is catalog multi-select / add-X grammar; mixed species
+ * needs a fixed pair (A + B, distinct) with averaged ancestry follow-up — not a
+ * selectable list with Add selected.
  */
 
 'use client';

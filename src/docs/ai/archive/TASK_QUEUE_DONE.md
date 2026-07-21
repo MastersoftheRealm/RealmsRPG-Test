@@ -1,3 +1,40 @@
+- id: TASK-605
+  title: Document or redesign MixedSpeciesModal selection grammar
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-21
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/components/character-creator/MixedSpeciesModal.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - .cursor/rules/realms-unification.mdc
+  description: |
+    MixedSpeciesModal is a dual-species picker (not list add-X). Either mark it an intentional
+    non-USM exception in FEATURE_INDEX + unification rule (like AddCombatantModal), or redesign
+    onto UnifiedSelectionModal / dual-select product grammar with owner ack.
+  acceptance_criteria:
+    - FEATURE_INDEX + realms-unification document the chosen path (exception or USM redesign).
+    - If redesign: Advanced species-step + sheet Edit Species keep mixed-species behavior.
+    - npm run build passes.
+  completed_work: |
+    - Chose **document exception** (task notes: prefer docs-only unless owner wants USM dual-select;
+      owner directed "Do task 605").
+    - Documented MixedSpeciesModal as intentional non-USM dual-species picker in FEATURE_INDEX,
+      realms-unification, and guide/02 (decision tree + intentional exceptions).
+    - File header on MixedSpeciesModal states why distinct from USM and call sites
+      (Advanced species-step, sheet edit-species-modal).
+    - No behavior change; no USM redesign; verification_status n/a (docs + comment only).
+  notes: |
+    From 2026-07-20 /global-audit. Docs-only exception path (parity with TASK-571 AddCombatantModal).
+  evidence: |
+    npm run build pass 2026-07-21; npm run tasks:validate.
+
+---
+
 - id: TASK-604
   title: CreatureStatBlock weapon attack bonus → weapon-attack-ability helper
   created_at: 2026-07-20
