@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-607, 606, 604, 603, 602, 601, 600, 599, 598, 596, 594, 597, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-608, 607, 606, 604, 603, 602, 601, 600, 599, 598, 596, 594, 597, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 8 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 7 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` TASK-601–606 done; filed TASK-614 (LoadoutBudgetBar → shared, Architect). Quality pseudo `/global-audit` → TASK-608–611, 613 (TASK-607/612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` TASK-601–606 done; filed TASK-614 (LoadoutBudgetBar → shared, Architect). Quality pseudo `/global-audit` → TASK-609–611, 613 (TASK-607/608/612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -60,29 +60,6 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
-
----
-
-- id: TASK-608
-  title: Split combat + skill encounter views under ~500 LOC
-  created_at: 2026-07-20
-  created_by: agent
-  priority: high
-  status: not-started
-  related_files:
-    - src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx
-    - src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx
-    - src/services/encounter-service.ts
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    Encounter play views are ~1246 / ~1435 LOC. Extract co-located combatant lists, round chrome,
-    roll panels, and helpers so each facade lands near ~500 LOC (TASK-598 style). Preserve
-    AddCombatantModal + shared roll patterns; do not fork selection shells.
-  acceptance_criteria:
-    - CombatEncounterView and SkillEncounterView facades each ≤ ~500 LOC (or justified partial with follow-up).
-    - Behavior parity for combat/skill encounter play loops.
-    - FEATURE_INDEX updated if module paths change; `npm run build` passes.
-  notes: Share combat/skill helpers only when identical — no premature mega-abstraction. Was TASK-602 pre-renumber.
 
 ---
 
