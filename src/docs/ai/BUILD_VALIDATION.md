@@ -4876,7 +4876,7 @@ Admin/creator editors, user `image_id` parity, legacy catalog migration, portrai
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-026 |
-| **Related task** | TASK-499 |
+| **Related task** | TASK-499 / TASK-603 |
 | **Where** | Character sheet (edit) or creator finalize / guided portrait |
 | **Needs** | Character draft or saved character |
 
@@ -4884,9 +4884,30 @@ Admin/creator editors, user `image_id` parity, legacy catalog migration, portrai
 1. Open portrait upload → **Choose from library**.
 2. Pick a species/creature bank image.
 3. Confirm portrait updates; custom crop upload still works.
+4. Smoke both Advanced finalize and Guided reveal — same crop modal + library picker (shared `CreatorPortraitUpload`).
 
 **Expected**
 - Bank pick is additive; surfaces are pick-only (`allowAdminUpload={false}`).
+- Advanced + Guided share one portrait presenter (layout variants OK); no parallel ImageUploadModal forks.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-026-T010 — Creator save-time portrait upload errors
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-026 |
+| **Related task** | TASK-603 |
+| **Where** | Advanced finalize create / Guided reveal create (with a cropped data-URL portrait) |
+| **Needs** | Signed-in user; optional Network throttle / failing `/api/upload/portrait` |
+
+**Steps**
+1. Set a portrait via crop (or bank URL — skip upload path) on Advanced finalize and/or Guided reveal.
+2. Create character with a data-URL portrait; confirm Storage upload succeeds and sheet shows the portrait URL.
+3. (Optional) Force upload failure; confirm toast shows a real error message (not a silent failure / empty toast).
+
+**Expected**
+- Save path uses `uploadCharacterPortraitFromDataUrl` + `getErrorMessage`; character still creates if portrait upload fails.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

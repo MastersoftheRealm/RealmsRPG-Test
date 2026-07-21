@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-601, 600, 599, 598, 596, 594, 597, 584, 587, 586, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-603, 602, 601, 600, 599, 598, 596, 594, 597, 584, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 12 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 11 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` TASK-601–602 done; remaining TASK-603–606. Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` TASK-601–603 done; remaining TASK-604–606. Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -60,30 +60,6 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
-
----
-
-- id: TASK-603
-  title: Unify Advanced + Guided portrait upload components
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/components/character-creator/steps/finalize/portrait-upload.tsx
-    - src/components/guided-creator/guided-portrait-upload.tsx
-    - src/components/shared/image-upload-modal.tsx
-    - src/lib/api-client.ts
-  description: |
-    Consolidate near-duplicate PortraitUpload / GuidedPortraitUpload onto one shared presenter
-    (props for store wiring). Prefer a single save-time portrait upload helper using apiUpload +
-    getErrorMessage rather than duplicated catch strings.
-  acceptance_criteria:
-    - One shared portrait UI module used by Advanced finalize + Guided reveal.
-    - Upload errors surface via getErrorMessage (or equivalent api-client helper).
-    - No parallel ImageUploadModal forks; npm run build passes.
-  notes: |
-    From 2026-07-20 /global-audit. Sheet portrait path already uses apiUpload — align creators.
 
 ---
 

@@ -1,3 +1,45 @@
+- id: TASK-603
+  title: Unify Advanced + Guided portrait upload components
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-21
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-026
+    tests:
+      - DEV-V-026-T005
+      - DEV-V-026-T010
+  developer_test_plan: |
+    Suite DEV-V-026 T005 / T010 — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/character-creator/creator-portrait-upload.tsx
+    - src/components/character-creator/steps/finalize/portrait-upload.tsx
+    - src/components/guided-creator/guided-portrait-upload.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/components/shared/image-upload-modal.tsx
+    - src/lib/portrait.ts
+    - src/lib/portrait.test.ts
+    - src/lib/api-client.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Consolidate near-duplicate PortraitUpload / GuidedPortraitUpload onto one shared presenter
+    (props for store wiring). Prefer a single save-time portrait upload helper using apiUpload +
+    getErrorMessage rather than duplicated catch strings.
+  acceptance_criteria:
+    - One shared portrait UI module used by Advanced finalize + Guided reveal.
+    - Upload errors surface via getErrorMessage (or equivalent api-client helper).
+    - No parallel ImageUploadModal forks; npm run build passes.
+  notes: |
+    From 2026-07-20 /global-audit. Shared CreatorPortraitUpload (finalize/reveal variants) +
+    uploadCharacterPortraitFromDataUrl; thin store wrappers retained. verification_status pending-qa.
+
+---
+
 - id: TASK-602
   title: Recovery modal → SegmentedControl + theme-aware status tokens
   created_at: 2026-07-20

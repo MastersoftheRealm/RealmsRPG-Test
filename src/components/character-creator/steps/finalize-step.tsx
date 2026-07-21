@@ -14,8 +14,11 @@ import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, us
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';
-import { dataUrlToBlob } from '@/lib/portrait';
-import { apiUpload } from '@/lib/api-client';
+import {
+  PORTRAIT_SAVE_UPLOAD_FALLBACK,
+  uploadCharacterPortraitFromDataUrl,
+} from '@/lib/portrait';
+import { getErrorMessage } from '@/lib/api-client';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { Button, Alert, Textarea, useToast } from '@/components/ui';
 import { useCharacterCreatorStore, CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
@@ -206,27 +209,10 @@ export function FinalizeStep() {
       // Upload base64 portrait to Supabase Storage and save the URL
       if (base64Portrait) {
         try {
-          const blob = dataUrlToBlob(base64Portrait);
-          const file = new File([blob], 'portrait.jpg', {
-            type: blob.type?.startsWith('image/') ? blob.type : 'image/jpeg',
-          });
-
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('characterId', characterId);
-
-          const uploadRes = await apiUpload<{ url: string }>('/api/upload/portrait', formData);
-
-          if (!uploadRes.url) {
-            showToast('Portrait upload returned no URL. Add a portrait from your character sheet.', 'error');
-          } else {
-            await saveCharacter(characterId, { portrait: uploadRes.url });
-          }
-        } catch {
-          showToast(
-            'Could not process or upload your portrait. Your character was created. Add a portrait from the sheet.',
-            'error'
-          );
+          const { url } = await uploadCharacterPortraitFromDataUrl(characterId, base64Portrait);
+          await saveCharacter(characterId, { portrait: url });
+        } catch (err) {
+          showToast(getErrorMessage(err, PORTRAIT_SAVE_UPLOAD_FALLBACK), 'error');
         }
       }
 
