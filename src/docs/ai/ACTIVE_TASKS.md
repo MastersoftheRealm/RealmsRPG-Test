@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-603, 602, 601, 600, 599, 598, 596, 594, 597, 584, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-604, 603, 602, 601, 600, 599, 598, 596, 594, 597, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 11 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` TASK-601–603 done; remaining TASK-604–606. Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` TASK-601–604 done; remaining TASK-605–606. Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -60,29 +60,6 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
-
----
-
-- id: TASK-604
-  title: CreatureStatBlock weapon attack bonus → weapon-attack-ability helper
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/components/shared/creature-stat-block.tsx
-    - src/lib/game/weapon-attack-ability.ts
-    - src/components/character-sheet/library-list-helpers.ts
-  description: |
-    Delete local getWeaponAttackBonus in CreatureStatBlock; wire getWeaponAttackBonusFromProperties
-    (or thin wrapper) so finesse/range/strength rules match sheet + guided equipment.
-  acceptance_criteria:
-    - No local attack-bonus fork in creature-stat-block.tsx.
-    - Displayed bonuses match sheet helper for same properties/abilities/prof.
-    - Vitest or existing attack-ability tests cover the shared path; npm run build passes.
-  notes: |
-    From 2026-07-20 /global-audit. Behavior-sensitive — compare melee/finesse/ranged cases.
-    Prefer before TASK-611 LOC split of the same file.
 
 ---
 
@@ -259,7 +236,7 @@ Do **not** read the done archive at session start.
     - If new shared public exports: ADR + allowlist update + `tasks:validate-shared-ui`.
     - `npm run build` + relevant vitest (e.g. grid-list-row-chrome) pass.
   notes: |
-    Was TASK-605 pre-renumber. Prefer TASK-604 weapon-attack wire before splitting creature-stat-block.
+    Was TASK-605 pre-renumber. TASK-604 weapon-attack wire done — safe to split creature-stat-block.
     Default Implementer path = private co-located files (Architect if new barrel API).
 
 

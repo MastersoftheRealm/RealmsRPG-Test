@@ -1,3 +1,40 @@
+- id: TASK-604
+  title: CreatureStatBlock weapon attack bonus → weapon-attack-ability helper
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-21
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-025
+    tests:
+      - DEV-V-025-T004
+  developer_test_plan: |
+    Suite DEV-V-025 T004 — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/shared/creature-stat-block.tsx
+    - src/lib/game/weapon-attack-ability.ts
+    - src/lib/game/weapon-attack-ability.test.ts
+    - src/components/character-sheet/library-list-helpers.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Delete local getWeaponAttackBonus in CreatureStatBlock; wire getWeaponAttackBonusFromProperties
+    (or thin wrapper) so finesse/range/strength rules match sheet + guided equipment.
+  acceptance_criteria:
+    - No local attack-bonus fork in creature-stat-block.tsx.
+    - Displayed bonuses match sheet helper for same properties/abilities/prof.
+    - Vitest or existing attack-ability tests cover the shared path; npm run build passes.
+  notes: |
+    From 2026-07-20 /global-audit. Call site uses getWeaponAttackBonusFromProperties + one-shot
+    attackAbilities (legacy keys via getAbilityValue). /cleanup: deleted thin wrapper; BV
+    relocated DEV-V-018-T011 → DEV-V-025-T004. Vitest covers melee/finesse/ranged/thrown.
+    verification_status pending-qa.
+
+---
+
 - id: TASK-603
   title: Unify Advanced + Guided portrait upload components
   created_at: 2026-07-20
