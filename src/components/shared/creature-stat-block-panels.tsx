@@ -42,7 +42,7 @@ import {
 
 type RollContext = ReturnType<typeof useRollsOptional>;
 
-export interface CreatureStatBlockExpandedContentProps {
+interface CreatureStatBlockExpandedContentProps {
   creature: CreatureData;
   subline: string;
   archetype: string;

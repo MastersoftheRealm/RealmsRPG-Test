@@ -12,7 +12,7 @@ import { columnDisplayLabel } from './grid-list-row-columns';
 import type { ColumnValue } from './grid-list-row-types';
 import { ListRowThumbnail, type ListRowThumbnailProps } from './list-row-thumbnail';
 
-export interface GridListRowCollapsedProps {
+interface GridListRowCollapsedProps {
   leftSlot?: ReactNode;
   isRowClickable: boolean;
   handleRowClickWithGuard: (e: MouseEvent) => void;

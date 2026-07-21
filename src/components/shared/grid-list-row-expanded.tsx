@@ -16,7 +16,7 @@ import { columnDisplayLabel } from './grid-list-row-columns';
 import { DetailSectionLabel, partsPropertiesHelpContent } from './grid-list-row-detail';
 import type { ColumnValue } from './grid-list-row-types';
 
-export interface GridListRowExpandedBodyProps {
+interface GridListRowExpandedBodyProps {
   compact: boolean;
   selectable: boolean;
   isRowClickable: boolean;
@@ -252,7 +252,7 @@ export function GridListRowExpandedBody({
   );
 }
 
-export interface GridListRowMobileSummaryProps {
+interface GridListRowMobileSummaryProps {
   mobileSummaryColumns: ColumnValue[];
   isRowClickable: boolean;
   handleRowBodyClickWithGuard: (e: MouseEvent) => void;

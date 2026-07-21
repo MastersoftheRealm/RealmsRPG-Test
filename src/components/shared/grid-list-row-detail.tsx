@@ -37,7 +37,7 @@ export function partsPropertiesHelpContent(key: PartsPropertiesHelpKey): ReactNo
   }
 }
 
-export const DETAIL_SECTION_LABEL_CLASS =
+const DETAIL_SECTION_LABEL_CLASS =
   'text-xs font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wider';
 
 /** Shared label + optional collapse chevron + InfoTippy for expanded detail sections (TASK-583). */

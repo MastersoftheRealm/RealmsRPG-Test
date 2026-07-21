@@ -39,6 +39,7 @@
     - scripts/shared-ui-allowlist.json
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/BUILD_VALIDATION.md
   completed_work: |
     Co-located private extracts for creature-stat-block, entity-library-sections, grid-list-row, and data-enrichment. Facades: 260 / 44 / 326 / 20 LOC. No new shared barrel exports; ADR-0007 + allowlist for private shared siblings. Vitest: grid-list-row-chrome + cleanForSave consumers. npm run build passes.
   build_validation: |
