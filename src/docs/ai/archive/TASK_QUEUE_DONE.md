@@ -20,10 +20,8 @@
     - src/components/guided-creator/guided-portrait-upload.tsx
     - src/components/character-creator/steps/finalize-step.tsx
     - src/components/guided-creator/steps/reveal-step.tsx
-    - src/components/shared/image-upload-modal.tsx
     - src/lib/portrait.ts
     - src/lib/portrait.test.ts
-    - src/lib/api-client.ts
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/BUILD_VALIDATION.md
   description: |
@@ -36,7 +34,9 @@
     - No parallel ImageUploadModal forks; npm run build passes.
   notes: |
     From 2026-07-20 /global-audit. Shared CreatorPortraitUpload (finalize/reveal variants) +
-    uploadCharacterPortraitFromDataUrl; thin store wrappers retained. verification_status pending-qa.
+    uploadCharacterPortraitFromDataUrl; thin store wrappers retained. /cleanup: drop double
+    getErrorMessage wrap, unexport max-size const, trim related_files, finalize caption not bare label.
+    verification_status pending-qa.
 
 ---
 

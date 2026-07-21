@@ -206,7 +206,7 @@ export function CreatorPortraitUpload({
   // variant === 'finalize' — labeled preview + upload button (Advanced)
   return (
     <div className={cn('mb-6', className)}>
-      <label className="mb-2 block text-sm font-medium text-text-secondary">{copy.fieldLabel}</label>
+      <p className="mb-2 text-sm font-medium text-text-secondary">{copy.fieldLabel}</p>
 
       <div className="flex items-start gap-4">
         <div className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border-light bg-surface-alt">

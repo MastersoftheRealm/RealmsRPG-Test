@@ -3,7 +3,7 @@
  * Treat legacy placeholder path as "no portrait" so we never request it (avoids 404).
  */
 
-import { apiUpload, getErrorMessage } from '@/lib/api-client';
+import { apiUpload } from '@/lib/api-client';
 import { getImageMatteFillColor } from '@/lib/crop-image';
 
 /** Legacy path that may be stored in DB; we treat it as no portrait and use inline fallback. */
@@ -14,7 +14,7 @@ export const FALLBACK_PORTRAIT_DATA_URL =
   'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="180" height="180"><rect width="100%" height="100%" fill="%23053357"/><text x="50%" y="52%" dominant-baseline="middle" text-anchor="middle" font-size="44" fill="white" font-family="Arial">?</text></svg>';
 
 /** Max data-URL length for draft portraits before save-time Storage upload. */
-export const MAX_PORTRAIT_DATA_URL_LENGTH = 700 * 1024;
+const MAX_PORTRAIT_DATA_URL_LENGTH = 700 * 1024;
 
 export const PORTRAIT_DRAFT_TOO_LARGE =
   'Image is still too large. Please use a smaller image.';
@@ -120,27 +120,22 @@ export async function compressPortraitBlobForDraft(blob: Blob): Promise<string> 
 
 /**
  * Upload a draft data-URL portrait to Storage after character create.
- * Uses apiUpload; callers should toast with getErrorMessage + {@link PORTRAIT_SAVE_UPLOAD_FALLBACK}.
+ * Uses apiUpload; callers toast failures with getErrorMessage + {@link PORTRAIT_SAVE_UPLOAD_FALLBACK}.
  */
 export async function uploadCharacterPortraitFromDataUrl(
   characterId: string,
   dataUrl: string,
 ): Promise<{ url: string }> {
-  try {
-    const blob = dataUrlToBlob(dataUrl);
-    const file = new File([blob], 'portrait.jpg', {
-      type: blob.type?.startsWith('image/') ? blob.type : 'image/jpeg',
-    });
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('characterId', characterId);
-    const uploadRes = await apiUpload<{ url: string }>('/api/upload/portrait', formData);
-    if (!uploadRes.url) {
-      throw new Error(PORTRAIT_SAVE_NO_URL);
-    }
-    return { url: uploadRes.url };
-  } catch (err) {
-    // Re-throw with a stable message so creator save toasts stay user-facing.
-    throw new Error(getErrorMessage(err, PORTRAIT_SAVE_UPLOAD_FALLBACK));
+  const blob = dataUrlToBlob(dataUrl);
+  const file = new File([blob], 'portrait.jpg', {
+    type: blob.type?.startsWith('image/') ? blob.type : 'image/jpeg',
+  });
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('characterId', characterId);
+  const uploadRes = await apiUpload<{ url: string }>('/api/upload/portrait', formData);
+  if (!uploadRes.url) {
+    throw new Error(PORTRAIT_SAVE_NO_URL);
   }
+  return { url: uploadRes.url };
 }
