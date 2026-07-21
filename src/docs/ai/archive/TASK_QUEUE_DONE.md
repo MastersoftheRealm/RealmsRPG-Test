@@ -1,4 +1,49 @@
-- id: TASK-608
+
+- id: TASK-609
+  title: Split admin codex / core-rules hot files under ~500 LOC
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-07-21
+  related_files:
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/admin-feat-form.ts
+    - src/app/(main)/admin/codex/admin-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-archetype-editor.tsx
+    - src/app/(main)/admin/codex/admin-archetype-editor-config.ts
+    - src/app/(main)/admin/codex/admin-archetype-editor-meta.tsx
+    - src/app/(main)/admin/codex/admin-archetype-editor-level1.tsx
+    - src/app/(main)/admin/codex/admin-archetype-editor-guided.tsx
+    - src/app/(main)/admin/codex/admin-archetype-editor-progression.tsx
+    - src/app/(main)/admin/codex/use-admin-archetype-workspace.ts
+    - src/app/(main)/admin/codex/use-admin-archetype-selection-options.ts
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/admin-part-form.ts
+    - src/app/(main)/admin/codex/admin-part-edit-modal.tsx
+    - src/app/(main)/admin/core-rules/page.tsx
+    - src/app/(main)/admin/core-rules/core-rules-tabs.ts
+    - src/app/(main)/admin/core-rules/core-rules-field-editors.tsx
+    - src/app/(main)/admin/core-rules/core-rules-progression-preview.tsx
+    - src/app/(main)/admin/core-rules/core-rules-damage-types-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-category-editor.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Admin codex/core-rules editors remain multi-file god zones (Feats ~1235, archetype editor ~1101,
+    workspace hook ~930, Parts ~882, core-rules page ~981). Slice into co-located modules using
+    existing CodexBrowseListShell / spreadsheet patterns; no parallel admin list chrome.
+  acceptance_criteria:
+    - Each listed hotspot reduced toward <= ~500 LOC facade (ship first slice + follow-ups if needed).
+    - Reuse CodexBrowseListShell / existing admin patterns — no new list shell.
+    - FEATURE_INDEX + build green; no live codex data mutations in this task.
+  verification_status: n/a
+  completed_work: |
+    Slice 1: AdminFeatsTab (~368), admin-feat-form + admin-feat-edit-modal; admin-archetype-editor (~98) + section modules; use-admin-archetype-selection-options.
+    Slice 2: AdminPartsTab (~390), admin-part-form + admin-part-edit-modal; core-rules/page (~142) + co-located category/field/preview modules.
+    use-admin-archetype-workspace ~658 (down from ~868). npm run build green.
+  notes: Was TASK-603 pre-renumber. Optional follow-up: extract workspace save handler under ~500 LOC.
+
+---- id: TASK-608
   title: Split combat + skill encounter views under ~500 LOC
   created_at: 2026-07-20
   created_by: agent

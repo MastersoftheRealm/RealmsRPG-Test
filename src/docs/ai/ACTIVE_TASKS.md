@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 7 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 6 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` TASK-601–606 done; filed TASK-614 (LoadoutBudgetBar → shared, Architect). Quality pseudo `/global-audit` → TASK-609–611, 613 (TASK-607/608/612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` TASK-601–606 done; filed TASK-614 (LoadoutBudgetBar → shared, Architect). Quality pseudo `/global-audit` → TASK-610–611, 613 (TASK-607/608/609/612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -60,31 +60,6 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
-
----
-
-- id: TASK-609
-  title: Split admin codex / core-rules hot files under ~500 LOC
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
-    - src/app/(main)/admin/codex/admin-archetype-editor.tsx
-    - src/app/(main)/admin/codex/use-admin-archetype-workspace.ts
-    - src/app/(main)/admin/codex/AdminPartsTab.tsx
-    - src/app/(main)/admin/core-rules/page.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    Admin codex/core-rules editors remain multi-file god zones (Feats ~1235, archetype editor ~1101,
-    workspace hook ~930, Parts ~882, core-rules page ~981). Slice into co-located modules using
-    existing CodexBrowseListShell / spreadsheet patterns; no parallel admin list chrome.
-  acceptance_criteria:
-    - Each listed hotspot reduced toward ≤ ~500 LOC facade (ship first slice + follow-ups if needed).
-    - Reuse CodexBrowseListShell / existing admin patterns — no new list shell.
-    - FEATURE_INDEX + build green; no live codex data mutations in this task.
-  notes: Prefer Feats + archetype workspace first (largest). Was TASK-603 pre-renumber.
 
 ---
 

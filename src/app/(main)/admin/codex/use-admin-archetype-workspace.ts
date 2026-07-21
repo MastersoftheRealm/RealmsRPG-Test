@@ -8,7 +8,7 @@
 
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useToast } from '@/components/ui';
 import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills, useCodexItemProperties, useCodexPowerParts } from '@/hooks/use-codex';
 import { useOfficialLibrary } from '@/hooks/use-official-library';
@@ -16,21 +16,17 @@ import { useQueryClient } from '@tanstack/react-query';
 import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
 import {
   COPY_NAME_SUFFIX,
-  armamentTypeOf,
   buildLevelPayload,
   dedupeStrings,
   guidedAbilitiesFromPath,
   guidedEquipmentMetaFromPath,
   guidanceGroupsFromPathData,
-  isCodexBaseSkill,
   isCodexSubSkill,
-  isFeatOrientedGuidanceGroup,
   makeLevelRow,
   newFeatGuidanceGroup,
   serializeRecommendedAbilities,
   toCsv,
   toLevelForm,
-  toLeveledFeatLike,
   toastLevel1SkillWarnings,
   type AdminArchetypeFormState,
   type CodexFeatLike,
@@ -38,7 +34,7 @@ import {
   type PathSelectionKey,
   type SelectionOption,
 } from './admin-archetype-path-form';
-import { getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
+import { useAdminArchetypeSelectionOptions } from './use-admin-archetype-selection-options';
 import {
   parseArchetypePathData,
   pathHiddenFromPlayerPicker,
@@ -50,7 +46,7 @@ import {
   unionFeatIdsFromGuidanceGroups,
   resolvePathGuidanceAudience,
 } from '@/lib/game/archetype-path';
-import { validateLevel1Skills, validatePathDataForPublish } from '@/lib/game/path-validation';
+import { validatePathDataForPublish } from '@/lib/game/path-validation';
 import { snapshotOfficialPowerForInnate } from '@/lib/game/innate-eligibility';
 import {
   createItemTpResolver,
@@ -115,275 +111,51 @@ export function useAdminArchetypeWorkspace() {
       (a.description || '').toLowerCase().includes(search.toLowerCase())
   );
 
-  const featById = useMemo(() => {
-    const map = new Map<string, CodexFeatLike>();
-    for (const feat of codexFeats as CodexFeatLike[]) {
-      if (feat.id != null && feat.id !== '') map.set(String(feat.id), feat);
-    }
-    return map;
-  }, [codexFeats]);
+  const selection = useAdminArchetypeSelectionOptions({
+    codexFeats: codexFeats as CodexFeatLike[],
+    codexSkills: codexSkills as CodexSkill[],
+    codexEquipment: codexEquipment as Array<{ id?: string; name?: string }>,
+    officialPowers,
+    officialTechniques,
+    officialItems,
+    level1Skills: form.level1Path.skills,
+    guidanceGroups: form.guidanceGroups,
+    isLoadingOfficialPowers,
+    isLoadingOfficialTechniques,
+    isLoadingOfficialItems,
+  });
 
-  const featOptions = useMemo<SelectionOption[]>(
-    () =>
-      (codexFeats as CodexFeatLike[])
-        .map((feat) => {
-          const normalized = toLeveledFeatLike(feat);
-          return {
-            value: String(normalized.id),
-            label: formatFeatName(normalized) || String(normalized.id),
-          };
-        })
-        .filter((feat) => feat.value && feat.label)
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [codexFeats]
-  );
-  const getFeatOptionsForLevel = useCallback(
-    (pathLevel: number): SelectionOption[] => {
-      return (codexFeats as CodexFeatLike[])
-        .filter((feat) => {
-          const lvlReq = feat.lvl_req;
-          if (lvlReq != null && lvlReq > pathLevel) return false;
-          if (pathLevel === 1) return getFeatLevel(toLeveledFeatLike(feat)) === 1;
-          return true;
-        })
-        .map((feat) => {
-          const normalized = toLeveledFeatLike(feat);
-          return {
-            value: String(normalized.id),
-            label: formatFeatName(normalized) || String(normalized.id),
-          };
-        })
-        .filter((o) => o.value && o.label)
-        .sort((a, b) => a.label.localeCompare(b.label));
-    },
-    [codexFeats]
-  );
-  const featOptionsLevel1 = useMemo(() => getFeatOptionsForLevel(1), [getFeatOptionsForLevel]);
-  const characterFeatOptionsLevel1 = useMemo(
-    () =>
-      featOptionsLevel1.filter((opt) => {
-        const feat = (codexFeats as CodexFeatLike[]).find((f) => String(f.id) === opt.value);
-        return Boolean(feat?.char_feat);
-      }),
-    [featOptionsLevel1, codexFeats]
-  );
-  const archetypeFeatOptionsLevel1 = useMemo(
-    () =>
-      featOptionsLevel1.filter((opt) => {
-        const feat = (codexFeats as CodexFeatLike[]).find((f) => String(f.id) === opt.value);
-        return !feat?.char_feat;
-      }),
-    [featOptionsLevel1, codexFeats]
-  );
-
-  const allSkillOptions = useMemo<SelectionOption[]>(
-    () =>
-      (codexSkills as CodexSkill[])
-        .map((skill) => ({ value: String(skill.id ?? ''), label: String(skill.name ?? skill.id ?? '') }))
-        .filter((skill) => skill.value && skill.label)
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [codexSkills]
-  );
-
-  const baseSkillOptions = useMemo<SelectionOption[]>(
-    () =>
-      (codexSkills as CodexSkill[])
-        .filter((skill) => isCodexBaseSkill(skill))
-        .map((skill) => ({ value: String(skill.id ?? ''), label: String(skill.name ?? skill.id ?? '') }))
-        .filter((skill) => skill.value && skill.label)
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [codexSkills]
-  );
-
-  const skillById = useMemo(() => {
-    const map = new Map<string, CodexSkill>();
-    for (const skill of codexSkills as CodexSkill[]) {
-      if (skill.id != null) map.set(String(skill.id), skill);
-    }
-    return map;
-  }, [codexSkills]);
-
-  /** Picker options: base skills + any legacy-selected ids (so chips keep labels). */
-  const level1SkillPickerOptions = useMemo<SelectionOption[]>(() => {
-    const selected = form.level1Path.skills;
-    const byValue = new Map(baseSkillOptions.map((o) => [o.value, o]));
-    for (const id of selected) {
-      if (byValue.has(id)) continue;
-      const fromAll = allSkillOptions.find((o) => o.value === id);
-      if (fromAll) byValue.set(id, fromAll);
-      else byValue.set(id, { value: id, label: id });
-    }
-    return Array.from(byValue.values()).sort((a, b) => a.label.localeCompare(b.label));
-  }, [baseSkillOptions, allSkillOptions, form.level1Path.skills]);
-
-  const level1SkillIssues = useMemo(
-    () =>
-      validateLevel1Skills(form.level1Path.skills, {
-        isSubSkill: (id) => {
-          const skill = skillById.get(String(id));
-          if (!skill) return null;
-          return isCodexSubSkill(skill);
-        },
-      }),
-    [form.level1Path.skills, skillById]
-  );
-
-  const powerOptions = useMemo<SelectionOption[]>(
-    () =>
-      officialPowers
-        .map((power) => ({
-          value: String(power.id ?? ''),
-          label: String(power.name ?? power.id ?? ''),
-        }))
-        .filter((power) => power.value && power.label)
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [officialPowers]
-  );
-
-  const techniqueOptions = useMemo<SelectionOption[]>(
-    () =>
-      officialTechniques
-        .map((technique) => ({
-          value: String(technique.id ?? ''),
-          label: String(technique.name ?? technique.id ?? ''),
-        }))
-        .filter((technique) => technique.value && technique.label)
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [officialTechniques]
-  );
-
-  const armamentTypeById = useMemo(() => {
-    const map = new Map<string, string>();
-    for (const item of officialItems) {
-      const id = String(item.id ?? '');
-      if (id) map.set(id, String(item.type ?? '').toLowerCase());
-    }
-    return map;
-  }, [officialItems]);
-
-  const weaponShieldArmamentOptions = useMemo<SelectionOption[]>(
-    () =>
-      officialItems
-        .filter((item) => {
-          const type = String(item.type ?? '').toLowerCase();
-          return type === 'weapon' || type === 'shield';
-        })
-        .map((item) => ({
-          value: String(item.id ?? ''),
-          label: String(item.name ?? item.id ?? ''),
-        }))
-        .filter((item) => item.value && item.label)
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [officialItems]
-  );
-
-  const armorArmamentOptions = useMemo<SelectionOption[]>(
-    () =>
-      officialItems
-        .filter((item) => String(item.type ?? '').toLowerCase() === 'armor')
-        .map((item) => ({
-          value: String(item.id ?? ''),
-          label: String(item.name ?? item.id ?? ''),
-        }))
-        .filter((item) => item.value && item.label)
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [officialItems]
-  );
-
-  /** Combined for labels / unknown checks / remove-armaments (single storage pool). */
-  const armamentOptions = useMemo<SelectionOption[]>(
-    () =>
-      dedupeStrings([
-        ...weaponShieldArmamentOptions.map((o) => o.value),
-        ...armorArmamentOptions.map((o) => o.value),
-      ])
-        .map(
-          (id) =>
-            weaponShieldArmamentOptions.find((o) => o.value === id) ??
-            armorArmamentOptions.find((o) => o.value === id)
-        )
-        .filter((item): item is SelectionOption => Boolean(item))
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [weaponShieldArmamentOptions, armorArmamentOptions]
-  );
+  const {
+    featById,
+    getFeatOptionsForLevel,
+    featOptionsLevel1,
+    characterFeatOptionsLevel1,
+    archetypeFeatOptionsLevel1,
+    skillById,
+    level1SkillPickerOptions,
+    level1SkillIssues,
+    weaponShieldArmamentOptions,
+    armorArmamentOptions,
+    armamentOptions,
+    filterLevel1WeaponShieldEntries,
+    filterLevel1ArmorEntries,
+    equipmentOptions,
+    optionsByField,
+    isSelectionDataLoading,
+    characterFeatGroups,
+    archetypeFeatGroups,
+    syncedFeatPreviewLabels,
+  } = selection;
 
   const level1WeaponShieldEntries = useMemo(
-    () =>
-      form.level1Path.armamentEntries.filter((entry) => {
-        const kind = armamentTypeOf(entry.id, armamentTypeById);
-        return kind === 'weapon' || kind === 'shield' || kind === 'unknown';
-      }),
-    [form.level1Path.armamentEntries, armamentTypeById]
+    () => filterLevel1WeaponShieldEntries(form.level1Path.armamentEntries),
+    [filterLevel1WeaponShieldEntries, form.level1Path.armamentEntries]
   );
 
   const level1ArmorEntries = useMemo(
-    () =>
-      form.level1Path.armamentEntries.filter(
-        (entry) => armamentTypeOf(entry.id, armamentTypeById) === 'armor'
-      ),
-    [form.level1Path.armamentEntries, armamentTypeById]
+    () => filterLevel1ArmorEntries(form.level1Path.armamentEntries),
+    [filterLevel1ArmorEntries, form.level1Path.armamentEntries]
   );
-
-  const equipmentOptions = useMemo<SelectionOption[]>(() => {
-    const codex = (codexEquipment as Array<{ id?: string; name?: string }>)
-      .map((item) => ({
-        value: String(item.id ?? ''),
-        label: `${String(item.name ?? item.id ?? '')} (Codex)`,
-      }))
-      .filter((item) => item.value && item.label);
-
-    const official = officialItems
-      .filter((item) => String(item.type ?? '').toLowerCase() === 'equipment')
-      .map((item) => ({
-        value: String(item.id ?? ''),
-        label: `${String(item.name ?? item.id ?? '')} (Official)`,
-      }))
-      .filter((item) => item.value && item.label);
-
-    return dedupeStrings([...codex.map((item) => item.value), ...official.map((item) => item.value)])
-      .map((id) => codex.find((item) => item.value === id) ?? official.find((item) => item.value === id))
-      .filter((item): item is SelectionOption => Boolean(item))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [codexEquipment, officialItems]);
-
-  const optionsByField = useMemo(
-    () => ({
-      feats: featOptions,
-      skills: allSkillOptions,
-      powers: powerOptions,
-      innatePowers: powerOptions,
-      techniques: techniqueOptions,
-      armaments: armamentOptions,
-      equipment: equipmentOptions,
-      removeFeats: featOptions,
-      removePowers: powerOptions,
-      removeTechniques: techniqueOptions,
-      removeArmaments: armamentOptions,
-    }),
-    [featOptions, allSkillOptions, powerOptions, techniqueOptions, armamentOptions, equipmentOptions]
-  );
-
-  const isSelectionDataLoading =
-    isLoadingOfficialPowers || isLoadingOfficialTechniques || isLoadingOfficialItems;
-
-  const characterFeatGroups = useMemo(
-    () =>
-      form.guidanceGroups.filter(
-        (g) => isFeatOrientedGuidanceGroup(g) && resolvePathGuidanceAudience(g) === 'character'
-      ),
-    [form.guidanceGroups]
-  );
-  const archetypeFeatGroups = useMemo(
-    () =>
-      form.guidanceGroups.filter(
-        (g) => isFeatOrientedGuidanceGroup(g) && resolvePathGuidanceAudience(g) === 'archetype'
-      ),
-    [form.guidanceGroups]
-  );
-  const syncedFeatPreviewLabels = useMemo(() => {
-    const ids = unionFeatIdsFromGuidanceGroups(form.guidanceGroups);
-    return ids.map((value) => featOptions.find((option) => option.value === value)?.label ?? value);
-  }, [form.guidanceGroups, featOptions]);
 
   const updateFeatGuidanceGroup = (
     groupId: string,
@@ -468,6 +240,7 @@ export function useAdminArchetypeWorkspace() {
 
     const checkField = (key: PathSelectionKey, label: string) => {
       const options = optionsByField[key];
+      if (!options) return;
       const knownIds = new Set(options.map((opt) => opt.value));
       const ids = levelForm[key].filter(Boolean);
       const invalidIds = ids.filter((id) => !knownIds.has(id));
