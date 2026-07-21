@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 13 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 12 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` TASK-601 done; remaining TASK-602–606. Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` TASK-601–602 done; remaining TASK-603–606. Quality pseudo `/global-audit` → TASK-607–611, 613 (TASK-612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -60,31 +60,6 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
-
----
-
-- id: TASK-602
-  title: Recovery modal → SegmentedControl + theme-aware status tokens
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/components/character-sheet/recovery-modal.tsx
-    - src/components/shared/segmented-control.tsx
-    - src/docs/MOBILE_UX.md
-    - src/docs/ai/BUILD_VALIDATION.md
-  description: |
-    Replace hand-rolled Full/Partial, hours (2/4/6), and Auto/Manual button clusters in Recovery
-    with SegmentedControl (icons OK). Prefer warning-fg / semantic tokens over numbered warning-*
-    ramps + ad-hoc dark: pairs where practical. Keep recovery math and fullScreenOnMobile.
-  acceptance_criteria:
-    - Three choice groups use SegmentedControl (or documented exception if icon+color treatment cannot).
-    - No parallel pill chrome; touch targets ≥44px on mobile.
-    - BUILD_VALIDATION recovery smoke steps still pass (add/adjust if visual labels change).
-    - npm run build passes.
-  notes: |
-    From 2026-07-20 /global-audit. Visual change — verify against sheet Recovery flow.
 
 ---
 
