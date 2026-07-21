@@ -1,3 +1,51 @@
+- id: TASK-607
+  title: Split crafting [id] page under ~500 LOC facade
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-21
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-019
+    tests:
+      - DEV-V-019-T011
+  developer_test_plan: |
+    Suite DEV-V-019 T011 — crafting session load + live requirements; also smoke:
+    open `/crafting/<id>` → change quantity/options → enter a roll → Complete Crafting still works.
+  related_files:
+    - src/app/(main)/crafting/[id]/page.tsx
+    - src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts
+    - src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts
+    - src/app/(main)/crafting/[id]/_components/crafting-summary-sidebar.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-adjustments-section.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-outcome-card.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Crafting session page is the largest TSX hotspot (~2009 LOC). Follow TASK-598 pattern:
+    extract co-located panels/hooks/helpers; keep a thin page facade under ~500 LOC; no behavior
+    change; no parallel crafting UI system.
+  acceptance_criteria:
+    - `crafting/[id]/page.tsx` facade ≤ ~500 LOC (prefer net move of presentation/helpers out).
+    - Named exports / routes unchanged; FEATURE_INDEX updated if paths move.
+    - `npm run build` passes; smoke crafting session load/roll/save if touched.
+    - No new shared/ui barrel symbols unless Architect path.
+  completed_work: |
+    - Extracted helpers + `useCraftingToolPage` + six co-located panels under `crafting/[id]/_components/`.
+    - Page facade ~190 LOC (was ~2009); default export / route unchanged; no new shared/ui symbols.
+    - FEATURE_INDEX crafting row updated.
+    - /cleanup: deleted unused `CraftingToolPageModel`; wired panels onto shared helper APIs (energy/DS/uses counts).
+  notes: |
+    Largest single play-loop readability win (quality audit 2026-07-20). Was TASK-601 pre-renumber.
+  evidence: |
+    npm run build; npm run tasks:validate; eslint on crafting/[id]; verification_status pending-qa.
+
+---
+
 - id: TASK-606
   title: Owner ack — Advanced CreatorResourceBar → PointStatus / LoadoutBudgetBar grammar
   created_at: 2026-07-20
