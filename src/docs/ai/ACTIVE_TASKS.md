@@ -236,7 +236,7 @@ Do **not** read the done archive at session start.
     - If new shared public exports: ADR + allowlist update + `tasks:validate-shared-ui`.
     - `npm run build` + relevant vitest (e.g. grid-list-row-chrome) pass.
   notes: |
-    Was TASK-605 pre-renumber. Prefer TASK-604 weapon-attack wire before splitting creature-stat-block.
+    Was TASK-605 pre-renumber. TASK-604 weapon-attack wire done — safe to split creature-stat-block.
     Default Implementer path = private co-located files (Architect if new barrel API).
 
 
