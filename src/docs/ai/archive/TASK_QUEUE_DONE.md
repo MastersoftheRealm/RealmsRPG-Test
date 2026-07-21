@@ -8,11 +8,11 @@
   status: done
   verification_status: pending-qa
   build_validation: |
-    suite: DEV-V-018
+    suite: DEV-V-025
     tests:
-      - DEV-V-018-T011
+      - DEV-V-025-T004
   developer_test_plan: |
-    Suite DEV-V-018 T011 — see BUILD_VALIDATION.md
+    Suite DEV-V-025 T004 — see BUILD_VALIDATION.md
   related_files:
     - src/components/shared/creature-stat-block.tsx
     - src/lib/game/weapon-attack-ability.ts
@@ -28,9 +28,9 @@
     - Displayed bonuses match sheet helper for same properties/abilities/prof.
     - Vitest or existing attack-ability tests cover the shared path; npm run build passes.
   notes: |
-    From 2026-07-20 /global-audit. Thin getCreatureWeaponAttackBonus wrapper normalizes legacy
-    ability keys then delegates to getWeaponAttackBonusFromProperties. Vitest covers melee /
-    finesse / ranged / thrown bonus path. Prefer before TASK-611 LOC split of the same file.
+    From 2026-07-20 /global-audit. Call site uses getWeaponAttackBonusFromProperties + one-shot
+    attackAbilities (legacy keys via getAbilityValue). /cleanup: deleted thin wrapper; BV
+    relocated DEV-V-018-T011 → DEV-V-025-T004. Vitest covers melee/finesse/ranged/thrown.
     verification_status pending-qa.
 
 ---

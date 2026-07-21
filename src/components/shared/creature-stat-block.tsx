@@ -258,34 +258,6 @@ type CodexProperty = {
   tp_cost?: number;
 };
 
-/** Attack bonus: ability + martial proficiency (shared weapon-attack-ability). */
-function getCreatureWeaponAttackBonus(
-  weapon: {
-    properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }> | Array<string>;
-    range?: string;
-  },
-  abilities: CreatureAbilities,
-  martialProficiency = 0
-): number {
-  const props = (weapon.properties || []).map((p) =>
-    typeof p === 'string' ? p : { id: p?.id, name: p?.name, op_1_lvl: p?.op_1_lvl }
-  );
-  const fullAbilities: Abilities = {
-    strength: getAbilityValue(abilities, 'strength'),
-    vitality: getAbilityValue(abilities, 'vitality'),
-    agility: getAbilityValue(abilities, 'agility'),
-    acuity: getAbilityValue(abilities, 'acuity'),
-    intelligence: getAbilityValue(abilities, 'intelligence'),
-    charisma: getAbilityValue(abilities, 'charisma'),
-  };
-  return getWeaponAttackBonusFromProperties(
-    props,
-    fullAbilities,
-    martialProficiency,
-    weapon.range
-  ).bonus;
-}
-
 function partsToChips(parts: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }> | undefined, codexParts: CodexPart[]): ChipData[] {
   if (!parts || parts.length === 0) return [];
   return parts.map((part) => {
@@ -402,6 +374,15 @@ export function CreatureStatBlock({
   const { data: officialTechniques = [] } = useOfficialLibrary('techniques');
   const level = creature.level ?? 1;
   const abilitiesRecord = creature.abilities ?? {};
+  /** Normalized Realms abilities (legacy keys via getAbilityValue) for shared weapon attack math. */
+  const attackAbilities: Abilities = {
+    strength: getAbilityValue(abilitiesRecord, 'strength'),
+    vitality: getAbilityValue(abilitiesRecord, 'vitality'),
+    agility: getAbilityValue(abilitiesRecord, 'agility'),
+    acuity: getAbilityValue(abilitiesRecord, 'acuity'),
+    intelligence: getAbilityValue(abilitiesRecord, 'intelligence'),
+    charisma: getAbilityValue(abilitiesRecord, 'charisma'),
+  };
   const hpAlloc = creature.hitPoints ?? creature.hp ?? 0;
   const enAlloc = creature.energyPoints ?? 0;
   const maxHpDisplay = calculateCreatureMaxHealth(level, abilitiesRecord, hpAlloc);
@@ -1069,11 +1050,12 @@ export function CreatureStatBlock({
                       thumbnail: resolveListRowThumbnail('equipment', w, w.name),
                       damage: w.damage,
                       range: normalizeRangeDisplay(w.range) || 'Melee',
-                      attackBonus: getCreatureWeaponAttackBonus(
-                        { properties: resolveArmamentProperties(w), range: normalizeRangeDisplay(w.range) || 'Melee' },
-                        creature.abilities ?? {},
-                        creature.martialProficiency ?? 0
-                      ),
+                      attackBonus: getWeaponAttackBonusFromProperties(
+                        resolveArmamentProperties(w),
+                        attackAbilities,
+                        creature.martialProficiency ?? 0,
+                        normalizeRangeDisplay(w.range) || 'Melee'
+                      ).bonus,
                       chips: propertiesToChips(resolveArmamentProperties(w), itemPropertiesDb as unknown as CodexProperty[]),
                     }))}
                     showListHeader
