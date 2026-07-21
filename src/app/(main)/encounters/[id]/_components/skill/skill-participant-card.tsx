@@ -72,7 +72,6 @@ export function ParticipantCard({
   onClearRoll: () => void;
   onSetHelping: (v: boolean) => void;
   onRemove: () => void;
-  onUpdateInitiative?: (value: number) => void;
   onUpdateParticipantType?: (t: SkillParticipantType) => void;
   onRollInitiative?: () => void;
   onDragStart?: (e: DragEvent<HTMLDivElement>) => void;

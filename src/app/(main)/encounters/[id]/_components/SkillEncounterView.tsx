@@ -18,8 +18,6 @@ import { SkillParticipantList } from "./skill/skill-participant-list";
 import { SkillSidebar } from "./skill/skill-sidebar";
 import type { SkillEncounterViewProps } from "./skill/skill-encounter-view-props";
 
-export type { SkillEncounterViewProps } from "./skill/skill-encounter-view-props";
-
 type EncounterWithSkillEncounter = Encounter & {
   skillEncounter: SkillEncounterState;
 };
@@ -104,7 +102,6 @@ function SkillEncounterViewInner(
             onClearRoll={model.clearParticipantRoll}
             onSetHelping={model.setParticipantHelping}
             onRemove={model.removeParticipant}
-            onUpdateInitiative={model.updateParticipantInitiative}
             onUpdateParticipantType={model.updateParticipantType}
             onRollInitiative={model.rollInitiativeForParticipant}
             onDragStart={model.handleDragStart}

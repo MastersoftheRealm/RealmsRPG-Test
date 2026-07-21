@@ -22,10 +22,12 @@
     - src/app/(main)/encounters/[id]/_components/encounter-view-helpers.ts
     - src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts
     - src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts
+    - src/app/(main)/encounters/[id]/_components/combat/combat-encounter-view-props.ts
     - src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx
     - src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx
     - src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx
     - src/app/(main)/encounters/[id]/_components/skill/use-skill-encounter-view.ts
+    - src/app/(main)/encounters/[id]/_components/skill/skill-encounter-view-props.ts
     - src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx
     - src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx
     - src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx
@@ -48,6 +50,7 @@
     - Consolidated duplicated combat initiative ordering onto `orderCombatantsByInitiative`.
     - Default exports + combat/skill/mixed route imports unchanged; AddCombatantModal preserved.
     - FEATURE_INDEX + DEV-V-030 smoke suite added.
+    - /cleanup: deleted dead facade helper/type re-exports; dropped unused skill-hook returns + dead `onUpdateInitiative` plumbing; helpers import id/initiative from shared file only.
   notes: Share combat/skill helpers only when identical — no premature mega-abstraction. Was TASK-602 pre-renumber.
   evidence: |
     npm run build; npm run tasks:validate; eslint on encounter _components; verification_status pending-qa.

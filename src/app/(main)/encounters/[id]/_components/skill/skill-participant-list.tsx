@@ -29,7 +29,6 @@ export interface SkillParticipantListProps {
   onClearRoll: (id: string) => void;
   onSetHelping: (id: string, v: boolean) => void;
   onRemove: (id: string) => void;
-  onUpdateInitiative: (id: string, value: number) => void;
   onUpdateParticipantType: (id: string, t: SkillParticipantType) => void;
   onRollInitiative: (id: string) => void;
   onDragStart: (e: DragEvent<HTMLDivElement>, id: string) => void;
@@ -52,7 +51,6 @@ export function SkillParticipantList({
   onClearRoll,
   onSetHelping,
   onRemove,
-  onUpdateInitiative,
   onUpdateParticipantType,
   onRollInitiative,
   onDragStart,
@@ -91,7 +89,6 @@ export function SkillParticipantList({
             onClearRoll={() => onClearRoll(p.id)}
             onSetHelping={(v) => onSetHelping(p.id, v)}
             onRemove={() => onRemove(p.id)}
-            onUpdateInitiative={(v) => onUpdateInitiative(p.id, v)}
             onUpdateParticipantType={(t) => onUpdateParticipantType(p.id, t)}
             onRollInitiative={() => onRollInitiative(p.id)}
             onDragStart={(e) => onDragStart(e, p.id)}

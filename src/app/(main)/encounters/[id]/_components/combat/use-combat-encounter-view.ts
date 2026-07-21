@@ -37,9 +37,8 @@ import type {
   CampaignCharacterEncounterData,
 } from "@/types/campaign";
 import type { CombatEncounterViewProps } from "./combat-encounter-view-props";
+import { generateId, rollInitiative } from "../encounter-view-helpers";
 import {
-  generateId,
-  rollInitiative,
   sortCombatantsForTurnOrder,
   remapTurnIndexAfterReorder,
   orderCombatantsByInitiative,
@@ -58,7 +57,7 @@ export function useCombatEncounterView({
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingAllChars, setAddingAllChars] = useState(false);
   const [newCombatant, setNewCombatant] = useState(() =>
-    createEmptyNewCombatantForm(rollInitiative),
+    createEmptyNewCombatantForm(),
   );
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
@@ -342,7 +341,7 @@ export function useCombatEncounterView({
         ? { ...prev, combatants: [...prev.combatants, ...newCombatants] }
         : prev,
     );
-    setNewCombatant(createEmptyNewCombatantForm(rollInitiative));
+    setNewCombatant(createEmptyNewCombatantForm());
   };
 
   const addCombatantsFromModal = (combatants: TrackedCombatant[]) => {

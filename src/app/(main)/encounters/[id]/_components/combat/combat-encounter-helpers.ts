@@ -5,12 +5,7 @@
  */
 
 import type { Combatant } from "@/types/encounter";
-import {
-  generateId,
-  rollInitiative,
-} from "../encounter-view-helpers";
-
-export { generateId, rollInitiative };
+import { rollInitiative } from "../encounter-view-helpers";
 
 /** Initiative order used for turn tracking and drag-reorder remapping. */
 export function sortCombatantsForTurnOrder(
@@ -94,12 +89,10 @@ export type NewCombatantForm = {
   quantity: number;
 };
 
-export function createEmptyNewCombatantForm(
-  rollInitiativeFn: (acuity: number) => number = rollInitiative,
-): NewCombatantForm {
+export function createEmptyNewCombatantForm(): NewCombatantForm {
   return {
     name: "",
-    initiative: rollInitiativeFn(0),
+    initiative: rollInitiative(0),
     acuity: 0,
     maxHealth: 20,
     maxEnergy: 10,

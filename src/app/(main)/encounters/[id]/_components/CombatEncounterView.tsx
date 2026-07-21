@@ -17,13 +17,6 @@ import { CombatCombatantList } from "./combat/combat-combatant-list";
 import { CombatAddSidebar } from "./combat/combat-add-sidebar";
 import type { CombatEncounterViewProps } from "./combat/combat-encounter-view-props";
 
-export type { CombatEncounterViewProps } from "./combat/combat-encounter-view-props";
-export {
-  generateId,
-  rollInitiative,
-  sortCombatantsForTurnOrder,
-} from "./combat/combat-encounter-helpers";
-
 export default function CombatEncounterView(props: CombatEncounterViewProps) {
   if (props.encounter === null) return null;
   return <CombatEncounterViewInner {...props} encounter={props.encounter} />;
