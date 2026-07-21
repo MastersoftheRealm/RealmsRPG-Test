@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 6 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 5 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` TASK-601–606 done; filed TASK-614 (LoadoutBudgetBar → shared, Architect). Quality pseudo `/global-audit` → TASK-610–611, 613 (TASK-607/608/609/612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` TASK-601–606 done; filed TASK-614 (LoadoutBudgetBar → shared, Architect). Quality pseudo `/global-audit` → TASK-611, 613 (TASK-607/608/609/610/612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -60,35 +60,6 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
-
----
-
-- id: TASK-610
-  title: Split remaining creator hot files under ~500 LOC
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/app/(main)/creature-creator/use-creature-creator-workspace.ts
-    - src/app/(main)/creature-creator/creature-creator-editor.tsx
-    - src/app/(main)/species-creator/page.tsx
-    - src/app/(main)/empowered-technique-creator/page.tsx
-    - src/components/guided-creator/steps/powers-techniques-step.tsx
-    - src/components/character-creator/steps/ancestry-step.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    After TASK-598 sheet/Advanced splits, remaining creator surfaces still exceed ~800 LOC
-    (creature workspace/editor, species page, empowered technique page, guided powers-techniques,
-    Advanced ancestry-step). Continue facade + co-located module pattern; extend existing
-    guided/creator libs rather than forking.
-  acceptance_criteria:
-    - Listed files moved toward ≤ ~500 LOC facades (partial OK with concrete follow_up_tasks).
-    - No new parallel creator selection/modal systems; barrels stay honest.
-    - Targeted vitest where logic extracts to `lib/`; `npm run build` passes.
-  notes: |
-    Was TASK-604 pre-renumber. Prefer TASK-601 workspace extract for species/empowered first;
-    ancestry-step — extract UI panels (`ancestry-pick-tasks` already shared).
 
 ---
 

@@ -4070,12 +4070,12 @@ islands (Phase 4) and workspace hook (Phase 5).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-018-T009 — Creature creator editor islands (TASK-381 Phase 4)
+#### DEV-V-018-T009 — Creature creator editor islands (TASK-381 Phase 4; TASK-610 splits)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-018 |
-| **Related task** | TASK-381 |
+| **Related task** | TASK-381 / TASK-610 |
 | **Where** | `/creature-creator` (+ `?edit=<id>` when available) |
 | **Needs** | Signed in; optional saved library creature |
 
@@ -4086,19 +4086,19 @@ islands (Phase 4) and workspace hook (Phase 5).
 4. Optional: `?edit=<id>` loads target; plain `/creature-creator` shows blank draft.
 
 **Expected**
-- Form sections render from `creature-creator-editor`; shell/modals/sidebar unchanged.
+- Form sections render from `creature-creator-editor` facade + co-located `creature-creator-editor-{traits,loadout}-sections.tsx`; shell/modals/sidebar unchanged.
 - No regression vs T005 chrome or T010 bootstrap.
 
-**Rollback** — Delete `creature-creator-editor.tsx` and restore prior page children from git.
+**Rollback** — Delete `creature-creator-editor-{traits,loadout}-sections.tsx` and restore monolithic `creature-creator-editor.tsx` from git.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-018-T010 — Creature creator workspace hook (TASK-381 Phase 5)
+#### DEV-V-018-T010 — Creature creator workspace hook (TASK-381 Phase 5; TASK-610 splits)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-018 |
-| **Related task** | TASK-381 |
+| **Related task** | TASK-381 / TASK-610 |
 | **Where** | `/creature-creator` (+ `?edit=<id>` when available) |
 | **Needs** | Signed in; optional saved library creature |
 
@@ -4108,10 +4108,10 @@ islands (Phase 4) and workspace hook (Phase 5).
 3. Optional: `?edit=<id>` then navigate to plain `/creature-creator` — blank draft (no edit leak).
 
 **Expected**
-- State lives in `use-creature-creator-workspace`; page is shell + modal/editor wiring only.
+- State lives in `use-creature-creator-workspace` + co-located `creature-creator-{library-selectables,derived-stats,feat-armament-display,skill-bonus,summaries}.ts`; page is shell + modal/editor wiring only.
 - No regression vs T005 / T009 / DEV-V-019-T010.
 
-**Rollback** — Delete `use-creature-creator-workspace.ts` and restore prior page body from git; keep editor islands.
+**Rollback** — Delete co-located workspace modules and restore monolithic `use-creature-creator-workspace.ts` from git; keep editor islands.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

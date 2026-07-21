@@ -8,9 +8,8 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Spinner, EmptyState, DescriptorChip } from '@/components/ui';
-import { GuidedLayerNav, PointStatus } from '@/components/shared';
-import { cn } from '@/lib/utils';
+import { Spinner } from '@/components/ui';
+import { PointStatus } from '@/components/shared';
 import {
   useEquipment,
   useOfficialLibrary,
@@ -20,22 +19,22 @@ import {
 } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
-import { GuidedChoiceCard } from '../guided-choice-card';
 import { GuidedPowersTechniquesL2Modal } from '../guided-powers-techniques-l2-modal';
-import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
-import type { ArchetypeCategory } from '@/types';
-import type { PathGuidanceGroup } from '@/types/archetype';
-import type { LibraryPower, LibraryTechnique } from '@/types/library';
+import { GuidedPowersTechniquesL1Content } from '../guided-powers-techniques-l1-content';
 import {
   buildPowerTechniqueCardFacts,
   resolvePowerTechniqueEnergy,
   resolvePowerTechniqueTpCost,
 } from '@/lib/guided-creator/power-technique-display';
+import { getPowersTechniquesL1Ids } from '@/lib/guided-creator/powers-techniques-l1-candidates';
 import {
-  getPowersTechniquesL1Ids,
-  isPathRecommendedPowersTechniquesId,
-} from '@/lib/guided-creator/powers-techniques-l1-candidates';
+  buildLookup,
+  pickAffordableIds,
+  pickInnateFillIds,
+  resolveLibraryItem,
+  stepCopy,
+} from '@/lib/guided-creator/powers-techniques-step-helpers';
 import {
   combineGuidedTpBudgets,
   wouldExceedSharedTp,
@@ -43,100 +42,12 @@ import {
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import { ARCHETYPE_CONFIGS } from '@/lib/game/constants';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import { GuidedFactChipRow } from '../guided-equipment-fact-chips';
 import { LoadoutBudgetBar } from '../loadout-budget-bar';
 import { normalizeId } from '@/lib/utils';
 
 const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
 
-type ItemKind = 'powers' | 'techniques';
 type L2ModalKind = 'regular' | 'innate' | null;
-
-function stepCopy(type: ArchetypeCategory | null): {
-  title: string;
-  description: string;
-  kind: ItemKind;
-} {
-  if (type === 'martial') {
-    return { ...ptCopy.martial, kind: 'techniques' as const };
-  }
-  if (type === 'powered-martial') {
-    return { ...ptCopy.poweredMartial, kind: 'powers' as const };
-  }
-  return { ...ptCopy.power, kind: 'powers' as const };
-}
-
-type GuidedPathLibraryRow = LibraryPower | LibraryTechnique;
-
-function buildLookup(items: GuidedPathLibraryRow[]): Map<string, GuidedPathLibraryRow> {
-  const map = new Map<string, GuidedPathLibraryRow>();
-  items.forEach((item) => {
-    const id = item.id != null ? String(item.id) : '';
-    const name = item.name != null ? String(item.name) : '';
-    if (id) map.set(id.toLowerCase(), item);
-    if (name) map.set(name.toLowerCase(), item);
-  });
-  return map;
-}
-
-function resolveLibraryItem(
-  id: string,
-  lookup: Map<string, GuidedPathLibraryRow>
-): GuidedPathLibraryRow | undefined {
-  return lookup.get(String(id).toLowerCase());
-}
-
-function pickAffordableIds(
-  ids: string[],
-  costOf: (id: string) => number,
-  alreadySpent: number,
-  limit: number
-): string[] {
-  const picked: string[] = [];
-  let spent = alreadySpent;
-  for (const id of ids) {
-    const cost = costOf(id);
-    if (spent + cost > limit) continue;
-    picked.push(id);
-    spent += cost;
-  }
-  return picked;
-}
-
-/**
- * Soft-seed innate picks that fit threshold, fill as much Innate Energy as possible,
- * and stay within the shared Training Points budget.
- */
-function pickInnateFillIds(
-  ids: string[],
-  energyOf: (id: string) => number | undefined,
-  tpOf: (id: string) => number,
-  threshold: number,
-  energyMax: number,
-  tpAlreadySpent: number,
-  tpLimit: number
-): string[] {
-  const candidates = ids
-    .map((id) => ({ id, energy: energyOf(id), tp: tpOf(id) }))
-    .filter(
-      (row): row is { id: string; energy: number; tp: number } =>
-        row.energy != null && row.energy >= 0 && row.energy <= threshold
-    )
-    .sort((a, b) => b.energy - a.energy);
-
-  const picked: string[] = [];
-  let energySpent = 0;
-  let tpSpent = tpAlreadySpent;
-  for (const row of candidates) {
-    if (energySpent + row.energy > energyMax) continue;
-    if (tpSpent + row.tp > tpLimit) continue;
-    picked.push(row.id);
-    energySpent += row.energy;
-    tpSpent += row.tp;
-    if (energySpent === energyMax) break;
-  }
-  return picked;
-}
 
 export function PowersTechniquesStep() {
   const { draft, updateDraft } = useGuidedCreatorStore();
@@ -599,7 +510,7 @@ export function PowersTechniquesStep() {
       return {
         id: String(id),
         name: facts.name,
-        description: facts.description,
+        description: facts.description ?? '',
         titleChips: facts.titleChips,
         detailChips: facts.detailChips,
         tpCost: facts.tpCost,
@@ -607,75 +518,6 @@ export function PowersTechniquesStep() {
     },
     [lookup, isTechniques, techniquePartsDb, powerPartsDb]
   );
-
-  const renderItemCard = (
-    id: string,
-    opts: {
-      selected: boolean;
-      unavailable: boolean;
-      onToggle: () => void;
-      pathRecommended?: boolean;
-    }
-  ) => {
-    const item = resolveDisplay(id);
-    return (
-      <GuidedChoiceCard
-        key={item.id}
-        density="compact"
-        title={item.name}
-        description={item.description}
-        titleMeta={
-          item.titleChips.length > 0 || opts.pathRecommended ? (
-            <span className="inline-flex flex-wrap items-center gap-1.5">
-              {opts.pathRecommended ? (
-                <DescriptorChip size="sm">{ptCopy.pathRecommendedChip}</DescriptorChip>
-              ) : null}
-              {item.titleChips.length > 0 ? (
-                <GuidedFactChipRow chips={item.titleChips} />
-              ) : null}
-            </span>
-          ) : undefined
-        }
-        expandedExtra={
-          item.detailChips.length > 0 ? (
-            <GuidedFactChipRow chips={item.detailChips} />
-          ) : undefined
-        }
-        selected={opts.selected}
-        onSelect={opts.onToggle}
-        selectAriaLabel={
-          opts.unavailable
-            ? `${item.name} unavailable: ${budgetMessage ?? ptCopy.tpBlocked}`
-            : `${opts.selected ? 'Deselect' : 'Select'} ${item.name}`
-        }
-      />
-    );
-  };
-
-  const renderGroupSection = (group: PathGuidanceGroup) => {
-    const ids = (isTechniques ? group.techniques : group.powers) ?? [];
-    if (ids.length === 0) return null;
-    const GroupHeading = showInnateTrack ? 'h4' : 'h3';
-    return (
-      <section key={group.id}>
-        <GroupHeading className="font-display text-lg font-semibold text-text-primary">
-          {group.title}
-        </GroupHeading>
-        {group.why ? (
-          <p className="mt-1 font-nunito text-sm text-text-secondary">{group.why}</p>
-        ) : null}
-        <div className={cn(GUIDED_CHOICE_COMPACT_GRID_CLASS, 'mt-3')}>
-          {ids.map((id) =>
-            renderItemCard(String(id), {
-              selected: isSelectedId(String(id), selectedIds),
-              unavailable: isRegularUnavailable(String(id)),
-              onToggle: () => toggleRegularId(String(id)),
-            })
-          )}
-        </div>
-      </section>
-    );
-  };
 
   /** Innate Energy under-fill is a soft warning only — never block Continue (TASK-573). */
   const innateSoftWarn =
@@ -752,120 +594,33 @@ export function PowersTechniquesStep() {
             </p>
           ) : null}
 
-          {showInnateTrack ? (
-            <section className="space-y-3">
-              <h3 className="font-display text-xl font-semibold text-text-primary">
-                {ptCopy.innateHeading}
-              </h3>
-              <p className="font-nunito text-sm text-text-secondary">{ptCopy.innateIntro}</p>
-              <p className="font-nunito text-xs text-text-secondary dark:text-text-secondary">
-                {ptCopy.innateThresholdHint(innateThreshold)}
-              </p>
-              {innateDisplayIds.length === 0 ? (
-                <EmptyState title={ptCopy.innateEmpty} />
-              ) : (
-                <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
-                  {innateDisplayIds.map((id) =>
-                    renderItemCard(id, {
-                      selected: isSelectedId(id, selectedInnateIds),
-                      unavailable: isInnateUnavailable(id),
-                      onToggle: () => toggleInnateId(id),
-                      pathRecommended:
-                        innatePromotedIds.length > 0 &&
-                        isPathRecommendedPowersTechniquesId(
-                          id,
-                          innateRecommendedIds,
-                          resolveCanonicalId
-                        ),
-                    })
-                  )}
-                </div>
-              )}
-              <GuidedLayerNav
-                expandLabel={ptCopy.innateSeeMore}
-                onExpand={() => setL2Modal('innate')}
-              />
-            </section>
-          ) : null}
-
-          <section className="space-y-3">
-            {showInnateTrack ? (
-              <h3 className="font-display text-xl font-semibold text-text-primary">
-                {isTechniques ? ptCopy.techniquesHeading : ptCopy.powersHeading}
-              </h3>
-            ) : null}
-
-            {allOptionIds.length === 0 && groups.length === 0 && libraryItems.length === 0 ? (
-              <EmptyState
-                title={ptCopy.emptyTitle(copy.kind)}
-                description={ptCopy.emptyDescription(copy.kind)}
-              />
-            ) : groups.length > 0 ? (
-              <div className="space-y-8">
-                <p className="font-nunito text-sm text-text-secondary">
-                  {ptCopy.groupIntro(copy.kind)}
-                </p>
-                {groups.map(renderGroupSection)}
-                {promotedIds.length > 0 ? (
-                  <section>
-                    {showInnateTrack ? (
-                      <h4 className="font-display text-lg font-semibold text-text-primary">
-                        {ptCopy.otherPicksHeading(copy.kind)}
-                      </h4>
-                    ) : (
-                      <h3 className="font-display text-lg font-semibold text-text-primary">
-                        {ptCopy.otherPicksHeading(copy.kind)}
-                      </h3>
-                    )}
-                    <p className="mt-1 font-nunito text-sm text-text-secondary">
-                      {ptCopy.otherPicksHint}
-                    </p>
-                    <div className={cn(GUIDED_CHOICE_COMPACT_GRID_CLASS, 'mt-3')}>
-                      {promotedIds.map((id) =>
-                        renderItemCard(id, {
-                          selected: isSelectedId(id, selectedIds),
-                          unavailable: isRegularUnavailable(id),
-                          onToggle: () => toggleRegularId(id),
-                        })
-                      )}
-                    </div>
-                  </section>
-                ) : null}
-              </div>
-            ) : allOptionIds.length > 0 || promotedIds.length > 0 ? (
-              <div className="space-y-4">
-                <p className="font-nunito text-sm text-text-secondary">
-                  {ptCopy.groupIntro(copy.kind)}
-                </p>
-                <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
-                  {l1DisplayIds.map((id) =>
-                    renderItemCard(id, {
-                      selected: isSelectedId(id, selectedIds),
-                      unavailable: isRegularUnavailable(id),
-                      onToggle: () => toggleRegularId(id),
-                      pathRecommended:
-                        showPathDescriptor &&
-                        isPathRecommendedPowersTechniquesId(
-                          id,
-                          allOptionIds,
-                          resolveCanonicalId
-                        ),
-                    })
-                  )}
-                </div>
-              </div>
-            ) : (
-              <EmptyState
-                title={ptCopy.emptyTitle(copy.kind)}
-                description={ptCopy.emptyDescription(copy.kind)}
-              />
-            )}
-
-            <GuidedLayerNav
-              expandLabel={ptCopy.seeMore}
-              onExpand={() => setL2Modal('regular')}
-            />
-          </section>
+          <GuidedPowersTechniquesL1Content
+            showInnateTrack={showInnateTrack}
+            isTechniques={isTechniques}
+            kind={copy.kind}
+            budgetMessage={budgetMessage}
+            innateThreshold={innateThreshold}
+            innateDisplayIds={innateDisplayIds}
+            selectedInnateIds={selectedInnateIds}
+            innatePromotedIds={innatePromotedIds}
+            innateRecommendedIds={innateRecommendedIds}
+            resolveCanonicalId={resolveCanonicalId}
+            allOptionIds={allOptionIds}
+            groups={groups}
+            l1DisplayIds={l1DisplayIds}
+            promotedIds={promotedIds}
+            selectedIds={selectedIds}
+            showPathDescriptor={showPathDescriptor}
+            libraryItemsCount={libraryItems.length}
+            isSelectedId={isSelectedId}
+            isRegularUnavailable={isRegularUnavailable}
+            isInnateUnavailable={isInnateUnavailable}
+            toggleRegularId={toggleRegularId}
+            toggleInnateId={toggleInnateId}
+            resolveDisplay={resolveDisplay}
+            onExpandInnate={() => setL2Modal('innate')}
+            onExpandRegular={() => setL2Modal('regular')}
+          />
         </div>
       )}
 

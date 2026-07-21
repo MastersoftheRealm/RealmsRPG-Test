@@ -116,6 +116,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-610** | DEV-V-018 **T009 / T010** + DEV-V-016 **T002** + DEV-V-013 smoke | Creator splits: `/creature-creator` (traits/loadout sections + workspace libs), `/empowered-technique-creator` (editor sections + cost/part modules), Advanced `/characters/new/advanced` ancestry step, Guided powers/techniques L1 — no behavior change vs pre-split |
 | **TASK-608** | DEV-V-030 **T001 / T002** | Combat + skill encounter play: add combatant/participant, round/roll chrome, AddCombatantModal still works after facade split |
 | **TASK-607** | DEV-V-019 **T011** (+ smoke) | Crafting session `/crafting/<id>`: load, change quantity/options (requirements update), enter roll, Complete Crafting; no blank flash |
 | **TASK-606** | DEV-V-001 **T014 / T016** | Advanced equipment/powers/finalize: Currency + Training Points (+ Energy on finalize) via LoadoutBudgetBar → PointStatus; no CreatorResourceBar / dual L1 chrome |

@@ -1,4 +1,44 @@
 
+- id: TASK-610
+  title: Split remaining creator hot files under ~500 LOC
+  created_at: 2026-07-20
+  completed_at: 2026-07-21
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/creature-creator/use-creature-creator-workspace.ts
+    - src/app/(main)/creature-creator/creature-creator-editor.tsx
+    - src/app/(main)/creature-creator/creature-creator-library-selectables.ts
+    - src/app/(main)/creature-creator/creature-creator-derived-stats.ts
+    - src/app/(main)/creature-creator/creature-creator-derived-stats.test.ts
+    - src/app/(main)/species-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/page.tsx
+    - src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts
+    - src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/lib/guided-creator/powers-techniques-step-helpers.ts
+    - src/lib/guided-creator/powers-techniques-step-helpers.test.ts
+    - src/components/character-creator/steps/ancestry-step.tsx
+    - src/components/character-creator/steps/ancestry/
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  follow_up_tasks:
+    - Shrink `powers-techniques-step.tsx` facade (~599 LOC) — extract toggle/seed hook
+    - Shrink `use-creature-creator-workspace.ts` (~518 LOC) — optional save/handlers slice
+  completed_work: |
+    Creature workspace/editor, empowered workspace/editor, ancestry-step, guided powers-techniques split into co-located modules; species/empowered pages already thin from TASK-601. Facades: ancestry-step 96, creature-editor 266, empowered-editor 84, species page 185, empowered page 292. Vitest: creature-creator-derived-stats.test.ts, powers-techniques-step-helpers.test.ts. npm run build passes.
+  build_validation: |
+    suite: DEV-V-018
+    tests:
+      - DEV-V-018-T009
+      - DEV-V-018-T010
+  developer_test_plan: |
+    DEV-V-018 T009/T010 smoke on /creature-creator; DEV-V-016 T002 on empowered technique columns; DEV-V-013 smoke on Advanced ancestry + Guided powers/techniques L1.
+
+---
 - id: TASK-609
   title: Split admin codex / core-rules hot files under ~500 LOC
   created_at: 2026-07-20
