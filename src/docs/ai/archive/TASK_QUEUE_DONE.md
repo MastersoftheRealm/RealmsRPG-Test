@@ -24,14 +24,17 @@
     - Chose **document exception** (task notes: prefer docs-only unless owner wants USM dual-select;
       owner directed "Do task 605").
     - Documented MixedSpeciesModal as intentional non-USM dual-species picker in FEATURE_INDEX,
-      realms-unification, and guide/02 (decision tree + intentional exceptions).
-    - File header on MixedSpeciesModal states why distinct from USM and call sites
+      realms-unification, and guide/02 decision-tree table.
+    - File header on MixedSpeciesModal states non-USM + call sites
       (Advanced species-step, sheet edit-species-modal).
+    - `/cleanup`: deleted ancestry FEATURE_INDEX cross-ref + guide/02 list-modal and
+      intentional-exceptions echoes; trimmed file header. SoT = FEATURE_INDEX row +
+      realms-unification + guide table row.
     - No behavior change; no USM redesign; verification_status n/a (docs + comment only).
   notes: |
     From 2026-07-20 /global-audit. Docs-only exception path (parity with TASK-571 AddCombatantModal).
   evidence: |
-    npm run build pass 2026-07-21; npm run tasks:validate.
+    npm run build pass 2026-07-21; npm run tasks:validate; /cleanup echo trim same day.
 
 ---
 
