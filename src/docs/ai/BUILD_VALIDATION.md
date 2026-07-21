@@ -5044,6 +5044,55 @@ Admin/creator editors, user `image_id` parity, legacy catalog migration, portrai
 
 ---
 
+## DEV-V-030 — Encounter play facades (TASK-608)
+
+Smoke suite for combat/skill encounter view splits. Routes and AddCombatantModal are unchanged; verify play loops still work after facade extraction.
+
+#### DEV-V-030-T001 — Combat encounter play after facade split
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-030 — Encounter play facades |
+| **Related task** | TASK-608 |
+| **Where** | `/encounters/<id>/combat` (or Mixed → Combat tab) |
+| **Needs** | Signed-in; an existing combat encounter (or create one) |
+
+**Steps**
+1. Open the combat encounter — combatants list + Add Combatant sidebar render (no blank flash).
+2. Add a manual combatant (name + Add Creature) and/or open **From Library / Campaign** (AddCombatantModal) and add one.
+3. Click **Start Encounter** → **Next Turn** / **Previous**; toggle Auto Sort Initiative; **Sort Initiative**.
+4. Edit HP/AP on a combatant card; wait for autosave indicator; refresh — state restores.
+
+**Expected**
+- Round chrome, drag-reorder list, and AddCombatantModal behave as before the split.
+- No new selection shell; combat/mixed routes still mount `CombatEncounterView`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-030-T002 — Skill encounter play after facade split
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-030 — Encounter play facades |
+| **Related task** | TASK-608 |
+| **Where** | `/encounters/<id>/skill` (or Mixed → Skill tab) |
+| **Needs** | Signed-in; an existing skill encounter (or create one) |
+
+**Steps**
+1. Open the skill encounter — Successes tracker, participant list, Configuration sidebar render.
+2. Set DS / required successes; add a participant (manual name or AddCombatantModal).
+3. Enter a roll total + optional RM → Submit — successes/failures update; outcome chips update.
+4. Optional: enable Track turns / use initiative; in mixed mode, **Copy combatants** / **Sync with combat order**.
+5. Refresh — rolls and totals restore via autosave.
+
+**Expected**
+- Tracker + ParticipantCard + sidebar config parity with pre-split behavior.
+- AddCombatantModal `mode="skill"` still adds participants; no USM fork.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -5067,5 +5116,6 @@ Admin/creator editors, user `image_id` parity, legacy catalog migration, portrai
 | DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
 | DEV-V-026 | Realms Image Library wiring (TASK-496–499, TASK-531–533) | — | Manual — see suite above |
 | DEV-V-027 | Admin Official Enhanced list shell (TASK-575) | — | Manual — see suite above |
+| DEV-V-030 | Encounter play facades (TASK-608) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

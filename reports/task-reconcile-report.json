@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-07-20T21:39:09.262Z",
+  "generated_at": "2026-07-21T11:24:00.306Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -27,96 +27,702 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-601",
-      "title": "Extract technique / empowered / species creator workspaces (TASK-381 remainder)",
+      "id": "TASK-609",
+      "title": "Split admin codex / core-rules hot files under ~500 LOC",
       "status": "not-started",
       "completed_at": "",
       "source": "src/docs/ai/ACTIVE_TASKS.md",
       "matches": [],
       "related_files": [
-        "src/app/(main)/technique-creator/page.tsx",
-        "src/app/(main)/empowered-technique-creator/page.tsx",
-        "src/app/(main)/species-creator/page.tsx",
-        "src/app/(main)/power-creator/use-power-creator-workspace.ts",
-        "src/components/creator/CreatorPageShell.tsx",
+        "src/app/(main)/admin/codex/AdminFeatsTab.tsx",
+        "src/app/(main)/admin/codex/admin-archetype-editor.tsx",
+        "src/app/(main)/admin/codex/use-admin-archetype-workspace.ts",
+        "src/app/(main)/admin/codex/AdminPartsTab.tsx",
+        "src/app/(main)/admin/core-rules/page.tsx",
         "src/docs/ai/FEATURE_INDEX.md"
       ],
       "related_overlap": []
     },
     {
-      "id": "TASK-602",
-      "title": "Recovery modal → SegmentedControl + theme-aware status tokens",
+      "id": "TASK-610",
+      "title": "Split remaining creator hot files under ~500 LOC",
       "status": "not-started",
       "completed_at": "",
       "source": "src/docs/ai/ACTIVE_TASKS.md",
       "matches": [],
+      "related_files": [
+        "src/app/(main)/creature-creator/use-creature-creator-workspace.ts",
+        "src/app/(main)/creature-creator/creature-creator-editor.tsx",
+        "src/app/(main)/species-creator/page.tsx",
+        "src/app/(main)/empowered-technique-creator/page.tsx",
+        "src/components/guided-creator/steps/powers-techniques-step.tsx",
+        "src/components/character-creator/steps/ancestry-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-611",
+      "title": "Split shared + data-enrichment hot modules (co-located)",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [
+        {
+          "hash": "52e3712417262afe4b64890149c735d8d7b6c386",
+          "subject": "TASK-604: Note TASK-611 can split creature-stat-block",
+          "files": [
+            "src/docs/ai/ACTIVE_TASKS.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/shared/creature-stat-block.tsx",
+        "src/components/shared/entity-library-sections.tsx",
+        "src/components/shared/grid-list-row.tsx",
+        "src/lib/data-enrichment.ts",
+        "src/components/shared/index.ts",
+        "scripts/shared-ui-allowlist.json",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-613",
+      "title": "API route automated smoke + critical-path coverage slice",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/app/api/characters/route.ts",
+        "src/lib/api-client.ts",
+        "src/lib/api-client.test.ts",
+        "vitest.config.ts"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-614",
+      "title": "Move LoadoutBudgetBar into shared (Architect)",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src/docs/ai/ACTIVE_TASKS.md",
+      "matches": [
+        {
+          "hash": "79359c21dc0d108550db29ea5b7e959b0eea0320",
+          "subject": "TASK-606: File TASK-614 for LoadoutBudgetBar → shared",
+          "files": [
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/guided-creator/loadout-budget-bar.tsx",
+        "src/components/shared/index.ts",
+        "src/components/shared/point-status.tsx",
+        "scripts/shared-ui-allowlist.json",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-608",
+      "title": "Split combat + skill encounter views under ~500 LOC",
+      "status": "done",
+      "completed_at": "2026-07-21",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "15c077402749e4b06f3cc0f9c94d2947af24767c",
+          "subject": "TASK-608: Split combat + skill encounter views under ~500 LOC",
+          "files": [
+            "src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx",
+            "src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx",
+            "src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx",
+            "src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx",
+            "src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts",
+            "src/app/(main)/encounters/[id]/_components/combat/combat-encounter-view-props.ts",
+            "src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx",
+            "src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts",
+            "src/app/(main)/encounters/[id]/_components/encounter-view-helpers.ts",
+            "src/app/(main)/encounters/[id]/_components/skill/skill-encounter-view-props.ts",
+            "src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx",
+            "src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx",
+            "src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx",
+            "src/app/(main)/encounters/[id]/_components/skill/skill-success-failure-tracker.tsx",
+            "src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx",
+            "src/app/(main)/encounters/[id]/_components/skill/use-skill-encounter-view.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx",
+        "src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx",
+        "src/app/(main)/encounters/[id]/_components/encounter-view-helpers.ts",
+        "src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts",
+        "src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts",
+        "src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx",
+        "src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx",
+        "src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx",
+        "src/app/(main)/encounters/[id]/_components/skill/use-skill-encounter-view.ts",
+        "src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx",
+        "src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx",
+        "src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx",
+        "src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx",
+        "src/app/(main)/encounters/[id]/_components/skill/skill-success-failure-tracker.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": [
+        "src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx",
+        "src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx",
+        "src/app/(main)/encounters/[id]/_components/encounter-view-helpers.ts",
+        "src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts",
+        "src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts",
+        "src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx",
+        "src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx",
+        "src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx",
+        "src/app/(main)/encounters/[id]/_components/skill/use-skill-encounter-view.ts",
+        "src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx",
+        "src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx",
+        "src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx",
+        "src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx",
+        "src/app/(main)/encounters/[id]/_components/skill/skill-success-failure-tracker.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
+    },
+    {
+      "id": "TASK-607",
+      "title": "Split crafting [id] page under ~500 LOC facade",
+      "status": "done",
+      "completed_at": "2026-07-21",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "01f99f13fff12da80e90c9579b2ae5dfbeb9d100",
+          "subject": "Merge pull request #93 from MastersoftheRealm/cursor/task-607-crafting-facade-c9fe",
+          "files": []
+        },
+        {
+          "hash": "3c6a5012287ca461eeaae92defb4cff937e33349",
+          "subject": "TASK-607: /cleanup — drop dead model type + wire helper forks",
+          "files": [
+            "src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx",
+            "src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx",
+            "src/app/(main)/crafting/[id]/_components/crafting-summary-sidebar.tsx",
+            "src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts",
+            "src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "96f5f6cd7aa286ba7eb18daa3f4af33e05bc263b",
+          "subject": "TASK-607: Split crafting [id] page under ~500 LOC facade",
+          "files": [
+            "src/app/(main)/crafting/[id]/_components/crafting-adjustments-section.tsx",
+            "src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx",
+            "src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx",
+            "src/app/(main)/crafting/[id]/_components/crafting-outcome-card.tsx",
+            "src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx",
+            "src/app/(main)/crafting/[id]/_components/crafting-summary-sidebar.tsx",
+            "src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts",
+            "src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts",
+            "src/app/(main)/crafting/[id]/page.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "b27ba907397c2fd6530c1e2bbbdd0a7312455148",
+          "subject": "Merge pull request #85 from MastersoftheRealm/cursor/quality-global-audit-tasks-936e",
+          "files": []
+        },
+        {
+          "hash": "c893b9e470cd0960db5d0fd77f6b721033e354a3",
+          "subject": "Merge origin/master; renumber quality tasks to TASK-607–613",
+          "files": [
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/HISTORY_INDEX.md",
+            "src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/(main)/crafting/[id]/page.tsx",
+        "src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts",
+        "src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts",
+        "src/app/(main)/crafting/[id]/_components/crafting-summary-sidebar.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-adjustments-section.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-outcome-card.tsx",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ],
+      "related_overlap": [
+        "src/app/(main)/crafting/[id]/page.tsx",
+        "src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts",
+        "src/app/(main)/crafting/[id]/_components/crafting-tool-helpers.ts",
+        "src/app/(main)/crafting/[id]/_components/crafting-summary-sidebar.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-adjustments-section.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-outcome-card.tsx",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ]
+    },
+    {
+      "id": "TASK-606",
+      "title": "Owner ack — Advanced CreatorResourceBar → PointStatus / LoadoutBudgetBar grammar",
+      "status": "done",
+      "completed_at": "2026-07-21",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "204976599dc048e9ba7c6b03af960fea194d98e0",
+          "subject": "Merge pull request #92 from MastersoftheRealm/cursor/task-606-resource-bar-unify-9132",
+          "files": []
+        },
+        {
+          "hash": "79359c21dc0d108550db29ea5b7e959b0eea0320",
+          "subject": "TASK-606: File TASK-614 for LoadoutBudgetBar → shared",
+          "files": [
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "d42bd5d58be6c31054a6174f82379d2e4de686c2",
+          "subject": "TASK-606: /cleanup — status region + drop energy tautology",
+          "files": [
+            "src/components/character-creator/steps/finalize-step.tsx",
+            "src/components/guided-creator/loadout-budget-bar.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/04-floating-ui-tooltips.md"
+          ]
+        },
+        {
+          "hash": "0acde942fc0d14207fe77ab52bf9097e33b31232",
+          "subject": "TASK-606: Unify Advanced creator budgets onto LoadoutBudgetBar",
+          "files": [
+            "src/components/character-creator/CreatorResourceBar.tsx",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/equipment/step-header.tsx",
+            "src/components/character-creator/steps/finalize-step.tsx",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-creator/steps/powers/powers-step-chrome.tsx",
+            "src/components/guided-creator/loadout-budget-bar.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/guided-creator/loadout-budget-bar.tsx",
+        "src/components/shared/point-status.tsx",
+        "src/components/character-creator/steps/equipment/step-header.tsx",
+        "src/components/character-creator/steps/powers/powers-step-chrome.tsx",
+        "src/components/character-creator/steps/finalize-step.tsx",
+        "src/components/character-creator/steps/equipment-step.tsx",
+        "src/components/character-creator/steps/powers-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": [
+        "src/components/guided-creator/loadout-budget-bar.tsx",
+        "src/components/character-creator/steps/equipment/step-header.tsx",
+        "src/components/character-creator/steps/powers/powers-step-chrome.tsx",
+        "src/components/character-creator/steps/finalize-step.tsx",
+        "src/components/character-creator/steps/equipment-step.tsx",
+        "src/components/character-creator/steps/powers-step.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
+    },
+    {
+      "id": "TASK-605",
+      "title": "Document or redesign MixedSpeciesModal selection grammar",
+      "status": "done",
+      "completed_at": "2026-07-21",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "2b8788105fa1dd4da262b16834b0a3e0002df8b9",
+          "subject": "Merge pull request #91 from MastersoftheRealm/cursor/task-605-mixed-species-modal-1217",
+          "files": []
+        },
+        {
+          "hash": "3bb671833c623741c8548f86e63a4eb020eafcbb",
+          "subject": "TASK-605: /cleanup — drop MixedSpeciesModal doc echoes",
+          "files": [
+            "src/components/character-creator/MixedSpeciesModal.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/02-components-and-lists.md"
+          ]
+        },
+        {
+          "hash": "96cfd9f1b54574292ab97faef4cb911e4f155aba",
+          "subject": "TASK-605: Document MixedSpeciesModal as intentional non-USM exception",
+          "files": [
+            ".cursor/rules/realms-unification.mdc",
+            "src/components/character-creator/MixedSpeciesModal.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/02-components-and-lists.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/character-creator/MixedSpeciesModal.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/guide/02-components-and-lists.md",
+        ".cursor/rules/realms-unification.mdc"
+      ],
+      "related_overlap": [
+        "src/components/character-creator/MixedSpeciesModal.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/guide/02-components-and-lists.md",
+        ".cursor/rules/realms-unification.mdc"
+      ]
+    },
+    {
+      "id": "TASK-604",
+      "title": "CreatureStatBlock weapon attack bonus → weapon-attack-ability helper",
+      "status": "done",
+      "completed_at": "2026-07-21",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "0f8351b4c73f630f1cfe0cfb2db2d9027ba6b028",
+          "subject": "Merge pull request #90 from MastersoftheRealm/cursor/task-604-weapon-attack-bonus-2c50",
+          "files": []
+        },
+        {
+          "hash": "96b865031fd70b578f6f6f27999911815ea1b1be",
+          "subject": "TASK-604: /cleanup — drop thin wrapper + relocate BV",
+          "files": [
+            "src/components/shared/creature-stat-block.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "52e3712417262afe4b64890149c735d8d7b6c386",
+          "subject": "TASK-604: Note TASK-611 can split creature-stat-block",
+          "files": [
+            "src/docs/ai/ACTIVE_TASKS.md"
+          ]
+        },
+        {
+          "hash": "67af18227b326d24f862e4ff79a8759cb2cca090",
+          "subject": "TASK-604: Wire CreatureStatBlock attack bonus to shared helper",
+          "files": [
+            "src/components/shared/creature-stat-block.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/game/weapon-attack-ability.test.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/shared/creature-stat-block.tsx",
+        "src/lib/game/weapon-attack-ability.ts",
+        "src/lib/game/weapon-attack-ability.test.ts",
+        "src/components/character-sheet/library-list-helpers.ts",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": [
+        "src/components/shared/creature-stat-block.tsx",
+        "src/lib/game/weapon-attack-ability.test.ts",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
+    },
+    {
+      "id": "TASK-603",
+      "title": "Unify Advanced + Guided portrait upload components",
+      "status": "done",
+      "completed_at": "2026-07-21",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "9d214f6ebd4c6711af311a519705b11300b85b8a",
+          "subject": "Merge pull request #89 from MastersoftheRealm/cursor/task-603-unify-portrait-upload-d743",
+          "files": []
+        },
+        {
+          "hash": "f13913218a966206099b5a35b61a6afdc6ad7135",
+          "subject": "TASK-603: /cleanup — drop double error wrap + unused export",
+          "files": [
+            "src/components/character-creator/creator-portrait-upload.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/portrait.ts"
+          ]
+        },
+        {
+          "hash": "9296fcafb0127274a33c5c4dc38bfe560b808352",
+          "subject": "TASK-603: Unify Advanced + Guided portrait upload",
+          "files": [
+            "src/components/character-creator/creator-portrait-upload.tsx",
+            "src/components/character-creator/steps/finalize-step.tsx",
+            "src/components/character-creator/steps/finalize/portrait-upload.tsx",
+            "src/components/guided-creator/guided-portrait-upload.tsx",
+            "src/components/guided-creator/steps/reveal-step.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/portrait.test.ts",
+            "src/lib/portrait.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/components/character-creator/creator-portrait-upload.tsx",
+        "src/components/character-creator/steps/finalize/portrait-upload.tsx",
+        "src/components/guided-creator/guided-portrait-upload.tsx",
+        "src/components/character-creator/steps/finalize-step.tsx",
+        "src/components/guided-creator/steps/reveal-step.tsx",
+        "src/lib/portrait.ts",
+        "src/lib/portrait.test.ts",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": [
+        "src/components/character-creator/creator-portrait-upload.tsx",
+        "src/components/character-creator/steps/finalize/portrait-upload.tsx",
+        "src/components/guided-creator/guided-portrait-upload.tsx",
+        "src/components/character-creator/steps/finalize-step.tsx",
+        "src/components/guided-creator/steps/reveal-step.tsx",
+        "src/lib/portrait.ts",
+        "src/lib/portrait.test.ts",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
+    },
+    {
+      "id": "TASK-602",
+      "title": "Recovery modal → SegmentedControl + theme-aware status tokens",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "f0631e0fce8722aa8fd0e971b11464908b76925a",
+          "subject": "Merge pull request #88 from MastersoftheRealm/cursor/task-602-recovery-segmented-1ef4",
+          "files": []
+        },
+        {
+          "hash": "e68ab06c64d1036742da852a928f5e34aa2a1cf3",
+          "subject": "TASK-602: /cleanup — sticky footer + drop fake labels",
+          "files": [
+            "src/components/character-sheet/recovery-modal.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "f58e17132582d9e8321f2ecaf1ed60ff8db1e8b5",
+          "subject": "TASK-602: Recovery modal SegmentedControl + warning tokens",
+          "files": [
+            "src/components/character-sheet/recovery-modal.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        }
+      ],
       "related_files": [
         "src/components/character-sheet/recovery-modal.tsx",
         "src/components/shared/segmented-control.tsx",
         "src/docs/MOBILE_UX.md",
         "src/docs/ai/BUILD_VALIDATION.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/components/character-sheet/recovery-modal.tsx",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
     },
     {
-      "id": "TASK-603",
-      "title": "Unify Advanced + Guided portrait upload components",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-creator/steps/finalize/portrait-upload.tsx",
-        "src/components/guided-creator/guided-portrait-upload.tsx",
-        "src/components/shared/image-upload-modal.tsx",
-        "src/lib/api-client.ts"
+      "id": "TASK-601",
+      "title": "Extract technique / empowered / species creator workspaces (TASK-381 remainder)",
+      "status": "done",
+      "completed_at": "2026-07-20",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "585c4c3957c80cbd98b5f718f539289fa5a332dc",
+          "subject": "Merge pull request #87 from MastersoftheRealm/cursor/task-601-creator-workspaces-30c6",
+          "files": []
+        },
+        {
+          "hash": "d214d9f0625b24d0ad3bbb30ba6dfea4aae42764",
+          "subject": "TASK-601: /cleanup — drop load any + unused creator exports",
+          "files": [
+            "src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts",
+            "src/app/(main)/species-creator/species-creator-bootstrap.ts",
+            "src/app/(main)/species-creator/species-creator-editor.tsx",
+            "src/app/(main)/species-creator/use-species-creator-workspace.ts",
+            "src/app/(main)/technique-creator/page.tsx",
+            "src/app/(main)/technique-creator/technique-creator-bootstrap.ts",
+            "src/app/(main)/technique-creator/use-technique-creator-workspace.ts",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
+          "hash": "e0d0fc529b35e6a2e7b0e4636878f25b54ea162d",
+          "subject": "TASK-601: Extract technique / empowered / species creator workspaces",
+          "files": [
+            "src/app/(main)/empowered-technique-creator/page.tsx",
+            "src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts",
+            "src/app/(main)/species-creator/page.tsx",
+            "src/app/(main)/species-creator/species-creator-bootstrap.ts",
+            "src/app/(main)/species-creator/species-creator-editor.tsx",
+            "src/app/(main)/species-creator/use-species-creator-workspace.ts",
+            "src/app/(main)/technique-creator/page.tsx",
+            "src/app/(main)/technique-creator/use-technique-creator-workspace.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "c893b9e470cd0960db5d0fd77f6b721033e354a3",
+          "subject": "Merge origin/master; renumber quality tasks to TASK-607–613",
+          "files": [
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/HISTORY_INDEX.md",
+            "src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md"
+          ]
+        },
+        {
+          "hash": "28decf1f888b0a8c26db52997aaba818e9bab192",
+          "subject": "TASK-601–607: /cleanup — drop reconcile churn + trim ACTIVE notes",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
+          "hash": "0793abfd2432450763ddf902386f0fe37b4004bd",
+          "subject": "Merge pull request #84 from MastersoftheRealm/cursor/global-debt-sheet-creators-admin-2368",
+          "files": []
+        },
+        {
+          "hash": "e7cd6955a0892b596a6655930d5278a2b7ea1b55",
+          "subject": "TASK-601–607: File quality pseudo global-audit follow-ups",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/HISTORY_INDEX.md",
+            "src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md"
+          ]
+        },
+        {
+          "hash": "ca64a3fa7524f95677363bfee1b5a492f818c671",
+          "subject": "/debt after /global-audit: delete dead sheet/creator clutter; file TASK-601–606",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/app/(main)/admin/codex/page.tsx",
+            "src/app/(main)/characters/[id]/CharacterSheetModals.tsx",
+            "src/components/character-creator/CreatorResourceBar.tsx",
+            "src/components/character-creator/index.ts",
+            "src/components/character-creator/steps/equipment-step.tsx",
+            "src/components/character-creator/steps/equipment/step-header.tsx",
+            "src/components/character-creator/steps/finalize-step.tsx",
+            "src/components/character-creator/steps/powers-step.tsx",
+            "src/components/character-creator/steps/powers/powers-step-chrome.tsx",
+            "src/components/character-sheet/add-library-item-modal.tsx",
+            "src/components/character-sheet/feats-tab.tsx",
+            "src/components/character-sheet/level-up-modal.tsx",
+            "src/components/character-sheet/library-list-helpers.ts",
+            "src/components/character-sheet/recovery-modal.tsx",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/lib/character/temp-modifiers.ts",
+            "src/lib/guided-creator/curated-skills.test.ts",
+            "src/lib/guided-creator/curated-skills.ts"
+          ]
+        }
       ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-604",
-      "title": "CreatureStatBlock weapon attack bonus → weapon-attack-ability helper",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
       "related_files": [
-        "src/components/shared/creature-stat-block.tsx",
-        "src/lib/game/weapon-attack-ability.ts",
-        "src/components/character-sheet/library-list-helpers.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-605",
-      "title": "Document or redesign MixedSpeciesModal selection grammar",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-creator/MixedSpeciesModal.tsx",
-        "src/components/character-creator/steps/species-step.tsx",
-        "src/components/character-sheet/edit-species-modal.tsx",
-        "src/docs/ai/FEATURE_INDEX.md",
-        ".cursor/rules/realms-unification.mdc"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-606",
-      "title": "Owner ack — Advanced CreatorResourceBar → PointStatus / LoadoutBudgetBar grammar",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src/docs/ai/ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-creator/CreatorResourceBar.tsx",
-        "src/components/guided-creator/loadout-budget-bar.tsx",
-        "src/components/shared/point-status.tsx",
+        "src/app/(main)/technique-creator/page.tsx",
+        "src/app/(main)/technique-creator/use-technique-creator-workspace.ts",
+        "src/app/(main)/technique-creator/technique-creator-editor.tsx",
+        "src/app/(main)/technique-creator/technique-creator-bootstrap.ts",
+        "src/app/(main)/empowered-technique-creator/page.tsx",
+        "src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts",
+        "src/app/(main)/empowered-technique-creator/empowered-technique-creator-editor.tsx",
+        "src/app/(main)/empowered-technique-creator/empowered-technique-bootstrap.ts",
+        "src/app/(main)/species-creator/page.tsx",
+        "src/app/(main)/species-creator/use-species-creator-workspace.ts",
+        "src/app/(main)/species-creator/species-creator-editor.tsx",
+        "src/app/(main)/species-creator/species-creator-bootstrap.ts",
+        "src/components/creator/CreatorPageShell.tsx",
         "src/docs/ai/FEATURE_INDEX.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/app/(main)/technique-creator/page.tsx",
+        "src/app/(main)/technique-creator/use-technique-creator-workspace.ts",
+        "src/app/(main)/technique-creator/technique-creator-bootstrap.ts",
+        "src/app/(main)/empowered-technique-creator/page.tsx",
+        "src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts",
+        "src/app/(main)/species-creator/page.tsx",
+        "src/app/(main)/species-creator/use-species-creator-workspace.ts",
+        "src/app/(main)/species-creator/species-creator-editor.tsx",
+        "src/app/(main)/species-creator/species-creator-bootstrap.ts",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ]
     },
     {
       "id": "TASK-600",
@@ -128,38 +734,6 @@
         {
           "hash": "29cbef84f631c269d5606eeaba0d2a182e30288f",
           "subject": "TASK-600: Speed/Evasion Temp Modifier only (remove pencil) (#83)",
-          "files": [
-            "src/app/(main)/characters/[id]/page.tsx",
-            "src/components/character-sheet/sheet-header.tsx",
-            "src/components/character-sheet/sheet-large-stat-block.tsx",
-            "src/docs/ALL_FEEDBACK_CLEAN.md",
-            "src/docs/ai/ACTIVE_TASKS.md",
-            "src/docs/ai/ADR/0006-temp-modifier-mode.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/BUILD_VALIDATION.md",
-            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
-            "src/docs/ai/FEATURE_INDEX.md",
-            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
-          ]
-        },
-        {
-          "hash": "45431ca4a709b4b076fd2df18da7869cfbfc7ad8",
-          "subject": "TASK-600: Changelog for cleanup pass",
-          "files": [
-            "src/docs/ai/AI_CHANGELOG.md"
-          ]
-        },
-        {
-          "hash": "3272fa6c5f12178aaf13e401c64ab6ad6e4981b6",
-          "subject": "TASK-600: Cleanup stale ADR follow-up and T038 order",
-          "files": [
-            "src/docs/ai/ADR/0006-temp-modifier-mode.md",
-            "src/docs/ai/BUILD_VALIDATION.md"
-          ]
-        },
-        {
-          "hash": "87118fe6c1e9449ea1a6d7b9348b83c3c3126001",
-          "subject": "TASK-600: Speed/Evasion header Temp Modifier only",
           "files": [
             "src/app/(main)/characters/[id]/page.tsx",
             "src/components/character-sheet/sheet-header.tsx",
@@ -16071,6 +16645,65 @@
         "src/components/character-sheet/library-entity-rows.test.ts"
       ],
       "related_overlap": []
+    },
+    {
+      "id": "TASK-612",
+      "title": "Docs corpus hygiene — changelog rotation + archive index honesty",
+      "status": "done",
+      "completed_at": "",
+      "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "f815348a863f2507d39a4b00fbbf9ebcb7c9a777",
+          "subject": "Merge pull request #86 from MastersoftheRealm/cursor/debt-from-quality-audit-936e",
+          "files": []
+        },
+        {
+          "hash": "d474da6542f481d306d5bd6412ddcc2d884b1125",
+          "subject": "TASK-612: /debt — delete dead lib helpers + unused export defaults",
+          "files": [
+            "src/components/crafting/CraftingItemSelectModal.tsx",
+            "src/components/rolls/index.ts",
+            "src/components/shared/creature-stat-block.tsx",
+            "src/components/shared/delete-confirm-modal.tsx",
+            "src/components/shared/equip-toggle.tsx",
+            "src/components/shared/error-boundary.tsx",
+            "src/components/shared/filters/filter-section.tsx",
+            "src/components/shared/grid-list-row.tsx",
+            "src/components/shared/list-header.tsx",
+            "src/components/shared/quantity-selector.tsx",
+            "src/components/shared/section-header.tsx",
+            "src/components/shared/selection-toggle.tsx",
+            "src/components/shared/skill-row.tsx",
+            "src/components/shared/tab-summary-section.tsx",
+            "src/components/shared/unified-selection-modal.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/REALMS_PRODUCT_OVERVIEW.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/04-floating-ui-tooltips.md",
+            "src/lib/detail-option/builders.ts",
+            "src/lib/detail-option/index.ts",
+            "src/lib/game/formulas.ts",
+            "src/lib/game/innate-eligibility.test.ts",
+            "src/lib/game/innate-eligibility.ts",
+            "src/lib/game/skill-allocation.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/docs/ai/AI_CHANGELOG.md",
+        "src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md",
+        "src/docs/ai/archive/HISTORY_INDEX.md",
+        "src/docs/ai/archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md",
+        "src/docs/ai/ACTIVE_TASKS.md"
+      ],
+      "related_overlap": [
+        "src/docs/ai/AI_CHANGELOG.md",
+        "src/docs/ai/ACTIVE_TASKS.md"
+      ]
     }
   ]
 }

@@ -1,3 +1,62 @@
+- id: TASK-608
+  title: Split combat + skill encounter views under ~500 LOC
+  created_at: 2026-07-20
+  created_by: agent
+  completed_at: 2026-07-21
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-030
+    tests:
+      - DEV-V-030-T001
+      - DEV-V-030-T002
+  developer_test_plan: |
+    Suite DEV-V-030 T001/T002 — combat + skill encounter play after facade split:
+    open `/encounters/<id>/combat` and `/skill` (or mixed tabs) → add combatant/participant via
+    AddCombatantModal + manual form → start/next turn or submit skill roll → autosave still works.
+  related_files:
+    - src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx
+    - src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx
+    - src/app/(main)/encounters/[id]/_components/encounter-view-helpers.ts
+    - src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts
+    - src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts
+    - src/app/(main)/encounters/[id]/_components/combat/combat-encounter-view-props.ts
+    - src/app/(main)/encounters/[id]/_components/combat/combat-round-controls.tsx
+    - src/app/(main)/encounters/[id]/_components/combat/combat-combatant-list.tsx
+    - src/app/(main)/encounters/[id]/_components/combat/combat-add-sidebar.tsx
+    - src/app/(main)/encounters/[id]/_components/skill/use-skill-encounter-view.ts
+    - src/app/(main)/encounters/[id]/_components/skill/skill-encounter-view-props.ts
+    - src/app/(main)/encounters/[id]/_components/skill/skill-trackers-section.tsx
+    - src/app/(main)/encounters/[id]/_components/skill/skill-participant-list.tsx
+    - src/app/(main)/encounters/[id]/_components/skill/skill-participant-card.tsx
+    - src/app/(main)/encounters/[id]/_components/skill/skill-sidebar.tsx
+    - src/app/(main)/encounters/[id]/_components/skill/skill-success-failure-tracker.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Encounter play views are ~1246 / ~1435 LOC. Extract co-located combatant lists, round chrome,
+    roll panels, and helpers so each facade lands near ~500 LOC (TASK-598 style). Preserve
+    AddCombatantModal + shared roll patterns; do not fork selection shells.
+  acceptance_criteria:
+    - CombatEncounterView and SkillEncounterView facades each ≤ ~500 LOC (or justified partial with follow-up).
+    - Behavior parity for combat/skill encounter play loops.
+    - FEATURE_INDEX updated if module paths change; `npm run build` passes.
+  completed_work: |
+    - Combat facade ~114 LOC + hook/helpers/panels under `_components/combat/`.
+    - Skill facade ~156 LOC + hook/panels under `_components/skill/`.
+    - Shared only identical `generateId` / `rollInitiative` in `encounter-view-helpers.ts`.
+    - Consolidated duplicated combat initiative ordering onto `orderCombatantsByInitiative`.
+    - Default exports + combat/skill/mixed route imports unchanged; AddCombatantModal preserved.
+    - FEATURE_INDEX + DEV-V-030 smoke suite added.
+    - /cleanup: deleted dead facade helper/type re-exports; dropped unused skill-hook returns + dead `onUpdateInitiative` plumbing; helpers import id/initiative from shared file only.
+  notes: Share combat/skill helpers only when identical — no premature mega-abstraction. Was TASK-602 pre-renumber.
+  evidence: |
+    npm run build; npm run tasks:validate; eslint on encounter _components; verification_status pending-qa.
+
+---
+
 - id: TASK-607
   title: Split crafting [id] page under ~500 LOC facade
   created_at: 2026-07-20
