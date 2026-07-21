@@ -7,6 +7,8 @@
   priority: low
   status: done
   verification_status: pending-qa
+  follow_up_tasks:
+    - TASK-614
   build_validation: |
     suite: DEV-V-001
     tests:
@@ -41,6 +43,7 @@
     - /cleanup: LoadoutBudgetBar role=status; drop finalize energySummary tautology; guide/04 Advanced reuse note.
   notes: |
     From 2026-07-20 /global-audit. Keep-fork path not taken.
+    Follow-up TASK-614: move LoadoutBudgetBar into shared (Architect) when prioritized.
   evidence: |
     npm run build; npm run tasks:validate; verification_status pending-qa.
 
