@@ -38,6 +38,7 @@
     - Collapsed Advanced equipment L1 vs non-L1 dual chrome and powers DescriptorChip TP fork.
     - Extended LoadoutBudgetBar with align + trailing (finalize Energy PointStatus).
     - FEATURE_INDEX + GUIDED_EQUIPMENT_PHASED_SPEC + BV T014/T016 updated.
+    - /cleanup: LoadoutBudgetBar role=status; drop finalize energySummary tautology; guide/04 Advanced reuse note.
   notes: |
     From 2026-07-20 /global-audit. Keep-fork path not taken.
   evidence: |

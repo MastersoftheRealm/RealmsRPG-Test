@@ -62,7 +62,11 @@ export function LoadoutBudgetBar({
   );
 
   return (
-    <div className={cn('flex flex-col gap-2', className)}>
+    <div
+      className={cn('flex flex-col gap-2', className)}
+      role="status"
+      aria-label="Character resources"
+    >
       {children}
       {showRow ? (
         <div

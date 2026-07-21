@@ -109,13 +109,12 @@ export function FinalizeStep() {
     return { spent, limit, remaining: limit - spent };
   }, [draft, powerPartsDb, techniquePartsDb, itemPropertiesDb]);
   
-  const energySummary = useMemo(() => {
+  const maxEnergy = useMemo(() => {
     const abilities = draft.abilities || {};
     const level = draft.level || 1;
     const powAbil = draft.pow_abil || draft.archetype?.pow_abil || draft.archetype?.ability;
     const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
-    const maxEnergy = calculateMaxEnergy(draft.energyPoints || 0, powAbil || martAbil, abilities, level);
-    return { current: maxEnergy, max: maxEnergy };
+    return calculateMaxEnergy(draft.energyPoints || 0, powAbil || martAbil, abilities, level);
   }, [draft]);
 
   const startingCurrency = useMemo(() => {
@@ -263,8 +262,8 @@ export function FinalizeStep() {
         tpSpent={proficiencyTpSummary.spent}
         trailing={
           <PointStatus
-            total={energySummary.max}
-            spent={energySummary.max - energySummary.current}
+            total={maxEnergy}
+            spent={0}
             label="Energy"
             variant="inline"
             className="text-base"
