@@ -14,12 +14,14 @@ import {
 import { validateLevel1Skills } from '@/lib/game/path-validation';
 import { LAYER1_GOVERNANCE } from '@/lib/constants/creator-layer-governance';
 import type { AbilityName } from '@/types/abilities';
-import type { CodexSkill } from '@/types/codex';
+import type { CodexSkill, CodexArchetype } from '@/types/codex';
 import type {
   PathGuidanceAudience,
   PathGuidanceGroup,
   PathItemRecommendation,
 } from '@/types/archetype';
+
+export type ArchetypeItem = CodexArchetype;
 
 export const COPY_NAME_SUFFIX = ' copy';
 export const ABILITY_OPTIONS = [

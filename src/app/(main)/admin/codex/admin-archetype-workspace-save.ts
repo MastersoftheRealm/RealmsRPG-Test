@@ -30,20 +30,19 @@ import {
   serializeRecommendedAbilities,
   toCsv,
   type AdminArchetypeFormState,
+  type ArchetypeItem,
   type PathSelectionKey,
   type SelectionOption,
 } from './admin-archetype-path-form';
 import { saveArchetypeWithPath } from './actions';
 import { getUnknownSelectionsForLevel } from './admin-archetype-workspace-unknown-selections';
-import type { ArchetypeItem } from './use-admin-archetype-workspace';
 
 type OptionsByField = Partial<Record<PathSelectionKey | 'armaments' | 'equipment', SelectionOption[]>>;
 
-export type SaveAdminArchetypeArgs = {
+type SaveAdminArchetypeArgs = {
   form: AdminArchetypeFormState;
   editing: ArchetypeItem | null;
   optionsByField: OptionsByField;
-  codexSkills: CodexSkill[];
   skillById: Map<string, CodexSkill>;
   officialPowers: LibraryPower[];
   officialItems: LibraryItem[];
@@ -60,7 +59,6 @@ export async function saveAdminArchetype({
   form,
   editing,
   optionsByField,
-  codexSkills,
   skillById,
   officialPowers,
   officialItems,

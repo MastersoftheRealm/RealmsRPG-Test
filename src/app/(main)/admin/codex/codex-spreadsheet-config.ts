@@ -2,8 +2,6 @@
  * Codex Spreadsheet — tab/column config (TASK-617)
  */
 
-export const COPY_NAME_SUFFIX = ' copy';
-
 export type CodexSpreadsheetTabId =
   | 'feats'
   | 'skills'

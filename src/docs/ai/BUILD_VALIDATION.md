@@ -4379,7 +4379,7 @@ Verifies behavior parity after removing setState-in-effect / fixing exhaustive-d
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-019 |
-| **Related task** | TASK-430 |
+| **Related task** | TASK-430, TASK-617 |
 | **Where** | `/crafting/<id>`, `/characters/<id>?offerTour=1`, sheet tour, `/admin/core-rules`, Admin Codex spreadsheet |
 | **Needs** | Crafting session with rolls; path character L5+ optional; admin |
 

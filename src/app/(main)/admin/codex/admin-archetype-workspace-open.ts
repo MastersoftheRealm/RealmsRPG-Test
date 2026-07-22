@@ -13,10 +13,10 @@ import {
   toastLevel1SkillWarnings,
   toLevelForm,
   type AdminArchetypeFormState,
+  type ArchetypeItem,
   type PathSelectionKey,
   type SelectionOption,
 } from './admin-archetype-path-form';
-import type { ArchetypeItem } from './use-admin-archetype-workspace';
 
 export const EMPTY_ARCHETYPE_FORM: AdminArchetypeFormState = {
   name: '',

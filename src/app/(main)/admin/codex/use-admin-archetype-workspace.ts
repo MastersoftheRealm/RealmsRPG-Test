@@ -21,7 +21,7 @@ import {
 import { useOfficialLibrary } from '@/hooks/use-official-library';
 import { useQueryClient } from '@tanstack/react-query';
 import { deleteCodexDoc } from './actions';
-import { type CodexFeatLike } from './admin-archetype-path-form';
+import { type ArchetypeItem, type CodexFeatLike } from './admin-archetype-path-form';
 import { useAdminArchetypeSelectionOptions } from './use-admin-archetype-selection-options';
 import {
   createFeatGuidanceMutators,
@@ -36,10 +36,10 @@ import {
 import { saveAdminArchetype } from './admin-archetype-workspace-save';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryItem, LibraryPower } from '@/types/library';
-import type { CodexSkill, CodexArchetype, CodexEquipmentItem } from '@/types/codex';
+import type { CodexSkill, CodexEquipmentItem } from '@/types/codex';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 
-export type ArchetypeItem = CodexArchetype;
+export type { ArchetypeItem } from './admin-archetype-path-form';
 
 export function useAdminArchetypeWorkspace() {
   const { showToast } = useToast();
@@ -158,7 +158,6 @@ export function useAdminArchetypeWorkspace() {
       form,
       editing,
       optionsByField,
-      codexSkills: codexSkills as CodexSkill[],
       skillById,
       officialPowers: officialPowers as LibraryPower[],
       officialItems: officialItems as LibraryItem[],

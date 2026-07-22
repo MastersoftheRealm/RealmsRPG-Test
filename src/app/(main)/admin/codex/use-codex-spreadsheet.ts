@@ -11,7 +11,6 @@ import { useCodexFull } from '@/hooks/use-codex';
 import { createCodexDoc, updateCodexDoc } from './actions';
 import {
   ACTIONS_COL_WIDTH,
-  COPY_NAME_SUFFIX,
   getColumnWidth,
   orderColumns,
   TAB_CONFIG,
@@ -25,7 +24,9 @@ import {
   stringToCellValue,
 } from './codex-spreadsheet-helpers';
 
-export type UseCodexSpreadsheetArgs = {
+const COPY_NAME_SUFFIX = ' copy';
+
+type UseCodexSpreadsheetArgs = {
   activeTab: CodexSpreadsheetTabId;
 };
 
