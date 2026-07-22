@@ -5093,6 +5093,22 @@ Smoke suite for combat/skill encounter view splits. Routes and AddCombatantModal
 
 ---
 
+## DEV-V-031 — API route smoke (TASK-613)
+
+Co-located vitest contract smoke for high-traffic API routes. First slice: `/api/characters` GET/POST auth, validation, happy path, and quota errors.
+
+#### DEV-V-031-T001 — Characters API route smoke
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-031 — API route smoke |
+| **Related task** | TASK-613 |
+| **Automated** | `npm run test:api` — `src/app/api/characters/route.test.ts` |
+
+**Expected** — 8 vitest cases pass: GET 401/200/500; POST 401/415/400/200/403.
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -5117,5 +5133,6 @@ Smoke suite for combat/skill encounter view splits. Routes and AddCombatantModal
 | DEV-V-026 | Realms Image Library wiring (TASK-496–499, TASK-531–533) | — | Manual — see suite above |
 | DEV-V-027 | Admin Official Enhanced list shell (TASK-575) | — | Manual — see suite above |
 | DEV-V-030 | Encounter play facades (TASK-608) | — | Manual — see suite above |
+| DEV-V-031 | API route smoke (TASK-613) | — | Automated (`npm run test:api`) |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
