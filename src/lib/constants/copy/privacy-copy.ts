@@ -40,26 +40,33 @@ export const PRIVACY_COPY = {
         'Provide, operate, and maintain your account, characters, library content, campaigns, and encounters',
         'Authenticate you and keep your session secure',
         'Improve site performance, usability, and accessibility',
-        'Understand how features are used so we can fix bugs and improve tools',
+        'Understand how features are used so we can fix bugs and improve tools (including anonymous page-view analytics from our hosting provider)',
         'Communicate with you about your account, support requests, or important service updates',
         'Send optional emails such as account confirmation or password reset messages',
         'Detect, prevent, and address abuse, fraud, or security issues',
       ],
     },
     {
-      heading: '3. Data Retention',
+      heading: '3. Cookies and Analytics',
+      paragraphs: [
+        'RealmsRPG uses essential cookies or similar storage needed to keep you signed in and apply preferences (for example theme). We do not use advertising cookies.',
+        'We use Vercel Web Analytics to collect anonymous, aggregate page-view and navigation data so we can understand site traffic and improve the product. This analytics product is designed to avoid collecting personal identifiers and does not rely on advertising cookies. Analytics is provided by our host (Vercel) as part of operating the app.',
+      ],
+    },
+    {
+      heading: '4. Data Retention',
       paragraphs: [
         'We will retain your personal information only for as long as is necessary for the purposes set out in this Privacy Policy. We will retain and use your information to the extent necessary to comply with our legal obligations, resolve disputes, and enforce our policies.',
       ],
     },
     {
-      heading: '4. Data Security',
+      heading: '5. Data Security',
       paragraphs: [
         'We take the security of your personal information seriously and use reasonable electronic, personnel, and physical measures to protect it from loss, theft, alteration, or misuse.',
       ],
     },
     {
-      heading: '5. Your Data Protection Rights',
+      heading: '6. Your Data Protection Rights',
       paragraphs: [
         'Depending on your location, you may have the following rights regarding your personal information:',
       ],
@@ -91,13 +98,13 @@ export const PRIVACY_COPY = {
       ],
     },
     {
-      heading: '6. Changes to This Policy',
+      heading: '7. Changes to This Policy',
       paragraphs: [
         'We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page. You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.',
       ],
     },
     {
-      heading: '7. Contact Us',
+      heading: '8. Contact Us',
       paragraphs: [
         'If you have any questions about this Privacy Policy, please contact us at',
       ],

@@ -1,3 +1,41 @@
+- id: TASK-615
+  title: Integrate Vercel Web Analytics (CSP + docs)
+  created_at: 2026-07-22
+  completed_at: 2026-07-22
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/layout.tsx
+    - next.config.ts
+    - package.json
+    - src/lib/constants/copy/privacy-copy.ts
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+    - src/docs/PERFORMANCE_AND_EDGE.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Vercel Agent PR #96 installed `@vercel/analytics` + `<Analytics />` in root layout but did not
+    update CSP, privacy/deploy docs, or the task queue. Integrate properly for RealmsRPG.
+  acceptance_criteria:
+    - `@vercel/analytics` in package.json; `<Analytics />` in `src/app/layout.tsx` (App Router).
+    - CSP allows Web Analytics (prod same-origin + `va.vercel-scripts.com` for local/dev debug).
+    - Deploy docs document Enable step + verify beacon; privacy copy discloses analytics.
+    - FEATURE_INDEX + DEV-006 Dashboard Enable; DEV-V-017-T005 updated; build passes.
+  build_validation: |
+    suite: DEV-V-017
+    tests:
+      - DEV-V-017-T005
+  developer_test_plan: |
+    Suite DEV-V-017 T005 — privacy Cookies and Analytics; Dashboard Enable = DEV-006.
+  notes: |
+    Supersedes incomplete vercel/install-vercel-web-analytics-5wx8k8 (#96) for repo conventions.
+    Speed Insights not in scope.
+
+---
+
 - id: TASK-611
   title: Split shared + data-enrichment hot modules (co-located)
   created_at: 2026-07-20

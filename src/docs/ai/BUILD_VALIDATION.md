@@ -3875,16 +3875,18 @@ Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and s
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-017 — Site copy modules |
-| **Related task** | TASK-390 |
+| **Related task** | TASK-390, TASK-615 |
 | **Where** | `/privacy` |
 | **Needs** | — |
 
 **Steps**
 1. Open `/privacy`.
-2. Confirm title, intro site URL, section headings, and contact email match `privacy-copy.ts` / `SITE_CONTACT_EMAIL`.
+2. Confirm title, intro site URL, section headings (including **Cookies and Analytics**), and contact email match `privacy-copy.ts` / `SITE_CONTACT_EMAIL`.
+3. Confirm Cookies and Analytics mentions Vercel Web Analytics / anonymous page views and essential (non-advertising) cookies.
 
 **Expected**
 - Prose and mailto use copy modules; heading hierarchy h1 → h2 with no skip.
+- Section **3. Cookies and Analytics** is present between How We Use Information and Data Retention.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

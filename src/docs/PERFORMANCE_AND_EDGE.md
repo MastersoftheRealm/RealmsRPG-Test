@@ -2,9 +2,9 @@
 
 > **Purpose:** How to keep Vercel Fast Data Transfer, Edge Requests, and Edge CPU under control. For AI agents and engineers.
 
-**Last updated:** Jun 2026 (consolidates former `CDN_QUERY_AUDIT_2026-02-24.md` and `EDGE_REQUESTS_REDUCTION.md`).
+**Last updated:** Jul 2026 (consolidates former `CDN_QUERY_AUDIT_2026-02-24.md` and `EDGE_REQUESTS_REDUCTION.md`; Web Analytics note).
 
-**Related:** `DATA_HANDLING.md` (query keys, cache), `DEPLOYMENT_AND_SECRETS_SUPABASE.md` (env, deploy).
+**Related:** `DATA_HANDLING.md` (query keys, cache), `DEPLOYMENT_AND_SECRETS_SUPABASE.md` (env, deploy, Web Analytics).
 
 ---
 
@@ -77,6 +77,7 @@ Excluded from proxy (no session refresh):
 3. **Custom rules** — Deny common bot paths (`.php`, `wp-admin`, `.env`, `.git`, `phpMyAdmin`).
 4. **Usage limits** — Set soft/hard caps to avoid surprise bills.
 5. **Caching** — Codex/official GET cache headers are set in route handlers; no extra Vercel config needed.
+6. **Web Analytics** — Enabled in code via `@vercel/analytics` in `src/app/layout.tsx`. Dashboard **Enable** is still required (see `DEPLOYMENT_AND_SECRETS_SUPABASE.md` Step 3b). Pageview beacons are same-origin `/_vercel/insights/*` in production and do not need proxy exclusions; keep an eye on Analytics quota on Hobby if traffic grows.
 
 ---
 
