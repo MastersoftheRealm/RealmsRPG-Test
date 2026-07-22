@@ -1,6 +1,41 @@
 
 ---
 
+- id: TASK-617
+  title: Split admin codex spreadsheet + archetype workspace under ~500 LOC
+  priority: medium
+  status: done
+  completed_at: 2026-07-22
+  created_at: 2026-07-22
+  created_by: agent
+  parent_task: TASK-609
+  related_files:
+    - src/app/(main)/admin/codex/CodexSpreadsheetView.tsx
+    - src/app/(main)/admin/codex/use-codex-spreadsheet.ts
+    - src/app/(main)/admin/codex/codex-spreadsheet-config.ts
+    - src/app/(main)/admin/codex/codex-spreadsheet-helpers.ts
+    - src/app/(main)/admin/codex/codex-spreadsheet-toolbar.tsx
+    - src/app/(main)/admin/codex/codex-spreadsheet-table.tsx
+    - src/app/(main)/admin/codex/use-admin-archetype-workspace.ts
+    - src/app/(main)/admin/codex/admin-archetype-workspace-open.ts
+    - src/app/(main)/admin/codex/admin-archetype-workspace-save.ts
+    - src/app/(main)/admin/codex/admin-archetype-workspace-mutators.ts
+    - src/app/(main)/admin/codex/admin-archetype-workspace-unknown-selections.ts
+  description: |
+    Quality-audit follow-up to TASK-609: split remaining admin codex god files
+    (CodexSpreadsheetView, use-admin-archetype-workspace) into co-located modules
+  acceptance_criteria:
+    - Facades <= ~500 LOC; co-located private extracts; no new shared barrel exports.
+    - Spreadsheet find/replace, inline edit, save-all, per-row save, copy-row unchanged.
+    - Archetype workspace open/save/delete/guidance mutators unchanged.
+    - npm run build passes.
+  verification_status: n/a
+  notes: |
+    Spreadsheet facade 115 LOC (was 749); workspace facade 242 LOC (was 658).
+    Next quality-audit targets: unified-selection-modal, CombatantCard.
+
+---
+
 - id: TASK-616
   title: Split power + item creator hot files under ~500 LOC
   priority: medium

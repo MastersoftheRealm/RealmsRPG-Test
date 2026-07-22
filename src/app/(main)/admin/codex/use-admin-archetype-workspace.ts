@@ -1,5 +1,5 @@
 /**
- * Admin Archetypes — workspace hook (TASK-381 Phase 6c)
+ * Admin Archetypes — workspace hook (TASK-381 Phase 6c, TASK-617 facade)
  * =====================================================
  * Owns list/modal state, option memos, guidance/armament mutators, and
  * open/save/delete. Presentational modal body stays in admin-archetype-editor;
@@ -10,57 +10,34 @@
 
 import { useMemo, useState } from 'react';
 import { useToast } from '@/components/ui';
-import { useCodexArchetypes, useCodexEquipment, useCodexFeats, useCodexSkills, useCodexItemProperties, useCodexPowerParts } from '@/hooks/use-codex';
+import {
+  useCodexArchetypes,
+  useCodexEquipment,
+  useCodexFeats,
+  useCodexSkills,
+  useCodexItemProperties,
+  useCodexPowerParts,
+} from '@/hooks/use-codex';
 import { useOfficialLibrary } from '@/hooks/use-official-library';
 import { useQueryClient } from '@tanstack/react-query';
-import { deleteCodexDoc, saveArchetypeWithPath } from './actions';
-import {
-  COPY_NAME_SUFFIX,
-  buildLevelPayload,
-  dedupeStrings,
-  guidedAbilitiesFromPath,
-  guidedEquipmentMetaFromPath,
-  guidanceGroupsFromPathData,
-  isCodexSubSkill,
-  makeLevelRow,
-  newFeatGuidanceGroup,
-  serializeRecommendedAbilities,
-  toCsv,
-  toLevelForm,
-  toastLevel1SkillWarnings,
-  type AdminArchetypeFormState,
-  type CodexFeatLike,
-  type PathLevelForm,
-  type PathSelectionKey,
-  type SelectionOption,
-} from './admin-archetype-path-form';
+import { deleteCodexDoc } from './actions';
+import { type CodexFeatLike } from './admin-archetype-path-form';
 import { useAdminArchetypeSelectionOptions } from './use-admin-archetype-selection-options';
 import {
-  parseArchetypePathData,
-  pathHiddenFromPlayerPicker,
-  serializeLevel1LoadoutsField,
-  coerceJsonRecord,
-  parseOptionalJsonField,
-  filterFeatGuidanceGroups,
-  mergeFeatGuidanceGroups,
-  unionFeatIdsFromGuidanceGroups,
-  resolvePathGuidanceAudience,
-} from '@/lib/game/archetype-path';
-import { validatePathDataForPublish } from '@/lib/game/path-validation';
-import { snapshotOfficialPowerForInnate } from '@/lib/game/innate-eligibility';
+  createFeatGuidanceMutators,
+  createLevel1ArmamentMutators,
+} from './admin-archetype-workspace-mutators';
 import {
-  createItemTpResolver,
-  trainingPointLimitFromRecommendedAbilities,
-} from '@/lib/guided-creator/loadout-tp';
-import { LAYER1_GOVERNANCE } from '@/lib/constants/creator-layer-governance';
+  buildArchetypeFormFromItem,
+  buildDuplicateArchetypeForm,
+  EMPTY_ARCHETYPE_FORM,
+  toastLevel1SkillsFromForm,
+} from './admin-archetype-workspace-open';
+import { saveAdminArchetype } from './admin-archetype-workspace-save';
 import type { PowerPart } from '@/hooks/codex-types';
-import type { LibraryPower } from '@/types/library';
-import type { CodexSkill, CodexArchetype } from '@/types/codex';
-import type {
-  PathGuidanceAudience,
-  PathGuidanceGroup,
-  PathItemRecommendation,
-} from '@/types/archetype';
+import type { LibraryItem, LibraryPower } from '@/types/library';
+import type { CodexSkill, CodexArchetype, CodexEquipmentItem } from '@/types/codex';
+import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 
 export type ArchetypeItem = CodexArchetype;
 
@@ -72,7 +49,8 @@ export function useAdminArchetypeWorkspace() {
   const { data: codexEquipment = [] } = useCodexEquipment();
   const { data: powerPartsDb = [] } = useCodexPowerParts();
   const { data: officialPowers = [], isLoading: isLoadingOfficialPowers } = useOfficialLibrary('powers');
-  const { data: officialTechniques = [], isLoading: isLoadingOfficialTechniques } = useOfficialLibrary('techniques');
+  const { data: officialTechniques = [], isLoading: isLoadingOfficialTechniques } =
+    useOfficialLibrary('techniques');
   const { data: officialItems = [], isLoading: isLoadingOfficialItems } = useOfficialLibrary('items');
   const { data: itemProperties = [] } = useCodexItemProperties();
   const queryClient = useQueryClient();
@@ -83,26 +61,7 @@ export function useAdminArchetypeWorkspace() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [copySourceName, setCopySourceName] = useState<string | null>(null);
-
-  const [form, setForm] = useState<AdminArchetypeFormState>({
-    name: '',
-    type: 'power',
-    description: '',
-    archetypeAbility: '',
-    secondaryAbility: '',
-    powerProfStart: 0,
-    martialProfStart: 0,
-    powerProfLevel5: 0,
-    martialProfLevel5: 0,
-    level1Path: makeLevelRow(1),
-    levelPathRows: [makeLevelRow(2)],
-    advancedPathJson: '',
-    guidedRecommendedAbilities: {},
-    guidedArmorStep: '',
-    guidedSharedEquipmentEntries: [],
-    /** Level 1 guidance groups (feat groups authored here; others preserved). */
-    guidanceGroups: [],
-  });
+  const [form, setForm] = useState(EMPTY_ARCHETYPE_FORM);
 
   const filtered = (archetypes || []).filter(
     (a: ArchetypeItem) =>
@@ -157,226 +116,33 @@ export function useAdminArchetypeWorkspace() {
     [filterLevel1ArmorEntries, form.level1Path.armamentEntries]
   );
 
-  const updateFeatGuidanceGroup = (
-    groupId: string,
-    patch: Partial<Pick<PathGuidanceGroup, 'title' | 'why' | 'feats'>>
-  ) => {
-    setForm((prev) => ({
-      ...prev,
-      guidanceGroups: prev.guidanceGroups.map((g) =>
-        g.id === groupId
-          ? {
-              ...g,
-              ...patch,
-              audience: resolvePathGuidanceAudience(g),
-            }
-          : g
-      ),
-    }));
-  };
-
-  const addFeatGuidanceGroup = (audience: PathGuidanceAudience) => {
-    const current = filterFeatGuidanceGroups(form.guidanceGroups, audience);
-    if (current.length >= LAYER1_GOVERNANCE.maxGroupsPerStep) {
-      showToast(
-        `At most ${LAYER1_GOVERNANCE.maxGroupsPerStep} ${audience} feat groups (Layer 1 governance).`,
-        'warning'
-      );
-      return;
-    }
-    setForm((prev) => ({
-      ...prev,
-      guidanceGroups: [...prev.guidanceGroups, newFeatGuidanceGroup(audience)],
-    }));
-  };
-
-  const removeFeatGuidanceGroup = (groupId: string) => {
-    setForm((prev) => ({
-      ...prev,
-      guidanceGroups: prev.guidanceGroups.filter((g) => g.id !== groupId),
-    }));
-  };
-
-  const addLevel1Armament = (value: string) => {
-    setForm((prev) => {
-      if (prev.level1Path.armamentEntries.some((e) => e.id === value)) return prev;
-      return {
-        ...prev,
-        level1Path: {
-          ...prev.level1Path,
-          armamentEntries: [...prev.level1Path.armamentEntries, { id: value, quantity: 1 }],
-        },
-      };
-    });
-  };
-
-  const updateLevel1ArmamentQty = (id: string, quantity: number) => {
-    setForm((prev) => ({
-      ...prev,
-      level1Path: {
-        ...prev.level1Path,
-        armamentEntries: prev.level1Path.armamentEntries.map((e) =>
-          e.id === id ? { ...e, quantity } : e
-        ),
-      },
-    }));
-  };
-
-  const removeLevel1Armament = (id: string) => {
-    setForm((prev) => ({
-      ...prev,
-      level1Path: {
-        ...prev.level1Path,
-        armamentEntries: prev.level1Path.armamentEntries.filter((e) => e.id !== id),
-      },
-    }));
-  };
-
-  const getSelectedLabels = (values: string[], options: SelectionOption[]) =>
-    values.map((value) => options.find((option) => option.value === value)?.label ?? value);
-
-  function getUnknownSelectionsForLevel(levelForm: PathLevelForm, labelPrefix: string): string[] {
-    const unknowns: string[] = [];
-
-    const checkField = (key: PathSelectionKey, label: string) => {
-      const options = optionsByField[key];
-      if (!options) return;
-      const knownIds = new Set(options.map((opt) => opt.value));
-      const ids = levelForm[key].filter(Boolean);
-      const invalidIds = ids.filter((id) => !knownIds.has(id));
-      if (invalidIds.length) {
-        const prettyLabels = getSelectedLabels(invalidIds, options);
-        unknowns.push(`${labelPrefix}${label}: ${prettyLabels.join(', ')}`);
-      }
-    };
-
-    const checkEntries = (entries: PathItemRecommendation[], label: string) => {
-      const options = entries.length && label === 'Armaments' ? optionsByField.armaments : optionsByField.equipment;
-      if (!options) return;
-      const knownIds = new Set(options.map((opt) => opt.value));
-      const invalid = entries.filter((e) => !knownIds.has(e.id));
-      if (invalid.length) {
-        const pretty = invalid.map((e) => getSelectedLabels([e.id], options).join(', ') || e.id);
-        unknowns.push(`${labelPrefix}${label}: ${pretty.join(', ')}`);
-      }
-    };
-
-    checkField('feats', 'Feats');
-    checkField('skills', 'Skills');
-    checkField('powers', 'Powers');
-    checkField('innatePowers', 'Innate Powers');
-    checkField('techniques', 'Techniques');
-    if (levelForm.armamentEntries?.length) checkEntries(levelForm.armamentEntries, 'Armaments');
-    else checkField('armaments', 'Armaments');
-    if (levelForm.equipmentEntries?.length) checkEntries(levelForm.equipmentEntries, 'Equipment');
-    else checkField('equipment', 'Equipment');
-    checkField('removeFeats', 'Remove Feats');
-    checkField('removePowers', 'Remove Powers');
-    checkField('removeTechniques', 'Remove Techniques');
-    checkField('removeArmaments', 'Remove Armaments');
-
-    return unknowns;
-  }
+  const { updateFeatGuidanceGroup, addFeatGuidanceGroup, removeFeatGuidanceGroup } =
+    createFeatGuidanceMutators(setForm, showToast);
+  const { addLevel1Armament, updateLevel1ArmamentQty, removeLevel1Armament } =
+    createLevel1ArmamentMutators(setForm);
 
   const openAdd = () => {
     setEditing(null);
     setCopySourceName(null);
-    setForm({
-      name: '',
-      type: 'power',
-      description: '',
-      archetypeAbility: '',
-      secondaryAbility: '',
-      powerProfStart: 0,
-      martialProfStart: 0,
-      powerProfLevel5: 0,
-      martialProfLevel5: 0,
-      level1Path: makeLevelRow(1),
-      levelPathRows: [makeLevelRow(2)],
-      advancedPathJson: '',
-      guidedRecommendedAbilities: {},
-      guidedArmorStep: '',
-      guidedSharedEquipmentEntries: [],
-      guidanceGroups: [],
-    });
+    setForm(EMPTY_ARCHETYPE_FORM);
     setModalOpen(true);
   };
 
   const openDuplicate = (a: ArchetypeItem) => {
-    const parsedPath = coerceJsonRecord(a.path_data);
-    const rawLevel1 =
-      parsedPath && typeof parsedPath.level1 === 'object' && parsedPath.level1 !== null
-        ? (parsedPath.level1 as Record<string, unknown>)
-        : {};
-    const rawLevels = Array.isArray(parsedPath?.levels)
-      ? (parsedPath?.levels as unknown[])
-      : [];
-    const levelRows = rawLevels
-      .filter((entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null)
-      .map((entry, index) => toLevelForm(entry, index + 2, optionsByField));
-
     setEditing(null);
     setCopySourceName(a.name || '');
-    const equipmentMeta = guidedEquipmentMetaFromPath(a.path_data);
-    const level1Path = toLevelForm(rawLevel1, 1, optionsByField);
-    setForm({
-      name: ((a.name || '').trim() || 'Archetype') + COPY_NAME_SUFFIX,
-      type: (a.type || 'power') as 'power' | 'powered-martial' | 'martial',
-      description: a.description || '',
-      archetypeAbility: a.archetype_ability || '',
-      secondaryAbility: a.secondary_ability || '',
-      powerProfStart: a.power_prof_start ?? 0,
-      martialProfStart: a.martial_prof_start ?? 0,
-      powerProfLevel5: a.power_prof_level5 ?? 0,
-      martialProfLevel5: a.martial_prof_level5 ?? 0,
-      level1Path,
-      levelPathRows: levelRows.length ? levelRows : [makeLevelRow(2)],
-      advancedPathJson: '',
-      guidedRecommendedAbilities: guidedAbilitiesFromPath(a.path_data),
-      guidedArmorStep: equipmentMeta.armorStep,
-      guidedSharedEquipmentEntries: equipmentMeta.sharedEquipmentEntries,
-      guidanceGroups: guidanceGroupsFromPathData(a.path_data, level1Path.feats),
-    });
-    toastLevel1SkillWarnings(level1Path.skills, codexSkills as CodexSkill[], showToast);
+    const nextForm = buildDuplicateArchetypeForm(a, optionsByField);
+    setForm(nextForm);
+    toastLevel1SkillsFromForm(nextForm, codexSkills as CodexSkill[], showToast);
     setModalOpen(true);
   };
 
   const openEdit = (a: ArchetypeItem) => {
-    const parsedPath = coerceJsonRecord(a.path_data);
-    const rawLevel1 =
-      parsedPath && typeof parsedPath.level1 === 'object' && parsedPath.level1 !== null
-        ? (parsedPath.level1 as Record<string, unknown>)
-        : {};
-    const rawLevels = Array.isArray(parsedPath?.levels)
-      ? (parsedPath?.levels as unknown[])
-      : [];
-    const levelRows = rawLevels
-      .filter((entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null)
-      .map((entry, index) => toLevelForm(entry, index + 2, optionsByField));
-
     setEditing(a);
     setCopySourceName(null);
-    const equipmentMeta = guidedEquipmentMetaFromPath(a.path_data);
-    const level1Path = toLevelForm(rawLevel1, 1, optionsByField);
-    setForm({
-      name: a.name || '',
-      type: (a.type || 'power') as 'power' | 'powered-martial' | 'martial',
-      description: a.description || '',
-      archetypeAbility: a.archetype_ability || '',
-      secondaryAbility: a.secondary_ability || '',
-      powerProfStart: a.power_prof_start ?? 0,
-      martialProfStart: a.martial_prof_start ?? 0,
-      powerProfLevel5: a.power_prof_level5 ?? 0,
-      martialProfLevel5: a.martial_prof_level5 ?? 0,
-      level1Path,
-      levelPathRows: levelRows.length ? levelRows : [makeLevelRow(2)],
-      advancedPathJson: '',
-      guidedRecommendedAbilities: guidedAbilitiesFromPath(a.path_data),
-      guidedArmorStep: equipmentMeta.armorStep,
-      guidedSharedEquipmentEntries: equipmentMeta.sharedEquipmentEntries,
-      guidanceGroups: guidanceGroupsFromPathData(a.path_data, level1Path.feats),
-    });
-    toastLevel1SkillWarnings(level1Path.skills, codexSkills as CodexSkill[], showToast);
+    const nextForm = buildArchetypeFormFromItem(a, optionsByField);
+    setForm(nextForm);
+    toastLevel1SkillsFromForm(nextForm, codexSkills as CodexSkill[], showToast);
     setModalOpen(true);
   };
 
@@ -388,230 +154,22 @@ export function useAdminArchetypeWorkspace() {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) return;
-
-    const unknownFromLevel1 = getUnknownSelectionsForLevel(form.level1Path, 'Level 1 ');
-    const unknownFromLevels = form.levelPathRows.flatMap((row) =>
-      getUnknownSelectionsForLevel(row, `Level ${row.level} `)
-    );
-    const allUnknowns = [...unknownFromLevel1, ...unknownFromLevels];
-    if (allUnknowns.length) {
-      showToast(
-        'Some archetype path entries no longer match existing Codex/Official Library items. ' +
-          'Please fix or remove these before saving: ' +
-          allUnknowns.join('; '),
-        'error'
-      );
-      return;
-    }
-
-    const featGroupsForSave: PathGuidanceGroup[] = form.guidanceGroups
-      .filter((g) => (g.feats?.length ?? 0) > 0)
-      .map((g) => {
-        const audience = resolvePathGuidanceAudience(g);
-        const feats = dedupeStrings(g.feats ?? []);
-        const why = g.why?.trim();
-        return {
-          id: g.id,
-          title: g.title.trim() || (audience === 'character' ? 'Character feats' : 'Archetype feats'),
-          audience,
-          ...(why ? { why } : {}),
-          feats,
-        };
-      });
-    const nonFeatGroups = form.guidanceGroups.filter(
-      (g) =>
-        !(g.feats?.length) &&
-        ((g.powers?.length ?? 0) > 0 ||
-          (g.techniques?.length ?? 0) > 0 ||
-          (g.armaments?.length ?? 0) > 0 ||
-          (g.equipment?.length ?? 0) > 0 ||
-          (g.innatePowers?.length ?? 0) > 0)
-    );
-    const guidanceGroupsForSave = mergeFeatGuidanceGroups(nonFeatGroups, featGroupsForSave);
-    const syncedFeats = unionFeatIdsFromGuidanceGroups(guidanceGroupsForSave);
-
-    const level1Payload = buildLevelPayload(
-      {
-        ...form.level1Path,
-        feats: syncedFeats.length > 0 ? syncedFeats : form.level1Path.feats,
-      },
-      false
-    );
-    if (guidanceGroupsForSave.length > 0) {
-      level1Payload.guidance_groups = guidanceGroupsForSave;
-    }
-    const levelsPayload = form.levelPathRows
-      .map((row) => buildLevelPayload(row, true))
-      .filter((row) => Object.keys(row).length > 1)
-      .sort((a, b) => Number(a.level || 0) - Number(b.level || 0));
-
-    let structuredPathData: Record<string, unknown> | undefined;
-    if (Object.keys(level1Payload).length > 0 || levelsPayload.length > 0) {
-      structuredPathData = {};
-      if (Object.keys(level1Payload).length > 0) structuredPathData.level1 = level1Payload;
-      if (levelsPayload.length > 0) structuredPathData.levels = levelsPayload;
-    }
-
-    if (structuredPathData && pathHiddenFromPlayerPicker(parseArchetypePathData(structuredPathData))) {
-      showToast(
-        'Level 1 has notes, remove lists, or Unarmed Prowess only; no add recommendations. ' +
-          'This path will not appear in the character creator picker or public codex path list until you add level 1 feats, skills, powers, innate powers, techniques, armaments, or equipment.',
-        'warning'
-      );
-    }
-
-    const recommendedAbilitiesValue = serializeRecommendedAbilities(form.guidedRecommendedAbilities);
-
-    let level1Override: Record<string, unknown> | undefined;
-    let levelsOverride: Record<string, unknown>[] | undefined;
-    if (form.advancedPathJson.trim()) {
-      const advancedParse = parseOptionalJsonField(form.advancedPathJson, 'Advanced Path JSON');
-      if (!advancedParse.ok) {
-        showToast(advancedParse.error, 'error');
-        return;
-      }
-      const override = (advancedParse.value ?? {}) as Record<string, unknown>;
-      if (override.level1 && typeof override.level1 === 'object') level1Override = override.level1 as Record<string, unknown>;
-      if (Array.isArray(override.levels)) {
-        levelsOverride = override.levels.filter(
-          (entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null
-        );
-      }
-    }
-
-    const previewLevel1 = level1Override || (structuredPathData?.level1 as Record<string, unknown> | undefined) || {};
-    const previewExistingLevel1 = editing ? parseArchetypePathData(editing.path_data)?.level1 : undefined;
-    const previewAbilities =
-      recommendedAbilitiesValue ?? previewExistingLevel1?.recommended_abilities;
-
-    const pathForValidation = parseArchetypePathData({
-      level1: {
-        ...previewLevel1,
-        ...(guidanceGroupsForSave.length > 0
-          ? { guidance_groups: guidanceGroupsForSave }
-          : {}),
-        ...(previewAbilities ? { recommended_abilities: previewAbilities } : {}),
-        ...(form.guidedArmorStep ? { armorStep: form.guidedArmorStep } : {}),
-        ...(form.guidedSharedEquipmentEntries.length
-          ? { sharedEquipment: form.guidedSharedEquipmentEntries }
-          : {}),
-      },
+    await saveAdminArchetype({
+      form,
+      editing,
+      optionsByField,
+      codexSkills: codexSkills as CodexSkill[],
+      skillById,
+      officialPowers: officialPowers as LibraryPower[],
+      officialItems: officialItems as LibraryItem[],
+      codexEquipment: codexEquipment as CodexEquipmentItem[],
+      itemProperties: itemProperties as ItemPropertyTpRow[],
+      powerPartsDb: powerPartsDb as PowerPart[],
+      queryClient,
+      showToast,
+      setSaving,
+      onSuccess: closeModal,
     });
-    if (pathForValidation?.level1) {
-      const officialById = new Map(
-        (officialPowers as LibraryPower[]).map((p) => [String(p.id ?? ''), p])
-      );
-      const publishIssues = validatePathDataForPublish(pathForValidation, {
-        resolveItemTrainingPoints: createItemTpResolver(
-          officialItems,
-          codexEquipment,
-          itemProperties
-        ),
-        trainingPointLimit: trainingPointLimitFromRecommendedAbilities(previewAbilities),
-        archetypeType: form.type,
-        powerProfStart: form.powerProfStart,
-        martialProfStart: form.martialProfStart,
-        isSubSkill: (skillId) => {
-          const skill = skillById.get(String(skillId));
-          if (!skill) return null;
-          return isCodexSubSkill(skill);
-        },
-        resolveInnatePower: (powerId) => {
-          const power = officialById.get(powerId);
-          if (!power) return null;
-          return snapshotOfficialPowerForInnate(power, powerPartsDb as PowerPart[]);
-        },
-      });
-      const publishErrors = publishIssues.filter((i) => i.severity === 'error');
-      if (publishErrors.length > 0) {
-        showToast(publishErrors.map((i) => i.message).join(' '), 'error');
-        return;
-      }
-      const publishWarnings = publishIssues.filter((i) => i.severity === 'warning');
-      if (publishWarnings.length > 0) {
-        showToast(
-          `Layer 1 governance: ${publishWarnings.map((i) => i.message).join(' ')}`,
-          'warning'
-        );
-      }
-    }
-
-    setSaving(true);
-    const finalLevel1 = previewLevel1;
-    const finalLevels = levelsOverride || (structuredPathData?.levels as Record<string, unknown>[] | undefined) || [];
-    const existingLevel1 = previewExistingLevel1;
-    const advancedGuidance =
-      Array.isArray(finalLevel1.guidance_groups) && finalLevel1.guidance_groups.length > 0
-        ? (finalLevel1.guidance_groups as PathGuidanceGroup[])
-        : null;
-    const preservedGuidanceGroups =
-      advancedGuidance ?? (guidanceGroupsForSave.length > 0 ? guidanceGroupsForSave : null);
-    const preservedRecommendedAbilities =
-      recommendedAbilitiesValue ??
-      existingLevel1?.recommended_abilities ??
-      null;
-    // Kits removed from live DB (TASK-442). Persist armorStep + recommended gear only.
-    const preservedLoadouts = serializeLevel1LoadoutsField({
-      armorStep: form.guidedArmorStep || undefined,
-      sharedEquipment: form.guidedSharedEquipmentEntries.length
-        ? form.guidedSharedEquipmentEntries
-        : undefined,
-    });
-
-    const result = await saveArchetypeWithPath({
-      ...(editing ? { id: editing.id } : {}),
-      name: form.name.trim(),
-      type: form.type,
-      description: form.description.trim() || undefined,
-      archetype_ability: form.archetypeAbility || undefined,
-      secondary_ability: form.secondaryAbility || undefined,
-      power_prof_start: form.powerProfStart,
-      martial_prof_start: form.martialProfStart,
-      power_prof_level5: form.powerProfLevel5,
-      martial_prof_level5: form.martialProfLevel5,
-      level1_feats: toCsv(finalLevel1.feats),
-      level1_skills: toCsv(finalLevel1.skills),
-      level1_powers: toCsv(finalLevel1.powers),
-      level1_innate_powers: toCsv(finalLevel1.innatePowers),
-      level1_techniques: toCsv(finalLevel1.techniques),
-      level1_armaments: toCsv(finalLevel1.armaments),
-      level1_equipment: toCsv(finalLevel1.equipment),
-      level1_recommend_unarmed_prowess: finalLevel1.recommendUnarmedProwess === true,
-      level1_remove_feats: toCsv(finalLevel1.removeFeats),
-      level1_remove_powers: toCsv(finalLevel1.removePowers),
-      level1_remove_techniques: toCsv(finalLevel1.removeTechniques),
-      level1_remove_armaments: toCsv(finalLevel1.removeArmaments),
-      level1_notes: typeof finalLevel1.notes === 'string' ? finalLevel1.notes : undefined,
-      level1_guidance_groups: preservedGuidanceGroups,
-      level1_recommended_abilities: preservedRecommendedAbilities,
-      level1_loadouts: preservedLoadouts,
-      levels: finalLevels.map((entry) => ({
-        level: Number(entry.level || 0),
-        feats: toCsv(entry.feats),
-        skills: toCsv(entry.skills),
-        powers: toCsv(entry.powers),
-        techniques: toCsv(entry.techniques),
-        armaments: toCsv(entry.armaments),
-        equipment: toCsv(entry.equipment),
-        remove_feats: toCsv(entry.removeFeats),
-        remove_powers: toCsv(entry.removePowers),
-        remove_techniques: toCsv(entry.removeTechniques),
-        remove_armaments: toCsv(entry.removeArmaments),
-        notes: typeof entry.notes === 'string' ? entry.notes : undefined,
-      })),
-    });
-
-    setSaving(false);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['gameData', 'archetypes'] });
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['gameData', 'archetypes'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
   };
 
   const handleDelete = async (id: string) => {
@@ -648,7 +206,6 @@ export function useAdminArchetypeWorkspace() {
       setPendingDeleteId(null);
     }
   };
-
 
   return {
     showToast,
