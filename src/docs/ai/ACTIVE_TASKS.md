@@ -4,17 +4,17 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-615
+**Next task ID:** TASK-616
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-611, 610, 608, 607, 606, 604, 603, 602, 601, 600, 599, 598, etc.)
+**Pending owner QA:** [`DEVELOPER_TASK_QUEUE.md`](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-615, 611, 610, 608, 607, 606, 604, 603, 602, 601, 600, 599, 598, etc.)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
 **Counts:** 2 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-614 done (LoadoutBudgetBar → shared). Quality audit TASK-607–613 done ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md)). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** TASK-615 done (TASK-610 facade remainder). TASK-614 done (LoadoutBudgetBar → shared). Quality audit TASK-607–613 done. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 

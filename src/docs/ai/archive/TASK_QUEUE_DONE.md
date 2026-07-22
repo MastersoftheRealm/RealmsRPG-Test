@@ -1,3 +1,35 @@
+- id: TASK-615
+  title: Shrink TASK-610 remainder facades under ~500 LOC
+  created_at: 2026-07-22
+  completed_at: 2026-07-22
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  parent_task: TASK-610
+  related_files:
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/components/guided-creator/steps/use-powers-techniques-selection.ts
+    - src/app/(main)/creature-creator/use-creature-creator-workspace.ts
+    - src/app/(main)/creature-creator/creature-creator-workspace-persistence.ts
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    TASK-610 follow-up: extracted guided powers/techniques selection+seed hook and creature
+    workspace save/load/reset/remove handlers into co-located modules. No behavior change.
+  acceptance_criteria:
+    - powers-techniques-step facade <=~500 LOC; selection/seed in co-located hook.
+    - use-creature-creator-workspace <=~500 LOC; save/handlers in co-located module.
+    - npm run build passes; powers-techniques-step-helpers vitest unchanged.
+    - FEATURE_INDEX updated for new module paths.
+  build_validation: |
+    suite: DEV-V-018
+    tests:
+      - DEV-V-018-T009
+      - DEV-V-018-T010
+  developer_test_plan: |
+    DEV-V-018 T009/T010 creature creator smoke; DEV-V-013 Guided powers/techniques L1 unchanged.
+
+---
 - id: TASK-611
   title: Split shared + data-enrichment hot modules (co-located)
   created_at: 2026-07-20

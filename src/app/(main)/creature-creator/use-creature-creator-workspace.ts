@@ -2,7 +2,8 @@
  * Creature Creator — workspace state hook (TASK-381 Phase 5; TASK-610 splits)
  * ==========================================================
  * Owns creature state, draft cache, stats, library selectable builders,
- * modal UI state, save/load, and editor callbacks. Presentational sections
+ * modal UI state, and editor callbacks. Save/load persistence in
+ * creature-creator-workspace-persistence.ts (TASK-615). Presentational sections
  * stay in creature-creator-editor; CreatorPageShell wiring stays in page.tsx.
  */
 
@@ -27,7 +28,6 @@ import {
   useCodexFeats,
   useTraits,
   useAdmin,
-  useCreatorSave,
   useLoadModalLibrary,
   useOfficialLibrary,
   useGameRules,
@@ -57,7 +57,6 @@ import {
 import {
   allocationsToCreatureSkills,
   creatureSkillsToAllocations,
-  rawRecordToCreatureState,
 } from './creature-skill-utils';
 import { bootstrapCreatureState } from './creature-creator-bootstrap';
 import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
@@ -95,6 +94,7 @@ import {
   buildCreaturePowersSummary,
   buildCreatureTechniquesSummary,
 } from './creature-creator-summaries';
+import { useCreatureCreatorWorkspacePersistence } from './creature-creator-workspace-persistence';
 
 type PowerModalTab = 'powers' | 'empowered';
 
@@ -371,31 +371,29 @@ export function useCreatureCreatorWorkspace() {
 
   const isOverBudget = useMemo(() => isCreatureOverBudget(stats), [stats]);
 
-  const getPayload = useCallback(
-    () => ({
-      name: creature.name.trim(),
-      data: { ...creature },
-    }),
-    [creature],
-  );
+  const {
+    save,
+    handleSave,
+    handleReset,
+    handleLoadCreature,
+    showResetConfirm,
+    setShowResetConfirm,
+    onRemoveFeat,
+    onTogglePowerInnate,
+    onRemovePower,
+    onRemoveTechnique,
+    onRemoveArmament,
+  } = useCreatureCreatorWorkspacePersistence({
+    creature,
+    setCreature,
+    stats: { isOverBudget },
+    load,
+  });
 
   const featsSummary = useMemo(() => buildCreatureFeatsSummary(creature), [creature]);
   const powersSummary = useMemo(() => buildCreaturePowersSummary(creature), [creature]);
   const techniquesSummary = useMemo(() => buildCreatureTechniquesSummary(creature), [creature]);
   const armamentsSummary = useMemo(() => buildCreatureArmamentsSummary(creature), [creature]);
-
-  const save = useCreatorSave({
-    type: 'creatures',
-    getPayload,
-    requirePublishConfirm: true,
-    publishConfirmTitle: 'Publish to Realms Library',
-    publishConfirmDescription: (n, { existingInPublic }) =>
-      existingInPublic
-        ? `Are you sure you want to override "${n}" (creature)? The existing public creature with this name will be replaced.`
-        : `Are you sure you wish to publish this creature "${n}" to the Realms Library? All users will be able to see and use it.`,
-    successMessage: 'Creature saved!',
-    publicSuccessMessage: 'Creature saved to Realms Library!',
-  });
 
   const skillAllocations = useMemo(
     () => creatureSkillsToAllocations(creature.skills, skillsData),
@@ -426,71 +424,6 @@ export function useCreatureCreatorWorkspace() {
 
   const handleDefenseSkillsChange = useCallback((defense: CreatureState['defenses']) => {
     setCreature((prev) => ({ ...prev, defenses: defense }));
-  }, []);
-
-  const handleLoadCreature = useCallback(
-    (item: SelectableItem) => {
-      setCreature(rawRecordToCreatureState(item.data as Record<string, unknown>));
-      load.closeLoadModal();
-      save.setSaveMessage({ type: 'success', text: 'Creature loaded successfully!' });
-      setTimeout(() => save.setSaveMessage(null), 2000);
-    },
-    [load, save],
-  );
-
-  const handleSave = useCallback(async () => {
-    if (isOverBudget) {
-      save.setSaveMessage({
-        type: 'error',
-        text: 'Cannot save: creature exceeds one or more point budgets.',
-      });
-      setTimeout(() => save.setSaveMessage(null), 3000);
-      return;
-    }
-    await save.handleSave();
-  }, [save, isOverBudget]);
-
-  const [showResetConfirm, setShowResetConfirm] = useState(false);
-
-  const handleReset = () => {
-    setShowResetConfirm(true);
-  };
-
-  const onRemoveFeat = useCallback((featId: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      feats: prev.feats.filter((f) => f.id !== featId),
-    }));
-  }, []);
-
-  const onTogglePowerInnate = useCallback((powerId: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      powers: prev.powers.map((p) =>
-        p.id === powerId ? { ...p, innate: !(p.innate === true) } : p,
-      ),
-    }));
-  }, []);
-
-  const onRemovePower = useCallback((powerId: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      powers: prev.powers.filter((p) => p.id !== powerId),
-    }));
-  }, []);
-
-  const onRemoveTechnique = useCallback((techniqueId: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      techniques: prev.techniques.filter((t) => t.id !== techniqueId),
-    }));
-  }, []);
-
-  const onRemoveArmament = useCallback((armamentId: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      armaments: prev.armaments.filter((a) => a.id !== armamentId),
-    }));
   }, []);
 
   return {
