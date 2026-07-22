@@ -6,6 +6,7 @@
 
 import type { Metadata, Viewport } from 'next';
 import { Nunito, Nunito_Sans, Nova_Flat } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import { AuthProvider, QueryProvider, ThemeProvider } from '@/components/providers';
 import { ToastProvider } from '@/components/ui';
 import { SelectionGuard } from '@/components/layout';
@@ -94,6 +95,8 @@ export default function RootLayout({
             </AuthProvider>
           </QueryProvider>
         </ThemeProvider>
+        {/* Vercel Web Analytics — production pageviews via same-origin /_vercel/insights */}
+        <Analytics />
       </body>
     </html>
   );

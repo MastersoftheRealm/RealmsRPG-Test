@@ -1,4 +1,3 @@
-
 - id: TASK-618
   title: Split unified-selection-modal + CombatantCard under ~500 LOC
   priority: medium
@@ -33,8 +32,10 @@
     - CombatantCard combatant row actions/conditions unchanged.
     - npm run build passes.
   completed_work: |
-    USM 696?354 facade + 6 co-located modules; CombatantCard 615?149 + 6 co-located modules.
+    USM 696→354 facade + 6 co-located modules; CombatantCard 615→149 + 6 co-located modules.
     Allowlist updated for USM extracts. npm run build passes.
+
+---
 
 ---
 
@@ -70,6 +71,8 @@
   notes: |
     Spreadsheet facade 115 LOC (was 749); workspace facade 242 LOC (was 658).
     Next quality-audit targets: unified-selection-modal, CombatantCard.
+
+---
 
 ---
 
@@ -117,6 +120,8 @@
 
 ---
 
+---
+
 - id: TASK-615
   title: Shrink TASK-610 remainder facades under ~500 LOC
   created_at: 2026-07-22
@@ -149,6 +154,47 @@
     DEV-V-018 T009/T010 creature creator smoke; DEV-V-013 Guided powers/techniques L1 unchanged.
 
 ---
+
+---
+
+- id: TASK-615
+  title: Integrate Vercel Web Analytics (CSP + docs)
+  created_at: 2026-07-22
+  completed_at: 2026-07-22
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/layout.tsx
+    - next.config.ts
+    - package.json
+    - src/lib/constants/copy/privacy-copy.ts
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+    - src/docs/PERFORMANCE_AND_EDGE.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Vercel Agent PR #96 installed `@vercel/analytics` + `<Analytics />` in root layout but did not
+    update CSP, privacy/deploy docs, or the task queue. Integrate properly for RealmsRPG.
+  acceptance_criteria:
+    - `@vercel/analytics` in package.json; `<Analytics />` in `src/app/layout.tsx` (App Router).
+    - CSP allows Web Analytics (prod same-origin + `va.vercel-scripts.com` for local/dev debug).
+    - Deploy docs document Enable step + verify beacon; privacy copy discloses analytics.
+    - FEATURE_INDEX + DEV-006 Dashboard Enable; DEV-V-017-T005 updated; build passes.
+  build_validation: |
+    suite: DEV-V-017
+    tests:
+      - DEV-V-017-T005
+  developer_test_plan: |
+    Suite DEV-V-017 T005 — privacy Cookies and Analytics; Dashboard Enable = DEV-006.
+  notes: |
+    Supersedes incomplete vercel/install-vercel-web-analytics-5wx8k8 (#96) for repo conventions.
+    Speed Insights not in scope.
+
+---
+
 - id: TASK-611
   title: Split shared + data-enrichment hot modules (co-located)
   created_at: 2026-07-20
@@ -15363,23 +15409,3 @@ Firebase/RTDB - the project is Supabase-only.
   notes: Was TASK-607 pre-renumber. First slice only; expand to more routes as follow-up.
 
 ---
-
-- id: TASK-614
-  title: Move LoadoutBudgetBar into shared (Architect)
-  created_at: 2026-07-21
-  completed_at: 2026-07-22
-  created_by: agent
-  priority: low
-  status: done
-  verification_status: n/a
-  parent_task: TASK-606
-  related_files:
-    - src/components/shared/loadout-budget-bar.tsx
-    - src/components/shared/index.ts
-    - scripts/shared-ui-allowlist.json
-    - src/docs/ai/ADR/0008-loadout-budget-bar-shared.md
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/guide/04-floating-ui-tooltips.md
-  description: |
-    Migrated LoadoutBudgetBar from guided-creator/ to shared/ so Guided + Advanced import from
-    @/components/shared (ADR-0008). No behavior change.

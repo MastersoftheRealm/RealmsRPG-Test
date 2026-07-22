@@ -166,6 +166,18 @@ On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users
 
 **Ignored builds (docs-only):** `vercel.json` runs `scripts/vercel-ignore-build.sh` so commits that only touch docs/agent/task-queue paths (`src/docs/`, `*.md`, `.cursor/`, `.github/`, `sql/`, seed/codex CSV) **skip** Vercel builds. This avoids Hobby **Deployment rate limited — retry in 24 hours** failures from rapid docs-only merges. App/`src` code changes still deploy. If master shows a red Vercel check with that rate-limit message while GitHub Actions are green, production is usually still on the last successful app deploy — wait for the window or upgrade; do not treat it as an app build break.
 
+### Step 3b: Web Analytics (optional but recommended)
+
+App code mounts Vercel Web Analytics in the root layout (`src/app/layout.tsx` → `<Analytics />` from `@vercel/analytics/next`). No env vars are required.
+
+1. In the Vercel project → **Analytics** → **Enable** Web Analytics (Dashboard-only; see **DEV-006** in `DEVELOPER_TASK_QUEUE.md`).
+2. Deploy (or wait for the next production deploy) so `/_vercel/insights/*` routes are provisioned.
+3. Verify: open the live site, DevTools → Network → look for a same-origin `…/view` (or `/_vercel/insights/view`) request after navigation.
+4. **CSP:** `next.config.ts` allows `https://va.vercel-scripts.com` on `script-src` / `connect-src` for local/dev debug scripts. Production uses same-origin `/_vercel/insights/*` (`'self'`). Do not remove those hosts without re-checking analytics in both environments.
+5. Privacy copy: `/privacy` discloses anonymous usage analytics via the host (see `privacy-copy.ts`).
+
+Speed Insights is **not** installed unless separately prioritized (different package + CSP considerations).
+
 ### Step 4: Custom domain (e.g. realmsrpg.com)
 
 1. **Vercel:** Project → Settings → Domains → Add `realmsrpg.com` (and `www.realmsrpg.com` if desired). Follow Vercel’s DNS instructions (A/CNAME records).

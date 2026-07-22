@@ -42,12 +42,14 @@ const nextConfig: NextConfig = {
       "form-action 'self'",
       "frame-ancestors 'self'",
       "object-src 'none'",
-      // Vercel Toolbar / Live feedback (preview & production) loads from vercel.live
-      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live",
+      // Vercel Toolbar / Live feedback (preview & production) loads from vercel.live.
+      // Web Analytics: production script is same-origin (/_vercel/insights/*); local/dev
+      // debug script loads from va.vercel-scripts.com (see DEPLOYMENT_AND_SECRETS_SUPABASE).
+      "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://vercel.live https://va.vercel-scripts.com",
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://*.vercel.live",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://*.vercel.live https://va.vercel-scripts.com",
       // Google Doc (Core Rulebook) + Vercel Live feedback iframe (preview toolbar)
       "frame-src 'self' https://docs.google.com https://vercel.live",
     ].join('; ');
