@@ -2,10 +2,9 @@
 
 import Link from 'next/link';
 import { Plus, Wand2, ExternalLink } from 'lucide-react';
-import { InfoTippy } from '@/components/shared';
+import { InfoTippy, LoadoutBudgetBar } from '@/components/shared';
 import { Button, Spinner } from '@/components/ui';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
-import { LoadoutBudgetBar } from '@/components/guided-creator/loadout-budget-bar';
 import type { PathGuidanceGroup } from '@/types/archetype';
 import { powersSelectionHelp } from '../../../../../public/tooltip-text';
 

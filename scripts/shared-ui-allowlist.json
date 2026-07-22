@@ -54,6 +54,7 @@
     "src/components/shared/innate-toggle.tsx",
     "src/components/shared/list-components.tsx",
     "src/components/shared/list-header.tsx",
+    "src/components/shared/loadout-budget-bar.tsx",
     "src/components/shared/list-row-thumbnail.tsx",
     "src/components/shared/login-prompt-modal.tsx",
     "src/components/shared/official-creature-list.tsx",

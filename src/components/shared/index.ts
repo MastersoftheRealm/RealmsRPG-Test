@@ -16,6 +16,9 @@ export { RollButton, type RollButtonProps } from './roll-button';
 // PointStatus - Unified point allocation display (creators, character sheet edit mode)
 export { PointStatus, type PointStatusProps } from './point-status';
 
+// LoadoutBudgetBar - Currency + Training Points budget row (Guided + Advanced creators; ADR-0008)
+export { LoadoutBudgetBar, type LoadoutBudgetBarProps } from './loadout-budget-bar';
+
 // AbilityScoreGrid - Six-ability tile row (sheet layout; display or edit)
 export {
   AbilityScoreGrid,

@@ -51,6 +51,7 @@ Generated: 2026-07-22
 - ListHeader
 - ListRowThumbnail
 - LoadingState
+- LoadoutBudgetBar
 - LoginPromptModal
 - OfficialCreatureList
 - OfficialEnhancedList
@@ -97,6 +98,7 @@ Generated: 2026-07-22
 - type AbilityScoreGridProps
 - type DescriptorChipWithTipProps
 - type EditState
+- type LoadoutBudgetBarProps
 - type PointStatusProps
 - type RollButtonProps
 - type SectionDualModeTogglesProps

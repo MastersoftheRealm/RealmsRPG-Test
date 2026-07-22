@@ -8,6 +8,8 @@
 import { useCallback, useMemo, useState } from 'react';
 import {
   UnifiedSelectionModal,
+  LoadoutBudgetBar,
+  PointStatus,
   type SelectableItem,
 } from '@/components/shared';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
@@ -22,8 +24,6 @@ import {
   type PowersTechniquesL2Mode,
 } from '@/lib/guided-creator/powers-techniques-l2';
 import type { PowersTechniquesKind } from '@/lib/guided-creator/power-technique-display';
-import { LoadoutBudgetBar } from './loadout-budget-bar';
-import { PointStatus } from '@/components/shared';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;

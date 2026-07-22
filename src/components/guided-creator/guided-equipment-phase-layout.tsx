@@ -1,8 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { GuidedLayerNav } from '@/components/shared';
-import { LoadoutBudgetBar } from './loadout-budget-bar';
+import { GuidedLayerNav, LoadoutBudgetBar } from '@/components/shared';
 
 export interface GuidedEquipmentPhaseLayoutProps {
   children: ReactNode;

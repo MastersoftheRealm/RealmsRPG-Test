@@ -9,7 +9,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Spinner } from '@/components/ui';
-import { PointStatus } from '@/components/shared';
+import { PointStatus, LoadoutBudgetBar } from '@/components/shared';
 import {
   useEquipment,
   useOfficialLibrary,
@@ -42,7 +42,6 @@ import {
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import { ARCHETYPE_CONFIGS } from '@/lib/game/constants';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import { LoadoutBudgetBar } from '../loadout-budget-bar';
 import { normalizeId } from '@/lib/utils';
 
 const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;

@@ -26,7 +26,7 @@ import { getAllValidationIssues } from '@/lib/character-creator-validation';
 import { calculateMaxEnergy } from '@/lib/game/calculations';
 import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
-import { LoginPromptModal, InfoTippy, PointStatus } from '@/components/shared';
+import { LoginPromptModal, InfoTippy, PointStatus, LoadoutBudgetBar } from '@/components/shared';
 import { PlayTogetherModal } from '@/components/onboarding';
 import {
   characterSheetUrlWithTourOffer,
@@ -35,7 +35,6 @@ import {
 } from '@/lib/onboarding-preferences';
 import { finalizeSummaryHelp } from '../../../../public/tooltip-text';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { LoadoutBudgetBar } from '@/components/guided-creator/loadout-budget-bar';
 import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
 import { ValidationModal } from './finalize/validation-modal';
 import { HealthEnergyAllocationSection } from './finalize/health-energy-section';

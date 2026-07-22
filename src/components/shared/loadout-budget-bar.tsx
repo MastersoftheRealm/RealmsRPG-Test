@@ -31,7 +31,7 @@ export interface LoadoutBudgetBarProps {
 
 /**
  * Shared Currency + Training Points PointStatus chrome for Guided Loadout
- * and Advanced creator equipment/powers/finalize (TASK-465 / TASK-606).
+ * and Advanced creator equipment/powers/finalize (TASK-465 / TASK-606 / TASK-614).
  * Training Points help sits inside the PointStatus label.
  */
 export function LoadoutBudgetBar({

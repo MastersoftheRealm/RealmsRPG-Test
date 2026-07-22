@@ -15212,3 +15212,23 @@ Firebase/RTDB - the project is Supabase-only.
   notes: Was TASK-607 pre-renumber. First slice only; expand to more routes as follow-up.
 
 ---
+
+- id: TASK-614
+  title: Move LoadoutBudgetBar into shared (Architect)
+  created_at: 2026-07-21
+  completed_at: 2026-07-22
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  parent_task: TASK-606
+  related_files:
+    - src/components/shared/loadout-budget-bar.tsx
+    - src/components/shared/index.ts
+    - scripts/shared-ui-allowlist.json
+    - src/docs/ai/ADR/0008-loadout-budget-bar-shared.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+  description: |
+    Migrated LoadoutBudgetBar from guided-creator/ to shared/ so Guided + Advanced import from
+    @/components/shared (ADR-0008). No behavior change.

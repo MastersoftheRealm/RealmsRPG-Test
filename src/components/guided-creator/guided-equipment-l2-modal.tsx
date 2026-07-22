@@ -3,6 +3,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import {
   UnifiedSelectionModal,
+  LoadoutBudgetBar,
   type SelectableItem,
 } from '@/components/shared';
 import type { GuidedDraft, GuidedEquipmentPhase } from '@/stores/guided-creator-store';
@@ -28,7 +29,6 @@ import {
   l2GridColumnsForPhase,
   l2HeaderColumnsForPhase,
 } from './guided-equipment-l2-grid';
-import { LoadoutBudgetBar } from './loadout-budget-bar';
 
 const l2Copy = GUIDED_CREATOR_COPY.steps.loadout.phases.l2;
 
