@@ -6,38 +6,25 @@ import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
-  RealmsImageField,
-  UnifiedSelectionModal,
   type ChipData,
-  type SelectableItem,
-  type SelectionColumnHeader,
 } from '@/components/shared';
-import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
+import { Button, IconButton, useToast } from '@/components/ui';
 import { useSpecies, useCodexSkills, useTraits, type Species, type Trait, type Skill } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
-import { Pencil, Copy, X, Plus } from 'lucide-react';
+import { Pencil, Copy, X } from 'lucide-react';
 import { formatListCellLabel } from '@/lib/utils';
 import { resolveSpeciesListRowThumbnail } from '@/lib/list-row-image';
 import { speciesSkillToChipData } from '@/lib/chip/species-skill-chips';
 import { useSort } from '@/hooks/use-sort';
-
-const COPY_NAME_SUFFIX = ' copy';
-const TRAIT_PICKER_GRID = '1.5fr 0.6fr 0.6fr';
-const TRAIT_PICKER_COLUMNS: SelectionColumnHeader[] = [
-  { key: 'name', label: 'NAME' },
-  { key: 'uses_per_rec', label: 'USES' },
-  { key: 'rec_period', label: 'RECOVERY' },
-];
-
-type TraitPickerField = 'speciesTraitIds' | 'ancestryTraitIds' | 'flawIds' | 'characteristicIds';
-
-const TRAIT_PICKER_TITLES: Record<TraitPickerField, string> = {
-  speciesTraitIds: 'Add Species Trait',
-  ancestryTraitIds: 'Add Ancestry Trait',
-  flawIds: 'Add Flaw',
-  characteristicIds: 'Add Characteristic',
-};
+import {
+  COPY_NAME_SUFFIX,
+  EMPTY_SPECIES_FORM,
+  speciesFormToSavePayload,
+  speciesToFormState,
+  type SpeciesFormState,
+} from './admin-species-form';
+import { AdminSpeciesEditModal } from './admin-species-edit-modal';
 
 export function AdminSpeciesTab() {
   const { showToast } = useToast();
@@ -53,73 +40,12 @@ export function AdminSpeciesTab() {
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   const [copySourceName, setCopySourceName] = useState<string | null>(null);
-
-  const [form, setForm] = useState({
-    name: '',
-    description: '',
-    type: '',
-    // Primary size is derived from sizes; keep in state for convenience but do not expose as a separate field
-    size: 'Medium',
-    sizes: 'Medium',
-    skillIds: [] as string[],
-    speciesTraitIds: [] as string[],
-    ancestryTraitIds: [] as string[],
-    flawIds: [] as string[],
-    characteristicIds: [] as string[],
-    aveHeight: '',
-    aveWeight: '',
-    adultAge: '',
-    maxAge: '',
-    languages: '',
-    isStarter: false,
-    imageId: null as string | null,
-    imageUrl: null as string | null,
-  });
-
-  const skillOptions = useMemo(
-    () => (skills as Skill[]).map((s) => ({ value: String(s.id), label: s.name })),
-    [skills],
-  );
-
-  const normalizeIds = (values: string[] = [], all: Array<{ id: string; name: string }>): string[] =>
-    values.map((val) => {
-      const byId = all.find((it) => String(it.id) === String(val));
-      if (byId) return String(byId.id);
-      const byName = all.find((it) => it.name === val);
-      return byName ? String(byName.id) : String(val);
-    });
-
+  const [form, setForm] = useState<SpeciesFormState>(EMPTY_SPECIES_FORM);
   const [typeFilters, setTypeFilters] = useState<string[]>([]);
   const [sizeFilters, setSizeFilters] = useState<string[]>([]);
-  const [traitPickerFor, setTraitPickerFor] = useState<TraitPickerField | null>(null);
 
-  const traitIdToTrait = useMemo(() => new Map((traits as Trait[]).map((t) => [String(t.id), t])), [traits]);
-
-  const traitPickerAlreadyIds = traitPickerFor ? form[traitPickerFor] : null;
-  const traitPickerItems = useMemo((): SelectableItem[] => {
-    if (!traitPickerFor || !traitPickerAlreadyIds) return [];
-    const already = new Set(traitPickerAlreadyIds.map(String));
-    return ((traits as Trait[]) || [])
-      .filter((t) => !already.has(String(t.id)))
-      .map((t) => ({
-        id: String(t.id),
-        name: t.name,
-        description: t.description ?? '',
-        columns: [
-          {
-            key: 'uses_per_rec',
-            value: t.uses_per_rec != null && t.uses_per_rec > 0 ? String(t.uses_per_rec) : '-',
-            align: 'center' as const,
-          },
-          {
-            key: 'rec_period',
-            value: t.rec_period ? formatListCellLabel(t.rec_period) : '-',
-            align: 'center' as const,
-          },
-        ],
-        data: t,
-      }));
-  }, [traitPickerFor, traitPickerAlreadyIds, traits]);
+  const skillsArr = skills as Skill[];
+  const traitsArr = traits as Trait[];
 
   const filterOptions = useMemo(() => {
     if (!species) return { types: [] as string[], sizes: [] as string[] };
@@ -145,7 +71,8 @@ export function AdminSpeciesTab() {
         return false;
       }
       if (typeFilters.length > 0 && !typeFilters.includes(s.type)) return false;
-      if (sizeFilters.length > 0 && !s.sizes?.some((sz: string) => sizeFilters.includes(sz))) return false;
+      if (sizeFilters.length > 0 && !s.sizes?.some((sz: string) => sizeFilters.includes(sz)))
+        return false;
       return true;
     }),
   );
@@ -153,97 +80,23 @@ export function AdminSpeciesTab() {
   const openAdd = () => {
     setEditing(null);
     setCopySourceName(null);
-    setForm({
-      name: '',
-      description: '',
-      type: '',
-      size: 'Medium',
-      sizes: 'Medium',
-      skillIds: [],
-      speciesTraitIds: [],
-      ancestryTraitIds: [],
-      flawIds: [],
-      characteristicIds: [],
-      aveHeight: '',
-      aveWeight: '',
-      adultAge: '',
-      maxAge: '',
-      languages: '',
-      isStarter: false,
-      imageId: null,
-      imageUrl: null,
-    });
+    setForm(EMPTY_SPECIES_FORM);
     setModalOpen(true);
   };
 
   const openDuplicate = (s: Species) => {
     setEditing(null);
     setCopySourceName(s.name);
-    const allSkillsArr = skills as Skill[];
-    const allTraitsArr = traits as Trait[];
-    const skillIds = normalizeIds((s.skills || []) as string[], allSkillsArr);
-    const speciesTraitIds = normalizeIds((s.species_traits || []) as string[], allTraitsArr);
-    const ancestryTraitIds = normalizeIds((s.ancestry_traits || []) as string[], allTraitsArr);
-    const flawIds = normalizeIds((s.flaws || []) as string[], allTraitsArr);
-    const characteristicIds = normalizeIds((s.characteristics || []) as string[], allTraitsArr);
-    const adult = s.adulthood_lifespan && s.adulthood_lifespan[0] != null ? String(s.adulthood_lifespan[0]) : '';
-    const max = s.adulthood_lifespan && s.adulthood_lifespan[1] != null ? String(s.adulthood_lifespan[1]) : '';
-    setForm({
-      name: (s.name || '').trim() + COPY_NAME_SUFFIX,
-      description: s.description || '',
-      type: s.type || '',
-      size: s.size || (s.sizes && s.sizes[0]) || 'Medium',
-      sizes: (s.sizes || []).join(', ') || s.size || 'Medium',
-      skillIds,
-      speciesTraitIds,
-      ancestryTraitIds,
-      flawIds,
-      characteristicIds,
-      aveHeight: s.ave_height != null ? String(s.ave_height) : '',
-      aveWeight: s.ave_weight != null ? String(s.ave_weight) : '',
-      adultAge: adult,
-      maxAge: max,
-      languages: (s.languages || []).join(', '),
-      isStarter: Boolean((s as Species & { is_starter?: boolean }).is_starter),
-      imageId: s.image_id ?? null,
-      imageUrl: s.image_url ?? null,
-    });
+    setForm(
+      speciesToFormState(s, skillsArr, traitsArr, (s.name || '').trim() + COPY_NAME_SUFFIX),
+    );
     setModalOpen(true);
   };
 
   const openEdit = (s: Species) => {
     setEditing(s);
     setCopySourceName(null);
-    const allSkillsArr = skills as Skill[];
-    const allTraitsArr = traits as Trait[];
-    const skillIds = normalizeIds((s.skills || []) as string[], allSkillsArr);
-    const speciesTraitIds = normalizeIds((s.species_traits || []) as string[], allTraitsArr);
-    const ancestryTraitIds = normalizeIds((s.ancestry_traits || []) as string[], allTraitsArr);
-    const flawIds = normalizeIds((s.flaws || []) as string[], allTraitsArr);
-    const characteristicIds = normalizeIds((s.characteristics || []) as string[], allTraitsArr);
-    const adult = s.adulthood_lifespan && s.adulthood_lifespan[0] != null ? String(s.adulthood_lifespan[0]) : '';
-    const max = s.adulthood_lifespan && s.adulthood_lifespan[1] != null ? String(s.adulthood_lifespan[1]) : '';
-    setForm({
-      name: s.name,
-      description: s.description || '',
-      type: s.type || '',
-      // Derive primary size from sizes array; kept internal only
-      size: s.size || (s.sizes && s.sizes[0]) || 'Medium',
-      sizes: (s.sizes || []).join(', ') || s.size || 'Medium',
-      skillIds,
-      speciesTraitIds,
-      ancestryTraitIds,
-      flawIds,
-      characteristicIds,
-      aveHeight: s.ave_height != null ? String(s.ave_height) : '',
-      aveWeight: s.ave_weight != null ? String(s.ave_weight) : '',
-      adultAge: adult,
-      maxAge: max,
-      languages: (s.languages || []).join(', '),
-      isStarter: Boolean((s as Species & { is_starter?: boolean }).is_starter),
-      imageId: s.image_id ?? null,
-      imageUrl: s.image_url ?? null,
-    });
+    setForm(speciesToFormState(s, skillsArr, traitsArr));
     setModalOpen(true);
   };
 
@@ -252,58 +105,15 @@ export function AdminSpeciesTab() {
     setEditing(null);
     setCopySourceName(null);
     setDeleteConfirm(null);
-    setTraitPickerFor(null);
-  };
-
-  const addTraitsFromPicker = (selected: SelectableItem[]) => {
-    if (!traitPickerFor || selected.length === 0) return;
-    const field = traitPickerFor;
-    const ids = selected.map((s) => String(s.id));
-    setForm((f) => {
-      const existing = new Set(f[field].map(String));
-      return {
-        ...f,
-        [field]: [...f[field], ...ids.filter((id) => !existing.has(id))],
-      };
-    });
   };
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
     setSaving(true);
-    const sizes = form.sizes.split(',').map((x) => x.trim()).filter(Boolean);
-    const adult = form.adultAge ? parseInt(form.adultAge, 10) || 0 : 0;
-    const max = form.maxAge ? parseInt(form.maxAge, 10) || 0 : 0;
-    const adulthood_lifespan = adult > 0 && max > 0 ? [adult, max] : undefined;
-    const ave_height = form.aveHeight ? parseInt(form.aveHeight, 10) || 0 : undefined;
-    const ave_weight = form.aveWeight ? parseInt(form.aveWeight, 10) || 0 : undefined;
-    const languages = form.languages
-      .split(',')
-      .map((l) => l.trim())
-      .filter(Boolean);
-
-    const baseData = {
-      name: form.name.trim(),
-      description: form.description.trim(),
-      type: form.type.trim(),
-      sizes: sizes.length ? sizes : [sizes[0] || form.size || 'Medium'],
-      skills: form.skillIds,
-      species_traits: form.speciesTraitIds,
-      ancestry_traits: form.ancestryTraitIds,
-      flaws: form.flawIds,
-      characteristics: form.characteristicIds,
-      ave_height,
-      ave_weight,
-      adulthood_lifespan,
-      languages,
-      isStarter: form.isStarter,
-      imageId: form.imageId,
-      imageUrl: form.imageUrl,
-    };
-
+    const data = speciesFormToSavePayload(form);
     const result = editing
-      ? await updateCodexDoc('codex_species', editing.id, baseData)
-      : await createCodexDoc('codex_species', undefined, baseData);
+      ? await updateCodexDoc('codex_species', editing.id, data)
+      : await createCodexDoc('codex_species', undefined, data);
 
     if (!result.success) {
       setSaving(false);
@@ -364,19 +174,18 @@ export function AdminSpeciesTab() {
               <ChipSelect
                 label="Type"
                 placeholder="Choose type"
-                options={filterOptions.types.map(t => ({ value: t, label: t }))}
+                options={filterOptions.types.map((t) => ({ value: t, label: t }))}
                 selectedValues={typeFilters}
                 onSelect={(v) => setTypeFilters((prev) => [...prev, v])}
-                onRemove={(v) => setTypeFilters((prev) => prev.filter(t => t !== v))}
+                onRemove={(v) => setTypeFilters((prev) => prev.filter((t) => t !== v))}
               />
-
               <ChipSelect
                 label="Size"
                 placeholder="Choose size"
-                options={filterOptions.sizes.map(s => ({ value: s, label: s }))}
+                options={filterOptions.sizes.map((s) => ({ value: s, label: s }))}
                 selectedValues={sizeFilters}
                 onSelect={(v) => setSizeFilters((prev) => [...prev, v])}
-                onRemove={(v) => setSizeFilters((prev) => prev.filter(s => s !== v))}
+                onRemove={(v) => setSizeFilters((prev) => prev.filter((s) => s !== v))}
               />
             </div>
           </FilterSection>
@@ -398,300 +207,136 @@ export function AdminSpeciesTab() {
         emptyAction={{ label: 'Add Species', onClick: openAdd }}
       >
         {filtered.map((s: Species) => {
-              // Build expandable chips for skills and traits so RMs can read descriptions inline
-              const traitIdToTrait = new Map<string, Trait>(
-                (traits as Trait[]).map((t) => [String(t.id), t]),
-              );
+          const traitIdToTrait = new Map<string, Trait>(traitsArr.map((t) => [String(t.id), t]));
 
-              const makeTraitChips = (ids: (string | number)[] | undefined) =>
-                (ids || []).map((id) => {
-                  const key = String(id);
-                  const trait = traitIdToTrait.get(key);
-                  return {
-                    name: trait?.name ?? key,
-                    description: trait?.description,
-                    category: 'default' as const,
-                  };
-                });
+          const makeTraitChips = (ids: (string | number)[] | undefined) =>
+            (ids || []).map((id) => {
+              const key = String(id);
+              const trait = traitIdToTrait.get(key);
+              return {
+                name: trait?.name ?? key,
+                description: trait?.description,
+                category: 'default' as const,
+              };
+            });
 
-              const skillsChips = (s.skills || []).map((id) =>
-                speciesSkillToChipData(id, skills as Skill[])
-              );
+          const skillsChips = (s.skills || []).map((id) => speciesSkillToChipData(id, skillsArr));
+          const speciesTraitChips = makeTraitChips(s.species_traits as string[] | undefined);
+          const ancestryTraitChips = makeTraitChips(s.ancestry_traits as string[] | undefined);
+          const flawChips = makeTraitChips(s.flaws as string[] | undefined);
+          const characteristicChips = makeTraitChips(s.characteristics as string[] | undefined);
 
-              const speciesTraitChips = makeTraitChips(s.species_traits as string[] | undefined);
-              const ancestryTraitChips = makeTraitChips(s.ancestry_traits as string[] | undefined);
-              const flawChips = makeTraitChips(s.flaws as string[] | undefined);
-              const characteristicChips = makeTraitChips(s.characteristics as string[] | undefined);
+          const detailSections: Array<{
+            label: string;
+            chips: ChipData[];
+            hideLabelIfSingle?: boolean;
+          }> = [];
 
-              const detailSections: Array<{
-                label: string;
-                chips: ChipData[];
-                hideLabelIfSingle?: boolean;
-              }> = [];
+          if (skillsChips.length > 0) {
+            detailSections.push({ label: 'Skills', chips: skillsChips, hideLabelIfSingle: true });
+          }
+          if (speciesTraitChips.length > 0) {
+            detailSections.push({ label: 'Species Traits', chips: speciesTraitChips });
+          }
+          if (ancestryTraitChips.length > 0) {
+            detailSections.push({ label: 'Ancestry Traits', chips: ancestryTraitChips });
+          }
+          if (flawChips.length > 0) {
+            detailSections.push({ label: 'Flaws', chips: flawChips });
+          }
+          if (characteristicChips.length > 0) {
+            detailSections.push({ label: 'Characteristics', chips: characteristicChips });
+          }
 
-              if (skillsChips.length > 0) {
-                detailSections.push({ label: 'Skills', chips: skillsChips, hideLabelIfSingle: true });
-              }
-              if (speciesTraitChips.length > 0) {
-                detailSections.push({ label: 'Species Traits', chips: speciesTraitChips });
-              }
-              if (ancestryTraitChips.length > 0) {
-                detailSections.push({ label: 'Ancestry Traits', chips: ancestryTraitChips });
-              }
-              if (flawChips.length > 0) {
-                detailSections.push({ label: 'Flaws', chips: flawChips });
-              }
-              if (characteristicChips.length > 0) {
-                detailSections.push({ label: 'Characteristics', chips: characteristicChips });
-              }
-
-              return (
-                <GridListRow
-                  key={s.id}
-                  id={s.id}
-                  name={s.name}
-                  thumbnail={resolveSpeciesListRowThumbnail(s)}
-                  description={s.description || ''}
-                  gridColumns="1.5fr 1fr 0.8fr 40px"
-                  columns={[
-                    { key: 'Type', value: formatListCellLabel(s.type) },
-                    { key: 'Sizes', value: (s.sizes || []).join(', ') || s.size || '-' },
-                  ]}
-                  detailSections={detailSections.length > 0 ? detailSections : undefined}
-                  rightSlot={
-                    <div className="flex items-center gap-1 pr-2">
-                      {pendingDeleteId === s.id ? (
-                        <div className="flex items-center gap-1 text-xs">
-                          <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={() => handleInlineDelete(s.id)}
-                            className="text-xs px-2 py-0.5 h-6"
-                          >
-                            Yes
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            onClick={() => setPendingDeleteId(null)}
-                            className="text-xs px-2 py-0.5 h-6"
-                          >
-                            No
-                          </Button>
-                        </div>
-                      ) : (
-                        <>
-                          <IconButton variant="ghost" size="sm" onClick={() => openEdit(s)} label="Edit" aria-label="Edit">
-                            <Pencil className="w-4 h-4" />
-                          </IconButton>
-                          <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(s)} label="Duplicate" aria-label="Duplicate">
-                            <Copy className="w-4 h-4" />
-                          </IconButton>
-                          <IconButton
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => setPendingDeleteId(s.id)}
-                            label="Delete"
-                            className="text-danger-fg hover:opacity-80 hover:bg-transparent"
-                          >
-                            <X className="w-4 h-4" />
-                          </IconButton>
-                        </>
-                      )}
+          return (
+            <GridListRow
+              key={s.id}
+              id={s.id}
+              name={s.name}
+              thumbnail={resolveSpeciesListRowThumbnail(s)}
+              description={s.description || ''}
+              gridColumns="1.5fr 1fr 0.8fr 40px"
+              columns={[
+                { key: 'Type', value: formatListCellLabel(s.type) },
+                { key: 'Sizes', value: (s.sizes || []).join(', ') || s.size || '-' },
+              ]}
+              detailSections={detailSections.length > 0 ? detailSections : undefined}
+              rightSlot={
+                <div className="flex items-center gap-1 pr-2">
+                  {pendingDeleteId === s.id ? (
+                    <div className="flex items-center gap-1 text-xs">
+                      <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">
+                        Remove?
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => handleInlineDelete(s.id)}
+                        className="text-xs px-2 py-0.5 h-6"
+                      >
+                        Yes
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setPendingDeleteId(null)}
+                        className="text-xs px-2 py-0.5 h-6"
+                      >
+                        No
+                      </Button>
                     </div>
-                  }
-                />
-              );
-            })}
-      </CodexBrowseListShell>
-
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Species' : 'Add Species'} size="full" fullScreenOnMobile
-        footer={
-          <div className="flex justify-between">
-            <div>
-              {editing && (
-                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}>
-                  {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={closeModal}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving || !form.name.trim()}>
-                {saving ? 'Saving...' : 'Save'}
-              </Button>
-            </div>
-          </div>
-        }
-      >
-        <div className="space-y-4">
-          {copySourceName && (
-            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
-              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new species.
-            </p>
-          )}
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
-            <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Species name" />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Species description" className="min-h-[120px] resize-y" rows={4} />
-          </div>
-          <RealmsImageField
-            categories="species"
-            imageId={form.imageId}
-            imageUrl={form.imageUrl}
-            onChange={({ imageId, imageUrl }) =>
-              setForm((f) => ({ ...f, imageId, imageUrl }))
-            }
-            entityName={form.name}
-            label="Species card art"
-            hint="Shown on guided creator species cards and the ancestry overview."
-          />
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
-              <Input value={form.type} onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))} placeholder="e.g. Humanoid" />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">All Sizes (comma-separated)</label>
-              <Input value={form.sizes} onChange={(e) => setForm((f) => ({ ...f, sizes: e.target.value }))} placeholder="Small, Medium, Large" />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Languages (comma-separated)</label>
-              <Input value={form.languages} onChange={(e) => setForm((f) => ({ ...f, languages: e.target.value }))} placeholder="Universal, Any, ..." />
-            </div>
-            <div className="flex items-end pb-2">
-              <label className="flex items-center gap-2 min-h-11 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={form.isStarter}
-                  onChange={(e) => setForm((f) => ({ ...f, isStarter: e.target.checked }))}
-                  className="rounded border-border"
-                />
-                <span className="text-sm font-medium text-text-primary">Starter species (guided creator)</span>
-              </label>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Average Height (cm)</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.aveHeight}
-                onChange={(e) => setForm((f) => ({ ...f, aveHeight: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Average Weight (kg)</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.aveWeight}
-                onChange={(e) => setForm((f) => ({ ...f, aveWeight: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Adulthood Age</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.adultAge}
-                onChange={(e) => setForm((f) => ({ ...f, adultAge: e.target.value }))}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Max Age</label>
-              <Input
-                type="number"
-                min={0}
-                value={form.maxAge}
-                onChange={(e) => setForm((f) => ({ ...f, maxAge: e.target.value }))}
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Species Skills</label>
-            <ChipSelect
-              label=""
-              placeholder="Choose skills"
-              options={skillOptions}
-              selectedValues={form.skillIds}
-              onSelect={(v) => setForm((f) => ({ ...f, skillIds: [...f.skillIds, v] }))}
-              onRemove={(v) => setForm((f) => ({ ...f, skillIds: f.skillIds.filter((id) => id !== v) }))}
-            />
-          </div>
-          {(['speciesTraitIds', 'ancestryTraitIds', 'flawIds', 'characteristicIds'] as const).map((key) => {
-            const label = key === 'speciesTraitIds' ? 'Species Traits' : key === 'ancestryTraitIds' ? 'Ancestry Traits' : key === 'flawIds' ? 'Flaws' : 'Characteristics';
-            const ids = form[key];
-            return (
-              <div key={key}>
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <label className="block text-sm font-medium text-text-secondary">{label}</label>
-                  <Button variant="outline" size="sm" onClick={() => setTraitPickerFor(key)} aria-label={`Add ${label}`}>
-                    <Plus className="w-4 h-4 mr-1 inline" />
-                    Add
-                  </Button>
-                </div>
-                <div className="border border-border-light rounded-lg overflow-hidden bg-surface-alt min-h-[44px]">
-                  {ids.length === 0 ? (
-                    <p className="text-sm text-text-muted p-3">None. Click Add to choose traits.</p>
                   ) : (
-                    ids.map((id) => {
-                      const t = traitIdToTrait.get(id);
-                      return (
-                        <GridListRow
-                          key={id}
-                          id={id}
-                          name={t?.name ?? id}
-                          description={t?.description ?? ''}
-                          gridColumns="1fr 44px"
-                          columns={[]}
-                          rightSlot={
-                            <IconButton
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => setForm((f) => ({ ...f, [key]: f[key].filter((x) => x !== id) }))}
-                              label={`Remove ${t?.name ?? id}`}
-                              aria-label={`Remove ${t?.name ?? id}`}
-                            >
-                              <X className="w-4 h-4" />
-                            </IconButton>
-                          }
-                        />
-                      );
-                    })
+                    <>
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEdit(s)}
+                        label="Edit"
+                        aria-label="Edit"
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </IconButton>
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openDuplicate(s)}
+                        label="Duplicate"
+                        aria-label="Duplicate"
+                      >
+                        <Copy className="w-4 h-4" />
+                      </IconButton>
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setPendingDeleteId(s.id)}
+                        label="Delete"
+                        className="text-danger-fg hover:opacity-80 hover:bg-transparent"
+                      >
+                        <X className="w-4 h-4" />
+                      </IconButton>
+                    </>
                   )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </Modal>
+              }
+            />
+          );
+        })}
+      </CodexBrowseListShell>
 
-      <UnifiedSelectionModal
-        isOpen={traitPickerFor !== null}
-        onClose={() => setTraitPickerFor(null)}
-        title={traitPickerFor ? TRAIT_PICKER_TITLES[traitPickerFor] : 'Add Trait'}
-        description="Traits already on this species field are hidden."
-        items={traitPickerItems}
-        onConfirm={addTraitsFromPicker}
-        columns={TRAIT_PICKER_COLUMNS}
-        gridColumns={TRAIT_PICKER_GRID}
-        itemLabel="trait"
-        emptyMessage="No traits found"
-        emptySubMessage="Try adjusting your search, or add traits in the Traits admin tab first."
-        searchPlaceholder="Search traits..."
-        searchFields={['name', 'description']}
-        confirmLabel="Add Selected"
-        size="lg"
+      <AdminSpeciesEditModal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        title={editing ? 'Edit Species' : 'Add Species'}
+        copySourceName={copySourceName}
+        editingId={editing?.id ?? null}
+        form={form}
+        setForm={setForm}
+        skills={skillsArr}
+        traits={traitsArr}
+        saving={saving}
+        deleteConfirm={deleteConfirm}
+        onRequestDelete={() => editing && handleDelete(editing.id)}
+        onSave={handleSave}
       />
     </div>
   );

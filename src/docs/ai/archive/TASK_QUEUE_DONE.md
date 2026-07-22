@@ -1,3 +1,38 @@
+- id: TASK-619
+  title: Split remaining admin codex tab god files under ~500 LOC
+  priority: medium
+  status: done
+  verification_status: n/a
+  completed_at: 2026-07-22
+  created_at: 2026-07-22
+  created_by: agent
+  parent_task: TASK-609
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/admin-species-form.ts
+    - src/app/(main)/admin/codex/admin-species-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/admin-property-form.ts
+    - src/app/(main)/admin/codex/admin-property-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/admin-trait-form.ts
+    - src/app/(main)/admin/codex/admin-trait-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-feat-edit-modal-fields.tsx
+    - src/app/(main)/admin/codex/admin-part-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-part-edit-modal-options.tsx
+  description: |
+    Quality-audit follow-up after TASK-617: split large admin codex list-tab modals
+    (species/properties/traits/feats/parts edit shells) into facade + co-located modules.
+  acceptance_criteria:
+    - Each touched tab facade <= ~500 LOC; co-located private extracts.
+    - Admin codex list + modal edit/save/copy flows unchanged.
+    - npm run build passes.
+  completed_work: |
+    Species 662->321 tab + form/modal extracts; Properties 609->357 + form/modal; Traits 492->296 + form/modal.
+    Feat edit modal 684->265 + fields module; Part edit modal 459->305 + options module. npm run build passes.
+
+---
 - id: TASK-618
   title: Split unified-selection-modal + CombatantCard under ~500 LOC
   priority: medium

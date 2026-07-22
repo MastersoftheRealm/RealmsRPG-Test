@@ -12,34 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 3 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 2 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-618 done (USM + CombatantCard splits). Quality-audit wave continues TASK-619. TASK-615 done (Vercel Web Analytics + CSP/docs; Dashboard Enable = DEV-006). TASK-615 done (TASK-610 facade remainder). /debt TASK-601–606 done. Quality audit TASK-607–613 done ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
-
----
-
-- id: TASK-619
-  title: Split remaining admin codex tab god files under ~500 LOC
-  priority: medium
-  status: not-started
-  created_at: 2026-07-22
-  created_by: agent
-  parent_task: TASK-609
-  related_files:
-    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
-    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
-    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
-    - src/app/(main)/admin/codex/admin-feat-edit-modal.tsx
-    - src/app/(main)/admin/codex/admin-part-edit-modal.tsx
-  description: |
-    Quality-audit follow-up after TASK-617: split large admin codex list-tab modals
-    (species/properties/traits/feats/parts edit shells) into facade + co-located modules.
-  acceptance_criteria:
-    - Each touched tab facade <= ~500 LOC; co-located private extracts.
-    - Admin codex list + modal edit/save/copy flows unchanged.
-    - npm run build passes.
-  notes: |
-    Targets still >500 LOC after TASK-609/617. Optional later: consolidate duplicate TabId unions.
+**Hot notes:** TASK-619 done (admin codex tab/modal splits). TASK-618 done (USM + CombatantCard splits). TASK-615 done (Vercel Web Analytics + CSP/docs; Dashboard Enable = DEV-006). TASK-615 done (TASK-610 facade remainder). /debt TASK-601–606 done. Quality audit TASK-607–613 done ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
