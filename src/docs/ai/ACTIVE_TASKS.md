@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 3 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** `/debt` TASK-601–606 done; filed TASK-614 (LoadoutBudgetBar → shared, Architect). Quality pseudo `/global-audit` → TASK-613 (TASK-607/608/609/610/611/612 done) ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** `/debt` TASK-601–606 done; filed TASK-614 (LoadoutBudgetBar → shared, Architect). Quality audit TASK-607–613 done ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
 
 ---
 
@@ -60,32 +60,6 @@ Do **not** read the done archive at session start.
     - Reuses RealmsImagePicker + bank — no parallel media system.
   notes: |
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
-
----
-
-- id: TASK-613
-  title: API route automated smoke + critical-path coverage slice
-  created_at: 2026-07-20
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/app/api/characters/route.ts
-    - src/lib/api-client.ts
-    - src/lib/api-client.test.ts
-    - vitest.config.ts
-  description: |
-    Coverage shape is strong for domain `lib/` (~63 vitest files) and Playwright visual/a11y, but
-    `src/app/api/**` has no co-located route tests (29 routes). Add a thin automated slice:
-    Zod/auth/error contract smoke for 1–2 high-traffic routes (start with characters) and/or one
-    non-visual critical-path Playwright beyond screenshot ratchets — without standing up a second
-    test framework.
-  acceptance_criteria:
-    - At least one API route has automated tests (vitest) covering happy + auth/validation failure paths.
-    - Document how to run the slice in task evidence / BUILD_VALIDATION or package script note.
-    - Prefer existing vitest + Playwright configs; no new parallel harness.
-    - `npm test` (or targeted vitest) green for new files.
-  notes: Was TASK-607 pre-renumber. Ship first slice + follow-ups — do not block on full API matrix.
 
 ---
 

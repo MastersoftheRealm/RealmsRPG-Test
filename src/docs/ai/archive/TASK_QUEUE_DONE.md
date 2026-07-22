@@ -81,8 +81,8 @@
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
   follow_up_tasks:
-    - Shrink `powers-techniques-step.tsx` facade (~599 LOC) — extract toggle/seed hook
-    - Shrink `use-creature-creator-workspace.ts` (~518 LOC) — optional save/handlers slice
+    - Shrink `powers-techniques-step.tsx` facade (~599 LOC) ï¿½ extract toggle/seed hook
+    - Shrink `use-creature-creator-workspace.ts` (~518 LOC) ï¿½ optional save/handlers slice
   completed_work: |
     Creature workspace/editor, empowered workspace/editor, ancestry-step, guided powers-techniques split into co-located modules; species/empowered pages already thin from TASK-601. Facades: ancestry-step 96, creature-editor 266, empowered-editor 84, species page 185, empowered page 292. Vitest: creature-creator-derived-stats.test.ts, powers-techniques-step-helpers.test.ts. npm run build passes.
   build_validation: |
@@ -129,7 +129,7 @@
     existing CodexBrowseListShell / spreadsheet patterns; no parallel admin list chrome.
   acceptance_criteria:
     - Each listed hotspot reduced toward <= ~500 LOC facade (ship first slice + follow-ups if needed).
-    - Reuse CodexBrowseListShell / existing admin patterns — no new list shell.
+    - Reuse CodexBrowseListShell / existing admin patterns ï¿½ no new list shell.
     - FEATURE_INDEX + build green; no live codex data mutations in this task.
   verification_status: n/a
   completed_work: |
@@ -15180,3 +15180,35 @@ Firebase/RTDB - the project is Supabase-only.
 
 ---
 
+
+- id: TASK-613
+  title: API route automated smoke + critical-path coverage slice
+  created_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: done
+  related_files:
+    - src/app/api/characters/route.ts
+    - src/app/api/characters/route.test.ts
+    - package.json
+    - vitest.config.ts
+  description: |
+    Coverage shape is strong for domain `lib/` (~63 vitest files) and Playwright visual/a11y, but
+    `src/app/api/**` had no co-located route tests (29 routes). Add a thin automated slice:
+    Zod/auth/error contract smoke for 1-2 high-traffic routes (start with characters) and/or one
+    non-visual critical-path Playwright beyond screenshot ratchets - without standing up a second
+    test framework.
+  acceptance_criteria:
+    - At least one API route has automated tests (vitest) covering happy + auth/validation failure paths.
+    - Document how to run the slice in task evidence / BUILD_VALIDATION or package script note.
+    - Prefer existing vitest + Playwright configs; no new parallel harness.
+    - `npm test` (or targeted vitest) green for new files.
+  verification_status: n/a
+  completed_work: |
+    - Added `src/app/api/characters/route.test.ts` (8 vitest cases: GET 401/200/500; POST 401/415/400/200/403).
+    - Partial mocks for session, supabase, role-policy, rate-limit; real Zod validation path.
+    - `package.json` script `test:api` -> `vitest run src/app/api`.
+    - `npm test` green (358 tests); `npm run build` + `npm run tasks:validate` pass after cleanup.
+  notes: Was TASK-607 pre-renumber. First slice only; expand to more routes as follow-up.
+
+---

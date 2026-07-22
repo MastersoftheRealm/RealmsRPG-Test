@@ -10,6 +10,7 @@
     "build": "next build --webpack",
     "start": "next start",
     "test": "vitest run",
+    "test:api": "vitest run src/app/api",
     "lint": "eslint",
     "format": "prettier --write .",
     "verify": "npm run build && npm run verify:contrast && npm run lint && npm run verify:visual && npm run verify:a11y",
