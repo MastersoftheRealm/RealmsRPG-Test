@@ -1,4 +1,41 @@
 
+- id: TASK-618
+  title: Split unified-selection-modal + CombatantCard under ~500 LOC
+  priority: medium
+  status: done
+  verification_status: n/a
+  completed_at: 2026-07-22
+  created_at: 2026-07-22
+  created_by: agent
+  parent_task: TASK-607
+  related_files:
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/shared/unified-selection-modal-types.ts
+    - src/components/shared/unified-selection-modal-helpers.ts
+    - src/components/shared/unified-selection-modal-toolbar.tsx
+    - src/components/shared/unified-selection-modal-list.tsx
+    - src/components/shared/unified-selection-modal-footer.tsx
+    - src/components/shared/unified-selection-modal-leave-prompt.tsx
+    - src/components/encounters/CombatantCard.tsx
+    - src/components/encounters/combatant-card-helpers.ts
+    - src/components/encounters/combatant-card-initiative.tsx
+    - src/components/encounters/combatant-card-header.tsx
+    - src/components/encounters/combatant-card-resources.tsx
+    - src/components/encounters/combatant-card-conditions.tsx
+    - src/components/encounters/combatant-card-quick-actions.tsx
+    - scripts/shared-ui-allowlist.json
+  description: |
+    Quality-audit follow-up after TASK-617: split remaining shared/encounter god files
+    into co-located private modules (ADR-0007 pattern). No behavior change.
+  acceptance_criteria:
+    - Facades <= ~500 LOC; co-located private extracts; no new shared barrel exports without ADR.
+    - UnifiedSelectionModal list/filter/selection flows unchanged.
+    - CombatantCard combatant row actions/conditions unchanged.
+    - npm run build passes.
+  completed_work: |
+    USM 696?354 facade + 6 co-located modules; CombatantCard 615?149 + 6 co-located modules.
+    Allowlist updated for USM extracts. npm run build passes.
+
 ---
 
 - id: TASK-617

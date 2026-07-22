@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-618
+**Next task ID:** TASK-620
 **Waiting / blocked / human:** [`WAITING_TASKS.md`](WAITING_TASKS.md)
 **Done archive:** [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md) · snapshot [`archive/TASK_QUEUE_DONE_2026-07-15.md`](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [`AI_TASK_QUEUE.md`](AI_TASK_QUEUE.md) · Template: [`AI_REQUEST_TEMPLATE.md`](AI_REQUEST_TEMPLATE.md)
@@ -12,9 +12,34 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 2 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 3 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-617 done (admin codex spreadsheet + archetype workspace splits). TASK-616 done (power + item creator splits). Quality audit TASK-607–613 done. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** TASK-618 done (USM + CombatantCard splits). Quality-audit wave continues TASK-619. TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+
+---
+
+- id: TASK-619
+  title: Split remaining admin codex tab god files under ~500 LOC
+  priority: medium
+  status: not-started
+  created_at: 2026-07-22
+  created_by: agent
+  parent_task: TASK-609
+  related_files:
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/admin-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-part-edit-modal.tsx
+  description: |
+    Quality-audit follow-up after TASK-617: split large admin codex list-tab modals
+    (species/properties/traits/feats/parts edit shells) into facade + co-located modules.
+  acceptance_criteria:
+    - Each touched tab facade <= ~500 LOC; co-located private extracts.
+    - Admin codex list + modal edit/save/copy flows unchanged.
+    - npm run build passes.
+  notes: |
+    Targets still >500 LOC after TASK-609/617. Optional later: consolidate duplicate TabId unions.
 
 ---
 
