@@ -3908,11 +3908,11 @@ Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and s
 
 ---
 
-## DEV-V-018 — CreatorPageShell parity (TASK-380 / TASK-381)
+## DEV-V-018 — CreatorPageShell parity (TASK-380 / TASK-381 / TASK-616)
 
 Verifies shared auth/load/save chrome on standalone creators after `CreatorPageShell` rollout.
 T001–T007 focus on chrome parity (domain cost math out of scope). **T008** covers power/item
-workspace-hook extraction parity after TASK-381 Phase 3. **T009–T010** cover creature editor
+workspace-hook extraction parity after TASK-381 Phase 3 and TASK-616 co-located splits (cost-derivation + part/property modules; facades unchanged). **T009–T010** cover creature editor
 islands (Phase 4) and workspace hook (Phase 5).
 
 #### DEV-V-018-T001 — Power creator chrome
@@ -4046,12 +4046,12 @@ islands (Phase 4) and workspace hook (Phase 5).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-018-T008 — Power + item workspace hook parity (TASK-381 Phase 3)
+#### DEV-V-018-T008 — Power + item workspace hook parity (TASK-381 Phase 3; TASK-616 splits)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-018 |
-| **Related task** | TASK-381 |
+| **Related task** | TASK-381 / TASK-616 |
 | **Where** | `/power-creator`, `/item-creator` (+ `?edit=<id>` when available) |
 | **Needs** | Signed in; optional saved library power/armament |
 
@@ -4063,7 +4063,7 @@ islands (Phase 4) and workspace hook (Phase 5).
 5. Optional: open `?edit=<id>` for each — loads target; navigating to plain `/power-creator` or `/item-creator` shows a blank draft (no edit leak).
 
 **Expected**
-- Behavior matches pre–Phase 3 (state lives in `use-*-creator-workspace`; page is shell-only).
+- Behavior matches pre–Phase 3 / pre–TASK-616 (state lives in `use-*-creator-workspace` + co-located cost/part modules; page is shell-only).
 - No regression vs DEV-V-018-T001/T002 chrome or DEV-V-019-T009/T010 bootstrap.
 
 **Rollback** — Delete `use-*-creator-workspace.ts` and restore prior page bodies from git; keep editor islands + bootstrap.

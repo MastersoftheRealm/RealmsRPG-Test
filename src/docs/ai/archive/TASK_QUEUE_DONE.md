@@ -1,3 +1,50 @@
+
+---
+
+- id: TASK-616
+  title: Split power + item creator hot files under ~500 LOC
+  priority: medium
+  status: done
+  created_at: 2026-07-22
+  completed_at: 2026-07-22
+  created_by: agent
+  parent_task: TASK-610
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/power-creator/power-creator-editor.tsx
+    - src/app/(main)/power-creator/use-power-creator-workspace.ts
+    - src/app/(main)/power-creator/power-creator-cost-derivation.ts
+    - src/app/(main)/power-creator/power-creator-part-actions.ts
+    - src/app/(main)/power-creator/power-creator-editor-config.ts
+    - src/app/(main)/power-creator/power-creator-editor-meta.tsx
+    - src/app/(main)/power-creator/power-creator-editor-action-profile.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-config.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-parts.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-damage.tsx
+    - src/app/(main)/item-creator/item-creator-editor.tsx
+    - src/app/(main)/item-creator/use-item-creator-workspace.ts
+    - src/app/(main)/item-creator/item-creator-cost-derivation.ts
+    - src/app/(main)/item-creator/item-creator-property-actions.ts
+    - src/app/(main)/item-creator/item-creator-editor-config.ts
+    - src/app/(main)/item-creator/item-creator-editor-meta.tsx
+    - src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx
+    - src/app/(main)/item-creator/item-creator-editor-armor.tsx
+    - src/app/(main)/item-creator/item-creator-editor-shield-panels.tsx
+    - src/app/(main)/item-creator/item-creator-editor-ability-properties.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    TASK-610 follow-up: split remaining power + item creator editor/workspace files
+    over ~500 LOC using the empowered-technique co-located extract pattern.
+  acceptance_criteria:
+    - power-creator-editor.tsx and use-power-creator-workspace.ts facades <= ~500 LOC.
+    - item-creator-editor.tsx and use-item-creator-workspace.ts facades <= ~500 LOC.
+    - Co-located cost-derivation + part/property action modules; no new shared barrel exports.
+    - npm run build passes; no behavior change on /power-creator and /item-creator.
+  notes: |
+    DEV-V-018 T008 pending owner QA.
+
+---
+
 - id: TASK-615
   title: Shrink TASK-610 remainder facades under ~500 LOC
   created_at: 2026-07-22
