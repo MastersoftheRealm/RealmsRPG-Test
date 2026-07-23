@@ -36,6 +36,9 @@ export {
   type AccountProfile,
 } from './use-profile';
 export { useIsClient } from './use-is-client';
+export { usePlaceholderTheme } from './use-placeholder-theme';
+export { useEffectivePortrait } from './use-effective-portrait';
+export { usePortraitFallbackUrl } from './use-portrait-fallback-url';
 
 // Campaigns
 export {

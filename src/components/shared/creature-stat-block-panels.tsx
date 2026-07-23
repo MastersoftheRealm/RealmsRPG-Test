@@ -128,7 +128,7 @@ export function CreatureStatBlockExpandedContent({
               className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border border-border-light bg-image-matte"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={creature.imageUrl} alt="" className="h-full w-full object-cover" />
+              <img src={creature.imageUrl} alt="" className="h-full w-full object-contain" />
             </ExpandableImage>
           ) : (
             <div className="h-20 w-20 flex-shrink-0 rounded-lg border border-border-light bg-image-matte" />

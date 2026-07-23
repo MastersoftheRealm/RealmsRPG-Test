@@ -13,7 +13,8 @@ import { cn } from '@/lib/utils';
 import { X, Plus, Copy } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import type { CharacterSummary } from '@/types';
-import { getEffectivePortrait, FALLBACK_PORTRAIT_DATA_URL } from '@/lib/portrait';
+import { useEffectivePortrait } from '@/hooks/use-effective-portrait';
+import { usePortraitFallbackUrl } from '@/hooks/use-portrait-fallback-url';
 
 /** Responsive sizes for the characters grid (1 / 2 / 3 cols). */
 const PORTRAIT_SIZES = '(max-width: 639px) 100vw, (max-width: 1023px) 50vw, 33vw';
@@ -40,6 +41,9 @@ export function CharacterCard({
   isDeleting,
   isDuplicating,
 }: CharacterCardProps) {
+  const portraitSrc = useEffectivePortrait(character.portrait);
+  const portraitFallbackUrl = usePortraitFallbackUrl();
+
   const handleDelete = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -69,16 +73,16 @@ export function CharacterCard({
       >
         {/* Portrait — 1:1 matches ImageUploadModal crop (aspect={1}) */}
         {/* DESIGN_INTENT: No ExpandableImage — portrait lives inside a Link; primary action is open sheet (invalid nested button). */}
-        <div className="relative aspect-square shrink-0 bg-primary-button">
+        <div className="relative aspect-square shrink-0 bg-image-matte">
           <Image
-            src={getEffectivePortrait(character.portrait)}
+            src={portraitSrc}
             alt={character.name}
             fill
-            className="object-cover"
+            className="object-contain"
             unoptimized
             sizes={PORTRAIT_SIZES}
             onError={(e) => {
-              (e.target as HTMLImageElement).src = FALLBACK_PORTRAIT_DATA_URL;
+              (e.target as HTMLImageElement).src = portraitFallbackUrl;
             }}
           />
         </div>

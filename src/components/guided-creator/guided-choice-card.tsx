@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { DescriptorChip, type ChipProps } from '@/components/ui';
 import { ExpandableImage } from '@/components/shared';
+import { usePlaceholderTheme } from '@/hooks/use-placeholder-theme';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { shouldExpandTaglineBody } from './guided-text';
 import {
@@ -235,11 +236,13 @@ export function GuidedChoiceCard({
     imageLayout ?? (imageKind ? defaultImageLayoutForKind(imageKind) : imageUrl ? 'thumb' : 'thumb');
   const isFeatured = layout === 'hero';
 
+  const theme = usePlaceholderTheme();
+
   const resolvedImage = useMemo(() => {
     if (imageUrl?.trim()) return { src: imageUrl.trim(), isPlaceholder: false };
-    if (imageKind) return resolveChoiceCardImage(imageKind, imageRecord);
+    if (imageKind) return resolveChoiceCardImage(imageKind, imageRecord, theme);
     return null;
-  }, [imageUrl, imageKind, imageRecord]);
+  }, [imageUrl, imageKind, imageRecord, theme]);
 
   const body = useMemo(
     () => resolveBody(description, tagline, fullDescription),
@@ -365,7 +368,7 @@ export function GuidedChoiceCard({
                 alt=""
                 fill
                 sizes={imageSizes}
-                className="object-cover"
+                className="object-contain"
               />
             </ExpandableImage>
           ) : showMedia && icon ? (

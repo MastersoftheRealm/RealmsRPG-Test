@@ -14,6 +14,7 @@
 
 import { useState, useCallback, useRef, useEffect, lazy, Suspense } from 'react';
 import type { Area, Point } from 'react-easy-crop';
+import 'react-easy-crop/react-easy-crop.css';
 
 const Cropper = lazy(() => import('react-easy-crop'));
 import { cn } from '@/lib/utils';
@@ -310,6 +311,9 @@ export function ImageUploadModal({
                   objectFit="contain"
                   style={{
                     containerStyle: { borderRadius: '0.75rem' },
+                    cropAreaStyle: {
+                      color: 'color-mix(in srgb, var(--color-background) 55%, transparent)',
+                    },
                   }}
                 />
               </Suspense>

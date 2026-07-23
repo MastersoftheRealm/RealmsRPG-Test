@@ -4991,10 +4991,14 @@ Admin/creator editors, user `image_id` parity, legacy catalog migration, portrai
 2. Confirm cropper stage and output preview use a soft tinted matte — not pure black or white.
 3. Confirm & save; open the asset in the picker grid and ExpandableImage enlarge — matte matches theme.
 4. Toggle light ↔ dark; matte should stay soft and on-theme in both.
+5. Upload a **new** transparent PNG portrait; toggle theme again — matte adapts without re-upload.
 
 **Expected**
-- Transparent areas use `bg-image-matte` / baked `--color-image-matte` (light soft primary tint; dark soft blue-gray).
-- New uploads no longer bake pure black into JPEG alpha holes.
+- Transparent areas use adaptive `bg-image-matte` at display time (`--color-image-matte`); **not** baked into stored PNG/WebP uploads.
+- Crop output preserves alpha; toggling light ↔ dark updates matte behind art without re-upload.
+- **Legacy** images uploaded before alpha-preserving crops (TASK-531 JPEG bake) may still show a fixed matte until re-uploaded.
+- Card placeholder SVGs have `-dark.svg` variants; missing portrait fallback is theme-aware.
+- Cropper dim overlay uses theme background mix — not pure black.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

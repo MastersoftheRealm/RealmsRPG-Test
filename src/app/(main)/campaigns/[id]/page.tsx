@@ -40,7 +40,10 @@ import { addCharacterToCampaignAction, removeCharacterFromCampaignAction, delete
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from '../constants';
 import type { CampaignCharacter } from '@/types/campaign';
 
-import { FALLBACK_PORTRAIT_DATA_URL, getEffectivePortrait } from '@/lib/portrait';
+import { isPortraitFallbackSrc } from '@/lib/portrait';
+import { useEffectivePortrait } from '@/hooks/use-effective-portrait';
+import { usePortraitFallbackUrl } from '@/hooks/use-portrait-fallback-url';
+import { PortraitThumb } from '@/components/character/portrait-thumb';
 
 export default function CampaignDetailPage() {
   return (
@@ -589,8 +592,9 @@ function CharacterChip({
   onRemove: () => void;
   onViewSheet?: string;
 }) {
-  const portraitSrc = getEffectivePortrait(character.portrait);
-  const isFallbackPortrait = portraitSrc === FALLBACK_PORTRAIT_DATA_URL;
+  const portraitSrc = useEffectivePortrait(character.portrait);
+  const portraitFallbackUrl = usePortraitFallbackUrl();
+  const isFallbackPortrait = isPortraitFallbackSrc(portraitSrc);
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt min-w-[200px]">
@@ -599,10 +603,17 @@ function CharacterChip({
         alt={`${character.characterName} portrait`}
         disabled={isFallbackPortrait}
         isPlaceholder={isFallbackPortrait}
-        className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-primary-button"
+        className="relative h-14 w-14 flex-shrink-0 overflow-hidden rounded-lg bg-image-matte"
       >
         {/* eslint-disable-next-line @next/next/no-img-element -- dynamic portrait URL */}
-        <img src={portraitSrc} alt="" className="h-full w-full object-cover" />
+        <img
+          src={portraitSrc}
+          alt=""
+          className="h-full w-full object-contain"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = portraitFallbackUrl;
+          }}
+        />
       </ExpandableImage>
       <div className="min-w-0 flex-1">
         <p className="font-semibold text-text-primary truncate">{character.characterName}</p>
@@ -676,9 +687,7 @@ function AddCharacterModal({
             disabled={loading}
             className="flex items-center gap-3 w-full p-3 rounded-lg border border-border-light hover:bg-surface-alt text-left transition-colors disabled:opacity-50"
           >
-            {/* DESIGN_INTENT: No ExpandableImage — decorative identity thumb inside a selectable row button (nested button invalid). */}
-            {/* eslint-disable-next-line @next/next/no-img-element -- dynamic portrait URL */}
-            <img src={getEffectivePortrait(c.portrait)} alt="" className="w-12 h-12 rounded-lg object-cover" />
+            <PortraitThumb portrait={c.portrait} className="h-12 w-12 rounded-lg" />
             <div>
               <p className="font-medium">{c.name}</p>
               <p className="text-sm text-text-muted dark:text-text-secondary">

@@ -141,7 +141,7 @@ export function CreatorPortraitUpload({
           disabled={isProcessing}
           aria-label={copy.changeAria(hasPortrait)}
           className={cn(
-            'group relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-card border-2 bg-surface-alt shadow-sm transition-colors',
+            'group relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-card border-2 bg-image-matte shadow-sm transition-colors',
             'min-h-[96px] min-w-[96px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border',
             hasPortrait
               ? 'border-border-light hover:border-primary-outline-border'
@@ -152,9 +152,9 @@ export function CreatorPortraitUpload({
           {hasPortrait && portraitUrl ? (
             isDataUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={portraitUrl} alt="" className="h-full w-full object-cover" />
+              <img src={portraitUrl} alt="" className="h-full w-full object-contain" />
             ) : (
-              <Image src={portraitUrl} alt="" fill sizes="96px" className="object-cover" />
+              <Image src={portraitUrl} alt="" fill sizes="96px" className="object-contain" />
             )
           ) : (
             <div className="flex flex-col items-center gap-1 p-2 text-center">
@@ -209,14 +209,14 @@ export function CreatorPortraitUpload({
       <p className="mb-2 text-sm font-medium text-text-secondary">{copy.fieldLabel}</p>
 
       <div className="flex items-start gap-4">
-        <div className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border-light bg-surface-alt">
+        <div className="relative flex h-28 w-28 items-center justify-center overflow-hidden rounded-lg border-2 border-dashed border-border-light bg-image-matte">
           {portraitUrl ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={portraitUrl}
                 alt="Character portrait"
-                className="h-full w-full object-cover"
+                className="h-full w-full object-contain"
               />
               <button
                 type="button"

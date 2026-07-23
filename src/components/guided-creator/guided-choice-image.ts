@@ -7,34 +7,24 @@
  */
 
 import { readRecordImageUrl } from '@/lib/entity-image-url';
+import {
+  getPlaceholderCardArtPath,
+  type ChoiceCardImageKind,
+  type PlaceholderTheme,
+} from '@/lib/placeholder-art';
 
-export type ChoiceCardImageKind =
-  | 'species'
-  | 'creature'
-  | 'path'
-  | 'equipment'
-  | 'power'
-  | 'technique';
-
-const PLACEHOLDER_BY_KIND: Record<ChoiceCardImageKind, string> = {
-  species: '/images/placeholder-species-card.svg',
-  /** Creatures share portrait-style bank art with species; reuse species placeholder. */
-  creature: '/images/placeholder-species-card.svg',
-  path: '/images/placeholder-path-card.svg',
-  equipment: '/images/placeholder-equipment-card.svg',
-  power: '/images/placeholder-power-card.svg',
-  technique: '/images/placeholder-technique-card.svg',
-};
+export type { ChoiceCardImageKind, PlaceholderTheme } from '@/lib/placeholder-art';
 
 export { readRecordImageUrl } from '@/lib/entity-image-url';
 
 export function resolveChoiceCardImage(
   kind: ChoiceCardImageKind,
-  record?: unknown
+  record?: unknown,
+  theme: PlaceholderTheme = 'light'
 ): { src: string; isPlaceholder: boolean } {
   const fromRecord = record ? readRecordImageUrl(record) : null;
   if (fromRecord) return { src: fromRecord, isPlaceholder: false };
-  return { src: PLACEHOLDER_BY_KIND[kind], isPlaceholder: true };
+  return { src: getPlaceholderCardArtPath(kind, theme), isPlaceholder: true };
 }
 
 export type ChoiceCardImageLayout = 'thumb' | 'hero';

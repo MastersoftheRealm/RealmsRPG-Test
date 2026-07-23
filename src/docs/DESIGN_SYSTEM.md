@@ -74,11 +74,11 @@ Secondary blue shades for utility buttons and accents.
 | `utility-400` | #407cb6 | Hover states |
 
 ### Image matte
-Soft backdrop behind transparent card/portrait art (thumbs, enlarge modal, cropper, JPEG bake). Not pure black or white.
+Soft backdrop behind transparent card/portrait art at **display time only** (`bg-image-matte`, enlarge modal, cropper stage). **Never baked into stored files** — uploads preserve alpha (PNG/WebP) so light/dark theme switches stay correct.
 
 | Token | Light | Dark | Usage |
 |-------|-------|------|-------|
-| `image-matte` | #e8f1f8 | #1c2430 | `bg-image-matte`; canvas fill via `getImageMatteFillColor()` in `crop-image.ts` |
+| `image-matte` | #e8f1f8 | #21262d | `bg-image-matte` on image frames; cropper container |
 
 ### Neutral Colors
 Grays for text, borders, and backgrounds.

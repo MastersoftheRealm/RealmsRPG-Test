@@ -20,6 +20,7 @@ import { ProtectedRoute } from '@/components/layout';
 import { cn } from '@/lib/utils';
 import { LoadingState, Button, Input, Alert, PageContainer, Spinner, Card, PageHeader, Checkbox } from '@/components/ui';
 import { ExpandableImage, ImageUploadModal, RealmsImagePicker } from '@/components/shared';
+import { fileFromCroppedBlob } from '@/lib/crop-image';
 import { User as UserIcon, Mail, Lock, Trash2, AlertTriangle, AtSign, Camera } from 'lucide-react';
 import { ONBOARDING_COPY } from '@/lib/constants/copy/onboarding-copy';
 import { areTutorialsEnabled, setTutorialsEnabled } from '@/lib/onboarding-preferences';
@@ -87,7 +88,7 @@ function AccountContent() {
     setUploadingPicture(true);
     setPictureMessage(null);
     try {
-      const file = new File([blob], 'profile.jpg', { type: 'image/jpeg' });
+      const file = fileFromCroppedBlob(blob, 'profile');
       const formData = new FormData();
       formData.append('file', file);
 
@@ -378,10 +379,10 @@ function AccountContent() {
             <ExpandableImage
               src={profile.photoURL}
               alt="Profile picture"
-              className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border-2 border-border-light bg-surface-alt"
+              className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full border-2 border-border-light bg-image-matte"
             >
               {/* eslint-disable-next-line @next/next/no-img-element -- dynamic profile photo URL */}
-              <img src={profile.photoURL} alt="" className="h-full w-full object-cover" />
+              <img src={profile.photoURL} alt="" className="h-full w-full object-contain" />
               {uploadingPicture && (
                 <div className="absolute inset-0 flex items-center justify-center bg-text-primary/40">
                   <Spinner size="sm" variant="white" />

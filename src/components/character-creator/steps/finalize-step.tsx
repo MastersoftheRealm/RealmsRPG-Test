@@ -281,10 +281,10 @@ export function FinalizeStep() {
       {/* Character reveal hero */}
       <div className="rounded-xl border border-primary-subtle-border bg-gradient-to-br from-primary-subtle-bg/80 to-surface overflow-hidden mb-6 shadow-sm">
         <div className="p-5 flex flex-col sm:flex-row gap-5 items-center sm:items-start">
-          <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-surface-alt border-2 border-border-light flex items-center justify-center shrink-0">
+          <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-image-matte border-2 border-border-light flex items-center justify-center shrink-0">
             {draft.portrait ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={draft.portrait} alt="" className="w-full h-full object-cover" />
+              <img src={draft.portrait} alt="" className="w-full h-full object-contain" />
             ) : (
               <span className="text-4xl text-text-muted dark:text-text-secondary" aria-hidden>
                 {draft.name?.charAt(0).toUpperCase() || '?'}

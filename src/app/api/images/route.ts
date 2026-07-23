@@ -143,8 +143,11 @@ export async function POST(request: NextRequest) {
     }
 
     const mime = await detectImageMime(file);
+    if (!mime) {
+      return NextResponse.json({ error: 'Invalid image file' }, { status: 400 });
+    }
     const ext = extensionForImageMime(mime);
-    const contentType = mime ?? 'image/jpeg';
+    const contentType = mime;
     const imageId = randomUUID();
     const storagePath = realmsImageStoragePath(imageId, ext);
 

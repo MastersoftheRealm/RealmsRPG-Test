@@ -36,7 +36,7 @@ import {
 import { InfoTippy } from '@/components/shared';
 import { campaignsHelp } from '../../../../public/tooltip-text';
 import { cn } from '@/lib/utils';
-import { getEffectivePortrait } from '@/lib/portrait';
+import { PortraitThumb } from '@/components/character/portrait-thumb';
 import { useCampaigns, useCharacters, useInvalidateCampaigns, useAuth } from '@/hooks';
 import { createCampaignAction, joinCampaignAction } from './actions';
 import { isValidInviteCodeFormat } from '@/lib/campaign-invite';
@@ -482,12 +482,7 @@ function JoinCampaignTab({
                 onChange={() => setSelectedCharacterId(c.id)}
                 className="sr-only"
               />
-              {/* eslint-disable-next-line @next/next/no-img-element -- dynamic portrait URL */}
-              <img
-                src={getEffectivePortrait(c.portrait)}
-                alt=""
-                className="w-12 h-12 rounded-lg object-cover flex-shrink-0"
-              />
+              <PortraitThumb portrait={c.portrait} className="h-12 w-12 flex-shrink-0 rounded-lg" />
               <div className="min-w-0 flex-1">
                 <span className="font-medium text-text-primary">{c.name}</span>
                 <span className="block text-sm text-text-muted dark:text-text-secondary">

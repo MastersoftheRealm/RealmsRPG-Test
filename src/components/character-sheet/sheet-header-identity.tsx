@@ -11,7 +11,10 @@ import {
   ExpandableImage,
 } from '@/components/shared';
 import type { Character } from '@/types';
-import { getEffectivePortrait, FALLBACK_PORTRAIT_DATA_URL } from '@/lib/portrait';
+import { isPortraitFallbackSrc, withPortraitCacheBust } from '@/lib/portrait';
+import { fileFromCroppedBlob } from '@/lib/crop-image';
+import { useEffectivePortrait } from '@/hooks/use-effective-portrait';
+import { usePortraitFallbackUrl } from '@/hooks/use-portrait-fallback-url';
 import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
 import { ArchetypePathGuidance } from './archetype-path-identity';
 
@@ -75,18 +78,17 @@ export function SheetHeaderIdentity({
   // Handle cropped image from the modal - await upload so modal stays open until done
   const handleCroppedImage = async (blob: Blob) => {
     if (!onPortraitChange) return;
-    const file = new File([blob], 'portrait.jpg', { type: 'image/jpeg' });
+    const file = fileFromCroppedBlob(blob, 'portrait');
     await onPortraitChange(file);
   };
 
   const canChangePortrait = Boolean(isEditMode && onPortraitChange);
-  const effectivePortrait = getEffectivePortrait(character.portrait);
-  const portraitSrc =
-    effectivePortrait === FALLBACK_PORTRAIT_DATA_URL
-      ? effectivePortrait
-      : `${effectivePortrait}${portraitRefreshKey != null ? `?t=${portraitRefreshKey}` : ''}`;
+  const effectivePortrait = useEffectivePortrait(character.portrait);
+  const portraitFallbackUrl = usePortraitFallbackUrl();
+  const isFallbackPortrait = isPortraitFallbackSrc(effectivePortrait);
+  const portraitSrc = withPortraitCacheBust(effectivePortrait, portraitRefreshKey);
   const portraitFrameClass = cn(
-    'relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-xl border-3 bg-surface shadow-lg md:h-36 md:w-36',
+    'relative h-28 w-28 flex-shrink-0 overflow-hidden rounded-xl border-3 bg-image-matte shadow-lg md:h-36 md:w-36',
     healthColor === 'green' && 'border-success-400',
     healthColor === 'orange' && 'border-warning-400',
     healthColor === 'red' && 'border-danger-600',
@@ -102,12 +104,12 @@ export function SheetHeaderIdentity({
         unoptimized
         priority
         className={cn(
-          'object-cover transition-opacity',
+          'object-contain transition-opacity',
           isUploadingPortrait && 'opacity-50'
         )}
         sizes="(max-width: 768px) 112px, 144px"
         onError={(e) => {
-          (e.target as HTMLImageElement).src = FALLBACK_PORTRAIT_DATA_URL;
+          (e.target as HTMLImageElement).src = portraitFallbackUrl;
         }}
       />
       {/* Upload overlay in edit mode — click opens ImageUploadModal, not ExpandableImage */}
@@ -167,6 +169,8 @@ export function SheetHeaderIdentity({
           <ExpandableImage
             src={portraitSrc}
             alt={character.name}
+            disabled={isFallbackPortrait}
+            isPlaceholder={isFallbackPortrait}
             className={portraitFrameClass}
           >
             {portraitImage}

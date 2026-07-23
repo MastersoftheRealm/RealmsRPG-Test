@@ -6,6 +6,8 @@
  */
 
 import { cn } from '@/lib/utils';
+import { getThemedPlaceholderSrc } from '@/lib/placeholder-art';
+import { usePlaceholderTheme } from '@/hooks/use-placeholder-theme';
 import { ExpandableImage } from './expandable-image';
 
 export interface ListRowThumbnailProps {
@@ -16,9 +18,12 @@ export interface ListRowThumbnailProps {
 }
 
 export function ListRowThumbnail({ src, alt, isPlaceholder = false, className }: ListRowThumbnailProps) {
+  const theme = usePlaceholderTheme();
+  const displaySrc = isPlaceholder ? getThemedPlaceholderSrc(src, theme) : src;
+
   return (
     <ExpandableImage
-      src={src}
+      src={displaySrc}
       alt={alt}
       isPlaceholder={isPlaceholder}
       stopPropagation
@@ -30,9 +35,9 @@ export function ListRowThumbnail({ src, alt, isPlaceholder = false, className }:
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        src={displaySrc}
         alt=""
-        className="absolute inset-0 h-full w-full object-cover object-center"
+        className="absolute inset-0 h-full w-full object-contain object-center"
         loading="lazy"
         decoding="async"
       />

@@ -107,9 +107,9 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
             src={draft.portraitUrl}
             alt={displayName}
             stopPropagation={false}
-            className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-alt"
+            className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-image-matte"
           >
-            <Image src={draft.portraitUrl} alt="" fill sizes="40px" className="object-cover" />
+            <Image src={draft.portraitUrl} alt="" fill sizes="40px" className="object-contain" />
           </ExpandableImage>
         ) : (
           <span className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-surface-alt">
@@ -152,9 +152,9 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
             src={draft.portraitUrl}
             alt={displayName}
             stopPropagation={false}
-            className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-card bg-surface-alt shadow-sm"
+            className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-card bg-image-matte shadow-sm"
           >
-            <Image src={draft.portraitUrl} alt="" fill sizes="64px" className="object-cover" />
+            <Image src={draft.portraitUrl} alt="" fill sizes="64px" className="object-contain" />
           </ExpandableImage>
         ) : (
           <span className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-card bg-surface-alt shadow-sm">

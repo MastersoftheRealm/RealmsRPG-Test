@@ -17,6 +17,7 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { GUIDED_CHOICE_STYLES, GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
 import { speciesSkillToSummaryChipItem, ANY_SPECIES_SKILL_ID } from '@/lib/chip/species-skill-chips';
 import { resolveChoiceCardImage } from './guided-choice-image';
+import { usePlaceholderTheme } from '@/hooks/use-placeholder-theme';
 import { GuidedTraitOptionList } from './guided-trait-option-list';
 import { GuidedOverviewSection } from './guided-overview-section';
 import { titleCase } from './guided-text';
@@ -106,7 +107,8 @@ export function SpeciesRevealPanel({
   hideChoiceTeaser = false,
 }: SpeciesRevealPanelProps) {
   const { data: allSkills = [] } = useCodexSkills();
-  const image = resolveChoiceCardImage('species', species);
+  const theme = usePlaceholderTheme();
+  const image = resolveChoiceCardImage('species', species, theme);
 
   const sizeOptions = useMemo(() => getSpeciesSizeOptions(species), [species]);
   const hasSizeChoice = sizeOptions.length > 1;
@@ -159,7 +161,7 @@ export function SpeciesRevealPanel({
               alt=""
               fill
               sizes="128px"
-              className="object-cover"
+              className="object-contain"
             />
           </ExpandableImage>
           <div className="min-w-0 flex-1 text-center sm:text-left">

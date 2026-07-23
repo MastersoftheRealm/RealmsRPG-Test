@@ -1,6 +1,7 @@
 /**
  * List-row thumbnail resolution — shared with guided choice cards (TASK-405 / TASK-532 / TASK-533).
  * Use `resolveListRowThumbnail(kind, record, name)` for species, creature, equipment, power, technique.
+ * Returns light placeholder paths; `ListRowThumbnail` swaps to `-dark.svg` via `usePlaceholderTheme`.
  *
  * **Agents:** Use with `GridListRow` `thumbnail` + `ListHeader.hasThumbnailColumn`.
  * Full guide: `guide/03-entity-card-art.md`.

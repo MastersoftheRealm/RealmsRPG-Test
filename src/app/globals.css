@@ -100,7 +100,7 @@
   --color-surface-secondary: #f6f6f6;
   --color-background: #f6f6f6;
   --color-card: #ffffff;
-  /* Soft matte behind transparent art (cropper + JPEG bake + thumbs). Not pure white/black. */
+  /* Soft matte behind transparent art at display time (cropper stage + thumbs). Not pure white/black. */
   --color-image-matte: #e8f1f8;
 
   /* ---------------------------------------------------------------------------
@@ -395,7 +395,8 @@
     --color-surface-alt: #21262d;
     --color-surface-secondary: #0d1117;
     --color-background: #0d1117;
-    --color-image-matte: #1c2430;
+    /* Align with surface-alt so transparent PNG letterboxing isn't stark vs page bg */
+    --color-image-matte: #21262d;
     /* These @theme tokens previously had no dark value (stayed light): */
     --color-card: #161b22;
     --color-muted: #21262d;

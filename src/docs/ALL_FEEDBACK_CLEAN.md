@@ -2686,3 +2686,11 @@ Notes
 - Feedback (verbatim summary): Add a pseudo global audit with quality findings (god files, docs corpus weight, creator/admin/encounter complexity clusters, API/e2e coverage shape) and create/add tasks to fix those issues.
 - Expected: Archive audit report + ACTIVE_TASKS follow-ups; no drive-by product refactors in the filing pass.
 - Disposition: Report `archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md`; filed **TASK-607**–**TASK-613** (splits, docs hygiene, API smoke; renumbered after debt TASK-601–606 collision).
+
+**Raw Feedback Log - 2026-07-23 (Placeholder dark mode + PNG matte)**
+- Date: 2026-07-23
+- Context: General site improvements (session)
+- Priority: Medium
+- Feedback (verbatim): Placeholder images need a darkmode variant. Images uploaded as PNGs get a default black background, but that color is too stark — needs to be closer to the theme background so contrast of PNG images isn't killed.
+- Expected: Dark-mode placeholder card/portrait art; transparent PNG letterboxing and crop matte aligned to theme (`surface-alt` / `image-matte`), not pure black.
+- Disposition: Implemented — `placeholder-art.ts`, dark SVG assets, adaptive `bg-image-matte` (display-only); crops preserve alpha (PNG/WebP, no baked matte). pending-qa DEV-V-026-T007.

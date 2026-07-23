@@ -1,9 +1,13 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   dataUrlToBlob,
+  getEffectivePortrait,
+  isPortraitFallbackSrc,
   PORTRAIT_SAVE_NO_URL,
   uploadCharacterPortraitFromDataUrl,
+  withPortraitCacheBust,
 } from './portrait';
+import { getFallbackPortraitDataUrl } from './placeholder-art';
 
 describe('dataUrlToBlob', () => {
   it('decodes a simple JPEG data URL', () => {
@@ -14,6 +18,27 @@ describe('dataUrlToBlob', () => {
 
   it('rejects invalid data URLs', () => {
     expect(() => dataUrlToBlob('not-a-data-url')).toThrow('Invalid data URL');
+  });
+});
+
+describe('portrait display helpers', () => {
+  it('resolves theme-aware fallbacks for empty portraits', () => {
+    expect(getEffectivePortrait(null, 'dark')).toBe(getFallbackPortraitDataUrl('dark'));
+    expect(getEffectivePortrait('', 'light')).toBe(getFallbackPortraitDataUrl('light'));
+  });
+
+  it('detects inline fallback data URLs for either theme', () => {
+    expect(isPortraitFallbackSrc(getFallbackPortraitDataUrl('light'))).toBe(true);
+    expect(isPortraitFallbackSrc(getFallbackPortraitDataUrl('dark'))).toBe(true);
+    expect(isPortraitFallbackSrc('https://cdn.example/p.jpg')).toBe(false);
+  });
+
+  it('does not cache-bust data-URL fallbacks', () => {
+    const fallback = getFallbackPortraitDataUrl('dark');
+    expect(withPortraitCacheBust(fallback, 99)).toBe(fallback);
+    expect(withPortraitCacheBust('https://cdn.example/p.jpg', 99)).toBe(
+      'https://cdn.example/p.jpg?t=99'
+    );
   });
 });
 

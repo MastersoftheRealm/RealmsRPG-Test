@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateImageMagicBytes } from '@/lib/validate-image';
+import { detectImageMime, extensionForImageMime } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 
 const BUCKET = 'portraits';
@@ -52,14 +52,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Image must be less than 5MB' }, { status: 400 });
   }
 
-  // Validate file content matches a real image format (prevents spoofed MIME types)
-  const isValidImage = await validateImageMagicBytes(file);
-  if (!isValidImage) {
+  const detectedMime = await detectImageMime(file);
+  if (!detectedMime) {
     return NextResponse.json({ error: 'Invalid image file' }, { status: 400 });
   }
 
-  // Always use .jpg for consistency (cropped images are JPEG); removes old portrait if different extension
-  const path = `${user.uid}/${charId}.jpg`;
+  const ext = extensionForImageMime(detectedMime);
+  const path = `${user.uid}/${charId}.${ext}`;
 
   try {
     const supabase = await createClient();
@@ -92,7 +91,7 @@ export async function POST(request: NextRequest) {
 
     const { error: uploadError } = await supabase.storage
       .from(BUCKET)
-      .upload(path, file, { upsert: true, contentType: file.type });
+      .upload(path, file, { upsert: true, contentType: detectedMime });
 
     if (uploadError) {
       console.error('Portrait upload error:', uploadError);

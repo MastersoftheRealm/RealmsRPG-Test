@@ -12,8 +12,8 @@
 |-------|----------|------|
 | **ExpandableImage** | `src/components/shared/expandable-image.tsx` | **Default** for any meaningful inline image — wraps visible image, click opens `ExpandableImageModal` (`object-contain`, `fullScreenOnMobile`, soft `bg-image-matte` behind art). Use `stopPropagation` inside selectable cards/rows. |
 | **ExpandableImageModal** | same file | Controlled preview only (rare); prefer `ExpandableImage`. |
-| **readRecordImageUrl** / **resolveChoiceCardImage** | `src/components/guided-creator/guided-choice-image.ts` → `src/lib/entity-image-url.ts` | Read `image_url` / `imageUrl` cache, bank join/enrichment, or `image_id`; fall back to typed SVG placeholders. |
-| **resolveListRowThumbnail** / **resolveSpeciesListRowThumbnail** | `src/lib/list-row-image.ts` | Wraps `resolveChoiceCardImage` → props for list thumbs |
+| **readRecordImageUrl** / **resolveChoiceCardImage** | `guided-choice-image.ts` → `entity-image-url.ts`; placeholders via `lib/placeholder-art.ts` (`getPlaceholderCardArtPath`, dark `-dark.svg` pairs) | Read `image_url` / bank join; fall back to typed SVG placeholders (theme via `usePlaceholderTheme` in client surfaces). |
+| **resolveListRowThumbnail** / **resolveSpeciesListRowThumbnail** | `src/lib/list-row-image.ts` | Wraps `resolveChoiceCardImage` (light path) → `ListRowThumbnail` applies dark swap via `getThemedPlaceholderSrc` |
 | **ListRowThumbnail** | `src/components/shared/list-row-thumbnail.tsx` | 44×44 list thumb — thin wrapper over `ExpandableImage` for `GridListRow.thumbnail` |
 | **GridListRow** `thumbnail` | `src/components/shared/grid-list-row.tsx` | D&D Beyond list style + `ListHeader` `hasThumbnailColumn` |
 | **GuidedChoiceCard** | `src/components/guided-creator/guided-choice-card.tsx` | Choice cards — hero art via `ExpandableImage` inside card |
@@ -57,9 +57,7 @@ Plain images remain intentional in these cases:
   compositions, dice/roll graphics, provider icons, and decorative art use plain
   images. Their role is identity, layout, or redundant control feedback—not
   inspectable entity content.
-- **Fallback / missing portraits:** `FALLBACK_PORTRAIT_DATA_URL` (“?” SVG) must use
-  `ExpandableImage` `disabled` (optionally `isPlaceholder`) — do not open a preview
-  of the placeholder.
+- **Fallback / missing portraits:** theme-aware inline “?” via `getFallbackPortraitDataUrl` / `useEffectivePortrait` / `PortraitThumb` (`character/portrait-thumb.tsx`). Read-only sheet portrait `ExpandableImage` must use `disabled` + `isPlaceholder` on fallback — do not open a preview of the placeholder.
 
 When a primary-action surface also needs enlargement, add a separate, explicitly
 labelled preview action; do not make one click perform both behaviors.

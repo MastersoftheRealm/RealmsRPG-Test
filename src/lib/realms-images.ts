@@ -9,7 +9,8 @@
  * moves them to `library/{id}.{ext}`.
  */
 
-import { apiFetch, apiUpload } from '@/lib/api-client';
+import { apiUpload, apiFetch } from '@/lib/api-client';
+import { fileFromCroppedBlob } from '@/lib/crop-image';
 
 /** Same bucket as interim entity-tied art; bank paths use `library/` prefix. */
 export const REALMS_IMAGES_BUCKET = 'codex-art';
@@ -165,7 +166,12 @@ export interface CreateRealmsImageInput {
 /** Admin-only create (multipart via apiUpload). */
 export async function createRealmsImage(input: CreateRealmsImageInput): Promise<RealmsImage> {
   const formData = new FormData();
-  formData.append('file', input.file, input.fileName ?? 'card-art.jpg');
+  const uploadFile = input.fileName
+    ? new File([input.file], input.fileName, {
+        type: input.file.type?.startsWith('image/') ? input.file.type : 'image/png',
+      })
+    : fileFromCroppedBlob(input.file, 'card-art');
+  formData.append('file', uploadFile);
   formData.append('name', input.name);
   formData.append('categories', JSON.stringify(input.categories));
   return apiUpload<RealmsImage>('/api/images', formData);
@@ -185,10 +191,15 @@ export async function updateRealmsImage(
 export async function replaceRealmsImageFile(
   id: string,
   file: Blob,
-  fileName = 'card-art.jpg'
+  fileName?: string
 ): Promise<RealmsImage> {
+  const uploadFile = fileName
+    ? new File([file], fileName, {
+        type: file.type?.startsWith('image/') ? file.type : 'image/png',
+      })
+    : fileFromCroppedBlob(file, 'card-art');
   const formData = new FormData();
-  formData.append('file', file, fileName);
+  formData.append('file', uploadFile);
   return apiUpload<RealmsImage>(`/api/images/${encodeURIComponent(id)}/replace`, formData);
 }
 
