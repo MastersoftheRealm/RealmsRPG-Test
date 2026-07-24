@@ -233,16 +233,6 @@ export function SheetHeader({
               />
             </>
           )}
-          <LargeStatBlock
-            label="Terminal"
-            value={displayStats.terminal}
-            valueAriaLabel={`Terminal ${displayStats.terminal}`}
-            isEditMode={isEditMode}
-            tempDelta={terminalTemp}
-            onTempDeltaChange={
-              onTempModifiersChange ? (d) => setScalarTemp('terminal', d) : undefined
-            }
-          />
         </div>
 
         <SheetHeaderResources
@@ -254,6 +244,11 @@ export function SheetHeader({
           currentEnergy={currentEnergy}
           maxEnergy={displayStats.maxEnergy}
           onEnergyChange={onEnergyChange}
+          terminal={displayStats.terminal}
+          terminalTempDelta={terminalTemp}
+          onTerminalTempChange={
+            onTempModifiersChange ? (d) => setScalarTemp('terminal', d) : undefined
+          }
           innateThreshold={innateThreshold}
           innatePools={innatePools}
           isEditMode={isEditMode}

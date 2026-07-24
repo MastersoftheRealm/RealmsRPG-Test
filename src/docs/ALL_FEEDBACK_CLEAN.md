@@ -2671,6 +2671,14 @@ Notes
 - Expected: Word-tied tip on Score values; GAME_RULES Score / Defense Score copy; shared across defenses.
 - Disposition: **TASK-587** done (shared `defenseScoreHelp` WordHelpTip on Score values; pending-qa DEV-V-009-T035).
 
+**Raw Feedback Log - 2026-07-24 (Terminal on Health header)**
+- Date: 2026-07-24
+- Context: Character sheet header — Terminal threshold placement
+- Priority: Medium
+- Feedback (verbatim): The terminal value should be in the top right "Terminal: X" of the health section of the character sheet, editable by temp mod, but not it's own box in the character stats top section area (it's not a main focus/quick reference value).
+- Expected: `Terminal: X` top-right on Health resource box; temp-mod in edit mode; removed from center LargeStatBlock row.
+- Disposition: **Session cleanup 2026-07-24** (co-located `sheet-temp-modifier-controls`; ADR-0006 + FEATURE_INDEX + BUILD_VALIDATION T033/T034 updated; pending-qa DEV-V-009-T034 retest).
+
 **Raw Feedback Log - 2026-07-20 (Speed/Evasion Temp only)**
 - Date: 2026-07-20
 - Context: Character sheet header Speed / Evasion LargeStatBlocks

@@ -137,7 +137,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-597** | Smoke (campaign RM view) | Open campaign → player character view: sheet sections match owner display (temp mods / library tabs); no edit chrome; rolls/log still work |
 | **TASK-584** | DEV-V-009 **T032** | Skills catalog-all base skills; Proficient/All + Show sub-skills filters; − clears value→prof (subs remove); no Add Skill / per-row X; pencil top-right |
 | **TASK-587** | DEV-V-009 **T035** | Defense Score value tip (`defenseScoreHelp`); name tips unchanged; roll chips still work |
-| **TASK-586** | DEV-V-009 **T033–T034** | Temp Modifier on header LargeStatBlocks + dual mode on Abilities (+ defenses + resource-maxima toggle) / Skills; tint + persist + cascade; pencil spend locks (Speed/Evasion pencil removed — see TASK-600) |
+| **TASK-586** | DEV-V-009 **T033–T034** | Temp Modifier on header LargeStatBlocks (Speed/Evasion/DR/crit) + Health `Terminal: X` + dual mode on Abilities (+ defenses + resource-maxima toggle) / Skills; tint + persist + cascade; pencil spend locks (Speed/Evasion pencil removed — see TASK-600) |
 | **TASK-430** | DEV-V-019 **T001–T007, T009–T013** | React Compiler hook cleanup batches 1–7: remount/bootstrap, crafting FSM, sheet tour offer, admin queries, USM reopen; sitewide those three react-hooks rules at 0 |
 | **TASK-440** | DEV-V-020 **T004** | Library Creatures + compact CombatantCard + Creature Creator quickStats: Health / Energy (not HP / EN) |
 | **TASK-388** | DEV-V-029 **T001–T003** | Play-together after first save; optional sheet tour (Skip / Don't show again); level-up highlight cards (ability = scroll + edit mode) + My Account tutorials toggle |

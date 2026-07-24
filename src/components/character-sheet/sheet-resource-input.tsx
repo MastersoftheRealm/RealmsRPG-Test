@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, KeyboardEvent, ChangeEvent } from 'react';
+import { useState, useRef, KeyboardEvent, ChangeEvent, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { ValueStepper } from '@/components/shared';
 
@@ -34,6 +34,7 @@ export function ResourceInput({
   onChange,
   colorVariant = 'default',
   subLabel,
+  headerRight,
   showBar = false,
 }: {
   label: string;
@@ -42,6 +43,8 @@ export function ResourceInput({
   onChange?: (value: number) => void;
   colorVariant?: 'health' | 'energy' | 'default';
   subLabel?: string;
+  /** Top-right slot (e.g. Terminal threshold on Health). Takes precedence over subLabel. */
+  headerRight?: ReactNode;
   showBar?: boolean;
 }) {
   const [inputValue, setInputValue] = useState(String(current));
@@ -169,13 +172,13 @@ export function ResourceInput({
   
   return (
     <div className={cn('flex flex-col p-3 rounded-lg border', bgColor)}>
-      <div className="flex items-center justify-between mb-1">
+      <div className="flex items-center justify-between gap-2 mb-1">
         <span className={cn('text-xs font-semibold uppercase tracking-wide', labelColor)}>
           {label}
         </span>
-        {subLabel && (
+        {headerRight ?? (subLabel ? (
           <span className="text-xs text-text-muted dark:text-text-secondary">{subLabel}</span>
-        )}
+        ) : null)}
       </div>
       <div className="flex items-center gap-2">
         <input

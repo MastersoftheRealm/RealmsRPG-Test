@@ -3,6 +3,7 @@
 import { cn } from '@/lib/utils';
 import { HealthEnergyAllocator } from '@/components/creator';
 import { ValueStepper } from '@/components/shared';
+import { TempModifierInlineLabel } from './sheet-temp-modifier-controls';
 import { ResourceInput } from './sheet-resource-input';
 
 export function SheetHeaderResources({
@@ -14,6 +15,9 @@ export function SheetHeaderResources({
   currentEnergy,
   maxEnergy,
   onEnergyChange,
+  terminal,
+  terminalTempDelta = 0,
+  onTerminalTempChange,
   innateThreshold = 0,
   innatePools = 0,
   isEditMode,
@@ -31,6 +35,9 @@ export function SheetHeaderResources({
   currentEnergy: number;
   maxEnergy: number;
   onEnergyChange?: (value: number) => void;
+  terminal: number;
+  terminalTempDelta?: number;
+  onTerminalTempChange?: (delta: number) => void;
   innateThreshold?: number;
   innatePools?: number;
   isEditMode: boolean;
@@ -73,7 +80,7 @@ export function SheetHeaderResources({
           </div>
         </div>
 
-        {/* Health & Energy stacked */}
+        {/* Health & Energy stacked — Terminal threshold is health-context metadata, not a header quick-stat */}
         <div className="flex flex-col gap-2 flex-1 min-w-0">
           <ResourceInput
             label="Health"
@@ -82,6 +89,16 @@ export function SheetHeaderResources({
             onChange={onHealthChange}
             colorVariant="health"
             showBar
+            headerRight={
+              <TempModifierInlineLabel
+                displayText={`Terminal: ${terminal}`}
+                ariaLabel={`Terminal ${terminal}`}
+                titleLabel="Terminal"
+                tempDelta={terminalTempDelta}
+                isEditMode={isEditMode}
+                onTempDeltaChange={onTerminalTempChange}
+              />
+            }
           />
           <ResourceInput
             label="Energy"

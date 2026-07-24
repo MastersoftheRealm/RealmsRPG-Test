@@ -1,15 +1,19 @@
 'use client';
 
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui';
-import { DecrementButton, IncrementButton, TempModifierToggle } from '@/components/shared';
+import { TempModifierToggle } from '@/components/shared';
 import { tempModifierValueClass } from '@/lib/character/temp-modifiers';
+import {
+  TempModifierStepperRow,
+  useTempModifierActive,
+} from './sheet-temp-modifier-controls';
 
 /**
- * Large stat block for Speed / Evasion / DR / Critical Range / Terminal.
+ * Large stat block for Speed / Evasion / DR / Critical Range.
  * Edit mode: Temp Modifier only (ADR-0006). No pencil / permanent base edit.
  * `value` is the final display number/string (temps already applied by caller).
+ * Terminal threshold lives on the Health resource header — not a quick-reference card.
  */
 export function LargeStatBlock({
   label,
@@ -29,9 +33,10 @@ export function LargeStatBlock({
   tempDelta?: number;
   onTempDeltaChange?: (delta: number) => void;
 }) {
-  const [tempActive, setTempActive] = useState(false);
-  const canTemp = Boolean(isEditMode && onTempDeltaChange);
-  const showTempControls = canTemp && tempActive;
+  const { tempActive, setTempActive, canTemp, showTempControls } = useTempModifierActive(
+    isEditMode,
+    onTempDeltaChange
+  );
 
   return (
     <Card className="flex flex-col items-center p-4 bg-surface-alt min-w-[100px] shadow-none">
@@ -62,26 +67,12 @@ export function LargeStatBlock({
       </span>
 
       {showTempControls && onTempDeltaChange && (
-        <div className="flex items-center gap-1 mt-2">
-          <DecrementButton
-            size="sm"
-            onClick={() => onTempDeltaChange(tempDelta - 1)}
-            title={`Decrease ${label} Temp Modifier`}
-          />
-          <span
-            className={cn(
-              'text-xs min-w-[3rem] text-center font-medium',
-              tempModifierValueClass(tempDelta) || 'text-text-muted dark:text-text-secondary'
-            )}
-          >
-            Temp: {tempDelta >= 0 ? `+${tempDelta}` : tempDelta}
-          </span>
-          <IncrementButton
-            size="sm"
-            onClick={() => onTempDeltaChange(tempDelta + 1)}
-            title={`Increase ${label} Temp Modifier`}
-          />
-        </div>
+        <TempModifierStepperRow
+          label={label}
+          tempDelta={tempDelta}
+          onTempDeltaChange={onTempDeltaChange}
+          className="mt-2"
+        />
       )}
     </Card>
   );
