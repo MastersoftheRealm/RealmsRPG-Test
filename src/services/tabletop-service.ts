@@ -1,5 +1,11 @@
 import { apiFetch, apiFetchOrNull, apiUpload } from '@/lib/api-client';
-import type { VttAction, VttGridConfig, VttTabletopState, VttToken } from '@/types/tabletop';
+import type {
+  AddVttCreatureTokensRequest,
+  VttAction,
+  VttGridConfig,
+  VttTabletopState,
+  VttToken,
+} from '@/types/tabletop';
 
 export async function openEncounterTabletop(encounterId: string): Promise<{ sceneId: string; campaignId: string }> {
   return apiFetch(`/api/encounters/${encodeURIComponent(encounterId)}/tabletop`, {
@@ -39,10 +45,27 @@ export async function syncTabletopCombatants(sceneId: string): Promise<VttToken[
   });
 }
 
+export async function addTabletopCreatureTokens(
+  sceneId: string,
+  request: AddVttCreatureTokensRequest
+): Promise<VttToken[]> {
+  return apiFetch(`/api/tabletop/scenes/${encodeURIComponent(sceneId)}/tokens`, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'add-creature', ...request }),
+  });
+}
+
 export async function updateTabletopToken(sceneId: string, id: string, updates: Partial<VttToken>): Promise<VttToken> {
   return apiFetch(`/api/tabletop/scenes/${encodeURIComponent(sceneId)}/tokens`, {
     method: 'PATCH',
     body: JSON.stringify({ id, updates }),
+  });
+}
+
+export async function deleteTabletopToken(sceneId: string, id: string): Promise<void> {
+  return apiFetch(`/api/tabletop/scenes/${encodeURIComponent(sceneId)}/tokens`, {
+    method: 'DELETE',
+    body: JSON.stringify({ id }),
   });
 }
 
@@ -79,4 +102,3 @@ export async function uploadVttMap(params: {
   formData.append('file', params.file);
   return apiUpload('/api/upload/vtt-map', formData);
 }
-

@@ -1740,3 +1740,43 @@ Notes
 - Feedback: "There is about a second delay on the virtual tabletop before any changes made by a user are reflected on the other players' tabletops. Is there a way to make it so all players can view changes in real time?"
 - Expected: Tabletop token moves, scene tool changes, pings, and move requests appear in other campaign participants' open tabletop sessions without manual refresh or a full-scene reload delay.
 - Disposition: TASK-424 implemented 2026-07-09 — `useTabletopRealtime` now merges Supabase Realtime payloads directly into tabletop query cache with player-safe visibility filtering; server refetch fallback remains for signed map URLs and enemy-resource visibility setting changes.
+
+**Raw Feedback Log — 2026-07-10 (Encounter duplicate campaign characters)**
+- Date: 2026-07-10
+- Context: Encounters — adding campaign characters to combat/skill/mixed encounters
+- Priority: High
+- Feedback: "In an encounter, I can add the same character more than once. Please disallow this functionality. No duplicate characters should be in a given encounter."
+- Expected: A campaign character can only appear once in a given encounter combatant list or skill participant list; add-all, campaign-character modal, and duplicate-card paths must not create duplicate linked characters.
+- Disposition: Implemented directly 2026-07-10 — campaign-character source IDs are filtered in encounter add flows, already-added rows are disabled in the modal, linked combatant duplicate action is hidden, and encounter API/local persistence rejects duplicate campaign-character entries.
+
+**Raw Feedback Log — 2026-07-10 (Campaign encounter visibility for players)**
+- Date: 2026-07-10
+- Context: Encounters — campaign-linked encounter persistence and non-RM visibility
+- Priority: High
+- Feedback: RM created a campaign, another user joined by code, RM started an encounter and added both the RM character and the other user's character. Both users left and came back the next day; the non-RM user had no encounters listed, while the RM could still see and edit the encounter.
+- Expected: Clarify whether campaign-linked encounters are RM-only or should appear for campaign members; if shared, non-RM users should be able to find the relevant encounter again without receiving unsafe RM-only edit/delete permissions.
+- Disposition: Added TASK-425 — campaign-linked encounter visibility for players.
+
+**Raw Feedback Log — 2026-07-16 (VTT ping expiry)**
+- Date: 2026-07-16
+- Context: Virtual tabletop — player/RM pings
+- Priority: Medium
+- Feedback: "Actually, make the pings expire after 5 seconds. We don't need a manuall delete"
+- Expected: Pings placed on the VTT disappear automatically after five seconds; no manual delete affordance is needed.
+- Disposition: Implemented directly 2026-07-16 — tabletop canvas filters ping actions by a 5-second lifetime and schedules their visual expiry.
+
+**Raw Feedback Log — 2026-07-24 (VTT token deletion)**
+- Date: 2026-07-24
+- Context: Virtual tabletop — duplicate or unwanted scene tokens
+- Priority: High
+- Feedback: "Currently, the VTT allows for duplicate tokens. Please build a way for RMs to delete tokens on the VTT"
+- Expected: Realm Masters can remove unwanted tokens from a tabletop scene; players cannot delete tokens; deleted tokens disappear from open tabletop sessions.
+- Disposition: Implemented directly 2026-07-24 — RM token rows expose a confirmed delete action backed by an RM-only tabletop token DELETE API and realtime/cache removal.
+
+**Raw Feedback Log — 2026-07-24 (VTT monster tokens)**
+- Date: 2026-07-24
+- Context: Virtual tabletop — adding monsters directly to a scene
+- Priority: High
+- Feedback: "Please add the ability for RMs to add monster tokens to the map"
+- Expected: Realm Masters can choose a creature from Realms Library or My Library, set quantity, and add enemy monster tokens to the tabletop; players cannot add monster tokens.
+- Disposition: Implemented directly 2026-07-24 — Scene Tools now includes an RM-only Monster action backed by an RM-only `add-creature` tabletop token API path.

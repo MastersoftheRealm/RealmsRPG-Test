@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Campaign } from '@/types/campaign';
 import type { TrackedCombatant } from '@/types/encounter';
 import { DEFAULT_VTT_GRID } from './grid';
-import { buildMissingTokensFromCombatants } from './tokens';
+import { buildMissingTokensFromCombatants, buildTokenFromCreature } from './tokens';
 
 const campaign = {
   id: 'campaign-1',
@@ -79,5 +79,41 @@ describe('tabletop token seeding', () => {
     expect(tokens[0]?.imageUrl).toBe('https://example.test/mara.jpg');
     expect(tokens[0]?.metadata.currentHealth).toBe(18);
   });
-});
 
+  it('creates hidden enemy tokens from library creatures with resource metadata', () => {
+    const token = buildTokenFromCreature({
+      sceneId: 'scene-1',
+      sourceId: 'creature-1',
+      index: 0,
+      grid: DEFAULT_VTT_GRID,
+      creature: {
+        id: 'creature-1',
+        docId: 'creature-1',
+        name: 'Ash Wraith',
+        description: 'A smoke-thin undead predator.',
+        level: 2,
+        type: 'undead',
+        size: 'Large',
+        hitPoints: 10,
+        energyPoints: 4,
+        abilities: { vitality: 2, agility: 3, acuity: 1 },
+      },
+    });
+
+    expect(token.combatantType).toBe('enemy');
+    expect(token.sourceType).toBe('creature-library');
+    expect(token.sourceId).toBe('creature-1');
+    expect(token.visible).toBe(false);
+    expect(token.size).toBeGreaterThan(DEFAULT_VTT_GRID.cellSize);
+    expect(token.metadata).toMatchObject({
+      currentHealth: 14,
+      maxHealth: 14,
+      currentEnergy: 10,
+      maxEnergy: 10,
+      evasion: 13,
+      creatureLevel: 2,
+      creatureType: 'undead',
+      creatureSize: 'Large',
+    });
+  });
+});

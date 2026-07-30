@@ -27,6 +27,10 @@ import { useCodexSkills } from '@/hooks';
 import { AddCombatantModal } from '@/components/shared/add-combatant-modal';
 import { RollLog } from '@/components/character-sheet';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
+import {
+  filterDuplicateCampaignCharacterEntries,
+  getCampaignCharacterIds,
+} from '@/lib/encounter/unique-campaign-characters';
 import type { Encounter, SkillParticipant, SkillEncounterState, TrackedCombatant, SkillParticipantType } from '@/types/encounter';
 import type { Campaign } from '@/types/campaign';
 
@@ -132,34 +136,49 @@ function SkillEncounterViewInner({
     const withInit = useInit
       ? newParticipants.map((p) => ({ ...p, initiative: p.initiative ?? rollInitiative(0), participantType: p.participantType ?? ('ally' as const) }))
       : newParticipants;
-    updateSkill({ participants: [...(skill?.participants || []), ...withInit] });
+    const participants = filterDuplicateCampaignCharacterEntries(withInit, skill?.participants);
+    if (participants.length > 0) {
+      updateSkill({ participants: [...(skill?.participants || []), ...participants] });
+    }
     setShowAddModal(false);
   };
 
   const linkedCampaign = encounter?.campaignId
     ? campaignsFull.find((c: Campaign) => c.id === encounter.campaignId)
     : undefined;
+  const existingCampaignCharacterIds = useMemo(
+    () => getCampaignCharacterIds(skill?.participants),
+    [skill?.participants]
+  );
+  const availableCampaignCharacters = useMemo(
+    () => (linkedCampaign?.characters ?? []).filter((c) => !existingCampaignCharacterIds.has(c.characterId)),
+    [linkedCampaign?.characters, existingCampaignCharacterIds]
+  );
 
   const addAllCampaignCharacters = useCallback(async () => {
-    if (!encounter?.campaignId || !linkedCampaign?.characters?.length) return;
+    if (!encounter?.campaignId || availableCampaignCharacters.length === 0) return;
     setAddingAllChars(true);
     try {
       const useInit = skill?.useInitiative ?? false;
-      const participants: SkillParticipant[] = linkedCampaign.characters.map(
+      const participants: SkillParticipant[] = availableCampaignCharacters.map(
         (c: { userId: string; characterId: string; characterName: string }) => ({
           id: generateId(),
           name: c.characterName,
           hasRolled: false,
           sourceType: 'campaign-character' as const,
           sourceId: c.characterId,
+          sourceUserId: c.userId,
           ...(useInit && { initiative: rollInitiative(0), participantType: 'ally' as const }),
         })
       );
-      updateSkill({ participants: [...(skill?.participants || []), ...participants] });
+      const newParticipants = filterDuplicateCampaignCharacterEntries(participants, skill?.participants);
+      if (newParticipants.length > 0) {
+        updateSkill({ participants: [...(skill?.participants || []), ...newParticipants] });
+      }
     } finally {
       setAddingAllChars(false);
     }
-  }, [encounter?.campaignId, linkedCampaign, skill?.participants, skill?.useInitiative, updateSkill]);
+  }, [availableCampaignCharacters, encounter?.campaignId, skill?.participants, skill?.useInitiative, updateSkill]);
 
   const addCombatantsAsParticipants = (combatants: TrackedCombatant[]) => {
     const useInit = skill?.useInitiative ?? false;
@@ -169,9 +188,13 @@ function SkillEncounterViewInner({
       hasRolled: false,
       sourceType: c.sourceType,
       sourceId: c.sourceId,
+      sourceUserId: c.sourceUserId,
       ...(useInit && { initiative: rollInitiative(c.acuity ?? 0), participantType: c.isAlly ? ('ally' as const) : ('enemy' as const) }),
     }));
-    updateSkill({ participants: [...(skill?.participants || []), ...participants] });
+    const newParticipants = filterDuplicateCampaignCharacterEntries(participants, skill?.participants);
+    if (newParticipants.length > 0) {
+      updateSkill({ participants: [...(skill?.participants || []), ...newParticipants] });
+    }
     setShowAddModal(false);
   };
 
@@ -180,7 +203,10 @@ function SkillEncounterViewInner({
     if (!encounter?.combatants?.length || !skill) return;
     const existingIds = new Set(skill.participants.map((p) => p.id));
     const combatants = encounter.combatants as TrackedCombatant[];
-    const toAdd = combatants.filter((c) => !existingIds.has(c.id));
+    const toAdd = filterDuplicateCampaignCharacterEntries(
+      combatants.filter((c) => !existingIds.has(c.id)),
+      skill.participants
+    );
     if (toAdd.length === 0) return;
     const participants: SkillParticipant[] = toAdd.map((c) => ({
       id: c.id,
@@ -712,7 +738,10 @@ function SkillEncounterViewInner({
             {isMixedEncounter && encounter?.combatants?.length ? (() => {
               const combatants = encounter.combatants as TrackedCombatant[];
               const existingIds = new Set(skill?.participants.map((p) => p.id) ?? []);
-              const notYetAdded = combatants.filter((c) => !existingIds.has(c.id)).length;
+              const notYetAdded = filterDuplicateCampaignCharacterEntries(
+                combatants.filter((c) => !existingIds.has(c.id)),
+                skill?.participants
+              ).length;
               return (
                 <Button
                   variant="secondary"
@@ -750,9 +779,13 @@ function SkillEncounterViewInner({
                   variant="secondary"
                   className="w-full"
                   onClick={addAllCampaignCharacters}
-                  disabled={addingAllChars}
+                  disabled={addingAllChars || availableCampaignCharacters.length === 0}
                 >
-                  {addingAllChars ? 'Adding…' : `Add all Characters (${linkedCampaign.characters?.length ?? 0})`}
+                  {addingAllChars
+                    ? 'Adding…'
+                    : availableCampaignCharacters.length === 0
+                      ? 'All Characters Added'
+                      : `Add all Characters (${availableCampaignCharacters.length})`}
                 </Button>
               )}
             </div>
@@ -811,6 +844,7 @@ function SkillEncounterViewInner({
           onAdd={addCombatantsAsParticipants}
           onAddParticipants={addParticipantsFromModal}
           mode="skill"
+          existingCampaignCharacterIds={existingCampaignCharacterIds}
         />
       )}
 

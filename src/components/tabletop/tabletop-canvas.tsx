@@ -7,9 +7,11 @@ import type Konva from 'konva';
 import { IconButton } from '@/components/ui';
 import { clampPointToMap, measureGridDistance, snapPointToGrid } from '@/lib/tabletop/grid';
 import { cn } from '@/lib/utils/cn';
-import type { VttPoint, VttTabletopState, VttToken } from '@/types/tabletop';
+import type { VttAction, VttPoint, VttTabletopState, VttToken } from '@/types/tabletop';
 
 export type TabletopToolMode = 'select' | 'ping' | 'request-move';
+
+const PING_TTL_MS = 5_000;
 
 interface TabletopCanvasProps {
   state: VttTabletopState;
@@ -66,6 +68,12 @@ function tokenTextColor(token: VttToken): string {
   return token.combatantType === 'enemy' ? '#fef2f2' : '#eff6ff';
 }
 
+function pingExpiresAt(action: VttAction): number {
+  if (action.type !== 'ping' || !action.createdAt) return 0;
+  const createdAt = Date.parse(action.createdAt);
+  return Number.isFinite(createdAt) ? createdAt + PING_TTL_MS : 0;
+}
+
 export function TabletopCanvas({
   state,
   selectedTokenId,
@@ -80,6 +88,7 @@ export function TabletopCanvas({
   const [scale, setScale] = useState(1);
   const [fullscreenAvailable, setFullscreenAvailable] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [now, setNow] = useState(() => Date.now());
   const mapImage = useImage(state.scene.map?.signedUrl);
   const mapWidth = state.scene.map?.width ?? 1600;
   const mapHeight = state.scene.map?.height ?? 1000;
@@ -96,8 +105,32 @@ export function TabletopCanvas({
     (action) => action.type === 'move-request' && action.status === 'pending' && action.tokenId
   );
   const pings = state.actions
-    .filter((action) => action.type === 'ping')
+    .filter((action) => pingExpiresAt(action) > now)
     .slice(0, 8);
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setNow(Date.now());
+    }, 0);
+
+    return () => window.clearTimeout(timeout);
+  }, [state.actions]);
+
+  useEffect(() => {
+    const nextPingExpiration = state.actions.reduce<number | null>((next, action) => {
+      const expiresAt = pingExpiresAt(action);
+      if (expiresAt <= now) return next;
+      return next == null ? expiresAt : Math.min(next, expiresAt);
+    }, null);
+
+    if (nextPingExpiration == null) return;
+
+    const timeout = window.setTimeout(() => {
+      setNow(Date.now());
+    }, Math.max(0, nextPingExpiration - now) + 50);
+
+    return () => window.clearTimeout(timeout);
+  }, [now, state.actions]);
 
   useEffect(() => {
     setFullscreenAvailable(Boolean(document.fullscreenEnabled && ref.current?.requestFullscreen));
@@ -177,7 +210,7 @@ export function TabletopCanvas({
     <div
       ref={ref}
       className={cn(
-        'relative h-[62vh] min-h-[420px] w-full overflow-hidden rounded-lg border border-border-light bg-surface-alt',
+        'relative h-[62vh] min-h-105 w-full overflow-hidden rounded-lg border border-border-light bg-surface-alt',
         isFullscreen && 'h-screen min-h-screen rounded-none border-0'
       )}
     >

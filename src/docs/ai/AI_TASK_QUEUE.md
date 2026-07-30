@@ -2,9 +2,44 @@
 
 **Last slimmed:** 2026-06-26 (TASK-382). Full history: [`archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md`](archive/AI_TASK_QUEUE_FULL_BACKUP_2026-06-26.md) and [`archive/TASK_QUEUE_DONE.md`](archive/TASK_QUEUE_DONE.md).
 
-**Next task ID:** TASK-425
+**Next task ID:** TASK-426
 
 **Agent rules:** Skip `blocked` tasks and any task with `assignee:` set to a human (e.g. TASK-353, **TASK-414**). Skip human-only tasks (TASK-353 → `DEVELOPER_TASK_QUEUE.md` DEV-001). Pick highest-priority `not-started` or continue `partial`. **Do not start TASK-408–413** until TASK-414 spec is `done` (owner approval).
+
+---
+
+- id: TASK-425
+  title: Campaign-linked encounter visibility for players
+  created_at: 2026-07-10
+  created_by: owner
+  priority: high
+  status: not-started
+  related_files:
+    - src/app/api/encounters/route.ts
+    - src/app/api/encounters/[id]/route.ts
+    - src/hooks/use-encounters.ts
+    - src/app/(main)/encounters/page.tsx
+    - src/types/encounter.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Campaign-linked encounters are currently persisted as owner-scoped `encounters` rows, so a non-RM campaign
+    member whose character is added to the encounter cannot find that encounter again from `/encounters`. Decide and
+    implement the intended campaign sharing model so players can see appropriate campaign encounters without gaining
+    unsafe RM-only edit capabilities.
+  acceptance_criteria:
+    - Campaign members can see active/relevant encounters linked to campaigns they belong to from the encounters page, or the UI clearly communicates that encounters are RM-only and directs players to the tabletop/campaign surface instead.
+    - Direct encounter detail access follows the same policy as list access; non-members cannot read unrelated encounters.
+    - Player permissions are explicit: read-only/player-safe where appropriate, with RM-only actions such as delete, full edit, and tabletop sync protected server-side.
+    - Adding a player's campaign character to an encounter is not the only source of authorization; campaign membership and encounter linkage are verified server-side.
+    - Add/update build validation coverage for RM and non-RM campaign member visibility.
+    - `npm run build` passes.
+  notes: |
+    Owner feedback 2026-07-10: RM created a campaign, another user joined by code, RM created an encounter linked
+    to the campaign and added both characters, then both users returned the next day. RM still sees/edits the
+    encounter, but the non-RM user has no encounters listed. Current API filters encounter list/detail by
+    `encounters.user_id = auth user`, while `campaignId` and `sourceUserId` live inside the encounter JSON and do
+    not grant visibility.
 
 ---
 

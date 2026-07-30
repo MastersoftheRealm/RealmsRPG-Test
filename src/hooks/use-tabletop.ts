@@ -7,7 +7,9 @@ import { createClient } from '@/lib/supabase/client';
 import { normalizeGridConfig } from '@/lib/tabletop/grid';
 import { filterActionsForRole, filterTokensForRole } from '@/lib/tabletop/visibility';
 import {
+  addTabletopCreatureTokens,
   createTabletopAction,
+  deleteTabletopToken,
   getActiveCampaignTabletop,
   getTabletopScene,
   resolveTabletopAction,
@@ -17,6 +19,7 @@ import {
   uploadVttMap,
 } from '@/services/tabletop-service';
 import type {
+  AddVttCreatureTokensRequest,
   VttAction,
   VttActionStatus,
   VttActionType,
@@ -217,6 +220,7 @@ function removeTokenFromState(state: VttTabletopState, tokenId: string): VttTabl
   return {
     ...state,
     tokens: state.tokens.filter((token) => token.id !== tokenId),
+    actions: state.actions.filter((action) => action.tokenId !== tokenId),
   };
 }
 
@@ -391,6 +395,22 @@ export function useTabletopMutations(sceneId: string | undefined) {
         updateTabletopToken(sceneId!, id, updates),
       onSuccess: (token) => {
         if (sceneId) updateCachedTabletopStates(queryClient, sceneId, (state) => upsertTokenInState(state, token));
+      },
+    }),
+    deleteToken: useMutation({
+      mutationFn: (id: string) => deleteTabletopToken(sceneId!, id),
+      onSuccess: (_result, id) => {
+        if (sceneId) updateCachedTabletopStates(queryClient, sceneId, (state) => removeTokenFromState(state, id));
+      },
+    }),
+    addCreatureTokens: useMutation({
+      mutationFn: (request: AddVttCreatureTokensRequest) => addTabletopCreatureTokens(sceneId!, request),
+      onSuccess: (tokens) => {
+        if (sceneId) {
+          updateCachedTabletopStates(queryClient, sceneId, (state) =>
+            tokens.reduce((nextState, token) => upsertTokenInState(nextState, token), state)
+          );
+        }
       },
     }),
     createAction: useMutation({

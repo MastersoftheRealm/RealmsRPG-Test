@@ -1,6 +1,8 @@
 import type { Campaign } from '@/types/campaign';
 import type { TrackedCombatant } from '@/types/encounter';
+import type { LibraryCreature } from '@/types/library';
 import type { VttGridConfig, VttToken, VttTokenMetadata } from '@/types/tabletop';
+import { calculateCreatureMaxEnergy, calculateCreatureMaxHealth, getCreatureAbilityScore } from '@/lib/game/encounter-utils';
 import { snapPointToGrid } from './grid';
 
 const TOKEN_COLORS: Record<TrackedCombatant['combatantType'], string> = {
@@ -25,6 +27,36 @@ function readRosterPortrait(campaign: Campaign | undefined, combatant: TrackedCo
   )?.portrait;
 }
 
+function readCreatureImageUrl(creature: LibraryCreature): string | undefined {
+  const record = creature as LibraryCreature & { image_url?: string | null; imageUrl?: string | null };
+  return record.image_url ?? record.imageUrl ?? undefined;
+}
+
+function creatureSizeMultiplier(size: string | undefined): number {
+  switch (size?.trim().toLowerCase()) {
+    case 'large':
+      return 2;
+    case 'huge':
+      return 3;
+    case 'gargantuan':
+      return 4;
+    default:
+      return 1;
+  }
+}
+
+function tokenPointForIndex(index: number, grid: VttGridConfig): { x: number; y: number } {
+  const cell = Math.max(32, grid.cellSize);
+  const columns = 8;
+  return snapPointToGrid(
+    {
+      x: grid.offsetX + cell * (1 + (index % columns)),
+      y: grid.offsetY + cell * (1 + Math.floor(index / columns)),
+    },
+    grid
+  );
+}
+
 export function metadataFromCombatant(combatant: TrackedCombatant): VttTokenMetadata {
   return {
     currentHealth: combatant.currentHealth,
@@ -47,14 +79,7 @@ export function buildTokenFromCombatant(params: {
 }): Omit<VttToken, 'createdAt' | 'updatedAt'> {
   const { sceneId, combatant, index, grid, campaign } = params;
   const cell = Math.max(32, grid.cellSize);
-  const columns = 8;
-  const point = snapPointToGrid(
-    {
-      x: grid.offsetX + cell * (1 + (index % columns)),
-      y: grid.offsetY + cell * (1 + Math.floor(index / columns)),
-    },
-    grid
-  );
+  const point = tokenPointForIndex(index, grid);
 
   return {
     id: crypto.randomUUID(),
@@ -74,6 +99,58 @@ export function buildTokenFromCombatant(params: {
     sourceId: combatant.sourceId,
     sourceUserId: combatant.sourceUserId,
     metadata: metadataFromCombatant(combatant),
+  };
+}
+
+export function buildTokenFromCreature(params: {
+  sceneId: string;
+  creature: LibraryCreature;
+  sourceId: string;
+  index: number;
+  grid: VttGridConfig;
+  visible?: boolean;
+}): Omit<VttToken, 'createdAt' | 'updatedAt'> {
+  const { sceneId, creature, sourceId, index, grid } = params;
+  const level = Number(creature.level || 1);
+  const safeLevel = Number.isFinite(level) ? level : 1;
+  const abilities = creature.abilities || {};
+  const agility = getCreatureAbilityScore(abilities, 'agility');
+  const maxHealth = calculateCreatureMaxHealth(safeLevel, abilities, creature.hitPoints ?? creature.hp ?? 0);
+  const maxEnergy = calculateCreatureMaxEnergy(safeLevel, abilities, creature.energyPoints ?? 0);
+  const evasion = Number(creature.defenses?.evasion ?? 10 + agility);
+  const armor = Number(creature.defenses?.armor ?? 0);
+  const cell = Math.max(32, grid.cellSize);
+  const point = tokenPointForIndex(index, grid);
+  const multiplier = creatureSizeMultiplier(creature.size);
+
+  return {
+    id: crypto.randomUUID(),
+    sceneId,
+    name: creature.name,
+    label: initials(creature.name),
+    x: point.x,
+    y: point.y,
+    size: Math.max(36, Math.round(cell * 0.82 * multiplier)),
+    color: TOKEN_COLORS.enemy,
+    imageUrl: readCreatureImageUrl(creature),
+    visible: params.visible ?? false,
+    locked: false,
+    combatantType: 'enemy',
+    sourceType: 'creature-library',
+    sourceId,
+    metadata: {
+      currentHealth: maxHealth,
+      maxHealth,
+      currentEnergy: maxEnergy,
+      maxEnergy,
+      armor: Number.isFinite(armor) ? armor : 0,
+      evasion: Number.isFinite(evasion) ? evasion : 10,
+      ap: 4,
+      notes: creature.description || undefined,
+      creatureLevel: safeLevel,
+      creatureType: creature.type,
+      creatureSize: creature.size,
+    },
   };
 }
 

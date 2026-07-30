@@ -65,6 +65,9 @@ export interface VttTokenMetadata {
   evasion?: number;
   ap?: number;
   notes?: string;
+  creatureLevel?: number;
+  creatureType?: string;
+  creatureSize?: string;
 }
 
 export interface VttToken {
@@ -120,3 +123,11 @@ export interface VttPoint {
   y: number;
 }
 
+export type VttCreatureTokenSource = 'official' | 'user';
+
+export interface AddVttCreatureTokensRequest {
+  source: VttCreatureTokenSource;
+  creatureId: string;
+  quantity?: number;
+  visible?: boolean;
+}

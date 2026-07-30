@@ -1345,10 +1345,12 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 **Steps**
 1. Open the campaign tabletop as a player.
 2. Click **Ping**, then click the map.
-3. Select a visible token, click **Request Move**, then click a destination.
+3. Wait at least 5 seconds.
+4. Select a visible token, click **Request Move**, then click a destination.
 
 **Expected**
 - Ping appears on the map for campaign participants.
+- Ping disappears automatically after 5 seconds without a manual delete action.
 - Move request appears as pending for the player and Realm Master.
 - Player cannot drag tokens directly.
 
@@ -1448,6 +1450,147 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 - The ping appears in the RM session without a manual refresh.
 - The move request appears in the RM session without a manual refresh.
 - When the RM accepts the request, the token movement and resolved request state update without a manual refresh.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-016-T009 — RM deletes an unwanted tabletop token
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Section** | Tokens and actions |
+| **Related task** | User request — VTT token deletion |
+| **Where** | `/campaigns/[id]/tabletop` |
+| **Needs** | Realm Master and non-RM player signed in to separate browser sessions; active tabletop scene with at least two tokens |
+
+**Steps**
+1. Open the same tabletop scene as the Realm Master and as the player.
+2. In the RM session, click the trash icon on an unwanted token in the **Tokens** panel.
+3. Confirm the delete modal.
+4. Watch both sessions without refreshing.
+5. Open the same scene as the non-RM player and confirm no delete control is present.
+
+**Expected**
+- The deleted token disappears from the RM token list and canvas.
+- The deleted token disappears from the player session without a manual refresh.
+- Pending move requests for that token no longer appear.
+- Non-RM players have no token delete affordance.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-016-T010 — RM adds monster tokens directly to the tabletop
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Section** | Tabletop scene tools |
+| **Related task** | User request — VTT monster tokens |
+| **Where** | `/campaigns/[id]/tabletop` |
+| **Needs** | Realm Master and non-RM player signed in to separate browser sessions; active tabletop scene; at least one creature in Realms Library or My Library |
+
+**Steps**
+1. In the RM session, open **Scene Tools** and click **Monster**.
+2. Search for a creature, pick one Realms Library or My Library creature, set quantity to 2, and leave **Visible to players** off.
+3. Click **Add Selected**.
+4. Watch the player session without refreshing.
+5. Repeat with **Visible to players** on for a single creature.
+6. Open the same scene as the non-RM player and confirm no **Monster** scene tool is present.
+
+**Expected**
+- The RM sees the added monster tokens in the token list and on the canvas.
+- Quantity 2 creates two distinct tokens with letter suffixes.
+- Hidden monster tokens do not appear for players.
+- A visible monster token appears in the player session without a manual refresh, with enemy HP/EN/AP still hidden unless the scene setting allows it.
+- Non-RM players cannot access the monster-token add flow.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-017 — Encounter duplicate campaign characters
+
+**Related task:** User request — encounter duplicate campaign characters
+**Start URL:** `/encounters`
+**Needs:** Logged-in Realm Master or campaign member with a campaign containing at least two characters; combat, skill, and mixed encounters linked to that campaign.
+
+---
+
+#### DEV-V-017-T001 — Combat encounter cannot add the same campaign character twice
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-017 |
+| **Section** | Combat encounter |
+| **Related task** | User request — encounter duplicate campaign characters |
+| **Where** | `/encounters/[id]/combat` |
+| **Needs** | Combat encounter linked to a campaign with at least one character |
+
+**Steps**
+1. Open the combat encounter.
+2. In **Add Combatant**, choose the linked campaign.
+3. Click **Add all Characters**.
+4. Open **From Library / Campaign** → **Campaign Characters** and select the same campaign.
+
+**Expected**
+- Each campaign character appears once in the combatant list.
+- **Add all Characters** changes to **All Characters Added** when every campaign character is already present.
+- Already-added campaign characters are disabled in the modal and cannot be selected.
+- Linked campaign-character combatants do not show the duplicate action.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-017-T002 — Skill encounter cannot add the same campaign participant twice
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-017 |
+| **Section** | Skill encounter |
+| **Related task** | User request — encounter duplicate campaign characters |
+| **Where** | `/encounters/[id]/skill` |
+| **Needs** | Skill encounter linked to a campaign with at least one character |
+
+**Steps**
+1. Open the skill encounter.
+2. In **Add Participants**, choose the linked campaign.
+3. Click **Add all Characters**.
+4. Open **From Library / Campaign** → **Campaign Characters** and select the same campaign.
+
+**Expected**
+- Each campaign character appears once in the participant list.
+- **Add all Characters** changes to **All Characters Added** when every campaign character is already present.
+- Already-added campaign characters are disabled in the modal and cannot be selected.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-017-T003 — Mixed encounter copy skips campaign characters already in skill participants
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-017 |
+| **Section** | Mixed encounter |
+| **Related task** | User request — encounter duplicate campaign characters |
+| **Where** | `/encounters/[id]/mixed` |
+| **Needs** | Mixed encounter linked to a campaign; at least one campaign character in combat |
+
+**Steps**
+1. Open the mixed encounter and stay on the **Combat** tab.
+2. Add campaign characters to combat.
+3. Switch to the **Skill** tab.
+4. Click **Copy combatants from combat encounter**.
+5. Click **Copy combatants from combat encounter** again.
+
+**Expected**
+- The first copy adds combat characters as skill participants.
+- The second copy is disabled or adds no duplicate campaign-character participants.
+- Existing manual or creature duplicates remain allowed only when they are not linked campaign characters.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

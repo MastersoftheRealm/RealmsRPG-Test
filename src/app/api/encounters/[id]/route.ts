@@ -10,6 +10,10 @@ import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, encounterUpdateSchema } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
+import {
+  formatDuplicateCampaignCharacterMessage,
+  getDuplicateCampaignCharactersByScope,
+} from '@/lib/encounter/unique-campaign-characters';
 import type { Encounter } from '@/types/encounter';
 
 export async function GET(
@@ -97,6 +101,11 @@ export async function PATCH(
 
     const current = (row.data as Record<string, unknown>) ?? {};
     const merged = { ...current, ...cleaned };
+    const duplicateReport = getDuplicateCampaignCharactersByScope(merged as Partial<Encounter>);
+    const duplicateMessage = formatDuplicateCampaignCharacterMessage(duplicateReport);
+    if (duplicateMessage) {
+      return NextResponse.json({ error: duplicateMessage }, { status: 400 });
+    }
 
     const updatePayload: Record<string, unknown> = { data: merged };
     if (merged.name !== undefined) updatePayload.name = merged.name;

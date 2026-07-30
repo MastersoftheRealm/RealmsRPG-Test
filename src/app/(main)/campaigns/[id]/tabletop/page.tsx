@@ -3,13 +3,16 @@
 import { use, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { ChevronLeft, Crosshair, Eye, EyeOff, Map, MousePointer2, RefreshCw, Ruler, Upload } from 'lucide-react';
+import { ChevronLeft, Crosshair, Eye, EyeOff, Map, MousePointer2, Plus, RefreshCw, Ruler, Trash2, Upload } from 'lucide-react';
 import { ProtectedRoute } from '@/components/layout';
 import { RollLog, RollProvider } from '@/components/character-sheet';
+import { DeleteConfirmModal } from '@/components/shared';
+import { AddMonsterTokenModal } from '@/components/tabletop/add-monster-token-modal';
 import { TabletopCanvas, type TabletopToolMode } from '@/components/tabletop/tabletop-canvas';
-import { Alert, Button, Card, CardContent, EmptyState, Input, LoadingState, PageContainer, PageHeader, useToast } from '@/components/ui';
+import { Alert, Button, Card, CardContent, EmptyState, IconButton, Input, LoadingState, PageContainer, PageHeader, useToast } from '@/components/ui';
 import { useActiveCampaignTabletop, useAuth, useTabletopMutations, useTabletopRealtime, useTabletopScene } from '@/hooks';
-import type { VttFogRegion, VttTabletopState, VttToken } from '@/types/tabletop';
+import { cn } from '@/lib/utils/cn';
+import type { AddVttCreatureTokensRequest, VttFogRegion, VttTabletopState, VttToken } from '@/types/tabletop';
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -87,6 +90,8 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
   const { showToast } = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>(undefined);
+  const [tokenDeleteTarget, setTokenDeleteTarget] = useState<VttToken | null>(null);
+  const [showMonsterModal, setShowMonsterModal] = useState(false);
   const [toolMode, setToolMode] = useState<TabletopToolMode>('select');
   const mutations = useTabletopMutations(state.scene.id);
   const isRealmMaster = state.role === 'realm-master';
@@ -149,6 +154,33 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
     });
     showToast('Move request sent to the Realm Master.', 'success');
     setToolMode('select');
+  };
+
+  const confirmDeleteToken = async () => {
+    if (!tokenDeleteTarget) return;
+    const tokenId = tokenDeleteTarget.id;
+    const tokenName = tokenDeleteTarget.name;
+    try {
+      await mutations.deleteToken.mutateAsync(tokenId);
+      if (selectedTokenId === tokenId) setSelectedTokenId(undefined);
+      setTokenDeleteTarget(null);
+      showToast(`${tokenName} removed from the tabletop.`, 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to delete token.', 'error');
+    }
+  };
+
+  const addMonsterTokens = async (request: AddVttCreatureTokensRequest) => {
+    try {
+      const tokens = await mutations.addCreatureTokens.mutateAsync(request);
+      if (tokens[0]) setSelectedTokenId(tokens[0].id);
+      const label = tokens.length === 1 ? 'Monster token added.' : `${tokens.length} monster tokens added.`;
+      showToast(label, 'success');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Failed to add monster tokens.', 'error');
+    } finally {
+      setShowMonsterModal(false);
+    }
   };
 
   return (
@@ -232,6 +264,16 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
                     <RefreshCw className="h-4 w-4" aria-hidden />
                     Sync
                   </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowMonsterModal(true)}
+                    isLoading={mutations.addCreatureTokens.isPending}
+                    className="col-span-2"
+                  >
+                    <Plus className="h-4 w-4" aria-hidden />
+                    Monster
+                  </Button>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <Input
@@ -302,26 +344,55 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
                 <span className="text-sm text-text-secondary">{state.tokens.length}</span>
               </div>
               <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
-                {state.tokens.map((token) => (
-                  <button
-                    type="button"
-                    key={token.id}
-                    onClick={() => setSelectedTokenId(token.id)}
-                    className={`w-full rounded-lg border px-3 py-2 text-left transition-colors ${
-                      selectedTokenId === token.id
-                        ? 'border-primary-outline-border bg-primary-subtle-bg'
-                        : 'border-border-light bg-surface hover:bg-surface-alt'
-                    }`}
-                  >
-                    <span className="flex items-center justify-between gap-2">
-                      <span className="min-w-0 truncate font-medium text-text-primary">{token.name}</span>
-                      <span className="text-xs capitalize text-text-secondary">{token.combatantType}</span>
-                    </span>
-                    <span className="mt-1 block text-xs text-text-secondary">
-                      {token.metadata.currentHealth != null ? `HP ${token.metadata.currentHealth}/${token.metadata.maxHealth ?? '?'}` : 'Resources hidden'}
-                    </span>
-                  </button>
-                ))}
+                {state.tokens.length === 0 ? (
+                  <p className="rounded-lg border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-secondary">
+                    No tokens on this scene.
+                  </p>
+                ) : (
+                  state.tokens.map((token) => {
+                    const selected = selectedTokenId === token.id;
+                    const deletingThisToken = mutations.deleteToken.isPending && tokenDeleteTarget?.id === token.id;
+                    return (
+                      <div
+                        key={token.id}
+                        className={cn(
+                          'flex w-full items-stretch overflow-hidden rounded-lg border transition-colors',
+                          selected
+                            ? 'border-primary-outline-border bg-primary-subtle-bg'
+                            : 'border-border-light bg-surface hover:bg-surface-alt'
+                        )}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTokenId(token.id)}
+                          className="min-w-0 flex-1 rounded-lg px-3 py-2 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2"
+                        >
+                          <span className="flex items-center justify-between gap-2">
+                            <span className="min-w-0 truncate font-medium text-text-primary">{token.name}</span>
+                            <span className="text-xs capitalize text-text-secondary">{token.combatantType}</span>
+                          </span>
+                          <span className="mt-1 block text-xs text-text-secondary">
+                            {token.metadata.currentHealth != null ? `HP ${token.metadata.currentHealth}/${token.metadata.maxHealth ?? '?'}` : 'Resources hidden'}
+                          </span>
+                        </button>
+                        {isRealmMaster && (
+                          <div className="flex items-center pr-2">
+                            <IconButton
+                              type="button"
+                              size="sm"
+                              variant="danger"
+                              label={`Delete ${token.name} token`}
+                              onClick={() => setTokenDeleteTarget(token)}
+                              disabled={deletingThisToken}
+                            >
+                              <Trash2 className="h-4 w-4" aria-hidden />
+                            </IconButton>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })
+                )}
               </div>
               {selectedToken && isRealmMaster && (
                 <div className="flex gap-2">
@@ -397,7 +468,28 @@ function TabletopExperience({ campaignId, state }: { campaignId: string; state: 
           </Card>
         </aside>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={Boolean(tokenDeleteTarget)}
+        itemName={tokenDeleteTarget?.name ?? 'token'}
+        itemType="token"
+        deleteContext="tabletop"
+        isDeleting={mutations.deleteToken.isPending}
+        onConfirm={confirmDeleteToken}
+        onClose={() => {
+          if (!mutations.deleteToken.isPending) setTokenDeleteTarget(null);
+        }}
+      />
+      {isRealmMaster && (
+        <AddMonsterTokenModal
+          isOpen={showMonsterModal}
+          isAdding={mutations.addCreatureTokens.isPending}
+          onClose={() => {
+            if (!mutations.addCreatureTokens.isPending) setShowMonsterModal(false);
+          }}
+          onAdd={addMonsterTokens}
+        />
+      )}
     </PageContainer>
   );
 }
-

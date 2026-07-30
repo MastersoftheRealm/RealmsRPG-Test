@@ -27,6 +27,10 @@ import {
   readResourcesFromCharacterData,
   scheduleCharacterResourceSyncFromCombatant,
 } from '@/lib/encounter/character-resource-sync';
+import {
+  filterDuplicateCampaignCharacterEntries,
+  getCampaignCharacterIds,
+} from '@/lib/encounter/unique-campaign-characters';
 import type { Campaign, CampaignCharacterEncounterData } from '@/types/campaign';
 
 export function generateId(): string {
@@ -362,24 +366,38 @@ function CombatEncounterViewInner({
   };
 
   const addCombatantsFromModal = (combatants: TrackedCombatant[]) => {
-    setEncounter((prev) => (prev ? { ...prev, combatants: [...prev.combatants, ...combatants] } : prev));
+    setEncounter((prev) => {
+      if (!prev) return prev;
+      const newCombatants = filterDuplicateCampaignCharacterEntries(combatants, prev.combatants);
+      if (newCombatants.length === 0) return prev;
+      return { ...prev, combatants: [...prev.combatants, ...newCombatants] };
+    });
     setShowAddModal(false);
   };
 
-  const linkedCampaign = encounter?.campaignId
-    ? campaignsFull.find((c: Campaign) => c.id === encounter.campaignId)
+  const encounterCampaignId = encounter.campaignId;
+  const linkedCampaign = encounterCampaignId
+    ? campaignsFull.find((c: Campaign) => c.id === encounterCampaignId)
     : undefined;
+  const existingCampaignCharacterIds = useMemo(
+    () => getCampaignCharacterIds(encounter.combatants),
+    [encounter.combatants]
+  );
+  const availableCampaignCharacters = useMemo(
+    () => (linkedCampaign?.characters ?? []).filter((c) => !existingCampaignCharacterIds.has(c.characterId)),
+    [linkedCampaign?.characters, existingCampaignCharacterIds]
+  );
 
   const addAllCampaignCharacters = useCallback(async () => {
-    if (!encounter?.campaignId || !linkedCampaign?.characters?.length) return;
+    if (!encounterCampaignId || availableCampaignCharacters.length === 0) return;
     setAddingAllChars(true);
     try {
       const results = await Promise.all(
-        linkedCampaign.characters.map(
+        availableCampaignCharacters.map(
           async (c: { userId: string; characterId: string; characterName: string }) => {
             try {
               const data = await apiFetchOrNull<CampaignCharacterEncounterData>(
-                `/api/campaigns/${encounter.campaignId}/characters/${c.userId}/${c.characterId}?scope=encounter`
+                `/api/campaigns/${encounterCampaignId}/characters/${c.userId}/${c.characterId}?scope=encounter`
               );
               if (!data) return null;
               return { charMeta: c, data };
@@ -419,14 +437,20 @@ function CombatEncounterViewInner({
             sourceUserId: r.charMeta.userId,
           };
         });
-      setEncounter((prev) => (prev ? { ...prev, combatants: [...prev.combatants, ...combatants] } : prev));
+      setEncounter((prev) => {
+        if (!prev) return prev;
+        const newCombatants = filterDuplicateCampaignCharacterEntries(combatants, prev.combatants);
+        if (newCombatants.length === 0) return prev;
+        return { ...prev, combatants: [...prev.combatants, ...newCombatants] };
+      });
     } catch {
     } finally {
       setAddingAllChars(false);
     }
-  }, [encounter, linkedCampaign, setEncounter]);
+  }, [availableCampaignCharacters, encounterCampaignId, setEncounter]);
 
   const duplicateCombatant = (combatant: Combatant) => {
+    if ((combatant as TrackedCombatant).sourceType === 'campaign-character') return;
     const baseNameMatch = combatant.name.match(/^(.+?)\s*[A-Z]?$/);
     const baseName = baseNameMatch ? baseNameMatch[1].trim() : combatant.name;
     const existing = encounter?.combatants || [];
@@ -805,6 +829,7 @@ function CombatEncounterViewInner({
                   onUpdate={(updates) => updateCombatant(combatant.id, updates)}
                   onRemove={() => removeCombatant(combatant.id)}
                   onDuplicate={() => duplicateCombatant(combatant)}
+                  canDuplicate={(combatant as TrackedCombatant).sourceType !== 'campaign-character'}
                   onAddCondition={(condition) => addCondition(combatant.id, condition)}
                   onRemoveCondition={(condition) => removeCondition(combatant.id, condition)}
                   onUpdateConditionLevel={(condition, delta) => updateConditionLevel(combatant.id, condition, delta)}
@@ -847,9 +872,13 @@ function CombatEncounterViewInner({
                   variant="secondary"
                   className="w-full"
                   onClick={addAllCampaignCharacters}
-                  disabled={addingAllChars || encounter.isActive}
+                  disabled={addingAllChars || encounter.isActive || availableCampaignCharacters.length === 0}
                 >
-                  {addingAllChars ? 'Adding…' : `Add all Characters (${linkedCampaign.characters?.length ?? 0})`}
+                  {addingAllChars
+                    ? 'Adding…'
+                    : availableCampaignCharacters.length === 0
+                      ? 'All Characters Added'
+                      : `Add all Characters (${availableCampaignCharacters.length})`}
                 </Button>
               )}
             </div>
@@ -975,7 +1004,12 @@ function CombatEncounterViewInner({
       </div>
 
       {showAddModal && (
-        <AddCombatantModal onClose={() => setShowAddModal(false)} onAdd={addCombatantsFromModal} mode="combat" />
+        <AddCombatantModal
+          onClose={() => setShowAddModal(false)}
+          onAdd={addCombatantsFromModal}
+          mode="combat"
+          existingCampaignCharacterIds={existingCampaignCharacterIds}
+        />
       )}
 
       {showRollLog && <RollLog viewOnlyCampaignId={encounter.campaignId} />}

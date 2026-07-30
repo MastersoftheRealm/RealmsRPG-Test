@@ -29,6 +29,7 @@ export const CombatantCard = memo(function CombatantCard({
   onUpdate,
   onRemove,
   onDuplicate,
+  canDuplicate = true,
   onAddCondition,
   onRemoveCondition,
   onUpdateConditionLevel,
@@ -532,14 +533,16 @@ export const CombatantCard = memo(function CombatantCard({
             </button>
 
             <div className="ml-auto flex items-center gap-1">
-              <button
-                onClick={onDuplicate}
-                className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-surface touch-target-md-compact inline-flex items-center justify-center"
-                title="Duplicate this combatant"
-                aria-label={`Duplicate ${combatant.name}`}
-              >
-                📋
-              </button>
+              {canDuplicate && (
+                <button
+                  onClick={onDuplicate}
+                  className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-surface touch-target-md-compact inline-flex items-center justify-center"
+                  title="Duplicate this combatant"
+                  aria-label={`Duplicate ${combatant.name}`}
+                >
+                  📋
+                </button>
+              )}
               <button
                 onClick={onRemove}
                 className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-danger-light hover:text-danger-fg touch-target-md-compact inline-flex items-center justify-center"

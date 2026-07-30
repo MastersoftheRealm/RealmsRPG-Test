@@ -11,14 +11,14 @@
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { apiFetchOrNull } from '@/lib/api-client';
-import { BookOpen, Users, Search, Plus, Minus } from 'lucide-react';
-import { Modal, Button, Input, SearchInput, LoadingState, EmptyState } from '@/components/ui';
+import { BookOpen, Users } from 'lucide-react';
+import { Modal, Button, SearchInput, LoadingState, EmptyState } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
 import { ValueStepper } from '@/components/shared/value-stepper';
 import { useUserCreatures, useCampaignsFull, type UserCreature } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import type { TrackedCombatant, CombatantType, SkillParticipant } from '@/types/encounter';
-import type { Campaign, CampaignCharacter, CampaignCharacterEncounterData } from '@/types/campaign';
+import type { Campaign, CampaignCharacterEncounterData } from '@/types/campaign';
 
 type TabId = 'library' | 'campaign';
 
@@ -28,6 +28,7 @@ interface AddCombatantModalProps {
   /** For skill mode, also provide onAddParticipants */
   onAddParticipants?: (participants: SkillParticipant[]) => void;
   mode: 'combat' | 'skill' | 'mixed';
+  existingCampaignCharacterIds?: Iterable<string>;
 }
 
 function generateId(): string {
@@ -39,7 +40,13 @@ function rollInitiative(acuity: number): number {
   return Math.floor(Math.random() * 20) + 1 + acuity;
 }
 
-export function AddCombatantModal({ onClose, onAdd, onAddParticipants, mode }: AddCombatantModalProps) {
+export function AddCombatantModal({
+  onClose,
+  onAdd,
+  onAddParticipants,
+  mode,
+  existingCampaignCharacterIds,
+}: AddCombatantModalProps) {
   const [tab, setTab] = useState<TabId>('library');
 
   return (
@@ -59,7 +66,13 @@ export function AddCombatantModal({ onClose, onAdd, onAddParticipants, mode }: A
       {tab === 'library' ? (
         <CreatureLibraryTab onAdd={onAdd} onAddParticipants={onAddParticipants} mode={mode} onClose={onClose} />
       ) : (
-        <CampaignCharactersTab onAdd={onAdd} onAddParticipants={onAddParticipants} mode={mode} onClose={onClose} />
+        <CampaignCharactersTab
+          onAdd={onAdd}
+          onAddParticipants={onAddParticipants}
+          mode={mode}
+          onClose={onClose}
+          existingCampaignCharacterIds={existingCampaignCharacterIds}
+        />
       )}
     </Modal>
   );
@@ -247,18 +260,31 @@ function CampaignCharactersTab({
   onAddParticipants,
   mode,
   onClose,
+  existingCampaignCharacterIds,
 }: {
   onAdd: (combatants: TrackedCombatant[]) => void;
   onAddParticipants?: (participants: SkillParticipant[]) => void;
   mode: string;
   onClose: () => void;
+  existingCampaignCharacterIds?: Iterable<string>;
 }) {
   const { data: campaigns = [], isLoading } = useCampaignsFull();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [selectedChars, setSelectedChars] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
+  const existingCharacterIds = useMemo(
+    () => new Set(existingCampaignCharacterIds ?? []),
+    [existingCampaignCharacterIds]
+  );
+  const selectedAvailableCount = useMemo(() => {
+    if (!selectedCampaign) return 0;
+    return selectedCampaign.characters.filter(
+      (c) => selectedChars.has(`${c.userId}-${c.characterId}`) && !existingCharacterIds.has(c.characterId)
+    ).length;
+  }, [existingCharacterIds, selectedCampaign, selectedChars]);
 
-  const toggleChar = (key: string) => {
+  const toggleChar = (key: string, alreadyAdded: boolean) => {
+    if (alreadyAdded) return;
     setSelectedChars((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
@@ -273,8 +299,9 @@ function CampaignCharactersTab({
 
     try {
       const chars = selectedCampaign.characters.filter(
-        (c) => selectedChars.has(`${c.userId}-${c.characterId}`)
+        (c) => selectedChars.has(`${c.userId}-${c.characterId}`) && !existingCharacterIds.has(c.characterId)
       );
+      if (chars.length === 0) return;
 
       // Fetch each character's data via the API (scope=encounter allows any campaign member)
       const results = await Promise.all(
@@ -392,14 +419,20 @@ function CampaignCharactersTab({
           <div className="max-h-[250px] overflow-y-auto space-y-1">
             {(selectedCampaign.characters || []).map((c) => {
               const key = `${c.userId}-${c.characterId}`;
-              const isSelected = selectedChars.has(key);
+              const alreadyAdded = existingCharacterIds.has(c.characterId);
+              const isSelected = !alreadyAdded && selectedChars.has(key);
               return (
                 <button
                   key={key}
-                  onClick={() => toggleChar(key)}
+                  type="button"
+                  onClick={() => toggleChar(key, alreadyAdded)}
+                  disabled={alreadyAdded}
+                  aria-disabled={alreadyAdded}
                   className={cn(
                     'w-full text-left px-3 py-2 rounded-lg flex items-center gap-3 transition-colors',
-                    isSelected
+                    alreadyAdded
+                      ? 'cursor-not-allowed opacity-60 border border-transparent'
+                      : isSelected
                       ? 'bg-primary-subtle-bg border border-primary-subtle-border'
                       : 'hover:bg-surface-alt border border-transparent'
                   )}
@@ -416,17 +449,18 @@ function CampaignCharactersTab({
                       Lv {c.level}
                       {c.species && ` \u00b7 ${c.species}`}
                     </span>
+                    {alreadyAdded && <span className="ml-2 text-xs font-medium text-text-secondary">Already added</span>}
                   </div>
                 </button>
               );
             })}
           </div>
 
-          {selectedChars.size > 0 && (
+          {selectedAvailableCount > 0 && (
             <Button onClick={handleAdd} disabled={loading} className="w-full mt-4">
               {loading
                 ? 'Loading characters...'
-                : `Add ${selectedChars.size} Character${selectedChars.size > 1 ? 's' : ''}`}
+                : `Add ${selectedAvailableCount} Character${selectedAvailableCount > 1 ? 's' : ''}`}
             </Button>
           )}
         </div>
