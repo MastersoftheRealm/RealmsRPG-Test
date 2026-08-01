@@ -65,7 +65,9 @@ All **columnar** (scalars + `payload` JSONB). Legacy `public_*` JSONB tables (`p
 
 **API:** `GET /api/public/[type]` reads `official_*` only (returns `[]` if the table is missing). `POST`/`DELETE` require admin and write to `official_*`. Legacy `public_*` JSONB tables were dropped; do not reference them in app code.
 
-**Migrations:** `sql/supabase-official-library-public-schema.sql` (create + RLS), `sql/supabase-official-library-columnar-expansion.sql` (powers columns), `sql/supabase-library-columnar-parity-expansion.sql` (promoted columns + `sync_library_promoted_columns` trigger on official_* and user_*).
+**Migrations:** `sql/supabase-official-library-public-schema.sql` (create + RLS), `sql/supabase-official-library-columnar-expansion.sql` (powers columns), `sql/supabase-library-columnar-parity-expansion.sql` (promoted columns + `sync_library_promoted_columns` trigger on official_* and user_*), `sql/official-powers-strip-redundant-auto-mechanic-parts-applied.sql` (TASK-627 — strip auto-mechanic duplicates from `payload.parts` when promoted columns exist; helper `public._official_power_rebuilt_mechanic_part_names()` for idempotent re-runs).
+
+**`payload.parts` (powers):** User and advanced parts only after TASK-627 cleanup; auto-mechanic parts derivable from promoted columns (`range_steps`, `duration_*`, `area_*`, `damage`, `action_type`, `is_reaction`) are rebuilt on read in app (`mechanic-builder.ts`) and were removed from official rows in live codex data.
 
 ---
 

@@ -51,6 +51,7 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | Unarmed prowess recommendation flag | [codex-archetypes-recommend-unarmed-prowess.sql](codex-archetypes-recommend-unarmed-prowess.sql) | `level1_recommend_unarmed_prowess` column present. |
 | TASK-530 path enrichment (all 12 + ability + backup) | [codex-archetypes-backup-20260717.sql](codex-archetypes-backup-20260717.sql), [codex-archetypes-ability-spread-20260717.sql](codex-archetypes-ability-spread-20260717.sql), [codex-archetypes-enrich-*-applied.sql](codex-archetypes-enrich-berserker-applied.sql), [codex-archetypes-emdash-scrub-20260717.sql](codex-archetypes-emdash-scrub-20260717.sql) | Applied RealmsRPG-Test 2026-07-17. Per-path `*-applied.sql` is the replay source; em-dash scrub is idempotent. |
 | Empowered technique tables | [empowered-techniques-separate-tables.sql](empowered-techniques-separate-tables.sql) | `user_empowered_techniques`, `official_empowered_techniques` exist. |
+| TASK-627 official powers payload dedupe | [official-powers-strip-redundant-auto-mechanic-parts-applied.sql](official-powers-strip-redundant-auto-mechanic-parts-applied.sql) | Applied 2026-08-01. Strips auto-mechanic parts from `payload.parts` when promoted columns exist; helper `_official_power_rebuilt_mechanic_part_names`. 41/44 rows cleaned; post-apply overlap audit 0; idempotent. |
 
 ---
 

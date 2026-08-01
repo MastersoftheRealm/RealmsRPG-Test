@@ -1,4 +1,33 @@
-﻿- id: TASK-628
+- id: TASK-627
+  title: Official powers payload — strip redundant auto-mechanic parts (codex data)
+  priority: low
+  status: done
+  verification_status: n/a
+  completed_at: 2026-08-01
+  created_at: 2026-08-01
+  created_by: agent
+  related_files:
+    - sql/official-powers-strip-redundant-auto-mechanic-parts-applied.sql
+    - sql/README.md
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    41/44 official_powers duplicated auto-mechanic parts in payload.parts when promoted columns exist.
+    Read-path dedupe fixes display; data cleanup removed redundancy from live codex rows.
+  acceptance_criteria:
+    - Audit query lists affected rows with overlap counts.
+    - Proposed SQL in sql/; preview Menace + Fog Cloud before/after.
+    - Owner approves apply; post-migration counts in AI_CHANGELOG.
+  notes: |
+    Pre-apply: 41/44 rows with >=1 overlap. Post-apply: overlap audit 0; 66 total parts across 44 rows.
+    Menace before: Frighten, Immune to Effect on Overcome, Sphere of Effect, No Harm or Adaptation for Duration, Duration (Minute).
+    Menace after: Frighten, Immune to Effect on Overcome, No Harm or Adaptation for Duration (3 parts).
+    Fog Cloud before: Fog, Expanding Area of Effect, Power Range, Sphere of Effect, No Harm or Adaptation for Duration, Duration (Minute).
+    Fog Cloud after: Fog, Expanding Area of Effect, No Harm or Adaptation for Duration (3 parts).
+    Applied live RealmsRPG-Test via Supabase MCP.
+
+---
+- id: TASK-628
   title: Library armor columns — ability requirement + Critical Range increase
   priority: medium
   status: done
@@ -103,7 +132,8 @@
   build_validation: |
     DEV-V-036-T001 Â— three 1d6 elemental rows sum EN in creator + after save/reload.
 
----- id: TASK-622
+---
+- id: TASK-622
   title: GLR action chrome + Parts/TP chip grammar
   priority: high
   status: done
@@ -654,7 +684,8 @@
     use-admin-archetype-workspace ~658 (down from ~868). npm run build green.
   notes: Was TASK-603 pre-renumber. Optional follow-up: extract workspace save handler under ~500 LOC.
 
----- id: TASK-608
+---
+- id: TASK-608
   title: Split combat + skill encounter views under ~500 LOC
   created_at: 2026-07-20
   created_by: agent
