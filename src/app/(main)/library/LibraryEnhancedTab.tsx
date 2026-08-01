@@ -30,6 +30,8 @@ function formatUses(item: UserEnhancedItem): string {
 }
 
 const GRID_COLUMNS = '2fr 1.5fr 1.5fr 0.9fr 0.9fr 0.9fr';
+/** Match other My Library tabs — ListHeader must reserve edit/delete tracks. */
+const ENHANCED_ROW_CHROME = { edit: true, delete: true } as const;
 const HEADER_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'base', label: 'BASE ITEM' },
@@ -94,6 +96,7 @@ export function LibraryEnhancedTab({
       onSort={handleSort}
       headerColumns={HEADER_COLUMNS}
       gridColumns={GRID_COLUMNS}
+      rowChrome={ENHANCED_ROW_CHROME}
       filteredCount={filteredData.length}
     >
       {filteredData.map((row) => {

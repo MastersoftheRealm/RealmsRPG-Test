@@ -1,3 +1,37 @@
+- id: TASK-631
+  title: Enforceable GLR list chrome + spacing norms (CI)
+  priority: medium
+  status: done
+  verification_status: n/a
+  completed_at: 2026-08-01
+  created_at: 2026-08-01
+  created_by: agent
+  related_files:
+    - src/lib/glr/glr-chrome-spacing-norms.ts
+    - src/lib/glr/validate-glr-chrome-spacing.ts
+    - src/lib/glr/validate-glr-chrome-spacing.test.ts
+    - src/lib/glr/index.ts
+    - src/components/shared/grid-list-row-chrome.ts
+    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
+    - src/app/(main)/library/LibraryEnhancedTab.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Shared ListHeader/GridListRow chrome exists (rowChrome, shell gap-1) but consumers can omit
+    rowChrome or override listClassName with looser gaps (Creatures did until TASK-630). No
+    automated check catches drift � owner must hunt-and-peck. Complement to TASK-629 (facts).
+  acceptance_criteria:
+    - Documented norm: Library/Official/Codex GLR lists use shell default gap-1; edit/delete/add
+      must pass matching ListHeader rowChrome (no leftover 40px tracks).
+    - Automated check (vitest or tasks:validate) fails on listClassName space-y-3 (or similar)
+      overrides for GLR shells, and on My Library entity tabs that render onEdit/onDelete without
+      rowChrome edit/delete.
+    - FEATURE_INDEX / guide note the check so agents do not reintroduce overrides.
+  notes: |
+    Vitest scan in validate-glr-chrome-spacing.test.ts; norms in glr-chrome-spacing-norms.ts.
+    Fixed LibraryEnhancedTab missing rowChrome. Related TASK-622/624/630 chrome.
+
+---
+
 - id: TASK-627
   title: Official powers payload — strip redundant auto-mechanic parts (codex data)
   priority: low
@@ -15759,4 +15793,36 @@ Firebase/RTDB - the project is Supabase-only.
   notes: Was TASK-607 pre-renumber. First slice only; expand to more routes as follow-up.
 
 ---
+
+
+- id: TASK-629
+  title: Enforceable GLR required-facts registry per entity type
+  priority: medium
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-01
+  related_files:
+    - src/docs/ai/ADR/0009-glr-required-facts-registry.md
+    - src/lib/glr/required-facts-registry.ts
+    - src/lib/glr/validate-glr-facts.ts
+    - src/lib/glr/required-facts-registry.test.ts
+    - src/lib/glr/index.ts
+    - src/lib/library/official-item-list.ts
+    - src/docs/ai/CHIP_UNIFICATION_PLAN.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - AGENTS.md
+  description: |
+    Policy exists (column OR self-describing chip; compact-facts grammar) but each GLR list
+    configures columns independently — no typed registry of required quick-ref facts per entity
+    type, and no CI/check that Library/Codex/sheet/add-modal surfaces satisfy it.
+  acceptance_criteria:
+    - Architect ADR or owner ack for a single required-facts map (entity → facts; column vs chip placement).
+    - Shared module consumed by Library/Official/sheet/add-modal builders (or validated against them).
+    - Automated check (vitest or tasks:validate) fails when a required fact is missing from both columns and expanded chips.
+    - Document SoT in constitution map / FEATURE_INDEX; retire stale CHIP_UNIFICATION example table drift.
+  notes: |
+    ADR-0009; lib/glr registry + validate-glr-facts; CI binds official power/technique/armament,
+    character-sheet play, add-modal, codex-feat surfaces. Sibling: TASK-631 (chrome/spacing).
 

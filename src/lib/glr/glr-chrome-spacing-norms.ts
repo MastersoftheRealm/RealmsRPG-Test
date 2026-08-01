@@ -1,0 +1,82 @@
+/**
+ * GLR list chrome + spacing norms (TASK-631).
+ *
+ * Library / Official / Codex browse lists share tight row density (`gap-1`) and
+ * ListHeader `rowChrome` tracks that mirror GridListRow edit/delete/add/rightSlot actions.
+ * Complements required-facts registry (TASK-629 / ADR-0009).
+ *
+ * CI: `validate-glr-chrome-spacing.test.ts` · Guide: `guide/02-components-and-lists.md`
+ */
+
+/** Default row-container class on UserLibraryEntityTabShell and OfficialEntityList. */
+export const DEFAULT_GLR_LIST_CLASSNAME = 'flex flex-col gap-1 mt-2' as const;
+
+/** CodexBrowseListShell hardcodes the same gap on its row container. */
+export const CODEX_BROWSE_LIST_ROW_CLASSNAME = 'mt-2 flex flex-col gap-1' as const;
+
+/** Shell components that own GLR list row spacing. */
+export const GLR_LIST_SHELL_SOURCES = [
+  'src/app/(main)/library/components/UserLibraryEntityTabShell.tsx',
+  'src/components/shared/official-entity-list.tsx',
+  'src/components/shared/codex-browse-list-shell.tsx',
+] as const;
+
+/** My Library entity tabs — must pair row actions with shell `rowChrome`. */
+export const MY_LIBRARY_ENTITY_TAB_SOURCES = [
+  'src/app/(main)/library/LibraryPowersTab.tsx',
+  'src/app/(main)/library/LibraryTechniquesTab.tsx',
+  'src/app/(main)/library/LibraryItemsTab.tsx',
+  'src/app/(main)/library/LibraryCreaturesTab.tsx',
+  'src/app/(main)/library/LibraryEnhancedTab.tsx',
+] as const;
+
+/** Shared grid column templates for Library/Official browse (data columns only — no 40px action track). */
+export const GLR_GRID_COLUMN_SOURCES = [
+  'src/lib/library/official-power-list.ts',
+  'src/lib/library/official-technique-list.ts',
+  'src/lib/library/official-item-list.ts',
+  'src/lib/library/official-creature-list.ts',
+  'src/lib/library/official-enhanced-list.ts',
+  'src/lib/codex/feat-list.ts',
+  'src/lib/codex/skill-list.ts',
+] as const;
+
+/** Codex/Admin browse shells — `rowChrome.rightSlot` must match row `rightSlot` when present. */
+export const CODEX_BROWSE_SHELL_SOURCES = [
+  'src/app/(main)/admin/codex/AdminFeatsTab.tsx',
+  'src/app/(main)/admin/codex/AdminPartsTab.tsx',
+  'src/app/(main)/admin/codex/AdminPropertiesTab.tsx',
+  'src/app/(main)/admin/codex/AdminEquipmentTab.tsx',
+  'src/app/(main)/admin/codex/AdminSpeciesTab.tsx',
+  'src/app/(main)/admin/codex/AdminTraitsTab.tsx',
+  'src/app/(main)/admin/codex/AdminSkillsTab.tsx',
+  'src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx',
+  'src/app/(main)/codex/CodexFeatsTab.tsx',
+  'src/app/(main)/codex/CodexPartsTab.tsx',
+  'src/app/(main)/codex/CodexPropertiesTab.tsx',
+  'src/app/(main)/codex/CodexEquipmentTab.tsx',
+  'src/app/(main)/codex/CodexSpeciesTab.tsx',
+  'src/app/(main)/codex/CodexTraitsTab.tsx',
+  'src/app/(main)/codex/CodexSkillsTab.tsx',
+  'src/app/(main)/codex/CodexCreatureFeatsTab.tsx',
+] as const;
+
+/** Callers that may pass `listClassName` into GLR shells. */
+export const GLR_LIST_CLASSNAME_CALLER_SOURCES = [
+  ...MY_LIBRARY_ENTITY_TAB_SOURCES,
+  'src/components/shared/official-power-list.tsx',
+  'src/components/shared/official-technique-list.tsx',
+  'src/components/shared/official-item-list.tsx',
+  'src/components/shared/official-creature-list.tsx',
+  'src/components/shared/official-enhanced-list.tsx',
+] as const;
+
+/**
+ * Looser vertical gaps between GLR rows (e.g. `space-y-3` overrides from pre-TASK-630).
+ * `gap-1` is the norm; do not widen list shells without updating this check.
+ */
+export const FORBIDDEN_GLR_LIST_GAP_REGEX =
+  /\bspace-y-(?:2|3|4|5|6|8)\b|\bflex\s+flex-col\s+gap-(?:2|3|4|5|6|8)\b/;
+
+/** Leftover inline action column — use ListHeader `rowChrome` instead (TASK-622). */
+export const FORBIDDEN_GLR_GRID_ACTION_TRACK_REGEX = /\b40px\b/;

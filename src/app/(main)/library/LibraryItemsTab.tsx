@@ -47,6 +47,8 @@ const ICONS_BY_KIND = {
   shield: <Shield className="w-8 h-8" />,
 };
 
+const ARMAMENT_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
+
 interface LibraryItemsTabProps {
   armamentKind: ArmamentLibraryKind;
   onDelete: (item: DisplayItem) => void;
@@ -126,7 +128,7 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
       headerColumns={headers}
       gridColumns={grid}
       hasThumbnailColumn
-      rowChrome={{ edit: true, delete: true }}
+      rowChrome={ARMAMENT_ROW_CHROME}
       filteredCount={filteredData.length}
       driftedCount={sync.driftedCount}
       syncingAll={sync.syncingAll}

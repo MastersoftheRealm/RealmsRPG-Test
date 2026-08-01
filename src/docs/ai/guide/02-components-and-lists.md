@@ -35,6 +35,8 @@ Quick location table: [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) § Components. Unifi
 
 **Sortable ListHeader columns:** Every data column (Name, Action Type, Energy, Training Points, Currency, Damage, Description, etc.) must be sortable ascending/descending. `ListHeader` / `UnifiedSelectionModal` default `sortable !== false`. Only spacer/action columns (`_actions`, empty label, thumbnails, `_sel`, `_innate`) use `sortable: false`. Mobile uses the same sort state via ListHeader’s “Sort by” control (`MOBILE_UX.md`). **Exception:** `DetailOptionList` deep-dive rows are not ListHeader sort chrome (no column-sort affordance).
 
+**GLR chrome + spacing (TASK-631):** Library / Official / Codex browse lists use shell default `flex flex-col gap-1` row containers — do not override with `space-y-3` or loose `gap-*`. Pair `ListHeader` `rowChrome` with row actions (`edit` / `delete` / `rightSlot` for add/sync/spend). Data-only `gridColumns` must not include a trailing `40px` action track. Register new My Library tabs in `lib/glr/glr-chrome-spacing-norms.ts` (`MY_LIBRARY_ENTITY_TAB_SOURCES`). CI: `lib/glr/validate-glr-chrome-spacing.test.ts` (runs via `npm test`).
+
 See `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended component catalog (agents: prefer this guide + `realms-unification.mdc`).
 
 ## Unified patterns (verified Jun 2026)

@@ -68,7 +68,7 @@ export interface ListHeaderProps {
   rightSlotWidth?: string;
   /**
    * Reserve the same horizontal space as `GridListRow` outer flex chrome (leftSlot / rightSlot / edit / delete / selection).
-   * Use when those controls sit outside the row's inner `gridColumns` grid so fractional columns line up.
+   * Pair flags with row actions — CI: `lib/glr/validate-glr-chrome-spacing.test.ts` (TASK-631).
    * Do not combine with `rightSlotWidth` (equipment-step pattern uses `rightSlotWidth` only).
    */
   rowChrome?: ListHeaderRowChrome;

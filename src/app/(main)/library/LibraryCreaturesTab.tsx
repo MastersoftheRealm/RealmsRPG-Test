@@ -8,7 +8,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
-import { CreatureStatBlock } from '@/components/shared';
+import { CreatureLibraryStatBlockRows } from '@/components/shared';
 import { RollLog, RollProvider } from '@/components/rolls';
 import { useSort } from '@/hooks/use-sort';
 import {
@@ -19,8 +19,14 @@ import {
   useItemProperties,
 } from '@/hooks';
 import type { DisplayItem } from '@/types';
+import type { LibraryCreature } from '@/types/library';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { getCreatureSyncResult, sanitizeCreatureForSync } from '@/lib/library-sync';
+import {
+  CREATURE_STAT_BLOCK_GRID,
+  CREATURE_STAT_BLOCK_HEADER_COLUMNS,
+  filterOfficialCreatureRows,
+} from '@/lib/library/official-creature-list';
 import {
   LibrarySyncRowAction,
   UserLibraryEntityTabShell,
@@ -29,16 +35,14 @@ import { CREATURE_LIBRARY_LABELS } from './components/library-entity-tab.types';
 import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 
-const CREATURE_GRID_COLUMNS = '1.8fr 0.6fr 0.8fr 1fr 1fr 0.6fr 0.6fr';
-const CREATURE_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'level', label: 'LEVEL', align: 'center' as const },
-  { key: 'size', label: 'SIZE', align: 'center' as const },
-  { key: 'type', label: 'TYPE', align: 'center' as const },
-  { key: 'archetype', label: 'ARCHETYPE', align: 'center' as const },
-  { key: 'hp', label: 'Health', align: 'center' as const },
-  { key: 'en', label: 'Energy', align: 'center' as const },
-];
+type CreatureListRow = LibraryCreature & {
+  id: string;
+  hasDrift: boolean;
+  syncMessage?: string;
+};
+
+/** Match Powers/Techniques — ListHeader must reserve edit/delete/sync tracks. */
+const CREATURE_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
 
 interface LibraryCreaturesTabProps {
   onDelete: (item: DisplayItem) => void;
@@ -54,12 +58,8 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
-  const cardData = useMemo(() => {
+  const cardData = useMemo((): CreatureListRow[] => {
     return creatures.map((c) => {
-      const power = c.powerProficiency ?? 0;
-      const martial = c.martialProficiency ?? 0;
-      const archetype =
-        power > 0 && martial > 0 ? 'Powered-Martial' : power > 0 ? 'Power' : martial > 0 ? 'Martial' : 'None';
       const level = c.level ?? 1;
       const abil = c.abilities || {};
       const hpAlloc = c.hitPoints ?? c.hp ?? 0;
@@ -75,12 +75,8 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
         ...c,
         id,
         name: c.name || '',
-        level: c.level ?? 0,
-        size: c.size ?? '',
-        type: c.type ?? '',
         hp: calculateCreatureMaxHealth(level, abil, hpAlloc),
         en: calculateCreatureMaxEnergy(level, abil, enAlloc),
-        archetype,
         hasDrift: syncResult.hasDrift,
         syncMessage: syncResult.issues[0]?.message,
       };
@@ -116,19 +112,10 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
     mutate: (id, handlers) => duplicateCreature.mutate(id, handlers),
   });
 
-  const filteredData = useMemo(() => {
-    let result = cardData;
-    if (search) {
-      const searchLower = search.toLowerCase();
-      result = result.filter(
-        (c) =>
-          c.name?.toLowerCase().includes(searchLower) ||
-          c.type?.toLowerCase().includes(searchLower) ||
-          c.description?.toLowerCase().includes(searchLower)
-      );
-    }
-    return sortItems(result);
-  }, [cardData, search, sortItems]);
+  const filteredData = useMemo(
+    () => filterOfficialCreatureRows(cardData, search, sortItems),
+    [cardData, search, sortItems]
+  );
 
   return (
     <RollProvider canRoll>
@@ -143,9 +130,10 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
         onSearchChange={setSearch}
         sortState={sortState}
         onSort={handleSort}
-        headerColumns={CREATURE_HEADER_COLUMNS}
-        gridColumns={CREATURE_GRID_COLUMNS}
+        headerColumns={CREATURE_STAT_BLOCK_HEADER_COLUMNS}
+        gridColumns={CREATURE_STAT_BLOCK_GRID}
         hasThumbnailColumn
+        rowChrome={CREATURE_ROW_CHROME}
         filteredCount={filteredData.length}
         driftedCount={sync.driftedCount}
         syncingAll={sync.syncingAll}
@@ -160,60 +148,30 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
         onCloseDuplicate={dup.closeDuplicateConfirm}
         onConfirmDuplicate={dup.onConfirmDuplicate}
         duplicatePending={dup.isPending}
-        listClassName=""
         afterList={<RollLog />}
       >
-        <div className="space-y-3">
-          {filteredData.map((creature) => (
-            <CreatureStatBlock
-              key={creature.docId}
-              creature={{
-                id: creature.docId,
-                name: creature.name,
-                description: creature.description,
-                imageUrl: creature.image_url ?? undefined,
-                level: creature.level,
-                type: creature.type,
-                size: creature.size,
-                hp: creature.hp,
-                hitPoints: creature.hitPoints,
-                energyPoints: creature.energyPoints,
-                abilities: creature.abilities,
-                defenses: creature.defenses,
-                powerProficiency: creature.powerProficiency,
-                martialProficiency: creature.martialProficiency,
-                resistances: creature.resistances,
-                weaknesses: creature.weaknesses,
-                immunities: creature.immunities,
-                conditionImmunities: creature.conditionImmunities,
-                senses: creature.senses,
-                movementTypes: creature.movementTypes,
-                languages: creature.languages,
-                skills: creature.skills,
-                powers: creature.powers,
-                techniques: creature.techniques,
-                feats: creature.feats,
-                armaments: creature.armaments,
-              }}
-              badges={creature.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : undefined}
-              warningMessage={creature.syncMessage}
-              rightSlot={
-                creature.hasDrift ? (
-                  <LibrarySyncRowAction
-                    syncing={sync.syncingIds.has(creature.id)}
-                    onSync={() => void sync.handleSyncOne(creature.id)}
-                  />
-                ) : undefined
-              }
-              onEdit={() => {
-                const id = creature.docId ?? creature.id;
+        <CreatureLibraryStatBlockRows
+          creatures={filteredData}
+          getRowProps={(creature) => {
+            const row = creature as CreatureListRow;
+            return {
+              badges: row.hasDrift ? [{ label: 'Needs sync', color: 'amber' as const }] : undefined,
+              warningMessage: row.syncMessage,
+              rightSlot: row.hasDrift ? (
+                <LibrarySyncRowAction
+                  syncing={sync.syncingIds.has(row.id)}
+                  onSync={() => void sync.handleSyncOne(row.id)}
+                />
+              ) : undefined,
+              onEdit: () => {
+                const id = row.docId ?? row.id;
                 router.push(`/creature-creator?edit=${encodeURIComponent(String(id))}`);
-              }}
-              onDelete={() => onDelete({ id: creature.docId, name: creature.name } as DisplayItem)}
-              onDuplicate={() => dup.openDuplicateConfirm(String(creature.docId), creature.name)}
-            />
-          ))}
-        </div>
+              },
+              onDelete: () => onDelete({ id: row.docId, name: row.name } as DisplayItem),
+              onDuplicate: () => dup.openDuplicateConfirm(String(row.docId), row.name),
+            };
+          }}
+        />
       </UserLibraryEntityTabShell>
     </RollProvider>
   );

@@ -46,7 +46,7 @@ const TECHNIQUE_HEADER_COLUMNS = [
   { key: 'weapon', label: 'ATTACK' },
   { key: 'damage', label: 'DAMAGE' },
 ];
-const TECHNIQUE_ROW_CHROME = { edit: true, delete: true } as const;
+const TECHNIQUE_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
 
 interface LibraryTechniquesTabProps {
   onDelete: (item: DisplayItem) => void;

@@ -4,6 +4,10 @@
  * Row actions (rightSlot, edit, delete, selection) render outside the inner CSS grid.
  * ListHeader must reserve the same flex footprint so `fr` columns line up with row values.
  *
+ * **Spacing + rowChrome contract (TASK-631):** Library / Official / Codex GLR lists use
+ * `flex flex-col gap-1` row containers; edit/delete/add/rightSlot must pass matching `rowChrome`
+ * on ListHeader (no leftover 40px grid tracks). CI: `validate-glr-chrome-spacing.test.ts`.
+ *
  * Widths mirror classes in `grid-list-row.tsx` (w-8, w-[4rem] mr-2, w-9, w-11).
  */
 

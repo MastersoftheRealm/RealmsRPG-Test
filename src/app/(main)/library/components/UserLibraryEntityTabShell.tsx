@@ -31,7 +31,7 @@ type UserLibraryEntityTabShellBaseProps = {
   gridColumns: string;
   /** Pair with GridListRow `thumbnail` (species/equipment art column). */
   hasThumbnailColumn?: boolean;
-  /** Reserve header space for edit/delete/rightSlot (must match GridListRow actions). */
+  /** Reserve header space for edit/delete/rightSlot (must match GridListRow actions). TASK-631 CI enforces pairing. */
   rowChrome?: ListHeaderRowChrome;
   filteredCount: number;
   children: ReactNode;

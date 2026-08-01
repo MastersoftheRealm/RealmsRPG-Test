@@ -38,7 +38,7 @@ const POWER_HEADER_COLUMNS = [
   { key: 'area', label: 'AREA' },
   { key: 'damage', label: 'DAMAGE' },
 ];
-const POWER_ROW_CHROME = { edit: true, delete: true } as const;
+const POWER_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
 
 interface LibraryPowersTabProps {
   onDelete: (item: DisplayItem) => void;
