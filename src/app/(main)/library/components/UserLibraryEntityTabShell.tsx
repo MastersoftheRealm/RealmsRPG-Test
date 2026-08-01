@@ -11,6 +11,7 @@ import {
   LoadingState,
   SearchInput,
   type ListColumn,
+  type ListHeaderRowChrome,
   type SortState,
 } from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
@@ -30,6 +31,8 @@ type UserLibraryEntityTabShellBaseProps = {
   gridColumns: string;
   /** Pair with GridListRow `thumbnail` (species/equipment art column). */
   hasThumbnailColumn?: boolean;
+  /** Reserve header space for edit/delete/rightSlot (must match GridListRow actions). */
+  rowChrome?: ListHeaderRowChrome;
   filteredCount: number;
   children: ReactNode;
   listClassName?: string;
@@ -91,6 +94,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
     headerColumns,
     gridColumns,
     hasThumbnailColumn = false,
+    rowChrome,
     filteredCount,
     children,
     listClassName = 'flex flex-col gap-1 mt-2',
@@ -160,6 +164,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
         sortState={sortState}
         onSort={onSort}
         hasThumbnailColumn={hasThumbnailColumn}
+        rowChrome={rowChrome}
       />
 
       <div className={listClassName}>

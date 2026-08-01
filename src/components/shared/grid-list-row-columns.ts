@@ -7,6 +7,23 @@ export function columnDisplayLabel(col: ColumnValue): string {
   return formatColumnKeyLabel(col.key);
 }
 
+/**
+ * True when a collapsed data column already shows Training Points / TP.
+ * Expanded "Total TP" chips should be omitted in that case (no double reference).
+ */
+export function columnsAlreadyShowTrainingPoints(
+  columns: ColumnValue[],
+  costLabel?: string
+): boolean {
+  const aliases = new Set(['tp', 'training points', 'total tp', 'total training points']);
+  if (costLabel?.trim()) aliases.add(costLabel.trim().toLowerCase());
+  return columns.some((col) => {
+    const key = col.key.trim().toLowerCase();
+    const label = (col.label ?? '').trim().toLowerCase();
+    return aliases.has(key) || (label.length > 0 && aliases.has(label));
+  });
+}
+
 /** Columns hidden from the mobile grid (`hideOnMobile` default true). */
 export function columnsForMobileSummary(columns: ColumnValue[]): ColumnValue[] {
   return columns.filter((col) => col.hideOnMobile !== false).slice(0, 3);

@@ -9,7 +9,8 @@ import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 
-export const OFFICIAL_TECHNIQUE_GRID = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
+/** Data columns only — edit/delete/add use ListHeader `rowChrome`. */
+export const OFFICIAL_TECHNIQUE_GRID = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr';
 
 export const OFFICIAL_TECHNIQUE_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME', align: 'left' as const },
@@ -18,7 +19,6 @@ export const OFFICIAL_TECHNIQUE_HEADER_COLUMNS = [
   { key: 'action', label: 'ACTION', align: 'center' as const },
   { key: 'weapon', label: 'ATTACK', align: 'center' as const },
   { key: 'damage', label: 'DAMAGE', align: 'center' as const },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 export interface OfficialTechniqueRow {

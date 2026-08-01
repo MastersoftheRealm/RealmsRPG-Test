@@ -75,7 +75,7 @@ export interface ExpandableChipProps {
 }
 
 function formatLevelSuffix(level?: number): string {
-  return level && level > 1 ? ` (Lv.${level})` : '';
+  return level != null && level > 0 ? ` (Lv.${level})` : '';
 }
 
 export function ExpandableChip({
@@ -90,7 +90,7 @@ export function ExpandableChip({
   tpCost,
   energyCost,
   cost,
-  costLabel = 'Training Points',
+  costLabel = 'TP',
   expandOnCost = false,
   costSuffix,
   level,
@@ -117,8 +117,16 @@ export function ExpandableChip({
   const optionsPanelOpen = optionsOpen !== undefined ? optionsOpen : internalOptionsOpen;
 
   const hasOptions = (options?.length ?? 0) > 0;
-  const parensCost =
-    costSuffix ?? (!expandOnCost && !tpCost && cost !== undefined ? cost : undefined);
+  // Legacy parens suffix only for non-zero / non-empty values — never render `(0)`.
+  const legacyParensCost =
+    !expandOnCost &&
+    !tpCost &&
+    cost !== undefined &&
+    cost !== '' &&
+    !(typeof cost === 'number' && cost <= 0)
+      ? cost
+      : undefined;
+  const parensCost = costSuffix ?? legacyParensCost;
   const headerCost = expandOnCost ? cost : undefined;
   const hasHeaderCost =
     typeof headerCost === 'number' ? headerCost > 0 : typeof headerCost === 'string' && headerCost.length > 0;
@@ -355,10 +363,12 @@ function ChipHeaderContent({
   return (
     <span className="inline-flex items-center gap-1.5 min-w-0 flex-1 flex-nowrap overflow-hidden">
       <span className={cn('truncate', labelClassName)}>{label}</span>
-      {level && level > 1 && (
+      {level != null && level > 0 && (
         <span className="text-xs text-text-secondary shrink-0">(Lv.{level})</span>
       )}
-      {costSuffix !== undefined && (
+      {costSuffix !== undefined &&
+        costSuffix !== '' &&
+        !(typeof costSuffix === 'number' && costSuffix <= 0) && (
         <span className="text-xs text-text-muted dark:text-text-secondary shrink-0">
           ({costSuffix})
         </span>

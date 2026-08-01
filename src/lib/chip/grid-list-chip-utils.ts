@@ -59,6 +59,6 @@ export function gridListChipStyleVariant(chip: ChipData): ChipVariant {
 }
 
 export function formatGridListChipLabel(chip: ChipData): string {
-  const levelSuffix = chip.level && chip.level > 1 ? ` (Lv.${chip.level})` : '';
+  const levelSuffix = chip.level != null && chip.level > 0 ? ` (Lv.${chip.level})` : '';
   return `${chip.name}${levelSuffix}`;
 }

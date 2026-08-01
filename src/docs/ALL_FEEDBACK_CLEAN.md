@@ -1,6 +1,32 @@
-# ALL_FEEDBACK ? Consolidated & Curated
+# ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-07-20 (`/debt` from quality audit — TASK-612 done)
+Last updated: 2026-08-01 (Power Creator multi-elemental damage EN)
+
+**Raw Feedback Log — 2026-08-01 (Power Creator multi-elemental damage EN)**
+- Context: Power Creator — Added Damage Types section
+- Feedback: When adding more than one row of elemental damage (fire, ice, lightning, etc.), each row should independently contribute to Energy; currently only one Elemental Damage instance is counted because rows share the same part id.
+- Expected: Each damage row adds its own base + option EN/TP; save/load and library display match live creator totals.
+- Disposition: **TASK-623** done — cost calc + display rebuild + save omit auto mechanics. verification_status pending-qa (DEV-V-036-T001).
+
+**Raw Feedback Log — 2026-08-01 (Realms Library redundant Realms badge)**
+- Context: Realms Library → expand power/technique/armament/creature row
+- Feedback: Some items show a descriptor chip labeled "Realms" — redundant when already browsing Realms Library (source is implied by page context); remove it.
+- Disposition: **Session cleanup** — dropped default `Realms` row badge from `OfficialEntityList` + creature `renderRow`; `getBadges` remains for meaningful badges (e.g. Enhanced). verification_status pending-qa (DEV-V-035-T001).
+
+**Raw Feedback Log — 2026-08-01 (GLR expand/collapse consistency)**
+- Context: GLR collapse/expand rows — character sheet, Library, Codex (official/personal), Powers/Techniques/Armor/Weapons/Shields
+- Feedback: (1) Column headers inconsistently account for edit/delete/add so data columns misalign; functional buttons inconsistently inside vs outside hover highlight (e.g. delete in hover, edit not). (2) Total Training Points desc chip repeats when TP already in collapsed columns (e.g. techniques). (3) Parts & Proficiencies chips: use `TP: X` not `Training Points: X`; option level increases unclear; do not show `(0)` when level is 0 or not increasable.
+- Disposition: **TASK-622** — shared GridListRow chrome + chip grammar; see ACTIVE_TASKS.
+
+**Raw Feedback Log — 2026-08-01 (guided creator subsection titles)**
+- Context: Guided creator — Path step and other steps with subsections (archetype feat groups, etc.)
+- Feedback: Section titles should use the display font; smaller than the main step title but large enough to read as clear sections; shared format across guided creator tabs with subsections.
+- Disposition: **Session cleanup** — `GuidedSectionTitle` + `GUIDED_SECTION_TITLE_CLASS` (`text-xl sm:text-2xl`); wired Path, feats, skills, abilities, powers/techniques, reveal, species overview. verification_status pending-qa (DEV-V-013-T067).
+
+**Raw Feedback Log — 2026-08-01 (Library armaments tab split)**
+- Context: Realms Library → Armaments tab
+- Feedback: Split armaments into Weapons, Armor, and Shields (3 tabs) so column headers can be more specific and users can tell which is which.
+- Disposition: **TASK-621** done — three tabs on `/library` (Realms + My); type-specific columns; shared `official-item-list.ts` + `armament-library-labels.ts`; admin segmented kind picker. verification_status pending-qa (DEV-V-033-T001).
 
 Purpose
 - Single, de-duplicated, organized source of owner feedback supplied to AI agents.
@@ -2702,3 +2728,19 @@ Notes
 - Feedback (verbatim): Placeholder images need a darkmode variant. Images uploaded as PNGs get a default black background, but that color is too stark — needs to be closer to the theme background so contrast of PNG images isn't killed.
 - Expected: Dark-mode placeholder card/portrait art; transparent PNG letterboxing and crop matte aligned to theme (`surface-alt` / `image-matte`), not pure black.
 - Disposition: Implemented — `placeholder-art.ts`, dark SVG assets, adaptive `bg-image-matte` (display-only); crops preserve alpha (PNG/WebP, no baked matte). pending-qa DEV-V-026-T007.
+
+**Raw Feedback Log - 2026-08-01 (Realms Library creature stat blocks)**
+- Date: 2026-08-01
+- Context: Library / Realms Library
+- Priority: Medium
+- Feedback (verbatim): The public realms library creature's tab should display creatures the same way as the private one, with full creature stat blocks.
+- Expected: Realms Library → Creatures uses full `CreatureStatBlock` rows (parity with My Library), not compact name/level/type grid.
+- Disposition: **TASK-620** (done, pending-qa DEV-V-032-T001).
+
+**Raw Feedback Log — 2026-08-01 (GLR expand/collapse consistency)**
+- Date: 2026-08-01
+- Context: GLR collapse/expand — character sheet, Library, Codex (official/personal); Powers/Techniques/Armor/Weapons/Shields
+- Priority: High
+- Feedback (verbatim summary): Column headers inconsistently reserve space for edit/delete/add so columns misalign; functional buttons inconsistently inside vs outside hover (delete in hover, edit not). Total Training Points expanded chip redundant when TP already in collapsed columns (techniques). Parts & Proficiencies chips should use `TP: X` not `Training Points: X`; option level increases unclear; omit `(0)` when level is 0 or not increasable.
+- Expected: Shared GridListRow chrome alignment + unified hover for action icons; suppress Total TP when column already shows it; dense browse Parts/Properties chips `TP: N` + `Lv.N` only when > 0.
+- Disposition: **TASK-622**.

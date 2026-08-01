@@ -34,10 +34,9 @@ const ADMIN_PART_COLUMNS = [
   { key: 'category', label: 'CATEGORY' },
   { key: '_en', label: 'ENERGY' },
   { key: '_tp', label: 'TP' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
-const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
+const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr';
 
 interface PartFilters {
   search: string;
@@ -295,6 +294,7 @@ export function AdminPartsTab() {
         gridColumns={PART_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
+        rowChrome={{ rightSlot: true }}
         isLoading={isLoading}
         isEmpty={filteredParts.length === 0}
         emptyTitle="No parts found"

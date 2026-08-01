@@ -54,6 +54,8 @@ export interface TechniqueChipData {
   description: string;
   finalTP: number;
   hasTP: boolean;
+  /** Max option level when > 0; omit at 0. */
+  optionLevel?: number;
 }
 
 export interface TechniqueDocument {
@@ -238,6 +240,7 @@ export function formatTechniquePartChip(
   const l3 = pl.op_3_lvl || 0;
 
   const finalTP = computePartTrainingPoints(def, pl, 'technique');
+  const optionLevel = Math.max(l1, l2, l3);
   let text = def.name || '';
   if (l1 > 0) text += ` (Opt1 ${l1})`;
   if (l2 > 0) text += ` (Opt2 ${l2})`;
@@ -249,6 +252,7 @@ export function formatTechniquePartChip(
     description: def.description || '',
     finalTP,
     hasTP: finalTP > 0,
+    optionLevel: optionLevel > 0 ? optionLevel : undefined,
   };
 }
 

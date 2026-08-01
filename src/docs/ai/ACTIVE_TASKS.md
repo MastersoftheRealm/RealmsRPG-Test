@@ -4,17 +4,62 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-620
+**Next task ID:** TASK-628
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-618, 616, 615, 611, 610, 608, 607, 606, 604, 603, 602, 601, 600, 599, 598, etc.)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: session Menace dedupe, TASK-623, 622, 621, …)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 2 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-619 done (admin codex tab/modal splits). TASK-618 done (USM + CombatantCard splits). TASK-615 done (Vercel Web Analytics + CSP/docs; Dashboard Enable = DEV-006). TASK-615 done (TASK-610 facade remainder). /debt TASK-601–606 done. Quality audit TASK-607–613 done ([archive report](archive/QUALITY_GLOBAL_AUDIT_2026-07-20.md); renumbered after ID collision with debt). TASK-326 partial (HIBP → DEV-001). TASK-500 deferred.
+**Hot notes:** Session cleanup — official power part chip dedupe (Menace). TASK-624 done (Codex/Admin GLR rowChrome). TASK-623 done (multi-elemental damage EN). TASK-622 done (GLR action chrome).
+
+---
+
+- id: TASK-626
+  title: Empowered technique library — show nested power part chips
+  priority: medium
+  status: not-started
+  created_at: 2026-08-01
+  created_by: agent
+  related_files:
+    - src/lib/library/official-technique-list.ts
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/hooks/add-library-item/build-empowered-selectable-item.ts
+    - src/lib/creator/advanced-powers-selectable.ts
+  description: |
+    Empowered techniques store power mechanics in nested `power` payload + columnar fields.
+    Library empowered rows only render technique part chips; power-side parts are missing.
+  acceptance_criteria:
+    - Realms + My Library empowered expand shows power + technique part chips via `derivePowerDisplay` on nested power doc.
+    - Load/add USM empowered rows include part chips (extend shared builder — no fork).
+    - npm run build; BUILD_VALIDATION smoke if user-facing.
+  notes: |
+    Filed from Menace duplicate-parts audit. Out of scope for read-path dedupe cleanup.
+
+---
+
+- id: TASK-627
+  title: Official powers payload — strip redundant auto-mechanic parts (codex data)
+  priority: low
+  status: not-started
+  created_at: 2026-08-01
+  created_by: agent
+  assignee: owner
+  related_files:
+    - sql/
+    - src/docs/SUPABASE_SCHEMA.md
+  description: |
+    ~12/43 official_powers duplicate auto-mechanic parts in payload.parts when promoted columns exist.
+    Read-path dedupe fixes display; optional data cleanup removes redundancy (owner approve before apply).
+  acceptance_criteria:
+    - Audit query lists affected rows with overlap counts.
+    - Proposed SQL in sql/; preview Menace + Fog Cloud before/after.
+    - Owner approves apply; post-migration counts in AI_CHANGELOG.
+  notes: |
+    Codex policy audit → propose → approve → apply.
 
 ---
 

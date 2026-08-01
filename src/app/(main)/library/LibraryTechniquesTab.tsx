@@ -35,7 +35,7 @@ import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
-const TECHNIQUE_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr 40px';
+const TECHNIQUE_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr';
 const TECHNIQUE_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'energy', label: 'ENERGY' },
@@ -43,8 +43,8 @@ const TECHNIQUE_HEADER_COLUMNS = [
   { key: 'action', label: 'ACTION' },
   { key: 'weapon', label: 'ATTACK' },
   { key: 'damage', label: 'DAMAGE' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
+const TECHNIQUE_ROW_CHROME = { edit: true, delete: true } as const;
 
 interface LibraryTechniquesTabProps {
   onDelete: (item: DisplayItem) => void;
@@ -170,6 +170,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
       headerColumns={TECHNIQUE_HEADER_COLUMNS}
       gridColumns={TECHNIQUE_GRID_COLUMNS}
       hasThumbnailColumn
+      rowChrome={TECHNIQUE_ROW_CHROME}
       filteredCount={filteredData.length}
       driftedCount={sync.driftedCount}
       syncingAll={sync.syncingAll}
@@ -204,7 +205,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
             ]}
             detailSections={partsSection ? [partsSection] : undefined}
             totalCost={typeof tech.tp === 'number' ? tech.tp : parseFloat(String(tech.tp)) || undefined}
-            costLabel="Training Points"
+            costLabel="TP"
             badges={tech.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
             warningMessage={tech.syncIssues[0]?.message}
             rightSlot={

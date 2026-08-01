@@ -20,13 +20,12 @@ import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useParts } from '@/hooks';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 
-const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 40px';
+const PART_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr';
 const PART_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'category', label: 'CATEGORY' },
   { key: 'energy', label: 'ENERGY' },
   { key: 'tp', label: 'TP' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 function formatEnergyCost(en: number | undefined, isPercentage: boolean | undefined): string {

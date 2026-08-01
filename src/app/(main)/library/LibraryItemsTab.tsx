@@ -1,104 +1,82 @@
 /**
- * Library Items (Armaments) Tab — entity mapping + rows; shell from ADR-0001.
+ * Library Items Tab — weapons, armor, or shields (My Library).
+ * Entity mapping + rows; shell from ADR-0001.
  */
 
 'use client';
 
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Shield } from 'lucide-react';
-import { GridListRow, type ChipData } from '@/components/shared';
+import { Shield, Shirt, Sword } from 'lucide-react';
+import { GridListRow } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
-import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
-import {
-  calculateItemCosts,
-  calculateCurrencyCostAndRarity,
-  formatRange as formatItemRange,
-} from '@/lib/calculators/item-calc';
-import { namedPropertyDescriptorChips } from '@/lib/detail-option/compact-facts';
 import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
-import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
 import type { DisplayItem } from '@/types';
 import { getItemSyncResult, sanitizeItemForSync } from '@/lib/library-sync';
 import {
+  ARMAMENT_LIBRARY_CONFIG,
+  armamentRowColumns,
+  buildOfficialItemRows,
+  filterItemsByArmamentKind,
+  type ArmamentLibraryKind,
+} from '@/lib/library/official-item-list';
+import {
   LibrarySyncRowAction,
   UserLibraryEntityTabShell,
 } from './components/UserLibraryEntityTabShell';
-import { ARMAMENT_LIBRARY_LABELS } from './components/library-entity-tab.types';
+import {
+  ARMOR_LIBRARY_LABELS,
+  SHIELD_LIBRARY_LABELS,
+  WEAPON_LIBRARY_LABELS,
+  type LibraryEntityTabLabels,
+} from './components/library-entity-tab.types';
 import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
-const ARMAMENT_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px';
-const ARMAMENT_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME', align: 'left' as const },
-  { key: 'type', label: 'TYPE', align: 'center' as const },
-  { key: 'rarity', label: 'RARITY', align: 'center' as const },
-  { key: 'currency', label: 'CURRENCY', align: 'center' as const },
-  { key: 'tp', label: 'TP', align: 'center' as const },
-  { key: 'range', label: 'RANGE', align: 'center' as const },
-  { key: 'damage', label: 'DAMAGE', align: 'center' as const },
-  { key: '_actions', label: '', sortable: false as const },
-];
+const LABELS_BY_KIND: Record<ArmamentLibraryKind, LibraryEntityTabLabels> = {
+  weapon: WEAPON_LIBRARY_LABELS,
+  armor: ARMOR_LIBRARY_LABELS,
+  shield: SHIELD_LIBRARY_LABELS,
+};
+
+const ICONS_BY_KIND = {
+  weapon: <Sword className="w-8 h-8" />,
+  armor: <Shirt className="w-8 h-8" />,
+  shield: <Shield className="w-8 h-8" />,
+};
 
 interface LibraryItemsTabProps {
+  armamentKind: ArmamentLibraryKind;
   onDelete: (item: DisplayItem) => void;
 }
 
-export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
+export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps) {
   const router = useRouter();
-  const { data: items = [], isLoading, error, refetch } = useUserItems();
+  const labels = LABELS_BY_KIND[armamentKind];
+  const { grid, headers } = ARMAMENT_LIBRARY_CONFIG[armamentKind];
+  const { data: allItems = [], isLoading, error, refetch } = useUserItems();
+  const items = useMemo(
+    () => filterItemsByArmamentKind(allItems, armamentKind),
+    [allItems, armamentKind]
+  );
   const { data: propertiesDb = [] } = useItemProperties();
   const duplicateItem = useDuplicateItem();
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
-  const cardData = useMemo(() => {
-    return (items || []).map((item) => {
-      const props = (Array.isArray(item.properties) ? item.properties : []) as ItemPropertyPayload[];
-      const costs = calculateItemCosts(props, propertiesDb);
-      const syncResult = getItemSyncResult(item, propertiesDb);
-      const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
-      const rangeStr = formatItemRange(props);
-      const parts: ChipData[] = namedPropertyDescriptorChips(
-        (item.properties || []) as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>,
-        propertiesDb
-      ).map((chip) => {
-        const prop = (
-          (item.properties || []) as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>
-        ).find((p) => {
-          const n = typeof p === 'string' ? p : String(p?.name ?? '');
-          return n.toLowerCase() === chip.name.toLowerCase();
-        });
-        const lvl = typeof prop === 'object' && prop && prop.op_1_lvl != null ? Number(prop.op_1_lvl) : 0;
-        return {
-          ...chip,
-          level: lvl > 1 ? lvl : undefined,
-        };
-      });
-      const totalTP = costs.totalTP;
-      return {
-        id: String(item.docId ?? item.id ?? ''),
-        name: String(item.name ?? ''),
-        description: String(item.description ?? ''),
-        type: formatListCellLabel(item.type),
-        rarity: formatListCellLabel(rarity),
-        currency: Math.round(currencyCost),
-        tp: Math.round(totalTP),
-        range: rangeStr || '-',
-        damage: formatDamageDisplay(item.damage) || '-',
-        parts,
-        hasDrift: syncResult.hasDrift,
-        syncIssues: syncResult.issues,
-        raw: item,
-      };
-    });
-  }, [items, propertiesDb]);
+  const cardData = useMemo(
+    () => buildOfficialItemRows(items, propertiesDb, armamentKind),
+    [items, propertiesDb, armamentKind]
+  );
 
   const driftedIds = useMemo(
-    () => cardData.filter((item) => item.hasDrift).map((item) => item.id),
-    [cardData]
+    () =>
+      cardData
+        .filter((item) => getItemSyncResult(item.raw, propertiesDb).hasDrift)
+        .map((item) => item.id),
+    [cardData, propertiesDb]
   );
 
   const sync = useLibraryEntitySync({
@@ -109,12 +87,12 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
     driftedIds,
     sanitize: (source) => sanitizeItemForSync(source, propertiesDb),
     refetch,
-    entitySingular: ARMAMENT_LIBRARY_LABELS.entitySingular,
-    entityPlural: ARMAMENT_LIBRARY_LABELS.entityPlural,
+    entitySingular: labels.entitySingular,
+    entityPlural: labels.entityPlural,
   });
 
   const dup = useLibraryDuplicateConfirm({
-    duplicateTitle: ARMAMENT_LIBRARY_LABELS.duplicateTitle,
+    duplicateTitle: labels.duplicateTitle,
     isPending: duplicateItem.isPending,
     mutate: (id, handlers) => duplicateItem.mutate(id, handlers),
   });
@@ -135,19 +113,20 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
 
   return (
     <UserLibraryEntityTabShell
-      labels={ARMAMENT_LIBRARY_LABELS}
+      labels={labels}
       isLoading={isLoading}
       error={error}
       onRetry={() => void refetch()}
       totalCount={cardData.length}
-      emptyIcon={<Shield className="w-8 h-8" />}
+      emptyIcon={ICONS_BY_KIND[armamentKind]}
       search={search}
       onSearchChange={setSearch}
       sortState={sortState}
       onSort={handleSort}
-      headerColumns={ARMAMENT_HEADER_COLUMNS}
-      gridColumns={ARMAMENT_GRID_COLUMNS}
+      headerColumns={headers}
+      gridColumns={grid}
       hasThumbnailColumn
+      rowChrome={{ edit: true, delete: true }}
       filteredCount={filteredData.length}
       driftedCount={sync.driftedCount}
       syncingAll={sync.syncingAll}
@@ -164,16 +143,10 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
       duplicatePending={dup.isPending}
     >
       {filteredData.map((item) => {
-        const rawType = String(item.raw?.type ?? '').toLowerCase();
-        const propertyFamily =
-          rawType === 'armor'
-            ? 'armor'
-            : rawType === 'shield'
-              ? 'shield'
-              : rawType === 'weapon'
-                ? 'weapon'
-                : 'item';
-        const propertySection = propertiesProficienciesSection(item.parts, propertyFamily);
+        const syncResult = getItemSyncResult(item.raw, propertiesDb);
+        const family =
+          armamentKind === 'armor' ? 'armor' : armamentKind === 'shield' ? 'shield' : 'weapon';
+        const propertySection = propertiesProficienciesSection(item.parts, family);
         return (
           <GridListRow
             key={item.id}
@@ -181,22 +154,15 @@ export function LibraryItemsTab({ onDelete }: LibraryItemsTabProps) {
             name={item.name}
             description={item.description}
             thumbnail={resolveListRowThumbnail('equipment', item.raw, item.name)}
-            gridColumns={ARMAMENT_GRID_COLUMNS}
-            columns={[
-              { key: 'Type', value: item.type, align: 'center' },
-              { key: 'Rarity', value: item.rarity, align: 'center' },
-              { key: 'Currency', value: item.currency, align: 'center' },
-              { key: 'TP', value: item.tp, highlight: true, align: 'center' },
-              { key: 'Range', value: item.range, align: 'center' },
-              { key: 'Damage', value: item.damage, align: 'center' },
-            ]}
+            gridColumns={grid}
+            columns={armamentRowColumns(item, armamentKind)}
             detailSections={propertySection ? [propertySection] : undefined}
             totalCost={item.tp}
-            costLabel="Training Points"
-            badges={item.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
-            warningMessage={item.syncIssues[0]?.message}
+            costLabel="TP"
+            badges={syncResult.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
+            warningMessage={syncResult.issues[0]?.message}
             rightSlot={
-              item.hasDrift ? (
+              syncResult.hasDrift ? (
                 <LibrarySyncRowAction
                   syncing={sync.syncingIds.has(item.id)}
                   onSync={() => void sync.handleSyncOne(item.id)}

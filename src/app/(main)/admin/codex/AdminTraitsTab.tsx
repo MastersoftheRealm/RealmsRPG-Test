@@ -23,13 +23,12 @@ import {
 } from './admin-trait-form';
 import { AdminTraitCreateModal, AdminTraitEditModal } from './admin-trait-edit-modal';
 
-const ADMIN_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 0.6fr 40px';
+const ADMIN_TRAIT_GRID = '1.5fr 0.6fr 0.6fr 0.6fr';
 const ADMIN_TRAIT_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'uses_per_rec', label: 'USES' },
   { key: 'rec_period', label: 'RECOVERY' },
   { key: 'choice', label: 'CHOICE' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 export function AdminTraitsTab() {
@@ -190,6 +189,7 @@ export function AdminTraitsTab() {
         searchPlaceholder="Search traits..."
         headerColumns={ADMIN_TRAIT_COLUMNS}
         gridColumns={ADMIN_TRAIT_GRID}
+        rowChrome={{ rightSlot: true }}
         sortState={sortState}
         onSort={handleSort}
         isLoading={isLoading}
@@ -206,7 +206,7 @@ export function AdminTraitsTab() {
               id={t.id}
               name={t.name}
               description={t.description || ''}
-              gridColumns="1.5fr 0.6fr 0.6fr 0.6fr 40px"
+              gridColumns={ADMIN_TRAIT_GRID}
               columns={[
                 { key: 'Uses', value: t.uses_per_rec != null ? String(t.uses_per_rec) : '-' },
                 { key: 'Recovery', value: t.rec_period || '-' },

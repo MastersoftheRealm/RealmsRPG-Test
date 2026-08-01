@@ -28,7 +28,7 @@ import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
-const POWER_GRID_COLUMNS = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
+const POWER_GRID_COLUMNS = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr';
 const POWER_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'energy', label: 'ENERGY' },
@@ -37,8 +37,8 @@ const POWER_HEADER_COLUMNS = [
   { key: 'range', label: 'RANGE' },
   { key: 'area', label: 'AREA' },
   { key: 'damage', label: 'DAMAGE' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
+const POWER_ROW_CHROME = { edit: true, delete: true } as const;
 
 interface LibraryPowersTabProps {
   onDelete: (item: DisplayItem) => void;
@@ -139,6 +139,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
       headerColumns={POWER_HEADER_COLUMNS}
       gridColumns={POWER_GRID_COLUMNS}
       hasThumbnailColumn
+      rowChrome={POWER_ROW_CHROME}
       filteredCount={filteredData.length}
       driftedCount={sync.driftedCount}
       syncingAll={sync.syncingAll}
@@ -174,7 +175,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
             ]}
             detailSections={partsSection ? [partsSection] : undefined}
             totalCost={power.tp}
-            costLabel="Training Points"
+            costLabel="TP"
             badges={power.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
             warningMessage={power.syncIssues[0]?.message}
             rightSlot={

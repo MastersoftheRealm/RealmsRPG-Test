@@ -17,13 +17,12 @@ import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 
-const CREATURE_FEAT_GRID_COLUMNS = '1.5fr 0.5fr 0.5fr 0.5fr 40px';
+const CREATURE_FEAT_GRID_COLUMNS = '1.5fr 0.5fr 0.5fr 0.5fr';
 const CREATURE_FEAT_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'points', label: 'PTS' },
   { key: 'feat_lvl', label: 'FEAT LVL' },
   { key: 'lvl_req', label: 'REQ. LVL' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {

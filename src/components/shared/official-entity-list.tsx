@@ -10,7 +10,6 @@
 'use client';
 
 import { useMemo, useState, type ReactNode, type ComponentProps } from 'react';
-import { Plus } from 'lucide-react';
 import {
   GridListRow,
   SearchInput,
@@ -20,10 +19,11 @@ import {
   ListEmptyState,
   SectionHeader,
 } from '@/components/shared';
+import { LibraryAddToLibraryButton } from '@/components/shared/library-add-to-library-button';
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
+import type { ListHeaderRowChrome } from '@/components/shared/grid-list-row-chrome';
 import type { ListRowThumbnailProps } from '@/components/shared/list-row-thumbnail';
 import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';
-import { IconButton } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 
 export interface OfficialEntityRow {
@@ -47,9 +47,9 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   ) => TRow[];
   gridColumns: string;
   headerColumns: ComponentProps<typeof ListHeader>['columns'];
-  /** Collapsed-row column values for a single row. */
-  getColumns: (row: TRow) => ColumnValue[];
-  /** Optional row badges (overrides library Realms default when set). */
+  /** Collapsed-row column values for a single row (not used when `renderRow` is set). */
+  getColumns?: (row: TRow) => ColumnValue[];
+  /** Optional row badges (e.g. Enhanced on admin enhanced items). */
   getBadges?: (row: TRow) => ComponentProps<typeof GridListRow>['badges'];
   /** Optional expanded chips (parts/properties). Prefer getDetailSections for Parts/Properties tips. */
   getChips?: (row: TRow) => ChipData[] | undefined;
@@ -64,6 +64,15 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
    * `hasThumbnailColumn` and each row receives `GridListRow.thumbnail`.
    */
   getThumbnail?: (row: TRow) => ListRowThumbnailProps;
+  /** Override ListHeader thumbnail column when using custom `renderRow`. */
+  hasThumbnailColumn?: boolean;
+  /** Custom row renderer (e.g. CreatureStatBlock). Skips GridListRow when set. */
+  renderRow?: (
+    row: TRow,
+    ctx: { canAdd: boolean; onAddRequest?: () => void }
+  ) => ReactNode;
+  listClassName?: string;
+  afterList?: ReactNode;
 
   errorMessage: string;
   sectionTitle?: string;
@@ -97,8 +106,12 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   chipsLabel,
   getDetailSections,
   getTotalCost,
-  costLabel = 'Training Points',
+  costLabel = 'TP',
   getThumbnail,
+  hasThumbnailColumn: hasThumbnailColumnProp,
+  renderRow,
+  listClassName = 'flex flex-col gap-1 mt-2',
+  afterList,
   errorMessage,
   sectionTitle,
   searchPlaceholder,
@@ -133,6 +146,14 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   }
 
   const canAdd = () => variant === 'library' && !readOnly && !!onAddRequest;
+  const hasThumbnailColumn = hasThumbnailColumnProp ?? Boolean(getThumbnail);
+  const rowChrome: ListHeaderRowChrome | undefined = (() => {
+    const chrome: ListHeaderRowChrome = {};
+    if (canAdd()) chrome.rightSlot = true;
+    if (variant === 'admin' && onEdit) chrome.edit = true;
+    if (variant === 'admin' && onDelete) chrome.delete = true;
+    return chrome.rightSlot || chrome.edit || chrome.delete ? chrome : undefined;
+  })();
 
   return (
     <div>
@@ -148,9 +169,10 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
         gridColumns={gridColumns}
         sortState={sortState}
         onSort={handleSort}
-        hasThumbnailColumn={Boolean(getThumbnail)}
+        hasThumbnailColumn={hasThumbnailColumn}
+        rowChrome={rowChrome}
       />
-      <div className="flex flex-col gap-1 mt-2">
+      <div className={listClassName}>
         {isLoading ? (
           <LoadingState />
         ) : filtered.length === 0 ? (
@@ -159,6 +181,15 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
           ) : (
             <ListEmptyState title={searchEmptyMessage} size="sm" />
           )
+        ) : renderRow ? (
+          filtered.map((row) => (
+            <div key={row.id}>
+              {renderRow(row, {
+                canAdd: canAdd(),
+                onAddRequest: canAdd() ? () => onAddRequest!(row) : undefined,
+              })}
+            </div>
+          ))
         ) : (
           filtered.map((row) => {
             const detailSections = getDetailSections?.(row);
@@ -172,30 +203,21 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
                 description={row.description}
                 thumbnail={getThumbnail?.(row)}
                 gridColumns={gridColumns}
-                columns={getColumns(row)}
+                columns={getColumns!(row)}
                 chips={chips}
                 chipsLabel={detailSections ? undefined : chipsLabel}
                 detailSections={detailSections}
                 totalCost={totalCost}
                 costLabel={costLabel}
-                badges={
-                  getBadges?.(row) ??
-                  (variant === 'library' ? [{ label: 'Realms', color: 'blue' }] : undefined)
-                }
+                badges={getBadges?.(row)}
                 rightSlot={
                   canAdd() ? (
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
+                    <LibraryAddToLibraryButton
                       onClick={(e) => {
                         e.stopPropagation();
                         onAddRequest!(row);
                       }}
-                      label="Add to my library"
-                      className="text-primary-link-fg hover:text-primary-fg-hover hover:bg-primary-subtle-bg"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </IconButton>
+                    />
                   ) : undefined
                 }
                 onAddToLibrary={canAdd() ? () => onAddRequest!(row) : undefined}
@@ -206,6 +228,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
           })
         )}
       </div>
+      {afterList}
     </div>
   );
 }

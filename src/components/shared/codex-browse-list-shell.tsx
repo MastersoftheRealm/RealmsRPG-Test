@@ -13,7 +13,7 @@
 import type { ReactNode } from 'react';
 import { SectionHeader } from './section-header';
 import { SearchInput, LoadingState, EmptyState as ListEmptyState } from './list-components';
-import { ListHeader, type ListColumn, type SortState } from './list-header';
+import { ListHeader, type ListColumn, type ListHeaderRowChrome, type SortState } from './list-header';
 import type { EmptyStateProps } from '@/components/ui/empty-state';
 import { cn } from '@/lib/utils';
 
@@ -35,6 +35,8 @@ export interface CodexBrowseListShellProps {
   sortState: SortState;
   onSort: (columnKey: string) => void;
   hasThumbnailColumn?: boolean;
+  /** Reserve header space for GridListRow rightSlot / edit / delete chrome. */
+  rowChrome?: ListHeaderRowChrome;
   isLoading?: boolean;
   loadingMessage?: string;
   isEmpty?: boolean;
@@ -62,6 +64,7 @@ export function CodexBrowseListShell({
   sortState,
   onSort,
   hasThumbnailColumn,
+  rowChrome,
   isLoading = false,
   loadingMessage,
   isEmpty = false,
@@ -109,6 +112,7 @@ export function CodexBrowseListShell({
         sortState={sortState}
         onSort={onSort}
         hasThumbnailColumn={hasThumbnailColumn}
+        rowChrome={rowChrome}
       />
 
       <div className="mt-2 flex flex-col gap-1">

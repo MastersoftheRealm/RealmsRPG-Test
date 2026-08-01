@@ -179,7 +179,7 @@ This is a **guide**, not a muzzle. Prefer Realms terms; avoid importing other sy
 | Health | HP / EN in dense HUD labels (prefer Health / Energy; TASK-440) |
 | Currency | c / gold shorthand in Layer 1 or Layer 2 UI |
 
-**Layer 1 / Layer 2 copy:** Spell game terms in full for new players (**Currency**, **Training Points**, **Damage Reduction**, …). Do not use compact abbreviations like `c` or `TP` in guided L1/L2 chrome, choice cards, or resource bars. Dense Layer 3 / advanced / table columns, and **character sheet / play lists**, may use short labels (`TP`, expandable chip `TP: N`) — the sheet is a working surface, not a guided creator disclosure ladder.
+**Layer 1 / Layer 2 copy:** Spell game terms in full for new players (**Currency**, **Training Points**, **Damage Reduction**, …). Do not use compact abbreviations like `c` or `TP` in guided L1/L2 chrome, choice cards, or resource bars. Dense Layer 3 / advanced / table columns, **Library / Codex browse rows**, and **character sheet / play lists**, may use short labels (`TP`, expandable chip `TP: N`) — those are working surfaces, not a guided creator disclosure ladder. Parts/Properties chips on those surfaces: show `TP: N` only when cost is greater than 0; show `(Lv.N)` only when option level is greater than 0 (never `(0)`).
 
 **Guided budgets (TASK-456):** Currency and Training Points are visible constrained resources in Layer 1 and Layer 2 (PointStatus total/spent/remaining). Do not hide Training Points behind “Layer 2 only” or “included in your path” framing when the user is making constrained Loadout or Powers/Techniques selections.
 

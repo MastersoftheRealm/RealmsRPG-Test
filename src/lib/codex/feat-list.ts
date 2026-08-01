@@ -13,7 +13,8 @@ import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { descriptorChipData, tagDescriptorChip } from '@/lib/chip/chip-data-helpers';
 import type { Character } from '@/types';
 
-export const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr 40px';
+/** Data columns only — admin action chrome uses CodexBrowseListShell `rowChrome`. */
+export const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr';
 
 export const CODEX_FEAT_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME' },
@@ -22,7 +23,6 @@ export const CODEX_FEAT_HEADER_COLUMNS = [
   { key: 'ability', label: 'ABILITY' },
   { key: 'uses_per_rec', label: 'USES' },
   { key: 'rec_period', label: 'RECOVERY' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 export const ADMIN_FEAT_HEADER_COLUMNS = [
@@ -32,7 +32,6 @@ export const ADMIN_FEAT_HEADER_COLUMNS = [
   { key: 'ability', label: 'ABILITY' },
   { key: 'rec_period', label: 'RECOVERY' },
   { key: 'uses_per_rec', label: 'USES' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 export interface FeatFilterOptions {

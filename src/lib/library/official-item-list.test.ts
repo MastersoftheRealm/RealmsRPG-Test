@@ -1,0 +1,83 @@
+import { describe, expect, it } from 'vitest';
+import {
+  ARMAMENT_LIBRARY_CONFIG,
+  armamentRowColumns,
+  buildOfficialItemRows,
+  countItemsByArmamentKind,
+  filterItemsByArmamentKind,
+} from '@/lib/library/official-item-list';
+import type { LibraryItem } from '@/types/library';
+
+const propertiesDb: never[] = [];
+
+function item(partial: Partial<LibraryItem> & Pick<LibraryItem, 'id' | 'name' | 'type'>): LibraryItem {
+  return {
+    docId: partial.id,
+    properties: [],
+    ...partial,
+  };
+}
+
+describe('official-item-list armament kinds', () => {
+  const catalog: LibraryItem[] = [
+    item({
+      id: 'w1',
+      name: 'Longsword',
+      type: 'weapon',
+      damage: [{ amount: 1, size: 8, type: 'Slashing' }],
+      properties: [{ id: 10, name: 'Range', op_1_lvl: 0 }],
+    }),
+    item({
+      id: 'a1',
+      name: 'Chain Mail',
+      type: 'armor',
+      properties: [
+        { id: 1, name: 'Damage Reduction', op_1_lvl: 1 },
+        { id: 5, name: 'Agility Reduction', op_1_lvl: 1 },
+      ],
+    }),
+    item({
+      id: 's1',
+      name: 'Kite Shield',
+      type: 'shield',
+      properties: [{ id: 20, name: 'Shield Amount', op_1_lvl: 2 }],
+    }),
+    item({ id: 'e1', name: 'Rope', type: 'equipment' }),
+  ];
+
+  it('filters and counts by armament kind', () => {
+    expect(filterItemsByArmamentKind(catalog, 'weapon').map((i) => i.id)).toEqual(['w1']);
+    expect(countItemsByArmamentKind(catalog, 'armor')).toBe(1);
+    expect(countItemsByArmamentKind(catalog, 'shield')).toBe(1);
+    expect(countItemsByArmamentKind(catalog, 'weapon')).toBe(1);
+  });
+
+  it('weapon row columns match header keys (except name and actions)', () => {
+    const rows = buildOfficialItemRows(catalog, propertiesDb, 'weapon');
+    const row = rows[0]!;
+    const headerKeys = ARMAMENT_LIBRARY_CONFIG.weapon.headers
+      .filter((c) => c.key !== 'name')
+      .map((c) => c.key);
+    expect(Object.keys(row).filter((k) => headerKeys.includes(k))).toEqual(headerKeys);
+    expect(armamentRowColumns(row, 'weapon').length).toBe(headerKeys.length);
+  });
+
+  it('armor sort keys align with row fields and derive agility reduction', () => {
+    const rows = buildOfficialItemRows(catalog, propertiesDb, 'armor');
+    const row = rows[0]!;
+    expect(row.damageReduction).toBe(2);
+    expect(row.agilityReduction).toBe(2);
+    const headerKeys = ARMAMENT_LIBRARY_CONFIG.armor.headers
+      .filter((c) => c.key !== 'name')
+      .map((c) => c.key);
+    expect(headerKeys).toEqual(['rarity', 'currency', 'tp', 'damageReduction', 'agilityReduction']);
+  });
+
+  it('shield rows expose block and damage columns', () => {
+    const rows = buildOfficialItemRows(catalog, propertiesDb, 'shield');
+    const row = rows[0]!;
+    expect(row.block).not.toBe('-');
+    const cols = armamentRowColumns(row, 'shield');
+    expect(cols.map((c) => c.key)).toEqual(['Rarity', 'Currency', 'TP', 'Block', 'Damage']);
+  });
+});

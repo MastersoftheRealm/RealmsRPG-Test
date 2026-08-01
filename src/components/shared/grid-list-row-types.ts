@@ -44,7 +44,7 @@ export interface ChipData {
   cost?: number;
   /**
    * Cost label on expandable chips (`{costLabel}: N`).
-   * Guided L1/L2: `Training Points`. Character sheet / dense play lists: `TP`.
+   * Dense browse / sheet / Library GLR default: `TP`. Guided L1/L2 surfaces pass `Training Points`.
    */
   costLabel?: string;
   /** Optional level indicator */

@@ -315,6 +315,7 @@ export function AdminFeatsTab() {
         gridColumns={FEAT_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
+        rowChrome={{ rightSlot: true }}
         isLoading={isLoading}
         isEmpty={groupedFeats.length === 0}
         emptyTitle="No feats match your filters"

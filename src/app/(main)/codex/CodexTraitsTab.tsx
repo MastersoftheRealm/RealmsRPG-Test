@@ -18,12 +18,11 @@ import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
 
-const TRAIT_GRID_COLUMNS = '1.5fr 0.6fr 0.6fr 40px';
+const TRAIT_GRID_COLUMNS = '1.5fr 0.6fr 0.6fr';
 const TRAIT_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'uses_per_rec', label: 'USES' },
   { key: 'rec_period', label: 'RECOVERY' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {

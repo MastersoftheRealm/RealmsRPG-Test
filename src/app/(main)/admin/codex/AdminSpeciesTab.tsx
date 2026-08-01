@@ -194,10 +194,10 @@ export function AdminSpeciesTab() {
           { key: 'name', label: 'NAME' },
           { key: 'type', label: 'TYPE' },
           { key: 'sizes', label: 'SIZES' },
-          { key: '_actions', label: '', sortable: false as const },
         ]}
-        gridColumns="1.5fr 1fr 0.8fr 40px"
+        gridColumns="1.5fr 1fr 0.8fr"
         hasThumbnailColumn
+        rowChrome={{ rightSlot: true }}
         sortState={sortState}
         onSort={handleSort}
         isLoading={isLoading}
@@ -255,7 +255,7 @@ export function AdminSpeciesTab() {
               name={s.name}
               thumbnail={resolveSpeciesListRowThumbnail(s)}
               description={s.description || ''}
-              gridColumns="1.5fr 1fr 0.8fr 40px"
+              gridColumns="1.5fr 1fr 0.8fr"
               columns={[
                 { key: 'Type', value: formatListCellLabel(s.type) },
                 { key: 'Sizes', value: (s.sizes || []).join(', ') || s.size || '-' },

@@ -4,7 +4,8 @@
 
 import type { OfficialEnhancedItem } from '@/types/crafting';
 
-export const OFFICIAL_ENHANCED_GRID = '1.6fr 1.3fr 1.3fr 0.9fr 0.9fr 0.9fr 40px';
+/** Data columns only — edit/delete/add use OfficialEntityList `rowChrome`. */
+export const OFFICIAL_ENHANCED_GRID = '1.6fr 1.3fr 1.3fr 0.9fr 0.9fr 0.9fr';
 
 export const OFFICIAL_ENHANCED_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME' },
@@ -13,7 +14,6 @@ export const OFFICIAL_ENHANCED_HEADER_COLUMNS = [
   { key: 'rarity', label: 'RARITY' },
   { key: 'cost', label: 'COST (C)' },
   { key: 'uses', label: 'USES' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 export interface OfficialEnhancedRow {

@@ -6,23 +6,32 @@
 'use client';
 
 import { type ReactNode } from 'react';
-import { Shield } from 'lucide-react';
+import { Shield, Shirt, Sword } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
 import type { ItemProperty } from '@/hooks/codex-types';
 import type { LibraryItem } from '@/types/library';
+import { ARMAMENT_LABELS_BY_KIND } from '@/lib/library/armament-library-labels';
 import {
+  ARMAMENT_LIBRARY_CONFIG,
+  armamentRowColumns,
   buildOfficialItemRows,
   filterOfficialItemRows,
-  OFFICIAL_ITEM_GRID,
-  OFFICIAL_ITEM_HEADER_COLUMNS,
+  type ArmamentLibraryKind,
   type OfficialItemRow,
 } from '@/lib/library/official-item-list';
 import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
-export type { OfficialItemRow };
+export type { OfficialItemRow, ArmamentLibraryKind };
+
+const ARMAMENT_ICONS: Record<ArmamentLibraryKind, ReactNode> = {
+  weapon: <Sword className="w-8 h-8" />,
+  armor: <Shirt className="w-8 h-8" />,
+  shield: <Shield className="w-8 h-8" />,
+};
 
 export interface OfficialItemListProps {
+  armamentKind: ArmamentLibraryKind;
   items: LibraryItem[];
   propertiesDb: ItemProperty[];
   isLoading: boolean;
@@ -32,8 +41,8 @@ export interface OfficialItemListProps {
   sectionTitle?: string;
   searchPlaceholder?: string;
   emptyIcon?: ReactNode;
-  emptyTitle: string;
-  emptyMessage: string;
+  emptyTitle?: string;
+  emptyMessage?: string;
   searchEmptyMessage?: string;
   variant: 'library' | 'admin';
   readOnly?: boolean;
@@ -43,65 +52,55 @@ export interface OfficialItemListProps {
 }
 
 export function OfficialItemList({
+  armamentKind,
   items,
   propertiesDb,
   isLoading,
   error,
   onRetry,
-  errorMessage = 'Failed to load armaments',
+  errorMessage,
   sectionTitle,
-  searchPlaceholder = 'Search armaments...',
-  emptyIcon = <Shield className="w-8 h-8" />,
+  searchPlaceholder,
+  emptyIcon,
   emptyTitle,
   emptyMessage,
-  searchEmptyMessage = 'No armaments match your search.',
+  searchEmptyMessage,
   variant,
   readOnly = false,
   onAddRequest,
   onEdit,
   onDelete,
 }: OfficialItemListProps) {
+  const labels = ARMAMENT_LABELS_BY_KIND[armamentKind];
+  const { grid, headers } = ARMAMENT_LIBRARY_CONFIG[armamentKind];
+
   return (
     <OfficialEntityList<OfficialItemRow, LibraryItem>
       items={items}
       isLoading={isLoading}
       error={error}
       onRetry={onRetry}
-      buildRows={(raw) => buildOfficialItemRows(raw, propertiesDb)}
+      buildRows={(raw) => buildOfficialItemRows(raw, propertiesDb, armamentKind)}
       filterRows={filterOfficialItemRows}
-      gridColumns={OFFICIAL_ITEM_GRID}
-      headerColumns={OFFICIAL_ITEM_HEADER_COLUMNS}
-      getColumns={(i) => [
-        { key: 'Type', value: i.type, align: 'center' },
-        { key: 'Rarity', value: i.rarity, align: 'center' },
-        { key: 'Currency', value: i.currency, align: 'center' },
-        { key: 'TP', value: i.tp, align: 'center' },
-        { key: 'Range', value: i.range, align: 'center' },
-        { key: 'Damage', value: i.damage, align: 'center' },
-      ]}
-      getDetailSections={(i) => {
-        const rawType = String(i.raw?.type ?? '').toLowerCase();
+      gridColumns={grid}
+      headerColumns={headers}
+      getColumns={(row) => armamentRowColumns(row, armamentKind)}
+      getDetailSections={(row) => {
         const family =
-          rawType === 'armor'
-            ? 'armor'
-            : rawType === 'shield'
-              ? 'shield'
-              : rawType === 'weapon'
-                ? 'weapon'
-                : 'item';
-        const section = propertiesProficienciesSection(i.parts, family);
+          armamentKind === 'armor' ? 'armor' : armamentKind === 'shield' ? 'shield' : 'weapon';
+        const section = propertiesProficienciesSection(row.parts, family);
         return section ? [section] : undefined;
       }}
-      getTotalCost={(i) => i.tp}
-      costLabel="Training Points"
-      getThumbnail={(i) => resolveListRowThumbnail('equipment', i.raw, i.name)}
-      errorMessage={errorMessage}
+      getTotalCost={(row) => row.tp}
+      costLabel="TP"
+      getThumbnail={(row) => resolveListRowThumbnail('equipment', row.raw, row.name)}
+      errorMessage={errorMessage ?? labels.realmsLoadErrorMessage}
       sectionTitle={sectionTitle}
-      searchPlaceholder={searchPlaceholder}
-      emptyIcon={emptyIcon}
-      emptyTitle={emptyTitle}
-      emptyMessage={emptyMessage}
-      searchEmptyMessage={searchEmptyMessage}
+      searchPlaceholder={searchPlaceholder ?? labels.searchPlaceholder}
+      emptyIcon={emptyIcon ?? ARMAMENT_ICONS[armamentKind]}
+      emptyTitle={emptyTitle ?? labels.emptyTitle}
+      emptyMessage={emptyMessage ?? labels.realmsEmptyMessage}
+      searchEmptyMessage={searchEmptyMessage ?? labels.searchEmptyTitle}
       variant={variant}
       readOnly={readOnly}
       onAddRequest={onAddRequest}

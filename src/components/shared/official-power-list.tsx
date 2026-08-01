@@ -84,7 +84,7 @@ export function OfficialPowerList({
         return section ? [section] : undefined;
       }}
       getTotalCost={(p) => p.tp}
-      costLabel="Training Points"
+      costLabel="TP"
       getThumbnail={(p) => resolveListRowThumbnail('power', p.raw, p.name)}
       errorMessage={errorMessage}
       sectionTitle={sectionTitle}

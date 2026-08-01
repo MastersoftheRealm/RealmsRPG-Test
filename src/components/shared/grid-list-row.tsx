@@ -32,6 +32,7 @@ import {
 } from './grid-list-row-chrome';
 import { GridListRowCollapsed } from './grid-list-row-collapsed';
 import {
+  columnsAlreadyShowTrainingPoints,
   columnsForExpandedMobileStats,
   columnsForMobileSummary,
   columnsWithoutDescriptionPreview,
@@ -53,7 +54,7 @@ export const GridListRow = memo(function GridListRow({
   chipsLabel = 'Details',
   detailSections,
   totalCost,
-  costLabel = 'Training Points',
+  costLabel = 'TP',
   badges = [],
   requirements,
   expandedContent,
@@ -128,9 +129,13 @@ export const GridListRow = memo(function GridListRow({
     !!expandedContent ||
     !!supplementalExpandedContent;
   const showActions = !!(onEdit || onDuplicate || onAddToLibrary);
+  const showExpandedTotalCost =
+    totalCost !== undefined &&
+    totalCost > 0 &&
+    !columnsAlreadyShowTrainingPoints(columns, costLabel);
   const hasDetails =
     hasBodyContent ||
-    (totalCost !== undefined && totalCost > 0) ||
+    showExpandedTotalCost ||
     showActions;
   const showExpander = hasDetails || !!onDelete;
 
@@ -193,9 +198,14 @@ export const GridListRow = memo(function GridListRow({
 
   const inlineSelectable = selectable && remainingInlineActionTracks > 0;
   if (inlineSelectable) remainingInlineActionTracks -= 1;
-  const inlineDelete = !!onDelete && remainingInlineActionTracks > 0;
+  // Edit + delete must share the same chrome (all inline or all flex-outside).
+  // A single leftover `40px` track used to put delete inside hover and edit outside.
+  const editDeleteCount = (onEdit ? 1 : 0) + (onDelete ? 1 : 0);
+  const inlineEditDelete =
+    editDeleteCount > 0 && remainingInlineActionTracks >= editDeleteCount;
+  const inlineDelete = inlineEditDelete && !!onDelete;
   if (inlineDelete) remainingInlineActionTracks -= 1;
-  const inlineEdit = !!onEdit && remainingInlineActionTracks > 0;
+  const inlineEdit = inlineEditDelete && !!onEdit;
   if (inlineEdit) remainingInlineActionTracks -= 1;
   const inlineRightSlot = !!rightSlot && remainingInlineActionTracks > 0;
   const inlineWarning = !!warningMessage && remainingInlineActionTracks > 0;
@@ -301,7 +311,7 @@ export const GridListRow = memo(function GridListRow({
           badges={badges}
           gridColumns={gridColumns}
           expandedMobileStatColumns={expandedMobileStatColumns}
-          totalCost={totalCost}
+          totalCost={showExpandedTotalCost ? totalCost : undefined}
           costLabel={costLabel}
           requirements={requirements}
           hasDetailSections={hasDetailSections}

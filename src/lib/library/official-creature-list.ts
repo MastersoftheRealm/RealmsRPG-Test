@@ -2,16 +2,30 @@
  * Shared official creature list helpers (Library Realms tab + Admin public library).
  */
 
+import type { CreatureData } from '@/components/shared/creature-stat-block-types';
 import { formatListCellLabel } from '@/lib/utils';
 import type { LibraryCreature } from '@/types/library';
 
-export const OFFICIAL_CREATURE_GRID = '1.5fr 0.8fr 1fr 40px';
+/** Full stat-block list chrome (Realms + My Library creature tabs). */
+export const CREATURE_STAT_BLOCK_GRID = '1.8fr 0.6fr 0.8fr 1fr 1fr 0.6fr 0.6fr';
+
+export const CREATURE_STAT_BLOCK_HEADER_COLUMNS = [
+  { key: 'name', label: 'NAME' },
+  { key: 'level', label: 'LEVEL', align: 'center' as const },
+  { key: 'size', label: 'SIZE', align: 'center' as const },
+  { key: 'type', label: 'TYPE', align: 'center' as const },
+  { key: 'archetype', label: 'ARCHETYPE', align: 'center' as const },
+  { key: 'hp', label: 'Health', align: 'center' as const },
+  { key: 'en', label: 'Energy', align: 'center' as const },
+];
+
+/** Data columns only — edit/delete/add use OfficialEntityList `rowChrome`. */
+export const OFFICIAL_CREATURE_GRID = '1.5fr 0.8fr 1fr';
 
 export const OFFICIAL_CREATURE_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME', align: 'left' as const },
   { key: 'level', label: 'LEVEL', align: 'center' as const },
   { key: 'type', label: 'TYPE', align: 'center' as const },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 export interface OfficialCreatureRow {
@@ -52,4 +66,36 @@ export function filterOfficialCreatureRows<
 
 export function formatOfficialCreatureType(type: string): string {
   return formatListCellLabel(type);
+}
+
+/** Map library API creature rows to CreatureStatBlock data. */
+export function mapLibraryCreatureToStatBlockData(creature: LibraryCreature): CreatureData {
+  return {
+    id: String(creature.id ?? creature.docId ?? ''),
+    name: creature.name || '',
+    description: creature.description,
+    imageUrl: creature.image_url ?? undefined,
+    level: creature.level,
+    type: creature.type,
+    size: creature.size,
+    hp: creature.hp,
+    hitPoints: creature.hitPoints,
+    energyPoints: creature.energyPoints,
+    abilities: creature.abilities,
+    defenses: creature.defenses,
+    powerProficiency: creature.powerProficiency,
+    martialProficiency: creature.martialProficiency,
+    resistances: creature.resistances,
+    weaknesses: creature.weaknesses,
+    immunities: creature.immunities,
+    conditionImmunities: creature.conditionImmunities,
+    senses: creature.senses,
+    movementTypes: creature.movementTypes,
+    languages: creature.languages,
+    skills: creature.skills,
+    powers: creature.powers,
+    techniques: creature.techniques,
+    feats: creature.feats,
+    armaments: creature.armaments,
+  };
 }

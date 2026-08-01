@@ -25,7 +25,7 @@ import {
 } from './admin-property-form';
 import { AdminPropertyEditModal } from './admin-property-edit-modal';
 
-const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 40px';
+const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr';
 
 interface PropertyFilters {
   search: string;
@@ -231,11 +231,11 @@ export function AdminPropertiesTab() {
           { key: 'ip', label: 'ITEM PTS' },
           { key: 'tp', label: 'TP' },
           { key: 'cost', label: 'COST MULT' },
-          { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={PROPERTY_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
+        rowChrome={{ rightSlot: true }}
         isLoading={isLoading}
         isEmpty={filteredProperties.length === 0}
         emptyTitle="No properties found"

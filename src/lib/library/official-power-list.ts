@@ -9,7 +9,8 @@ import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 
-export const OFFICIAL_POWER_GRID = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px';
+/** Data columns only — edit/delete/add use ListHeader `rowChrome` (not a leftover 40px track). */
+export const OFFICIAL_POWER_GRID = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr';
 
 export const OFFICIAL_POWER_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME', align: 'left' as const },
@@ -19,7 +20,6 @@ export const OFFICIAL_POWER_HEADER_COLUMNS = [
   { key: 'range', label: 'RANGE', align: 'center' as const },
   { key: 'area', label: 'AREA', align: 'center' as const },
   { key: 'damage', label: 'DAMAGE', align: 'center' as const },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 export interface OfficialPowerRow {

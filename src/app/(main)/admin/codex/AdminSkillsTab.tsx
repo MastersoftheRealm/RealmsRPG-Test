@@ -322,6 +322,7 @@ export function AdminSkillsTab() {
         }
         headerColumns={SKILL_HEADER_COLUMNS}
         gridColumns={SKILL_GRID_COLUMNS}
+        rowChrome={{ rightSlot: true }}
         sortState={sortState}
         onSort={handleSort}
         isLoading={isLoading}

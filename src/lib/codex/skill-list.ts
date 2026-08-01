@@ -4,13 +4,13 @@
 
 import type { Skill } from '@/hooks';
 
-export const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr 40px';
+/** Data columns only — admin action chrome uses CodexBrowseListShell `rowChrome`. */
+export const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr';
 
 export const SKILL_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'ability', label: 'ABILITIES' },
   { key: 'base_skill', label: 'BASE SKILL' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 export interface SkillFilterOptions {

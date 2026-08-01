@@ -86,7 +86,7 @@ export function OfficialTechniqueList({
         return section ? [section] : undefined;
       }}
       getTotalCost={(t) => t.tp}
-      costLabel="Training Points"
+      costLabel="TP"
       getThumbnail={(t) => resolveListRowThumbnail('technique', t.raw, t.name)}
       errorMessage={
         errorMessage ?? `Failed to load ${empowered ? 'empowered techniques' : 'techniques'}`

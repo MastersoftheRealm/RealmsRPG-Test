@@ -21,7 +21,7 @@ import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 const COPY_NAME_SUFFIX = ' copy';
 
-const EQUIPMENT_GRID_COLUMNS = '1.3fr 0.9fr 0.65fr 0.75fr 1fr 0.7fr 40px';
+const EQUIPMENT_GRID_COLUMNS = '1.3fr 0.9fr 0.65fr 0.75fr 1fr 0.7fr';
 
 interface EquipmentListItem {
   id: string;
@@ -261,12 +261,12 @@ export function AdminEquipmentTab() {
           { key: 'rarity', label: 'RARITY' },
           { key: 'damage', label: 'DAMAGE' },
           { key: 'dr', label: 'DMG. RED.' },
-          { key: '_actions', label: '', sortable: false as const },
         ]}
         gridColumns={EQUIPMENT_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
         hasThumbnailColumn
+        rowChrome={{ rightSlot: true }}
         isLoading={isLoading}
         isEmpty={filteredEquipment.length === 0}
         emptyTitle="No equipment found"

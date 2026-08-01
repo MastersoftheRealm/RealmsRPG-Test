@@ -22,7 +22,7 @@ import { namedPropertyDescriptorChips } from '@/lib/detail-option/compact-facts'
 import type { ChipData } from '@/components/shared/grid-list-row';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
-const EQUIPMENT_GRID_COLUMNS = '1.3fr 0.9fr 0.65fr 0.75fr 1fr 0.7fr 40px';
+const EQUIPMENT_GRID_COLUMNS = '1.3fr 0.9fr 0.65fr 0.75fr 1fr 0.7fr';
 const EQUIPMENT_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'category', label: 'CATEGORY' },
@@ -30,7 +30,6 @@ const EQUIPMENT_COLUMNS = [
   { key: 'rarity', label: 'RARITY' },
   { key: 'damage', label: 'DAMAGE' },
   { key: 'dr', label: 'DMG. RED.' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 interface Equipment {

@@ -3252,6 +3252,26 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-013-T067 — Guided creator subsection title typography (session)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Where** | `/characters/new/guided` — Path, Archetype Feats, Abilities, Reveal |
+| **Needs** | Codex paths with feat guidance groups |
+
+**Steps**
+1. Open guided Path. Confirm **Power Paths** / **Powered-Martial Paths** / **Martial Paths** use the display font, are clearly smaller than the step title (“Choose your path” or equivalent) but larger than card titles and body copy.
+2. Select a path with archetype feat guidance groups → Archetype Feats. Confirm each group heading matches the same subsection style as Path (display font, consistent size).
+3. On Abilities (recommended view), confirm the path-recommended heading uses the same subsection style.
+4. On Reveal, confirm **Identity**, **Health & Energy**, and the build summary panel title use the same subsection style under the step title.
+5. At ~360px width: subsection titles remain readable and do not collide with adjacent InfoTippy icons on Path.
+
+**Expected**
+- One shared subsection title scale (`font-display`, `text-xl` / `sm:text-2xl`, semibold) across guided steps; step title stays the largest heading on each screen.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-013-T066 — Guided skills Ability chip + Skill Bonus tip (TASK-548)
 
 | Field | Value |
@@ -3478,7 +3498,7 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 | **Suite** | DEV-V-015 |
 | **Manual** | Library → Realms Library tabs |
 
-**Expected** — Powers/Techniques/Armaments/Creatures load; "Add to library" confirm succeeds for a logged-in user.
+**Expected** — Powers/Techniques/Armaments load with grid rows; Creatures tab shows expandable `CreatureStatBlock` rows (parity with My Library); "Add to library" confirm succeeds for a logged-in user.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5115,6 +5135,173 @@ Co-located vitest contract smoke for high-traffic API routes. First slice: `/api
 
 ---
 
+## DEV-V-032 — Realms Library creature stat blocks (TASK-620)
+
+Parity: Realms Library → Creatures uses the same `CreatureStatBlock` rows as My Library (not the compact official grid).
+
+#### DEV-V-032-T001 — Realms Library creatures full stat blocks
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-032 — Realms Library creature stat blocks |
+| **Related task** | TASK-620 |
+| **Where** | `/library` → Realms Library → Creatures (signed-in and guest browse) |
+| **Needs** | At least one official creature in Realms Library |
+
+**Steps**
+1. Open Library → Realms Library → Creatures — rows match My Library chrome (level, size, type, archetype, Health, Energy columns + thumb).
+2. Expand a creature — full stat block sections (abilities, defenses, skills, powers, techniques, armaments, etc.) render like My Library.
+3. Use a roll button inside the expanded block — `RollLog` records the result.
+4. Signed-in: tap **+** or expanded **Add to library** — confirm modal → creature appears in My Library.
+5. Guest (signed out): browse and expand stat blocks; add actions prompt sign-in (no error).
+6. Admin `/admin/public-library` → Creatures — still compact name/level/type grid (not stat blocks).
+
+**Expected**
+- Library `variant="library"` → `CreatureStatBlock`; admin `variant="admin"` → compact `OfficialEntityList`.
+- Shared mapper `mapLibraryCreatureToStatBlockData` drives both Realms and My Library rows.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-033 — Library armaments split (TASK-621)
+
+Realms Library and My Library replace the single Armaments tab with **Weapons**, **Armor**, and **Shields** tabs. Each tab shows type-specific column headers.
+
+#### DEV-V-033-T001 — Library Weapons / Armor / Shields tabs
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-033 — Library armaments split |
+| **Related task** | TASK-621 |
+| **Where** | `/library` → Realms Library and My Library |
+| **Needs** | Official and/or user weapons, armor, and shields in library |
+
+**Steps**
+1. Open Library → Realms Library — confirm tabs are **Weapons**, **Armor**, **Shields** (not a single Armaments tab).
+2. **Weapons** tab: columns include Rarity, Currency, TP, Range, Damage (no Type column). Sort by Damage/TP works.
+3. **Armor** tab: columns include Damage Red. and Agility Red. (not Range/Damage). Sort by Damage Red. works.
+4. **Shields** tab: columns include Block and Damage.
+5. Switch to My Library — same three tabs with edit/duplicate/sync chrome per kind.
+6. Admin `/admin/public-library` → Armaments: segmented Weapons / Armor / Shields control; lists filter correctly.
+7. Optional ~360px: tab bar wraps; list headers remain readable.
+
+**Expected**
+- `equipment`-typed rows are excluded (armaments only); counts per tab match filtered items.
+- Add-to-library from Realms still works for each kind.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-034 — GLR chrome + Parts chip grammar (TASK-622)
+
+Library / Official GLR rows: action icons share chrome (header spacers + hover), no redundant Total TP when a TP column exists, Parts/Properties chips use dense `TP: N` and omit zero levels.
+
+#### DEV-V-034-T001 — Action chrome alignment + hover
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-034 — GLR chrome + Parts chip grammar |
+| **Related task** | TASK-622 |
+| **Where** | `/library` → My Library → Powers (also Techniques / Weapons) |
+| **Needs** | At least one user power with edit + delete |
+
+**Steps**
+1. Open My Library → Powers. Confirm Name/Energy/…/Damage headers align with row values (no drift from edit/delete icons).
+2. Hover a collapsed power row: edit pencil and delete X are both outside the row hover highlight (same chrome), not split (one in / one out).
+3. Expand a power: Parts chips show `TP: N` (not `Training Points: N`); chips with no TP and no option level show no `(0)`.
+4. My Library → Techniques: expand a technique that has a TP column — confirm there is **no** expanded "Total TP" / "Total Training Points" chip (TP already in the collapsed column).
+5. Optional: Realms Library → Powers with Add (+): header reserves space so columns stay centered over values.
+6. Codex → Equipment (browse): no empty trailing action column; Admin Codex → Equipment: edit/duplicate/delete sit in reserved right chrome aligned with the header.
+
+**Expected**
+- Edit/delete (and add when present) reserved via `rowChrome`, not a single leftover grid track that splits hover.
+- Powers without a TP column may still show expanded Total TP when cost is greater than 0.
+- Codex/Admin shell lists (TASK-624) match the same chrome pattern.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-035 — Realms Library redundant source badge (session)
+
+Realms Library browse rows should not repeat source context with a **Realms** descriptor chip when the page is already Realms Library.
+
+#### DEV-V-035-T001 — No Realms badge on official browse rows
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-035 — Realms Library redundant source badge |
+| **Related task** | Session cleanup (owner feedback) |
+| **Where** | `/library` → Realms Library → Powers, Techniques, Weapons/Armor/Shields, Creatures |
+| **Needs** | At least one official item per tab you spot-check |
+
+**Steps**
+1. Open Library → Realms Library → Powers — expand a row. Confirm there is **no** descriptor chip labeled **Realms** (parts/properties chips may still appear).
+2. Repeat on Techniques and one Armaments tab (e.g. Weapons).
+3. Creatures: expand a stat block — confirm **no** **Realms** badge under the description.
+4. Admin `/admin/public-library` → Enhanced (if any): **Enhanced** purple badge may still appear (meaningful, not source tagging).
+
+**Expected**
+- Realms Library `variant="library"` rows omit source badge; `getBadges` only when explicitly set (e.g. Enhanced).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-036 — Power Creator multi-elemental damage EN (TASK-623)
+
+Each added damage row (including multiple elemental types sharing one codex part id) must independently contribute to Energy in the creator, after save/reload, and in Library display.
+
+#### DEV-V-036-T001 — Three elemental damage rows sum EN
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-036 — Power Creator multi-elemental damage EN |
+| **Related task** | TASK-623 |
+| **Where** | `/power-creator` |
+| **Needs** | Signed-in user optional (save smoke) |
+
+**Steps**
+1. Open `/power-creator`. In Added Damage Types, add three rows: `1d6 fire`, `1d6 ice`, `1d6 lightning` (or acid).
+2. Confirm damage section EN and sidebar total reflect **three** Elemental Damage contributions (e.g. **12 EN** if each 1d6 row is 4 EN).
+3. Save the power; reload via Edit or refresh draft — EN unchanged.
+4. Optional: open saved power in Library — listed Energy matches creator total.
+
+**Expected**
+- Each damage row adds its own EN/TP; no collapse to a single Elemental Damage instance.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-037 — Official power part chip dedupe (session cleanup)
+
+Library/Official powers with promoted duration/area columns must not show duplicate mechanic part chips (e.g. Menace: one `Duration (Minute)`, one `Sphere of Effect`).
+
+#### DEV-V-037-T001 — Menace official power expand
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-037 — Official power part chip dedupe |
+| **Related task** | session cleanup (power-calc dedupe) |
+| **Where** | `/library` → Realms → Powers |
+| **Needs** | None (public official data) |
+
+**Steps**
+1. Open `/library`, Realms tab, Powers. Search **Menace**.
+2. Expand the row. Open **Parts & Proficiencies**.
+3. Count chips: expect **one** `Duration (Minute)`, **one** `Sphere of Effect`, plus Frighten / Immune / No Harm (5 unique chips total).
+4. Optional: spot-check **Fog Cloud** (sphere + minute) — no doubled area/duration mechanic chips.
+
+**Expected**
+- No duplicate auto-mechanic chips when columnar fields and `payload.parts` both exist.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -5140,5 +5327,11 @@ Co-located vitest contract smoke for high-traffic API routes. First slice: `/api
 | DEV-V-027 | Admin Official Enhanced list shell (TASK-575) | — | Manual — see suite above |
 | DEV-V-030 | Encounter play facades (TASK-608) | — | Manual — see suite above |
 | DEV-V-031 | API route smoke (TASK-613) | — | Automated (`npm run test:api`) |
+| DEV-V-032 | Realms Library creature stat blocks (TASK-620) | — | Manual — see suite above |
+| DEV-V-033 | Library armaments split (TASK-621) | — | Manual — see suite above |
+| DEV-V-034 | GLR chrome + Parts chip grammar (TASK-622) | — | Manual — see suite above |
+| DEV-V-035 | Realms Library redundant source badge (session) | — | Manual — see suite above |
+| DEV-V-036 | Power Creator multi-elemental damage EN (TASK-623) | — | Manual — see suite above |
+| DEV-V-037 | Official power part chip dedupe (session cleanup) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

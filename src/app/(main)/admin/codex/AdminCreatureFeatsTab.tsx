@@ -173,9 +173,9 @@ export function AdminCreatureFeatsTab() {
           { key: 'points', label: 'PTS' },
           { key: 'feat_lvl', label: 'FEAT LVL' },
           { key: 'lvl_req', label: 'REQ. LVL' },
-          { key: '_actions', label: '', sortable: false as const },
         ]}
-        gridColumns="1.5fr 0.5fr 0.5fr 0.5fr 40px"
+        gridColumns="1.5fr 0.5fr 0.5fr 0.5fr"
+        rowChrome={{ rightSlot: true }}
         sortState={sortState}
         onSort={handleSort}
         isLoading={isLoading}
@@ -190,7 +190,7 @@ export function AdminCreatureFeatsTab() {
                 id={f.id}
                 name={f.name}
                 description={f.description || ''}
-                gridColumns="1.5fr 0.5fr 0.5fr 0.5fr 40px"
+                gridColumns="1.5fr 0.5fr 0.5fr 0.5fr"
                 columns={[
                   { key: 'Pts', value: String(f.points ?? '-') },
                   { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },

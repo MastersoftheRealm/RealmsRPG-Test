@@ -18,14 +18,13 @@ import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { formatListCellLabel } from '@/lib/utils';
 
-const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr 40px';
+const PROPERTY_GRID_COLUMNS = '1.5fr 1fr 0.8fr 0.8fr 0.8fr';
 const PROPERTY_COLUMNS = [
   { key: 'name', label: 'NAME' },
   { key: 'type', label: 'TYPE' },
   { key: 'ip', label: 'ITEM PTS' },
   { key: 'tp', label: 'TP' },
   { key: 'cost', label: 'COST MULT' },
-  { key: '_actions', label: '', sortable: false as const },
 ];
 
 interface PropertyFilters {
