@@ -47,6 +47,7 @@
     "src/components/shared/grid-list-row.tsx",
     "src/components/shared/guided-choice/guided-choice-shell.tsx",
     "src/components/shared/guided-choice/guided-layer-nav.tsx",
+    "src/components/shared/guided-choice/guided-nav-button-styles.ts",
     "src/components/shared/guided-choice/index.ts",
     "src/components/shared/hub-list-row.tsx",
     "src/components/shared/image-upload-modal.tsx",
