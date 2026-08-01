@@ -4,67 +4,17 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-630
+**Next task ID:** TASK-639
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-628, session Menace dedupe, TASK-623, …)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-630, TASK-628, …)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 2 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-628 done (armor Abl. Req. + Crit + columns). TASK-629 filed (GLR fact registry — Architect). TASK-626 done (empowered nested power part chips).
-
----
-
-- id: TASK-629
-  title: Enforceable GLR required-facts registry per entity type
-  priority: medium
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - src/docs/ai/CHIP_UNIFICATION_PLAN.md
-    - src/docs/ai/guide/04-floating-ui-tooltips.md
-    - src/lib/detail-option/compact-facts.ts
-    - src/lib/library/official-item-list.ts
-    - src/docs/GAME_RULES.md
-  description: |
-    Policy exists (column OR self-describing chip; compact-facts grammar) but each GLR list
-    configures columns independently — no typed registry of required quick-ref facts per entity
-    type, and no CI/check that Library/Codex/sheet/add-modal surfaces satisfy it. Gaps rediscovered
-    (e.g. armor ability req / Critical Range increase before TASK-628).
-  acceptance_criteria:
-    - Architect ADR or owner ack for a single required-facts map (entity → facts; column vs chip placement).
-    - Shared module consumed by Library/Official/sheet/add-modal builders (or validated against them).
-    - Automated check (vitest or tasks:validate) fails when a required fact is missing from both columns and expanded chips.
-    - Document SoT in constitution map / FEATURE_INDEX; retire stale CHIP_UNIFICATION example table drift.
-  notes: |
-    Architect-class (new shared contract). Pause for stronger model / owner ack before implement.
-    Related: TASK-437 audit, TASK-454/461 compact-facts, CHIP_UNIFICATION_PLAN § Metadata visibility.
-
----
-
-- id: TASK-627
-  title: Official powers payload — strip redundant auto-mechanic parts (codex data)
-  priority: low
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  assignee: owner
-  related_files:
-    - sql/
-    - src/docs/SUPABASE_SCHEMA.md
-  description: |
-    ~12/43 official_powers duplicate auto-mechanic parts in payload.parts when promoted columns exist.
-    Read-path dedupe fixes display; optional data cleanup removes redundancy (owner approve before apply).
-  acceptance_criteria:
-    - Audit query lists affected rows with overlap counts.
-    - Proposed SQL in sql/; preview Menace + Fog Cloud before/after.
-    - Owner approves apply; post-migration counts in AI_CHANGELOG.
-  notes: |
-    Codex policy audit → propose → approve → apply.
+**Hot notes:** TASK-638 done (Path L1↔L3 custom archetype) — pending-qa DEV-V-013 T072–T074. Next Custom integration screen TBD by owner.
 
 ---
 

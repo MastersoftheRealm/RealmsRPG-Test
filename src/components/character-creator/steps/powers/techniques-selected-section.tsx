@@ -79,8 +79,9 @@ export function TechniquesSelectedSection({
             gridColumns={TECHNIQUE_GRID_COLUMNS}
             compact
             hasThumbnailColumn
+            rowChrome={{ rightSlot: true }}
           />
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1">
             {selectedTechniqueItems.map((tech) => {
               const idStr = String(tech.id);
               const isPathRec =

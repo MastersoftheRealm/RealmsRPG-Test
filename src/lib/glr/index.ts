@@ -22,12 +22,15 @@ export {
 export {
   CODEX_BROWSE_LIST_ROW_CLASSNAME,
   CODEX_BROWSE_SHELL_SOURCES,
+  CREATOR_EMBEDDED_GLR_SOURCES,
   DEFAULT_GLR_LIST_CLASSNAME,
+  DEFAULT_USM_LIST_CLASSNAME,
   FORBIDDEN_GLR_GRID_ACTION_TRACK_REGEX,
   GLR_GRID_COLUMN_SOURCES,
   GLR_LIST_CLASSNAME_CALLER_SOURCES,
   GLR_LIST_SHELL_SOURCES,
   MY_LIBRARY_ENTITY_TAB_SOURCES,
+  USM_LIST_SHELL_SOURCES,
 } from './glr-chrome-spacing-norms';
 
 export {
@@ -35,12 +38,7 @@ export {
   expectedRowChromeFromRowActions,
   resolvedRowChromeFlags,
   scanGlrChromeSpacingSources,
-  validateCodexBrowseShellSource,
-  validateGlrGridColumnSource,
   validateGlrListClassName,
-  validateGlrListClassNameCaller,
-  validateGlrListShellSource,
-  validateMyLibraryEntityTabSource,
   type GlrChromeSpacingScanResult,
   type RowChromeFlags,
 } from './validate-glr-chrome-spacing';

@@ -1,8 +1,9 @@
 /**
- * GLR list chrome + spacing norms (TASK-631).
+ * GLR list chrome + spacing norms (TASK-631, TASK-637).
  *
  * Library / Official / Codex browse lists share tight row density (`gap-1`) and
  * ListHeader `rowChrome` tracks that mirror GridListRow edit/delete/add/rightSlot actions.
+ * USM and creator-embedded GLR lists follow the same row-container + rowChrome contract.
  * Complements required-facts registry (TASK-629 / ADR-0009).
  *
  * CI: `validate-glr-chrome-spacing.test.ts` · Guide: `guide/02-components-and-lists.md`
@@ -10,6 +11,9 @@
 
 /** Default row-container class on UserLibraryEntityTabShell and OfficialEntityList. */
 export const DEFAULT_GLR_LIST_CLASSNAME = 'flex flex-col gap-1 mt-2' as const;
+
+/** Default row-container class on UnifiedSelectionModalList. */
+export const DEFAULT_USM_LIST_CLASSNAME = 'flex flex-col gap-1 min-w-0' as const;
 
 /** CodexBrowseListShell hardcodes the same gap on its row container. */
 export const CODEX_BROWSE_LIST_ROW_CLASSNAME = 'mt-2 flex flex-col gap-1' as const;
@@ -59,6 +63,19 @@ export const CODEX_BROWSE_SHELL_SOURCES = [
   'src/app/(main)/codex/CodexTraitsTab.tsx',
   'src/app/(main)/codex/CodexSkillsTab.tsx',
   'src/app/(main)/codex/CodexCreatureFeatsTab.tsx',
+] as const;
+
+/** UnifiedSelectionModal list row container (selection modals). */
+export const USM_LIST_SHELL_SOURCES = [
+  'src/components/shared/unified-selection-modal-list.tsx',
+] as const;
+
+/** Creator pages with embedded ListHeader + GridListRow lists (not library/codex shells). */
+export const CREATOR_EMBEDDED_GLR_SOURCES = [
+  'src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx',
+  'src/components/character-creator/steps/powers/powers-selected-section.tsx',
+  'src/components/character-creator/steps/powers/techniques-selected-section.tsx',
+  'src/components/character-creator/steps/equipment/selected-equipment-list.tsx',
 ] as const;
 
 /** Callers that may pass `listClassName` into GLR shells. */

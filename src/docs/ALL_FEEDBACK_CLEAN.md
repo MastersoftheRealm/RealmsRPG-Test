@@ -1,12 +1,24 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-01 (Creatures GLR spacing + header chrome drift)
+Last updated: 2026-08-01 (Unified character creator L1–L3 plan)
+
+**Raw Feedback Log — 2026-08-01 (Unified character creator L1–L2–L3)**
+- Context: Character creation entry + guided creator layers; product overview three-layer model; parallel Advanced/Custom creator to phase out
+- Feedback: Guided creator is mostly L1–L2 today; L3 should be the full customizable options currently represented by the parallel Custom/Advanced creator. Chooser buttons **Guided** and **Custom** both enter the same creator (today’s guided shell): Guided → L1 entry; Custom → L3 entry. Navigate between layers with same-style, same-place buttons (`GuidedLayerNav` pattern). L3 entry lands on the archetype step: pick Martial / Power / Powered-Martial, then power/martial ability(ies), with InfoTippy along the way. Escape hatch from L3: view archetype paths → L1 (path browse; Path chapter has no distinct L2 — L1 and “L2” are the same path cards). On L1 Path step, add bottom entry **Custom Archetype** (or similar) → L3. Align with `REALMS_PRODUCT_OVERVIEW.md` three-layer model; supersede “keep two parallel creators forever.”
+- Expected: One character-creator shell with catalog layers; Advanced/Custom phased out after integration; Path L1↔L3 hatches; chooser dual entry into the same creator. Not every step exposes all three layers — some are L1-only, L2-only, or L3-only by mechanics or design.
+- Disposition: Product overview revised §3 / §5.0 / §5.1. **TASK-638 done** — Path L1↔L3 custom archetype + chooser Custom entry (pending-qa DEV-V-013 T072–T074). Downstream forge chapters still open (one screen at a time).
+
+**Raw Feedback Log — 2026-08-01 (Creature level fraction display)**
+- Context: Sitewide creature level presentation
+- Feedback: Display decimal creature levels as unicode fractions when user-facing (0.25 → ¼, 0.5 → ½, 0.75 → ¾); establish as global standard across codebase.
+- Expected: All creature level labels/columns use shared formatter; creator level select shows fractions; numeric storage/calcs unchanged.
+- Disposition: **Session cleanup** — `lib/game/creature-level-display.ts` + wired stat blocks, library/admin lists, combatant picker, creator summary/select, load modals, creature-feat req columns. `GAME_RULES.md` + `FEATURE_INDEX` document rule. verification_status pending-qa (DEV-V-040-T001).
 
 **Raw Feedback Log — 2026-08-01 (Creatures GLR spacing + header alignment)**
 - Context: Library → Creatures tab (vs Powers/Techniques/Weapons/Armor/Shields); concern that GLR norms break locally and require hunt-and-peck fixes
 - Feedback: Creature GLR item spacing differs from other tabs; creature column headers do not follow the recent header↔column alignment fix (TASK-622 `rowChrome`). Assumed same pattern may exist in other GLR cases. Shared components should make the desired norm hard to break.
 - Expected: Same row gap as other GLR lists; ListHeader reserves the same action chrome as GridListRow (edit/delete/+); prefer enforceable shared defaults over per-tab overrides.
-- Disposition: **TASK-630** done — Creatures `rowChrome` + shell `gap-1` (dropped `space-y-3`); shared `CREATURE_STAT_BLOCK_GRID`. **TASK-631** filed for enforceable GLR chrome/spacing CI. Related TASK-629 (facts registry).
+- Disposition: **TASK-630** done — Creatures `rowChrome` + shell `gap-1` (dropped `space-y-3`); shared `CREATURE_STAT_BLOCK_GRID`. **TASK-631** done — GLR chrome/spacing CI for Library/Official/Codex. **TASK-637** done — extended CI to USM + creator-embedded lists (creature + advanced creator selected powers/techniques/equipment); migrated `rowChrome` / `gap-1`. Related TASK-629 (facts registry).
 
 **Raw Feedback Log — 2026-08-01 (Library armor columns + GLR quick-ref SoT)**
 - Context: Realms Library → Armor column headers; constitution consistency for GLR quick-ref facts
@@ -111,6 +123,7 @@ How to use
 - **Named Bonuses Title Case (2026-07-15):** Capitalize Attack Bonus and essentially every named Bonus (Power Bonus, Martial Bonus, Ranged Attack Bonus, Skill Bonus, Defense Bonus, ?). Documented in `GAME_RULES.md` Terminology.
 - **Creature Creator (2026-02-24):** (1) Show feat point cost for damage modifiers (resistance, immunity, weakness), senses, movement, condition immunities ? before and after adding (chip or label). TASK-270. (2) Use AddSkillModal and AddSubSkillModal instead of skills dropdown. TASK-271. (3) Separate Add Feat and Add Negative Feat modals (negative = feats with negative feat point cost). TASK-272. (4) Add power/technique/armament modals and displayed lists: parts, properties, options as chips; area, range, etc in expanded view; use same logic as add-library-item-modal and library/codex. TASK-273.
 - **2026-03-07 (barfight):** Power creator: allow multiple damage types per power (add row; save/load array). TASK-286. Creators: show explicit energy (EN) per item. TASK-287. Remove "(optional)" from damage in creators. TASK-288.
+- **2026-08-01:** Creature levels: user-facing decimal levels (0.25 / 0.5 / 0.75) display as unicode fractions (¼ / ½ / ¾) via `formatCreatureLevel*` (`@/lib/game`). Session cleanup — see raw log above.
 
 ### 4) Character Sheet & Library
 - Library tab order: Feats, Powers, Techniques, Inventory, Proficiencies, Notes (default open to Feats).
@@ -2755,3 +2768,17 @@ Notes
 - Feedback (verbatim summary): Column headers inconsistently reserve space for edit/delete/add so columns misalign; functional buttons inconsistently inside vs outside hover (delete in hover, edit not). Total Training Points expanded chip redundant when TP already in collapsed columns (techniques). Parts & Proficiencies chips should use `TP: X` not `Training Points: X`; option level increases unclear; omit `(0)` when level is 0 or not increasable.
 - Expected: Shared GridListRow chrome alignment + unified hover for action icons; suppress Total TP when column already shows it; dense browse Parts/Properties chips `TP: N` + `Lv.N` only when > 0.
 - Disposition: **TASK-622**.
+
+**Raw Feedback Log — 2026-08-01 (Codex feat Tags section label + order)**
+- Date: 2026-08-01
+- Context: Codex → Feats expanded row (e.g. Abundant Harvest)
+- Priority: Medium
+- Feedback (verbatim summary): Single feat tag chips (e.g. "Craft") appear without a section header — looks like a floating descriptor; user needs to know it is a tag. Tags should appear at the bottom of expanded detail sections (after ability requirements, skill requirements, feat levels).
+- Expected: **Tags** section label always visible; section order: requirements/levels first, Tags last; applies wherever `buildFeatDetailSections` is used.
+- Disposition: Implemented in `buildFeatDetailSections` (`feat-list.ts`); CI `feat-list.test.ts`; pending-qa **DEV-V-039-T001**.
+
+**Raw Feedback Log - 2026-08-01 (guided path ability chip colon + unification)**
+- Priority: Low
+- Feedback (verbatim summary): Path selection guided creator card/desc chips should read `Primary Ability: X` and `Secondary Ability: X` (colon for clarity), not `Primary Ability X`.
+- Expected: Guided path cards + More details use colon-separated labels; Advanced creator parity via shared copy + chip builder.
+- Disposition: `path-ability-copy.ts` + `buildPathAbilityChipLabels`; wired Guided path-step/overview + Advanced archetype-step; `path-ability-labels.test.ts`.

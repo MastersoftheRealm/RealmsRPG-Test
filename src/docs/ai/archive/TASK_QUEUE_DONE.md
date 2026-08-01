@@ -1,3 +1,38 @@
+- id: TASK-638
+  title: Guided Path — L3 custom archetype face + L1?L3 hatches
+  created_at: 2026-08-01
+  created_by: owner
+  completed_at: 2026-08-01
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/steps/path-step.tsx
+    - src/components/guided-creator/guided-path-custom-archetype.tsx
+    - src/lib/guided-creator/path-selection-draft.ts
+    - src/stores/guided-creator-store.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/app/(main)/characters/new/page.tsx
+    - src/app/(main)/characters/new/guided/page.tsx
+    - src/lib/guided-creator/build-character.ts
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  description: |
+    First Custom-integration screen: Foundation Path. L1 = path cards + Custom Archetype hatch.
+    L3 = type + ability picks with InfoTippy. Chooser Custom ? guided Path L3.
+  acceptance_criteria:
+    - L1 Path shows Custom Archetype hatch; L3 Continue + View archetype paths; Custom chooser entry; forge save payload.
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T072
+      - DEV-V-013-T073
+      - DEV-V-013-T074
+  developer_test_plan: |
+    Suite DEV-V-013 T072–T074 — Path Custom Archetype L1?L3 + chooser Custom entry.
+  notes: |
+    Downstream forge chapter parity is follow-up (one screen at a time). Advanced route still exists.
+
+---
 - id: TASK-631
   title: Enforceable GLR list chrome + spacing norms (CI)
   priority: medium
@@ -15826,3 +15861,27 @@ Firebase/RTDB - the project is Supabase-only.
     ADR-0009; lib/glr registry + validate-glr-facts; CI binds official power/technique/armament,
     character-sheet play, add-modal, codex-feat surfaces. Sibling: TASK-631 (chrome/spacing).
 
+
+- id: TASK-637
+  title: Extend GLR chrome/spacing CI to USM and creator embedded lists
+  priority: low
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  created_by: agent
+  parent_task: TASK-631
+  related_files:
+    - src/components/shared/unified-selection-modal-list.tsx
+    - src/lib/glr/glr-chrome-spacing-norms.ts
+    - src/lib/glr/validate-glr-chrome-spacing.ts
+    - src/lib/glr/validate-glr-chrome-spacing.test.ts
+    - src/lib/glr/index.ts
+    - src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx
+    - src/docs/ai/guide/02-components-and-lists.md
+    - src/docs/ai/FEATURE_INDEX.md
+  completed_work: |
+    Registered USM_LIST_SHELL_SOURCES + CREATOR_EMBEDDED_GLR_SOURCES; extended validators
+    (per-ListHeader rowChrome incl. leftSlot, gap-1 row containers, 40px grid scan).
+    Migrated USM list body + creature creator loadout (feats/powers/techniques/armaments)
+    to rowChrome pattern; dropped 40px action tracks and space-y-1 list overrides.
+  notes: Follow-up from TASK-631 cleanup audit.

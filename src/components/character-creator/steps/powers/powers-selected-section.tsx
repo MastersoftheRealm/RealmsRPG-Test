@@ -82,9 +82,9 @@ export function PowersSelectedSection({
             gridColumns={POWER_GRID_COLUMNS}
             compact
             hasThumbnailColumn
-            rowChrome={{ leftSlot: showInnateControls }}
+            rowChrome={{ leftSlot: showInnateControls, rightSlot: true }}
           />
-          <div className="space-y-1">
+          <div className="flex flex-col gap-1">
             {selectedPowerItems.map((power) => {
               const idStr = String(power.id);
               const draftPower = selectedPowers.find((p) => String(p.id) === idStr);

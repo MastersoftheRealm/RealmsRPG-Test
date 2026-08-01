@@ -1,10 +1,12 @@
 /**
- * GLR list chrome + spacing validators (TASK-631).
+ * GLR list chrome + spacing validators (TASK-631, TASK-637).
  */
 
 import {
   CODEX_BROWSE_LIST_ROW_CLASSNAME,
+  CREATOR_EMBEDDED_GLR_SOURCES,
   DEFAULT_GLR_LIST_CLASSNAME,
+  DEFAULT_USM_LIST_CLASSNAME,
   FORBIDDEN_GLR_GRID_ACTION_TRACK_REGEX,
   FORBIDDEN_GLR_LIST_GAP_REGEX,
   GLR_GRID_COLUMN_SOURCES,
@@ -12,22 +14,13 @@ import {
   GLR_LIST_SHELL_SOURCES,
   CODEX_BROWSE_SHELL_SOURCES,
   MY_LIBRARY_ENTITY_TAB_SOURCES,
-} from './glr-chrome-spacing-norms';
-
-export {
-  CODEX_BROWSE_LIST_ROW_CLASSNAME,
-  CODEX_BROWSE_SHELL_SOURCES,
-  DEFAULT_GLR_LIST_CLASSNAME,
-  FORBIDDEN_GLR_GRID_ACTION_TRACK_REGEX,
-  GLR_GRID_COLUMN_SOURCES,
-  GLR_LIST_CLASSNAME_CALLER_SOURCES,
-  GLR_LIST_SHELL_SOURCES,
-  MY_LIBRARY_ENTITY_TAB_SOURCES,
+  USM_LIST_SHELL_SOURCES,
 } from './glr-chrome-spacing-norms';
 
 export interface RowChromeFlags {
   edit: boolean;
   delete: boolean;
+  leftSlot: boolean;
   rightSlot: boolean;
 }
 
@@ -60,25 +53,64 @@ function extractConstObjectBody(source: string, constName: string): string | nul
   return plainMatch?.[1] ?? null;
 }
 
+function applyRowChromeBody(flags: RowChromeFlags, body: string): void {
+  if (/edit:\s*true/.test(body)) flags.edit = true;
+  if (/delete:\s*true/.test(body)) flags.delete = true;
+  if (/leftSlot:\s*true/.test(body) || /leftSlot:\s*[a-zA-Z_$]/.test(body)) {
+    flags.leftSlot = true;
+  }
+  if (/rightSlot:\s*true/.test(body) || /rightSlot:\s*[a-zA-Z_$]/.test(body)) {
+    flags.rightSlot = true;
+  }
+}
+
 /** Parse `rowChrome` flags from inline object or `*_ROW_CHROME` const. */
 export function resolvedRowChromeFlags(source: string): RowChromeFlags {
-  const flags: RowChromeFlags = { edit: false, delete: false, rightSlot: false };
+  const flags: RowChromeFlags = {
+    edit: false,
+    delete: false,
+    leftSlot: false,
+    rightSlot: false,
+  };
 
   const inlineMatch = source.match(/rowChrome=\{\{([\s\S]*?)\}\}/);
   if (inlineMatch) {
-    const body = inlineMatch[1];
-    if (/edit:\s*true/.test(body)) flags.edit = true;
-    if (/delete:\s*true/.test(body)) flags.delete = true;
-    if (/rightSlot:\s*true/.test(body)) flags.rightSlot = true;
+    applyRowChromeBody(flags, inlineMatch[1]);
     return flags;
   }
 
   for (const match of source.matchAll(/rowChrome=\{([A-Z][A-Z0-9_]*)\}/g)) {
     const body = extractConstObjectBody(source, match[1]);
     if (!body) continue;
-    if (/edit:\s*true/.test(body)) flags.edit = true;
-    if (/delete:\s*true/.test(body)) flags.delete = true;
-    if (/rightSlot:\s*true/.test(body)) flags.rightSlot = true;
+    applyRowChromeBody(flags, body);
+  }
+
+  return flags;
+}
+
+/** Parse `rowChrome` on a single ListHeader block (embedded creator lists). */
+export function resolvedRowChromeFlagsInBlock(
+  section: string,
+  fullSource?: string
+): RowChromeFlags {
+  const flags: RowChromeFlags = {
+    edit: false,
+    delete: false,
+    leftSlot: false,
+    rightSlot: false,
+  };
+
+  const inlineMatch = section.match(/rowChrome=\{\{([\s\S]*?)\}\}/);
+  if (inlineMatch) {
+    applyRowChromeBody(flags, inlineMatch[1]);
+    return flags;
+  }
+
+  const constMatch = section.match(/rowChrome=\{([A-Z][A-Z0-9_]*)\}/);
+  if (constMatch) {
+    const lookup = fullSource ?? section;
+    const body = extractConstObjectBody(lookup, constMatch[1]);
+    if (body) applyRowChromeBody(flags, body);
   }
 
   return flags;
@@ -88,6 +120,7 @@ export function expectedRowChromeFromRowActions(source: string): RowChromeFlags 
   return {
     edit: /\bonEdit\s*[=:{]/.test(source),
     delete: /\bonDelete\s*[=:{]/.test(source),
+    leftSlot: /\bleftSlot\s*[=:{]/.test(source),
     rightSlot: /\brightSlot\s*[=:{]/.test(source),
   };
 }
@@ -101,7 +134,9 @@ function validateRowChromePairing(
   if (!source.includes(shellMarker)) return errors;
 
   const expected = expectedRowChromeFromRowActions(source);
-  if (!expected.edit && !expected.delete && !expected.rightSlot) return errors;
+  if (!expected.edit && !expected.delete && !expected.leftSlot && !expected.rightSlot) {
+    return errors;
+  }
 
   if (!/rowChrome=/.test(source)) {
     errors.push(`${relativePath}: row actions present but shell is missing rowChrome`);
@@ -115,8 +150,71 @@ function validateRowChromePairing(
   if (expected.delete && !actual.delete) {
     errors.push(`${relativePath}: onDelete requires rowChrome.delete`);
   }
+  if (expected.leftSlot && !actual.leftSlot) {
+    errors.push(`${relativePath}: leftSlot requires rowChrome.leftSlot`);
+  }
   if (expected.rightSlot && !actual.rightSlot) {
     errors.push(`${relativePath}: rightSlot requires rowChrome.rightSlot`);
+  }
+
+  return errors;
+}
+
+function splitEmbeddedListHeaderSections(source: string): string[] {
+  return source.split(/(?=<ListHeader)/).filter((part) => part.includes('<ListHeader'));
+}
+
+function validateEmbeddedListHeaderBlock(
+  relativePath: string,
+  section: string,
+  index: number,
+  fullSource: string
+): string[] {
+  const errors: string[] = [];
+  if (!section.includes('GridListRow')) return errors;
+
+  const context = `${relativePath} ListHeader#${index + 1}`;
+  // Equipment-step pattern: `rightSlotWidth` reserves remove/qty chrome instead of rowChrome.
+  if (/rightSlotWidth=/.test(section)) return errors;
+
+  const expected = expectedRowChromeFromRowActions(section);
+  if (!expected.edit && !expected.delete && !expected.leftSlot && !expected.rightSlot) {
+    return errors;
+  }
+
+  if (!/rowChrome=/.test(section)) {
+    errors.push(`${context}: row actions present but ListHeader is missing rowChrome`);
+    return errors;
+  }
+
+  const actual = resolvedRowChromeFlagsInBlock(section, fullSource);
+  if (expected.edit && !actual.edit) {
+    errors.push(`${context}: onEdit requires rowChrome.edit`);
+  }
+  if (expected.delete && !actual.delete) {
+    errors.push(`${context}: onDelete requires rowChrome.delete`);
+  }
+  if (expected.leftSlot && !actual.leftSlot) {
+    errors.push(`${context}: leftSlot requires rowChrome.leftSlot`);
+  }
+  if (expected.rightSlot && !actual.rightSlot) {
+    errors.push(`${context}: rightSlot requires rowChrome.rightSlot`);
+  }
+
+  return errors;
+}
+
+/** GLR row containers wrapping GridListRow maps must use tight gap-1 (not space-y-3 / gap-3). */
+export function validateEmbeddedGlrListRowContainers(
+  relativePath: string,
+  source: string
+): string[] {
+  const errors: string[] = [];
+  const containerPattern =
+    /<div className="([^"]+)"[^>]*>\s*\{[^}]*\.map\([\s\S]*?<GridListRow/g;
+
+  for (const match of source.matchAll(containerPattern)) {
+    errors.push(...validateGlrListClassName(match[1], `${relativePath} GLR row container`));
   }
 
   return errors;
@@ -240,6 +338,48 @@ export function validateCodexBrowseShellSource(
   return validateRowChromePairing(relativePath, source, 'CodexBrowseListShell');
 }
 
+/** UnifiedSelectionModal list shell must keep canonical gap-1 row container. */
+export function validateUsmListShellSource(
+  relativePath: string,
+  source: string
+): string[] {
+  const errors: string[] = [];
+  const listContainerMatch = source.match(
+    /<div className="([^"]+)"[^>]*>\s*\{filteredItems\.map/
+  );
+
+  if (!listContainerMatch) {
+    errors.push(`${relativePath}: missing USM list row container`);
+    return errors;
+  }
+
+  const className = listContainerMatch[1];
+  if (className !== DEFAULT_USM_LIST_CLASSNAME) {
+    errors.push(
+      `${relativePath}: USM list row container must be "${DEFAULT_USM_LIST_CLASSNAME}" (got "${className}")`
+    );
+  }
+
+  errors.push(...validateGlrListClassName(className, `${relativePath} USM list container`));
+  return errors;
+}
+
+/** Creator-embedded GLR lists: rowChrome pairing, no 40px tracks, tight row gaps. */
+export function validateCreatorEmbeddedGlrSource(
+  relativePath: string,
+  source: string
+): string[] {
+  const errors: string[] = [];
+  errors.push(...validateGlrGridColumnSource(relativePath, source));
+  errors.push(...validateEmbeddedGlrListRowContainers(relativePath, source));
+
+  splitEmbeddedListHeaderSections(source).forEach((section, index) => {
+    errors.push(...validateEmbeddedListHeaderBlock(relativePath, section, index, source));
+  });
+
+  return errors;
+}
+
 export interface GlrChromeSpacingScanResult {
   errors: string[];
 }
@@ -268,6 +408,14 @@ export function scanGlrChromeSpacingSources(
 
   for (const path of CODEX_BROWSE_SHELL_SOURCES) {
     errors.push(...validateCodexBrowseShellSource(path, readFile(path)));
+  }
+
+  for (const path of USM_LIST_SHELL_SOURCES) {
+    errors.push(...validateUsmListShellSource(path, readFile(path)));
+  }
+
+  for (const path of CREATOR_EMBEDDED_GLR_SOURCES) {
+    errors.push(...validateCreatorEmbeddedGlrSource(path, readFile(path)));
   }
 
   return { errors };

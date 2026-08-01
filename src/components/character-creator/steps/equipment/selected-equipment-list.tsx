@@ -46,7 +46,7 @@ export function SelectedEquipmentList({
         compact
         hasThumbnailColumn
       />
-      <div className="space-y-1 pb-2">
+      <div className="flex flex-col gap-1 pb-2">
         {selectedItems.map((item) => {
           const fullItem = allEquipment.find((e) => e.id === item.id);
           const typeLabel = item.type.charAt(0).toUpperCase() + item.type.slice(1);

@@ -18,7 +18,11 @@ import { CollapsibleSection } from '@/components/creator';
 import { buildFeatLevelChips } from '@/lib/leveled-feats';
 import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 
-const CREATURE_FEAT_LIST_GRID = '1.15fr 0.58fr 0.52fr 0.4fr 40px';
+const CREATURE_FEAT_LIST_GRID = '1.15fr 0.58fr 0.52fr 0.4fr';
+const CREATURE_REMOVE_ROW_CHROME = { rightSlot: true } as const;
+const CREATURE_POWER_ROW_CHROME = { leftSlot: true, rightSlot: true } as const;
+const CREATURE_ARMAMENT_LIST_GRID =
+  'minmax(180px, 0.9fr) minmax(72px, 0.55fr) minmax(88px, 7rem) minmax(60px, 4rem) minmax(110px, 8rem) minmax(56px, 0.45fr) minmax(64px, 0.55fr)';
 
 type LoadoutSectionsProps = Pick<
   CreatureCreatorEditorProps,
@@ -93,13 +97,13 @@ export function CreatureCreatorEditorLoadoutSections({
                 { key: 'typeLabel', label: 'TYPE', width: '0.58fr', align: 'center' },
                 { key: 'level', label: 'LVL', width: '0.52fr', align: 'center' },
                 { key: 'points', label: 'PTS', width: '0.4fr', align: 'center' },
-                { key: '_actions', label: '', sortable: false as const },
               ]}
               gridColumns={CREATURE_FEAT_LIST_GRID}
               sortState={featSort}
               onSort={onFeatSort}
+              rowChrome={CREATURE_REMOVE_ROW_CHROME}
             />
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               {sortedFeats.map((feat) => {
                 const levelChips =
                   feat.levelMeta && feat.levelMeta.family.length > 1
@@ -186,7 +190,6 @@ export function CreatureCreatorEditorLoadoutSections({
           <div className="border border-border-light rounded-lg overflow-hidden mb-4">
             <ListHeader
               columns={[
-                { key: '_innate', label: '', width: '2rem', sortable: false as const },
                 { key: 'name', label: 'NAME', width: '1.4fr' },
                 { key: 'Energy', label: 'ENERGY', width: '0.6fr', align: 'center' },
                 { key: 'Action', label: 'ACTION', width: '0.8fr', align: 'center' },
@@ -194,10 +197,11 @@ export function CreatureCreatorEditorLoadoutSections({
                 { key: 'Area', label: 'AREA', width: '0.7fr', align: 'center' },
                 { key: 'Duration', label: 'DURATION', width: '0.8fr', align: 'center' },
               ]}
-              gridColumns="2rem 1.4fr 0.6fr 0.8fr 0.8fr 0.7fr 0.8fr"
+              gridColumns="1.4fr 0.6fr 0.8fr 0.8fr 0.7fr 0.8fr"
               hasThumbnailColumn
+              rowChrome={CREATURE_POWER_ROW_CHROME}
             />
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               {creature.powers.map(
                 (power: {
                   id: string;
@@ -276,8 +280,9 @@ export function CreatureCreatorEditorLoadoutSections({
               ]}
               gridColumns="1.4fr 0.7fr 1fr 0.8fr"
               hasThumbnailColumn
+              rowChrome={CREATURE_REMOVE_ROW_CHROME}
             />
-            <div className="space-y-1">
+            <div className="flex flex-col gap-1">
               {creature.techniques.map(
                 (tech: {
                   id: string;
@@ -333,7 +338,7 @@ export function CreatureCreatorEditorLoadoutSections({
         {creature.armaments.length === 0 ? (
           <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No inventory items added</p>
         ) : (
-          <div className="space-y-3 mb-4">
+          <div className="flex flex-col gap-3 mb-4">
             <div className="rounded-lg border border-border-light bg-surface-alt p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium text-text-secondary dark:text-text-primary">
@@ -362,21 +367,21 @@ export function CreatureCreatorEditorLoadoutSections({
                   { key: 'damage', label: 'DAMAGE', width: 'minmax(92px, 6.75rem)', align: 'center' },
                   { key: 'tp', label: 'TP', width: '0.5fr', align: 'center' },
                   { key: 'currency', label: 'COST', width: '0.6fr', align: 'center' },
-                  { key: '_actions', label: '', sortable: false as const },
                 ]}
-                gridColumns="minmax(180px, 0.9fr) minmax(72px, 0.55fr) minmax(88px, 7rem) minmax(60px, 4rem) minmax(110px, 8rem) minmax(56px, 0.45fr) minmax(64px, 0.55fr) 40px"
+                gridColumns={CREATURE_ARMAMENT_LIST_GRID}
                 sortState={armamentSort}
                 onSort={onArmamentSort}
                 hasThumbnailColumn
+                rowChrome={CREATURE_REMOVE_ROW_CHROME}
               />
-              <div className="space-y-1">
+              <div className="flex flex-col gap-1">
                 {sortedArmaments.map((armament) => (
                   <GridListRow
                     key={armament.id}
                     id={armament.id}
                     name={armament.name}
                     thumbnail={resolveListRowThumbnail('equipment', armament, armament.name)}
-                    gridColumns="minmax(180px, 0.9fr) minmax(72px, 0.55fr) minmax(88px, 7rem) minmax(60px, 4rem) minmax(110px, 8rem) minmax(56px, 0.45fr) minmax(64px, 0.55fr) 40px"
+                    gridColumns={CREATURE_ARMAMENT_LIST_GRID}
                     columns={[
                       { key: 'type', value: armament.type, align: 'center' },
                       { key: 'range', value: armament.range, align: 'center' },

@@ -1,15 +1,17 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_GLR_LIST_CLASSNAME } from './glr-chrome-spacing-norms';
+import { DEFAULT_GLR_LIST_CLASSNAME, DEFAULT_USM_LIST_CLASSNAME } from './glr-chrome-spacing-norms';
 import {
   assertGlrChromeSpacingSources,
   expectedRowChromeFromRowActions,
   resolvedRowChromeFlags,
   scanGlrChromeSpacingSources,
+  validateCreatorEmbeddedGlrSource,
   validateGlrGridColumnSource,
   validateGlrListClassName,
   validateMyLibraryEntityTabSource,
+  validateUsmListShellSource,
 } from './validate-glr-chrome-spacing';
 
 const repoRoot = path.resolve(__dirname, '../../..');
@@ -18,7 +20,7 @@ function readRepoFile(relativePath: string): string {
   return readFileSync(path.join(repoRoot, relativePath), 'utf8');
 }
 
-describe('GLR chrome + spacing norms (TASK-631)', () => {
+describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
   it('accepts canonical default list class', () => {
     expect(validateGlrListClassName(DEFAULT_GLR_LIST_CLASSNAME, 'test')).toEqual([]);
   });
@@ -82,13 +84,40 @@ describe('GLR chrome + spacing norms (TASK-631)', () => {
     expect(expectedRowChromeFromRowActions(source)).toEqual({
       edit: true,
       delete: false,
+      leftSlot: false,
       rightSlot: true,
     });
     expect(resolvedRowChromeFlags(source)).toEqual({
       edit: true,
       delete: true,
+      leftSlot: false,
       rightSlot: true,
     });
+  });
+
+  it('flags creator embedded lists with 40px action tracks', () => {
+    const errors = validateGlrGridColumnSource(
+      'creature-creator-editor-loadout-sections.tsx',
+      `const CREATURE_FEAT_LIST_GRID = '1fr 40px';`
+    );
+    expect(errors.some((e) => e.includes('40px'))).toBe(true);
+  });
+
+  it('flags embedded ListHeader blocks missing rowChrome.rightSlot', () => {
+    const bad = `
+      <ListHeader columns={[]} />
+      <GridListRow rightSlot={<button />} />
+    `;
+    const errors = validateCreatorEmbeddedGlrSource('bad.tsx', bad);
+    expect(errors.some((e) => e.includes('rowChrome'))).toBe(true);
+  });
+
+  it('rejects non-canonical USM list row container', () => {
+    const errors = validateUsmListShellSource(
+      'unified-selection-modal-list.tsx',
+      `<div className="space-y-1 min-w-0">{filteredItems.map`
+    );
+    expect(errors.some((e) => e.includes(DEFAULT_USM_LIST_CLASSNAME))).toBe(true);
   });
 
   it('registered GLR shells and browse lists satisfy chrome + spacing contract', () => {
