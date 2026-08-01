@@ -11,12 +11,17 @@ import {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
   deriveAgilityReductionFromProperties,
+  deriveCriticalRangeIncreaseFromProperties,
   deriveDamageReductionFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
   formatRange,
 } from '@/lib/calculators/item-calc';
-import { namedPropertyDescriptorChips } from '@/lib/detail-option/compact-facts';
+import { deriveAbilityRequirementFromProperties } from '@/lib/data-enrichment/find-in-library';
+import {
+  formatAbilityRequirementFact,
+  namedPropertyDescriptorChips,
+} from '@/lib/detail-option/compact-facts';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import type { ArmamentLibraryKind } from '@/lib/library/armament-library-labels';
 
@@ -66,7 +71,7 @@ export const ARMAMENT_LIBRARY_CONFIG: Record<
     ],
   },
   armor: {
-    grid: '1.5fr 0.7fr 0.7fr 0.7fr 1fr 0.8fr',
+    grid: '1.4fr 0.55fr 0.6fr 0.45fr 0.7fr 0.7fr 0.9fr 0.55fr',
     headers: [
       { key: 'name', label: 'NAME', align: 'left' },
       { key: 'rarity', label: 'RARITY', align: 'center' },
@@ -74,6 +79,8 @@ export const ARMAMENT_LIBRARY_CONFIG: Record<
       { key: 'tp', label: 'TP', align: 'center' },
       { key: 'damageReduction', label: 'DAMAGE RED.', align: 'center' },
       { key: 'agilityReduction', label: 'AGILITY RED.', align: 'center' },
+      { key: 'abilityRequirement', label: 'ABL. REQ.', align: 'center' },
+      { key: 'criticalRangeIncrease', label: 'CRIT +', align: 'center' },
     ],
   },
   shield: {
@@ -102,21 +109,32 @@ export interface OfficialItemRow {
   damage: string;
   damageReduction: number;
   agilityReduction: number;
+  /** Dense column cell: "Strength 3+" (header is Abl. Req.); "-" when none. */
+  abilityRequirement: string;
+  /** Critical Range +1 stack total from armor (0 when none). */
+  criticalRangeIncrease: number;
   block: string;
   parts: ChipData[];
 }
+
+/** Shown as armor Crit + column — omit from expanded property chips (no column+chip dupe). */
+const ARMOR_COLUMN_PROPERTY_NAMES = new Set(['critical range +1']);
 
 function propertyChipsForItem(
   item: LibraryItem,
   propertiesDb: ItemProperty[]
 ): ChipData[] {
-  return namedPropertyDescriptorChips(
-    (item.properties as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>) || [],
-    propertiesDb
-  ).map((chip) => {
-    const prop = (
-      (item.properties as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>) || []
-    ).find((p) => {
+  const props =
+    (item.properties as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>) || [];
+  const forChips =
+    normalizeArmamentKind(item.type) === 'armor'
+      ? props.filter((p) => {
+          const n = (typeof p === 'string' ? p : String(p?.name ?? '')).trim().toLowerCase();
+          return !ARMOR_COLUMN_PROPERTY_NAMES.has(n);
+        })
+      : props;
+  return namedPropertyDescriptorChips(forChips, propertiesDb).map((chip) => {
+    const prop = props.find((p) => {
       const n = typeof p === 'string' ? p : String(p?.name ?? '');
       return n.toLowerCase() === chip.name.toLowerCase();
     });
@@ -132,6 +150,30 @@ function resolveAgilityReduction(item: LibraryItem, props: ItemPropertyPayload[]
   const scalar = item.agilityReduction;
   if (scalar != null && scalar > 0) return scalar;
   return deriveAgilityReductionFromProperties(props);
+}
+
+function resolveCriticalRangeIncrease(item: LibraryItem, props: ItemPropertyPayload[]): number {
+  const scalar = item.criticalRangeIncrease;
+  if (scalar != null && scalar > 0) return scalar;
+  return deriveCriticalRangeIncreaseFromProperties(props);
+}
+
+/** Column cell under Abl. Req. — Ability + level (header supplies "Req."). */
+function formatAbilityRequirementColumn(
+  item: LibraryItem,
+  props: ItemPropertyPayload[]
+): string {
+  const raw =
+    item.abilityRequirement ?? deriveAbilityRequirementFromProperties(props);
+  if (!raw?.name?.trim() || raw.level == null || Number.isNaN(Number(raw.level))) {
+    return '-';
+  }
+  const fact = formatAbilityRequirementFact({
+    name: raw.name.trim(),
+    level: Number(raw.level),
+  });
+  if (!fact) return '-';
+  return fact.replace(/ Requirement /, ' ');
 }
 
 export function buildOfficialItemRows(
@@ -151,6 +193,8 @@ export function buildOfficialItemRows(
       item.armorValue ??
       deriveDamageReductionFromProperties(props);
     const agilityReduction = resolveAgilityReduction(item, props);
+    const criticalRangeIncrease = resolveCriticalRangeIncrease(item, props);
+    const abilityRequirement = formatAbilityRequirementColumn(item, props);
     const block = deriveShieldAmountFromProperties(props);
     const shieldDamage =
       deriveShieldDamageFromProperties(props) ??
@@ -168,6 +212,8 @@ export function buildOfficialItemRows(
       damage: kind === 'shield' ? (shieldDamage || '-') : damageStr,
       damageReduction,
       agilityReduction,
+      abilityRequirement,
+      criticalRangeIncrease,
       block: block !== '-' ? block : '-',
       parts: propertyChipsForItem(item, propertiesDb),
     };
@@ -192,6 +238,16 @@ export function armamentRowColumns(row: OfficialItemRow, kind: ArmamentLibraryKi
       {
         key: 'Agility Red.',
         value: row.agilityReduction > 0 ? row.agilityReduction : '-',
+        align: 'center',
+      },
+      {
+        key: 'Abl. Req.',
+        value: row.abilityRequirement,
+        align: 'center',
+      },
+      {
+        key: 'Crit +',
+        value: row.criticalRangeIncrease > 0 ? `+${row.criticalRangeIncrease}` : '-',
         align: 'center',
       },
     ];

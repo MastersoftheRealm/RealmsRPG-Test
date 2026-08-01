@@ -31,9 +31,11 @@ describe('official-item-list armament kinds', () => {
       id: 'a1',
       name: 'Chain Mail',
       type: 'armor',
+      abilityRequirement: { name: 'Strength', level: 3 },
       properties: [
         { id: 1, name: 'Damage Reduction', op_1_lvl: 1 },
         { id: 5, name: 'Agility Reduction', op_1_lvl: 1 },
+        { id: 22, name: 'Critical Range +1', op_1_lvl: 0 },
       ],
     }),
     item({
@@ -62,15 +64,37 @@ describe('official-item-list armament kinds', () => {
     expect(armamentRowColumns(row, 'weapon').length).toBe(headerKeys.length);
   });
 
-  it('armor sort keys align with row fields and derive agility reduction', () => {
+  it('armor sort keys align with row fields and derive ability/crit columns', () => {
     const rows = buildOfficialItemRows(catalog, propertiesDb, 'armor');
     const row = rows[0]!;
     expect(row.damageReduction).toBe(2);
     expect(row.agilityReduction).toBe(2);
+    expect(row.abilityRequirement).toBe('Strength 3+');
+    expect(row.criticalRangeIncrease).toBe(1);
+    expect(row.parts.some((p) => /critical range/i.test(p.name))).toBe(false);
     const headerKeys = ARMAMENT_LIBRARY_CONFIG.armor.headers
       .filter((c) => c.key !== 'name')
       .map((c) => c.key);
-    expect(headerKeys).toEqual(['rarity', 'currency', 'tp', 'damageReduction', 'agilityReduction']);
+    expect(headerKeys).toEqual([
+      'rarity',
+      'currency',
+      'tp',
+      'damageReduction',
+      'agilityReduction',
+      'abilityRequirement',
+      'criticalRangeIncrease',
+    ]);
+    const cols = armamentRowColumns(row, 'armor');
+    expect(cols.map((c) => c.key)).toEqual([
+      'Rarity',
+      'Currency',
+      'TP',
+      'Damage Reduction',
+      'Agility Red.',
+      'Abl. Req.',
+      'Crit +',
+    ]);
+    expect(cols.find((c) => c.key === 'Crit +')?.value).toBe('+1');
   });
 
   it('shield rows expose block and damage columns', () => {
