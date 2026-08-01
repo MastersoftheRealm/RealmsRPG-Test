@@ -72,11 +72,18 @@ export const GUIDED_CHOICE_STYLES = {
 } as const;
 
 /**
+ * Step subsection titles — display font, below step h2 (`GuidedStepLayout`), above body copy.
+ * Prefer `GuidedSectionTitle` for markup; this constant is for rare dynamic heading tags only.
+ */
+export const GUIDED_SECTION_TITLE_CLASS =
+  'font-display text-xl sm:text-2xl font-semibold text-text-primary tracking-tight';
+
+/**
  * Typography for read-only overview panels (species reveal, summary chips).
  * Pair display titles with nunito body — no mixed display fonts on stat values.
  */
 export const GUIDED_OVERVIEW_STYLES = {
-  sectionTitle: 'font-display text-lg font-semibold text-text-primary',
+  sectionTitle: GUIDED_SECTION_TITLE_CLASS,
   sectionHint: 'mt-1 font-nunito text-sm text-text-secondary',
   body: 'font-nunito text-base text-text-primary leading-relaxed',
   bodySecondary: 'font-nunito text-base text-text-secondary leading-relaxed',

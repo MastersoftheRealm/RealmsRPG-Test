@@ -11,6 +11,7 @@ import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { GuidedChoiceCard } from './guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from './guided-choice-styles';
 import { GuidedFactChipRow } from './guided-equipment-fact-chips';
+import { GuidedSectionTitle } from './guided-section-title';
 
 const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
 
@@ -125,12 +126,9 @@ export function GuidedPowersTechniquesL1Content({
   const renderGroupSection = (group: PathGuidanceGroup) => {
     const ids = (isTechniques ? group.techniques : group.powers) ?? [];
     if (ids.length === 0) return null;
-    const GroupHeading = showInnateTrack ? 'h4' : 'h3';
     return (
       <section key={group.id}>
-        <GroupHeading className="font-display text-lg font-semibold text-text-primary">
-          {group.title}
-        </GroupHeading>
+        <GuidedSectionTitle as={showInnateTrack ? 'h4' : 'h3'}>{group.title}</GuidedSectionTitle>
         {group.why ? (
           <p className="mt-1 font-nunito text-sm text-text-secondary">{group.why}</p>
         ) : null}
@@ -151,9 +149,7 @@ export function GuidedPowersTechniquesL1Content({
     <>
       {showInnateTrack ? (
         <section className="space-y-3">
-          <h3 className="font-display text-xl font-semibold text-text-primary">
-            {ptCopy.innateHeading}
-          </h3>
+          <GuidedSectionTitle>{ptCopy.innateHeading}</GuidedSectionTitle>
           <p className="font-nunito text-sm text-text-secondary">{ptCopy.innateIntro}</p>
           <p className="font-nunito text-xs text-text-secondary dark:text-text-secondary">
             {ptCopy.innateThresholdHint(innateThreshold)}
@@ -184,9 +180,9 @@ export function GuidedPowersTechniquesL1Content({
 
       <section className="space-y-3">
         {showInnateTrack ? (
-          <h3 className="font-display text-xl font-semibold text-text-primary">
+          <GuidedSectionTitle>
             {isTechniques ? ptCopy.techniquesHeading : ptCopy.powersHeading}
-          </h3>
+          </GuidedSectionTitle>
         ) : null}
 
         {allOptionIds.length === 0 && groups.length === 0 && libraryItemsCount === 0 ? (
@@ -200,15 +196,9 @@ export function GuidedPowersTechniquesL1Content({
             {groups.map(renderGroupSection)}
             {promotedIds.length > 0 ? (
               <section>
-                {showInnateTrack ? (
-                  <h4 className="font-display text-lg font-semibold text-text-primary">
-                    {ptCopy.otherPicksHeading(kind)}
-                  </h4>
-                ) : (
-                  <h3 className="font-display text-lg font-semibold text-text-primary">
-                    {ptCopy.otherPicksHeading(kind)}
-                  </h3>
-                )}
+                <GuidedSectionTitle as={showInnateTrack ? 'h4' : 'h3'}>
+                  {ptCopy.otherPicksHeading(kind)}
+                </GuidedSectionTitle>
                 <p className="mt-1 font-nunito text-sm text-text-secondary">
                   {ptCopy.otherPicksHint}
                 </p>

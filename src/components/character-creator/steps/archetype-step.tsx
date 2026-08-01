@@ -21,11 +21,30 @@ import {
   listPlayerVisiblePaths,
   pathCategoryGroupLabel,
 } from '@/lib/game/archetype-edit';
-import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
+import { buildPathAbilityChipLabels } from '@/lib/guided-creator/path-ability-labels';
 import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy';
 import type { Archetype, ArchetypeCategory, AbilityName } from '@/types';
 import { InfoTippy } from '@/components/shared';
 import { chooseCharacterCreationStyle, martialAbility, powerAbility } from '../../../../public/tooltip-text';
+
+function PathAbilityChips({ path, className }: { path: Archetype; className?: string }) {
+  const chips = buildPathAbilityChipLabels(path);
+  if (chips.length === 0) return null;
+
+  return (
+    <div className={cn('flex flex-wrap gap-1', className)}>
+      {chips.map((chip) => (
+        <DescriptorChip
+          key={chip.key}
+          variant={chip.role === 'primary' ? 'power' : 'technique'}
+          size="sm"
+        >
+          {chip.label}
+        </DescriptorChip>
+      ))}
+    </div>
+  );
+}
 
 export function ArchetypeStep() {
   const {
@@ -229,20 +248,7 @@ export function ArchetypeStep() {
                           >
                             {option.description || 'No description provided.'}
                           </p>
-                          {(option.archetype_ability || option.secondary_ability) && (
-                            <div className="flex flex-wrap gap-1">
-                              {option.archetype_ability && (
-                                <DescriptorChip variant="power" size="sm">
-                                  Primary Ability: {formatAbilityLabel(option.archetype_ability)}
-                                </DescriptorChip>
-                              )}
-                              {option.secondary_ability && (
-                                <DescriptorChip variant="technique" size="sm">
-                                  Secondary Ability: {formatAbilityLabel(option.secondary_ability)}
-                                </DescriptorChip>
-                              )}
-                            </div>
-                          )}
+                          <PathAbilityChips path={option} className="mb-0" />
                         </SelectionCard>
                       ))}
                     </div>
@@ -261,20 +267,7 @@ export function ArchetypeStep() {
               <p className="text-sm text-text-secondary whitespace-pre-wrap">
                 {selectedPath.description || 'No description provided.'}
               </p>
-              {(selectedPath.archetype_ability || selectedPath.secondary_ability) && (
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {selectedPath.archetype_ability && (
-                    <DescriptorChip variant="power" size="sm">
-                      Primary Ability: {formatAbilityLabel(selectedPath.archetype_ability)}
-                    </DescriptorChip>
-                  )}
-                  {selectedPath.secondary_ability && (
-                    <DescriptorChip variant="technique" size="sm">
-                      Secondary Ability: {formatAbilityLabel(selectedPath.secondary_ability)}
-                    </DescriptorChip>
-                  )}
-                </div>
-              )}
+              <PathAbilityChips path={selectedPath} className="mt-3" />
             </div>
           )}
 

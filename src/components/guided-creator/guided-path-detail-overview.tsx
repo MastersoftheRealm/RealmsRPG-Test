@@ -13,10 +13,9 @@ import {
   SummaryChipList,
 } from '@/components/shared';
 import { useCodexSkills, useGameRules } from '@/hooks';
-import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { speciesSkillToSummaryChipItem } from '@/lib/chip/species-skill-chips';
-import { resolvePathAbilityLabels } from '@/lib/guided-creator/path-ability-labels';
+import { buildPathAbilityChipLabels } from '@/lib/guided-creator/path-ability-labels';
 import { getArmamentMax } from '@/lib/game/formulas';
 import { cn } from '@/lib/utils';
 import { DEFAULT_ABILITIES, type Abilities } from '@/types';
@@ -41,27 +40,7 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
   const level1 = pathData?.level1;
   const pathType = (path.type || 'power') as Archetype['type'];
 
-  const abilityChips = useMemo(() => {
-    const { primaryAbilities, secondaryAbility } = resolvePathAbilityLabels(path);
-    const chips: Array<{ key: string; label: string; variant?: 'primary' }> = [];
-
-    for (const ability of primaryAbilities) {
-      chips.push({
-        key: `primary-${ability}`,
-        label: copy.primaryAbility(formatAbilityLabel(ability)),
-        variant: 'primary',
-      });
-    }
-
-    if (secondaryAbility) {
-      chips.push({
-        key: 'secondary',
-        label: copy.secondaryAbility(formatAbilityLabel(secondaryAbility)),
-      });
-    }
-
-    return chips;
-  }, [path]);
+  const abilityChips = useMemo(() => buildPathAbilityChipLabels(path), [path]);
 
   const recommendedAbilitiesGrid = useMemo(() => {
     const raw = level1?.recommended_abilities;
@@ -121,7 +100,11 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
         >
           <div className="flex flex-wrap gap-2">
             {abilityChips.map((chip) => (
-              <DescriptorChip key={chip.key} variant={chip.variant} size="md">
+              <DescriptorChip
+                key={chip.key}
+                variant={chip.role === 'primary' ? 'primary' : undefined}
+                size="md"
+              >
                 {chip.label}
               </DescriptorChip>
             ))}

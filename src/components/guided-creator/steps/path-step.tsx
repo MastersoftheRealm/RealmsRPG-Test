@@ -1,26 +1,32 @@
 /**
  * Guided · Chapter 1 · Path
  * =========================
- * Choose a path (archetype). Grouped Power → Powered-Martial → Martial (custom-creator parity).
+ * L1: archetype path cards. L3: custom archetype (type + abilities).
+ * No distinct Path L2 (REALMS §5.1).
  */
 
 'use client';
 
 import { useMemo, useState } from 'react';
 import { Spinner, EmptyState } from '@/components/ui';
-import { InfoTippy } from '@/components/shared';
+import { GuidedLayerNav, InfoTippy } from '@/components/shared';
 import { useCodexArchetypes } from '@/hooks';
 import {
   PATH_CATEGORY_GROUPS,
   groupPathsByCategory,
   listPlayerVisiblePaths,
 } from '@/lib/game/archetype-edit';
-import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import { resolvePathAbilityLabels } from '@/lib/guided-creator/path-ability-labels';
-import { buildPathSelectionDraftPatch } from '@/lib/guided-creator/path-selection-draft';
+import { buildPathAbilityChipLabels } from '@/lib/guided-creator/path-ability-labels';
+import {
+  buildCustomArchetypeDraftPatch,
+  buildEnterCustomArchetypeLayerPatch,
+  buildEnterPathLayerPatch,
+  buildPathSelectionDraftPatch,
+  isGuidedCustomArchetypeComplete,
+} from '@/lib/guided-creator/path-selection-draft';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
-import { type Archetype, type ArchetypeCategory } from '@/types';
+import { type AbilityName, type Archetype, type ArchetypeCategory } from '@/types';
 import {
   guidedArchetypePathHelp,
   guidedMartialPathTypeHelp,
@@ -29,31 +35,21 @@ import {
 } from '../../../../public/tooltip-text';
 import { GuidedChoiceCard, type GuidedChoiceTag } from '../guided-choice-card';
 import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from '../guided-choice-styles';
-
+import { GuidedPathCustomArchetype } from '../guided-path-custom-archetype';
 import { GuidedPathDetailModal } from '../guided-path-detail-modal';
+import { GuidedSectionTitle } from '../guided-section-title';
 import { GuidedStepLayout } from '../guided-step-layout';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.path;
-const detailCopy = stepCopy.detail;
 
 /** Path ability chips: slight enlarge for all; Primary uses primary (blue) tokens. */
 function pathAbilityTags(path: Archetype): GuidedChoiceTag[] {
-  const { primaryAbilities, secondaryAbility } = resolvePathAbilityLabels(path);
-  const tags: GuidedChoiceTag[] = [];
-  for (const ability of primaryAbilities) {
-    tags.push({
-      label: detailCopy.primaryAbility(formatAbilityLabel(ability)),
-      variant: 'primary',
-      size: 'md',
-    });
-  }
-  if (secondaryAbility) {
-    tags.push({
-      label: detailCopy.secondaryAbility(formatAbilityLabel(secondaryAbility)),
-      size: 'md',
-    });
-  }
-  return tags;
+  return buildPathAbilityChipLabels(path).map((chip) => ({
+    label: chip.label,
+    ...(chip.role === 'primary'
+      ? { variant: 'primary' as const, size: 'md' as const }
+      : { size: 'md' as const }),
+  }));
 }
 
 const PATH_GROUP_TIP: Record<ArchetypeCategory, string> = {
@@ -71,6 +67,9 @@ export function PathStep() {
   const { data: codexArchetypes = [], isLoading } = useCodexArchetypes();
   const [detailPathId, setDetailPathId] = useState<string | null>(null);
 
+  const pathLayer = draft.pathLayer === 'l3' ? 'l3' : 'l1';
+  const isCustomLayer = pathLayer === 'l3';
+
   const paths = useMemo(
     () => listPlayerVisiblePaths(codexArchetypes as Archetype[]),
     [codexArchetypes],
@@ -86,33 +85,87 @@ export function PathStep() {
 
   const hasAnyPath = paths.length > 0;
 
-  // Lookup against full player-visible list so detail modal stays mounted across re-renders.
   const detailPath = useMemo(
     () => paths.find((p) => String(p.id) === detailPathId) ?? null,
     [paths, detailPathId]
   );
 
-  const handleSelect = (path: Archetype) => {
-    // Same path re-tap: keep dependents. New path: invalidate (see buildPathSelectionDraftPatch).
+  const canContinue = isCustomLayer
+    ? isGuidedCustomArchetypeComplete(draft.archetypeType, draft.pow_abil, draft.mart_abil)
+    : Boolean(draft.archetypePathId);
+
+  const handleSelectPath = (path: Archetype) => {
     updateDraft(buildPathSelectionDraftPatch(draft.archetypePathId, path));
+  };
+
+  const handleEnterCustom = () => {
+    updateDraft(buildEnterCustomArchetypeLayerPatch());
+  };
+
+  const handleViewPaths = () => {
+    updateDraft(buildEnterPathLayerPatch());
+  };
+
+  const applyCustomPatch = (
+    type: ArchetypeCategory,
+    powAbil: AbilityName | null,
+    martAbil: AbilityName | null
+  ) => {
+    updateDraft(
+      buildCustomArchetypeDraftPatch({
+        type,
+        powAbil,
+        martAbil,
+        previousType: draft.archetypeType,
+      })
+    );
+  };
+
+  const handleSelectType = (type: ArchetypeCategory) => {
+    applyCustomPatch(type, null, null);
+  };
+
+  const handleSelectPowerAbility = (ability: AbilityName) => {
+    if (!draft.archetypeType) return;
+    applyCustomPatch(draft.archetypeType, ability, draft.mart_abil);
+  };
+
+  const handleSelectMartialAbility = (ability: AbilityName) => {
+    if (!draft.archetypeType) return;
+    applyCustomPatch(draft.archetypeType, draft.pow_abil, ability);
   };
 
   return (
     <GuidedStepLayout
       subStep="path"
-      title={stepCopy.title}
+      title={isCustomLayer ? stepCopy.customTitle : stepCopy.title}
       titleAddon={
         <InfoTippy
           content={guidedArchetypePathHelp}
-          label="About Archetype Path"
+          label={isCustomLayer ? 'About Custom Archetype' : 'About Archetype Path'}
           size="inline"
         />
       }
-      description={stepCopy.description}
-      canContinue={Boolean(draft.archetypePathId)}
+      description={isCustomLayer ? stepCopy.customDescription : stepCopy.description}
+      canContinue={canContinue}
       hideBack
     >
-      {isLoading ? (
+      {isCustomLayer ? (
+        <>
+          <GuidedPathCustomArchetype
+            selectedType={draft.archetypeType}
+            powAbil={draft.pow_abil}
+            martAbil={draft.mart_abil}
+            onSelectType={handleSelectType}
+            onSelectPowerAbility={handleSelectPowerAbility}
+            onSelectMartialAbility={handleSelectMartialAbility}
+          />
+          <GuidedLayerNav
+            collapseLabel={stepCopy.viewArchetypePaths}
+            onCollapse={handleViewPaths}
+          />
+        </>
+      ) : isLoading ? (
         <div className="flex justify-center py-12">
           <Spinner />
         </div>
@@ -128,16 +181,18 @@ export function PathStep() {
                 const title = stepCopy.groupTitles[group];
                 return (
                   <section key={group} aria-label={title}>
-                    <div className="flex items-center gap-1.5 mb-3">
-                      <h3 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
-                        {title}
-                      </h3>
-                      <InfoTippy
-                        content={PATH_GROUP_TIP[group]}
-                        label={`About ${title}`}
-                        size="inline"
-                      />
-                    </div>
+                    <GuidedSectionTitle
+                      className="mb-3"
+                      titleAddon={
+                        <InfoTippy
+                          content={PATH_GROUP_TIP[group]}
+                          label={`About ${title}`}
+                          size="inline"
+                        />
+                      }
+                    >
+                      {title}
+                    </GuidedSectionTitle>
                     <div className={GUIDED_CHOICE_GRID_CLASS}>
                       {options.map((path) => (
                         <GuidedChoiceCard
@@ -147,7 +202,7 @@ export function PathStep() {
                           description={path.description}
                           tags={pathAbilityTags(path)}
                           selected={draft.archetypePathId === String(path.id)}
-                          onSelect={() => handleSelect(path)}
+                          onSelect={() => handleSelectPath(path)}
                           onDetails={() => setDetailPathId(String(path.id))}
                         />
                       ))}
@@ -158,11 +213,16 @@ export function PathStep() {
             </div>
           )}
 
+          <GuidedLayerNav
+            expandLabel={stepCopy.customArchetype}
+            onExpand={handleEnterCustom}
+          />
+
           <GuidedPathDetailModal
             isOpen={detailPath != null}
             onClose={() => setDetailPathId(null)}
             path={detailPath}
-            onSelect={detailPath ? () => handleSelect(detailPath) : undefined}
+            onSelect={detailPath ? () => handleSelectPath(detailPath) : undefined}
           />
         </>
       )}

@@ -15,6 +15,7 @@ import { LoadingState } from '@/components/ui';
 import { Skull } from 'lucide-react';
 import { RollLog, RollProvider } from '@/components/rolls';
 import { formatListCellLabel } from '@/lib/utils';
+import { formatCreatureLevel } from '@/lib/game';
 import {
   CreatorSummaryPanel,
   CreatorPageShell,
@@ -185,7 +186,7 @@ function CreatureCreatorContent() {
           })}
           statRows={[
             { label: 'Archetype', value: formatListCellLabel(creature.archetypeType) },
-            { label: 'Level', value: creature.level },
+            { label: 'Level', value: formatCreatureLevel(creature.level) },
             { label: 'Type', value: formatListCellLabel(creature.type) },
             { label: 'Size', value: formatListCellLabel(creature.size) },
           ]}

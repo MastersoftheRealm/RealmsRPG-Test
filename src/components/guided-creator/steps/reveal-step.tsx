@@ -28,7 +28,10 @@ import { GuidedStepLayout } from '../guided-step-layout';
 import { GuidedRevealSummary } from '../guided-reveal-summary';
 import { GuidedPortraitUpload } from '../guided-portrait-upload';
 import { GuidedHealthEnergySection } from '../guided-health-energy-section';
+import { GuidedSectionTitle } from '../guided-section-title';
 import { buildGuidedCharacterPayload } from '@/lib/guided-creator/build-character';
+import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
+import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { createCharacter, saveCharacter } from '@/services/character-service';
 import {
@@ -92,12 +95,17 @@ export function RevealStep() {
     return safe || null;
   }, [searchParams]);
 
-  const species = useMemo(
-    () => allSpecies.find((s) => String(s.id) === String(draft.speciesId)) ?? null,
-    [allSpecies, draft.speciesId]
+  const speciesContext = useMemo(
+    () => resolveGuidedSpeciesContext(draft, allSpecies),
+    [draft, allSpecies]
   );
+  const species = speciesContext.species;
+  const mixedPhysical =
+    speciesContext.isMixed && speciesContext.speciesA && speciesContext.speciesB
+      ? averageMixedPhysical(speciesContext.speciesA, speciesContext.speciesB)
+      : null;
 
-  const speciesName = draft.speciesName ?? species?.name ?? null;
+  const speciesName = draft.speciesName ?? speciesContext.displayName ?? species?.name ?? null;
   const hePool = calculateHealthEnergyPool(1, 'PLAYER', false, rules);
   const hpBonus = draft.hpAllocated ?? 0;
   const enBonus = draft.energyAllocated ?? 0;
@@ -105,11 +113,11 @@ export function RevealStep() {
 
   const heroSubtitle = [speciesName, archetype?.name].filter(Boolean).join(' · ');
 
-  const avgHeight = speciesAvgNumber(species?.ave_height);
-  const avgWeight = speciesAvgNumber(species?.ave_weight);
+  const avgHeight = mixedPhysical?.aveHeight ?? speciesAvgNumber(species?.ave_height);
+  const avgWeight = mixedPhysical?.aveWeight ?? speciesAvgNumber(species?.ave_weight);
   const [adulthoodRaw, lifespanRaw] = species?.adulthood_lifespan ?? [];
-  const adulthood = speciesAvgNumber(adulthoodRaw);
-  const lifespan = speciesAvgNumber(lifespanRaw);
+  const adulthood = mixedPhysical?.adulthood ?? speciesAvgNumber(adulthoodRaw);
+  const lifespan = mixedPhysical?.maxAge ?? speciesAvgNumber(lifespanRaw);
 
   const agePlaceholder = stepCopy.agePlaceholder(adulthood, lifespan);
   const heightPlaceholder = stepCopy.heightPlaceholder(avgHeight);
@@ -142,6 +150,8 @@ export function RevealStep() {
         archetype,
         pathData,
         species,
+        speciesA: speciesContext.speciesA,
+        speciesB: speciesContext.speciesB,
         codexSkills,
         codexFeats,
         rules,
@@ -250,7 +260,7 @@ export function RevealStep() {
 
           {/* Identity details */}
           <div className="space-y-4 rounded-card border border-border-light bg-surface p-5 shadow-sm">
-            <h3 className="font-display text-lg font-bold text-text-primary">{stepCopy.identityTitle}</h3>
+            <GuidedSectionTitle>{stepCopy.identityTitle}</GuidedSectionTitle>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>

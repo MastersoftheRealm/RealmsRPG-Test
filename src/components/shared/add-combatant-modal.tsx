@@ -26,6 +26,7 @@ import { SegmentedControl } from '@/components/shared';
 import { ValueStepper } from '@/components/shared/value-stepper';
 import { useUserCreatures, useCampaignsFull, type UserCreature } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
+import { formatCreatureLevelShort } from '@/lib/game';
 import type { TrackedCombatant, CombatantType, SkillParticipant } from '@/types/encounter';
 import type { Campaign, CampaignCharacterEncounterData } from '@/types/campaign';
 
@@ -193,7 +194,7 @@ function CreatureLibraryTab({
             <div className="flex items-center justify-between">
               <div>
                 <span className="font-medium text-text-primary">{creature.name}</span>
-                <span className="text-xs text-text-muted ml-2">Lv {creature.level}</span>
+                <span className="text-xs text-text-muted ml-2">{formatCreatureLevelShort(creature.level)}</span>
                 {creature.type && <span className="text-xs text-text-muted ml-1">({creature.type})</span>}
               </div>
               <div className="text-xs text-text-muted">

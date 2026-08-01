@@ -225,7 +225,7 @@ export function applyPathProficiencyForLevel(
   pathArchetype?: CharacterArchetype | null
 ): { pow_prof: number; mart_prof: number } | null {
   if (newLevel < 5) return null;
-  if (character.creationMode !== 'path' && !character.archetypePathId) return null;
+  if (!character.archetypePathId?.trim()) return null;
 
   const arch = pathArchetype ?? character.archetype;
   const powTarget = arch?.power_prof_level5;

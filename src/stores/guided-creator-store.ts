@@ -21,6 +21,7 @@ import type { AbilityName, ArchetypeCategory } from '@/types';
 import { DEFAULT_ABILITIES } from '@/types';
 import type { PathItemRecommendation } from '@/types/archetype';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
+import type { CreatorEntryMode } from '@/lib/guided-creator/creator-entry-mode';
 import {
   nextGuidedSubStep,
   prevGuidedSubStep,
@@ -124,14 +125,33 @@ export function getChapterForSubStep(subStep: GuidedSubStep): GuidedChapterMeta 
   );
 }
 
+/** Path step catalog face: L1 = path cards; L3 = custom archetype (no distinct L2). */
+export type GuidedPathLayer = 'l1' | 'l3';
+
 export interface GuidedDraft {
+  /** Chooser entry: guided = L1 faces; custom = deeper catalogs when no path id. */
+  creatorEntryMode: CreatorEntryMode;
   // Chapter 1 — Foundation
+  /** Which Path face is showing (REALMS §5.1). */
+  pathLayer: GuidedPathLayer;
   archetypePathId: string | null;
   archetypeType: ArchetypeCategory | null;
   pow_abil: AbilityName | null;
   mart_abil: AbilityName | null;
   speciesId: string | null;
   speciesName: string | null;
+  /** True when the player chose mixed species (two parent species). */
+  speciesMixed: boolean;
+  /** Parent species ids when `speciesMixed` (exactly two). */
+  mixedSpeciesIds: [string, string] | null;
+  /** Parent species display names when `speciesMixed`. */
+  mixedSpeciesNames: [string, string] | null;
+  /** Mixed species: up to two skill ids chosen from combined parent skills. */
+  selectedSpeciesSkillIds: string[];
+  /** Mixed species: one species trait id per parent [A, B]. */
+  selectedSpeciesTraits: string[];
+  /** Mixed species: which parent species the chosen flaw comes from. */
+  selectedFlawSpeciesId: string | null;
   /** When species offers multiple sizes, player picks one on the ancestry overview. */
   selectedSize: string | null;
 
@@ -190,12 +210,20 @@ export interface GuidedDraft {
 
 function createInitialDraft(): GuidedDraft {
   return {
+    creatorEntryMode: 'guided',
+    pathLayer: 'l1',
     archetypePathId: null,
     archetypeType: null,
     pow_abil: null,
     mart_abil: null,
     speciesId: null,
     speciesName: null,
+    speciesMixed: false,
+    mixedSpeciesIds: null,
+    mixedSpeciesNames: null,
+    selectedSpeciesSkillIds: [],
+    selectedSpeciesTraits: [],
+    selectedFlawSpeciesId: null,
     selectedSize: null,
     selectedSpeciesTraitChoices: {},
     selectedAncestryTraitIds: [],
@@ -260,7 +288,7 @@ interface GuidedCreatorState {
 }
 
 /** Bump when persisted draft shape changes; old versions migrate forward. */
-const GUIDED_STORE_SCHEMA_VERSION = 6;
+const GUIDED_STORE_SCHEMA_VERSION = 11;
 
 export const useGuidedCreatorStore = create<GuidedCreatorState>()(
   persist(
@@ -419,6 +447,72 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
           };
         }
 
+        if (version < 7 && state.draft) {
+          const hasPath = Boolean(state.draft.archetypePathId);
+          state = {
+            ...state,
+            draft: {
+              ...state.draft,
+              pathLayer:
+                state.draft.pathLayer === 'l3'
+                  ? 'l3'
+                  : hasPath
+                    ? 'l1'
+                    : state.draft.archetypeType
+                      ? 'l3'
+                      : 'l1',
+            },
+          };
+        }
+
+        if (version < 8 && state.draft) {
+          const { creationMode: _removed, ...rest } = state.draft as GuidedDraft & {
+            creationMode?: string;
+          };
+          void _removed;
+          state = { ...state, draft: rest as GuidedDraft };
+        }
+
+        if (version < 9 && state.draft) {
+          const draft = state.draft;
+          const inferredCustom =
+            draft.pathLayer === 'l3' && !draft.archetypePathId && Boolean(draft.archetypeType);
+          state = {
+            ...state,
+            draft: {
+              ...draft,
+              creatorEntryMode: inferredCustom ? 'custom' : 'guided',
+            },
+          };
+        }
+
+        if (version < 10 && state.draft) {
+          const draft = state.draft;
+          const legacyMixed =
+            typeof draft.speciesId === 'string' && draft.speciesId.startsWith('mixed:');
+          state = {
+            ...state,
+            draft: {
+              ...draft,
+              speciesMixed: draft.speciesMixed ?? legacyMixed,
+              mixedSpeciesIds: draft.mixedSpeciesIds ?? null,
+              mixedSpeciesNames: draft.mixedSpeciesNames ?? null,
+              selectedSpeciesSkillIds: draft.selectedSpeciesSkillIds ?? [],
+            },
+          };
+        }
+
+        if (version < 11 && state.draft) {
+          state = {
+            ...state,
+            draft: {
+              ...state.draft,
+              selectedSpeciesTraits: state.draft.selectedSpeciesTraits ?? [],
+              selectedFlawSpeciesId: state.draft.selectedFlawSpeciesId ?? null,
+            },
+          };
+        }
+
         if (version < 3 && state.draft) {
           const legacy = state.draft;
           const skills: Record<string, number> = legacy.skills ?? {};
@@ -488,12 +582,19 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         if (!Array.isArray(draft.innatePowerIds)) {
           draft.innatePowerIds = [];
         }
+        if (draft.pathLayer !== 'l1' && draft.pathLayer !== 'l3') {
+          draft.pathLayer = draft.archetypePathId ? 'l1' : draft.archetypeType ? 'l3' : 'l1';
+        }
+        if (draft.creatorEntryMode !== 'guided' && draft.creatorEntryMode !== 'custom') {
+          draft.creatorEntryMode = 'guided';
+        }
         return {
           ...currentState,
           ...persisted,
           draft,
         };
       },
+
     }
   )
 );

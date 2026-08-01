@@ -27,6 +27,16 @@ describe('dedupeSavedParts', () => {
     expect(dedupeSavedParts(['A', 'B', 'a'])).toEqual(['A', 'B']);
   });
 
+  it('collapses codex s-prefix id aliases (s377 vs 377)', () => {
+    const parts = [
+      { id: '377', name: 'Duration (Minute)', op_1_lvl: 0 },
+      { id: 's377', name: 'Duration (Minute)', op_1_lvl: 1 },
+    ];
+    expect(dedupeSavedParts(parts)).toEqual([
+      { id: '377', name: 'Duration (Minute)', op_1_lvl: 1 },
+    ]);
+  });
+
   it('returns empty for null/undefined', () => {
     expect(dedupeSavedParts(null)).toEqual([]);
     expect(dedupeSavedParts(undefined)).toEqual([]);

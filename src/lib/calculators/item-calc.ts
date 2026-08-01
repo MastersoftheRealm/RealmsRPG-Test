@@ -360,6 +360,16 @@ export function deriveDamageReductionFromProperties(properties: ItemPropertyPayl
   return 1 + (drProp.op_1_lvl || 0);
 }
 
+/** Derive Agility Reduction from properties (1 + op_1_lvl; matches item creator storage). */
+export function deriveAgilityReductionFromProperties(properties: ItemPropertyPayload[]): number {
+  const arProp = (properties || []).find((p) => {
+    if (p.id === PROPERTY_IDS.AGILITY_REDUCTION) return true;
+    return p.name === 'Agility Reduction';
+  });
+  if (!arProp) return 0;
+  return 1 + (arProp.op_1_lvl || 0);
+}
+
 /**
  * Derive Critical Range +1 levels from properties (1 + op_1_lvl per stack).
  */

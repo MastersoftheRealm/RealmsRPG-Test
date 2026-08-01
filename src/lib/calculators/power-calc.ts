@@ -7,11 +7,17 @@
 
 import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
-import { computePartTrainingPoints } from '@/lib/library/part-display';
 import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
+import { computePartTrainingPoints } from '@/lib/library/part-display';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
+import {
+  buildMechanicParts,
+  type AreaConfig,
+  type DurationConfig,
+} from './mechanic-builder';
+import { POWER_ADVANCED_MECHANIC_CATEGORY_SET, POWER_AUTO_MECHANIC_PART_NAMES } from './power-mechanic-constants';
 
 // Re-export for backwards compatibility
 export { PART_IDS, findByIdOrName };
@@ -60,6 +66,8 @@ export interface PartChipData {
   description: string;
   finalTP: number;
   hasTP: boolean;
+  /** Max option level when > 0; omit at 0. */
+  optionLevel?: number;
 }
 
 /**
@@ -95,8 +103,9 @@ export function calculatePowerCosts(
   let tpRaw = 0;
   const tpSources: string[] = [];
 
-  const uniqueParts = dedupeSavedParts(partsPayload);
-  uniqueParts.forEach((pl) => {
+  // Each payload entry is an independent cost contribution (e.g. multiple elemental
+  // damage rows share a part id but must each add base_en + option energy).
+  partsPayload.forEach((pl) => {
     // Normalize to support both saved-format and UI-format
     const isUiShape = pl.part !== undefined;
 
@@ -517,6 +526,7 @@ export function formatPowerPartChip(
   const l3 = pl.op_3_lvl || 0;
 
   const finalTP = computePartTrainingPoints(def, pl, 'power');
+  const optionLevel = Math.max(l1, l2, l3);
   let text = def.name;
   if (l1 > 0) text += ` (Opt1 ${l1})`;
   if (l2 > 0) text += ` (Opt2 ${l2})`;
@@ -528,12 +538,139 @@ export function formatPowerPartChip(
     description: def.description || '',
     finalTP,
     hasTP: finalTP > 0,
+    optionLevel: optionLevel > 0 ? optionLevel : undefined,
   };
 }
 
 // =============================================================================
 // High-level Display Builder
 // =============================================================================
+
+type SavedPowerPart = NonNullable<PowerDocument['parts']>[number];
+
+function isUserOrAdvancedSavedPart(
+  savedPart: SavedPowerPart,
+  partsDb: PowerPart[]
+): boolean {
+  const def = findByIdOrName(partsDb, savedPart);
+  if (!def) return false;
+  const name = savedPart.name ?? def.name;
+  if (name && POWER_AUTO_MECHANIC_PART_NAMES.has(name)) return false;
+  if (!def.mechanic) return true;
+  if (savedPart.isAdvanced) return true;
+  return POWER_ADVANCED_MECHANIC_CATEGORY_SET.has(def.category || '');
+}
+
+function powerDocHasCreatorStyleFields(powerDoc: PowerDocument): boolean {
+  const hasDamage = (powerDoc.damage ?? []).some(
+    (d) => d.type && d.type !== 'none' && Number(d.amount) > 0
+  );
+  return (
+    hasDamage ||
+    !!powerDoc.actionType ||
+    !!powerDoc.isReaction ||
+    powerDoc.range?.steps !== undefined ||
+    (!!powerDoc.area?.type && powerDoc.area.type !== 'none') ||
+    (!!powerDoc.duration?.type && powerDoc.duration.type !== 'instant')
+  );
+}
+
+function buildPowerPartsPayloadForCost(
+  powerDoc: PowerDocument,
+  partsDb: PowerPart[]
+): PowerPartPayload[] {
+  const savedParts = Array.isArray(powerDoc.parts) ? powerDoc.parts : [];
+
+  if (!powerDocHasCreatorStyleFields(powerDoc)) {
+    return dedupeSavedParts(
+      savedParts.map((p) => ({
+        id: p.id,
+        name: p.name,
+        op_1_lvl: p.op_1_lvl || 0,
+        op_2_lvl: p.op_2_lvl || 0,
+        op_3_lvl: p.op_3_lvl || 0,
+        applyDuration: p.applyDuration || false,
+      }))
+    );
+  }
+
+  const userParts: PowerPartPayload[] = savedParts
+    .filter((p) => isUserOrAdvancedSavedPart(p, partsDb))
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      op_1_lvl: p.op_1_lvl || 0,
+      op_2_lvl: p.op_2_lvl || 0,
+      op_3_lvl: p.op_3_lvl || 0,
+      applyDuration: p.applyDuration || false,
+    }));
+
+  const mechanicParts = buildMechanicParts({
+    creatorType: 'power',
+    partsDb,
+    action: {
+      type: powerDoc.actionType ?? 'basic',
+      isReaction: !!powerDoc.isReaction,
+    },
+    powerDamage: (powerDoc.damage ?? []).map((d) => ({
+      type: d.type ?? 'none',
+      diceAmount: Number(d.amount) || 0,
+      dieSize: Number(d.size) || 6,
+      applyDuration: d.applyDuration ?? false,
+    })),
+    range: powerDoc.range
+      ? { steps: powerDoc.range.steps ?? 0, applyDuration: powerDoc.range.applyDuration }
+      : undefined,
+    area:
+      powerDoc.area?.type && powerDoc.area.type !== 'none'
+        ? {
+            type: powerDoc.area.type as AreaConfig['type'],
+            level: powerDoc.area.level ?? 1,
+            applyDuration: powerDoc.area.applyDuration,
+          }
+        : undefined,
+    duration:
+      powerDoc.duration?.type && powerDoc.duration.type !== 'instant'
+        ? {
+            type: powerDoc.duration.type as DurationConfig['type'],
+            value: powerDoc.duration.value ?? 1,
+            applyDuration: powerDoc.duration.applyDuration,
+            focus: powerDoc.duration.focus,
+            noHarm: powerDoc.duration.noHarm,
+            endsOnActivation: powerDoc.duration.endsOnActivation,
+            sustain: powerDoc.duration.sustain,
+          }
+        : undefined,
+  });
+
+  const mechanicPayload: PowerPartPayload[] = mechanicParts.map((mp) => ({
+    id: mp.id,
+    name: mp.name,
+    op_1_lvl: mp.op_1_lvl,
+    op_2_lvl: mp.op_2_lvl,
+    op_3_lvl: mp.op_3_lvl,
+    applyDuration: mp.applyDuration ?? false,
+  }));
+
+  const rebuiltMechanicNames = new Set(mechanicParts.map((mp) => mp.name));
+  const legacyAutoMechanics: PowerPartPayload[] = savedParts
+    .filter((p) => {
+      const name = p.name ?? '';
+      return name && POWER_AUTO_MECHANIC_PART_NAMES.has(name) && !rebuiltMechanicNames.has(name);
+    })
+    .map((p) => ({
+      id: p.id,
+      name: p.name,
+      op_1_lvl: p.op_1_lvl || 0,
+      op_2_lvl: p.op_2_lvl || 0,
+      op_3_lvl: p.op_3_lvl || 0,
+      applyDuration: p.applyDuration || false,
+    }));
+
+  // Dedupe saved-side rows only — mechanicPayload may intentionally repeat the same
+  // part id per damage row (e.g. three Elemental Damage lines for fire/ice/lightning).
+  return [...dedupeSavedParts([...userParts, ...legacyAutoMechanics]), ...mechanicPayload];
+}
 
 export interface PowerDocument {
   name?: string;
@@ -545,6 +682,7 @@ export interface PowerDocument {
     op_2_lvl?: number;
     op_3_lvl?: number;
     applyDuration?: boolean;
+    isAdvanced?: boolean;
   }>;
   damage?: Array<{
     amount?: number | string;
@@ -567,6 +705,7 @@ export interface PowerDocument {
   duration?: {
     type?: string;
     value?: number;
+    applyDuration?: boolean;
     focus?: boolean;
     noHarm?: boolean;
     endsOnActivation?: boolean;
@@ -581,18 +720,7 @@ export function derivePowerDisplay(
   powerDoc: PowerDocument,
   partsDb: PowerPart[]
 ): PowerDisplayData {
-  const partsPayload: PowerPartPayload[] = dedupeSavedParts(
-    Array.isArray(powerDoc.parts)
-      ? powerDoc.parts.map((p) => ({
-          id: p.id,
-          name: p.name,
-          op_1_lvl: p.op_1_lvl || 0,
-          op_2_lvl: p.op_2_lvl || 0,
-          op_3_lvl: p.op_3_lvl || 0,
-          applyDuration: p.applyDuration || false,
-        }))
-      : []
-  );
+  const partsPayload: PowerPartPayload[] = buildPowerPartsPayloadForCost(powerDoc, partsDb);
 
   const calc = calculatePowerCosts(partsPayload, partsDb);
   

@@ -1,5 +1,72 @@
+- id: TASK-640
+  title: Legacy chooser + custom deep catalogs + GuidedLayerNav chrome parity
+  priority: high
+  status: done
+  created_at: 2026-08-01
+  created_by: agent
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T075
+      - DEV-V-013-T076
+      - DEV-V-013-T077
+  developer_test_plan: DEV-V-013 T075-T077 — see BUILD_VALIDATION.md
+  related_files:
+    - src/app/(main)/characters/new/page.tsx
+    - src/app/(main)/characters/new/guided/page.tsx
+    - src/lib/guided-creator/creator-entry-mode.ts
+    - src/lib/guided-creator/guided-deep-entry-landing.ts
+    - src/lib/guided-creator/use-guided-deep-entry-on-arrival.ts
+    - src/lib/guided-creator/path-selection-draft.ts
+    - src/components/shared/guided-choice/guided-nav-button-styles.ts
+    - src/components/shared/guided-choice/guided-layer-nav.tsx
+    - src/components/guided-creator/guided-step-footer.tsx
+    - src/components/guided-creator/guided-step-layout.tsx
+    - src/components/guided-creator/steps/species-step.tsx
+    - src/components/guided-creator/steps/abilities-step.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+    - src/components/guided-creator/steps/character-feat-step.tsx
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/stores/guided-creator-store.ts
+  acceptance_criteria:
+    - Chooser shows Guided, Custom, and temporary Legacy cards; Legacy routes to Advanced wizard
+    - Custom entry lands on deeper catalog faces per step when no path is selected (creatorEntryMode session-only)
+    - Guided chooser sets creatorEntryMode guided and Path L1 via entry=guided bootstrap
+    - GuidedLayerNav expand uses primary chrome; collapse uses outline chrome matching footer Continue/Back
+  notes: Owner 2026-08-01 unified creator feedback. QA DEV-V-013 T075-T077.
+
+---
+
+- id: TASK-639
+  title: Fix mojibake (?-corrupted em dash/arrow/section-sign) in AI_CHANGELOG.md + done archive
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-01
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/archive/TASK_QUEUE_DONE.md
+    - scripts/fix-mojibake-639.py
+  description: |
+    Context-aware restoration of historical log encoding corruption (flattened Unicode to literal ?).
+  acceptance_criteria:
+    - No blind-regex; legitimate query params and UI question marks preserved.
+    - Files remain valid UTF-8; spot-checked samples.
+  notes: |
+    Changelog body: spaced-mojibake 0; 11 intentional question marks (query params, UI copy).
+    Archive: 4 spaced question marks (code ternaries only); 55 total (ternaries, audit templates, questions).
+
+---
+
 - id: TASK-638
-  title: Guided Path � L3 custom archetype face + L1?L3 hatches
+  title: Guided Path L1↔L3 custom archetype face + L1↔L3 hatches
   created_at: 2026-08-01
   created_by: owner
   completed_at: 2026-08-01
@@ -18,7 +85,7 @@
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
   description: |
     First Custom-integration screen: Foundation Path. L1 = path cards + Custom Archetype hatch.
-    L3 = type + ability picks with InfoTippy. Chooser Custom ? guided Path L3.
+    L3 = type + ability picks with InfoTippy. Chooser Custom— guided Path L3.
   acceptance_criteria:
     - L1 Path shows Custom Archetype hatch; L3 Continue + View archetype paths; Custom chooser entry; forge save payload.
   build_validation: |
@@ -28,7 +95,7 @@
       - DEV-V-013-T073
       - DEV-V-013-T074
   developer_test_plan: |
-    Suite DEV-V-013 T072�T074 � Path Custom Archetype L1?L3 + chooser Custom entry.
+    Suite DEV-V-013 T072–T074 — Path Custom Archetype L1↔L3 + chooser Custom entry.
   notes: |
     Downstream forge chapter parity is follow-up (one screen at a time). Advanced route still exists.
 
@@ -53,7 +120,7 @@
   description: |
     Shared ListHeader/GridListRow chrome exists (rowChrome, shell gap-1) but consumers can omit
     rowChrome or override listClassName with looser gaps (Creatures did until TASK-630). No
-    automated check catches drift � owner must hunt-and-peck. Complement to TASK-629 (facts).
+    automated check catches drift — owner must hunt-and-peck. Complement to TASK-629 (facts).
   acceptance_criteria:
     - Documented norm: Library/Official/Codex GLR lists use shell default gap-1; edit/delete/add
       must pass matching ListHeader rowChrome (no leftover 40px tracks).
@@ -310,7 +377,7 @@
 
 ---
 - id: TASK-621
-  title: Library armaments split ? Weapons / Armor / Shields tabs
+  title: Library armaments split— Weapons / Armor / Shields tabs
   priority: medium
   status: done
   verification_status: pending-qa
@@ -346,7 +413,7 @@
 ---
 
 - id: TASK-620
-  title: Realms Library creatures tab ? full CreatureStatBlock parity
+  title: Realms Library creatures tab— full CreatureStatBlock parity
   priority: medium
   status: done
   verification_status: pending-qa
@@ -450,7 +517,7 @@
     - CombatantCard combatant row actions/conditions unchanged.
     - npm run build passes.
   completed_work: |
-    USM 696?354 facade + 6 co-located modules; CombatantCard 615?149 + 6 co-located modules.
+    USM 696"354 facade + 6 co-located modules; CombatantCard 615"149 + 6 co-located modules.
     Allowlist updated for USM extracts. npm run build passes.
 
 ---
@@ -696,8 +763,8 @@
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
   follow_up_tasks:
-    - Shrink `powers-techniques-step.tsx` facade (~599 LOC) ? extract toggle/seed hook
-    - Shrink `use-creature-creator-workspace.ts` (~518 LOC) ? optional save/handlers slice
+    - Shrink `powers-techniques-step.tsx` facade (~599 LOC)— extract toggle/seed hook
+    - Shrink `use-creature-creator-workspace.ts` (~518 LOC)— optional save/handlers slice
   completed_work: |
     Creature workspace/editor, empowered workspace/editor, ancestry-step, guided powers-techniques split into co-located modules; species/empowered pages already thin from TASK-601. Facades: ancestry-step 96, creature-editor 266, empowered-editor 84, species page 185, empowered page 292. Vitest: creature-creator-derived-stats.test.ts, powers-techniques-step-helpers.test.ts. npm run build passes.
   build_validation: |
@@ -744,7 +811,7 @@
     existing CodexBrowseListShell / spreadsheet patterns; no parallel admin list chrome.
   acceptance_criteria:
     - Each listed hotspot reduced toward <= ~500 LOC facade (ship first slice + follow-ups if needed).
-    - Reuse CodexBrowseListShell / existing admin patterns ? no new list shell.
+    - Reuse CodexBrowseListShell / existing admin patterns— no new list shell.
     - FEATURE_INDEX + build green; no live codex data mutations in this task.
   verification_status: n/a
   completed_work: |
@@ -770,8 +837,8 @@
       - DEV-V-030-T002
   developer_test_plan: |
     Suite DEV-V-030 T001/T002 Â— combat + skill encounter play after facade split:
-    open `/encounters/<id>/combat` and `/skill` (or mixed tabs) ? add combatant/participant via
-    AddCombatantModal + manual form ? start/next turn or submit skill roll ? autosave still works.
+    open `/encounters/<id>/combat` and `/skill` (or mixed tabs)— add combatant/participant via
+    AddCombatantModal + manual form— start/next turn or submit skill roll— autosave still works.
   related_files:
     - src/app/(main)/encounters/[id]/_components/CombatEncounterView.tsx
     - src/app/(main)/encounters/[id]/_components/SkillEncounterView.tsx
@@ -828,7 +895,7 @@
       - DEV-V-019-T011
   developer_test_plan: |
     Suite DEV-V-019 T011 Â— crafting session load + live requirements; also smoke:
-    open `/crafting/<id>` ? change quantity/options ? enter a roll ? Complete Crafting still works.
+    open `/crafting/<id>` → change quantity/options— enter a roll— Complete Crafting still works.
   related_files:
     - src/app/(main)/crafting/[id]/page.tsx
     - src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts
@@ -862,7 +929,7 @@
 ---
 
 - id: TASK-606
-  title: Owner ack Â— Advanced CreatorResourceBar ? PointStatus / LoadoutBudgetBar grammar
+  title: Owner ack Â— Advanced CreatorResourceBar— PointStatus / LoadoutBudgetBar grammar
   created_at: 2026-07-20
   created_by: agent
   completed_at: 2026-07-21
@@ -891,7 +958,7 @@
     - src/docs/ai/BUILD_VALIDATION.md
   description: |
     Advanced creator still uses plain CreatorResourceBar (TP/currency/energy text) while Guided
-    uses LoadoutBudgetBar ? PointStatus. Product split was noted in TASK-596. Needs owner ack
+    uses LoadoutBudgetBar— PointStatus. Product split was noted in TASK-596. Needs owner ack
     before unifying Advanced onto PointStatus grammar, or permanently document the fork.
   acceptance_criteria:
     - Owner chooses unify vs keep fork.
@@ -899,7 +966,7 @@
     - If keep: FEATURE_INDEX states permanent Advanced vs Guided resource chrome split.
   completed_work: |
     - Owner chose **unify** (prefer Guided grammar so Advanced can be phased out later).
-    - Deleted CreatorResourceBar; wired Advanced equipment/powers/finalize onto LoadoutBudgetBar ? PointStatus.
+    - Deleted CreatorResourceBar; wired Advanced equipment/powers/finalize onto LoadoutBudgetBar— PointStatus.
     - Collapsed Advanced equipment L1 vs non-L1 dual chrome and powers DescriptorChip TP fork.
     - Extended LoadoutBudgetBar with align + trailing (finalize Energy PointStatus).
     - FEATURE_INDEX + GUIDED_EQUIPMENT_PHASED_SPEC + BV T014/T016 updated.
@@ -953,7 +1020,7 @@
 ---
 
 - id: TASK-604
-  title: CreatureStatBlock weapon attack bonus ? weapon-attack-ability helper
+  title: CreatureStatBlock weapon attack bonus— weapon-attack-ability helper
   created_at: 2026-07-20
   created_by: agent
   completed_at: 2026-07-21
@@ -984,7 +1051,7 @@
   notes: |
     From 2026-07-20 /global-audit. Call site uses getWeaponAttackBonusFromProperties + one-shot
     attackAbilities (legacy keys via getAbilityValue). /cleanup: deleted thin wrapper; BV
-    relocated DEV-V-018-T011 ? DEV-V-025-T004. Vitest covers melee/finesse/ranged/thrown.
+    relocated DEV-V-018-T011— DEV-V-025-T004. Vitest covers melee/finesse/ranged/thrown.
     verification_status pending-qa.
 
 ---
@@ -1032,7 +1099,7 @@
 ---
 
 - id: TASK-602
-  title: Recovery modal ? SegmentedControl + theme-aware status tokens
+  title: Recovery modal— SegmentedControl + theme-aware status tokens
   created_at: 2026-07-20
   created_by: agent
   completed_at: 2026-07-20
@@ -1063,7 +1130,7 @@
   notes: |
     From 2026-07-20 /global-audit. Wired mode/duration/allocation onto SegmentedControl; preview uses
     statusPanel.warning + warning-fg; confirm CTA uses primary Button (no warning-* dark: pairs).
-    /cleanup: Cancel/confirm ? Modal footer + flexLayout; bare labels ? visual captions (aria-label on controls).
+    /cleanup: Cancel/confirm— Modal footer + flexLayout; bare labels— visual captions (aria-label on controls).
     verification_status pending-qa (DEV-V-009-T039).
 
 ---
@@ -1110,7 +1177,7 @@
     - FEATURE_INDEX rows updated; npm run build passes.
     - Targeted smoke or existing DEV-V creator suites still apply where present.
   notes: |
-    From 2026-07-20 /global-audit ? /debt. Species was deferred when TASK-381 archived.
+    From 2026-07-20 /global-audit — /debt. Species was deferred when TASK-381 archived.
     Coordinates with TASK-610 (LOC facade splits) Â— prefer completing workspace extract first.
     verification_status pending-qa (DEV-V-016 creator Load smoke).
 
@@ -1261,7 +1328,7 @@
     - Path recommend / currency / TP behavior unchanged vs BUILD_VALIDATION DEV-V-001 equipment tests.
     - No new parallel budget chrome; do not force LoadoutBudgetBar into Advanced without ack.
   notes: |
-    equipment-step ~1404?~1082 LOC (UI split remains TASK-598). Vitest covers catalog merge,
+    equipment-step ~1404→~1082 LOC (UI split remains TASK-598). Vitest covers catalog merge,
     path recommend/phase filter, currency (T014 partial CI), inventory add/remove/replace,
     unarmed TP. verification_status pending-qa (DEV-V-001 T014Â–T015 display/save chrome).
 
@@ -1422,11 +1489,11 @@
   acceptance_criteria:
     - Automated coverage of one-screen advance vs furthest-jump regression.
     - Prefer pure helper extract if store is hard to unit-test; no Playwright required.
-    - npm test green; matrix row #7 ? CI.
+    - npm test green; matrix row #7— CI.
   notes: |
     Extracted nextGuidedSubStep / prevGuidedSubStep / landsOnFirstInnerScreen into
     guided-substep-nav.ts; store footer nav + Ancestry/Loadout entry consume helpers.
-    Vitest covers one-step walk of GUIDED_SUBSTEP_ORDER, species?ancestry (not abilities),
+    Vitest covers one-step walk of GUIDED_SUBSTEP_ORDER, species→ancestry (not abilities),
     and landsOnFirstInnerScreen intent (forward/first vs back). UI phase reset stays human T059.
 - id: TASK-591
   title: Vitest - ancestry pick task order (DEV-V-013-T061)
@@ -1457,7 +1524,7 @@
     before ancestry-trait-1 before flaw; ancestry-trait-2 only when selectedFlawId is truthy;
     skip (empty string) omits bonus trait. AncestryStep consumes buildAncestryPickTasks.
 - id: TASK-584
-  title: Skills sheet ? catalog-all base skills + filters + edit chrome
+  title: Skills sheet— catalog-all base skills + filters + edit chrome
   created_at: 2026-07-20
   completed_at: 2026-07-20
   created_by: agent
@@ -1483,7 +1550,7 @@
     tests:
       - DEV-V-009-T032
   developer_test_plan: |
-    Suite DEV-V-009 T032 ? Skills catalog list + filters + - removes.
+    Suite DEV-V-009 T032— Skills catalog list + filters + - removes.
   description: |
     Skills list model: always show every Codex base skill (no Add Skill opt-in for base skills).
     Sub-skills: proficient ones always shown; unproficient sub-skills only if user added them.
@@ -1519,7 +1586,7 @@
     tests:
       - DEV-V-009-T035
   developer_test_plan: |
-    Suite DEV-V-009 T035 ? Defense Score hover tip.
+    Suite DEV-V-009 T035— Defense Score hover tip.
   description: |
     On the character sheet Defenses row, each Defense Score value (large number) gets a short
     WordHelpTip explaining Score / Defense Score per GAME_RULES (10 + Defense Bonus; Bonus + 10).
@@ -1592,7 +1659,7 @@
       - DEV-V-009-T034
       - DEV-V-009-T033
   developer_test_plan: |
-    Suite DEV-V-009 T034 ? Temp Modifier on v1 sheet surfaces; T033 persistence/tint/cascade.
+    Suite DEV-V-009 T034— Temp Modifier on v1 sheet surfaces; T033 persistence/tint/cascade.
   description: |
     Wired Temp Modifier to Speed, Evasion, Critical Range, Damage Reduction, Terminal;
     Abilities (+ HP/EN/TP max toggle); Defenses; Skills. Stacks on computed/armor defaults.
@@ -1737,7 +1804,7 @@
     tests:
       - DEV-V-009-T031
   developer_test_plan: |
-    Suite DEV-V-009 T031 ? Parts/Properties sections default collapsed + InfoTippy.
+    Suite DEV-V-009 T031— Parts/Properties sections default collapsed + InfoTippy.
   description: |
     Parts/Properties & Proficiencies detailSections default collapsed with chevron +
     family-tailored InfoTippy via MetadataDetailSection / GridListRow (no forks).
@@ -1787,9 +1854,9 @@
   notes: |
     SummaryItem gained labelAccessory (PointStatus pattern). No duplicate tip strings found beyond
     guided-creator-copy prose that states the number (not a tip definition). Renamed
-    archetypePathHelp ? guidedArchetypePathHelp for guided* naming (cleanup).
+    archetypePathHelp— guidedArchetypePathHelp for guided* naming (cleanup).
 - id: TASK-430
-  title: React Compiler hook warnings ? exhaustive-deps / set-state-in-effect / preserve-manual-memoization
+  title: React Compiler hook warnings— exhaustive-deps / set-state-in-effect / preserve-manual-memoization
   created_at: 2026-07-13
   created_by: agent
   priority: low
@@ -1825,18 +1892,18 @@
       - DEV-V-019-T012
       - DEV-V-019-T013
   developer_test_plan: |
-    Full DEV-V-019 suite T001?T007 + T009?T013 (batches 1?7). Sitewide react-hooks compiler warnings should be 0.
+    Full DEV-V-019 suite T001–T007 + T009–T013 (batches 1–7). Sitewide react-hooks compiler warnings should be 0.
   description: |
-    Cleared React Compiler hook rule warnings (~171 ? 0) via derive / remount / useQuery / useIsClient batches without eslint-disable.
+    Cleared React Compiler hook rule warnings (~171— 0) via derive / remount / useQuery / useIsClient batches without eslint-disable.
   acceptance_criteria:
     - Material reduction in react-hooks/* warnings without cascading re-render regressions.
     - Prefer removing unnecessary effects over blanket eslint-disable.
     - exhaustive-deps changes must not alter intentional mount-only / stable-ref patterns.
     - npm run build + lint pass; no new errors.
   completed_work: |
-    Batches 1?7 (2026-07-15/20): ~171 ? **0** react-hooks set-state-in-effect / exhaustive-deps / preserve-manual-memoization.
+    Batches 1–7 (2026-07-15/20): ~171— **0** react-hooks set-state-in-effect / exhaustive-deps / preserve-manual-memoization.
     Patterns: derive, remount-on-open, useIsClient, useQuery for admin/profile fetches, crafting bootstrap + displaySessions,
-    sheet tour latch, core-rules/spreadsheet seed. DEV-V-019 T001?T013.
+    sheet tour latch, core-rules/spreadsheet seed. DEV-V-019 T001–T013.
   notes: |
     Soft follow-up TASK-381 (sheet facade) was independent; domain hooks already quiet before close.
 - id: TASK-440
@@ -1865,7 +1932,7 @@
   description: |
     Follow-up to TASK-439. Owner chose full Health / Energy over dense HP / EN on listed HUD surfaces.
   acceptance_criteria:
-    - Owner decides: keep HP in dense HUD, or rename to Health (and EN?Energy where paired).
+    - Owner decides: keep HP in dense HUD, or rename to Health (and EN→Energy where paired).
     - Apply decision sitewide to listed surfaces (and peers if found).
     - npm run build if UI touched.
   completed_work: |
@@ -1933,11 +2000,11 @@
       - DEV-V-029-T002
       - DEV-V-029-T003
   developer_test_plan: |
-    Suite DEV-V-029 T001?T003 ? play-together, sheet tour offer, level-up guides + tutorials toggle.
+    Suite DEV-V-029 T001–T003— play-together, sheet tour offer, level-up guides + tutorials toggle.
   description: |
     Section 11 of REALMS_PRODUCT_OVERVIEW.md. After first character save, guide users
     toward playing together (Discord, campaign invite). Optional post-save sheet tour.
-    Contextual level-up tutorials for milestones ? delta-only, skippable, global tutorials on/off.
+    Contextual level-up tutorials for milestones— delta-only, skippable, global tutorials on/off.
   acceptance_criteria:
     - After first character save: dismissible play-together prompt (Discord + start campaign).
     - Optional sheet tour offered once post-save (Skip + Don't show again); not on home page.
@@ -1948,7 +2015,7 @@
     - `npm run build` passes.
   completed_work: |
     PlayTogetherModal shared by guided reveal + advanced finalize (localStorage dismiss).
-    Sheet tour offer via ?offerTour=1; highlight-chain SheetTour; level-up guide modal via
+    Sheet tour offer via `?offerTour=1`; highlight-chain SheetTour; level-up guide modal via
     buildLevelUpGuideContent; My Account tutorials toggle; prefs in onboarding-preferences.ts.
     Unit tests + DEV-V-029; build green.
   notes: |
@@ -2163,7 +2230,7 @@
       - DEV-V-028-T003
       - DEV-V-028-T004
   developer_test_plan: |
-    Suite DEV-V-028 T001?T004 ? see BUILD_VALIDATION.md
+    Suite DEV-V-028 T001–T004— see BUILD_VALIDATION.md
   description: |
     /global-audit 2026-07-20: Admin Codex + Codex browse + Admin Images hand-rolled
     SectionHeader + SearchInput + ListHeader. Shipped CodexBrowseListShell (ADR-0005);
@@ -2180,7 +2247,7 @@
     - Migrated Codex browse peers (same set); my-mode empties unchanged.
     - Admin Images bank list on shell; PageHeader stays page-level.
     - AdminArchetypesTab documented exception (path-card UI); CodexArchetypesTab on shell.
-    - DEV-V-028 T001?T004.
+    - DEV-V-028 T001–T004.
   notes: |
     Owner ack 2026-07-20 (proceed). Nested modal lists (AdminTraits choice picker,
     AdminSpecies trait USM) stay hand-rolled per ADR.
@@ -2207,7 +2274,7 @@
     - isStarter checkbox wired in AdminSpeciesTab (openAdd/openEdit/save).
     - Guided recommended abilities + loadouts persisted via saveArchetypeWithPath.
     - TASK-404: structured admin abilities steppers + loadout controls (raw JSON removed for those fields).
-    - Soft residual (species trait-option picker polish) superseded by TASK-572 AdminSpecies ? USM; no further 403 work.
+    - Soft residual (species trait-option picker polish) superseded by TASK-572 AdminSpecies— USM; no further 403 work.
   notes: |
     2026-07-20 /debt (/global-audit): AC met; archived. Do not rediscover optional trait-option residual Â— TASK-572 covers AdminSpecies trait Add.
   follow_up_tasks:
@@ -2215,7 +2282,7 @@
     - TASK-572
 
 - id: TASK-575
-  title: Admin Official Enhanced list ? OfficialEntityList shell parity
+  title: Admin Official Enhanced list— OfficialEntityList shell parity
   created_at: 2026-07-20
   created_by: agent
   priority: medium
@@ -2298,7 +2365,7 @@
   acceptance_criteria:
     - Header `description` omitted or single short sentence across USM add/load callers (innate: none).
     - No blank strip between scrollable list and sticky footer on USM.
-    - Cancel/X/backdrop/Escape with dirty selection ? Add selected? (or Load selected?); confirm applies, Don't add discards, prompt close keeps browsing.
+    - Cancel/X/backdrop/Escape with dirty selection— Add selected" (or Load selected"); confirm applies, Don't add discards, prompt close keeps browsing.
     - npm run build; DEV-V-016-T015; changelog + docs.
   completed_work: |
     - UnifiedSelectionModal: `pb-0` content (no footer gap); leave-with-selection prompt for dirty picks.
@@ -2307,7 +2374,7 @@
     - `/cleanup`: dropped `description={undefined}` noise + empty `innateDescription`; one-line
       sub-skill/proficiency help; removed dead leave-prompt `titleA11y`; powers L2 no double-close;
       related_files matched diff.
-    - Renumbered from TASK-573 ? TASK-574 after master claimed TASK-573 (guided innate soft-warn, PR #70).
+    - Renumbered from TASK-573— TASK-574 after master claimed TASK-573 (guided innate soft-warn, PR #70).
   notes: |
     From owner screenshot feedback (Browse Innate Powers). Shared USM fix covers all add-X/load wrappers.
   evidence: |
@@ -2466,7 +2533,7 @@
     - Guidance-group armaments/equipment refs parse via parseIdQuantityStrings.
     - Added unit coverage for first-colon split (canonical vs former lastIndexOf).
     - `/cleanup`: drop redundant .map(String); one parse call per guidance group;
-      FEATURE_INDEX Â“admin parsersÂ” ? shared parsers (TASK-476/570).
+      FEATURE_INDEX "admin parsers" → shared parsers (TASK-476/570).
   notes: |
     Filed from /debt 2026-07-19. Lib consolidation Â— no manual QA suite.
   evidence: |
@@ -2583,7 +2650,7 @@
   developer_test_plan: |
     Suite DEV-V-009 T027 Â— see BUILD_VALIDATION.md (also remount covered by DEV-V-019-T007 step 4).
   notes: |
-    Filed from /debt 2026-07-19. AddCombatantModal ? TASK-571; AdminSpecies ? TASK-572.
+    Filed from /debt 2026-07-19. AddCombatantModal— TASK-571; AdminSpecies— TASK-572.
   evidence: |
     npm run build (pass 2026-07-19); cleanup pass same day.
 
@@ -2606,7 +2673,7 @@
     - Sheet partDataToChips: descriptor kind when no options; Training Points costLabel.
     - Advanced powers/techniques add-modal columns spell Training Points.
     - normalizeId used by powers L1 candidates; formatDamageReductionFact added.
-    - Powers/techniques L2: GuidedPowersTechniquesL2Modal ? UnifiedSelectionModal (TASK-463 done).
+    - Powers/techniques L2: GuidedPowersTechniquesL2Modal— UnifiedSelectionModal (TASK-463 done).
   build_validation: |
     suite: DEV-V-013
     tests:
@@ -2709,7 +2776,7 @@
   merged_at: |
     2026-07-19
   evidence: |
-    npm run build; /audit ? /cleanup touch target + tip docs
+    npm run build; /audit — /cleanup touch target + tip docs
   build_validation: |
     suite: DEV-V-013
     tests:
@@ -2830,13 +2897,13 @@
     Multi-ability Skills note Â“highest linked AbilityÂ” in the tip.
     Cleanup 2026-07-19: bonus tip child aria-label; Ability primary (vs Species descriptor);
     remove uses text-danger-fg; DESIGN_INTENT on tip helper/call site.
-    Renumbered from TASK-544?545?547?548 on merge Â— TASK-544Â–547 taken by path ability,
+    Renumbered from TASK-544–545"547"548 on merge Â— TASK-544Â–547 taken by path ability,
     sheet dedupe, and ability/defense word tooltips (PR #45/#49/#48/#47). BV tip is T066
     (T065 = guided ability name tooltips from TASK-547).
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/46
   evidence: |
-    npm run build; vitest guided-skill-recommendations.test.ts; /audit ? /cleanup a11y+tokens
+    npm run build; vitest guided-skill-recommendations.test.ts; /audit — /cleanup a11y+tokens
   build_validation: |
     suite: DEV-V-013
     tests:
@@ -2938,7 +3005,7 @@
     ABILITY_EFFECT_BLURBS (always-visible Layer 1 cards).
     Cleanup 2026-07-19: DESIGN_INTENT on WordHelpTip; AbilityScoreGrid aria on score
     (not tile); guide/04 + tooltips README; related_files honesty.
-    Renumbered from TASK-544?545?546?547 on merge Â— path ability PRs #45/#49 and sheet
+    Renumbered from TASK-544–545"546"547 on merge Â— path ability PRs #45/#49 and sheet
     duplicates PR #48 claimed earlier IDs; BV tip test is T026 (T025 = duplicates).
   build_validation: |
     suite: DEV-V-009 / DEV-V-013
@@ -2952,7 +3019,7 @@
   merged_at: |
     2026-07-19
   evidence: |
-    npm run build (agent); /audit ? /cleanup; CI green; merged to master via PR #47.
+    npm run build (agent); /audit — /cleanup; CI green; merged to master via PR #47.
 
 ---
 
@@ -3004,7 +3071,7 @@
     Owner feedback 2026-07-19. Global fix (not UI bandaid): write + read paths.
     Cleanup 2026-07-19: drop dead allTraits from guided build context/reveal-step;
     archive related_files includes guide/06 + reveal-step.
-    Renumbered from TASK-544?545?546 on merge Â— TASK-544/545 path ability work (PR #45/#49).
+    Renumbered from TASK-544–545→546 on merge Â— TASK-544/545 path ability work (PR #45/#49).
   pr_link: |
     https://github.com/MastersoftheRealm/RealmsRPG-Test/pull/48
   merged_at: |
@@ -3219,7 +3286,7 @@
   merged_at: 2026-07-18
   evidence: |
     npm run build (pass); vitest map-selection.test.ts (pass).
-    Merged to master via PR #43 after conflict resolve (renumber ? TASK-542).
+    Merged to master via PR #43 after conflict resolve (renumber— TASK-542).
   build_validation: |
     suite: DEV-V-009
     tests:
@@ -3489,7 +3556,7 @@
     while X/+ took the remaining flex space. Collapse the mobile grid so the name
     gets minmax(0, 1fr) beside action chrome.
   acceptance_criteria:
-    - Below lg, GridListRow uses a collapsed template (thumb? + name fr + visible
+    - Below lg, GridListRow uses a collapsed template (thumb + name fr + visible
       mobile cols + trailing action tracks); names are not left-squeezed by empty
       desktop data tracks.
     - Desktop lg+ column alignment unchanged; description name-span remains lg-only.
@@ -3731,7 +3798,7 @@
     - src/components/character-creator/steps/finalize-step.tsx
     - src/docs/DESIGN_SYSTEM.md
   description: |
-    Transparent art was compositing onto near-black (cropper bg + JPEG alpha?black).
+    Transparent art was compositing onto near-black (cropper bg + JPEG alpha→black).
     Add a soft theme-aware image-matte token for display and bake fills.
   acceptance_criteria:
     - Transparent PNG areas use soft theme matte (not pure black/white) in cropper, thumbs, and enlarge modal.
@@ -4244,7 +4311,7 @@ Firebase/RTDB - the project is Supabase-only.
 ---
 
 - id: TASK-518
-  title: Admin ? DB ? guided archetype-path sync audit (post 514Â–517)
+  title: Admin— DB— guided archetype-path sync audit (post 514Â–517)
   created_at: 2026-07-17
   created_by: agent
   priority: medium
@@ -4281,7 +4348,7 @@ Firebase/RTDB - the project is Supabase-only.
   remaining_work: |
     - None for AC; content trim = TASK-521.
   acceptance_criteria:
-    - Audit documents admin ? guided parity for L1 path fields; residuals tracked.
+    - Audit documents admin— guided parity for L1 path fields; residuals tracked.
     - Follow-up TASK-521 filed for codex content pass.
     - BUILD_VALIDATION cross-links honest; npm run build.
   notes: |
@@ -4618,9 +4685,9 @@ Firebase/RTDB - the project is Supabase-only.
     unused opposite Library tab (Techniques vs Powers) is hidden by default. Reuses the existing
     sheet eye-toggle prefs; user can unhide in edit mode. Powered-Martial keeps both tabs.
   acceptance_criteria:
-    - Power create ? Techniques hidden on sheet (view mode); Powers visible.
-    - Martial create ? Powers hidden; Techniques visible.
-    - Powered-Martial ? both tabs visible by default.
+    - Power create— Techniques hidden on sheet (view mode); Powers visible.
+    - Martial create— Powers hidden; Techniques visible.
+    - Powered-Martial— both tabs visible by default.
     - Unhide via existing edit-mode Library eye toggle still works.
     - Guided + advanced create paths both set the pref; cleanForSave persists it.
     - Unit tests + npm run build.
@@ -4851,7 +4918,7 @@ Firebase/RTDB - the project is Supabase-only.
     Reordered Unarmed td cells only; preserved RollButton handlers, proficient styling, Bludgeoning.
     npm run build.
   notes: |
-    Completed 2026-07-16. No new weapons table fork ? kept separate Unarmed row under QuickWeaponsTable.
+    Completed 2026-07-16. No new weapons table fork— kept separate Unarmed row under QuickWeaponsTable.
 - id: TASK-001
   title: Unify skill rows across creators
   priority: high
@@ -4881,9 +4948,9 @@ Firebase/RTDB - the project is Supabase-only.
     - PR includes visual before/after screenshots
   notes: |
     AUDIT COMPLETE 2026-02-06:
-    ? Using GridListRow/ListHeader: codex/page.tsx, library/page.tsx, library-section.tsx, add-feat-modal.tsx, add-skill-modal.tsx, add-library-item-modal.tsx, feats-step.tsx, equipment-step.tsx, creature-creator/page.tsx, unified-selection-modal.tsx
-    ? Using ItemCard/ItemList (alternative unified): item-selection-modal.tsx
-    ? Custom (justified): add-sub-skill-modal.tsx (unique base-skill selector UI), species-modal.tsx (detail view), level-up-modal.tsx (wizard), recovery-modal.tsx (specialized)
+    - Using GridListRow/ListHeader: codex/page.tsx, library/page.tsx, library-section.tsx, add-feat-modal.tsx, add-skill-modal.tsx, add-library-item-modal.tsx, feats-step.tsx, equipment-step.tsx, creature-creator/page.tsx, unified-selection-modal.tsx
+    - Using ItemCard/ItemList (alternative unified): item-selection-modal.tsx
+    - Custom (justified): add-sub-skill-modal.tsx (unique base-skill selector UI), species-modal.tsx (detail view), level-up-modal.tsx (wizard), recovery-modal.tsx (specialized)
     CONCLUSION: All list pages and selection modals already use unified patterns (GridListRow or ItemCard). No changes needed.
 
 - id: TASK-284
@@ -5108,14 +5175,14 @@ Firebase/RTDB - the project is Supabase-only.
     - Security audit documented with any risks identified and addressed.
   notes: |
     AUDIT COMPLETE 2026-02-05:
-    ? GOOD: Reauthentication before email/password change and delete
-    ? GOOD: DELETE confirmation requires typing "DELETE"
-    ? GOOD: Error handling with user-friendly messages
-    ? GOOD: Clear sign-out functionality
-    ? GAP: Google/Apple OAuth users can't change email (no password for reauth) - needs provider detection
-    ? GAP: Username editing not implemented (displayName only)
-    ? GAP: Profile picture upload not implemented
-    ? GAP: No rate limiting on changes (should be backend concern)
+    ✅ GOOD: Reauthentication before email/password change and delete
+    ✅ GOOD: DELETE confirmation requires typing "DELETE"
+    ✅ GOOD: Error handling with user-friendly messages
+    ✅ GOOD: Clear sign-out functionality
+    ⚠️ GAP: Google/Apple OAuth users can't change email (no password for reauth) - needs provider detection
+    ⚠️ GAP: Username editing not implemented (displayName only)
+    ⚠️ GAP: Profile picture upload not implemented
+    ⚠️ GAP: No rate limiting on changes (should be backend concern)
     RECOMMENDATION: Add provider detection to show appropriate options per auth method.
     RESOLVED: All gaps addressed ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â TASK-047 (auth provider detection), TASK-046 (username change), TASK-041 (profile picture upload).
 
@@ -5202,9 +5269,9 @@ Firebase/RTDB - the project is Supabase-only.
     - Document any intentional differences (if any) with rationale.
   notes: |
     AUDIT COMPLETE 2026-02-05:
-    ? AbilityScoreEditor uses ValueStepper consistently
-    ? DefensesSection uses ValueStepper consistently
-    ? AbilitiesSection uses ValueStepper consistently
+    ✅ AbilityScoreEditor uses ValueStepper consistently
+    ✅ DefensesSection uses ValueStepper consistently
+    ✅ AbilitiesSection uses ValueStepper consistently
     FINDING: All components already use the shared ValueStepper component.
     Differences are intentional: compact=true for dense layouts, different sizes for context.
     No changes needed - already unified."
@@ -5254,7 +5321,7 @@ Firebase/RTDB - the project is Supabase-only.
   created_at: 2026-02-05
   created_by: owner
   description: |
-    Users can currently set Weight and Height to negative values in the Character Notes ? Physical Attributes & Movement section. Add validation to ensure minimum value is 1.
+    Users can currently set Weight and Height to negative values in the Character Notes— Physical Attributes & Movement section. Add validation to ensure minimum value is 1.
   acceptance_criteria:
     - Weight input has min value of 1.
     - Height input has min value of 1.
@@ -5270,7 +5337,7 @@ Firebase/RTDB - the project is Supabase-only.
   created_at: 2026-02-05
   created_by: owner
   description: |
-    Users are unable to remove items from their inventory in Character Notes ? Inventory. The remove/delete functionality is broken or missing.
+    Users are unable to remove items from their inventory in Character Notes— Inventory. The remove/delete functionality is broken or missing.
   acceptance_criteria:
     - Inventory items can be removed via a delete/remove button.
     - Removal persists to the database.
@@ -5310,7 +5377,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Character name pencil icon only appears/functions in edit mode
     - XP edit icon/functionality available regardless of edit mode
     - Both respect the color scheme from TASK-020
-  notes: "DONE 2026-02-05: Updated characters/[id]/page.tsx to conditionally pass onNameChange={isEditMode ? handleNameChange : undefined} so name is only editable in edit mode. XP onExperienceChange is always passed so it's always editable."
+  notes: "DONE 2026-02-05: Updated characters/[id]/page.tsx to conditionally pass onNameChange={isEditMode— handleNameChange : undefined} so name is only editable in edit mode. XP onExperienceChange is always passed so it's always editable."
 
 - id: TASK-022
   title: Library feats tab - enable feat deletion via pencil icon
@@ -5420,7 +5487,7 @@ Firebase/RTDB - the project is Supabase-only.
     - "Radiant" damage type removed from power creator options
     - Only valid Realms damage types available
     - Part IDs used correctly (not names)
-  notes: "DONE 2026-02-06: Removed 'radiant' from MAGIC_DAMAGE_TYPES and ALL_DAMAGE_TYPES in creator-constants.ts, replaced with 'light' (proper Realms name). Kept 'radiant' ? LIGHT_DAMAGE mapping in mechanic-builder.ts and power-calc.ts as legacy fallback."
+  notes: "DONE 2026-02-06: Removed 'radiant' from MAGIC_DAMAGE_TYPES and ALL_DAMAGE_TYPES in creator-constants.ts, replaced with 'light' (proper Realms name). Kept 'radiant'— LIGHT_DAMAGE mapping in mechanic-builder.ts and power-calc.ts as legacy fallback."
 
 - id: TASK-028
   title: List headers - use all caps consistently
@@ -5509,7 +5576,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Keep: modifier/bonus input for custom rolls
     - Custom rolls logged as "Custom Roll" (no naming needed)
     - Show dice icons with labels (1d10 below the icon)
-    - Display: dice images ? result + bonus ? total
+    - Display: dice images— result + bonus— total
     - Save dice logs (last 20 rolls) - persist across refresh/navigation
   acceptance_criteria:
     - Dice roller uses custom dice images from vanilla site
@@ -5553,7 +5620,7 @@ Firebase/RTDB - the project is Supabase-only.
   acceptance_criteria:
     - Equip toggle works for armor and weapons
     - Equipped state persists to database
-    - Visual indicator: unfilled circle ? filled circle when equipped
+    - Visual indicator: unfilled circle— filled circle when equipped
     - Works outside edit mode
   notes: "DONE 2026-02-05: Created EquipToggle component with Circle/CheckCircle2 icons (unfilled/filled). Updated library-section to use EquipToggle instead of SelectionToggle. Fixed handlers in characters/[id]/page.tsx to match by ID or name (equipment stored as {name, equipped} without ID). Updated handleToggleEquipWeapon, handleToggleEquipArmor, handleRemoveWeapon, handleRemoveArmor, handleRemoveEquipment, handleEquipmentQuantityChange to match items by ID, name, or case-insensitive name."
 
@@ -5599,7 +5666,7 @@ Firebase/RTDB - the project is Supabase-only.
     - No yellow outlines
     - No power/martial text labels by abilities
     - Consistent with character creator indicators
-  notes: "DONE 2026-02-06: Replaced emoji indicators (??/??) with colored border outlines - purple (border-purple-400) for power ability, red (border-red-400) for martial. Removed yellow border-amber-300 and emoji labels."
+  notes: "DONE 2026-02-06: Replaced emoji indicators (?"/"?) with colored border outlines - purple (border-purple-400) for power ability, red (border-red-400) for martial. Removed yellow border-amber-300 and emoji labels."
 
 - id: TASK-037
   title: Ability edit mode - center skill/ability points display
@@ -5827,12 +5894,12 @@ Firebase/RTDB - the project is Supabase-only.
   created_at: 2026-02-05
   created_by: agent
   description: |
-    Enforce tab order: Feats ? Powers ? Techniques ? Inventory ? Proficiencies ? Notes.
+    Enforce tab order: Feats— Powers— Techniques— Inventory— Proficiencies— Notes.
     Default open tab should be Feats.
   acceptance_criteria:
     - Tabs render in specified order
     - Default active tab is Feats
-  notes: "DONE (pre-existing): library-section.tsx tabs array order is Feats?Powers?Techniques?Inventory?Proficiencies?Notes; useState('feats') sets default. Verified 2026-02-05 audit."
+  notes: "DONE (pre-existing): library-section.tsx tabs array order is Feats"Powers"Techniques"Inventory"Proficiencies?Notes; useState('feats') sets default. Verified 2026-02-05 audit."
 
 - id: TASK-049
   title: Sortable list headers (column sorting)
@@ -5970,7 +6037,7 @@ Firebase/RTDB - the project is Supabase-only.
     - npm run build passes
   notes: |
     DONE 2026-02-06:
-    - Renamed heading "Ability Scores" ? "Abilities" in creature-creator/page.tsx.
+    - Renamed heading "Ability Scores"— "Abilities" in creature-creator/page.tsx.
     - Updated comments in ability-score-editor.tsx, abilities-section.tsx, creator/index.ts.
     - Fixed cost hint bug in abilities-section.tsx: getAbilityIncreaseCost now returns 2 at value>=3 (next increase to 4+ costs 2). Removed redundant `cost + (value >= 3 ? 1 : 0)` workaround, replaced with clean `cost`.
     - Also renamed HealthEnergyAllocator label from "HP/EN Pool" to "Health/Energy Allocation" (from same feedback batch).
@@ -6034,8 +6101,8 @@ Firebase/RTDB - the project is Supabase-only.
     - Both are visually distinct from each other
   notes: |
     DONE 2026-02-06: Unified HealthBar component colors with ResourceInput bar:
-    - Half-health: changed bg-orange-500 ? bg-amber-500 (yellower orange).
-    - Terminal: changed bg-red-500 ? bg-red-700 (deeper red).
+    - Half-health: changed bg-orange-500— bg-amber-500 (yellower orange).
+    - Terminal: changed bg-red-500— bg-red-700 (deeper red).
     - ResourceInput already used bg-amber-500/bg-red-700. Portrait border already used border-amber-400/border-red-600. Now fully consistent.
 
 - id: TASK-059
@@ -6052,7 +6119,7 @@ Firebase/RTDB - the project is Supabase-only.
     backgroundless "+" icon that turns to a green check when selected, with animation.
     Ancestry step trait selection buttons should be larger and vertically centered.
   acceptance_criteria:
-    - Selection toggle uses clean + ? ? animation without circular border
+    - Selection toggle uses clean + " " animation without circular border
     - Add buttons consistent across all modals and sections
     - Ancestry step selection buttons centered and larger
   notes: |
@@ -6150,14 +6217,14 @@ Firebase/RTDB - the project is Supabase-only.
   acceptance_criteria:
     - CreatureStatBlock displays all 6 Realms abilities (STR, VIT, AGI, ACU, INT, CHA) for creator creatures
     - Item creator: "Require a minimum Ability to use..." (not "ability score")
-    - Creature creator: Defense "Reflex" ? "Reflexes" (or document as acceptable abbreviation)
+    - Creature creator: Defense "Reflex"— "Reflexes" (or document as acceptable abbreviation)
     - npm run build passes
   notes: |
     DONE 2026-02-06:
     - CreatureStatBlock: Updated to Realms ability order (STR, VIT, AGI, ACU, INT, CHA); added legacy map for intellect/perception/willpower; grid-cols-6.
-    - Item creator: "ability score" ? "Ability".
-    - Creature creator: Defense label "Reflex" ? "Reflexes".
-    - Encounter-tracker: Faint condition "Reflex" ? "Reflexes".
+    - Item creator: "ability score"— "Ability".
+    - Creature creator: Defense label "Reflex"— "Reflexes".
+    - Encounter-tracker: Faint condition "Reflex"— "Reflexes".
     - npm run build passes.
 
 - id: TASK-065
@@ -6571,13 +6638,13 @@ Firebase/RTDB - the project is Supabase-only.
     hardcoded light-mode colors. This is a comprehensive pass to add dark: variants everywhere.
     
     Priority components (user-facing, frequently used):
-    - recovery-modal: bg-white ? bg-surface, bg-blue-50/bg-amber-50/bg-violet-50 ? with dark: variants
-    - archetype-section: bg-red-50, bg-violet-50 ? with dark: variants
-    - skill-row: hover:bg-blue-50, bg-blue-50 species highlight ? with dark: variants
-    - grid-list-row: bg-green-50 (equipped), bg-violet-50 (innate) ? with dark: variants
-    - tab-summary-section: gradient backgrounds ? with dark: variants
-    - notes-tab, library-section: bg-white inputs ? dark:bg-surface
-    - innate-toggle: hover:bg-violet-50 ? with dark: variant
+    - recovery-modal: bg-white— bg-surface, bg-blue-50/bg-amber-50/bg-violet-50— with dark: variants
+    - archetype-section: bg-red-50, bg-violet-50— with dark: variants
+    - skill-row: hover:bg-blue-50, bg-blue-50 species highlight— with dark: variants
+    - grid-list-row: bg-green-50 (equipped), bg-violet-50 (innate)— with dark: variants
+    - tab-summary-section: gradient backgrounds— with dark: variants
+    - notes-tab, library-section: bg-white inputs— dark:bg-surface
+    - innate-toggle: hover:bg-violet-50— with dark: variant
     
     Secondary components:
     - ancestry-step, feats-step, equipment-step: colored backgrounds
@@ -6770,14 +6837,14 @@ Firebase/RTDB - the project is Supabase-only.
     missing shared component usage, design token violations, and React/Tailwind best practices.
     
     Changes:
-    1. Consolidated 6 duplicate formatBonus functions ? single canonical export in lib/utils/number.ts
+    1. Consolidated 6 duplicate formatBonus functions— single canonical export in lib/utils/number.ts
     2. Removed ~60 unused utility exports from array.ts, number.ts, string.ts, object.ts
-    3. Consolidated 3 duplicate SortState types ? canonical export from list-header.tsx (renamed items.ts to ItemSortState)
+    3. Consolidated 3 duplicate SortState types— canonical export from list-header.tsx (renamed items.ts to ItemSortState)
     4. Removed deprecated list-components exports (SimpleEmptyState, LoadingSpinner, ResultsCount, ListContainer)
     5. Deleted entirely unused lib/constants/colors.ts
     6. Replaced 8 custom spinner implementations with shared Spinner component
     7. Replaced 6 inline textareas with shared Textarea component
-    8. Fixed 6 hardcoded neutral-* colors in roll-log.tsx ? design tokens
+    8. Fixed 6 hardcoded neutral-* colors in roll-log.tsx— design tokens
     9. Converted 6 template-literal classNames to cn() utility
     10. Fixed index-as-key issues in proficiencies-tab, grid-list-row, part-chip
   acceptance_criteria:
@@ -6887,7 +6954,7 @@ Firebase/RTDB - the project is Supabase-only.
   notes: "Done 2026-02-08: useSort hook (TASK-091) returns SortState; Codex/library use useSort. No inline SortState definitions remain in targeted files."
 
 - id: TASK-093
-  title: "Remaining template literal ? cn() conversions"
+  title: "Remaining template literal— cn() conversions"
   priority: medium
   status: done
   related_files:
@@ -6940,23 +7007,23 @@ Firebase/RTDB - the project is Supabase-only.
     
     1. notes-tab.tsx:264 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Fall damage roll button
        `px-2 py-0.5 text-sm font-bold bg-primary-600 text-white rounded hover:bg-primary-700`
-       ? `<Button variant="primary" size="sm">`
+       → `<Button variant="primary" size="sm">`
     
     2. dice-roller.tsx:189 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Roll button
        `w-full py-3 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700`
-       ? `<Button variant="primary" size="lg" className="w-full rounded-xl">`
+       → `<Button variant="primary" size="lg" className="w-full rounded-xl">`
     
     3. encounter-tracker/page.tsx:1291 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Add condition button
        `px-3 py-1 text-sm bg-amber-600 text-white rounded hover:bg-amber-700`
-       ? `<Button variant="primary" size="sm" className="bg-amber-600 hover:bg-amber-700">`
+       → `<Button variant="primary" size="sm" className="bg-amber-600 hover:bg-amber-700">`
     
     4. item-creator/page.tsx:1399 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Add property button
        `px-4 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700`
-       ? `<Button variant="primary" className="bg-amber-600 hover:bg-amber-700">`
+       → `<Button variant="primary" className="bg-amber-600 hover:bg-amber-700">`
     
     5. power-creator/page.tsx:1543 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Add part button
        `px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700`
-       ? `<Button variant="primary">`
+       → `<Button variant="primary">`
   acceptance_criteria:
     - All 5 inline button patterns replaced with Button component
     - Visual appearance unchanged
@@ -6976,11 +7043,11 @@ Firebase/RTDB - the project is Supabase-only.
     
     1. item-list.tsx:241 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â search input with icon overlay
        Full inline styling + Search icon positioned absolutely.
-       ? Replace with `<SearchInput>` from @/components/ui
+       → Replace with `<SearchInput>` from @/components/ui
     
     2. ability-requirement-filter.tsx:75 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â number input for max value
        `w-20 px-3 py-2 border border-border-light rounded-md text-sm ...`
-       ? Replace with `<Input type="number" className="w-20" />`
+       → Replace with `<Input type="number" className="w-20" />`
   acceptance_criteria:
     - Both raw inputs replaced with shared components
     - npm run build passes
@@ -7008,23 +7075,23 @@ Firebase/RTDB - the project is Supabase-only.
     6 files exceed 1000 lines and should be decomposed for maintainability:
     
     1. power-creator/page.tsx (~1673 lines)
-       ? Extract: PowerFormFields, PowerPartsEditor, PowerSummaryPanel
+       → Extract: PowerFormFields, PowerPartsEditor, PowerSummaryPanel
     
     2. characters/[id]/page.tsx (~1586 lines)
-       ? Extract: CharacterSheetContent, CharacterSheetModals, CharacterSheetHandlers (custom hook)
+       → Extract: CharacterSheetContent, CharacterSheetModals, CharacterSheetHandlers (custom hook)
     
     3. creature-creator/page.tsx (~1580 lines)
-       ? Extract: CreatureFormFields, CreatureSkillsEditor, CreatureSummaryPanel
+       → Extract: CreatureFormFields, CreatureSkillsEditor, CreatureSummaryPanel
     
     4. codex/page.tsx (~1451 lines)
-       ? Extract each tab into its own component: CodexFeatsTab, CodexSkillsTab, 
+       → Extract each tab into its own component: CodexFeatsTab, CodexSkillsTab, 
          CodexSpeciesTab, CodexEquipmentTab, CodexPropertiesTab, CodexPartsTab
     
     5. encounter-tracker/page.tsx (~1327 lines)
-       ? Extract: CombatantList, CombatantCard, ConditionManager, InitiativeTracker
+       → Extract: CombatantList, CombatantCard, ConditionManager, InitiativeTracker
     
     6. library/page.tsx (large)
-       ? Extract each tab: LibraryPowersTab, LibraryTechniquesTab, etc.
+       → Extract each tab: LibraryPowersTab, LibraryTechniquesTab, etc.
     
     Start with codex and library since they have the most repeated patterns
     (each tab is structurally identical with its own sort/filter/render).
@@ -7113,7 +7180,7 @@ Firebase/RTDB - the project is Supabase-only.
     After creating, they land on the new character sheet. Add returnTo param so they can be redirected
     back to /campaigns?tab=join to complete the join flow.
   acceptance_criteria:
-    - Join tab empty state passes ?returnTo=/campaigns?tab=join when navigating to character creation
+    - Join tab empty state passes "returnTo=/campaigns"tab=join when navigating to character creation
     - After character creation, redirect to returnTo if present
     - npm run build passes
   notes: "Done 2026-02-08: Join tab empty state passes returnTo=/campaigns?tab=join when navigating to /characters/new. FinalizeStep reads returnTo from searchParams and redirects there after create."
@@ -7185,7 +7252,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Nav/routes use "Encounters" terminology
     - Encounters hub page: list view, filter, search, sort
     - Create new: combat, skill, or mixed
-    - Click encounter ? navigate to /encounters/[id] (combat/skill/mixed)
+    - Click encounter— navigate to /encounters/[id] (combat/skill/mixed)
     - npm run build passes
   notes: "Done 2026-02-06. Encounters hub page with list/filter/sort/create, nav updated, TabNavigation + type filters."
 
@@ -7240,7 +7307,7 @@ Firebase/RTDB - the project is Supabase-only.
     Create a Skill Encounter page. Add characters; track if each has made their skill roll; track successes vs failures; set required successes and failures; input rolled skill values to compute successes/failures based on Difficulty Score (DS). Reference GAME_RULES.md: Average DS = 10 + ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Party Level; Required Successes = # Characters + 1. Include useful RM features per core rules.
   acceptance_criteria:
     - Add characters to skill encounter
-    - Per-character: rolled? success/fail based on DS
+    - Per-character: rolled → success/fail based on DS
     - Set DS (default 10 + ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â party level)
     - Set required successes and failures
     - Success = roll = DS
@@ -7277,7 +7344,7 @@ Firebase/RTDB - the project is Supabase-only.
     Allow adding characters from campaigns the user is in to encounters. Pull evasion, acuity, HP, EN, etc. from character/campaign data for quick reference. Easy add without manual entry. Use campaign character API and enrichment.
   acceptance_criteria:
     - Add combatant/skill participant: "From Campaign" option
-    - Select campaign ? select character; auto-populate evasion, acuity, HP, EN
+    - Select campaign— select character; auto-populate evasion, acuity, HP, EN
     - Works for combat and skill encounters
     - npm run build passes
   notes: "Done 2026-02-06. AddCombatantModal 'From Campaign' tab; fetches character data via API; auto-populates HP/EN/evasion/acuity."
@@ -7297,7 +7364,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Equip/unequip armor and weapons persists correctly on save
     - Works with items that have id, name, or index-only
     - npm run build passes
-  notes: "Done 2026-02-06: Added index-based fallback matching; pass item.id ?? item.name ?? i; handlers now support numeric index when id/name missing."
+  notes: "Done 2026-02-06: Added index-based fallback matching; pass item.id – item.name – i; handlers now support numeric index when id/name missing."
 
 - id: TASK-110
   title: Verify weapon/armor delete in character sheet
@@ -7317,7 +7384,7 @@ Firebase/RTDB - the project is Supabase-only.
   notes: "Done 2026-02-06: Feat delete gated on isEditMode (pencil enables it); weapon/armor delete gated on isEditMode for consistency with powers/techniques; equipment delete remains available outside edit mode (like quantity change). Build passes."
 
 - id: TASK-111
-  title: Fix inventory remove bug (Library ? Equipment)
+  title: Fix inventory remove bug (Library— Equipment)
   priority: high
   status: done
   related_files:
@@ -7328,7 +7395,7 @@ Firebase/RTDB - the project is Supabase-only.
   description: |
     Feedback: "Unable to remove items from inventory." Verify onRemoveEquipment flow and GridListRow onDelete for equipment items. Ensure delete button appears and handler correctly filters items.
   acceptance_criteria:
-    - Users can remove equipment items from Library ? Equipment tab
+    - Users can remove equipment items from Library— Equipment tab
     - Delete persists on save
     - npm run build passes
   notes: "Done 2026-02-06: Equipment delete uses index-based fallback (TASK-109 fix); no isEditMode gate so delete always visible; onDelete + handleRemoveEquipment flow verified. Build passes."
@@ -7430,7 +7497,7 @@ Firebase/RTDB - the project is Supabase-only.
   notes: "Done 2026-02-06: Added rules for all 9 codex_* collections (feats, skills, species, traits, parts, properties, equipment, archetypes, creature_feats). Public read, no client write."
 
 - id: TASK-117
-  title: Create migration script RTDB ? Firestore
+  title: Create migration script RTDB— Firestore
   priority: high
   status: done
   created_at: 2026-02-06
@@ -7442,7 +7509,7 @@ Firebase/RTDB - the project is Supabase-only.
     - package.json
   acceptance_criteria:
     - Script reads all RTDB paths and writes to corresponding Firestore collections
-    - Handles comma-separated strings ? arrays where needed (per use-rtdb.ts transforms)
+    - Handles comma-separated strings— arrays where needed (per use-rtdb.ts transforms)
     - Dry-run logs what would be written without writing
     - README or script header documents usage and env vars (GOOGLE_APPLICATION_CREDENTIALS)
   notes: "Done 2026-02-06: Created scripts/migrate_rtdb_to_firestore.js with --dry-run. npm run migrate:rtdb-to-firestore. Requires GOOGLE_APPLICATION_CREDENTIALS or SERVICE_ACCOUNT_* env vars."
@@ -7847,7 +7914,7 @@ Firebase/RTDB - the project is Supabase-only.
     - No Firebase/RTDB references
     - Admin and public library flow documented
   notes: |
-    Completed 2026-02-07 with TASK-144. ARCHITECTURE.md now documents Supabase/Prisma, Codex API, Codex hooks; RTDB?Codex. Firebase/Firestore kept only for migration context (characters/library). Admin/public library flow: TASK-143.
+    Completed 2026-02-07 with TASK-144. ARCHITECTURE.md now documents Supabase/Prisma, Codex API, Codex hooks; RTDB→Codex. Firebase/Firestore kept only for migration context (characters/library). Admin/public library flow: TASK-143.
 
 - id: TASK-143
   title: Add Admin / Public Library workflow docs
@@ -7889,13 +7956,13 @@ Firebase/RTDB - the project is Supabase-only.
     Completed 2026-02-07. Archived DEPLOYMENT_SECRETS.md, ADMIN_SDK_SECRETS_SETUP.md, SECRETS_SETUP.md to archived_docs/*_FIREBASE.md. Updated AGENTS.md, AGENT_GUIDE.md, ARCHITECTURE.md, README.md, ALL_FEEDBACK_CLEAN.md, update-admin-secrets.ps1. AGENTS.md/AGENT_GUIDE.md/ARCHITECTURE.md now reference Supabase/Prisma/Codex.
 
 - id: TASK-145
-  title: Rename RTDB ? Codex globally (hooks, types, variables)
+  title: Rename RTDB— Codex globally (hooks, types, variables)
   priority: critical
   status: done
   created_at: 2026-02-07
   created_by: agent
   description: |
-    Data no longer comes from Firebase RTDB ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â it comes from Prisma via use-codex. Rename: useRTDBFeats?useCodexFeats (remove alias), RTDBFeat?Feat, rtdb* vars?codex*, source:'rtdb'?'codex'. See DOCUMENTATION_MIGRATION_AUDIT.md section 1.
+    Data no longer comes from Firebase RTDB ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â it comes from Prisma via use-codex. Rename: useRTDBFeats"useCodexFeats (remove alias), RTDBFeat"Feat, rtdb* vars"codex*, source:'rtdb'"'codex'. See DOCUMENTATION_MIGRATION_AUDIT.md section 1.
   related_files:
     - src/docs/DOCUMENTATION_MIGRATION_AUDIT.md
     - src/hooks/index.ts
@@ -7913,7 +7980,7 @@ Firebase/RTDB - the project is Supabase-only.
     - sourceFilter uses 'codex' not 'rtdb'
     - npm run build passes
   notes: |
-    Completed 2026-02-07. Removed useRTDBFeats/useRTDBSkills aliases; export useCodexFeats, useCodexSkills, Feat, Skill. Renamed rtdb*?codex*, source:'rtdb'?'codex', speciesTraitsFromRTDB?speciesTraitsFromCodex, RTDBEquipmentItem?CodexEquipmentItem. Updated hooks, equipment-step, finalize-step, feats-step, powers-step, add-skill-modal, add-sub-skill-modal, skills-allocation-page, species-modal, ancestry-step, characters/campaigns pages, admin/codex tabs, creature-creator, data-enrichment.
+    Completed 2026-02-07. Removed useRTDBFeats/useRTDBSkills aliases; export useCodexFeats, useCodexSkills, Feat, Skill. Renamed rtdb*"codex*, source:'rtdb'"'codex', speciesTraitsFromRTDB"speciesTraitsFromCodex, RTDBEquipmentItem"CodexEquipmentItem. Updated hooks, equipment-step, finalize-step, feats-step, powers-step, add-skill-modal, add-sub-skill-modal, skills-allocation-page, species-modal, ancestry-step, characters/campaigns pages, admin/codex tabs, creature-creator, data-enrichment.
 
 - id: TASK-146
   title: Fix TypeScript build errors (implicit any, type mismatches)
@@ -7936,13 +8003,13 @@ Firebase/RTDB - the project is Supabase-only.
     Completed 2026-02-07. Fixed implicit any in: finalize-step, powers-step, skills-step, species-step, add-skill-modal, add-sub-skill-modal, skills-allocation-page, game-data-service. Added RTDBSkill, Species, PowerPart, TechniquePart types to callbacks; sortItems<T> where needed; Set<string> for speciesSkillIds.
 
 - id: TASK-147
-  title: Fix gold ? currency terminology globally
+  title: Fix gold— currency terminology globally
   priority: high
   status: done
   created_at: 2026-02-07
   created_by: agent
   description: |
-    "Gold" is not a Realms term. Use Currency, "c", or "C" for abbreviation. Replace: gold_cost?currency_cost (or keep currency field), "gp"?"c", "Gold Cost"?"Currency Cost", formatGold?formatCurrency, goldCost?currencyCost. See GAME_RULES.md for correct terminology.
+    "Gold" is not a Realms term. Use Currency, "c", or "C" for abbreviation. Replace: gold_cost"currency_cost (or keep currency field), "gp"""c", "Gold Cost"""Currency Cost", formatGold"formatCurrency, goldCost?currencyCost. See GAME_RULES.md for correct terminology.
   related_files:
     - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
     - src/app/(main)/codex/CodexEquipmentTab.tsx
@@ -7961,7 +8028,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Legacy gold_cost in DB/API may remain for backward compat; document
     - npm run build passes
   notes: |
-    Completed 2026-02-07. AdminEquipmentTab: "gp"?"c", "Gold Cost"?"Currency Cost"; item-creator: "Base Gold"?"Base Currency"; item-transformers: formatGold?formatCurrency (deprecated formatGold); DOCUMENTATION_MIGRATION_AUDIT: legacy gold_cost note.
+    Completed 2026-02-07. AdminEquipmentTab: "gp"""c", "Gold Cost"""Currency Cost"; item-creator: "Base Gold"""Base Currency"; item-transformers: formatGold"formatCurrency (deprecated formatGold); DOCUMENTATION_MIGRATION_AUDIT: legacy gold_cost note.
 
 - id: TASK-148
   title: Migrate character-service, use-user-library, campaign-service to Prisma
@@ -8058,7 +8125,7 @@ Firebase/RTDB - the project is Supabase-only.
     - No known bugs from feedback remain
     - npm run build passes
   notes: |
-    Done 2026-02-07: Audited skill encounter page. Campaign chars (RM + non-RM) fixed in prior session via API ?scope=encounter. CreatureLibraryTab and CampaignCharactersTab both support mode=skill and onAddParticipants. computeSkillRollResult matches GAME_RULES (roll >= DS: 1 + floor((roll-DS)/5) successes; roll < DS: 1 + floor((DS-roll)/5) failures). Added Required Successes display (participants + 1) per GAME_RULES. Build passes.
+    Done 2026-02-07: Audited skill encounter page. Campaign chars (RM + non-RM) fixed in prior session via API `?scope=encounter`counter. CreatureLibraryTab and CampaignCharactersTab both support mode=skill and onAddParticipants. computeSkillRollResult matches GAME_RULES (roll >= DS: 1 + floor((roll-DS)/5) successes; roll < DS: 1 + floor((DS-roll)/5) failures). Added Required Successes display (participants + 1) per GAME_RULES. Build passes.
 
 - id: TASK-153
   title: Navbar ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Move Campaigns to right of RM Tools, left of About
@@ -8093,7 +8160,7 @@ Firebase/RTDB - the project is Supabase-only.
     - feat_lvl > 0 displays numeric value
     - Applies to Admin Feats and Codex Feats tabs
   notes: |
-    Use display helper: (feat_lvl === 0 || feat_lvl == null) ? '-' : String(feat_lvl).
+    Use display helper: (feat_lvl === 0 || feat_lvl == null)— '-' : String(feat_lvl).
 
 - id: TASK-155
   title: Admin Codex ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â List refresh after delete; unify UI with Codex
@@ -8349,7 +8416,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Real-time or near-real-time; consider Supabase Realtime on characters
     - npm run build passes
   notes: |
-    Done 2026-02-09: TrackedCombatant/SkillParticipant have sourceUserId. Encounter?character: updateCombatant calls syncCharacterHealthEnergy (debounced 400ms) when owner edits HP/EN; PATCH /api/characters/[id]. Character?encounter: Realtime subscription on users.characters for campaign-character combatant ids; on UPDATE merge health/energy into combatants. Publication + GRANT for users.characters in supabase-rls-policies.sql.
+    Done 2026-02-09: TrackedCombatant/SkillParticipant have sourceUserId. Encounter→character: updateCombatant calls syncCharacterHealthEnergy (debounced 400ms) when owner edits HP/EN; PATCH /api/characters/[id]. Character→encounter: Realtime subscription on users.characters for campaign-character combatant ids; on UPDATE merge health/energy into combatants. Publication + GRANT for users.characters in supabase-rls-policies.sql.
 
 - id: TASK-167
   title: Character visibility ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â public link, campaign-only, private?campaign on join
@@ -8732,7 +8799,7 @@ Firebase/RTDB - the project is Supabase-only.
   notes: "Completed 2026-02-11. Created ConfirmActionModal shared component with publish/warning icon variants."
 
 - id: TASK-185
-  title: Unify admin codex delete icons (Trash2 ? X) and fix delete handler bug
+  title: Unify admin codex delete icons (Trash2— X) and fix delete handler bug
   priority: high
   status: done
   created_at: 2026-02-11
@@ -8798,7 +8865,7 @@ Firebase/RTDB - the project is Supabase-only.
   created_at: 2026-02-11
   created_by: agent
   description: |
-    Power creator and technique creator now handle ?edit=<id> URL parameter to load an existing item for editing, matching the item creator's existing behavior. Library edit buttons navigate to /power-creator?edit=<id> or /technique-creator?edit=<id>.
+    Power creator and technique creator now handle ?edit=<id> URL parameter to load an existing item for editing, matching the item creator's existing behavior. Library edit buttons navigate to /power-creator"edit=<id> or /technique-creator"edit=<id>.
   related_files:
     - src/app/(main)/power-creator/page.tsx
     - src/app/(main)/technique-creator/page.tsx
@@ -8977,7 +9044,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/app/(main)/admin/codex/AdminFeatsTab.tsx
     - src/docs/CODEX_SCHEMA_REFERENCE.md
   acceptance_criteria:
-    - AdminSkillsTab Base Skill column shows the correct base skill name for all skills with a valid base_skill_id (including id 0 ? ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂAnyÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â), falling back to "-" only when there truly is no base skill
+    - AdminSkillsTab Base Skill column shows the correct base skill name for all skills with a valid base_skill_id (including id 0— ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂAnyÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â), falling back to "-" only when there truly is no base skill
     - Editing an existing sub-skill in AdminSkillsTab pre-selects the appropriate base skill (or ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂAnyÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â) in the Base skill dropdown based on base_skill_id
     - The Skill Type SelectFilter in AdminSkillsTab has a single clear way to show ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Âall skillsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â (e.g., placeholder only or explicit option only), eliminating duplicate ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂAll SkillsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â entries
     - The Feat Type and State Feats filters in AdminFeatsTab likewise avoid duplicate ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂAllÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â/ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂAll FeatsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â options while preserving the ability to filter by archetype/character and state feats
@@ -8993,7 +9060,7 @@ Firebase/RTDB - the project is Supabase-only.
   created_by: agent
   notes: |
     Owner confirmed 2026-02-11: "abilities cost 2 for every 1 point after 4."
-    COST_INCREASE_THRESHOLD = 4 in constants.ts IS correct. Going from 3?4 costs 1, 4?5 costs 2.
+    COST_INCREASE_THRESHOLD = 4 in constants.ts IS correct. Going from 3"4 costs 1, 4"5 costs 2.
     GAME_RULES.md had an incorrect table (said 3?4 costs 2) which has been corrected.
   related_files:
     - src/lib/game/constants.ts
@@ -9467,7 +9534,7 @@ Firebase/RTDB - the project is Supabase-only.
   priority: high
   status: done
   notes: |
-    cleanForSave now saves equipment items as { id, name, equipped?, quantity? } ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â strips
+    cleanForSave now saves equipment items as { id, name, equipped", quantity" } ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â strips
     description/damage/properties/cost/rarity/weight/armor/range. ID saved for reliable lookup,
     name kept for backward compat. Redundant inventory[] array removed from save. enrichItems()
     updated to support ID-based lookup with codex fallback by ID.
@@ -9503,7 +9570,7 @@ Firebase/RTDB - the project is Supabase-only.
   notes: |
     Removed health_energy_points from creator save. Removed health/energy ResourcePool from
     SAVEABLE_FIELDS. Character sheet now reads currentHealth/currentEnergy (canonical) with
-    backward compat fallback to health?.current/energy?.current for old saves. All writes
+    backward compat fallback to health".current/energy".current for old saves. All writes
     (recovery, power/technique use, allocation changes) write to currentHealth/currentEnergy.
     cleanForSave migration copies health.current?currentHealth for old data on save.
   created_at: 2026-02-11
@@ -9707,10 +9774,10 @@ Firebase/RTDB - the project is Supabase-only.
   status: done
   notes: |
     Fully completed in Phase 4 (TASK-203ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â210). cleanForSave now strips all derived data:
-    feats ? { id, name, currentUses }, powers ? { id, name, innate }, techniques ? { id, name },
-    equipment ? { id, name, equipped?, quantity? }, skills ? { id, name, skill_val, prof, selectedBaseSkillId? },
-    archetype ? { id, type }, ancestry ? { id, name, selectedTraits, selectedFlaw, selectedCharacteristic },
-    health/energy ? currentHealth/currentEnergy + healthPoints/energyPoints.
+    feats " { id, name, currentUses }, powers " { id, name, innate }, techniques → { id, name },
+    equipment " { id, name, equipped", quantity" }, skills " { id, name, skill_val, prof, selectedBaseSkillId? },
+    archetype " { id, type }, ancestry " { id, name, selectedTraits, selectedFlaw, selectedCharacteristic },
+    health/energy— currentHealth/currentEnergy + healthPoints/energyPoints.
   created_at: 2026-02-11
   created_by: agent
   description: |
@@ -9741,13 +9808,13 @@ Firebase/RTDB - the project is Supabase-only.
   status: done
   notes: |
     All redundant fields in Character type annotated with @deprecated JSDoc:
-    - species ? Use ancestry.name
-    - health/energy ResourcePool ? Use currentHealth/currentEnergy
-    - speed/evasion/armor ? Derived from calculateAllStats()
-    - martialProficiency/powerProficiency ? Use mart_prof/pow_prof
-    - allTraits/_displayFeats ? Display-only, not saved
-    - ancestryTraits/flawTrait/characteristicTrait/speciesTraits ? Use ancestry sub-fields
-    - health_energy_points ? Use healthPoints/energyPoints
+    - species— Use ancestry.name
+    - health/energy ResourcePool— Use currentHealth/currentEnergy
+    - speed/evasion/armor— Derived from calculateAllStats()
+    - martialProficiency/powerProficiency— Use mart_prof/pow_prof
+    - allTraits/_displayFeats— Display-only, not saved
+    - ancestryTraits/flawTrait/characteristicTrait/speciesTraits— Use ancestry sub-fields
+    - health_energy_points— Use healthPoints/energyPoints
     Fields kept with deprecation notices for backward compat until full migration (TASK-220).
   created_at: 2026-02-11
   created_by: agent
@@ -9779,7 +9846,7 @@ Firebase/RTDB - the project is Supabase-only.
   notes: |
     Character creator finalize step now uploads portrait to Supabase Storage via /api/upload/portrait
     after character creation, saving URL instead of base64. Flow: base64 kept in draft for preview ?
-    strip from initial save ? create character ? upload blob to Storage ? update with URL.
+    strip from initial save— create character— upload blob to Storage— update with URL.
     Character sheet already used Storage. Old base64 portraits still display (backward compat
     via src attribute accepting both data: URIs and URLs).
   created_at: 2026-02-11
@@ -9807,8 +9874,8 @@ Firebase/RTDB - the project is Supabase-only.
   status: done
   notes: |
     Created scripts/migrate-characters-lean.js. Supports --dry-run for preview.
-    Migrates: health/energy ResourcePool ? currentHealth/currentEnergy, health_energy_points ?
-    healthPoints/energyPoints, species ? ancestry.name, strips archetype/ancestry/feats/powers/
+    Migrates: health/energy ResourcePool— currentHealth/currentEnergy, health_energy_points ?
+    healthPoints/energyPoints, species— ancestry.name, strips archetype/ancestry/feats/powers/
     techniques/equipment/skills to lean format, removes legacy display-only fields (allTraits,
     _displayFeats, speciesTraits, etc.) and derived combat stats (speed, evasion, armor).
     Idempotent ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â already-lean characters pass through unchanged.
@@ -10218,7 +10285,7 @@ Firebase/RTDB - the project is Supabase-only.
     Recovery tab: partial/full recovery details, requirements, without-full-recovery rules.
     Experience tab: XP formula, combat/skill encounter XP, DS, successes, divide rules.
     Damage Types tab: add/remove types, armor exceptions toggleable by click, note editable.
-    Armament Proficiency tab: martial prof ? armament max table with inline editing, add/remove rows.
+    Armament Proficiency tab: martial prof— armament max table with inline editing, add/remove rows.
   created_at: 2026-02-11
   created_by: agent
   description: |
@@ -10415,7 +10482,7 @@ Firebase/RTDB - the project is Supabase-only.
   notes: "Done 2026-02-13. All items verified. Build passes."
 
 - id: TASK-239
-  title: "Audit Phase 2 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Complete design token migration (blue/green/red/amber ? tokens)"
+  title: "Audit Phase 2 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Complete design token migration (blue/green/red/amber— tokens)"
   priority: high
   status: done
   created_at: 2026-02-13
@@ -10674,7 +10741,7 @@ Firebase/RTDB - the project is Supabase-only.
   acceptance_criteria:
     - Abilities in finalize summary show as full names (Strength, Vitality, Agility, Acuity, Intelligence, Charisma) or at minimum 3-letter abbreviations
     - npm run build passes
-  notes: "Done 2026-02-17: Added ABILITY_DISPLAY_NAMES to lib/game/constants.ts (lowercase key ? full name). finalize-step imports it and uses ABILITY_DISPLAY_NAMES[ability] ?? ability for ability label instead of ability.charAt(0).toUpperCase()."
+  notes: "Done 2026-02-17: Added ABILITY_DISPLAY_NAMES to lib/game/constants.ts (lowercase key— full name). finalize-step imports it and uses ABILITY_DISPLAY_NAMES[ability] – ability for ability label instead of ability.charAt(0).toUpperCase()."
 
 - id: TASK-254
   title: Creators ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â description/option contrast + dropdown dark mode
@@ -10715,7 +10782,7 @@ Firebase/RTDB - the project is Supabase-only.
     - All text elements meet 4.5:1 (small) or 3:1 (large text) contrast ratio
     - Document any residual issues and remediation plan
     - npm run build passes
-  notes: "Done 2026-02-18: Auth text-gray-400 ? gray-300; dark --text-muted 6e7681 ? 8b949e; item-card/creator-summary-panel opacity-70 ? semantic tokens; roll-log timestamp ? text-text-secondary. ACCESSIBILITY_AUDIT_2026-02-18.md documents changes."
+  notes: "Done 2026-02-18: Auth text-gray-400— gray-300; dark --text-muted 6e7681— 8b949e; item-card/creator-summary-panel opacity-70— semantic tokens; roll-log timestamp— text-text-secondary. ACCESSIBILITY_AUDIT_2026-02-18.md documents changes."
 
 - id: TASK-256
   title: Species height/weight/lifespan ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â API mapping and display everywhere
@@ -10814,7 +10881,7 @@ Firebase/RTDB - the project is Supabase-only.
   created_at: 2026-02-20
   created_by: agent
   description: |
-    Phase 3 unification: Add a thin useCreatorLoad(type, options) that encapsulates "fetch library, open modal, onSelect ? filter mechanics + restore state" and leaves type-specific mapping to callers. Reduces copy-paste in handleLoadPower / handleLoadTechnique / handleLoadItem.
+    Phase 3 unification: Add a thin useCreatorLoad(type, options) that encapsulates "fetch library, open modal, onSelect— filter mechanics + restore state" and leaves type-specific mapping to callers. Reduces copy-paste in handleLoadPower / handleLoadTechnique / handleLoadItem.
   related_files:
     - src/hooks/use-creator-load.ts
     - src/app/(main)/power-creator/page.tsx
@@ -10924,7 +10991,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Home feature text meets contrast (e.g. text-neutral-700 or semantic token in light mode).
     - All icon-only buttons have aria-label (password toggle, dice roller history/clear, campaign edit, encounter add participant).
     - All selects have associated label (htmlFor/id) or aria-label.
-    - Heading hierarchy: no skip (h1?h2?h3); campaigns list and detail, encounter views use h2 for first section after h1.
+    - Heading hierarchy: no skip (h1"h2"h3); campaigns list and detail, encounter views use h2 for first section after h1.
     - Dice images with visible die label use alt="" to avoid duplicate announcement.
     - eslint-plugin-jsx-a11y installed and enabled; .cursor/rules or ACCESSIBILITY.md documents a11y requirements for agents.
     - npm run build passes.
@@ -10994,7 +11061,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Tables renamed to official_* (or new tables created and public_* deprecated).
     - Prisma models OfficialPower/OfficialTechnique/OfficialItem/OfficialCreature with columns + payload JSONB.
     - API route /api/official/[type] (or /api/public redirects); read/write columnar.
-    - Admin "Public Library" ? "Official Library"; all references updated.
+    - Admin "Public Library"— "Official Library"; all references updated.
     - npm run build passes; official library load/add-to-library still works.
   notes: "Done 2026-02-25. (1) supabase-official-library-columnar.sql + Prisma Official* models. (2) GET/POST/DELETE /api/official/[type] columnar read/write. (3) proxy.ts excludes api/official. (4) library-service: fetchOfficialLibrary, saveToOfficialLibrary, findOfficialLibraryItemByName (legacy names aliased). (5) use-public-library: useOfficialLibrary/useAddOfficialToLibrary + query key official-library; usePublicLibrary/useAddPublicToLibrary deprecated aliases. (6) use-creator-save uses saveToOfficialLibrary/findOfficialLibraryItemByName. (7) Admin public-library: useOfficialLibrary, DELETE /api/official, QUERY_KEY official-library, labels Official Library / Official Powers etc.; page title Official Library Editor. (8) Admin nav link Open Official Library Editor. Legacy /api/public unchanged for backward compat. npm run build passes."
 
@@ -11097,7 +11164,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Two buttons: "Add Feat" (opens modal with feats where feat_points >= 0 or non-mechanical) and "Add Negative Feat" (opens modal with feats where feat_points < 0).
     - Filter feat list by creatureFeatsData / codex creature feats: points (feat_points) < 0 for negative feat modal; points >= 0 (and optionally exclude mechanical-only) for add feat modal.
     - Both modals use same UnifiedSelectionModal pattern; only data source filter differs.
-  notes: "Done 2026-02-24. featSelectableItems filtered by Number(f.cost ?? 0) >= 0; featSelectableItemsNegative by < 0. Two modals and Add Feat / Add Negative Feat buttons."
+  notes: "Done 2026-02-24. featSelectableItems filtered by Number(f.cost – 0) >= 0; featSelectableItemsNegative by < 0. Two modals and Add Feat / Add Negative Feat buttons."
 
 - id: TASK-277
   title: Creature Creator ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Power/technique/armament modals and lists show parts, properties, options as chips; use site-wide display logic
@@ -11340,7 +11407,7 @@ Firebase/RTDB - the project is Supabase-only.
     - No "(optional)" text next to damage in creators.
     - npm run build passes.
   notes: |
-    Done 2026-03-07. Power creator: "Damage (Optional)" ? "Damage". Item creator: "Shield Damage (Optional)" ? "Shield Damage". npm run build passes.
+    Done 2026-03-07. Power creator: "Damage (Optional)"— "Damage". Item creator: "Shield Damage (Optional)"— "Shield Damage". npm run build passes.
 
 - id: TASK-289
   title: Official library ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â fix save for powers, techniques, armaments
@@ -11473,7 +11540,7 @@ Firebase/RTDB - the project is Supabase-only.
   status: done
   created_at: 2026-03-10
   created_by: owner
-  notes: "Implemented: (1) crafting-utils: getEnhancedCraftingRequirements, getConsumableEnhancedRequirements, getMultipleUseAdjustedEnergy, getEnhancedMarketPrice. (2) Types: CraftingPowerRef, CraftingCustomBaseItem, UserEnhancedItem; session data extended with isEnhanced, powerRef, customBaseItem, potency, multipleUseTableIndex. (3) /crafting/new: Enhanced checkbox, power selector (user powers), energy cost input, custom base option (name+price), potency (creator or manual), multiple-use table dropdown; uses enhanced or consumable-enhanced table by energy. (4) user_enhanced_items table (schema + migration SQL in SUPABASE_SCHEMA.md), API GET/POST /api/user/enhanced-items, DELETE [id], PATCH [id] for potency/name; hooks useEnhancedItems, useCreateEnhancedItem, useDeleteEnhancedItem, useUpdateEnhancedItem. (5) Library: Enhanced tab (My Library only), LibraryEnhancedTab list + delete. (6) Crafting [id]: when completed and isEnhanced, 'Save to Library' creates enhanced item. (7) Upgrade potency (Phase 5): hub 'Upgrade potency' ? /crafting/new?mode=upgrade-potency (select enhanced item from library); getUpgradePotencyRequirements (25% time/cost/successes, same DS); session [id] when completed shows 'Update potency in library' with potency input and PATCH. (8) Follow-up 2026-03-13: crafting/[id] now calculates enhanced power energy from selected power parts (no manual EN input), supports official + library powers in selector, adds use/recovery selection from multiple-use table, and adds 'Craft base item as well' toggle to include both base and enhancement requirements in one session. npm run build passes."
+  notes: "Implemented: (1) crafting-utils: getEnhancedCraftingRequirements, getConsumableEnhancedRequirements, getMultipleUseAdjustedEnergy, getEnhancedMarketPrice. (2) Types: CraftingPowerRef, CraftingCustomBaseItem, UserEnhancedItem; session data extended with isEnhanced, powerRef, customBaseItem, potency, multipleUseTableIndex. (3) /crafting/new: Enhanced checkbox, power selector (user powers), energy cost input, custom base option (name+price), potency (creator or manual), multiple-use table dropdown; uses enhanced or consumable-enhanced table by energy. (4) user_enhanced_items table (schema + migration SQL in SUPABASE_SCHEMA.md), API GET/POST /api/user/enhanced-items, DELETE [id], PATCH [id] for potency/name; hooks useEnhancedItems, useCreateEnhancedItem, useDeleteEnhancedItem, useUpdateEnhancedItem. (5) Library: Enhanced tab (My Library only), LibraryEnhancedTab list + delete. (6) Crafting [id]: when completed and isEnhanced, 'Save to Library' creates enhanced item. (7) Upgrade potency (Phase 5): hub 'Upgrade potency' " /crafting/new"mode=upgrade-potency (select enhanced item from library); getUpgradePotencyRequirements (25% time/cost/successes, same DS); session [id] when completed shows 'Update potency in library' with potency input and PATCH. (8) Follow-up 2026-03-13: crafting/[id] now calculates enhanced power energy from selected power parts (no manual EN input), supports official + library powers in selector, adds use/recovery selection from multiple-use table, and adds 'Craft base item as well' toggle to include both base and enhancement requirements in one session. npm run build passes."
   description: |
     Add Enhanced crafting: toggle, power selection, custom base item, potency (manual or creator's), Multiple Use table, Consumable Enhanced table. Add Enhanced Equipment library (official + personal): save enhanced items from crafting; base item + power + description, uses, potency.
   related_files:
@@ -11911,7 +11978,7 @@ Firebase/RTDB - the project is Supabase-only.
 
 # =============================================================================
 # Codex Firestore Migration + Admin Editor + Public Library (TASK-116+)
-# Created 2026-02-06 from owner request. Phases: Migration ? Admin ? Public Library.
+# Created 2026-02-06 from owner request. Phases: Migration— Admin— Public Library.
 # USER tasks require manual steps by owner; all others assignable to AI.
 # =============================================================================
 
@@ -12125,7 +12192,7 @@ Firebase/RTDB - the project is Supabase-only.
   notes: |
     Owner 2026-07-15: ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Âother eligibility rules enforced on admin path creation (another task).ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â
     Can start in parallel with TASK-470/463; TASK-471 consumes the field (empty-state OK until
-    seeded). Spec audit 2026-07-15: eligibility ? energy-only; Innate Energy ? getInnateEnergyMax.
+    seeded). Spec audit 2026-07-15: eligibility— energy-only; Innate Energy— getInnateEnergyMax.
     Implemented 2026-07-15: repo code + SQL. **Applied** on RealmsRPG-Test 2026-07-15 (owner
     approved) ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â `level1_innate_powers` TEXT live. Seed recommended innates via admin when ready.
 
@@ -12225,12 +12292,12 @@ Firebase/RTDB - the project is Supabase-only.
     - Update REALMS ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â5.8 (innate vs regular; powered-martial clarity); FEATURE_INDEX; DEV-V-013;
       npm run build.
   notes: |
-    After TASK-470. Soft-depends on TASK-473 for authored content. L1 split may run ? TASK-463;
+    After TASK-470. Soft-depends on TASK-473 for authored content. L1 split may run— TASK-463;
     innate modal + L2 promote soft-after 463. Mirror sheet grammar; do not fork new card
     components. Spec audit 2026-07-15.
     Done 2026-07-15: dual L1 Innate Powers + Powers; innatePowerIds store (schema v6);
     soft L2 innate modal; graceful empty until TASK-473 seeds.
-    Audit 2026-07-15: exclusive innate?regular seed + reconcile; Energy title chips on innate cards.
+    Audit 2026-07-15: exclusive innate→regular seed + reconcile; Energy title chips on innate cards.
 
 - id: TASK-470
   title: Guided powers/techniques L1 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Loadout card + desc-chip parity
@@ -12469,7 +12536,7 @@ Firebase/RTDB - the project is Supabase-only.
     Base, ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â); L1 named property chips are name-only (no TP on those desc chips). Armor gets
     ability requirement chips like weapons.
   acceptance_criteria:
-    - formatAbilityRequirementFact ? `Abilityname Requirement X+` with prefix stripping.
+    - formatAbilityRequirementFact → `Abilityname Requirement X+` with prefix stripping.
     - formatDamageFact ends with capitalized Damage.
     - MECHANIC_PROPERTY_NAMES / isMechanicPropertyName suppress calculation-only and
       already-represented properties; namedPropertyDescriptorChips default includeCost false.
@@ -12525,16 +12592,16 @@ Firebase/RTDB - the project is Supabase-only.
       HP/EN pool of 18 allocated to Energy + archetype ability from draft); fallback exclude
       Energy > 20 when calc inputs missing. Document helper next to power-technique-display /
       calculations.
-    - Martial ? techniques only; Power ? powers only.
+    - Martial— techniques only; Power— powers only.
     - Innate modal deferred to TASK-471 (do not implement innate See more in this task).
     - Same fact language as L1 cards (TASK-470 Action Type value-only chips, Training Points,
-      Energy) via compact-facts / combat-builder; LoadoutBudgetBar TP gating; L2?L1 promotion
+      Energy) via compact-facts / combat-builder; LoadoutBudgetBar TP gating; L2→L1 promotion
       (TASK-458).
     - fullScreenOnMobile on modal; update REALMS ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â5.8 (replace in-step panel wording);
       FEATURE_INDEX; DEV-V-013; npm run build.
   notes: |
     Updated 2026-07-15 from owner Powers/Techniques feedback (modal + energy filter). Spec audit
-    same day: removed hard follow_up TASK-471 (L1 dual lists may run ? this task); innate modal
+    same day: removed hard follow_up TASK-471 (L1 dual lists may run— this task); innate modal
     deferred; browse panel removal is AC. Prefer calculateMaxEnergy(18, ...) over hard-cap ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â
     function and GAME_RULES L1 pool of 18 already exist.
     Done 2026-07-15: GuidedPowersTechniquesL2Modal; deleted browse panel; Energy =
@@ -12813,7 +12880,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Candidate merging is ID-stable, deduplicated, and does not drop resolvable selected rows during
       async library loading; stale unresolved refs still prune safely.
     - Removing a promoted selection updates cards and Currency/Training Points immediately.
-    - Add DEV-V-013 tests for equipment and powers/techniques L2 ? selected-card return;
+    - Add DEV-V-013 tests for equipment and powers/techniques L2— selected-card return;
       npm run build passes.
   evidence: |
     Equipment: getPhaseL1Candidates already merges selectedIds; unit tests cover dedupe + wrong-phase skip.
@@ -13064,8 +13131,8 @@ Firebase/RTDB - the project is Supabase-only.
       - DEV-V-013-T030
       - DEV-V-013-T031
   developer_test_plan: |
-    DEV-V-013-T027/T028 Close|Select on species and path More details; T029 Foundation rail ? Path;
-    T030 Ancestry rail ? species overview; T031 footer Back stays sequential.
+    DEV-V-013-T027/T028 Close|Select on species and path More details; T029 Foundation rail— Path;
+    T030 Ancestry rail— species overview; T031 footer Back stays sequential.
   related_files:
     - src/components/guided-creator/guided-entity-detail-modal.tsx
     - src/components/guided-creator/guided-species-detail-modal.tsx
@@ -13089,7 +13156,7 @@ Firebase/RTDB - the project is Supabase-only.
     ancestry/loadout apply first-screen landing on jump.
   notes: |
     Owner 2026-07-15 guided creator feedback; implemented directly.
-    Audit 2026-07-15: REALMS ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â3.1 updated (More details open ? select; footer Select OK);
+    Audit 2026-07-15: REALMS ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â3.1 updated (More details open— select; footer Select OK);
     Select closes via modal onClose; T023 aligned after phase-strip removal (TASK-447).
 
 - id: TASK-447
@@ -13256,7 +13323,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Path recommendations shown as selectable GuidedChoiceCards; selection state is explicit.
     - No silent select-all on mount that the user cannot see as their choice (pre-check OK if visible).
     - GuidedLayerNav ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂSee more optionsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â opens filtered browse; ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂBack to recommendationsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â returns to L1.
-    - Martial ? techniques only; Power ? powers only; naming per existing copy.
+    - Martial— techniques only; Power— powers only; naming per existing copy.
     - npm run build; DEV-V-013 test(s) for powers L1 confirm + L2 expand/collapse.
   notes: |
     2026-07-15: Done. Feats-style in-step L2 (`GuidedPowersTechniquesBrowsePanel` + GuidedLayerNav);
@@ -13369,7 +13436,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/components/guided-creator/guided-choice-card.tsx
   description: |
     Skip weapon/armor phases when path has no options; renumber SegmentedControl dynamically.
-    Weapon/armor cards: fact chips + More details ? expandable property chips; currency on all phases.
+    Weapon/armor cards: fact chips + More details— expandable property chips; currency on all phases.
     Gear: Add all recommended + per-item quantity; L2 browse retained.
   acceptance_criteria:
     - Visible phases only; labels 1..N for present phases (no phantom Armor/Weapons).
@@ -13407,14 +13474,14 @@ Firebase/RTDB - the project is Supabase-only.
     guided-entity-detail-shell helpers; DEV-V-013-T016 tightened.
   description: |
     Owner feedback 2026-07-15 (ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂLayer 2 CardsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â): progressive disclosure on choice cards needs an
-    explicit path from Layer 1 card ? information modal for that entity ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â opened only via a
+    explicit path from Layer 1 card— information modal for that entity ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â opened only via a
     ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂMore detailsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â control, never by selecting the card. Opening More details must not select;
     footer Select on path/species (TASK-448) is a later add. Inline See more / expandedExtra stay as
     light in-card disclosure.
 
     IMPORTANT naming (document in REALMS + AGENT_GUIDE):
     - Catalog Layer 2 = GuidedLayerNav ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂSee more optionsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â / browse / UnifiedSelectionModal (existing).
-    - Choice-card deep-dive = ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂMore detailsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â on a GuidedChoiceCard ? GuidedEntityDetailModal (this epic).
+    - Choice-card deep-dive = ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂMore detailsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â on a GuidedChoiceCard— GuidedEntityDetailModal (this epic).
     Do not reuse ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂSee moreÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â wording that opens catalog L2; prefer ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂMore detailsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â / ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂView detailsÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â.
 
     Phase 1 ships the shared primitives only (no species/path content yet):
@@ -13445,7 +13512,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Docs clarify deep-dive vs catalog Layer 2; copy keys exist; contrast + touch-target checklists pass.
     - npm run build passes; no regression to existing choice-card select/expand behavior.
   notes: |
-    Epic sequencing: 432 foundation ? 433 species content ? 434 path content ? 435 shared
+    Epic sequencing: 432 foundation— 433 species content— 434 path content— 435 shared
     GridListRow option presets + remodel of legacy overview surfaces reused from advanced creator.
     Prefer remodel-in-place of shared primitives over forking parallel ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Âguided-onlyÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â row components.
     Reference SpeciesRevealPanel + home/guided visual language; avoid copying dense species-modal UX as-is.
@@ -13524,7 +13591,7 @@ Firebase/RTDB - the project is Supabase-only.
   evidence: |
     GuidedPathDetailModal + GuidedPathDetailOverview + GuidedDetailOptionList (GridListRow); feats split by
     char_feat; equipment via buildEquipmentLookup/catalog-rows; unarmed when recommendUnarmedProwess;
-    martial?techniques, power/powered-martial?powers; path-step wired; copy + tooltip-text tips;
+    martial"techniques, power/powered-martial"powers; path-step wired; copy + tooltip-text tips;
     DEV-V-013-T018; npm run build.
     Audit 2026-07-15: overview-while-loading catalogs; omit power/tech/feat phantoms; feat id|name resolve;
     martial ability labeling (no Secondary mislabel); expandable property chips via useItemProperties;
@@ -13576,7 +13643,7 @@ Firebase/RTDB - the project is Supabase-only.
   evidence: |
     DetailOptionList + lib/detail-option builders (trait/feat/equipment/loadout/power/technique + property
     chips); GuidedTraitOptionList + GuidedDetailOptionList thin wrappers; SpeciesRevealPanel granted
-    traits remodeled; advanced species-modal TraitSection ? DetailOptionList; AGENT_GUIDE/FEATURE_INDEX/
+    traits remodeled; advanced species-modal TraitSection— DetailOptionList; AGENT_GUIDE/FEATURE_INDEX/
     REALMS; DEV-V-013-T019; npm run build.
     Audit 2026-07-15: extracted equipmentRefToDetailOption / combat builders from path modal; FEATURE_INDEX
     triad wording; species-modal !found dimming + choice-option uses; stable list keys.
@@ -13695,7 +13762,7 @@ Firebase/RTDB - the project is Supabase-only.
 
     Owner lock (2026-07-15): **Dense browse lists keep column headers when space allows**; labeled
     chips for omitted-column facts apply primarily to **deep-dive / progressive-disclosure** lists
-    (`DetailOptionList`). Audit order: Library ? Codex ? character sheet library ? add modals.
+    (`DetailOptionList`). Audit order: Library— Codex— character sheet library— add modals.
   acceptance_criteria:
     - Policy documented (AGENT_GUIDE + FEATURE_INDEX) with browse-vs-deep-dive distinction.
     - Audit inventory of GridListRow consumers with column-vs-chip gaps.
@@ -13739,7 +13806,7 @@ Firebase/RTDB - the project is Supabase-only.
   evidence: |
     GAME_RULES Terminology expanded; AGENT_GUIDE/AGENTS pointers; Customize Abilities copy fix;
     Powered-Martial Archetype Power/Martial Ability labels (guided overview). Em dash ban
-    (not hyphen ban) documented. Historical full-site rewrite deferred ? **TASK-439**.
+    (not hyphen ban) documented. Historical full-site rewrite deferred— **TASK-439**.
   notes: |
     Owner: expand what exists; whitelist/blacklist soft; Score = Bonus+10; avoid Spell/AC/Race/Class/
     Check/Save/DC/modifier; do not extremely limit agents.
@@ -13776,7 +13843,7 @@ Firebase/RTDB - the project is Supabase-only.
     rewrite in-world flavor that intentionally uses fiction words. Do not rewrite the rules book
     extract wholesale unless a UI string cites it wrongly.
 
-    Phased (inventory ? fix ? next phase):
+    Phased (inventory— fix— next phase):
     1) Inventory: `src/lib/constants/copy/*` + `public/tooltip-text.tsx` (em dash + avoid-term hits).
     2) Guided + advanced character creator copy + tips (highest product traffic).
     3) Marketing/legal surfaces (landing, about, rules, resources, auth, nav, footer, privacy, terms).
@@ -13799,17 +13866,17 @@ Firebase/RTDB - the project is Supabase-only.
     Phase 1 inventory (2026-07-15):
     - Em dash in *user string literals*: guided-creator-copy.ts = 22; marketing *-copy.ts* + tooltip-text
       = 0 (hits were file-header / developer comments only).
-    - Prefer/avoid in copy+tooltip: no Ability Scores/DC/Class/Race/Spell/Check hits; Base HP ? fixed.
+    - Prefer/avoid in copy+tooltip: no Ability Scores/DC/Class/Race/Spell/Check hits; Base HP— fixed.
     Keep-exceptions: developer comments; empty-field placeholder glyph `ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â`; dense creature/encounter
     HUD label HP (allowed abbr per GAME_RULES).
     Phases 2ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â3: guided-creator-copy em dashes removed; Base Health/Energy; Ability Bonuses/Points;
     Power/Martial Ability labels; marketing modules already clean of user-facing em dashes/banned terms.
     Phase 4 high-traffic: advanced creator step strings; roll-log aria Bonus; CodexFeatsTab; admin
     Abilities/Health labels; encounters meta; crafting Difficulty Score Bonus; power-creator mechanics
-    copy. Residuals ? TASK-440.
+    copy. Residuals— TASK-440.
     Audit follow-up (2026-07-15, post-"done"): closed misses (ability-effect-blurbs, format-recovery,
     path-validation messages, sheet path/edit-archetype copy, expandable-image placeholder, styleguide
-    labels, AdminPartsTab ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â%, creature-creator "Damage Modifiers" ? Resistances/Weaknesses/Immunities).
+    labels, AdminPartsTab ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â%, creature-creator "Damage Modifiers"— Resistances/Weaknesses/Immunities).
     Re-scan: 0 Ability Scores / Difficulty Class / Skill Check / Saving Throw / Armor Class /
     Damage Modifiers in UI tree; remaining em dashes are comments or `ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â` placeholders only.
   build_validation: |
@@ -13835,7 +13902,7 @@ Firebase/RTDB - the project is Supabase-only.
     tests:
       - DEV-V-013-T012
   developer_test_plan: |
-    DEV-V-013-T012 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Archetype + character feat See more ? L2 browse; Back to recommendations.
+    DEV-V-013-T012 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Archetype + character feat See more— L2 browse; Back to recommendations.
   related_files:
     - src/components/guided-creator/guided-feats-browse-panel.tsx
     - src/components/guided-creator/steps/archetype-feats-step.tsx
@@ -13978,7 +14045,7 @@ Firebase/RTDB - the project is Supabase-only.
 ---
 
 - id: TASK-424
-  title: Guided equipment phased sub-flow (weapon ? armor ? gear)
+  title: Guided equipment phased sub-flow (weapon— armor— gear)
   created_at: 2026-07-06
   created_by: agent
   priority: high
@@ -13987,7 +14054,7 @@ Firebase/RTDB - the project is Supabase-only.
   developer_test_plan: |
     DEV-V-013-T004 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Berserker quick kits + phased weapon L1 cards.
     DEV-V-013-T006 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â See more opens Layer 2 modal with TP bar.
-    DEV-V-013-T013 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Weapon ? armor ? gear phase walk + progress chips.
+    DEV-V-013-T013 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Weapon— armor— gear phase walk + progress chips.
   completed_work: |
     Phase 0: GUIDED_EQUIPMENT_PHASED_SPEC.md; FEATURE_INDEX.
     Phase 1: weapon-attack-ability.ts (+ thrown fix, sheet refactor); equipment-eligibility.ts;
@@ -14058,10 +14125,10 @@ Firebase/RTDB - the project is Supabase-only.
     DEV-V-013-T004 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Berserker phased loadout + quick kits.
     DEV-V-013-T006 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â See more opens Layer 2 modal with TP bar (Confirm applies).
     DEV-V-013-T007 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Admin path save rejects loadout exceeding TP budget.
-    DEV-V-013-T013 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Weapon ? armor ? gear phase walk.
+    DEV-V-013-T013 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Weapon— armor— gear phase walk.
   description: |
     Replace minimal guided loadout cards with REALMS ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â5.7 equipment UX. Superseded UI path
-    completed via TASK-424 (phased weapon ? armor ? gear). Path content seeding remains TASK-423.
+    completed via TASK-424 (phased weapon— armor— gear). Path content seeding remains TASK-423.
   related_files:
     - src/components/guided-creator/steps/loadout-step.tsx
     - src/components/guided-creator/guided-equipment-l1-phase.tsx
@@ -14138,16 +14205,16 @@ Firebase/RTDB - the project is Supabase-only.
   completed_work: |
     - Batch 1 lint fix; 0 errors.
     - Batch 2 (TASK-350): lib/hooks no-unused-vars; character sheet page destructuring; ESLint 393?339 warnings.
-    - Batch 3ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â4 (2026-07-13): cleared all unused-vars (141?0); fixed 4 lint errors (raw color tokens,
+    - Batch 3ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â4 (2026-07-13): cleared all unused-vars (141→0); fixed 4 lint errors (raw color tokens,
       InfoTippy Floating UI refs disables); removed dead PROPERTY_IDS re-export (batch-3 gap);
       fixed agent gaps (login dead `ready` state, official-entity-list canAdd(row)?canAdd());
       cleared admin no-explicit-any (40); a11y aria-sort; unused eslint-disable; dynamic img disables.
-      Baseline before: 360 warnings / 4 errors ? after: ~171 warnings / 0 errors (react-hooks only).
+      Baseline before: 360 warnings / 4 errors— after: ~171 warnings / 0 errors (react-hooks only).
   remaining_work: |
     - React Compiler hook warnings deferred to TASK-430 (eslint.config keeps them as warn on purpose).
   follow_up_tasks:
     - TASK-430
-  notes: "2026-07-13 DONE for unused-vars/any/errors scope. Hook residuals ? TASK-430."
+  notes: "2026-07-13 DONE for unused-vars/any/errors scope. Hook residuals— TASK-430."
 
 - id: TASK-346
   title: "Systemic token & console cleanup (batch by rule)"
@@ -14157,7 +14224,7 @@ Firebase/RTDB - the project is Supabase-only.
   created_by: agent
   completed_at: 2026-07-13
   description: |
-    Repo-wide batch cleanup: status colors -600 ? -700 in light mode; replace stray gray-*/neutral-* outside auth;
+    Repo-wide batch cleanup: status colors -600 → -700 in light mode; replace stray gray-*/neutral-* outside auth;
     remove leftover client debug console.*. Do in small, rule-scoped batches with build between.
   related_files:
     - src/app/globals.css
@@ -14175,7 +14242,7 @@ Firebase/RTDB - the project is Supabase-only.
   completed_work: |
     - Batch 1ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â2: footer/roll-button/console purge; status -600?-700; home/item-creator neutrals.
     - Batch 3ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â4: emptied TSX backlog allowlist; semantic tokens across admin/codex/creators/sheet/shared.
-    - Audit 2026-07-13: globals.css tab/stepper/search/skeleton/shimmer/glow ? semantic tokens; Button
+    - Audit 2026-07-13: globals.css tab/stepper/search/skeleton/shimmer/glow— semantic tokens; Button
       primary/danger `text-text-on-dark`; AGENT_GUIDE exceptions corrected; AC clarified for diagnostic consoles.
   remaining_work: |
     (none for token migration)
@@ -14235,7 +14302,7 @@ Firebase/RTDB - the project is Supabase-only.
   notes: |
     Planned from remediation close-out. Compatibility-first phases required.
     DONE 2026-07-03: `CodexPayload` in `src/types/codex.ts`; typed `fetchCodex` + server route; entity types moved from hooks/codex-types; roll timestamp util extracted; character sheet uses CodexFeat/CodexSkill; vitest shape + timestamp tests; build pass.
-    Follow-ups: TASK-420 done (library API typing); TASK-421 (enhanced items typing). Creator load `any` handlers ? TASK-381.
+    Follow-ups: TASK-420 done (library API typing); TASK-421 (enhanced items typing). Creator load `any` handlers— TASK-381.
 
 - id: TASK-379
   title: DUP-05/08 unify library selection pipelines and make LoadFromLibraryModal a thin wrapper
@@ -14265,7 +14332,7 @@ Firebase/RTDB - the project is Supabase-only.
     Run DEV-V-016 in BUILD_VALIDATION.md (power/technique/item/empowered/species+creature load + sheet add parity).
   notes: |
     Deferred from remediation waves. Requires QA-first execution.
-    2026-07-13: Done ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â LoadFromLibraryModal ? UnifiedSelectionModal (confirmLabel Load, max 1);
+    2026-07-13: Done ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â LoadFromLibraryModal— UnifiedSelectionModal (confirmLabel Load, max 1);
     add+load share library-selectable-builders + normalize-public (weaponName); technique Action
     column on load matches add; DEV-V-016 added. Build/test/lint pass.
     2026-07-13 audit: Empowered load uses buildEmpoweredPowerSelectableItem + EMPOWERED columns;
@@ -14308,7 +14375,7 @@ Firebase/RTDB - the project is Supabase-only.
     collapse pattern (ui/Collapsible already gone). Species Load remains ungated; creature keeps
     reset confirm + over-budget save. CreatorLayout retained as inner layout primitive.
     2026-07-14 audit: Fixed creature Suspense/?edit; LoginPrompt save|load reason; species + empowered
-    contentType; ungated Load toolbar labels; lg-only sticky sidebar. Remaining ? TASK-431.
+    contentType; ungated Load toolbar labels; lg-only sticky sidebar. Remaining— TASK-431.
     2026-07-01: Owner ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Phase 1b prerequisite for standalone guided creators (REALMS ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â5.11).
 
 - id: TASK-431
@@ -14337,7 +14404,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/docs/ai/AGENT_GUIDE.md
   acceptance_criteria:
     - CollapsibleSection: no nested interactive controls inside a role=button / expand header; move rightSlot/Remove outside the disclosure control (or equivalent pattern); fix misleading comment that claims nesting is OK.
-    - Section titles use heading level that does not skip (h1 PageHeader ? h2 sections), or an equivalent a11y-compliant pattern documented in AGENT_GUIDE.
+    - Section titles use heading level that does not skip (h1 PageHeader— h2 sections), or an equivalent a11y-compliant pattern documented in AGENT_GUIDE.
     - Species and/or creature load lists use an extended useLoadModalLibrary (or dedicated shared hook) with SourceFilter parity ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â no bespoke fetch/shape duplication beyond entity-specific columns/handleLoad.
     - Empowered publish override copy says "empowered technique" (not "technique") when replacing an existing public item.
     - Empowered dual-load errors identify which dataset(s) failed (power parts / technique parts) and surface both messages when both fail; retry still refetches both.
@@ -14449,10 +14516,10 @@ Firebase/RTDB - the project is Supabase-only.
   completed_work: |
     - Toast region: `role="region"` so `aria-label` is valid with `aria-live`.
     - TabNavigation: `disabled` instead of prohibited `aria-disabled` on tabs; `associatePanels` prop for demos.
-    - Form error text ? `text-danger-fg` (Input/Select/Textarea/Checkbox).
+    - Form error text → `text-danger-fg` (Input/Select/Textarea/Checkbox).
     - Privacy inline links: persistent underline (`link-in-text-block`).
     - Styleguide: token swatches on correct surfaces; tab panels wired; toast trigger; PointStatus contrast.
-    - `tab-nav-trigger-active` ? semantic tokens (no primary ramp `dark:`).
+    - `tab-nav-trigger-active` → semantic tokens (no primary ramp `dark:`).
     - `tests/visual/a11y-baseline.json` emptied ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â zero allowed violations.
   related_files:
     - src/components/layout/header.tsx
@@ -14539,7 +14606,7 @@ Firebase/RTDB - the project is Supabase-only.
     - public/tooltip-text.tsx
   acceptance_criteria:
     - Archetype step: path cards show build preview (counts + one-line goal); Path default, "Forge Your Own" secondary/L3.
-    - Feats step (pilot): Layer 1 grouped recommended feats with why-copy; "See all feats" ? existing L3 browser; "Back to recommendations" returns to L1.
+    - Feats step (pilot): Layer 1 grouped recommended feats with why-copy; "See all feats"— existing L3 browser; "Back to recommendations" returns to L1.
     - Global: `level1.notes` surfaced via enhanced `PathHelpCard` on every path step.
     - Content: one fully authored reference martial path in admin; completable in L1 without opening full lists.
     - `npm run build` passes; MOBILE_UX + ACCESSIBILITY rules followed.
@@ -14555,7 +14622,7 @@ Firebase/RTDB - the project is Supabase-only.
   status: done
   description: |
     Scrap and rebuild `home-page.tsx` per REALMS_PRODUCT_OVERVIEW Section 4 ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â
-    not a copy-only patch. Single primary CTA (Start Playing ? /characters/new),
+    not a copy-only patch. Single primary CTA (Start Playing → /characters/new),
     research-backed scroll structure, remove OnboardingTour and Codex/Library CTAs.
     Mid-page secondary CTAs: custom power, weapons/armor (? creators; Layer 1 entry
     when those creators support it). Discord tertiary. Design system compliant.
@@ -14567,7 +14634,7 @@ Firebase/RTDB - the project is Supabase-only.
   acceptance_criteria:
     - Remove OnboardingTour trigger and welcome-banner tour link from home.
     - Remove Browse Codex / Browse Library as landing CTAs (nav only).
-    - One primary hero CTA: Start Playing ? /characters/new.
+    - One primary hero CTA: Start Playing → /characters/new.
     - Uniqueness block with visual proof (screenshots/art), not abstract copy only.
     - Below fold: Create a Custom Power + Create Weapons & Armor sections with links to creators.
     - Join Discord in closing/footer section.
@@ -14655,9 +14722,9 @@ Firebase/RTDB - the project is Supabase-only.
   build_validation: DEV-V-017
   developer_test_plan: |
     Run DEV-V-017-T001ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂT006 in BUILD_VALIDATION.md (About, nav, rules, resources, privacy, terms).
-    Optional screenshot audit: `npx playwright test -c playwright.site-copy-audit.config.ts` ? `.site-copy-audit/`.
+    Optional screenshot audit: `npx playwright test -c playwright.site-copy-audit.config.ts` → `.site-copy-audit/`.
   notes: |
-    2026-07-14: Done ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â About carousel ? structured `ABOUT_CAROUSEL_SLIDES` + `AboutSlideBodyView`;
+    2026-07-14: Done ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â About carousel— structured `ABOUT_CAROUSEL_SLIDES` + `AboutSlideBodyView`;
     `nav-copy`, `rules-copy`, `resources-copy`; footer/landing/auth/guided already migrated.
     Audit pass: fixed root-layout motto AC3 gap; creator-note punctuation; SEO meta from copy;
     `privacy-copy` + `terms-copy`; shared `SITE_CONTACT_EMAIL` / `ROOT_META_DESCRIPTION`;
@@ -14837,7 +14904,7 @@ Firebase/RTDB - the project is Supabase-only.
   acceptance_criteria:
     - Sub-step order enforced in store; guidance groups drive feat selection when present.
   notes: |
-    2026-06-30: Chapter 4 sub-steps skills ? archetype-feats ? character-feat.
+    2026-06-30: Chapter 4 sub-steps skills— archetype-feats— character-feat.
 
 - id: TASK-401
   title: Guided Simple Creator ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Phase 5 Equipment + Powers/Techniques
@@ -14907,8 +14974,8 @@ Firebase/RTDB - the project is Supabase-only.
     tests:
       - DEV-V-013-T014
   notes: |
-    2026-06-30: Owner chose Option B ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â full allocation per REALMS ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â5.5. Store schema v3 (skillIds ? skills). npm run build pass.
-    2026-07-13 audit: AC updated for GuidedSkillsPanel (TASK-419); build_validation rewired from wrong T003 ? T014.
+    2026-06-30: Owner chose Option B ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â full allocation per REALMS ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â5.5. Store schema v3 (skillIds— skills). npm run build pass.
+    2026-07-13 audit: AC updated for GuidedSkillsPanel (TASK-419); build_validation rewired from wrong T003— T014.
 
 - id: TASK-406
   title: Guided creator ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â Your Hero reveal redesign (ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â5.10)
@@ -14943,7 +15010,7 @@ Firebase/RTDB - the project is Supabase-only.
   notes: |
     2026-06-30: Owner feedback ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â guided reveal was worst finalize step; redesign in stages.
     2026-06-30: Hero band, GuidedRevealSummary (names + edit links), identity block, portrait upload, smart HP/EN auto-allocate, shell hides strip on reveal. npm run build pass.
-    2026-07-13 audit: build_validation rewired from T004 (loadout) ? T015 reveal + T005 save.
+    2026-07-13 audit: build_validation rewired from T004 (loadout)— T015 reveal + T005 save.
 
 - id: TASK-415
   title: Chip taxonomy & metadata display unification
@@ -14981,21 +15048,21 @@ Firebase/RTDB - the project is Supabase-only.
     - Styleguide shows expandable vs descriptor side-by-side; npm run build passes
   completed_work: |
     Phase A (2026-07-02): chip `shape` variant; `descriptor` variant + DescriptorChip; shared expandableChipShellClass;
-    GridListRow badges/total cost ? DescriptorChip; descriptor routing for tags/metadata; styleguide + docs.
+    GridListRow badges/total cost— DescriptorChip; descriptor routing for tags/metadata; styleguide + docs.
     Phase B (2026-07-02): merged ExpandableChip, PartChip, GridListRow chips into single `ui/ExpandableChip`;
     `expandable-chip-props.ts` adapters; deleted `expandable-grid-list-chip.tsx`. Build passes.
-    Phase B audit (2026-07-02): `GridListChip` wrapper; `PartData` + `ChipOptionsPanel` in `lib/chip/`; `PartChipList` ? ExpandableChip; styleguide GridListRow patterns. Build passes.
-    Phase C (2026-07-02): feat category redundancy removed; SpeciesTraitCard/HubListRow/ItemCard ? DescriptorChip; encounters/crafting badgeVariant. Build passes.
+    Phase B audit (2026-07-02): `GridListChip` wrapper; `PartData` + `ChipOptionsPanel` in `lib/chip/`; `PartChipList` → ExpandableChip; styleguide GridListRow patterns. Build passes.
+    Phase C (2026-07-02): feat category redundancy removed; SpeciesTraitCard/HubListRow/ItemCard— DescriptorChip; encounters/crafting badgeVariant. Build passes.
     Phase C audit (2026-07-03): `descriptor-chip-variants.ts`; global metadata migration (creator, sheet, guided, admin, creature/item/power creators). Build passes.
-    Phase D (2026-07-03): `list-row-metadata.ts`; raw requirements divs ? descriptor detailSections (powers/techniques/armor); range/damage in add-library + creator modals; feat Type hidden in creator tabs. Build passes.
+    Phase D (2026-07-03): `list-row-metadata.ts`; raw requirements divs— descriptor detailSections (powers/techniques/armor); range/damage in add-library + creator modals; feat Type hidden in creator tabs. Build passes.
     Phase D audit (2026-07-03): `part-chips-from-display.ts`; creature stat block, load-library modal, creature creator, library/official lists; weapon/shield/equipment detailSections; empowered range metadata. Build passes.
-    Phase E (2026-07-03): `ChipData.kind`; removed `category: 'tag'` + `PartChipDetails`; `chip-data-helpers.ts`; feat modals ? `buildFeatDetailSections`; styleguide expanded rows + `chip-unification.pw.ts` baselines. Build passes.
+    Phase E (2026-07-03): `ChipData.kind`; removed `category: 'tag'` + `PartChipDetails`; `chip-data-helpers.ts`; feat modals → `buildFeatDetailSections`; styleguide expanded rows + `chip-unification.pw.ts` baselines. Build passes.
     Phase E audit (2026-07-03): explicit `descriptorChipData` on codex parts/equipment, add-skill abilities, admin species skills; `buildUsesRecoveryDetailSections`; VSEA-004 closed. Build passes.
   remaining_work: |
     None ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â TASK-415 complete. Expandable chips (options, leveled feats, traits with descriptions) correctly omit explicit `kind`.
   notes: |
     Owner feedback 2026-07-02. Phase 2.2 unified token maps; this task completes semantic/UX chip unification.
-    Implement in sub-phases AÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂE per CHIP_UNIFICATION_PLAN.md (primitives ? merge ? descriptors ? metadata audit ? cleanup).
+    Implement in sub-phases AÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€ÂE per CHIP_UNIFICATION_PLAN.md (primitives— merge— descriptors— metadata audit — cleanup).
 
 - id: TASK-416
   title: Feat tag unification ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â taxonomy cleanup + untagged feats
@@ -15016,7 +15083,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/app/(main)/admin/codex/actions.ts
     - src/lib/codex/feat-list.ts
   acceptance_criteria:
-    - Phase 1ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â2 SQL applied; unique tags materially reduced (349 ? ~277 achieved)
+    - Phase 1ÃƒÂ¢Ã¢Â‚Â¬Ã¢Â€Â2 SQL applied; unique tags materially reduced (349 → ~277 achieved)
     - Admin feat save normalizes tags via `normalize_feat_tags` RPC
     - Phase 3 proposed tags for all untagged feats; owner approves before DB apply
     - Seed CSV parity documented or exported after approved apply
@@ -15047,7 +15114,7 @@ Firebase/RTDB - the project is Supabase-only.
     - Unique tags reduced materially; zero untagged feats
     - feats.csv synced
   completed_work: |
-    Applied 2026-07-03: 291 ? 172 unique tags; 122 ? 14 singletons; ~128 feats re-normalized.
+    Applied 2026-07-03: 291— 172 unique tags; 122— 14 singletons; ~128 feats re-normalized.
     Fixed Focus/Movement drops; remapped Carry/Luck/Solo/Environment/Wall/Water instead of NULL.
   notes: |
     Owner approved 2026-07-03. Remaining 14 singletons intentional (skills, Focus, Interchangeable, etc.).
@@ -15783,7 +15850,7 @@ Firebase/RTDB - the project is Supabase-only.
     into AI_CHANGELOG_ARCHIVE per `/debt` checklist; ensure HISTORY_INDEX points at the quality
     audit; scrub any live-sounding claims in hot-path docs that lag code (no theater-only rewrites).
   acceptance_criteria:
-    - Entries older than ~60 days moved from AI_CHANGELOG.md ? archive/AI_CHANGELOG_ARCHIVE.md.
+    - Entries older than ~60 days moved from AI_CHANGELOG.md— archive/AI_CHANGELOG_ARCHIVE.md.
     - Live changelog remains the recent working set; HISTORY_INDEX lists QUALITY_GLOBAL_AUDIT_2026-07-20.
     - No deletion of historical audit dumps without owner ack.
     - `npm run tasks:validate-docs` (or full `tasks:validate`) passes.
@@ -15885,3 +15952,45 @@ Firebase/RTDB - the project is Supabase-only.
     Migrated USM list body + creature creator loadout (feats/powers/techniques/armaments)
     to rowChrome pattern; dropped 40px action tracks and space-y-1 list overrides.
   notes: Follow-up from TASK-631 cleanup audit.
+
+- id: TASK-641
+  title: Guided Species L2 — all species, Mixed Species, Create Species + mixed Ancestry
+  priority: high
+  status: done
+  created_at: 2026-08-01
+  created_by: agent
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T078
+  developer_test_plan: DEV-V-013 T078 — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/guided-creator/steps/species-step.tsx
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/components/guided-creator/guided-mixed-species-overview.tsx
+    - src/components/guided-creator/character-preview-panel.tsx
+    - src/components/guided-creator/species-reveal-panel.tsx
+    - src/components/guided-creator/guided-step-footer.tsx
+    - src/components/guided-creator/guided-step-layout.tsx
+    - src/lib/guided-creator/guided-species-resolve.ts
+    - src/lib/guided-creator/ancestry-pick-tasks.ts
+    - src/lib/guided-creator/ancestry-pick-tasks.test.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/lib/guided-creator/build-character.test.ts
+    - src/stores/guided-creator-store.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+  description: |
+    Product overview Species L2 slice: expand to full species catalog, Mixed Species card
+    (Advanced MixedSpeciesModal parity), and footer Create Species hatch. Mixed species
+    flows through Ancestry micro-flow and persists on save.
+  acceptance_criteria:
+    - Species L1 shows starters; L2 expands to all species plus Mixed Species card (MixedSpeciesModal)
+    - L2 footer Create Species (outline, left of Continue) opens /species-creator in a new tab
+    - Mixed species selection sets speciesMixed, mixedSpeciesIds, mixedSpeciesNames on draft
+    - Ancestry micro-flow supports mixed parents (overview, per-parent traits, choose-2 skills, flaw-scoped bonus trait)
+    - buildGuidedCharacterPayload persists ancestry.mixed and speciesIds for mixed builds
+    - Skills step respects mixed species skill locks downstream
+  notes: Owner 2026-08-01 product-overview Species L2. QA DEV-V-013 T078.

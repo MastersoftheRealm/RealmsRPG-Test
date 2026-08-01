@@ -29,7 +29,7 @@ export function useCreatorPathData(): ArchetypePathData | undefined {
           fromDraft.level1.guidance_groups?.length ||
           fromDraft.level1.notes?.trim())
     );
-    if (draftHasContent || draft.creationMode !== 'path') return fromDraft;
+    if (draftHasContent || !draft.archetypePathId) return fromDraft;
 
     const lookupId = draft.archetypePathId ?? draft.archetype?.id;
     if (!lookupId) return fromDraft;
@@ -42,7 +42,6 @@ export function useCreatorPathData(): ArchetypePathData | undefined {
     draft.archetype?.path_data,
     draft.archetype?.id,
     draft.archetypePathId,
-    draft.creationMode,
     codexArchetypes,
   ]);
 }

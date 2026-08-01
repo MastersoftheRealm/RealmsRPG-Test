@@ -21,8 +21,10 @@ import { GuidedFeatRestrictionNotice } from '../guided-restriction-notice';
 import { GuidedFeatsL2Modal } from '../guided-feats-l2-modal';
 import { getFeatRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
+import { GuidedSectionTitle } from '../guided-section-title';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 import { filterFeatGuidanceGroups } from '@/lib/game/archetype-path';
 import { EMPTY_GUIDANCE_GROUPS, EMPTY_STRING_ARRAY } from '@/lib/empty';
 import type { PathGuidanceGroup } from '@/types/archetype';
@@ -41,10 +43,19 @@ function resolveFeat(id: string, featById: Map<string, Feat>) {
 }
 
 export function ArchetypeFeatsStep() {
-  const { draft, updateDraft } = useGuidedCreatorStore();
+  const { draft, updateDraft, navigationIntent, entryNonce } = useGuidedCreatorStore();
   const { pathData, archetype } = useGuidedPathData();
   const { data: feats = [], isLoading } = useCodexFeats();
   const [browseOpen, setBrowseOpen] = useState(false);
+
+  const openBrowse = useCallback(() => setBrowseOpen(true), []);
+  useGuidedDeepEntryOnArrival({
+    draft,
+    navigationIntent,
+    entryNonce,
+    enabled: !isLoading,
+    onDeepEntry: openBrowse,
+  });
 
   const maxFeats = calculateMaxArchetypeFeats(1, draft.archetypeType ?? undefined);
   const guidanceGroups = pathData?.level1?.guidance_groups;
@@ -107,7 +118,7 @@ export function ArchetypeFeatsStep() {
 
   const renderGroupSection = (group: PathGuidanceGroup) => (
     <section key={group.id}>
-      <h3 className="font-display text-lg font-semibold text-text-primary">{group.title}</h3>
+      <GuidedSectionTitle>{group.title}</GuidedSectionTitle>
       {group.why ? (
         <p className="mt-1 font-nunito text-sm text-text-secondary">{group.why}</p>
       ) : null}

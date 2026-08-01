@@ -7,6 +7,7 @@
 import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
+import { GuidedSectionTitle } from './guided-section-title';
 
 export function GuidedOverviewSection({
   title,
@@ -24,10 +25,7 @@ export function GuidedOverviewSection({
 }) {
   return (
     <section className={className}>
-      <div className="flex items-center gap-1.5">
-        <div className={o.sectionTitle}>{title}</div>
-        {titleAddon}
-      </div>
+      <GuidedSectionTitle titleAddon={titleAddon}>{title}</GuidedSectionTitle>
       {hint ? <p className={o.sectionHint}>{hint}</p> : null}
       <div className={cn(hint ? 'mt-3' : 'mt-2')}>{children}</div>
     </section>

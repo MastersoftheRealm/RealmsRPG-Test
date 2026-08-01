@@ -50,8 +50,7 @@ export interface EditArchetypeResult {
   mart_abil?: AbilityName;
   mart_prof: number;
   pow_prof: number;
-  creationMode?: 'forge' | 'path';
-  /** Pass `null` to clear when switching to forge. */
+  /** Pass `null` to clear when switching off a path. */
   archetypePathId?: string | null;
 }
 
@@ -142,7 +141,6 @@ export function EditArchetypeModal({
           : undefined,
       mart_prof: martProf,
       pow_prof: powProf,
-      creationMode: 'forge',
       archetypePathId: null,
     });
     onClose();

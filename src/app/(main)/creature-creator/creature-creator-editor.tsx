@@ -26,9 +26,9 @@ import type { SortState } from '@/components/shared/list-header';
 import type { CreatureState } from './creature-creator-types';
 import type { CreatureFeat } from './transformers';
 import {
-  LEVEL_OPTIONS,
   CREATURE_TYPE_OPTIONS,
 } from './creature-creator-constants';
+import { CREATURE_LEVEL_SELECT_OPTIONS } from '@/lib/game';
 import { CREATURE_SIZES } from '@/lib/game/creator-constants';
 import { CreatureCreatorEditorTraitsSection } from './creature-creator-editor-traits-section';
 import { CreatureCreatorEditorLoadoutSections } from './creature-creator-editor-loadout-sections';
@@ -174,7 +174,7 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
               label="Level"
               value={String(creature.level)}
               onChange={(e) => updateCreature({ level: parseFloat(e.target.value) })}
-              options={LEVEL_OPTIONS}
+              options={CREATURE_LEVEL_SELECT_OPTIONS}
             />
             <Select
               label="Type"

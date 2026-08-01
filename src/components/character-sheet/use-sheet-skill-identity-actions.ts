@@ -206,7 +206,6 @@ export function useSheetSkillIdentityActions({
               pow_prof: result.pow_prof,
               martialProficiency: result.mart_prof,
               powerProficiency: result.pow_prof,
-              ...(result.creationMode !== undefined ? { creationMode: result.creationMode } : {}),
               ...(result.archetypePathId !== undefined
                 ? { archetypePathId: result.archetypePathId ?? undefined }
                 : {}),

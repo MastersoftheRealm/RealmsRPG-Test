@@ -14,8 +14,9 @@ import { cn } from '@/lib/utils';
 import { User } from 'lucide-react';
 import { DescriptorChip } from '@/components/ui';
 import { ExpandableImage } from '@/components/shared';
-import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useMergedSpecies, useCodexFeats } from '@/hooks';
+import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
+import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
 import { useGuidedPathData } from './use-guided-path-data';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { AbilityName } from '@/types';
@@ -53,26 +54,29 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
 
   const copy = variant === 'strip' ? GUIDED_CREATOR_COPY.strip : GUIDED_CREATOR_COPY.preview;
 
-  const speciesName = useMemo(() => {
-    if (draft.speciesName) return draft.speciesName;
-    if (!draft.speciesId) return null;
-    const match = allSpecies.find((s) => String(s.id) === String(draft.speciesId));
-    return match?.name ?? null;
-  }, [draft.speciesName, draft.speciesId, allSpecies]);
-
-  const species = useMemo(
-    () => allSpecies.find((s) => String(s.id) === String(draft.speciesId)),
-    [allSpecies, draft.speciesId]
+  const speciesContext = useMemo(
+    () => resolveGuidedSpeciesContext(draft, allSpecies),
+    [draft, allSpecies]
   );
+
+  const speciesName = speciesContext.displayName;
+
+  const species = speciesContext.species;
 
   const skillCount = useMemo(() => {
     const ids = new Set<string>();
-    (species?.skills ?? []).forEach((id) => {
-      if (String(id) !== '0') ids.add(String(id));
-    });
+    if (speciesContext.isMixed) {
+      draft.selectedSpeciesSkillIds.forEach((id) => {
+        if (String(id) !== '0') ids.add(String(id));
+      });
+    } else {
+      (species?.skills ?? []).forEach((id) => {
+        if (String(id) !== '0') ids.add(String(id));
+      });
+    }
     Object.keys(draft.skills ?? {}).forEach((id) => ids.add(String(id)));
     return ids.size;
-  }, [species, draft.skills]);
+  }, [speciesContext.isMixed, species, draft.selectedSpeciesSkillIds, draft.skills]);
 
   const featNames = useMemo(() => {
     const ids = [...draft.archetypeFeatIds, ...draft.characterFeatIds];

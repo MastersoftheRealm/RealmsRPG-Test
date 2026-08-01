@@ -11,7 +11,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Plus, Wand2, Swords, Shield, Users, LogIn, Sparkles } from 'lucide-react';
+import { Plus, Wand2, Swords, Shield, Shirt, Sword, Users, LogIn, Sparkles } from 'lucide-react';
+import { countItemsByArmamentKind } from '@/lib/library/official-item-list';
 import { useAuth } from '@/hooks';
 import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup, Button, useToast } from '@/components/ui';
 import { DeleteConfirmModal, LoginPromptModal, SegmentedControl, LoadingState } from '@/components/shared';
@@ -40,7 +41,15 @@ import { LibraryCreaturesTab } from './LibraryCreaturesTab';
 import { LibraryEnhancedTab } from './LibraryEnhancedTab';
 import { LibraryPublicContent, type LibraryPublicTabId } from './LibraryPublicContent';
 
-type TabId = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'enhanced';
+type TabId =
+  | 'powers'
+  | 'techniques'
+  | 'empowered-techniques'
+  | 'weapons'
+  | 'armor'
+  | 'shields'
+  | 'creatures'
+  | 'enhanced';
 
 interface Tab {
   id: TabId;
@@ -54,7 +63,9 @@ const TABS: Tab[] = [
   { id: 'powers', label: 'Powers', icon: <Wand2 className="w-4 h-4" />, createHref: '/power-creator', createLabel: 'Create Power' },
   { id: 'techniques', label: 'Techniques', icon: <Swords className="w-4 h-4" />, createHref: '/technique-creator', createLabel: 'Create Technique' },
   { id: 'empowered-techniques', label: 'Empowered', icon: <Swords className="w-4 h-4" />, createHref: '/empowered-technique-creator', createLabel: 'Create Empowered Technique' },
-  { id: 'items', label: 'Armaments', icon: <Shield className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Armament' },
+  { id: 'weapons', label: 'Weapons', icon: <Sword className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Weapon' },
+  { id: 'armor', label: 'Armor', icon: <Shirt className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Armor' },
+  { id: 'shields', label: 'Shields', icon: <Shield className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Shield' },
   { id: 'creatures', label: 'Creatures', icon: <Users className="w-4 h-4" />, createHref: '/creature-creator', createLabel: 'Create Creature' },
   { id: 'enhanced', label: 'Enhanced', icon: <Sparkles className="w-4 h-4" />, createHref: '/crafting', createLabel: 'From Crafting' },
 ];
@@ -121,7 +132,9 @@ function LibraryContent() {
     powers: powers.length,
     techniques: techniques.length,
     'empowered-techniques': empoweredTechniques.length,
-    items: items.length,
+    weapons: countItemsByArmamentKind(items, 'weapon'),
+    armor: countItemsByArmamentKind(items, 'armor'),
+    shields: countItemsByArmamentKind(items, 'shield'),
     creatures: creatures.length,
     enhanced: enhancedItems.length,
   };
@@ -130,7 +143,9 @@ function LibraryContent() {
     powers: publicPowers.length,
     techniques: publicTechniques.length,
     'empowered-techniques': publicEmpoweredTechniques.length,
-    items: publicItems.length,
+    weapons: countItemsByArmamentKind(publicItems, 'weapon'),
+    armor: countItemsByArmamentKind(publicItems, 'armor'),
+    shields: countItemsByArmamentKind(publicItems, 'shield'),
     creatures: publicCreatures.length,
     enhanced: 0,
   };
@@ -155,7 +170,9 @@ function LibraryContent() {
         case 'empowered-techniques':
           await deleteEmpoweredTechnique.mutateAsync(deleteConfirm.item.id);
           break;
-        case 'items':
+        case 'weapons':
+        case 'armor':
+        case 'shields':
           await deleteItem.mutateAsync(deleteConfirm.item.id);
           break;
         case 'creatures':
@@ -179,6 +196,14 @@ function LibraryContent() {
   }));
 
   const isPublic = resolvedLibraryMode === 'public';
+
+  const deleteItemType = deleteConfirm
+    ? deleteConfirm.type === 'enhanced'
+      ? 'enhanced item'
+      : deleteConfirm.type === 'armor'
+        ? 'armor'
+        : deleteConfirm.type.slice(0, -1)
+    : '';
 
   if (!authInitialized || libraryMode === null) {
     return (
@@ -258,7 +283,15 @@ function LibraryContent() {
           {displayTab === 'powers' && <LibraryPowersTab onDelete={(item) => setDeleteConfirm({ type: 'powers', item })} />}
           {displayTab === 'techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'techniques', item })} mode="standard" />}
           {displayTab === 'empowered-techniques' && <LibraryTechniquesTab onDelete={(item) => setDeleteConfirm({ type: 'empowered-techniques', item })} mode="empowered" />}
-          {displayTab === 'items' && <LibraryItemsTab onDelete={(item) => setDeleteConfirm({ type: 'items', item })} />}
+          {displayTab === 'weapons' && (
+            <LibraryItemsTab armamentKind="weapon" onDelete={(item) => setDeleteConfirm({ type: 'weapons', item })} />
+          )}
+          {displayTab === 'armor' && (
+            <LibraryItemsTab armamentKind="armor" onDelete={(item) => setDeleteConfirm({ type: 'armor', item })} />
+          )}
+          {displayTab === 'shields' && (
+            <LibraryItemsTab armamentKind="shield" onDelete={(item) => setDeleteConfirm({ type: 'shields', item })} />
+          )}
           {displayTab === 'creatures' && <LibraryCreaturesTab onDelete={(item) => setDeleteConfirm({ type: 'creatures', item })} />}
           {displayTab === 'enhanced' && <LibraryEnhancedTab onDelete={(item) => setDeleteConfirm({ type: 'enhanced', item })} />}
         </>
@@ -269,7 +302,7 @@ function LibraryContent() {
         <DeleteConfirmModal
           isOpen={true}
           itemName={deleteConfirm.item.name}
-          itemType={deleteConfirm.type === 'enhanced' ? 'enhanced item' : deleteConfirm.type.slice(0, -1)}
+          itemType={deleteItemType}
           isDeleting={isDeleting}
           onConfirm={handleDelete}
           onClose={() => setDeleteConfirm(null)}

@@ -2,6 +2,8 @@
  * Shared types/labels for My Library entity tabs (ADR-0001).
  */
 
+import { ARMAMENT_LABELS_BY_KIND } from '@/lib/library/armament-library-labels';
+
 /** Labels for search/sort/list chrome only (`enableSync={false}`). */
 export interface LibraryEntityTabBasicLabels {
   searchPlaceholder: string;
@@ -21,19 +23,26 @@ export interface LibraryEntityTabLabels extends LibraryEntityTabBasicLabels {
   syncAllRemovedRefsHint: string;
 }
 
-export const ARMAMENT_LIBRARY_LABELS: LibraryEntityTabLabels = {
-  entitySingular: 'armament',
-  entityPlural: 'armaments',
-  searchPlaceholder: 'Search armaments...',
-  loadErrorMessage: 'Failed to load armaments',
-  emptyTitle: 'No armaments yet',
-  emptyMessage: 'Create your first weapon, armor, or equipment to see it here.',
-  createHref: '/item-creator',
-  createLabel: 'Create Armament',
-  searchEmptyTitle: 'No armaments match your search.',
-  duplicateTitle: 'Duplicate armament?',
-  syncAllRemovedRefsHint: 'Properties that no longer exist in the codex may be removed.',
-};
+const ARMAMENT_SYNC_HINT = 'Properties that no longer exist in the codex may be removed.';
+
+function armamentTabLabels(
+  kind: keyof typeof ARMAMENT_LABELS_BY_KIND,
+  createLabel: string,
+  duplicateTitle: string
+): LibraryEntityTabLabels {
+  const base = ARMAMENT_LABELS_BY_KIND[kind];
+  return {
+    ...base,
+    createHref: '/item-creator',
+    createLabel,
+    duplicateTitle,
+    syncAllRemovedRefsHint: ARMAMENT_SYNC_HINT,
+  };
+}
+
+export const WEAPON_LIBRARY_LABELS = armamentTabLabels('weapon', 'Create Weapon', 'Duplicate weapon?');
+export const ARMOR_LIBRARY_LABELS = armamentTabLabels('armor', 'Create Armor', 'Duplicate armor?');
+export const SHIELD_LIBRARY_LABELS = armamentTabLabels('shield', 'Create Shield', 'Duplicate shield?');
 
 export const POWER_LIBRARY_LABELS: LibraryEntityTabLabels = {
   entitySingular: 'power',

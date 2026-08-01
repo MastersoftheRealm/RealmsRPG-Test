@@ -16,6 +16,8 @@ import {
   useUserTechniques,
 } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
+import { CREATURE_STAT_BLOCK_GRID } from '@/lib/library/official-creature-list';
+import { formatCreatureLevel, formatCreatureLevelLabel } from '@/lib/game';
 import { formatListCellLabel } from '@/lib/utils';
 import type { Abilities } from '@/types';
 
@@ -47,6 +49,7 @@ export function CreatureStatBlock({
   onEdit,
   onDelete,
   onDuplicate,
+  onAddToLibrary,
   rightSlot,
   warningMessage,
   badges,
@@ -79,7 +82,7 @@ export function CreatureStatBlock({
   const maxHpDisplay = calculateCreatureMaxHealth(level, abilitiesRecord, hpAlloc);
   const maxEnDisplay = calculateCreatureMaxEnergy(level, abilitiesRecord, enAlloc);
   const archetype = formatArchetype(creature.powerProficiency, creature.martialProficiency);
-  const subline = `Level ${creature.level ?? 1} ${creature.size ? formatListCellLabel(creature.size) : 'Medium'} ${formatListCellLabel(creature.type ?? 'creature')}`;
+  const subline = `${formatCreatureLevelLabel(creature.level ?? 1)} ${creature.size ? formatListCellLabel(creature.size) : 'Medium'} ${formatListCellLabel(creature.type ?? 'creature')}`;
 
   const highestAbility = useMemo(() => {
     const abilities = creature.abilities ?? {};
@@ -173,7 +176,7 @@ export function CreatureStatBlock({
   ].filter((line): line is string => Boolean(line));
 
   const headerColumns: ColumnValue[] = [
-    { key: 'level', value: creature.level ?? 1, align: 'center' },
+    { key: 'level', value: formatCreatureLevel(creature.level ?? 1), align: 'center' },
     { key: 'size', value: formatListCellLabel(creature.size), align: 'center' },
     { key: 'type', value: formatListCellLabel(creature.type), align: 'center' },
     {
@@ -211,10 +214,11 @@ export function CreatureStatBlock({
       description={subline}
       thumbnail={listThumbnail}
       columns={headerColumns}
-      gridColumns="1.8fr 0.6fr 0.8fr 1fr 1fr 0.6fr 0.6fr"
+      gridColumns={CREATURE_STAT_BLOCK_GRID}
       onEdit={showActions ? onEdit : undefined}
       onDelete={showActions ? onDelete : undefined}
       onDuplicate={showActions ? onDuplicate : undefined}
+      onAddToLibrary={onAddToLibrary}
       rightSlot={rightSlot}
       warningMessage={warningMessage}
       badges={badges}

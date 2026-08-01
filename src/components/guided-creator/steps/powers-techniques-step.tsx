@@ -34,13 +34,14 @@ import { combineGuidedTpBudgets } from '@/lib/guided-creator/loadout-tp';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import { ARCHETYPE_CONFIGS } from '@/lib/game/constants';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 
 const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
 
 type L2ModalKind = 'regular' | 'innate' | null;
 
 export function PowersTechniquesStep() {
-  const { draft, updateDraft } = useGuidedCreatorStore();
+  const { draft, updateDraft, navigationIntent, entryNonce } = useGuidedCreatorStore();
   const { pathData } = useGuidedPathData();
   const copy = stepCopy(draft.archetypeType);
   const isTechniques = copy.kind === 'techniques';
@@ -69,6 +70,18 @@ export function PowersTechniquesStep() {
 
   const isLoading = isTechniques ? techniquesLoading : powersLoading;
   const libraryItems = isTechniques ? officialTechniques : officialPowers;
+
+  const openDeepBrowse = useCallback(() => {
+    setL2Modal(showInnateTrack ? 'innate' : 'regular');
+  }, [showInnateTrack]);
+  useGuidedDeepEntryOnArrival({
+    draft,
+    navigationIntent,
+    entryNonce,
+    enabled: !isLoading,
+    onDeepEntry: openDeepBrowse,
+  });
+
   const lookup = useMemo(() => buildLookup(libraryItems), [libraryItems]);
 
   const innateProgression = useMemo(() => {

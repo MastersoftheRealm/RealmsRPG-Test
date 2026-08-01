@@ -13,6 +13,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/shared';
+import { formatCreatureLevel } from '@/lib/game';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
@@ -74,7 +75,7 @@ export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'p
                 columns={[
                   { key: 'Pts', value: String(f.points ?? '-') },
                   { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
-                  { key: 'Req. Lvl', value: f.lvl_req != null ? String(f.lvl_req) : '-' },
+                  { key: 'Req. Lvl', value: f.lvl_req != null ? formatCreatureLevel(f.lvl_req) : '-' },
                 ]}
               />
       ))}

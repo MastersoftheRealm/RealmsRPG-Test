@@ -16,6 +16,7 @@ import { InfoTippy } from '@/components/shared';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { cn } from '@/lib/utils';
 import { GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
+import { GuidedSectionTitle } from './guided-section-title';
 
 export interface GuidedEntityDetailSection {
   id: string;
@@ -122,9 +123,9 @@ export function GuidedEntityDetailModal({
           CollapsibleSection headingLevel={3} without skipping levels.
         */}
         <section aria-labelledby="guided-entity-overview-heading" className="space-y-3">
-          <div id="guided-entity-overview-heading" className={o.sectionTitle}>
+          <GuidedSectionTitle as="div" id="guided-entity-overview-heading">
             {copy.overviewHeading}
-          </div>
+          </GuidedSectionTitle>
           <div className={cn('space-y-4 text-base leading-relaxed', o.body)}>{overview}</div>
         </section>
 

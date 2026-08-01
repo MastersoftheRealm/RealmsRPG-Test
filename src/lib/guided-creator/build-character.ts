@@ -23,6 +23,8 @@ import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations'
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
 import type { Species } from '@/hooks';
+import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
+import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
 import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
@@ -56,6 +58,9 @@ export interface BuildGuidedCharacterContext {
   archetype?: Archetype;
   pathData?: ArchetypePathData;
   species?: Species | null;
+  /** Mixed species parents for save enrichment. */
+  speciesA?: Species | null;
+  speciesB?: Species | null;
   codexSkills?: Array<{ id: string | number; name?: string; ability?: string; category?: string }>;
   /** Codex feats — resolve archetype/character feat display names on save. */
   codexFeats?: Array<{ id?: string | number; name?: string }>;
@@ -178,6 +183,11 @@ export function buildGuidedCharacterPayload(
   );
   const maxEnergy = calculateMaxEnergy(enAlloc, powAbil || martAbil, abilities, level);
 
+  const mixedPhysical =
+    draft.speciesMixed && ctx.speciesA && ctx.speciesB
+      ? averageMixedPhysical(ctx.speciesA, ctx.speciesB)
+      : null;
+
   // Species traits are derived from the species codex on the sheet — do not
   // persist them into selectedTraits (that caused duplicate trait rows).
   // Keep choice resolutions so choice-trait options still apply on load.
@@ -190,11 +200,36 @@ export function buildGuidedCharacterPayload(
         selectedFlaw: draft.selectedFlawId,
         selectedCharacteristic: draft.selectedCharacteristicId,
         selectedSpeciesTraitChoices: draft.selectedSpeciesTraitChoices,
+        ...(draft.speciesMixed && draft.mixedSpeciesIds
+          ? {
+              mixed: true as const,
+              speciesIds: draft.mixedSpeciesIds,
+              ...(draft.mixedSpeciesNames ? { speciesNames: draft.mixedSpeciesNames } : {}),
+              ...(draft.selectedSpeciesTraits.length >= 2
+                ? {
+                    selectedSpeciesTraits: [
+                      draft.selectedSpeciesTraits[0],
+                      draft.selectedSpeciesTraits[1],
+                    ] as [string, string],
+                  }
+                : {}),
+              ...(draft.selectedFlawSpeciesId
+                ? { selectedFlawSpeciesId: draft.selectedFlawSpeciesId }
+                : {}),
+              ...(mixedPhysical ? { mixedPhysical } : {}),
+              ...(draft.selectedSpeciesSkillIds.length > 0
+                ? { selectedSpeciesSkillIds: draft.selectedSpeciesSkillIds }
+                : {}),
+            }
+          : {}),
         ...(draft.selectedSize ? { selectedSize: draft.selectedSize } : {}),
       }
     : undefined;
 
-  const speciesSkillIds = (ctx.species?.skills ?? []).map(String);
+  const speciesSkillIds =
+    draft.speciesMixed && draft.selectedSpeciesSkillIds.length > 0
+      ? draft.selectedSpeciesSkillIds.map(String)
+      : (ctx.species?.skills ?? []).map(String);
 
   const activePathSkillIds = (ctx.pathData?.level1?.skills ?? [])
     .map(String)
@@ -320,19 +355,17 @@ export function buildGuidedCharacterPayload(
   // DESIGN_INTENT: same libraryTabVisibility prefs as sheet eye toggle (TASK-501).
   const libraryTabVisibility = defaultLibraryTabVisibilityForArchetype(type);
 
+  const archetypePayload = ctx.archetype
+    ? { id: String(ctx.archetype.id), type }
+    : { id: type, type };
+
   return {
     name: draft.name.trim() || 'Unnamed Character',
     level,
     status: 'complete',
     abilities,
-    creationMode: 'path',
-    ...(draft.archetypePathId && { archetypePathId: draft.archetypePathId }),
-    ...(ctx.archetype && {
-      archetype: {
-        id: String(ctx.archetype.id),
-        type,
-      },
-    }),
+    ...(draft.archetypePathId ? { archetypePathId: draft.archetypePathId } : {}),
+    archetype: archetypePayload,
     ...(powAbil && { pow_abil: powAbil }),
     ...(martAbil && { mart_abil: martAbil }),
     mart_prof: type === 'martial' ? 2 : type === 'powered-martial' ? 1 : 0,

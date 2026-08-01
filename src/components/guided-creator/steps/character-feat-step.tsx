@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 import { EmptyState, Spinner } from '@/components/ui';
 import { GuidedLayerNav } from '@/components/shared';
 import { useCodexFeats } from '@/hooks';
@@ -19,16 +19,26 @@ import { getFeatRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 import { filterFeatGuidanceGroups } from '@/lib/game/archetype-path';
 import { EMPTY_GUIDANCE_GROUPS } from '@/lib/empty';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.characterFeat;
 
 export function CharacterFeatStep() {
-  const { draft, updateDraft } = useGuidedCreatorStore();
+  const { draft, updateDraft, navigationIntent, entryNonce } = useGuidedCreatorStore();
   const { pathData } = useGuidedPathData();
   const { data: feats = [], isLoading } = useCodexFeats();
   const [browseOpen, setBrowseOpen] = useState(false);
+
+  const openBrowse = useCallback(() => setBrowseOpen(true), []);
+  useGuidedDeepEntryOnArrival({
+    draft,
+    navigationIntent,
+    entryNonce,
+    enabled: !isLoading,
+    onDeepEntry: openBrowse,
+  });
 
   const guidanceGroups = pathData?.level1?.guidance_groups;
   const characterFeatGroups = useMemo(

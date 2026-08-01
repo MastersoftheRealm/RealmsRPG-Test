@@ -1,12 +1,30 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-01 (Unified character creator L1–L3 plan)
+Last updated: 2026-08-01 (Guided Species L2 + mixed Ancestry)
+
+**Raw Feedback Log — 2026-08-01 (Guided Species L2 — mixed + Create Species)**
+- Context: Guided creator Species step product overview implementation
+- Feedback: L2 = all species + Mixed Species card (same as Advanced `MixedSpeciesModal`) + L3 footer **Create Species** opens species creator in new tab. Mixed species affects Ancestry/skills downstream.
+- Expected: L2 catalog + mixed pick + external species creator hatch; Ancestry micro-flow supports mixed parents (traits, choose-2 skills, flaw-scoped bonus trait).
+- Disposition: **TASK-641** done — see archive. verification_status pending-qa (DEV-V-013 T078).
+
+**Raw Feedback Log — 2026-08-01 (Chooser Legacy + custom deep catalogs + layer button parity)**
+- Context: Character creation chooser; cohesive creator custom entry; GuidedLayerNav vs footer buttons
+- Feedback: (1) Temporarily add **Legacy** chooser card → `/characters/new/advanced`; **Custom** → guided Path L3. (2) Custom entry should land on deeper catalog faces on later steps (e.g. all species, not starters only); layer nav labels direction-neutral (**See starter species**, not “Back to…”). (3) L1/L2/L3 expand/collapse buttons should match footer Continue/Back chrome so deeper does not feel like a dull downgrade.
+- Expected: `creatorEntryMode` session flag (not saved on character); deep landing per step; shared primary/outline styles via `GuidedLayerNav` + `guided-nav-button-styles`; product overview chooser table updated.
+- Disposition: **TASK-640** done — see archive. verification_status pending-qa (DEV-V-013 T075–T077).
+
+**Raw Feedback Log — 2026-08-01 (Do not persist creator type / creationMode)**
+- Context: TASK-638 Path L3 custom archetype + cohesive creator policy
+- Feedback: Do not persist a “creator type” or forge vs path flag. Only persist `archetypePathId` when the player picked a path (level-up / sheet recommendations). Custom-archetype builds use normal archetype type + ability fields with no path id.
+- Expected: Save payloads and sheet path logic use `archetypePathId` only; no `creationMode` in `clean-for-save` or guided draft; Advanced may keep in-session UX until retired.
+- Disposition: Implemented in `clean-for-save`, `build-character`, guided store migration v8, sheet modals/level-up, `FEATURE_INDEX`, `REALMS_PRODUCT_OVERVIEW` §5.0. `Character.creationMode` deprecated on type only. Pending-qa with TASK-638 (DEV-V-013).
 
 **Raw Feedback Log — 2026-08-01 (Unified character creator L1–L2–L3)**
 - Context: Character creation entry + guided creator layers; product overview three-layer model; parallel Advanced/Custom creator to phase out
 - Feedback: Guided creator is mostly L1–L2 today; L3 should be the full customizable options currently represented by the parallel Custom/Advanced creator. Chooser buttons **Guided** and **Custom** both enter the same creator (today’s guided shell): Guided → L1 entry; Custom → L3 entry. Navigate between layers with same-style, same-place buttons (`GuidedLayerNav` pattern). L3 entry lands on the archetype step: pick Martial / Power / Powered-Martial, then power/martial ability(ies), with InfoTippy along the way. Escape hatch from L3: view archetype paths → L1 (path browse; Path chapter has no distinct L2 — L1 and “L2” are the same path cards). On L1 Path step, add bottom entry **Custom Archetype** (or similar) → L3. Align with `REALMS_PRODUCT_OVERVIEW.md` three-layer model; supersede “keep two parallel creators forever.”
 - Expected: One character-creator shell with catalog layers; Advanced/Custom phased out after integration; Path L1↔L3 hatches; chooser dual entry into the same creator. Not every step exposes all three layers — some are L1-only, L2-only, or L3-only by mechanics or design.
-- Disposition: Product overview revised §3 / §5.0 / §5.1. **TASK-638 done** — Path L1↔L3 custom archetype + chooser Custom entry (pending-qa DEV-V-013 T072–T074). Downstream forge chapters still open (one screen at a time).
+- Disposition: Product overview revised §3 / §5.0 / §5.1. **TASK-638 done** — Path L1↔L3 custom archetype + chooser Custom entry (pending-qa DEV-V-013 T072–T074). **TASK-640 done** — Legacy chooser + custom deep catalogs + layer nav chrome (pending-qa T075–T077). Downstream forge chapters still open.
 
 **Raw Feedback Log — 2026-08-01 (Creature level fraction display)**
 - Context: Sitewide creature level presentation

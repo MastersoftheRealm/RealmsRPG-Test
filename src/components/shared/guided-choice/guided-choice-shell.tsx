@@ -48,7 +48,7 @@ export interface GuidedChoiceShellProps {
   children?: ReactNode;
   /** Advance one layer (1 → 2 → 3). */
   onExpandLayer?: () => void;
-  /** Return to Layer 1 ("Back to recommendations"). */
+  /** Return to Layer 1 ("See recommendations"). */
   onCollapseLayer?: () => void;
   expandLabel?: string;
   collapseLabel?: string;
@@ -86,7 +86,7 @@ export function GuidedChoiceShell({
   onExpandLayer,
   onCollapseLayer,
   expandLabel,
-  collapseLabel = 'Back to recommendations',
+  collapseLabel = 'See recommendations',
   canExpand = true,
   primaryAction,
   className,

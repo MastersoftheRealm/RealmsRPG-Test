@@ -29,16 +29,16 @@ For **every** `GridListRow` (and entity-library-section) list backed by codex/DB
 
 > If a field is meaningful to the player and stored on the item, it must appear in **either** the collapsed row columns **or** descriptor chips in the expanded view — not nowhere.
 
-Apply per entity type (examples):
+**SoT (TASK-629):** `src/lib/glr/required-facts-registry.ts` — per-surface required fact ids + column/chip placement. CI: `required-facts-registry.test.ts`. Formatting: `lib/detail-option/compact-facts.ts`.
+
+Historical examples (see registry for live bindings — do not edit this table without updating CI):
 
 | Entity | Collapsed columns (preferred) | Expanded descriptors (if not in columns) |
 |--------|------------------------------|------------------------------------------|
-| Power | Action, Damage, Area, Duration; **play sheet:** Energy header + far-right spend `rightSlot` only (never a static Energy *value* column). **Browse/stat-block:** Energy column OK when there is no spend button | Range, TP total, part-level energy not in part chips |
-| Technique | **Play sheet** (`includeActionColumn`): Action, Weapon, **TP** + Energy header over spend `rightSlot`. **Browse:** Action/Energy/Weapon (or Energy/Weapon/TP) when no spend button | Range, damage breakdown; parts/properties as expandable chips with `TP: N` (not descriptor + InfoTippy) |
-| Weapon/Armor | DR, crit, type, etc. | Sheet parts/properties: expandable with `TP: N`. Guided L1/L2 metadata may stay descriptor + tip |
-| Feat | Req level, Category, Ability, Uses, Recovery | Tags, type (character/archetype/state), requirements **only if not already in columns** |
-| Trait | Description, Uses, Recovery | Trait kind (ancestry/flaw/characteristic) **only if not in overview/header** |
-| Species part/property | As codex defines | Same rule |
+| Power | Action, Damage, Area, Duration; **play sheet:** Energy via spend `rightSlot` only | Range (add-modal), TP on part chips |
+| Technique | **Play sheet:** Action, Weapon + Energy `rightSlot`. **Browse:** Energy/Weapon/TP | Range, damage breakdown |
+| Weapon/Armor/Shield | Library official: kind-specific (see `ARMAMENT_GLR_SURFACE`) | Named properties as expandable chips |
+| Feat | Req level, Category, Ability, Uses, Recovery | Type, requirements, feat levels, Tags last |
 
 ### 2. No redundancy
 

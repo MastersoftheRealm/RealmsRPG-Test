@@ -138,7 +138,7 @@ export function LevelUpModal({
   const showPathGuidance =
     !isLevelDown &&
     isLevelChange &&
-    (pathCharacter.creationMode === 'path' || Boolean(pathCharacter.archetypePathId)) &&
+    (pathCharacter.archetypePathId?.trim()) &&
     pathCharacter.archetype;
 
   return (

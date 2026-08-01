@@ -495,7 +495,6 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           abilities,
           ...(archetype && { archetype }),
           ...(draft.archetypePathId && { archetypePathId: draft.archetypePathId }),
-          ...(draft.creationMode && { creationMode: draft.creationMode }),
           ...(draft.pow_abil && { pow_abil: draft.pow_abil }),
           ...(draft.mart_abil && { mart_abil: draft.mart_abil }),
           // Proficiency allocation - set based on archetype type

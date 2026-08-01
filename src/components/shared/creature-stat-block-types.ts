@@ -96,6 +96,7 @@ export interface CreatureStatBlockProps {
   onEdit?: () => void;
   onDelete?: () => void;
   onDuplicate?: () => void;
+  onAddToLibrary?: () => void;
   rightSlot?: React.ReactNode;
   warningMessage?: string;
   badges?: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;

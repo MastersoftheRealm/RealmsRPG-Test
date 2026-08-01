@@ -7,6 +7,11 @@
  * Step files import from this module — do not duplicate strings in components.
  */
 
+import {
+  formatPathPrimaryAbilityLabel,
+  formatPathSecondaryAbilityLabel,
+} from './path-ability-copy';
+
 export const GUIDED_CREATOR_COPY = {
   chooser: {
     title: 'Create a New Character',
@@ -26,11 +31,21 @@ export const GUIDED_CREATOR_COPY = {
       },
       custom: {
         label: 'Custom',
-        tagline: 'The full builder when you want every option up front.',
+        tagline: 'Start with your own archetype, then build chapter by chapter.',
         bullets: [
-          'All catalogs available while you build',
-          'Forge your own archetype, or fine-tune every pick',
+          'Opens the cohesive creator on custom archetype (Layer 3)',
+          'Forge type and abilities, then species, feats, and loadout',
           'Ideal if you already know the system or want full control',
+        ],
+      },
+      /** Temporary chooser peer until Advanced is fully absorbed (REALMS §5.0). */
+      legacy: {
+        label: 'Legacy',
+        tagline: 'The classic multi-step creator while we finish the unified flow.',
+        bullets: [
+          'Original tabbed wizard with every step up front',
+          'Forge your own archetype in the classic layout',
+          'Use if you prefer the previous creator experience',
         ],
       },
     },
@@ -61,9 +76,9 @@ export const GUIDED_CREATOR_COPY = {
     defaultSubtitle: 'Choices appear here as you go',
   },
 
-  /** Layer 1 ↔ 2/3 navigation — shared labels (REALMS §3). Expand/collapse always below content. */
+  /** Layer 1 ↔ 2/3 navigation — shared labels (REALMS §3). Direction-neutral (works when entered deep or navigated). */
   layerNav: {
-    backToRecommendations: 'Back to recommendations',
+    seeRecommendations: 'See recommendations',
   },
 
   /**
@@ -102,6 +117,22 @@ export const GUIDED_CREATOR_COPY = {
       title: 'Choose your Archetype Path',
       description:
         'Your Archetype Path suggests Abilities, Skills, Feats, and Loadout options. Then you choose among those options.',
+      /** L1 → L3 hatch (GuidedLayerNav expand). */
+      customArchetype: 'Custom Archetype',
+      /** L3 face */
+      customTitle: 'Custom Archetype',
+      customDescription:
+        'Pick Power, Martial, or Powered-Martial, then the ability that drives your build. Full catalogs open as you continue.',
+      /** L3 → L1 hatch (GuidedLayerNav collapse). */
+      viewArchetypePaths: 'View archetype paths',
+      chooseTypeHeading: 'Choose your archetype',
+      chooseAbilityHeading: {
+        power: 'Choose your Power Ability',
+        martial: 'Choose your Martial Ability',
+        'powered-martial': 'Choose your Power and Martial Abilities',
+      },
+      powerAbilityLabel: 'Power Ability',
+      martialAbilityLabel: 'Martial Ability',
       /** Section headings — Power / Powered-Martial / Martial (InfoTippy on each title). */
       groupTitles: {
         power: 'Power Paths',
@@ -114,8 +145,8 @@ export const GUIDED_CREATOR_COPY = {
         noDescription: 'No description is available for this path yet.',
         loadingCatalogs: 'Loading path options…',
         pathAbilitiesTitle: 'Path Abilities',
-        primaryAbility: (label: string) => `Primary Ability ${label}`,
-        secondaryAbility: (label: string) => `Secondary Ability ${label}`,
+        primaryAbility: formatPathPrimaryAbilityLabel,
+        secondaryAbility: formatPathSecondaryAbilityLabel,
         recommendedAbilitiesTitle: 'Recommended Abilities',
         weaponsAndArmorTitle: 'Weapons and Armor',
         /** Path-type flavor + live Armament Proficiency number from getArmamentMax. */
@@ -158,8 +189,12 @@ export const GUIDED_CREATOR_COPY = {
     species: {
       title: 'Choose your species',
       description: 'Any species works with any path. Pick the one that excites you.',
-      showAll: 'Show all species',
-      backToStarters: 'Back to starter species',
+      showAll: 'See all species',
+      seeStarters: 'See starter species',
+      /** L3 hatch — opens Species Creator in a new tab (REALMS §5.2). */
+      createSpecies: 'Create Species',
+      mixedSpeciesTitle: 'Mixed Species',
+      mixedSpeciesDescription: 'Combine two species into one character.',
       emptyTitle: 'No species available',
       emptyDescription: 'Check back later.',
       detailModalHint: 'Preview this species, then Select if it fits your character.',
@@ -219,6 +254,14 @@ export const GUIDED_CREATOR_COPY = {
           'Some species can be more than one size. Pick the size that fits how you imagine this character.',
         sizeChoiceRequired: 'Select a size to continue.',
       },
+      mixedOverview: {
+        title: (nameA: string, nameB: string) => `Mixed: ${nameA} / ${nameB}`,
+        description:
+          'You combine two species. Next, you will pick traits, skills, and ancestry options from both.',
+        choicesAheadTitle: 'Choices ahead',
+        choicesAheadHint:
+          'You will choose one species trait from each parent, your species skills (when needed), a characteristic, ancestry traits, and an optional flaw.',
+      },
     },
     abilities: {
       title: 'Your Abilities',
@@ -264,7 +307,7 @@ export const GUIDED_CREATOR_COPY = {
       seeMore: 'See more Feats',
       emptyTitle: 'No Feat recommendations',
       emptyDescription:
-        'This path does not list Archetype Feats yet. Use See more Feats, or pick another path.',
+        'No path-specific Archetype Feats to suggest. Use See more Feats to browse the full catalog.',
     },
     characterFeat: {
       title: 'Who you are beyond the fight',
@@ -330,7 +373,7 @@ export const GUIDED_CREATOR_COPY = {
         },
         skipArmorLabel: 'Fight unarmored',
         seeMoreLabel: 'See more options',
-        backToPhase: 'Back to recommendations',
+        seeRecommendations: 'See recommendations',
         continueWeapon: 'Continue to armor →',
         continueToGear: 'Continue to Equipment →',
         currencyLabel: 'Currency',

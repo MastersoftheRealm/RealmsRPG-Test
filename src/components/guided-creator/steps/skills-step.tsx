@@ -9,6 +9,7 @@ import React, { useMemo, useCallback, useState } from 'react';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedSkillsPanel } from '../guided-skills-panel';
+import { GuidedSectionTitle } from '../guided-section-title';
 import { useMergedSpecies, useCodexSkills, useGameRules } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
@@ -25,6 +26,9 @@ import {
   guidedSuggestionsToBadgeMap,
 } from '@/lib/guided-creator/guided-skill-recommendations';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
+import { buildMixedSpeciesSkillOptions } from '@/lib/ancestry/ancestry-selection';
+import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 import type { Skill } from '@/hooks';
 
 import { EMPTY_NUMBER_RECORD, EMPTY_STRING_ARRAY } from '@/lib/empty';
@@ -32,7 +36,7 @@ import { EMPTY_NUMBER_RECORD, EMPTY_STRING_ARRAY } from '@/lib/empty';
 const stepCopy = GUIDED_CREATOR_COPY.steps.skills;
 
 export function SkillsStep() {
-  const { draft, updateDraft, nextSubStep } = useGuidedCreatorStore();
+  const { draft, updateDraft, nextSubStep, navigationIntent, entryNonce } = useGuidedCreatorStore();
   const { pathData, archetype } = useGuidedPathData();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
@@ -40,15 +44,33 @@ export function SkillsStep() {
   const skillRules = resolveSkillAllocationRules(rules);
   const [browseOpen, setBrowseOpen] = useState(false);
 
-  const species = useMemo(
-    () => allSpecies.find((s) => String(s.id) === String(draft.speciesId)),
-    [allSpecies, draft.speciesId]
+  const openBrowse = useCallback(() => setBrowseOpen(true), []);
+  useGuidedDeepEntryOnArrival({
+    draft,
+    navigationIntent,
+    entryNonce,
+    onDeepEntry: openBrowse,
+  });
+
+  const speciesContext = useMemo(
+    () => resolveGuidedSpeciesContext(draft, allSpecies),
+    [draft, allSpecies]
   );
 
-  const speciesSkillIds = useMemo(
-    () => new Set((species?.skills ?? []).map(String)),
-    [species]
-  );
+  const speciesSkillIds = useMemo(() => {
+    if (speciesContext.isMixed && speciesContext.speciesA && speciesContext.speciesB) {
+      if (draft.selectedSpeciesSkillIds.length > 0) {
+        return new Set(draft.selectedSpeciesSkillIds.map(String));
+      }
+      const options = buildMixedSpeciesSkillOptions(
+        speciesContext.speciesA,
+        speciesContext.speciesB,
+        codexSkills
+      );
+      return new Set(options.map((o) => o.id));
+    }
+    return new Set((speciesContext.species?.skills ?? []).map(String));
+  }, [speciesContext, draft.selectedSpeciesSkillIds, codexSkills]);
 
   const pathSkillIds = useMemo(
     () => new Set((pathData?.level1?.skills ?? []).map(String)),
@@ -263,13 +285,13 @@ export function SkillsStep() {
 
       {skillSuggestions.length > 0 && (
         <section className="mt-8">
-          <h3 className="font-display text-lg font-semibold text-text-primary">
+          <GuidedSectionTitle>
             {hasPathDeclinedSuggestions && !hasAbilitySuggestions
               ? stepCopy.pathSkillSuggestionsTitle(archetype?.name ?? 'your path')
               : hasPathDeclinedSuggestions && hasAbilitySuggestions
                 ? stepCopy.mixedSkillSuggestionsTitle
                 : stepCopy.suggestedSkillsTitle}
-          </h3>
+          </GuidedSectionTitle>
           {hasPathDeclinedSuggestions && (
             <p className="mt-1 font-nunito text-sm text-text-secondary">
               {hasAbilitySuggestions

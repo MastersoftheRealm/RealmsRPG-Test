@@ -12,6 +12,7 @@ import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { GuidedSectionTitle } from './guided-section-title';
 
 const copy = GUIDED_CREATOR_COPY.steps.reveal.healthEnergy;
 
@@ -107,7 +108,7 @@ export function GuidedHealthEnergySection() {
     <div className="rounded-card border border-border-light bg-surface p-5 shadow-sm">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 className="font-display text-lg font-bold text-text-primary">{copy.title}</h3>
+          <GuidedSectionTitle>{copy.title}</GuidedSectionTitle>
           <p className="mt-1 font-nunito text-sm text-text-secondary">{copy.description}</p>
         </div>
         <Button

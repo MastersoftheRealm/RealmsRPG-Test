@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-07-24
+Generated: 2026-08-01
 
 ## `src/components/shared/index.ts`
 
@@ -19,6 +19,8 @@ Generated: 2026-07-24
 - ChoiceTraitOptionListPicker
 - CodexBrowseListShell
 - ConfirmActionModal
+- CreatureLibraryStatBlockRow
+- CreatureLibraryStatBlockRows
 - CreatureStatBlock
 - DecrementButton
 - DeleteConfirmModal
@@ -46,6 +48,7 @@ Generated: 2026-07-24
 - IncrementButton
 - InfoTippy
 - InnateToggle
+- LibraryAddToLibraryButton
 - LibraryCollapsibleSection
 - ListEmptyState
 - ListHeader
@@ -96,6 +99,8 @@ Generated: 2026-07-24
 - THUMBNAIL_HEADER_COLUMN_KEY
 - type AbilityRequirement
 - type AbilityScoreGridProps
+- type CreatureLibraryStatBlockRowProps
+- type CreatureLibraryStatBlockRowsProps
 - type DescriptorChipWithTipProps
 - type EditState
 - type LoadoutBudgetBarProps

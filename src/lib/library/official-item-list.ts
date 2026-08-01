@@ -1,5 +1,7 @@
 /**
  * Shared official armament list helpers (Library Realms tab + Admin public library).
+ *
+ * GLR required-facts registry surfaces: `ARMAMENT_GLR_SURFACE` in `@/lib/glr`.
  */
 
 import type { ChipData } from '@/components/shared';

@@ -153,7 +153,7 @@ export function SpeciesStep() {
       {pathMode && showFullCatalog && hasStarters && (
         <div className="mb-4">
           <Button variant="link" onClick={() => collapseLayer('species')} className="min-h-11 px-0">
-            ← Back to starter species
+            See starter species
           </Button>
         </div>
       )}

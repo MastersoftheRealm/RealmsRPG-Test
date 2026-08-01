@@ -83,7 +83,6 @@ export type PathSwitchEditResult = {
   mart_abil?: AbilityName;
   mart_prof: number;
   pow_prof: number;
-  creationMode: 'path';
   archetypePathId: string;
 };
 
@@ -114,7 +113,6 @@ export function buildPathSwitchResult(
     mart_abil: martAbil,
     mart_prof,
     pow_prof,
-    creationMode: 'path',
     archetypePathId: path.id,
   };
 
@@ -122,7 +120,6 @@ export function buildPathSwitchResult(
     {
       ...character,
       ...base,
-      creationMode: 'path',
       archetypePathId: path.id,
     },
     level,

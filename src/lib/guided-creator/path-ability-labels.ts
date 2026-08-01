@@ -12,7 +12,20 @@
  *   score take the higher of the two.
  */
 
+import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
+import {
+  formatPathPrimaryAbilityLabel,
+  formatPathSecondaryAbilityLabel,
+} from '@/lib/constants/copy/path-ability-copy';
 import type { AbilityName, Archetype } from '@/types';
+
+export type PathAbilityChipRole = 'primary' | 'secondary';
+
+export interface PathAbilityChipLabel {
+  key: string;
+  label: string;
+  role: PathAbilityChipRole;
+}
 
 export interface PathAbilityLabels {
   /** Archetype abilities shown as Primary Ability chips (1, or 2 for powered-martial). */
@@ -84,4 +97,28 @@ export function resolvePathAbilityLabels(path: Archetype): PathAbilityLabels {
     powAbil,
     martAbil: null,
   };
+}
+
+/** Labeled path ability chips for Guided + Advanced path cards and detail overviews. */
+export function buildPathAbilityChipLabels(path: Archetype): PathAbilityChipLabel[] {
+  const { primaryAbilities, secondaryAbility } = resolvePathAbilityLabels(path);
+  const chips: PathAbilityChipLabel[] = [];
+
+  for (const ability of primaryAbilities) {
+    chips.push({
+      key: `primary-${ability}`,
+      label: formatPathPrimaryAbilityLabel(formatAbilityLabel(ability)),
+      role: 'primary',
+    });
+  }
+
+  if (secondaryAbility) {
+    chips.push({
+      key: `secondary-${secondaryAbility}`,
+      label: formatPathSecondaryAbilityLabel(formatAbilityLabel(secondaryAbility)),
+      role: 'secondary',
+    });
+  }
+
+  return chips;
 }

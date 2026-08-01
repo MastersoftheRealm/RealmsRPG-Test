@@ -19,13 +19,21 @@ export type SavedPartLike = {
   part?: { id?: string | number | null; name?: string | null } | null;
 };
 
+/** Collapse codex aliases such as `s377` and `377` to the same dedupe key. */
+function canonicalPartIdKey(id: string | number | null | undefined): string {
+  const raw = normalizeId(id);
+  if (!raw) return '';
+  const stripped = raw.startsWith('s') && /^\d+$/.test(raw.slice(1)) ? raw.slice(1) : raw;
+  return stripped;
+}
+
 function partDedupeKey(part: SavedPartLike | string): string {
   if (typeof part === 'string') {
     const name = normalizeId(part);
     return name ? `name:${name}` : '';
   }
-  const id = normalizeId(part.id ?? part.part?.id);
-  if (id) return `id:${id}`;
+  const idKey = canonicalPartIdKey(part.id ?? part.part?.id);
+  if (idKey) return `id:${idKey}`;
   const name = normalizeId(part.name ?? part.part?.name);
   return name ? `name:${name}` : '';
 }

@@ -19,12 +19,20 @@ import {
 import { POWERS_TECHNIQUES_L2_HEADER_COLUMNS } from '@/lib/guided-creator/powers-techniques-l2';
 
 const baseDraft: GuidedDraft = {
+  creatorEntryMode: 'guided',
+  pathLayer: 'l1' as const,
   archetypePathId: '1',
   archetypeType: 'martial',
   pow_abil: null,
   mart_abil: 'strength',
   speciesId: null,
   speciesName: null,
+  speciesMixed: false,
+  mixedSpeciesIds: null,
+  mixedSpeciesNames: null,
+  selectedSpeciesSkillIds: [],
+  selectedSpeciesTraits: [],
+  selectedFlawSpeciesId: null,
   selectedSize: null,
   selectedSpeciesTraitChoices: {},
   selectedAncestryTraitIds: [],

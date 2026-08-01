@@ -28,6 +28,13 @@ export {
   type LegacyTechniqueMechanicContext,
 } from './mechanic-builder';
 
+export {
+  POWER_ADVANCED_MECHANIC_CATEGORIES,
+  POWER_ADVANCED_MECHANIC_CATEGORY_SET,
+  POWER_AUTO_MECHANIC_PART_NAMES,
+  type PowerAdvancedMechanicCategory,
+} from './power-mechanic-constants';
+
 // Power Calculator
 export {
   calculatePowerCosts,
@@ -90,6 +97,7 @@ export {
   formatDamage as formatItemDamage,
   formatRange,
   deriveDamageReductionFromProperties,
+  deriveAgilityReductionFromProperties,
   deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,

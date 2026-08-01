@@ -187,7 +187,9 @@ export interface Character {
   
   // Archetype
   archetype?: CharacterArchetype;
+  /** @deprecated Not persisted. Path characters are identified by `archetypePathId` only. */
   creationMode?: 'forge' | 'path';
+  /** When set, level-up and sheet may surface this path's recommendations. */
   archetypePathId?: string;
   pow_abil?: AbilityName;
   mart_abil?: AbilityName;

@@ -9,6 +9,10 @@
 import type { ReactNode } from 'react';
 import { Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import {
+  guidedNavPreviousClassName,
+  guidedNavProgressClassName,
+} from '@/components/shared/guided-choice/guided-nav-button-styles';
 
 export interface GuidedStepFooterProps {
   onBack?: () => void;
@@ -17,7 +21,11 @@ export interface GuidedStepFooterProps {
   backLabel?: string;
   continueDisabled?: boolean;
   backDisabled?: boolean;
+  /** Continue as primary (default) or outline previous-tone (e.g. close L2 browse). */
+  continueTone?: 'progress' | 'previous';
   primaryAction?: ReactNode;
+  /** Optional action to the left of Continue (e.g. Species L3 Create Species). */
+  trailingAction?: ReactNode;
   completionHint?: ReactNode;
   className?: string;
 }
@@ -29,7 +37,9 @@ export function GuidedStepFooter({
   backLabel = 'Back',
   continueDisabled,
   backDisabled,
+  continueTone = 'progress',
   primaryAction,
+  trailingAction,
   completionHint,
   className,
 }: GuidedStepFooterProps) {
@@ -42,11 +52,7 @@ export function GuidedStepFooter({
       onClick={onBack}
       disabled={backDisabled}
       size="lg"
-      className={cn(
-        'min-h-11 shrink-0',
-        'border-primary-outline-border text-primary-outline-fg',
-        'dark:border-border dark:text-text-primary'
-      )}
+      className={guidedNavPreviousClassName}
     >
       {backLabel}
     </Button>
@@ -56,10 +62,13 @@ export function GuidedStepFooter({
     primaryAction ??
     (onContinue ? (
       <Button
+        variant={continueTone === 'previous' ? 'outline' : 'primary'}
         onClick={onContinue}
         disabled={continueDisabled}
         size="lg"
-        className="min-h-11 shrink-0"
+        className={
+          continueTone === 'previous' ? guidedNavPreviousClassName : guidedNavProgressClassName
+        }
       >
         {continueLabel}
       </Button>
@@ -121,7 +130,12 @@ export function GuidedStepFooter({
                 <span className="sm:order-1" aria-hidden />
               ) : null}
 
-              {continueSlot ? <div className="sm:order-3">{continueSlot}</div> : null}
+              {continueSlot || trailingAction ? (
+                <div className="flex items-center gap-3 sm:order-3">
+                  {trailingAction}
+                  {continueSlot}
+                </div>
+              ) : null}
             </div>
           </div>
         </div>

@@ -11,6 +11,7 @@ import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
+import { formatCreatureLevel } from '@/lib/game';
 import { Pencil, Copy, X } from 'lucide-react';
 
 const COPY_NAME_SUFFIX = ' copy';
@@ -194,7 +195,7 @@ export function AdminCreatureFeatsTab() {
                 columns={[
                   { key: 'Pts', value: String(f.points ?? '-') },
                   { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
-                  { key: 'Req. Lvl', value: f.lvl_req != null ? String(f.lvl_req) : '-' },
+                  { key: 'Req. Lvl', value: f.lvl_req != null ? formatCreatureLevel(f.lvl_req) : '-' },
                 ]}
                 rightSlot={
                   <div className="flex items-center gap-1 pr-2">

@@ -3,6 +3,7 @@
  */
 
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import { formatCreatureLevel } from '@/lib/game';
 import { formatListCellLabel } from '@/lib/utils';
 
 export function buildSpeciesSelectableItem(
@@ -22,7 +23,14 @@ export function buildSpeciesSelectableItem(
 }
 
 export function buildCreatureSelectableItem(
-  c: { docId?: unknown; id?: unknown; name?: unknown; description?: unknown; level?: unknown; type?: unknown }
+  c: {
+    docId?: unknown;
+    id?: unknown;
+    name?: unknown;
+    description?: unknown;
+    level?: number | string | null;
+    type?: unknown;
+  }
 ): SelectableItem {
   const id = String(c.docId ?? c.id ?? '');
   return {
@@ -31,7 +39,7 @@ export function buildCreatureSelectableItem(
     description: typeof c.description === 'string' ? c.description : undefined,
     data: c,
     columns: [
-      { key: 'level', value: String(c.level ?? '-'), align: 'center' },
+      { key: 'level', value: formatCreatureLevel(c.level), align: 'center' },
       { key: 'type', value: formatListCellLabel(String(c.type ?? 'creature')), align: 'center' },
     ],
   };

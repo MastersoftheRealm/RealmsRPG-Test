@@ -20,7 +20,7 @@ export { computeSplits };
 export type CreatorType = 'power' | 'technique' | 'empowered';
 
 export interface MechanicPartResult {
-  id: number | string; // codex may use numeric (379) or string ids ("s377")
+  id: number | string; // codex may use numeric (377) or legacy string ids ("s377")
   name: string;
   op_1_lvl: number;
   op_2_lvl: number;
@@ -170,7 +170,7 @@ function getAreaPartInfo(areaType: string): { id: number; name: string } | null 
 function getDurationPartInfo(durationType: string): { id: number | string; name: string } | null {
   const mapping: Record<string, { id: number | string; name: string }> = {
     rounds: { id: PART_IDS.DURATION_ROUND, name: 'Duration (Round)' },
-    minutes: { id: 's377', name: 'Duration (Minute)' }, // codex often uses "s377" for Duration (Minute)
+    minutes: { id: PART_IDS.DURATION_MINUTE, name: 'Duration (Minute)' },
     hours: { id: PART_IDS.DURATION_HOUR, name: 'Duration (Hour)' },
     days: { id: PART_IDS.DURATION_DAYS, name: 'Duration (Days)' },
     permanent: { id: PART_IDS.DURATION_PERMANENT, name: 'Duration (Permanent)' },

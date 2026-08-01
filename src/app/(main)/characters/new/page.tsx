@@ -1,14 +1,15 @@
 /**
  * Character Creation Entry Chooser
  * ================================
- * Guided vs Custom — copy in `src/lib/constants/copy/guided-creator-copy.ts`.
+ * Guided / Custom / Legacy — copy in `src/lib/constants/copy/guided-creator-copy.ts`.
+ * Custom → cohesive guided creator Path L3; Legacy → transitional Advanced wizard.
  */
 
 'use client';
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Sparkles, SlidersHorizontal, Check } from 'lucide-react';
+import { Sparkles, SlidersHorizontal, History, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { DescriptorChip } from '@/components/ui';
@@ -20,16 +21,24 @@ const { chooser: copy } = GUIDED_CREATOR_COPY;
 const MODES = [
   {
     id: 'guided' as const,
-    href: '/characters/new/guided',
+    href: '/characters/new/guided?entry=guided',
     ...copy.modes.guided,
     icon: Sparkles,
     showFirstTimerBadge: true,
   },
   {
     id: 'custom' as const,
-    href: '/characters/new/advanced',
+    // Same cohesive creator; Path L3 custom-archetype entry (REALMS §5.0 / TASK-638).
+    href: '/characters/new/guided?entry=custom',
     ...copy.modes.custom,
     icon: SlidersHorizontal,
+    showFirstTimerBadge: false,
+  },
+  {
+    id: 'legacy' as const,
+    href: '/characters/new/advanced',
+    ...copy.modes.legacy,
+    icon: History,
     showFirstTimerBadge: false,
   },
 ];
@@ -52,7 +61,7 @@ export default function NewCharacterChooserPage() {
       <CreatorFunnelHero align="center" title={copy.title} subtitle={copy.subtitle} />
 
       <div className="layout-shell-wide px-4 py-10 sm:py-14">
-        <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
           {MODES.map((mode) => {
             const Icon = mode.icon;
             return (

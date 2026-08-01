@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { Trait } from '@/hooks';
 import {
   buildAncestryPickTasks,
+  buildMixedAncestryPickTasks,
   type AncestryPickSpeciesInput,
 } from './ancestry-pick-tasks';
 
@@ -122,5 +123,61 @@ describe('buildAncestryPickTasks', () => {
         selectedAncestryTraitIds: [],
       })
     ).toEqual([]);
+  });
+});
+
+describe('buildMixedAncestryPickTasks', () => {
+  const speciesA = {
+    id: 'a',
+    name: 'Alpha',
+    species_traits: ['st-a1'],
+    characteristics: ['char-1'],
+    ancestry_traits: ['anc-1'],
+    flaws: ['flaw-a'],
+    skills: ['sk1', 'sk2'],
+  };
+  const speciesB = {
+    id: 'b',
+    name: 'Beta',
+    species_traits: ['st-b1'],
+    characteristics: ['char-1'],
+    ancestry_traits: ['anc-2'],
+    flaws: ['flaw-b'],
+    skills: ['sk3', 'sk4'],
+  };
+  const mixedTraits: Trait[] = [
+    trait({ id: 'st-a1', name: 'Trait A' }),
+    trait({ id: 'st-b1', name: 'Trait B' }),
+    trait({ id: 'char-1', name: 'Char' }),
+    trait({ id: 'anc-1', name: 'Anc 1' }),
+    trait({ id: 'anc-2', name: 'Anc 2' }),
+    trait({ id: 'flaw-a', name: 'Flaw A', flaw: true }),
+    trait({ id: 'flaw-b', name: 'Flaw B', flaw: true }),
+  ];
+
+  it('includes mixed trait picks and skill choice when parents have 4 skills', () => {
+    const tasks = buildMixedAncestryPickTasks({
+      speciesA: speciesA as never,
+      speciesB: speciesB as never,
+      allTraits: mixedTraits,
+      allSkills: [
+        { id: 'sk1', name: 'Skill 1' },
+        { id: 'sk2', name: 'Skill 2' },
+        { id: 'sk3', name: 'Skill 3' },
+        { id: 'sk4', name: 'Skill 4' },
+      ] as never,
+      selectedFlawId: null,
+      selectedAncestryTraitIds: [],
+      selectedFlawSpeciesId: null,
+    });
+
+    expect(tasks.map((t) => t.phase)).toEqual([
+      'mixed-species-trait-a',
+      'mixed-species-trait-b',
+      'mixed-species-skills',
+      'characteristic',
+      'ancestry-trait-1',
+      'flaw',
+    ]);
   });
 });

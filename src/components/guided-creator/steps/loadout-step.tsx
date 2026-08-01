@@ -33,6 +33,7 @@ import {
   type EquipmentPhaseVisibility,
 } from '@/lib/guided-creator/equipment-phase-nav';
 import { landsOnFirstInnerScreen } from '@/lib/guided-creator/guided-substep-nav';
+import { prefersDeepCatalogEntry } from '@/lib/guided-creator/creator-entry-mode';
 import {
   computeRemainingCurrency,
   computeSpentCurrency,
@@ -190,8 +191,8 @@ export function LoadoutStep() {
     lastLoadoutJumpNonce.current = entryNonce;
     const first = visiblePhases[0] ?? 'weapon';
     updateDraft({ equipmentPhase: first });
-    setL2Open(false);
-  }, [isLoading, navigationIntent, entryNonce, visiblePhases, updateDraft]);
+    setL2Open(prefersDeepCatalogEntry(draft));
+  }, [isLoading, navigationIntent, entryNonce, visiblePhases, updateDraft, draft]);
 
   /** Re-bucket weapons/armor and drop unresolved (stale) refs once lookup is ready. */
   useEffect(() => {
@@ -275,7 +276,7 @@ export function LoadoutStep() {
   ]);
 
   const continueLabel = l2Open
-    ? phaseCopy.backToPhase
+    ? phaseCopy.seeRecommendations
     : onLastPhase
       ? stepCopy.continueLabel
       : nextEquipmentPhase(equipmentPhase, armorMode, phaseVisibility) === 'armor'
@@ -301,6 +302,7 @@ export function LoadoutStep() {
       description={phaseTitleCopy.description}
       canContinue={footerCanContinue}
       continueLabel={continueLabel}
+      continueTone={l2Open ? 'previous' : 'progress'}
       footerBack={handleLoadoutBack}
       footerContinue={handleLoadoutContinue}
       completionHint={completionHint}

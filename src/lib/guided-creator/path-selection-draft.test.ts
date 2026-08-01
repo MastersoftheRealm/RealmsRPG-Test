@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { buildPathSelectionDraftPatch } from './path-selection-draft';
+import {
+  buildCustomArchetypeDraftPatch,
+  buildEnterCustomArchetypeLayerPatch,
+  buildEnterPathLayerPatch,
+  buildOpenCustomPathEntryPatch,
+  buildOpenGuidedPathEntryPatch,
+  buildPathSelectionDraftPatch,
+  isGuidedCustomArchetypeComplete,
+} from './path-selection-draft';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 import { DEFAULT_ABILITIES, type Archetype } from '@/types';
 
@@ -23,6 +31,7 @@ describe('buildPathSelectionDraftPatch', () => {
     const patch = buildPathSelectionDraftPatch('path-a', selected);
 
     expect(patch).toEqual({
+      pathLayer: 'l1',
       archetypePathId: 'path-a',
       archetypeType: 'power',
       pow_abil: 'intelligence',
@@ -94,5 +103,68 @@ describe('buildPathSelectionDraftPatch', () => {
     expect(patch.skills).toEqual({});
     expect(patch.powerIds).toEqual([]);
     expect(patch.abilitiesMode).toBeNull();
+  });
+});
+
+describe('Path L1↔L3 layer patches', () => {
+  it('enter custom archetype clears path and dependents', () => {
+    const patch = buildEnterCustomArchetypeLayerPatch();
+    expect(patch.creatorEntryMode).toBe('custom');
+    expect(patch.pathLayer).toBe('l3');
+    expect(patch.archetypePathId).toBeNull();
+    expect(patch.archetypeType).toBeNull();
+    expect(patch.skills).toEqual({});
+    expect(patch.innatePowerIds).toEqual([]);
+  });
+
+  it('enter path layer clears forge picks', () => {
+    const patch = buildEnterPathLayerPatch();
+    expect(patch.pathLayer).toBe('l1');
+    expect(patch.archetypePathId).toBeNull();
+    expect(patch.mart_abil).toBeNull();
+  });
+
+  it('custom chooser entry sets deep catalog mode and Path L3', () => {
+    const patch = buildOpenCustomPathEntryPatch();
+    expect(patch.creatorEntryMode).toBe('custom');
+    expect(patch.pathLayer).toBe('l3');
+    expect(patch.archetypePathId).toBeNull();
+  });
+
+  it('guided chooser entry sets guided mode and Path L1', () => {
+    const patch = buildOpenGuidedPathEntryPatch();
+    expect(patch.creatorEntryMode).toBe('guided');
+    expect(patch.pathLayer).toBe('l1');
+  });
+
+  it('custom archetype complete rules match forge Continue', () => {
+    expect(isGuidedCustomArchetypeComplete('power', 'intelligence', null)).toBe(true);
+    expect(isGuidedCustomArchetypeComplete('martial', null, 'strength')).toBe(true);
+    expect(isGuidedCustomArchetypeComplete('powered-martial', 'intelligence', 'strength')).toBe(
+      true
+    );
+    expect(isGuidedCustomArchetypeComplete('powered-martial', 'strength', 'strength')).toBe(false);
+    expect(isGuidedCustomArchetypeComplete('power', null, null)).toBe(false);
+  });
+
+  it('type change clears dependents; ability-only update does not', () => {
+    const typeChange = buildCustomArchetypeDraftPatch({
+      type: 'martial',
+      powAbil: null,
+      martAbil: 'strength',
+      previousType: 'power',
+    });
+    expect(typeChange.skills).toEqual({});
+    expect(typeChange.pow_abil).toBeNull();
+    expect(typeChange.mart_abil).toBe('strength');
+
+    const abilityOnly = buildCustomArchetypeDraftPatch({
+      type: 'martial',
+      powAbil: null,
+      martAbil: 'agility',
+      previousType: 'martial',
+    });
+    expect(abilityOnly).not.toHaveProperty('skills');
+    expect(abilityOnly.mart_abil).toBe('agility');
   });
 });

@@ -9,13 +9,6 @@ import type { CreatureState } from './creature-creator-types';
 
 export const CREATURE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.CREATURE;
 
-export const LEVEL_OPTIONS = [
-  { value: '0.25', label: '1/4' },
-  { value: '0.5', label: '1/2' },
-  { value: '0.75', label: '3/4' },
-  ...Array.from({ length: 30 }, (_, i) => ({ value: String(i + 1), label: String(i + 1) })),
-];
-
 export const CREATURE_TYPE_OPTIONS = CREATURE_TYPES.map(type => ({ value: type, label: type }));
 
 export const DAMAGE_TYPES = [

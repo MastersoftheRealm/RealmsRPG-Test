@@ -161,6 +161,7 @@ export function usePowerCreatorWorkspace({
   });
 
   const getPayload = useCallback(() => {
+    // User + advanced parts only; auto mechanics are derived from action/damage/range/area/duration/attackMode on load.
     const partsToSave = dedupeSavedParts([
       ...selectedParts.map((sp) => ({
         id: Number(sp.part.id),
@@ -179,28 +180,6 @@ export function usePowerCreatorWorkspace({
         applyDuration: ap.applyDuration,
         isAdvanced: true,
       })),
-      ...mechanicParts.map((mp) => ({
-        id: mp.id,
-        name: mp.name,
-        op_1_lvl: mp.op_1_lvl,
-        op_2_lvl: mp.op_2_lvl,
-        op_3_lvl: mp.op_3_lvl,
-        applyDuration: mp.applyDuration,
-        isMechanic: true,
-      })),
-      ...(addWeaponToPowerPart
-        ? [
-            {
-              id: addWeaponToPowerPart.id,
-              name: addWeaponToPowerPart.name,
-              op_1_lvl: addWeaponToPowerPart.op_1_lvl,
-              op_2_lvl: addWeaponToPowerPart.op_2_lvl,
-              op_3_lvl: addWeaponToPowerPart.op_3_lvl,
-              applyDuration: false,
-              isMechanic: true,
-            },
-          ]
-        : []),
     ]);
     const damageToSave = damages
       .filter((d) => d.type !== 'none' && d.amount > 0)
@@ -227,8 +206,6 @@ export function usePowerCreatorWorkspace({
     description,
     selectedParts,
     selectedAdvancedParts,
-    mechanicParts,
-    addWeaponToPowerPart,
     damages,
     actionType,
     isReaction,

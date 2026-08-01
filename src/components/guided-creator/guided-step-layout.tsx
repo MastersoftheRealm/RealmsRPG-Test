@@ -25,6 +25,10 @@ export interface GuidedStepLayoutProps {
   footerBack?: () => void;
   /** Override default footer continue (e.g. ancestry micro-flow). */
   footerContinue?: () => void;
+  /** Optional action left of Continue (e.g. Species L3 Create Species). */
+  footerTrailing?: ReactNode;
+  /** Continue chrome: primary forward (default) or outline shallower (e.g. loadout L2). */
+  continueTone?: 'progress' | 'previous';
   hideBack?: boolean;
 }
 
@@ -41,6 +45,8 @@ export function GuidedStepLayout({
   hideBack,
   footerBack,
   footerContinue,
+  footerTrailing,
+  continueTone,
 }: GuidedStepLayoutProps) {
   const { prevSubStep, nextSubStep } = useGuidedCreatorStore();
 
@@ -69,9 +75,11 @@ export function GuidedStepLayout({
         onContinue={primaryAction ? undefined : (footerContinue ?? nextSubStep)}
         continueDisabled={!canContinue}
         continueLabel={continueLabel ?? 'Continue'}
+        continueTone={continueTone}
         backLabel="Back"
         completionHint={completionHint}
         primaryAction={primaryAction}
+        trailingAction={footerTrailing}
       />
     </div>
   );

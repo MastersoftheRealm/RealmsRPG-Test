@@ -10,9 +10,9 @@
 >
 > **Related:** [`human/USER_EXPERIENCE_GOALS.md`](./human/USER_EXPERIENCE_GOALS.md) is the **shipped-UX checklist** (terminology, guest gating, retention tactics). This document is the **vision**; that document tracks what is implemented. When they disagree, this document describes the target and that one describes today.
 
-> **Document status (read before building):** This is **intention-driven design** — a system philosophy, onboarding architecture, and product direction doc. It is **not** a validated UX system, behavior-tested flow, or production-ready interaction spec until Layer 1 is playtested and revised from real user behavior. See **Appendix I** before expanding speculative scope. **Owner reconciliations from guided playtest / TASK feedback** (e.g. §3.1 selection grammar, Layer 1 choice principle, kit removal) **are in-bounds** and supersede older automation language in this file. Prefer revising settled sections over inventing new speculative phases (Appendix I §I.6).
+> **Document status (read before building):** This is **intention-driven design** — a system philosophy, onboarding architecture, and product direction doc. It is **not** a validated UX system, behavior-tested flow, or production-ready interaction spec until Layer 1 is playtested and revised from real user behavior. See **Appendix I** before expanding speculative scope. **Owner reconciliations from guided playtest / TASK feedback** (e.g. §3.1 selection grammar, Layer 1 choice principle, kit removal, **§5.0 one cohesive creator / phase out parallel Custom**) **are in-bounds** and supersede older automation language in this file. Prefer revising settled sections over inventing new speculative phases (Appendix I §I.6).
 
-**Last updated:** 2026-07-15 (§5.7–§5.9 Loadout budgets: optional picks + visible Training Points; §3.1 selection grammar)
+**Last updated:** 2026-08-01 (§5.0 one cohesive character creator; §3 partial-layer rule; §5.1 Foundation archetype L1↔L3)
 
 ---
 
@@ -119,10 +119,12 @@ Every creator and selection system **must** follow this structure. It is the cor
 
 ### Rules
 
-- **Default entry is always Layer 1.**
-- Provide an explicit affordance to expand: "See more options" moves to Layer 2; "See everything" / "See all" moves to Layer 3.
-- Always allow a return to Layer 1: "Back to recommendations."
-- **Forge Your Own** is the global Layer 3 escape hatch for the character creator (`creationMode: 'forge'` in [`character-creator-store.ts`](../stores/character-creator-store.ts)). Never remove it; never make it the default for the first-time flow.
+- **Default entry is always Layer 1** when a step has a guided face. Product entry for first-timers lands on L1 (chooser **Guided**). Experienced users may enter the **same** creator at L3 (chooser **Custom**) — see §5.0.
+- Provide an explicit affordance to expand when a deeper layer exists: "See more options" → Layer 2; "See everything" / "See all" / step-specific L3 labels → Layer 3.
+- Always allow a return toward the simpler face when one exists: "Back to recommendations" (or the step’s collapse label).
+- **Not every screen exposes all three layers.** Some steps are effectively L1-only, L2-only, or L3-only — because game mechanics do not support a simpler/more-complex face, or by deliberate design. Omit expand/collapse chrome when there is nowhere to go; do not invent fake intermediate layers.
+- **Layer chrome stays consistent:** same place, same style (`GuidedLayerNav` / `GuidedChoiceShell`) wherever expand/collapse *does* apply.
+- **Custom / forge archetype control** remains always reachable from the Foundation Path step (L3 face — see §5.1). It is never the default for the first-time Guided entry.
 - **Do not conflate catalog layers with entity deep-dive.** Expanding *which options are listed* (Layer 1 → 2 → 3 above) is separate from deepening *facts about one option* (§3.1 entity depth ladder).
 
 ```mermaid
@@ -131,6 +133,8 @@ flowchart LR
   L2 -->|"See everything"| L3[Layer3_FullSystem]
   L3 -->|"Back to recommendations"| L1
 ```
+
+When a step skips a layer (e.g. Path: L1 path cards ↔ L3 custom archetype, no distinct L2), navigate directly between the layers that exist.
 
 ### 3.1 Selection grammar — cards, GridListRow, and two disclosure ladders
 
@@ -172,9 +176,9 @@ More *options*, not more depth on one option. This is the Layer 1 / 2 / 3 table 
 |-------|------------|------------|
 | Curated | (default Layer 1) | Choice cards / small recommendation groups |
 | Filtered browse | **See more options** | In-step browse panel or `UnifiedSelectionModal` with GridListRow |
-| Full system | **See all** / Forge | Unfiltered catalogs, Advanced / custom creators |
+| Full system | **See all** / Custom Archetype / forge-style L3 | Unfiltered catalogs and full customization **inside the same creator shell** |
 
-**Bridge expectation:** Leaving curated cards via **See more options** should land on GridListRow of the **same entity type**, with the same fact language the user already saw on the card / More details path — so Advanced, Codex, and Library feel like denser cousins, not a different app.
+**Bridge expectation:** Leaving curated cards via **See more options** should land on GridListRow of the **same entity type**, with the same fact language the user already saw on the card / More details path — so L2/L3, Codex, and Library feel like denser cousins, not a different app.
 
 #### Layer 1 choice principle (owner revision 2026-07-15)
 
@@ -191,9 +195,9 @@ Earlier drafts over-emphasized “accept path defaults and barely touch the midd
 
 #### Shared layer chrome
 
-[`GuidedChoiceShell`](../components/shared/guided-choice/guided-choice-shell.tsx) + [`GuidedLayerNav`](../components/shared/guided-choice/guided-layer-nav.tsx) own expand/collapse for Ladder B. Guided character-creator steps primarily use `GuidedStepLayout` + `GuidedLayerNav` (same labels). Continue converging Advanced path-mode steps onto that chrome rather than inventing per-step toggles.
+[`GuidedChoiceShell`](../components/shared/guided-choice/guided-choice-shell.tsx) + [`GuidedLayerNav`](../components/shared/guided-choice/guided-layer-nav.tsx) own expand/collapse for Ladder B. Character-creator steps use `GuidedStepLayout` + `GuidedLayerNav` (same labels). Absorb remaining Custom/Advanced catalog behaviors into those layers rather than inventing per-step toggles or a second wizard.
 
-Components still being absorbed: Advanced [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx), [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx), [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx), [`PathHelpCard.tsx`](../components/character-creator/PathHelpCard.tsx).
+Legacy Advanced surfaces still being absorbed into the cohesive creator: [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx), [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx), [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx), [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) forge face, [`PathHelpCard.tsx`](../components/character-creator/PathHelpCard.tsx).
 
 ### Current state: most creators are Layer 3 today
 
@@ -201,8 +205,8 @@ Components still being absorbed: Advanced [`feats-step.tsx`](../components/chara
 
 | Surface | Target layers | Current default |
 |---------|---------------|-----------------|
-| Character creator — Guided (`/characters/new/guided`) | L1 + per-step L2 (incl. powers/techniques browse) | In progress; kits removed |
-| Character creator — Advanced / Custom | Evolve to L2 face + L3 expand / Forge | Mostly L3; Forge = L3 |
+| Character creator (`/characters/new/guided`) | One shell; per-step L1/L2/L3 as applicable (partial layers OK) | Mostly L1 + some L2; Custom/Advanced still a parallel L3 wizard |
+| Character creator — legacy Custom/Advanced (`/characters/new/advanced`) | **Phase out** — functionality integrates into the cohesive creator’s L3 | Mostly L3; forge archetype = L3 |
 | Power / technique / item creators | L1 guided routes → L2 filtered → L3 advanced builder | **L3 only** |
 | Species / creature creators | L3 only (deferred from beginner funnel) | **L3 only** |
 | Encounters, campaigns, crafting | L1 task-focused → L2 → L3 | **L3 / dense UI** |
@@ -269,20 +273,31 @@ Today's home page mixes hero, reviews, multiple feature cards, welcome banner, o
 
 Character creation is the **primary onboarding experience** and must be fully guided.
 
-### 5.0 Two-creator model — Simple (Guided) vs Advanced (Classic) — DECIDED 2026-06-30
+### 5.0 One cohesive character creator — DECIDED 2026-08-01 (supersedes 2026-06-30 two-creator model)
 
-Rather than rewrite the existing wizard in place, Realms ships **two coexisting creators**, chosen at entry:
+**Target:** a **single** character creator — the chapter-based shell at `/characters/new/guided` ([`guided-creator-store.ts`](../stores/guided-creator-store.ts), `src/components/guided-creator/`) — with **L1 ↔ L2 ↔ L3 (and back)** throughout, using shared layer chrome. Complexity is available inside this shell, not via a parallel “Custom” wizard.
 
-- **Advanced (Classic)** — today's 9-step wizard (`STEP_ORDER` in [`character-creator-store.ts`](../stores/character-creator-store.ts)), unchanged. The full-system / power-user surface. Lives at `/characters/new/advanced`.
-- **Simple (Guided)** — a brand-new, **separate** chapter-based creator with a persistent live character preview. Lives at `/characters/new/guided`. Own route, store ([`guided-creator-store.ts`](../stores/guided-creator-store.ts)), and components under `src/components/guided-creator/`.
+**Phase out:** the legacy Custom/Advanced creator at `/characters/new/advanced` (`character-creator-store.ts`, `src/components/character-creator/`). Its full-customization behavior (forge archetype, unrestricted catalogs, etc.) **integrates into** the cohesive creator’s Layer 3 faces. Keep the Advanced route only as a transitional implementation surface until parity is absorbed; do not treat it as a permanent product peer.
 
-**Entry chooser:** Clicking **New Character** first asks **Simple vs Advanced** (modal/`/characters/new` chooser) before entering either creator. Terms ("Simple"/"Advanced") are placeholders and may be refined.
+**Entry chooser** (`/characters/new` — **Guided** / **Custom** / temporary **Legacy**):
 
-**Build strategy:** UI-first prototype. We hand-seed **one reference path** + a few **starter species** via SQL, build the guided flow end-to-end to validate the feel, then harden DB fields and build robust admin tooling. The Simple creator is a prototype that coexists with — does not yet replace — the Advanced creator.
+| Chooser card | Routes into | Lands on |
+|--------------|-------------|----------|
+| **Guided** (default / first-timer) | Same cohesive creator | Layer 1 entry (Foundation → Path cards, as today) |
+| **Custom** | Same cohesive creator | Layer 3 entry (Foundation → custom archetype face — see §5.1); later chapters open deeper catalog faces when no path is selected (`creatorEntryMode` in session only — not persisted on save) |
+| **Legacy** (temporary) | Advanced wizard at `/characters/new/advanced` | Classic tabbed creator until cohesive L3 parity is absorbed |
 
-**Future evolution (after Guided is validated):** Once Simple (Guided) works well end-to-end, reposition **Advanced** as **Layer 2 face value** — more options visible by default, still structured — with **Layer 3** when the user deliberately expands into full catalogs and forge-style freedom. The same progression applies to standalone creators (Section 5.11). Do not collapse Advanced into Guided in place; evolve routes and defaults.
+Guided and Custom enter **one** creator. **Legacy** is a transitional escape hatch to the old wizard (owner 2026-08-01). Layer navigation inside steps uses the same place/style controls (`GuidedLayerNav`) wherever a simpler or deeper face exists — expand uses primary chrome (Continue weight); collapse uses outline chrome (Back weight). Labels are direction-neutral (**See …**) so they work whether the player started on that face or navigated there.
 
-**Future (not in scope yet):** an **animated character avatar** that progresses/levels visually along the chapters near the top of the guided creator. The shell reserves a header slot for it.
+**Partial layers (by step):** Many steps will expose L1, L2, and L3. Others cannot get simpler or more customizable — by game mechanics or by design — and correctly offer only the layers that make sense. Path (archetype) is the first worked example: L1 path cards ↔ L3 custom archetype; **no distinct Path L2** (browsing paths *is* the simple face).
+
+**Saved character identity:** Do **not** persist a “creator type” or forge vs path flag. Persist **`archetypePathId` only when the player picked a path** (for level-up / sheet path recommendations). Custom-archetype builds omit it; archetype type + abilities live on the normal character fields.
+
+**Historical note (2026-06-30):** Guided was built as a separate prototype beside Advanced so L1 could ship without rewriting the classic wizard in place. That coexistence was transitional. **2026-08-01 owner decision:** unify into the guided shell and retire Custom as a separate product.
+
+**Build strategy:** continue UI-first hardening of path content + starter species; absorb Custom/Advanced capabilities chapter-by-chapter into L2/L3 panels. First integration slice: Foundation **Path / archetype** (§5.1).
+
+**Future (not in scope yet):** an **animated character avatar** that progresses/levels visually along the chapters near the top of the creator. The shell reserves a header slot for it.
 
 #### 5.0.1 Guided chapter model (rulebook-aligned)
 
@@ -375,9 +390,9 @@ All card/list art comes from the **Realms Image Library**: one master Storage ob
 | 5 | TASK-498 | Migrate existing `codex-art` entity files into the bank — **done** |
 | later | TASK-500 | Enhanced-item images (deferred) |
 
-> The subsections below (5.1–5.10) describe the **per-step UX vision** shared by both creators. The guided creator realizes them chapter-by-chapter per 5.0.1.
+> The subsections below (5.1–5.10) describe the **per-step UX vision** for the cohesive character creator. Legacy Advanced step files remain a reference for L3 behavior until absorbed.
 
-**Current step order** (`STEP_ORDER` in [`character-creator-store.ts`](../stores/character-creator-store.ts)): archetype → species → ancestry → abilities → skills → feats → equipment → powers → finalize.
+**Legacy Advanced step order** (transitional reference — `STEP_ORDER` in [`character-creator-store.ts`](../stores/character-creator-store.ts)): archetype → species → ancestry → abilities → skills → feats → equipment → powers → finalize.
 
 **Target flow** (vision reconciled with the codebase):
 
@@ -408,23 +423,39 @@ Ancestry remains an explicit step (an exciting identity moment, backed by [`ance
 
 Each subsection below should ultimately be expanded using the page-spec template in Appendix A. Gap tables reference the verified current behavior in Appendix B.
 
-### 5.1 Entry: Archetype / Path Selection
+### 5.1 Entry: Archetype / Path Selection (Foundation — first Custom-integration slice)
 
-The user begins by choosing an archetype (a **path**).
+The user begins Foundation by choosing how their **archetype** is defined: a curated **path**, or a **custom archetype** (full type + ability picks).
 
 **Valid hesitation:** "Which direction do I want to play?"
 
 **Invalid hesitation:** "What is an archetype?" / "What does this mean?" / "Where do I click?" / "How do I scroll?"
 
+#### Layers on this step
+
+| Layer | Face | Notes |
+|-------|------|--------|
+| **L1** | Archetype **path** cards (grouped Power / Powered-Martial / Martial) | Default for Guided entry. Current guided Path step. |
+| **L2** | *(none)* | Path browse and the simple face are the same — do **not** invent a semi-guided path catalog. |
+| **L3** | **Custom archetype** — pick Martial / Power / Powered-Martial, then power and/or martial ability(ies), with InfoTippy explaining decisions | Absorbs legacy Advanced forge UX. Default landing for Custom chooser entry. |
+
+#### Navigation (same place / same style)
+
+- **L1 → L3:** bottom hatch (e.g. **Custom Archetype**) via `GuidedLayerNav`-style control.
+- **L3 → L1:** escape hatch (e.g. **View archetype paths**) in the same slot — returns to path cards.
+- Chooser **Guided** opens L1; chooser **Custom** opens L3; in-step hatches move between them without leaving the creator.
+
+#### Requirements
+
 | Requirement | Target |
 |-------------|--------|
-| Visually distinct choices | Path cards with image or icon, a one-line role identity, and a build preview |
-| No prior terminology required | Plain language first ("Choose your Archetype Path") over system jargon ("Select archetype category") — expose the game term, never "class" |
-| Minimal scrolling or searching | Grouped by Power / Powered-Martial / Martial; paginated if the list is long |
-| Layer 1 default | Path selection is primary; "Forge Your Own" is the Layer 3 entry point |
-| Card deep-dive | **More details** → path modal (overview + feat / weapon / armor / gear / power|technique catalogs; Close \| Select). Entity depth (§3.1), not catalog Layer 2. |
+| Visually distinct path choices | Path cards with a one-line role identity and build preview (choice-card grammar) |
+| No prior terminology required | Plain language first ("Choose your Archetype Path"); expose the game term, never "class" |
+| Minimal scrolling or searching | Grouped by Power / Powered-Martial / Martial; InfoTippy on section titles |
+| L3 custom archetype | Type cards + ability picks with tooltips (reuse Advanced forge help: creation style, power/martial ability tips) |
+| Card deep-dive (paths) | **More details** → path modal (overview + option catalogs; Close \| Select). Entity depth (§3.1), not catalog Layer 2. |
 
-**Current gap:** Advanced [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) still weak on card previews. **Guided:** path deep-dive shipped (TASK-434/435); paths grouped Power / Powered-Martial / Martial with section-title InfoTippy (TASK-528) — matches Advanced grouping, guided choice cards.
+**Current state:** Guided L1 path cards + deep-dive shipped (TASK-434/435/528). **Path L3 custom archetype + L1↔L3 hatches + chooser Custom → guided L3** shipped (TASK-638). Downstream chapters for forge builds and full Advanced retirement remain. Legacy Advanced [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) still exists as transitional parallel.
 
 ### 5.2 Species Selection
 
@@ -891,7 +922,8 @@ Path data and logic: [`src/types/archetype.ts`](../types/archetype.ts), [`src/li
 | Surface | Route / file | UX layer today | Target |
 |---------|--------------|----------------|--------|
 | Home | `home-page.tsx` | Multi-CTA, onboarding tour | Section 4 rebuild |
-| Character creator (forge) | `characters/new` | Layer 3 | Layer 1 path default |
+| Character creator (cohesive) | `characters/new/guided` | Mostly L1 + some L2 | One shell; L1/L2/L3 per step (§5.0); Custom chooser → L3 |
+| Character creator (legacy Custom) | `characters/new/advanced` | Layer 3 | Phase out into cohesive L3 |
 | Power creator | `power-creator/page.tsx` (+ future `/guided`) | Layer 3 | L1 guided route + `official_powers` templates (§5.11) |
 | Technique creator | `technique-creator/page.tsx` | Layer 3 | After power/item guided |
 | Item creator | `item-creator/page.tsx` (+ future `/guided`) | Layer 3 | L1 guided; landing CTA entry |
@@ -946,7 +978,7 @@ Only changes that the UX requires. Do not expand the data model beyond reducing 
 
 ## Appendix E — Migration strategy and MVP
 
-Refactor one step at a time behind `creationMode === 'path'`. Forge mode keeps its current UI until the Phase 3 unification.
+Refactor one guided chapter at a time (Path L1↔L3 first; TASK-638). Path builds are identified by saved `archetypePathId`; custom-archetype builds omit it. Legacy Advanced (`/characters/new/advanced`) keeps in-session forge UX until L3 parity is absorbed.
 
 ```mermaid
 flowchart LR
@@ -1021,9 +1053,10 @@ Everything else stays on current UI until each phase validates the pattern.
 
 **Glossary (first-exposure concepts):**
 
-- **Path / Archetype** — a guided character build direction (Power, Powered-Martial, or Martial), with level-1 recommendations.
-- **Forge Your Own** — the unguided Layer 3 path that gives full control from the start.
-- **Guided creator route** — parallel L1 flow (character: `/characters/new/guided`; power: `/power-creator/guided` when built).
+- **Path / Archetype** — a guided character build direction (Power, Powered-Martial, or Martial), with level-1 recommendations when a path is chosen.
+- **Custom archetype (Path L3)** — pick archetype type + power/martial abilities without a curated path; always reachable from Foundation Path (and the Custom chooser entry). Legacy name in Advanced: “Forge Your Own.”
+- **Cohesive character creator** — single shell at `/characters/new/guided` with per-step L1/L2/L3 (partial layers OK). Legacy Custom/Advanced at `/characters/new/advanced` is transitional.
+- **Guided power creator route** — future L1 flow at `/power-creator/guided` when built (standalone creators still mostly L3 today).
 - **Innate Power** — a power whose Energy is at or below your Innate Threshold; usable without spending pool Energy when qualified (Basic/Reaction only; no healing/energy-gain parts).
 - **Innate Threshold** — max Energy for an innate power; level 1: 8 (Power), 6 (Powered-Martial); +1 every 3 levels from 4.
 - **Archetype feat** — a feat oriented toward combat and high-stakes situations.

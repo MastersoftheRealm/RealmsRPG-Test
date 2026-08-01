@@ -10,10 +10,12 @@ import {
   GuidedLayerNav,
   resolveDistinctSecondaryAbility,
 } from '@/components/shared';
+import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GuidedAbilitiesCustomizePanel } from '../guided-abilities-customize-panel';
+import { GuidedSectionTitle } from '../guided-section-title';
 import { calculateAbilityPoints, calculateAbilityScoreCost } from '@/lib/game/formulas';
 import { resolveGuidedRecommendedAbilities } from '@/lib/guided-creator/build-character';
 import type { AbilityName } from '@/types';
@@ -24,10 +26,18 @@ const stepCopy = GUIDED_CREATOR_COPY.steps.abilities;
 const layerNavCopy = GUIDED_CREATOR_COPY.layerNav;
 
 export function AbilitiesStep() {
-  const { draft, updateDraft } = useGuidedCreatorStore();
+  const { draft, updateDraft, navigationIntent, entryNonce } = useGuidedCreatorStore();
   const { archetype, pathData } = useGuidedPathData();
   const { rules } = useGameRules();
   const [customizing, setCustomizing] = useState(draft.abilitiesMode === 'custom');
+
+  const openCustomize = useCallback(() => setCustomizing(true), []);
+  useGuidedDeepEntryOnArrival({
+    draft,
+    navigationIntent,
+    entryNonce,
+    onDeepEntry: openCustomize,
+  });
 
   const primary = draft.pow_abil ?? draft.mart_abil ?? archetype?.archetype_ability ?? null;
   const secondary =
@@ -105,9 +115,9 @@ export function AbilitiesStep() {
       {!customizing && recommended && (
         <>
           <div className="rounded-card border border-primary-subtle-border bg-primary-subtle-bg/60 p-4 sm:p-5">
-            <p className="font-display text-lg font-semibold text-text-primary">
+            <GuidedSectionTitle>
               {stepCopy.recommendedHeading(archetype?.name ?? 'your path')}
-            </p>
+            </GuidedSectionTitle>
             <p className="mt-1 font-nunito text-sm text-text-secondary">{stepCopy.recommendedHint}</p>
             <div className="mt-4">
               <AbilityScoreGrid
@@ -139,7 +149,7 @@ export function AbilitiesStep() {
           />
           {recommended ? (
             <GuidedLayerNav
-              collapseLabel={layerNavCopy.backToRecommendations}
+              collapseLabel={layerNavCopy.seeRecommendations}
               onCollapse={applyRecommended}
             />
           ) : null}

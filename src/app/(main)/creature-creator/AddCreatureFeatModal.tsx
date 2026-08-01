@@ -24,6 +24,7 @@ import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import { buildUsesRecoveryDetailSections } from '@/lib/chip/list-row-metadata';
+import { formatCreatureLevelLabel } from '@/lib/game';
 import { getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import {
   creatureToFeatRequirementCharacter,
@@ -189,7 +190,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
       if (!di) return;
 
       const base = displayItemToSelectableItem(di);
-      const warning = !meetsLvl && lr != null ? `Requires creature level ${lr}` : undefined;
+      const warning = !meetsLvl && lr != null ? `Requires ${formatCreatureLevelLabel(lr)}` : undefined;
       items.push({
         ...base,
         id: `ccf:${feat.id}`,

@@ -449,7 +449,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 | **Section** | Character sheet header |
 | **Related task** | TASK-366, TASK-484 |
 | **Where** | `/characters/[id]` |
-| **Needs** | Saved path character (`creationMode: path` or `archetypePathId` set) |
+| **Needs** | Saved path character (`archetypePathId` set) |
 
 **Steps**
 1. Open a path-created character sheet (header shows path name, not generic "Power"/"Martial" only).
@@ -1913,7 +1913,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-394 |
+| **Related task** | TASK-394, TASK-638 |
 | **Where** | `/characters/new` |
 | **Needs** | — |
 
@@ -1921,8 +1921,9 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. From home, click **Start Playing** or **Create another character** (or open `/characters/new` directly).
 
 **Expected**
-- Simple vs Advanced cards appear with landing-style hero (gradient, dice decor).
-- **Simple** → `/characters/new/guided`; **Advanced** → `/characters/new/advanced`.
+- Guided vs Custom cards appear with landing-style hero (gradient, dice decor).
+- **Guided** → `/characters/new/guided` (Path L1).
+- **Custom** → `/characters/new/guided?entry=custom` (Path L3 custom archetype).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3428,6 +3429,148 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Expected**
 - Same `trainingPointsHelp` export on LoadoutBudgetBar; shorter teaching copy; still matches GAME_RULES shared-budget + remaining-gates affordability.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T072 — Chooser Custom opens Path L3 (TASK-638)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-638 |
+| **Where** | `/characters/new` → Custom |
+| **Needs** | — |
+
+**Steps**
+1. Open `/characters/new` and click **Custom**.
+2. Confirm URL is `/characters/new/guided?entry=custom` (or equivalent with returnTo preserved).
+3. Confirm Path step shows **Custom Archetype** face (Power / Powered-Martial / Martial type cards), not path cards.
+4. Confirm **View archetype paths** (layer collapse) is visible below the content.
+
+**Expected**
+- Custom and Guided both use the guided shell; Custom lands on Path L3.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T073 — Path L1 Custom Archetype hatch (TASK-638)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-638 |
+| **Where** | `/characters/new/guided` Path step |
+| **Needs** | — |
+
+**Steps**
+1. Open Guided entry (`/characters/new/guided`).
+2. Confirm path cards (grouped Power / Powered-Martial / Martial).
+3. At the bottom, click **Custom Archetype**.
+4. Confirm L3 type cards appear; path selection is cleared; Continue stays disabled until type + ability(ies) are valid.
+
+**Expected**
+- Same-place GuidedLayerNav expand; L3 face matches product overview §5.1.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T074 — Path L3 type/ability Continue + return to paths (TASK-638)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-638 |
+| **Where** | Guided Path L3 |
+| **Needs** | — |
+
+**Steps**
+1. On Path L3, pick **Power**, then a Power Ability — Continue enables.
+2. Switch to **Powered-Martial**, pick two different abilities — Continue enables; same ability on both sides stays disabled/blocked.
+3. Click **View archetype paths** — return to L1 path cards; forge picks cleared.
+4. Optionally pick a path and Continue to Species — path flow still works.
+5. Optionally on L3: pick type + abilities, Continue to Species — abilities step shows suggested array or customize panel; archetype feats shows empty recommendations with **See more Feats** browse (no path id on saved character if completed later).
+
+**Expected**
+- Tooltips on type and ability help; L3↔L1 clears incompatible draft fields; path Continue still requires a path on L1.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T075 — Chooser Legacy card (TASK-640)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-640 |
+| **Where** | `/characters/new` |
+| **Needs** | — |
+
+**Steps**
+1. Open `/characters/new` — confirm three cards: **Guided**, **Custom**, **Legacy**.
+2. Click **Legacy** — confirm `/characters/new/advanced` (classic tabbed creator).
+3. Return; click **Guided** — confirm `/characters/new/guided` Path L1 (`entry=guided` applied then stripped from URL).
+4. Return; click **Custom** — confirm `?entry=custom` and Path L3 custom archetype face.
+
+**Expected**
+- Legacy is temporary peer; Guided/Custom share cohesive shell; `returnTo` preserved on all three.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T076 — Custom entry deep catalogs (TASK-640)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-640 |
+| **Where** | Custom chooser → complete Path L3 → Species onward (no path pick) |
+| **Needs** | Starter + non-starter species in codex |
+
+**Steps**
+1. Enter via **Custom**, forge archetype, Continue to **Species** — confirm **all species** visible (not starters-only).
+2. Confirm **See starter species** (outline) collapses to starter set; **See all species** (primary) expands.
+3. On **Abilities**, confirm customize panel opens; **See recommendations** returns to path suggestions when a path exists (pick path via View archetype paths first).
+4. On **Skills** / **Archetype Feats** / **Character Feat** / **Loadout** / **Powers**, confirm browse/L2 opens on first landing for custom forge (no `archetypePathId`).
+5. **Ancestry**: custom entry skips species overview when picks remain — lands on first pick.
+
+**Expected**
+- `creatorEntryMode` custom + no path id drives deep landing; picking a path on L1 reverts later steps to guided faces.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T077 — Layer nav button chrome (TASK-640)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-640 |
+| **Where** | Any guided step with `GuidedLayerNav` (Species, Abilities, Loadout L2 footer) |
+| **Needs** | — |
+
+**Steps**
+1. On Species L1, confirm **See all species** uses primary (same weight as footer Continue).
+2. On Species L2, confirm **See starter species** uses outline (same weight as footer Back).
+3. On Loadout L2 browse, confirm footer **See recommendations** uses outline, not primary.
+
+**Expected**
+- Deeper = primary `lg`; shallower = outline `lg`; no gray secondary layer-nav buttons.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T078 — Guided Species L2 (mixed + Create Species) (TASK-641)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-641 |
+| **Where** | `/characters/new/guided` → Species (L2) → Ancestry (mixed) |
+| **Needs** | At least two species; ideally a pair with 4+ combined skills for skill-pick step |
+
+**Steps**
+1. On Species L1, **See all species** — confirm full catalog.
+2. On Species L2, confirm **Mixed Species** card at end of grid; open modal, pick two distinct species, confirm selection ring.
+3. Confirm footer **Create Species** (outline, left of Continue) opens `/species-creator` in a new tab.
+4. Continue to **Ancestry** — mixed overview shows both parent names; complete trait/skill/characteristic picks (choose 2 skills when 4 options).
+5. Continue through Skills — locked species skills match mixed picks; save character — `ancestry.mixed` + `speciesIds` on sheet.
+
+**Expected**
+- Mixed selection no longer dead-ends on Ancestry; save persists mixed ancestry fields.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5245,6 +5388,53 @@ Library / Official GLR rows: action icons share chrome (header spacers + hover),
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-034-T002 — Creatures GLR spacing + header chrome (TASK-630)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-034 — GLR chrome + Parts chip grammar |
+| **Related task** | TASK-630 |
+| **Where** | `/library` → My Library → Creatures; Realms Library → Creatures |
+| **Needs** | At least one user creature (edit/delete) and one official creature |
+
+**Steps**
+1. Open My Library → Creatures. Confirm row vertical spacing matches Powers/Techniques (tight `gap-1`, not airy `space-y-3`).
+2. Confirm Name / Level / Size / Type / Archetype / Health / Energy headers align with row values (edit/delete chrome reserved — no column skew).
+3. Open Realms Library → Creatures — same tight row spacing as other Realms tabs; + add chrome keeps columns aligned.
+4. Optional ~360px: headers collapse to Sort by; rows still readable.
+
+**Expected**
+- Creatures use the same shell list gap and `rowChrome` contract as other Library entity tabs.
+- Stat-block expanded content unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-040 — Creature level fraction display (session)
+
+User-facing creature levels use unicode fractions (¼ / ½ / ¾), not raw decimals.
+
+#### DEV-V-040-T001 — Fraction display sitewide
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-040 — Creature level fraction display |
+| **Related task** | Session cleanup (owner feedback) |
+| **Where** | `/creature-creator`, `/library` → Creatures, Realms Library → Creatures, encounter Add Combatant → Creature Library, Codex → Creature Feats |
+| **Needs** | At least one creature at level ½ or ¼ (create in creature creator if needed) |
+
+**Steps**
+1. Creature creator → Level select shows `¼`, `½`, `¾` (not `1/4` / `0.25`).
+2. Save/load a ½-level creature — summary panel and stat block Level column show `½` or `Lv ½`.
+3. Library + Realms Library creature rows — Level column matches fraction display.
+4. Add Combatant modal creature list — `Lv ½` style label.
+5. Codex Creature Feats — Req. Lvl column uses fractions when applicable.
+
+**Expected** — No raw decimal creature levels in user-facing UI; calculations still use numeric level internally.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-035 — Realms Library redundant source badge (session)
@@ -5351,6 +5541,32 @@ Library empowered technique rows must show both nested power parts (`derivePower
 
 ---
 
+## DEV-V-039 — Codex feat Tags section (session)
+
+Feat expanded rows must label the Tags section even for a single tag, and Tags must appear after ability/skill requirements and feat levels.
+
+#### DEV-V-039-T001 — Codex Feats Tags label + order
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-039 — Codex feat Tags section |
+| **Related task** | Session cleanup |
+| **Where** | `/codex` → Feats |
+| **Needs** | Signed-in user |
+
+**Steps**
+1. Open Feats; expand **Abundant Harvest** (single tag).
+2. Confirm **TAGS** section header appears above the **Craft** chip (not a floating unlabeled chip).
+3. Confirm order: Type (if shown) → Ability Requirements (if any) → Skill Requirements → Feat Levels → **Tags** last.
+4. Expand **Abjure** (multi-tag) — **TAGS** still labeled; tags remain after requirements/levels.
+
+**Expected**
+- Tags section always has a visible label; Tags is the last detail section before any supplemental content.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -5378,10 +5594,12 @@ Library empowered technique rows must show both nested power parts (`derivePower
 | DEV-V-031 | API route smoke (TASK-613) | — | Automated (`npm run test:api`) |
 | DEV-V-032 | Realms Library creature stat blocks (TASK-620) | — | Manual — see suite above |
 | DEV-V-033 | Library armaments split (TASK-621, TASK-628) | — | Manual — see suite above |
-| DEV-V-034 | GLR chrome + Parts chip grammar (TASK-622) | — | Manual — see suite above |
+| DEV-V-034 | GLR chrome + Parts chip grammar (TASK-622, TASK-630) | — | Manual — see suite above |
 | DEV-V-035 | Realms Library redundant source badge (session) | — | Manual — see suite above |
 | DEV-V-036 | Power Creator multi-elemental damage EN (TASK-623) | — | Manual — see suite above |
 | DEV-V-037 | Official power part chip dedupe (session cleanup) | — | Manual — see suite above |
 | DEV-V-038 | Empowered technique nested power part chips (TASK-626) | — | Manual — see suite above |
+| DEV-V-039 | Codex feat Tags section (session) | — | Automated (`feat-list.test.ts`) + manual smoke |
+| DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

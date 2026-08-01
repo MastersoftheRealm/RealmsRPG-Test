@@ -20,6 +20,7 @@ import { resolveChoiceCardImage } from './guided-choice-image';
 import { usePlaceholderTheme } from '@/hooks/use-placeholder-theme';
 import { GuidedTraitOptionList } from './guided-trait-option-list';
 import { GuidedOverviewSection } from './guided-overview-section';
+import { GuidedSectionTitle } from './guided-section-title';
 import { titleCase } from './guided-text';
 import { getSpeciesSizeOptions } from './guided-species-utils';
 
@@ -184,7 +185,7 @@ export function SpeciesRevealPanel({
 
         {vitals.length > 0 && (
           <div className="border-t border-border-light bg-surface-alt/50 px-4 py-4 sm:px-5">
-            <div className={o.sectionTitle}>{copy.vitalsTitle}</div>
+            <GuidedSectionTitle as="div">{copy.vitalsTitle}</GuidedSectionTitle>
             <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {vitals.map((item) => (
                 <div
@@ -248,7 +249,7 @@ export function SpeciesRevealPanel({
           <div className="mb-3 flex items-start gap-2">
             <Heart className="mt-0.5 h-5 w-5 shrink-0 text-info-fg" aria-hidden="true" />
             <div>
-              <div className={o.sectionTitle}>{copy.grantedTitle}</div>
+              <GuidedSectionTitle as="div">{copy.grantedTitle}</GuidedSectionTitle>
               <p className={o.sectionHint}>{copy.grantedHint}</p>
             </div>
           </div>
@@ -261,7 +262,7 @@ export function SpeciesRevealPanel({
           <div className="flex items-start gap-2">
             <Sparkles className="mt-0.5 h-5 w-5 shrink-0 text-primary-fg" aria-hidden="true" />
             <div>
-              <div className={o.sectionTitle}>{copy.choiceTeaserTitle}</div>
+              <GuidedSectionTitle as="div">{copy.choiceTeaserTitle}</GuidedSectionTitle>
               <p className={o.sectionHint}>{copy.choiceTeaserHint(choiceNames)}</p>
             </div>
           </div>

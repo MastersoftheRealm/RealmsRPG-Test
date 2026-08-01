@@ -10,12 +10,20 @@ import type { LibraryItem, LibraryPower } from '@/types/library';
 
 function minimalDraft(overrides: Partial<GuidedDraft> = {}): GuidedDraft {
   return {
+    creatorEntryMode: 'guided',
+    pathLayer: 'l1',
     archetypePathId: '1',
     archetypeType: 'martial',
     pow_abil: null,
     mart_abil: 'strength',
     speciesId: null,
     speciesName: null,
+    speciesMixed: false,
+    mixedSpeciesIds: null,
+    mixedSpeciesNames: null,
+    selectedSpeciesSkillIds: [],
+    selectedSpeciesTraits: [],
+    selectedFlawSpeciesId: null,
     selectedSize: null,
     selectedSpeciesTraitChoices: {},
     selectedAncestryTraitIds: [],
@@ -150,6 +158,39 @@ describe('buildGuidedCharacterPayload', () => {
     expect(lean.libraryTabVisibility).toEqual({ techniques: false });
   });
 
+  it('omits archetypePathId and uses type-id archetype when no path', () => {
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        pathLayer: 'l3',
+        archetypePathId: null,
+        archetypeType: 'power',
+        pow_abil: 'intelligence',
+        mart_abil: null,
+      }),
+      {}
+    );
+    expect(payload.creationMode).toBeUndefined();
+    expect(payload.archetypePathId).toBeUndefined();
+    expect(payload.archetype).toEqual({ id: 'power', type: 'power' });
+    expect(payload.pow_abil).toBe('intelligence');
+  });
+
+  it('does not persist creatorEntryMode (session-only chooser flag)', () => {
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        creatorEntryMode: 'custom',
+        pathLayer: 'l3',
+        archetypePathId: null,
+        archetypeType: 'martial',
+        mart_abil: 'strength',
+      }),
+      {}
+    );
+    expect((payload as Record<string, unknown>).creatorEntryMode).toBeUndefined();
+    const lean = cleanForSave(payload as Character);
+    expect((lean as Record<string, unknown>).creatorEntryMode).toBeUndefined();
+  });
+
   it('stores ancestry picks only in selectedTraits (not species traits)', () => {
     const payload = buildGuidedCharacterPayload(
       minimalDraft({
@@ -173,6 +214,33 @@ describe('buildGuidedCharacterPayload', () => {
     expect(payload.ancestry?.selectedTraits).not.toContain('species-trait-a');
     expect(payload.ancestry?.selectedCharacteristic).toBe('char-1');
     expect(payload.ancestry?.selectedFlaw).toBe('flaw-1');
+  });
+
+  it('persists mixed species ancestry fields on save', () => {
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        speciesId: 'mixed:elf+dwarf',
+        speciesName: 'Elf / Dwarf',
+        speciesMixed: true,
+        mixedSpeciesIds: ['elf', 'dwarf'],
+        mixedSpeciesNames: ['Elf', 'Dwarf'],
+        selectedSpeciesTraits: ['st-a', 'st-b'],
+        selectedSpeciesSkillIds: ['sk1', 'sk2'],
+        selectedFlawSpeciesId: 'elf',
+        selectedSize: 'medium',
+      }),
+      {
+        species: null,
+        speciesA: { id: 'elf', name: 'Elf', ave_height: 170, ave_weight: 70 } as never,
+        speciesB: { id: 'dwarf', name: 'Dwarf', ave_height: 130, ave_weight: 60 } as never,
+      }
+    );
+
+    expect(payload.ancestry?.mixed).toBe(true);
+    expect(payload.ancestry?.speciesIds).toEqual(['elf', 'dwarf']);
+    expect(payload.ancestry?.selectedSpeciesTraits).toEqual(['st-a', 'st-b']);
+    expect(payload.ancestry?.selectedSpeciesSkillIds).toEqual(['sk1', 'sk2']);
+    expect(payload.ancestry?.mixedPhysical).toBeTruthy();
   });
 
   it('dedupes power and feat ids on save', () => {

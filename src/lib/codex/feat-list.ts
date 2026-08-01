@@ -167,11 +167,6 @@ export function buildFeatDetailSections(
 
   // Category omitted — already shown in collapsed row columns (redundancy rule).
 
-  const tagChips = feat.tags?.map((tag) => tagDescriptorChip(tag)) || [];
-  if (tagChips.length > 0) {
-    detailSections.push({ label: 'Tags', chips: tagChips, hideLabelIfSingle: true });
-  }
-
   const abilityReqChips = (feat.ability_req || []).map((a, i) => {
     const val = feat.abil_req_val?.[i];
     return descriptorChipData(`${a}${typeof val === 'number' ? ` ${val}+` : ''}`, 'default');
@@ -192,6 +187,11 @@ export function buildFeatDetailSections(
   const levelChips = buildFeatLevelChips(familyLevels, feat.id);
   if (levelChips.length > 0) {
     detailSections.push({ label: 'Feat Levels', chips: levelChips });
+  }
+
+  const tagChips = feat.tags?.map((tag) => tagDescriptorChip(tag)) || [];
+  if (tagChips.length > 0) {
+    detailSections.push({ label: 'Tags', chips: tagChips });
   }
 
   return detailSections;

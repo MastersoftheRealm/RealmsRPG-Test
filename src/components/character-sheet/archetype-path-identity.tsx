@@ -8,7 +8,7 @@ import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
 import type { Character } from '@/types';
 
 export function isPathCharacter(character: Character): boolean {
-  return character.creationMode === 'path' || Boolean(character.archetypePathId?.trim());
+  return Boolean(character.archetypePathId?.trim());
 }
 
 export function ArchetypePathGuidance({ character }: { character: Character }) {

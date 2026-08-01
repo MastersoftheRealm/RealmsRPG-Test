@@ -116,13 +116,13 @@ export type { OfficialTechniqueListProps, OfficialTechniqueRow } from './officia
 
 // OfficialItemList - shared Realms Library armaments grid
 export { OfficialItemList } from './official-item-list';
-export type { OfficialItemListProps, OfficialItemRow } from './official-item-list';
+export type { OfficialItemListProps, OfficialItemRow, ArmamentLibraryKind } from './official-item-list';
 
 // OfficialEnhancedList - shared Realms Library enhanced items grid (admin)
 export { OfficialEnhancedList } from './official-enhanced-list';
 export type { OfficialEnhancedListProps, OfficialEnhancedRow } from './official-enhanced-list';
 
-// OfficialCreatureList - shared Realms Library creatures grid
+// OfficialCreatureList - Realms Library stat blocks (library) + admin compact grid
 export { OfficialCreatureList } from './official-creature-list';
 export type { OfficialCreatureListProps, OfficialCreatureRow } from './official-creature-list';
 
@@ -171,6 +171,13 @@ export type { SortState } from './list-header';
 // Creature components
 export { CreatureStatBlock } from './creature-stat-block';
 export type { CreatureData, CreatureStatBlockProps } from './creature-stat-block';
+export {
+  CreatureLibraryStatBlockRow,
+  CreatureLibraryStatBlockRows,
+  type CreatureLibraryStatBlockRowProps,
+  type CreatureLibraryStatBlockRowsProps,
+} from './creature-library-stat-block-rows';
+export { LibraryAddToLibraryButton } from './library-add-to-library-button';
 
 // Entity library sections (shared list section renderers)
 export {

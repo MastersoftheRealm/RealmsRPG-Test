@@ -17,6 +17,7 @@ import {
   useTechniqueParts,
 } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
+import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
 import { useGuidedPathData } from './use-guided-path-data';
 import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
 import type { TraitWithChoiceOptions } from '@/lib/choice-trait';
@@ -25,6 +26,7 @@ import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { GuidedSectionTitle } from './guided-section-title';
 
 const copy = GUIDED_CREATOR_COPY.steps.reveal.summary;
 
@@ -51,21 +53,24 @@ export function GuidedRevealSummary() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
 
-  const species = useMemo(
-    () => allSpecies.find((s) => String(s.id) === String(draft.speciesId)) ?? null,
-    [allSpecies, draft.speciesId]
+  const speciesContext = useMemo(
+    () => resolveGuidedSpeciesContext(draft, allSpecies),
+    [draft, allSpecies]
   );
+  const species = speciesContext.species;
 
   const pathType = draft.archetypeType;
 
   const traitById = useMemo(() => new Map(allTraits.map((t) => [String(t.id), t])), [allTraits]);
 
   const ancestryTraitNames = useMemo((): SummaryChipItem[] => {
-    const resolvedSpeciesTraits = applySpeciesTraitChoiceSelections(
-      species?.species_traits,
-      draft.selectedSpeciesTraitChoices,
-      allTraits as TraitWithChoiceOptions[]
-    );
+    const resolvedSpeciesTraits = speciesContext.isMixed
+      ? draft.selectedSpeciesTraits
+      : applySpeciesTraitChoiceSelections(
+          species?.species_traits,
+          draft.selectedSpeciesTraitChoices,
+          allTraits as TraitWithChoiceOptions[]
+        );
     const ids = [
       ...resolvedSpeciesTraits,
       ...draft.selectedAncestryTraitIds,
@@ -81,13 +86,19 @@ export function GuidedRevealSummary() {
         variant: 'list' as const,
       };
     });
-  }, [species, draft, allTraits, traitById]);
+  }, [speciesContext.isMixed, species, draft, allTraits, traitById]);
 
   const skillNames = useMemo((): SummaryChipItem[] => {
     const ids = new Set<string>();
-    (species?.skills ?? []).forEach((id) => {
-      if (String(id) !== '0') ids.add(String(id));
-    });
+    if (speciesContext.isMixed) {
+      draft.selectedSpeciesSkillIds.forEach((id) => {
+        if (String(id) !== '0') ids.add(String(id));
+      });
+    } else {
+      (species?.skills ?? []).forEach((id) => {
+        if (String(id) !== '0') ids.add(String(id));
+      });
+    }
     Object.keys(draft.skills ?? {}).forEach((id) => ids.add(String(id)));
     return Array.from(ids).map((id) => {
       const skill = codexSkills.find((s) => String(s.id) === id);
@@ -98,7 +109,7 @@ export function GuidedRevealSummary() {
         variant: 'list' as const,
       };
     });
-  }, [draft.skills, species, codexSkills]);
+  }, [draft.skills, draft.selectedSpeciesSkillIds, speciesContext.isMixed, species, codexSkills]);
 
   const featById = useMemo(() => new Map(feats.map((f) => [String(f.id), f])), [feats]);
 
@@ -220,7 +231,7 @@ export function GuidedRevealSummary() {
   return (
     <div className="overflow-hidden rounded-card border border-border-light bg-surface shadow-sm">
       <div className="border-b border-border-light bg-surface-alt px-5 py-4">
-        <h3 className="font-display text-lg font-bold text-text-primary">{copy.title}</h3>
+        <GuidedSectionTitle>{copy.title}</GuidedSectionTitle>
         <p className="mt-0.5 font-nunito text-sm text-text-secondary">{copy.description}</p>
       </div>
 

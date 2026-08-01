@@ -12,3 +12,6 @@ export * from './formulas';
 
 // Calculations
 export * from './calculations';
+
+// Creature level display (user-facing fractions)
+export * from './creature-level-display';
