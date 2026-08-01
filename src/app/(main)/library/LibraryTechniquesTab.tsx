@@ -13,11 +13,13 @@ import { useSort } from '@/hooks/use-sort';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import {
   useUserTechniques,
   useUserEmpoweredTechniques,
   useTechniqueParts,
+  usePowerParts,
   useDuplicateTechnique,
   useDuplicateEmpoweredTechnique,
 } from '@/hooks';
@@ -66,6 +68,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   const { data: standardTechniques = [], isLoading: standardLoading, error: standardError } = standardTechniquesQuery;
   const { data: empoweredTechniques = [], isLoading: empoweredLoading, error: empoweredError } = empoweredTechniquesQuery;
   const { data: partsDb = [] } = useTechniqueParts();
+  const { data: powerPartsDb = [] } = usePowerParts({ enabled: mode === 'empowered' });
   const duplicateTechnique = useDuplicateTechnique();
   const duplicateEmpoweredTechnique = useDuplicateEmpoweredTechnique();
   const [search, setSearch] = useState('');
@@ -96,7 +99,9 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
       const syncResult = getTechniqueSyncResult(tech, partsDb);
       const totals = getEmpoweredTotals(tech);
       const damageStr = formatTechniqueDamage(doc.damage);
-      const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
+      const parts = empowered
+        ? []
+        : partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
       return {
         id: String(tech.docId ?? tech.id ?? ''),
         name: display.name,
@@ -187,7 +192,12 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
       duplicatePending={dup.isPending}
     >
       {filteredData.map((tech) => {
-        const partsSection = partsProficienciesSection(tech.parts, 'technique');
+        const partsSection =
+          mode === 'empowered'
+            ? empoweredTechniquePartsSection(tech.raw, powerPartsDb, partsDb, {
+                stripOptionSuffix: true,
+              })
+            : partsProficienciesSection(tech.parts, 'technique');
         return (
           <GridListRow
             key={tech.id}

@@ -120,9 +120,13 @@ export function buildPowerSelectableItems(
 export function buildEmpoweredTechniqueSelectableItems(
   empoweredTechniqueList: UserTechnique[],
   powerPartsDb: Parameters<typeof transformUserPowerToDisplayItem>[1],
+  techniquePartsDb: Parameters<typeof buildTechniqueSelectableItems>[1],
 ): SelectableItem[] {
   return empoweredTechniqueList.map((technique) => {
-    const empowered = buildEmpoweredPowerSelectableItem(technique);
+    const empowered = buildEmpoweredPowerSelectableItem(technique, {
+      powerPartsDb: powerPartsDb ?? [],
+      techniquePartsDb: techniquePartsDb ?? [],
+    });
     const raw = technique as unknown as Record<string, unknown>;
     const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
     const totals = (raw.totals as Record<string, unknown> | undefined) ?? {};

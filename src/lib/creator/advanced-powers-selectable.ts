@@ -183,12 +183,18 @@ export function techniqueListToSelectable(
 
 /** Map empowered techniques into the powers-modal SelectableItem shape (compact columns). */
 export function empoweredTechniqueToPowerSelectable(
-  list: WithSource<UserTechnique>[]
+  list: WithSource<UserTechnique>[],
+  powerPartsDb?: PowerPart[] | null,
+  techniquePartsDb?: TechniquePart[] | null
 ): SelectableItem[] {
+  const codex =
+    powerPartsDb && techniquePartsDb
+      ? { powerPartsDb, techniquePartsDb }
+      : undefined;
   return list.flatMap((technique) => {
     const itemId = String(technique.docId ?? technique.id ?? '');
     if (!itemId) return [];
-    const base = buildEmpoweredPowerSelectableItem(technique);
+    const base = buildEmpoweredPowerSelectableItem(technique, codex);
     const raw = technique as unknown as Record<string, unknown>;
     const totals = (raw.totals as Record<string, unknown> | undefined) ?? {};
     const energy = Number(totals.energy ?? 0);

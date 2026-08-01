@@ -187,8 +187,8 @@ export function useCreatureCreatorWorkspace() {
     [powerList, powerPartsDb],
   );
   const empoweredTechniqueSelectableItems = useMemo(
-    () => buildEmpoweredTechniqueSelectableItems(empoweredTechniqueList, powerPartsDb),
-    [empoweredTechniqueList, powerPartsDb],
+    () => buildEmpoweredTechniqueSelectableItems(empoweredTechniqueList, powerPartsDb, techniquePartsDb),
+    [empoweredTechniqueList, powerPartsDb, techniquePartsDb],
   );
   const techniqueSelectableItems = useMemo(
     () => buildTechniqueSelectableItems(techniqueList, techniquePartsDb),

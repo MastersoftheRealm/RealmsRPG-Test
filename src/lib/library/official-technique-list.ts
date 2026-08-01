@@ -49,6 +49,7 @@ export function buildOfficialTechniqueRows(
   mode: 'standard' | 'empowered' = 'standard'
 ): OfficialTechniqueRow[] {
   return items.map((t) => {
+    const empowered = mode === 'empowered';
     const doc: TechniqueDocument = {
       name: String(t.name ?? ''),
       description: String(t.description ?? ''),
@@ -61,10 +62,11 @@ export function buildOfficialTechniqueRows(
       weapon: t.weapon as TechniqueDocument['weapon'],
     };
     const display = deriveTechniqueDisplay(doc, partsDb);
-    const empowered = mode === 'empowered';
     const totals = empowered ? getEmpoweredTechniqueTotals(t) : {};
     const damageStr = formatTechniqueDamage(doc.damage);
-    const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
+    const parts = empowered
+      ? []
+      : partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
     return {
       id: String(t.id ?? t.docId ?? ''),
       raw: t,

@@ -5180,7 +5180,7 @@ Realms Library and My Library replace the single Armaments tab with **Weapons**,
 **Steps**
 1. Open Library → Realms Library — confirm tabs are **Weapons**, **Armor**, **Shields** (not a single Armaments tab).
 2. **Weapons** tab: columns include Rarity, Currency, TP, Range, Damage (no Type column). Sort by Damage/TP works.
-3. **Armor** tab: columns include Damage Red. and Agility Red. (not Range/Damage). Sort by Damage Red. works.
+3. **Armor** tab: columns include Damage Red., Agility Red., Abl. Req., and Crit + (not Range/Damage). Sort by Damage Red. works.
 4. **Shields** tab: columns include Block and Damage.
 5. Switch to My Library — same three tabs with edit/duplicate/sync chrome per kind.
 6. Admin `/admin/public-library` → Armaments: segmented Weapons / Armor / Shields control; lists filter correctly.
@@ -5189,6 +5189,29 @@ Realms Library and My Library replace the single Armaments tab with **Weapons**,
 **Expected**
 - `equipment`-typed rows are excluded (armaments only); counts per tab match filtered items.
 - Add-to-library from Realms still works for each kind.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-033-T002 — Armor Abl. Req. + Crit + columns (TASK-628)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-033 — Library armaments split |
+| **Related task** | TASK-628 |
+| **Where** | `/library` → Realms Library and My Library → **Armor** |
+| **Needs** | Armor with a Strength (or other) ability requirement and/or Critical Range +1 property |
+
+**Steps**
+1. Open Library → Realms Library → **Armor**.
+2. Confirm column headers include **ABL. REQ.** and **CRIT +** (alongside Damage Red. / Agility Red.).
+3. Spot-check an armor with a Strength requirement: Abl. Req. cell shows e.g. `Strength 3+` (not blank when the item has a req).
+4. Spot-check an armor with Critical Range +1: Crit + cell shows `+1` (or higher stack); expand the row and confirm **Critical Range +1** is not duplicated as a property chip.
+5. Armor with neither: Abl. Req. and Crit + show `-`.
+6. My Library → Armor: same headers/cells.
+
+**Expected**
+- Quick-ref ability requirement and Critical Range increase are visible in collapsed columns without expanding.
+- No column + chip duplication for Critical Range +1 on armor rows.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5302,6 +5325,32 @@ Library/Official powers with promoted duration/area columns must not show duplic
 
 ---
 
+## DEV-V-038 — Empowered technique nested power part chips (TASK-626)
+
+Library empowered technique rows must show both nested power parts (`derivePowerDisplay` on `power` payload) and technique parts.
+
+#### DEV-V-038-T001 — Library empowered expand + USM chips
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-038 — Empowered technique nested power part chips |
+| **Related task** | TASK-626 |
+| **Where** | `/library` → Realms + My → Empowered; sheet Add → Empowered; `/empowered-technique-creator` → Load |
+| **Needs** | Account with at least one empowered technique that has both power and technique parts saved |
+
+**Steps**
+1. Open `/library` → Realms → Empowered. Expand a row with known power + technique parts.
+2. Open **Parts & Proficiencies** — confirm chips from **both** sides (e.g. power Range/Frighten + technique Weapon Attack).
+3. Repeat on My Library → Empowered tab.
+4. Sheet → Add power → Empowered tab (or creator Load): expand row — same part chips in detail sections.
+
+**Expected**
+- Power-side parts from nested `power.parts` / `power.mechanics` appear alongside technique parts; no forked chip builder.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -5328,10 +5377,11 @@ Library/Official powers with promoted duration/area columns must not show duplic
 | DEV-V-030 | Encounter play facades (TASK-608) | — | Manual — see suite above |
 | DEV-V-031 | API route smoke (TASK-613) | — | Automated (`npm run test:api`) |
 | DEV-V-032 | Realms Library creature stat blocks (TASK-620) | — | Manual — see suite above |
-| DEV-V-033 | Library armaments split (TASK-621) | — | Manual — see suite above |
+| DEV-V-033 | Library armaments split (TASK-621, TASK-628) | — | Manual — see suite above |
 | DEV-V-034 | GLR chrome + Parts chip grammar (TASK-622) | — | Manual — see suite above |
 | DEV-V-035 | Realms Library redundant source badge (session) | — | Manual — see suite above |
 | DEV-V-036 | Power Creator multi-elemental damage EN (TASK-623) | — | Manual — see suite above |
 | DEV-V-037 | Official power part chip dedupe (session cleanup) | — | Manual — see suite above |
+| DEV-V-038 | Empowered technique nested power part chips (TASK-626) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

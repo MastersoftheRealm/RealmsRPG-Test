@@ -8,7 +8,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Wand2, Swords, Shield, Users } from 'lucide-react';
+import { Wand2, Swords, Shield, Shirt, Sword, Users } from 'lucide-react';
 import {
   ConfirmActionModal,
   OfficialPowerList,
@@ -27,10 +27,18 @@ import {
 import { getErrorMessage } from '@/lib/api-client';
 import { useAuthStore } from '@/stores/auth-store';
 import type { LibraryCreature, LibraryItem, LibraryPower, LibraryTechnique } from '@/types/library';
+import type { ArmamentLibraryKind } from '@/lib/library/armament-library-labels';
 
 type AddableOfficialItem = LibraryPower | LibraryTechnique | LibraryItem | LibraryCreature;
 
-export type LibraryPublicTabId = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures';
+export type LibraryPublicTabId =
+  | 'powers'
+  | 'techniques'
+  | 'empowered-techniques'
+  | 'weapons'
+  | 'armor'
+  | 'shields'
+  | 'creatures';
 
 interface LibraryPublicContentProps {
   activeTab: LibraryPublicTabId;
@@ -45,7 +53,15 @@ export function LibraryPublicContent({ activeTab, onLoginRequired, readOnly = fa
   if (activeTab === 'empowered-techniques') {
     return <PublicTechniquesList onLoginRequired={onLoginRequired} readOnly={readOnly} mode="empowered" />;
   }
-  if (activeTab === 'items') return <PublicItemsList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
+  if (activeTab === 'weapons') {
+    return <PublicItemsList armamentKind="weapon" onLoginRequired={onLoginRequired} readOnly={readOnly} />;
+  }
+  if (activeTab === 'armor') {
+    return <PublicItemsList armamentKind="armor" onLoginRequired={onLoginRequired} readOnly={readOnly} />;
+  }
+  if (activeTab === 'shields') {
+    return <PublicItemsList armamentKind="shield" onLoginRequired={onLoginRequired} readOnly={readOnly} />;
+  }
   if (activeTab === 'creatures') return <PublicCreaturesList onLoginRequired={onLoginRequired} readOnly={readOnly} />;
   return null;
 }
@@ -141,6 +157,7 @@ function PublicTechniquesList({
   const libraryType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary(libraryType);
   const { data: partsDb = [] } = useTechniqueParts();
+  const { data: powerPartsDb = [] } = usePowerParts({ enabled: mode === 'empowered' });
   const addMutation = useAddOfficialToLibrary(libraryType);
   const { openAddConfirm, confirmModal, wrapAddSuccess } = useAddToLibraryFlow<LibraryTechnique>(readOnly, onLoginRequired);
   const empowered = mode === 'empowered';
@@ -150,6 +167,7 @@ function PublicTechniquesList({
       <OfficialTechniqueList
         items={items}
         partsDb={partsDb}
+        powerPartsDb={powerPartsDb}
         isLoading={isLoading}
         error={error}
         onRetry={() => { void refetch(); }}
@@ -171,7 +189,21 @@ function PublicTechniquesList({
   );
 }
 
-function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequired: () => void; readOnly?: boolean }) {
+const ARMAMENT_EMPTY_ICONS: Record<ArmamentLibraryKind, React.ReactNode> = {
+  weapon: <Sword className="w-8 h-8" />,
+  armor: <Shirt className="w-8 h-8" />,
+  shield: <Shield className="w-8 h-8" />,
+};
+
+function PublicItemsList({
+  armamentKind,
+  onLoginRequired,
+  readOnly = false,
+}: {
+  armamentKind: ArmamentLibraryKind;
+  onLoginRequired: () => void;
+  readOnly?: boolean;
+}) {
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('items');
   const { data: propertiesDb = [] } = useItemProperties();
   const addMutation = useAddOfficialToLibrary('items');
@@ -180,15 +212,13 @@ function PublicItemsList({ onLoginRequired, readOnly = false }: { onLoginRequire
   return (
     <>
       <OfficialItemList
+        armamentKind={armamentKind}
         items={items}
         propertiesDb={propertiesDb}
         isLoading={isLoading}
         error={error}
         onRetry={() => { void refetch(); }}
-        errorMessage="Failed to load Realms Library armaments"
-        emptyIcon={<Shield className="w-8 h-8" />}
-        emptyTitle="No armaments yet"
-        emptyMessage="Official armaments will appear here when added to Realms Library."
+        emptyIcon={ARMAMENT_EMPTY_ICONS[armamentKind]}
         variant="library"
         readOnly={readOnly}
         onAddRequest={(row) => openAddConfirm(row.name, row.raw)}

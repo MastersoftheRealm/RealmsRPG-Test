@@ -9,7 +9,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DeleteConfirmModal, OfficialTechniqueList } from '@/components/shared';
 import { useToast } from '@/components/ui';
-import { useOfficialLibrary, useTechniqueParts } from '@/hooks';
+import { useOfficialLibrary, useTechniqueParts, usePowerParts } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
 import { Swords } from 'lucide-react';
@@ -23,6 +23,7 @@ export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standa
   const queryClient = useQueryClient();
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary(libraryType);
   const { data: partsDb = [] } = useTechniqueParts();
+  const { data: powerPartsDb = [] } = usePowerParts({ enabled: mode === 'empowered' });
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const empowered = mode === 'empowered';
 
@@ -45,6 +46,7 @@ export function AdminPublicTechniquesTab({ mode = 'standard' }: { mode?: 'standa
       <OfficialTechniqueList
         items={items}
         partsDb={partsDb}
+        powerPartsDb={powerPartsDb}
         isLoading={isLoading}
         error={error}
         onRetry={() => { void refetch(); }}

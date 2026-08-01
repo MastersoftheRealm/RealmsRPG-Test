@@ -152,7 +152,9 @@ export function useLoadModalLibrary(
   } = useOfficialLibrary('creatures', { enabled: needCreatures && fetchEnabled });
 
   const { data: codexSpecies = [] } = useCodexSpecies({ enabled: needSpecies && fetchEnabled });
-  const { data: powerPartsDb = [] } = useCodexPowerParts({ enabled: needPowers && fetchEnabled });
+  const { data: powerPartsDb = [] } = useCodexPowerParts({
+    enabled: (needPowers || needEmpowered) && fetchEnabled,
+  });
   const { data: techniquePartsDb = [] } = useCodexTechniqueParts({
     enabled: (needTechniques || needEmpowered) && fetchEnabled,
   });
@@ -214,7 +216,12 @@ export function useLoadModalLibrary(
       const loading =
         (source !== 'public' && empoweredTechniquesLoading) ||
         (source !== 'my' && publicEmpoweredTechniquesLoading);
-      const items = raw.map((item) => buildEmpoweredPowerSelectableItem(item));
+      const items = raw.map((item) =>
+        buildEmpoweredPowerSelectableItem(item, {
+          powerPartsDb: codex.powerPartsDb,
+          techniquePartsDb: codex.techniquePartsDb,
+        })
+      );
       return { selectableItems: items, rawItems: raw, isLoading: loading, isPublicError: !!publicError };
     }
 

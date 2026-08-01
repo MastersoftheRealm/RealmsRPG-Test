@@ -119,6 +119,8 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-628** | DEV-V-033 **T002** | Library Armor tab: Abl. Req. + Crit + columns; Critical Range +1 not duplicated as property chip |
+| **TASK-626** | DEV-V-038 **T001** | Library Realms + My empowered techniques expand: Parts & Proficiencies shows power + technique chips; load/add USM empowered rows show same chips |
 | **Session** | DEV-V-037 **T001** | Realms Library → Powers → Menace expand: one `Duration (Minute)`, one `Sphere of Effect` (5 unique part chips); optional Fog Cloud spot-check |
 | **Session** | DEV-V-035 **T001** | Realms Library: expanded powers/techniques/armaments/creatures show no redundant **Realms** descriptor chip; admin Enhanced badge unchanged |
 | **TASK-623** | DEV-V-036 **T001** | Power Creator: add fire + ice + lightning 1d6 rows — sidebar/total EN sums each row (e.g. 12 EN for three 1d6 elemental); save/reload and Library energy match |

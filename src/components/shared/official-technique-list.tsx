@@ -8,7 +8,7 @@
 import { type ReactNode } from 'react';
 import { Swords } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
-import type { TechniquePart } from '@/hooks/codex-types';
+import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
 import {
   buildOfficialTechniqueRows,
@@ -17,6 +17,7 @@ import {
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
   type OfficialTechniqueRow,
 } from '@/lib/library/official-technique-list';
+import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
@@ -25,6 +26,8 @@ export type { OfficialTechniqueRow };
 export interface OfficialTechniqueListProps {
   items: LibraryTechnique[];
   partsDb: TechniquePart[];
+  /** Required when `mode="empowered"` — nested power part chips use derivePowerDisplay. */
+  powerPartsDb?: PowerPart[];
   isLoading: boolean;
   error: Error | null;
   onRetry: () => void;
@@ -46,6 +49,7 @@ export interface OfficialTechniqueListProps {
 export function OfficialTechniqueList({
   items,
   partsDb,
+  powerPartsDb = [],
   isLoading,
   error,
   onRetry,
@@ -82,7 +86,11 @@ export function OfficialTechniqueList({
         { key: 'Damage', value: t.damage, align: 'center' },
       ]}
       getDetailSections={(t) => {
-        const section = partsProficienciesSection(t.parts, 'technique');
+        const section = empowered
+          ? empoweredTechniquePartsSection(t.raw, powerPartsDb, partsDb, {
+              stripOptionSuffix: true,
+            })
+          : partsProficienciesSection(t.parts, 'technique');
         return section ? [section] : undefined;
       }}
       getTotalCost={(t) => t.tp}

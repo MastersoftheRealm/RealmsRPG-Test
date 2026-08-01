@@ -90,8 +90,8 @@ export function usePowersStepSelectables(args: {
     [allPowersRaw, powerParts, recommendedPowerRefs, powerSelectableOpts]
   );
   const allEmpoweredSelectableItems = useMemo(
-    () => empoweredTechniqueToPowerSelectable(allEmpoweredTechniquesRaw),
-    [allEmpoweredTechniquesRaw]
+    () => empoweredTechniqueToPowerSelectable(allEmpoweredTechniquesRaw, powerParts, techniqueParts),
+    [allEmpoweredTechniquesRaw, powerParts, techniqueParts]
   );
 
   const selectedTechniqueIdsSet = useMemo(
