@@ -27,7 +27,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // =============================================================================
 // CORE RULES DATA — sourced from constants.ts, creator-constants.ts, formulas.ts,
-// GAME_RULES.md, and core_rulebook_extracted.txt
+// GAME_RULES.md, and data/core-rules/*.json exports
 // =============================================================================
 
 const CORE_RULES = {
@@ -123,7 +123,7 @@ const CORE_RULES = {
     gargantuan: { name: 'Gargantuan', space: 20 },
   },
 
-  // ─── CRAFTING (crafting.txt) ───────────────────────────────────────────────
+  // ─── CRAFTING (GAME_RULES.md / core_rules CRAFTING category) ───────────────
   CRAFTING: {
     craftingCostMultiplier: 0.75,
     consumableTimeMultiplier: 0.25,

@@ -43,6 +43,18 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
+# Local agent/session scratch (never commit)
+/build-output*.txt
+/lint-output.txt
+/tsc-errors.txt
+/commit-msgs.txt
+/tmp_transcript.txt
+
+# Local audit scratch + extracted rulebook copies (keep outside repo)
+/tmp/
+/core_rulebook_extracted.txt
+/crafting.txt
+
 # env files (can opt-in for committing if needed)
 .env*
 !.env.example

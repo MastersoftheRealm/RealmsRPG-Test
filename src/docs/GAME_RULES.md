@@ -2,7 +2,7 @@
 
 > **Purpose:** Centralized game rules for AI agents and engineers. Use when implementing validation, caps, display logic, helpful subtext, and calculations. Parsed from the Core Rulebook.
 
-**Pure source of truth:** `core_rulebook_extracted.txt` (the extracted Core Rulebook)
+**Authority:** This file (`GAME_RULES.md`) for agent/engineer rules reference; live DB via `public.core_rules` (admin/codex); re-seed JSON in `data/core-rules/`.
 **Code sources:** `src/lib/game/constants.ts`, `src/lib/game/formulas.ts`, `src/lib/game/calculations.ts`, `src/lib/game/skill-allocation.ts`, `src/lib/game/creator-constants.ts`
 
 ---
