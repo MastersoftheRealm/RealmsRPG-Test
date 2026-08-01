@@ -1,6 +1,17 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-01 (Power Creator multi-elemental damage EN)
+Last updated: 2026-08-01 (Creatures GLR spacing + header chrome drift)
+
+**Raw Feedback Log — 2026-08-01 (Creatures GLR spacing + header alignment)**
+- Context: Library → Creatures tab (vs Powers/Techniques/Weapons/Armor/Shields); concern that GLR norms break locally and require hunt-and-peck fixes
+- Feedback: Creature GLR item spacing differs from other tabs; creature column headers do not follow the recent header↔column alignment fix (TASK-622 `rowChrome`). Assumed same pattern may exist in other GLR cases. Shared components should make the desired norm hard to break.
+- Expected: Same row gap as other GLR lists; ListHeader reserves the same action chrome as GridListRow (edit/delete/+); prefer enforceable shared defaults over per-tab overrides.
+- Disposition: **TASK-630** done — Creatures `rowChrome` + shell `gap-1` (dropped `space-y-3`); shared `CREATURE_STAT_BLOCK_GRID`. **TASK-631** filed for enforceable GLR chrome/spacing CI. Related TASK-629 (facts registry).
+
+**Raw Feedback Log — 2026-08-01 (Library armor columns + GLR quick-ref SoT)**
+- Context: Realms Library → Armor column headers; constitution consistency for GLR quick-ref facts
+- Feedback: Add ability requirement and critical range increase to the armor column headers. Also: based on the goal that quick-reference information is readily available as a column header or desc chip for items — do we have a shared/consistent reference for what that means for each GLR item type that is enforceable across the codebase? (e.g. powers show range; armor ability requirements / critical range; weapon damage / range / rarity / currency.) Are these accounted for across all cases and enforced? Source of truth?
+- Disposition: **TASK-628** done — Armor Abl. Req. + Crit + columns in `ARMAMENT_LIBRARY_CONFIG` / `armamentRowColumns`. **TASK-629** filed (Architect) for an enforceable per-entity required-facts registry — today policy lives in docs + `compact-facts` grammar, not CI-enforced per list.
 
 **Raw Feedback Log — 2026-08-01 (Power Creator multi-elemental damage EN)**
 - Context: Power Creator — Added Damage Types section
