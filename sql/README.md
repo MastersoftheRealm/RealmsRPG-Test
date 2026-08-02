@@ -55,6 +55,22 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 
 ---
 
+## Proposed (awaiting owner approval — TASK-649)
+
+Draft-only audit hardening from [CODEBASE_AUDIT_2026-08-01](../src/docs/ai/archive/CODEBASE_AUDIT_2026-08-01.md) §5.2. **Do not apply** until owner reviews and says "apply". Apply in order:
+
+| Step | File | Purpose |
+|------|------|---------|
+| 1 | [task-649-drop-codex-backup-tables-proposed.sql](task-649-drop-codex-backup-tables-proposed.sql) | Drop 4 stale `codex_*_backup_*` tables |
+| 2 | [task-649-anon-least-privilege-proposed.sql](task-649-anon-least-privilege-proposed.sql) | Revoke excessive `anon` grants; re-GRANT SELECT on public-read tables |
+| 3 | [task-649-codex-art-storage-select-hardening-proposed.sql](task-649-codex-art-storage-select-hardening-proposed.sql) | Remove broad `codex-art` listing policy (bucket stays public) |
+| 4 | [task-649-feat-tag-function-search-path-proposed.sql](task-649-feat-tag-function-search-path-proposed.sql) | Pin `search_path` on feat-tag functions |
+| 5 | [task-649-index-hygiene-proposed.sql](task-649-index-hygiene-proposed.sql) | Add 2 FK indexes; unused-index drops deferred (commented) |
+
+Post-apply: re-run `get_advisors`, smoke-test codex read / image URLs / auth flows, update `SUPABASE_SCHEMA.md`. See **DEV-007** in `DEVELOPER_TASK_QUEUE.md`.
+
+---
+
 ## When to use
 
 - **New project / fresh DB:** Historical Path C consolidation: [ai/archive/SUPABASE_PATH_C_OPERATOR_GUIDE.md](../src/docs/ai/archive/SUPABASE_PATH_C_OPERATOR_GUIDE.md). Current schema is already in `public`.
