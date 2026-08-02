@@ -6,7 +6,9 @@
 
 import { NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { isAdmin } from '@/lib/admin';
 import { createClient } from '@/lib/supabase/server';
+import { getSession } from '@/lib/supabase/session';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { coerceJsonRecord, parseArchetypePathData } from '@/lib/game/archetype-path';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
@@ -444,6 +446,14 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
 /** Codex is admin-editable; long public cache caused stale archetypes/feats after saves. */
 const cacheControl = 'private, max-age=0, must-revalidate';
 
+/** ?debug=1 is allowed in non-production or for authenticated admins only (SEC audit M1). */
+async function canExposeCodexDebug(requested: boolean): Promise<boolean> {
+  if (!requested) return false;
+  if (process.env.NODE_ENV !== 'production') return true;
+  const { user } = await getSession();
+  return user?.uid ? isAdmin(user.uid) : false;
+}
+
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const debug = url.searchParams.get('debug') === '1';
@@ -459,6 +469,7 @@ export async function GET(request: Request) {
     const code = err && typeof err === 'object' && 'code' in err ? String((err as { code?: string }).code) : undefined;
     const stack = err instanceof Error ? err.stack : undefined;
     console.error('[Codex API] Database error:', message, stack);
+    const showDebug = await canExposeCodexDebug(debug);
     const safeHint =
       process.env.NODE_ENV === 'development'
         ? message
@@ -473,7 +484,7 @@ export async function GET(request: Request) {
       {
         error: 'Failed to load codex',
         ...(safeHint && { hint: safeHint }),
-        ...(debug && { debug: { message, code } }),
+        ...(showDebug && { debug: { message, code } }),
       },
       { status: 500 }
     );

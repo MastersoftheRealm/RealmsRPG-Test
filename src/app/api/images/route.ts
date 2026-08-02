@@ -8,7 +8,7 @@ import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { detectImageMime, extensionForImageMime, validateImageMagicBytes } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 import {
@@ -50,7 +50,8 @@ export async function GET(request: NextRequest) {
     }
     const q = params.get('q')?.trim() ?? '';
 
-    const supabase = createServiceRoleClient();
+    // Public reads: cookie-aware anon/authenticated client so RLS governs visibility (SEC audit M3).
+    const supabase = await createClient();
 
     // Category filter: resolve matching image ids via join table, then hydrate full rows
     // (inner-join select can truncate sibling tags / confuse typed select strings).

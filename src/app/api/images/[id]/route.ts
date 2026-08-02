@@ -8,7 +8,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
-import { createServiceRoleClient } from '@/lib/supabase/server';
+import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { REALMS_IMAGES_BUCKET, parseRealmsImageCategories } from '@/lib/realms-images';
 import { clearRealmsImageRefs } from '@/lib/realms-image-consumers';
 import { fetchRealmsImageById, replaceImageCategories } from '@/lib/realms-images-server';
@@ -24,8 +24,12 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'id required' }, { status: 400 });
     }
 
-    const supabase = createServiceRoleClient();
-    const image = await fetchRealmsImageById(supabase, id);
+    // Public reads: cookie-aware anon/authenticated client so RLS governs visibility (SEC audit M3).
+    const supabase = await createClient();
+    const image = await fetchRealmsImageById(
+      supabase as unknown as ReturnType<typeof createServiceRoleClient>,
+      id
+    );
     if (!image) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
