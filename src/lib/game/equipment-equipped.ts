@@ -3,33 +3,18 @@
  * Armor: at most one piece equipped; weapons/shields/general gear may multi-equip.
  */
 
-import type { Item, ItemProperty } from '@/types/equipment';
+import type { Item } from '@/types/equipment';
+import {
+  resolveArmorDamageReduction,
+  type ArmorDrSource,
+} from '@/lib/game/resolve-armor-damage-reduction';
 
-type DrLike = {
-  damageReduction?: number;
-  armorValue?: number;
-  armor?: number;
-  properties?: Array<string | ItemProperty | { name?: string; op_1_lvl?: number }>;
-};
-
-/** Resolve Damage Reduction for armor pick / display parity with sheet rows. */
-export function itemDamageReduction(item: DrLike): number {
-  const direct = item.damageReduction ?? item.armorValue ?? item.armor;
-  if (typeof direct === 'number' && direct > 0) return direct;
-
-  const props = item.properties;
-  if (!Array.isArray(props)) return 0;
-
-  for (const p of props) {
-    if (typeof p === 'string') continue;
-    if (p.name === 'Damage Reduction') {
-      const op = p as ItemProperty & { op_1_lvl?: number };
-      const lvl = typeof op.op_1_lvl === 'number' ? op.op_1_lvl : 0;
-      return 1 + lvl;
-    }
-  }
-  return 0;
+/** @deprecated Prefer `resolveArmorDamageReduction`; kept for existing imports. */
+export function itemDamageReduction(item: ArmorDrSource): number {
+  return resolveArmorDamageReduction(item);
 }
+
+export { resolveArmorDamageReduction, type ArmorDrSource } from '@/lib/game/resolve-armor-damage-reduction';
 
 /** Index of armor row to equip at creation (highest DR, else first). */
 export function pickArmorEquipIndex<T>(armorRows: T[], drScore: (row: T) => number): number {

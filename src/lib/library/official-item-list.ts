@@ -14,7 +14,6 @@ import {
   calculateCurrencyCostAndRarity,
   deriveAgilityReductionFromProperties,
   deriveCriticalRangeIncreaseFromProperties,
-  deriveDamageReductionFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
   formatRange,
@@ -24,6 +23,7 @@ import {
   formatAbilityRequirementFact,
   namedPropertyDescriptorChips,
 } from '@/lib/detail-option/compact-facts';
+import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import type { ArmamentLibraryKind } from '@/lib/library/armament-library-labels';
 
@@ -190,10 +190,7 @@ export function buildOfficialItemRows(
     const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
     const rangeStr = formatRange(props) || '-';
     const damageStr = formatDamageDisplay(item.damage) || '-';
-    const damageReduction =
-      item.damageReduction ??
-      item.armorValue ??
-      deriveDamageReductionFromProperties(props);
+    const damageReduction = resolveArmorDamageReduction({ ...item, properties: props });
     const agilityReduction = resolveAgilityReduction(item, props);
     const criticalRangeIncrease = resolveCriticalRangeIncrease(item, props);
     const abilityRequirement = formatAbilityRequirementColumn(item, props);

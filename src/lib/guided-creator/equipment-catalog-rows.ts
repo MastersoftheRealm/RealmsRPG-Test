@@ -13,6 +13,7 @@ import type { EligibleEquipmentRow, EquipmentPhase } from '@/lib/guided-creator/
 import { resolveItemUnitCost } from '@/lib/guided-creator/equipment-currency';
 import { resolveItemTrainingPoints } from '@/lib/guided-creator/loadout-tp';
 import { formatWeaponDamageLine } from '@/lib/guided-creator/equipment-phase-stats';
+import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { normalizeId } from '@/lib/utils';
 
 /**
@@ -130,14 +131,21 @@ export function armorStatsForRef(
   const key = normalizeId(refId);
   const official = officialItems.find((i) => normalizeId(String(i.id)) === key);
   if (official) {
+    const damageReduction = resolveArmorDamageReduction(official);
     return {
-      damageReduction: official.damageReduction ?? official.armorValue ?? null,
+      damageReduction: damageReduction > 0 ? damageReduction : null,
       agilityPenalty: official.agilityReduction ?? null,
     };
   }
   const codex = codexEquipment.find((i) => normalizeId(String(i.id)) === key);
-  if (codex?.armor_value != null) {
-    return { damageReduction: codex.armor_value, agilityPenalty: null };
+  if (codex) {
+    const damageReduction = resolveArmorDamageReduction({
+      armor_value: codex.armor_value,
+      properties: (codex.properties ?? []).map((name) => ({ name })),
+    });
+    if (damageReduction > 0) {
+      return { damageReduction, agilityPenalty: null };
+    }
   }
   return {};
 }

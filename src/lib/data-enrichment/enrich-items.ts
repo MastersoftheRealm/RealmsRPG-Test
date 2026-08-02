@@ -1,5 +1,6 @@
 import type { UserItem } from '@/hooks/use-user-library';
-import { formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties, deriveDamageReductionFromProperties } from '@/lib/calculators';
+import { formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties } from '@/lib/calculators';
+import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import type { CodexEquipmentItem, EnrichedItem } from './types';
 import { findInLibrary, deriveAbilityRequirementFromProperties } from './find-in-library';
 
@@ -47,8 +48,10 @@ export function enrichItems(
       // Shield-specific: block amount and optional damage from properties
       const shieldAmount = itemType === 'shield' ? deriveShieldAmountFromProperties(props) : undefined;
       const shieldDamage = itemType === 'shield' ? deriveShieldDamageFromProperties(props) : undefined;
-      // Armor DR = 1 (base) + op_1_lvl per game rules; derive from properties so display is accurate
-      const derivedArmorValue = itemType === 'armor' ? deriveDamageReductionFromProperties(props) : undefined;
+      const armorValue =
+        itemType === 'armor'
+          ? resolveArmorDamageReduction({ ...libraryItem, properties: props })
+          : undefined;
       return {
         id: displayId,
         name: libraryItem.name,
@@ -57,7 +60,7 @@ export function enrichItems(
         equipped,
         quantity,
         damage: libraryItem.damage,
-        armorValue: derivedArmorValue ?? libraryItem.armorValue,
+        armorValue,
         properties: propertyNames,
         range: (itemType === 'weapon' || itemType === 'shield') ? formatRange(props) : undefined,
         // Armor-specific fields
@@ -89,7 +92,10 @@ export function enrichItems(
           equipped,
           quantity,
           damage: codexItem.damage,
-          armorValue: codexItem.armor_value,
+          armorValue: resolveArmorDamageReduction({
+            armor_value: codexItem.armor_value,
+            properties: (codexItem.properties ?? []).map((name) => ({ name })),
+          }),
           properties: codexItem.properties || [],
         };
       }
