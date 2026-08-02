@@ -45,7 +45,7 @@ function findViolation(value) {
 }
 
 /** @type {import('eslint').Rule.RuleModule} */
-export default {
+const noRawColorRule = {
   meta: {
     type: 'problem',
     docs: {
@@ -75,3 +75,5 @@ export default {
     };
   },
 };
+
+export default noRawColorRule;

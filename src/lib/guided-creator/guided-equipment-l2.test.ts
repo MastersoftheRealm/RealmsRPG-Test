@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 import {
   applyGuidedEquipmentL2Selection,
   buildGuidedEquipmentL2Items,
@@ -301,21 +302,22 @@ describe('guided-equipment-l2', () => {
   });
 
   it('gear Confirm rejects over-budget quantity; empty selection clears gear (DEV-V-013-T052)', () => {
+    const overBudgetSelection: Array<SelectableItem & { quantity?: number }> = [
+      {
+        id: 'g1',
+        name: 'Rope',
+        quantity: 50,
+        data: {
+          ref: { id: 'g1', quantity: 1 },
+          category: 'equipment' as const,
+          row: catalog.get('g1')!,
+        },
+      },
+    ];
     const over = applyGuidedEquipmentL2Selection(
       'gear',
       baseDraft,
-      [
-        {
-          id: 'g1',
-          name: 'Rope',
-          quantity: 50,
-          data: {
-            ref: { id: 'g1', quantity: 1 },
-            category: 'equipment' as const,
-            row: catalog.get('g1')!,
-          },
-        },
-      ],
+      overBudgetSelection,
       catalog,
       30,
       200

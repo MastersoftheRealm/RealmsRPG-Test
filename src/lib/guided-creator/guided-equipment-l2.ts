@@ -29,7 +29,6 @@ import {
 import { buildEquipmentPhaseCardStats } from '@/lib/guided-creator/equipment-phase-stats';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { resolveCatalogRowUnitCost } from '@/lib/guided-creator/equipment-currency';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { normalizeId } from '@/lib/utils';
 
 export interface GuidedEquipmentL2ItemData {

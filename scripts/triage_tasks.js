@@ -40,8 +40,8 @@ function findFilesForKeywords(keywords) {
         const file = line.split(':')[0];
         found.set(file, (found.get(file)||0)+1);
       });
-    } catch(e) {
-      // ignore
+    } catch {
+      // ignore git grep failures
     }
   }
   // sort by count desc

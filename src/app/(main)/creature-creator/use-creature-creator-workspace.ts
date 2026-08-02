@@ -34,7 +34,6 @@ import {
   type CreatureFeat as CodexCreatureFeatRow,
   type UserPower,
   type UserTechnique,
-  type Skill,
   type Feat,
   type Trait,
 } from '@/hooks';

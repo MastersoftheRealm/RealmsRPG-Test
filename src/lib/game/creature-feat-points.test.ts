@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { calculateCreatureFeatPoints } from './formulas';
 import { CREATURE_CONSTANTS } from './constants';
+import type { CoreRulesMap } from '@/types/core-rules';
+
+type CreatureFeatRules = Pick<CoreRulesMap, 'PROGRESSION_CREATURE'>;
 
 describe('calculateCreatureFeatPoints', () => {
   it('uses CREATURE_CONSTANTS fallback when rules are missing', () => {
@@ -18,11 +21,11 @@ describe('calculateCreatureFeatPoints', () => {
   });
 
   it('reads featPointsPerLevel from admin PROGRESSION_CREATURE rules', () => {
-    const rules = {
+    const rules: CreatureFeatRules = {
       PROGRESSION_CREATURE: {
         baseFeatPoints: 4,
         featPointsPerLevel: 2,
-      },
+      } as CoreRulesMap['PROGRESSION_CREATURE'],
     };
 
     expect(calculateCreatureFeatPoints(1, 0, rules)).toBe(4);

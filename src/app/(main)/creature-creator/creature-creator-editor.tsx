@@ -14,7 +14,7 @@ import {
   RealmsImageField,
 } from '@/components/shared';
 import { subSkillsHelp } from '../../../../public/tooltip-text';
-import { Button, Input, Select, Textarea, Card } from '@/components/ui';
+import { Input, Select, Textarea, Card } from '@/components/ui';
 import {
   HealthEnergyAllocator,
   AbilityScoreEditor,

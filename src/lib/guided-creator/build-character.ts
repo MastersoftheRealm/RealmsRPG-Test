@@ -24,7 +24,6 @@ import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
 import type { Species } from '@/hooks';
 import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
-import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
 import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';

@@ -34,8 +34,8 @@ const character: CharacterForFeatRequirement = {
 describe('buildGuidedFeatsL2FilterOptions', () => {
   it('splits archetype vs character categories and abilities', () => {
     const feats = [
-      feat({ id: '1', name: 'Strike', category: 'Combat', ability: 'strength', char_feat: false }),
-      feat({ id: '2', name: 'Charm', category: 'Social', ability: 'fellowship', char_feat: true }),
+      feat({ id: '1', name: 'Strike', category: 'Combat', ability: ['strength'], char_feat: false }),
+      feat({ id: '2', name: 'Charm', category: 'Social', ability: ['fellowship'], char_feat: true }),
     ];
     expect(buildGuidedFeatsL2FilterOptions(feats, 'archetype')).toEqual({
       categories: ['Combat'],

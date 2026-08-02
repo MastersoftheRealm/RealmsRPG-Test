@@ -7,6 +7,7 @@ import { calculatePowerCosts, derivePowerDisplay } from './power-calc';
 const elementalDamagePart: PowerPart = {
   id: String(PART_IDS.ELEMENTAL_DAMAGE),
   name: 'Elemental Damage',
+  description: 'Elemental damage part',
   category: 'Damage',
   mechanic: true,
   base_en: 3,
@@ -20,6 +21,7 @@ const elementalDamagePart: PowerPart = {
 const magicDamagePart: PowerPart = {
   id: String(PART_IDS.MAGIC_DAMAGE),
   name: 'Magic Damage',
+  description: 'Magic damage part',
   category: 'Damage',
   mechanic: true,
   base_en: 3,
@@ -107,6 +109,7 @@ describe('derivePowerDisplay', () => {
       {
         id: '205',
         name: 'Frighten',
+        description: 'Frighten',
         category: 'Charm',
         mechanic: false,
         base_en: 0,
@@ -117,6 +120,7 @@ describe('derivePowerDisplay', () => {
       {
         id: '387',
         name: 'Immune to Effect on Overcome',
+        description: 'Immune to Effect on Overcome',
         category: 'Restriction',
         mechanic: true,
         base_en: 0,
@@ -127,6 +131,7 @@ describe('derivePowerDisplay', () => {
       {
         id: '232',
         name: 'Sphere of Effect',
+        description: 'Sphere of Effect',
         category: 'Area of Effect',
         mechanic: true,
         base_en: 0,
@@ -137,6 +142,7 @@ describe('derivePowerDisplay', () => {
       {
         id: '303',
         name: 'No Harm or Adaptation for Duration',
+        description: 'No Harm or Adaptation for Duration',
         category: 'Duration',
         mechanic: true,
         base_en: 0,
@@ -147,6 +153,7 @@ describe('derivePowerDisplay', () => {
       {
         id: '377',
         name: 'Duration (Minute)',
+        description: 'Duration (Minute)',
         category: 'Duration',
         mechanic: true,
         base_en: 0,
@@ -165,9 +172,9 @@ describe('derivePowerDisplay', () => {
         parts: [
           { id: 205, name: 'Frighten', op_1_lvl: 1, applyDuration: true },
           { id: 387, name: 'Immune to Effect on Overcome', isAdvanced: true },
-          { id: '232', name: 'Sphere of Effect' },
-          { id: '303', name: 'No Harm or Adaptation for Duration' },
-          { id: '377', name: 'Duration (Minute)' },
+          { id: 232, name: 'Sphere of Effect' },
+          { id: 303, name: 'No Harm or Adaptation for Duration' },
+          { id: 377, name: 'Duration (Minute)' },
         ],
       },
       partsDb

@@ -1,3 +1,83 @@
+- id: TASK-656
+  title: Add --max-warnings 0 ESLint CI gate; fix existing warnings
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-01
+  related_files:
+    - package.json
+    - .github/workflows/ui-verify.yml
+    - eslint-rules/no-raw-color.mjs
+    - scripts/check-feats-ids.js
+    - scripts/session_submit.js
+    - scripts/triage_tasks.js
+    - src/app/(main)/admin/codex/admin-species-edit-modal.tsx
+    - src/app/(main)/creature-creator/creature-creator-editor.tsx
+    - src/app/(main)/creature-creator/use-creature-creator-workspace.ts
+    - src/app/(main)/power-creator/use-power-creator-workspace.ts
+    - src/components/character-sheet/edit-species-modal.tsx
+    - src/components/character-sheet/proficiencies-tab.tsx
+    - src/components/character-sheet/use-sheet-resource-actions.ts
+    - src/lib/realms-image-consumers.ts
+    - tests/visual/auth-a11y.pw.ts
+    - tests/visual/auth-screenshots.pw.ts
+  description: |
+    Audit section 3 action item 4: lint currently passes with ~28 warnings (unused vars, hook deps) that CI
+    doesn't fail on. Fix the existing warnings and add --max-warnings 0 to the CI lint step.
+  acceptance_criteria:
+    - npm run lint (or CI lint step) passes with --max-warnings 0.
+    - 0 pre-existing warnings remain.
+    - npm run build passes.
+  completed_work: |
+    Added --max-warnings 0 to ui-verify.yml lint step and local package.json lint script (eslint . --max-warnings 0).
+    Resolved ~28 ESLint warnings across production src/, scripts, and visual test files (unused vars, hook deps,
+    raw-color backlog entries). npm run lint and npm run build pass.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md section 3/10.
+
+---
+
+- id: TASK-655
+  title: Add typecheck script + CI gate; fix broken test files
+  priority: high
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-01
+  related_files:
+    - package.json
+    - .github/workflows/ai-task-verifier.yml
+    - src/lib/calculators/power-calc.test.ts
+    - src/lib/game/creature-feat-points.test.ts
+    - src/lib/game/equipment-equipped.test.ts
+    - src/lib/glr/required-facts-registry.test.ts
+    - src/lib/guided-creator/build-character.test.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/lib/guided-creator/equipment-phase-nav.ts
+    - src/lib/guided-creator/feats-l2.test.ts
+    - src/lib/guided-creator/guided-equipment-l2.test.ts
+    - src/lib/guided-creator/guided-equipment-l2.ts
+    - src/lib/library/empowered-technique-display.test.ts
+  description: |
+    Audit section 2/10 item 7: there's no tsc --noEmit script and it isn't run in CI, even though 37-39
+    type errors currently exist across 7-8 test files (production src/ typechecks clean). Add a
+    typecheck script, wire it into CI, and fix the drifted test-file mocks.
+  acceptance_criteria:
+    - npm run typecheck script exists and passes with 0 errors.
+    - CI workflow runs it.
+    - All previously-failing test files fixed without weakening assertions.
+  completed_work: |
+    Added npm run typecheck (tsc --noEmit) and Typecheck step to ai-task-verifier.yml. Fixed drifted mocks/types
+    in 8 vitest files (power-calc, creature-feat-points, equipment-equipped, required-facts-registry,
+    build-character, feats-l2, guided-equipment-l2, empowered-technique-display) plus minor production type
+    fixes in build-character.ts, equipment-phase-nav.ts, guided-equipment-l2.ts. npm run typecheck passes with 0 errors.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md section 2/3/10.
+
+---
 - id: TASK-646
   title: Upgrade Next.js to latest 16.x patch
   priority: critical

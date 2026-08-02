@@ -6,6 +6,7 @@ import { buildGuidedCharacterPayload } from '@/lib/guided-creator/build-characte
 import { cleanForSave } from '@/lib/data-enrichment';
 import { calculateProficiencyTP } from '@/lib/proficiencies';
 import type { Character } from '@/types';
+import type { Item } from '@/types/equipment';
 import type { LibraryItem, LibraryPower } from '@/types/library';
 
 function minimalDraft(overrides: Partial<GuidedDraft> = {}): GuidedDraft {
@@ -254,12 +255,12 @@ describe('buildGuidedCharacterPayload', () => {
       }),
       {
         officialPowers: [
-          { id: 'p1', docId: 'p1', name: 'Bolt' },
-          { id: 'p2', docId: 'p2', name: 'Shield' },
+          { id: 'p1', docId: 'p1', name: 'Bolt', parts: [] },
+          { id: 'p2', docId: 'p2', name: 'Shield', parts: [] },
         ],
         officialTechniques: [
-          { id: 't1', docId: 't1', name: 'Slash' },
-          { id: 't2', docId: 't2', name: 'Parry' },
+          { id: 't1', docId: 't1', name: 'Slash', parts: [] },
+          { id: 't2', docId: 't2', name: 'Parry', parts: [] },
         ],
         codexFeats: [
           { id: 'feat-a', name: 'Weapon Focus' },
@@ -303,10 +304,10 @@ describe('buildGuidedCharacterPayload', () => {
 
   it('auto-equips starter gear with a single armor piece by DR', () => {
     const officialItems: LibraryItem[] = [
-      { id: 'w1', docId: 'w1', name: 'Sword', type: 'weapon' },
-      { id: 'a-light', docId: 'a-light', name: 'Leather', type: 'armor', armorValue: 1 },
-      { id: 'a-heavy', docId: 'a-heavy', name: 'Plate', type: 'armor', armorValue: 4 },
-      { id: 's1', docId: 's1', name: 'Buckler', type: 'shield' },
+      { id: 'w1', docId: 'w1', name: 'Sword', type: 'weapon', properties: [] },
+      { id: 'a-light', docId: 'a-light', name: 'Leather', type: 'armor', armorValue: 1, properties: [] },
+      { id: 'a-heavy', docId: 'a-heavy', name: 'Plate', type: 'armor', armorValue: 4, properties: [] },
+      { id: 's1', docId: 's1', name: 'Buckler', type: 'shield', properties: [] },
     ];
 
     const payload = buildGuidedCharacterPayload(
@@ -328,9 +329,10 @@ describe('buildGuidedCharacterPayload', () => {
 
     expect(payload.equipment?.weapons?.[0]?.equipped).toBe(true);
     expect(payload.equipment?.shields?.[0]?.equipped).toBe(true);
-    const armor = payload.equipment?.armor ?? [];
-    expect(armor.filter((a) => a.equipped).length).toBe(1);
-    expect(armor.find((a) => a.id === 'a-heavy')?.equipped).toBe(true);
-    expect(armor.find((a) => a.id === 'a-light')?.equipped).toBe(false);
+    expect(Array.isArray(payload.equipment?.armor)).toBe(true);
+    const armorRows = payload.equipment!.armor as Item[];
+    expect(armorRows.filter((a) => a.equipped).length).toBe(1);
+    expect(armorRows.find((a) => a.id === 'a-heavy')?.equipped).toBe(true);
+    expect(armorRows.find((a) => a.id === 'a-light')?.equipped).toBe(false);
   });
 });

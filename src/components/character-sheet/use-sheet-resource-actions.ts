@@ -193,7 +193,8 @@ export function useSheetResourceActions({
         if (!prev) return null;
         const next = patchTempModifiers(prev.tempModifiers, patch);
         if (next) return { ...prev, tempModifiers: next };
-        const { tempModifiers: _removed, ...rest } = prev;
+        const rest = { ...prev };
+        delete rest.tempModifiers;
         return rest as Character;
       });
     },

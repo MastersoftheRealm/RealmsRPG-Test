@@ -9,6 +9,7 @@ import {
 const frightenPart: PowerPart = {
   id: '100',
   name: 'Frighten',
+  description: 'Frighten',
   category: 'Status',
   mechanic: false,
   base_en: 2,
@@ -22,6 +23,7 @@ const frightenPart: PowerPart = {
 const customTechniquePart: TechniquePart = {
   id: '99',
   name: 'Custom Technique Part',
+  description: 'Custom Technique Part',
   category: 'Custom',
   mechanic: false,
   base_en: 1,
@@ -29,7 +31,6 @@ const customTechniquePart: TechniquePart = {
   op_1_en: 0,
   op_1_tp: 0,
   percentage: false,
-  duration: false,
 };
 
 const empoweredSample = {

@@ -9,7 +9,6 @@
 import { useMemo, useState } from 'react';
 import { IconButton, Button, Input, DescriptorChip, ExpandableChip } from '@/components/ui';
 import { Plus, X, RefreshCw } from 'lucide-react';
-import { cn } from '@/lib/utils';
 import { TabSummarySection, SummaryItem, SummaryRow, ValueStepper, ConfirmActionModal, LibraryCollapsibleSection } from '@/components/shared';
 import type { PartData } from '@/lib/chip/part-data';
 import { expandableChipPropsFromPartData } from '@/lib/chip/expandable-chip-props';

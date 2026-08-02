@@ -116,8 +116,6 @@ export function usePowerCreatorWorkspace({
   );
 
   const {
-    mechanicParts,
-    addWeaponToPowerPart,
     costs,
     advancedCalcRows,
     actionTypeDisplay,

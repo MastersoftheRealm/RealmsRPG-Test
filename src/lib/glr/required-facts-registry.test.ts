@@ -27,7 +27,9 @@ import {
   validateRowFactCoverage,
   validateSurfaceColumnConfig,
 } from './validate-glr-facts';
-import type { LibraryItem } from '@/types/library';
+import type { Item } from '@/types/equipment';
+import type { LibraryItem, LibraryPower } from '@/types/library';
+import type { Abilities } from '@/types/abilities';
 
 const propertiesDb: never[] = [];
 const emptyCodex = {
@@ -44,7 +46,14 @@ const sheetCtx: LibraryEntityRowContext = {
   showLibraryEditControls: false,
   rollContext: null,
   hasMissingForEntry: () => false,
-  abilities: { agility: 2 },
+  abilities: {
+    strength: 0,
+    vitality: 0,
+    agility: 2,
+    acuity: 0,
+    intelligence: 0,
+    charisma: 0,
+  } satisfies Abilities,
 };
 
 function headerKeys(
@@ -182,7 +191,7 @@ describe('GLR required-facts registry — row coverage (TASK-629)', () => {
         name: 'Bolt',
         description: 'A bolt.',
         actionType: 'Action',
-        range: { type: 'ranged', distance: 16 },
+        range: { type: 'ranged', distance: 16 } as LibraryPower['range'],
         parts: [],
       },
       'power',
@@ -210,7 +219,7 @@ describe('GLR required-facts registry — row coverage (TASK-629)', () => {
           agilityReduction: 1,
           armorValue: 2,
           properties: [{ id: 22, name: 'Critical Range +1', op_1_lvl: 0 }],
-        },
+        } as unknown as Item,
       ],
       sheetCtx
     );

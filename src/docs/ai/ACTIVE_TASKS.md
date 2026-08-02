@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 21 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 19 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-646 done (Next.js 16.2.12). TASK-665 done (utils hygiene). TASK-644 done (armor DR unify) — pending-qa. TASK-653 done (character ID oracle). TASK-642 partial (signup QA only). TASK-647/TASK-651 done. TASK-643 pending-qa. TASK-641 pending-qa DEV-V-013 T078. TASK-640 pending-qa T075–T077.
+**Hot notes:** TASK-655/656 done (typecheck + zero-warning lint CI gates) — pending-qa. TASK-646 done (Next.js 16.2.12). TASK-665 done (utils hygiene). TASK-644 done (armor DR unify) — pending-qa. TASK-653 done (character ID oracle). TASK-642 partial (signup QA only). TASK-647/TASK-651 done. TASK-643 pending-qa. TASK-641 pending-qa DEV-V-013 T078. TASK-640 pending-qa T075–T077.
 
 ---
 
@@ -240,49 +240,6 @@ Do **not** read the done archive at session start.
     - npm run build + test pass.
   notes: |
     Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 M5, §4.4.
-
----
-
-- id: TASK-655
-  title: Add typecheck script + CI gate; fix broken test files
-  priority: high
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - package.json
-    - .github/workflows/ai-task-verifier.yml
-  description: |
-    Audit §2/§10 item 7: there's no `tsc --noEmit` script and it isn't run in CI, even though 37-39
-    type errors currently exist across 7-8 test files (production src/ typechecks clean). Add a
-    typecheck script, wire it into CI, and fix the drifted test-file mocks.
-  acceptance_criteria:
-    - npm run typecheck script exists and passes with 0 errors.
-    - CI workflow runs it.
-    - All previously-failing test files fixed without weakening assertions.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §2/§3/§10.
-
----
-
-- id: TASK-656
-  title: Add --max-warnings 0 ESLint CI gate; fix existing warnings
-  priority: medium
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - package.json
-    - .github/workflows/ui-verify.yml
-  description: |
-    Audit §3 action item 4: lint currently passes with ~28 warnings (unused vars, hook deps) that CI
-    doesn't fail on. Fix the existing warnings and add --max-warnings 0 to the CI lint step.
-  acceptance_criteria:
-    - npm run lint (or CI lint step) passes with --max-warnings 0.
-    - 0 pre-existing warnings remain.
-    - npm run build passes.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §3/§10.
 
 ---
 

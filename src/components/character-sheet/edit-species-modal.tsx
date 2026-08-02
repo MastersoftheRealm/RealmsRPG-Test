@@ -126,12 +126,18 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
     [speciesA, speciesB],
   );
 
-  const selectedTraitIds = draftAncestry?.selectedTraits || [];
+  const selectedTraitIds = useMemo(
+    () => draftAncestry?.selectedTraits || [],
+    [draftAncestry?.selectedTraits],
+  );
   const selectedFlaw = draftAncestry?.selectedFlaw ?? null;
   const selectedCharacteristic = draftAncestry?.selectedCharacteristic ?? null;
   const selectedSpeciesTraits = draftAncestry?.selectedSpeciesTraits;
   const selectedFlawSpeciesId = draftAncestry?.selectedFlawSpeciesId ?? null;
-  const selectedSpeciesSkillIds = draftAncestry?.selectedSpeciesSkillIds ?? [];
+  const selectedSpeciesSkillIds = useMemo(
+    () => draftAncestry?.selectedSpeciesSkillIds ?? [],
+    [draftAncestry?.selectedSpeciesSkillIds],
+  );
   const maxAncestryTraits = selectedFlaw ? 2 : 1;
 
   const ancestryTraitsFromFlawSpecies = useMemo(() => {

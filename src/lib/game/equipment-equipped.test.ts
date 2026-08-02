@@ -5,6 +5,7 @@ import {
   itemDamageReduction,
   pickArmorEquipIndex,
   toggleSheetArmorEquipped,
+  type InventoryEquipRow,
 } from '@/lib/game/equipment-equipped';
 
 describe('itemDamageReduction', () => {
@@ -40,7 +41,7 @@ describe('toggleSheetArmorEquipped', () => {
 
 describe('applyStarterEquippedFlags', () => {
   it('equips all weapons/shields/equipment and one armor by DR', () => {
-    const inventory = [
+    const inventory: Array<InventoryEquipRow & { id: string }> = [
       { id: 'w1', type: 'weapon' as const },
       { id: 's1', type: 'shield' as const },
       { id: 'e1', type: 'equipment' as const },

@@ -93,14 +93,17 @@ async function updateConsumerRows(
 
   let { data, error } = await attempt(patch);
   if (error && /updated_at/i.test(error.message ?? '') && 'updated_at' in patch) {
-    const { updated_at: _u, ...withoutUpdated } = patch;
+    const { updated_at, ...withoutUpdated } = patch;
+    void updated_at;
     ({ data, error } = await attempt(withoutUpdated));
   }
   if (error && /image_url/i.test(error.message ?? '') && 'image_url' in patch) {
-    const { image_url: _i, ...withoutUrl } = patch;
+    const { image_url, ...withoutUrl } = patch;
+    void image_url;
     ({ data, error } = await attempt(withoutUrl));
     if (error && /updated_at/i.test(error.message ?? '') && 'updated_at' in withoutUrl) {
-      const { updated_at: _u2, ...minimal } = withoutUrl;
+      const { updated_at, ...minimal } = withoutUrl;
+      void updated_at;
       ({ data, error } = await attempt(minimal));
     }
   }

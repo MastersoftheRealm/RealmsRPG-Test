@@ -14,7 +14,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { spawnSync, execSync } = require('child_process');
+const { execSync } = require('child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
 const feedbackPath = path.join(repoRoot, 'src', 'docs', 'ALL_FEEDBACK_CLEAN.md');
@@ -53,8 +53,8 @@ console.log('Running extractor (apply)...');
 try {
   const out = execSync('node scripts/extract_feedback.js --apply', { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe'});
   console.log(out);
-} catch(e) {
-  console.error('Extractor failed:', e.stdout || e.message);
+} catch (error) {
+  console.error('Extractor failed:', error.stdout || error.message);
 }
 
 // Run triage --apply
@@ -62,8 +62,8 @@ console.log('Running triage (apply)...');
 try {
   const out = execSync('node scripts/triage_tasks.js --apply', { cwd: repoRoot, encoding: 'utf8', stdio: 'pipe'});
   console.log(out);
-} catch(e) {
-  console.error('Triage failed:', e.stdout || e.message);
+} catch (error) {
+  console.error('Triage failed:', error.stdout || error.message);
 }
 
 // Optional: autopush - create branches for low-risk tasks and open PRs using gh (if available)
@@ -76,7 +76,7 @@ if (autopush) {
   // require gh CLI
   try {
     execSync('gh --version', { stdio: 'ignore' });
-  } catch(e) {
+  } catch {
     console.error('gh CLI not available. Install GitHub CLI and authenticate to enable autopush.');
     process.exit(1);
   }
@@ -109,9 +109,9 @@ if (autopush) {
       // open PR
       const prTitle = `[${id}] ${title}`;
       execSync(`gh pr create --fill --title "${prTitle}" --body "Auto-created PR for ${id}. Agent will implement changes and update this PR."`, { cwd: repoRoot, stdio: 'inherit' });
-    } catch(e) {
-      console.error('Autopush step failed for', id, e.message || e);
-      try { execSync('git checkout -', { cwd: repoRoot }); } catch(_){}
+    } catch (error) {
+      console.error('Autopush step failed for', id, error.message || error);
+      try { execSync('git checkout -', { cwd: repoRoot }); } catch { /* ignore checkout rollback */ }
     }
   }
 }

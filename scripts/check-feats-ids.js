@@ -57,5 +57,5 @@ if (dupes.length) {
 }
 if (empty.length) {
   console.log('Empty id rows:', empty.length);
-  empty.forEach(([id, arr]) => arr.forEach((a) => console.log('  line', a.lineNum, a.name)));
+  empty.forEach(([, arr]) => arr.forEach((a) => console.log('  line', a.lineNum, a.name)));
 }

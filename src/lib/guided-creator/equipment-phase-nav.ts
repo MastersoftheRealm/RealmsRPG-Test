@@ -107,9 +107,11 @@ export function equipmentPhaseIndex(
  * Selection validation (hands, Currency, Training Points) still applies when items are chosen.
  */
 export function canCompleteEquipmentPhase(
-  _phase: GuidedEquipmentPhase,
-  _ctx: EquipmentPhaseCompletionContext
+  phase: GuidedEquipmentPhase,
+  ctx: EquipmentPhaseCompletionContext
 ): boolean {
+  void phase;
+  void ctx;
   return true;
 }
 

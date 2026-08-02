@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ChipSelect } from '@/components/shared/filters';
 import {
   GridListRow,
@@ -58,10 +58,6 @@ export function AdminSpeciesEditModal({
   onSave,
 }: AdminSpeciesEditModalProps) {
   const [traitPickerFor, setTraitPickerFor] = useState<TraitPickerField | null>(null);
-
-  useEffect(() => {
-    if (!isOpen) setTraitPickerFor(null);
-  }, [isOpen]);
 
   const skillOptions = useMemo(
     () => skills.map((s) => ({ value: String(s.id), label: s.name })),
