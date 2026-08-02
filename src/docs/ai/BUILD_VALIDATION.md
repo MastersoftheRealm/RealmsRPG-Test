@@ -5583,12 +5583,12 @@ Saving a power must persist Area **Apply duration** and Duration modifiers (Focu
 **Steps**
 1. Open `/power-creator`. Set Area to **Sphere** (any level), check **Apply duration**.
 2. Set Duration to **1 minute** (or longer) and enable **Focus** (and optionally Sustain).
-3. Note the sidebar Energy total.
+3. Confirm the Area section EN badge rises vs unchecked Apply duration (duration multiplier applied), and note the sidebar Energy total.
 4. Save to My Library; Load the power (or open `?edit=`). Confirm **Apply duration** is still checked and Focus/Sustain restored.
 5. Open the power in Library — Energy matches the creator total from step 3 (higher than the same power without Apply duration).
 
 **Expected**
-- Checkbox and duration modifiers round-trip; GLR Energy includes apply-duration contribution when a duration is set.
+- Checkbox and duration modifiers round-trip; Area section badge + GLR Energy include apply-duration contribution when a duration is set.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

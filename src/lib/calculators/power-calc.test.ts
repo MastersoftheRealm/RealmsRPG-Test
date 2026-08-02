@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS } from '@/lib/id-constants';
 import { buildMechanicParts } from './mechanic-builder';
-import { calculatePowerCosts, derivePowerDisplay } from './power-calc';
+import {
+  calculatePowerCosts,
+  calculatePowerSectionContribution,
+  derivePowerDisplay,
+} from './power-calc';
 
 const elementalDamagePart: PowerPart = {
   id: String(PART_IDS.ELEMENTAL_DAMAGE),
@@ -29,6 +33,63 @@ const magicDamagePart: PowerPart = {
   percentage: false,
   duration: false,
 };
+
+describe('calculatePowerSectionContribution', () => {
+  it('includes duration multiplier in section EN when applyDuration is set', () => {
+    const spherePart: PowerPart = {
+      id: String(PART_IDS.SPHERE_OF_EFFECT),
+      name: 'Sphere of Effect',
+      category: 'Area of Effect',
+      mechanic: true,
+      base_en: 4,
+      base_tp: 1,
+      percentage: false,
+      duration: false,
+    };
+    const durationPart: PowerPart = {
+      id: '377',
+      name: 'Duration (Minute)',
+      category: 'Duration',
+      mechanic: true,
+      base_en: 2,
+      base_tp: 0,
+      percentage: false,
+      duration: true,
+    };
+    const areaParts = [
+      {
+        id: spherePart.id,
+        name: spherePart.name,
+        op_1_lvl: 0,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration: true,
+      },
+    ];
+    const durationParts = [
+      {
+        id: durationPart.id,
+        name: durationPart.name,
+        op_1_lvl: 0,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration: false,
+      },
+    ];
+
+    const isolated = calculatePowerCosts(areaParts, [spherePart, durationPart]);
+    const section = calculatePowerSectionContribution(
+      areaParts,
+      [spherePart, durationPart],
+      durationParts
+    );
+
+    expect(isolated.energyRaw).toBe(4);
+    // dur_all=2 → section share 4 + 2*4 = 12
+    expect(section.energyRaw).toBe(12);
+    expect(section.totalTP).toBe(1);
+  });
+});
 
 describe('calculatePowerCosts', () => {
   it('counts each elemental damage row independently', () => {

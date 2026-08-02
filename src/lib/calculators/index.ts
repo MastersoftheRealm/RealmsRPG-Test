@@ -38,6 +38,7 @@ export {
 // Power Calculator
 export {
   calculatePowerCosts,
+  calculatePowerSectionContribution,
   computeActionType as computePowerActionType,
   computeActionTypeFromSelection as computePowerActionTypeFromSelection,
   buildPowerMechanicPartPayload,

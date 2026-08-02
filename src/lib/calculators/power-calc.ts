@@ -178,6 +178,31 @@ export function calculatePowerCosts(
   return { totalEnergy, totalTP, tpRaw, tpSources, energyRaw: totalEnergyRaw };
 }
 
+/**
+ * Section EN/TP contribution for creator badges.
+ * When section parts use `applyDuration`, duration parts must be included so
+ * `dur_all` multiplies correctly — then duration-only energy is subtracted so
+ * the badge reflects only this section's share.
+ */
+export function calculatePowerSectionContribution(
+  sectionParts: PowerPartPayload[] = [],
+  partsDb: PowerPart[] = [],
+  durationParts: PowerPartPayload[] = []
+): Pick<PowerCostResult, 'energyRaw' | 'totalTP'> {
+  const sectionOnly = calculatePowerCosts(sectionParts, partsDb);
+  const needsDurationContext =
+    durationParts.length > 0 && sectionParts.some((pl) => !!pl.applyDuration);
+  if (!needsDurationContext) {
+    return { energyRaw: sectionOnly.energyRaw, totalTP: sectionOnly.totalTP };
+  }
+  const withDuration = calculatePowerCosts([...sectionParts, ...durationParts], partsDb);
+  const durationOnly = calculatePowerCosts(durationParts, partsDb);
+  return {
+    energyRaw: withDuration.energyRaw - durationOnly.energyRaw,
+    totalTP: sectionOnly.totalTP,
+  };
+}
+
 // =============================================================================
 // Action Type
 // =============================================================================

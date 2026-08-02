@@ -14,7 +14,9 @@
   related_files:
     - src/lib/library-columnar.ts
     - src/lib/library-columnar.test.ts
+    - src/lib/calculators/power-calc.ts
     - src/lib/calculators/power-calc.test.ts
+    - src/lib/calculators/index.ts
     - src/app/(main)/power-creator/power-creator-cost-derivation.ts
     - src/lib/data-enrichment/enrich-powers.ts
     - src/docs/SUPABASE_SCHEMA.md
@@ -26,9 +28,10 @@
   acceptance_criteria:
     - Columnar round-trip keeps area.applyDuration and duration modifiers in payload; scalars still promoted.
     - derivePowerDisplay energy increases when area.applyDuration is true with a duration present.
+    - Section EN badges include duration multiplier when Apply duration is set.
     - Vitest coverage; DEV-V-041 manual smoke.
   notes: |
-    Owner 2026-08-02 feedback. Also restored applyDuration on section-cost payloads and character-sheet part enrichment.
+    Owner 2026-08-02 feedback. Cleanup: calculatePowerSectionContribution; dropped reconcile-report PR noise.
 
 ---
 

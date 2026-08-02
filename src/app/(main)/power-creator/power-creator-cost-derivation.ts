@@ -11,6 +11,7 @@ import { findByIdOrName, PART_IDS } from '@/lib/id-constants';
 import {
   buildMechanicParts,
   calculatePowerCosts,
+  calculatePowerSectionContribution,
   computePowerActionTypeFromSelection,
   deriveRange,
   deriveArea,
@@ -274,12 +275,12 @@ export function usePowerCreatorCostDerivation({
     return {
       action: calculatePowerCosts(actionParts, powerParts),
       weapon: calculatePowerCosts(addWeaponToPowerPart ? [addWeaponToPowerPart] : [], powerParts),
-      range: calculatePowerCosts(rangeParts, powerParts),
-      area: calculatePowerCosts(areaParts, powerParts),
+      range: calculatePowerSectionContribution(rangeParts, powerParts, durationParts),
+      area: calculatePowerSectionContribution(areaParts, powerParts, durationParts),
       duration: calculatePowerCosts(durationParts, powerParts),
-      damage: calculatePowerCosts(damageParts, powerParts),
-      powerParts: calculatePowerCosts(partsPayloadForSections, powerParts),
-      powerMechanics: calculatePowerCosts(mechanicPayload, powerParts),
+      damage: calculatePowerSectionContribution(damageParts, powerParts, durationParts),
+      powerParts: calculatePowerSectionContribution(partsPayloadForSections, powerParts, durationParts),
+      powerMechanics: calculatePowerSectionContribution(mechanicPayload, powerParts, durationParts),
     };
   }, [mechanicParts, powerParts, selectedParts, selectedAdvancedParts, addWeaponToPowerPart]);
 
