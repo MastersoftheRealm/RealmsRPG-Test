@@ -13,12 +13,6 @@ export function useEntityListSectionCollapse(
   return useLibrarySectionCollapse(collapsible ?? false, itemCount, onAdd);
 }
 
-export function truncateText(text: string | undefined, maxLength: number): string {
-  if (!text) return '';
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength).trim() + '...';
-}
-
 export function formatRecoveryAbbrev(recovery: string | undefined): string {
   if (!recovery) return '-';
   const lower = recovery.toLowerCase();

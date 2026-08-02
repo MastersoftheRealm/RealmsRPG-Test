@@ -11,14 +11,9 @@ import type { EntityFeatRow } from '@/components/shared/entity-library-sections'
 import { FEAT_GRID, FEAT_GRID_WITH_LEVEL } from '@/components/shared/entity-library-sections';
 import { Input, Textarea } from '@/components/ui';
 import type { FeatTraitCustomization } from '@/types/feats';
+import { truncateText } from '@/lib/utils';
 
 const DESCRIPTION_EXTENDED_TRUNCATE = 220;
-
-function truncateText(text: string | undefined, maxLength: number): string {
-  if (!text) return '';
-  if (text.length <= maxLength) return text;
-  return text.substring(0, maxLength).trim() + '...';
-}
 
 function formatRecoveryAbbrev(recovery: string | undefined): string {
   if (!recovery) return '';

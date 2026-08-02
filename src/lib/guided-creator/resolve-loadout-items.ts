@@ -5,6 +5,7 @@
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { LibraryItem } from '@/types/library';
 import type { PathItemRecommendation, PathLoadout } from '@/types/archetype';
+import { formatDamage, type ItemDamage } from '@/lib/calculators/item-calc';
 import { normalizeId } from '@/lib/utils';
 
 export type LoadoutItemCategory = 'weapon' | 'armor' | 'equipment';
@@ -41,23 +42,15 @@ function mapLibraryType(type: string | undefined): LoadoutItemCategory {
   return 'weapon';
 }
 
-function formatDamage(damage: LibraryItem['damage']): string | undefined {
-  if (!Array.isArray(damage) || damage.length === 0) return undefined;
-  const first = damage[0];
-  if (!first) return undefined;
-  const amount = first.amount ?? '';
-  const size = first.size ?? '';
-  const type = first.type ?? '';
-  const dice = amount && size ? `${amount}d${size}` : '';
-  return [dice, type].filter(Boolean).join(' ').trim() || undefined;
-}
-
 function entryFromOfficial(item: LibraryItem): EquipmentLookupEntry {
   const category = mapLibraryType(item.type);
+  const damageStats = formatDamage(
+    Array.isArray(item.damage) ? (item.damage as ItemDamage[]) : undefined
+  );
   const statsLine =
     category === 'armor' && item.damageReduction != null
       ? `DR ${item.damageReduction}`
-      : formatDamage(item.damage);
+      : damageStats || undefined;
   return {
     id: String(item.id),
     name: String(item.name ?? item.id),

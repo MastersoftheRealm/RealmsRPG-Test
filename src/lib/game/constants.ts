@@ -21,6 +21,7 @@ export const SHARED_CONSTANTS = {
 /** Player character specific constants */
 export const PLAYER_CONSTANTS = {
   BASE_HIT_ENERGY: 18,
+  BASE_HEALTH: 8,
   BASE_TRAINING_POINTS: 22,
   TP_PER_LEVEL_MULTIPLIER: 2,
 } as const;
@@ -96,6 +97,29 @@ export const GAME_CONSTANTS = {
   SKILL: SKILL_LIMITS,
   ARCHETYPE: ARCHETYPE_CONFIGS,
 } as const;
+
+/** Item property derivation (range spaces from Range property level). */
+export const ITEM_PROPERTY_CONSTANTS = {
+  RANGE_BASE_SPACES: 8,
+  RANGE_SPACES_PER_LEVEL: 8,
+} as const;
+
+/**
+ * Martial proficiency → max armament Training Points.
+ * Extends beyond L1 archetype tiers (martial prof 3+).
+ */
+export const ARMAMENT_PROFICIENCY_TABLE: ReadonlyArray<{
+  martialProf: number;
+  armamentMax: number;
+}> = [
+  { martialProf: 0, armamentMax: ARCHETYPE_CONFIGS.power.armamentMax },
+  { martialProf: 1, armamentMax: ARCHETYPE_CONFIGS['powered-martial'].armamentMax },
+  { martialProf: 2, armamentMax: ARCHETYPE_CONFIGS.martial.armamentMax },
+  { martialProf: 3, armamentMax: 15 },
+  { martialProf: 4, armamentMax: 18 },
+  { martialProf: 5, armamentMax: 21 },
+  { martialProf: 6, armamentMax: 24 },
+];
 
 /** Default combat values */
 export const COMBAT_DEFAULTS = {

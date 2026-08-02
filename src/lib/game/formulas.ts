@@ -16,6 +16,7 @@ import {
   CREATURE_CONSTANTS, 
   ABILITY_LIMITS,
   ARCHETYPE_CONFIGS,
+  ARMAMENT_PROFICIENCY_TABLE,
 } from './constants';
 
 // =============================================================================
@@ -160,14 +161,15 @@ export function calculateCreatureTrainingPoints(level: number, highestNonVitalit
 export function calculateCreatureFeatPoints(level: number, martialProficiency = 0, rules?: Rules): number {
   const parsedLevel = parseFloat(String(level)) || 1;
   const martial = martialProficiency || 0;
-  const baseFeat = rules?.PROGRESSION_CREATURE?.baseFeatPoints ?? 1.5;
-  
+  const baseFeat = rules?.PROGRESSION_CREATURE?.baseFeatPoints ?? CREATURE_CONSTANTS.BASE_FEAT_POINTS;
+  const perLevel = rules?.PROGRESSION_CREATURE?.featPointsPerLevel ?? CREATURE_CONSTANTS.FEAT_POINTS_PER_LEVEL;
+
   if (parsedLevel < 1) {
     return Math.ceil((baseFeat + martial) * parsedLevel);
   }
-  
+
   const baseAtLevel1 = baseFeat + martial;
-  const levelBonus = parsedLevel > 1 ? (parsedLevel - 1) : 0;
+  const levelBonus = parsedLevel > 1 ? (parsedLevel - 1) * perLevel : 0;
   return baseAtLevel1 + levelBonus;
 }
 
@@ -302,22 +304,15 @@ export function getArmamentMax(archetype: ArchetypeCategory | { type?: Archetype
  * Calculate armament proficiency based on martial proficiency.
  */
 export function calculateArmamentProficiency(martialProf: number, rules?: Rules): number {
-  // Try DB lookup table first
-  const table = rules?.ARMAMENT_PROFICIENCY?.table;
-  if (table && table.length > 0) {
-    // Find exact match or highest entry below martialProf
-    const sorted = [...table].sort((a, b) => a.martialProf - b.martialProf);
-    for (let i = sorted.length - 1; i >= 0; i--) {
-      if (sorted[i].martialProf <= martialProf) return sorted[i].armamentMax;
-    }
-    return sorted[0]?.armamentMax ?? 3;
+  const table =
+    rules?.ARMAMENT_PROFICIENCY?.table && rules.ARMAMENT_PROFICIENCY.table.length > 0
+      ? rules.ARMAMENT_PROFICIENCY.table
+      : ARMAMENT_PROFICIENCY_TABLE;
+  const sorted = [...table].sort((a, b) => a.martialProf - b.martialProf);
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    if (sorted[i].martialProf <= martialProf) return sorted[i].armamentMax;
   }
-  
-  // Fallback to hardcoded formula
-  if (martialProf === 0) return 3;
-  if (martialProf === 1) return 8;
-  if (martialProf === 2) return 12;
-  return 12 + (3 * (martialProf - 2));
+  return sorted[0]?.armamentMax ?? ARCHETYPE_CONFIGS.power.armamentMax;
 }
 
 /**

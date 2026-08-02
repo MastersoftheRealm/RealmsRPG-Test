@@ -12,6 +12,7 @@ import {
   findByIdOrName,
   type HasIdAndName,
 } from '@/lib/id-constants';
+import { ITEM_PROPERTY_CONSTANTS } from '@/lib/game/constants';
 import type { ItemProperty } from '@/hooks/codex-types';
 
 // Re-export for convenience
@@ -344,7 +345,9 @@ export function formatRange(properties: ItemPropertyPayload[]): string {
   });
   if (!prop) return 'Melee';
   const lvl = prop.op_1_lvl || 0;
-  const n = 8 + lvl * 8;
+  const n =
+    ITEM_PROPERTY_CONSTANTS.RANGE_BASE_SPACES +
+    lvl * ITEM_PROPERTY_CONSTANTS.RANGE_SPACES_PER_LEVEL;
   return `${n} ${n === 1 ? 'space' : 'spaces'}`;
 }
 

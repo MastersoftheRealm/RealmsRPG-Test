@@ -43,7 +43,6 @@ export function buildCombatLookup(
 export function powerToDetailOption(
   power: LibraryPower,
   powerPartsDb: PowerPart[],
-  energyTag: (energy: number) => string,
   idOverride?: string
 ): DetailOptionItemModel {
   const chips: ChipData[] = [];
@@ -71,7 +70,6 @@ export function powerToDetailOption(
     const damage = formatPowerDamage(power.damage);
     const dmgChip = damageFactChip(damage);
     if (dmgChip) chips.push(dmgChip);
-    void energyTag;
   } catch {
     // still return the resolved row
   }
@@ -87,7 +85,6 @@ export function powerToDetailOption(
 export function techniqueToDetailOption(
   technique: LibraryTechnique,
   techniquePartsDb: TechniquePart[],
-  energyTag: (energy: number) => string,
   idOverride?: string
 ): DetailOptionItemModel {
   const chips: ChipData[] = [];
@@ -113,7 +110,6 @@ export function techniqueToDetailOption(
     const dmgChip = damageFactChip(disp.damageStr);
     if (dmgChip) chips.push(dmgChip);
     if (disp.weaponName) pushFact(chips, 'Attack', disp.weaponName);
-    void energyTag;
   } catch {
     // still return the resolved row
   }
@@ -132,8 +128,7 @@ export function resolveCombatDetailOption(
   lookup: Map<string, LibraryPower | LibraryTechnique>,
   kind: 'power' | 'technique',
   powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[],
-  energyTag: (energy: number) => string
+  techniquePartsDb: TechniquePart[]
 ): DetailOptionItemModel | null {
   const raw = lookup.get(String(refId).toLowerCase());
   if (!raw) return null;
@@ -141,9 +136,8 @@ export function resolveCombatDetailOption(
     return techniqueToDetailOption(
       raw as LibraryTechnique,
       techniquePartsDb,
-      energyTag,
       String(refId)
     );
   }
-  return powerToDetailOption(raw as LibraryPower, powerPartsDb, energyTag, String(refId));
+  return powerToDetailOption(raw as LibraryPower, powerPartsDb, String(refId));
 }

@@ -48,7 +48,6 @@ import { GuidedRestrictionNotice } from './guided-restriction-notice';
 import { GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
 
 const detailCopy = GUIDED_CREATOR_COPY.steps.path.detail;
-const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
 
 export interface GuidedPathDetailModalProps {
   isOpen: boolean;
@@ -319,8 +318,7 @@ export function GuidedPathDetailModal({
             combatLookup,
             'technique',
             powerPartsDb,
-            techniquePartsDb,
-            ptCopy.energyTag
+            techniquePartsDb
           )
         )
         .filter((row): row is GuidedDetailOptionItem => Boolean(row));
@@ -349,8 +347,7 @@ export function GuidedPathDetailModal({
             combatLookup,
             'power',
             powerPartsDb,
-            techniquePartsDb,
-            ptCopy.energyTag
+            techniquePartsDb
           )
         )
         .filter((row): row is GuidedDetailOptionItem => Boolean(row));

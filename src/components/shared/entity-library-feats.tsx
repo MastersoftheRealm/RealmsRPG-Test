@@ -14,9 +14,9 @@ import {
 import {
   formatRecoveryAbbrev,
   renderInteractiveGridRows,
-  truncateText,
   useEntityListSectionCollapse,
 } from './entity-library-sections-rows';
+import { truncateText } from '@/lib/utils';
 import type { EntityFeatRow, EntityListControls } from './entity-library-sections-types';
 
 /** Collapsible block for library tabs that are not entity list sections (notes, proficiencies). */

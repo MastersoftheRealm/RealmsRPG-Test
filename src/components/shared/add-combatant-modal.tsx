@@ -18,7 +18,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, generateId } from '@/lib/utils';
 import { apiFetchOrNull } from '@/lib/api-client';
 import { BookOpen, Users } from 'lucide-react';
 import { Modal, Button, SearchInput, LoadingState, EmptyState } from '@/components/ui';
@@ -39,10 +39,6 @@ export interface AddCombatantModalProps {
   onAddParticipants?: (participants: SkillParticipant[]) => void;
   /** Mixed encounter pages reuse combat/skill views — pass those modes, not a third value. */
   mode: 'combat' | 'skill';
-}
-
-function generateId(): string {
-  return Math.random().toString(36).substring(2, 9);
 }
 
 /** Roll initiative: d20 + acuity bonus */

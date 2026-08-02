@@ -14,7 +14,7 @@
 import type { Abilities, DefenseBonuses, DefenseSkills, Character, AbilityName, Item } from '@/types';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
-import { COMBAT_DEFAULTS } from './constants';
+import { COMBAT_DEFAULTS, PLAYER_CONSTANTS } from './constants';
 import { unproficientBonus } from './formulas';
 
 type Rules = Partial<CoreRulesMap>;
@@ -90,7 +90,7 @@ export function calculateMaxHealth(
   rules?: Rules,
   martAbil?: AbilityName | string | undefined
 ): number {
-  const baseHealth = rules?.PROGRESSION_PLAYER?.baseHealth ?? 8;
+  const baseHealth = rules?.PROGRESSION_PLAYER?.baseHealth ?? PLAYER_CONSTANTS.BASE_HEALTH;
   const vitalityIsArchetype =
     powAbil?.toLowerCase() === 'vitality' || martAbil?.toLowerCase() === 'vitality';
   const abilityMod = vitalityIsArchetype ? (abilities?.strength || 0) : vitality;

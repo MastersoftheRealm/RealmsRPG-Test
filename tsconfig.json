@@ -31,5 +31,5 @@
     "*.ts",
     "*.mts"
   ],
-  "exclude": ["node_modules", "vanilla-site", "vercel-supa-next-unfinished"]
+  "exclude": ["node_modules"]
 }

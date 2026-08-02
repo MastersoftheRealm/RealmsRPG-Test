@@ -4,6 +4,17 @@
  * Centralized string manipulation functions
  */
 
+import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
+
+/**
+ * Truncate text to maxLength with ellipsis (list row descriptions).
+ */
+export function truncateText(text: string | undefined, maxLength: number): string {
+  if (!text) return '';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim() + '...';
+}
+
 /**
  * Capitalize the first letter of a string.
  */
@@ -186,8 +197,6 @@ export function formatWeaponRangeCompact(range: string | number | null | undefin
   if (match) return `${match[1]} sp`;
   return normalized.replace(/\bspaces?\b/gi, 'sp');
 }
-
-import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 
 /**
  * Format feat ability (sorting) for list display: "Strength, Intelligence" etc.

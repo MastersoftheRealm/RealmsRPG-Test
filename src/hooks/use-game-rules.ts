@@ -24,6 +24,7 @@ import {
   ABILITY_LIMITS,
   ARCHETYPE_CONFIGS,
   COMBAT_DEFAULTS,
+  ARMAMENT_PROFICIENCY_TABLE,
 } from '@/lib/game/constants';
 import {
   CONDITIONS,
@@ -57,7 +58,7 @@ const FALLBACK_RULES: CoreRulesMap = {
     proficiencyPerIncrease: SHARED_CONSTANTS.PROFICIENCY_PER_5_LEVELS,
     baseTrainingPoints: PLAYER_CONSTANTS.BASE_TRAINING_POINTS,
     tpPerLevelMultiplier: PLAYER_CONSTANTS.TP_PER_LEVEL_MULTIPLIER,
-    baseHealth: 8,
+    baseHealth: PLAYER_CONSTANTS.BASE_HEALTH,
     xpToLevelFormula: 'level * 4',
     startingCurrency: 200,
     characterFeatsPerLevel: 1,
@@ -120,15 +121,7 @@ const FALLBACK_RULES: CoreRulesMap = {
     martialProgression: [],
   },
   ARMAMENT_PROFICIENCY: {
-    table: [
-      { martialProf: 0, armamentMax: 3 },
-      { martialProf: 1, armamentMax: 8 },
-      { martialProf: 2, armamentMax: 12 },
-      { martialProf: 3, armamentMax: 15 },
-      { martialProf: 4, armamentMax: 18 },
-      { martialProf: 5, armamentMax: 21 },
-      { martialProf: 6, armamentMax: 24 },
-    ],
+    table: [...ARMAMENT_PROFICIENCY_TABLE],
   },
   COMBAT: {
     baseSpeed: COMBAT_DEFAULTS.BASE_SPEED,

@@ -16,7 +16,7 @@ import type { ColumnValue } from '@/components/shared/grid-list-row';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
 import { useCodexArchetypes, useCodexFeats, useCodexSkills, useEquipment, useOfficialLibrary } from '@/hooks';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
-import { formatListCellLabel } from '@/lib/utils';
+import { formatListCellLabel, capitalize } from '@/lib/utils';
 import type { Archetype, ArchetypePathRecommendations } from '@/types/archetype';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 
@@ -28,18 +28,13 @@ const ARCHETYPE_COLUMNS = [
   { key: '_desc', label: 'DESCRIPTION', align: 'left' as const },
 ];
 
-function capitalizeAbility(value?: string): string {
-  if (!value) return '';
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
 function formatAbilityEmphasis(archetype: Archetype): string {
   const primary = archetype.archetype_ability;
   const secondary = archetype.secondary_ability;
   if (archetype.type === 'powered-martial' && primary && secondary) {
-    return `${capitalizeAbility(primary)} / ${capitalizeAbility(secondary)}`;
+    return `${capitalize(primary)} / ${capitalize(secondary)}`;
   }
-  if (primary) return capitalizeAbility(primary);
+  if (primary) return capitalize(primary);
   return '-';
 }
 

@@ -10,6 +10,7 @@ import {
   formatSavedActionTypeForDisplay,
   formatActionTypeForDisplay,
   formatListCellLabel,
+  capitalize,
 } from '@/lib/utils';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { ChoiceCardImageKind } from '@/components/guided-creator/guided-choice-image';
@@ -70,11 +71,6 @@ function selectableImageKind(itemType: LibraryItemType): ChoiceCardImageKind | n
     return 'equipment';
   }
   return null;
-}
-
-function capitalize(s: string | undefined): string {
-  if (!s) return '-';
-  return s.replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export type TechniqueColumnDisplay = {
