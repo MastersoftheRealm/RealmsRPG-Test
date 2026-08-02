@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T01:53:54.116Z",
+  "generated_at": "2026-08-02T02:08:26.848Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -181,32 +181,6 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-655",
-      "title": "Add typecheck script + CI gate; fix broken test files",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "package.json",
-        ".github/workflows/ai-task-verifier.yml"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-656",
-      "title": "Add --max-warnings 0 ESLint CI gate; fix existing warnings",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "package.json",
-        ".github/workflows/ui-verify.yml"
-      ],
-      "related_overlap": []
-    },
-    {
       "id": "TASK-657",
       "title": "Add pre-commit hooks (husky + lint-staged + typecheck on changed files)",
       "status": "not-started",
@@ -364,12 +338,176 @@
       "related_overlap": []
     },
     {
+      "id": "TASK-656",
+      "title": "Add --max-warnings 0 ESLint CI gate; fix existing warnings",
+      "status": "done",
+      "completed_at": "2026-08-01",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "fea11c05e7334e7c5a21618cbab8cc2e573911ce",
+          "subject": "TASK-655 + TASK-656: Add typecheck and zero-warning lint CI gates.",
+          "files": [
+            ".github/workflows/ai-task-verifier.yml",
+            "eslint-rules/no-raw-color.mjs",
+            "package.json",
+            "scripts/check-feats-ids.js",
+            "scripts/session_submit.js",
+            "scripts/triage_tasks.js",
+            "src/app/(main)/admin/codex/admin-species-edit-modal.tsx",
+            "src/app/(main)/creature-creator/creature-creator-editor.tsx",
+            "src/app/(main)/creature-creator/use-creature-creator-workspace.ts",
+            "src/app/(main)/power-creator/use-power-creator-workspace.ts",
+            "src/components/character-sheet/edit-species-modal.tsx",
+            "src/components/character-sheet/proficiencies-tab.tsx",
+            "src/components/character-sheet/use-sheet-resource-actions.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/calculators/power-calc.test.ts",
+            "src/lib/game/creature-feat-points.test.ts",
+            "src/lib/game/equipment-equipped.test.ts",
+            "src/lib/glr/required-facts-registry.test.ts",
+            "src/lib/guided-creator/build-character.test.ts",
+            "src/lib/guided-creator/build-character.ts",
+            "src/lib/guided-creator/equipment-phase-nav.ts",
+            "src/lib/guided-creator/feats-l2.test.ts",
+            "src/lib/guided-creator/guided-equipment-l2.test.ts",
+            "src/lib/guided-creator/guided-equipment-l2.ts",
+            "src/lib/library/empowered-technique-display.test.ts",
+            "src/lib/realms-image-consumers.ts",
+            "tests/visual/auth-a11y.pw.ts",
+            "tests/visual/auth-screenshots.pw.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "package.json",
+        ".github/workflows/ui-verify.yml",
+        "eslint-rules/no-raw-color.mjs",
+        "scripts/check-feats-ids.js",
+        "scripts/session_submit.js",
+        "scripts/triage_tasks.js",
+        "src/app/(main)/admin/codex/admin-species-edit-modal.tsx",
+        "src/app/(main)/creature-creator/creature-creator-editor.tsx",
+        "src/app/(main)/creature-creator/use-creature-creator-workspace.ts",
+        "src/app/(main)/power-creator/use-power-creator-workspace.ts",
+        "src/components/character-sheet/edit-species-modal.tsx",
+        "src/components/character-sheet/proficiencies-tab.tsx",
+        "src/components/character-sheet/use-sheet-resource-actions.ts",
+        "src/lib/realms-image-consumers.ts",
+        "tests/visual/auth-a11y.pw.ts",
+        "tests/visual/auth-screenshots.pw.ts"
+      ],
+      "related_overlap": [
+        "package.json",
+        "eslint-rules/no-raw-color.mjs",
+        "scripts/check-feats-ids.js",
+        "scripts/session_submit.js",
+        "scripts/triage_tasks.js",
+        "src/app/(main)/admin/codex/admin-species-edit-modal.tsx",
+        "src/app/(main)/creature-creator/creature-creator-editor.tsx",
+        "src/app/(main)/creature-creator/use-creature-creator-workspace.ts",
+        "src/app/(main)/power-creator/use-power-creator-workspace.ts",
+        "src/components/character-sheet/edit-species-modal.tsx",
+        "src/components/character-sheet/proficiencies-tab.tsx",
+        "src/components/character-sheet/use-sheet-resource-actions.ts",
+        "src/lib/realms-image-consumers.ts",
+        "tests/visual/auth-a11y.pw.ts",
+        "tests/visual/auth-screenshots.pw.ts"
+      ]
+    },
+    {
+      "id": "TASK-655",
+      "title": "Add typecheck script + CI gate; fix broken test files",
+      "status": "done",
+      "completed_at": "2026-08-01",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "fea11c05e7334e7c5a21618cbab8cc2e573911ce",
+          "subject": "TASK-655 + TASK-656: Add typecheck and zero-warning lint CI gates.",
+          "files": [
+            ".github/workflows/ai-task-verifier.yml",
+            "eslint-rules/no-raw-color.mjs",
+            "package.json",
+            "scripts/check-feats-ids.js",
+            "scripts/session_submit.js",
+            "scripts/triage_tasks.js",
+            "src/app/(main)/admin/codex/admin-species-edit-modal.tsx",
+            "src/app/(main)/creature-creator/creature-creator-editor.tsx",
+            "src/app/(main)/creature-creator/use-creature-creator-workspace.ts",
+            "src/app/(main)/power-creator/use-power-creator-workspace.ts",
+            "src/components/character-sheet/edit-species-modal.tsx",
+            "src/components/character-sheet/proficiencies-tab.tsx",
+            "src/components/character-sheet/use-sheet-resource-actions.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/calculators/power-calc.test.ts",
+            "src/lib/game/creature-feat-points.test.ts",
+            "src/lib/game/equipment-equipped.test.ts",
+            "src/lib/glr/required-facts-registry.test.ts",
+            "src/lib/guided-creator/build-character.test.ts",
+            "src/lib/guided-creator/build-character.ts",
+            "src/lib/guided-creator/equipment-phase-nav.ts",
+            "src/lib/guided-creator/feats-l2.test.ts",
+            "src/lib/guided-creator/guided-equipment-l2.test.ts",
+            "src/lib/guided-creator/guided-equipment-l2.ts",
+            "src/lib/library/empowered-technique-display.test.ts",
+            "src/lib/realms-image-consumers.ts",
+            "tests/visual/auth-a11y.pw.ts",
+            "tests/visual/auth-screenshots.pw.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "package.json",
+        ".github/workflows/ai-task-verifier.yml",
+        "src/lib/calculators/power-calc.test.ts",
+        "src/lib/game/creature-feat-points.test.ts",
+        "src/lib/game/equipment-equipped.test.ts",
+        "src/lib/glr/required-facts-registry.test.ts",
+        "src/lib/guided-creator/build-character.test.ts",
+        "src/lib/guided-creator/build-character.ts",
+        "src/lib/guided-creator/equipment-phase-nav.ts",
+        "src/lib/guided-creator/feats-l2.test.ts",
+        "src/lib/guided-creator/guided-equipment-l2.test.ts",
+        "src/lib/guided-creator/guided-equipment-l2.ts",
+        "src/lib/library/empowered-technique-display.test.ts"
+      ],
+      "related_overlap": [
+        "package.json",
+        ".github/workflows/ai-task-verifier.yml",
+        "src/lib/calculators/power-calc.test.ts",
+        "src/lib/game/creature-feat-points.test.ts",
+        "src/lib/game/equipment-equipped.test.ts",
+        "src/lib/glr/required-facts-registry.test.ts",
+        "src/lib/guided-creator/build-character.test.ts",
+        "src/lib/guided-creator/build-character.ts",
+        "src/lib/guided-creator/equipment-phase-nav.ts",
+        "src/lib/guided-creator/feats-l2.test.ts",
+        "src/lib/guided-creator/guided-equipment-l2.test.ts",
+        "src/lib/guided-creator/guided-equipment-l2.ts",
+        "src/lib/library/empowered-technique-display.test.ts"
+      ]
+    },
+    {
       "id": "TASK-646",
       "title": "Upgrade Next.js to latest 16.x patch",
       "status": "done",
       "completed_at": "2026-08-01",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "89d15a802b8fde6f1a90d67a3ab5dae42f1a3e5f",
+          "subject": "chore: regenerate task reconcile report post TASK-646 commit",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "88f6e469dedee1e66c4b0972f001391cb7d55262",
           "subject": "TASK-646: Upgrade Next.js to 16.2.12 for security advisories.",
