@@ -1,3 +1,106 @@
+- id: TASK-653
+  title: Fix character route 404-vs-403 authorization oracle
+  priority: medium
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-01
+  related_files:
+    - src/app/api/characters/[id]/route.ts
+    - src/app/api/characters/[id]/route.test.ts
+  description: |
+    Audit M6: the character detail API route distinguishes "not found" from "not authorized" in a way
+    that lets a caller enumerate which character IDs exist. Return a uniform 404 for both not-found and
+    not-visible cases.
+  acceptance_criteria:
+    - Requesting another user's private character and a nonexistent ID both return 404 with the same shape.
+    - Owner/authorized access unaffected.
+    - Targeted API test added; npm run test passes.
+  completed_work: |
+    Not-visible GET returns 404 null (same shape as missing id); owner/public paths unchanged.
+    route.test.ts (4 cases); npm run build + test pass after TASK-644 cleared build blocker.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ง4.2 M6.
+
+---
+- id: TASK-654
+  title: Fix cross-user library fetch for campaign viewers
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-01
+  related_files:
+    - src/lib/owner-library-for-view.ts
+  description: |
+    Audit M7: owner-library-for-view.ts combined with the campaign character route can fail to fetch
+    another player's library items for a campaign viewer due to authz sequencing. Restructure as a
+    controlled server-side fetch that runs after authorization is confirmed, rather than the viewer's
+    own RLS-scoped client.
+  acceptance_criteria:
+    - Campaign GM/party viewer can see a party member's character sheet including library-derived rows.
+    - Non-member cannot.
+    - npm run build passes; manual QA in a test campaign.
+  completed_work: |
+    Switched getOwnerLibraryForView to createServiceRoleClient() (bypasses RLS on owner library
+    tables) with caller-must-authorize-first documentation. Matches campaign character route pattern
+    for cross-user character row fetch.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ง4.2 M7.
+
+---
+- id: TASK-651
+  title: Use anon/user Supabase client for public image GET routes
+  priority: high
+  status: done
+  created_at: 2026-08-01
+  completed_at: 2026-08-01
+  created_by: agent
+  verification_status: n/a
+  related_files:
+    - src/app/api/images/route.ts
+    - src/app/api/images/[id]/route.ts
+  description: |
+    Audit M3: public image GET endpoints use the service-role Supabase client without an auth check,
+    bypassing RLS for reads that should be scoped. Switch to the anon/user-scoped client (or add an
+    explicit authorization check) so RLS governs visibility.
+  acceptance_criteria:
+    - GET routes no longer use service role for public reads (or have an equivalent explicit authz check).
+    - Existing public image display still works.
+    - npm run build passes.
+  completed_work: |
+    GET /api/images and GET /api/images/[id] now use await createClient() (anon/authenticated, RLS-aware).
+    Admin POST/PATCH/DELETE still use service role after isAdmin() check.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ง4.2 M3.
+
+---
+
+- id: TASK-647
+  title: Gate codex ?debug=1 debug param to dev/admin only
+  priority: high
+  status: done
+  created_at: 2026-08-01
+  completed_at: 2026-08-01
+  created_by: agent
+  verification_status: n/a
+  related_files:
+    - src/app/api/codex/route.ts
+  description: |
+    Audit M1: /api/codex?debug=1 leaks raw DB errors in production to any caller. Restrict debug
+    output to non-production environments or authenticated admins only.
+  acceptance_criteria:
+    - ?debug=1 in production returns a generic response for non-admins.
+    - Admins (or dev env) still get debug detail.
+    - npm run build passes.
+  completed_work: |
+    Added canExposeCodexDebug(): debug payload only when NODE_ENV !== production or isAdmin(uid).
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ง4.2 M1.
+
+---
 - id: TASK-640
   title: Legacy chooser + custom deep catalogs + GuidedLayerNav chrome parity
   priority: high
@@ -15994,3 +16097,95 @@ Firebase/RTDB - the project is Supabase-only.
     - buildGuidedCharacterPayload persists ancestry.mixed and speciesIds for mixed builds
     - Skills step respects mixed species skill locks downstream
   notes: Owner 2026-08-01 product-overview Species L2. QA DEV-V-013 T078.
+---
+
+- id: TASK-643
+  title: Fix creature feat points fallback + honor featPointsPerLevel config
+  priority: critical
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-01
+  related_files:
+    - src/lib/game/formulas.ts
+    - src/lib/game/constants.ts
+    - src/lib/game/creature-feat-points.test.ts
+  description: |
+    Audit B1: creature feat-point calculation falls back to 1.5/level when rules data is missing, but
+    the real constant is 4, and the admin-configurable featPointsPerLevel value is never actually read,
+    so admin config changes have no effect on creature budgets. Fix the fallback and wire the calc to
+    read the configured value.
+  acceptance_criteria:
+    - Correct fallback constant used when rules data is missing.
+    - featPointsPerLevel admin setting measurably affects calculated creature feat budgets.
+    - Targeted unit test added/updated in src/lib/game; npm run test passes.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ยง6 B1.
+    Fixed calculateCreatureFeatPoints to use CREATURE_CONSTANTS fallbacks (4 base, 1/level) and multiply level bonus by configured featPointsPerLevel.
+
+- id: TASK-644
+  title: Unify armor Damage Reduction resolution across sheet/library/enrichment/guided catalog
+  priority: critical
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-01
+  related_files:
+    - src/lib/game/resolve-armor-damage-reduction.ts
+    - src/lib/game/resolve-armor-damage-reduction.test.ts
+    - src/lib/game/equipment-equipped.ts
+    - src/lib/library/official-item-list.ts
+    - src/lib/data-enrichment/enrich-items.ts
+    - src/lib/guided-creator/equipment-catalog-rows.ts
+  description: |
+    Audit B2: four independent code paths compute armor Damage Reduction and disagree, so the same
+    item can show a different DR value in the sheet vs library vs guided creator. Consolidate into one
+    shared DR-resolution helper in src/lib/game/ and have all four call sites use it.
+  acceptance_criteria:
+    - Single exported DR-resolution function used by all 4 call sites (no re-implementation).
+    - Unit test covers a property-based DR item and a flat-DR item.
+    - npm run test + build pass.
+    - Manual QA: same armor item shows identical DR in sheet, library list, and both creators.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md section 6 B2.
+    Added resolveArmorDamageReduction; itemDamageReduction delegates. Guided catalog armorStatsForRef now derives DR from properties (was scalar-only).
+
+---
+
+- id: TASK-665
+  title: Code hygiene sweep — magic numbers, duplicate small utils, dead params, dead tsconfig refs
+  priority: medium
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-01
+  related_files:
+    - src/lib/game/constants.ts
+    - src/lib/utils/string.ts
+    - src/lib/utils/id.ts
+    - src/lib/utils/index.ts
+    - src/lib/calculators/item-calc.ts
+    - src/lib/game/calculations.ts
+    - src/lib/game/formulas.ts
+    - src/hooks/use-game-rules.ts
+    - src/lib/guided-creator/resolve-loadout-items.ts
+    - src/lib/detail-option/combat-builder.ts
+    - src/lib/library-selectable-builders.ts
+    - src/app/(main)/encounters/[id]/_components/encounter-view-helpers.ts
+    - src/components/shared/add-combatant-modal.tsx
+    - src/components/shared/entity-library-feats.tsx
+    - src/components/character-sheet/library-feat-rows.tsx
+    - src/app/(main)/codex/CodexArchetypesTab.tsx
+    - src/components/guided-creator/guided-path-detail-modal.tsx
+    - tsconfig.json
+  description: |
+    Audit hygiene: consolidated magic numbers, deduped small utils, removed dead energyTag param, fixed tsconfig excludes.
+  completed_work: |
+    - Added PLAYER_CONSTANTS.BASE_HEALTH, ITEM_PROPERTY_CONSTANTS, ARMAMENT_PROFICIENCY_TABLE.
+    - Canonical truncateText/generateId/capitalize in lib/utils; formatDamage in item-calc.
+    - Removed energyTag from combat-builder power/technique detail builders.
+    - tsconfig exclude list trimmed to node_modules only.
+    - npm run build pass; resolve-loadout-items + compact-facts tests pass.

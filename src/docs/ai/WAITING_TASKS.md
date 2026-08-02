@@ -8,6 +8,28 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
 
 ---
 
+- id: TASK-669
+  title: Provision Redis-backed rate limiting store (Upstash or Vercel KV)
+  priority: high
+  status: not-started
+  created_at: 2026-08-01
+  created_by: agent
+  parent_task: TASK-645
+  assignee: human
+  related_files:
+    - src/lib/rate-limit.ts
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+  description: |
+    Sign up for Upstash Redis (or enable Vercel KV) and add the resulting env vars (URL/token) to
+    Vercel project settings + a .env.example placeholder, so TASK-645's Redis-backed rate limiter can
+    be enabled in production instead of the current ineffective in-memory limiter.
+  acceptance_criteria:
+    - Redis/KV instance provisioned.
+    - Env vars set in Vercel (production + preview) and documented in DEPLOYMENT_AND_SECRETS_SUPABASE.md.
+  notes: "Human-only — new vendor account / billing decision. AI skip. Blocks full activation of TASK-645."
+
+---
+
 - id: TASK-423
   title: Guided loadout path content — seed flat recommendations for remaining paths
   created_at: 2026-07-05
