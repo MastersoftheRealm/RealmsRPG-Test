@@ -4,9 +4,14 @@
  * Server-only: fetches a user's library (powers, techniques, items, creatures) for
  * read-only display when viewing another user's character (public or campaign).
  * Uses Supabase (public.user_powers, user_techniques, user_items, user_creatures).
+ *
+ * Callers MUST verify authorization before invoking (e.g. public visibility, shared
+ * campaign membership, or campaign RM roster check). This helper uses the service-role
+ * client to bypass RLS on the owner's library tables — the viewer's session client
+ * cannot read another user's rows.
  */
 
-import { createClient } from '@/lib/supabase/server';
+import { createServiceRoleClient } from '@/lib/supabase/server';
 import { rowToItem } from '@/lib/library-columnar';
 
 export interface LibraryForView {
@@ -21,7 +26,7 @@ export interface LibraryForView {
  * Used by GET /api/characters/[id] and GET /api/campaigns/[id]/characters/[userId]/[characterId].
  */
 export async function getOwnerLibraryForView(ownerUserId: string): Promise<LibraryForView> {
-  const supabase = await createClient();
+  const supabase = createServiceRoleClient();
   const [powerRes, techniqueRes, itemRes, creatureRes] = await Promise.all([
     supabase.from('user_powers').select('*').eq('user_id', ownerUserId),
     supabase.from('user_techniques').select('*').eq('user_id', ownerUserId),
