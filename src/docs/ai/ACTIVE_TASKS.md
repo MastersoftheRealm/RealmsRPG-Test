@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 22 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 21 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-665 done (utils hygiene). TASK-644 done (armor DR unify) — pending-qa. TASK-653 done (character ID oracle). TASK-642 partial (signup QA only). TASK-647/TASK-651 done. TASK-643 pending-qa. TASK-641 pending-qa DEV-V-013 T078. TASK-640 pending-qa T075–T077.
+**Hot notes:** TASK-646 done (Next.js 16.2.12). TASK-665 done (utils hygiene). TASK-644 done (armor DR unify) — pending-qa. TASK-653 done (character ID oracle). TASK-642 partial (signup QA only). TASK-647/TASK-651 done. TASK-643 pending-qa. TASK-641 pending-qa DEV-V-013 T078. TASK-640 pending-qa T075–T077.
 
 ---
 
@@ -117,26 +117,6 @@ Do **not** read the done archive at session start.
     Pause trigger — adds a new external vendor dependency (Upstash/Vercel KV) + env vars; confirm
     with owner before implementing per realms-tasks model-escalation rule. Provisioning is human-owned
     — see TASK-669 in WAITING_TASKS.
-
----
-
-- id: TASK-646
-  title: Upgrade Next.js to latest 16.x patch
-  priority: critical
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - package.json
-  description: |
-    Audit §2: npm audit reports 3 high-severity advisories against Next.js 16.1.6 (SSRF, CSRF bypass,
-    cache poisoning, DoS). Upgrade to the latest 16.x patch and re-verify.
-  acceptance_criteria:
-    - npm audit (prod) shows 0 high-severity issues from Next.js.
-    - npm run build, npm run lint, npm run test all pass.
-    - Manual smoke test of a few core routes.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §2.
 
 ---
 

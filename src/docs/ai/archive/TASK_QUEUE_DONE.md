@@ -1,3 +1,30 @@
+- id: TASK-646
+  title: Upgrade Next.js to latest 16.x patch
+  priority: critical
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-01
+  related_files:
+    - package.json
+    - package-lock.json
+  description: |
+    Audit Â§2: npm audit reports 3 high-severity advisories against Next.js 16.1.6 (SSRF, CSRF bypass,
+    cache poisoning, DoS). Upgrade to the latest 16.x patch and re-verify.
+  acceptance_criteria:
+    - npm audit (prod) shows 0 high-severity issues from Next.js.
+    - npm run build, npm run lint, npm run test all pass.
+    - Manual smoke test of a few core routes.
+  completed_work: |
+    Upgraded next + eslint-config-next 16.1.6 â†’ 16.2.12; npm overrides for postcss 8.5.25 + sharp 0.35.3
+    (transitive Next deps). npm audit --omit=dev: 0 vulnerabilities. build/lint/test pass; smoke /, /login,
+    /characters, /codex, /library â†’ 200.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md Â§2.
+
+---
+
 - id: TASK-653
   title: Fix character route 404-vs-403 authorization oracle
   priority: medium
@@ -21,7 +48,7 @@
     Not-visible GET returns 404 null (same shape as missing id); owner/public paths unchanged.
     route.test.ts (4 cases); npm run build + test pass after TASK-644 cleared build blocker.
   notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 M6.
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ï¿½4.2 M6.
 
 ---
 - id: TASK-654
@@ -48,7 +75,7 @@
     tables) with caller-must-authorize-first documentation. Matches campaign character route pattern
     for cross-user character row fetch.
   notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 M7.
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ï¿½4.2 M7.
 
 ---
 - id: TASK-651
@@ -74,7 +101,7 @@
     GET /api/images and GET /api/images/[id] now use await createClient() (anon/authenticated, RLS-aware).
     Admin POST/PATCH/DELETE still use service role after isAdmin() check.
   notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 M3.
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ï¿½4.2 M3.
 
 ---
 
@@ -98,7 +125,7 @@
   completed_work: |
     Added canExposeCodexDebug(): debug payload only when NODE_ENV !== production or isAdmin(uid).
   notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 M1.
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ï¿½4.2 M1.
 
 ---
 - id: TASK-640
@@ -16155,7 +16182,7 @@ Firebase/RTDB - the project is Supabase-only.
 ---
 
 - id: TASK-665
-  title: Code hygiene sweep — magic numbers, duplicate small utils, dead params, dead tsconfig refs
+  title: Code hygiene sweep ï¿½ magic numbers, duplicate small utils, dead params, dead tsconfig refs
   priority: medium
   status: done
   verification_status: n/a
