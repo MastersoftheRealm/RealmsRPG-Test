@@ -54,7 +54,7 @@ export async function createUserProfileAction(data: {
       return { success: false, error: 'Not authenticated' };
     }
     const uid = sessionUser.uid;
-    const email = (data.email ?? sessionUser.email ?? '').toString();
+    const email = (sessionUser.email ?? '').toString();
 
     const supabase = await createServerClient();
     const now = new Date().toISOString();

@@ -97,7 +97,7 @@ export async function GET(
       }
     }
 
-    return NextResponse.json({ error: 'Character not found or not visible' }, { status: 403 });
+    return NextResponse.json(null, { status: 404 });
   } catch (err) {
     console.error('[API Error] GET /api/characters/[id]:', err);
     return NextResponse.json({ error: 'Failed to load character' }, { status: 500 });
