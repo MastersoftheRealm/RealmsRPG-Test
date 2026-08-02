@@ -6,7 +6,7 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 
 **Agents:** When you finish a user-facing task (`done` or `partial`), add granular tests to `BUILD_VALIDATION.md` and index the suite below. See `[ARCHITECTURE_CONSTITUTION.md](ARCHITECTURE_CONSTITUTION.md)`.
 
-**Last updated:** 2026-08-01
+**Last updated:** 2026-08-02
 
 ---
 
@@ -101,6 +101,7 @@ Each suite is a **category** of step-by-step tests. Full steps live in `[BUILD_V
 | **DEV-V-027** | Admin Official Enhanced list shell                    | TASK-575                                                                                                                                                                 | T001 (1)          | Ready — [open suite](BUILD_VALIDATION.md#dev-v-027--admin-official-enhanced-list-shell-task-575)                 |
 | **DEV-V-035** | Realms Library redundant source badge                 | Session cleanup                                                                                                                                                          | T001 (1)          | Ready — [open suite](BUILD_VALIDATION.md#dev-v-035--realms-library-redundant-source-badge-session)              |
 | **DEV-V-034** | GLR chrome + Parts chip grammar                       | TASK-622, TASK-630                                                                                                                                                       | T001–T002 (2)     | Ready — [open suite](BUILD_VALIDATION.md#dev-v-034--glr-chrome--parts-chip-grammar-task-622)                    |
+| **DEV-V-041** | Power Creator AoE apply duration persistence          | TASK-642                                                                                                                                                                 | T001 (1)          | Ready — [open suite](BUILD_VALIDATION.md#dev-v-041--power-creator-aoe-apply-duration--duration-modifiers-task-642) |
 | DEV-V-002     | Campaign & rolls security                             | TASK-329                                                                                                                                                                 | —                 | Planned (legacy DEV-T-002)                                                                                        |
 | DEV-V-003     | Admin role change safety                              | TASK-330                                                                                                                                                                 | —                 | Planned                                                                                                           |
 | DEV-V-004     | Storage & account security                            | TASK-326, TASK-331                                                                                                                                                       | —                 | Planned                                                                                                           |
@@ -120,6 +121,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-642** | DEV-V-041 **T001** | Power Creator: Sphere + Apply duration + Focus/Sustain — save/reload checkbox + modifiers stick; Library Energy matches creator |
 | **TASK-640** | DEV-V-013 **T075–T077** | Chooser Legacy card; Custom deep catalogs per step; layer nav primary/outline parity |
 | **TASK-641** | DEV-V-013 **T078** | Species L2: all species + Mixed Species card + Create Species footer; guided mixed Ancestry flow |
 | **TASK-638** | DEV-V-013 **T072–T074** (+ T001 update) | Chooser Custom → guided Path L3; L1 **Custom Archetype** hatch; L3 type/ability Continue + **View archetype paths** back to L1 |

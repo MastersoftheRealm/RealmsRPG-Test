@@ -1,6 +1,12 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-01 (Guided Species L2 + mixed Ancestry)
+Last updated: 2026-08-02 (Power Creator AoE apply duration save)
+
+**Raw Feedback Log — 2026-08-02 (Power Creator AoE apply duration + calc mismatch)**
+- Context: Power Creator save vs Library/GLR displayed Energy
+- Feedback: Power creator does not seem to save the Apply duration tick for Area of Effect mechanics; possible other mismatches between creator-calculated and displayed/loaded GLR Energy.
+- Expected: Apply duration on AoE (and related duration modifiers) round-trip on save/load; Library Energy matches creator.
+- Disposition: **TASK-642** done — `bodyToColumnar` was skipping nested `area`/`range`/`duration` from payload (only promoting scalars), dropping `applyDuration` and Focus/Sustain/etc. Fixed persistence + section-cost applyDuration + enrich-powers part flag. verification_status pending-qa (DEV-V-041 T001).
 
 **Raw Feedback Log — 2026-08-01 (Guided Species L2 — mixed + Create Species)**
 - Context: Guided creator Species step product overview implementation

@@ -1,3 +1,37 @@
+- id: TASK-642
+  title: Persist power AoE applyDuration + duration modifiers through columnar save
+  created_at: 2026-08-02
+  created_by: owner
+  completed_at: 2026-08-02
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-041
+    tests:
+      - DEV-V-041-T001
+  developer_test_plan: DEV-V-041 T001 — see BUILD_VALIDATION.md
+  related_files:
+    - src/lib/library-columnar.ts
+    - src/lib/library-columnar.test.ts
+    - src/lib/calculators/power-calc.test.ts
+    - src/app/(main)/power-creator/power-creator-cost-derivation.ts
+    - src/lib/data-enrichment/enrich-powers.ts
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Power creator Area "Apply duration" (and duration Focus/Sustain/No Harm/Ends on Activation)
+    were dropped on save because bodyToColumnar skipped nested range/area/duration from payload
+    while only promoting type/level/steps/value scalars. GLR/loaded Energy then mismatched creator.
+  acceptance_criteria:
+    - Columnar round-trip keeps area.applyDuration and duration modifiers in payload; scalars still promoted.
+    - derivePowerDisplay energy increases when area.applyDuration is true with a duration present.
+    - Vitest coverage; DEV-V-041 manual smoke.
+  notes: |
+    Owner 2026-08-02 feedback. Also restored applyDuration on section-cost payloads and character-sheet part enrichment.
+
+---
+
 - id: TASK-640
   title: Legacy chooser + custom deep catalogs + GuidedLayerNav chrome parity
   priority: high

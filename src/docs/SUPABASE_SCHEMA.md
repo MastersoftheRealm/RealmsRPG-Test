@@ -69,6 +69,8 @@ All **columnar** (scalars + `payload` JSONB). Legacy `public_*` JSONB tables (`p
 
 **`payload.parts` (powers):** User and advanced parts only after TASK-627 cleanup; auto-mechanic parts derivable from promoted columns (`range_steps`, `duration_*`, `area_*`, `damage`, `action_type`, `is_reaction`) are rebuilt on read in app (`mechanic-builder.ts`) and were removed from official rows in live codex data.
 
+**`payload.range` / `payload.area` / `payload.duration` (powers):** Promoted scalars hold `steps` / `type`+`level` / `type`+`value` for indexing. Non-promoted fields (`applyDuration` on range/area; duration `focus` / `noHarm` / `endsOnActivation` / `sustain`) live in the nested payload objects and are merged on read in `library-columnar.ts` (`rowToItem`). Do not skip writing these nested objects on save — TASK-642.
+
 ---
 
 ### 2.5 User library

@@ -61,6 +61,7 @@ export function enrichPowers(
           op_1_lvl: part.op_1_lvl,
           op_2_lvl: part.op_2_lvl,
           op_3_lvl: part.op_3_lvl,
+          ...(part.applyDuration ? { applyDuration: true } : {}),
         })),
         innate,
         libraryItem,

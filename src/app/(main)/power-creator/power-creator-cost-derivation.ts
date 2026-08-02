@@ -213,12 +213,14 @@ export function usePowerCreatorCostDerivation({
       op_1_lvl: number;
       op_2_lvl: number;
       op_3_lvl: number;
+      applyDuration?: boolean;
     }) => ({
       id: mp.id,
       name: mp.name,
       op_1_lvl: mp.op_1_lvl,
       op_2_lvl: mp.op_2_lvl,
       op_3_lvl: mp.op_3_lvl,
+      applyDuration: mp.applyDuration ?? false,
     });
     const rangeParts = mechanicParts.filter((mp) => mp.name === 'Power Range').map(toPayload);
     const areaNames = [
@@ -260,12 +262,14 @@ export function usePowerCreatorCostDerivation({
       op_1_lvl: sp.op_1_lvl,
       op_2_lvl: sp.op_2_lvl,
       op_3_lvl: sp.op_3_lvl,
+      applyDuration: sp.applyDuration,
     }));
     const mechanicPayload = selectedAdvancedParts.map((ap) => ({
       part: ap.part,
       op_1_lvl: ap.op_1_lvl,
       op_2_lvl: ap.op_2_lvl,
       op_3_lvl: ap.op_3_lvl,
+      applyDuration: ap.applyDuration,
     }));
     return {
       action: calculatePowerCosts(actionParts, powerParts),

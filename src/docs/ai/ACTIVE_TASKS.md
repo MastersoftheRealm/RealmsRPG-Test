@@ -4,17 +4,17 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-642
+**Next task ID:** TASK-643
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-641, TASK-640, TASK-630, TASK-628, …)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-642, TASK-641, TASK-640, TASK-630, …)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
 **Counts:** 2 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-641 done (Species L2 + mixed Ancestry) — pending-qa DEV-V-013 T078. TASK-640 pending-qa T075–T077. TASK-638 pending-qa T072–T074.
+**Hot notes:** TASK-642 done (power AoE applyDuration + duration modifiers persistence) — pending-qa DEV-V-041 T001. TASK-641 pending-qa DEV-V-013 T078. TASK-640 pending-qa T075–T077.
 
 ---
 
@@ -62,4 +62,3 @@ Do **not** read the done archive at session start.
     Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
 
 ---
-

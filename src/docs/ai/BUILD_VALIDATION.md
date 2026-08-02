@@ -5567,6 +5567,33 @@ Feat expanded rows must label the Tags section even for a single tag, and Tags m
 
 ---
 
+## DEV-V-041 — Power Creator AoE apply duration + duration modifiers (TASK-642)
+
+Saving a power must persist Area **Apply duration** and Duration modifiers (Focus / No Harm / Ends on Activation / Sustain). Library GLR Energy after reload must match the creator total.
+
+#### DEV-V-041-T001 — AoE Apply duration survives save/reload
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-041 — Power Creator AoE apply duration + duration modifiers |
+| **Related task** | TASK-642 |
+| **Where** | `/power-creator` → Library Powers |
+| **Needs** | Signed-in user |
+
+**Steps**
+1. Open `/power-creator`. Set Area to **Sphere** (any level), check **Apply duration**.
+2. Set Duration to **1 minute** (or longer) and enable **Focus** (and optionally Sustain).
+3. Note the sidebar Energy total.
+4. Save to My Library; Load the power (or open `?edit=`). Confirm **Apply duration** is still checked and Focus/Sustain restored.
+5. Open the power in Library — Energy matches the creator total from step 3 (higher than the same power without Apply duration).
+
+**Expected**
+- Checkbox and duration modifiers round-trip; GLR Energy includes apply-duration contribution when a duration is set.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -5601,5 +5628,6 @@ Feat expanded rows must label the Tags section even for a single tag, and Tags m
 | DEV-V-038 | Empowered technique nested power part chips (TASK-626) | — | Manual — see suite above |
 | DEV-V-039 | Codex feat Tags section (session) | — | Automated (`feat-list.test.ts`) + manual smoke |
 | DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
+| DEV-V-041 | Power Creator AoE apply duration persistence (TASK-642) | — | Automated (`library-columnar.test.ts` + `power-calc.test.ts`) + manual smoke |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
