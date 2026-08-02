@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T01:44:31.049Z",
+  "generated_at": "2026-08-02T01:53:54.116Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -33,6 +33,14 @@
       "completed_at": "",
       "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
       "matches": [
+        {
+          "hash": "130ec60512741d52256a1d5b7a03e78e4397608e",
+          "subject": "chore: regenerate task reconcile report and barrel inventory post Wave 1 commits",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/docs/ai/FEATURE_INDEX_BARRELS.generated.md"
+          ]
+        },
         {
           "hash": "04868faae991e605fff6a3df96fdd55909ad3cd8",
           "subject": "docs: reconcile Wave 1 audit task queue and changelog",
@@ -75,18 +83,6 @@
         "src/app/(main)/campaigns/actions.ts",
         "src/app/api/admin/role-policies/route.ts",
         "src/app/api/admin/users/update-role/route.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-646",
-      "title": "Upgrade Next.js to latest 16.x patch",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "package.json"
       ],
       "related_overlap": []
     },
@@ -366,6 +362,34 @@
         "src/docs/ai/FEATURE_INDEX.md"
       ],
       "related_overlap": []
+    },
+    {
+      "id": "TASK-646",
+      "title": "Upgrade Next.js to latest 16.x patch",
+      "status": "done",
+      "completed_at": "2026-08-01",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "88f6e469dedee1e66c4b0972f001391cb7d55262",
+          "subject": "TASK-646: Upgrade Next.js to 16.2.12 for security advisories.",
+          "files": [
+            "package-lock.json",
+            "package.json",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "package.json",
+        "package-lock.json"
+      ],
+      "related_overlap": [
+        "package.json",
+        "package-lock.json"
+      ]
     },
     {
       "id": "TASK-653",
