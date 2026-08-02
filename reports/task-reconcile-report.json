@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T15:50:07.891Z",
+  "generated_at": "2026-08-02T15:50:24.091Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -32,7 +32,27 @@
       "status": "done",
       "completed_at": "2026-08-02",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "24060e963e27a7a16c1000cfa920335716293b84",
+          "subject": "TASK-642: Persist power AoE applyDuration and duration modifiers on save.",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/app/(main)/power-creator/power-creator-cost-derivation.ts",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/SUPABASE_SCHEMA.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/calculators/power-calc.test.ts",
+            "src/lib/data-enrichment/enrich-powers.ts",
+            "src/lib/library-columnar.test.ts",
+            "src/lib/library-columnar.ts"
+          ]
+        }
+      ],
       "related_files": [
         "src/lib/library-columnar.ts",
         "src/lib/library-columnar.test.ts",
@@ -42,7 +62,15 @@
         "src/docs/SUPABASE_SCHEMA.md",
         "src/docs/ai/BUILD_VALIDATION.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/lib/library-columnar.ts",
+        "src/lib/library-columnar.test.ts",
+        "src/lib/calculators/power-calc.test.ts",
+        "src/app/(main)/power-creator/power-creator-cost-derivation.ts",
+        "src/lib/data-enrichment/enrich-powers.ts",
+        "src/docs/SUPABASE_SCHEMA.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ]
     },
     {
       "id": "TASK-640",
