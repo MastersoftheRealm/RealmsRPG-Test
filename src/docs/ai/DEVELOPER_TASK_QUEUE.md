@@ -6,7 +6,22 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 
 **Agents:** When you finish a user-facing task (`done` or `partial`), add granular tests to `BUILD_VALIDATION.md` and index the suite below. See `[ARCHITECTURE_CONSTITUTION.md](ARCHITECTURE_CONSTITUTION.md)`.
 
-**Last updated:** 2026-08-01
+**Last updated:** 2026-08-03
+
+---
+
+## API route auth/IDOR test coverage gap (TASK-658)
+
+Vitest auth/IDOR suites now cover **characters** (`route.test.ts`, `[id]/route.test.ts` incl. PATCH/DELETE), **campaigns** (`route.test.ts`, `[id]/route.test.ts`), and **admin/users** (`route.test.ts`). Intentionally deferred (follow-up vitest or DEV-V-002/003/004):
+
+| Area | Routes without auth/IDOR vitest |
+| ---- | ------------------------------- |
+| Admin | `/api/admin/check`, `/api/admin/changelogs`, `/api/admin/role-policies`, `/api/admin/users/update-role` |
+| Campaigns | `/api/campaigns/invite/[code]`, `/api/campaigns/[id]/rolls`, `/api/campaigns/[id]/characters/[userId]/[characterId]` |
+| Encounters | `/api/encounters`, `/api/encounters/[id]` |
+| Crafting | `/api/crafting`, `/api/crafting/[id]` |
+| Images / uploads | `/api/images`, `/api/images/[id]`, `/api/images/[id]/replace`, `/api/images/[id]/usage`, `/api/upload/portrait`, `/api/upload/profile-picture` |
+| Library / codex | `/api/codex`, `/api/official/[type]`, `/api/official/enhanced-items`, `/api/user/library/[type]`, `/api/user/library/[type]/[id]`, `/api/user/enhanced-items`, `/api/user/enhanced-items/[id]` |
 
 ---
 
@@ -68,6 +83,8 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 | **DEV-008** | [TASK-642](ACTIVE_TASKS.md) partial — signup email | Sign up a new account; confirm `user_profiles.email` matches the auth session email (client cannot spoof a different address). Unblocks TASK-642 `done`. | Manual auth flow | | | | |
 | **DEV-009** | Wave 1 commit + reconcile | **Done** 2026-08-01 — /cleanup landed all uncommitted Wave 1 work in 7 lane commits (`TASK-###` in each subject); `npm run tasks:validate` passes strict reconcile for TASK-643/644/647/651/653/654/665. | Git + CI gate | | | | |
 | **DEV-010** | [TASK-655](archive/TASK_QUEUE_DONE.md) + [TASK-656](archive/TASK_QUEUE_DONE.md) — typecheck + zero-warning lint | **Done** 2026-08-01 — committed TASK-655/TASK-656; local `npm run typecheck`, `npm run lint`, `npm run build`, `npm test` pass. Confirm CI `AI Task Verifier` + `UI Verify / static-gates` on push. | Git + CI gate | | | | |
+| **DEV-011** | [TASK-669](WAITING_TASKS.md) — Upstash / Vercel KV for rate limits | Provision Upstash Redis (or Vercel KV). Add `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (or `KV_REST_API_URL` + `KV_REST_API_TOKEN`) to Vercel production + preview. `.env.example` + `DEPLOYMENT_AND_SECRETS_SUPABASE.md` already document vars; code falls back to in-memory when unset. After deploy: complete [TASK-645](archive/TASK_QUEUE_DONE.md) pending QA below. | Dashboard secrets + vendor billing | | | | |
+| **DEV-012** | [TASK-648](archive/TASK_QUEUE_DONE.md) + [TASK-652](archive/TASK_QUEUE_DONE.md) + [TASK-645](archive/TASK_QUEUE_DONE.md) — commit + reconcile | **Audit 2026-08-03:** batch archived `done` but **not on `HEAD`** — e.g. `HEAD` still returns raw `error.message` on `/api/images` GET; working tree fixes are correct. Prefer **three scoped commits** (648 = `api-error.ts` + audited routes + ARCHITECTURE docs only; 652 = admin validation + `lib/admin`; 645 = rate-limit + deps + env docs) — do not mix `official/enhanced-items` admin refactor into TASK-648. Run `npm run tasks:validate`; clean `.next` + `npm run build` before push. Optional `/cleanup TASK-648`: unify catch blocks to `logApiError`; crafting/encounters GET `{ error }` handling. | Git + CI gate | | | | |
 
 
 ---
@@ -124,6 +141,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-645** | Rate-limit smoke | Local (no Redis): join campaign via invite + admin role-policy PATCH still succeed under normal use. After **DEV-011**: rapid join attempts (5+/min per user) return 429 + `Retry-After`; admin role-policy PATCH bursts return 429 at strict limit; limits persist across cold serverless instances (not per-instance only). |
 | **TASK-647** | Codex debug gate smoke | Production (or prod-like): `GET /api/codex?debug=1` as non-admin returns generic error without `debug.message`/`debug.code`. Dev or admin still gets debug payload. |
 | **TASK-651** | Public image GET smoke | Unauthenticated: public image URLs still render; private/non-existent images 404. No regression on admin image upload/replace. |
 | **TASK-644** | Armor DR parity smoke | Same armor item shows identical DR on character sheet, library list, guided creator, and advanced creator (flat scalar + property-based DR item). |

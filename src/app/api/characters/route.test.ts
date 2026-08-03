@@ -31,7 +31,7 @@ vi.mock('@/lib/game/archetype-display', async (importOriginal) => {
 
 vi.mock('@/lib/rate-limit', () => ({
   standardLimiter: {
-    check: vi.fn(() => ({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+    check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
   },
 }));
 
@@ -190,7 +190,7 @@ describe('POST /api/characters', () => {
     mockFetchArchetypeNameMap.mockResolvedValue(new Map());
     mockEnsureUserProfile.mockResolvedValue(undefined);
     mockGetRolePolicyForUser.mockResolvedValue(getDefaultRolePolicy('new_player'));
-    mockStandardLimiterCheck.mockReturnValue({
+    mockStandardLimiterCheck.mockResolvedValue({
       success: true,
       remaining: 29,
       reset: Date.now() + 60_000,

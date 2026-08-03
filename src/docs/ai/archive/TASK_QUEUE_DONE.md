@@ -1,3 +1,140 @@
+
+- id: TASK-658
+  title: Add API route auth/IDOR tests for remaining routes
+  priority: high
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - src/app/api/characters/route.test.ts
+    - src/app/api/characters/[id]/route.test.ts
+    - src/app/api/campaigns/route.test.ts
+    - src/app/api/campaigns/[id]/route.test.ts
+    - src/app/api/admin/users/route.test.ts
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Audit section 3/10 item 20: only ~1 of 29 API routes had test coverage (~3%). Add vitest coverage for
+    auth/IDOR behavior (unauthenticated rejected, cross-user access rejected, owner access allowed) on
+    the highest-risk remaining routes (characters, campaigns, admin) beyond the existing characters
+    API smoke suite.
+  acceptance_criteria:
+    - New vitest files cover auth/IDOR for at least characters, campaigns, and one admin route.
+    - npm run test passes.
+    - Coverage gap for any intentionally-deferred routes noted in DEVELOPER_TASK_QUEUE.
+  completed_work: |
+    Added campaigns/route.test.ts (401, empty list, owner summary), campaigns/[id]/route.test.ts
+    (401, 404 missing, 404 IDOR, owner invite code, member hidden invite), admin/users/route.test.ts
+    (401, 403, 200 admin list, 429 rate limit). Extended characters/[id]/route.test.ts with PATCH/DELETE
+    401 + cross-user 404 + owner success. Indexed deferred routes in DEVELOPER_TASK_QUEUE. npm run test 469 pass.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md section 3/10.
+
+- id: TASK-645
+  title: Durable rate limiting for invite join, admin mutations, and uploads
+  priority: high
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - src/lib/rate-limit.ts
+    - src/app/(main)/campaigns/actions.ts
+    - src/app/api/admin/role-policies/route.ts
+    - src/app/api/admin/users/update-role/route.ts
+    - package.json
+    - package-lock.json
+    - .env.example
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+  description: |
+    Audit H2/H3/M4: the current limiter is in-memory per-serverless-instance so it doesn't meaningfully
+    throttle anything on Vercel; joinCampaignAction has no throttle at all despite a service-role
+    lookup; several admin mutation routes don't apply a limiter. Add a Redis (Upstash) or Vercel
+    KV-backed limiter behind the existing rateLimit()-shaped API — env-flagged, safe no-op fallback
+    when unconfigured — and apply it to joinCampaignAction plus admin mutation routes missing one.
+  acceptance_criteria:
+    - Shared limiter is consistent across serverless instances when Redis/KV env vars are set, and
+      degrades gracefully (no crash) when unset.
+    - joinCampaignAction is throttled.
+    - Identified admin mutation routes call standardLimiter/strictLimiter consistently.
+    - npm run build passes.
+  completed_work: |
+    Added @upstash/ratelimit + @upstash/redis; rateLimit().check is async with Upstash sliding-window
+    when UPSTASH_REDIS_* or KV_REST_API_* env vars are set, in-memory fallback otherwise (Redis errors
+    also fall back). Throttled joinCampaignAction (inviteCodeLimiter 5/min); PATCH admin/role-policies
+    (strictLimiter). All existing limiter call sites updated to await. Env vars documented in
+    .env.example and DEPLOYMENT_AND_SECRETS_SUPABASE.md. npm run typecheck pass; build compiles + TS
+    pass — trace step intermittently ENOENT on OneDrive path (environment).
+  notes: |
+    Full production activation requires TASK-669 (human Redis/KV provisioning).
+
+---
+
+---
+
+- id: TASK-652
+  title: Admin API hardening — explicit validation allowlists + consolidate admin-check
+  priority: medium
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - src/app/api/admin/users/update-role/route.ts
+    - src/app/api/admin/role-policies/route.ts
+    - src/lib/admin.ts
+    - src/app/api/admin/check/route.ts
+    - src/lib/api-validation.ts
+    - src/app/api/official/enhanced-items/route.ts
+  description: |
+    Audit M5 + low note: some admin route bodies use permissive Zod passthrough() schemas instead of
+    explicit field allowlists, and admin-check logic is duplicated in places instead of always going
+    through @/lib/admin. Tighten schemas to explicit/strict field lists and route remaining ad hoc
+    admin checks through the shared helper.
+  acceptance_criteria:
+    - Identified admin routes use explicit Zod schemas (no passthrough()).
+    - No remaining duplicate isAdmin-style checks outside @/lib/admin.
+    - npm run build + test pass.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 M5, §4.4.
+    Added adminUpdateRoleSchema + adminRolePolicyPatchSchema in api-validation.ts; requireAdminSession in admin.ts; consolidated official/enhanced-items duplicate role query.
+
+---
+
+- id: TASK-648
+  title: Standardize API error responses — stop leaking raw DB/Supabase errors
+  priority: high
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - src/lib/api-error.ts
+    - src/app/api/codex/route.ts
+    - src/app/api/images/route.ts
+    - src/app/api/images/[id]/route.ts
+    - src/app/api/images/[id]/replace/route.ts
+    - src/app/api/official/[type]/route.ts
+    - src/app/api/crafting/route.ts
+    - src/app/api/encounters/route.ts
+    - src/app/api/upload/portrait/route.ts
+    - src/app/api/upload/profile-picture/route.ts
+    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
+    - src/docs/ARCHITECTURE.md
+  description: |
+    Audit M2 + low note: several API routes (images, official, crafting, encounters, uploads) return
+    raw Supabase/Postgres error objects/messages to the client, and error response shapes are
+    inconsistent across routes. Log the raw error server-side and return a generic { error: string } shape; document the convention.
+  acceptance_criteria:
+    - Audited routes no longer return raw DB error text/details to clients.
+    - Documented response-shape convention exists (API README note or ARCHITECTURE_CONSTITUTION).
+    - npm run build + lint pass.
+  notes: |
+    Added @/lib/api-error (logApiError, piErrorResponse). Codex production hints gated to dev or ?debug=1 (admin). Success shapes remain route-specific; errors standardized.
 - id: TASK-657
   title: Add pre-commit hooks (husky + lint-staged + typecheck on changed files)
   priority: medium

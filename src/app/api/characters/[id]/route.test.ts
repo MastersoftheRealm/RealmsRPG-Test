@@ -13,14 +13,41 @@ vi.mock('@/lib/owner-library-for-view', () => ({
   getOwnerLibraryForView: vi.fn(),
 }));
 
-import { GET } from './route';
+vi.mock('@/lib/rate-limit', () => ({
+  standardLimiter: {
+    check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+  },
+}));
+
+vi.mock('@/lib/api-validation', () => ({
+  validateJson: vi.fn(),
+  characterUpdateSchema: {},
+}));
+
+vi.mock('@/lib/character-save', () => ({
+  prepareCharacterForSave: vi.fn((data: unknown) => data),
+}));
+
+vi.mock('@/lib/character-list-columns', () => ({
+  getCharacterListColumns: vi.fn(() => ({})),
+}));
+
+vi.mock('@/lib/game/archetype-display', () => ({
+  fetchArchetypeNameMap: vi.fn(() => Promise.resolve(new Map())),
+}));
+
+import { GET, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
 import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
+import { validateJson } from '@/lib/api-validation';
+import { standardLimiter } from '@/lib/rate-limit';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
 const mockGetOwnerLibraryForView = vi.mocked(getOwnerLibraryForView);
+const mockValidateJson = vi.mocked(validateJson);
+const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
 
 const OWNER = { uid: 'owner-user', email: 'owner@example.com' };
 const OTHER = { uid: 'other-user', email: 'other@example.com' };
@@ -48,13 +75,41 @@ function makeCharacterRow(
 }
 
 function createMockSupabase(characterRow: CharacterRow | null) {
+  const buildSelectChain = () => {
+    const eqCalls: [string, string][] = [];
+    const chain = {
+      eq: vi.fn((col: string, val: string) => {
+        eqCalls.push([col, val]);
+        return chain;
+      }),
+      maybeSingle: vi.fn(async () => {
+        if (!characterRow) return { data: null, error: null };
+        const filters = Object.fromEntries(eqCalls);
+        if (filters.id && filters.id !== characterRow.id) {
+          return { data: null, error: null };
+        }
+        if (filters.user_id && filters.user_id !== characterRow.user_id) {
+          return { data: null, error: null };
+        }
+        return { data: characterRow, error: null };
+      }),
+    };
+    return chain;
+  };
+
   return {
     from: vi.fn((table: string) => {
       if (table === 'characters') {
         return {
-          select: vi.fn().mockReturnValue({
+          select: vi.fn(() => buildSelectChain()),
+          update: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
-              maybeSingle: vi.fn().mockResolvedValue({ data: characterRow, error: null }),
+              eq: vi.fn().mockResolvedValue({ error: null }),
+            }),
+          }),
+          delete: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              eq: vi.fn().mockResolvedValue({ error: null }),
             }),
           }),
         };
@@ -69,11 +124,32 @@ function createMockSupabase(characterRow: CharacterRow | null) {
       }
       throw new Error(`Unexpected table: ${table}`);
     }),
+    storage: {
+      from: vi.fn(() => ({
+        list: vi.fn().mockResolvedValue({ data: [], error: null }),
+        remove: vi.fn().mockResolvedValue({ error: null }),
+      })),
+    },
   };
 }
 
 function makeGetRequest(id: string) {
   return new NextRequest(`http://localhost/api/characters/${id}`);
+}
+
+function makePatchRequest(id: string, body: unknown) {
+  return new NextRequest(`http://localhost/api/characters/${id}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': '203.0.113.1' },
+    body: JSON.stringify(body),
+  });
+}
+
+function makeDeleteRequest(id: string) {
+  return new NextRequest(`http://localhost/api/characters/${id}`, {
+    method: 'DELETE',
+    headers: { 'x-forwarded-for': '203.0.113.1' },
+  });
 }
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -101,6 +177,19 @@ describe('GET /api/characters/[id]', () => {
   it('returns 404 null for another users private character (not 403)', async () => {
     const row = makeCharacterRow('char-private', OWNER.uid, { visibility: 'private' });
     mockGetSession.mockResolvedValue({ user: OTHER, error: null });
+    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+    const response = await GET(makeGetRequest('char-private'), {
+      params: Promise.resolve({ id: 'char-private' }),
+    });
+
+    expect(response.status).toBe(404);
+    await expect(readJson(response)).resolves.toBeNull();
+  });
+
+  it('returns 404 null for unauthenticated viewers of a private character (not 403)', async () => {
+    const row = makeCharacterRow('char-private', OWNER.uid, { visibility: 'private' });
+    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
     mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
 
     const response = await GET(makeGetRequest('char-private'), {
@@ -140,5 +229,105 @@ describe('GET /api/characters/[id]', () => {
     const body = await readJson<{ character: { id: string }; libraryForView: unknown }>(response);
     expect(body.character.id).toBe('char-public');
     expect(body.libraryForView).toEqual({ powers: [], techniques: [], items: [], creatures: [] });
+  });
+});
+
+describe('PATCH /api/characters/[id]', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockStandardLimiterCheck.mockResolvedValue({
+      success: true,
+      remaining: 29,
+      reset: Date.now() + 60_000,
+    });
+    mockValidateJson.mockResolvedValue({
+      success: true,
+      data: { name: 'Updated Hero' },
+    } as never);
+  });
+
+  it('returns 401 when session is missing', async () => {
+    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+
+    const response = await PATCH(makePatchRequest('char-1', { name: 'Updated Hero' }), {
+      params: Promise.resolve({ id: 'char-1' }),
+    });
+
+    expect(response.status).toBe(401);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Unauthorized' });
+  });
+
+  it('returns 404 when another user tries to update a character (IDOR)', async () => {
+    const row = makeCharacterRow('char-private', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OTHER, error: null });
+    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+    const response = await PATCH(makePatchRequest('char-private', { name: 'Stolen' }), {
+      params: Promise.resolve({ id: 'char-private' }),
+    });
+
+    expect(response.status).toBe(404);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Character not found' });
+  });
+
+  it('updates the character for the owner', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+    const response = await PATCH(makePatchRequest('char-owned', { name: 'Updated Hero' }), {
+      params: Promise.resolve({ id: 'char-owned' }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(readJson(response)).resolves.toEqual({ ok: true });
+  });
+});
+
+describe('DELETE /api/characters/[id]', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockStandardLimiterCheck.mockResolvedValue({
+      success: true,
+      remaining: 29,
+      reset: Date.now() + 60_000,
+    });
+  });
+
+  it('returns 401 when session is missing', async () => {
+    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+
+    const response = await DELETE(makeDeleteRequest('char-1'), {
+      params: Promise.resolve({ id: 'char-1' }),
+    });
+
+    expect(response.status).toBe(401);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Unauthorized' });
+  });
+
+  it('returns 404 when another user tries to delete a character (IDOR)', async () => {
+    const row = makeCharacterRow('char-private', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OTHER, error: null });
+    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+    const response = await DELETE(makeDeleteRequest('char-private'), {
+      params: Promise.resolve({ id: 'char-private' }),
+    });
+
+    expect(response.status).toBe(404);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Character not found' });
+  });
+
+  it('deletes the character for the owner', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+    const response = await DELETE(makeDeleteRequest('char-owned'), {
+      params: Promise.resolve({ id: 'char-owned' }),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(readJson(response)).resolves.toEqual({ ok: true });
   });
 });
