@@ -134,10 +134,40 @@ Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexP
 
 1. **User-initiated actions** (save, delete, sync, upload, account change): never empty `catch {}` / `.catch(() => {})`. Show toast or inline message with `getErrorMessage(err, fallback)`.
 2. **Not-found vs failure:** Helpers that return `null` for “no row” (e.g. name lookup) must still **throw** on network/HTTP failure — `null` means not found only.
-3. **Best-effort background work** (optional migrate, non-critical sync): silent catch is allowed only with an adjacent comment explaining why the user is not notified.
+3. **Best-effort background work** (optional migrate, non-critical sync): log via `logClientError` from `@/lib/api-client` with an adjacent comment explaining why the user is not notified; do not use empty `catch {}`.
 4. **Parse once:** Use `getErrorMessage` from `@/lib/api-client` instead of ad-hoc `(e as Error)?.message ?? '…'` at each callsite when touching a file.
 
 ### Reference migrations (TASK-479)
 
 - Account: `my-account/page.tsx` — profile load and auth updates surface errors (no silent catch).
 - Library: `findLibraryItemByName` in `library-service.ts` — lookup miss → `null`; API failure → throw (callers toast).
+
+### Server error responses (Route Handlers)
+
+**Authority for `/api/*` failure JSON.** Complements client-side handling above.
+
+| Rule | Convention |
+|------|------------|
+| **Error shape** | `{ error: string }` with appropriate HTTP status. No raw Supabase/Postgres `.message`, `.details`, or stack in production responses. |
+| **Logging** | `logApiError(context, err)` or `apiErrorResponse(message, status, context, err)` from `@/lib/api-error` — log full error server-side first. |
+| **Debug / hints** | Optional `hint` or `debug` only when `NODE_ENV=development` or explicit gated `?debug=1` (e.g. codex admin gate). |
+| **Validation** | Zod/validation failures may include field-level `details` when the message is derived from schema paths, not DB errors. |
+
+Success responses remain route-specific (`{ id }`, `{ images }`, arrays, etc.); standardize **errors** only.
+
+---
+
+## Character schema (save/load boundary)
+
+**Authority:** `src/lib/character/schema-normalize.ts` (TASK-663). Normalize at API load (`normalizeCharacterOnLoad` — promotes canonical fields and strips legacy aliases) and before persistence (`normalizeCharacterForSave` in `cleanForSave`, `prepareCharacterForSave`, and PATCH/duplicate merge paths).
+
+| Concept | Canonical field | Legacy aliases (dual-read on load; stripped on save) |
+|---------|-----------------|------------------------------------------------------|
+| Defense allocation | `defenseVals` | `defenseSkills` |
+| Martial proficiency | `mart_prof` | `martialProficiency` |
+| Power proficiency | `pow_prof` | `powerProficiency` |
+| Archetype category | `archetype.type` (`power` \| `powered-martial` \| `martial`) | `mixed` → `powered-martial` |
+
+Proficiency-inferred archetype in `getArchetypeType()` uses `ProficiencyDerivedArchetype` (`ArchetypeCategory | 'none'`) — same vocabulary as stored `archetype.type`, not a separate `mixed` label.
+
+Armor item DR at display time: `damageReduction` is canonical; `armorValue` / `armor` on items are read fallbacks in `deriveArmorItemCombatStats` (enrichment derives from properties when absent).

@@ -36,6 +36,15 @@ In Vercel → Project → Settings → Environment Variables, add:
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY` | All | Anon/public key (safe for client) |
 | `SUPABASE_SERVICE_ROLE_KEY` | All | **Server-only** — never expose to client |
 
+**Optional — durable rate limiting (TASK-645):** When set, API and server-action limiters share counters across Vercel serverless instances via Upstash Redis REST. Without them, the app falls back to per-instance in-memory limits (weaker on Vercel). Provisioning is human-owned — see **TASK-669** in `WAITING_TASKS.md`.
+
+| Variable | Scope | Notes |
+|----------|-------|-------|
+| `UPSTASH_REDIS_REST_URL` | Server | Upstash Redis REST URL |
+| `UPSTASH_REDIS_REST_TOKEN` | Server | Upstash Redis REST token |
+| `KV_REST_API_URL` | Server | Vercel KV alternative (same client) |
+| `KV_REST_API_TOKEN` | Server | Vercel KV alternative token |
+
 **Never** use `NEXT_PUBLIC_` prefix for `SUPABASE_SERVICE_ROLE_KEY`. `DATABASE_URL` / `DIRECT_URL` are optional for the Next.js app; they are **required for local full-database backups** (`npm run db:backup`).
 
 ### Local database backup

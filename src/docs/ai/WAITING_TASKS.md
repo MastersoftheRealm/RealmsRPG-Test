@@ -21,12 +21,13 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
     - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
   description: |
     Sign up for Upstash Redis (or enable Vercel KV) and add the resulting env vars (URL/token) to
-    Vercel project settings + a .env.example placeholder, so TASK-645's Redis-backed rate limiter can
-    be enabled in production instead of the current ineffective in-memory limiter.
+    Vercel project settings. TASK-645 (2026-08-03) shipped the code path + `.env.example` +
+    `DEPLOYMENT_AND_SECRETS_SUPABASE.md` docs; in-memory fallback remains until these secrets exist.
   acceptance_criteria:
     - Redis/KV instance provisioned.
-    - Env vars set in Vercel (production + preview) and documented in DEPLOYMENT_AND_SECRETS_SUPABASE.md.
-  notes: "Human-only — new vendor account / billing decision. AI skip. Blocks full activation of TASK-645."
+    - Env vars set in Vercel (production + preview).
+    - Owner completes TASK-645 pending QA in DEVELOPER_TASK_QUEUE.md (DEV-011).
+  notes: "Human-only — new vendor account / billing decision. AI skip. Blocks durable cross-instance limits (DEV-011)."
 
 ---
 

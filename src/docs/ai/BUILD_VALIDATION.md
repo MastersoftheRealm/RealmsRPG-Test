@@ -1032,7 +1032,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1493,6 +1493,18 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Open **Recovery**. 2. Confirm Full / Partial is a shared `SegmentedControl` (pill track), not hand-rolled bordered buttons. 3. Switch to **Partial Recovery** — duration **2 / 4 / 6 hours** and **Automatic / Manual** are also SegmentedControls; Manual shows the HP/EN slider. 4. Confirm preview shows Health/Energy deltas; Confirm CTA still reads **Full Recovery** or **Recover (Nh)** and sits in the sticky Modal footer (Cancel alongside). 5. Optional ~360px: modal is full-screen; footer stays visible without scrolling; segments remain ≥44px touch targets. |
 | **Expected** | Three choice groups use SegmentedControl; recovery math unchanged; no parallel pill chrome; Cancel/confirm via Modal `footer` + `flexLayout`; preview uses warning semantic surface (`warning-fg` / status panel), not numbered `warning-*` + `dark:` pairs on the choice clusters. |
 | **Report** | DEV-V-009-T039: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T040 — Sheet modals + Library from context (TASK-667)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-667 |
+| **Where** | `/characters/[id]` (edit mode) |
+| **Needs** | Editable character with library items / feats |
+| **Steps** | 1. Open Recovery → Full + Partial. 2. Level Up → confirm. 3. Library → Add power/technique/weapon/equipment. 4. Feats → Add archetype + character feat; remove one. 5. Edit Archetype + Edit Species save. 6. Reload; confirm library lists + notes still match. |
+| **Expected** | All sheet modals open/save via context (no blank/error). Library tabs still add/remove/equip; campaign RM view remains read-only. |
+| **Report** | DEV-V-009-T040: PASS / FAIL / SKIP — |
 
 ---
 
@@ -5694,6 +5706,145 @@ Post-apply smoke for anon grant hardening, public read paths, and guest characte
 
 ---
 
+## DEV-V-043 — Wave 5 page facade splits (TASK-666)
+
+Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC; verify routes still load and core actions work after splits (no behavior change intended).
+
+#### DEV-V-043-T001 — Combat encounter play after Wave 5 hook split
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-043 — Wave 5 page facade splits |
+| **Related task** | TASK-666 (666a) |
+| **Where** | `/encounters/<id>/combat` (or Mixed → Combat tab) |
+| **Needs** | Signed-in; an existing combat encounter (or create one) |
+
+**Steps**
+1. Open the combat encounter — combatants list + Add Combatant sidebar render (no blank flash).
+2. Add a combatant (manual and/or From Library / Campaign).
+3. Start encounter → Next/Previous turn; edit HP/AP; wait for autosave; refresh — state restores.
+
+**Expected**
+- Round chrome, roster actions, and linked-character sync behave as before the `use-combat-encounter-view` split.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-043-T002 — My Account after facade split
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-043 |
+| **Related task** | TASK-666 (666b) |
+| **Where** | `/my-account` |
+| **Needs** | Signed-in account |
+
+**Steps**
+1. Open `/my-account` — role limits, profile, preferences, security, and danger-zone cards render.
+2. Toggle a preference (e.g. tutorials) and refresh — preference persists.
+3. Spot-check profile display name / email fields still load.
+
+**Expected**
+- No blank page; section cards match pre-split account surface.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-043-T003 — Campaign detail after facade split
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-043 |
+| **Related task** | TASK-666 (666c) |
+| **Where** | `/campaigns/<id>` |
+| **Needs** | Signed-in; owned or joined campaign |
+
+**Steps**
+1. Open campaign detail — header, invite, roster, and roll log sections render.
+2. Copy/view invite if owner; confirm roster characters list.
+3. Optional: open roll log entries if any exist.
+
+**Expected**
+- Campaign detail sections mount without blank flash; invite/roster/log chrome unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-043-T004 — Character sheet after page facade split
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-043 |
+| **Related task** | TASK-666 (666d) |
+| **Where** | `/characters/<id>` |
+| **Needs** | Signed-in; owned character |
+
+**Steps**
+1. Open character sheet — header stats + section panels load (no blank flash).
+2. Toggle edit mode; expand Library / Skills briefly.
+3. Refresh — sheet restores.
+
+**Expected**
+- Sheet orchestration via `use-character-sheet-page` (+ `page-data` / `page-ui`) still wires modals/sections; no regression vs pre-split page.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-043-T005 — Crafting tool after derived extract
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-043 |
+| **Related task** | TASK-666 (666e) |
+| **Where** | `/crafting/<sessionId>` |
+| **Needs** | Signed-in; existing crafting session (or create one) |
+
+**Steps**
+1. Open crafting session — tool loads (no blank flash).
+2. Change quantity/options — requirements/summary update.
+3. Enter a roll value if available; refresh — session restores.
+
+**Expected**
+- Derived calc extract does not break options/rolls/summary wiring.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-043-T006 — Edit Species modal after shell/hook split
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-043 |
+| **Related task** | TASK-666 (666f) |
+| **Where** | Character sheet → Edit Species |
+| **Needs** | Signed-in; owned character with species/ancestry |
+
+**Steps**
+1. Open Edit Species — species step grid renders (`fullScreenOnMobile` still applies on narrow viewport). Sticky Modal `footer` shows Cancel / Next (or Save on ancestry).
+2. Continue to ancestry step — trait picks render. For mixed species, skills use shared `MixedSpeciesSkillPicker` (same as Advanced creator; intentional TASK-670 unification, not pre-split pill chips).
+3. Cancel without save — sheet unchanged; optional: save once and confirm ancestry persists.
+
+**Expected**
+- Modal shell + `use-edit-species-modal` / step components match pre-split flow (footer sticky; mixed skills via shared picker).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-043-T007 — Admin core rules category tabs after editor split
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-043 |
+| **Related task** | TASK-666 (666g) |
+| **Where** | `/admin/core-rules` |
+| **Needs** | Admin account |
+
+**Steps**
+1. Open admin core rules — category tabs render.
+2. Switch across several tabs (Progression, Combat, Archetypes, Conditions, Crafting, etc.) — each editor mounts.
+3. Edit one non-destructive field (or open then discard) — no crash / blank panel.
+
+**Expected**
+- `core-rules-category-editor` facade still routes each tab to its category editor module.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -5730,5 +5881,6 @@ Post-apply smoke for anon grant hardening, public read paths, and guest characte
 | DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649) | — | Manual DEV-V-041 + `node scripts/verify-task-649.mjs` |
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |
+| DEV-V-043 | Wave 5 page facade splits (TASK-666) | — | Manual — see suite above |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

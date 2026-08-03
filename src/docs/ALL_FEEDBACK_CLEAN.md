@@ -1,6 +1,24 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-01 (Guided Species L2 + mixed Ancestry)
+Last updated: 2026-08-03 (TASK-649 Supabase hardening approval)
+
+**Raw Feedback Log — 2026-08-03 (TASK-649 — public read + VTT scope)**
+- Context: TASK-649 Phase 2 Supabase least-privilege hardening before live apply
+- Feedback: Do not touch VTT tables (Collins branch, in use). Non-sensitive data must stay publicly readable without sign-in: codex, official Realms library, item/codex art (direct URLs), guest public character sheets with art. Approve apply if SQL matches vision.
+- Expected: Least-privilege anon grants + no bucket listing; public read preserved; VTT out of scope.
+- Disposition: **TASK-649 done** — applied live 2026-08-03 via `node scripts/run-task-649-phase2.mjs`; verify-task-649 checks pass. verification_status pending-qa.
+
+**Raw Feedback Log — 2026-08-03 (Guided Abilities — custom archetype / custom chooser)**
+- Context: Guided creator Abilities step when forging a custom archetype (no codex path)
+- Feedback: No pre-assigned ability values; no L1 recommended layer or See recommendations; only full point-buy from zeros; no auto-allocated points.
+- Expected: `prefersDeepCatalogEntry` → customize-only panel; Continue requires spending all ability points.
+- Disposition: Implemented — `abilities-step.tsx`, `buildOpenCustomPathEntryPatch` clears stale dependents, `canContinueGuidedAbilitiesStep`; BUILD_VALIDATION DEV-V-013 T074 step 5 updated. verification_status pending-qa.
+
+**Raw Feedback Log — 2026-08-03 (GuidedLayerNav placement — below content, not footer)**
+- Context: Guided creator layer expand/collapse buttons (`GuidedLayerNav`)
+- Feedback: One layer-nav button → bottom left below step content. Two buttons → shallower (e.g. See starter species) left, deeper (e.g. See all species / Create Species) right. Layer-nav actions must not live in the sticky Back/Continue footer (e.g. Create Species on Species L2).
+- Expected: `GuidedLayerNav` uses `justify-start` for single action, `justify-between` for pair; Species **Create Species** in layer nav right slot on L2.
+- Disposition: Implemented — `guided-layer-nav.tsx`, `species-step.tsx`; BUILD_VALIDATION DEV-V-013 T077–T078 updated. **Cleanup 2026-08-03:** removed dead `footerTrailing` API; FEATURE_INDEX + product overview aligned.
 
 **Raw Feedback Log — 2026-08-01 (Guided Species L2 — mixed + Create Species)**
 - Context: Guided creator Species step product overview implementation
@@ -2576,6 +2594,15 @@ Notes
 - Expected: In Skills edit mode on desktop (`lg+` narrow Skills column), each Value stepper shows a full usable `+` (not clipped by the panel/card edge); horizontal scroll via TableScroll if the table is wider than the panel.
 - Disposition: Implemented as **TASK-543** (renumbered; TASK-540–542 taken by auth / sticky footer / inventory+roll-log). QA: DEV-V-009-T024.
 
+**Raw Feedback Log - 2026-08-03 (Guided custom route skills browse layers)**
+- Date: 2026-08-03
+- Context: Guided creator → Skills step → custom chooser (no path)
+- Priority: High
+- Feedback (verbatim):
+  For custom route in guided creator for the skills screen, don't show the add skills modal automatically, instead let them choose to open it if they scroll down and select browse all skills, also add a button to the bottom to navigate deeper by browse all sub skills, since this is slightly deeper.
+- Expected: Custom chooser Skills does not auto-open Add Skills modal; L1 **Browse all Skills** opt-in; L3 **Browse all Sub-Skills** deeper from L2 modal; sub-skills visible in guided allocation list; reuse canonical `AddSubSkillModal` not parallel modal.
+- Disposition: Implemented session cleanup — `skill-allocation-add.ts`, progressive L2→L3 modal footer nav, `GuidedSkillsPanel` sub-rows. QA: DEV-V-013-T076 step 4.
+
 **Raw Feedback Log - 2026-07-19 (Guided feats See more → add modal)**
 - Date: 2026-07-19
 - Context: Guided creator → Archetype Feats / Character Feat Layer 2
@@ -2800,3 +2827,11 @@ Notes
 - Feedback (verbatim summary): Path selection guided creator card/desc chips should read `Primary Ability: X` and `Secondary Ability: X` (colon for clarity), not `Primary Ability X`.
 - Expected: Guided path cards + More details use colon-separated labels; Advanced creator parity via shared copy + chip builder.
 - Disposition: `path-ability-copy.ts` + `buildPathAbilityChipLabels`; wired Guided path-step/overview + Advanced archetype-step; `path-ability-labels.test.ts`.
+
+**Raw Feedback Log — 2026-08-03 (Species skill pick cards show descriptions)**
+- Date: 2026-08-03
+- Context: Guided creator mixed ancestry, Advanced ancestry, Edit Species
+- Priority: Medium
+- Feedback (verbatim summary): For “Choose your species skills” and other skill cards/row pickers, show skill descriptions (truncated as normal) instead of name-only chips/pills.
+- Expected: Guided `GuidedChoiceCard` skill picks show codex description; Advanced + sheet mixed pickers show description in TraitSection-style rows with clamp/See more.
+- Disposition: **TASK-670** — `buildMixedSpeciesSkillOptions` + `MixedSpeciesSkillPicker`; pending-qa **DEV-V-013 T079**.

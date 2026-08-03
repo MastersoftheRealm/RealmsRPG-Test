@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-03T12:07:57.115Z",
+  "generated_at": "2026-08-03T15:45:36.813Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -72,246 +72,6 @@
       ]
     },
     {
-      "id": "TASK-645",
-      "title": "Durable rate limiting for invite join, admin mutations, and uploads",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/rate-limit.ts",
-        "src/app/(main)/campaigns/actions.ts",
-        "src/app/api/admin/role-policies/route.ts",
-        "src/app/api/admin/users/update-role/route.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-648",
-      "title": "Standardize API error responses — stop leaking raw DB/Supabase errors",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/app/api/codex/route.ts",
-        "src/app/api/images/route.ts",
-        "src/app/api/images/[id]/route.ts",
-        "src/app/api/official/[type]/route.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-649",
-      "title": "Supabase least-privilege + hygiene hardening (live DB)",
-      "status": "partial",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [
-        {
-          "hash": "04868faae991e605fff6a3df96fdd55909ad3cd8",
-          "subject": "docs: reconcile Wave 1 audit task queue and changelog",
-          "files": [
-            "src/docs/ai/ACTIVE_TASKS.md",
-            "src/docs/ai/AI_CHANGELOG.md",
-            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
-            "src/docs/ai/WAITING_TASKS.md",
-            "src/docs/ai/archive/CODEBASE_AUDIT_2026-08-01.md",
-            "src/docs/ai/archive/HISTORY_INDEX.md",
-            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
-          ]
-        },
-        {
-          "hash": "92a70f5f1bcd0038ef1bd576e465f1c98d0fa918",
-          "subject": "TASK-649: Draft Supabase least-privilege + hygiene hardening SQL (Phase 1, no apply)",
-          "files": [
-            "sql/README.md",
-            "sql/task-649-anon-least-privilege-proposed.sql",
-            "sql/task-649-codex-art-storage-select-hardening-proposed.sql",
-            "sql/task-649-drop-codex-backup-tables-proposed.sql",
-            "sql/task-649-feat-tag-function-search-path-proposed.sql",
-            "sql/task-649-index-hygiene-proposed.sql"
-          ]
-        }
-      ],
-      "related_files": [
-        "sql/task-649-anon-least-privilege-proposed.sql",
-        "sql/task-649-drop-codex-backup-tables-proposed.sql",
-        "sql/task-649-codex-art-storage-select-hardening-proposed.sql",
-        "sql/task-649-feat-tag-function-search-path-proposed.sql",
-        "sql/task-649-index-hygiene-proposed.sql",
-        "sql/README.md",
-        "src/docs/SUPABASE_SCHEMA.md"
-      ],
-      "related_overlap": [
-        "sql/task-649-anon-least-privilege-proposed.sql",
-        "sql/task-649-drop-codex-backup-tables-proposed.sql",
-        "sql/task-649-codex-art-storage-select-hardening-proposed.sql",
-        "sql/task-649-feat-tag-function-search-path-proposed.sql",
-        "sql/task-649-index-hygiene-proposed.sql",
-        "sql/README.md"
-      ]
-    },
-    {
-      "id": "TASK-650",
-      "title": "Consolidate permissive RLS SELECT policies on campaigns",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "sql/README.md",
-        "src/docs/SUPABASE_SCHEMA.md"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-652",
-      "title": "Admin API hardening — explicit validation allowlists + consolidate admin-check",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/app/api/admin/users/update-role/route.ts",
-        "src/app/api/admin/role-policies/route.ts",
-        "src/lib/admin.ts",
-        "src/app/api/admin/check/route.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-658",
-      "title": "Add API route auth/IDOR tests for remaining routes",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/app/api/characters/route.ts",
-        "src/app/api/characters/[id]/route.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-659",
-      "title": "Wire a creator Playwright audit suite into default CI",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "playwright.creator-audit.config.ts",
-        "playwright.shell-creators-audit.config.ts",
-        ".github/workflows/ui-verify.yml"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-660",
-      "title": "Dedupe deriveAbilityRequirementFromProperties + fix unproficientBonus SSOT violation",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/data-enrichment/find-in-library.ts",
-        "src/lib/guided-creator/equipment-eligibility.ts",
-        "src/lib/game/formulas.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-661",
-      "title": "Replace silent/empty catches with logged failures",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/guest-encounter-migration.ts",
-        "src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts",
-        "src/components/shared/add-combatant-modal.tsx",
-        "src/app/api/admin/check/route.ts",
-        "src/lib/guided-creator/power-technique-display.ts",
-        "src/lib/detail-option/combat-builder.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-662",
-      "title": "Invert calculators/game → library/guided-creator dependency direction",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/calculators/power-calc.ts",
-        "src/lib/game/path-validation.ts",
-        "src/lib/game/archetype-edit.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-663",
-      "title": "Normalize character/archetype schema drift",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/data-enrichment/clean-for-save.ts",
-        "src/lib/game/formulas.ts",
-        "src/lib/game/archetype-edit.ts"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-664",
-      "title": "Reduce `as unknown as` type-debt casts",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/lib/calculators",
-        "src/lib/game",
-        "src/lib/data-enrichment"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-666",
-      "title": "Split remaining 600+ line files into hooks + section components",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts",
-        "src/app/(main)/my-account/page.tsx",
-        "src/app/(main)/campaigns/[id]/page.tsx",
-        "src/app/(main)/characters/[id]/page.tsx",
-        "src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts",
-        "src/components/character-sheet/edit-species-modal.tsx",
-        "src/app/(main)/admin/core-rules/core-rules-category-editor.tsx"
-      ],
-      "related_overlap": []
-    },
-    {
-      "id": "TASK-667",
-      "title": "Reduce mega prop bags — LibrarySectionProps + CharacterSheetModals",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "src/components/character-sheet/library-section-props.ts",
-        "src/app/(main)/characters/[id]/CharacterSheetModals.tsx"
-      ],
-      "related_overlap": []
-    },
-    {
       "id": "TASK-668",
       "title": "Reconcile project docs with CODEBASE_AUDIT_2026-08-01 findings",
       "status": "not-started",
@@ -326,12 +86,300 @@
       "related_overlap": []
     },
     {
+      "id": "TASK-667",
+      "title": "Reduce mega prop bags — LibrarySectionProps + CharacterSheetModals",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/components/character-sheet/library-section-props.ts",
+        "src/components/character-sheet/library-section.tsx",
+        "src/components/character-sheet/character-sheet-context.tsx",
+        "src/components/character-sheet/character-sheet-body.tsx",
+        "src/components/character-sheet/read-only-sheet.ts",
+        "src/components/character-sheet/use-character-sheet-derived.ts",
+        "src/app/(main)/characters/[id]/CharacterSheetModals.tsx",
+        "src/app/(main)/characters/[id]/library-section-props.ts",
+        "src/app/(main)/characters/[id]/use-character-sheet-page.ts",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/FEATURE_INDEX.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-662",
+      "title": "Invert calculators/game ? library/guided-creator dependency direction",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/calculators/power-calc.ts",
+        "src/lib/calculators/technique-calc.ts",
+        "src/lib/calculators/part-training-points.ts",
+        "src/lib/game/path-validation.ts",
+        "src/lib/game/archetype-edit.ts",
+        "src/lib/game/dedupe-saved-parts.ts",
+        "src/lib/game/loadout-entries.ts",
+        "src/lib/game/path-ability-labels.ts",
+        "src/lib/library/part-display.ts",
+        "src/lib/guided-creator/resolve-loadout-items.ts",
+        "src/lib/guided-creator/path-ability-labels.ts",
+        "src/docs/ai/ADR/0010-lib-layer-dependency-direction.md",
+        "src/docs/ai/ARCHITECTURE_CONSTITUTION.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-650",
+      "title": "Consolidate permissive RLS SELECT policies on campaigns",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "bd3db259ec11b8fa9b3a78380eb0955a06fbfd6c",
+          "subject": "TASK-650: Drop redundant campaigns SELECT RLS policy and harden verify.",
+          "files": [
+            "scripts/run-task-650.mjs",
+            "scripts/verify-task-650.mjs",
+            "sql/README.md",
+            "sql/task-649-anon-least-privilege-applied.sql",
+            "sql/task-649-codex-art-storage-select-hardening-applied.sql",
+            "sql/task-649-drop-codex-backup-tables-applied.sql",
+            "sql/task-649-feat-tag-function-search-path-applied.sql",
+            "sql/task-649-index-hygiene-applied.sql",
+            "sql/task-650-campaigns-rls-select-consolidation-applied.sql",
+            "sql/task-650-verify-applied.sql",
+            "src/docs/SUPABASE_SCHEMA.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "sql/task-650-campaigns-rls-select-consolidation-applied.sql",
+        "sql/task-650-verify-applied.sql",
+        "scripts/run-task-650.mjs",
+        "scripts/verify-task-650.mjs",
+        "sql/README.md",
+        "src/docs/SUPABASE_SCHEMA.md"
+      ],
+      "related_overlap": [
+        "sql/task-650-campaigns-rls-select-consolidation-applied.sql",
+        "sql/task-650-verify-applied.sql",
+        "scripts/run-task-650.mjs",
+        "scripts/verify-task-650.mjs",
+        "sql/README.md",
+        "src/docs/SUPABASE_SCHEMA.md"
+      ]
+    },
+    {
+      "id": "TASK-670",
+      "title": "Species skill pick cards show skill descriptions",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/ancestry/ancestry-selection.ts",
+        "src/lib/ancestry/ancestry-selection.test.ts",
+        "src/lib/guided-creator/ancestry-pick-tasks.ts",
+        "src/components/guided-creator/steps/ancestry-step.tsx",
+        "src/components/character-creator/mixed-species-skill-picker.tsx",
+        "src/components/character-creator/steps/ancestry/ancestry-mixed-panel.tsx",
+        "src/components/character-sheet/edit-species-modal.tsx"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-661",
+      "title": "Replace silent/empty catches with logged failures",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/api-client.ts",
+        "src/lib/guest-encounter-migration.ts",
+        "src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts",
+        "src/components/shared/add-combatant-modal.tsx",
+        "src/app/api/admin/check/route.ts",
+        "src/lib/guided-creator/power-technique-display.ts",
+        "src/lib/detail-option/combat-builder.ts",
+        "src/hooks/use-auth.ts"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-660",
+      "title": "Dedupe deriveAbilityRequirementFromProperties + fix unproficientBonus SSOT violation",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "8050f9617aacfbe6c7ac060ef50abe5840c27536",
+          "subject": "TASK-660: Consolidate ability requirement derivation and unproficientBonus SSOT.",
+          "files": [
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/data-enrichment/enrich-items.ts",
+            "src/lib/data-enrichment/find-in-library.ts",
+            "src/lib/game/formulas.test.ts",
+            "src/lib/game/formulas.ts",
+            "src/lib/game/weapon-attack-ability.test.ts",
+            "src/lib/game/weapon-attack-ability.ts",
+            "src/lib/guided-creator/equipment-eligibility.ts",
+            "src/lib/guided-creator/equipment-phase-stats.ts",
+            "src/lib/library/official-item-list.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/lib/game/weapon-attack-ability.ts",
+        "src/lib/game/weapon-attack-ability.test.ts",
+        "src/lib/game/formulas.test.ts",
+        "src/lib/data-enrichment/find-in-library.ts",
+        "src/lib/guided-creator/equipment-eligibility.ts",
+        "src/lib/game/formulas.ts",
+        "src/lib/data-enrichment/enrich-items.ts",
+        "src/lib/library/official-item-list.ts",
+        "src/lib/guided-creator/equipment-phase-stats.ts"
+      ],
+      "related_overlap": [
+        "src/lib/game/weapon-attack-ability.ts",
+        "src/lib/game/weapon-attack-ability.test.ts",
+        "src/lib/game/formulas.test.ts",
+        "src/lib/data-enrichment/find-in-library.ts",
+        "src/lib/guided-creator/equipment-eligibility.ts",
+        "src/lib/game/formulas.ts",
+        "src/lib/data-enrichment/enrich-items.ts",
+        "src/lib/library/official-item-list.ts",
+        "src/lib/guided-creator/equipment-phase-stats.ts"
+      ]
+    },
+    {
+      "id": "TASK-658",
+      "title": "Add API route auth/IDOR tests for remaining routes",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "e99a238f1c43547938f72c8bbb05d4fa499494e1",
+          "subject": "TASK-658: Add API route auth/IDOR vitest for characters, campaigns, and admin users.",
+          "files": [
+            "src/app/api/admin/users/route.test.ts",
+            "src/app/api/campaigns/[id]/route.test.ts",
+            "src/app/api/campaigns/route.test.ts",
+            "src/app/api/characters/[id]/route.test.ts",
+            "src/app/api/characters/route.test.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/app/api/characters/route.test.ts",
+        "src/app/api/characters/[id]/route.test.ts",
+        "src/app/api/campaigns/route.test.ts",
+        "src/app/api/campaigns/[id]/route.test.ts",
+        "src/app/api/admin/users/route.test.ts",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md"
+      ],
+      "related_overlap": [
+        "src/app/api/characters/route.test.ts",
+        "src/app/api/characters/[id]/route.test.ts",
+        "src/app/api/campaigns/route.test.ts",
+        "src/app/api/campaigns/[id]/route.test.ts",
+        "src/app/api/admin/users/route.test.ts",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md"
+      ]
+    },
+    {
+      "id": "TASK-645",
+      "title": "Durable rate limiting for invite join, admin mutations, and uploads",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/rate-limit.ts",
+        "src/app/(main)/campaigns/actions.ts",
+        "src/app/api/admin/role-policies/route.ts",
+        "src/app/api/admin/users/update-role/route.ts",
+        "package.json",
+        "package-lock.json",
+        ".env.example",
+        "src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-652",
+      "title": "Admin API hardening � explicit validation allowlists + consolidate admin-check",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/app/api/admin/users/update-role/route.ts",
+        "src/app/api/admin/role-policies/route.ts",
+        "src/lib/admin.ts",
+        "src/app/api/admin/check/route.ts",
+        "src/lib/api-validation.ts",
+        "src/app/api/official/enhanced-items/route.ts"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-648",
+      "title": "Standardize API error responses � stop leaking raw DB/Supabase errors",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/api-error.ts",
+        "src/app/api/codex/route.ts",
+        "src/app/api/images/route.ts",
+        "src/app/api/images/[id]/route.ts",
+        "src/app/api/images/[id]/replace/route.ts",
+        "src/app/api/official/[type]/route.ts",
+        "src/app/api/crafting/route.ts",
+        "src/app/api/encounters/route.ts",
+        "src/app/api/upload/portrait/route.ts",
+        "src/app/api/upload/profile-picture/route.ts",
+        "src/docs/ai/ARCHITECTURE_CONSTITUTION.md",
+        "src/docs/ARCHITECTURE.md"
+      ],
+      "related_overlap": []
+    },
+    {
       "id": "TASK-657",
       "title": "Add pre-commit hooks (husky + lint-staged + typecheck on changed files)",
       "status": "done",
       "completed_at": "2026-08-01",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "cd59fa71a61a6772447d44886917f214ec5eaf84",
+          "subject": "chore: regenerate task reconcile report post TASK-657 commit",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "f0e9351198e2caf3d9c4e72aecc198bab0f70e09",
           "subject": "TASK-657: Add husky + lint-staged pre-commit hooks for eslint and scoped typecheck.",
@@ -20822,6 +20870,202 @@
         "src/components/guided-creator/guided-path-detail-modal.tsx",
         "tsconfig.json"
       ]
+    },
+    {
+      "id": "TASK-649",
+      "title": "Supabase least-privilege + hygiene hardening (live DB)",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "04868faae991e605fff6a3df96fdd55909ad3cd8",
+          "subject": "docs: reconcile Wave 1 audit task queue and changelog",
+          "files": [
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/WAITING_TASKS.md",
+            "src/docs/ai/archive/CODEBASE_AUDIT_2026-08-01.md",
+            "src/docs/ai/archive/HISTORY_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        },
+        {
+          "hash": "92a70f5f1bcd0038ef1bd576e465f1c98d0fa918",
+          "subject": "TASK-649: Draft Supabase least-privilege + hygiene hardening SQL (Phase 1, no apply)",
+          "files": [
+            "sql/README.md",
+            "sql/task-649-anon-least-privilege-proposed.sql",
+            "sql/task-649-codex-art-storage-select-hardening-proposed.sql",
+            "sql/task-649-drop-codex-backup-tables-proposed.sql",
+            "sql/task-649-feat-tag-function-search-path-proposed.sql",
+            "sql/task-649-index-hygiene-proposed.sql"
+          ]
+        }
+      ],
+      "related_files": [
+        "sql/task-649-drop-codex-backup-tables-proposed.sql",
+        "sql/task-649-anon-least-privilege-proposed.sql",
+        "sql/task-649-characters-anon-public-read-proposed.sql",
+        "sql/task-649-codex-art-storage-select-hardening-proposed.sql",
+        "sql/task-649-feat-tag-function-search-path-proposed.sql",
+        "sql/task-649-index-hygiene-proposed.sql",
+        "scripts/run-task-649-phase2.mjs",
+        "scripts/verify-task-649.mjs",
+        "sql/README.md",
+        "src/docs/SUPABASE_SCHEMA.md"
+      ],
+      "related_overlap": [
+        "sql/task-649-drop-codex-backup-tables-proposed.sql",
+        "sql/task-649-anon-least-privilege-proposed.sql",
+        "sql/task-649-codex-art-storage-select-hardening-proposed.sql",
+        "sql/task-649-feat-tag-function-search-path-proposed.sql",
+        "sql/task-649-index-hygiene-proposed.sql",
+        "sql/README.md"
+      ]
+    },
+    {
+      "id": "TASK-659",
+      "title": "Wire a creator Playwright audit suite into default CI",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "7c0a5bd10edf26d9a128e24eac2549889dba1fd5",
+          "subject": "TASK-659: Wire shell-creators Playwright audit into default CI.",
+          "files": [
+            ".github/workflows/ui-verify.yml",
+            "package.json",
+            "playwright.shell-creators-audit.config.ts",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/01-verification-and-ui-gates.md",
+            "src/docs/ai/guide/06-creators-and-loadouts.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "playwright.shell-creators-audit.config.ts",
+        ".github/workflows/ui-verify.yml",
+        "package.json",
+        "src/docs/ai/guide/01-verification-and-ui-gates.md",
+        "src/docs/ai/guide/06-creators-and-loadouts.md"
+      ],
+      "related_overlap": [
+        "playwright.shell-creators-audit.config.ts",
+        ".github/workflows/ui-verify.yml",
+        "package.json",
+        "src/docs/ai/guide/01-verification-and-ui-gates.md",
+        "src/docs/ai/guide/06-creators-and-loadouts.md"
+      ]
+    },
+    {
+      "id": "TASK-663",
+      "title": "Normalize character/archetype schema drift",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/character/schema-normalize.ts",
+        "src/lib/character/schema-normalize.test.ts",
+        "src/lib/data-enrichment/clean-for-save.ts",
+        "src/lib/character-save.ts",
+        "src/lib/character-save.test.ts",
+        "src/lib/game/formulas.ts",
+        "src/types/archetype.ts",
+        "src/app/api/characters/[id]/route.ts",
+        "src/components/character-sheet/archetype-section.tsx",
+        "src/docs/ARCHITECTURE.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-664",
+      "title": "Reduce `as unknown as` type-debt casts",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/lib/calculators/item-calc.ts",
+        "src/lib/game/calculations.ts",
+        "src/lib/character/schema-normalize.ts",
+        "src/lib/data-enrichment/clean-for-save.ts",
+        "src/lib/data-enrichment/enrich-powers.ts",
+        "src/lib/data-enrichment/enrich-techniques.ts",
+        "src/app/(main)/creature-creator/transformers.ts",
+        "src/components/character-sheet/use-sheet-skill-identity-actions.ts",
+        "src/components/character-sheet/use-character-sheet-derived.ts",
+        "src/components/character-sheet/archetype-section.tsx",
+        "src/components/shared/creature-stat-block-panels.tsx",
+        "src/components/shared/creature-stat-block-display-data.ts",
+        "src/services/character-service.ts",
+        "src/types/skills.ts",
+        "src/types/character.ts",
+        "src/types/items.ts",
+        "src/types/library.ts"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-666",
+      "title": "Split remaining 600+ line files into hooks + section components",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts",
+        "src/app/(main)/encounters/[id]/_components/combat/use-combat-linked-character-sync.ts",
+        "src/app/(main)/encounters/[id]/_components/combat/use-combat-roster-actions.ts",
+        "src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts",
+        "src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts",
+        "src/app/(main)/my-account/page.tsx",
+        "src/app/(main)/my-account/_components/use-my-account-page.ts",
+        "src/app/(main)/my-account/_components/account-helpers.ts",
+        "src/app/(main)/my-account/_components/account-role-limits-card.tsx",
+        "src/app/(main)/my-account/_components/account-profile-card.tsx",
+        "src/app/(main)/my-account/_components/account-preferences-cards.tsx",
+        "src/app/(main)/my-account/_components/account-security-cards.tsx",
+        "src/app/(main)/my-account/_components/account-danger-zone-card.tsx",
+        "src/app/(main)/campaigns/[id]/page.tsx",
+        "src/app/(main)/campaigns/[id]/_components/use-campaign-detail-page.ts",
+        "src/app/(main)/campaigns/[id]/_components/campaign-detail-header.tsx",
+        "src/app/(main)/campaigns/[id]/_components/campaign-invite-section.tsx",
+        "src/app/(main)/campaigns/[id]/_components/campaign-roster-section.tsx",
+        "src/app/(main)/campaigns/[id]/_components/campaign-roll-log-section.tsx",
+        "src/app/(main)/campaigns/[id]/_components/character-chip.tsx",
+        "src/app/(main)/campaigns/[id]/_components/add-character-modal.tsx",
+        "src/app/(main)/characters/[id]/page.tsx",
+        "src/app/(main)/characters/[id]/use-character-sheet-page.ts",
+        "src/app/(main)/characters/[id]/use-character-sheet-page-data.ts",
+        "src/app/(main)/characters/[id]/use-character-sheet-page-ui.ts",
+        "src/app/(main)/characters/[id]/character-sheet-utils.ts",
+        "src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts",
+        "src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts",
+        "src/components/character-sheet/edit-species-modal.tsx",
+        "src/components/character-sheet/use-edit-species-modal.ts",
+        "src/components/character-sheet/edit-species-species-step.tsx",
+        "src/components/character-sheet/edit-species-ancestry-step.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-category-editor.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-damage-types-editor.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-progression-editor.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-combat-editor.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-archetypes-editor.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-ability-skills-editors.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-conditions-editor.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-sizes-editor.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-rarities-editor.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-recovery-experience-editors.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-armament-editor.tsx",
+        "src/app/(main)/admin/core-rules/core-rules-crafting-rules-editor.tsx"
+      ],
+      "related_overlap": []
     }
   ]
 }

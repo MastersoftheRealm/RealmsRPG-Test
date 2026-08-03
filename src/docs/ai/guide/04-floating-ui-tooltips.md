@@ -132,7 +132,7 @@ Implementation: `src/components/shared/info-tippy.tsx` (`InfoTippy` + `WordHelpT
 
 ## Related patterns (not InfoTippy)
 
-- **`PathHelpCard` / `GuidedChoiceShell` / `GuidedLayerNav`** — path-mode prose and **Layer 1 ↔ 2/3** chrome. **`GuidedLayerNav`**: expand = `outline` button below content; collapse = `secondary` button below content (same slot). Use on guided creator steps and any creator step with progressive disclosure.
+- **`PathHelpCard` / `GuidedChoiceShell` / `GuidedLayerNav`** — path-mode prose and **Layer 1 ↔ 2/3** chrome. **`GuidedLayerNav`**: below step content (not footer); one action → bottom left; two actions → shallower outline left, deeper primary right; expand = primary `lg`; collapse = outline `lg` (matches footer Continue/Back weight). Use on guided creator steps and any creator step with progressive disclosure.
 - **Selection grammar (cards ↔ GridListRow)** — Canonical rules in [`REALMS_PRODUCT_OVERVIEW.md`](../../REALMS_PRODUCT_OVERVIEW.md) **§3.1**:
   - **Ladder A (entity depth):** Glance → **See more** (in-card) → **More details** (modal or lots of chip/fact disclosure). Same facts whether chrome is a card or a GridListRow.
   - **Ladder B (catalog breadth):** Curated cards → **See more options** (filtered GridListRow browse) → **See all** / Forge.

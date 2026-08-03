@@ -35,9 +35,11 @@ Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` append
 
 - **Search before build** — never fork a parallel `Library*Tab` / load hook / upload path / parser.
 - **Stack** — Next.js App Router, Supabase (no Prisma), Vercel. SQL in `sql/`; schema docs in `SUPABASE_SCHEMA.md`.
+- **Lib layers** — `lib/game` + `lib/calculators` are neutral domain math (no imports from `lib/library` or `lib/guided-creator`). UI/creator layers import downward. See ADR-0010.
 - **Migrations (one policy):** Prefer Supabase MCP `apply_migration` when available; else Dashboard SQL Editor. Always keep idempotent SQL in `sql/`. **Codex data** (`codex_*` / `core_rules`): audit → propose SQL → **owner approve** → apply (MCP or Dashboard). See `realms-codex-data.mdc`.
 - **Uploads** — client multipart via `apiUpload` from `@/lib/api-client` (not raw `fetch` to `/api/upload/*`).
 - **Client errors** — API/Supabase boundary convention in `ARCHITECTURE.md` § Client error handling: `apiFetch` throws; check Supabase `{ error }`; no silent `catch` on user actions.
+- **API error responses** — Route Handlers return `{ error: string }` on failure (4xx/5xx). Log raw Supabase/Postgres/storage errors server-side via `logApiError` / `apiErrorResponse` (`@/lib/api-error`); never expose `.message`, `.details`, or stack traces to clients in production. Optional `hint` / `debug` fields only when `?debug=1` (admin/non-prod) or `NODE_ENV=development`. Success payloads vary by route; errors do not.
 - **Parsers** — domain parsers in `src/lib/game/` (e.g. `archetype-path.ts`); no admin-local forks.
 - **UI gates** — keep `realms/no-raw-color`, contrast, visual/a11y Playwright. Prefer `text-success-fg` / `text-danger-fg` / `text-warning-fg` / `text-power-fg` / `text-martial-fg` over numbered ramp + ad-hoc `dark:`.
 - **Mobile** — `fullScreenOnMobile` on large modals; ≥44px touch targets.

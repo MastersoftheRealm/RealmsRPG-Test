@@ -12,7 +12,7 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 15 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Hot notes:** TASK-650 done (campaigns RLS SELECT consolidation applied). TASK-649 done (Supabase least-privilege Phase 2 applied). TASK-657 done (pre-commit hooks). TASK-655/656 done (typecheck + zero-warning lint CI gates) — pending-qa.
 
@@ -87,129 +87,6 @@ Do **not** read the done archive at session start.
   notes: |
     Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 H1.
 
----
-
-- id: TASK-662
-  title: Invert calculators/game → library/guided-creator dependency direction
-  priority: high
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - src/lib/calculators/power-calc.ts
-    - src/lib/game/path-validation.ts
-    - src/lib/game/archetype-edit.ts
-  description: |
-    Audit B6: src/lib/calculators and src/lib/game (meant to be neutral domain logic) import from
-    src/lib/library and src/lib/guided-creator, inverting the intended dependency direction. Extract
-    the shared neutral pieces into a lib/rules/-style layer (or push dependent logic up into the
-    calling layer) so calculators/game have no upward imports.
-  acceptance_criteria:
-    - src/lib/calculators and src/lib/game no longer import from src/lib/library or src/lib/guided-creator.
-    - Behavior unchanged (existing unit tests + build pass).
-    - Dependency direction documented (ARCHITECTURE_CONSTITUTION or ADR).
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §6 B6.
-    Pause trigger — cross-cutting refactor introducing a new shared lib boundary; flag to owner before
-    implementing per realms-tasks model-escalation rule.
-
----
-
-- id: TASK-663
-  title: Normalize character/archetype schema drift
-  priority: high
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - src/lib/data-enrichment/clean-for-save.ts
-    - src/lib/game/formulas.ts
-    - src/lib/game/archetype-edit.ts
-  description: |
-    Audit B7/B8: character data carries multiple dual/legacy field names simultaneously
-    (pow_prof/powerProficiency, defenseVals/defenseSkills, armor/armorValue/damageReduction), and
-    archetype "type" is represented inconsistently as 'mixed' in formulas.ts vs 'powered-martial' in
-    archetype-edit.ts. Normalize to one field name per concept and one archetype-type vocabulary at the
-    save/load boundary, with back-compat for existing saved characters if needed.
-  acceptance_criteria:
-    - One canonical field name per concept going forward.
-    - Archetype type vocabulary consistent across formulas.ts and archetype-edit.ts.
-    - Existing saved characters still load/calculate correctly (migration or dual-read fallback).
-    - npm run test + build pass.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §6 B7/B8.
-
----
-
-- id: TASK-664
-  title: Reduce `as unknown as` type-debt casts
-  priority: medium
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - src/lib/calculators
-    - src/lib/game
-    - src/lib/data-enrichment
-  description: |
-    Audit §6/§8: 86 `as unknown as` casts across 39 files (concentrated in calculators, creature
-    transformers, sheet mutations) indicate type-model drift being papered over. Work through the
-    highest-concentration files first, replacing casts with correct types or narrow type guards.
-  acceptance_criteria:
-    - Measurable reduction in `as unknown as` count (target: eliminate in the top 10 highest-concentration files).
-    - No behavior change.
-    - npm run build (and typecheck once TASK-655 lands) pass.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §6/§8.
-
----
-
-- id: TASK-666
-  title: Split remaining 600+ line files into hooks + section components
-  priority: medium
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts
-    - src/app/(main)/my-account/page.tsx
-    - src/app/(main)/campaigns/[id]/page.tsx
-    - src/app/(main)/characters/[id]/page.tsx
-    - src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts
-    - src/components/character-sheet/edit-species-modal.tsx
-    - src/app/(main)/admin/core-rules/core-rules-category-editor.tsx
-  description: |
-    Audit §7/§10 item 14: 7 files remain at 600-767 lines. Following the pattern already used for
-    TASK-618/TASK-619, extract state/derived-data into hooks and split UI into section components,
-    keeping each file under ~500 lines.
-  acceptance_criteria:
-    - Each listed file is under (or materially closer to) ~500 lines.
-    - No behavior regression (build + targeted tests + manual smoke pass per page).
-    - FEATURE_INDEX updated if new modules are added.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §7/§10.
-
----
-
-- id: TASK-667
-  title: Reduce mega prop bags — LibrarySectionProps + CharacterSheetModals
-  priority: medium
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - src/components/character-sheet/library-section-props.ts
-    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
-  description: |
-    Audit §7/§10 item 13: LibrarySectionProps has 100+ fields and CharacterSheetModals still threads
-    ~30 props instead of reading from the existing character-sheet context. Finish adopting the sheet
-    context so both shrink to only what genuinely can't come from context.
-  acceptance_criteria:
-    - LibrarySectionProps field count meaningfully reduced (fields sourced from context removed).
-    - CharacterSheetModals reads shared state from character-sheet-context instead of prop drilling.
-    - npm run build passes; manual QA of sheet modals (recovery, level-up, feats, add-library-item).
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §7/§10.
 
 ---
 

@@ -1,4 +1,80 @@
 
+- id: TASK-667
+  title: Reduce mega prop bags â€” LibrarySectionProps + CharacterSheetModals
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - src/components/character-sheet/library-section-props.ts
+    - src/components/character-sheet/library-section.tsx
+    - src/components/character-sheet/character-sheet-context.tsx
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/components/character-sheet/read-only-sheet.ts
+    - src/components/character-sheet/use-character-sheet-derived.ts
+    - src/app/(main)/characters/[id]/CharacterSheetModals.tsx
+    - src/components/character-sheet/build-library-section-data.ts
+    - src/app/(main)/characters/[id]/use-character-sheet-page.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Audit section 7/10 item 13: LibrarySectionProps has 100+ fields and CharacterSheetModals still threads
+    ~30 props instead of reading from the existing character-sheet context. Finish adopting the sheet
+    context so both shrink to only what genuinely can't come from context.
+  acceptance_criteria:
+    - LibrarySectionProps field count meaningfully reduced (fields sourced from context removed).
+    - CharacterSheetModals reads shared state from character-sheet-context instead of prop drilling.
+    - npm run build passes; manual QA of sheet modals (recovery, level-up, feats, add-library-item).
+  completed_work: |
+    LibrarySectionProps is chrome-only (activeTab/className); SheetLibraryModel + libraryHandlers on
+    context; LibrarySection builds resolved data via buildCharacterSheetLibraryProps. CharacterSheetModals
+    is prop-free and reads modal UI/handlers from context. Campaign read-only path updated. DEV-V-009-T040.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md. verification_status pending-qa (DEV-V-009-T040).
+
+
+- id: TASK-662
+  title: Invert calculators/game ? library/guided-creator dependency direction
+  priority: high
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - src/lib/calculators/power-calc.ts
+    - src/lib/calculators/technique-calc.ts
+    - src/lib/calculators/part-training-points.ts
+    - src/lib/game/path-validation.ts
+    - src/lib/game/archetype-edit.ts
+    - src/lib/game/dedupe-saved-parts.ts
+    - src/lib/game/loadout-entries.ts
+    - src/lib/game/path-ability-labels.ts
+    - src/lib/library/part-display.ts
+    - src/lib/guided-creator/resolve-loadout-items.ts
+    - src/lib/guided-creator/path-ability-labels.ts
+    - src/docs/ai/ADR/0010-lib-layer-dependency-direction.md
+    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
+  description: |
+    Audit B6: src/lib/calculators and src/lib/game (meant to be neutral domain logic) import from
+    src/lib/library and src/lib/guided-creator, inverting the intended dependency direction. Extract
+    the shared neutral pieces into a lib/rules/-style layer (or push dependent logic up into the
+    calling layer) so calculators/game have no upward imports.
+  acceptance_criteria:
+    - src/lib/calculators and src/lib/game no longer import from src/lib/library or src/lib/guided-creator.
+    - Behavior unchanged (existing unit tests + build pass).
+    - Dependency direction documented (ARCHITECTURE_CONSTITUTION or ADR).
+  completed_work: |
+    Moved dedupeSavedParts to lib/game; extracted computePartTrainingPoints to lib/calculators/part-training-points;
+    moved flattenLoadoutEntries and resolvePathAbilityLabels to lib/game; deleted library/dedupe-saved-parts.
+    ADR-0010 + ARCHITECTURE_CONSTITUTION lib-layer note.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §6 B6. npm run build pass; 27 targeted unit tests pass.
+
 - id: TASK-650
   title: Consolidate permissive RLS SELECT policies on campaigns
   priority: medium
@@ -16648,3 +16724,157 @@ Firebase/RTDB - the project is Supabase-only.
     - Wired shell-creators-audit (8 tests) into ui-verify.yml visual-a11y job after build.
     - Config uses npm run start, CI forbidOnly/retries, ~1-2 min budget documented in workflow + config header.
     - verify:shell-creators-audit npm script now builds first; creator/loadout/flaw/etc. configs unchanged.
+
+- id: TASK-663
+  title: Normalize character/archetype schema drift
+  priority: high
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - src/lib/character/schema-normalize.ts
+    - src/lib/character/schema-normalize.test.ts
+    - src/lib/data-enrichment/clean-for-save.ts
+    - src/lib/character-save.ts
+    - src/lib/character-save.test.ts
+    - src/lib/game/formulas.ts
+    - src/types/archetype.ts
+    - src/app/api/characters/[id]/route.ts
+    - src/components/character-sheet/archetype-section.tsx
+    - src/docs/ARCHITECTURE.md
+  description: |
+    Audit B7/B8: character data carries multiple dual/legacy field names simultaneously
+    (pow_prof/powerProficiency, defenseVals/defenseSkills, armor/armorValue/damageReduction), and
+    archetype "type" is represented inconsistently as 'mixed' in formulas.ts vs 'powered-martial' in
+    archetype-edit.ts. Normalize to one field name per concept and one archetype-type vocabulary at the
+    save/load boundary, with back-compat for existing saved characters if needed.
+  acceptance_criteria:
+    - One canonical field name per concept going forward.
+    - Archetype type vocabulary consistent across formulas.ts and archetype-edit.ts.
+    - Existing saved characters still load/calculate correctly (migration or dual-read fallback).
+    - npm run test + build pass.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md section 6 B7/B8.
+    Added schema-normalize.ts at save/load boundary; getArchetypeType now returns powered-martial not mixed.
+
+
+---
+
+- id: TASK-664
+  title: Reduce `as unknown as` type-debt casts
+  priority: medium
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-03
+  related_files:
+    - src/lib/calculators/item-calc.ts
+    - src/lib/game/calculations.ts
+    - src/lib/character/schema-normalize.ts
+    - src/lib/data-enrichment/clean-for-save.ts
+    - src/lib/data-enrichment/enrich-powers.ts
+    - src/lib/data-enrichment/enrich-techniques.ts
+    - src/app/(main)/creature-creator/transformers.ts
+    - src/components/character-sheet/use-sheet-skill-identity-actions.ts
+    - src/components/character-sheet/use-character-sheet-derived.ts
+    - src/components/character-sheet/archetype-section.tsx
+    - src/components/shared/creature-stat-block-panels.tsx
+    - src/components/shared/creature-stat-block-display-data.ts
+    - src/services/character-service.ts
+    - src/types/skills.ts
+    - src/types/character.ts
+    - src/types/items.ts
+    - src/types/library.ts
+  description: |
+    Audit section 6/8: eliminate `as unknown as` in highest-concentration files; replace with correct types or narrow guards.
+  acceptance_criteria:
+    - Measurable reduction in `as unknown as` count (target: eliminate in the top 10 highest-concentration files).
+    - No behavior change.
+    - npm run build (and typecheck once TASK-655 lands) pass.
+  completed_work: |
+    - Eliminated all `as unknown as` in top-10 concentration files (transformers 12, item-calc 9, use-sheet-skill-identity-actions 7, use-character-sheet-derived 4, creature-stat-block-display-data 4, creature-stat-block-panels 3, archetype-section 3, clean-for-save 2, enrich-powers/techniques 1 each).
+    - Added CharacterSkillRow union on Character.skills; typed LibraryForView; empowered technique fields on LibraryTechnique; DisplayItem.sourceData unknown; computeMaxHealthEnergy accepts Character.
+    - src/ `as unknown as` count reduced from ~86 to ~45. npm run build pass.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md section 6/8. Remaining casts in API routes, creator steps, tests â€” follow-up optional.
+
+---
+
+- id: TASK-666
+  title: Split remaining 600+ line files into hooks + section components
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts
+    - src/app/(main)/encounters/[id]/_components/combat/use-combat-linked-character-sync.ts
+    - src/app/(main)/encounters/[id]/_components/combat/use-combat-roster-actions.ts
+    - src/app/(main)/encounters/[id]/_components/combat/use-combat-round-actions.ts
+    - src/app/(main)/encounters/[id]/_components/combat/combat-encounter-helpers.ts
+    - src/app/(main)/my-account/page.tsx
+    - src/app/(main)/my-account/_components/use-my-account-page.ts
+    - src/app/(main)/my-account/_components/account-helpers.ts
+    - src/app/(main)/my-account/_components/account-role-limits-card.tsx
+    - src/app/(main)/my-account/_components/account-profile-card.tsx
+    - src/app/(main)/my-account/_components/account-preferences-cards.tsx
+    - src/app/(main)/my-account/_components/account-security-cards.tsx
+    - src/app/(main)/my-account/_components/account-danger-zone-card.tsx
+    - src/app/(main)/campaigns/[id]/page.tsx
+    - src/app/(main)/campaigns/[id]/_components/use-campaign-detail-page.ts
+    - src/app/(main)/campaigns/[id]/_components/campaign-detail-header.tsx
+    - src/app/(main)/campaigns/[id]/_components/campaign-invite-section.tsx
+    - src/app/(main)/campaigns/[id]/_components/campaign-roster-section.tsx
+    - src/app/(main)/campaigns/[id]/_components/campaign-roll-log-section.tsx
+    - src/app/(main)/campaigns/[id]/_components/character-chip.tsx
+    - src/app/(main)/campaigns/[id]/_components/add-character-modal.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/characters/[id]/use-character-sheet-page.ts
+    - src/app/(main)/characters/[id]/use-character-sheet-page-data.ts
+    - src/app/(main)/characters/[id]/use-character-sheet-page-ui.ts
+    - src/app/(main)/characters/[id]/character-sheet-utils.ts
+    - src/app/(main)/crafting/[id]/_components/use-crafting-tool-page.ts
+    - src/app/(main)/crafting/[id]/_components/crafting-tool-derived.ts
+    - src/components/character-sheet/edit-species-modal.tsx
+    - src/components/character-sheet/use-edit-species-modal.ts
+    - src/components/character-sheet/edit-species-species-step.tsx
+    - src/components/character-sheet/edit-species-ancestry-step.tsx
+    - src/app/(main)/admin/core-rules/core-rules-category-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-damage-types-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-progression-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-combat-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-archetypes-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-ability-skills-editors.tsx
+    - src/app/(main)/admin/core-rules/core-rules-conditions-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-sizes-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-rarities-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-recovery-experience-editors.tsx
+    - src/app/(main)/admin/core-rules/core-rules-armament-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-crafting-rules-editor.tsx
+  description: |
+    Audit §7/§10 item 14: 7 files remain at 600-767 lines. Following the pattern already used for
+    TASK-618/TASK-619, extract state/derived-data into hooks and split UI into section components,
+    keeping each file under ~500 lines.
+  acceptance_criteria:
+    - Each listed file is under (or materially closer to) ~500 lines.
+    - No behavior regression (build + targeted tests + manual smoke pass per page).
+    - FEATURE_INDEX updated if new modules are added.
+  completed_work: |
+    - 666a combat: use-combat-encounter-view facade ~78 LOC + linked-character-sync / roster-actions / round-actions hooks + helpers (internal sort/name helpers unexported).
+    - 666b my-account: page.tsx ~163 LOC facade; use-my-account-page + section cards under _components/.
+    - 666c campaigns/[id]: page.tsx ~187 LOC facade; use-campaign-detail-page + header/invite/roster/roll-log sections.
+    - 666d characters/[id]: page.tsx ~243 LOC facade; orchestration split: use-character-sheet-page facade ~288 + page-data ~300 + page-ui ~165 (all under ~500).
+    - 666e crafting: use-crafting-tool-page ~476 LOC + crafting-tool-derived extract.
+    - 666f edit-species-modal: shell ~139 LOC + use-edit-species-modal + species/ancestry steps; mixed skills use shared MixedSpeciesSkillPicker (TASK-670 unification).
+    - 666g core-rules-category-editor: facade ~81 LOC + per-category editor modules (a11y/touch chrome on extracts).
+    - FEATURE_INDEX updated for all Wave 5 surfaces; BUILD_VALIDATION DEV-V-043 added.
+    - Cleanup: restored silent add-all campaign catch (no toast delta); unexported internal combat helpers.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §7/§10.
+    Manual smoke not run - verification_status pending-qa (DEV-V-043 T001-T007).
+    Original-seven listed files under ~500; sheet orchestration further split into page-data / page-ui / facade (owner-acked).
