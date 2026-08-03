@@ -33,7 +33,6 @@ import {
   CreatorSummaryPanel,
 } from '@/components/creator';
 import { SourceFilter, sourceFilterSummary } from '@/components/shared/filters/source-filter';
-import { ErrorDisplay } from '@/components/shared';
 import {
   bootstrapTechniqueCreatorFormState,
   type TechniqueCreatorFormState,
@@ -52,11 +51,9 @@ function TechniqueCreatorContent() {
   const { data: techniqueParts = [], isLoading, error, refetch } = useTechniqueParts();
 
   const sessionKey = editTechniqueId ?? 'draft';
-  // Ready once parts exist; in ?edit= mode also wait for the library fetch to
-  // settle (rawItems may legitimately stay empty — fall back to blank form).
-  const bootstrapReady =
-    techniqueParts.length > 0 &&
-    (!editTechniqueId || !load.isLoading);
+  // Settle when the parts query finishes (empty/error OK — shell chrome must still
+  // render for chrome audits / secret-less CI). In ?edit= mode also wait for library.
+  const bootstrapReady = !isLoading && (!editTechniqueId || !load.isLoading);
 
   // One-time render adjust per sessionKey: compute the initial form state exactly
   // once when data is ready (no hydrate effect, no recompute on later re-renders).
@@ -75,19 +72,6 @@ function TechniqueCreatorContent() {
     });
   }
   const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background">
-        <ErrorDisplay
-          message={`Failed to load technique parts: ${error.message}`}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
-      </div>
-    );
-  }
 
   if (!initialFormState) {
     return (

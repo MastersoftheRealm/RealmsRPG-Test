@@ -27,7 +27,6 @@ import {
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
 import { SourceFilter, sourceFilterSummary } from '@/components/shared/filters/source-filter';
-import { ErrorDisplay } from '@/components/shared';
 import {
   CreatorPageShell,
   AdvancedCalculationsPanel,
@@ -52,11 +51,9 @@ function PowerCreatorContent() {
   const { data: powerParts = [], isLoading, error, refetch } = usePowerParts();
 
   const sessionKey = editPowerId ?? 'draft';
-  // Ready once parts exist; in ?edit= mode also wait for the library fetch to
-  // settle (rawItems may legitimately stay empty — fall back to blank form).
-  const bootstrapReady =
-    powerParts.length > 0 &&
-    (!editPowerId || !load.isLoading);
+  // Settle when the parts query finishes (empty/error OK — shell chrome must still
+  // render for chrome audits / offline-less CI). In ?edit= mode also wait for library.
+  const bootstrapReady = !isLoading && (!editPowerId || !load.isLoading);
 
   // One-time render adjust per sessionKey: compute the initial form state exactly
   // once when data is ready (no hydrate effect, no recompute on later re-renders).
@@ -75,19 +72,6 @@ function PowerCreatorContent() {
     });
   }
   const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background">
-        <ErrorDisplay
-          message={`Failed to load power parts: ${error.message}`}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
-      </div>
-    );
-  }
 
   if (!initialFormState) {
     return (

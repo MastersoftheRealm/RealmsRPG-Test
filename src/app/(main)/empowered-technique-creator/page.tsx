@@ -28,7 +28,6 @@ import {
   AdvancedCalculationsPanel,
 } from '@/components/creator';
 import { LoadingState } from '@/components/ui';
-import { ErrorDisplay } from '@/components/shared';
 import { SourceFilter, sourceFilterSummary } from '@/components/shared/filters/source-filter';
 import { EmpoweredTechniqueCreatorEditor } from './empowered-technique-creator-editor';
 import {
@@ -48,11 +47,11 @@ function EmpoweredTechniqueCreatorContent() {
   const { data: techniqueParts = [], isLoading: techniquePartsLoading, error: techniquePartsError, refetch: refetchTechniqueParts } = useTechniqueParts();
 
   const sessionKey = editId ?? 'draft';
-  // Ready once both part databases exist; in ?edit= mode also wait for the
-  // library fetch to settle (rawItems may legitimately stay empty — fall back to blank form).
+  // Settle when both parts queries finish (empty/error OK — shell chrome must still
+  // render for chrome audits / secret-less CI). In ?edit= mode also wait for library.
   const bootstrapReady =
-    powerParts.length > 0 &&
-    techniqueParts.length > 0 &&
+    !powerPartsLoading &&
+    !techniquePartsLoading &&
     (!editId || !load.isLoading);
 
   // One-time render adjust per sessionKey: compute the initial form state exactly
@@ -73,21 +72,6 @@ function EmpoweredTechniqueCreatorContent() {
     });
   }
   const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;
-
-  const partsError = powerPartsError ?? techniquePartsError ?? null;
-  if (partsError) {
-    return (
-      <div className="min-h-screen bg-background">
-        <ErrorDisplay
-          message={`Failed to load empowered technique creator: ${partsError.message}`}
-          onRetry={() => {
-            void refetchPowerParts();
-            void refetchTechniqueParts();
-          }}
-        />
-      </div>
-    );
-  }
 
   if (!initialFormState) {
     return (
