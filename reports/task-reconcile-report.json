@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T02:17:14.046Z",
+  "generated_at": "2026-08-03T12:07:57.115Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -331,7 +331,23 @@
       "status": "done",
       "completed_at": "2026-08-01",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "f0e9351198e2caf3d9c4e72aecc198bab0f70e09",
+          "subject": "TASK-657: Add husky + lint-staged pre-commit hooks for eslint and scoped typecheck.",
+          "files": [
+            ".husky/pre-commit",
+            "README.md",
+            "package-lock.json",
+            "package.json",
+            "reports/task-reconcile-report.json",
+            "scripts/typecheck-staged.mjs",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md"
+          ]
+        }
+      ],
       "related_files": [
         "package.json",
         "package-lock.json",
@@ -339,7 +355,13 @@
         "scripts/typecheck-staged.mjs",
         "README.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "package.json",
+        "package-lock.json",
+        ".husky/pre-commit",
+        "scripts/typecheck-staged.mjs",
+        "README.md"
+      ]
     },
     {
       "id": "TASK-656",
