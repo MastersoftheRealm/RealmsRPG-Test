@@ -4,8 +4,10 @@
 
 import { getArmamentMax } from '@/lib/game/formulas';
 import {
+  deriveAbilityRequirementFromProperties,
   hasTwoHandedProperty,
   weaponMatchesArchetypeAbilities,
+  type AbilityRequirement,
   type WeaponPropertyRef,
 } from '@/lib/game/weapon-attack-ability';
 import {
@@ -19,11 +21,6 @@ import { normalizeId } from '@/lib/utils';
 export type EquipmentPhase = 'weapon' | 'armor' | 'gear';
 
 export type ArmorStepMode = 'required' | 'optional' | 'none';
-
-export interface AbilityRequirement {
-  name: string;
-  level: number;
-}
 
 export interface EligibleEquipmentRow {
   id: string;
@@ -60,24 +57,6 @@ function normalizeRarity(rarity: string | null | undefined): string {
 
 export function isCommonRarity(rarity: string | null | undefined): boolean {
   return normalizeRarity(rarity) === 'common';
-}
-
-export function deriveAbilityRequirementFromProperties(
-  properties: WeaponPropertyRef[] | undefined
-): AbilityRequirement | undefined {
-  for (const p of properties ?? []) {
-    const name = typeof p === 'string' ? p : String(p.name ?? '');
-    const op1 = typeof p === 'object' && p != null ? (p.op_1_lvl ?? 0) : 0;
-    const level = 1 + (Number(op1) || 0);
-    if (level < 1) continue;
-    if (name.includes('Strength Requirement')) return { name: 'Strength', level };
-    if (name.includes('Agility Requirement')) return { name: 'Agility', level };
-    if (name.includes('Vitality Requirement')) return { name: 'Vitality', level };
-    if (name.includes('Acuity Requirement')) return { name: 'Acuity', level };
-    if (name.includes('Intelligence Requirement')) return { name: 'Intelligence', level };
-    if (name.includes('Charisma Requirement')) return { name: 'Charisma', level };
-  }
-  return undefined;
 }
 
 const ABILITY_KEY_MAP: Record<string, keyof Abilities> = {

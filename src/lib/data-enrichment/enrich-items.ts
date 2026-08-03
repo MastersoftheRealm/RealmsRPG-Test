@@ -2,7 +2,8 @@ import type { UserItem } from '@/hooks/use-user-library';
 import { formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties } from '@/lib/calculators';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import type { CodexEquipmentItem, EnrichedItem } from './types';
-import { findInLibrary, deriveAbilityRequirementFromProperties } from './find-in-library';
+import { deriveAbilityRequirementFromProperties } from '@/lib/game/weapon-attack-ability';
+import { findInLibrary } from './find-in-library';
 
 /**
  * Enrich character equipment with full data from user's item library

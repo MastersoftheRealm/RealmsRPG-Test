@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { PROPERTY_IDS } from '@/lib/id-constants';
 import {
+  deriveAbilityRequirementFromProperties,
   getWeaponAttackAbility,
   getWeaponAttackBonusFromProperties,
   hasThrownProperty,
@@ -39,6 +40,27 @@ describe('weapon-attack-ability', () => {
 
   it('defaults to strength for melee', () => {
     expect(getWeaponAttackAbility([])).toBe('strength');
+  });
+
+  describe('deriveAbilityRequirementFromProperties', () => {
+    it('parses ability requirement properties with op_1_lvl offset', () => {
+      expect(
+        deriveAbilityRequirementFromProperties([
+          { name: 'Strength Requirement', op_1_lvl: 2 },
+        ])
+      ).toEqual({ name: 'Strength', level: 3 });
+    });
+
+    it('returns undefined when no requirement property is present', () => {
+      expect(deriveAbilityRequirementFromProperties([{ name: 'Finesse' }])).toBeUndefined();
+      expect(deriveAbilityRequirementFromProperties(undefined)).toBeUndefined();
+    });
+
+    it('accepts string property entries', () => {
+      expect(
+        deriveAbilityRequirementFromProperties(['Agility Requirement'])
+      ).toEqual({ name: 'Agility', level: 1 });
+    });
   });
 
   it('matches archetype abilities for ranking', () => {

@@ -18,7 +18,7 @@ import {
   deriveShieldDamageFromProperties,
   formatRange,
 } from '@/lib/calculators/item-calc';
-import { deriveAbilityRequirementFromProperties } from '@/lib/data-enrichment/find-in-library';
+import { deriveAbilityRequirementFromProperties } from '@/lib/game/weapon-attack-ability';
 import {
   formatAbilityRequirementFact,
   namedPropertyDescriptorChips,

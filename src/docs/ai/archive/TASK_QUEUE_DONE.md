@@ -1,4 +1,38 @@
 
+- id: TASK-660
+  title: Dedupe deriveAbilityRequirementFromProperties + fix unproficientBonus SSOT violation
+  priority: high
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - src/lib/game/weapon-attack-ability.ts
+    - src/lib/game/weapon-attack-ability.test.ts
+    - src/lib/game/formulas.test.ts
+    - src/lib/data-enrichment/find-in-library.ts
+    - src/lib/guided-creator/equipment-eligibility.ts
+    - src/lib/game/formulas.ts
+    - src/lib/data-enrichment/enrich-items.ts
+    - src/lib/library/official-item-list.ts
+    - src/lib/guided-creator/equipment-phase-stats.ts
+  description: |
+    Audit B3/B4: deriveAbilityRequirementFromProperties is implemented twice (find-in-library.ts and
+    equipment-eligibility.ts) and can drift; unproficientBonus is duplicated inline in formulas.ts
+    instead of referencing the single source constant. Consolidate both into one shared implementation.
+  acceptance_criteria:
+    - Single exported deriveAbilityRequirementFromProperties used by both call sites.
+    - unproficientBonus computed from one place only.
+    - Targeted unit tests updated; npm run test passes.
+  completed_work: |
+    Moved deriveAbilityRequirementFromProperties + AbilityRequirement type to weapon-attack-ability.ts;
+    removed duplicates from find-in-library and equipment-eligibility; updated enrich-items, official-item-list,
+    equipment-phase-stats imports. calculateSkillBonusWithProficiency now calls unproficientBonus. Added tests
+    in weapon-attack-ability.test.ts and formulas.test.ts. npm run test 475 pass; npm run build pass.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md section 6 B3/B4.
+
 - id: TASK-658
   title: Add API route auth/IDOR tests for remaining routes
   priority: high

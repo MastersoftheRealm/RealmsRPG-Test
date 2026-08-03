@@ -23,11 +23,11 @@ import {
 } from '@/lib/detail-option/compact-facts';
 import { formatDamageDisplay } from '@/lib/utils';
 import { formatRange, type ItemPropertyPayload, type ItemPropertyTpRow } from '@/lib/calculators/item-calc';
-import type { WeaponPropertyRef } from '@/lib/game/weapon-attack-ability';
 import {
   deriveAbilityRequirementFromProperties,
   type AbilityRequirement,
-} from '@/lib/guided-creator/equipment-eligibility';
+  type WeaponPropertyRef,
+} from '@/lib/game/weapon-attack-ability';
 import type { LoadoutItemCategory } from '@/lib/guided-creator/resolve-loadout-items';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 

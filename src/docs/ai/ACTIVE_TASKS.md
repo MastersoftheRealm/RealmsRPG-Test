@@ -180,29 +180,6 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-660
-  title: Dedupe deriveAbilityRequirementFromProperties + fix unproficientBonus SSOT violation
-  priority: high
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - src/lib/data-enrichment/find-in-library.ts
-    - src/lib/guided-creator/equipment-eligibility.ts
-    - src/lib/game/formulas.ts
-  description: |
-    Audit B3/B4: deriveAbilityRequirementFromProperties is implemented twice (find-in-library.ts and
-    equipment-eligibility.ts) and can drift; unproficientBonus is duplicated inline in formulas.ts
-    instead of referencing the single source constant. Consolidate both into one shared implementation.
-  acceptance_criteria:
-    - Single exported deriveAbilityRequirementFromProperties used by both call sites.
-    - unproficientBonus computed from one place only.
-    - Targeted unit tests updated; npm run test passes.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §6 B3/B4.
-
----
-
 - id: TASK-661
   title: Replace silent/empty catches with logged failures
   priority: high

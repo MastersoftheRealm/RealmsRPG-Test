@@ -563,10 +563,8 @@ export function calculateSkillBonusWithProficiency(
 
   if (isProficient) {
     return abilityMod + skillValue;
-  } else {
-    const unprofAbilityBonus = abilityMod < 0 ? abilityMod * 2 : Math.ceil(abilityMod / 2);
-    return unprofAbilityBonus;
   }
+  return unproficientBonus(abilityMod);
 }
 
 /** Codex row shape for resolving a sub-skill's parent skill name (character save omits `baseSkill` string). */
