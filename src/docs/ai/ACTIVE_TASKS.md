@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 19 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 18 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-655/656 done (typecheck + zero-warning lint CI gates) — pending-qa. TASK-646 done (Next.js 16.2.12). TASK-665 done (utils hygiene). TASK-644 done (armor DR unify) — pending-qa. TASK-653 done (character ID oracle). TASK-642 partial (signup QA only). TASK-647/TASK-651 done. TASK-643 pending-qa. TASK-641 pending-qa DEV-V-013 T078. TASK-640 pending-qa T075–T077.
+**Hot notes:** TASK-657 done (pre-commit hooks). TASK-655/656 done (typecheck + zero-warning lint CI gates) — pending-qa. TASK-646 done (Next.js 16.2.12). TASK-665 done (utils hygiene). TASK-644 done (armor DR unify) — pending-qa. TASK-653 done (character ID oracle). TASK-642 partial (signup QA only). TASK-647/TASK-651 done. TASK-643 pending-qa. TASK-641 pending-qa DEV-V-013 T078. TASK-640 pending-qa T075–T077.
 
 ---
 
@@ -240,26 +240,6 @@ Do **not** read the done archive at session start.
     - npm run build + test pass.
   notes: |
     Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 M5, §4.4.
-
----
-
-- id: TASK-657
-  title: Add pre-commit hooks (husky + lint-staged + typecheck on changed files)
-  priority: medium
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - package.json
-  description: |
-    Audit §2/§10 item 9: there are no pre-commit hooks, so lint/type issues only surface in CI. Add
-    husky + lint-staged running eslint (and a scoped typecheck) on staged files.
-  acceptance_criteria:
-    - Committing a file with a lint error or type error is blocked locally with a clear message.
-    - Hook setup documented (README or CONTRIBUTING note).
-    - Scoped to staged files so commits stay fast.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §2/§10. Depends on TASK-655 for a typecheck script.
 
 ---
 

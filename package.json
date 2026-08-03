@@ -17,6 +17,7 @@
     "test:api": "vitest run src/app/api",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
+    "typecheck:staged": "node scripts/typecheck-staged.mjs",
     "format": "prettier --write .",
     "verify": "npm run build && npm run verify:contrast && npm run lint && npm run verify:visual && npm run verify:a11y",
     "verify:contrast": "node scripts/check-contrast.mjs",
@@ -49,7 +50,8 @@
     "feedback:extract": "node scripts/extract_feedback.js",
     "db:backup": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/supabase-backup.ps1",
     "storage:backup": "node scripts/supabase-storage-backup.js",
-    "backup:all": "npm run db:backup && npm run storage:backup"
+    "backup:all": "npm run db:backup && npm run storage:backup",
+    "prepare": "husky"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.19",
@@ -86,10 +88,16 @@
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
     "eslint-plugin-jsx-a11y": "^6.10.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "prettier": "^3.7.4",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.6"
+  },
+  "lint-staged": {
+    "*.{js,jsx,mjs,cjs,ts,tsx}": "eslint --fix --max-warnings 0",
+    "*.{ts,tsx}": "npm run typecheck:staged --"
   }
 }

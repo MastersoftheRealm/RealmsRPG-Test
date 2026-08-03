@@ -1,3 +1,29 @@
+- id: TASK-657
+  title: Add pre-commit hooks (husky + lint-staged + typecheck on changed files)
+  priority: medium
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  created_by: agent
+  completed_at: 2026-08-01
+  related_files:
+    - package.json
+    - package-lock.json
+    - .husky/pre-commit
+    - scripts/typecheck-staged.mjs
+    - README.md
+  description: |
+    Audit section 2/10 item 9: there are no pre-commit hooks, so lint/type issues only surface in CI. Add
+    husky + lint-staged running eslint (and a scoped typecheck) on staged files.
+  acceptance_criteria:
+    - Committing a file with a lint error or type error is blocked locally with a clear message.
+    - Hook setup documented (README or CONTRIBUTING note).
+    - Scoped to staged files so commits stay fast.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md section 2/10. Depends on TASK-655 for a typecheck script.
+
+---
+
 - id: TASK-656
   title: Add --max-warnings 0 ESLint CI gate; fix existing warnings
   priority: medium

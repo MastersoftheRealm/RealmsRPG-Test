@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-02T02:08:26.848Z",
+  "generated_at": "2026-08-02T02:17:14.046Z",
   "tasks": [
     {
       "id": "TASK-326",
@@ -181,18 +181,6 @@
       "related_overlap": []
     },
     {
-      "id": "TASK-657",
-      "title": "Add pre-commit hooks (husky + lint-staged + typecheck on changed files)",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
-      "related_files": [
-        "package.json"
-      ],
-      "related_overlap": []
-    },
-    {
       "id": "TASK-658",
       "title": "Add API route auth/IDOR tests for remaining routes",
       "status": "not-started",
@@ -338,6 +326,22 @@
       "related_overlap": []
     },
     {
+      "id": "TASK-657",
+      "title": "Add pre-commit hooks (husky + lint-staged + typecheck on changed files)",
+      "status": "done",
+      "completed_at": "2026-08-01",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "package.json",
+        "package-lock.json",
+        ".husky/pre-commit",
+        "scripts/typecheck-staged.mjs",
+        "README.md"
+      ],
+      "related_overlap": []
+    },
+    {
       "id": "TASK-656",
       "title": "Add --max-warnings 0 ESLint CI gate; fix existing warnings",
       "status": "done",
@@ -425,6 +429,13 @@
       "completed_at": "2026-08-01",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "113f2a5205f28181170b8316a12e8e57396cbdd3",
+          "subject": "chore: regenerate task reconcile report post TASK-655/656 commit",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "fea11c05e7334e7c5a21618cbab8cc2e573911ce",
           "subject": "TASK-655 + TASK-656: Add typecheck and zero-warning lint CI gates.",
