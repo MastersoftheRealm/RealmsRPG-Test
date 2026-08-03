@@ -15,7 +15,18 @@
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ARCHITECTURE.md
     - src/docs/ai/guide/01-verification-and-ui-gates.md
+    - src/docs/ai/guide/08-workflows-routes-and-progress.md
     - src/docs/ai/PR_CHECKLIST.md
+    - src/docs/ai/AGENT_GUIDE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/README.md
+    - AGENTS.md
+    - src/docs/ai/archive/HISTORY_INDEX.md
+    - src/docs/ai/archive/README.md
+    - src/docs/ai/archive/FULL_AUDIT_2026-06.md
+    - src/docs/ai/archive/SYSTEMATIC_AUDIT_2026-06.md
+    - src/docs/human/USER_EXPERIENCE_GOALS.md
   description: |
     This audit was run without access to project docs, so some findings may already be tracked
     elsewhere under different names, and some existing docs are stale relative to what the audit found
@@ -32,6 +43,7 @@
     Shipped REMEDIATION_STATUS_2026-08.md status matrix; demoted June remediation to historical;
     corrected armor DR / rate-limit / lint-warnings / CI gate claims. Twin creators confirmed as
     intentional coexistence (not single-canonical). No new tasks filed for D3/HIBP or Redis.
+    Cleanup 2026-08-03: removed June-as-current archive banners; completed related_files; AGENTS SoT + UX goals pointers.
 
 ---
 

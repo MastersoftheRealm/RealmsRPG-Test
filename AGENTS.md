@@ -33,6 +33,7 @@ Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits
 | Mobile | `MOBILE_UX.md` |
 | Accessibility | `ACCESSIBILITY.md` |
 | Open tasks | `ACTIVE_TASKS.md` · waiting `WAITING_TASKS.md` · process `AI_TASK_QUEUE.md` · human `DEVELOPER_TASK_QUEUE.md` |
+| Audit remediation status | `REMEDIATION_STATUS_2026-08.md` (June snapshot: `REMEDIATION_STATUS_2026-06.md`) |
 | Design constraints | `DESIGN_INTENT.md` |
 | ADRs | `src/docs/ai/ADR/` |
 | PR failure-mode checklist | `src/docs/ai/PR_CHECKLIST.md` (incl. owner commands) |
