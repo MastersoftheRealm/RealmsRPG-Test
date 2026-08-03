@@ -11,6 +11,7 @@ import { findByIdOrName, PART_IDS } from '@/lib/id-constants';
 import {
   buildMechanicParts,
   calculatePowerCosts,
+  calculatePowerSectionContribution,
   computePowerActionTypeFromSelection,
   deriveRange,
   deriveArea,
@@ -213,12 +214,14 @@ export function usePowerCreatorCostDerivation({
       op_1_lvl: number;
       op_2_lvl: number;
       op_3_lvl: number;
+      applyDuration?: boolean;
     }) => ({
       id: mp.id,
       name: mp.name,
       op_1_lvl: mp.op_1_lvl,
       op_2_lvl: mp.op_2_lvl,
       op_3_lvl: mp.op_3_lvl,
+      applyDuration: mp.applyDuration ?? false,
     });
     const rangeParts = mechanicParts.filter((mp) => mp.name === 'Power Range').map(toPayload);
     const areaNames = [
@@ -260,22 +263,24 @@ export function usePowerCreatorCostDerivation({
       op_1_lvl: sp.op_1_lvl,
       op_2_lvl: sp.op_2_lvl,
       op_3_lvl: sp.op_3_lvl,
+      applyDuration: sp.applyDuration,
     }));
     const mechanicPayload = selectedAdvancedParts.map((ap) => ({
       part: ap.part,
       op_1_lvl: ap.op_1_lvl,
       op_2_lvl: ap.op_2_lvl,
       op_3_lvl: ap.op_3_lvl,
+      applyDuration: ap.applyDuration,
     }));
     return {
       action: calculatePowerCosts(actionParts, powerParts),
       weapon: calculatePowerCosts(addWeaponToPowerPart ? [addWeaponToPowerPart] : [], powerParts),
-      range: calculatePowerCosts(rangeParts, powerParts),
-      area: calculatePowerCosts(areaParts, powerParts),
+      range: calculatePowerSectionContribution(rangeParts, powerParts, durationParts),
+      area: calculatePowerSectionContribution(areaParts, powerParts, durationParts),
       duration: calculatePowerCosts(durationParts, powerParts),
-      damage: calculatePowerCosts(damageParts, powerParts),
-      powerParts: calculatePowerCosts(partsPayloadForSections, powerParts),
-      powerMechanics: calculatePowerCosts(mechanicPayload, powerParts),
+      damage: calculatePowerSectionContribution(damageParts, powerParts, durationParts),
+      powerParts: calculatePowerSectionContribution(partsPayloadForSections, powerParts, durationParts),
+      powerMechanics: calculatePowerSectionContribution(mechanicPayload, powerParts, durationParts),
     };
   }, [mechanicParts, powerParts, selectedParts, selectedAdvancedParts, addWeaponToPowerPart]);
 

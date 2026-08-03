@@ -5643,6 +5643,68 @@ Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Au
 
 ---
 
+## DEV-V-044 — Power Creator AoE apply duration + duration modifiers (TASK-672)
+
+Saving a power must persist Area **Apply duration** and Duration modifiers (Focus / No Harm / Ends on Activation / Sustain). Library GLR Energy after reload must match the creator total.
+
+#### DEV-V-044-T001 — AoE Apply duration survives save/reload
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-044 — Power Creator AoE apply duration + duration modifiers |
+| **Related task** | TASK-672 |
+| **Where** | `/power-creator` → Library Powers |
+| **Needs** | Signed-in user |
+
+**Steps**
+1. Open `/power-creator`. Set Area to **Sphere** (any level), check **Apply duration**.
+2. Set Duration to **1 minute** (or longer) and enable **Focus** (and optionally Sustain).
+3. Confirm the Area section EN badge rises vs unchecked Apply duration (duration multiplier applied), and note the sidebar Energy total.
+4. Save to My Library; Load the power (or open `?edit=`). Confirm **Apply duration** is still checked and Focus/Sustain restored.
+5. Open the power in Library — Energy matches the creator total from step 3 (higher than the same power without Apply duration).
+
+**Expected**
+- Checkbox and duration modifiers round-trip; Area section badge + GLR Energy include apply-duration contribution when a duration is set.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## Planned suites (split from legacy DEV-T)
+
+| Suite | Topic | Legacy | Status |
+|-------|-------|--------|--------|
+| DEV-V-002 | Campaign & rolls security | DEV-T-002 | Planned |
+| DEV-V-003 | Admin role change safety | DEV-T-003 | Planned |
+| DEV-V-004 | Storage & account security | DEV-T-004 | Planned |
+| DEV-V-005 | RLS / DB migrations | DEV-T-005 | Planned |
+| DEV-V-006 | Resources PDF | DEV-T-006 | Planned |
+| DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
+| DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
+| DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
+| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541) | — | Manual — see suite above (T001–T013) |
+| DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
+| DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
+| DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
+| DEV-V-020 | Sitewide copy compliance (TASK-439) | — | Manual — see suite above |
+| DEV-V-022 | Characters list page (TASK-469) | — | Manual — see suite above |
+| DEV-V-023 | Admin Realms Image Library (TASK-493) | — | Manual — see suite above |
+| DEV-V-024 | Client error handling (TASK-479, TASK-540) | — | Automated (`npm test`) + manual smoke |
+| DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
+| DEV-V-026 | Realms Image Library wiring (TASK-496–499, TASK-531–533) | — | Manual — see suite above |
+| DEV-V-027 | Admin Official Enhanced list shell (TASK-575) | — | Manual — see suite above |
+| DEV-V-030 | Encounter play facades (TASK-608) | — | Manual — see suite above |
+| DEV-V-031 | API route smoke (TASK-613) | — | Automated (`npm run test:api`) |
+| DEV-V-032 | Realms Library creature stat blocks (TASK-620) | — | Manual — see suite above |
+| DEV-V-033 | Library armaments split (TASK-621, TASK-628) | — | Manual — see suite above |
+| DEV-V-034 | GLR chrome + Parts chip grammar (TASK-622, TASK-630) | — | Manual — see suite above |
+| DEV-V-035 | Realms Library redundant source badge (session) | — | Manual — see suite above |
+| DEV-V-036 | Power Creator multi-elemental damage EN (TASK-623) | — | Manual — see suite above |
+| DEV-V-037 | Official power part chip dedupe (session cleanup) | — | Manual — see suite above |
+| DEV-V-038 | Empowered technique nested power part chips (TASK-626) | — | Manual — see suite above |
+| DEV-V-039 | Codex feat Tags section (session) | — | Automated (`feat-list.test.ts`) + manual smoke |
+| DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
+
 ## DEV-V-041 — Supabase least-privilege Phase 2 (TASK-649)
 
 Post-apply smoke for anon grant hardening, public read paths, and guest character sheets. Automated SQL parity: `node scripts/verify-task-649.mjs`.
@@ -5879,6 +5941,7 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 | DEV-V-038 | Empowered technique nested power part chips (TASK-626) | — | Manual — see suite above |
 | DEV-V-039 | Codex feat Tags section (session) | — | Automated (`feat-list.test.ts`) + manual smoke |
 | DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
+| DEV-V-044 | Power Creator AoE applyDuration persistence (TASK-672) | — | Automated (library-columnar + power-calc tests) + manual DEV-V-044-T001 |
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649) | — | Manual DEV-V-041 + `node scripts/verify-task-649.mjs` |
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |
 | DEV-V-043 | Wave 5 page facade splits (TASK-666) | — | Manual — see suite above |

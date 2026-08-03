@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest';
 import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS } from '@/lib/id-constants';
 import { buildMechanicParts } from './mechanic-builder';
-import { calculatePowerCosts, derivePowerDisplay } from './power-calc';
+import {
+  calculatePowerCosts,
+  calculatePowerSectionContribution,
+  derivePowerDisplay,
+} from './power-calc';
 
 const elementalDamagePart: PowerPart = {
   id: String(PART_IDS.ELEMENTAL_DAMAGE),
@@ -31,6 +35,65 @@ const magicDamagePart: PowerPart = {
   percentage: false,
   duration: false,
 };
+
+describe('calculatePowerSectionContribution', () => {
+  it('includes duration multiplier in section EN when applyDuration is set', () => {
+    const spherePart: PowerPart = {
+      id: String(PART_IDS.SPHERE_OF_EFFECT),
+      name: 'Sphere of Effect',
+      description: 'Sphere of Effect',
+      category: 'Area of Effect',
+      mechanic: true,
+      base_en: 4,
+      base_tp: 1,
+      percentage: false,
+      duration: false,
+    };
+    const durationPart: PowerPart = {
+      id: '377',
+      name: 'Duration (Minute)',
+      description: 'Duration (Minute)',
+      category: 'Duration',
+      mechanic: true,
+      base_en: 2,
+      base_tp: 0,
+      percentage: false,
+      duration: true,
+    };
+    const areaParts = [
+      {
+        id: spherePart.id,
+        name: spherePart.name,
+        op_1_lvl: 0,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration: true,
+      },
+    ];
+    const durationParts = [
+      {
+        id: durationPart.id,
+        name: durationPart.name,
+        op_1_lvl: 0,
+        op_2_lvl: 0,
+        op_3_lvl: 0,
+        applyDuration: false,
+      },
+    ];
+
+    const isolated = calculatePowerCosts(areaParts, [spherePart, durationPart]);
+    const section = calculatePowerSectionContribution(
+      areaParts,
+      [spherePart, durationPart],
+      durationParts
+    );
+
+    expect(isolated.energyRaw).toBe(4);
+    // dur_all=2 → section share 4 + 2*4 = 12
+    expect(section.energyRaw).toBe(12);
+    expect(section.totalTP).toBe(1);
+  });
+});
 
 describe('calculatePowerCosts', () => {
   it('counts each elemental damage row independently', () => {
@@ -184,5 +247,59 @@ describe('derivePowerDisplay', () => {
     expect(chipNames.filter((n) => n === 'Duration (Minute)')).toHaveLength(1);
     expect(chipNames.filter((n) => n === 'Sphere of Effect')).toHaveLength(1);
     expect(chipNames).toHaveLength(5);
+  });
+
+  it('applies area applyDuration into energy when duration is present', () => {
+    const spherePart: PowerPart = {
+      id: String(PART_IDS.SPHERE_OF_EFFECT),
+      name: 'Sphere of Effect',
+      description: 'Sphere of Effect',
+      category: 'Area of Effect',
+      mechanic: true,
+      base_en: 4,
+      base_tp: 1,
+      op_1_en: 2,
+      op_1_tp: 0.5,
+      percentage: false,
+      duration: false,
+    };
+    const durationPart: PowerPart = {
+      id: '377',
+      name: 'Duration (Minute)',
+      description: 'Duration (Minute)',
+      category: 'Duration',
+      mechanic: true,
+      base_en: 2,
+      base_tp: 0,
+      percentage: false,
+      duration: true,
+    };
+
+    const withoutApply = derivePowerDisplay(
+      {
+        name: 'Zone',
+        actionType: 'basic',
+        area: { type: 'sphere', level: 1, applyDuration: false },
+        duration: { type: 'minutes', value: 1 },
+        parts: [],
+      },
+      [spherePart, durationPart]
+    );
+    const withApply = derivePowerDisplay(
+      {
+        name: 'Zone',
+        actionType: 'basic',
+        area: { type: 'sphere', level: 1, applyDuration: true },
+        duration: { type: 'minutes', value: 1 },
+        parts: [],
+      },
+      [spherePart, durationPart]
+    );
+
+    // Sphere base 4 + duration multiplier: without apply → flat only; with apply → flat + dur*flat
+    expect(withApply.energy).toBeGreaterThan(withoutApply.energy);
+    expect(withoutApply.energy).toBe(4);
+    // dur_all = 2, flat_normal = 4, flat_duration = 4 → 4 + 2*4 = 12
+    expect(withApply.energy).toBe(12);
   });
 });

@@ -4,17 +4,17 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-672
+**Next task ID:** TASK-673
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
-**Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) Â· snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
-**Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) Â· Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) â†’ Pending owner QA (recent: TASK-654, TASK-641, TASK-640, TASK-630, â€¦)
+**Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
+**Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) ? Pending owner QA (recent: TASK-672, TASK-654, TASK-641, TASK-640, …)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only â†’ `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive â€” do not re-list them here.
 
 **Counts:** 4 agent-eligible Â· waiting/blocked in WAITING_TASKS Â· done in archive.
 
-**Hot notes:** TASK-650 done (campaigns RLS SELECT consolidation applied). TASK-649 done (Supabase least-privilege Phase 2 applied). TASK-657 done (pre-commit hooks). TASK-655/656 done (typecheck + zero-warning lint CI gates) â€” pending-qa.
+**Hot notes:** TASK-672 done (power AoE applyDuration — re-homed from remote mislabeled TASK-642; local TASK-642 remains email spoof). TASK-650/649 applied. TASK-657 hooks. TASK-655/656 CI gates — pending-qa.
 
 ---
 
@@ -83,10 +83,10 @@ Do **not** read the done archive at session start.
     - createUserProfileAction now derives email only from sessionUser.email (client email ignored).
     - npm run build passes (TASK-644 cleared shared build blocker).
   remaining_work: |
-    - Manual signup QA (profile shows session email) â€” see DEV-008.
+    - Manual signup QA (profile shows session email) — see DEV-008.
   notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md Â§4.2 H1.
-
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 H1.
+    2026-08-03 merge: remote also used TASK-642 for power AoE — that work is archived as TASK-672.
 
 ---
 
@@ -109,10 +109,9 @@ Do **not** read the done archive at session start.
   acceptance_criteria:
     - Doc claims contradicted by the audit are corrected or annotated as known debt with a linked TASK-###.
     - No duplicate tasks filed for items already tracked elsewhere (e.g. TASK-326/353 leaked-password
-      protection â€” already covers audit D3, not re-filed here).
+      protection — already covers audit D3, not re-filed here).
     - npm run tasks:validate-docs passes.
   notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md (full report). Companion to TASK-642â€“667.
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md (full report). Companion to TASK-642–667.
 
 ---
-

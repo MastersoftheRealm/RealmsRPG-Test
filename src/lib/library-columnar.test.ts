@@ -228,6 +228,55 @@ describe('library-columnar API round-trip — powers', () => {
     expect((loaded.duration as { type?: string; value?: number }).value).toBe(3);
     expect((loaded.parts as unknown[]).length).toBe(1);
   });
+
+  it('persists area applyDuration and duration modifiers through columnar round-trip', () => {
+    const body = {
+      name: 'Lingering Sphere',
+      actionType: 'basic',
+      range: { steps: 2, applyDuration: true },
+      area: { type: 'sphere', level: 3, applyDuration: true },
+      duration: {
+        type: 'minutes',
+        value: 10,
+        applyDuration: false,
+        focus: true,
+        noHarm: true,
+        endsOnActivation: false,
+        sustain: 2,
+      },
+      damage: [{ amount: 1, size: 6, type: 'fire', applyDuration: true }],
+      parts: [{ id: 205, name: 'Frighten', op_1_lvl: 1, applyDuration: true }],
+    };
+
+    const { scalars, payload } = bodyToColumnar('powers', body);
+
+    expect(scalars.areaType).toBe('sphere');
+    expect(scalars.areaLevel).toBe(3);
+    expect(scalars.durationType).toBe('minutes');
+    expect(scalars.durationValue).toBe(10);
+    expect((payload.area as { applyDuration?: boolean }).applyDuration).toBe(true);
+    expect((payload.range as { applyDuration?: boolean }).applyDuration).toBe(true);
+    expect((payload.duration as { focus?: boolean; sustain?: number }).focus).toBe(true);
+    expect((payload.duration as { focus?: boolean; sustain?: number }).sustain).toBe(2);
+    expect((payload.duration as { noHarm?: boolean }).noHarm).toBe(true);
+
+    const loaded = apiRoundTrip('powers', body);
+
+    expect((loaded.area as { applyDuration?: boolean; type?: string; level?: number }).applyDuration).toBe(
+      true,
+    );
+    expect((loaded.area as { type?: string }).type).toBe('sphere');
+    expect((loaded.area as { level?: number }).level).toBe(3);
+    expect((loaded.range as { applyDuration?: boolean; steps?: number }).applyDuration).toBe(true);
+    expect((loaded.range as { steps?: number }).steps).toBe(2);
+    expect((loaded.duration as { focus?: boolean }).focus).toBe(true);
+    expect((loaded.duration as { noHarm?: boolean }).noHarm).toBe(true);
+    expect((loaded.duration as { sustain?: number }).sustain).toBe(2);
+    expect((loaded.duration as { type?: string; value?: number }).type).toBe('minutes');
+    expect((loaded.duration as { value?: number }).value).toBe(10);
+    expect((loaded.damage as Array<{ applyDuration?: boolean }>)[0]?.applyDuration).toBe(true);
+    expect((loaded.parts as Array<{ applyDuration?: boolean }>)[0]?.applyDuration).toBe(true);
+  });
 });
 
 describe('library-columnar API round-trip — items (migration hardening)', () => {

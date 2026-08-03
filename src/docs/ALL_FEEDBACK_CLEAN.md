@@ -1,6 +1,6 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-03 (TASK-649 Supabase hardening approval)
+Last updated: 2026-08-03 (merge origin/master + TASK-649 Supabase hardening)
 
 **Raw Feedback Log — 2026-08-03 (TASK-649 — public read + VTT scope)**
 - Context: TASK-649 Phase 2 Supabase least-privilege hardening before live apply
@@ -19,6 +19,12 @@ Last updated: 2026-08-03 (TASK-649 Supabase hardening approval)
 - Feedback: One layer-nav button → bottom left below step content. Two buttons → shallower (e.g. See starter species) left, deeper (e.g. See all species / Create Species) right. Layer-nav actions must not live in the sticky Back/Continue footer (e.g. Create Species on Species L2).
 - Expected: `GuidedLayerNav` uses `justify-start` for single action, `justify-between` for pair; Species **Create Species** in layer nav right slot on L2.
 - Disposition: Implemented — `guided-layer-nav.tsx`, `species-step.tsx`; BUILD_VALIDATION DEV-V-013 T077–T078 updated. **Cleanup 2026-08-03:** removed dead `footerTrailing` API; FEATURE_INDEX + product overview aligned.
+
+**Raw Feedback Log — 2026-08-02 (Power Creator AoE apply duration + calc mismatch)**
+- Context: Power Creator save vs Library/GLR displayed Energy
+- Feedback: Power creator does not seem to save the Apply duration tick for Area of Effect mechanics; possible other mismatches between creator-calculated and displayed/loaded GLR Energy.
+- Expected: Apply duration on AoE (and related duration modifiers) round-trip on save/load; Library Energy matches creator.
+- Disposition: **TASK-672** done (re-homed from remote mislabeled TASK-642) — `bodyToColumnar` was skipping nested `area`/`range`/`duration` from payload (only promoting scalars), dropping `applyDuration` and Focus/Sustain/etc. Fixed persistence + section-cost applyDuration + enrich-powers part flag. verification_status pending-qa (DEV-V-041 T001).
 
 **Raw Feedback Log — 2026-08-01 (Guided Species L2 — mixed + Create Species)**
 - Context: Guided creator Species step product overview implementation

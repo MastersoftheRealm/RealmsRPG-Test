@@ -322,14 +322,21 @@ export function bodyToColumnar(
     const range = body.range as Record<string, unknown> | undefined;
     const duration = body.duration as Record<string, unknown> | undefined;
     const area = body.area as Record<string, unknown> | undefined;
-    if (range && typeof range === 'object' && range.steps != null) scalars.rangeSteps = range.steps;
+    // Promote query scalars AND keep full nested objects in payload so non-promoted
+    // fields survive round-trip (area/range applyDuration; duration focus/sustain/etc.).
+    if (range && typeof range === 'object') {
+      if (range.steps != null) scalars.rangeSteps = range.steps;
+      payload.range = { ...range };
+    }
     if (duration && typeof duration === 'object') {
       if (duration.type != null) scalars.durationType = duration.type;
       if (duration.value != null) scalars.durationValue = duration.value;
+      payload.duration = { ...duration };
     }
     if (area && typeof area === 'object') {
       if (area.type != null) scalars.areaType = area.type;
       if (area.level != null) scalars.areaLevel = area.level;
+      payload.area = { ...area };
     }
     if (Array.isArray(body.damage)) scalars.damage = body.damage;
   }
@@ -342,10 +349,18 @@ export function bodyToColumnar(
       | Record<string, unknown>
       | undefined;
     const damage = (body.damage ?? (body.power as Record<string, unknown> | undefined)?.damage) as unknown;
-    if (range && typeof range === 'object' && range.steps != null) scalars.rangeSteps = range.steps;
+    // Top-level range/duration may be omitted when nested under `power` (empowered).
+    // Persist top-level objects when present; nested `power` still goes through the loop.
+    if (range && typeof range === 'object') {
+      if (range.steps != null) scalars.rangeSteps = range.steps;
+      if (body.range && typeof body.range === 'object') payload.range = { ...(body.range as Record<string, unknown>) };
+    }
     if (duration && typeof duration === 'object') {
       if (duration.type != null) scalars.durationType = duration.type;
       if (duration.value != null) scalars.durationValue = duration.value;
+      if (body.duration && typeof body.duration === 'object') {
+        payload.duration = { ...(body.duration as Record<string, unknown>) };
+      }
     }
     if (Array.isArray(damage)) scalars.damage = damage;
   }

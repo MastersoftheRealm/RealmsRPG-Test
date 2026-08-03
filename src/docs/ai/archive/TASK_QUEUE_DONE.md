@@ -1,3 +1,43 @@
+- id: TASK-672
+  title: Persist power AoE applyDuration + duration modifiers through columnar save
+  created_at: 2026-08-02
+  created_by: owner
+  completed_at: 2026-08-02
+  priority: high
+  status: done
+  verification_status: pending-qa
+  notes: |
+    Re-homed from origin/master commits that incorrectly reused TASK-642 (local TASK-642 = email spoofing). Code merged 2026-08-03.
+  build_validation: |
+    suite: DEV-V-044
+    tests:
+      - DEV-V-044-T001
+  developer_test_plan: DEV-V-044 T001 â€” see BUILD_VALIDATION.md
+  related_files:
+    - src/lib/library-columnar.ts
+    - src/lib/library-columnar.test.ts
+    - src/lib/calculators/power-calc.ts
+    - src/lib/calculators/power-calc.test.ts
+    - src/lib/calculators/index.ts
+    - src/app/(main)/power-creator/power-creator-cost-derivation.ts
+    - src/lib/data-enrichment/enrich-powers.ts
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Power creator Area "Apply duration" (and duration Focus/Sustain/No Harm/Ends on Activation)
+    were dropped on save because bodyToColumnar skipped nested range/area/duration from payload
+    while only promoting type/level/steps/value scalars. GLR/loaded Energy then mismatched creator.
+  acceptance_criteria:
+    - Columnar round-trip keeps area.applyDuration and duration modifiers in payload; scalars still promoted.
+    - derivePowerDisplay energy increases when area.applyDuration is true with a duration present.
+    - Section EN badges include duration multiplier when Apply duration is set.
+    - Vitest coverage; DEV-V-044 manual smoke.
+  notes: |
+    Owner 2026-08-02 feedback. Cleanup: calculatePowerSectionContribution; dropped reconcile-report PR noise.
+
+---
+
+
 
 - id: TASK-667
   title: Reduce mega prop bags â€” LibrarySectionProps + CharacterSheetModals
@@ -73,7 +113,7 @@
     moved flattenLoadoutEntries and resolvePathAbilityLabels to lib/game; deleted library/dedupe-saved-parts.
     ADR-0010 + ARCHITECTURE_CONSTITUTION lib-layer note.
   notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §6 B6. npm run build pass; 27 targeted unit tests pass.
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ï¿½6 B6. npm run build pass; 27 targeted unit tests pass.
 
 - id: TASK-650
   title: Consolidate permissive RLS SELECT policies on campaigns
@@ -110,7 +150,7 @@
   developer_test_plan: |
     DEV-V-042 T001 automated verify (node scripts/verify-task-650.mjs); T002 optional browser campaign smoke.
   notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D6. DEV-V-042-T001 PASS 2026-08-03 (advisor parity + RLS smoke). T002 browser pending owner.
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ï¿½5.2 D6. DEV-V-042-T001 PASS 2026-08-03 (advisor parity + RLS smoke). T002 browser pending owner.
 
 - id: TASK-670
   title: Species skill pick cards show skill descriptions
@@ -133,7 +173,7 @@
     tests:
       - DEV-V-013-T079
   developer_test_plan: |
-    DEV-V-013 T079 — mixed species skill pick descriptions (guided + Advanced + sheet)
+    DEV-V-013 T079 ï¿½ mixed species skill pick descriptions (guided + Advanced + sheet)
   description: |
     Mixed species skill selection (guided Choose your species skills, Advanced ancestry,
     Edit Species modal) showed name-only cards/pills. Show codex skill descriptions with
@@ -166,7 +206,7 @@
     - src/lib/detail-option/combat-builder.ts
     - src/hooks/use-auth.ts
   description: |
-    Audit B5 + §8 hygiene sweep: 28 empty/comment-only catch blocks exist, including cost-calculation
+    Audit B5 + ï¿½8 hygiene sweep: 28 empty/comment-only catch blocks exist, including cost-calculation
     paths that silently return 0/undefined on failure (masking broken parts) and encounter/migration
     code that swallows real errors. Replace with server-side logging (and, where user-facing, a visible
     error state) instead of silent failure.
@@ -267,8 +307,8 @@
     Audit H2/H3/M4: the current limiter is in-memory per-serverless-instance so it doesn't meaningfully
     throttle anything on Vercel; joinCampaignAction has no throttle at all despite a service-role
     lookup; several admin mutation routes don't apply a limiter. Add a Redis (Upstash) or Vercel
-    KV-backed limiter behind the existing rateLimit()-shaped API — env-flagged, safe no-op fallback
-    when unconfigured — and apply it to joinCampaignAction plus admin mutation routes missing one.
+    KV-backed limiter behind the existing rateLimit()-shaped API ï¿½ env-flagged, safe no-op fallback
+    when unconfigured ï¿½ and apply it to joinCampaignAction plus admin mutation routes missing one.
   acceptance_criteria:
     - Shared limiter is consistent across serverless instances when Redis/KV env vars are set, and
       degrades gracefully (no crash) when unset.
@@ -281,7 +321,7 @@
     also fall back). Throttled joinCampaignAction (inviteCodeLimiter 5/min); PATCH admin/role-policies
     (strictLimiter). All existing limiter call sites updated to await. Env vars documented in
     .env.example and DEPLOYMENT_AND_SECRETS_SUPABASE.md. npm run typecheck pass; build compiles + TS
-    pass — trace step intermittently ENOENT on OneDrive path (environment).
+    pass ï¿½ trace step intermittently ENOENT on OneDrive path (environment).
   notes: |
     Full production activation requires TASK-669 (human Redis/KV provisioning).
 
@@ -290,7 +330,7 @@
 ---
 
 - id: TASK-652
-  title: Admin API hardening — explicit validation allowlists + consolidate admin-check
+  title: Admin API hardening ï¿½ explicit validation allowlists + consolidate admin-check
   priority: medium
   status: done
   verification_status: n/a
@@ -314,13 +354,13 @@
     - No remaining duplicate isAdmin-style checks outside @/lib/admin.
     - npm run build + test pass.
   notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 M5, §4.4.
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ï¿½4.2 M5, ï¿½4.4.
     Added adminUpdateRoleSchema + adminRolePolicyPatchSchema in api-validation.ts; requireAdminSession in admin.ts; consolidated official/enhanced-items duplicate role query.
 
 ---
 
 - id: TASK-648
-  title: Standardize API error responses — stop leaking raw DB/Supabase errors
+  title: Standardize API error responses ï¿½ stop leaking raw DB/Supabase errors
   priority: high
   status: done
   verification_status: n/a
@@ -16857,7 +16897,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/app/(main)/admin/core-rules/core-rules-armament-editor.tsx
     - src/app/(main)/admin/core-rules/core-rules-crafting-rules-editor.tsx
   description: |
-    Audit §7/§10 item 14: 7 files remain at 600-767 lines. Following the pattern already used for
+    Audit ï¿½7/ï¿½10 item 14: 7 files remain at 600-767 lines. Following the pattern already used for
     TASK-618/TASK-619, extract state/derived-data into hooks and split UI into section components,
     keeping each file under ~500 lines.
   acceptance_criteria:
@@ -16875,6 +16915,6 @@ Firebase/RTDB - the project is Supabase-only.
     - FEATURE_INDEX updated for all Wave 5 surfaces; BUILD_VALIDATION DEV-V-043 added.
     - Cleanup: restored silent add-all campaign catch (no toast delta); unexported internal combat helpers.
   notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §7/§10.
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md ï¿½7/ï¿½10.
     Manual smoke not run - verification_status pending-qa (DEV-V-043 T001-T007).
     Original-seven listed files under ~500; sheet orchestration further split into page-data / page-ui / facade (owner-acked).
