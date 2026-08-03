@@ -136,6 +136,8 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 
 **Cross-user read (campaign / public):** `/api/characters/[id]` applies visibility in app code, but Supabase RLS runs first. If the only SELECT policy is “own rows,” other users get no row → “Character not found.” Run **`sql/supabase-characters-rls-cross-read.sql`** to add SELECT policies for `data.visibility = 'public'` and for `campaign` when the reader is the campaign owner or in `campaign_members` and the character appears on that campaign’s `characters` JSON roster (`userId`/`characterId` or snake_case).
 
+**Guest public sheets (TASK-649):** Applied 2026-08-03. `characters_select_authenticated` remains `TO authenticated`; **`sql/task-649-characters-anon-public-read-applied.sql`** adds `characters_select_public_anon` for guests (`visibility = 'public'`). Owner library on public views still uses service_role in `getOwnerLibraryForView`.
+
 ---
 
 ### 2.7 Campaigns
@@ -147,6 +149,8 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 | `campaign_rolls` | Hybrid | id (PK, required on insert unless DB default), campaign_id (FK), data (JSONB), **created_at** (app POST sets ISO `now`; optional DB `DEFAULT now()`); list columns: character_id, user_id, type, title |
 
 Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls`.
+
+**RLS (`campaigns`):** One permissive SELECT policy per role — `campaigns_select_participants` (`private.auth_is_campaign_participant(id)` covers owner + members). Owner write policies: `campaigns_owner_insert`, `campaigns_owner_update`, `campaigns_owner_delete`. Consolidation: `sql/task-650-campaigns-rls-select-consolidation-applied.sql` (dropped redundant `campaigns_owner_select`).
 
 **Join-by-invite (app behavior):** RLS on `campaigns` allows SELECT only for the owner or existing members, so a new player cannot load a campaign row with the normal user-scoped Supabase client. The app uses **`SUPABASE_SERVICE_ROLE_KEY`** (server-only) in `joinCampaignAction` and in `GET /api/campaigns/invite/[code]` to look up by `invite_code` and update roster/members after the user is authenticated and character ownership is verified.
 
@@ -351,6 +355,23 @@ Used by `user_profiles.role`.
 | UI tooltips (legacy DB) | Removed | Dropped 2026-06-30 — `sql/drop-legacy-ui-tooltips-2026-06.sql`. Help copy in `public/tooltip-text.tsx` + `InfoTippy`. |
 
 See `AI_TASK_QUEUE.md` for TASK-279–TASK-283 and TASK-304. Historical rationale: `src/docs/ai/archive/DATABASE_SCALABILITY_AUDIT.md`.
+
+### 4.1 `anon` role grant posture (TASK-649 — applied 2026-08-03)
+
+Live on RealmsRPG-Test after **`sql/task-649-anon-least-privilege-applied.sql`** + guest public character read. The `anon` role has **SELECT only** on intentional public-read tables:
+
+| Table group | Tables | RLS |
+|-------------|--------|-----|
+| Codex + rules | `codex_*` (10 tables), `core_rules` | `Anyone can read …` (`TO public`) |
+| Official library | `official_powers`, `official_techniques`, `official_empowered_techniques`, `official_items`, `official_creatures`, `official_enhanced_items` | `Anyone can read official_*` |
+| Image bank metadata | `realms_images`, `realms_image_categories` | `Anyone can read realms images*` |
+| Guest public sheets | `characters` | `characters_select_public_anon` — `visibility = 'public'` only |
+
+All other `public` tables: **no** `anon` table grants (RLS + `authenticated` / `service_role` as before). **VTT tables (`vtt_*`)** unchanged — out of scope for TASK-649 (Collins branch).
+
+**Storage art (no sign-in):** `codex-art`, `portraits`, and `profile-pictures` buckets remain **public** in `storage.buckets`. TASK-649 removed bucket-wide Storage **listing** policies on `codex-art` (same pattern as portraits); **direct object URLs / CDN GETs still work** without a SELECT policy.
+
+Replay / verify: `node scripts/run-task-649-phase2.mjs` (idempotent) · `node scripts/verify-task-649.mjs` (advisor-parity SQL checks). See `sql/README.md` § Applied ad-hoc.
 
 ---
 

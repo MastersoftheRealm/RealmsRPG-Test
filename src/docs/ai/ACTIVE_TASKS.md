@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-670
+**Next task ID:** TASK-672
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 18 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 16 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-657 done (pre-commit hooks). TASK-655/656 done (typecheck + zero-warning lint CI gates) — pending-qa. TASK-646 done (Next.js 16.2.12). TASK-665 done (utils hygiene). TASK-644 done (armor DR unify) — pending-qa. TASK-653 done (character ID oracle). TASK-642 partial (signup QA only). TASK-647/TASK-651 done. TASK-643 pending-qa. TASK-641 pending-qa DEV-V-013 T078. TASK-640 pending-qa T075–T077.
+**Hot notes:** TASK-650 done (campaigns RLS SELECT consolidation applied). TASK-649 done (Supabase least-privilege Phase 2 applied). TASK-657 done (pre-commit hooks). TASK-655/656 done (typecheck + zero-warning lint CI gates) — pending-qa.
 
 ---
 
@@ -89,74 +89,6 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-649
-  title: Supabase least-privilege + hygiene hardening (live DB)
-  priority: high
-  status: partial
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - sql/task-649-anon-least-privilege-proposed.sql
-    - sql/task-649-drop-codex-backup-tables-proposed.sql
-    - sql/task-649-codex-art-storage-select-hardening-proposed.sql
-    - sql/task-649-feat-tag-function-search-path-proposed.sql
-    - sql/task-649-index-hygiene-proposed.sql
-    - sql/README.md
-    - src/docs/SUPABASE_SCHEMA.md
-  description: |
-    Audit D1/D2/D4/D5/D7/D8: `anon` role has full CRUD+TRUNCATE grants on nearly every public table
-    including admin_role_audit/role_policies (RLS blocks today but violates least privilege); 4 stale
-    backup tables (codex_archetypes_backup_*, codex_archetype_levels_backup_*) sit in production with
-    RLS on but no policies/PK; the codex-art storage bucket allows public listing; 4 functions
-    (normalize_feat_tags, map_feat_tag_phase*) have mutable search_path; ~20 unused indexes and 2
-    unindexed FKs (realms_images.created_by, vtt_actions.token_id) were flagged. Draft SQL in sql/,
-    verify against get_advisors, then apply via Supabase MCP.
-  acceptance_criteria:
-    - anon grants revoked down to least privilege; RLS + authenticated role still work (re-test key flows).
-    - Backup tables dropped or moved off the public schema.
-    - codex-art bucket SELECT policy no longer allows public listing.
-    - Affected functions have explicit search_path set.
-    - Index changes only made where usage data supports it (no blind drops).
-    - SUPABASE_SCHEMA.md updated; advisors re-checked post-apply.
-  completed_work: |
-    Phase 1 (2026-08-01): Live audit via get_advisors + list_tables + execute_sql on
-    RealmsRPG-Test (lbqhiwudvifmkjtkccdg). Confirmed D1–D5/D7/D8 findings; drafted five idempotent
-    SQL files in sql/ (anon least-privilege, drop backup tables, codex-art storage SELECT hardening,
-    feat-tag search_path, FK indexes + unused-index review). No live DB apply; no app code changes.
-  remaining_work: |
-    Phase 2 (owner approval): Apply SQL in order — (1) drop backup tables, (2) anon grants,
-    (3) codex-art storage policy, (4) function search_path, (5) FK indexes (Part A only unless
-    owner approves Part B drops). Re-run get_advisors; smoke-test codex read, image URLs, auth flows.
-    Update SUPABASE_SCHEMA.md (remove backup tables; document grant posture). Optional: revoke anon
-    EXECUTE on internal trigger functions (out of scope unless owner requests).
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D1/D2/D4/D5/D7/D8.
-    Live DB mutation — draft SQL first, no blind apply. Treat with the same audit→propose→apply care
-    as realms-codex-data.mdc even though this isn't codex reference data.
-
----
-
-- id: TASK-650
-  title: Consolidate permissive RLS SELECT policies on campaigns
-  priority: medium
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - sql/README.md
-    - src/docs/SUPABASE_SCHEMA.md
-  description: |
-    Audit D6: campaigns has multiple permissive SELECT RLS policies stacked (a consolidation migration
-    exists in history but the advisor still flags it). Investigate the live policy set, consolidate to
-    one policy per role/action, and confirm the advisor clears.
-  acceptance_criteria:
-    - get_advisors no longer flags multiple permissive policies on campaigns.
-    - Existing access patterns (owner, public visibility, campaign participant) pass manual QA.
-    - SQL documented in sql/.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D6.
-
-
 - id: TASK-659
   title: Wire a creator Playwright audit suite into default CI
   priority: medium
@@ -177,33 +109,6 @@ Do **not** read the done archive at session start.
     - Other audit configs remain available for manual/optional runs.
   notes: |
     Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §3.
-
----
-
-- id: TASK-661
-  title: Replace silent/empty catches with logged failures
-  priority: high
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - src/lib/guest-encounter-migration.ts
-    - src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts
-    - src/components/shared/add-combatant-modal.tsx
-    - src/app/api/admin/check/route.ts
-    - src/lib/guided-creator/power-technique-display.ts
-    - src/lib/detail-option/combat-builder.ts
-  description: |
-    Audit B5 + §8 hygiene sweep: 28 empty/comment-only catch blocks exist, including cost-calculation
-    paths that silently return 0/undefined on failure (masking broken parts) and encounter/migration
-    code that swallows real errors. Replace with server-side logging (and, where user-facing, a visible
-    error state) instead of silent failure.
-  acceptance_criteria:
-    - Identified catches log the error instead of swallowing it.
-    - Cost-path failures on power/technique display are visible in logs/dev tools, not silently defaulted.
-    - npm run build + test pass.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §6 B5, §8.
 
 ---
 

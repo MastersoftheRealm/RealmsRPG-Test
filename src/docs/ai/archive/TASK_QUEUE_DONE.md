@@ -1,4 +1,109 @@
 
+- id: TASK-650
+  title: Consolidate permissive RLS SELECT policies on campaigns
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - sql/task-650-campaigns-rls-select-consolidation-applied.sql
+    - sql/task-650-verify-applied.sql
+    - scripts/run-task-650.mjs
+    - scripts/verify-task-650.mjs
+    - sql/README.md
+    - src/docs/SUPABASE_SCHEMA.md
+  description: |
+    Audit D6: campaigns had multiple permissive SELECT RLS policies stacked (a consolidation migration
+    exists in history but the advisor still flagged it). Investigate the live policy set, consolidate to
+    one policy per role/action, and confirm the advisor clears.
+  acceptance_criteria:
+    - get_advisors no longer flags multiple permissive policies on campaigns.
+    - Existing access patterns (owner, campaign participant) pass automated RLS verify; optional browser smoke DEV-V-042-T002.
+    - SQL documented in sql/.
+  completed_work: |
+    Live audit found campaigns_owner_select + campaigns_select_participants both granting authenticated SELECT.
+    Applied task-650-campaigns-rls-select-consolidation-applied.sql (DROP campaigns_owner_select; owner read
+    already covered by private.auth_is_campaign_participant). verify-task-650.mjs: 1 SELECT policy, 4 total.
+  build_validation: |
+    suite: DEV-V-042
+    tests:
+      - DEV-V-042-T001
+      - DEV-V-042-T002
+  developer_test_plan: |
+    DEV-V-042 T001 automated verify (node scripts/verify-task-650.mjs); T002 optional browser campaign smoke.
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D6. DEV-V-042-T001 PASS 2026-08-03 (advisor parity + RLS smoke). T002 browser pending owner.
+
+- id: TASK-670
+  title: Species skill pick cards show skill descriptions
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-03
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - src/lib/ancestry/ancestry-selection.ts
+    - src/lib/ancestry/ancestry-selection.test.ts
+    - src/lib/guided-creator/ancestry-pick-tasks.ts
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/components/character-creator/mixed-species-skill-picker.tsx
+    - src/components/character-creator/steps/ancestry/ancestry-mixed-panel.tsx
+    - src/components/character-sheet/edit-species-modal.tsx
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T079
+  developer_test_plan: |
+    DEV-V-013 T079 — mixed species skill pick descriptions (guided + Advanced + sheet)
+  description: |
+    Mixed species skill selection (guided Choose your species skills, Advanced ancestry,
+    Edit Species modal) showed name-only cards/pills. Show codex skill descriptions with
+    normal truncation (GuidedChoiceCard compact + TraitSection-style picker rows).
+  acceptance_criteria:
+    - buildMixedSpeciesSkillOptions includes description from codex (and Any helper text).
+    - Guided ancestry mixed-species-skills GuidedChoiceCard shows description.
+    - Advanced + sheet use shared MixedSpeciesSkillPicker with descriptions (clamp + See more).
+    - npm run build + ancestry-selection tests pass.
+  completed_work: |
+    Extended NamedIdOption + buildMixedSpeciesSkillOptions via speciesSkillToSummaryChipItem.
+    Added MixedSpeciesSkillPicker (replaces pill buttons). Wired guided ancestry-step description prop.
+    BUILD_VALIDATION DEV-V-013-T079; feedback logged in ALL_FEEDBACK_CLEAN.md.
+
+- id: TASK-661
+  title: Replace silent/empty catches with logged failures
+  priority: high
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - src/lib/api-client.ts
+    - src/lib/guest-encounter-migration.ts
+    - src/app/(main)/encounters/[id]/_components/combat/use-combat-encounter-view.ts
+    - src/components/shared/add-combatant-modal.tsx
+    - src/app/api/admin/check/route.ts
+    - src/lib/guided-creator/power-technique-display.ts
+    - src/lib/detail-option/combat-builder.ts
+    - src/hooks/use-auth.ts
+  description: |
+    Audit B5 + §8 hygiene sweep: 28 empty/comment-only catch blocks exist, including cost-calculation
+    paths that silently return 0/undefined on failure (masking broken parts) and encounter/migration
+    code that swallows real errors. Replace with server-side logging (and, where user-facing, a visible
+    error state) instead of silent failure.
+  acceptance_criteria:
+    - Identified catches log the error instead of swallowing it.
+    - Cost-path failures on power/technique display are visible in logs/dev tools, not silently defaulted.
+    - npm run build + test pass.
+  completed_work: |
+    Added logClientError to api-client.ts (mirrors server logApiError). Replaced silent catches in all
+    related_files: guest-encounter-migration (best-effort log), power-technique-display + combat-builder
+    (cost/chip derivation logs), admin/check (logApiError), add-combatant-modal + use-combat-encounter-view
+    (per-character log + toast on user-initiated add-all), use-auth migration .catch. npm run build + test 475 pass.
+
 - id: TASK-660
   title: Dedupe deriveAbilityRequirementFromProperties + fix unproficientBonus SSOT violation
   priority: high
@@ -16493,3 +16598,26 @@ Firebase/RTDB - the project is Supabase-only.
     - Removed energyTag from combat-builder power/technique detail builders.
     - tsconfig exclude list trimmed to node_modules only.
     - npm run build pass; resolve-loadout-items + compact-facts tests pass.
+
+- id: TASK-649
+  title: Supabase least-privilege + hygiene hardening (live DB)
+  priority: high
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - sql/task-649-drop-codex-backup-tables-proposed.sql
+    - sql/task-649-anon-least-privilege-proposed.sql
+    - sql/task-649-characters-anon-public-read-proposed.sql
+    - sql/task-649-codex-art-storage-select-hardening-proposed.sql
+    - sql/task-649-feat-tag-function-search-path-proposed.sql
+    - sql/task-649-index-hygiene-proposed.sql
+    - scripts/run-task-649-phase2.mjs
+    - scripts/verify-task-649.mjs
+    - sql/README.md
+    - src/docs/SUPABASE_SCHEMA.md
+  summary: |
+    Applied Phase 2 on RealmsRPG-Test: dropped 4 codex backup tables; anon least-privilege (SELECT on 20 public-read tables); guest public character anon RLS; codex-art listing policy removed; feat-tag search_path pinned; realms_images FK index (VTT skipped per owner).
+

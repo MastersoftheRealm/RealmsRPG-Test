@@ -52,22 +52,8 @@ These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test.
 | TASK-530 path enrichment (all 12 + ability + backup) | [codex-archetypes-backup-20260717.sql](codex-archetypes-backup-20260717.sql), [codex-archetypes-ability-spread-20260717.sql](codex-archetypes-ability-spread-20260717.sql), [codex-archetypes-enrich-*-applied.sql](codex-archetypes-enrich-berserker-applied.sql), [codex-archetypes-emdash-scrub-20260717.sql](codex-archetypes-emdash-scrub-20260717.sql) | Applied RealmsRPG-Test 2026-07-17. Per-path `*-applied.sql` is the replay source; em-dash scrub is idempotent. |
 | Empowered technique tables | [empowered-techniques-separate-tables.sql](empowered-techniques-separate-tables.sql) | `user_empowered_techniques`, `official_empowered_techniques` exist. |
 | TASK-627 official powers payload dedupe | [official-powers-strip-redundant-auto-mechanic-parts-applied.sql](official-powers-strip-redundant-auto-mechanic-parts-applied.sql) | Applied 2026-08-01. Strips auto-mechanic parts from `payload.parts` when promoted columns exist; helper `_official_power_rebuilt_mechanic_part_names`. 41/44 rows cleaned; post-apply overlap audit 0; idempotent. |
-
----
-
-## Proposed (awaiting owner approval — TASK-649)
-
-Draft-only audit hardening from [CODEBASE_AUDIT_2026-08-01](../src/docs/ai/archive/CODEBASE_AUDIT_2026-08-01.md) §5.2. **Do not apply** until owner reviews and says "apply". Apply in order:
-
-| Step | File | Purpose |
-|------|------|---------|
-| 1 | [task-649-drop-codex-backup-tables-proposed.sql](task-649-drop-codex-backup-tables-proposed.sql) | Drop 4 stale `codex_*_backup_*` tables |
-| 2 | [task-649-anon-least-privilege-proposed.sql](task-649-anon-least-privilege-proposed.sql) | Revoke excessive `anon` grants; re-GRANT SELECT on public-read tables |
-| 3 | [task-649-codex-art-storage-select-hardening-proposed.sql](task-649-codex-art-storage-select-hardening-proposed.sql) | Remove broad `codex-art` listing policy (bucket stays public) |
-| 4 | [task-649-feat-tag-function-search-path-proposed.sql](task-649-feat-tag-function-search-path-proposed.sql) | Pin `search_path` on feat-tag functions |
-| 5 | [task-649-index-hygiene-proposed.sql](task-649-index-hygiene-proposed.sql) | Add 2 FK indexes; unused-index drops deferred (commented) |
-
-Post-apply: re-run `get_advisors`, smoke-test codex read / image URLs / auth flows, update `SUPABASE_SCHEMA.md`. See **DEV-007** in `DEVELOPER_TASK_QUEUE.md`.
+| TASK-649 Supabase least-privilege Phase 2 | [task-649-*-applied.sql](task-649-anon-least-privilege-applied.sql) (6 files) + [task-649-verify-applied.sql](task-649-verify-applied.sql) | Applied 2026-08-03. `node scripts/run-task-649-phase2.mjs` · `node scripts/verify-task-649.mjs`. VTT tables skipped. |
+| TASK-650 campaigns RLS SELECT consolidation | [task-650-campaigns-rls-select-consolidation-applied.sql](task-650-campaigns-rls-select-consolidation-applied.sql) + [task-650-verify-applied.sql](task-650-verify-applied.sql) | Applied 2026-08-03. Dropped redundant `campaigns_owner_select` (stacked with `campaigns_select_participants`). `node scripts/run-task-650.mjs` · `node scripts/verify-task-650.mjs`. |
 
 ---
 

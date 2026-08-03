@@ -3486,7 +3486,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Switch to **Powered-Martial**, pick two different abilities — Continue enables; same ability on both sides stays disabled/blocked.
 3. Click **View archetype paths** — return to L1 path cards; forge picks cleared.
 4. Optionally pick a path and Continue to Species — path flow still works.
-5. Optionally on L3: pick type + abilities, Continue to Species — abilities step shows suggested array or customize panel; archetype feats shows empty recommendations with **See more Feats** browse (no path id on saved character if completed later).
+5. Optionally on L3: pick type + abilities, Continue to Species — **Abilities** step is full point-buy only (all scores at 0, no See recommendations, Continue after spending all points); archetype feats shows empty recommendations with **See more Feats** browse (no path id on saved character if completed later).
 
 **Expected**
 - Tooltips on type and ability help; L3↔L1 clears incompatible draft fields; path Continue still requires a path on L1.
@@ -3526,7 +3526,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Enter via **Custom**, forge archetype, Continue to **Species** — confirm **all species** visible (not starters-only).
 2. Confirm **See starter species** (outline) collapses to starter set; **See all species** (primary) expands.
 3. On **Abilities**, confirm customize panel opens; **See recommendations** returns to path suggestions when a path exists (pick path via View archetype paths first).
-4. On **Skills** / **Archetype Feats** / **Character Feat** / **Loadout** / **Powers**, confirm browse/L2 opens on first landing for custom forge (no `archetypePathId`).
+4. On **Skills**, confirm browse does **not** auto-open on first landing; scroll and use **Browse all Skills**; in that modal use **Browse all Sub-Skills** for L3. On **Archetype Feats** / **Character Feat** / **Loadout** / **Powers**, confirm browse/L2 still opens on first landing for custom forge (no `archetypePathId`).
 5. **Ancestry**: custom entry skips species overview when picks remain — lands on first pick.
 
 **Expected**
@@ -3544,8 +3544,8 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Needs** | — |
 
 **Steps**
-1. On Species L1, confirm **See all species** uses primary (same weight as footer Continue).
-2. On Species L2, confirm **See starter species** uses outline (same weight as footer Back).
+1. On Species L1, confirm **See all species** uses primary (same weight as footer Continue) and sits **bottom left** below the grid (not in footer).
+2. On Species L2, confirm **See starter species** (outline, bottom left) and **Create Species** (primary, bottom right) sit below the grid — not in the sticky footer.
 3. On Loadout L2 browse, confirm footer **See recommendations** uses outline, not primary.
 
 **Expected**
@@ -3565,12 +3565,32 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Steps**
 1. On Species L1, **See all species** — confirm full catalog.
 2. On Species L2, confirm **Mixed Species** card at end of grid; open modal, pick two distinct species, confirm selection ring.
-3. Confirm footer **Create Species** (outline, left of Continue) opens `/species-creator` in a new tab.
+3. Confirm **Create Species** (primary, bottom-right below grid via `GuidedLayerNav`) opens `/species-creator` in a new tab — not in the sticky Back/Continue footer.
 4. Continue to **Ancestry** — mixed overview shows both parent names; complete trait/skill/characteristic picks (choose 2 skills when 4 options).
 5. Continue through Skills — locked species skills match mixed picks; save character — `ancestry.mixed` + `speciesIds` on sheet.
 
 **Expected**
 - Mixed selection no longer dead-ends on Ancestry; save persists mixed ancestry fields.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T079 — Mixed species skill picks show descriptions (TASK-670)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-670 |
+| **Where** | Guided `/characters/new/guided` → Ancestry (mixed, 4+ combined skills); Advanced mixed ancestry; sheet Edit Species (mixed) |
+| **Needs** | Mixed species pair with more than two combined skill options (four-option pick step) |
+
+**Steps**
+1. Guided: on **Choose your species skills**, confirm each `GuidedChoiceCard` shows skill description (truncated; **See more…** when long).
+2. Advanced mixed ancestry: **Species skills** section shows description under each skill name (clamp + See more when long).
+3. Sheet **Edit Species** (mixed): same picker descriptions in modal.
+4. Confirm **Any** skill option shows its helper description when present in codex data.
+
+**Expected**
+- No name-only skill pick cards/rows in mixed species skill selection flows.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5567,6 +5587,113 @@ Feat expanded rows must label the Tags section even for a single tag, and Tags m
 
 ---
 
+## DEV-V-042 — Campaigns RLS SELECT consolidation (TASK-650)
+
+Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Automated SQL parity + RLS access: `node scripts/verify-task-650.mjs`.
+
+#### DEV-V-042-T001 — Automated advisor + RLS access (DB)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-042 — TASK-650 campaigns RLS |
+| **Related task** | TASK-650 |
+| **Where** | Terminal / CI |
+| **Needs** | `DATABASE_URL` in `.env.local`, `psql` on PATH |
+
+**Steps**
+1. Run `node scripts/verify-task-650.mjs`.
+
+**Expected**
+- Exit 0; output ends with `TASK-650 verify PASS`.
+- Asserts: no duplicate permissive `(cmd, roles)` on `campaigns`; exactly one `authenticated` SELECT policy; `campaigns_owner_select` absent; owner/member/stranger RLS smoke on a sample campaign.
+
+**Report** — `[x] PASS` (agent 2026-08-03) · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-042-T002 — Campaign UI smoke (browser)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-042 |
+| **Related task** | TASK-650 |
+| **Where** | `/campaigns`, campaign detail |
+| **Needs** | Owner account + member account (or invite join) |
+
+**Steps**
+1. Signed in as **owner**: `/campaigns` list loads; open a campaign detail.
+2. Signed in as **member** (non-owner): same campaign visible in list and detail.
+3. Signed in as **non-member**: campaign detail not accessible (403/empty).
+4. Invite join flow still works for a new player with valid invite code.
+
+**Expected**
+- Owner and member read access unchanged after policy drop; non-participant blocked; join-by-invite unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-041 — Supabase least-privilege Phase 2 (TASK-649)
+
+Post-apply smoke for anon grant hardening, public read paths, and guest character sheets. Automated SQL parity: `node scripts/verify-task-649.mjs`.
+
+#### DEV-V-041-T001 — Public codex + official library (logged out)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-041 — TASK-649 DB hardening |
+| **Related task** | TASK-649 |
+| **Where** | `/codex`, Realms Library tabs |
+| **Needs** | Logged out (incognito) |
+
+**Steps**
+1. Open `/codex` — feats/skills/species load without sign-in.
+2. Open Realms Library → Powers (or Items) — official list loads.
+3. Expand a row with bank art — image renders (direct URL).
+
+**Expected**
+- No permission-denied errors; codex and official library readable without auth.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-041-T002 — Guest public character sheet
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-041 |
+| **Related task** | TASK-649 |
+| **Where** | Public character URL |
+| **Needs** | A character with `visibility = public`; logged out |
+
+**Steps**
+1. Open a known public character sheet URL while logged out.
+2. Confirm sheet loads (name, portrait if set, library-derived cards).
+3. Open a private character URL while logged out — expect 404 / not found.
+
+**Expected**
+- Public sheet readable for guests; private sheet blocked.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-041-T003 — Authenticated flows unchanged
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-041 |
+| **Related task** | TASK-649 |
+| **Where** | Login, own character, campaign |
+| **Needs** | Signed-in user |
+
+**Steps**
+1. Sign in; open own character sheet — full edit access.
+2. Join or open a campaign roster — member sheets load as before.
+3. Admin codex edit (if admin) — save still works.
+
+**Expected**
+- No regression on authenticated owner/campaign/admin flows.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -5601,5 +5728,7 @@ Feat expanded rows must label the Tags section even for a single tag, and Tags m
 | DEV-V-038 | Empowered technique nested power part chips (TASK-626) | — | Manual — see suite above |
 | DEV-V-039 | Codex feat Tags section (session) | — | Automated (`feat-list.test.ts`) + manual smoke |
 | DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
+| DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649) | — | Manual DEV-V-041 + `node scripts/verify-task-649.mjs` |
+| DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
