@@ -63,9 +63,9 @@ jobs:
         run: npm run verify:visual && npm run verify:a11y
       - name: Shell-creators chrome audit (Playwright)
         # 8 deterministic tests across six CreatorPageShell routes; no auth/data deps.
-        # Uses raw playwright (not npm run verify:shell-creators-audit) to avoid a second build.
+        # Uses npx playwright (not npm run verify:shell-creators-audit) to avoid a second build.
         # Budget: ~1–2 min on Linux (workers=1; review screenshots under .shell-creators-audit/).
-        run: playwright test -c playwright.shell-creators-audit.config.ts
+        run: npx playwright test -c playwright.shell-creators-audit.config.ts
       - name: Authenticated visual + a11y (optional — DEV-003 secrets)
         env:
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}

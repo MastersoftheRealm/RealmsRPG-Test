@@ -12,7 +12,6 @@
 
 import { useCallback, useState, type ReactNode } from 'react';
 import {
-  PageContainer,
   LoadingState,
   type ContainerSize,
 } from '@/components/ui';
@@ -149,17 +148,16 @@ export function CreatorPageShell({
     onLoad();
   }, [requireAuthToLoad, user, onLoad]);
 
+  // Keep title / Load / Reset / Save chrome visible during load & error so
+  // chrome audits and signed-out UX do not depend on codex data being present
+  // (CI often has empty Supabase secrets; species/creature already settle without parts).
+  // On error, keep children mounted so section chrome (h2 / expand) still audits.
+  let body: ReactNode = children;
   if (loading?.isLoading) {
-    return (
-      <PageContainer size={size}>
-        <LoadingState message={loading.loadingMessage ?? 'Loading...'} />
-      </PageContainer>
-    );
-  }
-
-  if (loading?.error) {
-    return (
-      <PageContainer size={size}>
+    body = <LoadingState message={loading.loadingMessage ?? 'Loading...'} />;
+  } else if (loading?.error) {
+    body = (
+      <>
         <ErrorDisplay
           message={
             loading.errorMessage ??
@@ -167,7 +165,8 @@ export function CreatorPageShell({
           }
           onRetry={loading.onRetry}
         />
-      </PageContainer>
+        {children}
+      </>
     );
   }
 
@@ -194,7 +193,7 @@ export function CreatorPageShell({
           onLoad={handleLoad}
           onReset={onReset}
           saving={saving}
-          saveDisabled={saveDisabled}
+          saveDisabled={saveDisabled || !!loading?.isLoading}
           showPublicPrivate={showPublicPrivate}
           user={user}
           requireAuthToLoad={requireAuthToLoad}
@@ -234,7 +233,7 @@ export function CreatorPageShell({
         </>
       }
     >
-      {children}
+      {body}
     </CreatorLayout>
   );
 }

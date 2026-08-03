@@ -26,7 +26,6 @@ import {
   type ItemProperty,
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
-import { ErrorDisplay } from '@/components/shared';
 import { LoadingState } from '@/components/ui';
 import {
   CreatorPageShell,
@@ -56,10 +55,9 @@ function ItemCreatorContent() {
   const { data: itemProperties = [], isLoading, error, refetch } = useItemProperties();
 
   const sessionKey = editItemId ?? 'draft';
-  // Ready once properties exist; in ?edit= mode also wait for the library fetch
-  // to settle (rawItems may legitimately stay empty — fall back to blank form).
-  const bootstrapReady =
-    itemProperties.length > 0 && (!editItemId || !load.isLoading);
+  // Settle when the properties query finishes (empty/error OK — shell chrome must
+  // still render for chrome audits / secret-less CI). In ?edit= mode also wait for library.
+  const bootstrapReady = !isLoading && (!editItemId || !load.isLoading);
 
   // One-time render adjust per sessionKey: compute the initial form state exactly
   // once when data is ready (no hydrate effect, no recompute on later re-renders).
@@ -78,19 +76,6 @@ function ItemCreatorContent() {
     });
   }
   const initialFormState = bootstrapState?.key === sessionKey ? bootstrapState.form : null;
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background">
-        <ErrorDisplay
-          message={`Failed to load item properties: ${error.message}`}
-          onRetry={() => {
-            void refetch();
-          }}
-        />
-      </div>
-    );
-  }
 
   if (!initialFormState) {
     return (
