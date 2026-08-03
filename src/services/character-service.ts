@@ -5,16 +5,17 @@
  */
 
 import type { Character, CharacterSummary } from '@/types';
+import type { UserCreature, UserItem, UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { apiFetch, apiFetchOrNull } from '@/lib/api-client';
 
 const API_BASE = '/api/characters';
 
 /** Owner's library items returned when viewing another user's character (read-only enrichment). */
 export interface LibraryForView {
-  powers: Array<Record<string, unknown>>;
-  techniques: Array<Record<string, unknown>>;
-  items: Array<Record<string, unknown>>;
-  creatures: Array<Record<string, unknown>>;
+  powers: UserPower[];
+  techniques: UserTechnique[];
+  items: UserItem[];
+  creatures: UserCreature[];
 }
 
 export interface GetCharacterResult {

@@ -5,7 +5,7 @@
 import { calculateProficiency } from '@/lib/game/formulas';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
 import { applyPathProficiencyForLevel } from '@/lib/game/archetype-display';
-import { resolvePathAbilityLabels } from '@/lib/guided-creator/path-ability-labels';
+import { resolvePathAbilityLabels } from '@/lib/game/path-ability-labels';
 import type { AbilityName, Archetype, ArchetypeCategory, Character } from '@/types';
 
 export const ARCHETYPE_ABILITY_OPTIONS: AbilityName[] = [

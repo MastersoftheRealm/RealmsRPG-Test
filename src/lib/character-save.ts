@@ -3,6 +3,7 @@
  */
 
 import { normalizeTempModifiers } from '@/lib/character/temp-modifiers';
+import { normalizeCharacterForSave } from '@/lib/character/schema-normalize';
 import { removeUndefined } from '@/lib/utils/object';
 import type { Character, CharacterTempModifiers } from '@/types';
 
@@ -24,6 +25,9 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
     if (normalized) cleaned.tempModifiers = normalized;
     else delete cleaned.tempModifiers;
   }
+
+  // Canonical field names + strip legacy aliases (TASK-663)
+  normalizeCharacterForSave(cleaned);
 
   cleaned.updatedAt = new Date().toISOString();
   return removeUndefined(cleaned);

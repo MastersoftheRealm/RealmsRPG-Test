@@ -129,6 +129,9 @@ describe('Path L1↔L3 layer patches', () => {
     expect(patch.creatorEntryMode).toBe('custom');
     expect(patch.pathLayer).toBe('l3');
     expect(patch.archetypePathId).toBeNull();
+    expect(patch.abilities).toEqual({ ...DEFAULT_ABILITIES });
+    expect(patch.abilitiesMode).toBeNull();
+    expect(patch.archetypeType).toBeNull();
   });
 
   it('guided chooser entry sets guided mode and Path L1', () => {

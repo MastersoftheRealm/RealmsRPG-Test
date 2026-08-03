@@ -9,6 +9,9 @@ import type { AbilityName } from './abilities';
 /** The three main archetype categories */
 export type ArchetypeCategory = 'power' | 'powered-martial' | 'martial';
 
+/** Archetype category inferred from martial + power proficiency split (TASK-663). */
+export type ProficiencyDerivedArchetype = ArchetypeCategory | 'none';
+
 /** Proficiency configuration for archetypes */
 export interface ArchetypeProficiency {
   martial: number;

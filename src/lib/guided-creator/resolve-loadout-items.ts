@@ -6,6 +6,7 @@ import type { CodexEquipmentItem } from '@/types/codex';
 import type { LibraryItem } from '@/types/library';
 import type { PathItemRecommendation, PathLoadout } from '@/types/archetype';
 import { formatDamage, type ItemDamage } from '@/lib/calculators/item-calc';
+import { flattenLoadoutEntries } from '@/lib/game/loadout-entries';
 import { normalizeId } from '@/lib/utils';
 
 export type LoadoutItemCategory = 'weapon' | 'armor' | 'equipment';
@@ -107,14 +108,6 @@ export function resolveEquipmentRef(
     statsLine: entry?.statsLine,
     resolved: Boolean(entry),
   };
-}
-
-export function flattenLoadoutEntries(loadout: PathLoadout): PathItemRecommendation[] {
-  return [
-    ...(loadout.armaments ?? []),
-    ...(loadout.armor ?? []),
-    ...(loadout.equipment ?? []),
-  ];
 }
 
 export function resolveLoadoutItems(

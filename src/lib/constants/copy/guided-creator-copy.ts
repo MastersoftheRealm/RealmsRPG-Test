@@ -290,6 +290,8 @@ export const GUIDED_CREATOR_COPY = {
       mixedSkillSuggestionsHint: (remaining: number) =>
         `You have ${remaining} Skill Point${remaining === 1 ? '' : 's'} left. Restore a path Skill or pick a suggestion below.`,
       browseAll: 'Browse all Skills',
+      browseAllSubSkills: 'Browse all Sub-Skills',
+      subBrowseDisabled: 'No Skill Points left to add a Sub-Skill.',
       browseOverLimit: (max: number) =>
         max <= 0
           ? 'No Skill Points left to add more. Remove a Skill or lower a value, then try again.'

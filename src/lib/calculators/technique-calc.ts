@@ -6,8 +6,8 @@
  */
 
 import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
-import { computePartTrainingPoints } from '@/lib/library/part-display';
-import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
+import { computePartTrainingPoints } from '@/lib/calculators/part-training-points';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import { attackModeColumnLabel, deriveTechniqueAttackMode, type AttackMode } from '@/lib/attack-mode';

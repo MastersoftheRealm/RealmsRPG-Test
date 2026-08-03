@@ -11,6 +11,7 @@ export { DEFAULT_ABILITIES } from './abilities';
 // Archetype
 export type {
   ArchetypeCategory,
+  ProficiencyDerivedArchetype,
   ArchetypeProficiency,
   ArchetypeConfig,
   Archetype,
@@ -32,6 +33,7 @@ export type {
   SkillCategory,
   Skill,
   CharacterSkill,
+  CharacterSkillRow,
   CharacterSkills,
   DefenseSkills,
 } from './skills';

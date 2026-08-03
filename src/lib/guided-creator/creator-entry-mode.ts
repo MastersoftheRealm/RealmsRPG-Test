@@ -13,3 +13,17 @@ export function prefersDeepCatalogEntry(
 ): boolean {
   return draft.creatorEntryMode === 'custom' && !draft.archetypePathId;
 }
+
+/** Continue on Abilities: recommended bypass only when a codex path backs recommendations. */
+export function canContinueGuidedAbilitiesStep(args: {
+  customizeOnly: boolean;
+  abilitiesMode: 'recommended' | 'custom' | null;
+  showCustomizePanel: boolean;
+  spentPoints: number;
+  totalPoints: number;
+}): boolean {
+  return (
+    (!args.customizeOnly && args.abilitiesMode === 'recommended') ||
+    (args.showCustomizePanel && args.spentPoints === args.totalPoints)
+  );
+}

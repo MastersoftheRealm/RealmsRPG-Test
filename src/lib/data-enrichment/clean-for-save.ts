@@ -3,8 +3,9 @@ import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import {
   dedupeByNormalizedId,
   dedupeEntityRefs,
-} from '@/lib/library/dedupe-saved-parts';
+} from '@/lib/game/dedupe-saved-parts';
 import { normalizeTempModifiers } from '@/lib/character/temp-modifiers';
+import { normalizeCharacterForSave } from '@/lib/character/schema-normalize';
 
 /**
  * Fields that should be saved to the database (minimal data).
@@ -107,10 +108,8 @@ export function cleanForSave(data: Character): Partial<Character> {
     else delete cleaned.tempModifiers;
   }
 
-  // Migrate defenseSkills → defenseVals (backward compat for old saves)
-  if (!cleaned.defenseVals && data.defenseSkills) {
-    cleaned.defenseVals = data.defenseSkills;
-  }
+  // Canonical field names + strip legacy aliases (TASK-663)
+  normalizeCharacterForSave(cleaned, data);
 
   // Migrate health/energy ResourcePool → currentHealth/currentEnergy
   if (cleaned.currentHealth === undefined && data.health?.current !== undefined) {
@@ -125,9 +124,7 @@ export function cleanForSave(data: Character): Partial<Character> {
   const dataEnergy = data.energy as { current?: number; max?: number } | undefined;
   const healthCurrent = (cleaned.currentHealth as number) ?? dataHealth?.current;
   const energyCurrent = (cleaned.currentEnergy as number) ?? dataEnergy?.current;
-  const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } = computeMaxHealthEnergy(
-    data as unknown as Record<string, unknown>
-  );
+  const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } = computeMaxHealthEnergy(data);
   if (typeof healthCurrent === 'number') {
     cleaned.health = {
       current: healthCurrent,

@@ -8,7 +8,8 @@
  * When provided, DB-stored values are used. Otherwise, constants.ts fallbacks apply.
  */
 
-import type { EntityType, Abilities, ArchetypeCategory } from '@/types';
+import type { EntityType, Abilities } from '@/types';
+import type { ArchetypeCategory, ProficiencyDerivedArchetype } from '@/types';
 import type { CoreRulesMap, ArchetypeConfigRules } from '@/types/core-rules';
 import { 
   SHARED_CONSTANTS, 
@@ -318,10 +319,10 @@ export function calculateArmamentProficiency(martialProf: number, rules?: Rules)
 /**
  * Get archetype type based on martial and power proficiency.
  */
-export function getArchetypeType(martialProf: number, powerProf: number): 'power' | 'martial' | 'mixed' | 'none' {
+export function getArchetypeType(martialProf: number, powerProf: number): ProficiencyDerivedArchetype {
   if (martialProf === 0 && powerProf > 0) return 'power';
   if (powerProf === 0 && martialProf > 0) return 'martial';
-  if (martialProf > 0 && powerProf > 0) return 'mixed';
+  if (martialProf > 0 && powerProf > 0) return 'powered-martial';
   return 'none';
 }
 
@@ -375,7 +376,7 @@ export function getArchetypeMilestoneLevels(currentLevel: number, rules?: Rules)
 }
 
 export interface ArchetypeProgression {
-  archetype: 'power' | 'martial' | 'mixed' | 'none';
+  archetype: ProficiencyDerivedArchetype;
   armamentProficiency: number;
   innateThreshold: number;
   innatePools: number;
@@ -415,7 +416,7 @@ export function calculateArchetypeProgression(
       bonusArchetypeFeats = calculateBonusArchetypeFeats(level, rules);
       break;
       
-    case 'mixed':
+    case 'powered-martial':
       innateThreshold = mixedConfig.innateThreshold;
       innatePools = mixedConfig.innatePools;
       bonusArchetypeFeats = mixedConfig.featLimit;
@@ -445,7 +446,7 @@ export function calculateArchetypeProgression(
     innatePools,
     innateEnergy,
     bonusArchetypeFeats,
-    availableMilestones: archetype === 'mixed' ? getArchetypeMilestoneLevels(level, rules) : [],
+    availableMilestones: archetype === 'powered-martial' ? getArchetypeMilestoneLevels(level, rules) : [],
   };
 }
 

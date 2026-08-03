@@ -88,6 +88,12 @@ export interface LibraryTechnique {
   createdAt?: Date | string;
   updatedAt?: Date | string;
   _source?: 'official' | string;
+  /** Present on empowered-technique library rows. */
+  empoweredTechnique?: boolean;
+  empowered_technique?: boolean;
+  power?: Record<string, unknown>;
+  technique?: Record<string, unknown>;
+  totals?: { energy?: number; trainingPoints?: number };
 }
 
 export interface SavedProperty {

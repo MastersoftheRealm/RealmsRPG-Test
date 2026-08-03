@@ -14,6 +14,7 @@
 import type { Abilities, DefenseBonuses, DefenseSkills, Character, AbilityName, Item } from '@/types';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
+import { resolveDefenseVals, resolveMartProf, resolvePowProf } from '@/lib/character/schema-normalize';
 import { COMBAT_DEFAULTS, PLAYER_CONSTANTS } from './constants';
 import { unproficientBonus } from './formulas';
 
@@ -191,11 +192,13 @@ export function calculateBonuses(
 /** Power Attack Bonus = Power Ability + Power Proficiency (GAME_RULES). */
 export function calculatePowerAttackBonus(charData: Partial<Character>): number {
   const abilities = charData.abilities ?? {};
-  const powProf = charData.pow_prof ?? charData.powerProficiency ?? 0;
+  const record = charData as Record<string, unknown>;
+  const powProf = resolvePowProf(record) ?? 0;
+  const martProf = resolveMartProf(record) ?? 0;
   const powAbil =
     charData.pow_abil ?? charData.archetype?.pow_abil ?? charData.archetype?.ability;
   return calculateBonuses(
-    charData.mart_prof ?? charData.martialProficiency ?? 0,
+    martProf,
     powProf,
     abilities,
     powAbil
@@ -258,8 +261,7 @@ export function calculateAllStats(character: Partial<Character>, rules?: Rules):
 
   const defenseVals: DefenseSkills = {
     ...DEFAULT_DEFENSE_SKILLS,
-    ...(character.defenseSkills || {}),
-    ...(character.defenseVals || {}),
+    ...(resolveDefenseVals(character as Record<string, unknown>) || {}),
   };
 
   // --- Defenses ---
@@ -315,23 +317,27 @@ export function calculateAllStats(character: Partial<Character>, rules?: Rules):
 /**
  * Compute max health and max energy from raw character data.
  */
-export function computeMaxHealthEnergy(charData: Record<string, unknown>, rules?: Rules): {
+export function computeMaxHealthEnergy(
+  charData: Character | Record<string, unknown>,
+  rules?: Rules,
+): {
   maxHealth: number;
   maxEnergy: number;
 } {
-  const rawAbilities = (charData.abilities || {}) as Record<string, number>;
+  const record = charData as Record<string, unknown>;
+  const rawAbilities = (record.abilities || {}) as Record<string, number>;
   const abilities: Partial<Abilities> = {
     ...rawAbilities,
     acuity: rawAbilities.acuity ?? rawAbilities.acu ?? 0,
     agility: rawAbilities.agility ?? rawAbilities.agi ?? 0,
   };
-  const level = (charData.level as number) ?? 1;
-  const healthPoints = (charData.healthPoints as number) ?? 0;
-  const energyPoints = (charData.energyPoints as number) ?? 0;
-  const archetype = charData.archetype as { type?: string; pow_abil?: string; mart_abil?: string; ability?: string } | undefined;
+  const level = (record.level as number) ?? 1;
+  const healthPoints = (record.healthPoints as number) ?? 0;
+  const energyPoints = (record.energyPoints as number) ?? 0;
+  const archetype = record.archetype as { type?: string; pow_abil?: string; mart_abil?: string; ability?: string } | undefined;
   // Match calculateAllStats: top-level pow_abil / archetype.pow_abil / archetype.ability
-  const powAbil = (charData.pow_abil as string) || archetype?.pow_abil || archetype?.ability;
-  const martAbil = (charData.mart_abil as string) || archetype?.mart_abil;
+  const powAbil = (record.pow_abil as string) || archetype?.pow_abil || archetype?.ability;
+  const martAbil = (record.mart_abil as string) || archetype?.mart_abil;
 
   const maxHealth = calculateMaxHealth(
     healthPoints,

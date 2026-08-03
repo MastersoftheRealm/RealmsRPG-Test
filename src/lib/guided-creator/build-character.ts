@@ -35,7 +35,7 @@ import {
   itemDamageReduction,
 } from '@/lib/game/equipment-equipped';
 import { normalizeId } from '@/lib/utils';
-import { dedupeEntityRefs } from '@/lib/library/dedupe-saved-parts';
+import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 
 interface CodexPartLike {
   id?: string | number;

@@ -95,10 +95,20 @@ describe('combineSpeciesSizes / skill options', () => {
       { id: 'sk3', name: 'Arcana', description: '', ability: 'intelligence' },
     ];
     expect(buildMixedSpeciesSkillOptions(speciesA, speciesB, skills as never)).toEqual([
-      { id: 'sk1', name: 'Stealth' },
-      { id: 'sk2', name: 'Athletics' },
-      { id: 'sk3', name: 'Arcana' },
+      { id: 'sk1', name: 'Stealth', description: undefined },
+      { id: 'sk2', name: 'Athletics', description: undefined },
+      { id: 'sk3', name: 'Arcana', description: undefined },
     ]);
+  });
+
+  it('includes codex skill descriptions on mixed skill options', () => {
+    const skills = [
+      { id: 'sk1', name: 'Stealth', description: 'Move unseen.', ability: 'agility' },
+      { id: 'sk2', name: 'Athletics', description: '', ability: 'strength' },
+      { id: 'sk3', name: 'Arcana', description: '', ability: 'intelligence' },
+    ];
+    const options = buildMixedSpeciesSkillOptions(speciesA, speciesB, skills as never);
+    expect(options[0]).toEqual({ id: 'sk1', name: 'Stealth', description: 'Move unseen.' });
   });
 });
 

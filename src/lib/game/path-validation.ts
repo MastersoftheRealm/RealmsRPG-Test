@@ -4,7 +4,7 @@
  */
 
 import type { ArchetypeCategory, ArchetypePathData, PathGuidanceGroup } from '@/types/archetype';
-import { flattenLoadoutEntries } from '@/lib/guided-creator/resolve-loadout-items';
+import { flattenLoadoutEntries } from '@/lib/game/loadout-entries';
 import { LAYER1_GOVERNANCE } from '@/lib/constants/creator-layer-governance';
 import {
   validateRecommendedInnatePowers,

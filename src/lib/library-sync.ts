@@ -1,6 +1,6 @@
 import type { SavedPart, SavedProperty, UserItem, UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { findByIdOrName } from '@/lib/id-constants';
-import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 
 type PartLike = {
   id?: string | number;

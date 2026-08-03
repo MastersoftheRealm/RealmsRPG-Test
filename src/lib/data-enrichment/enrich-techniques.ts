@@ -5,7 +5,7 @@ import { deriveTechniqueDisplay } from '@/lib/calculators';
 import {
   dedupeEntityRefs,
   dedupeSavedParts,
-} from '@/lib/library/dedupe-saved-parts';
+} from '@/lib/game/dedupe-saved-parts';
 import type { EnrichedTechnique } from './types';
 import { findInLibrary } from './find-in-library';
 
@@ -31,12 +31,11 @@ export function enrichTechniques(
     }
     
     if (libraryItem) {
-      const rawItem = libraryItem as unknown as Record<string, unknown>;
       const isEmpowered =
-        rawItem.empoweredTechnique === true ||
-        rawItem.empowered_technique === true ||
-        (rawItem.power != null && rawItem.technique != null);
-      const empoweredTotals = rawItem.totals as Record<string, unknown> | undefined;
+        libraryItem.empoweredTechnique === true ||
+        libraryItem.empowered_technique === true ||
+        (libraryItem.power != null && libraryItem.technique != null);
+      const empoweredTotals = libraryItem.totals;
       const empoweredEnergy = typeof empoweredTotals?.energy === 'number' ? empoweredTotals.energy : undefined;
       const empoweredTP = typeof empoweredTotals?.trainingPoints === 'number' ? empoweredTotals.trainingPoints : undefined;
       // Extract first damage object if damage is an array

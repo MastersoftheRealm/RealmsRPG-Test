@@ -7,7 +7,7 @@
 import type { Abilities, AbilityName, DefenseName } from './abilities';
 import type { CharacterArchetype } from './archetype';
 import type { CharacterAncestry } from './ancestry';
-import type { CharacterSkills, DefenseSkills } from './skills';
+import type { CharacterSkillRow, CharacterSkills, DefenseSkills } from './skills';
 import type { CharacterFeat, FeatTraitCustomization } from './feats';
 import type { CharacterEquipment } from './equipment';
 
@@ -199,8 +199,8 @@ export interface Character {
   /** @deprecated Use ancestry.name instead. Kept for backward compat with old saves. */
   species?: string;
   
-  // Skills
-  skills?: CharacterSkills;
+  // Skills — Record (legacy) or lean array rows (sheet / modern saves)
+  skills?: CharacterSkills | CharacterSkillRow[];
   /** Canonical defense allocation field — vals represent 2 skill points spent per 1 */
   defenseVals?: DefenseSkills;
   /** @deprecated Use defenseVals instead. Kept for backward compat with old saved data. */
@@ -329,7 +329,9 @@ export interface CharacterSummary {
 }
 
 /** Character creation draft */
-export interface CharacterDraft extends Partial<Character> {
+export interface CharacterDraft extends Partial<Omit<Character, 'skills'>> {
+  /** Creator uses Record<skillId, ranks>; sheet may persist lean array rows on Character. */
+  skills?: CharacterSkills;
   step?: number;
   isComplete?: boolean;
   /** For multi-ability skills (e.g. Craft): skillId -> chosen ability key */

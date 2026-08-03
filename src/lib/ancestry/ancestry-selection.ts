@@ -4,8 +4,8 @@
  */
 
 import { getChoiceOptionIds } from '@/lib/choice-trait';
-import { buildSkillIdToName } from '@/lib/codex/skill-list';
-import { resolveTraitIds, type Species, type Trait } from '@/hooks';
+import { speciesSkillToSummaryChipItem } from '@/lib/chip/species-skill-chips';
+import { resolveTraitIds, type Species, type Skill, type Trait } from '@/hooks';
 import type { CharacterAncestry } from '@/types';
 
 export type AncestryTraitBuckets = {
@@ -15,7 +15,7 @@ export type AncestryTraitBuckets = {
   characteristics: Trait[];
 };
 
-export type NamedIdOption = { id: string; name: string };
+export type NamedIdOption = { id: string; name: string; description?: string };
 
 const EMPTY_BUCKETS: AncestryTraitBuckets = {
   speciesTraits: [],
@@ -94,18 +94,23 @@ export function combineSpeciesSizes(
 export function buildMixedSpeciesSkillOptions(
   speciesA: Pick<Species, 'skills'> | null | undefined,
   speciesB: Pick<Species, 'skills'> | null | undefined,
-  allSkills: Parameters<typeof buildSkillIdToName>[0] | null | undefined,
+  allSkills: Skill[] | null | undefined,
 ): NamedIdOption[] {
   if (!speciesA || !speciesB || !allSkills) return [];
   const merged = [...(speciesA.skills || []), ...(speciesB.skills || [])];
   const seen = new Set<string>();
-  const map = buildSkillIdToName(allSkills);
   const options: NamedIdOption[] = [];
   merged.forEach((id) => {
     const sid = String(id);
     if (seen.has(sid)) return;
     seen.add(sid);
-    options.push({ id: sid, name: sid === '0' ? 'Any' : (map.get(sid) ?? sid) });
+    const chip = speciesSkillToSummaryChipItem(sid, allSkills);
+    const description = chip.description?.trim();
+    options.push({
+      id: sid,
+      name: chip.label,
+      description: description || undefined,
+    });
   });
   return options;
 }

@@ -11,7 +11,7 @@ import {
   deriveTechniqueAttackMode,
   type AttackMode,
 } from '@/lib/attack-mode';
-import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 
 export const COLUMNAR_LIBRARY_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures'] as const;
 export type ColumnarLibraryType = (typeof COLUMNAR_LIBRARY_TYPES)[number];

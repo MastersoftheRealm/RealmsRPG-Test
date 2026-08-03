@@ -36,6 +36,20 @@ export interface CharacterSkills {
   [skillId: string]: number; // skillId -> ranks
 }
 
+/** Lean skill row persisted on sheet / creator (array format). */
+export interface CharacterSkillRow {
+  id: string | number;
+  name?: string;
+  skill_val?: number;
+  prof?: boolean;
+  ability?: string;
+  availableAbilities?: string[];
+  category?: string;
+  baseSkillId?: number;
+  selectedBaseSkillId?: string;
+  baseSkill?: string;
+}
+
 /** Defense skill allocations */
 export interface DefenseSkills {
   might: number;

@@ -284,11 +284,8 @@ export function trainingPointsForItemPropertyRef(
   const data = resolveItemPropertyCodexRow(payload, propertiesData);
   if (!data) return 0;
   const lvl = payload.op_1_lvl || 0;
-  const baseTP =
-    (data as unknown as { base_tp?: number }).base_tp ||
-    (data as unknown as { tp_cost?: number }).tp_cost ||
-    0;
-  const op1TP = (data as unknown as { op_1_tp?: number }).op_1_tp || 0;
+  const baseTP = data.base_tp || data.tp_cost || 0;
+  const op1TP = data.op_1_tp || 0;
   return baseTP + op1TP * lvl;
 }
 
@@ -310,11 +307,10 @@ export function calculateItemCosts(
     const payload = normalizeItemPropertyRef(ref);
     const lvl = payload.op_1_lvl || 0;
 
-    // Access properties with optional chaining for safety
-    const baseIP = (data as unknown as { base_ip?: number }).base_ip || 0;
-    const op1IP = (data as unknown as { op_1_ip?: number }).op_1_ip || 0;
-    const baseC = (data as unknown as { base_c?: number }).base_c || 0;
-    const op1C = (data as unknown as { op_1_c?: number }).op_1_c || 0;
+    const baseIP = data.base_ip || 0;
+    const op1IP = data.op_1_ip || 0;
+    const baseC = data.base_c || 0;
+    const op1C = data.op_1_c || 0;
 
     totalIP += baseIP + op1IP * lvl;
     totalTP += trainingPointsForItemPropertyRef(ref, propertiesData);
@@ -433,8 +429,8 @@ export function extractProficiencies(
     if (!data) return;
 
     const lvl = ref.op_1_lvl || 0;
-    const baseTP = (data as unknown as { base_tp?: number }).base_tp || 0;
-    const op1TP = (data as unknown as { op_1_tp?: number }).op_1_tp || 0;
+    const baseTP = data.base_tp || 0;
+    const op1TP = data.op_1_tp || 0;
     const optTP = lvl > 0 ? op1TP * lvl : 0;
     const totalTP = baseTP + optTP;
 

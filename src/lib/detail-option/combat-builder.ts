@@ -2,6 +2,7 @@
  * Library Power / Technique → DetailOptionItem for path deep-dive catalogs.
  */
 
+import { logClientError } from '@/lib/api-client';
 import {
   derivePowerDisplay,
   formatPowerDamage,
@@ -70,8 +71,8 @@ export function powerToDetailOption(
     const damage = formatPowerDamage(power.damage);
     const dmgChip = damageFactChip(damage);
     if (dmgChip) chips.push(dmgChip);
-  } catch {
-    // still return the resolved row
+  } catch (err) {
+    logClientError(`combat-builder: power detail chips failed (${power.name ?? power.id})`, err);
   }
   return {
     id: idOverride ?? String(power.id ?? power.name ?? ''),
@@ -110,8 +111,11 @@ export function techniqueToDetailOption(
     const dmgChip = damageFactChip(disp.damageStr);
     if (dmgChip) chips.push(dmgChip);
     if (disp.weaponName) pushFact(chips, 'Attack', disp.weaponName);
-  } catch {
-    // still return the resolved row
+  } catch (err) {
+    logClientError(
+      `combat-builder: technique detail chips failed (${technique.name ?? technique.id})`,
+      err
+    );
   }
   return {
     id: idOverride ?? String(technique.id ?? technique.name ?? ''),

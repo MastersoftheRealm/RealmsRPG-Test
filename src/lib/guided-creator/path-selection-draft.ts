@@ -2,7 +2,7 @@
  * Guided Path draft patches: path select, Path L1↔L3 layer switches, custom archetype.
  */
 
-import { resolvePathAbilityLabels } from '@/lib/guided-creator/path-ability-labels';
+import { resolvePathAbilityLabels } from '@/lib/game/path-ability-labels';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import {
@@ -91,13 +91,17 @@ export function buildOpenGuidedPathEntryPatch(): Partial<GuidedDraft> {
 
 /**
  * Chooser Custom / deep-link: show Path L3.
- * Clears a path pick so custom archetype is the committed mode; keeps in-progress type/abilities.
+ * Clears path + chapter dependents so abilities are not inherited from a prior guided session.
  */
 export function buildOpenCustomPathEntryPatch(): Partial<GuidedDraft> {
   return {
     creatorEntryMode: 'custom',
     pathLayer: 'l3',
     archetypePathId: null,
+    archetypeType: null,
+    pow_abil: null,
+    mart_abil: null,
+    ...clearArchetypeDependentDraftFields(),
   };
 }
 

@@ -16,7 +16,7 @@ import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';
-import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 
 type EmpoweredRecord = Record<string, unknown>;
 

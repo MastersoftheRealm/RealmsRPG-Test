@@ -5,6 +5,7 @@
  * Innate L1 cards use the same TP title chip (TASK-573); Energy stays in detail.
  */
 
+import { logClientError } from '@/lib/api-client';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 import {
   actionTypeFactChip,
@@ -64,7 +65,11 @@ export function resolvePowerTechniqueTpCost(
       parts: power.parts ?? [],
     };
     return Math.max(0, Math.round(derivePowerDisplay(doc, powerPartsDb).tp ?? 0));
-  } catch {
+  } catch (err) {
+    logClientError(
+      `power-technique-display: TP cost failed (${kind}, ${item?.name ?? 'unknown'})`,
+      err
+    );
     return 0;
   }
 }
@@ -98,7 +103,11 @@ export function resolvePowerTechniqueEnergy(
     };
     const energy = derivePowerDisplay(doc, powerPartsDb).energy;
     return typeof energy === 'number' ? energy : undefined;
-  } catch {
+  } catch (err) {
+    logClientError(
+      `power-technique-display: energy cost failed (${kind}, ${item?.name ?? 'unknown'})`,
+      err
+    );
     return undefined;
   }
 }
@@ -172,7 +181,11 @@ export function buildPowerTechniqueCardFacts(
       energy,
       actionType: formatActionTypeValue(rawAction),
     };
-  } catch {
+  } catch (err) {
+    logClientError(
+      `power-technique-display: card facts failed (${kind}, ${name})`,
+      err
+    );
     const tpChip = trainingPointsFactChip(tpCost);
     if (tpChip) titleChips.push(tpChip);
     return { name, description, titleChips, detailChips, tpCost };

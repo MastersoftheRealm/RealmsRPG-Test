@@ -37,7 +37,6 @@ function downstreamDraftReset(): Partial<CharacterDraft> {
     energyPoints: 0,
     currency: CHARACTER_STARTING_CURRENCY,
     defenseVals: { ...DEFAULT_DEFENSE_SKILLS },
-    defenseSkills: { ...DEFAULT_DEFENSE_SKILLS },
     pow_prof: undefined,
     mart_prof: undefined,
     declinedPathSkillIds: undefined,
@@ -514,7 +513,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           // Species/ancestry — lean save: { id, name, selectedTraits, selectedFlaw, selectedCharacteristic }
           ancestry: draft.ancestry,
           skills: draft.skills || {},
-          defenseVals: draft.defenseVals || draft.defenseSkills || { ...DEFAULT_DEFENSE_SKILLS },
+          defenseVals: draft.defenseVals || { ...DEFAULT_DEFENSE_SKILLS },
           // Separate feats by type - archetype feats vs character feats
           // The feats step stores them with type: 'archetype' | 'character'
           archetypeFeats: (draft.feats || [])

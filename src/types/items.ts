@@ -46,8 +46,8 @@ export interface DisplayItem extends BaseGameItem {
   isDisabled?: boolean;
   disabledReason?: string;
   
-  // Source data for editing/saving
-  sourceData?: Record<string, unknown>;
+  // Source data for editing/saving (creature creator stores typed payloads)
+  sourceData?: unknown;
 }
 
 export interface ItemBadge {

@@ -5,7 +5,7 @@ import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators';
 import {
   dedupeEntityRefs,
   dedupeSavedParts,
-} from '@/lib/library/dedupe-saved-parts';
+} from '@/lib/game/dedupe-saved-parts';
 import type { EnrichedPower } from './types';
 import { findInLibrary } from './find-in-library';
 
@@ -24,7 +24,7 @@ export function enrichPowers(
   const uniquePowers = dedupeEntityRefs(characterPowers);
   return uniquePowers.map(charPower => {
     const name = typeof charPower === 'string' ? charPower : charPower.name;
-    const innate = typeof charPower === 'object' ? !!(charPower as unknown as { innate?: boolean }).innate : false;
+    const innate = typeof charPower === 'object' ? !!charPower.innate : false;
     
     let libraryItem = findInLibrary(userPowerLibrary, charPower);
     if (!libraryItem && publicPowerLibrary?.length) {
