@@ -1,12 +1,12 @@
 # Historical Docs Index
 
-**Do not use these as current truth.** For active agent workflow, read root [`AGENTS.md`](../../../../AGENTS.md) and [`REMEDIATION_STATUS_2026-06.md`](../REMEDIATION_STATUS_2026-06.md).
+**Do not use these as current truth.** For active agent workflow, read root [`AGENTS.md`](../../../../AGENTS.md), open tasks in [`ACTIVE_TASKS.md`](../ACTIVE_TASKS.md), and current remediation in [`REMEDIATION_STATUS_2026-08.md`](../REMEDIATION_STATUS_2026-08.md). June snapshot: [`REMEDIATION_STATUS_2026-06.md`](../REMEDIATION_STATUS_2026-06.md).
 
 ## August 2026 full codebase audit
 
 | Doc | Purpose |
 |-----|---------|
-| [`CODEBASE_AUDIT_2026-08-01.md`](CODEBASE_AUDIT_2026-08-01.md) | Independent full-codebase audit run without docs access (build/lint/tsc/npm audit/vitest + Supabase advisors + git author analysis) — filed TASK-642–668 (security, correctness, quality gates, duplication, hygiene); TASK-669 (Redis provisioning) in WAITING_TASKS. Character-creator consolidation intentionally deferred — see CHARACTER_CREATOR_AUDIT_2026-06-26.md. |
+| [`CODEBASE_AUDIT_2026-08-01.md`](CODEBASE_AUDIT_2026-08-01.md) | Independent full-codebase audit run without docs access (build/lint/tsc/npm audit/vitest + Supabase advisors + git author analysis) — filed TASK-642–668 (security, correctness, quality gates, duplication, hygiene); TASK-669 (Redis provisioning) in WAITING_TASKS. Character-creator consolidation intentionally deferred — see CHARACTER_CREATOR_AUDIT_2026-06-26.md. **Post-fix status:** [`../REMEDIATION_STATUS_2026-08.md`](../REMEDIATION_STATUS_2026-08.md). |
 
 ## July 2026 quality / global audits
 

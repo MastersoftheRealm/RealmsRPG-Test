@@ -5,7 +5,7 @@
 Verified against codebase (Jun 2026+). Use this hub when you need component locations, list/selection patterns, art pipeline, or creator load rules — then open the matching appendix under [`guide/`](guide/).
 
 > **First stop before building anything new:** [`FEATURE_INDEX.md`](FEATURE_INDEX.md) + barrels.  
-> **Remediation status:** [`REMEDIATION_STATUS_2026-06.md`](REMEDIATION_STATUS_2026-06.md).  
+> **Remediation status:** [`REMEDIATION_STATUS_2026-08.md`](REMEDIATION_STATUS_2026-08.md) (June snapshot: [`REMEDIATION_STATUS_2026-06.md`](REMEDIATION_STATUS_2026-06.md)).  
 > **History:** [`archive/HISTORY_INDEX.md`](archive/HISTORY_INDEX.md) — not current open work.
 
 **Note:** When implementing a task, verify `related_files` in [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) against the actual codebase — some entries may have been corrected; paths can become stale (e.g., `header-section.tsx` was replaced by `sheet-action-toolbar.tsx`).

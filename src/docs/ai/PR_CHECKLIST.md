@@ -7,7 +7,7 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 3. **AC complete** — Every acceptance criterion met? Else `partial` + follow-ups.
 4. **related_files** — Every listed path exists in the repo (real file/dir; no invented module names)? Match the diff? Globs (`*`) ok; directories ok if tracked children exist.
 5. **Commit subjects** — Each `done` task’s `TASK-###` appears in a git commit subject (`git log --grep=TASK-###`)? Ranges like `TASK-530–534` do **not** count — list IDs explicitly. Squash merges that drop subjects need a follow-up reconcile commit.
-6. **Build** — `npm run build` (and targeted tests) green?
+6. **Build** — `npm run build` green? When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) + targeted tests (TASK-655/656)?
 7. **Tokens** — Semantic / `*-fg`; no raw palette outside exemptions?
 8. **Mobile** — `fullScreenOnMobile` / 44px targets where needed?
 9. **A11y** — Labels, headings, modal title/`titleA11y`?
