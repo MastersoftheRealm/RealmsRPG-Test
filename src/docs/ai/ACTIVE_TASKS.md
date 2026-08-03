@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 3 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-672 done (power AoE applyDuration — re-homed from remote mislabeled TASK-642; local TASK-642 remains email spoof). TASK-650/649 applied. TASK-657 hooks. TASK-655/656 CI gates — pending-qa.
+**Hot notes:** TASK-668 done (Aug audit docs reconciled → `REMEDIATION_STATUS_2026-08.md`). TASK-642 remains email-spoof QA. TASK-650/649 applied. TASK-657 hooks. TASK-655/656 CI gates — pending-qa.
 
 ---
 
@@ -87,31 +87,5 @@ Do **not** read the done archive at session start.
   notes: |
     Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 H1.
     2026-08-03 merge: remote also used TASK-642 for power AoE — that work is archived as TASK-672.
-
----
-
-- id: TASK-668
-  title: Reconcile project docs with CODEBASE_AUDIT_2026-08-01 findings
-  priority: medium
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - src/docs/ai/archive/CODEBASE_AUDIT_2026-08-01.md
-    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    This audit was run without access to project docs, so some findings may already be tracked
-    elsewhere under different names, and some existing docs are stale relative to what the audit found
-    in live code. Cross-check each finding against FEATURE_INDEX/ARCHITECTURE_CONSTITUTION/
-    BUILD_VALIDATION for accuracy and correct any doc claims the audit disproved (e.g. test-coverage
-    claims, "single canonical implementation" claims where duplication was found).
-  acceptance_criteria:
-    - Doc claims contradicted by the audit are corrected or annotated as known debt with a linked TASK-###.
-    - No duplicate tasks filed for items already tracked elsewhere (e.g. TASK-326/353 leaked-password
-      protection — already covers audit D3, not re-filed here).
-    - npm run tasks:validate-docs passes.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md (full report). Companion to TASK-642–667.
 
 ---

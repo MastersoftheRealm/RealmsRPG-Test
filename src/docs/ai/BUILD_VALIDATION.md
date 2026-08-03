@@ -1633,7 +1633,7 @@ These verify the automated design-system net itself. They are **command-line** c
 2. Temporarily add `className="bg-blue-500"` to a non-exempt component (not under `(auth)/` or `components/ui/`) and re-run `npm run lint`.
 
 **Expected**
-- Step 1: 0 errors (warnings allowed).
+- Step 1: 0 errors and 0 warnings (`npm run lint` uses `--max-warnings 0` — TASK-656).
 - Step 2: a `realms/no-raw-color` **error** on that line. Revert the edit.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:

@@ -48,7 +48,7 @@ Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` append
 
 A task may be `done` only when **all** acceptance criteria are met **and**:
 
-1. `npm run build` passes (and targeted tests if the area has them)
+1. `npm run build` passes (and targeted tests if the area has them). When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) — CI-hard since TASK-655/656.
 2. No new parallel pattern introduced (or Architect ADR + owner ack) — **prefer net remove** when cleaning or consolidating (delete weaker forks / dead code rather than leaving compat layers)
 3. `ACTIVE_TASKS.md` updated (`done` → move block to `archive/TASK_QUEUE_DONE.md`; bump status fields)
 4. Commit subject(s) include this task’s `TASK-###` (CI strict reconcile greps subjects — see `AI_TASK_QUEUE.md` § Evidence / CI)

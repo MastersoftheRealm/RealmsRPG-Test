@@ -6,7 +6,7 @@ This folder contains one-off audits, design snapshots, migration plans, and comp
 
 **Schema:** Use ../SUPABASE_SCHEMA.md.
 
-**Active agent docs** (parent ai/ folder): AGENT_GUIDE, FEATURE_INDEX, AI_TASK_QUEUE (slim), AI_CHANGELOG, REMEDIATION_STATUS_2026-06.
+**Active agent docs** (parent ai/ folder): AGENT_GUIDE, FEATURE_INDEX, ACTIVE_TASKS, AI_TASK_QUEUE (process), AI_CHANGELOG, REMEDIATION_STATUS_2026-08.
 
 **Indexing:** ai/archive/ and src/docs/human/ are in .cursorignore.
 

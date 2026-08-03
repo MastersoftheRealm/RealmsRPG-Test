@@ -24,9 +24,9 @@
 | Changelog | `src/docs/ai/AI_CHANGELOG.md` |
 | Raw feedback | `src/docs/ALL_FEEDBACK_CLEAN.md` |
 | Game rules | `src/docs/GAME_RULES.md` — terminology, formulas, display conventions |
-| **Current remediation status** | `src/docs/ai/REMEDIATION_STATUS_2026-06.md` — current completion/open-gap truth and execution sequencing for deferred work. |
-| Historical audits & task backup | `src/docs/ai/archive/HISTORY_INDEX.md` — June 2026 audits, full queue backup, older plans |
-| Codebase audit (historical) | `src/docs/ai/archive/CODEBASE_AUDIT_2026-02-13.md` — 98-finding audit with 6-phase fix plan |
+| **Current remediation status** | `src/docs/ai/REMEDIATION_STATUS_2026-08.md` — Aug 2026 audit completion/open-gap truth (TASK-642–669). June snapshot: `REMEDIATION_STATUS_2026-06.md`. |
+| Historical audits & task backup | `src/docs/ai/archive/HISTORY_INDEX.md` — Aug/July/June 2026 audits, full queue backup, older plans |
+| Codebase audit (historical) | `src/docs/ai/archive/CODEBASE_AUDIT_2026-08-01.md` (current remediations above); older: `CODEBASE_AUDIT_2026-02-13.md` |
 | Unification audit (historical) | `src/docs/ai/archive/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
 | Modal unification audit (historical) | `src/docs/ai/archive/MODAL_UNIFICATION_AUDIT_2026-02-20.md` — list modals (add-X, load, selection): logic, styles, EmptyState/LoadingState, FilterSection, alignment with Codex/Library. See TASK-264. |
 | **Performance & edge usage** | `src/docs/PERFORMANCE_AND_EDGE.md` — Vercel CDN/edge requests, proxy matcher, cache headers, prefetch, polling; checklist for new public APIs and hooks. Web Analytics ops: `DEPLOYMENT_AND_SECRETS_SUPABASE.md` Step 3b. |

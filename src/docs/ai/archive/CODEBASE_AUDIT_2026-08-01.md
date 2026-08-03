@@ -1,5 +1,7 @@
 # RealmsRPG Codebase Audit — 2026-08-01
 
+> **Snapshot as of 2026-08-01.** Findings below were verified against live code at audit time (docs intentionally ignored). For post-fix task status, see [`../REMEDIATION_STATUS_2026-08.md`](../REMEDIATION_STATUS_2026-08.md) (TASK-642–668 companions; TASK-669 Redis). Do not treat §2–11 as current open work.
+
 **Scope:** Full codebase review ignoring project docs as source of truth. Verified against live code, git history, Supabase project `RealmsRPG-Test`, and automated checks (`build`, `lint`, `tsc`, `npm audit`, `vitest`).
 
 **Repo scale:** ~1,448 tracked files · ~693 commits (Jan–Aug 2026) · Next.js 16.1.6 · React 19 · Supabase · Vercel

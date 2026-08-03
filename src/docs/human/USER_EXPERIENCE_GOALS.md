@@ -120,7 +120,7 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 | **Mobile and touch** | `src/docs/MOBILE_UX.md` — breakpoints, 44px touch targets, fullScreenOnMobile, side-scroll/collapse |
 | **Accessibility and contrast** | `src/docs/ACCESSIBILITY.md`, `.cursor/rules/realms-accessibility.mdc` — WCAG 2.1 AA, labels, headings, modals |
 | **Game rules and terminology** | `src/docs/GAME_RULES.md` — ability names, formulas, display conventions |
-| **Owner feedback and tasks** | `src/docs/ALL_FEEDBACK_CLEAN.md` (curated + raw log), `src/docs/ai/AI_TASK_QUEUE.md` |
+| **Owner feedback and tasks** | `src/docs/ALL_FEEDBACK_CLEAN.md` (curated + raw log), `src/docs/ai/ACTIVE_TASKS.md` (process: `AI_TASK_QUEUE.md`) |
 
 ### 5.2 Checklist for UX-sensitive changes
 
@@ -135,7 +135,7 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 ### 5.3 Where to record UX feedback and work
 
 - **Raw owner feedback:** Append to `src/docs/ALL_FEEDBACK_CLEAN.md` under “Raw Feedback Log” (date, context, priority, feedback text, expected behavior). See `.cursor/rules/realms-tasks.mdc` Feedback Processing Protocol.
-- **New tasks:** Add to `src/docs/ai/AI_TASK_QUEUE.md` with next TASK-### ID; reference this doc in description if the task is UX/onboarding/retention.
+- **New tasks:** Add to `src/docs/ai/ACTIVE_TASKS.md` with next TASK-### ID (process: `AI_TASK_QUEUE.md`); reference this doc in description if the task is UX/onboarding/retention.
 - **Done work:** Update task status; add notes and PR link; append to `src/docs/ai/AI_CHANGELOG.md`. If a backlog item in this doc is completed, update Section 4 and Section 3 accordingly.
 
 ### 5.4 Key files (implementation)
