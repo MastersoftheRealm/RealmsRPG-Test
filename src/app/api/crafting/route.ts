@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, craftingSessionCreateSchema } from '@/lib/api-validation';
+import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { standardLimiter } from '@/lib/rate-limit';
 import type { CraftingSessionSummary, CraftingSessionData } from '@/types/crafting';
 
@@ -44,24 +45,28 @@ export async function GET() {
     }
 
     const supabase = await createClient();
-    const { data: rows } = await supabase
+    const { data: rows, error: dbError } = await supabase
       .from('crafting_sessions')
       .select('id, data, status, item_name, currency_cost, created_at, updated_at')
       .eq('user_id', user.uid)
       .order('updated_at', { ascending: false });
 
+    if (dbError) {
+      return apiErrorResponse('Failed to load crafting sessions', 500, 'GET /api/crafting', dbError);
+    }
+
     const summaries: CraftingSessionSummary[] = (rows ?? []).map((r) => toSummary(r as Row));
     return NextResponse.json(summaries);
   } catch (err) {
-    console.error('[API Error] GET /api/crafting:', err);
-    return NextResponse.json({ error: 'Failed to load crafting sessions' }, { status: 500 });
+    logApiError('GET /api/crafting', err);
+    return apiErrorResponse('Failed to load crafting sessions', 500);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`craft-post:${ip}`);
+    const { success } = await standardLimiter.check(`craft-post:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
@@ -102,16 +107,12 @@ export async function POST(request: NextRequest) {
     };
     const { error: insertErr } = await supabase.from('crafting_sessions').insert(row);
     if (insertErr) {
-      console.error('[API Error] POST /api/crafting insert:', insertErr.message, insertErr.details);
-      return NextResponse.json(
-        { error: `Failed to create crafting session: ${insertErr.message ?? 'Database error'}` },
-        { status: 500 }
-      );
+      return apiErrorResponse('Failed to create crafting session', 500, 'POST /api/crafting (insert)', insertErr);
     }
 
     return NextResponse.json({ id });
   } catch (err) {
-    console.error('[API Error] POST /api/crafting:', err);
-    return NextResponse.json({ error: 'Failed to create crafting session' }, { status: 500 });
+    logApiError('POST /api/crafting', err);
+    return apiErrorResponse('Failed to create crafting session', 500);
   }
 }

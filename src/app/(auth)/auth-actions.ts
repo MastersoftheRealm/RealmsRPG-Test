@@ -21,7 +21,7 @@ export async function resendConfirmationAction(
 
   const headerList = await headers();
   const ip = resolveClientIp(headerList);
-  const { success } = authActionLimiter.check(
+  const { success } = await authActionLimiter.check(
     buildRateLimitKey('auth-resend', { ip, userId: normalizedEmail })
   );
   if (!success) {

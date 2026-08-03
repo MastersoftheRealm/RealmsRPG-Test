@@ -1,6 +1,6 @@
--- TASK-649 Phase 1 (draft) — Drop stale codex archetype backup tables (D2)
+-- TASK-649 Phase 2 — Drop stale codex archetype backup tables (D2)
 -- =============================================================================
--- Status: PROPOSED — owner review required before apply (Phase 2).
+-- Status: APPLIED 2026-08-03 on RealmsRPG-Test
 -- Project: RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
 -- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D2
 --
@@ -16,7 +16,7 @@
 -- Optional pre-drop export:
 --   pg_dump --table=codex_archetypes_backup_20260717 ...
 --
--- Apply BEFORE task-649-anon-least-privilege-proposed.sql.
+-- Apply BEFORE task-649-anon-least-privilege-applied.sql.
 -- Safe to re-run (IF EXISTS).
 -- =============================================================================
 

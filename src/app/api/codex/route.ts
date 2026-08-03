@@ -8,6 +8,7 @@ import { NextResponse } from 'next/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { isAdmin } from '@/lib/admin';
 import { createClient } from '@/lib/supabase/server';
+import { logApiError } from '@/lib/api-error';
 import { getSession } from '@/lib/supabase/session';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { coerceJsonRecord, parseArchetypePathData } from '@/lib/game/archetype-path';
@@ -468,22 +469,25 @@ export async function GET(request: Request) {
     const message = err instanceof Error ? err.message : 'Unknown database error';
     const code = err && typeof err === 'object' && 'code' in err ? String((err as { code?: string }).code) : undefined;
     const stack = err instanceof Error ? err.stack : undefined;
-    console.error('[Codex API] Database error:', message, stack);
+    logApiError('GET /api/codex', { message, code, stack, err });
     const showDebug = await canExposeCodexDebug(debug);
-    const safeHint =
-      process.env.NODE_ENV === 'development'
-        ? message
-        : message.includes('connect') || message.includes('connection')
+    const hint =
+      showDebug || process.env.NODE_ENV === 'development'
+        ? message.includes('connect') || message.includes('connection')
           ? 'Database connection failed. Check NEXT_PUBLIC_SUPABASE_URL and keys in Vercel.'
           : message.includes('exist') || message.includes('relation')
             ? 'Codex tables may be missing in public. Run Supabase SQL migrations.'
-            : message.includes('permission') || message.includes('policy') || message.includes('row-level') || message.includes('denied')
+            : message.includes('permission') ||
+                message.includes('policy') ||
+                message.includes('row-level') ||
+                message.includes('denied')
               ? 'Permission denied: RLS may be blocking reads. Run sql/supabase-codex-rls-public.sql in Supabase Dashboard → SQL Editor.'
-              : undefined;
+              : message
+        : undefined;
     return NextResponse.json(
       {
         error: 'Failed to load codex',
-        ...(safeHint && { hint: safeHint }),
+        ...(hint && { hint }),
         ...(showDebug && { debug: { message, code } }),
       },
       { status: 500 }

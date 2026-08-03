@@ -12,6 +12,7 @@ import { getRolePolicyForUser } from '@/lib/role-policy';
 import { buildRoleQuotaExceededResponse } from '@/lib/role-quota-messages';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
 import { prepareCharacterForCreate } from '@/lib/character-save';
+import { normalizeCharacterForSave, normalizeCharacterOnLoad } from '@/lib/character/schema-normalize';
 import { standardLimiter } from '@/lib/rate-limit';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
@@ -77,7 +78,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`char-post:${ip}`);
+    const { success } = await standardLimiter.check(`char-post:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'Character not found' }, { status: 404 });
       }
       const d = (existing.data as Record<string, unknown>) ?? {};
-      const baseData = { ...d };
+      const baseData = normalizeCharacterOnLoad({ ...d });
       delete baseData.createdAt;
       delete baseData.updatedAt;
       const newData = {
@@ -131,6 +132,7 @@ export async function POST(request: NextRequest) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
+      normalizeCharacterForSave(newData);
       const archetypeNameById = await fetchArchetypeNameMap(supabase);
       const listCols = getCharacterListColumns(newData as Record<string, unknown>, { archetypeNameById });
       const newId = crypto.randomUUID();

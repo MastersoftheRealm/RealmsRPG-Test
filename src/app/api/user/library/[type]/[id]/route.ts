@@ -92,7 +92,7 @@ export async function PATCH(
 ) {
   try {
     const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`lib-patch:${ip}`);
+    const { success } = await standardLimiter.check(`lib-patch:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
@@ -194,7 +194,7 @@ export async function DELETE(
 ) {
   try {
     const ip = _request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`lib-del:${ip}`);
+    const { success } = await standardLimiter.check(`lib-del:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }

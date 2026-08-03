@@ -6,11 +6,9 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
-import { getSession } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
-import { strictLimiter, buildRateLimitKey, resolveClientIp } from '@/lib/rate-limit';
-
-const ALLOWED_ROLES = ['new_player', 'playtester', 'developer', 'admin'] as const;
+import { requireAdminSession } from '@/lib/admin';
+import { adminUpdateRoleSchema, validateJson } from '@/lib/api-validation';
+import { strictLimiter, buildRateLimitKey, resolveClientIp, retryAfterSecondsFromReset } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,42 +23,32 @@ function getSupabaseAdmin() {
 
 export async function PATCH(request: NextRequest) {
   try {
-    const { user } = await getSession();
-    if (!user?.uid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const admin = await isAdmin(user.uid);
-    if (!admin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const auth = await requireAdminSession();
+    if (!auth.ok) {
+      return NextResponse.json(auth.body, { status: auth.status });
     }
 
     // SEC-05: limit sensitive role mutations per admin/IP.
-    const { success } = strictLimiter.check(
-      buildRateLimitKey('admin-update-role', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    const rateResult = await strictLimiter.check(
+      buildRateLimitKey('admin-update-role', { userId: auth.userId, ip: resolveClientIp(request.headers) })
     );
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    if (!rateResult.success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': retryAfterSecondsFromReset(rateResult.reset) } }
+      );
     }
 
-    const body = await request.json();
-    const userId = typeof body.userId === 'string' ? body.userId.trim() : '';
-    const username = typeof body.username === 'string' ? body.username.trim() : '';
-    const role = body.role as string;
+    const validation = await validateJson(request, adminUpdateRoleSchema);
+    if (!validation.success) return validation.error;
 
-    if (!userId && !username) {
-      return NextResponse.json({ error: 'User ID or username is required' }, { status: 400 });
-    }
-    if (!role || !ALLOWED_ROLES.includes(role as (typeof ALLOWED_ROLES)[number])) {
-      return NextResponse.json({
-        error: 'Role must be one of: new_player, playtester, developer, admin.',
-      }, { status: 400 });
-    }
+    const { userId, username, role } = validation.data;
 
     const supabase = getSupabaseAdmin();
     const profileQuery = supabase.from('user_profiles').select('id, role').limit(1);
     const { data: profile } = userId
       ? await profileQuery.eq('id', userId).maybeSingle()
-      : await profileQuery.ilike('username', username.toLowerCase()).maybeSingle();
+      : await profileQuery.ilike('username', (username ?? '').toLowerCase()).maybeSingle();
     if (!profile) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
@@ -103,7 +91,7 @@ export async function PATCH(request: NextRequest) {
 
     // Append-only audit trail (best-effort; never blocks the role change).
     const { error: auditError } = await supabase.from('admin_role_audit').insert({
-      actor_id: user.uid,
+      actor_id: auth.userId,
       target_id: targetId,
       old_role: oldRole,
       new_role: role,

@@ -1,5 +1,14 @@
-import { describe, expect, it } from 'vitest';
-import { getErrorMessage } from './api-client';
+import { describe, expect, it, vi } from 'vitest';
+import { getErrorMessage, logClientError } from './api-client';
+
+describe('logClientError', () => {
+  it('logs with context prefix', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    logClientError('test-context', new Error('boom'));
+    expect(spy).toHaveBeenCalledWith('[Client Error] test-context:', expect.any(Error));
+    spy.mockRestore();
+  });
+});
 
 describe('getErrorMessage', () => {
   it('prefers Error.message', () => {

@@ -53,7 +53,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`enhanced-post:${ip}`);
+    const { success } = await standardLimiter.check(`enhanced-post:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }

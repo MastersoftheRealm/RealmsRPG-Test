@@ -349,3 +349,46 @@ export const publicItemSchema = withSafeJsonBlob({
   id: z.string().optional(),
   name: z.string().min(1, 'Name is required').max(200).optional(),
 });
+
+// =============================================================================
+// Admin API Schemas
+// =============================================================================
+
+export const USER_ROLES = ['new_player', 'playtester', 'developer', 'admin'] as const;
+export const userRoleSchema = z.enum(USER_ROLES);
+
+const nonNegativeIntField = z.coerce.number().int().min(0);
+
+const rolePolicyPermissionsSchema = z
+  .object({
+    can_upload_profile_picture: z.boolean().optional(),
+  })
+  .strict();
+
+/** PATCH /api/admin/users/update-role — explicit allowlist (TASK-652). */
+export const adminUpdateRoleSchema = z
+  .object({
+    userId: z.string().trim().optional(),
+    username: z.string().trim().optional(),
+    role: userRoleSchema,
+  })
+  .strict()
+  .refine((v) => Boolean(v.userId) || Boolean(v.username), {
+    message: 'User ID or username is required',
+    path: ['userId'],
+  });
+
+/** PATCH /api/admin/role-policies — explicit allowlist (TASK-652). */
+export const adminRolePolicyPatchSchema = z
+  .object({
+    role: userRoleSchema,
+    maxCampaigns: nonNegativeIntField.optional(),
+    maxPlayersPerCampaign: nonNegativeIntField.optional(),
+    maxCharacters: nonNegativeIntField.optional(),
+    maxCustomPowers: nonNegativeIntField.optional(),
+    maxCustomTechniques: nonNegativeIntField.optional(),
+    maxCustomArmaments: nonNegativeIntField.optional(),
+    maxCustomCreatures: nonNegativeIntField.optional(),
+    permissions: rolePolicyPermissionsSchema.optional(),
+  })
+  .strict();

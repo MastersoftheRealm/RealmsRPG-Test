@@ -10,6 +10,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { detectImageMime, extensionForImageMime } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
+import { apiErrorResponse, logApiError } from '@/lib/api-error';
 
 const BUCKET = 'portraits';
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     userId: user.uid,
     ip: resolveClientIp(request.headers),
   });
-  const { success } = uploadLimiter.check(key);
+  const { success } = await uploadLimiter.check(key);
   if (!success) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
   }
@@ -71,8 +72,7 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.uid)
       .maybeSingle();
     if (ownErr) {
-      console.error('Portrait upload ownership check error:', ownErr);
-      return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+      return apiErrorResponse('Upload failed', 500, 'POST /api/upload/portrait (ownership)', ownErr);
     }
     if (!ownedChar) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
@@ -94,14 +94,13 @@ export async function POST(request: NextRequest) {
       .upload(path, file, { upsert: true, contentType: detectedMime });
 
     if (uploadError) {
-      console.error('Portrait upload error:', uploadError);
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      return apiErrorResponse('Upload failed', 500, 'POST /api/upload/portrait', uploadError);
     }
 
     const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
     return NextResponse.json({ url: publicUrl });
   } catch (err) {
-    console.error('[API Error] POST /api/upload/portrait:', err);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    logApiError('POST /api/upload/portrait', err);
+    return apiErrorResponse('Upload failed', 500);
   }
 }

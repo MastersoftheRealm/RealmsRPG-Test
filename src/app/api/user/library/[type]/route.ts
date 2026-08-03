@@ -140,7 +140,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { success } = standardLimiter.check(
+    const { success } = await standardLimiter.check(
       buildRateLimitKey('lib-post', { userId: user.uid, ip: resolveClientIp(request.headers) })
     );
     if (!success) {

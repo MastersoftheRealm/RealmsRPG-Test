@@ -25,7 +25,7 @@ export async function GET(
 
     const ip = resolveClientIp((_request as unknown as NextRequest).headers);
     const key = buildRateLimitKey('invite', { ip });
-    const { success } = inviteCodeLimiter.check(key);
+    const { success } = await inviteCodeLimiter.check(key);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }

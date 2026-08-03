@@ -1,6 +1,6 @@
--- TASK-649 Phase 1 (draft) — codex-art storage SELECT hardening (D4)
+-- TASK-649 Phase 2 — codex-art storage SELECT hardening (D4)
 -- =============================================================================
--- Status: PROPOSED — owner review required before apply (Phase 2).
+-- Status: APPLIED 2026-08-03 on RealmsRPG-Test
 -- Project: RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
 -- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D4
 --

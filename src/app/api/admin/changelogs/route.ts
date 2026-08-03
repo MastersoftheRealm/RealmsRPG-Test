@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getSession } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
+import { requireAdminSession } from '@/lib/admin';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { buildRateLimitKey, resolveClientIp, retryAfterSecondsFromReset, standardLimiter } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -46,9 +46,20 @@ function toValidLimit(raw: string | null): number {
 
 export async function GET(request: NextRequest) {
   try {
-    const { user } = await getSession();
-    if (!user?.uid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    if (!(await isAdmin(user.uid))) return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const auth = await requireAdminSession();
+    if (!auth.ok) {
+      return NextResponse.json(auth.body, { status: auth.status });
+    }
+
+    const rateResult = await standardLimiter.check(
+      buildRateLimitKey('admin-changelogs-get', { userId: auth.userId, ip: resolveClientIp(request.headers) })
+    );
+    if (!rateResult.success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': retryAfterSecondsFromReset(rateResult.reset) } }
+      );
+    }
 
     const params = request.nextUrl.searchParams;
     const entityType = params.get('entityType') ?? 'codex_feats';

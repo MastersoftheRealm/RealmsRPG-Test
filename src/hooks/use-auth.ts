@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AuthUser } from '@/types/auth';
 import { migrateGuestEncountersOnSignIn, hasGuestEncountersToMigrate } from '@/lib/guest-encounter-migration';
+import { logClientError } from '@/lib/api-client';
 import { useIsClient } from './use-is-client';
 
 function toAuthUser(user: { id: string; email?: string; user_metadata?: Record<string, unknown>; app_metadata?: { provider?: string }; identities?: Array<{ provider?: string }> } | null): AuthUser | null {
@@ -63,7 +64,9 @@ export function useAuth() {
         setUser(toAuthUser(session?.user ?? null));
         setInitialized(true);
         if (event === 'SIGNED_IN' && session?.user && hasGuestEncountersToMigrate()) {
-          migrateGuestEncountersOnSignIn().catch(() => {});
+          migrateGuestEncountersOnSignIn().catch((err) => {
+            logClientError('use-auth: guest encounter migration failed', err);
+          });
         }
       }
     });

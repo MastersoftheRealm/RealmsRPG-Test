@@ -1,11 +1,11 @@
--- TASK-649 Phase 1 (draft) — Index hygiene: FK covers + unused-index review (D7/D8)
+-- TASK-649 Phase 2 — Index hygiene: FK covers + unused-index review (D7/D8)
 -- =============================================================================
--- Status: PROPOSED — owner review required before apply (Phase 2).
+-- Status: APPLIED 2026-08-03 on RealmsRPG-Test (VTT tables excluded per owner)
 -- Project: RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
 -- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D7/D8
 --
--- Part A (recommended apply): add covering indexes for two unindexed FKs flagged
--- by get_advisors performance lint 0001_unindexed_foreign_keys.
+-- Part A (apply): add covering index for realms_images.created_by FK only.
+-- vtt_actions.token_id index SKIPPED — owner: do not touch VTT tables (Collins branch).
 --
 -- Part B (review only): 29 indexes flagged unused (idx_scan = 0). Per audit and
 -- TASK-649 AC, do NOT drop blindly — many are forward-looking (image_id joins,
@@ -23,8 +23,7 @@
 CREATE INDEX IF NOT EXISTS idx_realms_images_created_by
   ON public.realms_images (created_by);
 
-CREATE INDEX IF NOT EXISTS idx_vtt_actions_token_id
-  ON public.vtt_actions (token_id);
+-- SKIPPED (owner 2026-08-03): idx_vtt_actions_token_id — VTT tables out of scope.
 
 -- -----------------------------------------------------------------------------
 -- Part B — Unused indexes (get_advisors 2026-08-01, idx_scan = 0)
@@ -68,11 +67,10 @@ CREATE INDEX IF NOT EXISTS idx_vtt_actions_token_id
 -- -----------------------------------------------------------------------------
 -- SELECT indexrelid::regclass, idx_scan
 -- FROM pg_stat_user_indexes
--- WHERE indexrelid::regclass::text IN (
---   'idx_realms_images_created_by', 'idx_vtt_actions_token_id'
--- );
+-- WHERE indexrelid::regclass::text = 'idx_realms_images_created_by';
 --
--- Re-check get_advisors: unindexed_foreign_keys on realms_images + vtt_actions cleared.
+-- Re-check get_advisors: unindexed_foreign_keys on realms_images cleared.
+-- vtt_actions FK index intentionally deferred (VTT out of scope).
 --
 -- Refresh unused-index stats before any Part B drops:
 -- SELECT indexrelid::regclass AS index_name, idx_scan,

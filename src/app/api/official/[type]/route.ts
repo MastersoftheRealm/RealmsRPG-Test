@@ -12,6 +12,7 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { validateJson, publicItemSchema } from '@/lib/api-validation';
+import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import {
   rowToItem,
   bodyToColumnar,
@@ -165,8 +166,8 @@ export async function GET(
     const cacheControl = 'private, max-age=0, must-revalidate';
     return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
-    console.error('[API Error] GET /api/official/[type]:', err);
-    return NextResponse.json({ error: 'Failed to load items' }, { status: 500 });
+    logApiError('GET /api/official/[type]', err);
+    return apiErrorResponse('Failed to load items', 500);
   }
 }
 
@@ -211,11 +212,7 @@ export async function POST(
           .eq('id', existingId)
           .select('id');
         if (updateError) {
-          console.error('[API] codex_species update failed:', updateError);
-          return NextResponse.json(
-            { error: 'Failed to update item', details: updateError.message },
-            { status: 500 }
-          );
+          return apiErrorResponse('Failed to update item', 500, 'POST /api/official/[type] (species update)', updateError);
         }
         if (updatedRows && updatedRows.length > 0) {
           return NextResponse.json({ id: existingId });
@@ -229,14 +226,10 @@ export async function POST(
           return NextResponse.json({ id });
         }
         if (insertError.code !== '23505') {
-          console.error('[API] codex_species insert failed:', insertError);
-          return NextResponse.json(
-            { error: 'Failed to save item', details: insertError.message },
-            { status: 500 }
-          );
+          return apiErrorResponse('Failed to save item', 500, 'POST /api/official/[type] (species insert)', insertError);
         }
       }
-      return NextResponse.json({ error: 'Failed to save item', details: 'ID allocation conflict' }, { status: 500 });
+      return apiErrorResponse('Failed to save item', 500);
     }
 
     const withUpdated = { ...body, updatedAt: new Date().toISOString() };
@@ -252,11 +245,7 @@ export async function POST(
         .eq('id', existingId)
         .select('id');
       if (updateError) {
-        console.error('[API] Official library update failed:', updateError);
-        return NextResponse.json(
-          { error: 'Failed to update item', details: updateError.message },
-          { status: 500 }
-        );
+        return apiErrorResponse('Failed to update item', 500, 'POST /api/official/[type] (update)', updateError);
       }
       if (updatedRows && updatedRows.length > 0) {
         return NextResponse.json({ id: existingId });
@@ -271,16 +260,12 @@ export async function POST(
       updated_at: new Date().toISOString(),
     }).select('id').single();
     if (insertError) {
-      console.error('[API] Official library insert failed:', insertError);
-      return NextResponse.json(
-        { error: 'Failed to save item', details: insertError.message },
-        { status: 500 }
-      );
+      return apiErrorResponse('Failed to save item', 500, 'POST /api/official/[type] (insert)', insertError);
     }
     return NextResponse.json({ id });
   } catch (err) {
-    console.error('[API Error] POST /api/official/[type]:', err);
-    return NextResponse.json({ error: 'Failed to save item' }, { status: 500 });
+    logApiError('POST /api/official/[type]', err);
+    return apiErrorResponse('Failed to save item', 500);
   }
 }
 
@@ -312,18 +297,14 @@ export async function DELETE(
     const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type as ColumnarLibraryType];
     const { data: deleted, error: deleteError } = await supabase.from(table).delete().eq('id', id).select('id');
     if (deleteError) {
-      console.error('[API] Official library delete failed:', deleteError);
-      return NextResponse.json(
-        { error: 'Failed to delete item', details: deleteError.message },
-        { status: 500 }
-      );
+      return apiErrorResponse('Failed to delete item', 500, 'DELETE /api/official/[type]', deleteError);
     }
     if (!deleted || deleted.length === 0) {
       return NextResponse.json({ error: 'Item not found or already deleted' }, { status: 404 });
     }
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[API Error] DELETE /api/official/[type]:', err);
-    return NextResponse.json({ error: 'Failed to delete item' }, { status: 500 });
+    logApiError('DELETE /api/official/[type]', err);
+    return apiErrorResponse('Failed to delete item', 500);
   }
 }

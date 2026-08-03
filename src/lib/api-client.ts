@@ -19,6 +19,11 @@ function parseApiErrorBody(err: unknown, fallback: string): string {
   return payload.error ?? fallback;
 }
 
+/** Log client-side failures for dev tools / diagnostics (best-effort paths). */
+export function logClientError(context: string, err: unknown): void {
+  console.error(`[Client Error] ${context}:`, err);
+}
+
 /** Normalize unknown catch values for toasts / inline Alerts. */
 export function getErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error && err.message.trim()) return err.message;

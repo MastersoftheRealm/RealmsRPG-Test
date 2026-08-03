@@ -10,6 +10,7 @@ import { isAdmin } from '@/lib/admin';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { detectImageMime, extensionForImageMime, validateImageMagicBytes } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
+import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import {
   REALMS_IMAGES_BUCKET,
   realmsImageStoragePath,
@@ -37,7 +38,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     userId: user.uid,
     ip: resolveClientIp(request.headers),
   });
-  const { success } = uploadLimiter.check(key);
+  const { success } = await uploadLimiter.check(key);
   if (!success) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
   }
@@ -83,8 +84,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       .upload(nextPath, file, { upsert: true, contentType });
 
     if (uploadError) {
-      console.error('[realms-images] replace upload failed:', uploadError);
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      return apiErrorResponse('Replace failed', 500, 'POST /api/images/[id]/replace (upload)', uploadError);
     }
 
     if (previousPath && previousPath !== nextPath) {
@@ -111,7 +111,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
       .eq('id', id);
 
     if (updateError) {
-      return NextResponse.json({ error: updateError.message }, { status: 500 });
+      return apiErrorResponse('Replace failed', 500, 'POST /api/images/[id]/replace (update)', updateError);
     }
 
     const synced = await syncRealmsImageCacheUrls(supabase, id, publicUrl);
@@ -125,7 +125,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
     return NextResponse.json(image);
   } catch (err) {
-    console.error('[API Error] POST /api/images/[id]/replace:', err);
-    return NextResponse.json({ error: 'Replace failed' }, { status: 500 });
+    logApiError('POST /api/images/[id]/replace', err);
+    return apiErrorResponse('Replace failed', 500);
   }
 }

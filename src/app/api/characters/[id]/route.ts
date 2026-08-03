@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, characterUpdateSchema } from '@/lib/api-validation';
 import { prepareCharacterForSave } from '@/lib/character-save';
+import { normalizeCharacterForSave, normalizeCharacterOnLoad } from '@/lib/character/schema-normalize';
 import { standardLimiter } from '@/lib/rate-limit';
 import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
@@ -20,7 +21,7 @@ import type { Character, CharacterVisibility } from '@/types';
 type CharRow = { id: string; user_id: string; data: unknown; created_at: string | null; updated_at: string | null };
 
 function rowToCharacter(row: CharRow): Character {
-  const d = (row.data as Record<string, unknown>) ?? {};
+  const d = normalizeCharacterOnLoad((row.data as Record<string, unknown>) ?? {});
   return {
     id: row.id,
     userId: row.user_id,
@@ -110,7 +111,7 @@ export async function PATCH(
 ) {
   try {
     const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`char-patch:${ip}`);
+    const { success } = await standardLimiter.check(`char-patch:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
@@ -144,6 +145,7 @@ export async function PATCH(
 
     const currentData = (existing.data as Record<string, unknown>) ?? {};
     const mergedData = { ...currentData, ...cleanedData };
+    normalizeCharacterForSave(mergedData);
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
     const listCols = getCharacterListColumns(mergedData, { archetypeNameById });
 
@@ -167,7 +169,7 @@ export async function DELETE(
 ) {
   try {
     const ip = _request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`char-del:${ip}`);
+    const { success } = await standardLimiter.check(`char-del:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }

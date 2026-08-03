@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, craftingSessionUpdateSchema } from '@/lib/api-validation';
+import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { standardLimiter } from '@/lib/rate-limit';
 import type { CraftingSession, CraftingSessionData } from '@/types/crafting';
 
@@ -34,12 +35,16 @@ export async function GET(
 
     const { id } = await params;
     const supabase = await createClient();
-    const { data: row } = await supabase
+    const { data: row, error: dbError } = await supabase
       .from('crafting_sessions')
       .select('id, user_id, data, created_at, updated_at')
       .eq('id', id)
       .eq('user_id', user.uid)
       .maybeSingle();
+
+    if (dbError) {
+      return apiErrorResponse('Failed to load crafting session', 500, 'GET /api/crafting/[id]', dbError);
+    }
 
     if (!row) {
       return NextResponse.json({ error: 'Crafting session not found' }, { status: 404 });
@@ -48,8 +53,8 @@ export async function GET(
     const session = toSession(row);
     return NextResponse.json(session);
   } catch (err) {
-    console.error('[API Error] GET /api/crafting/[id]:', err);
-    return NextResponse.json({ error: 'Failed to load crafting session' }, { status: 500 });
+    logApiError('GET /api/crafting/[id]', err);
+    return apiErrorResponse('Failed to load crafting session', 500);
   }
 }
 
@@ -59,7 +64,7 @@ export async function PATCH(
 ) {
   try {
     const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`craft-patch:${ip}`);
+    const { success } = await standardLimiter.check(`craft-patch:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
@@ -71,12 +76,16 @@ export async function PATCH(
 
     const { id } = await params;
     const supabase = await createClient();
-    const { data: row } = await supabase
+    const { data: row, error: fetchError } = await supabase
       .from('crafting_sessions')
       .select('id, data')
       .eq('id', id)
       .eq('user_id', user.uid)
       .maybeSingle();
+
+    if (fetchError) {
+      return apiErrorResponse('Failed to update crafting session', 500, 'PATCH /api/crafting/[id] (fetch)', fetchError);
+    }
 
     if (!row) {
       return NextResponse.json({ error: 'Crafting session not found' }, { status: 404 });
@@ -109,12 +118,14 @@ export async function PATCH(
       .update({ ...updatePayload, updated_at: cleaned.updatedAt })
       .eq('id', id)
       .eq('user_id', user.uid);
-    if (updateErr) throw updateErr;
+    if (updateErr) {
+      return apiErrorResponse('Failed to update crafting session', 500, 'PATCH /api/crafting/[id] (update)', updateErr);
+    }
 
     return new NextResponse(null, { status: 204 });
   } catch (err) {
-    console.error('[API Error] PATCH /api/crafting/[id]:', err);
-    return NextResponse.json({ error: 'Failed to update crafting session' }, { status: 500 });
+    logApiError('PATCH /api/crafting/[id]', err);
+    return apiErrorResponse('Failed to update crafting session', 500);
   }
 }
 
@@ -124,7 +135,7 @@ export async function DELETE(
 ) {
   try {
     const ip = (_request as unknown as NextRequest).headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`craft-del:${ip}`);
+    const { success } = await standardLimiter.check(`craft-del:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
@@ -136,12 +147,16 @@ export async function DELETE(
 
     const { id } = await params;
     const supabase = await createClient();
-    const { data: row } = await supabase
+    const { data: row, error: fetchError } = await supabase
       .from('crafting_sessions')
       .select('id')
       .eq('id', id)
       .eq('user_id', user.uid)
       .maybeSingle();
+
+    if (fetchError) {
+      return apiErrorResponse('Failed to delete crafting session', 500, 'DELETE /api/crafting/[id] (fetch)', fetchError);
+    }
 
     if (!row) {
       return NextResponse.json({ error: 'Crafting session not found' }, { status: 404 });
@@ -152,11 +167,13 @@ export async function DELETE(
       .delete()
       .eq('id', id)
       .eq('user_id', user.uid);
-    if (delErr) throw delErr;
+    if (delErr) {
+      return apiErrorResponse('Failed to delete crafting session', 500, 'DELETE /api/crafting/[id] (delete)', delErr);
+    }
 
     return new NextResponse(null, { status: 204 });
   } catch (err) {
-    console.error('[API Error] DELETE /api/crafting/[id]:', err);
-    return NextResponse.json({ error: 'Failed to delete crafting session' }, { status: 500 });
+    logApiError('DELETE /api/crafting/[id]', err);
+    return apiErrorResponse('Failed to delete crafting session', 500);
   }
 }

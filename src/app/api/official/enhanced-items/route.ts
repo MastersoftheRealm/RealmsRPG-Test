@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import { getSession } from '@/lib/supabase/session';
+import { requireAdminSession } from '@/lib/admin';
 import { getGameRulesFallback } from '@/hooks/use-game-rules';
 import {
   getEnhancedCraftingRequirements,
@@ -26,7 +26,7 @@ const enhancedBodySchema = z
     usesCount: z.number().int().min(0).optional(),
     payload: z.record(z.string(), z.unknown()).optional(),
   })
-  .passthrough();
+  .strict();
 
 // SEC-04: validate the PATCH body instead of writing raw client JSON to columns.
 const enhancedPatchBodySchema = z
@@ -66,33 +66,9 @@ function getMultipleUseIndex(
   );
 }
 
-async function requireAdmin():
-  Promise<
-    | { ok: true }
-    | { ok: false; status: number; body: { error: string } }
-  > {
-  const { user, error } = await getSession();
-  if (error || !user?.uid) {
-    return { ok: false, status: 401, body: { error: 'Unauthorized' } };
-  }
-
-  const supabase = await createClient();
-  const { data, error: profileErr } = await supabase
-    .from('user_profiles')
-    .select('role')
-    .eq('id', user.uid)
-    .single();
-
-  if (profileErr || !data || data.role !== 'admin') {
-    return { ok: false, status: 403, body: { error: 'Forbidden' } };
-  }
-
-  return { ok: true };
-}
-
 export async function GET() {
   try {
-    const auth = await requireAdmin();
+    const auth = await requireAdminSession();
     if (!auth.ok) {
       return NextResponse.json(auth.body, { status: auth.status });
     }
@@ -121,7 +97,7 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   try {
-    const auth = await requireAdmin();
+    const auth = await requireAdminSession();
     if (!auth.ok) {
       return NextResponse.json(auth.body, { status: auth.status });
     }
@@ -183,7 +159,7 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const auth = await requireAdmin();
+    const auth = await requireAdminSession();
     if (!auth.ok) {
       return NextResponse.json(auth.body, { status: auth.status });
     }
@@ -239,7 +215,7 @@ export async function PATCH(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const auth = await requireAdmin();
+    const auth = await requireAdminSession();
     if (!auth.ok) {
       return NextResponse.json(auth.body, { status: auth.status });
     }

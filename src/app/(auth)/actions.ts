@@ -179,7 +179,7 @@ export async function checkUsernameAvailableAction(username: string) {
       return { available: false, error: 'Not authenticated' };
     }
     const ip = resolveClientIp(await headers());
-    const { success } = strictLimiter.check(buildRateLimitKey('username-check', { userId: user.uid, ip }));
+    const { success } = await strictLimiter.check(buildRateLimitKey('username-check', { userId: user.uid, ip }));
     if (!success) {
       return { available: false, error: 'Too many requests' };
     }

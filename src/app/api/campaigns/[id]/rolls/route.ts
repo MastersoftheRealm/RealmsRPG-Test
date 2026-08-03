@@ -131,7 +131,7 @@ export async function POST(
 
     // SEC-05: rate-limit roll submissions per user/IP (realtime fan-out makes
     // this endpoint abuse-prone).
-    const { success } = standardLimiter.check(
+    const { success } = await standardLimiter.check(
       buildRateLimitKey('campaign-roll', { userId: user.uid, ip: resolveClientIp(request.headers) })
     );
     if (!success) {

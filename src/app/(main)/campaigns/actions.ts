@@ -14,6 +14,7 @@ import { getCharacterListColumns } from '@/lib/character-list-columns';
 import { normalizeInviteCodeInput, isValidInviteCodeFormat, visibilityForCampaignMembership } from '@/lib/campaign-invite';
 import { buildRosterFieldsFromCharacterData } from '@/lib/campaign-roster';
 import { getRolePolicyForUser } from '@/lib/role-policy';
+import { buildRateLimitKey, inviteCodeLimiter } from '@/lib/rate-limit';
 import { formatRoleQuotaExceededMessage } from '@/lib/role-quota-messages';
 import type { CampaignCharacter } from '@/types/campaign';
 import { MAX_CAMPAIGN_CHARACTERS, OWNER_MAX_CHARACTERS } from './constants';
@@ -109,6 +110,14 @@ export async function joinCampaignAction(data: {
 }) {
   try {
     const user = await requireAuth();
+
+    const { success: rateOk } = await inviteCodeLimiter.check(
+      buildRateLimitKey('join-campaign', { userId: user.uid })
+    );
+    if (!rateOk) {
+      return { success: false, error: 'Too many join attempts. Please wait a minute and try again.' };
+    }
+
     const code = normalizeInviteCodeInput(data.inviteCode);
     if (!code) {
       return { success: false, error: 'Please enter an invite code' };

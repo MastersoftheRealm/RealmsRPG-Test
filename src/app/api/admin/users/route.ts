@@ -8,9 +8,8 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
-import { getSession } from '@/lib/supabase/session';
-import { isAdmin } from '@/lib/admin';
-import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
+import { requireAdminSession } from '@/lib/admin';
+import { buildRateLimitKey, resolveClientIp, retryAfterSecondsFromReset, standardLimiter } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,22 +24,21 @@ function getSupabaseAdmin() {
 
 export async function GET(request: NextRequest) {
   try {
-    const { user } = await getSession();
-    if (!user?.uid) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-    const admin = await isAdmin(user.uid);
-    if (!admin) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    const auth = await requireAdminSession();
+    if (!auth.ok) {
+      return NextResponse.json(auth.body, { status: auth.status });
     }
 
     const rateKey = buildRateLimitKey('admin-users-get', {
-      userId: user.uid,
+      userId: auth.userId,
       ip: resolveClientIp(request.headers),
     });
-    const { success: rateOk } = standardLimiter.check(rateKey);
-    if (!rateOk) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    const rateResult = await standardLimiter.check(rateKey);
+    if (!rateResult.success) {
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': retryAfterSecondsFromReset(rateResult.reset) } }
+      );
     }
 
     const supabase = getSupabaseAdmin();

@@ -9,6 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, encounterCreateSchema } from '@/lib/api-validation';
+import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { standardLimiter } from '@/lib/rate-limit';
 import type { EncounterSummary } from '@/types/encounter';
 
@@ -48,24 +49,28 @@ export async function GET() {
     }
 
     const supabase = await createClient();
-    const { data: rows } = await supabase
+    const { data: rows, error: dbError } = await supabase
       .from('encounters')
       .select('id, data, name, type, status, created_at, updated_at')
       .eq('user_id', user.uid)
       .order('updated_at', { ascending: false });
 
+    if (dbError) {
+      return apiErrorResponse('Failed to load encounters', 500, 'GET /api/encounters', dbError);
+    }
+
     const summaries: EncounterSummary[] = (rows ?? []).map((r) => toSummary(r as Row));
     return NextResponse.json(summaries);
   } catch (err) {
-    console.error('[API Error] GET /api/encounters:', err);
-    return NextResponse.json({ error: 'Failed to load encounters' }, { status: 500 });
+    logApiError('GET /api/encounters', err);
+    return apiErrorResponse('Failed to load encounters', 500);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
     const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = standardLimiter.check(`enc-post:${ip}`);
+    const { success } = await standardLimiter.check(`enc-post:${ip}`);
     if (!success) {
       return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
@@ -101,17 +106,12 @@ export async function POST(request: NextRequest) {
     };
     const { error: insertErr } = await supabase.from('encounters').insert(row);
     if (insertErr) {
-      console.error('[API Error] POST /api/encounters insert:', insertErr.message, insertErr.details);
-      const message = insertErr.message ?? 'Database error';
-      return NextResponse.json(
-        { error: `Failed to create encounter: ${message}` },
-        { status: 500 }
-      );
+      return apiErrorResponse('Failed to create encounter', 500, 'POST /api/encounters (insert)', insertErr);
     }
 
     return NextResponse.json({ id });
   } catch (err) {
-    console.error('[API Error] POST /api/encounters:', err);
-    return NextResponse.json({ error: 'Failed to create encounter' }, { status: 500 });
+    logApiError('POST /api/encounters', err);
+    return apiErrorResponse('Failed to create encounter', 500);
   }
 }

@@ -1,6 +1,6 @@
--- TASK-649 Phase 1 (draft) — Pin search_path on feat tag functions (D5)
+-- TASK-649 Phase 2 — Pin search_path on feat tag functions (D5)
 -- =============================================================================
--- Status: PROPOSED — owner review required before apply (Phase 2).
+-- Status: APPLIED 2026-08-03 on RealmsRPG-Test
 -- Project: RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
 -- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D5
 --

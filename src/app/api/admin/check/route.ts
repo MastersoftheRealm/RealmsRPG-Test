@@ -5,6 +5,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { logApiError } from '@/lib/api-error';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 
@@ -18,7 +19,8 @@ export async function GET() {
     }
     const admin = await isAdmin(user.uid);
     return NextResponse.json({ isAdmin: admin });
-  } catch {
+  } catch (err) {
+    logApiError('admin/check', err);
     return NextResponse.json({ isAdmin: false });
   }
 }

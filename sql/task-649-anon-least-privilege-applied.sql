@@ -1,6 +1,6 @@
--- TASK-649 Phase 1 (draft) — Revoke excessive anon table grants (D1)
+-- TASK-649 Phase 2 — Revoke excessive anon table grants (D1)
 -- =============================================================================
--- Status: PROPOSED — owner review required before apply (Phase 2).
+-- Status: APPLIED 2026-08-03 on RealmsRPG-Test — replay: scripts/run-task-649-phase2.mjs
 -- Project: RealmsRPG-Test (lbqhiwudvifmkjtkccdg)
 -- Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §5.2 D1
 --
@@ -15,7 +15,7 @@
 --   3) Leave `authenticated` and `service_role` grants unchanged.
 --
 -- Does NOT revoke anon EXECUTE on functions (separate hardening if needed).
--- Apply AFTER task-649-drop-codex-backup-tables-proposed.sql (backup tables
+-- Apply AFTER task-649-drop-codex-backup-tables-applied.sql (backup tables
 -- should not receive SELECT re-grants).
 --
 -- Safe to re-run (idempotent REVOKE/GRANT).
@@ -54,11 +54,15 @@ GRANT SELECT ON TABLE public.official_techniques TO anon;
 GRANT SELECT ON TABLE public.realms_images TO anon;
 GRANT SELECT ON TABLE public.realms_image_categories TO anon;
 
+-- Public character sheets (guests): table grant here; RLS in
+-- task-649-characters-anon-public-read-applied.sql (visibility = public only).
+GRANT SELECT ON TABLE public.characters TO anon;
+
 -- -----------------------------------------------------------------------------
 -- Verification (run after apply)
 -- -----------------------------------------------------------------------------
--- Expect: anon has SELECT only on the 19 tables above; no INSERT/UPDATE/DELETE/
--- TRUNCATE on any public table.
+-- Expect: anon has SELECT only on the 20 tables above; no INSERT/UPDATE/DELETE/
+-- TRUNCATE on any public table. VTT tables (vtt_*) intentionally excluded.
 --
 -- SELECT table_name, privilege_type
 -- FROM information_schema.table_privileges
@@ -67,6 +71,8 @@ GRANT SELECT ON TABLE public.realms_image_categories TO anon;
 --
 -- Smoke-test (anon key):
 --   GET /api/codex (public codex read)
---   Public character sheet with visibility=public (uses authenticated, not anon)
+--   GET /api/official/* (public library)
+--   GET /api/characters/[id] for visibility=public (guest, no sign-in)
+--   Direct codex-art / portrait CDN URLs (bucket public=true; no listing)
 --   Admin flows (service_role / authenticated session)
 -- -----------------------------------------------------------------------------

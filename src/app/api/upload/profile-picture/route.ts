@@ -11,6 +11,7 @@ import { getSession } from '@/lib/supabase/session';
 import { getRolePolicyForUser } from '@/lib/role-policy';
 import { detectImageMime, extensionForImageMime } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
+import { apiErrorResponse, logApiError } from '@/lib/api-error';
 
 const BUCKET = 'profile-pictures';
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -25,7 +26,7 @@ export async function POST(request: NextRequest) {
     userId: user.uid,
     ip: resolveClientIp(request.headers),
   });
-  const { success } = uploadLimiter.check(key);
+  const { success } = await uploadLimiter.check(key);
   if (!success) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
   }
@@ -76,8 +77,7 @@ export async function POST(request: NextRequest) {
       .upload(path, file, { upsert: true, contentType: detectedMime });
 
     if (uploadError) {
-      console.error('Profile picture upload error:', uploadError);
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      return apiErrorResponse('Upload failed', 500, 'POST /api/upload/profile-picture', uploadError);
     }
 
     const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ url: publicUrl });
   } catch (err) {
-    console.error('[API Error] POST /api/upload/profile-picture:', err);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    logApiError('POST /api/upload/profile-picture', err);
+    return apiErrorResponse('Upload failed', 500);
   }
 }

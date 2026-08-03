@@ -18,6 +18,7 @@ import {
   realmsImageStoragePath,
   type RealmsImageCategory,
 } from '@/lib/realms-images';
+import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import {
   REALMS_IMAGE_SELECT,
   fetchRealmsImageById,
@@ -62,8 +63,7 @@ export async function GET(request: NextRequest) {
         .select('image_id')
         .in('category', categories);
       if (catError) {
-        console.error('[API Error] GET /api/images (categories):', catError);
-        return NextResponse.json({ error: catError.message }, { status: 500 });
+        return apiErrorResponse('Failed to list images', 500, 'GET /api/images (categories)', catError);
       }
       filteredIds = Array.from(
         new Set((catRows ?? []).map((r) => String((r as { image_id: string }).image_id)))
@@ -87,15 +87,14 @@ export async function GET(request: NextRequest) {
 
     const { data, error } = await query;
     if (error) {
-      console.error('[API Error] GET /api/images:', error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return apiErrorResponse('Failed to list images', 500, 'GET /api/images', error);
     }
 
     const images = ((data ?? []) as RealmsImageRow[]).map(mapRealmsImageRow);
     return NextResponse.json({ images });
   } catch (err) {
-    console.error('[API Error] GET /api/images:', err);
-    return NextResponse.json({ error: 'Failed to list images' }, { status: 500 });
+    logApiError('GET /api/images', err);
+    return apiErrorResponse('Failed to list images', 500);
   }
 }
 
@@ -112,7 +111,7 @@ export async function POST(request: NextRequest) {
     userId: user.uid,
     ip: resolveClientIp(request.headers),
   });
-  const { success } = uploadLimiter.check(key);
+  const { success } = await uploadLimiter.check(key);
   if (!success) {
     return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
   }
@@ -159,8 +158,7 @@ export async function POST(request: NextRequest) {
       .upload(storagePath, file, { upsert: false, contentType });
 
     if (uploadError) {
-      console.error('[realms-images] storage upload failed:', uploadError);
-      return NextResponse.json({ error: uploadError.message }, { status: 500 });
+      return apiErrorResponse('Upload failed', 500, 'POST /api/images (storage upload)', uploadError);
     }
 
     const {
@@ -179,16 +177,15 @@ export async function POST(request: NextRequest) {
     });
 
     if (insertError) {
-      console.error('[realms-images] insert failed:', insertError);
       await supabase.storage.from(REALMS_IMAGES_BUCKET).remove([storagePath]);
-      return NextResponse.json({ error: insertError.message }, { status: 500 });
+      return apiErrorResponse('Upload failed', 500, 'POST /api/images (insert)', insertError);
     }
 
     const cats = await replaceImageCategories(supabase, imageId, categories);
     if (!cats.ok) {
       await supabase.from('realms_images').delete().eq('id', imageId);
       await supabase.storage.from(REALMS_IMAGES_BUCKET).remove([storagePath]);
-      return NextResponse.json({ error: cats.message }, { status: 500 });
+      return apiErrorResponse('Upload failed', 500, 'POST /api/images (categories)', cats.message);
     }
 
     const image = await fetchRealmsImageById(supabase, imageId);
@@ -197,7 +194,7 @@ export async function POST(request: NextRequest) {
     }
     return NextResponse.json(image, { status: 201 });
   } catch (err) {
-    console.error('[API Error] POST /api/images:', err);
-    return NextResponse.json({ error: 'Upload failed' }, { status: 500 });
+    logApiError('POST /api/images', err);
+    return apiErrorResponse('Upload failed', 500);
   }
 }
