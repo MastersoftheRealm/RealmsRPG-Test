@@ -16621,3 +16621,30 @@ Firebase/RTDB - the project is Supabase-only.
   summary: |
     Applied Phase 2 on RealmsRPG-Test: dropped 4 codex backup tables; anon least-privilege (SELECT on 20 public-read tables); guest public character anon RLS; codex-art listing policy removed; feat-tag search_path pinned; realms_images FK index (VTT skipped per owner).
 
+
+---
+
+- id: TASK-659
+  title: Wire a creator Playwright audit suite into default CI
+  priority: medium
+  status: done
+  verification_status: n/a
+  created_at: 2026-08-01
+  completed_at: 2026-08-03
+  created_by: agent
+  related_files:
+    - playwright.shell-creators-audit.config.ts
+    - .github/workflows/ui-verify.yml
+    - package.json
+    - src/docs/ai/guide/01-verification-and-ui-gates.md
+    - src/docs/ai/guide/06-creators-and-loadouts.md
+  description: |
+    Audit section 3 action item 3: wire at least one creator flow audit into default ui-verify workflow.
+  acceptance_criteria:
+    - Chosen suite runs on PRs via CI; failures block merge.
+    - Runtime budget documented.
+    - Other audit configs remain available for manual/optional runs.
+  completed_work: |
+    - Wired shell-creators-audit (8 tests) into ui-verify.yml visual-a11y job after build.
+    - Config uses npm run start, CI forbidOnly/retries, ~1-2 min budget documented in workflow + config header.
+    - verify:shell-creators-audit npm script now builds first; creator/loadout/flaw/etc. configs unchanged.

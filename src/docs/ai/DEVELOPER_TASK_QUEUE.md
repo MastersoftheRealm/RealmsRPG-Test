@@ -32,7 +32,7 @@ Vitest auth/IDOR suites now cover **characters** (`route.test.ts`, `[id]/route.t
 | Layer | What runs in CI / `npm test` | Keep human-only |
 | ----- | ---------------------------- | --------------- |
 | **Vitest** | Pure helpers for high-churn guided/library/sheet (loadout, eligibility, selectable builders, inventory merge, codex payload, etc.) | Live save/reload, multi-account, auth SMTP |
-| **Playwright** | `verify:visual` / `verify:a11y` + optional creator/loadout/chip audits | Pixel polish judgment, tooltip feel, touch ergonomics beyond baselines |
+| **Playwright** | `verify:visual` / `verify:a11y` / `verify:shell-creators-audit` (CI) + optional creator/loadout/chip audits | Pixel polish judgment, tooltip feel, touch ergonomics beyond baselines |
 | **Owner DEV-V** | Full step suites after user-facing ships (`pending-qa`) | Admin authoring, RLS/campaign multi-identity, Dashboard secrets (DEV-001+) |
 
 **Top 10 automation candidates (2026-07-20 audit)** — rows 1–9 are CI; row 10 human UI smoke:

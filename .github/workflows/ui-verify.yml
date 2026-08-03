@@ -6,6 +6,7 @@ name: UI Verify (design system)
 #   - production build
 #   - accessibility (axe-core, deterministic routes, both themes)
 #   - visual regression (Playwright screenshots, both themes x 3 breakpoints)
+#   - shell-creators chrome audit (8 Playwright tests, ~1–2 min on Linux after build — TASK-659)
 #
 # All steps are required (no continue-on-error). See src/docs/ai/BUILD_VALIDATION.md
 # and DEVELOPER_TASK_QUEUE for the one-time setup (CI secrets + seeding Linux
@@ -60,6 +61,11 @@ jobs:
       - name: Visual + accessibility (Playwright)
         # Core gate only: screenshots.pw.ts + a11y.pw.ts (audit suites use dedicated configs).
         run: npm run verify:visual && npm run verify:a11y
+      - name: Shell-creators chrome audit (Playwright)
+        # 8 deterministic tests across six CreatorPageShell routes; no auth/data deps.
+        # Uses raw playwright (not npm run verify:shell-creators-audit) to avoid a second build.
+        # Budget: ~1–2 min on Linux (workers=1; review screenshots under .shell-creators-audit/).
+        run: playwright test -c playwright.shell-creators-audit.config.ts
       - name: Authenticated visual + a11y (optional — DEV-003 secrets)
         env:
           E2E_TEST_EMAIL: ${{ secrets.E2E_TEST_EMAIL }}
@@ -77,5 +83,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
+          path: |
+            playwright-report/
+            .shell-creators-audit/
           retention-days: 14

@@ -12,7 +12,7 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 16 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 15 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
 **Hot notes:** TASK-650 done (campaigns RLS SELECT consolidation applied). TASK-649 done (Supabase least-privilege Phase 2 applied). TASK-657 done (pre-commit hooks). TASK-655/656 done (typecheck + zero-warning lint CI gates) — pending-qa.
 
@@ -86,29 +86,6 @@ Do **not** read the done archive at session start.
     - Manual signup QA (profile shows session email) — see DEV-008.
   notes: |
     Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 H1.
-
----
-
-- id: TASK-659
-  title: Wire a creator Playwright audit suite into default CI
-  priority: medium
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  related_files:
-    - playwright.creator-audit.config.ts
-    - playwright.shell-creators-audit.config.ts
-    - .github/workflows/ui-verify.yml
-  description: |
-    Audit §3 action item 3: 8+ Playwright audit configs exist (creator, shell-creators, loadout, flaw,
-    feat-cards, etc.) but none run in default CI — only marketing/styleguide screenshots do. Wire at
-    least one creator flow audit (guided loadout or shell-creators) into the default ui-verify workflow.
-  acceptance_criteria:
-    - Chosen suite runs on PRs via CI; failures block merge.
-    - Runtime budget documented.
-    - Other audit configs remain available for manual/optional runs.
-  notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §3.
 
 ---
 
