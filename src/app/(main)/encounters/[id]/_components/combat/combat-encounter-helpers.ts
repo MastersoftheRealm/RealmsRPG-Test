@@ -1,11 +1,12 @@
 /**
- * Combat encounter helpers (TASK-608)
- * ===================================
- * Pure turn-order / initiative helpers for the combat encounter facade.
+ * Combat encounter helpers (TASK-608 / TASK-666a)
+ * ===============================================
+ * Pure turn-order / initiative / roster builders for the combat encounter facade.
  */
 
-import type { Combatant } from "@/types/encounter";
-import { rollInitiative } from "../encounter-view-helpers";
+import type { Combatant, CombatantType, TrackedCombatant } from "@/types/encounter";
+import type { CampaignCharacter, CampaignCharacterEncounterData } from "@/types/campaign";
+import { generateId, rollInitiative } from "../encounter-view-helpers";
 
 /** Initiative order used for turn tracking and drag-reorder remapping. */
 export function sortCombatantsForTurnOrder(
@@ -38,7 +39,7 @@ export function remapTurnIndexAfterReorder(
     : Math.min(prevIndex, Math.max(0, newSorted.length - 1));
 }
 
-export function sortByRollAndAcuity(a: Combatant, b: Combatant): number {
+function sortByRollAndAcuity(a: Combatant, b: Combatant): number {
   if (b.initiative !== a.initiative) return b.initiative - a.initiative;
   return b.acuity - a.acuity;
 }
@@ -102,5 +103,116 @@ export function createEmptyNewCombatantForm(): NewCombatantForm {
     isAlly: true,
     isSurprised: false,
     quantity: 1,
+  };
+}
+
+/** Build 1–26 manual combatants from the add-sidebar form (A/B suffixes when qty > 1). */
+export function buildManualCombatantsFromForm(
+  form: NewCombatantForm,
+): TrackedCombatant[] {
+  const quantity = Math.max(1, Math.min(26, form.quantity || 1));
+  const combatants: TrackedCombatant[] = [];
+  for (let i = 0; i < quantity; i++) {
+    const suffix = quantity > 1 ? ` ${String.fromCharCode(65 + i)}` : "";
+    combatants.push({
+      id: generateId(),
+      name: form.name + suffix,
+      initiative: form.initiative,
+      acuity: form.acuity,
+      maxHealth: form.maxHealth,
+      maxEnergy: form.maxEnergy,
+      armor: form.armor,
+      evasion: form.evasion,
+      currentHealth: form.maxHealth,
+      currentEnergy: form.maxEnergy,
+      ap: 4,
+      conditions: [],
+      notes: "",
+      combatantType: form.combatantType,
+      isAlly:
+        form.combatantType === "ally" || form.combatantType === "companion",
+      isSurprised: form.isSurprised,
+      sourceType: "manual",
+    });
+  }
+  return combatants;
+}
+
+/** Next unused A–Z suffix for a duplicated combatant base name. */
+function nextDuplicateCombatantName(
+  combatantName: string,
+  existingNames: string[],
+): string {
+  const baseNameMatch = combatantName.match(/^(.+?)\s*[A-Z]?$/);
+  const baseName = baseNameMatch ? baseNameMatch[1].trim() : combatantName;
+  const escaped = baseName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const usedSuffixes = existingNames
+    .filter((n) => n.startsWith(baseName))
+    .map((n) => {
+      const m = n.match(new RegExp(`^${escaped}\\s*([A-Z])?$`));
+      return m ? m[1] || "" : "";
+    })
+    .filter(Boolean);
+  const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let suffix = "";
+  for (const letter of alphabet) {
+    if (!usedSuffixes.includes(letter)) {
+      suffix = ` ${letter}`;
+      break;
+    }
+  }
+  return baseName + suffix;
+}
+
+export function buildDuplicateCombatant(
+  combatant: Combatant,
+  existingNames: string[],
+): TrackedCombatant {
+  return {
+    ...combatant,
+    id: generateId(),
+    name: nextDuplicateCombatantName(combatant.name, existingNames),
+    currentHealth: combatant.maxHealth,
+    currentEnergy: combatant.maxEnergy,
+    conditions: [],
+  };
+}
+
+/** Map campaign-character encounter payload → tracked combatant. */
+export function buildCampaignCharacterCombatant(
+  charMeta: CampaignCharacter,
+  data: CampaignCharacterEncounterData,
+): TrackedCombatant {
+  const abilities = data.abilities || {};
+  const acuity = abilities.acuity ?? 0;
+  const d = data as Record<string, unknown>;
+  return {
+    id: generateId(),
+    name: charMeta.characterName,
+    initiative: rollInitiative(acuity),
+    acuity,
+    maxHealth: data.health?.max ?? 20,
+    currentHealth:
+      (d.currentHealth as number | undefined) ??
+      data.health?.current ??
+      data.health?.max ??
+      20,
+    maxEnergy: data.energy?.max ?? 10,
+    currentEnergy:
+      (d.currentEnergy as number | undefined) ??
+      data.energy?.current ??
+      data.energy?.max ??
+      10,
+    armor: 0,
+    evasion: data.evasion ?? 10 + (abilities.agility ?? 0),
+    ap: (d.actionPoints as number | undefined) ?? 4,
+    conditions: [],
+    notes: "",
+    combatantType: "ally" as CombatantType,
+    isAlly: true,
+    isSurprised: false,
+    sourceType: "campaign-character" as const,
+    sourceId: charMeta.characterId,
+    sourceUserId: charMeta.userId,
   };
 }

@@ -7,11 +7,9 @@ import { usePowerParts, useTechniqueParts, useGameRules } from '@/hooks';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { HealthEnergyAllocator } from '@/components/creator';
-import { derivePowerDisplay } from '@/lib/calculators/power-calc';
-import type { PowerDocument } from '@/lib/calculators/power-calc';
-import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
-import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
+import { resolvePowerTechniqueEnergy } from '@/lib/guided-creator/power-technique-display';
 import type { CharacterPower, CharacterTechnique } from '@/types';
+import type { LibraryPower, LibraryTechnique } from '@/types/library';
 
 /**
  * Health & Energy Allocation Section
@@ -51,20 +49,22 @@ export function HealthEnergyAllocationSection() {
     const powers = (draft.powers || []) as CharacterPower[];
     const techniques = (draft.techniques || []) as CharacterTechnique[];
     powers.forEach((p) => {
-      try {
-        const disp = derivePowerDisplay(p as unknown as PowerDocument, powerPartsDb);
-        if (typeof disp.energy === 'number') max = Math.max(max, disp.energy);
-      } catch {
-        // ignore invalid power
-      }
+      const energy = resolvePowerTechniqueEnergy(
+        'powers',
+        p as unknown as LibraryPower,
+        powerPartsDb,
+        techniquePartsDb
+      );
+      if (typeof energy === 'number') max = Math.max(max, energy);
     });
     techniques.forEach((t) => {
-      try {
-        const disp = deriveTechniqueDisplay(t as unknown as TechniqueDocument, techniquePartsDb);
-        if (typeof disp.energy === 'number') max = Math.max(max, disp.energy);
-      } catch {
-        // ignore invalid technique
-      }
+      const energy = resolvePowerTechniqueEnergy(
+        'techniques',
+        t as unknown as LibraryTechnique,
+        powerPartsDb,
+        techniquePartsDb
+      );
+      if (typeof energy === 'number') max = Math.max(max, energy);
     });
     return max;
   }, [draft.powers, draft.techniques, powerPartsDb, techniquePartsDb]);

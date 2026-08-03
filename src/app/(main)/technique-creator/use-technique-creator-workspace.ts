@@ -20,7 +20,7 @@ import {
   type TechniquePartPayload,
 } from '@/lib/calculators';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
-import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import {
   techniqueLibraryRecordToFormState,
   TECHNIQUE_CREATOR_CACHE_KEY,

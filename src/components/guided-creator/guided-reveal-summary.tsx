@@ -21,10 +21,7 @@ import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species
 import { useGuidedPathData } from './use-guided-path-data';
 import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
 import type { TraitWithChoiceOptions } from '@/lib/choice-trait';
-import { derivePowerDisplay } from '@/lib/calculators/power-calc';
-import type { PowerDocument } from '@/lib/calculators/power-calc';
-import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
-import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
+import { resolvePowerTechniqueEnergy } from '@/lib/guided-creator/power-technique-display';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { GuidedSectionTitle } from './guided-section-title';
 
@@ -159,20 +156,9 @@ export function GuidedRevealSummary() {
     const byId = new Map(officialPowers.map((p) => [String(p.id), p]));
     return draft.powerIds.map((id) => {
       const raw = byId.get(String(id));
-      let energyCost: number | undefined;
-      if (raw) {
-        try {
-          const doc: PowerDocument = {
-            name: String(raw.name ?? ''),
-            description: String(raw.description ?? ''),
-            parts: Array.isArray(raw.parts) ? (raw.parts as PowerDocument['parts']) : [],
-          };
-          const disp = derivePowerDisplay(doc, powerPartsDb);
-          if (typeof disp.energy === 'number') energyCost = disp.energy;
-        } catch {
-          // ignore
-        }
-      }
+      const energyCost = raw
+        ? resolvePowerTechniqueEnergy('powers', raw, powerPartsDb, techniquePartsDb)
+        : undefined;
       return {
         key: id,
         label: String(raw?.name ?? id),
@@ -181,26 +167,15 @@ export function GuidedRevealSummary() {
         variant: 'power' as const,
       };
     });
-  }, [draft.powerIds, officialPowers, powerPartsDb]);
+  }, [draft.powerIds, officialPowers, powerPartsDb, techniquePartsDb]);
 
   const techniqueChips = useMemo((): SummaryChipItem[] => {
     const byId = new Map(officialTechniques.map((t) => [String(t.id), t]));
     return draft.techniqueIds.map((id) => {
       const raw = byId.get(String(id));
-      let energyCost: number | undefined;
-      if (raw) {
-        try {
-          const doc: TechniqueDocument = {
-            name: String(raw.name ?? ''),
-            description: String(raw.description ?? ''),
-            parts: Array.isArray(raw.parts) ? (raw.parts as TechniqueDocument['parts']) : [],
-          };
-          const disp = deriveTechniqueDisplay(doc, techniquePartsDb);
-          if (typeof disp.energy === 'number') energyCost = disp.energy;
-        } catch {
-          // ignore
-        }
-      }
+      const energyCost = raw
+        ? resolvePowerTechniqueEnergy('techniques', raw, powerPartsDb, techniquePartsDb)
+        : undefined;
       return {
         key: id,
         label: String(raw?.name ?? id),
@@ -209,7 +184,7 @@ export function GuidedRevealSummary() {
         variant: 'technique' as const,
       };
     });
-  }, [draft.techniqueIds, officialTechniques, techniquePartsDb]);
+  }, [draft.techniqueIds, officialTechniques, powerPartsDb, techniquePartsDb]);
 
   const powersSectionTitle =
     powerChips.length > 0 && techniqueChips.length > 0

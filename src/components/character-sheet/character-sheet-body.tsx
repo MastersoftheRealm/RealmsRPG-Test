@@ -112,11 +112,10 @@ function ArchetypePanel({ className }: { className?: string }) {
 }
 
 function LibraryPanel({ className }: { className?: string }) {
-  const { librarySectionProps, libraryActiveTab, setLibraryActiveTab } = useCharacterSheet();
-  if (!librarySectionProps) return null;
+  const { libraryModel, libraryActiveTab, setLibraryActiveTab } = useCharacterSheet();
+  if (!libraryModel) return null;
   return (
     <LibrarySection
-      {...librarySectionProps}
       className={className}
       activeTab={libraryActiveTab}
       onActiveTabChange={setLibraryActiveTab}

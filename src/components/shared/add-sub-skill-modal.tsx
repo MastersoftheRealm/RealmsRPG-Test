@@ -14,7 +14,8 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { Alert, Select } from '@/components/ui';
+import { Alert, Button, Select } from '@/components/ui';
+import { guidedNavPreviousClassName } from '@/components/shared/guided-choice/guided-nav-button-styles';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
@@ -33,6 +34,9 @@ export interface AddSubSkillModalProps {
   characterSkills: CharacterSkillForSubModal[];
   existingSkillNames: string[];
   onAdd: (skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => void;
+  /** Optional shallower layer hop (e.g. guided L3 → L2 base skills). */
+  shallowerLayerLabel?: string;
+  onShallowerLayer?: () => void;
 }
 
 const SUB_SKILL_COLUMNS = [
@@ -47,6 +51,8 @@ export function AddSubSkillModal({
   characterSkills,
   existingSkillNames,
   onAdd,
+  shallowerLayerLabel,
+  onShallowerLayer,
 }: AddSubSkillModalProps) {
   const { data: allSkills = [], isLoading: loading, error: fetchError } = useCodexSkills();
   const [abilityFilter, setAbilityFilter] = useState('');
@@ -193,35 +199,65 @@ export function AddSubSkillModal({
   const footerExtra = useCallback(
     (selectedItems: SelectableItem[]) => {
       const selectedAnyBase = selectedItems.filter((item) => (item.data as Skill).base_skill_id === 0);
-      if (selectedAnyBase.length === 0) return null;
-
-      return (
-        <div className="space-y-2">
-          {selectedAnyBase.map((item) => {
-            const skill = item.data as Skill;
-            return (
-              <div
-                key={skill.id}
-                className="p-3 rounded-lg border border-border-light bg-surface-alt dark:bg-surface"
-              >
-                <label className="block text-sm font-medium text-text-primary mb-2">
-                  Choose base Skill for <span className="font-semibold">{skill.name}</span>:
-                </label>
-                <Select
-                  value={anyBaseSkillSelections[skill.id] ?? ''}
-                  onChange={(e) => handleBaseSkillSelect(skill.id, e.target.value)}
-                  options={[
-                    { value: '', label: 'Select a base Skill...' },
-                    ...allBaseSkills.map((s) => ({ value: s.id, label: s.name })),
-                  ]}
-                />
+      const anyBaseUi =
+        selectedAnyBase.length === 0
+          ? null
+          : (
+              <div className="space-y-2">
+                {selectedAnyBase.map((item) => {
+                  const skill = item.data as Skill;
+                  return (
+                    <div
+                      key={skill.id}
+                      className="p-3 rounded-lg border border-border-light bg-surface-alt dark:bg-surface"
+                    >
+                      <label className="block text-sm font-medium text-text-primary mb-2">
+                        Choose base Skill for <span className="font-semibold">{skill.name}</span>:
+                      </label>
+                      <Select
+                        value={anyBaseSkillSelections[skill.id] ?? ''}
+                        onChange={(e) => handleBaseSkillSelect(skill.id, e.target.value)}
+                        options={[
+                          { value: '', label: 'Select a base Skill...' },
+                          ...allBaseSkills.map((s) => ({ value: s.id, label: s.name })),
+                        ]}
+                      />
+                    </div>
+                  );
+                })}
               </div>
             );
-          })}
+
+      const shallowerNav =
+        shallowerLayerLabel && onShallowerLayer ? (
+          <div className="pb-1">
+            <Button
+              type="button"
+              variant="outline"
+              size="lg"
+              onClick={onShallowerLayer}
+              className={guidedNavPreviousClassName}
+            >
+              {shallowerLayerLabel}
+            </Button>
+          </div>
+        ) : null;
+
+      if (!shallowerNav && !anyBaseUi) return null;
+      return (
+        <div className="space-y-3">
+          {shallowerNav}
+          {anyBaseUi}
         </div>
       );
     },
-    [anyBaseSkillSelections, allBaseSkills, handleBaseSkillSelect]
+    [
+      anyBaseSkillSelections,
+      allBaseSkills,
+      handleBaseSkillSelect,
+      shallowerLayerLabel,
+      onShallowerLayer,
+    ]
   );
 
   const confirmDisabled = useCallback(

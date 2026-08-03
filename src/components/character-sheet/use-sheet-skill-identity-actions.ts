@@ -5,7 +5,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import type { Character } from '@/types';
+import type { Character, CharacterSkillRow } from '@/types';
 import type { EditArchetypeResult } from './edit-archetype-modal';
 import type { SkillModalType } from './character-sheet-context';
 
@@ -16,6 +16,18 @@ type UseSheetSkillIdentityActionsArgs = {
   setShowEditArchetypeModal: (value: boolean) => void;
   setShowEditSpeciesModal: (value: boolean) => void;
 };
+
+function getSkillRows(skills: Character['skills'] | undefined): CharacterSkillRow[] {
+  if (!skills) return [];
+  return Array.isArray(skills) ? skills : [];
+}
+
+function withSkillRows(
+  prev: Character,
+  nextSkills: CharacterSkillRow[],
+): Character {
+  return { ...prev, skills: nextSkills };
+}
 
 export function useSheetSkillIdentityActions({
   character,
@@ -35,7 +47,7 @@ export function useSheetSkillIdentityActions({
       }>,
     ) => {
       if (!character) return;
-      const skillsToAdd = newSkills.map((s) => {
+      const skillsToAdd: CharacterSkillRow[] = newSkills.map((s) => {
         const availableAbilities =
           typeof s.ability === 'string'
             ? s.ability
@@ -46,24 +58,14 @@ export function useSheetSkillIdentityActions({
 
         const defaultAbility = availableAbilities[0] || 'strength';
 
-        const skill: {
-          id: string;
-          name: string;
-          category: string;
-          skill_val: number;
-          prof: boolean;
-          ability?: string;
-          availableAbilities?: string[];
-          baseSkillId?: number;
-          selectedBaseSkillId?: string;
-        } = {
+        const skill: CharacterSkillRow = {
           id: s.id,
           name: s.name,
           category: defaultAbility,
           skill_val: 0,
           prof: false,
+          ability: defaultAbility,
         };
-        skill.ability = defaultAbility;
         if (availableAbilities.length > 0) {
           skill.availableAbilities = availableAbilities;
         }
@@ -74,11 +76,7 @@ export function useSheetSkillIdentityActions({
 
       setCharacter((prev) => {
         if (!prev) return null;
-        const currentSkills = (prev.skills || []) as unknown as typeof skillsToAdd;
-        return {
-          ...prev,
-          skills: [...currentSkills, ...skillsToAdd] as unknown as typeof prev.skills,
-        };
+        return withSkillRows(prev, [...getSkillRows(prev.skills), ...skillsToAdd]);
       });
       setSkillModalType(null);
     },
@@ -90,11 +88,11 @@ export function useSheetSkillIdentityActions({
       if (!character) return;
       setCharacter((prev) => {
         if (!prev) return null;
-        const currentSkills = (prev.skills || []) as unknown as Array<{ id: string }>;
-        return {
-          ...prev,
-          skills: currentSkills.filter((s) => s.id !== skillId) as unknown as typeof prev.skills,
-        };
+        const currentSkills = getSkillRows(prev.skills);
+        return withSkillRows(
+          prev,
+          currentSkills.filter((s) => s.id !== skillId),
+        );
       });
     },
     [character, setCharacter],
@@ -116,30 +114,18 @@ export function useSheetSkillIdentityActions({
       if (!character) return;
       setCharacter((prev) => {
         if (!prev) return null;
-        const currentSkills = (prev.skills || []) as unknown as Array<{
-          id: string;
-          name?: string;
-          skill_val?: number;
-          prof?: boolean;
-          ability?: string;
-          availableAbilities?: string[];
-          category?: string;
-          baseSkill?: string;
-        }>;
+        const currentSkills = getSkillRows(prev.skills);
         const idx = currentSkills.findIndex((skill) => String(skill.id) === String(skillId));
         if (idx >= 0) {
           const updatedSkills = currentSkills.map((skill, i) =>
             i === idx ? { ...skill, ...updates } : skill
           );
-          return {
-            ...prev,
-            skills: updatedSkills as unknown as typeof prev.skills,
-          };
+          return withSkillRows(prev, updatedSkills);
         }
         // Catalog-only base skill first spend / ability / temp — upsert (TASK-584)
         if (!updates.name) return prev;
         const defaultAbility = updates.ability || 'strength';
-        const seeded = {
+        const seeded: CharacterSkillRow = {
           id: skillId,
           name: updates.name,
           category: updates.category ?? defaultAbility,
@@ -151,10 +137,7 @@ export function useSheetSkillIdentityActions({
             : {}),
           ...(updates.baseSkill ? { baseSkill: updates.baseSkill } : {}),
         };
-        return {
-          ...prev,
-          skills: [...currentSkills, seeded] as unknown as typeof prev.skills,
-        };
+        return withSkillRows(prev, [...currentSkills, seeded]);
       });
     },
     [character, setCharacter],
@@ -218,7 +201,7 @@ export function useSheetSkillIdentityActions({
   );
 
   const handleEditSpeciesSave = useCallback(
-    (updates: { ancestry: Character['ancestry']; skills: unknown }) => {
+    (updates: { ancestry: Character['ancestry']; skills: CharacterSkillRow[] }) => {
       if (!character) return;
       let ancestry = updates.ancestry;
       if (ancestry?.mixed === true && Array.isArray(ancestry.selectedSpeciesTraits)) {
@@ -232,7 +215,7 @@ export function useSheetSkillIdentityActions({
         };
       }
       setCharacter((prev) =>
-        prev ? { ...prev, ancestry, skills: updates.skills as Character['skills'] } : null,
+        prev ? { ...prev, ancestry, skills: updates.skills } : null,
       );
       setShowEditSpeciesModal(false);
     },

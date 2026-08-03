@@ -22,7 +22,7 @@ import {
 } from '@/lib/game/feat-requirements';
 import { mapTraitRows, mapFeatRows, resolveTraitCustomizationKey, type FeatRowContext, type FeatLevelMeta } from './library-feat-rows';
 import { collectSheetTraits } from '@/lib/character/collect-sheet-traits';
-import { dedupeEntityRefs } from '@/lib/library/dedupe-saved-parts';
+import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 import type { FeatTraitCustomization } from '@/types/feats';
 
 interface TraitData {

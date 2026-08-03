@@ -1,6 +1,8 @@
 /**
  * Skills — species locked (free), path recommended (auto-added), skill points + free picks.
- * L1: allocated list + recommended skill cards. L2: Browse all Skills below recommendations.
+ * L1: allocated list + recommended skill cards.
+ * L2: Browse all Skills (custom chooser: opt-in via GuidedLayerNav, not auto-opened).
+ * L3: Browse all Sub-Skills from L2 modal footer (custom chooser only).
  */
 
 'use client';
@@ -14,13 +16,21 @@ import { useMergedSpecies, useCodexSkills, useGameRules } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
-import { AddSkillModal, GuidedLayerNav } from '@/components/shared';
+import { AddSkillModal, AddSubSkillModal, GuidedLayerNav } from '@/components/shared';
+import { prefersDeepCatalogEntry } from '@/lib/guided-creator/creator-entry-mode';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import {
   calculateSimpleSkillPointsSpent,
   getTotalSkillPoints,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
+import {
+  applyAddedBaseSkills,
+  applyAddedSubSkills,
+  buildCharacterSkillsForSubModal,
+  buildExistingSkillIdSet,
+  buildExistingSkillNames,
+} from '@/lib/game/skill-allocation-add';
 import {
   buildGuidedSkillSuggestions,
   guidedSuggestionsToBadgeMap,
@@ -42,14 +52,29 @@ export function SkillsStep() {
   const { data: codexSkills = [] } = useCodexSkills();
   const { rules } = useGameRules();
   const skillRules = resolveSkillAllocationRules(rules);
+  const deepCatalogOnly = prefersDeepCatalogEntry(draft);
   const [browseOpen, setBrowseOpen] = useState(false);
+  const [subBrowseOpen, setSubBrowseOpen] = useState(false);
 
-  const openBrowse = useCallback(() => setBrowseOpen(true), []);
+  const openBrowse = useCallback(() => {
+    setSubBrowseOpen(false);
+    setBrowseOpen(true);
+  }, []);
+  const openSubBrowse = useCallback(() => {
+    setBrowseOpen(false);
+    setSubBrowseOpen(true);
+  }, []);
+  const closeBrowseLayers = useCallback(() => {
+    setBrowseOpen(false);
+    setSubBrowseOpen(false);
+  }, []);
+
   useGuidedDeepEntryOnArrival({
     draft,
     navigationIntent,
     entryNonce,
     onDeepEntry: openBrowse,
+    enabled: !deepCatalogOnly,
   });
 
   const speciesContext = useMemo(
@@ -86,7 +111,6 @@ export function SkillsStep() {
   );
 
   const allocations = draft.skills ?? EMPTY_NUMBER_RECORD;
-  // Stable when draft.abilities is missing; never share a mutable DEFAULT_ABILITIES reference.
   const abilities = useMemo(
     () => draft.abilities ?? { ...DEFAULT_ABILITIES },
     [draft.abilities]
@@ -134,6 +158,7 @@ export function SkillsStep() {
   const maxAddSkillSelections = Math.floor(
     remainingPoints / skillRules.gainProficiencyCost
   );
+  const canBrowseSubSkills = remainingPoints >= 1;
 
   const handleAllocationsChange = useCallback(
     (newAllocations: Record<string, number>) => {
@@ -169,13 +194,19 @@ export function SkillsStep() {
     [allocationsWithDefaults]
   );
 
+  const existingSkillIds = useMemo(
+    () => buildExistingSkillIdSet(speciesSkillIds, allocationsWithDefaults),
+    [speciesSkillIds, allocationsWithDefaults]
+  );
+
   const existingSkillNames = useMemo(
-    () =>
-      codexSkills
-        .filter((s) => selectedSkillIds.has(String(s.id)))
-        .map((s) => s.name)
-        .filter((n): n is string => Boolean(n)),
-    [codexSkills, selectedSkillIds]
+    () => buildExistingSkillNames(codexSkills, existingSkillIds),
+    [codexSkills, existingSkillIds]
+  );
+
+  const characterSkillsForSubModal = useMemo(
+    () => buildCharacterSkillsForSubModal(codexSkills, existingSkillIds, allocationsWithDefaults),
+    [codexSkills, existingSkillIds, allocationsWithDefaults]
   );
 
   const { suggestions: skillSuggestions } = useMemo(
@@ -236,13 +267,16 @@ export function SkillsStep() {
 
   const handleAddSkills = useCallback(
     (skills: Skill[]) => {
-      const next = { ...allocationsWithDefaults };
-      skills.forEach((s) => {
-        const key = String(s.id);
-        if (!(key in next)) next[key] = 0;
-      });
-      handleAllocationsChange(next);
+      handleAllocationsChange(applyAddedBaseSkills(allocationsWithDefaults, skills));
       setBrowseOpen(false);
+    },
+    [allocationsWithDefaults, handleAllocationsChange]
+  );
+
+  const handleAddSubSkills = useCallback(
+    (skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => {
+      handleAllocationsChange(applyAddedSubSkills(allocationsWithDefaults, skills));
+      setSubBrowseOpen(false);
     },
     [allocationsWithDefaults, handleAllocationsChange]
   );
@@ -320,22 +354,40 @@ export function SkillsStep() {
         </section>
       )}
 
-      {/* Layer 2: catalog browse below curated recommendations (REALMS §3.1). */}
-      <GuidedLayerNav
-        expandLabel={stepCopy.browseAll}
-        onExpand={() => setBrowseOpen(true)}
-      />
+      {!browseOpen && !subBrowseOpen ? (
+        <GuidedLayerNav expandLabel={stepCopy.browseAll} onExpand={openBrowse} />
+      ) : null}
 
       {browseOpen ? (
         <AddSkillModal
           isOpen
-          onClose={() => setBrowseOpen(false)}
+          onClose={closeBrowseLayers}
           existingSkillNames={existingSkillNames}
           onAdd={handleAddSkills}
           skillBadgesById={browseSkillBadgesById}
           recommendedSkillIds={browseRecommendedSkillIds}
           maxSelections={maxAddSkillSelections}
           selectionLimitMessage={stepCopy.browseOverLimit(maxAddSkillSelections)}
+          deeperLayerLabel={
+            deepCatalogOnly ? stepCopy.browseAllSubSkills : undefined
+          }
+          onDeeperLayer={deepCatalogOnly ? openSubBrowse : undefined}
+          deeperLayerDisabled={!canBrowseSubSkills}
+          deeperLayerDisabledTitle={
+            !canBrowseSubSkills ? stepCopy.subBrowseDisabled : undefined
+          }
+        />
+      ) : null}
+
+      {subBrowseOpen ? (
+        <AddSubSkillModal
+          isOpen
+          onClose={closeBrowseLayers}
+          characterSkills={characterSkillsForSubModal}
+          existingSkillNames={existingSkillNames}
+          onAdd={handleAddSubSkills}
+          shallowerLayerLabel={stepCopy.browseAll}
+          onShallowerLayer={openBrowse}
         />
       ) : null}
     </GuidedStepLayout>

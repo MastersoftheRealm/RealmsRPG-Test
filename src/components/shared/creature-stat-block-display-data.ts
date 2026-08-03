@@ -9,6 +9,7 @@ import {
 import { buildPartsAndMetadataDetailSections } from '@/lib/chip/list-row-metadata';
 import type { Abilities } from '@/types';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
+import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { CreatureData } from './creature-stat-block-types';
 import {
   REALMS_ABILITY_ORDER,
@@ -20,6 +21,26 @@ import {
 
 type LibraryPowerLike = LibraryPower & { docId?: string };
 type LibraryTechniqueLike = LibraryTechnique & { docId?: string };
+
+type SavedPartRef = string | {
+  id?: string | number;
+  name?: string;
+  op_1_lvl?: number;
+  op_2_lvl?: number;
+  op_3_lvl?: number;
+};
+
+function objectPartsOnly(parts: SavedPartRef[]): NonNullable<import('@/lib/calculators/power-calc').PowerDocument['parts']> {
+  return parts
+    .filter((part): part is Exclude<SavedPartRef, string> => typeof part !== 'string')
+    .map((part) => ({
+      id: typeof part.id === 'number' ? part.id : undefined,
+      name: part.name,
+      op_1_lvl: part.op_1_lvl,
+      op_2_lvl: part.op_2_lvl,
+      op_3_lvl: part.op_3_lvl,
+    }));
+}
 
 type SkillDbEntry = {
   id?: string | number;
@@ -33,7 +54,7 @@ export function buildPowersForDisplay(
   creature: CreatureData,
   userPowers: LibraryPowerLike[],
   officialPowers: LibraryPower[],
-  powerPartsDb: unknown[]
+  powerPartsDb: PowerPart[]
 ): EntityPowerRow[] {
   const refs = Array.isArray(creature.powers) ? creature.powers : [];
   if (refs.length === 0) return [];
@@ -99,8 +120,8 @@ export function buildPowersForDisplay(
 
     const baseName = enriched?.name || refName;
     const baseDescription = enriched?.description ?? ref.description;
-    const parts = (enriched?.parts as unknown as Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>) ?? ref.parts ?? [];
-    const damage = (enriched?.damage as unknown) ?? ref.damage;
+    const parts: SavedPartRef[] = enriched?.parts ?? ref.parts ?? [];
+    const damage = enriched?.damage ?? ref.damage;
     const imageRecord = {
       image_id: enriched?.image_id ?? (ref as { image_id?: string | null }).image_id,
       image_url: enriched?.image_url ?? (ref as { image_url?: string | null }).image_url,
@@ -110,16 +131,16 @@ export function buildPowersForDisplay(
       {
         name: baseName,
         description: baseDescription,
-        parts: parts as never,
-        damage: Array.isArray(damage) ? (damage as never) : undefined,
-        actionType: enriched?.actionType as string | undefined,
-        isReaction: enriched?.isReaction as boolean | undefined,
+        parts: objectPartsOnly(parts),
+        damage: Array.isArray(damage) ? damage : undefined,
+        actionType: enriched?.actionType,
+        isReaction: enriched?.isReaction,
       },
-      powerPartsDb as never
+      powerPartsDb
     );
 
-    const partsChips = partsToChips(parts, powerPartsDb as unknown as CodexPart[]);
-    const damageStr = formatPowerDamage(Array.isArray(damage) ? (damage as never) : undefined) || (typeof ref.damage === 'string' ? ref.damage : undefined);
+    const partsChips = partsToChips(parts, powerPartsDb as CodexPart[]);
+    const damageStr = formatPowerDamage(Array.isArray(damage) ? damage : undefined) || (typeof ref.damage === 'string' ? ref.damage : undefined);
     const rangeValue =
       derived.range && derived.range !== '-' ? derived.range : ref.range;
     const detailSections = buildPartsAndMetadataDetailSections({
@@ -149,7 +170,7 @@ export function buildTechniquesForDisplay(
   creature: CreatureData,
   userTechniques: LibraryTechniqueLike[],
   officialTechniques: LibraryTechnique[],
-  techniquePartsDb: unknown[]
+  techniquePartsDb: TechniquePart[]
 ): EntityTechniqueRow[] {
   const refs = Array.isArray(creature.techniques) ? creature.techniques : [];
   if (refs.length === 0) return [];
@@ -210,7 +231,7 @@ export function buildTechniquesForDisplay(
 
     const baseName = enriched?.name || refName;
     const baseDescription = enriched?.description ?? ref.description;
-    const parts = (enriched?.parts as unknown as Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>) ?? ref.parts ?? [];
+    const parts: SavedPartRef[] = enriched?.parts ?? ref.parts ?? [];
     const damage = enriched?.damage ?? ref.damage;
     const imageRecord = {
       image_id: enriched?.image_id ?? (ref as { image_id?: string | null }).image_id,
@@ -221,16 +242,16 @@ export function buildTechniquesForDisplay(
       {
         name: baseName,
         description: baseDescription,
-        parts: parts as never,
-        damage: Array.isArray(damage) ? (damage as never)[0] : undefined,
-        weapon: (enriched?.weapon as never) ?? undefined,
-        actionType: enriched?.actionType as string | undefined,
-        isReaction: enriched?.isReaction as boolean | undefined,
+        parts: objectPartsOnly(parts),
+        damage: Array.isArray(damage) ? damage[0] : undefined,
+        weapon: enriched?.weapon,
+        actionType: enriched?.actionType,
+        isReaction: enriched?.isReaction,
       },
-      techniquePartsDb as never
+      techniquePartsDb
     );
 
-    const partsChips = partsToChips(parts, techniquePartsDb as unknown as CodexPart[]);
+    const partsChips = partsToChips(parts, techniquePartsDb as CodexPart[]);
     const damageStr =
       derived.damageStr !== '-' ? derived.damageStr : typeof ref.damage === 'string' ? ref.damage : undefined;
     const detailSections = buildPartsAndMetadataDetailSections({

@@ -13,7 +13,7 @@ import {
   type PowerPart,
   type TechniquePart,
 } from '@/hooks';
-import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';

@@ -1,11 +1,12 @@
 /**
  * Character Sheet - Modal Components
+ * Reads modal state + handlers from character-sheet context (TASK-667).
  */
 
 'use client';
 
 import { useMemo } from 'react';
-import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
+import type { Character, Item } from '@/types';
 import {
   AddLibraryItemModal,
   AddFeatModal,
@@ -14,14 +15,11 @@ import {
   EditArchetypeModal,
   EditSpeciesModal,
 } from '@/components/character-sheet';
-import type { EditArchetypeResult } from '@/components/character-sheet';
 import { DeleteConfirmModal, AddSubSkillModal } from '@/components/shared';
 import type { AddLibraryItemType } from '@/hooks/use-add-library-item-data';
-import type { CharacterSheetStats } from './character-sheet-utils';
-import type {
-  AddModalType,
-  FeatModalType,
-  SkillModalType,
+import {
+  useCharacterSheet,
+  type AddModalType,
 } from '@/components/character-sheet/character-sheet-context';
 
 /**
@@ -63,17 +61,6 @@ function existingIdsForAddModal(
   return ids;
 }
 
-interface SkillForModal {
-  id: string;
-  name: string;
-  category?: string;
-  skill_val?: number;
-  prof?: boolean;
-  baseSkill?: string;
-  ability?: string;
-  availableAbilities?: string[];
-}
-
 interface TraitForModal {
   name: string;
   currentUses?: number;
@@ -89,75 +76,42 @@ interface FeatForModal {
   recovery?: string;
 }
 
-interface CharacterSheetModalsProps {
-  addModalType: AddModalType;
-  setAddModalType: (t: AddModalType) => void;
-  featModalType: FeatModalType;
-  setFeatModalType: (t: FeatModalType) => void;
-  skillModalType: SkillModalType;
-  setSkillModalType: (t: SkillModalType) => void;
-  featToRemove: { id: string; name: string } | null;
-  setFeatToRemove: (f: { id: string; name: string } | null) => void;
-  showLevelUpModal: boolean;
-  setShowLevelUpModal: (v: boolean) => void;
-  showRecoveryModal: boolean;
-  setShowRecoveryModal: (v: boolean) => void;
-  character: Character | null;
-  /** Codex-hydrated character for path-aware modals (optional). */
-  displayCharacter?: Character | null;
-  calculatedStats: CharacterSheetStats | null;
-  skills: SkillForModal[];
-  traitsDb: Array<{ name?: string; uses_per_rec?: number; rec_period?: string }>;
-  onModalAdd: (items: CharacterPower[] | CharacterTechnique[] | Item[]) => void;
-  onAddFeats: (feats: Array<{ id: string; name: string; description?: string; effect?: string; max_uses?: number }>, type: 'archetype' | 'character' | 'state') => void;
-  onAddSkills: (skills: Array<{ id: string; name: string; ability?: string; base_skill_id?: number; selectedBaseSkillId?: string }>) => void;
-  onConfirmRemoveFeat: () => void;
-  onLevelUp: (newLevel: number) => void;
-  onFullRecovery: () => void;
-  onPartialRecovery: (hpRestored: number, enRestored: number, resetPartialFeats: boolean) => void;
-  showEditArchetypeModal: boolean;
-  setShowEditArchetypeModal: (v: boolean) => void;
-  /** Bumps on each open so EditArchetypeModal remounts with fresh local state. */
-  editArchetypeSessionKey: number;
-  onArchetypeSave: (result: EditArchetypeResult) => void;
-  showEditSpeciesModal: boolean;
-  setShowEditSpeciesModal: (v: boolean) => void;
-  onSpeciesSave: (updates: { ancestry: Character['ancestry']; skills: unknown }) => void;
-}
+export function CharacterSheetModals() {
+  const {
+    character,
+    displayCharacter,
+    calculatedStats,
+    skills,
+    libraryModel,
+    addModalType,
+    setAddModalType,
+    featModalType,
+    setFeatModalType,
+    skillModalType,
+    setSkillModalType,
+    featToRemove,
+    setFeatToRemove,
+    showLevelUpModal,
+    setShowLevelUpModal,
+    showRecoveryModal,
+    setShowRecoveryModal,
+    showEditArchetypeModal,
+    setShowEditArchetypeModal,
+    editArchetypeSessionKey,
+    showEditSpeciesModal,
+    setShowEditSpeciesModal,
+    onModalAdd,
+    onAddFeats,
+    onAddSkills,
+    onConfirmRemoveFeat,
+    onLevelUp,
+    onFullRecovery,
+    onPartialRecovery,
+    onArchetypeSave,
+    onSpeciesSave,
+  } = useCharacterSheet();
 
-export function CharacterSheetModals({
-  addModalType,
-  setAddModalType,
-  featModalType,
-  setFeatModalType,
-  skillModalType,
-  setSkillModalType,
-  featToRemove,
-  setFeatToRemove,
-  showLevelUpModal,
-  setShowLevelUpModal,
-  showRecoveryModal,
-  setShowRecoveryModal,
-  character,
-  displayCharacter,
-  calculatedStats,
-  skills,
-  traitsDb,
-  onModalAdd,
-  onAddFeats,
-  onAddSkills,
-  onConfirmRemoveFeat,
-  onLevelUp,
-  onFullRecovery,
-  onPartialRecovery,
-  showEditArchetypeModal,
-  setShowEditArchetypeModal,
-  editArchetypeSessionKey,
-  onArchetypeSave,
-  showEditSpeciesModal,
-  setShowEditSpeciesModal,
-  onSpeciesSave,
-}: CharacterSheetModalsProps) {
+  const traitsDb = libraryModel?.traitsDb ?? [];
   const scopedExistingIds = useMemo(
     () => existingIdsForAddModal(character, addModalType),
     [character, addModalType]
@@ -165,7 +119,7 @@ export function CharacterSheetModals({
 
   return (
     <>
-      {character && showEditArchetypeModal && (
+      {showEditArchetypeModal && (
         <EditArchetypeModal
           key={editArchetypeSessionKey}
           isOpen
@@ -176,14 +130,12 @@ export function CharacterSheetModals({
         />
       )}
 
-      {character && (
-        <EditSpeciesModal
-          isOpen={showEditSpeciesModal}
-          onClose={() => setShowEditSpeciesModal(false)}
-          character={character}
-          onSave={onSpeciesSave}
-        />
-      )}
+      <EditSpeciesModal
+        isOpen={showEditSpeciesModal}
+        onClose={() => setShowEditSpeciesModal(false)}
+        character={character}
+        onSave={onSpeciesSave}
+      />
 
       {addModalType && (
         <AddLibraryItemModal
@@ -207,7 +159,7 @@ export function CharacterSheetModals({
         />
       )}
 
-      {character && featModalType && (
+      {featModalType && (
         <AddFeatModal
           key={featModalType}
           isOpen
@@ -215,24 +167,24 @@ export function CharacterSheetModals({
           featType={featModalType}
           character={character}
           existingFeatIds={[
-            ...(character.archetypeFeats || []).map(f => f.id || f.name),
-            ...(character.feats || []).map(f => f.id || f.name),
+            ...(character.archetypeFeats || []).map((f) => f.id || f.name),
+            ...(character.feats || []).map((f) => f.id || f.name),
           ]}
-          onAdd={feats => onAddFeats(feats, featModalType)}
+          onAdd={(feats) => onAddFeats(feats, featModalType)}
         />
       )}
 
-      {character && skillModalType === 'subskill' && (
+      {skillModalType === 'subskill' && (
         <AddSubSkillModal
           isOpen={true}
           onClose={() => setSkillModalType(null)}
-          characterSkills={skills.map(s => ({ name: s.name, prof: s.prof || false }))}
-          existingSkillNames={skills.map(s => s.name)}
+          characterSkills={skills.map((s) => ({ name: s.name, prof: s.prof || false }))}
+          existingSkillNames={skills.map((s) => s.name)}
           onAdd={onAddSkills}
         />
       )}
 
-      {character && showLevelUpModal && (
+      {showLevelUpModal && (
         <LevelUpModal
           key={`${character.id}:${character.level ?? 1}`}
           isOpen
@@ -243,7 +195,7 @@ export function CharacterSheetModals({
         />
       )}
 
-      {character && calculatedStats && (
+      {calculatedStats && (
         <RecoveryModal
           isOpen={showRecoveryModal}
           onClose={() => setShowRecoveryModal(false)}
@@ -253,14 +205,14 @@ export function CharacterSheetModals({
           maxEnergy={calculatedStats.maxEnergy}
           feats={
             [
-              ...(character.archetypeFeats || []).map(f => ({
+              ...(character.archetypeFeats || []).map((f) => ({
                 id: f.id || f.name,
                 name: f.name,
                 currentUses: f.currentUses,
                 maxUses: f.maxUses,
                 recovery: f.recovery,
               })),
-              ...(character.feats || []).map(f => ({
+              ...(character.feats || []).map((f) => ({
                 id: f.id || f.name,
                 name: f.name,
                 currentUses: f.currentUses,
@@ -271,8 +223,8 @@ export function CharacterSheetModals({
           }
           traits={
             traitsDb
-              .filter(t => character.traitUses?.[t.name!] !== undefined)
-              .map(t => ({
+              .filter((t) => t.name != null && character.traitUses?.[t.name] !== undefined)
+              .map((t) => ({
                 name: t.name!,
                 currentUses: character.traitUses?.[t.name!],
                 maxUses: t.uses_per_rec,

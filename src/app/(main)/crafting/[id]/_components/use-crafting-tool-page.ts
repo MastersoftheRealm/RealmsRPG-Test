@@ -1,7 +1,8 @@
 /**
- * Crafting tool page state + derived values (TASK-607)
- * ====================================================
+ * Crafting tool page state + derived values (TASK-607 / TASK-666e)
+ * ================================================================
  * Co-located hook for the crafting session facade — presentation lives in sibling panels.
+ * Pure derived/sync helpers: `crafting-tool-derived.ts`.
  */
 
 'use client';
@@ -22,21 +23,12 @@ import { useGameRules } from '@/hooks/use-game-rules';
 import { useToast } from '@/components/ui';
 import { computeSkillRollResult } from '@/lib/game/encounter-utils';
 import {
-  getCraftingSessionLabels,
-  getEnhancedCraftingRequirements,
-  getConsumableEnhancedRequirements,
   getEnhancedMarketPrice,
   calculateCraftingOutcome,
   type CraftingRequirements,
 } from '@/lib/game/crafting-utils';
 import type { CraftingSelectedItem } from '@/components/crafting/CraftingItemSelectModal';
-import type {
-  CraftingSession as CraftingSessionType,
-  CraftingRollSession,
-  CraftingPowerRef,
-} from '@/types/crafting';
-import { derivePowerDisplay, type PowerDocument } from '@/lib/calculators/power-calc';
-import type { LibraryPower } from '@/types/library';
+import type { CraftingSession as CraftingSessionType } from '@/types/crafting';
 import {
   bootstrapCraftingSession,
   craftingSessionNeedsRules,
@@ -45,13 +37,21 @@ import {
   type PowerOption,
   type UsesType,
   toCraftingItemRef,
-  resolveMultipleUseIndex,
-  getEffectiveCraftingEnergy,
   getSessionDsForIndex,
   computeCraftingRequirements,
   computeRequirementsBreakdown,
   computeOptionalModifierMaxSteps,
 } from './crafting-tool-helpers';
+import {
+  filterCraftSubSkills,
+  buildCraftingPowerOptions,
+  resolveLiveCraftingPowerRef,
+  buildRequirementsSyncPatch,
+  mapDisplaySessionsWithRollResults,
+  computeCraftingSessionTallies,
+  computeLiveCraftingOutcome,
+  computeBaseOutcomeForDisplay,
+} from './crafting-tool-derived';
 
 export function useCraftingToolPage() {
   const params = useParams();
@@ -123,83 +123,29 @@ export function useCraftingToolPage() {
   const usesType = (session?.data.usesType ?? 'full') as UsesType;
   const usesCount = session?.data.usesCount ?? 1;
 
-  const CRAFT_BASE_SKILL_ID = 13;
-  const craftSubSkills = useMemo(() => {
-    const withCraftDesc = codexSkills.filter(
-      (s: { base_skill_id?: number; craft_success_desc?: string; craft_failure_desc?: string }) =>
-        s.craft_success_desc || s.craft_failure_desc
-    );
-    const craftSubs = withCraftDesc.filter(
-      (s: { base_skill_id?: number }) => s.base_skill_id === CRAFT_BASE_SKILL_ID
-    );
-    return craftSubs.length > 0 ? craftSubs : withCraftDesc;
-  }, [codexSkills]);
+  const craftSubSkills = useMemo(
+    () => filterCraftSubSkills(codexSkills),
+    [codexSkills]
+  );
 
   const craftSubSkill = session?.data.item?.subSkillId
     ? codexSkills.find((s: { id: string }) => String(s.id) === String(session.data.item?.subSkillId))
     : null;
 
-  const powerOptions = useMemo<PowerOption[]>(() => {
-    const map = new Map<string, PowerOption>();
-    const toEnergyCost = (raw: LibraryPower) => {
-      const doc: PowerDocument = {
-        name: raw.name,
-        description: raw.description,
-        parts: raw.parts,
-        damage: raw.damage,
-        actionType: raw.actionType,
-        isReaction: raw.isReaction,
-        range: raw.range,
-        area: raw.area,
-        duration: raw.duration,
-      };
-      return derivePowerDisplay(doc, powerPartsDb).energy;
-    };
+  const powerOptions = useMemo<PowerOption[]>(
+    () => buildCraftingPowerOptions(userPowers, officialPowers, powerPartsDb),
+    [userPowers, officialPowers, powerPartsDb]
+  );
 
-    userPowers.forEach((p) => {
-      const powerId = String(p.id);
-      map.set(powerId, {
-        source: 'library',
-        id: powerId,
-        name: p.name,
-        energyCost: toEnergyCost(p),
-      });
-    });
-
-    officialPowers.forEach((p) => {
-      const powerId = String(p.id ?? '');
-      if (!powerId || map.has(powerId)) return;
-      map.set(powerId, {
-        source: 'official',
-        id: powerId,
-        name: String(p.name ?? powerId),
-        energyCost: toEnergyCost(p),
-      });
-    });
-
-    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
-  }, [userPowers, officialPowers, powerPartsDb]);
-
-  /** Live power metadata for display/requirements; persist only on explicit power select. */
-  const resolvedPowerRef = useMemo((): CraftingPowerRef | null | undefined => {
-    const ref = session?.data.powerRef;
-    if (!session?.data.isEnhanced || !ref) return ref;
-    const latest = powerOptions.find((p) => p.id === ref.id);
-    if (!latest) return ref;
-    if (
-      latest.name === ref.name &&
-      latest.energyCost === ref.energyCost &&
-      latest.source === ref.source
-    ) {
-      return ref;
-    }
-    return {
-      ...ref,
-      name: latest.name,
-      source: latest.source,
-      energyCost: latest.energyCost,
-    };
-  }, [session?.data.isEnhanced, session?.data.powerRef, powerOptions]);
+  const resolvedPowerRef = useMemo(
+    () =>
+      resolveLiveCraftingPowerRef(
+        session?.data.isEnhanced,
+        session?.data.powerRef,
+        powerOptions
+      ),
+    [session?.data.isEnhanced, session?.data.powerRef, powerOptions]
+  );
 
   const requirements = useMemo((): CraftingRequirements | null => {
     if (!rulesData || (!item && !customBaseItem) || !session) return null;
@@ -258,88 +204,23 @@ export function useCraftingToolPage() {
   ]);
 
   // Sync requirements → session snapshot when config changes (render-time — TASK-430)
-  if (
-    initialized &&
-    requirements &&
-    session &&
-    (item || customBaseItem)
-  ) {
-    const needsSync =
-      session.data.difficultyScore !== requirements.difficultyScore ||
-      session.data.requiredSuccesses !== requirements.requiredSuccesses ||
-      session.data.materialCost !== requirements.materialCost ||
-      session.data.timeValue !== requirements.timeValue ||
-      session.data.sessionCount !== requirements.sessionCount;
-    if (needsSync) {
-      let labels: string[];
-      if (
-        isEnhanced &&
-        session.data.craftBaseItemAlso &&
-        requirementsBreakdown
-      ) {
-        const baseLabels = getCraftingSessionLabels(
-          requirementsBreakdown.baseItemReq.timeValue,
-          requirementsBreakdown.baseItemReq.timeUnit,
-          requirementsBreakdown.baseItemReq.sessionCount
-        );
-        const enhancementLabels = getCraftingSessionLabels(
-          requirementsBreakdown.enhancementReq.timeValue,
-          requirementsBreakdown.enhancementReq.timeUnit,
-          requirementsBreakdown.enhancementReq.sessionCount
-        );
-        labels = [...baseLabels, ...enhancementLabels];
-      } else {
-        labels = getCraftingSessionLabels(
-          requirements.timeValue,
-          requirements.timeUnit,
-          requirements.sessionCount
-        );
-      }
-      const existingSessions = session.data.sessions ?? [];
-      const newSessions: CraftingRollSession[] = labels.map((label, i) => {
-        if (i < existingSessions.length) {
-          return { ...existingSessions[i], label };
-        }
-        return { label, roll: null, successes: 0, failures: 0 };
-      });
-
-      let enhancementMaterialCost: number | undefined;
-      if (isEnhanced && resolvedPowerRef?.energyCost != null && rulesData) {
-        const idx = resolveMultipleUseIndex(
-          rulesData,
-          usesType,
-          usesCount,
-          session.data.multipleUseTableIndex
-        );
-        const effEnergy = getEffectiveCraftingEnergy(
-          resolvedPowerRef.energyCost,
-          idx,
-          rulesData
-        );
-        const req = isConsumable
-          ? getConsumableEnhancedRequirements(effEnergy, rulesData)
-          : getEnhancedCraftingRequirements(effEnergy, rulesData);
-        enhancementMaterialCost = req?.materialCost;
-      }
-
+  if (initialized && requirements && session && (item || customBaseItem)) {
+    const patch = buildRequirementsSyncPatch({
+      session,
+      requirements,
+      requirementsBreakdown,
+      rulesData: rulesData!,
+      isEnhanced,
+      isConsumable,
+      resolvedPowerRef,
+      usesType,
+      usesCount,
+      quantity,
+    });
+    if (patch) {
       setSession((prev) => {
         if (!prev) return prev;
-        return {
-          ...prev,
-          data: {
-            ...prev.data,
-            status: 'in_progress',
-            difficultyScore: requirements.difficultyScore,
-            requiredSuccesses: requirements.requiredSuccesses,
-            materialCost: requirements.materialCost,
-            enhancementMaterialCost: isEnhanced ? enhancementMaterialCost : undefined,
-            timeValue: requirements.timeValue,
-            timeUnit: requirements.timeUnit,
-            sessionCount: requirements.sessionCount,
-            sessions: newSessions,
-            isBulk: quantity === (rulesData?.bulkCraftCount ?? 4),
-          },
-        };
+        return { ...prev, data: { ...prev.data, ...patch } };
       });
     }
   }
@@ -347,24 +228,18 @@ export function useCraftingToolPage() {
   const baseDS = requirements?.difficultyScore ?? session?.data.difficultyScore ?? 0;
   const effectiveDS = baseDS + (session?.data.dsModifier ?? 0);
 
-  const displaySessions = useMemo(() => {
-    const sessions = session?.data.sessions ?? [];
-    if (!sessions.length) return sessions;
-    return sessions.map((s, index) => {
-      if (s.roll == null) return s;
-      const dsForSession = getSessionDsForIndex({
-        index,
+  const displaySessions = useMemo(
+    () =>
+      mapDisplaySessionsWithRollResults({
+        sessions: session?.data.sessions ?? [],
         effectiveDS,
         dsModifier: session?.data.dsModifier ?? 0,
         isEnhanced,
         craftBaseItemAlso: !!session?.data.craftBaseItemAlso,
         requirementsBreakdown,
-      });
-      const { successes, failures } = computeSkillRollResult(s.roll, dsForSession);
-      if (successes === s.successes && failures === s.failures) return s;
-      return { ...s, successes, failures };
-    });
-  }, [session, effectiveDS, isEnhanced, requirementsBreakdown]);
+      }),
+    [session, effectiveDS, isEnhanced, requirementsBreakdown]
+  );
 
   const updateSessionRoll = useCallback(
     (index: number, roll: number | null) => {
@@ -390,111 +265,70 @@ export function useCraftingToolPage() {
     [session, effectiveDS, updateData, isEnhanced, requirementsBreakdown]
   );
 
-  let baseSessionSuccesses = 0;
-  let baseSessionFailures = 0;
-  let enhSessionSuccesses = 0;
-  let enhSessionFailures = 0;
+  const tallies = useMemo(
+    () =>
+      computeCraftingSessionTallies({
+        displaySessions,
+        requirementsBreakdown,
+        isEnhanced,
+        craftBaseItemAlso: !!session?.data.craftBaseItemAlso,
+        requiredSuccesses: session?.data.requiredSuccesses ?? 0,
+        additionalSuccesses: session?.data.additionalSuccesses ?? 0,
+        additionalFailures: session?.data.additionalFailures ?? 0,
+      }),
+    [displaySessions, requirementsBreakdown, isEnhanced, session]
+  );
 
-  if (
-    displaySessions.length &&
-    requirementsBreakdown &&
-    isEnhanced &&
-    session?.data.craftBaseItemAlso
-  ) {
-    const baseCount = requirementsBreakdown.baseItemReq.requiredSuccesses;
-    displaySessions.forEach((s, index) => {
-      if (index < baseCount) {
-        baseSessionSuccesses += s.successes;
-        baseSessionFailures += s.failures;
-      } else {
-        enhSessionSuccesses += s.successes;
-        enhSessionFailures += s.failures;
-      }
-    });
-  } else {
-    const totals = displaySessions.reduce(
-      (acc, s) => {
-        acc.s += s.successes;
-        acc.f += s.failures;
-        return acc;
-      },
-      { s: 0, f: 0 }
-    );
-    enhSessionSuccesses = totals.s;
-    enhSessionFailures = totals.f;
-  }
-
-  const additionalSuccesses = session?.data.additionalSuccesses ?? 0;
-  const additionalFailures = session?.data.additionalFailures ?? 0;
-
-  const enhancementRequired =
-    isEnhanced && requirementsBreakdown && session?.data.craftBaseItemAlso
-      ? requirementsBreakdown.enhancementReq.requiredSuccesses
-      : session?.data.requiredSuccesses ?? 0;
-
-  const baseRequired =
-    isEnhanced && requirementsBreakdown && session?.data.craftBaseItemAlso
-      ? requirementsBreakdown.baseItemReq.requiredSuccesses
-      : 0;
-
-  const required = enhancementRequired;
-
-  const totalEnhSuccesses = enhSessionSuccesses + additionalSuccesses;
-  const totalEnhFailures = enhSessionFailures + additionalFailures;
-  const netDelta = totalEnhSuccesses - totalEnhFailures - enhancementRequired;
-
-  const liveOutcome = useMemo(() => {
-    if (!rulesData) return null;
-    const baseMarketPrice = isEnhanced
-      ? getEnhancedMarketPrice(session?.data.materialCost ?? 0, rulesData)
-      : (item?.marketPrice ?? customBaseItem?.marketPrice ?? 0);
-    if (!baseMarketPrice) return null;
-    return calculateCraftingOutcome(
-      netDelta,
-      session?.data.materialCost ?? 0,
-      baseMarketPrice,
-      rulesData.successesTable
-    );
-  }, [
-    rulesData,
-    isEnhanced,
-    item?.marketPrice,
-    customBaseItem?.marketPrice,
-    netDelta,
-    session?.data.materialCost,
-  ]);
-
-  const baseOutcomeForDisplay = useMemo(() => {
-    if (
-      !rulesData ||
-      !requirementsBreakdown ||
-      !isEnhanced ||
-      !session?.data.craftBaseItemAlso
-    ) {
-      return null;
-    }
-    const baseMarketPrice = item?.marketPrice ?? customBaseItem?.marketPrice ?? 0;
-    if (!baseMarketPrice) return null;
-    const baseMaterialCost = requirementsBreakdown.baseItemReq.materialCost;
-    const baseNetDelta =
-      baseRequired > 0 ? baseSessionSuccesses - baseSessionFailures - baseRequired : 0;
-    return calculateCraftingOutcome(
-      baseNetDelta,
-      baseMaterialCost,
-      baseMarketPrice,
-      rulesData.successesTable
-    );
-  }, [
-    rulesData,
-    requirementsBreakdown,
-    isEnhanced,
-    session?.data.craftBaseItemAlso,
-    item?.marketPrice,
-    customBaseItem?.marketPrice,
-    baseRequired,
+  const {
     baseSessionSuccesses,
     baseSessionFailures,
-  ]);
+    enhSessionSuccesses,
+    enhSessionFailures,
+    baseRequired,
+    required,
+    totalEnhSuccesses,
+    totalEnhFailures,
+    netDelta,
+  } = tallies;
+
+  const liveOutcome = useMemo(
+    () =>
+      computeLiveCraftingOutcome({
+        rulesData,
+        isEnhanced,
+        materialCost: session?.data.materialCost ?? 0,
+        item,
+        customBaseItem,
+        netDelta,
+      }),
+    [rulesData, isEnhanced, item, customBaseItem, netDelta, session?.data.materialCost]
+  );
+
+  const baseOutcomeForDisplay = useMemo(
+    () =>
+      computeBaseOutcomeForDisplay({
+        rulesData,
+        requirementsBreakdown,
+        isEnhanced,
+        craftBaseItemAlso: !!session?.data.craftBaseItemAlso,
+        item,
+        customBaseItem,
+        baseRequired,
+        baseSessionSuccesses,
+        baseSessionFailures,
+      }),
+    [
+      rulesData,
+      requirementsBreakdown,
+      isEnhanced,
+      session?.data.craftBaseItemAlso,
+      item,
+      customBaseItem,
+      baseRequired,
+      baseSessionSuccesses,
+      baseSessionFailures,
+    ]
+  );
 
   const handleComplete = useCallback(async () => {
     if (!session || !id || !rulesData || (!item && !customBaseItem)) return;

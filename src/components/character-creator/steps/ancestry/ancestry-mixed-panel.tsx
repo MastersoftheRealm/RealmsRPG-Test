@@ -1,12 +1,13 @@
 'use client';
 
-import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui';
 import { InfoTippy } from '@/components/shared';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { TraitSection } from '@/components/character-creator/TraitSection';
+import { MixedSpeciesSkillPicker } from '@/components/character-creator/mixed-species-skill-picker';
 import { resolveTraitIds, type Species, type Trait } from '@/hooks';
 import type { CharacterAncestry, CharacterDraft } from '@/types';
+import type { NamedIdOption } from '@/lib/ancestry/ancestry-selection';
 import type { ValidationIssue, StepCompletion } from '@/lib/character-creator-validation';
 import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
 import { chooseYourAncestryTraits } from '../../../../../public/tooltip-text';
@@ -21,7 +22,7 @@ export interface AncestryMixedPanelProps {
   ancestryPathNotes: string | undefined;
   ancestryCompletion: StepCompletion;
   canContinue: boolean;
-  mixedSpeciesSkillOptions: { id: string; name: string }[];
+  mixedSpeciesSkillOptions: NamedIdOption[];
   selectedSpeciesSkillIds: string[];
   speciesTraitsFromA: Trait[];
   speciesTraitsFromB: Trait[];
@@ -158,26 +159,11 @@ export function AncestryMixedPanel({
           <p className="text-sm text-text-secondary mb-3">
             Choose exactly 2 skills from the options below (from both species). You get proficiency in these; all other species skills are not granted.
           </p>
-          <div className="flex flex-wrap gap-2">
-            {mixedSpeciesSkillOptions.map((opt) => {
-              const selected = selectedSpeciesSkillIds.includes(opt.id);
-              return (
-                <button
-                  key={opt.id}
-                  type="button"
-                  onClick={() => toggleMixedSpeciesSkill(opt.id)}
-                  className={cn(
-                    'px-3 py-2 min-h-11 rounded-full text-sm font-medium border transition-colors',
-                    selected
-                      ? 'bg-primary-subtle-bg border-primary-subtle-border text-primary-subtle-fg'
-                      : 'bg-surface border-border-light text-text-secondary hover:bg-surface-alt hover:border-primary-outline-border dark:hover:border-primary-outline-border'
-                  )}
-                >
-                  {opt.name}
-                </button>
-              );
-            })}
-          </div>
+          <MixedSpeciesSkillPicker
+            options={mixedSpeciesSkillOptions}
+            selectedIds={selectedSpeciesSkillIds}
+            onToggle={toggleMixedSpeciesSkill}
+          />
           <p className="text-xs text-text-muted dark:text-text-secondary mt-2">
             Selected: {selectedSpeciesSkillIds.length} / 2
           </p>

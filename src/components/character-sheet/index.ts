@@ -15,7 +15,6 @@ export { CharacterSheetProvider } from './character-sheet-context';
 export { CharacterSheetBody } from './character-sheet-body';
 export {
   useCharacterSheetDerived,
-  buildCharacterSheetLibraryProps,
 } from './use-character-sheet-derived';
 export { useCharacterSheetActions } from './use-character-sheet-actions';
 export { AddLibraryItemModal } from './add-library-item-modal';

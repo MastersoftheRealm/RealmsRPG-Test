@@ -12,6 +12,7 @@ import { cn, formatBonus } from '@/lib/utils';
 import { useCodexSkills, useGameRules, type Skill } from '@/hooks';
 import {
   calculateSkillBonusWithProficiency,
+  calculateSubSkillBonusWithProficiency,
   getHighestLinkedAbilityKey,
   getLinkedAbilityKeys,
 } from '@/lib/game/formulas';
@@ -54,6 +55,8 @@ interface GuidedSkillRowItem {
   multiAbility: boolean;
   isSpecies: boolean;
   isPath: boolean;
+  isSubSkill: boolean;
+  baseSkillName?: string;
   canIncrease: boolean;
   canDecrease: boolean;
 }
@@ -81,6 +84,8 @@ function GuidedSkillRow({
     multiAbility,
     isSpecies,
     isPath,
+    isSubSkill,
+    baseSkillName,
     canIncrease,
     canDecrease,
   } = item;
@@ -124,7 +129,12 @@ function GuidedSkillRow({
                 : undefined
             }
           >
-            <span className="font-nunito font-semibold text-text-primary">{skill.name}</span>
+            <span className="font-nunito font-semibold text-text-primary">
+              {item.isSubSkill ? (
+                <span className="pl-1 text-text-secondary">↳ </span>
+              ) : null}
+              {skill.name}
+            </span>
             {hasDescription && (
               <ChevronDown
                 className={cn(
@@ -135,7 +145,7 @@ function GuidedSkillRow({
               />
             )}
           </button>
-          {(abilityLabel || isSpecies || (isPath && pathSourceLabel)) && (
+          {(abilityLabel || isSpecies || (isPath && pathSourceLabel) || isSubSkill) && (
             <div className="flex flex-wrap items-center gap-1.5 pb-0.5">
               {/* DESIGN_INTENT: Ability = primary (guided ability chips); Species = descriptor; path = primary source */}
               {abilityLabel && (
@@ -145,6 +155,11 @@ function GuidedSkillRow({
                   title={`Contributing Ability: ${abilityLabel}`}
                 >
                   {abilityLabel}
+                </DescriptorChip>
+              )}
+              {isSubSkill && baseSkillName && (
+                <DescriptorChip variant="descriptor" size="sm" title={baseSkillName}>
+                  {baseSkillName}
                 </DescriptorChip>
               )}
               {isSpecies && (
@@ -258,20 +273,42 @@ export function GuidedSkillsPanel({
   }, [speciesSkillIds, allocations]);
 
   const orderedSkills = useMemo(() => {
-    const base = allSkills.filter(
-      (s) => s.base_skill_id === undefined && visibleSkillIds.has(String(s.id))
-    );
+    const subsByBase: Record<string, Skill[]> = {};
+    const inList = (id: string | number) => visibleSkillIds.has(String(id));
+
+    allSkills.forEach((s) => {
+      if (s.base_skill_id !== undefined) {
+        const baseKey = String(s.base_skill_id);
+        if (!subsByBase[baseKey]) subsByBase[baseKey] = [];
+        subsByBase[baseKey].push(s);
+      }
+    });
+
+    const baseSkills = allSkills.filter((s) => s.base_skill_id === undefined);
     const rank = (id: string) => {
       if (speciesSkillIds.has(id)) return 0;
       if (pathSkillIds.has(id)) return 1;
       return 2;
     };
-    return base.sort((a, b) => {
+    baseSkills.sort((a, b) => {
       const ra = rank(String(a.id));
       const rb = rank(String(b.id));
       if (ra !== rb) return ra - rb;
       return String(a.name ?? '').localeCompare(String(b.name ?? ''));
     });
+
+    const result: Skill[] = [];
+    baseSkills.forEach((base) => {
+      const baseKey = String(base.id);
+      const subs = subsByBase[baseKey] ?? [];
+      const subsInList = subs.filter((sub) => inList(sub.id));
+      const baseInList = inList(base.id);
+      if (!baseInList && subsInList.length === 0) return;
+      if (baseInList) result.push(base);
+      subsInList.sort((a, b) => String(a.name ?? '').localeCompare(String(b.name ?? '')));
+      result.push(...subsInList);
+    });
+    return result;
   }, [allSkills, visibleSkillIds, speciesSkillIds, pathSkillIds]);
 
   const handleRemove = useCallback(
@@ -290,41 +327,74 @@ export function GuidedSkillsPanel({
       if (!skill) return;
 
       const current = allocations[skillId] ?? 0;
+      const isSubSkill = skill.base_skill_id !== undefined;
 
       if (delta > 0) {
-        const cost = getSkillValueIncreaseCost(current, false, skillRules);
+        const cost = getSkillValueIncreaseCost(current, isSubSkill, skillRules);
         if (remainingPoints < cost) return;
         onAllocationsChange({ ...allocations, [skillId]: current + 1 });
       } else if (current > 0) {
-        onAllocationsChange({ ...allocations, [skillId]: current - 1 });
+        const newVal = current - 1;
+        if (isSubSkill && newVal === 0) {
+          handleRemove(skillId);
+        } else {
+          onAllocationsChange({ ...allocations, [skillId]: newVal });
+        }
       }
     },
-    [allocations, allSkills, remainingPoints, onAllocationsChange, skillRules]
+    [allocations, allSkills, remainingPoints, onAllocationsChange, skillRules, handleRemove]
   );
 
   const rowItems = useMemo((): GuidedSkillRowItem[] => {
     return orderedSkills.map((skill) => {
       const skillId = String(skill.id);
+      const isSubSkill = skill.base_skill_id !== undefined;
+      const baseSkill = isSubSkill
+        ? allSkills.find((s) => String(s.id) === String(skill.base_skill_id))
+        : null;
+      const baseValue = baseSkill ? (allocations[String(baseSkill.id)] ?? 0) : 0;
+      const baseProficient = Boolean(
+        baseSkill &&
+          (speciesSkillIds.has(String(baseSkill.id)) ||
+            (allocations[String(baseSkill.id)] ?? -1) >= 0)
+      );
       const value = Math.max(0, allocations[skillId] ?? 0);
       const isSpecies = speciesSkillIds.has(skillId);
       const isPath = !isSpecies && pathSkillIds.has(skillId);
-      const linkedKeys = getLinkedAbilityKeys(skill.ability);
+      const skillForAbility = baseSkill ?? skill;
+      const linkedKeys = getLinkedAbilityKeys(skillForAbility.ability);
       const chosenAbilityKey =
-        getHighestLinkedAbilityKey(skill.ability, abilities) ?? linkedKeys[0];
+        getHighestLinkedAbilityKey(skillForAbility.ability, abilities) ?? linkedKeys[0];
       const abilityValue = chosenAbilityKey ? (abilities[chosenAbilityKey] ?? 0) : 0;
-      const abilityLabel = formatGuidedSkillAbilityTag(skill, abilities);
-      const bonus = calculateSkillBonusWithProficiency(
-        skill.ability,
-        value,
-        abilities,
-        true,
-        chosenAbilityKey
-      );
-      const canInc =
-        remainingPoints >=
-        (value === 0
-          ? skillRules.gainProficiencyCost
-          : getSkillValueIncreaseCost(value, false, skillRules));
+      const abilityLabel = formatGuidedSkillAbilityTag(skillForAbility, abilities);
+      const proficient = isSubSkill ? value >= 1 : value >= 0;
+      const bonus = isSubSkill
+        ? calculateSubSkillBonusWithProficiency(
+            skill.ability,
+            value,
+            baseValue,
+            baseProficient,
+            abilities,
+            proficient,
+            chosenAbilityKey
+          )
+        : calculateSkillBonusWithProficiency(
+            skill.ability,
+            value,
+            abilities,
+            true,
+            chosenAbilityKey
+          );
+      const canInc = isSubSkill
+        ? baseProficient &&
+          remainingPoints >=
+            (value === 0
+              ? skillRules.gainProficiencyCost
+              : getSkillValueIncreaseCost(value, true, skillRules))
+        : remainingPoints >=
+            (value === 0
+              ? skillRules.gainProficiencyCost
+              : getSkillValueIncreaseCost(value, false, skillRules));
 
       return {
         skill,
@@ -335,12 +405,15 @@ export function GuidedSkillsPanel({
         multiAbility: linkedKeys.length > 1,
         isSpecies,
         isPath,
+        isSubSkill,
+        baseSkillName: isSubSkill ? baseSkill?.name : undefined,
         canIncrease: canInc,
         canDecrease: value > 0,
       };
     });
   }, [
     orderedSkills,
+    allSkills,
     allocations,
     speciesSkillIds,
     pathSkillIds,

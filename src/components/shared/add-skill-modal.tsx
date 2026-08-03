@@ -6,6 +6,8 @@
 'use client';
 
 import { useMemo, useState, type ReactNode } from 'react';
+import { Button } from '@/components/ui';
+import { guidedNavProgressClassName } from '@/components/shared/guided-choice/guided-nav-button-styles';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { Alert, DescriptorChip } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
@@ -37,6 +39,11 @@ export interface AddSkillModalProps {
    * Rows stay readable; Add Selected is blocked until under the limit.
    */
   selectionLimitMessage?: string;
+  /** Optional deeper layer hop (e.g. guided L2 → L3 sub-skills). */
+  deeperLayerLabel?: string;
+  onDeeperLayer?: () => void;
+  deeperLayerDisabled?: boolean;
+  deeperLayerDisabledTitle?: string;
 }
 
 /** Parse skill.ability (comma-separated) into list of abbreviated ability codes (STR, AGI, ...). */
@@ -106,6 +113,10 @@ export function AddSkillModal({
   recommendedSkillIds,
   maxSelections,
   selectionLimitMessage,
+  deeperLayerLabel,
+  onDeeperLayer,
+  deeperLayerDisabled = false,
+  deeperLayerDisabledTitle,
 }: AddSkillModalProps) {
   const { data: allSkills = [], isLoading: loading, error: queryError } = useCodexSkills();
   const [abilityFilter, setAbilityFilter] = useState('');
@@ -171,6 +182,23 @@ export function AddSkillModal({
     </div>
   );
 
+  const deeperLayerNav =
+    deeperLayerLabel && onDeeperLayer ? (
+      <div className="pb-1">
+        <Button
+          type="button"
+          variant="primary"
+          size="lg"
+          onClick={onDeeperLayer}
+          disabled={deeperLayerDisabled}
+          title={deeperLayerDisabled ? deeperLayerDisabledTitle : undefined}
+          className={guidedNavProgressClassName}
+        >
+          {deeperLayerLabel}
+        </Button>
+      </div>
+    ) : null;
+
   return (
     <>
       {error && isOpen && (
@@ -187,6 +215,7 @@ export function AddSkillModal({
         onConfirm={(selected) => onAdd(selected.map(i => i.data as Skill))}
         maxSelections={maxSelections}
         selectionLimitMessage={resolvedLimitMessage}
+        footerExtra={deeperLayerNav ? () => deeperLayerNav : undefined}
         columns={[
           { key: 'name', label: 'Name' },
           { key: 'ability', label: 'Abilities', sortable: true },

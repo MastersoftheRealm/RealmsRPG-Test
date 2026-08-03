@@ -127,11 +127,10 @@ export function buildEmpoweredTechniqueSelectableItems(
       powerPartsDb: powerPartsDb ?? [],
       techniquePartsDb: techniquePartsDb ?? [],
     });
-    const raw = technique as unknown as Record<string, unknown>;
-    const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
-    const totals = (raw.totals as Record<string, unknown> | undefined) ?? {};
-    const energy = Number(totals.energy ?? 0);
-    const tp = Number(totals.trainingPoints ?? 0);
+    const powerData = technique.power ?? {};
+    const totals = technique.totals ?? {};
+    const energy = totals.energy ?? 0;
+    const tp = totals.trainingPoints ?? 0;
     const actionCol = empowered.columns?.find((c) => c.key === 'Action');
     const damageCol = empowered.columns?.find((c) => c.key === 'Damage');
     const areaCol = empowered.columns?.find((c) => c.key === 'Area');
@@ -143,8 +142,8 @@ export function buildEmpoweredTechniqueSelectableItems(
         name: technique.name,
         description: technique.description,
         parts: [],
-        actionType: String(raw.actionType ?? ''),
-        isReaction: raw.isReaction === true,
+        actionType: String(technique.actionType ?? ''),
+        isReaction: technique.isReaction === true,
         area: powerData.area as UserPower['area'],
         range: powerData.range as UserPower['range'],
         duration: powerData.duration as UserPower['duration'],
@@ -183,7 +182,7 @@ export function buildEmpoweredTechniqueSelectableItems(
           innate: false,
           image_id: technique.image_id ?? null,
           image_url: technique.image_url ?? null,
-        } as unknown as Record<string, unknown>,
+        },
       },
     };
   });

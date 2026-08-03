@@ -177,12 +177,12 @@ export function transformUserPowerToDisplayItem(
       innate: false,
       image_id: power.image_id ?? null,
       image_url: power.image_url ?? null,
-    } as unknown as Record<string, unknown>,
+    },
   };
 }
 
 export function displayItemToCreaturePower(item: DisplayItem): CreaturePower {
-  return item.sourceData as unknown as CreaturePower;
+  return item.sourceData as CreaturePower;
 }
 
 // =============================================================================
@@ -231,12 +231,12 @@ export function transformUserTechniqueToDisplayItem(
       damage: display.damageStr,
       image_id: technique.image_id ?? null,
       image_url: technique.image_url ?? null,
-    } as unknown as Record<string, unknown>,
+    },
   };
 }
 
 export function displayItemToCreatureTechnique(item: DisplayItem): CreatureTechnique {
-  return item.sourceData as unknown as CreatureTechnique;
+  return item.sourceData as CreatureTechnique;
 }
 
 // =============================================================================
@@ -272,12 +272,12 @@ export function transformCreatureFeatToDisplayItem(
       description: feat.description,
       points,
       featSourceType: 'creature' as const,
-    } as unknown as Record<string, unknown>,
+    },
   };
 }
 
 export function displayItemToCreatureFeat(item: DisplayItem): CreatureFeat {
-  return item.sourceData as unknown as CreatureFeat;
+  return item.sourceData as CreatureFeat;
 }
 
 // =============================================================================
@@ -361,12 +361,12 @@ export function transformUserItemToDisplayItem(
       shieldDR: item.shieldDR ?? null,
       image_id: item.image_id ?? null,
       image_url: item.image_url ?? null,
-    } as unknown as Record<string, unknown>,
+    },
   };
 }
 
 export function displayItemToCreatureArmament(item: DisplayItem): CreatureArmament {
-  return item.sourceData as unknown as CreatureArmament;
+  return item.sourceData as CreatureArmament;
 }
 
 // =============================================================================
@@ -389,7 +389,7 @@ export function creaturePowerToDisplayItem(power: CreaturePower): DisplayItem {
       ...(power.damage ? [{ label: 'Damage', value: power.damage }] : []),
     ],
     badges: [],
-    sourceData: power as unknown as Record<string, unknown>,
+    sourceData: power,
   };
 }
 
@@ -408,7 +408,7 @@ export function creatureTechniqueToDisplayItem(technique: CreatureTechnique): Di
       ...(technique.damage ? [{ label: 'Damage', value: technique.damage }] : []),
     ],
     badges: [],
-    sourceData: technique as unknown as Record<string, unknown>,
+    sourceData: technique,
   };
 }
 
@@ -423,7 +423,7 @@ export function creatureFeatToDisplayItem(feat: CreatureFeat): DisplayItem {
     stats: [],
     details: [],
     badges: [],
-    sourceData: feat as unknown as Record<string, unknown>,
+    sourceData: feat,
   };
 }
 
@@ -442,6 +442,6 @@ export function creatureArmamentToDisplayItem(armament: CreatureArmament): Displ
     badges: [
       { label: armament.rarity, variant: 'default' },
     ],
-    sourceData: armament as unknown as Record<string, unknown>,
+    sourceData: armament,
   };
 }

@@ -1,9 +1,10 @@
 /**
- * Shared LibrarySection props for desktop + mobile character sheet (TASK-365).
+ * Resolve LibrarySection panel data from sheet context pieces (TASK-365 / TASK-667 cleanup).
+ * Lives under components/ so character-sheet does not import from app/.
  */
 
-import type { LibrarySectionProps } from '@/components/character-sheet/library-section';
 import type { CharacterProficiency, Item, Character, CharacterAncestry } from '@/types';
+import type { EnrichedCharacterData } from '@/lib/data-enrichment';
 import { characterToFeatRequirementCharacter } from '@/lib/game/feat-requirements';
 import {
   calculateMaxArchetypeFeats,
@@ -11,103 +12,44 @@ import {
 } from '@/lib/game/formulas';
 import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
 import { withAbilitiesForResourceMaxima } from '@/lib/character/temp-modifiers';
+import type { LibrarySectionData, SheetLibraryModel } from './library-section-props';
+import type { CharacterSheetDerivedHandlers } from './use-character-sheet-derived';
 
-type EnrichedSheetData = {
-  powers?: Character['powers'];
-  techniques?: Character['techniques'];
-  weapons?: unknown[];
-  shields?: unknown[];
-  armor?: unknown[];
-  equipment?: unknown[];
-};
-
-type ArchetypeProgression = {
-  innateEnergy?: number;
-  innateThreshold?: number;
-  innatePools?: number;
-};
-
-export type BuildLibrarySectionPropsArgs = {
+export function buildLibrarySectionData(input: {
   character: Character;
-  enrichedData: EnrichedSheetData | null | undefined;
-  archetypeProgression: ArchetypeProgression | null | undefined;
-  calculatedMaxEnergy: number;
-  powerPartsDb: LibrarySectionProps['powerPartsDb'];
-  techniquePartsDb: LibrarySectionProps['techniquePartsDb'];
-  itemPropertiesDb: LibrarySectionProps['itemPropertiesDb'];
-  traitsDb: LibrarySectionProps['traitsDb'];
-  featsDb: LibrarySectionProps['featsDb'];
-  characterSpeciesTraits: string[];
-  archetypeFeatsForDisplay: LibrarySectionProps['archetypeFeats'];
-  characterFeatsForDisplay: LibrarySectionProps['characterFeats'];
-  stateFeatsList: LibrarySectionProps['stateFeats'];
-  stateUsesCurrent: number;
-  stateUsesMax: number;
-  setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
-  handleRemovePower: NonNullable<LibrarySectionProps['onRemovePower']>;
-  handleTogglePowerInnate: NonNullable<LibrarySectionProps['onTogglePowerInnate']>;
-  handleUsePower: NonNullable<LibrarySectionProps['onUsePower']>;
-  handleRemoveTechnique: NonNullable<LibrarySectionProps['onRemoveTechnique']>;
-  handleUseTechnique: NonNullable<LibrarySectionProps['onUseTechnique']>;
-  handleRemoveWeapon: NonNullable<LibrarySectionProps['onRemoveWeapon']>;
-  handleToggleEquipWeapon: NonNullable<LibrarySectionProps['onToggleEquipWeapon']>;
-  handleRemoveShield: NonNullable<LibrarySectionProps['onRemoveShield']>;
-  handleToggleEquipShield: NonNullable<LibrarySectionProps['onToggleEquipShield']>;
-  handleRemoveArmor: NonNullable<LibrarySectionProps['onRemoveArmor']>;
-  handleToggleEquipArmor: NonNullable<LibrarySectionProps['onToggleEquipArmor']>;
-  handleRemoveEquipment: NonNullable<LibrarySectionProps['onRemoveEquipment']>;
-  handleEquipmentQuantityChange: NonNullable<LibrarySectionProps['onEquipmentQuantityChange']>;
-  handleCurrencyChange: NonNullable<LibrarySectionProps['onCurrencyChange']>;
-  handleStateUsesChange: NonNullable<LibrarySectionProps['onStateUsesChange']>;
-  handleEnterState: NonNullable<LibrarySectionProps['onEnterState']>;
-  handleFeatUsesChange: NonNullable<LibrarySectionProps['onFeatUsesChange']>;
-  handleFeatLevelChange: NonNullable<LibrarySectionProps['onFeatLevelChange']>;
-  handleRequestRemoveFeat: NonNullable<LibrarySectionProps['onRemoveFeat']>;
-  handleTraitUsesChange: NonNullable<LibrarySectionProps['onTraitUsesChange']>;
-  handleFeatCustomizationChange: NonNullable<LibrarySectionProps['onFeatCustomizationChange']>;
-  handleTraitCustomizationChange: NonNullable<LibrarySectionProps['onTraitCustomizationChange']>;
-};
+  enrichedData: EnrichedCharacterData | null | undefined;
+  libraryModel: SheetLibraryModel;
+  handlers: CharacterSheetDerivedHandlers;
+}): LibrarySectionData {
+  const { character, enrichedData, libraryModel: m, handlers } = input;
+  const {
+    setCharacter,
+    handleRemovePower,
+    handleTogglePowerInnate,
+    handleUsePower,
+    handleRemoveTechnique,
+    handleUseTechnique,
+    handleRemoveWeapon,
+    handleToggleEquipWeapon,
+    handleRemoveShield,
+    handleToggleEquipShield,
+    handleRemoveArmor,
+    handleToggleEquipArmor,
+    handleRemoveEquipment,
+    handleEquipmentQuantityChange,
+    handleCurrencyChange,
+    handleStateUsesChange,
+    handleEnterState,
+    handleFeatUsesChange,
+    handleFeatLevelChange,
+    handleRequestRemoveFeat,
+    handleTraitUsesChange,
+    handleFeatCustomizationChange,
+    handleTraitCustomizationChange,
+  } = handlers;
 
-export function buildLibrarySectionProps({
-  character,
-  enrichedData,
-  archetypeProgression,
-  calculatedMaxEnergy,
-  powerPartsDb,
-  techniquePartsDb,
-  itemPropertiesDb,
-  traitsDb,
-  featsDb,
-  characterSpeciesTraits,
-  archetypeFeatsForDisplay,
-  characterFeatsForDisplay,
-  stateFeatsList,
-  stateUsesCurrent,
-  stateUsesMax,
-  setCharacter,
-  handleRemovePower,
-  handleTogglePowerInnate,
-  handleUsePower,
-  handleRemoveTechnique,
-  handleUseTechnique,
-  handleRemoveWeapon,
-  handleToggleEquipWeapon,
-  handleRemoveShield,
-  handleToggleEquipShield,
-  handleRemoveArmor,
-  handleToggleEquipArmor,
-  handleRemoveEquipment,
-  handleEquipmentQuantityChange,
-  handleCurrencyChange,
-  handleStateUsesChange,
-  handleEnterState,
-  handleFeatUsesChange,
-  handleFeatLevelChange,
-  handleRequestRemoveFeat,
-  handleTraitUsesChange,
-  handleFeatCustomizationChange,
-  handleTraitCustomizationChange,
-}: BuildLibrarySectionPropsArgs): Omit<LibrarySectionProps, 'className' | 'activeTab' | 'onActiveTabChange'> {
+  const archetypeProgression = m.archetypeProgression;
+
   return {
     powers: enrichedData?.powers || character.powers || [],
     techniques: enrichedData?.techniques || character.techniques || [],
@@ -119,7 +61,7 @@ export function buildLibrarySectionProps({
     innateEnergy: archetypeProgression?.innateEnergy || 0,
     innateThreshold: archetypeProgression?.innateThreshold || 0,
     innatePools: archetypeProgression?.innatePools || 0,
-    currentEnergy: character.currentEnergy ?? character.energy?.current ?? calculatedMaxEnergy,
+    currentEnergy: character.currentEnergy ?? character.energy?.current ?? m.calculatedMaxEnergy,
     martialProficiency: character.mart_prof,
     powerAttackBonus: calculatePowerAttackBonus(character),
     onRemovePower: handleRemovePower,
@@ -179,9 +121,9 @@ export function buildLibrarySectionProps({
     level: character.level,
     // TP limit respects ability temps only when applyAbilityToResourceMaxima is on (ADR-0006)
     archetypeAbility: getArchetypeAbilityScore(withAbilitiesForResourceMaxima(character)),
-    powerPartsDb,
-    techniquePartsDb,
-    itemPropertiesDb,
+    powerPartsDb: m.powerPartsDb,
+    techniquePartsDb: m.techniquePartsDb,
+    itemPropertiesDb: m.itemPropertiesDb,
     proficiencies: character.proficiencies,
     onProficienciesChange: (next: CharacterProficiency[]) =>
       setCharacter((prev) => (prev ? { ...prev, proficiencies: next } : null)),
@@ -198,12 +140,12 @@ export function buildLibrarySectionProps({
       characteristicTrait: character.characteristicTrait,
       speciesTraits: character.speciesTraits,
     },
-    speciesTraitsFromCodex: characterSpeciesTraits,
-    archetypeFeats: archetypeFeatsForDisplay,
-    characterFeats: characterFeatsForDisplay,
-    stateFeats: stateFeatsList,
-    stateUsesCurrent,
-    stateUsesMax,
+    speciesTraitsFromCodex: m.characterSpeciesTraits,
+    archetypeFeats: m.archetypeFeatsForDisplay,
+    characterFeats: m.characterFeatsForDisplay,
+    stateFeats: m.stateFeatsList,
+    stateUsesCurrent: m.stateUsesCurrent,
+    stateUsesMax: m.stateUsesMax,
     onStateUsesChange: handleStateUsesChange,
     onEnterState: handleEnterState,
     maxArchetypeFeats: calculateMaxArchetypeFeats(
@@ -215,8 +157,8 @@ export function buildLibrarySectionProps({
     onFeatLevelChange: handleFeatLevelChange,
     featRequirementCharacter: characterToFeatRequirementCharacter(character),
     onRemoveFeat: handleRequestRemoveFeat,
-    traitsDb,
-    featsDb,
+    traitsDb: m.traitsDb,
+    featsDb: m.featsDb,
     traitUses: character.traitUses,
     onTraitUsesChange: handleTraitUsesChange,
     traitCustomizations: character.traitCustomizations,

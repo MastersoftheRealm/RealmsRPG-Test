@@ -31,6 +31,13 @@ import {
   canIncreaseDefense,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
+import {
+  applyAddedBaseSkills,
+  applyAddedSubSkills,
+  buildCharacterSkillsForSubModal,
+  buildExistingSkillIdSet,
+  buildExistingSkillNames,
+} from '@/lib/game/skill-allocation-add';
 import { useGameRules } from '@/hooks';
 import { formatBonus } from '@/lib/utils';
 import { SkillRow, PointStatus, AddSkillModal, AddSubSkillModal, ValueStepper, WordHelpTip } from '@/components/shared';
@@ -191,21 +198,19 @@ export function SkillsAllocationPage({
   }, [allSkills, speciesSkillIds, allocations]);
 
   const existingSkillIds = useMemo(
-    () => new Set([...speciesSkillIds, ...Object.keys(allocations)]),
+    () => buildExistingSkillIdSet(speciesSkillIds, allocations),
     [speciesSkillIds, allocations]
   );
 
-  const existingSkillNames = useMemo(() => {
-    return allSkills
-      .filter((s: Skill) => existingSkillIds.has(String(s.id)))
-      .map((s: Skill) => s.name);
-  }, [allSkills, existingSkillIds]);
+  const existingSkillNames = useMemo(
+    () => buildExistingSkillNames(allSkills, existingSkillIds),
+    [allSkills, existingSkillIds]
+  );
 
-  const characterSkillsForSubModal = useMemo(() => {
-    return allSkills
-      .filter((s: Skill) => s.base_skill_id === undefined && existingSkillIds.has(String(s.id)))
-      .map((s: Skill) => ({ id: s.id, name: s.name, prof: (allocations[String(s.id)] ?? 0) > 0 }));
-  }, [allSkills, existingSkillIds, allocations]);
+  const characterSkillsForSubModal = useMemo(
+    () => buildCharacterSkillsForSubModal(allSkills, existingSkillIds, allocations),
+    [allSkills, existingSkillIds, allocations]
+  );
 
   const handleRemoveSkill = useCallback(
     (skillId: string) => {
@@ -247,12 +252,7 @@ export function SkillsAllocationPage({
 
   const handleAddSkills = useCallback(
     (skills: Skill[]) => {
-      const next = { ...allocations };
-      skills.forEach((s: Skill) => {
-        const key = String(s.id);
-        if (!(key in next)) next[key] = 0; // Auto proficient, skill value 0 (proficiency costs 1 pt)
-      });
-      onAllocationsChange(next);
+      onAllocationsChange(applyAddedBaseSkills(allocations, skills));
       setAddSkillModalOpen(false);
     },
     [allocations, onAllocationsChange]
@@ -260,16 +260,7 @@ export function SkillsAllocationPage({
 
   const handleAddSubSkills = useCallback(
     (skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => {
-      const next = { ...allocations };
-      skills.forEach((s: Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }) => {
-        if (s.autoAddBaseSkill) {
-          const baseKey = String(s.autoAddBaseSkill.id);
-          if (!(baseKey in next)) next[baseKey] = 0; // Base skill: proficient, value 0
-        }
-        const key = String(s.id);
-        if (!(key in next)) next[key] = 1; // Sub-skill: proficient + 1 value (free with proficiency)
-      });
-      onAllocationsChange(next);
+      onAllocationsChange(applyAddedSubSkills(allocations, skills));
       setAddSubSkillModalOpen(false);
     },
     [allocations, onAllocationsChange]

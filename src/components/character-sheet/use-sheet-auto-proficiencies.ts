@@ -19,7 +19,7 @@ import {
   getMissingRequiredProficiencies,
 } from '@/lib/proficiencies';
 import type { Character, Item } from '@/types';
-import type { LibrarySectionProps } from './library-section';
+import type { LibrarySectionData } from './library-section-props';
 
 export type ApplyAutoProficienciesResult = {
   character: Character;
@@ -63,9 +63,9 @@ export function computeAutoProficiencies(
 type UseSheetAutoProficienciesArgs = {
   character: Character | null;
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
-  powerPartsDb: LibrarySectionProps['powerPartsDb'];
-  techniquePartsDb: LibrarySectionProps['techniquePartsDb'];
-  itemPropertiesDb: LibrarySectionProps['itemPropertiesDb'];
+  powerPartsDb: LibrarySectionData['powerPartsDb'];
+  techniquePartsDb: LibrarySectionData['techniquePartsDb'];
+  itemPropertiesDb: LibrarySectionData['itemPropertiesDb'];
   showToast: ShowToast;
 };
 

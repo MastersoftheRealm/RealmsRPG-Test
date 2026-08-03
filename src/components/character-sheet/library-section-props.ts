@@ -1,5 +1,6 @@
 /**
- * Public props for LibrarySection (re-exported from library-section.tsx).
+ * Library section types (TASK-667).
+ * Public props are chrome-only; resolved panel data is built from sheet context.
  */
 
 import type { CharacterNote } from './notes-tab';
@@ -9,10 +10,83 @@ import type {
   Item,
   Abilities,
   CharacterProficiency,
+  CharacterFeat,
 } from '@/types';
 import type { TabType } from './library-tab-config';
 
+/** Public LibrarySection props — tab chrome only; data comes from character-sheet context. */
 export interface LibrarySectionProps {
+  /** Controlled tab (optional; page context owns tab when provided) */
+  activeTab?: TabType;
+  onActiveTabChange?: (tab: TabType) => void;
+  className?: string;
+}
+
+/**
+ * Derived + catalog inputs that are not already on sheet context as character/enrichedData.
+ * Assembled by the page; LibrarySection maps these into panel data via buildLibrarySectionData.
+ */
+export interface SheetLibraryModel {
+  archetypeProgression: {
+    innateEnergy?: number;
+    innateThreshold?: number;
+    innatePools?: number;
+  } | null;
+  calculatedMaxEnergy: number;
+  powerPartsDb?: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    base_tp?: number;
+    op_1_tp?: number;
+    op_2_tp?: number;
+    op_3_tp?: number;
+  }>;
+  techniquePartsDb?: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    base_tp?: number;
+    op_1_tp?: number;
+    op_2_tp?: number;
+    op_3_tp?: number;
+  }>;
+  itemPropertiesDb?: Array<{
+    id: string | number;
+    name: string;
+    description?: string;
+    base_tp?: number;
+    tp_cost?: number;
+  }>;
+  traitsDb?: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    uses_per_rec?: number;
+    rec_period?: string;
+  }>;
+  featsDb?: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    effect?: string;
+    max_uses?: number;
+    rec_period?: string;
+    category?: string;
+  }>;
+  characterSpeciesTraits: string[];
+  archetypeFeatsForDisplay: CharacterFeat[];
+  characterFeatsForDisplay: CharacterFeat[];
+  stateFeatsList: Array<CharacterFeat & { type: 'archetype' | 'character' }>;
+  stateUsesCurrent: number;
+  stateUsesMax: number;
+}
+
+/**
+ * Resolved library panel data (internal to character-sheet).
+ * Built from character + SheetLibraryModel + handlers — not a public prop bag (TASK-667).
+ */
+export interface LibrarySectionData {
   powers: CharacterPower[];
   techniques: CharacterTechnique[];
   weapons: Item[];
@@ -21,12 +95,11 @@ export interface LibrarySectionProps {
   equipment: Item[];
   currency?: number;
   innateEnergy?: number;
-  innateThreshold?: number; // Innate energy threshold per pool
-  innatePools?: number; // Number of innate pools
-  currentInnateEnergy?: number; // Optional override; default = max minus innate power costs
-  currentEnergy?: number; // Current energy for use button validation
+  innateThreshold?: number;
+  innatePools?: number;
+  currentInnateEnergy?: number;
+  currentEnergy?: number;
   isEditMode?: boolean;
-  // Power/Technique/Equipment callbacks
   onAddPower?: () => void;
   onRemovePower?: (id: string | number) => void;
   onTogglePowerInnate?: (id: string | number, isInnate: boolean) => void;
@@ -47,10 +120,8 @@ export interface LibrarySectionProps {
   onRemoveEquipment?: (id: string | number) => void;
   onEquipmentQuantityChange?: (id: string | number, delta: number) => void;
   onCurrencyChange?: (value: number) => void;
-  // Notes tab props
   visibility?: 'private' | 'campaign' | 'public';
   onVisibilityChange?: (value: 'private' | 'campaign' | 'public') => void;
-  /** Speed display unit for movement (Jump, Climb, Swim) in Notes tab */
   speedDisplayUnit?: 'spaces' | 'feet' | 'meters';
   weight?: number;
   height?: number;
@@ -58,54 +129,41 @@ export interface LibrarySectionProps {
   archetypeDesc?: string;
   notes?: string;
   abilities?: Abilities;
-  /** Power Attack Bonus (power ability + power proficiency) for power damage rolls */
   powerAttackBonus?: number;
   onWeightChange?: (value: number) => void;
   onHeightChange?: (value: number) => void;
   onAppearanceChange?: (value: string) => void;
   onArchetypeDescChange?: (value: string) => void;
   onNotesChange?: (value: string) => void;
-  // Named notes (custom notes)
   namedNotes?: CharacterNote[];
   onAddNote?: () => void;
   onUpdateNote?: (id: string, updates: Partial<CharacterNote>) => void;
   onDeleteNote?: (id: string) => void;
-  // Proficiencies tab props
   level?: number;
   archetypeAbility?: number;
-  martialProficiency?: number; // For armament proficiency display
-  // Codex parts data for enrichment (descriptions, TP costs)
-  powerPartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
-  techniquePartsDb?: Array<{ id: string; name: string; description?: string; base_tp?: number; op_1_tp?: number; op_2_tp?: number; op_3_tp?: number }>;
-  itemPropertiesDb?: Array<{ id: string | number; name: string; description?: string; base_tp?: number; tp_cost?: number }>;
+  martialProficiency?: number;
+  powerPartsDb?: SheetLibraryModel['powerPartsDb'];
+  techniquePartsDb?: SheetLibraryModel['techniquePartsDb'];
+  itemPropertiesDb?: SheetLibraryModel['itemPropertiesDb'];
   proficiencies?: CharacterProficiency[];
   onProficienciesChange?: (next: CharacterProficiency[]) => void;
   unarmedProwess?: number;
   onUnarmedProwessChange?: (level: number) => void;
   tabVisibility?: Partial<Record<TabType, boolean>>;
   onTabVisibilityChange?: (next: Partial<Record<TabType, boolean>>) => void;
-  // Feats tab props
   ancestry?: {
     selectedTraits?: string[];
     selectedFlaw?: string | null;
     selectedCharacteristic?: string | null;
   };
-  // Vanilla site trait fields (stored at top level)
   vanillaTraits?: {
     ancestryTraits?: string[];
     flawTrait?: string | null;
     characteristicTrait?: string | null;
     speciesTraits?: string[];
   };
-  // Species traits from Codex species data (automatically granted based on species)
   speciesTraitsFromCodex?: string[];
-  traitsDb?: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    uses_per_rec?: number;
-    rec_period?: string;
-  }>;
+  traitsDb?: SheetLibraryModel['traitsDb'];
   traitUses?: Record<string, number>;
   archetypeFeats?: Array<{
     id?: string | number;
@@ -127,17 +185,13 @@ export interface LibrarySectionProps {
     customName?: string;
     note?: string;
   }>;
-  featsDb?: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    effect?: string;
-    max_uses?: number;
-    rec_period?: string;
-    category?: string;
-  }>;
+  featsDb?: SheetLibraryModel['featsDb'];
   onFeatUsesChange?: (featId: string, delta: number) => void;
-  onFeatLevelChange?: (featId: string, targetLevel: number, listType: 'archetype' | 'character') => void;
+  onFeatLevelChange?: (
+    featId: string,
+    targetLevel: number,
+    listType: 'archetype' | 'character'
+  ) => void;
   featRequirementCharacter?: import('@/lib/game/feat-requirements').CharacterForFeatRequirement;
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
@@ -154,18 +208,19 @@ export interface LibrarySectionProps {
     traitKey: string,
     updates: Partial<import('@/types/feats').FeatTraitCustomization>
   ) => void;
-  /** State uses (current/max per recovery; max = proficiency). Restored on full recovery. */
-  stateFeats?: Array<{ id?: string | number; name: string; description?: string; maxUses?: number; currentUses?: number; recovery?: string; type?: 'archetype' | 'character' }>;
+  stateFeats?: Array<{
+    id?: string | number;
+    name: string;
+    description?: string;
+    maxUses?: number;
+    currentUses?: number;
+    recovery?: string;
+    type?: 'archetype' | 'character';
+  }>;
   stateUsesCurrent?: number;
   stateUsesMax?: number;
   onStateUsesChange?: (delta: number) => void;
   onEnterState?: () => void;
-  /** Max archetype feats (for overspend indicator and current/max display) */
   maxArchetypeFeats?: number;
-  /** Max character feats (for overspend indicator and current/max display) */
   maxCharacterFeats?: number;
-  /** Controlled tab (optional; page context owns tab when provided) */
-  activeTab?: TabType;
-  onActiveTabChange?: (tab: TabType) => void;
-  className?: string;
 }

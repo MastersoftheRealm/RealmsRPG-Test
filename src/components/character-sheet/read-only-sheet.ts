@@ -7,11 +7,12 @@ import type { Dispatch, SetStateAction } from 'react';
 import type { EnrichedCharacterData } from '@/lib/data-enrichment';
 import type { Character, CharacterLibraryTabId } from '@/types';
 import type { CharacterSheetContextValue } from './character-sheet-context';
-import type { LibrarySectionProps } from './library-section';
+import type { SheetLibraryModel } from './library-section-props';
 import type {
   CharacterSheetDerivedHandlers,
   CharacterSheetPointBudgets,
   CharacterSheetSkillRow,
+  CharacterSheetStats,
 } from './use-character-sheet-derived';
 
 const noop = () => {};
@@ -49,34 +50,61 @@ export function buildReadOnlyLibraryHandlers(
   };
 }
 
-type LibraryProps = Omit<LibrarySectionProps, 'className' | 'activeTab' | 'onActiveTabChange'> | null;
-
 /** Full sheet context for read-only consumers (campaign RM character view). */
 export function buildReadOnlySheetContextValue(input: {
   character: Character;
   skills: CharacterSheetSkillRow[];
   pointBudgets: CharacterSheetPointBudgets | null;
   enrichedData: EnrichedCharacterData | null;
-  librarySectionProps: LibraryProps;
+  libraryModel: SheetLibraryModel | null;
+  libraryHandlers?: CharacterSheetDerivedHandlers;
   characterSpeciesSkills: string[];
   libraryActiveTab: CharacterLibraryTabId;
   setLibraryActiveTab: (tab: CharacterLibraryTabId) => void;
+  displayCharacter?: Character | null;
+  calculatedStats?: CharacterSheetStats | null;
 }): CharacterSheetContextValue {
   return {
     character: input.character,
     setCharacter: readOnlySetCharacter,
     isEditMode: false,
     isOwner: false,
-    setAddModalType: noop,
-    setFeatModalType: noop,
-    setSkillModalType: noop,
     skills: input.skills,
     pointBudgets: input.pointBudgets,
     enrichedData: input.enrichedData,
-    librarySectionProps: input.librarySectionProps,
+    libraryModel: input.libraryModel,
+    libraryHandlers: input.libraryHandlers ?? buildReadOnlyLibraryHandlers(),
     characterSpeciesSkills: input.characterSpeciesSkills,
     libraryActiveTab: input.libraryActiveTab,
     setLibraryActiveTab: input.setLibraryActiveTab,
+    displayCharacter: input.displayCharacter ?? input.character,
+    calculatedStats: input.calculatedStats ?? null,
+    addModalType: null,
+    setAddModalType: noop,
+    featModalType: null,
+    setFeatModalType: noop,
+    skillModalType: null,
+    setSkillModalType: noop,
+    featToRemove: null,
+    setFeatToRemove: noop,
+    showLevelUpModal: false,
+    setShowLevelUpModal: noop,
+    showRecoveryModal: false,
+    setShowRecoveryModal: noop,
+    showEditArchetypeModal: false,
+    setShowEditArchetypeModal: noop,
+    editArchetypeSessionKey: 0,
+    showEditSpeciesModal: false,
+    setShowEditSpeciesModal: noop,
+    onModalAdd: noop,
+    onAddFeats: noop,
+    onAddSkills: noop,
+    onConfirmRemoveFeat: noop,
+    onLevelUp: noop,
+    onFullRecovery: noop,
+    onPartialRecovery: noop,
+    onArchetypeSave: noop,
+    onSpeciesSave: noop,
     onAbilityChange: noop,
     onDefenseChange: noop,
     onTempModifiersChange: noop,

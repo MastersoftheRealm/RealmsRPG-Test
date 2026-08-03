@@ -19,13 +19,13 @@ import {
   CharacterSheetProvider,
   CharacterSheetBody,
   useCharacterSheetDerived,
-  buildCharacterSheetLibraryProps,
   resolveLibraryActiveTab,
 } from '@/components/character-sheet';
 import {
   buildReadOnlyLibraryHandlers,
   buildReadOnlySheetContextValue,
 } from '@/components/character-sheet/read-only-sheet';
+import type { SheetLibraryModel } from '@/components/character-sheet/library-section-props';
 import { RollLog, RollProvider } from '@/components/rolls';
 import {
   useUserPowers,
@@ -163,11 +163,9 @@ function CampaignCharacterViewContent() {
     }
   }
 
-  const librarySectionProps = useMemo(() => {
+  const libraryModel = useMemo((): SheetLibraryModel | null => {
     if (!character || !calculatedStats) return null;
-    return buildCharacterSheetLibraryProps({
-      character,
-      enrichedData,
+    return {
       archetypeProgression,
       calculatedMaxEnergy: calculatedStats.maxEnergy,
       powerPartsDb,
@@ -181,12 +179,10 @@ function CampaignCharacterViewContent() {
       stateFeatsList,
       stateUsesCurrent,
       stateUsesMax,
-      handlers: READONLY_LIBRARY_HANDLERS,
-    });
+    };
   }, [
     character,
     calculatedStats,
-    enrichedData,
     archetypeProgression,
     powerPartsDb,
     techniquePartsDb,
@@ -209,10 +205,13 @@ function CampaignCharacterViewContent() {
             skills,
             pointBudgets,
             enrichedData,
-            librarySectionProps,
+            libraryModel,
+            libraryHandlers: READONLY_LIBRARY_HANDLERS,
             characterSpeciesSkills,
             libraryActiveTab,
             setLibraryActiveTab,
+            displayCharacter: character,
+            calculatedStats,
           })
         : null,
     [
@@ -220,9 +219,10 @@ function CampaignCharacterViewContent() {
       skills,
       pointBudgets,
       enrichedData,
-      librarySectionProps,
+      libraryModel,
       characterSpeciesSkills,
       libraryActiveTab,
+      calculatedStats,
     ]
   );
 

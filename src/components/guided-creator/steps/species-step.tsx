@@ -9,9 +9,8 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { GitMerge } from 'lucide-react';
-import { Spinner, EmptyState, Button } from '@/components/ui';
+import { Spinner, EmptyState } from '@/components/ui';
 import { GuidedLayerNav } from '@/components/shared';
-import { guidedNavPreviousClassName } from '@/components/shared/guided-choice/guided-nav-button-styles';
 import { useMergedSpecies, useUserSpecies } from '@/hooks';
 import type { Species } from '@/hooks';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -130,19 +129,6 @@ export function SpeciesStep() {
       title={stepCopy.title}
       description={stepCopy.description}
       canContinue={Boolean(draft.speciesId)}
-      footerTrailing={
-        isL2 ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            onClick={openSpeciesCreator}
-            className={guidedNavPreviousClassName}
-          >
-            {stepCopy.createSpecies}
-          </Button>
-        ) : undefined
-      }
     >
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -190,11 +176,12 @@ export function SpeciesStep() {
 
           {hasStarters && !showAll ? (
             <GuidedLayerNav expandLabel={stepCopy.showAll} onExpand={() => setShowAll(true)} />
-          ) : null}
-          {hasStarters && showAll ? (
+          ) : isL2 ? (
             <GuidedLayerNav
-              collapseLabel={stepCopy.seeStarters}
-              onCollapse={() => setShowAll(false)}
+              collapseLabel={hasStarters ? stepCopy.seeStarters : undefined}
+              onCollapse={hasStarters ? () => setShowAll(false) : undefined}
+              expandLabel={stepCopy.createSpecies}
+              onExpand={openSpeciesCreator}
             />
           ) : null}
 

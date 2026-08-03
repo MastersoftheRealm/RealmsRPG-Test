@@ -19,7 +19,6 @@ import {
   calculateProficiency,
   calculateSkillPointsForEntity,
   resolveParentSkillNameForSubSkill,
-  type CodexSkillParentRef,
 } from '@/lib/game/formulas';
 import { getArchetypeCodexLookupId, mergeArchetypeFromCodex } from '@/lib/game/archetype-display';
 import { calculateCharacterSkillPointsSpent, buildSpeciesSkillIdSet } from '@/lib/game/skill-allocation';
@@ -31,8 +30,7 @@ import {
   calculateStats,
   type CharacterSheetStats,
 } from '@/app/(main)/characters/[id]/character-sheet-utils';
-import { buildLibrarySectionProps } from '@/app/(main)/characters/[id]/library-section-props';
-import type { LibrarySectionProps } from './library-section';
+import type { LibrarySectionData } from './library-section-props';
 
 export type { CharacterSheetStats };
 
@@ -59,90 +57,28 @@ export interface CharacterSheetPointBudgets {
 
 export interface CharacterSheetDerivedHandlers {
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
-  handleRemovePower: NonNullable<LibrarySectionProps['onRemovePower']>;
-  handleTogglePowerInnate: NonNullable<LibrarySectionProps['onTogglePowerInnate']>;
-  handleUsePower: NonNullable<LibrarySectionProps['onUsePower']>;
-  handleRemoveTechnique: NonNullable<LibrarySectionProps['onRemoveTechnique']>;
-  handleUseTechnique: NonNullable<LibrarySectionProps['onUseTechnique']>;
-  handleRemoveWeapon: NonNullable<LibrarySectionProps['onRemoveWeapon']>;
-  handleToggleEquipWeapon: NonNullable<LibrarySectionProps['onToggleEquipWeapon']>;
-  handleRemoveShield: NonNullable<LibrarySectionProps['onRemoveShield']>;
-  handleToggleEquipShield: NonNullable<LibrarySectionProps['onToggleEquipShield']>;
-  handleRemoveArmor: NonNullable<LibrarySectionProps['onRemoveArmor']>;
-  handleToggleEquipArmor: NonNullable<LibrarySectionProps['onToggleEquipArmor']>;
-  handleRemoveEquipment: NonNullable<LibrarySectionProps['onRemoveEquipment']>;
-  handleEquipmentQuantityChange: NonNullable<LibrarySectionProps['onEquipmentQuantityChange']>;
-  handleCurrencyChange: NonNullable<LibrarySectionProps['onCurrencyChange']>;
-  handleStateUsesChange: NonNullable<LibrarySectionProps['onStateUsesChange']>;
-  handleEnterState: NonNullable<LibrarySectionProps['onEnterState']>;
-  handleFeatUsesChange: NonNullable<LibrarySectionProps['onFeatUsesChange']>;
-  handleFeatLevelChange: NonNullable<LibrarySectionProps['onFeatLevelChange']>;
-  handleRequestRemoveFeat: NonNullable<LibrarySectionProps['onRemoveFeat']>;
-  handleTraitUsesChange: NonNullable<LibrarySectionProps['onTraitUsesChange']>;
-  handleFeatCustomizationChange: NonNullable<LibrarySectionProps['onFeatCustomizationChange']>;
-  handleTraitCustomizationChange: NonNullable<LibrarySectionProps['onTraitCustomizationChange']>;
-}
-
-export interface BuildLibrarySectionPropsInput {
-  character: Character;
-  enrichedData: ReturnType<typeof enrichCharacterData> | null;
-  archetypeProgression: ReturnType<typeof calculateArchetypeProgression> | null;
-  calculatedMaxEnergy: number;
-  powerPartsDb: LibrarySectionProps['powerPartsDb'];
-  techniquePartsDb: LibrarySectionProps['techniquePartsDb'];
-  itemPropertiesDb: LibrarySectionProps['itemPropertiesDb'];
-  traitsDb: Trait[];
-  featsDb: NonNullable<LibrarySectionProps['featsDb']>;
-  characterSpeciesTraits: string[];
-  archetypeFeatsForDisplay: CharacterFeat[];
-  characterFeatsForDisplay: CharacterFeat[];
-  stateFeatsList: Array<CharacterFeat & { type: 'archetype' | 'character' }>;
-  stateUsesCurrent: number;
-  stateUsesMax: number;
-  handlers: CharacterSheetDerivedHandlers;
-}
-
-export function buildCharacterSheetLibraryProps(input: BuildLibrarySectionPropsInput) {
-  return buildLibrarySectionProps({
-    character: input.character,
-    enrichedData: input.enrichedData,
-    archetypeProgression: input.archetypeProgression,
-    calculatedMaxEnergy: input.calculatedMaxEnergy,
-    powerPartsDb: input.powerPartsDb,
-    techniquePartsDb: input.techniquePartsDb,
-    itemPropertiesDb: input.itemPropertiesDb,
-    traitsDb: input.traitsDb,
-    featsDb: input.featsDb,
-    characterSpeciesTraits: input.characterSpeciesTraits,
-    archetypeFeatsForDisplay: input.archetypeFeatsForDisplay,
-    characterFeatsForDisplay: input.characterFeatsForDisplay,
-    stateFeatsList: input.stateFeatsList,
-    stateUsesCurrent: input.stateUsesCurrent,
-    stateUsesMax: input.stateUsesMax,
-    setCharacter: input.handlers.setCharacter,
-    handleRemovePower: input.handlers.handleRemovePower,
-    handleTogglePowerInnate: input.handlers.handleTogglePowerInnate,
-    handleUsePower: input.handlers.handleUsePower,
-    handleRemoveTechnique: input.handlers.handleRemoveTechnique,
-    handleUseTechnique: input.handlers.handleUseTechnique,
-    handleRemoveWeapon: input.handlers.handleRemoveWeapon,
-    handleToggleEquipWeapon: input.handlers.handleToggleEquipWeapon,
-    handleRemoveShield: input.handlers.handleRemoveShield,
-    handleToggleEquipShield: input.handlers.handleToggleEquipShield,
-    handleRemoveArmor: input.handlers.handleRemoveArmor,
-    handleToggleEquipArmor: input.handlers.handleToggleEquipArmor,
-    handleRemoveEquipment: input.handlers.handleRemoveEquipment,
-    handleEquipmentQuantityChange: input.handlers.handleEquipmentQuantityChange,
-    handleCurrencyChange: input.handlers.handleCurrencyChange,
-    handleStateUsesChange: input.handlers.handleStateUsesChange,
-    handleEnterState: input.handlers.handleEnterState,
-    handleFeatUsesChange: input.handlers.handleFeatUsesChange,
-    handleFeatLevelChange: input.handlers.handleFeatLevelChange,
-    handleRequestRemoveFeat: input.handlers.handleRequestRemoveFeat,
-    handleTraitUsesChange: input.handlers.handleTraitUsesChange,
-    handleFeatCustomizationChange: input.handlers.handleFeatCustomizationChange,
-    handleTraitCustomizationChange: input.handlers.handleTraitCustomizationChange,
-  });
+  handleRemovePower: NonNullable<LibrarySectionData['onRemovePower']>;
+  handleTogglePowerInnate: NonNullable<LibrarySectionData['onTogglePowerInnate']>;
+  handleUsePower: NonNullable<LibrarySectionData['onUsePower']>;
+  handleRemoveTechnique: NonNullable<LibrarySectionData['onRemoveTechnique']>;
+  handleUseTechnique: NonNullable<LibrarySectionData['onUseTechnique']>;
+  handleRemoveWeapon: NonNullable<LibrarySectionData['onRemoveWeapon']>;
+  handleToggleEquipWeapon: NonNullable<LibrarySectionData['onToggleEquipWeapon']>;
+  handleRemoveShield: NonNullable<LibrarySectionData['onRemoveShield']>;
+  handleToggleEquipShield: NonNullable<LibrarySectionData['onToggleEquipShield']>;
+  handleRemoveArmor: NonNullable<LibrarySectionData['onRemoveArmor']>;
+  handleToggleEquipArmor: NonNullable<LibrarySectionData['onToggleEquipArmor']>;
+  handleRemoveEquipment: NonNullable<LibrarySectionData['onRemoveEquipment']>;
+  handleEquipmentQuantityChange: NonNullable<LibrarySectionData['onEquipmentQuantityChange']>;
+  handleCurrencyChange: NonNullable<LibrarySectionData['onCurrencyChange']>;
+  handleStateUsesChange: NonNullable<LibrarySectionData['onStateUsesChange']>;
+  handleEnterState: NonNullable<LibrarySectionData['onEnterState']>;
+  handleFeatUsesChange: NonNullable<LibrarySectionData['onFeatUsesChange']>;
+  handleFeatLevelChange: NonNullable<LibrarySectionData['onFeatLevelChange']>;
+  handleRequestRemoveFeat: NonNullable<LibrarySectionData['onRemoveFeat']>;
+  handleTraitUsesChange: NonNullable<LibrarySectionData['onTraitUsesChange']>;
+  handleFeatCustomizationChange: NonNullable<LibrarySectionData['onFeatCustomizationChange']>;
+  handleTraitCustomizationChange: NonNullable<LibrarySectionData['onTraitCustomizationChange']>;
 }
 
 export interface UseCharacterSheetDerivedArgs {
@@ -153,9 +89,9 @@ export interface UseCharacterSheetDerivedArgs {
   userEmpoweredTechniques: UserTechnique[];
   userItems: UserItem[];
   codexEquipment: unknown[];
-  powerPartsDb: LibrarySectionProps['powerPartsDb'];
-  techniquePartsDb: LibrarySectionProps['techniquePartsDb'];
-  itemPropertiesDb: LibrarySectionProps['itemPropertiesDb'];
+  powerPartsDb: LibrarySectionData['powerPartsDb'];
+  techniquePartsDb: LibrarySectionData['techniquePartsDb'];
+  itemPropertiesDb: LibrarySectionData['itemPropertiesDb'];
   publicLibraries: {
     powers: UserPower[];
     techniques: UserTechnique[];
@@ -189,12 +125,10 @@ export function useCharacterSheetDerived({
 }: UseCharacterSheetDerivedArgs) {
   const enrichedData = useMemo(() => {
     if (!character) return null;
-    const powers = libraryForView ? (libraryForView.powers as unknown as typeof userPowers) : userPowers;
-    const baseTechniques = libraryForView
-      ? (libraryForView.techniques as unknown as typeof userTechniques)
-      : userTechniques;
+    const powers = libraryForView ? libraryForView.powers : userPowers;
+    const baseTechniques = libraryForView ? libraryForView.techniques : userTechniques;
     const techniques = libraryForView ? baseTechniques : [...baseTechniques, ...userEmpoweredTechniques];
-    const items = libraryForView ? (libraryForView.items as unknown as typeof userItems) : userItems;
+    const items = libraryForView ? libraryForView.items : userItems;
     return enrichCharacterData(
       character,
       powers,
@@ -487,7 +421,7 @@ export function useCharacterSheetDerived({
         resolveParentSkillNameForSubSkill(
           skill,
           codexSkill as { base_skill_id?: string | number } | undefined,
-          codexSkills as unknown as CodexSkillParentRef[]
+          codexSkills,
         );
 
       let availableAbilities = skill.availableAbilities;

@@ -4,11 +4,13 @@
  * Displays character's powers, techniques, equipment, proficiencies, and notes
  * Supports edit mode for adding/removing items
  * Weapons have clickable attack/damage rolls
+ *
+ * Data + handlers come from CharacterSheetProvider (TASK-667) — public props are chrome only.
  */
 
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { NotesTab } from './notes-tab';
 import { ProficienciesTab } from './proficiencies-tab';
@@ -20,129 +22,53 @@ import {
 } from '@/components/shared';
 import { Card } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
-import { useCharacterSheetOptional } from './character-sheet-context';
+import { useCharacterSheet } from './character-sheet-context';
 import type { TabType } from './library-tab-config';
 import { useLibrarySectionRows } from './use-library-section-rows';
 import { useLibraryTabNavigation } from './use-library-tab-navigation';
 import { LibraryPowersPanel } from './library-powers-panel';
 import { LibraryInventoryPanel } from './library-inventory-panel';
+import { buildLibrarySectionData } from './build-library-section-data';
 import type { LibrarySectionProps } from './library-section-props';
 
-export type { LibrarySectionProps };
+export type { LibrarySectionProps, SheetLibraryModel } from './library-section-props';
 
 export function LibrarySection({
-  powers,
-  techniques,
-  weapons,
-  shields = [],
-  armor,
-  equipment,
-  currency = 0,
-  innateEnergy = 0,
-  innateThreshold = 0,
-  innatePools = 0,
-  currentInnateEnergy,
-  currentEnergy = 0,
-  isEditMode: isEditModeProp = false,
-  onAddPower: onAddPowerProp,
-  onRemovePower,
-  onTogglePowerInnate,
-  onUsePower,
-  onAddTechnique: onAddTechniqueProp,
-  onRemoveTechnique,
-  onUseTechnique,
-  onAddWeapon: onAddWeaponProp,
-  onRemoveWeapon,
-  onToggleEquipWeapon,
-  onAddShield: onAddShieldProp,
-  onRemoveShield,
-  onToggleEquipShield,
-  onAddArmor: onAddArmorProp,
-  onRemoveArmor,
-  onToggleEquipArmor,
-  onAddEquipment: onAddEquipmentProp,
-  onRemoveEquipment,
-  onEquipmentQuantityChange,
-  onCurrencyChange,
-  // Notes props
-  visibility = 'private',
-  onVisibilityChange,
-  speedDisplayUnit = 'spaces',
-  weight = 70,
-  height = 170,
-  appearance = '',
-  archetypeDesc = '',
-  notes = '',
-  abilities,
-  powerAttackBonus,
-  onWeightChange,
-  onHeightChange,
-  onAppearanceChange,
-  onArchetypeDescChange,
-  onNotesChange,
-  // Custom notes props
-  namedNotes,
-  onAddNote,
-  onUpdateNote,
-  onDeleteNote,
-  // Proficiencies props
-  level = 1,
-  archetypeAbility = 0,
-  martialProficiency,
-  powerPartsDb = [],
-  techniquePartsDb = [],
-  itemPropertiesDb = [],
-  proficiencies = [],
-  onProficienciesChange,
-  unarmedProwess = 0,
-  onUnarmedProwessChange,
-  tabVisibility,
-  onTabVisibilityChange,
-  // Feats props
-  ancestry,
-  vanillaTraits,
-  speciesTraitsFromCodex = [],
-  traitsDb = [],
-  featsDb = [],
-  traitUses = {},
-  archetypeFeats = [],
-  characterFeats = [],
-  onFeatUsesChange,
-  onFeatLevelChange,
-  featRequirementCharacter,
-  onTraitUsesChange,
-  onAddArchetypeFeat: onAddArchetypeFeatProp,
-  onAddCharacterFeat: onAddCharacterFeatProp,
-  onAddStateFeat: onAddStateFeatProp,
-  onRemoveFeat,
-  traitCustomizations = {},
-  onFeatCustomizationChange,
-  onTraitCustomizationChange,
-  stateFeats = [],
-  stateUsesCurrent,
-  stateUsesMax,
-  onStateUsesChange,
-  onEnterState,
-  maxArchetypeFeats,
-  maxCharacterFeats,
   activeTab: activeTabProp,
   onActiveTabChange,
   className,
 }: LibrarySectionProps) {
-  const ctx = useCharacterSheetOptional();
-  const isEditMode = ctx?.isEditMode ?? isEditModeProp;
-  const setAddModalType = ctx?.setAddModalType;
-  const setFeatModalType = ctx?.setFeatModalType;
-  const onAddPower = onAddPowerProp ?? (setAddModalType ? () => setAddModalType('power') : undefined);
+  const ctx = useCharacterSheet();
+  const {
+    character,
+    enrichedData,
+    isEditMode,
+    libraryModel,
+    libraryHandlers,
+    setAddModalType,
+    setFeatModalType,
+  } = ctx;
+
+  const data = useMemo(() => {
+    if (!libraryModel) return null;
+    return buildLibrarySectionData({
+      character,
+      enrichedData,
+      libraryModel,
+      handlers: libraryHandlers,
+    });
+  }, [character, enrichedData, libraryModel, libraryHandlers]);
+
+  const onAddPower = setAddModalType ? () => setAddModalType('power') : undefined;
   const onAddInnatePower = setAddModalType ? () => setAddModalType('innate-power') : undefined;
-  const onAddTechnique = onAddTechniqueProp ?? (setAddModalType ? () => setAddModalType('technique') : undefined);
-  const onAddWeapon = onAddWeaponProp ?? (setAddModalType ? () => setAddModalType('weapon') : undefined);
-  const onAddShield = onAddShieldProp ?? (setAddModalType ? () => setAddModalType('shield') : undefined);
-  const onAddArmor = onAddArmorProp ?? (setAddModalType ? () => setAddModalType('armor') : undefined);
-  const onAddEquipment = onAddEquipmentProp ?? (setAddModalType ? () => setAddModalType('equipment') : undefined);
-  const onAddArchetypeFeat = onAddArchetypeFeatProp ?? (setFeatModalType ? () => setFeatModalType('archetype') : undefined);
-  const onAddCharacterFeat = onAddCharacterFeatProp ?? (setFeatModalType ? () => setFeatModalType('character') : undefined);
-  const onAddStateFeat = onAddStateFeatProp ?? (setFeatModalType ? () => setFeatModalType('state') : undefined);
+  const onAddTechnique = setAddModalType ? () => setAddModalType('technique') : undefined;
+  const onAddWeapon = setAddModalType ? () => setAddModalType('weapon') : undefined;
+  const onAddShield = setAddModalType ? () => setAddModalType('shield') : undefined;
+  const onAddArmor = setAddModalType ? () => setAddModalType('armor') : undefined;
+  const onAddEquipment = setAddModalType ? () => setAddModalType('equipment') : undefined;
+  const onAddArchetypeFeat = setFeatModalType ? () => setFeatModalType('archetype') : undefined;
+  const onAddCharacterFeat = setFeatModalType ? () => setFeatModalType('character') : undefined;
+  const onAddStateFeat = setFeatModalType ? () => setFeatModalType('state') : undefined;
 
   const [isSectionEditing, setIsSectionEditing] = useState(isEditMode);
   const [prevIsEditMode, setPrevIsEditMode] = useState(isEditMode);
@@ -152,20 +78,22 @@ export function LibrarySection({
   }
 
   const showLibraryEditControls = isEditMode && isSectionEditing;
-  const archetypeFeatCount = archetypeFeats?.length ?? 0;
-  const characterFeatCount = characterFeats?.length ?? 0;
-  const archetypeOver = maxArchetypeFeats !== undefined && archetypeFeatCount > maxArchetypeFeats;
-  const characterOver = maxCharacterFeats !== undefined && characterFeatCount > maxCharacterFeats;
+  const archetypeFeatCount = data?.archetypeFeats?.length ?? 0;
+  const characterFeatCount = data?.characterFeats?.length ?? 0;
+  const archetypeOver =
+    data?.maxArchetypeFeats !== undefined && archetypeFeatCount > data.maxArchetypeFeats;
+  const characterOver =
+    data?.maxCharacterFeats !== undefined && characterFeatCount > data.maxCharacterFeats;
   const libraryEditState = archetypeOver || characterOver ? 'over-budget' : 'normal';
 
   const { resolvedActiveTab, setActiveTab, navigationTabs } = useLibraryTabNavigation({
     isEditMode,
     activeTabProp,
     onActiveTabChange,
-    tabVisibility,
-    onTabVisibilityChange,
-    onAddPowerProp,
-    onAddTechniqueProp,
+    tabVisibility: data?.tabVisibility,
+    onTabVisibilityChange: data?.onTabVisibilityChange,
+    onAddPowerProp: onAddPower,
+    onAddTechniqueProp: onAddTechnique,
     setAddModalType,
   });
 
@@ -193,43 +121,110 @@ export function LibrarySection({
     displayedCurrentInnateEnergy,
     innateEnergyOverBudget,
   } = useLibrarySectionRows({
+    powers: data?.powers ?? [],
+    techniques: data?.techniques ?? [],
+    weapons: data?.weapons ?? [],
+    shields: data?.shields ?? [],
+    armor: data?.armor ?? [],
+    equipment: data?.equipment ?? [],
+    innateEnergy: data?.innateEnergy ?? 0,
+    currentInnateEnergy: data?.currentInnateEnergy,
+    currentEnergy: data?.currentEnergy ?? 0,
+    abilities: data?.abilities,
+    powerAttackBonus: data?.powerAttackBonus,
+    martialProficiency: data?.martialProficiency,
+    powerPartsDb: data?.powerPartsDb ?? [],
+    techniquePartsDb: data?.techniquePartsDb ?? [],
+    itemPropertiesDb: data?.itemPropertiesDb ?? [],
+    proficiencies: data?.proficiencies ?? [],
+    showLibraryEditControls,
+    onUsePower: data?.onUsePower,
+    onRemovePower: data?.onRemovePower,
+    onTogglePowerInnate: data?.onTogglePowerInnate,
+    onUseTechnique: data?.onUseTechnique,
+    onRemoveTechnique: data?.onRemoveTechnique,
+    onRemoveWeapon: data?.onRemoveWeapon,
+    onToggleEquipWeapon: data?.onToggleEquipWeapon,
+    onRemoveShield: data?.onRemoveShield,
+    onToggleEquipShield: data?.onToggleEquipShield,
+    onRemoveArmor: data?.onRemoveArmor,
+    onToggleEquipArmor: data?.onToggleEquipArmor,
+    onRemoveEquipment: data?.onRemoveEquipment,
+    onEquipmentQuantityChange: data?.onEquipmentQuantityChange,
+  });
+
+  if (!data) return null;
+
+  const {
     powers,
     techniques,
     weapons,
-    shields,
+    shields = [],
     armor,
-    equipment,
-    innateEnergy,
-    currentInnateEnergy,
-    currentEnergy,
-    abilities,
-    powerAttackBonus,
-    martialProficiency,
-    powerPartsDb,
-    techniquePartsDb,
-    itemPropertiesDb,
-    proficiencies,
-    showLibraryEditControls,
-    onUsePower,
-    onRemovePower,
-    onTogglePowerInnate,
-    onUseTechnique,
+    currency = 0,
+    innateEnergy = 0,
+    innateThreshold = 0,
+    innatePools = 0,
     onRemoveTechnique,
     onRemoveWeapon,
-    onToggleEquipWeapon,
     onRemoveShield,
-    onToggleEquipShield,
     onRemoveArmor,
-    onToggleEquipArmor,
     onRemoveEquipment,
-    onEquipmentQuantityChange,
-  });
-
-  // NOTE: Unarmed Prowess is now shown in the Archetype section, not here
+    onCurrencyChange,
+    visibility = 'private',
+    onVisibilityChange,
+    speedDisplayUnit = 'spaces',
+    weight = 70,
+    height = 170,
+    appearance = '',
+    archetypeDesc = '',
+    notes = '',
+    abilities,
+    onWeightChange,
+    onHeightChange,
+    onAppearanceChange,
+    onArchetypeDescChange,
+    onNotesChange,
+    namedNotes,
+    onAddNote,
+    onUpdateNote,
+    onDeleteNote,
+    level = 1,
+    archetypeAbility = 0,
+    powerPartsDb = [],
+    techniquePartsDb = [],
+    itemPropertiesDb = [],
+    proficiencies = [],
+    onProficienciesChange,
+    unarmedProwess = 0,
+    onUnarmedProwessChange,
+    ancestry,
+    vanillaTraits,
+    speciesTraitsFromCodex = [],
+    traitsDb = [],
+    featsDb = [],
+    traitUses = {},
+    archetypeFeats = [],
+    characterFeats = [],
+    onFeatUsesChange,
+    onFeatLevelChange,
+    featRequirementCharacter,
+    onTraitUsesChange,
+    onRemoveFeat,
+    traitCustomizations = {},
+    onFeatCustomizationChange,
+    onTraitCustomizationChange,
+    stateFeats = [],
+    stateUsesCurrent,
+    stateUsesMax,
+    onStateUsesChange,
+    onEnterState,
+    maxArchetypeFeats,
+    maxCharacterFeats,
+  } = data;
 
   return (
     <Card className={cn('shadow-md p-4 md:p-6 relative flex flex-col', className)}>
-      {/* Edit Mode Indicator - Pencil toggles library in/out of edit (like other sections) */}
       {isEditMode && (
         <div className="absolute top-3 right-3 z-10">
           <EditSectionToggle
@@ -247,12 +242,10 @@ export function LibrarySection({
         </div>
       )}
 
-      {/* Card title — peer of Skills / Archetype & Attacks (DESIGN_SYSTEM sheet section headers) */}
       <div className={cn('mb-4', isEditMode && 'pr-10')}>
         <h2 className="text-lg font-bold text-text-primary">Library</h2>
       </div>
 
-      {/* Tabs */}
       <TabNavigation
         tabs={navigationTabs}
         activeTab={resolvedActiveTab}
@@ -262,7 +255,6 @@ export function LibrarySection({
         className="mb-4"
       />
 
-      {/* Content */}
       <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
         {resolvedActiveTab === 'powers' && (
           <LibraryPowersPanel
@@ -301,7 +293,7 @@ export function LibrarySection({
           <LibraryInventoryPanel
             currency={currency}
             onCurrencyChange={onCurrencyChange}
-            martialProficiency={martialProficiency}
+            martialProficiency={data.martialProficiency}
             showLibraryEditControls={showLibraryEditControls}
             weaponRows={weaponRows}
             shieldRows={shieldRows}

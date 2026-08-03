@@ -24,8 +24,6 @@ export interface GuidedStepFooterProps {
   /** Continue as primary (default) or outline previous-tone (e.g. close L2 browse). */
   continueTone?: 'progress' | 'previous';
   primaryAction?: ReactNode;
-  /** Optional action to the left of Continue (e.g. Species L3 Create Species). */
-  trailingAction?: ReactNode;
   completionHint?: ReactNode;
   className?: string;
 }
@@ -39,7 +37,6 @@ export function GuidedStepFooter({
   backDisabled,
   continueTone = 'progress',
   primaryAction,
-  trailingAction,
   completionHint,
   className,
 }: GuidedStepFooterProps) {
@@ -130,11 +127,8 @@ export function GuidedStepFooter({
                 <span className="sm:order-1" aria-hidden />
               ) : null}
 
-              {continueSlot || trailingAction ? (
-                <div className="flex items-center gap-3 sm:order-3">
-                  {trailingAction}
-                  {continueSlot}
-                </div>
+              {continueSlot ? (
+                <div className="flex items-center gap-3 sm:order-3">{continueSlot}</div>
               ) : null}
             </div>
           </div>

@@ -14,9 +14,38 @@ import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider, Dec
 import { TableScroll } from '@/components/ui';
 import type { Character, Abilities, Item } from '@/types';
 import type { EnrichedItem } from '@/lib/data-enrichment';
-import { QuickArmorTable, QuickShieldsTable, QuickWeaponsTable, QUICK_WEAPON_COL } from '@/components/shared';
+import { QuickArmorTable, QuickShieldsTable, QuickWeaponsTable, QUICK_WEAPON_COL, type QuickArmamentItem } from '@/components/shared';
 import { Card, DescriptorChip } from '@/components/ui';
 import { profPointsDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
+
+function toQuickArmamentItems(items: Array<EnrichedItem | Item>): QuickArmamentItem[] {
+  return items.map((item) => {
+    const rawProps = 'properties' in item ? item.properties : undefined;
+    const properties = rawProps?.map((prop): QuickArmamentItem['properties'] extends (infer U)[] | undefined ? U : never => {
+      if (typeof prop === 'string') return prop;
+      const op1 =
+        'op_1_lvl' in prop && typeof prop.op_1_lvl === 'number' ? prop.op_1_lvl : undefined;
+      return {
+        id: typeof prop.id === 'number' ? prop.id : undefined,
+        name: prop.name,
+        ...(op1 !== undefined ? { op_1_lvl: op1 } : {}),
+      };
+    });
+
+    return {
+      id: item.id,
+      name: item.name,
+      description: item.description,
+      damage: item.damage,
+      range: typeof item.range === 'number' ? String(item.range) : item.range,
+      properties,
+      equipped: item.equipped,
+      armorValue: 'armorValue' in item ? item.armorValue : undefined,
+      armor: item.armor,
+      libraryItem: 'libraryItem' in item ? item.libraryItem : undefined,
+    };
+  });
+}
 
 interface ArchetypeSectionProps {
   character: Character;
@@ -249,7 +278,7 @@ function WeaponsSection({
   return (
     <div className="bg-surface-alt rounded-lg p-3 mb-4">
       <QuickWeaponsTable
-        items={equippedWeapons as unknown as import('@/components/shared').QuickArmamentItem[]}
+        items={toQuickArmamentItems(equippedWeapons)}
         abilities={abilities}
         martialProf={martialProf}
         filterEquipped={false}
@@ -278,7 +307,7 @@ function ShieldsSection({
 
   return (
     <QuickShieldsTable
-      items={equippedShields as unknown as import('@/components/shared').QuickArmamentItem[]}
+      items={toQuickArmamentItems(equippedShields)}
       abilities={abilities}
       martialProf={martialProf}
       filterEquipped={false}
@@ -303,7 +332,7 @@ function ArmorSection({
 
   return (
     <QuickArmorTable
-      items={equippedArmor as unknown as import('@/components/shared').QuickArmamentItem[]}
+      items={toQuickArmamentItems(equippedArmor)}
       abilities={abilities}
       filterEquipped={false}
     />
@@ -477,7 +506,7 @@ export function ArchetypeSection({
       )}
       
       {/* Mixed Archetype Milestone Choices — edit mode only */}
-      {archetypeType === 'mixed' && milestoneLevels.length > 0 && showEditControls && (
+      {archetypeType === 'powered-martial' && milestoneLevels.length > 0 && showEditControls && (
         <div className="mb-4 p-3 bg-gradient-to-r from-warning-light to-power-light border border-warning-border rounded-lg">
           <SectionHeader title="Milestone Choices" className="mb-2" />
           <div className="flex flex-wrap gap-2">

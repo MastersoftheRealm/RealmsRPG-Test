@@ -19,9 +19,9 @@
 
 import { useState, useMemo } from 'react';
 import { cn, generateId } from '@/lib/utils';
-import { apiFetchOrNull } from '@/lib/api-client';
+import { apiFetchOrNull, getErrorMessage, logClientError } from '@/lib/api-client';
 import { BookOpen, Users } from 'lucide-react';
-import { Modal, Button, SearchInput, LoadingState, EmptyState } from '@/components/ui';
+import { Modal, Button, SearchInput, LoadingState, EmptyState, useToast } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
 import { ValueStepper } from '@/components/shared/value-stepper';
 import { useUserCreatures, useCampaignsFull, type UserCreature } from '@/hooks';
@@ -261,6 +261,7 @@ function CampaignCharactersTab({
   onClose: () => void;
 }) {
   const { data: campaigns = [], isLoading } = useCampaignsFull();
+  const { showToast } = useToast();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [selectedChars, setSelectedChars] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
@@ -292,15 +293,24 @@ function CampaignCharactersTab({
             );
             if (!data) return null;
             return { charMeta: c, data };
-          } catch {
+          } catch (err) {
+            logClientError(
+              `add-combatant-modal: character fetch failed (${c.userId}/${c.characterId})`,
+              err
+            );
             return null;
           }
         })
       );
 
+      const loaded = results.filter((r): r is NonNullable<typeof r> => r !== null);
+      if (chars.length > 0 && loaded.length === 0) {
+        showToast('Could not load selected characters. Check your connection and try again.', 'error');
+        return;
+      }
+
       if (mode === 'skill' && onAddParticipants) {
-        const participants: SkillParticipant[] = results
-          .filter((r): r is NonNullable<typeof r> => r !== null)
+        const participants: SkillParticipant[] = loaded
           .map((r) => ({
             id: generateId(),
             name: r.charMeta.characterName,
@@ -314,8 +324,7 @@ function CampaignCharactersTab({
         return;
       }
 
-      const combatants: TrackedCombatant[] = results
-        .filter((r): r is NonNullable<typeof r> => r !== null)
+      const combatants: TrackedCombatant[] = loaded
         .map((r) => {
           const d = r.data;
           const abilities = d.abilities || {};
@@ -345,7 +354,8 @@ function CampaignCharactersTab({
 
       onAdd(combatants);
       onClose();
-    } catch {
+    } catch (err) {
+      showToast(getErrorMessage(err, 'Failed to add campaign characters'), 'error');
     } finally {
       setLoading(false);
     }

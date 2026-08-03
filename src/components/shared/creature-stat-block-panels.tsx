@@ -55,7 +55,7 @@ interface CreatureStatBlockExpandedContentProps {
   damageReduction: number;
   rollContext: RollContext;
   attackAbilities: Abilities;
-  itemPropertiesDb: unknown[];
+  itemPropertiesDb: CodexProperty[];
   senses: string[];
   movement: string[];
   hasSensesOrMovement: boolean;
@@ -374,7 +374,7 @@ export function CreatureStatBlockExpandedContent({
                     creature.martialProficiency ?? 0,
                     normalizeRangeDisplay(w.range) || 'Melee'
                   ).bonus,
-                  chips: propertiesToChips(resolveArmamentProperties(w), itemPropertiesDb as unknown as CodexProperty[]),
+                  chips: propertiesToChips(resolveArmamentProperties(w), itemPropertiesDb),
                 }))}
                 showListHeader
                 compactRows
@@ -393,7 +393,7 @@ export function CreatureStatBlockExpandedContent({
                   thumbnail: resolveListRowThumbnail('equipment', s, s.name),
                   damage: s.damage,
                   properties: s.properties,
-                  chips: propertiesToChips(resolveArmamentProperties(s), itemPropertiesDb as unknown as CodexProperty[]),
+                  chips: propertiesToChips(resolveArmamentProperties(s), itemPropertiesDb),
                 }))}
                 showListHeader
                 compactRows
@@ -412,7 +412,7 @@ export function CreatureStatBlockExpandedContent({
                   thumbnail: resolveListRowThumbnail('equipment', a, a.name),
                   damageReduction: a.damageReduction,
                   armorValue: a.armorValue,
-                  chips: propertiesToChips(resolveArmamentProperties(a), itemPropertiesDb as unknown as CodexProperty[]),
+                  chips: propertiesToChips(resolveArmamentProperties(a), itemPropertiesDb),
                 }))}
                 showListHeader
                 compactRows

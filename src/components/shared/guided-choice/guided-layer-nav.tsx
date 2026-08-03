@@ -1,7 +1,8 @@
 /**
  * GuidedLayerNav — unified Layer 1 ↔ 2/3 navigation (REALMS §3).
  *
- * **Placement:** Always below the step's primary content (never above).
+ * **Placement:** Always below the step's primary content (never in the sticky footer).
+ * **Layout:** One action → bottom left; two actions → shallower (collapse) left, deeper (expand) right.
  * **Expand:** Primary button — go deeper (same weight as footer Continue).
  * **Collapse:** Outline button — simpler view (same weight as footer Back).
  *
@@ -34,22 +35,21 @@ export function GuidedLayerNav({
   onCollapse,
   className,
 }: GuidedLayerNavProps) {
-  if (!onExpand && !onCollapse) return null;
+  const hasExpand = Boolean(onExpand && expandLabel);
+  const hasCollapse = Boolean(onCollapse);
+  if (!hasExpand && !hasCollapse) return null;
+
+  const singleAction = hasExpand !== hasCollapse;
 
   return (
-    <div className={cn('mt-5 flex flex-wrap items-center gap-3', className)}>
-      {onExpand && expandLabel ? (
-        <Button
-          type="button"
-          variant="primary"
-          size="lg"
-          onClick={onExpand}
-          className={guidedNavProgressClassName}
-        >
-          {expandLabel}
-        </Button>
-      ) : null}
-      {onCollapse ? (
+    <div
+      className={cn(
+        'mt-5 flex w-full items-center gap-3',
+        singleAction ? 'justify-start' : 'justify-between',
+        className
+      )}
+    >
+      {hasCollapse ? (
         <Button
           type="button"
           variant="outline"
@@ -58,6 +58,17 @@ export function GuidedLayerNav({
           className={guidedNavPreviousClassName}
         >
           {collapseLabel}
+        </Button>
+      ) : null}
+      {hasExpand ? (
+        <Button
+          type="button"
+          variant="primary"
+          size="lg"
+          onClick={onExpand}
+          className={guidedNavProgressClassName}
+        >
+          {expandLabel}
         </Button>
       ) : null}
     </div>

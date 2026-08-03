@@ -8,11 +8,25 @@
 'use client';
 
 import { createContext, useContext, type ReactNode } from 'react';
-import type { AbilityName, Character, CharacterLibraryTabId, CharacterTempModifiers } from '@/types';
+import type {
+  AbilityName,
+  Character,
+  CharacterLibraryTabId,
+  CharacterPower,
+  CharacterSkillRow,
+  CharacterTechnique,
+  CharacterTempModifiers,
+  Item,
+} from '@/types';
 import type { EnrichedCharacterData } from '@/lib/data-enrichment';
-import type { LibrarySectionProps } from './library-section';
-import type { CharacterSheetSkillRow } from './use-character-sheet-derived';
-import type { CharacterSheetPointBudgets } from './use-character-sheet-derived';
+import type { SheetLibraryModel } from './library-section-props';
+import type {
+  CharacterSheetDerivedHandlers,
+  CharacterSheetSkillRow,
+  CharacterSheetPointBudgets,
+  CharacterSheetStats,
+} from './use-character-sheet-derived';
+import type { EditArchetypeResult } from './edit-archetype-modal';
 
 /** Sheet only opens Add Sub-Skill (base skills are catalog-all — TASK-584). */
 export type SkillModalType = 'subskill' | null;
@@ -32,18 +46,56 @@ export interface CharacterSheetContextValue {
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   isEditMode: boolean;
   isOwner: boolean;
-  setAddModalType: (type: AddModalType) => void;
-  setFeatModalType: (type: FeatModalType) => void;
-  setSkillModalType: (type: SkillModalType) => void;
 
   /** Derived section data */
   skills: CharacterSheetSkillRow[];
   pointBudgets: CharacterSheetPointBudgets | null;
   enrichedData: EnrichedCharacterData | null;
-  librarySectionProps: Omit<LibrarySectionProps, 'className' | 'activeTab' | 'onActiveTabChange'> | null;
+  /** Codex/derived library inputs (not a mega props bag — TASK-667) */
+  libraryModel: SheetLibraryModel | null;
+  libraryHandlers: CharacterSheetDerivedHandlers;
   characterSpeciesSkills: string[];
   libraryActiveTab: CharacterLibraryTabId;
   setLibraryActiveTab: (tab: CharacterLibraryTabId) => void;
+
+  /** Codex-hydrated character for path-aware modals (falls back to character). */
+  displayCharacter: Character | null;
+  calculatedStats: CharacterSheetStats | null;
+
+  /** Modal UI state (TASK-667 — CharacterSheetModals reads from context) */
+  addModalType: AddModalType;
+  setAddModalType: (type: AddModalType) => void;
+  featModalType: FeatModalType;
+  setFeatModalType: (type: FeatModalType) => void;
+  skillModalType: SkillModalType;
+  setSkillModalType: (type: SkillModalType) => void;
+  featToRemove: { id: string; name: string } | null;
+  setFeatToRemove: (f: { id: string; name: string } | null) => void;
+  showLevelUpModal: boolean;
+  setShowLevelUpModal: (v: boolean) => void;
+  showRecoveryModal: boolean;
+  setShowRecoveryModal: (v: boolean) => void;
+  showEditArchetypeModal: boolean;
+  setShowEditArchetypeModal: (v: boolean) => void;
+  editArchetypeSessionKey: number;
+  showEditSpeciesModal: boolean;
+  setShowEditSpeciesModal: (v: boolean) => void;
+
+  /** Modal action handlers (no-ops on read-only campaign view) */
+  onModalAdd: (items: CharacterPower[] | CharacterTechnique[] | Item[]) => void;
+  onAddFeats: (
+    feats: Array<{ id: string; name: string; description?: string; effect?: string; max_uses?: number }>,
+    type: 'archetype' | 'character' | 'state'
+  ) => void;
+  onAddSkills: (
+    skills: Array<{ id: string; name: string; ability?: string; base_skill_id?: number; selectedBaseSkillId?: string }>
+  ) => void;
+  onConfirmRemoveFeat: () => void;
+  onLevelUp: (newLevel: number) => void;
+  onFullRecovery: () => void;
+  onPartialRecovery: (hpRestored: number, enRestored: number, resetPartialFeats: boolean) => void;
+  onArchetypeSave: (result: EditArchetypeResult) => void;
+  onSpeciesSave: (updates: { ancestry: Character['ancestry']; skills: CharacterSkillRow[] }) => void;
 
   /** Abilities & defenses */
   onAbilityChange: (ability: AbilityName, value: number) => void;

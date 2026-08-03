@@ -7,10 +7,7 @@ import { useGameRules, usePowerParts, useTechniqueParts, useOfficialLibrary } fr
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
-import { derivePowerDisplay } from '@/lib/calculators/power-calc';
-import type { PowerDocument } from '@/lib/calculators/power-calc';
-import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
-import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
+import { resolvePowerTechniqueEnergy } from '@/lib/guided-creator/power-technique-display';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { GuidedSectionTitle } from './guided-section-title';
 
@@ -55,34 +52,14 @@ export function GuidedHealthEnergySection() {
 
     draft.powerIds.forEach((id) => {
       const raw = powerById.get(String(id));
-      if (!raw) return;
-      try {
-        const doc: PowerDocument = {
-          name: String(raw.name ?? ''),
-          description: String(raw.description ?? ''),
-          parts: Array.isArray(raw.parts) ? (raw.parts as PowerDocument['parts']) : [],
-        };
-        const disp = derivePowerDisplay(doc, powerPartsDb);
-        if (typeof disp.energy === 'number') max = Math.max(max, disp.energy);
-      } catch {
-        // ignore invalid power
-      }
+      const energy = resolvePowerTechniqueEnergy('powers', raw, powerPartsDb, techniquePartsDb);
+      if (typeof energy === 'number') max = Math.max(max, energy);
     });
 
     draft.techniqueIds.forEach((id) => {
       const raw = techniqueById.get(String(id));
-      if (!raw) return;
-      try {
-        const doc: TechniqueDocument = {
-          name: String(raw.name ?? ''),
-          description: String(raw.description ?? ''),
-          parts: Array.isArray(raw.parts) ? (raw.parts as TechniqueDocument['parts']) : [],
-        };
-        const disp = deriveTechniqueDisplay(doc, techniquePartsDb);
-        if (typeof disp.energy === 'number') max = Math.max(max, disp.energy);
-      } catch {
-        // ignore invalid technique
-      }
+      const energy = resolvePowerTechniqueEnergy('techniques', raw, powerPartsDb, techniquePartsDb);
+      if (typeof energy === 'number') max = Math.max(max, energy);
     });
 
     return max;

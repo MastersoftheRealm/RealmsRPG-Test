@@ -1,5 +1,6 @@
 /**
  * Abilities — path-recommended array applied by default; optional customize.
+ * Custom archetype / custom chooser (no codex path): full point-buy only — no L1 recommendations.
  */
 
 'use client';
@@ -10,6 +11,10 @@ import {
   GuidedLayerNav,
   resolveDistinctSecondaryAbility,
 } from '@/components/shared';
+import {
+  canContinueGuidedAbilitiesStep,
+  prefersDeepCatalogEntry,
+} from '@/lib/guided-creator/creator-entry-mode';
 import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
@@ -29,7 +34,22 @@ export function AbilitiesStep() {
   const { draft, updateDraft, navigationIntent, entryNonce } = useGuidedCreatorStore();
   const { archetype, pathData } = useGuidedPathData();
   const { rules } = useGameRules();
-  const [customizing, setCustomizing] = useState(draft.abilitiesMode === 'custom');
+
+  /** Custom archetype / custom chooser: no codex path → only full point-buy (no L1 recommendations). */
+  const customizeOnly = prefersDeepCatalogEntry(draft);
+
+  const [customizing, setCustomizing] = useState(
+    customizeOnly || draft.abilitiesMode === 'custom'
+  );
+  // Reset customize layer when path/mode changes away from custom (render-time adjust; avoids setState-in-effect).
+  const abilitiesResetKey = `${customizeOnly}:${draft.abilitiesMode}`;
+  const [prevAbilitiesResetKey, setPrevAbilitiesResetKey] = useState(abilitiesResetKey);
+  if (abilitiesResetKey !== prevAbilitiesResetKey) {
+    setPrevAbilitiesResetKey(abilitiesResetKey);
+    if (!customizeOnly && draft.abilitiesMode !== 'custom') {
+      setCustomizing(false);
+    }
+  }
 
   const openCustomize = useCallback(() => setCustomizing(true), []);
   useGuidedDeepEntryOnArrival({
@@ -37,6 +57,7 @@ export function AbilitiesStep() {
     navigationIntent,
     entryNonce,
     onDeepEntry: openCustomize,
+    enabled: !customizeOnly,
   });
 
   const primary = draft.pow_abil ?? draft.mart_abil ?? archetype?.archetype_ability ?? null;
@@ -64,12 +85,17 @@ export function AbilitiesStep() {
   );
 
   const recommended = useMemo(
-    () => resolveGuidedRecommendedAbilities(pathData, primary, secondary),
-    [pathData, primary, secondary]
+    () =>
+      customizeOnly
+        ? null
+        : resolveGuidedRecommendedAbilities(pathData, primary, secondary),
+    [customizeOnly, pathData, primary, secondary]
   );
 
+  const showCustomizePanel = customizeOnly || customizing || !recommended;
+
   const displayAbilities =
-    !customizing && recommended && draft.abilitiesMode !== 'custom'
+    !showCustomizePanel && recommended && draft.abilitiesMode !== 'custom'
       ? recommended
       : draft.abilities;
 
@@ -101,9 +127,13 @@ export function AbilitiesStep() {
     });
   };
 
-  const canContinue =
-    draft.abilitiesMode === 'recommended' ||
-    (customizing && spentPoints === totalPoints);
+  const canContinue = canContinueGuidedAbilitiesStep({
+    customizeOnly,
+    abilitiesMode: draft.abilitiesMode,
+    showCustomizePanel,
+    spentPoints,
+    totalPoints,
+  });
 
   return (
     <GuidedStepLayout
@@ -112,7 +142,7 @@ export function AbilitiesStep() {
       description={stepCopy.description}
       canContinue={canContinue}
     >
-      {!customizing && recommended && (
+      {!showCustomizePanel && recommended && (
         <>
           <div className="rounded-card border border-primary-subtle-border bg-primary-subtle-bg/60 p-4 sm:p-5">
             <GuidedSectionTitle>
@@ -136,7 +166,7 @@ export function AbilitiesStep() {
         </>
       )}
 
-      {(customizing || !recommended) && (
+      {showCustomizePanel && (
         <>
           <GuidedAbilitiesCustomizePanel
             abilities={draft.abilities}
@@ -147,7 +177,7 @@ export function AbilitiesStep() {
             martialAbility={martialAbilityProp}
             secondaryAbility={secondaryAbilityProp}
           />
-          {recommended ? (
+          {!customizeOnly && recommended ? (
             <GuidedLayerNav
               collapseLabel={layerNavCopy.seeRecommendations}
               onCollapse={applyRecommended}

@@ -10,7 +10,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCreatorSave, type PowerPart } from '@/hooks';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
-import { dedupeSavedParts } from '@/lib/library/dedupe-saved-parts';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { AttackMode } from '@/lib/attack-mode';
 import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
 import { POWER_CREATOR_CACHE_KEY, EXCLUDED_PARTS } from './power-creator-constants';

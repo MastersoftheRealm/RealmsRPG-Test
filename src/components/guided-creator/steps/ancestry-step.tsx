@@ -542,6 +542,7 @@ export function AncestryStep() {
               key={opt.id}
               density="compact"
               title={opt.name}
+              description={opt.description}
               selected={isSkillSelected(opt.id)}
               onSelect={() => handleSkillPick(opt.id)}
               selectAriaLabel={`Choose ${opt.name}`}
