@@ -3,8 +3,8 @@
 import { useMemo } from 'react';
 import { cn } from '@/lib/utils/cn';
 import { GridListRow } from './grid-list-row';
-import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { ColumnValue } from '@/components/shared/grid-list-row';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import { useRollsOptional } from '@/components/rolls';
 import {
   useCodexSkills,
@@ -51,6 +51,7 @@ export function CreatureStatBlock({
   onDuplicate,
   onAddToLibrary,
   rightSlot,
+  rowChrome,
   warningMessage,
   badges,
   showActions = true,
@@ -220,6 +221,7 @@ export function CreatureStatBlock({
       onDuplicate={showActions ? onDuplicate : undefined}
       onAddToLibrary={onAddToLibrary}
       rightSlot={rightSlot}
+      rowChrome={rowChrome}
       warningMessage={warningMessage}
       badges={badges}
       defaultExpanded={initialExpanded}

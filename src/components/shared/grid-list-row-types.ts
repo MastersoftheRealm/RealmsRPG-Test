@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';
+import type { ListHeaderRowChrome } from './grid-list-row-chrome';
 import type { ListRowThumbnailProps } from './list-row-thumbnail';
 
 /**
@@ -143,6 +144,11 @@ export interface GridListRowProps {
   thumbnail?: ListRowThumbnailProps;
   /** Right slot content (e.g., use button, roll buttons) - renders after columns */
   rightSlot?: ReactNode;
+  /**
+   * Reserve the same outer flex chrome as `ListHeader` `rowChrome` when slot content is absent
+   * (e.g. My Library sync button only on drifted rows). Pair with the shell/header flags.
+   */
+  rowChrome?: ListHeaderRowChrome;
   /** Visual state: item is equipped (green border/bg styling) */
   equipped?: boolean;
   /** Visual state: item is innate (purple styling) */

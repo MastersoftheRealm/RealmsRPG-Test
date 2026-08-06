@@ -802,15 +802,18 @@ Character creation is the **activation milestone** — the "aha moment." Guidanc
 
 ### 11.1 Immediate post-save: "Play together"
 
-After first character save, redirect to the character sheet and show a **one-time prompt** (dismissible, stored in profile or localStorage):
+After first character save, show a **one-time prompt** before navigating to the sheet (dismissible, stored in profile or localStorage):
 
-- **Message theme:** "You've built your character — Realms is most fun with a party."
-- **Primary actions:**
+- **Message theme:** Character is saved — see your sheet first; party options are secondary.
+- **Primary action:**
+  - **See my character** — navigate to the character sheet (primary blue CTA at top)
+- **Secondary actions** (outline, grouped below):
+  - **Join campaign** — invite code flow (`/campaigns?tab=join`)
   - **Join Discord** — find groups and community
-  - **Start a campaign** — create a campaign and invite friends (link to `/campaigns` or create flow)
-- **Not:** send them back to Codex/Library browse.
+  - **Run games as RM** — create a campaign (`/campaigns?tab=create`)
+- **Not:** send them back to Codex/Library browse; do not use "Browse campaigns" (join-only until browse exists).
 
-Show for first-time players (first saved character); optional "don't show again." Logged-in users who already dismissed skip it.
+Show for first-time players (first saved character); optional "don't show again." Logged-in users who already dismissed skip it. Skip when `?returnTo=` is set on the creator URL.
 
 **Best practice:** Trigger on **behavior** (character saved), not on home-page load. One modal or banner, not a multi-step tour.
 

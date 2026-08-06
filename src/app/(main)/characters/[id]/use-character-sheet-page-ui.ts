@@ -45,6 +45,7 @@ export function useCharacterSheetPageUi({
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [sheetTourOfferLatched, setSheetTourOfferLatched] = useState(false);
   const [sheetTourActive, setSheetTourActive] = useState(false);
+  const [sheetTourRestartKey, setSheetTourRestartKey] = useState(0);
   const [levelUpGuide, setLevelUpGuide] = useState<LevelUpGuideContent | null>(null);
   const [addModalType, setAddModalType] = useState<AddModalType>(null);
   const [libraryActiveTab, setLibraryActiveTab] = useState<CharacterLibraryTabId>('feats');
@@ -124,6 +125,11 @@ export function useCharacterSheetPageUi({
     [character, id, showToast, setCharacter],
   );
 
+  const handleRetakeSheetTour = useCallback(() => {
+    setSheetTourRestartKey((k) => k + 1);
+    setSheetTourActive(true);
+  }, []);
+
   return {
     isEditMode,
     setIsEditMode,
@@ -137,6 +143,8 @@ export function useCharacterSheetPageUi({
     setSheetTourOfferLatched,
     sheetTourActive,
     setSheetTourActive,
+    sheetTourRestartKey,
+    handleRetakeSheetTour,
     levelUpGuide,
     setLevelUpGuide,
     addModalType,

@@ -474,7 +474,6 @@ export default function StyleguidePage() {
                 label="Extended Range"
                 costSuffix={1}
                 description="Increases the power's range by 30 feet. This line is intentionally longer to verify that expanded chips use rounded rectangles rather than pill caps that clip corner text."
-                defaultExpanded
                 interactiveHover
               />
               <ExpandableChip
@@ -514,7 +513,6 @@ export default function StyleguidePage() {
                 label="Area of Effect"
                 category="area"
                 description="Affects all creatures in a 15-foot radius."
-                defaultExpanded
                 interactiveHover
               />
             </ChipGroup>

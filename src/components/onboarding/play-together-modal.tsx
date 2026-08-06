@@ -51,48 +51,55 @@ export function PlayTogetherModal({
       description={copy.description}
       fullScreenOnMobile
       footer={
-        <div className="flex flex-col gap-3 border-t border-border-light p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="border-t border-border-light p-4">
           <Checkbox
             id="play-together-dont-show"
             checked={dontShowAgain}
             onChange={(e) => setDontShowAgain(e.target.checked)}
             label={copy.dontShowAgain}
           />
-          <Button variant="secondary" onClick={handleView} className="min-h-11">
-            {copy.viewCharacter}
-          </Button>
         </div>
       }
     >
-      <div className="space-y-3 p-4">
-        {DISCORD_URL && (
-          <MarketingExternalButton
-            href={DISCORD_URL}
+      <div className="space-y-4 p-4">
+        <Button variant="primary" size="lg" className="w-full min-h-11" onClick={handleView}>
+          {copy.viewCharacter}
+        </Button>
+
+        <div className="space-y-3 border-t border-border-light pt-4">
+          <p className="text-center text-sm font-medium text-text-secondary">
+            {copy.secondaryHeading}
+          </p>
+          <MarketingLinkButton
+            href="/campaigns?tab=join"
+            variant="outline"
             size="lg"
             className="w-full"
-            onClick={persistIfNeeded}
+            onClick={handleLeave}
           >
-            {copy.discord}
-          </MarketingExternalButton>
-        )}
-        <MarketingLinkButton
-          href="/campaigns"
-          variant="outline"
-          size="lg"
-          className="w-full"
-          onClick={handleLeave}
-        >
-          {copy.campaigns}
-        </MarketingLinkButton>
-        <MarketingLinkButton
-          href="/campaigns?tab=create"
-          variant="outline"
-          size="lg"
-          className="w-full"
-          onClick={handleLeave}
-        >
-          {copy.runGames}
-        </MarketingLinkButton>
+            {copy.campaigns}
+          </MarketingLinkButton>
+          {DISCORD_URL && (
+            <MarketingExternalButton
+              href={DISCORD_URL}
+              variant="outline"
+              size="lg"
+              className="w-full"
+              onClick={handleLeave}
+            >
+              {copy.discord}
+            </MarketingExternalButton>
+          )}
+          <MarketingLinkButton
+            href="/campaigns?tab=create"
+            variant="outline"
+            size="lg"
+            className="w-full"
+            onClick={handleLeave}
+          >
+            {copy.runGames}
+          </MarketingLinkButton>
+        </div>
       </div>
     </Modal>
   );

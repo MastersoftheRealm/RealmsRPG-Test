@@ -2,6 +2,10 @@
  * Shared sheet tour / milestone highlight helpers (TASK-388).
  */
 
+/** Above roll-log FAB (`z-floating`); bottom-left on desktop; room for dice on mobile. */
+export const ONBOARDING_FLOATING_CARD_CLASS =
+  'fixed z-tour left-4 right-20 bottom-20 md:left-4 md:right-auto md:bottom-8 md:w-96 max-w-[calc(100vw-2rem)]';
+
 const HIGHLIGHT_CLASSES = [
   'ring-2',
   'ring-primary-link-fg',

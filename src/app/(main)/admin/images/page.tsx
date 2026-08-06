@@ -166,7 +166,7 @@ export default function AdminImagesPage() {
         searchPlaceholder="Search by name..."
         searchAriaLabel="Search images by name"
         filters={
-          <FilterSection defaultExpanded>
+          <FilterSection>
             <ChipSelect
               label="Filter by category"
               placeholder="Any category..."

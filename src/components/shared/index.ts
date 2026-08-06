@@ -102,6 +102,10 @@ export {
   CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
 } from './grid-list-row-chrome';
 
+// ListSearchToolbar — full-span search + trailing slot (ADR-0011)
+export { ListSearchToolbar } from './list-search-toolbar';
+export type { ListSearchToolbarProps } from './list-search-toolbar';
+
 // CodexBrowseListShell — Admin Codex + Codex browse list chrome (ADR-0005)
 export { CodexBrowseListShell } from './codex-browse-list-shell';
 export type { CodexBrowseListShellProps } from './codex-browse-list-shell';
@@ -178,6 +182,10 @@ export {
   type CreatureLibraryStatBlockRowsProps,
 } from './creature-library-stat-block-rows';
 export { LibraryAddToLibraryButton } from './library-add-to-library-button';
+export {
+  LibraryAddToCharacterButton,
+  LibraryRowActionSlot,
+} from './library-row-action-slot';
 
 // Entity library sections (shared list section renderers)
 export {

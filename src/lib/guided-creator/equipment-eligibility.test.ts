@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
+import { meetsAbilityRequirement } from '@/lib/game/weapon-attack-ability';
 import {
   filterEligibleEquipment,
   isCommonRarity,
-  meetsAbilityRequirement,
   rankWeaponCandidates,
   resolveArmorStepMode,
   shouldSkipArmorPhase,

@@ -12,14 +12,18 @@
 import { useMemo, useState, type ReactNode, type ComponentProps } from 'react';
 import {
   GridListRow,
-  SearchInput,
   ListHeader,
   LoadingState,
   ErrorDisplay,
   ListEmptyState,
   SectionHeader,
 } from '@/components/shared';
+import { ListSearchToolbar } from './list-search-toolbar';
 import { LibraryAddToLibraryButton } from '@/components/shared/library-add-to-library-button';
+import {
+  LibraryAddToCharacterButton,
+  LibraryRowActionSlot,
+} from '@/components/shared/library-row-action-slot';
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import type { ListHeaderRowChrome } from '@/components/shared/grid-list-row-chrome';
 import type { ListRowThumbnailProps } from '@/components/shared/list-row-thumbnail';
@@ -85,6 +89,12 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   variant: 'library' | 'admin';
   readOnly?: boolean;
   onAddRequest?: (row: TRow) => void;
+  /** When a character is filtered, add row directly to that character. */
+  addToCharacter?: {
+    kind: 'power' | 'technique' | 'weapon' | 'armor' | 'shield';
+    onRequest: (row: TRow) => void;
+    isOnCharacter: (row: TRow) => boolean;
+  };
   onEdit?: (id: string) => void;
   onDelete?: (id: string, name: string) => void;
   /** Optional control beside search (e.g. admin Create). Keeps list chrome when empty. */
@@ -124,6 +134,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   variant,
   readOnly = false,
   onAddRequest,
+  addToCharacter,
   onEdit,
   onDelete,
   searchTrailing,
@@ -149,10 +160,11 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   }
 
   const canAdd = () => variant === 'library' && !readOnly && !!onAddRequest;
+  const canAddToCharacter = () => Boolean(addToCharacter);
   const hasThumbnailColumn = hasThumbnailColumnProp ?? Boolean(getThumbnail);
   const rowChrome: ListHeaderRowChrome | undefined = (() => {
     const chrome: ListHeaderRowChrome = {};
-    if (canAdd()) chrome.rightSlot = true;
+    if (canAdd() || canAddToCharacter()) chrome.rightSlot = true;
     if (variant === 'admin' && onEdit) chrome.edit = true;
     if (variant === 'admin' && onDelete) chrome.delete = true;
     return chrome.rightSlot || chrome.edit || chrome.delete ? chrome : undefined;
@@ -161,12 +173,12 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   return (
     <div>
       {sectionTitle ? <SectionHeader title={sectionTitle} size="md" /> : null}
-      <div className="mb-4 flex flex-wrap items-center gap-3">
-        <div className="min-w-[200px] flex-1">
-          <SearchInput value={search} onChange={setSearch} placeholder={searchPlaceholder} />
-        </div>
-        {searchTrailing}
-      </div>
+      <ListSearchToolbar
+        search={search}
+        onSearchChange={setSearch}
+        placeholder={searchPlaceholder}
+        trailing={searchTrailing}
+      />
       {filters}
       <ListHeader
         columns={headerColumns}
@@ -215,13 +227,26 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
                 costLabel={costLabel}
                 badges={getBadges?.(row)}
                 rightSlot={
-                  canAdd() ? (
-                    <LibraryAddToLibraryButton
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onAddRequest!(row);
-                      }}
-                    />
+                  canAdd() || canAddToCharacter() ? (
+                    <LibraryRowActionSlot>
+                      {canAddToCharacter() && !addToCharacter!.isOnCharacter(row) ? (
+                        <LibraryAddToCharacterButton
+                          kind={addToCharacter!.kind}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            addToCharacter!.onRequest(row);
+                          }}
+                        />
+                      ) : null}
+                      {canAdd() ? (
+                        <LibraryAddToLibraryButton
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onAddRequest!(row);
+                          }}
+                        />
+                      ) : null}
+                    </LibraryRowActionSlot>
                   ) : undefined
                 }
                 onAddToLibrary={canAdd() ? () => onAddRequest!(row) : undefined}

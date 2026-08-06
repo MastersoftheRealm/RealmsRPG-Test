@@ -1,6 +1,38 @@
 {
-  "generated_at": "2026-08-03T16:27:40.545Z",
+  "generated_at": "2026-08-06T15:45:03.421Z",
   "tasks": [
+    {
+      "id": "TASK-681",
+      "title": "Persist character filter across Library + Codex tabs",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/filters/character-filter.tsx",
+        "src/components/shared/filters/power-technique-filters.tsx",
+        "src/components/shared/filters/armament-filters.tsx",
+        "src/app/(main)/codex/CodexFeatsTab.tsx",
+        "src/app/(main)/library/page.tsx",
+        "src/lib/library/character-filter-persistence.ts"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-675",
+      "title": "Wire PowerTechniqueFilters compact into USM add-power/technique",
+      "status": "not-started",
+      "completed_at": "",
+      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/filters/power-technique-filters.tsx",
+        "src/components/shared/unified-selection-modal.tsx",
+        "src/lib/library/power-technique-filters.ts",
+        "src/lib/library-selectable-builders.ts"
+      ],
+      "related_overlap": []
+    },
     {
       "id": "TASK-326",
       "title": "Tighten Supabase security advisors (bucket listing + leaked-password protection)",
@@ -33,6 +65,27 @@
       "completed_at": "",
       "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
       "matches": [
+        {
+          "hash": "0802ce64d881ab2868f01d4a83d9c86f065de2c2",
+          "subject": "fix(ci): make shell-creators audit data-independent after master merge",
+          "files": [
+            "src/app/(main)/empowered-technique-creator/page.tsx",
+            "src/app/(main)/item-creator/page.tsx",
+            "src/app/(main)/power-creator/page.tsx",
+            "src/app/(main)/technique-creator/page.tsx",
+            "src/components/creator/CreatorPageShell.tsx",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
+        {
+          "hash": "6291de5319146643d9591154b050f55dd0ddfa1a",
+          "subject": "fix(ci): repair post-merge shell-creators Playwright invoke + ACTIVE_TASKS encoding",
+          "files": [
+            ".github/workflows/ui-verify.yml",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
         {
           "hash": "2cbad1a9265f02aa3721a5887cfffb66ee0ca3c1",
           "subject": "Merge origin/master: keep power AoE applyDuration; prefer local TASK-642 email fix",
@@ -129,18 +182,361 @@
       ]
     },
     {
-      "id": "TASK-668",
-      "title": "Reconcile project docs with CODEBASE_AUDIT_2026-08-01 findings",
-      "status": "not-started",
-      "completed_at": "",
-      "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
+      "id": "TASK-680",
+      "title": "Armaments library � character filter + add to character sheet",
+      "status": "done",
+      "completed_at": "2026-08-06",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
       "matches": [],
       "related_files": [
-        "src/docs/ai/archive/CODEBASE_AUDIT_2026-08-01.md",
-        "src/docs/ai/ARCHITECTURE_CONSTITUTION.md",
+        "src/app/(main)/library/LibraryItemsTab.tsx",
+        "src/components/shared/official-item-list.tsx",
+        "src/components/shared/official-entity-list.tsx",
+        "src/components/shared/filters/armament-filters.tsx",
+        "src/components/shared/filters/index.ts",
+        "src/components/shared/library-row-action-slot.tsx",
+        "src/lib/library/official-item-list.ts",
+        "src/lib/library/armament-filters.ts",
+        "src/lib/library/armament-filters.test.ts",
+        "src/lib/library/armament-character-context.ts",
+        "src/lib/game/weapon-attack-ability.ts",
+        "src/lib/guided-creator/equipment-eligibility.ts",
+        "src/hooks/use-add-to-character-from-library.tsx",
+        "src/hooks/add-library-item/map-library-to-character.ts",
+        "src/hooks/add-library-item/map-library-to-character.test.ts",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-682",
+      "title": "Extract shared ListSearchToolbar (search + trailing slot)",
+      "status": "done",
+      "completed_at": "2026-08-06",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/list-search-toolbar.tsx",
+        "src/components/shared/codex-browse-list-shell.tsx",
+        "src/components/shared/official-entity-list.tsx",
+        "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx",
+        "src/components/shared/index.ts",
+        "scripts/shared-ui-allowlist.json",
+        "src/docs/ai/ADR/0011-list-search-toolbar.md",
         "src/docs/ai/FEATURE_INDEX.md"
       ],
       "related_overlap": []
+    },
+    {
+      "id": "TASK-679",
+      "title": "Library add-to-character (+) when filtering by character",
+      "status": "done",
+      "completed_at": "2026-08-06",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/hooks/use-add-to-character-from-library.tsx",
+        "src/hooks/add-library-item/map-library-to-character.ts",
+        "src/hooks/add-library-item/map-library-to-character.test.ts",
+        "src/components/shared/library-row-action-slot.tsx",
+        "src/components/shared/filters/power-technique-filters.tsx",
+        "src/components/shared/filters/select-filter.tsx",
+        "src/components/shared/official-entity-list.tsx",
+        "src/components/shared/official-power-list.tsx",
+        "src/components/shared/official-technique-list.tsx",
+        "src/app/(main)/library/LibraryPowersTab.tsx",
+        "src/app/(main)/library/LibraryTechniquesTab.tsx",
+        "src/components/shared/index.ts",
+        "src/hooks/index.ts",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-677",
+      "title": "Collapse creators + browse filters by default",
+      "status": "done",
+      "completed_at": "2026-08-06",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/components/creator/collapsible-section.tsx",
+        "src/components/shared/filters/filter-section.tsx",
+        "src/components/shared/filters/power-technique-filters.tsx",
+        "src/app/(main)/power-creator/power-creator-editor-power-config.tsx",
+        "src/app/(main)/power-creator/power-creator-editor-power-parts.tsx",
+        "src/app/(main)/power-creator/power-creator-editor-power-damage.tsx",
+        "src/app/(main)/power-creator/power-creator-editor-action-profile.tsx",
+        "src/app/(main)/technique-creator/technique-creator-editor.tsx",
+        "src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx",
+        "src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-parts.tsx",
+        "src/app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx",
+        "src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx",
+        "src/app/(main)/empowered-technique-creator/empowered-technique-editor-action-profile.tsx",
+        "src/app/(main)/item-creator/item-creator-editor-ability-properties.tsx",
+        "src/app/(main)/item-creator/item-creator-editor-armor.tsx",
+        "src/app/(main)/item-creator/item-creator-editor-shield-panels.tsx",
+        "src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx",
+        "src/app/(main)/species-creator/species-creator-editor.tsx",
+        "src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-adjustments-section.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx",
+        "src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx",
+        "src/app/(main)/admin/images/page.tsx",
+        "src/docs/ai/guide/06-creators-and-loadouts.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-676",
+      "title": "Power/technique filters - character caps, Max TP, layout align",
+      "status": "done",
+      "completed_at": "",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/filters/power-technique-filters.tsx",
+        "src/components/shared/filters/character-filter.tsx",
+        "src/components/shared/filters/chip-select.tsx",
+        "src/components/shared/filters/select-filter.tsx",
+        "src/lib/library/power-technique-filters.ts",
+        "src/lib/library/power-technique-filters.test.ts",
+        "src/lib/library/power-technique-character-context.ts",
+        "src/lib/library/power-technique-categories.ts",
+        "src/lib/library/power-technique-categories.test.ts",
+        "src/lib/library/official-power-list.ts",
+        "src/lib/library/official-technique-list.ts",
+        "src/components/shared/official-power-list.tsx",
+        "src/components/shared/official-technique-list.tsx",
+        "src/app/(main)/library/LibraryPowersTab.tsx",
+        "src/app/(main)/library/LibraryTechniquesTab.tsx",
+        "src/lib/game/formulas.ts",
+        "src/lib/game/formulas.test.ts",
+        "src/lib/game/innate-eligibility.ts",
+        "src/lib/game/innate-eligibility.test.ts",
+        "src/lib/game/constants.ts",
+        "src/components/character-sheet/archetype-section.tsx",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-673",
+      "title": "Library powers/techniques - derived categories + FilterSection",
+      "status": "done",
+      "completed_at": "2026-08-06",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "1a04e2d0025411ea4aaa10c4a12f107ec7517105",
+          "subject": "feat(TASK-673): library power/technique categories and shared filters",
+          "files": [
+            "scripts/shared-ui-allowlist.json",
+            "src/app/(main)/library/LibraryPowersTab.tsx",
+            "src/app/(main)/library/LibraryTechniquesTab.tsx",
+            "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx",
+            "src/components/shared/filters/index.ts",
+            "src/components/shared/filters/power-technique-filters.tsx",
+            "src/components/shared/filters/select-filter.tsx",
+            "src/components/shared/index.ts",
+            "src/components/shared/official-entity-list.tsx",
+            "src/components/shared/official-power-list.tsx",
+            "src/components/shared/official-technique-list.tsx",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/FEATURE_INDEX_BARRELS.generated.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/game/innate-eligibility.test.ts",
+            "src/lib/game/innate-eligibility.ts",
+            "src/lib/glr/required-facts-registry.ts",
+            "src/lib/library/official-power-list.ts",
+            "src/lib/library/official-technique-list.ts",
+            "src/lib/library/power-technique-categories.test.ts",
+            "src/lib/library/power-technique-categories.ts",
+            "src/lib/library/power-technique-filters.test.ts",
+            "src/lib/library/power-technique-filters.ts"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/lib/library/power-technique-categories.ts",
+        "src/lib/library/power-technique-categories.test.ts",
+        "src/lib/library/power-technique-filters.ts",
+        "src/lib/library/power-technique-filters.test.ts",
+        "src/lib/library/official-power-list.ts",
+        "src/lib/library/official-technique-list.ts",
+        "src/lib/game/innate-eligibility.ts",
+        "src/lib/game/innate-eligibility.test.ts",
+        "src/lib/glr/required-facts-registry.ts",
+        "src/components/shared/filters/power-technique-filters.tsx",
+        "src/components/shared/filters/select-filter.tsx",
+        "src/components/shared/filters/index.ts",
+        "src/components/shared/official-entity-list.tsx",
+        "src/components/shared/official-power-list.tsx",
+        "src/components/shared/official-technique-list.tsx",
+        "src/app/(main)/library/LibraryPowersTab.tsx",
+        "src/app/(main)/library/LibraryTechniquesTab.tsx",
+        "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx",
+        "scripts/shared-ui-allowlist.json",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md"
+      ],
+      "related_overlap": [
+        "src/lib/library/power-technique-categories.ts",
+        "src/lib/library/power-technique-categories.test.ts",
+        "src/lib/library/power-technique-filters.ts",
+        "src/lib/library/power-technique-filters.test.ts",
+        "src/lib/library/official-power-list.ts",
+        "src/lib/library/official-technique-list.ts",
+        "src/lib/game/innate-eligibility.ts",
+        "src/lib/game/innate-eligibility.test.ts",
+        "src/lib/glr/required-facts-registry.ts",
+        "src/components/shared/filters/power-technique-filters.tsx",
+        "src/components/shared/filters/select-filter.tsx",
+        "src/components/shared/filters/index.ts",
+        "src/components/shared/official-entity-list.tsx",
+        "src/components/shared/official-power-list.tsx",
+        "src/components/shared/official-technique-list.tsx",
+        "src/app/(main)/library/LibraryPowersTab.tsx",
+        "src/app/(main)/library/LibraryTechniquesTab.tsx",
+        "src/app/(main)/library/components/UserLibraryEntityTabShell.tsx",
+        "scripts/shared-ui-allowlist.json",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ai/DEVELOPER_TASK_QUEUE.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md"
+      ]
+    },
+    {
+      "id": "TASK-674",
+      "title": "My Library GLR header alignment - conditional sync rightSlot chrome",
+      "status": "done",
+      "completed_at": "2026-08-06",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/components/shared/grid-list-row.tsx",
+        "src/components/shared/grid-list-row-collapsed.tsx",
+        "src/components/shared/grid-list-row-types.ts",
+        "src/components/shared/grid-list-row-chrome.ts",
+        "src/components/shared/creature-stat-block.tsx",
+        "src/components/shared/creature-stat-block-types.ts",
+        "src/app/(main)/library/LibraryPowersTab.tsx",
+        "src/app/(main)/library/LibraryTechniquesTab.tsx",
+        "src/app/(main)/library/LibraryItemsTab.tsx",
+        "src/app/(main)/library/LibraryCreaturesTab.tsx",
+        "src/app/(main)/library/LibraryEnhancedTab.tsx",
+        "src/lib/glr/validate-glr-chrome-spacing.ts",
+        "src/lib/glr/validate-glr-chrome-spacing.test.ts",
+        "src/docs/ai/guide/02-components-and-lists.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ALL_FEEDBACK_CLEAN.md"
+      ],
+      "related_overlap": []
+    },
+    {
+      "id": "TASK-668",
+      "title": "Reconcile project docs with CODEBASE_AUDIT_2026-08-01 findings",
+      "status": "done",
+      "completed_at": "2026-08-03",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [
+        {
+          "hash": "f5d11c568b265d00a26d32256f768ee2631989d1",
+          "subject": "Merge pull request #101 from MastersoftheRealm/cursor/reconcile-audit-docs-668-ad3e",
+          "files": []
+        },
+        {
+          "hash": "b3beb8ab673f7a753d6b6e2c0475c5568509986d",
+          "subject": "docs(TASK-668): cleanup — drop June-as-current banners; complete related_files",
+          "files": [
+            "AGENTS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/archive/FULL_AUDIT_2026-06.md",
+            "src/docs/ai/archive/SYSTEMATIC_AUDIT_2026-06.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/human/USER_EXPERIENCE_GOALS.md"
+          ]
+        },
+        {
+          "hash": "a386d388e70d44e6f18d740fbb07c2556e9208e3",
+          "subject": "docs(TASK-668): reconcile project docs with CODEBASE_AUDIT_2026-08-01",
+          "files": [
+            "src/docs/ARCHITECTURE.md",
+            "src/docs/README.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AGENT_GUIDE.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/ARCHITECTURE_CONSTITUTION.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/PR_CHECKLIST.md",
+            "src/docs/ai/REMEDIATION_STATUS_2026-06.md",
+            "src/docs/ai/REMEDIATION_STATUS_2026-08.md",
+            "src/docs/ai/archive/CODEBASE_AUDIT_2026-08-01.md",
+            "src/docs/ai/archive/HISTORY_INDEX.md",
+            "src/docs/ai/archive/README.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/docs/ai/guide/01-verification-and-ui-gates.md",
+            "src/docs/ai/guide/08-workflows-routes-and-progress.md"
+          ]
+        }
+      ],
+      "related_files": [
+        "src/docs/ai/archive/CODEBASE_AUDIT_2026-08-01.md",
+        "src/docs/ai/REMEDIATION_STATUS_2026-08.md",
+        "src/docs/ai/REMEDIATION_STATUS_2026-06.md",
+        "src/docs/ai/ARCHITECTURE_CONSTITUTION.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ARCHITECTURE.md",
+        "src/docs/ai/guide/01-verification-and-ui-gates.md",
+        "src/docs/ai/guide/08-workflows-routes-and-progress.md",
+        "src/docs/ai/PR_CHECKLIST.md",
+        "src/docs/ai/AGENT_GUIDE.md",
+        "src/docs/ai/ACTIVE_TASKS.md",
+        "src/docs/ai/AI_CHANGELOG.md",
+        "src/docs/README.md",
+        "AGENTS.md",
+        "src/docs/ai/archive/HISTORY_INDEX.md",
+        "src/docs/ai/archive/README.md",
+        "src/docs/ai/archive/FULL_AUDIT_2026-06.md",
+        "src/docs/ai/archive/SYSTEMATIC_AUDIT_2026-06.md",
+        "src/docs/human/USER_EXPERIENCE_GOALS.md"
+      ],
+      "related_overlap": [
+        "src/docs/ai/archive/CODEBASE_AUDIT_2026-08-01.md",
+        "src/docs/ai/REMEDIATION_STATUS_2026-08.md",
+        "src/docs/ai/REMEDIATION_STATUS_2026-06.md",
+        "src/docs/ai/ARCHITECTURE_CONSTITUTION.md",
+        "src/docs/ai/FEATURE_INDEX.md",
+        "src/docs/ai/BUILD_VALIDATION.md",
+        "src/docs/ARCHITECTURE.md",
+        "src/docs/ai/guide/01-verification-and-ui-gates.md",
+        "src/docs/ai/guide/08-workflows-routes-and-progress.md",
+        "src/docs/ai/PR_CHECKLIST.md",
+        "src/docs/ai/AGENT_GUIDE.md",
+        "src/docs/ai/ACTIVE_TASKS.md",
+        "src/docs/ai/AI_CHANGELOG.md",
+        "src/docs/README.md",
+        "AGENTS.md",
+        "src/docs/ai/archive/HISTORY_INDEX.md",
+        "src/docs/ai/archive/README.md",
+        "src/docs/ai/archive/FULL_AUDIT_2026-06.md",
+        "src/docs/ai/archive/SYSTEMATIC_AUDIT_2026-06.md",
+        "src/docs/human/USER_EXPERIENCE_GOALS.md"
+      ]
     },
     {
       "id": "TASK-672",
@@ -149,6 +545,15 @@
       "completed_at": "2026-08-02",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "6291de5319146643d9591154b050f55dd0ddfa1a",
+          "subject": "fix(ci): repair post-merge shell-creators Playwright invoke + ACTIVE_TASKS encoding",
+          "files": [
+            ".github/workflows/ui-verify.yml",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md"
+          ]
+        },
         {
           "hash": "2cbad1a9265f02aa3721a5887cfffb66ee0ca3c1",
           "subject": "Merge origin/master: keep power AoE applyDuration; prefer local TASK-642 email fix",
@@ -22051,6 +22456,21 @@
         "src/app/(main)/admin/core-rules/core-rules-armament-editor.tsx",
         "src/app/(main)/admin/core-rules/core-rules-crafting-rules-editor.tsx"
       ]
+    },
+    {
+      "id": "TASK-678",
+      "title": "Creature library fractional level sort",
+      "status": "done",
+      "completed_at": "",
+      "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
+      "matches": [],
+      "related_files": [
+        "src/hooks/use-sort.ts",
+        "src/hooks/use-sort.test.ts",
+        "src/lib/game/creature-level-display.ts",
+        "src/lib/game/creature-level-display.test.ts"
+      ],
+      "related_overlap": []
     }
   ]
 }

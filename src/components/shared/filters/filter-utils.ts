@@ -30,3 +30,7 @@ export function shouldShowSelectPlaceholder(
 export function dedupeStrings(values: string[]): string[] {
   return [...new Set(values)];
 }
+
+/** Shared h-11 control row chrome for filter checkboxes and inline controls. */
+export const FILTER_CONTROL_ROW_CLASS =
+  'flex min-h-11 items-center rounded-md border border-border-light bg-surface px-3';

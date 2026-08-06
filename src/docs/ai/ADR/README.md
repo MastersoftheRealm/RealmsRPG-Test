@@ -32,3 +32,5 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0007 | Co-located private extracts for shared hot modules | Accepted |
 | 0008 | LoadoutBudgetBar in shared | Accepted |
 | 0009 | GLR required-facts registry | Accepted |
+| 0010 | Lib layer dependency direction | Accepted |
+| 0011 | List search toolbar | Accepted |

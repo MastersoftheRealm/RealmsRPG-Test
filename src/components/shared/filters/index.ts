@@ -11,6 +11,7 @@
  * - TagFilter: Multi-select tag filter with Any/All mode
  * - SelectFilter: Simple single-select dropdown
  * - CharacterFilter: Filter list content by a user's character stats
+ * - ArmamentFilters: Character + currency affordability for weapons/armor/shields
  * - FilterSection: Collapsible container (`page` for Codex; `compact` + toolbarStart for selection modals)
  * - SourceFilter: All / Realms Library / My Library scope
  */
@@ -25,12 +26,16 @@ export {
   type PowerTechniqueFiltersProps,
 } from './power-technique-filters';
 export {
+  ArmamentFilters,
+  type ArmamentFiltersProps,
+} from './armament-filters';
+export {
   dedupeSelectOptions,
   dedupeStrings,
   shouldShowSelectPlaceholder,
+  FILTER_CONTROL_ROW_CLASS,
   type SelectOption,
-} from './filter-utils';
-export { FilterSection, type FilterSectionProps } from './filter-section';
+} from './filter-utils';export { FilterSection, type FilterSectionProps } from './filter-section';
 export {
   SourceFilter,
   sourceFilterSummary,

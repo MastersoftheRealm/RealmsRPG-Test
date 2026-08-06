@@ -315,6 +315,36 @@ export function validateGlrGridColumnSource(
   return errors;
 }
 
+/** When shell reserves rowChrome.rightSlot but row content is conditional, rows must pass matching GridListRow rowChrome. */
+export function validateMyLibraryRowChromeOnRows(
+  relativePath: string,
+  source: string
+): string[] {
+  const errors: string[] = [];
+  if (!source.includes('UserLibraryEntityTabShell')) return errors;
+
+  const shellChrome = resolvedRowChromeFlags(source);
+  if (!shellChrome.rightSlot) return errors;
+
+  const hasConditionalRightSlot =
+    /rightSlot:\s*[\w.]+\s*\?/.test(source) ||
+    /rightSlot=\{\s*[\w.]+\s*\?/.test(source);
+
+  if (!hasConditionalRightSlot) return errors;
+
+  const rowPassesRowChrome =
+    /<(GridListRow|CreatureStatBlock)[^>]*rowChrome=/.test(source) ||
+    /\browChrome:\s*[A-Z][A-Z0-9_]*/.test(source);
+
+  if (!rowPassesRowChrome) {
+    errors.push(
+      `${relativePath}: conditional rightSlot requires matching GridListRow/CreatureStatBlock rowChrome when shell reserves rowChrome.rightSlot`
+    );
+  }
+
+  return errors;
+}
+
 /** My Library tabs with row actions must pass matching ListHeader rowChrome. */
 export function validateMyLibraryEntityTabSource(
   relativePath: string,
@@ -325,6 +355,7 @@ export function validateMyLibraryEntityTabSource(
     source,
     'UserLibraryEntityTabShell'
   );
+  errors.push(...validateMyLibraryRowChromeOnRows(relativePath, source));
   errors.push(...validateGlrListClassNameCaller(relativePath, source));
   errors.push(...validateGlrGridColumnSource(relativePath, source));
   return errors;

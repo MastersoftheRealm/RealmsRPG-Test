@@ -104,6 +104,8 @@ describe('innate-eligibility', () => {
     expect(opts).toContain(6);
     expect(opts).toContain(8);
     expect(opts).toContain(9);
+    expect(opts).toContain(14);
+    expect(opts).not.toContain(7); // PM first innate bump is 6→8, never 7
     expect(opts[0]).toBeLessThan(opts[opts.length - 1]);
   });
 

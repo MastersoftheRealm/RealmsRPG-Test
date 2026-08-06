@@ -10,6 +10,7 @@ import { Wand2 } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
 import { PowerTechniqueFilters } from '@/components/shared/filters';
 import { useGameRules } from '@/hooks/use-game-rules';
+import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryPower } from '@/types/library';
 import {
@@ -24,6 +25,7 @@ import {
   EMPTY_POWER_TECHNIQUE_FILTERS,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
+import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
@@ -73,9 +75,13 @@ export function OfficialPowerList({
   const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
     EMPTY_POWER_TECHNIQUE_FILTERS
   );
+  const [characterContext, setCharacterContext] =
+    useState<PowerTechniqueCharacterContext | null>(null);
+  const [characterFilterId, setCharacterFilterId] = useState('');
+  const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
 
   const categoryOptions = useMemo(
-    () => collectCategoryOptionsFromItems(items, partsDb),
+    () => collectCategoryOptionsFromItems(items, partsDb, { includeDamageCategory: true }),
     [items, partsDb]
   );
 
@@ -89,12 +95,13 @@ export function OfficialPowerList({
       rows: OfficialPowerRow[],
       search: string,
       sortItems: (items: OfficialPowerRow[]) => OfficialPowerRow[]
-    ) => filterOfficialPowerRows(rows, search, sortItems, advancedFilters),
-    [advancedFilters]
+    ) => filterOfficialPowerRows(rows, search, sortItems, advancedFilters, characterContext),
+    [advancedFilters, characterContext]
   );
 
   return (
-    <OfficialEntityList<OfficialPowerRow, LibraryPower>
+    <>
+      <OfficialEntityList<OfficialPowerRow, LibraryPower>
       items={items}
       isLoading={isLoading}
       error={error}
@@ -110,10 +117,12 @@ export function OfficialPowerList({
           onChange={setAdvancedFilters}
           categoryOptions={categoryOptions}
           innateThresholdOptions={innateThresholdOptions}
+          onCharacterContextChange={setCharacterContext}
+          onCharacterIdChange={setCharacterFilterId}
         />
       }
       getColumns={(p) => [
-        { key: 'Category', value: p.category, align: 'left' },
+        { key: 'Category', value: p.category, align: 'center' },
         { key: 'Energy', value: p.energy, highlight: true, align: 'center' },
         { key: 'Action', value: p.action, align: 'center' },
         { key: 'Duration', value: p.duration, align: 'center' },
@@ -138,8 +147,19 @@ export function OfficialPowerList({
       variant={variant}
       readOnly={readOnly}
       onAddRequest={onAddRequest}
+      addToCharacter={
+        variant === 'library' && addToCharacter.active
+          ? {
+              kind: 'power',
+              onRequest: (row) => addToCharacter.openAddConfirm(row.name, row.raw),
+              isOnCharacter: (row) => addToCharacter.isOnCharacter(row.raw),
+            }
+          : undefined
+      }
       onEdit={onEdit}
       onDelete={onDelete}
     />
+      {addToCharacter.confirmModal}
+    </>
   );
 }

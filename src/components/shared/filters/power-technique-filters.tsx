@@ -1,28 +1,45 @@
 /**
- * PowerTechniqueFilters — Category / Energy / Action / (power) Innate filters.
- * Composes ChipSelect, SelectFilter, FilterSection primitives (TASK-673).
+ * PowerTechniqueFilters — Category / Energy / TP / Action / (power) Innate filters.
+ * Composes ChipSelect, SelectFilter, CharacterFilter, FilterSection (TASK-673 / TASK-676).
  */
 
 'use client';
 
-import { useId } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { Input } from '@/components/ui';
 import { InfoTippy } from '@/components/shared/info-tippy';
+import { useCharacter } from '@/hooks';
+import { useGameRules } from '@/hooks/use-game-rules';
+import { derivePowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
+import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { ChipSelect } from './chip-select';
 import { SelectFilter } from './select-filter';
+import { CharacterFilter } from './character-filter';
 import { FilterSection } from './filter-section';
 import {
   POWER_TECHNIQUE_ACTION_FILTER_OPTIONS,
   REACTION_FILTER_OPTIONS,
   countActivePowerTechniqueFilters,
+  withCharacterContextApplied,
   withInnateThresholdSelected,
   type PowerTechniqueFilterKind,
   type PowerTechniqueFilterState,
   type ReactionFilterMode,
 } from '@/lib/library/power-technique-filters';
+import {
+  readInitialLibraryCharacterFilterId,
+  writePersistedLibraryCharacterFilterId,
+} from '@/lib/library/character-filter-persistence';
+import { FILTER_CONTROL_ROW_CLASS } from './filter-utils';
+import { cn } from '@/lib/utils';
 
 const INNATE_THRESHOLD_HELP =
-  'Innate Threshold is the maximum Energy a power may cost to be taken as Innate. Values come from core rules progression (e.g. 6 at Power Proficiency 1 / Powered-Martial, 8 at Power Proficiency 2, then higher at later levels). Selecting a threshold also enables Innate Eligible.';
+  'Innate Threshold is the maximum Energy a power may cost to be Innate. Power characters start at 8 and rise to 14 with level (not a direct Power Proficiency table). Powered-Martial starts at 6; at milestones (every 3 levels from 4) choose Increase Innate Power (6→8, then +1; also +1 Innate Pool) or an Additional Feat. Selecting a threshold enables Innate Eligible. With a character selected, Innate Eligible uses that character’s threshold.';
+
+const CHARACTER_FILTER_HELP =
+  'Caps Max Energy to this character’s max Energy. When Innate Eligible is on (powers), locks Power Threshold to their Innate Threshold. Optionally keep only entries whose Training Points cost fits remaining TP (from owned proficiencies).';
+
+const SET_BY_CHARACTER_HINT = 'Set by character';
 
 export interface PowerTechniqueFiltersProps {
   kind: PowerTechniqueFilterKind;
@@ -32,10 +49,17 @@ export interface PowerTechniqueFiltersProps {
   categoryOptions: string[];
   /** Innate Threshold dropdown values from `listInnateThresholdFilterOptions`. */
   innateThresholdOptions?: number[];
+  /** Notified when character context changes (for applyPowerTechniqueFilters). */
+  onCharacterContextChange?: (ctx: PowerTechniqueCharacterContext | null) => void;
+  /** Selected character id ('' when none). Used for add-to-character row actions. */
+  onCharacterIdChange?: (characterId: string) => void;
   /** FilterSection page vs compact (selection modals later). */
   variant?: 'page' | 'compact';
+  /** Override FilterSection initial expand (default collapsed). */
   defaultExpanded?: boolean;
   className?: string;
+  /** Persist character pick (default true for page variant). */
+  persistCharacter?: boolean;
 }
 
 export function PowerTechniqueFilters({
@@ -44,18 +68,93 @@ export function PowerTechniqueFilters({
   onChange,
   categoryOptions,
   innateThresholdOptions = [],
+  onCharacterContextChange,
+  onCharacterIdChange,
   variant = 'page',
-  defaultExpanded = false,
+  defaultExpanded,
   className,
+  persistCharacter = variant === 'page',
 }: PowerTechniqueFiltersProps) {
-  const energyMinId = useId();
   const energyMaxId = useId();
+  const tpMaxId = useId();
   const innateEligibleId = useId();
-  const activeCount = countActivePowerTechniqueFilters(value, kind);
+  const affordableTpId = useId();
+  const { rules } = useGameRules();
+
+  const [characterId, setCharacterId] = useState(() =>
+    readInitialLibraryCharacterFilterId(persistCharacter)
+  );
+
+  const { data: characterResult } = useCharacter(characterId || undefined);
+  const character = characterResult?.character ?? undefined;
+  const valueRef = useRef(value);
+  useEffect(() => {
+    valueRef.current = value;
+  }, [value]);
+  const syncedCharacterIdRef = useRef<string | null>(null);
+
+  const characterContext = useMemo(() => {
+    if (!characterId || !character) return null;
+    return derivePowerTechniqueCharacterContext(character, rules);
+  }, [characterId, character, rules]);
+
+  useEffect(() => {
+    onCharacterContextChange?.(characterContext);
+  }, [characterContext, onCharacterContextChange]);
+
+  useEffect(() => {
+    onCharacterIdChange?.(characterId);
+  }, [characterId, onCharacterIdChange]);
+
+  const handleCharacterChange = useCallback(
+    (id: string) => {
+      setCharacterId(id);
+      if (persistCharacter) writePersistedLibraryCharacterFilterId(id);
+      if (!id) {
+        syncedCharacterIdRef.current = null;
+        onChange(withCharacterContextApplied(valueRef.current, null));
+      } else {
+        // Force re-sync when switching characters (effect waits for loaded context).
+        syncedCharacterIdRef.current = null;
+      }
+    },
+    [onChange, persistCharacter]
+  );
+
+  // Sync Max Energy / innate threshold once per selected character load (not on every edit).
+  useEffect(() => {
+    if (!characterId) return;
+    if (!characterContext) return;
+    if (syncedCharacterIdRef.current === characterId) return;
+    syncedCharacterIdRef.current = characterId;
+    onChange(withCharacterContextApplied(valueRef.current, characterContext));
+  }, [characterId, characterContext, onChange]);
+
+  const hasCharacter = Boolean(characterId && characterContext);
+  const activeCount =
+    countActivePowerTechniqueFilters(value, kind, hasCharacter) + (characterId ? 1 : 0);
 
   const set = (patch: Partial<PowerTechniqueFilterState>) => {
     onChange({ ...value, ...patch });
   };
+
+  const handleInnateEligibleChange = (checked: boolean) => {
+    if (!checked) {
+      set({ innateEligibleOnly: false, innateThreshold: null });
+      return;
+    }
+    if (characterContext && characterContext.innateThreshold > 0) {
+      set({
+        innateEligibleOnly: true,
+        innateThreshold: characterContext.innateThreshold,
+      });
+      return;
+    }
+    set({ innateEligibleOnly: true });
+  };
+
+  const energyLockedByCharacter = hasCharacter;
+  const thresholdLockedByCharacter = hasCharacter && value.innateEligibleOnly;
 
   return (
     <FilterSection
@@ -64,7 +163,24 @@ export function PowerTechniqueFilters({
       activeCount={activeCount}
       className={className}
     >
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <CharacterFilter
+        value={characterId}
+        onChange={handleCharacterChange}
+        className="mb-4 max-w-md border-b border-border-light pb-4"
+        helpContent={CHARACTER_FILTER_HELP}
+      >
+        {hasCharacter && characterContext ? (
+          <p className="mt-2 text-xs text-text-secondary dark:text-text-secondary">
+            {character?.name}: max Energy {characterContext.maxEnergy}
+            {kind === 'power' && characterContext.innateThreshold > 0
+              ? ` · Innate Threshold ${characterContext.innateThreshold}`
+              : ''}
+            {` · TP ${characterContext.tpSpent}/${characterContext.tpTotal} (${characterContext.tpRemaining} remaining)`}
+          </p>
+        ) : null}
+      </CharacterFilter>
+
+      <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <ChipSelect
           label="Category"
           placeholder="Choose category"
@@ -76,39 +192,51 @@ export function PowerTechniqueFilters({
           }
         />
 
-        <div className="filter-group">
-          <label htmlFor={energyMinId} className="mb-1 block text-sm font-medium text-text-secondary">
-            Min Energy
-          </label>
-          <Input
-            id={energyMinId}
-            type="number"
-            min={0}
-            value={value.energyMin ?? ''}
-            onChange={(e) =>
-              set({
-                energyMin: e.target.value === '' ? null : Number(e.target.value),
-              })
-            }
-            placeholder="No min"
-          />
-        </div>
-
-        <div className="filter-group">
-          <label htmlFor={energyMaxId} className="mb-1 block text-sm font-medium text-text-secondary">
-            Max Energy
-          </label>
+        <div className={cn('filter-group min-w-0', energyLockedByCharacter && 'opacity-60')}>
+          <div className="mb-1 flex h-5 items-center gap-1.5">
+            <label htmlFor={energyMaxId} className="text-sm font-medium leading-5 text-text-secondary">
+              Max Energy
+            </label>
+            {energyLockedByCharacter ? (
+              <span className="text-xs text-text-muted dark:text-text-secondary">
+                {SET_BY_CHARACTER_HINT}
+              </span>
+            ) : null}
+          </div>
           <Input
             id={energyMaxId}
             type="number"
             min={0}
             value={value.energyMax ?? ''}
+            disabled={energyLockedByCharacter}
             onChange={(e) =>
               set({
                 energyMax: e.target.value === '' ? null : Number(e.target.value),
               })
             }
+            placeholder={energyLockedByCharacter ? SET_BY_CHARACTER_HINT : 'No max'}
+            className="h-11"
+          />
+        </div>
+
+        <div className="filter-group min-w-0">
+          <div className="mb-1 flex h-5 items-center">
+            <label htmlFor={tpMaxId} className="text-sm font-medium leading-5 text-text-secondary">
+              Max TP
+            </label>
+          </div>
+          <Input
+            id={tpMaxId}
+            type="number"
+            min={0}
+            value={value.tpMax ?? ''}
+            onChange={(e) =>
+              set({
+                tpMax: e.target.value === '' ? null : Number(e.target.value),
+              })
+            }
             placeholder="No max"
+            className="h-11"
           />
         </div>
 
@@ -141,32 +269,65 @@ export function PowerTechniqueFilters({
                 label: String(n),
               }))}
               onChange={(v) => onChange(withInnateThresholdSelected(value, v))}
-              placeholder="Any"
+              placeholder={thresholdLockedByCharacter ? SET_BY_CHARACTER_HINT : 'Any'}
+              disabled={thresholdLockedByCharacter}
+              disabledHint={thresholdLockedByCharacter ? SET_BY_CHARACTER_HINT : undefined}
               labelAccessory={
                 <InfoTippy
                   content={INNATE_THRESHOLD_HELP}
                   label="Innate threshold filter help"
                   size="inline"
+                  className="!min-h-4 !min-w-4 !my-0 md:!min-h-4 md:!min-w-4"
                 />
               }
             />
 
-            <div className="filter-group flex items-end">
-              <label
-                htmlFor={innateEligibleId}
-                className="flex min-h-11 cursor-pointer items-center gap-2 text-sm text-text-primary"
-              >
+            <div className="filter-group min-w-0">
+              <div className="mb-1 flex h-5 items-center">
+                <label
+                  htmlFor={innateEligibleId}
+                  className="text-sm font-medium leading-5 text-text-secondary"
+                >
+                  Innate Eligible
+                </label>
+              </div>
+              <div className={FILTER_CONTROL_ROW_CLASS}>
                 <input
                   id={innateEligibleId}
                   type="checkbox"
                   checked={value.innateEligibleOnly}
-                  onChange={(e) => set({ innateEligibleOnly: e.target.checked })}
+                  onChange={(e) => handleInnateEligibleChange(e.target.checked)}
                   className="h-4 w-4 rounded border-border-light text-primary-fg focus:ring-primary-outline-border"
                 />
-                Innate Eligible
-              </label>
+                <span className="ml-2 text-sm text-text-primary">Only innate-eligible</span>
+              </div>
             </div>
           </>
+        ) : null}
+
+        {hasCharacter ? (
+          <div className="filter-group min-w-0">
+            <div className="mb-1 flex h-5 items-center">
+              <label
+                htmlFor={affordableTpId}
+                className="text-sm font-medium leading-5 text-text-secondary"
+              >
+                Available TP
+              </label>
+            </div>
+            <div className={cn(FILTER_CONTROL_ROW_CLASS)}>
+              <input
+                id={affordableTpId}
+                type="checkbox"
+                checked={value.affordableTpOnly}
+                onChange={(e) => set({ affordableTpOnly: e.target.checked })}
+                className="h-4 w-4 rounded border-border-light text-primary-fg focus:ring-primary-outline-border"
+              />
+              <span className="ml-2 text-sm text-text-primary">
+                ≤ {characterContext?.tpRemaining ?? 0} remaining
+              </span>
+            </div>
+          </div>
         ) : null}
       </div>
     </FilterSection>

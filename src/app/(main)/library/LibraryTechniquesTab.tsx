@@ -8,9 +8,14 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Swords } from 'lucide-react';
-import { GridListRow } from '@/components/shared';
+import {
+  GridListRow,
+  LibraryAddToCharacterButton,
+  LibraryRowActionSlot,
+} from '@/components/shared';
 import { PowerTechniqueFilters } from '@/components/shared/filters';
 import { useSort } from '@/hooks/use-sort';
+import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import {
@@ -24,6 +29,7 @@ import {
   EMPTY_POWER_TECHNIQUE_FILTERS,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
+import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import {
   useUserTechniques,
   useUserEmpoweredTechniques,
@@ -69,6 +75,10 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
     EMPTY_POWER_TECHNIQUE_FILTERS
   );
+  const [characterContext, setCharacterContext] =
+    useState<PowerTechniqueCharacterContext | null>(null);
+  const [characterFilterId, setCharacterFilterId] = useState('');
+  const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const techniques = mode === 'empowered' ? empoweredTechniques : standardTechniques;
@@ -122,10 +132,17 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
 
   const filteredData = useMemo(() => {
     const advanced = mode === 'empowered' ? undefined : advancedFilters;
-    return filterOfficialTechniqueRows(cardData, search, sortItems, advanced);
-  }, [cardData, search, sortItems, mode, advancedFilters]);
+    return filterOfficialTechniqueRows(
+      cardData,
+      search,
+      sortItems,
+      advanced,
+      mode === 'empowered' ? null : characterContext
+    );
+  }, [cardData, search, sortItems, mode, advancedFilters, characterContext]);
 
   return (
+    <>
     <UserLibraryEntityTabShell
       labels={labels}
       isLoading={isLoading}
@@ -165,6 +182,8 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
             value={advancedFilters}
             onChange={setAdvancedFilters}
             categoryOptions={categoryOptions}
+            onCharacterContextChange={setCharacterContext}
+            onCharacterIdChange={setCharacterFilterId}
           />
         )
       }
@@ -186,12 +205,12 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
             gridColumns={OFFICIAL_TECHNIQUE_GRID}
             rowChrome={TECHNIQUE_ROW_CHROME}
             columns={[
-              { key: 'Category', value: tech.category },
-              { key: 'Energy', value: tech.energy, highlight: true },
-              { key: 'TP', value: tech.tp },
-              { key: 'Action', value: tech.action },
-              { key: 'Weapon', value: tech.weapon },
-              { key: 'Damage', value: tech.damage },
+              { key: 'Category', value: tech.category, align: 'center' },
+              { key: 'Energy', value: tech.energy, highlight: true, align: 'center' },
+              { key: 'TP', value: tech.tp, align: 'center' },
+              { key: 'Action', value: tech.action, align: 'center' },
+              { key: 'Weapon', value: tech.weapon, align: 'center' },
+              { key: 'Damage', value: tech.damage, align: 'center' },
             ]}
             detailSections={partsSection ? [partsSection] : undefined}
             totalCost={typeof tech.tp === 'number' ? tech.tp : parseFloat(String(tech.tp)) || undefined}
@@ -199,7 +218,25 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
             badges={tech.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
             warningMessage={tech.syncIssues[0]?.message}
             rightSlot={
-              tech.hasDrift ? (
+              mode !== 'empowered' &&
+              addToCharacter.active &&
+              !addToCharacter.isOnCharacter(tech.raw) ? (
+                <LibraryRowActionSlot>
+                  <LibraryAddToCharacterButton
+                    kind="technique"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCharacter.openAddConfirm(tech.name, tech.raw);
+                    }}
+                  />
+                  {tech.hasDrift ? (
+                    <LibrarySyncRowAction
+                      syncing={sync.syncingIds.has(tech.id)}
+                      onSync={() => void sync.handleSyncOne(tech.id)}
+                    />
+                  ) : null}
+                </LibraryRowActionSlot>
+              ) : tech.hasDrift ? (
                 <LibrarySyncRowAction
                   syncing={sync.syncingIds.has(tech.id)}
                   onSync={() => void sync.handleSyncOne(tech.id)}
@@ -217,5 +254,7 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
         );
       })}
     </UserLibraryEntityTabShell>
+    {mode !== 'empowered' ? addToCharacter.confirmModal : null}
+    </>
   );
 }

@@ -38,7 +38,6 @@ export function ItemCreatorEditorShieldPanels({
       <CollapsibleSection
         title="Shield Block (Damage Reduction)"
         collapsedSummary={shieldBlockSummary}
-        defaultExpanded={true}
         rightSlot={
           <SectionCostBadge
             ip={itemSectionCosts.shieldDR.totalIP}
@@ -80,7 +79,6 @@ export function ItemCreatorEditorShieldPanels({
       <CollapsibleSection
         title="Shield Damage"
         collapsedSummary={shieldDamageSummary}
-        defaultExpanded={true}
         rightSlot={
           <SectionCostBadge
             ip={itemSectionCosts.shieldDamage.totalIP}

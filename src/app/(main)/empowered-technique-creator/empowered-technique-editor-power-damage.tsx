@@ -25,7 +25,6 @@ export function EmpoweredTechniqueEditorPowerDamage({
     <CollapsibleSection
       title="Power Damage (Add Damage)"
       collapsedSummary={powerDamageSummary}
-      defaultExpanded={true}
       rightSlot={
         <SectionCostBadge
           en={sectionCosts.powerDamage.energyRaw}

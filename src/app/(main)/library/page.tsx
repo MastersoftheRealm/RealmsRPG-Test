@@ -66,8 +66,8 @@ const TABS: Tab[] = [
   { id: 'weapons', label: 'Weapons', icon: <Sword className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Weapon' },
   { id: 'armor', label: 'Armor', icon: <Shirt className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Armor' },
   { id: 'shields', label: 'Shields', icon: <Shield className="w-4 h-4" />, createHref: '/item-creator', createLabel: 'Create Shield' },
+  { id: 'enhanced', label: 'Enhanced Items', icon: <Sparkles className="w-4 h-4" />, createHref: '/crafting', createLabel: 'From Crafting' },
   { id: 'creatures', label: 'Creatures', icon: <Users className="w-4 h-4" />, createHref: '/creature-creator', createLabel: 'Create Creature' },
-  { id: 'enhanced', label: 'Enhanced', icon: <Sparkles className="w-4 h-4" />, createHref: '/crafting', createLabel: 'From Crafting' },
 ];
 
 type LibraryMode = 'my' | 'public';

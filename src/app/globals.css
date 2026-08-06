@@ -358,6 +358,7 @@
   --z-index-popover: 70;
   --z-index-toast: 100;
   --z-index-floating: 1000;
+  --z-index-tour: 1100;
   --z-index-skip-link: 9999;
   --z-index-toast-stack: 10000;
 

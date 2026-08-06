@@ -33,7 +33,6 @@ export function EmpoweredTechniqueEditorActionProfile({
     <CollapsibleSection
       title="Shared Action Profile"
       collapsedSummary={`${actionDisplay} • ${attackModeColumnLabel(attackMode)}`}
-      defaultExpanded={true}
       rightSlot={
         <>
           <SectionCostBadge en={sectionCosts.action.energyRaw} tp={sectionCosts.action.totalTP} />

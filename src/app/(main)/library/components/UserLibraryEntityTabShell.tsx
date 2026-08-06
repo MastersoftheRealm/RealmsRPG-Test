@@ -8,8 +8,8 @@ import {
   ErrorDisplay,
   ListEmptyState,
   ListHeader,
+  ListSearchToolbar,
   LoadingState,
-  SearchInput,
   type ListColumn,
   type ListHeaderRowChrome,
   type SortState,
@@ -135,31 +135,25 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
 
   return (
     <div>
-      <div
-        className={
-          syncEnabled
-            ? 'mb-4 flex flex-wrap items-center justify-between gap-2'
-            : 'mb-4'
+      <ListSearchToolbar
+        search={search}
+        onSearchChange={onSearchChange}
+        placeholder={labels.searchPlaceholder}
+        trailing={
+          syncEnabled ? (
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={props.onOpenSyncAllConfirm}
+              disabled={props.driftedCount === 0 || props.syncingAll}
+            >
+              <RefreshCw className={`w-4 h-4 ${props.syncingAll ? 'animate-spin' : ''}`} />
+              Sync with current patch
+              {props.driftedCount > 0 ? ` (${props.driftedCount})` : ''}
+            </Button>
+          ) : null
         }
-      >
-        <SearchInput
-          value={search}
-          onChange={onSearchChange}
-          placeholder={labels.searchPlaceholder}
-        />
-        {syncEnabled ? (
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={props.onOpenSyncAllConfirm}
-            disabled={props.driftedCount === 0 || props.syncingAll}
-          >
-            <RefreshCw className={`w-4 h-4 ${props.syncingAll ? 'animate-spin' : ''}`} />
-            Sync with current patch
-            {props.driftedCount > 0 ? ` (${props.driftedCount})` : ''}
-          </Button>
-        ) : null}
-      </div>
+      />
 
       {filters}
 

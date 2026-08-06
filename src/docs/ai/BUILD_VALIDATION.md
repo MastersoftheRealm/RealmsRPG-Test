@@ -3872,15 +3872,15 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Expected** | Modal Type/TP/Cost layout still works; combat facts remain self-describing when expanded. |
 | **Report** | DEV-V-016-T010: PASS / FAIL / SKIP — |
 
-#### DEV-V-016-T011 — My Library Enhanced tab shell (no sync/duplicate) (TASK-475)
+#### DEV-V-016-T011 — My Library Enhanced Items tab shell (no sync/duplicate) (TASK-475)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-016 |
 | **Task** | TASK-475 |
-| **Where** | `/library` → My Library → Enhanced |
-| **Needs** | Signed-in user; empty Enhanced tab OK, or at least one enhanced item for row actions |
-| **Steps** | 1. Open Enhanced — search + column headers present; no “Sync with current patch” button (search is not paired with an empty sync gutter). 2. Empty state (if none): “Go to Crafting” CTA; with items: expand a row, Edit opens `/crafting/<id>`, Delete still prompts via parent. 3. Search filters by name/base/power; no Duplicate action on rows. 4. While loading, search/header may show with inline spinner (same as other My Library tabs — not a full-page-only spinner). |
+| **Where** | `/library` → My Library → **Enhanced Items** |
+| **Needs** | Signed-in user; empty Enhanced Items tab OK, or at least one enhanced item for row actions |
+| **Steps** | 1. Open **Enhanced Items** (tab immediately before Creatures) — search spans full row width; no “Sync with current patch” button (no empty sync gutter). 2. Empty state (if none): “Go to Crafting” CTA; with items: expand a row, Edit opens `/crafting/<id>`, Delete still prompts via parent. 3. Search filters by name/base/power; no Duplicate action on rows. 4. While loading, search/header may show with inline spinner (same as other My Library tabs — not a full-page-only spinner). |
 | **Expected** | Shared list chrome only; no sync-all or duplicate UI; delete/edit unchanged; loading/error match other My Library shell tabs. |
 | **Report** | DEV-V-016-T011: PASS / FAIL / SKIP — |
 
@@ -3931,6 +3931,17 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Steps** | 1. Open Browse Innate Powers (or Add Power). 2. Confirm header has at most a **single short** help line under the title (innate: none). 3. Confirm the sticky footer sits flush under the list — no blank white strip above Cancel / Add Selected (or the Innate Energy badge). 4. Select 1–2 rows; tap **Cancel** (or X). 5. Confirm an **Add selected?** prompt appears; choose **Add Selected** and confirm picks apply. 6. Re-open, select again, dismiss via X → **Don't add**; confirm modal closes without applying. 7. Re-open, select again, dismiss the prompt with X; confirm the selection modal stays open with picks intact. 8. Spot-check a Load modal: prompt says **Load selected?** / **Don't load**. |
 | **Expected** | No multi-sentence header help; no footer gap strip; leave-with-selection prompt on Cancel/X/backdrop/Escape when picks differ from open seed; Add confirms, Don't add discards, prompt X keeps browsing. |
 | **Report** | DEV-V-016-T015: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T016 — My Library search spans to sync button (session)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Where** | `/library` → My Library → **Powers** (primary); spot-check Techniques / Weapons |
+| **Needs** | Signed-in user; at least one drifted item optional (sync button visible) |
+| **Steps** | 1. Open My Library → Powers at desktop width. 2. Confirm search input grows to fill the row and ends at the **Sync with current patch** button (not a short fixed-width field). 3. Repeat at ~360px — search wraps above sync button if needed (`flex-wrap`). 4. Open **Enhanced Items** — search spans full width (no sync button). 5. Confirm tab bar order: … Shields → **Enhanced Items** → Creatures. |
+| **Expected** | Codex-parity search toolbar; Enhanced Items label + order; no layout regression on filter rows below search. |
+| **Report** | DEV-V-016-T016: PASS / FAIL / SKIP — |
 
 ---
 
@@ -4397,19 +4408,19 @@ Verifies behavior parity after removing setState-in-effect / fixing exhaustive-d
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-019-T004 — Library scope + enhanced tab clamp
+#### DEV-V-019-T004 — Library scope + Enhanced Items tab clamp
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-019 |
 | **Related task** | TASK-430 |
 | **Where** | `/library` |
-| **Needs** | Signed-in user with at least one Enhanced item (or empty Enhanced tab OK) |
+| **Needs** | Signed-in user with at least one Enhanced item (or empty Enhanced Items tab OK) |
 
 **Steps**
 1. Open `/library` signed in — defaults to My Library (unless `?view=realms`).
-2. Switch to Enhanced tab, then SegmentedControl → Realms Library — active tab becomes Powers (Enhanced hidden); content is not blank.
-3. Switch back to My Library — Enhanced is available again; if you left Realms with Powers selected, Enhanced is not auto-restored (state was clamped).
+2. Switch to **Enhanced Items** tab, then SegmentedControl → Realms Library — active tab becomes Powers (Enhanced Items hidden); content is not blank.
+3. Switch back to My Library — Enhanced Items is available again; if you left Realms with Powers selected, Enhanced Items is not auto-restored (state was clamped).
 4. Fresh load of `/library?view=realms` — starts on Realms Library.
 5. (Parity) After initial scope is set, changing only the URL `?view=` without reload need not re-lock scope — SegmentedControl is the user override (one-time init after auth).
 
@@ -5488,6 +5499,25 @@ User-facing creature levels use unicode fractions (¼ / ½ / ¾), not raw decima
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-040-T002 — Library Creatures Level column sort (TASK-678)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-040 — Creature level fraction display |
+| **Related task** | TASK-678 |
+| **Where** | `/library` → My Library → Creatures; Realms Library → Creatures |
+| **Needs** | At least three creatures at levels ¼, ½, and 1 (create in creature creator if needed) |
+
+**Steps**
+1. Open My Library → Creatures. Click **LEVEL** header once (ascending).
+2. Confirm order is ¼ → ½ → ¾ (if present) → 1 → higher integers — not ½ before ¼.
+3. Click **LEVEL** again (descending). Confirm highest levels first, with 1 above ½ above ¼.
+4. Repeat on Realms Library → Creatures.
+
+**Expected** — Level sort follows numeric quarter-step order; display still shows unicode fractions.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-035 — Realms Library redundant source badge (session)
@@ -5648,28 +5678,28 @@ Feats tab character qualification filter: shared `CharacterFilter` in filters pa
 
 ---
 
-## DEV-V-046 — Library power/technique categories + filters (TASK-673)
+## DEV-V-046 — Library power/technique categories + filters (TASK-673 / TASK-676)
 
-Derived part categories (non-mechanic) as Category column; shared `PowerTechniqueFilters` on Realms Library, My Library, and Admin public lists.
+Derived part categories (non-mechanic) as Category column; shared `PowerTechniqueFilters` on Realms Library, My Library, and Admin public lists. TASK-676: character/TP filters, Max Energy only, aligned filter cells, center Category.
 
 #### DEV-V-046-T001 — Powers filters + Category column (Library + Admin)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-046 — Library power/technique filters |
-| **Related task** | TASK-673 |
+| **Related task** | TASK-673 / TASK-676 |
 | **Where** | `/library` → Realms + My → Powers; `/admin/public-library` → Powers |
 | **Needs** | Powers with varied part categories, energy, action types; at least one innate-eligible and one heal power |
 
 **Steps**
-1. Open Realms Library → Powers. Confirm **CATEGORY** column and **Filters** (collapsed by default).
-2. Expand Filters: Category, Min/Max Energy, Action Type, Action/Reaction, Power Threshold (Innate) + tip, Innate Eligible.
+1. Open Realms Library → Powers. Confirm **CATEGORY** column is **center**-aligned (like Energy; Name stays left) and **Filters** (collapsed by default).
+2. Expand Filters: Filter by character (when signed in); Category; **Max Energy** (no Min); **Max TP**; Action Type; Action/Reaction; Power Threshold (Innate) + tip; Innate Eligible (label + control cell aligned with other filters).
 3. Filter by a category — list narrows; Category column shows that category (multi joined with commas when applicable).
 4. Select Power Threshold (Innate) e.g. **8** — Innate Eligible auto-checks; heal / high-energy / non-Basic powers drop out.
 5. Repeat on My Library → Powers and Admin public Powers — same filters and Category column.
 
 **Expected**
-- Shared filter UX; no duplicate Category desc chip when column is present; Admin/Realms/My stay in sync.
+- Shared filter UX; no duplicate Category desc chip when column is present; Admin/Realms/My stay in sync; filter controls share row alignment.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5678,16 +5708,153 @@ Derived part categories (non-mechanic) as Category column; shared `PowerTechniqu
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-046 |
-| **Related task** | TASK-673 |
+| **Related task** | TASK-673 / TASK-676 |
 | **Where** | `/library` → Techniques; Admin public Techniques |
 | **Needs** | Techniques with part categories |
 
 **Steps**
-1. Open Techniques (Realms + My + Admin). Confirm Category column + Filters (no Innate Threshold / Innate Eligible).
-2. Filter by category and energy — list updates; empowered techniques tab still lists without power-only filters.
+1. Open Techniques (Realms + My + Admin). Confirm Category column (center) + Filters (no Innate Threshold / Innate Eligible).
+2. Filter by category, Max Energy, Max TP — list updates; empowered techniques tab still lists without power-only filters.
 
 **Expected**
 - Technique filters match powers minus innate controls.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-046-T003 — Character filter + available TP (powers/techniques)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-046 |
+| **Related task** | TASK-676 |
+| **Where** | `/library` → Powers (and Techniques); signed-in user with ≥1 character |
+| **Needs** | Character with known max Energy, innate threshold (if Power), and TP spent/remaining from proficiencies |
+
+**Steps**
+1. Sign in → Library → Powers → expand Filters → **Filter by character** → pick a character.
+2. Confirm Max Energy fills to character max Energy and is disabled (“Set by character”); summary line shows max Energy / innate threshold / TP spent/total/remaining.
+3. Check **Innate Eligible** — threshold uses character innate threshold and locks; uncheck clears threshold. List respects eligibility + energy ≤ threshold.
+4. Check **Available TP** (≤ N remaining) — entries with TP cost above remaining disappear. Set **Max TP** independently (with or without character) and confirm it caps TP cost.
+5. Spot-check Techniques tab: character caps Max Energy; Available TP + Max TP work; no innate controls. Confirm damaging powers can show **Damage** in Category.
+6. Powers: with character selected, check **Innate Eligible** — Power Threshold greys out with **Set by character** (same as Max Energy).
+
+**Expected**
+- Character caps compose with Max Energy lock; TP remaining matches sheet proficiency spend model; Damage category appears for powers with damage; innate threshold locks when Innate Eligible + character filter.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-046-T004 — Add to character from Library (+ row action)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-046 |
+| **Related task** | TASK-679 |
+| **Where** | `/library` → My Library + Realms Library → Powers and Techniques |
+| **Needs** | Signed-in user with ≥1 character; library power/technique not already on that character |
+
+**Steps**
+1. Library → Powers → Filters → pick a character under **Filter by character**.
+2. Confirm each GLR row shows a **+** (add to character) when the entry is not already on that character.
+3. Click **+** on a power → confirm modal names the character and power → **Add**.
+4. Open that character's sheet → Powers tab → entry appears; required proficiencies auto-added if applicable.
+5. Return to Library with same character filter — **+** hidden for the added power. Repeat on Techniques tab and Realms Library browse.
+
+**Expected**
+- Confirm/cancel modal matches other library confirms; save persists; duplicate adds blocked per row id.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-046-T005 — Armaments character filter + add to character
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-046 |
+| **Related task** | TASK-680 |
+| **Where** | `/library` → My Library + Realms Library → Weapons, Armor, Shields |
+| **Needs** | Signed-in user with ≥1 character; library armament not already on that character; items with ability req / high TP / varied currency help spot-check filters |
+
+**Steps**
+1. Library → Weapons → Filters → **Filter by character** → pick a character.
+2. Confirm summary shows Armament Proficiency + Currency; list drops items over proficiency TP max or unmet ability requirements.
+3. Check **Within currency** — high-currency rows disappear.
+4. Confirm GLR **+** on rows not already on that character; click **+** → confirm modal → **Add**.
+5. Open character sheet → Inventory → entry appears; required proficiencies auto-added if applicable.
+6. Return to Library with same character — **+** hidden for added item. Repeat Armor / Shields and Realms Library browse.
+
+**Expected**
+- Shared `ArmamentFilters` + `useAddToCharacterFromLibrary` (no parallel hook); admin public-library has no add-to-character; character pick shares persistence key with power/technique filters.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-047 — Collapse-by-default creators + browse filters (TASK-677)
+
+Owner feedback: reduce initial visual load — creator `CollapsibleSection` blocks and browse `FilterSection` panels start collapsed.
+
+#### DEV-V-047-T001 — Standalone creators start collapsed
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-047 |
+| **Related task** | TASK-677 |
+| **Where** | `/power-creator`, `/technique-creator`, `/item-creator`, `/species-creator` |
+| **Needs** | None |
+
+**Steps**
+1. Open Power Creator — confirm Range, Area of Effect, Duration, Action Profile, Damage, and Parts sections are **collapsed** on first load; collapsed summary lines still show key state.
+2. Expand one section; collapse again.
+3. Spot-check Technique + Item creators — same collapsed-first behavior for `CollapsibleSection` blocks.
+
+**Expected**
+- No creator section auto-expands on first paint unless user expands it.
+- Summaries remain readable when collapsed.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-047-T002 — Codex + Library filters start collapsed
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-047 |
+| **Related task** | TASK-677 |
+| **Where** | `/codex` (Feats tab), `/library` → Powers |
+| **Needs** | None |
+
+**Steps**
+1. Codex → Feats — confirm **Show Filters** is collapsed; list is primary focus; click Show Filters — panel opens.
+2. Library → Powers (Realms or My) — Filters collapsed by default; expand and apply a filter; collapse again — active count badge shows when collapsed.
+
+**Expected**
+- Browse filter panels use collapsed default sitewide via `FilterSection`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-048 — Library search toolbar + Enhanced Items tab (session)
+
+My Library entity tabs: full-span search to sync button (codex parity); **Enhanced Items** tab label and order (before Creatures).
+
+#### DEV-V-048-T001 — Search span + Enhanced Items tab
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-048 — Library search toolbar + Enhanced Items tab |
+| **Related task** | Session — 2026-08-06 feedback; **TASK-682** (ListSearchToolbar) |
+| **Where** | `/library` → My Library |
+| **Needs** | Signed-in user |
+
+**Steps**
+1. Open My Library → **Powers** (desktop). Confirm search grows to the **Sync with current patch** button (not a short field).
+2. Narrow to ~360px — search may wrap above sync (`flex-wrap`); no overlap/clipping.
+3. Open **Enhanced Items** — tab sits immediately before **Creatures**; search spans full width (no sync button).
+4. Spot-check Techniques or Weapons — same search span behavior.
+
+**Expected**
+- Codex-parity search toolbar in `UserLibraryEntityTabShell`; tab label **Enhanced Items**; order Shields → Enhanced Items → Creatures.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5776,7 +5943,7 @@ Saving a power must persist Area **Apply duration** and Duration modifiers (Focu
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
-| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541) | — | Manual — see suite above (T001–T013) |
+| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541) | — | Manual — see suite above (T001–T016) |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 | DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
@@ -5799,6 +5966,7 @@ Saving a power must persist Area **Apply duration** and Duration modifiers (Focu
 | DEV-V-039 | Codex feat Tags section (session) | — | Automated (`feat-list.test.ts`) + manual smoke |
 | DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
 | DEV-V-045 | Codex character filter UX (session) | — | Manual — see suite above |
+| DEV-V-048 | Library search toolbar + Enhanced Items tab (session) | — | Manual — see suite above |
 
 ## DEV-V-041 — Supabase least-privilege Phase 2 (TASK-649)
 
@@ -6014,7 +6182,7 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
-| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541) | — | Manual — see suite above (T001–T013) |
+| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541) | — | Manual — see suite above (T001–T016) |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 | DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
@@ -6037,7 +6205,8 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 | DEV-V-039 | Codex feat Tags section (session) | — | Automated (`feat-list.test.ts`) + manual smoke |
 | DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
 | DEV-V-045 | Codex character filter UX (session) | — | Manual — see suite above |
-| DEV-V-046 | Library power/technique categories + filters (TASK-673) | — | Automated (category/filter/innate tests) + manual DEV-V-046 T001–T002 |
+| DEV-V-048 | Library search toolbar + Enhanced Items tab (session) | — | Manual — see suite above |
+| DEV-V-046 | Library power/technique categories + filters (TASK-673 / TASK-676) | — | Automated (category/filter/innate/formulas tests) + manual DEV-V-046 T001–T003 |
 | DEV-V-044 | Power Creator AoE applyDuration persistence (TASK-672) | — | Automated (library-columnar + power-calc tests) + manual DEV-V-044-T001 |
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649) | — | Manual DEV-V-041 + `node scripts/verify-task-649.mjs` |
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |

@@ -12,10 +12,10 @@
 
 import type { ReactNode } from 'react';
 import { SectionHeader } from './section-header';
-import { SearchInput, LoadingState, EmptyState as ListEmptyState } from './list-components';
+import { LoadingState, EmptyState as ListEmptyState } from './list-components';
+import { ListSearchToolbar } from './list-search-toolbar';
 import { ListHeader, type ListColumn, type ListHeaderRowChrome, type SortState } from './list-header';
 import type { EmptyStateProps } from '@/components/ui/empty-state';
-import { cn } from '@/lib/utils';
 
 export interface CodexBrowseListShellProps {
   /** When set, renders SectionHeader (admin tabs). Omit for Codex browse. */
@@ -87,22 +87,14 @@ export function CodexBrowseListShell({
         />
       ) : null}
 
-      <div
-        className={cn(
-          'mb-4 flex flex-wrap items-center gap-3',
-          sectionTitle != null && 'mt-2',
-        )}
-      >
-        <div className="min-w-[200px] flex-1">
-          <SearchInput
-            value={search}
-            onChange={onSearchChange}
-            placeholder={searchPlaceholder}
-            {...(searchAriaLabel ? { 'aria-label': searchAriaLabel } : {})}
-          />
-        </div>
-        {searchTrailing}
-      </div>
+      <ListSearchToolbar
+        search={search}
+        onSearchChange={onSearchChange}
+        placeholder={searchPlaceholder}
+        searchAriaLabel={searchAriaLabel}
+        trailing={searchTrailing}
+        className={sectionTitle != null ? 'mt-2' : undefined}
+      />
 
       {filters}
 

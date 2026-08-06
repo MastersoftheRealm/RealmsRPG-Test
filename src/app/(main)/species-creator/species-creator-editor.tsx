@@ -80,7 +80,7 @@ export function SpeciesCreatorEditor({
 }: SpeciesCreatorEditorProps) {
   return (
     <div className="space-y-6">
-      <CollapsibleSection title="Basics" collapsedSummary={basicsSummary} defaultExpanded={true}>
+      <CollapsibleSection title="Basics" collapsedSummary={basicsSummary}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Input
@@ -135,7 +135,7 @@ export function SpeciesCreatorEditor({
         )}
       </CollapsibleSection>
 
-      <CollapsibleSection title={`Sizes (up to ${MAX_SIZES})`} collapsedSummary={sizesSummary} defaultExpanded={true}>
+      <CollapsibleSection title={`Sizes (up to ${MAX_SIZES})`} collapsedSummary={sizesSummary}>
         <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Choose up to two size options for this species.</p>
         <ChipList items={form.sizes} onRemove={onRemoveSize} color="bg-primary-subtle-bg text-primary-subtle-fg" />
         <div className="flex flex-wrap gap-2 mt-2">
@@ -147,7 +147,7 @@ export function SpeciesCreatorEditor({
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Base skills (2)" collapsedSummary={baseSkillsSummary} defaultExpanded={true}>
+      <CollapsibleSection title="Base skills (2)" collapsedSummary={baseSkillsSummary}>
         <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Select two base skills; one may be &quot;Any&quot; (id 0). You cannot pick the same skill twice.</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {([0, 1] as const).map((i) => (
@@ -170,7 +170,7 @@ export function SpeciesCreatorEditor({
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title={`Languages (up to ${MAX_LANGUAGES})`} collapsedSummary={languagesSummary} defaultExpanded={true}>
+      <CollapsibleSection title={`Languages (up to ${MAX_LANGUAGES})`} collapsedSummary={languagesSummary}>
         <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Universal can be included by default; add or remove as desired.</p>
         <ChipList items={form.languages} onRemove={onRemoveLanguage} color="bg-info-100 dark:bg-info-900/30 text-info-800 dark:text-info-300" />
         <div className="flex gap-2 mt-2">
@@ -190,7 +190,6 @@ export function SpeciesCreatorEditor({
       <CollapsibleSection
         title="Traits"
         collapsedSummary={traitsSummary}
-        defaultExpanded={true}
         rightSlot={
           <div className="flex flex-wrap gap-2">
             <Button
@@ -223,7 +222,7 @@ export function SpeciesCreatorEditor({
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Height, weight & lifespan *" collapsedSummary={heightWeightLifespanSummary} defaultExpanded={true}>
+      <CollapsibleSection title="Height, weight & lifespan *" collapsedSummary={heightWeightLifespanSummary}>
         <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Required. Average height (cm), average weight (kg), adulthood age, and lifespan (years).</p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

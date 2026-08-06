@@ -1,10 +1,11 @@
 /**
- * Shared power/technique library filter state + apply logic (TASK-673).
+ * Shared power/technique library filter state + apply logic (TASK-673 / TASK-676).
  * UI: `PowerTechniqueFilters` in `@/components/shared/filters`.
  */
 
 import { ACTION_OPTIONS } from '@/lib/game/creator-constants';
 import { isPowerInnateEligible, type InnatePowerSnapshot } from '@/lib/game/innate-eligibility';
+import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 
 export type PowerTechniqueFilterKind = 'power' | 'technique';
 
@@ -12,11 +13,16 @@ export type ReactionFilterMode = 'all' | 'action' | 'reaction';
 
 export interface PowerTechniqueFilterState {
   categories: string[];
-  energyMin: number | null;
   energyMax: number | null;
+  /** Max Training Points cost (always available). */
+  tpMax: number | null;
+  /**
+   * When a character is selected: keep only rows whose TP ≤ character remaining TP.
+   */
+  affordableTpOnly: boolean;
   actionTypes: string[];
   reactionMode: ReactionFilterMode;
-  /** Power-only: selected Innate Threshold from core rules. */
+  /** Power-only: selected Innate Threshold from core rules (or character). */
   innateThreshold: number | null;
   /** Power-only: keep only Appendix G innate-eligible powers. */
   innateEligibleOnly: boolean;
@@ -24,8 +30,9 @@ export interface PowerTechniqueFilterState {
 
 export const EMPTY_POWER_TECHNIQUE_FILTERS: PowerTechniqueFilterState = {
   categories: [],
-  energyMin: null,
   energyMax: null,
+  tpMax: null,
+  affordableTpOnly: false,
   actionTypes: [],
   reactionMode: 'all',
   innateThreshold: null,
@@ -46,6 +53,8 @@ export const REACTION_FILTER_OPTIONS: { value: ReactionFilterMode; label: string
 export interface PowerTechniqueFilterableRow {
   categories?: string[];
   energy?: string | number | null;
+  /** Training Points cost for Max TP / affordable filters. */
+  tp?: number | null;
   /** Raw action type key or display string. */
   actionTypeRaw?: string | null;
   /** Display action (fallback when raw missing). */
@@ -74,14 +83,21 @@ function parseEnergy(value: string | number | null | undefined): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
+function parseTp(value: number | null | undefined): number | null {
+  if (value == null) return null;
+  return Number.isFinite(value) ? value : null;
+}
+
 export function countActivePowerTechniqueFilters(
   filters: PowerTechniqueFilterState,
-  kind: PowerTechniqueFilterKind
+  kind: PowerTechniqueFilterKind,
+  hasCharacter = false
 ): number {
   let count = 0;
   if (filters.categories.length > 0) count += 1;
-  if (filters.energyMin != null) count += 1;
   if (filters.energyMax != null) count += 1;
+  if (filters.tpMax != null) count += 1;
+  if (hasCharacter && filters.affordableTpOnly) count += 1;
   if (filters.actionTypes.length > 0) count += 1;
   if (filters.reactionMode !== 'all') count += 1;
   if (kind === 'power') {
@@ -116,15 +132,50 @@ function rowMatchesAction(
   return filters.actionTypes.includes(key);
 }
 
+function effectiveEnergyMax(
+  filters: PowerTechniqueFilterState,
+  character?: PowerTechniqueCharacterContext | null
+): number | null {
+  const manual = filters.energyMax;
+  if (!character) return manual;
+  if (manual == null) return character.maxEnergy;
+  return Math.min(manual, character.maxEnergy);
+}
+
+function effectiveInnateThreshold(
+  filters: PowerTechniqueFilterState,
+  character?: PowerTechniqueCharacterContext | null
+): number | null {
+  if (character && filters.innateEligibleOnly && character.innateThreshold > 0) {
+    return character.innateThreshold;
+  }
+  return filters.innateThreshold;
+}
+
 function rowMatchesEnergy(
   row: PowerTechniqueFilterableRow,
-  filters: PowerTechniqueFilterState
+  energyMax: number | null
 ): boolean {
-  if (filters.energyMin == null && filters.energyMax == null) return true;
+  if (energyMax == null) return true;
   const energy = parseEnergy(row.energy);
   if (energy == null) return false;
-  if (filters.energyMin != null && energy < filters.energyMin) return false;
-  if (filters.energyMax != null && energy > filters.energyMax) return false;
+  return energy <= energyMax;
+}
+
+function rowMatchesTp(
+  row: PowerTechniqueFilterableRow,
+  filters: PowerTechniqueFilterState,
+  character?: PowerTechniqueCharacterContext | null
+): boolean {
+  const tp = parseTp(row.tp);
+  if (filters.tpMax != null) {
+    if (tp == null) return false;
+    if (tp > filters.tpMax) return false;
+  }
+  if (filters.affordableTpOnly && character) {
+    if (tp == null) return false;
+    if (tp > character.tpRemaining) return false;
+  }
   return true;
 }
 
@@ -141,19 +192,26 @@ function toInnateSnapshot(row: PowerTechniqueFilterableRow): InnatePowerSnapshot
 
 /**
  * Apply advanced filters (not search/sort). Category match is OR across selected categories.
+ * When `character` is set: energy is capped by character max Energy; innate eligible uses
+ * character innate threshold; affordableTpOnly uses remaining Training Points.
  */
 export function applyPowerTechniqueFilters<T extends PowerTechniqueFilterableRow>(
   rows: T[],
   filters: PowerTechniqueFilterState,
-  kind: PowerTechniqueFilterKind
+  kind: PowerTechniqueFilterKind,
+  character?: PowerTechniqueCharacterContext | null
 ): T[] {
+  const energyMax = effectiveEnergyMax(filters, character);
+  const innateThreshold = effectiveInnateThreshold(filters, character);
+
   return rows.filter((row) => {
     if (!rowMatchesCategories(row, filters.categories)) return false;
-    if (!rowMatchesEnergy(row, filters)) return false;
+    if (!rowMatchesEnergy(row, energyMax)) return false;
+    if (!rowMatchesTp(row, filters, character)) return false;
     if (!rowMatchesAction(row, filters)) return false;
 
     if (kind === 'power' && filters.innateEligibleOnly) {
-      if (!isPowerInnateEligible(toInnateSnapshot(row), filters.innateThreshold)) {
+      if (!isPowerInnateEligible(toInnateSnapshot(row), innateThreshold)) {
         return false;
       }
     }
@@ -181,4 +239,24 @@ export function withInnateThresholdSelected(
     innateThreshold: n,
     innateEligibleOnly: true,
   };
+}
+
+/**
+ * When a character is selected, sync Max Energy (and innate threshold if eligible) from context.
+ */
+export function withCharacterContextApplied(
+  prev: PowerTechniqueFilterState,
+  character: PowerTechniqueCharacterContext | null
+): PowerTechniqueFilterState {
+  if (!character) {
+    return { ...prev, affordableTpOnly: false };
+  }
+  const next: PowerTechniqueFilterState = {
+    ...prev,
+    energyMax: character.maxEnergy,
+  };
+  if (prev.innateEligibleOnly && character.innateThreshold > 0) {
+    next.innateThreshold = character.innateThreshold;
+  }
+  return next;
 }

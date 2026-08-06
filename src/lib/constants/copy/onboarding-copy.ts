@@ -6,10 +6,11 @@ export const ONBOARDING_COPY = {
   playTogether: {
     title: "You're ready to play!",
     description:
-      'Realms is most fun with a party. Join Discord, browse campaigns, or run games as Realm Master.',
-    viewCharacter: 'View my character',
+      'Your character is saved. See your sheet now, or find a party below.',
+    viewCharacter: 'See my character',
+    secondaryHeading: 'Find your party',
     discord: 'Join Discord',
-    campaigns: 'Browse campaigns',
+    campaigns: 'Join campaign',
     runGames: 'Run games as RM',
     dontShowAgain: "Don't show this again",
   },
@@ -85,5 +86,12 @@ export const ONBOARDING_COPY = {
     tutorialsDescription:
       'Contextual sheet tours and first-time level-up guides. Turn off to hide all of them.',
     tutorialsLabel: 'Show tutorials',
+  },
+  sheetSettings: {
+    tourTitle: 'Sheet tour',
+    tourDescription:
+      'A short walkthrough of abilities, skills, library, rolls, edit mode, and contextual help.',
+    tourRetake: 'Take the tour again',
+    tourDisabledHint: 'Turn on Show tutorials under My Account to retake the tour.',
   },
 } as const;

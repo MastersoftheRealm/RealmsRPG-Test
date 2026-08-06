@@ -83,6 +83,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
     setSheetTourOfferLatched,
     sheetTourActive,
     setSheetTourActive,
+    sheetTourRestartKey,
+    handleRetakeSheetTour,
     levelUpGuide,
     setLevelUpGuide,
     handleToggleEditMode,
@@ -129,6 +131,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
               onConfirm={handleSettingsConfirm}
               canEdit={isOwner}
               isInCampaign={isInCampaign}
+              onTakeSheetTour={isOwner ? handleRetakeSheetTour : undefined}
             />
           )}
 
@@ -176,7 +179,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
             }}
             onDismiss={() => setSheetTourOfferLatched(false)}
           />
-          <SheetTour active={sheetTourActive} onComplete={() => setSheetTourActive(false)} />
+          <SheetTour
+            key={sheetTourRestartKey}
+            active={sheetTourActive}
+            onComplete={() => setSheetTourActive(false)}
+          />
           <LevelUpGuideCard content={levelUpGuide} onClose={() => setLevelUpGuide(null)} />
         </div>
       </CharacterSheetProvider>

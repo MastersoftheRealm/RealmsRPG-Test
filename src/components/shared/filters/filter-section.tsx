@@ -14,6 +14,7 @@ import { Button } from '@/components/ui';
 
 interface FilterSectionProps {
   children: ReactNode;
+  /** Initial expand state (default collapsed). */
   defaultExpanded?: boolean;
   /** Controlled expanded state (e.g. reset when a modal reopens). */
   expanded?: boolean;
@@ -44,7 +45,7 @@ interface FilterSectionProps {
 
 export function FilterSection({
   children,
-  defaultExpanded = true,
+  defaultExpanded = false,
   expanded: expandedControlled,
   onExpandedChange,
   variant = 'page',

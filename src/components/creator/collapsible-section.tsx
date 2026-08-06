@@ -21,6 +21,7 @@ export interface CollapsibleSectionProps {
   optional?: boolean;
   enabled?: boolean;
   onEnabledChange?: (enabled: boolean) => void;
+  /** Initial expand state (default collapsed). */
   defaultExpanded?: boolean;
   itemCount?: number;
   points?: { spent: number; total: number };
@@ -48,7 +49,7 @@ export function CollapsibleSection({
   optional = false,
   enabled = true,
   onEnabledChange,
-  defaultExpanded = true,
+  defaultExpanded = false,
   itemCount,
   points,
   icon,

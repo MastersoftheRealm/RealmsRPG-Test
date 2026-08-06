@@ -4,17 +4,46 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-676
+**Next task ID:** TASK-683
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-673, TASK-672, TASK-654, TASK-641, …)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-680, TASK-679, …)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 5 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-675 filed (USM compact PowerTechniqueFilters). TASK-673 cleanup done. TASK-674 done (My Library GLR chrome). TASK-642 remains email-spoof QA.
+**Hot notes:** TASK-680 done (armaments character filter + add). TASK-681 cross-tab character filter persistence (feats key still separate; Library PT+armaments share key).
+
+---
+
+- id: TASK-681
+  title: Persist character filter across Library + Codex tabs
+  created_at: 2026-08-06
+  created_by: agent
+  priority: medium
+  status: not-started
+  parent_task: TASK-676
+  related_files:
+    - src/lib/library/character-filter-persistence.ts
+    - src/components/shared/filters/character-filter.tsx
+    - src/components/shared/filters/power-technique-filters.tsx
+    - src/components/shared/filters/armament-filters.tsx
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+    - src/app/(main)/library/page.tsx
+  description: |
+    When the user picks a character under Filter by character on one Library or Codex tab,
+    switching tabs (powers → techniques → feats → armaments, My ↔ Realms where applicable)
+    should keep the same character selected. Library tabs share
+    `character-filter-persistence.ts`; Codex feats still uses a separate key.
+  acceptance_criteria:
+    - Single shared persistence key + helper (`lib/library/character-filter-persistence.ts`) used by CharacterFilter consumers.
+    - Library all relevant tabs + Codex feats read/write the same character id.
+    - Clearing character on one tab clears globally; localStorage survives refresh.
+    - No duplicate useCharacters / localStorage logic per tab.
+  notes: |
+    Owner cleanup 2026-08-06. Persistence helper landed in TASK-680 cleanup; remaining: wire Codex feats to same key.
 
 ---
 
@@ -42,6 +71,7 @@ Do **not** read the done archive at session start.
   notes: |
     Filed from TASK-673 audit follow-up. Guided creator L1/L2 already use innate-eligibility domain;
     this task is USM chrome only unless a shared hook is extracted while wiring.
+    TASK-676 added character/TP filters to the shared panel — USM should inherit those when wired.
 
 ---
 

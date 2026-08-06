@@ -45,7 +45,6 @@ export function EmpoweredTechniqueEditorTechniqueParts({
       <CollapsibleSection
         title={`Technique Parts (${selectedTechniqueParts.length})`}
         collapsedSummary={techniquePartsSummary}
-        defaultExpanded={true}
         rightSlot={
           <>
             <SectionCostBadge
@@ -92,7 +91,6 @@ export function EmpoweredTechniqueEditorTechniqueParts({
       <CollapsibleSection
         title="Additional Damage (Technique)"
         collapsedSummary={techniqueDamageSummary}
-        defaultExpanded={true}
         rightSlot={
           <SectionCostBadge
             en={sectionCosts.techniqueDamage.energyRaw}

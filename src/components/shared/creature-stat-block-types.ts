@@ -1,3 +1,5 @@
+import type { ListHeaderRowChrome } from './grid-list-row-chrome';
+
 export interface CreatureAbilities {
   strength?: number;
   vitality?: number;
@@ -98,6 +100,8 @@ export interface CreatureStatBlockProps {
   onDuplicate?: () => void;
   onAddToLibrary?: () => void;
   rightSlot?: React.ReactNode;
+  /** Pair with ListHeader `rowChrome` when `rightSlot` is conditional (e.g. patch sync). */
+  rowChrome?: ListHeaderRowChrome;
   warningMessage?: string;
   badges?: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
   showActions?: boolean;

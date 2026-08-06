@@ -55,7 +55,6 @@ export function EmpoweredTechniqueEditorPowerParts({
       <CollapsibleSection
         title={`Power Parts (${selectedPowerParts.length})`}
         collapsedSummary={powerPartsSummary}
-        defaultExpanded={true}
         rightSlot={
           <>
             <SectionCostBadge
@@ -101,7 +100,6 @@ export function EmpoweredTechniqueEditorPowerParts({
       <CollapsibleSection
         title={`Power Mechanics (${selectedPowerAdvancedParts.length})`}
         collapsedSummary={powerMechanicsSummary}
-        defaultExpanded={true}
         rightSlot={
           <>
             <SectionCostBadge

@@ -44,7 +44,6 @@ export function ItemCreatorEditorWeaponShield({
         <CollapsibleSection
           title={armamentType === 'Weapon' ? 'Weapon Configuration' : 'Shield Configuration'}
           collapsedSummary={weaponShieldConfigSummary}
-          defaultExpanded={true}
         >
           <div className="flex flex-wrap items-center gap-6">
             <div className="flex items-center gap-3 flex-wrap">
@@ -105,7 +104,6 @@ export function ItemCreatorEditorWeaponShield({
         <CollapsibleSection
           title="Base Damage"
           collapsedSummary={baseDamageSummary}
-          defaultExpanded={true}
           rightSlot={
             <SectionCostBadge
               ip={itemSectionCosts.damage.totalIP}

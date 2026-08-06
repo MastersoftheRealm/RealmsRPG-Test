@@ -29,7 +29,6 @@ export function PowerCreatorEditorPowerDamage({
     <CollapsibleSection
       title="Damage"
       collapsedSummary={damageSummary}
-      defaultExpanded={true}
       rightSlot={<SectionCostBadge en={sectionCosts.damage.energyRaw} tp={sectionCosts.damage.totalTP} />}
     >
       {damages.map((d, index) => (

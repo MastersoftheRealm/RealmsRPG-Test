@@ -108,6 +108,7 @@ export function LibraryEnhancedTab({
             name={row.name}
             description={row.description}
             gridColumns={GRID_COLUMNS}
+            rowChrome={ENHANCED_ROW_CHROME}
             columns={[
               { key: 'base', value: row.base },
               { key: 'power', value: row.power },

@@ -134,7 +134,6 @@ export function TechniqueCreatorEditor({
       <CollapsibleSection
         title="Combat Configuration"
         collapsedSummary={combatConfigSummary}
-        defaultExpanded={true}
         rightSlot={<SectionCostBadge en={combatConfigCost.energyRaw} tp={combatConfigCost.totalTP} />}
       >
         <div className="grid md:grid-cols-2 gap-4">
@@ -200,7 +199,6 @@ export function TechniqueCreatorEditor({
       <CollapsibleSection
         title={`Technique Parts (${selectedParts.length})`}
         collapsedSummary={techniquePartsSummary}
-        defaultExpanded={true}
         rightSlot={
           <Button
             type="button"
@@ -239,7 +237,6 @@ export function TechniqueCreatorEditor({
       <CollapsibleSection
         title="Additional Damage"
         collapsedSummary={damageSummary}
-        defaultExpanded={true}
         rightSlot={<SectionCostBadge en={damageSectionCost.energyRaw} tp={damageSectionCost.totalTP} />}
       >
         <p className="text-sm text-text-secondary mb-4">

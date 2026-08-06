@@ -18,7 +18,11 @@ import {
   deriveShieldDamageFromProperties,
   formatRange,
 } from '@/lib/calculators/item-calc';
-import { deriveAbilityRequirementFromProperties } from '@/lib/game/weapon-attack-ability';
+import {
+  deriveAbilityRequirementFromProperties,
+  type AbilityRequirement,
+  type WeaponPropertyRef,
+} from '@/lib/game/weapon-attack-ability';
 import {
   formatAbilityRequirementFact,
   namedPropertyDescriptorChips,
@@ -26,6 +30,11 @@ import {
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import type { ArmamentLibraryKind } from '@/lib/library/armament-library-labels';
+import {
+  applyArmamentFilters,
+  type ArmamentFilterState,
+} from '@/lib/library/armament-filters';
+import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 
 export type { ArmamentLibraryKind };
 
@@ -113,6 +122,8 @@ export interface OfficialItemRow {
   agilityReduction: number;
   /** Dense column cell: "Strength 3+" (header is Abl. Req.); "-" when none. */
   abilityRequirement: string;
+  /** Parsed ability requirement for character filters (TASK-680). */
+  abilityReq: AbilityRequirement | null;
   /** Critical Range +1 stack total from armor (0 when none). */
   criticalRangeIncrease: number;
   block: string;
@@ -164,18 +175,19 @@ function resolveCriticalRangeIncrease(item: LibraryItem, props: ItemPropertyPayl
 function formatAbilityRequirementColumn(
   item: LibraryItem,
   props: ItemPropertyPayload[]
-): string {
+): { display: string; req: AbilityRequirement | null } {
   const raw =
     item.abilityRequirement ?? deriveAbilityRequirementFromProperties(props);
   if (!raw?.name?.trim() || raw.level == null || Number.isNaN(Number(raw.level))) {
-    return '-';
+    return { display: '-', req: null };
   }
-  const fact = formatAbilityRequirementFact({
+  const req: AbilityRequirement = {
     name: raw.name.trim(),
     level: Number(raw.level),
-  });
-  if (!fact) return '-';
-  return fact.replace(/ Requirement /, ' ');
+  };
+  const fact = formatAbilityRequirementFact(req);
+  if (!fact) return { display: '-', req: null };
+  return { display: fact.replace(/ Requirement /, ' '), req };
 }
 
 export function buildOfficialItemRows(
@@ -193,7 +205,9 @@ export function buildOfficialItemRows(
     const damageReduction = resolveArmorDamageReduction({ ...item, properties: props });
     const agilityReduction = resolveAgilityReduction(item, props);
     const criticalRangeIncrease = resolveCriticalRangeIncrease(item, props);
-    const abilityRequirement = formatAbilityRequirementColumn(item, props);
+    const abilityReqResult = formatAbilityRequirementColumn(item, props);
+    const abilityRequirement = abilityReqResult.display;
+    const abilityReq = abilityReqResult.req;
     const block = deriveShieldAmountFromProperties(props);
     const shieldDamage =
       deriveShieldDamageFromProperties(props) ??
@@ -212,6 +226,7 @@ export function buildOfficialItemRows(
       damageReduction,
       agilityReduction,
       abilityRequirement,
+      abilityReq,
       criticalRangeIncrease,
       block: block !== '-' ? block : '-',
       parts: propertyChipsForItem(item, propertiesDb),
@@ -269,10 +284,21 @@ export function armamentRowColumns(row: OfficialItemRow, kind: ArmamentLibraryKi
   ];
 }
 
-export function filterOfficialItemRows<T extends { name?: string; description?: string }>(
+export function filterOfficialItemRows<
+  T extends {
+    name?: string;
+    description?: string;
+    currency?: number | null;
+    tp?: number | null;
+    abilityReq?: AbilityRequirement | null;
+    properties?: WeaponPropertyRef[];
+  },
+>(
   rows: T[],
   search: string,
-  sortItems: (items: T[]) => T[]
+  sortItems: (items: T[]) => T[],
+  filters?: ArmamentFilterState,
+  characterContext?: ArmamentCharacterContext | null
 ): T[] {
   let result = rows;
   if (search) {
@@ -282,6 +308,9 @@ export function filterOfficialItemRows<T extends { name?: string; description?: 
         String(x.name ?? '').toLowerCase().includes(s) ||
         String(x.description ?? '').toLowerCase().includes(s)
     );
+  }
+  if (filters && characterContext) {
+    result = applyArmamentFilters(result, filters, characterContext);
   }
   return sortItems(result);
 }

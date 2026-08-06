@@ -155,6 +155,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
           getRowProps={(creature) => {
             const row = creature as CreatureListRow;
             return {
+              rowChrome: CREATURE_ROW_CHROME,
               badges: row.hasDrift ? [{ label: 'Needs sync', color: 'amber' as const }] : undefined,
               warningMessage: row.syncMessage,
               rightSlot: row.hasDrift ? (

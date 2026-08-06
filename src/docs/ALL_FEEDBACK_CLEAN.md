@@ -1,6 +1,23 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-06 (My Library GLR header alignment)
+Last updated: 2026-08-06 (Library add-to-character from character filter)
+
+**Raw Feedback Log — 2026-08-06 (Library — add power/technique to character from browse)**
+- Context: `/library` → Powers/Techniques with **Filter by character** selected
+- Feedback: When sorting/filtering by character, add a **+** on each GLR row to add that power/technique directly to the character (confirm/cancel modal), same pattern as add-to-library. Future armament tabs should reuse.
+- Expected: + appears only when a character is filtered; confirm names character + item; persists to sheet; hides + when already on character.
+- Disposition: **TASK-679** done — `useAddToCharacterFromLibrary` + row `LibraryAddToCharacterButton` on My/Realms power/technique lists. verification_status pending-qa (DEV-V-046 T004). Follow-ups: **TASK-680** (armaments), **TASK-681** (cross-tab character filter).
+
+**Raw Feedback Log — 2026-08-06 (Power filters — innate threshold lock with character)**
+- Context: Library/Codex power filters with character + Innate Eligible checked
+- Feedback: Power Threshold (Innate) selector should grey out and show **Set by character** like Max Energy when filtering by character and Innate Eligible is on.
+- Disposition: **TASK-679** cleanup — `thresholdLockedByCharacter` when `hasCharacter && innateEligibleOnly`; `SelectFilter.disabledHint`.
+
+**Raw Feedback Log — 2026-08-06 (Creature library — fractional level sort)**
+- Context: `/library` → Creatures (My Library + Realms Library) — sort by Level column
+- Feedback: Fractional levels sort wrong — ½ appears before ¼, then 1; expected ¼ (smallest) → ½ → 1.
+- Expected: Level sort uses numeric quarter-step order (0.25 < 0.5 < 0.75 < 1), not string/`localeCompare` collation on decimals or display fractions.
+- Disposition: **TASK-678** done — `parseCreatureLevelSortValue` + `sortByColumn` level/`lvl` numeric compare; tests in `creature-level-display.test.ts` + `use-sort.test.ts`. verification_status pending-qa (DEV-V-040 T002).
 
 **Raw Feedback Log — 2026-08-06 (My Library GLR header/column alignment vs Realms)**
 - Context: `/library` — My Library vs Realms Library GLR lists (powers, techniques, armaments, creatures)
@@ -2875,3 +2892,26 @@ Notes
 - Feedback (verbatim): Powers and techniques will need categories assigned from power/technique part categories (excluding mechanic parts). Multi-category OK; dedupe duplicate part categories. Library (Realms + My) powers/techniques get a top FilterSection (shared filters like Codex): Category; min/max Energy; Action Type / Reaction. Power-only: Power Threshold (Innate) dropdown of live core-rules threshold values (same progression as sheet — e.g. 6 at Power Prof 1 / PM, 8 at Power Prof 2, then 9+), selecting it auto-checks "Innate Eligible" which reuses the shared innate-eligibility filter used in guided creator (Basic/Reaction, no heal/energy-gain parts, energy ≤ threshold). Category is for sort/filter and should be a desc chip when not a column header; prefer column header when spacing permits (owner said "codex" — clarify: Library Realms/My + Admin public lists); uninvasive desc chip in expanded power details. Future filters may be added later.
 - Expected: Derived categories (not a new DB field); FilterSection on power/technique library surfaces; GLR column-or-chip for category; shared innate eligibility; threshold options from `useGameRules` / progression helpers.
 - Disposition: Filed **TASK-673** (categories + display + shared filters). Architect note: compose `@/components/shared/filters` first; extract a shared panel file only if Official + My + USM need identical chrome (owner ack / ADR if new shared UI). **Implemented 2026-08-06** — `PowerTechniqueFilters` + derived categories; Realms/My/Admin wired; pending-qa **DEV-V-046**.
+
+**Raw Feedback Log — 2026-08-06 (Power/technique filter layout + character/TP)**
+- Date: 2026-08-06
+- Context: Library powers/techniques FilterSection follow-up
+- Priority: High
+- Feedback (verbatim summary): Filters misaligned across rows; Innate Eligible toggle not aligned; Category GLR header should be center (default for non-name columns); remove Min Energy (keep Max only); add Filter by character — caps by character max Energy; when Innate Eligible checked, use that character’s innate threshold; same energy for techniques; with character, filter by Training Points remaining (e.g. 22/25 spent → hide TP > 3) for powers/techniques (armaments later); Max TP filter always available with or without character.
+- Expected: Aligned filter grid; CharacterFilter + derived caps; Max TP + optional affordable TP; Category center; no Min Energy.
+- Disposition: Filed **TASK-676**. **Implemented** — layout fix (label+control cells, h-11 controls); CharacterFilter + max Energy / innate / remaining TP; Max TP always; Category headers/cells center; Min Energy removed. Follow-up polish (same day): locks/clear/Damage/PM 6→8. pending-qa **DEV-V-046-T003**.
+
+**Raw Feedback Log — 2026-08-06 (Filter polish + Damage category + innate threshold rules)**
+- Date: 2026-08-06
+- Context: Library power/technique filters + innate progression
+- Priority: High
+- Feedback (verbatim summary): Slight misalignment from Innate Threshold tooltip vertical space; grey out Set-by-character fields; unchecking Innate Eligible clears threshold (connected); powers with damage get Damage category; innate thresholds are not a clean Power Proficiency map — Power 8→14 by level; Powered-Martial starts 6 with milestone 6→8 then +1 (or feat); update tooltip; ensure core rules correct.
+- Disposition: Fixed filter label-row heights + compact tippy; disabled/grey Max Energy + Threshold when character-driven; clear threshold on uncheck; synthetic Damage category; fixed PM innate bump in formulas (6→8); filter options exclude 7; tooltip + sheet milestone copy updated. Live `core_rules` ARCHETYPES configs already matched GAME_RULES (L1 thresholds/pools/energy + milestones); local `ARCHETYPE_CONFIGS.power.innateEnergy` aligned to 16.
+
+**Raw Feedback Log — 2026-08-06 (Library search span + Enhanced Items tab)**
+- Date: 2026-08-06
+- Context: `/library` My Library — entity tab shell search + tab bar
+- Priority: Medium
+- Feedback (verbatim summary): Search bar should span full width until the Sync with current patch button (match codex full-span search). Rename Enhanced tab to **Enhanced Items** and place it immediately before Creatures.
+- Expected: `UserLibraryEntityTabShell` search uses codex-style `flex-1` wrapper; tab label **Enhanced Items**; tab order … Shields → Enhanced Items → Creatures.
+- Disposition: **Implemented** — `UserLibraryEntityTabShell` search row aligned to `CodexBrowseListShell`; `page.tsx` `TABS` updated. pending-qa **DEV-V-048-T001** (+ refresh DEV-V-016-T011 / DEV-V-019-T004 labels). Follow-up **TASK-682** — extract shared `ListSearchToolbar`.

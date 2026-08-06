@@ -7,7 +7,9 @@
  * **Spacing + rowChrome contract (TASK-631 / TASK-637):** Library / Official / Codex / USM /
  * creator-embedded GLR lists use `flex flex-col gap-1` row containers; edit/delete/add/
  * leftSlot/rightSlot must pass matching `rowChrome` on ListHeader (or `rightSlotWidth` for
- * equipment-step qty/remove). No leftover 40px grid tracks. CI: `validate-glr-chrome-spacing.test.ts`.
+ * equipment-step qty/remove). When header reserves a slot but row content is conditional
+ * (e.g. patch sync), pass the same `rowChrome` on `GridListRow` so empty rows keep alignment.
+ * No leftover 40px grid tracks. CI: `validate-glr-chrome-spacing.test.ts`.
  *
  * Widths mirror classes in `grid-list-row.tsx` (w-8, w-[4rem] mr-2, w-9, w-11).
  */

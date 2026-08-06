@@ -33,7 +33,6 @@ export function ItemCreatorEditorArmor({
     <CollapsibleSection
       title="Armor Configuration"
       collapsedSummary={armorConfigSummary}
-      defaultExpanded={true}
     >
       <div className="grid md:grid-cols-3 gap-6">
         <div>

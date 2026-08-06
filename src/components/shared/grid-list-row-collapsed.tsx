@@ -7,7 +7,7 @@ import { IconButton, DescriptorChip } from '@/components/ui';
 import { descriptorChipVariantForBadgeColor } from '@/lib/chip/grid-list-chip-utils';
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
-import { GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH } from './grid-list-row-chrome';
+import { GRID_LIST_ROW_LEFT_SLOT_WIDTH, GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH } from './grid-list-row-chrome';
 import { columnDisplayLabel } from './grid-list-row-columns';
 import type { ColumnValue } from './grid-list-row-types';
 import { ListRowThumbnail, type ListRowThumbnailProps } from './list-row-thumbnail';
@@ -50,6 +50,8 @@ interface GridListRowCollapsedProps {
   warningMessage?: string;
   inlineRightSlot: boolean;
   rightSlot?: ReactNode;
+  reserveRightSlotChrome?: boolean;
+  reserveLeftSlotChrome?: boolean;
   inlineEdit: boolean;
   onEdit?: () => void;
   inlineDelete: boolean;
@@ -97,6 +99,8 @@ export function GridListRowCollapsed({
   warningMessage,
   inlineRightSlot,
   rightSlot,
+  reserveRightSlotChrome = false,
+  reserveLeftSlotChrome = false,
   inlineEdit,
   onEdit,
   inlineDelete,
@@ -108,8 +112,13 @@ export function GridListRowCollapsed({
   return (
     <div className="flex items-center min-h-[44px]">
       {/* Left Slot - fixed width so column content aligns with headers */}
-      {leftSlot && (
-        <div className="flex-shrink-0 flex items-center justify-center w-8 min-w-[2rem]" onClick={(e) => e.stopPropagation()}>
+      {(leftSlot || reserveLeftSlotChrome) && (
+        <div
+          className="flex-shrink-0 flex items-center justify-center w-8 min-w-[2rem]"
+          style={reserveLeftSlotChrome && !leftSlot ? { width: GRID_LIST_ROW_LEFT_SLOT_WIDTH } : undefined}
+          onClick={(e) => e.stopPropagation()}
+          aria-hidden={reserveLeftSlotChrome && !leftSlot ? true : undefined}
+        >
           {leftSlot}
         </div>
       )}
@@ -327,11 +336,12 @@ export function GridListRowCollapsed({
       </div>
 
       {/* Right Slot - use button, roll buttons, quantity, etc. (before delete so X is at far right) */}
-      {rightSlot && !inlineRightSlot && (
+      {(rightSlot || reserveRightSlotChrome) && !inlineRightSlot && (
         <div
           className="flex items-center flex-shrink-0 justify-center pr-1"
           style={{ width: GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH }}
           onClick={(e) => e.stopPropagation()}
+          aria-hidden={reserveRightSlotChrome && !rightSlot ? true : undefined}
         >
           {rightSlot}
         </div>

@@ -85,7 +85,6 @@ export function CreatureCreatorEditorLoadoutSections({
         icon="⭐"
         itemCount={creature.feats.length}
         points={{ spent: stats.featSpent, total: stats.featPoints }}
-        defaultExpanded={true}
       >
         {creature.feats.length === 0 ? (
           <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No feats added</p>
@@ -182,7 +181,6 @@ export function CreatureCreatorEditorLoadoutSections({
         enabled={creature.enablePowers}
         onEnabledChange={(enabled) => updateCreature({ enablePowers: enabled })}
         itemCount={creature.powers.length}
-        defaultExpanded={true}
       >
         {creature.powers.length === 0 ? (
           <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No powers added</p>
@@ -265,7 +263,6 @@ export function CreatureCreatorEditorLoadoutSections({
         enabled={creature.enableTechniques}
         onEnabledChange={(enabled) => updateCreature({ enableTechniques: enabled })}
         itemCount={creature.techniques.length}
-        defaultExpanded={true}
       >
         {creature.techniques.length === 0 ? (
           <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No techniques added</p>
@@ -333,7 +330,6 @@ export function CreatureCreatorEditorLoadoutSections({
         enabled={creature.enableArmaments}
         onEnabledChange={(enabled) => updateCreature({ enableArmaments: enabled })}
         itemCount={creature.armaments.length}
-        defaultExpanded={true}
       >
         {creature.armaments.length === 0 ? (
           <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No inventory items added</p>

@@ -48,7 +48,6 @@ export function PowerCreatorEditorPowerParts({
       <CollapsibleSection
         title={`Power Parts (${selectedParts.length})`}
         collapsedSummary={powerPartsSummary}
-        defaultExpanded={true}
         rightSlot={
           <>
             <SectionCostBadge en={sectionCosts.powerParts.energyRaw} tp={sectionCosts.powerParts.totalTP} />
@@ -83,7 +82,6 @@ export function PowerCreatorEditorPowerParts({
       <CollapsibleSection
         title={`Power Mechanics (${selectedAdvancedParts.length})`}
         collapsedSummary={powerMechanicsSummary}
-        defaultExpanded={true}
         rightSlot={
           <>
             <SectionCostBadge en={sectionCosts.powerMechanics.energyRaw} tp={sectionCosts.powerMechanics.totalTP} />

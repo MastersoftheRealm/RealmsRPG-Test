@@ -10,7 +10,7 @@ import { Button } from '@/components/ui';
 import { ONBOARDING_COPY } from '@/lib/constants/copy/onboarding-copy';
 import { markTutorialMilestone } from '@/lib/onboarding-preferences';
 import type { LevelUpGuideContent } from '@/lib/level-up-guide';
-import { applyTourHighlight } from '@/lib/sheet-tour-highlight';
+import { applyTourHighlight, ONBOARDING_FLOATING_CARD_CLASS } from '@/lib/sheet-tour-highlight';
 import { cn } from '@/lib/utils';
 
 const copy = ONBOARDING_COPY.levelUpGuide;
@@ -36,7 +36,7 @@ export function LevelUpGuideCard({ content, onClose }: LevelUpGuideCardProps) {
   return (
     <div
       className={cn(
-        'fixed z-overlay left-4 right-4 bottom-20 md:left-auto md:right-4 md:bottom-8 md:w-96',
+        ONBOARDING_FLOATING_CARD_CLASS,
         'rounded-xl border border-border-light bg-surface shadow-lg p-4'
       )}
       role="dialog"

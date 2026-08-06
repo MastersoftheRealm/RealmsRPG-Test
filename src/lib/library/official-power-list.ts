@@ -11,18 +11,21 @@ import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
   derivePartCategories,
   formatPartCategoriesColumn,
+  powerHasDamageCategory,
+  withDamageCategory,
 } from '@/lib/library/power-technique-categories';
 import {
   applyPowerTechniqueFilters,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
+import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 
 /** Data columns only — edit/delete/add use ListHeader `rowChrome` (not a leftover 40px track). */
 export const OFFICIAL_POWER_GRID = '1.4fr 1fr 0.7fr 0.9fr 0.9fr 0.7fr 0.9fr 0.9fr';
 
 export const OFFICIAL_POWER_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME', align: 'left' as const },
-  { key: 'category', label: 'CATEGORY', align: 'left' as const },
+  { key: 'category', label: 'CATEGORY', align: 'center' as const },
   { key: 'energy', label: 'ENERGY', align: 'center' as const },
   { key: 'action', label: 'ACTION', align: 'center' as const },
   { key: 'duration', label: 'DURATION', align: 'center' as const },
@@ -74,7 +77,10 @@ export function buildOfficialPowerRows(
     const display = derivePowerDisplay(doc, partsDb);
     const damageStr = formatPowerDamage(doc.damage);
     const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
-    const categories = derivePartCategories(savedParts, partsDb);
+    const categories = withDamageCategory(
+      derivePartCategories(savedParts, partsDb),
+      powerHasDamageCategory(doc.damage)
+    );
     return {
       id: String(p.id ?? p.docId ?? ''),
       raw: p,
@@ -108,6 +114,7 @@ export function filterOfficialPowerRows<
     description?: string;
     categories?: string[];
     energy?: string | number | null;
+    tp?: number | null;
     action?: string | null;
     actionTypeRaw?: string | null;
     isReaction?: boolean;
@@ -119,7 +126,8 @@ export function filterOfficialPowerRows<
   rows: T[],
   search: string,
   sortItems: (items: T[]) => T[],
-  advanced?: PowerTechniqueFilterState
+  advanced?: PowerTechniqueFilterState,
+  character?: PowerTechniqueCharacterContext | null
 ): T[] {
   let result = rows;
   if (search) {
@@ -132,7 +140,7 @@ export function filterOfficialPowerRows<
     );
   }
   if (advanced) {
-    result = applyPowerTechniqueFilters(result, advanced, 'power');
+    result = applyPowerTechniqueFilters(result, advanced, 'power', character);
   }
   return sortItems(result);
 }

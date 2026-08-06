@@ -71,6 +71,7 @@ export const GridListRow = memo(function GridListRow({
   leftSlot,
   thumbnail,
   rightSlot,
+  rowChrome,
   innate = false,
   hideInnateBadge = false,
   uses,
@@ -198,6 +199,9 @@ export const GridListRow = memo(function GridListRow({
 
   const inlineSelectable = selectable && remainingInlineActionTracks > 0;
   if (inlineSelectable) remainingInlineActionTracks -= 1;
+  const reserveRightSlotChrome = !!(rowChrome?.rightSlot && !rightSlot);
+  const reserveLeftSlotChrome = !!(rowChrome?.leftSlot && !leftSlot);
+  const showRightSlotChrome = !!(rightSlot || reserveRightSlotChrome);
   // Edit + delete must share the same chrome (all inline or all flex-outside).
   // A single leftover `40px` track used to put delete inside hover and edit outside.
   const editDeleteCount = (onEdit ? 1 : 0) + (onDelete ? 1 : 0);
@@ -207,7 +211,8 @@ export const GridListRow = memo(function GridListRow({
   if (inlineDelete) remainingInlineActionTracks -= 1;
   const inlineEdit = inlineEditDelete && !!onEdit;
   if (inlineEdit) remainingInlineActionTracks -= 1;
-  const inlineRightSlot = !!rightSlot && remainingInlineActionTracks > 0;
+  const inlineRightSlot = showRightSlotChrome && remainingInlineActionTracks > 0;
+  if (inlineRightSlot) remainingInlineActionTracks -= 1;
   const inlineWarning = !!warningMessage && remainingInlineActionTracks > 0;
   if (inlineWarning) remainingInlineActionTracks -= 1;
 
@@ -281,6 +286,8 @@ export const GridListRow = memo(function GridListRow({
         warningMessage={warningMessage}
         inlineRightSlot={inlineRightSlot}
         rightSlot={rightSlot}
+        reserveRightSlotChrome={reserveRightSlotChrome}
+        reserveLeftSlotChrome={reserveLeftSlotChrome}
         inlineEdit={inlineEdit}
         onEdit={onEdit}
         inlineDelete={inlineDelete}

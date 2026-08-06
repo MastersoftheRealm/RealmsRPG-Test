@@ -32,7 +32,7 @@ Common scales are encoded as semantic tokens so components share one ladder inst
 | Radius | `--radius-control`, `--radius-card`, `--radius-pill` | controls = `lg`, cards = `xl`, pills/avatars = `full` |
 | Elevation | `--shadow-card`, `--shadow-raised`, `--shadow-overlay` | resting card → hovered/raised → modal/popover |
 | Motion | `--duration-fast` (150ms), `--duration-base` (200ms), `--duration-slow` (300ms), `--ease-standard` | one easing curve for all transitions; use `duration-base ease-standard` in TSX; in `@apply` use `var(--duration-base)` + `var(--ease-standard)` |
-| Z-index | `--z-sticky` (10), `--z-header` / `--z-overlay` (50), `--z-popover` (70), `--z-toast` (100), `--z-floating` (1000), `--z-skip-link` (9999), `--z-toast-stack` (10000) | sticky → header/modal → popovers/tooltips → alerts → skip link / toast stack |
+| Z-index | `--z-sticky` (10), `--z-header` / `--z-overlay` (50), `--z-popover` (70), `--z-toast` (100), `--z-floating` (1000), `--z-tour` (1100), `--z-skip-link` (9999), `--z-toast-stack` (10000) | sticky → header/modal → popovers/tooltips → floating widgets → onboarding tour cards → skip link / toast stack |
 | Focus | `focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2` | buttons, icon buttons, tabs; form controls use `:focus:` (same ring token); errors use `ring-danger-border` |
 | Touch | `--touch-target-min: 44px`; utilities `.touch-target`, `.touch-target-md-compact` | 44px below `md`; compact on desktop; `Button`/`IconButton` also use `@media(pointer:coarse)` |
 | Container | `--container-narrow` (4xl), `--container-standard` (7xl), `--container-wide` (1440px), `--container-full-tool` (1600px) | page max-widths; marketing chrome uses `.layout-shell-wide` |

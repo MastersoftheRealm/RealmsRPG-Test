@@ -9,6 +9,7 @@ import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Swords } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
 import { PowerTechniqueFilters } from '@/components/shared/filters';
+import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
 import {
@@ -23,6 +24,7 @@ import {
   EMPTY_POWER_TECHNIQUE_FILTERS,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
+import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
@@ -77,6 +79,10 @@ export function OfficialTechniqueList({
   const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
     EMPTY_POWER_TECHNIQUE_FILTERS
   );
+  const [characterContext, setCharacterContext] =
+    useState<PowerTechniqueCharacterContext | null>(null);
+  const [characterFilterId, setCharacterFilterId] = useState('');
+  const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
 
   const categoryOptions = useMemo(() => {
     if (empowered) return [];
@@ -88,12 +94,14 @@ export function OfficialTechniqueList({
       rows: OfficialTechniqueRow[],
       search: string,
       sortItems: (items: OfficialTechniqueRow[]) => OfficialTechniqueRow[]
-    ) => filterOfficialTechniqueRows(rows, search, sortItems, advancedFilters),
-    [advancedFilters]
+    ) =>
+      filterOfficialTechniqueRows(rows, search, sortItems, advancedFilters, characterContext),
+    [advancedFilters, characterContext]
   );
 
   return (
-    <OfficialEntityList<OfficialTechniqueRow, LibraryTechnique>
+    <>
+      <OfficialEntityList<OfficialTechniqueRow, LibraryTechnique>
       items={items}
       isLoading={isLoading}
       error={error}
@@ -109,11 +117,13 @@ export function OfficialTechniqueList({
             value={advancedFilters}
             onChange={setAdvancedFilters}
             categoryOptions={categoryOptions}
+            onCharacterContextChange={setCharacterContext}
+            onCharacterIdChange={setCharacterFilterId}
           />
         )
       }
       getColumns={(t) => [
-        { key: 'Category', value: t.category, align: 'left' },
+        { key: 'Category', value: t.category, align: 'center' },
         { key: 'Energy', value: t.energy, highlight: true, align: 'center' },
         { key: 'TP', value: t.tp, align: 'center' },
         { key: 'Action', value: t.action, align: 'center' },
@@ -148,8 +158,21 @@ export function OfficialTechniqueList({
       variant={variant}
       readOnly={readOnly}
       onAddRequest={onAddRequest}
+      addToCharacter={
+        variant === 'library' &&
+        !empowered &&
+        addToCharacter.active
+          ? {
+              kind: 'technique',
+              onRequest: (row) => addToCharacter.openAddConfirm(row.name, row.raw),
+              isOnCharacter: (row) => addToCharacter.isOnCharacter(row.raw),
+            }
+          : undefined
+      }
       onEdit={onEdit}
       onDelete={onDelete}
     />
+      {addToCharacter.confirmModal}
+    </>
   );
 }

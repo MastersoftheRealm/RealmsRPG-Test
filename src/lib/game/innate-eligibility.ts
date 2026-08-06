@@ -278,8 +278,9 @@ export function validateRecommendedInnatePowers(
 }
 
 /**
- * Distinct Innate Threshold values from live core rules / progression helpers
- * (Power L1–20 + Powered-Martial base and milestone bumps). Used by library filters.
+ * Distinct Innate Threshold values from live core rules / progression helpers.
+ * Power: 8–14 by level. Powered-Martial: base 6, then 6→8 on first Increase Innate
+ * Power pick, then +1 per later innate pick (never 7).
  */
 export function listInnateThresholdFilterOptions(rules?: Rules): number[] {
   const set = new Set<number>();
@@ -290,13 +291,13 @@ export function listInnateThresholdFilterOptions(rules?: Rules): number[] {
   }
 
   const mixed = getArchetypeConfig('powered-martial', rules);
-  const base = mixed.innateThreshold ?? 0;
-  if (base > 0) set.add(base);
+  let pmThreshold = mixed.innateThreshold ?? 0;
+  if (pmThreshold > 0) set.add(pmThreshold);
 
   const milestones = getArchetypeMilestoneLevels(20, rules);
-  for (let i = 1; i <= milestones.length; i++) {
-    const threshold = base + i;
-    if (threshold > 0) set.add(threshold);
+  for (let i = 0; i < milestones.length; i++) {
+    pmThreshold = pmThreshold < 8 ? 8 : pmThreshold + 1;
+    if (pmThreshold > 0) set.add(pmThreshold);
   }
 
   return [...set].sort((a, b) => a - b);

@@ -37,7 +37,6 @@ export function PowerCreatorEditorActionProfile({
       <CollapsibleSection
         title="Action Type"
         collapsedSummary={actionTypeDisplay}
-        defaultExpanded={true}
         rightSlot={<SectionCostBadge en={sectionCosts.action.energyRaw} tp={sectionCosts.action.totalTP} />}
       >
         <div className="flex flex-wrap gap-4">
@@ -64,7 +63,6 @@ export function PowerCreatorEditorActionProfile({
       <CollapsibleSection
         title="Attack"
         collapsedSummary={attackModeColumnLabel(attackMode)}
-        defaultExpanded={true}
         rightSlot={<SectionCostBadge en={sectionCosts.weapon.energyRaw} tp={sectionCosts.weapon.totalTP} />}
       >
         <div>

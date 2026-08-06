@@ -473,7 +473,7 @@ Any Bonus can be converted to a Score by adding 10.
 | Training points | 22 + ability + (2 + ability) × (level − 1) | Same formula as characters |
 | Currency | 200 × 1.45^(level−1) | `calculateCreatureCurrency` |
 
-**Display (UI):** User-facing creature levels use unicode fractions for quarter steps — `¼`, `½`, `¾` (e.g. level 0.25 → `¼`, 1.5 → `1½`). Use `formatCreatureLevel` / `formatCreatureLevelLabel` / `formatCreatureLevelShort` from `@/lib/game`. Store and calculate with numeric levels; format only at display.
+**Display (UI):** User-facing creature levels use unicode fractions for quarter steps — `¼`, `½`, `¾` (e.g. level 0.25 → `¼`, 1.5 → `1½`). Use `formatCreatureLevel` / `formatCreatureLevelLabel` / `formatCreatureLevelShort` from `@/lib/game`. List sort by level uses `parseCreatureLevelSortValue` (numeric quarter-step order). Store and calculate with numeric levels; format only at display.
 
 ---
 

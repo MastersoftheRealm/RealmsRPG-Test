@@ -3,6 +3,8 @@ import {
   collectCategoryFilterOptions,
   derivePartCategories,
   formatPartCategoriesColumn,
+  powerHasDamageCategory,
+  withDamageCategory,
 } from './power-technique-categories';
 
 const partsDb = [
@@ -42,6 +44,14 @@ describe('derivePartCategories (TASK-673)', () => {
   it('formats column display', () => {
     expect(formatPartCategoriesColumn([])).toBe('—');
     expect(formatPartCategoriesColumn(['Offense', 'Utility'])).toBe('Offense, Utility');
+  });
+
+  it('adds Damage category when power has damage rows', () => {
+    expect(
+      withDamageCategory(['Charm'], powerHasDamageCategory([{ amount: 1, size: 8, type: 'ice' }]))
+    ).toEqual(['Charm', 'Damage']);
+    expect(withDamageCategory(['Damage'], true)).toEqual(['Damage']);
+    expect(powerHasDamageCategory([{ amount: 1, size: 6, type: 'none' }])).toBe(false);
   });
 
   it('collects sorted unique filter options', () => {

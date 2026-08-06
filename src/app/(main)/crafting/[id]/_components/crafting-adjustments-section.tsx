@@ -34,7 +34,6 @@ export function CraftingAdjustmentsSection({
   return (
     <CollapsibleSection
       title="Adjustments"
-      defaultExpanded
       collapsedSummary={`Difficulty Score Bonus ${session.data.dsModifier ?? 0}, bonus S/F`}
     >
       <p className="text-sm text-text-muted dark:text-text-secondary mb-4">

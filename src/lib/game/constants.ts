@@ -62,7 +62,7 @@ export const ARCHETYPE_CONFIGS: Record<ArchetypeCategory, ArchetypeConfig> = {
   power: {
     featLimit: 0,           // No bonus archetype feats (total = level)
     armamentMax: 3,         // Martial Prof 0 → Armament Prof 3
-    innateEnergy: 8,        // @deprecated mislabel — this is Innate Threshold; use calculateArchetypeProgression().innateEnergy for budget
+    innateEnergy: 16,       // L1 Innate Energy budget (Threshold 8 × Pools 2)
     innateThreshold: 8,
     innatePools: 2,
     proficiency: { martial: 0, power: 2 },
@@ -71,7 +71,7 @@ export const ARCHETYPE_CONFIGS: Record<ArchetypeCategory, ArchetypeConfig> = {
   'powered-martial': {
     featLimit: 1,           // +1 bonus from martial proficiency joining
     armamentMax: 8,         // Martial Prof 1 → Armament Prof 8
-    innateEnergy: 6,        // @deprecated mislabel — Innate Threshold 6; L1 Innate Energy = 6 (1 pool)
+    innateEnergy: 6,        // L1 Innate Energy (Threshold 6 × Pools 1)
     innateThreshold: 6,
     innatePools: 1,
     proficiency: { martial: 1, power: 1 },

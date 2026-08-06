@@ -425,7 +425,8 @@ export function calculateArchetypeProgression(
       for (const milestoneLevel of milestones) {
         const choice = archetypeChoices[milestoneLevel];
         if (choice === 'innate') {
-          innateThreshold += 1;
+          // GAME_RULES: first Increase Innate Power is 6→8; later picks +1.
+          innateThreshold = innateThreshold < 8 ? 8 : innateThreshold + 1;
           innatePools += 1;
         } else if (choice === 'feat') {
           bonusArchetypeFeats += 1;

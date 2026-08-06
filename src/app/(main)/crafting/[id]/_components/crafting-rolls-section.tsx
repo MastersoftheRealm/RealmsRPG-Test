@@ -52,7 +52,6 @@ export function CraftingRollsSection({
   return (
     <CollapsibleSection
       title="Crafting Rolls"
-      defaultExpanded
       collapsedSummary={`Net ${netDelta >= 0 ? `+${netDelta}` : netDelta}, enhancement ${totalEnhSuccesses} S / ${totalEnhFailures} F`}
     >
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">

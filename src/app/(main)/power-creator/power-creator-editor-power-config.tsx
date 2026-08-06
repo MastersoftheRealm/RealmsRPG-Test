@@ -48,7 +48,6 @@ export function PowerCreatorEditorPowerConfig({
       <CollapsibleSection
         title="Range"
         collapsedSummary={rangeSummary}
-        defaultExpanded={true}
         rightSlot={<SectionCostBadge en={sectionCosts.range.energyRaw} tp={sectionCosts.range.totalTP} />}
       >
         <div className="flex flex-wrap items-center gap-4">
@@ -68,7 +67,6 @@ export function PowerCreatorEditorPowerConfig({
       <CollapsibleSection
         title="Area of Effect"
         collapsedSummary={area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)}
-        defaultExpanded={true}
         rightSlot={<SectionCostBadge en={sectionCosts.area.energyRaw} tp={sectionCosts.area.totalTP} />}
       >
         <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -121,7 +119,6 @@ export function PowerCreatorEditorPowerConfig({
       <CollapsibleSection
         title="Duration"
         collapsedSummary={durationSummary}
-        defaultExpanded={true}
         rightSlot={<SectionCostBadge en={sectionCosts.duration.energyRaw} tp={sectionCosts.duration.totalTP} />}
       >
         <div className="flex flex-wrap items-center gap-4 mb-4">

@@ -10,6 +10,12 @@ const QUARTER_FRACTION_CHARS: Record<number, string> = {
   0.75: '¾',
 };
 
+const UNICODE_FRACTION_TO_DECIMAL: Record<string, number> = Object.fromEntries(
+  Object.entries(QUARTER_FRACTION_CHARS).map(([decimal, char]) => [char, Number(decimal)])
+);
+
+const UNICODE_FRACTION_CHAR_LIST = Object.keys(UNICODE_FRACTION_TO_DECIMAL);
+
 /** Snap to nearest quarter to tolerate floating-point storage (e.g. 0.30000000004). */
 function normalizeCreatureLevelParts(level: number): { whole: number; fraction: number } {
   const quarters = Math.round(level * 4);
@@ -49,6 +55,51 @@ export function formatCreatureLevelLabel(
 /** @example formatCreatureLevelShort(0.75) → "Lv ¾" */
 export function formatCreatureLevelShort(level: number | string | null | undefined): string {
   return `Lv ${formatCreatureLevel(level)}`;
+}
+
+/**
+ * Numeric value for sorting creature levels (¼ < ½ < 1).
+ * Accepts stored numbers, decimal strings, and `formatCreatureLevel` display strings.
+ */
+export function parseCreatureLevelSortValue(level: unknown): number | null {
+  if (level == null || level === '') return null;
+
+  if (typeof level === 'number' && Number.isFinite(level)) {
+    if (level < 0) return null;
+    const { whole, fraction } = normalizeCreatureLevelParts(level);
+    return whole + fraction;
+  }
+
+  if (typeof level === 'string') {
+    const trimmed = level.trim();
+    if (!trimmed || trimmed === '-') return null;
+
+    if (UNICODE_FRACTION_TO_DECIMAL[trimmed] != null) {
+      return UNICODE_FRACTION_TO_DECIMAL[trimmed];
+    }
+
+    for (const fracChar of UNICODE_FRACTION_CHAR_LIST) {
+      if (trimmed.endsWith(fracChar)) {
+        const wholePart = trimmed.slice(0, -fracChar.length);
+        const whole = wholePart === '' ? 0 : Number(wholePart);
+        if (!Number.isFinite(whole) || whole < 0) return null;
+        return whole + UNICODE_FRACTION_TO_DECIMAL[fracChar];
+      }
+    }
+
+    if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+      const n = Number(trimmed);
+      if (!Number.isFinite(n) || n < 0) return null;
+      const { whole, fraction } = normalizeCreatureLevelParts(n);
+      return whole + fraction;
+    }
+
+    if (/^\d+$/.test(trimmed)) {
+      return Number(trimmed);
+    }
+  }
+
+  return null;
 }
 
 /** Creature creator level select options — labels use unicode fractions. */

@@ -1,3 +1,215 @@
+- id: TASK-680
+  title: Armaments library — character filter + add to character sheet
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-06
+  completed_at: 2026-08-06
+  created_by: agent
+  parent_task: TASK-679
+  related_files:
+    - src/app/(main)/library/LibraryItemsTab.tsx
+    - src/components/shared/official-item-list.tsx
+    - src/components/shared/official-entity-list.tsx
+    - src/components/shared/filters/armament-filters.tsx
+    - src/components/shared/filters/index.ts
+    - src/components/shared/library-row-action-slot.tsx
+    - src/lib/library/official-item-list.ts
+    - src/lib/library/armament-filters.ts
+    - src/lib/library/armament-filters.test.ts
+    - src/lib/library/armament-character-context.ts
+    - src/lib/library/character-filter-persistence.ts
+    - src/lib/library/character-filter-persistence.test.ts
+    - src/lib/game/weapon-attack-ability.ts
+    - src/lib/guided-creator/equipment-eligibility.ts
+    - src/hooks/use-add-to-character-from-library.tsx
+    - src/hooks/add-library-item/map-library-to-character.ts
+    - src/hooks/add-library-item/map-library-to-character.test.ts
+    - scripts/shared-ui-allowlist.json
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Extend TASK-679 patterns to weapons, armor, and shields (My Library + Realms Library):
+    character-scoped filters (proficiency / ability req / currency caps as applicable),
+    + row action to add armament directly to the filtered character's equipment with
+    confirm modal. Reuse `useAddToCharacterFromLibrary` (extend kind) or shared hook
+  acceptance_criteria:
+    - Weapons / armor / shields tabs support Filter by character with shared CharacterFilter model.
+    - GLR + shows + when character selected and item not already on character (per equipment slot rules).
+    - Confirm modal → PATCH character equipment; auto-proficiency apply matches sheet add-equipment flow.
+    - No parallel filter panel or add hook — extend TASK-679 shared helpers.
+    - npm run build + targeted tests pass.
+  notes: |
+    Owner cleanup 2026-08-06. QA: DEV-V-046 T005. Shares LIBRARY_PT_CHARACTER_FILTER_KEY with power/technique (TASK-681 unifies Codex feats).
+- id: TASK-682
+  title: Extract shared ListSearchToolbar (search + trailing slot)
+  priority: low
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-06
+  completed_at: 2026-08-06
+  created_by: agent
+  related_files:
+    - src/components/shared/list-search-toolbar.tsx
+    - src/components/shared/codex-browse-list-shell.tsx
+    - src/components/shared/official-entity-list.tsx
+    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
+    - src/components/shared/index.ts
+    - scripts/shared-ui-allowlist.json
+    - src/docs/ai/ADR/0011-list-search-toolbar.md
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    DRY the duplicated flex search row between CodexBrowseListShell,
+    UserLibraryEntityTabShell, and OfficialEntityList.
+  acceptance_criteria:
+    - Shared ListSearchToolbar under src/components/shared/ (ADR-0011 + allowlist).
+    - All three shells delegate; full-span search to trailing control preserved.
+    - npm run build passes.
+  notes: |
+    Owner ack 2026-08-06. QA: DEV-V-048 T001 (+ DEV-V-016 T016).
+- id: TASK-679
+  title: Library add-to-character (+) when filtering by character
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-06
+  completed_at: 2026-08-06
+  created_by: owner
+  related_files:
+    - src/hooks/use-add-to-character-from-library.tsx
+    - src/hooks/add-library-item/map-library-to-character.ts
+    - src/hooks/add-library-item/map-library-to-character.test.ts
+    - src/components/shared/library-row-action-slot.tsx
+    - src/components/shared/filters/power-technique-filters.tsx
+    - src/components/shared/filters/select-filter.tsx
+    - src/components/shared/official-entity-list.tsx
+    - src/components/shared/official-power-list.tsx
+    - src/components/shared/official-technique-list.tsx
+    - src/app/(main)/library/LibraryPowersTab.tsx
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/components/shared/index.ts
+    - src/hooks/index.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    When filtering Library powers/techniques by character, show + on GLR rows to add
+    directly to that character with ConfirmActionModal (same pattern as add-to-library).
+  acceptance_criteria:
+    - + appears when character filter active; confirm names character + item; saves to sheet.
+    - Hides + when item already on character (id match).
+    - My Library + Realms Library powers/techniques; admin browse does not offer add-to-character.
+    - Innate Threshold locks with Set by character when Innate Eligible + character filter.
+    - npm run build + unit tests pass.
+  notes: |
+    Follow-ups TASK-680 (armaments), TASK-681 (cross-tab character filter persistence).
+    QA DEV-V-046 T004.
+- id: TASK-677
+  title: Collapse creators + browse filters by default
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-06
+  completed_at: 2026-08-06
+  created_by: owner
+  related_files:
+    - src/components/creator/collapsible-section.tsx
+    - src/components/shared/filters/filter-section.tsx
+    - src/components/shared/filters/power-technique-filters.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-config.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-parts.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-damage.tsx
+    - src/app/(main)/power-creator/power-creator-editor-action-profile.tsx
+    - src/app/(main)/technique-creator/technique-creator-editor.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-config.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-parts.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-technique-parts.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-power-damage.tsx
+    - src/app/(main)/empowered-technique-creator/empowered-technique-editor-action-profile.tsx
+    - src/app/(main)/item-creator/item-creator-editor-ability-properties.tsx
+    - src/app/(main)/item-creator/item-creator-editor-armor.tsx
+    - src/app/(main)/item-creator/item-creator-editor-shield-panels.tsx
+    - src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx
+    - src/app/(main)/species-creator/species-creator-editor.tsx
+    - src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-adjustments-section.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-item-options-section.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-rolls-section.tsx
+    - src/app/(main)/crafting/[id]/_components/crafting-optional-rules-section.tsx
+    - src/app/(main)/admin/images/page.tsx
+    - src/docs/ai/guide/06-creators-and-loadouts.md
+  description: |
+    Owner feedback: reduce initial visual load when opening standalone creators and Codex/Library
+    browse surfaces � collapsible creator sections and FilterSection panels should start collapsed.
+  acceptance_criteria:
+    - CollapsibleSection defaults collapsed; creator call sites no longer force expanded.
+    - FilterSection defaults collapsed for Codex, admin browse, and library filter panels.
+    - Collapsed summaries still visible where provided; expand/collapse still works.
+    - npm run build passes.
+  completed_work: |
+    - Flipped shared defaults on CollapsibleSection + FilterSection to defaultExpanded=false.
+    - Removed per-creator defaultExpanded={true} overrides; dropped redundant explicit false in crafting optional rules.
+    - Documented collapsed-by-default in guide/06; BUILD_VALIDATION DEV-V-047 for owner QA.
+  notes: |
+    Creature creator Basic Info / Archetype / H&E / Abilities remain always-open Cards (not CollapsibleSection).
+    StatBlockSection unchanged. Manual QA not run � verification_status pending-qa (DEV-V-047 T001�T002).
+- id: TASK-676
+  title: Power/technique filters - character caps, Max TP, layout align
+  created_at: 2026-08-06
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  parent_task: TASK-673
+  build_validation: |
+    suite: DEV-V-046
+    tests:
+      - DEV-V-046-T001
+      - DEV-V-046-T002
+      - DEV-V-046-T003
+  developer_test_plan: |
+    Suite DEV-V-046 T001�T003 � see BUILD_VALIDATION.md
+  related_files:
+    - src/components/shared/filters/power-technique-filters.tsx
+    - src/components/shared/filters/character-filter.tsx
+    - src/components/shared/filters/chip-select.tsx
+    - src/components/shared/filters/select-filter.tsx
+    - src/lib/library/power-technique-filters.ts
+    - src/lib/library/power-technique-filters.test.ts
+    - src/lib/library/power-technique-character-context.ts
+    - src/lib/library/power-technique-categories.ts
+    - src/lib/library/power-technique-categories.test.ts
+    - src/lib/library/official-power-list.ts
+    - src/lib/library/official-technique-list.ts
+    - src/components/shared/official-power-list.tsx
+    - src/components/shared/official-technique-list.tsx
+    - src/app/(main)/library/LibraryPowersTab.tsx
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/lib/game/formulas.ts
+    - src/lib/game/formulas.test.ts
+    - src/lib/game/innate-eligibility.ts
+    - src/lib/game/innate-eligibility.test.ts
+    - src/lib/game/constants.ts
+    - src/components/character-sheet/archetype-section.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Fix power/technique FilterSection alignment (Innate Eligible); remove Min Energy;
+    add CharacterFilter (max Energy, innate threshold when eligible, available TP);
+    Max TP always; center Category GLR headers/cells.
+  acceptance_criteria:
+    - Filter controls share row alignment; Innate Eligible is a labeled filter cell.
+    - Character selection caps energy / innate / optional remaining TP; Max TP always works.
+    - Category header+cells center; Min Energy removed; tests + DEV-V-046-T003.
+  completed_work: |
+    Follow-up polish: character-set Max Energy/Threshold disabled+grey; clear threshold on
+    uncheck Innate Eligible; Damage category for damaging powers; PM innate 6->8 formula +
+    filter options; CharacterFilter owns useCharacters (no duplicate parent fetch).
+  notes: |
+    Owner feedback 2026-08-06. TP remaining = proficiency spend + Unarmed Prowess (sheet model).
+    Armaments TP filter deferred.
+
+---
 - id: TASK-673
   title: Library powers/techniques - derived categories + FilterSection
   priority: high
@@ -17051,3 +17263,27 @@ Firebase/RTDB - the project is Supabase-only.
     Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md �7/�10.
     Manual smoke not run - verification_status pending-qa (DEV-V-043 T001-T007).
     Original-seven listed files under ~500; sheet orchestration further split into page-data / page-ui / facade (owner-acked).
+---
+
+- id: TASK-678
+  title: Creature library fractional level sort
+  created_at: 2026-08-06
+  created_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/hooks/use-sort.ts
+    - src/hooks/use-sort.test.ts
+    - src/lib/game/creature-level-display.ts
+    - src/lib/game/creature-level-display.test.ts
+  description: |
+    Library Creatures Level column must sort quarter-step levels numerically (¼ < ½ < 1),
+    not via localeCompare on decimal strings or unicode fraction display.
+  acceptance_criteria:
+    - My Library + Realms Library Creatures sort Level ascending: ¼ → ½ → ¾ → 1.
+    - sortByColumn uses parseCreatureLevelSortValue for level/lvl columns.
+    - Unit tests cover numeric rows and formatted column values.
+  notes: |
+    BUILD_VALIDATION DEV-V-040-T002. Owner feedback 2026-08-06.
+

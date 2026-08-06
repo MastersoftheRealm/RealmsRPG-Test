@@ -58,7 +58,7 @@ All product help copy still lives in **`public/tooltip-text.tsx`**. Scope the **
 | Pick one option from a list (filters, sort) | **`Select`**, **`SelectFilter`**, **`ChipSelect`**, native `<select>` | InfoTippy |
 | Nav dropdown (Library links, account menu) | Existing header / menu pattern; **future:** shared **`AnchoredMenu`** on Floating UI | InfoTippy |
 | Click-to-open panel (actions, compact picker) | **Future:** shared **`AnchoredPopover`** on Floating UI; until then, extend nearest existing pattern | InfoTippy, one-off `absolute top-full` without a plan to unify |
-| Post-activation sheet tour / highlight chain (TASK-388) | Dedicated tour/highlight system (not built) | InfoTippy chain for walkthroughs |
+| Post-activation sheet tour / highlight chain (TASK-388) | `SheetTour` + `sheet-tour-highlight.ts` (`ONBOARDING_FLOATING_CARD_CLASS`, `z-tour` above roll-log FAB) | InfoTippy chain for walkthroughs |
 | Primary step guidance (Path mode) | **`PathHelpCard`**, **`GuidedChoiceShell`** `guidance` slot, step description prose | InfoTippy alone as the only guidance |
 | Styleguide / demo only | **`Tooltip`** from `@/components/ui` | InfoTippy |
 

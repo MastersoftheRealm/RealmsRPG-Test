@@ -54,7 +54,6 @@ export function ItemCreatorEditorAbilityProperties({
       <CollapsibleSection
         title="Ability Requirement"
         collapsedSummary={abilityReqSummary}
-        defaultExpanded={true}
         rightSlot={
           <SectionCostBadge
             ip={itemSectionCosts.abilityReq.totalIP}
@@ -109,7 +108,6 @@ export function ItemCreatorEditorAbilityProperties({
       <CollapsibleSection
         title={`Properties (${selectedProperties.length})`}
         collapsedSummary={propertiesSummary}
-        defaultExpanded={true}
         rightSlot={
           <Button
             type="button"

@@ -63,7 +63,6 @@ export function CraftingItemOptionsSection({
   return (
     <CollapsibleSection
       title="Item & Options"
-      defaultExpanded
       collapsedSummary={
         item
           ? `${item.name} · ${item.marketPrice} currency`

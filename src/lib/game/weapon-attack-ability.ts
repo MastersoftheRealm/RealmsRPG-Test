@@ -47,6 +47,26 @@ export function deriveAbilityRequirementFromProperties(
   return undefined;
 }
 
+const ABILITY_KEY_MAP: Record<string, keyof Abilities> = {
+  strength: 'strength',
+  agility: 'agility',
+  vitality: 'vitality',
+  acuity: 'acuity',
+  intelligence: 'intelligence',
+  charisma: 'charisma',
+};
+
+/** True when abilities meet (or exceed) the requirement, or when there is no requirement. */
+export function meetsAbilityRequirement(
+  req: AbilityRequirement | null | undefined,
+  abilities: Abilities
+): boolean {
+  if (!req) return true;
+  const key = ABILITY_KEY_MAP[req.name.toLowerCase()];
+  if (!key) return true;
+  return (abilities[key] ?? 0) >= req.level;
+}
+
 function normalizePropertyName(ref: WeaponPropertyRef): string {
   if (typeof ref === 'string') return ref.trim().toLowerCase();
   return String(ref.name ?? '').trim().toLowerCase();

@@ -21,6 +21,7 @@ export type {
   UseLoadModalLibraryOptions,
 } from './use-load-modal-library';
 export { useAddLibraryItemData } from './use-add-library-item-data';
+export { useAddToCharacterFromLibrary } from './use-add-to-character-from-library';
 export type {
   AddLibraryItemType,
   EqItem,

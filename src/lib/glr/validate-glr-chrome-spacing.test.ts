@@ -70,10 +70,21 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
     const good = `
       const POWER_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
       <UserLibraryEntityTabShell rowChrome={POWER_ROW_CHROME}>
-        <GridListRow onEdit={() => {}} onDelete={() => {}} rightSlot={<span />} />
+        <GridListRow rowChrome={POWER_ROW_CHROME} onEdit={() => {}} onDelete={() => {}} rightSlot={<span />} />
       </UserLibraryEntityTabShell>
     `;
     expect(validateMyLibraryEntityTabSource('LibraryPowersTab.tsx', good)).toEqual([]);
+  });
+
+  it('flags conditional rightSlot without GridListRow rowChrome', () => {
+    const bad = `
+      const POWER_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
+      <UserLibraryEntityTabShell rowChrome={POWER_ROW_CHROME}>
+        <GridListRow onEdit={() => {}} onDelete={() => {}} rightSlot={hasDrift ? <span /> : undefined} />
+      </UserLibraryEntityTabShell>
+    `;
+    const errors = validateMyLibraryEntityTabSource('LibraryBadTab.tsx', bad);
+    expect(errors.some((e) => e.includes('conditional rightSlot'))).toBe(true);
   });
 
   it('parses expected vs actual rowChrome flags', () => {

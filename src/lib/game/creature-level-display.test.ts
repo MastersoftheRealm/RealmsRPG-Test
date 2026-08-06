@@ -3,6 +3,7 @@ import {
   formatCreatureLevel,
   formatCreatureLevelLabel,
   formatCreatureLevelShort,
+  parseCreatureLevelSortValue,
 } from './creature-level-display';
 
 describe('formatCreatureLevel', () => {
@@ -46,5 +47,27 @@ describe('formatCreatureLevelShort', () => {
   it('prefixes with Lv', () => {
     expect(formatCreatureLevelShort(0.5)).toBe('Lv ½');
     expect(formatCreatureLevelShort(2)).toBe('Lv 2');
+  });
+});
+
+describe('parseCreatureLevelSortValue', () => {
+  it('orders quarter-step numeric levels for sort', () => {
+    const levels = [1, 0.5, 0.25, 0.75, 2.25];
+    const sorted = [...levels].sort(
+      (a, b) => parseCreatureLevelSortValue(a)! - parseCreatureLevelSortValue(b)!
+    );
+    expect(sorted).toEqual([0.25, 0.5, 0.75, 1, 2.25]);
+  });
+
+  it('parses display strings from formatCreatureLevel', () => {
+    expect(parseCreatureLevelSortValue(formatCreatureLevel(0.25))).toBe(0.25);
+    expect(parseCreatureLevelSortValue(formatCreatureLevel(0.5))).toBe(0.5);
+    expect(parseCreatureLevelSortValue(formatCreatureLevel(1.25))).toBe(1.25);
+  });
+
+  it('returns null for invalid values', () => {
+    expect(parseCreatureLevelSortValue(null)).toBeNull();
+    expect(parseCreatureLevelSortValue('-')).toBeNull();
+    expect(parseCreatureLevelSortValue('foo')).toBeNull();
   });
 });

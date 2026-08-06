@@ -7,10 +7,15 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Wand2 } from 'lucide-react';
-import { GridListRow } from '@/components/shared';
+import {
+  GridListRow,
+  LibraryAddToCharacterButton,
+  LibraryRowActionSlot,
+} from '@/components/shared';
 import { PowerTechniqueFilters } from '@/components/shared/filters';
 import { useSort } from '@/hooks/use-sort';
 import { useGameRules } from '@/hooks/use-game-rules';
+import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { useUserPowers, usePowerParts, useDuplicatePower } from '@/hooks';
 import type { DisplayItem } from '@/types';
@@ -26,6 +31,7 @@ import {
   EMPTY_POWER_TECHNIQUE_FILTERS,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
+import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 import {
   LibrarySyncRowAction,
@@ -52,6 +58,10 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
     EMPTY_POWER_TECHNIQUE_FILTERS
   );
+  const [characterContext, setCharacterContext] =
+    useState<PowerTechniqueCharacterContext | null>(null);
+  const [characterFilterId, setCharacterFilterId] = useState('');
+  const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
@@ -67,7 +77,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   }, [powers, partsDb]);
 
   const categoryOptions = useMemo(
-    () => collectCategoryOptionsFromItems(powers, partsDb),
+    () => collectCategoryOptionsFromItems(powers, partsDb, { includeDamageCategory: true }),
     [powers, partsDb]
   );
 
@@ -100,11 +110,13 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   });
 
   const filteredData = useMemo(
-    () => filterOfficialPowerRows(cardData, search, sortItems, advancedFilters),
-    [cardData, search, advancedFilters, sortItems]
+    () =>
+      filterOfficialPowerRows(cardData, search, sortItems, advancedFilters, characterContext),
+    [cardData, search, advancedFilters, characterContext, sortItems]
   );
 
   return (
+    <>
     <UserLibraryEntityTabShell
       labels={POWER_LIBRARY_LABELS}
       isLoading={isLoading}
@@ -141,6 +153,8 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
           onChange={setAdvancedFilters}
           categoryOptions={categoryOptions}
           innateThresholdOptions={innateThresholdOptions}
+          onCharacterContextChange={setCharacterContext}
+          onCharacterIdChange={setCharacterFilterId}
         />
       }
     >
@@ -156,13 +170,13 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
             gridColumns={OFFICIAL_POWER_GRID}
             rowChrome={POWER_ROW_CHROME}
             columns={[
-              { key: 'Category', value: power.category },
-              { key: 'Energy', value: power.energy, highlight: true },
-              { key: 'Action', value: power.action },
-              { key: 'Duration', value: power.duration },
-              { key: 'Range', value: power.range },
-              { key: 'Area', value: power.area },
-              { key: 'Damage', value: power.damage },
+              { key: 'Category', value: power.category, align: 'center' },
+              { key: 'Energy', value: power.energy, highlight: true, align: 'center' },
+              { key: 'Action', value: power.action, align: 'center' },
+              { key: 'Duration', value: power.duration, align: 'center' },
+              { key: 'Range', value: power.range, align: 'center' },
+              { key: 'Area', value: power.area, align: 'center' },
+              { key: 'Damage', value: power.damage, align: 'center' },
             ]}
             detailSections={partsSection ? [partsSection] : undefined}
             totalCost={power.tp}
@@ -170,7 +184,23 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
             badges={power.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
             warningMessage={power.syncIssues[0]?.message}
             rightSlot={
-              power.hasDrift ? (
+              addToCharacter.active && !addToCharacter.isOnCharacter(power.raw) ? (
+                <LibraryRowActionSlot>
+                  <LibraryAddToCharacterButton
+                    kind="power"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCharacter.openAddConfirm(power.name, power.raw);
+                    }}
+                  />
+                  {power.hasDrift ? (
+                    <LibrarySyncRowAction
+                      syncing={sync.syncingIds.has(power.id)}
+                      onSync={() => void sync.handleSyncOne(power.id)}
+                    />
+                  ) : null}
+                </LibraryRowActionSlot>
+              ) : power.hasDrift ? (
                 <LibrarySyncRowAction
                   syncing={sync.syncingIds.has(power.id)}
                   onSync={() => void sync.handleSyncOne(power.id)}
@@ -184,5 +214,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
         );
       })}
     </UserLibraryEntityTabShell>
+    {addToCharacter.confirmModal}
+    </>
   );
 }

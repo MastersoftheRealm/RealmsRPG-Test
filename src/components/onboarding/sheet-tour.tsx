@@ -8,7 +8,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui';
 import { ONBOARDING_COPY } from '@/lib/constants/copy/onboarding-copy';
 import { setSheetTourStatus } from '@/lib/onboarding-preferences';
-import { applyTourHighlight } from '@/lib/sheet-tour-highlight';
+import { applyTourHighlight, ONBOARDING_FLOATING_CARD_CLASS } from '@/lib/sheet-tour-highlight';
 import { cn } from '@/lib/utils';
 
 const copy = ONBOARDING_COPY.sheetTour;
@@ -47,7 +47,7 @@ export function SheetTour({ active, onComplete }: SheetTourProps) {
   return (
     <div
       className={cn(
-        'fixed z-overlay left-4 right-4 bottom-20 md:left-auto md:right-4 md:bottom-8 md:w-96',
+        ONBOARDING_FLOATING_CARD_CLASS,
         'rounded-xl border border-border-light bg-surface shadow-lg p-4'
       )}
       role="dialog"

@@ -269,6 +269,8 @@ export function useCharacterSheetPage(id: string) {
     setSheetTourOfferLatched: ui.setSheetTourOfferLatched,
     sheetTourActive: ui.sheetTourActive,
     setSheetTourActive: ui.setSheetTourActive,
+    sheetTourRestartKey: ui.sheetTourRestartKey,
+    handleRetakeSheetTour: ui.handleRetakeSheetTour,
     levelUpGuide: ui.levelUpGuide,
     setLevelUpGuide: ui.setLevelUpGuide,
     handleToggleEditMode: ui.handleToggleEditMode,

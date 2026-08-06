@@ -526,7 +526,7 @@ export function ArchetypeSection({
                             ? 'bg-power-dark text-text-on-dark'
                             : 'bg-power-light text-power-fg hover:bg-power-border/30'
                         )}
-                        title="Gain +1 Innate Threshold & +1 Innate Pools"
+                        title="Increase Innate Power: Threshold 6→8 (then +1), and +1 Innate Pool"
                       >
                         ✨ Innate
                       </button>
@@ -550,7 +550,8 @@ export function ArchetypeSection({
             })}
           </div>
           <p className="text-[10px] text-text-muted dark:text-text-secondary mt-2">
-            Mixed archetypes choose at levels 4, 7, 10, etc.: +1 Innate (Threshold & Pools) OR +1 Bonus Feat
+            Mixed archetypes choose at levels 4, 7, 10, etc.: Increase Innate Power (6→8, then +1;
+            +1 Pool) OR Additional Feat
           </p>
         </div>
       )}

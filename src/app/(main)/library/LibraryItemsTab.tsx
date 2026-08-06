@@ -8,8 +8,14 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Shield, Shirt, Sword } from 'lucide-react';
-import { GridListRow } from '@/components/shared';
+import {
+  GridListRow,
+  LibraryAddToCharacterButton,
+  LibraryRowActionSlot,
+} from '@/components/shared';
+import { ArmamentFilters } from '@/components/shared/filters';
 import { useSort } from '@/hooks/use-sort';
+import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
 import type { DisplayItem } from '@/types';
@@ -19,8 +25,14 @@ import {
   armamentRowColumns,
   buildOfficialItemRows,
   filterItemsByArmamentKind,
+  filterOfficialItemRows,
   type ArmamentLibraryKind,
 } from '@/lib/library/official-item-list';
+import {
+  EMPTY_ARMAMENT_FILTERS,
+  type ArmamentFilterState,
+} from '@/lib/library/armament-filters';
+import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import {
   LibrarySyncRowAction,
   UserLibraryEntityTabShell,
@@ -66,6 +78,12 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
   const { data: propertiesDb = [] } = useItemProperties();
   const duplicateItem = useDuplicateItem();
   const [search, setSearch] = useState('');
+  const [advancedFilters, setAdvancedFilters] =
+    useState<ArmamentFilterState>(EMPTY_ARMAMENT_FILTERS);
+  const [characterContext, setCharacterContext] =
+    useState<ArmamentCharacterContext | null>(null);
+  const [characterFilterId, setCharacterFilterId] = useState('');
+  const addToCharacter = useAddToCharacterFromLibrary(armamentKind, characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(
@@ -99,84 +117,104 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
     mutate: (id, handlers) => duplicateItem.mutate(id, handlers),
   });
 
-  const filteredData = useMemo(() => {
-    let result = cardData;
-    if (search) {
-      const searchLower = search.toLowerCase();
-      result = result.filter(
-        (item) =>
-          String(item.name ?? '').toLowerCase().includes(searchLower) ||
-          String(item.description ?? '').toLowerCase().includes(searchLower) ||
-          item.parts.some((p) => String(p.name ?? '').toLowerCase().includes(searchLower))
-      );
-    }
-    return sortItems(result);
-  }, [cardData, search, sortItems]);
+  const filteredData = useMemo(
+    () =>
+      filterOfficialItemRows(cardData, search, sortItems, advancedFilters, characterContext),
+    [cardData, search, sortItems, advancedFilters, characterContext]
+  );
 
   return (
-    <UserLibraryEntityTabShell
-      labels={labels}
-      isLoading={isLoading}
-      error={error}
-      onRetry={() => void refetch()}
-      totalCount={cardData.length}
-      emptyIcon={ICONS_BY_KIND[armamentKind]}
-      search={search}
-      onSearchChange={setSearch}
-      sortState={sortState}
-      onSort={handleSort}
-      headerColumns={headers}
-      gridColumns={grid}
-      hasThumbnailColumn
-      rowChrome={ARMAMENT_ROW_CHROME}
-      filteredCount={filteredData.length}
-      driftedCount={sync.driftedCount}
-      syncingAll={sync.syncingAll}
-      showSyncAllConfirm={sync.showSyncAllConfirm}
-      onOpenSyncAllConfirm={() => sync.setShowSyncAllConfirm(true)}
-      onCloseSyncAllConfirm={() => sync.setShowSyncAllConfirm(false)}
-      onConfirmSyncAll={() => {
-        sync.setShowSyncAllConfirm(false);
-        void sync.handleSyncAll();
-      }}
-      duplicateConfirm={dup.duplicateConfirm}
-      onCloseDuplicate={dup.closeDuplicateConfirm}
-      onConfirmDuplicate={dup.onConfirmDuplicate}
-      duplicatePending={dup.isPending}
-    >
-      {filteredData.map((item) => {
-        const syncResult = getItemSyncResult(item.raw, propertiesDb);
-        const family =
-          armamentKind === 'armor' ? 'armor' : armamentKind === 'shield' ? 'shield' : 'weapon';
-        const propertySection = propertiesProficienciesSection(item.parts, family);
-        return (
-          <GridListRow
-            key={item.id}
-            id={item.id}
-            name={item.name}
-            description={item.description}
-            thumbnail={resolveListRowThumbnail('equipment', item.raw, item.name)}
-            gridColumns={grid}
-            columns={armamentRowColumns(item, armamentKind)}
-            detailSections={propertySection ? [propertySection] : undefined}
-            totalCost={item.tp}
-            costLabel="TP"
-            badges={syncResult.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
-            warningMessage={syncResult.issues[0]?.message}
-            rightSlot={
-              syncResult.hasDrift ? (
-                <LibrarySyncRowAction
-                  syncing={sync.syncingIds.has(item.id)}
-                  onSync={() => void sync.handleSyncOne(item.id)}
-                />
-              ) : undefined
-            }
-            onEdit={() => router.push(`/item-creator?edit=${encodeURIComponent(item.id)}`)}
-            onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
-            onDuplicate={() => dup.openDuplicateConfirm(item.id, item.name)}
+    <>
+      <UserLibraryEntityTabShell
+        labels={labels}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => void refetch()}
+        totalCount={cardData.length}
+        emptyIcon={ICONS_BY_KIND[armamentKind]}
+        search={search}
+        onSearchChange={setSearch}
+        sortState={sortState}
+        onSort={handleSort}
+        headerColumns={headers}
+        gridColumns={grid}
+        hasThumbnailColumn
+        rowChrome={ARMAMENT_ROW_CHROME}
+        filteredCount={filteredData.length}
+        driftedCount={sync.driftedCount}
+        syncingAll={sync.syncingAll}
+        showSyncAllConfirm={sync.showSyncAllConfirm}
+        onOpenSyncAllConfirm={() => sync.setShowSyncAllConfirm(true)}
+        onCloseSyncAllConfirm={() => sync.setShowSyncAllConfirm(false)}
+        onConfirmSyncAll={() => {
+          sync.setShowSyncAllConfirm(false);
+          void sync.handleSyncAll();
+        }}
+        duplicateConfirm={dup.duplicateConfirm}
+        onCloseDuplicate={dup.closeDuplicateConfirm}
+        onConfirmDuplicate={dup.onConfirmDuplicate}
+        duplicatePending={dup.isPending}
+        filters={
+          <ArmamentFilters
+            value={advancedFilters}
+            onChange={setAdvancedFilters}
+            onCharacterContextChange={setCharacterContext}
+            onCharacterIdChange={setCharacterFilterId}
           />
-        );
-      })}
-    </UserLibraryEntityTabShell>
+        }
+      >
+        {filteredData.map((item) => {
+          const syncResult = getItemSyncResult(item.raw, propertiesDb);
+          const family =
+            armamentKind === 'armor' ? 'armor' : armamentKind === 'shield' ? 'shield' : 'weapon';
+          const propertySection = propertiesProficienciesSection(item.parts, family);
+          return (
+            <GridListRow
+              key={item.id}
+              id={item.id}
+              name={item.name}
+              description={item.description}
+              thumbnail={resolveListRowThumbnail('equipment', item.raw, item.name)}
+              gridColumns={grid}
+              rowChrome={ARMAMENT_ROW_CHROME}
+              columns={armamentRowColumns(item, armamentKind)}
+              detailSections={propertySection ? [propertySection] : undefined}
+              totalCost={item.tp}
+              costLabel="TP"
+              badges={syncResult.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
+              warningMessage={syncResult.issues[0]?.message}
+              rightSlot={
+                addToCharacter.active && !addToCharacter.isOnCharacter(item.raw) ? (
+                  <LibraryRowActionSlot>
+                    <LibraryAddToCharacterButton
+                      kind={armamentKind}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCharacter.openAddConfirm(item.name, item.raw);
+                      }}
+                    />
+                    {syncResult.hasDrift ? (
+                      <LibrarySyncRowAction
+                        syncing={sync.syncingIds.has(item.id)}
+                        onSync={() => void sync.handleSyncOne(item.id)}
+                      />
+                    ) : null}
+                  </LibraryRowActionSlot>
+                ) : syncResult.hasDrift ? (
+                  <LibrarySyncRowAction
+                    syncing={sync.syncingIds.has(item.id)}
+                    onSync={() => void sync.handleSyncOne(item.id)}
+                  />
+                ) : undefined
+              }
+              onEdit={() => router.push(`/item-creator?edit=${encodeURIComponent(item.id)}`)}
+              onDelete={() => onDelete({ id: item.id, name: item.name } as DisplayItem)}
+              onDuplicate={() => dup.openDuplicateConfirm(item.id, item.name)}
+            />
+          );
+        })}
+      </UserLibraryEntityTabShell>
+      {addToCharacter.confirmModal}
+    </>
   );
 }

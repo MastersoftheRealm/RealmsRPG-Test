@@ -16,13 +16,14 @@ import {
   applyPowerTechniqueFilters,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
+import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 
 /** Data columns only — edit/delete/add use ListHeader `rowChrome`. */
 export const OFFICIAL_TECHNIQUE_GRID = '1.4fr 1fr 0.7fr 0.7fr 0.9fr 1fr 1fr';
 
 export const OFFICIAL_TECHNIQUE_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME', align: 'left' as const },
-  { key: 'category', label: 'CATEGORY', align: 'left' as const },
+  { key: 'category', label: 'CATEGORY', align: 'center' as const },
   { key: 'energy', label: 'ENERGY', align: 'center' as const },
   { key: 'tp', label: 'TP', align: 'center' as const },
   { key: 'action', label: 'ACTION', align: 'center' as const },
@@ -120,6 +121,7 @@ export function filterOfficialTechniqueRows<
     weapon?: string;
     categories?: string[];
     energy?: string | number | null;
+    tp?: number | null;
     action?: string | null;
     actionTypeRaw?: string | null;
     isReaction?: boolean;
@@ -131,7 +133,8 @@ export function filterOfficialTechniqueRows<
   rows: T[],
   search: string,
   sortItems: (items: T[]) => T[],
-  advanced?: PowerTechniqueFilterState
+  advanced?: PowerTechniqueFilterState,
+  character?: PowerTechniqueCharacterContext | null
 ): T[] {
   let result = rows;
   if (search) {
@@ -145,7 +148,7 @@ export function filterOfficialTechniqueRows<
     );
   }
   if (advanced) {
-    result = applyPowerTechniqueFilters(result, advanced, 'technique');
+    result = applyPowerTechniqueFilters(result, advanced, 'technique', character);
   }
   return sortItems(result);
 }

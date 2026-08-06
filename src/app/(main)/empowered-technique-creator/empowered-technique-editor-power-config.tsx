@@ -42,7 +42,6 @@ export function EmpoweredTechniqueEditorPowerConfig({
     <CollapsibleSection
       title="Power Configuration"
       collapsedSummary={powerConfigSummary}
-      defaultExpanded={true}
     >
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-4">

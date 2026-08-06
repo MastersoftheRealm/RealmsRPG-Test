@@ -46,7 +46,6 @@ export function CraftingOptionalRulesSection({
   return (
     <CollapsibleSection
       title="Crafting Adjustments"
-      defaultExpanded={false}
       collapsedSummary="Trade time, DS, or cost"
     >
       <p className="text-sm text-text-muted dark:text-text-secondary mb-4">

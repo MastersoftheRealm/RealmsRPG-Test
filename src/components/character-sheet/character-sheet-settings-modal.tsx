@@ -10,6 +10,8 @@
 
 import { useState } from 'react';
 import { Modal, Select, Button } from '@/components/ui';
+import { ONBOARDING_COPY } from '@/lib/constants/copy/onboarding-copy';
+import { areTutorialsEnabled } from '@/lib/onboarding-preferences';
 import type { CharacterVisibility } from '@/types';
 
 const VISIBILITY_OPTIONS: { value: CharacterVisibility; label: string }[] = [
@@ -42,6 +44,8 @@ export interface CharacterSheetSettingsModalProps {
   onSpeedDisplayUnitChange?: (value: SpeedDisplayUnit) => void;
   /** Called on Confirm to save both visibility and speed display. If provided, overrides onConfirmVisibility for full save. */
   onConfirm?: (updates: { visibility?: CharacterVisibility; speedDisplayUnit?: SpeedDisplayUnit }) => void | Promise<void>;
+  /** Restart the post-save sheet tour from step 1 (owner only). */
+  onTakeSheetTour?: () => void;
 }
 
 export function CharacterSheetSettingsModal({
@@ -55,7 +59,10 @@ export function CharacterSheetSettingsModal({
   speedDisplayUnit = 'spaces',
   onSpeedDisplayUnitChange,
   onConfirm,
+  onTakeSheetTour,
 }: CharacterSheetSettingsModalProps) {
+  const tourCopy = ONBOARDING_COPY.sheetSettings;
+  const tutorialsEnabled = areTutorialsEnabled();
   // Fresh drafts per open — parent mounts only while showSettingsModal is true.
   const [selectedVisibility, setSelectedVisibility] = useState<CharacterVisibility>(visibility);
   const [selectedSpeedUnit, setSelectedSpeedUnit] = useState<SpeedDisplayUnit>(speedDisplayUnit);
@@ -93,7 +100,7 @@ export function CharacterSheetSettingsModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Character settings"
-      description="Adjust visibility and display preferences."
+      description="Adjust visibility, display preferences, and sheet tour."
       size="md"
       showCloseButton
       fullScreenOnMobile
@@ -140,6 +147,32 @@ export function CharacterSheetSettingsModal({
             </p>
           )}
         </div>
+        {onTakeSheetTour && (
+          <div className="rounded-lg border border-border-light bg-surface-alt p-3">
+            <h3 className="text-sm font-semibold text-text-primary mb-1">{tourCopy.tourTitle}</h3>
+            <p className="text-xs text-text-muted dark:text-text-secondary mb-3">
+              {tourCopy.tourDescription}
+            </p>
+            {!tutorialsEnabled && (
+              <p className="text-xs text-text-muted dark:text-text-secondary mb-3">
+                {tourCopy.tourDisabledHint}
+              </p>
+            )}
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="min-h-11"
+              disabled={!tutorialsEnabled}
+              onClick={() => {
+                onTakeSheetTour();
+                onClose();
+              }}
+            >
+              {tourCopy.tourRetake}
+            </Button>
+          </div>
+        )}
         {canSave && (
           <div className="flex justify-end gap-2">
             <Button variant="secondary" onClick={onClose}>

@@ -6,6 +6,7 @@ import { getArmamentMax } from '@/lib/game/formulas';
 import {
   deriveAbilityRequirementFromProperties,
   hasTwoHandedProperty,
+  meetsAbilityRequirement,
   weaponMatchesArchetypeAbilities,
   type AbilityRequirement,
   type WeaponPropertyRef,
@@ -57,25 +58,6 @@ function normalizeRarity(rarity: string | null | undefined): string {
 
 export function isCommonRarity(rarity: string | null | undefined): boolean {
   return normalizeRarity(rarity) === 'common';
-}
-
-const ABILITY_KEY_MAP: Record<string, keyof Abilities> = {
-  strength: 'strength',
-  agility: 'agility',
-  vitality: 'vitality',
-  acuity: 'acuity',
-  intelligence: 'intelligence',
-  charisma: 'charisma',
-};
-
-export function meetsAbilityRequirement(
-  req: AbilityRequirement | null | undefined,
-  abilities: Abilities
-): boolean {
-  if (!req) return true;
-  const key = ABILITY_KEY_MAP[req.name.toLowerCase()];
-  if (!key) return true;
-  return (abilities[key] ?? 0) >= req.level;
 }
 
 export function resolveArmorStepMode(

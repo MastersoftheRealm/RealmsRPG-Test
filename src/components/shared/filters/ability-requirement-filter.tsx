@@ -24,6 +24,9 @@ interface AbilityRequirementFilterProps {
   onAdd: (req: AbilityRequirement) => void;
   onRemove: (ability: string) => void;
   className?: string;
+  /** When set, controls are disabled and placeholders use this hint. */
+  disabled?: boolean;
+  disabledHint?: string;
 }
 
 export function AbilityRequirementFilter({
@@ -33,6 +36,8 @@ export function AbilityRequirementFilter({
   onAdd,
   onRemove,
   className = '',
+  disabled = false,
+  disabledHint,
 }: AbilityRequirementFilterProps) {
   const abilitySelectId = useId();
   const [selectedAbility, setSelectedAbility] = useState('');
@@ -57,7 +62,7 @@ export function AbilityRequirementFilter({
   };
 
   return (
-    <div className={cn('filter-group', className)}>
+    <div className={cn('filter-group', disabled && 'opacity-60', className)}>
       <label htmlFor={abilitySelectId} className="block text-sm font-medium text-text-secondary mb-1">
         {label}
       </label>
@@ -66,9 +71,11 @@ export function AbilityRequirementFilter({
           id={abilitySelectId}
           value={selectedAbility}
           onChange={(e) => setSelectedAbility(e.target.value)}
-          className="flex-1 px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-primary-outline-border"
+          disabled={disabled}
+          aria-disabled={disabled}
+          className="flex-1 px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-primary-outline-border disabled:cursor-not-allowed disabled:bg-surface-alt"
         >
-          <option value="">Choose ability</option>
+          <option value="">{disabled && disabledHint ? disabledHint : 'Choose ability'}</option>
           {availableAbilities.map(ability => (
             <option key={ability} value={ability}>
               {ability}
@@ -81,8 +88,9 @@ export function AbilityRequirementFilter({
             value={maxValue}
             onChange={(e) => setMaxValue(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Max"
+            placeholder={disabled && disabledHint ? disabledHint : 'Max'}
             min={0}
+            disabled={disabled}
             className="w-full"
           />
         </div>
@@ -90,7 +98,7 @@ export function AbilityRequirementFilter({
           variant="primary"
           label="Add requirement"
           onClick={handleAdd}
-          disabled={!selectedAbility || !maxValue}
+          disabled={disabled || !selectedAbility || !maxValue}
         >
           <Plus className="w-4 h-4" />
         </IconButton>
