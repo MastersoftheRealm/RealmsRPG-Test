@@ -10,6 +10,7 @@
  * - AbilityRequirementFilter: Filter by ability score requirements
  * - TagFilter: Multi-select tag filter with Any/All mode
  * - SelectFilter: Simple single-select dropdown
+ * - CharacterFilter: Filter list content by a user's character stats
  * - FilterSection: Collapsible container (`page` for Codex; `compact` + toolbarStart for selection modals)
  * - SourceFilter: All / Realms Library / My Library scope
  */
@@ -18,6 +19,11 @@ export { ChipSelect } from './chip-select';
 export { AbilityRequirementFilter, type AbilityRequirement } from './ability-requirement-filter';
 export { TagFilter } from './tag-filter';
 export { SelectFilter } from './select-filter';
+export { CharacterFilter, CHARACTER_FILTER_NONE_LABEL, type CharacterFilterProps } from './character-filter';
+export {
+  PowerTechniqueFilters,
+  type PowerTechniqueFiltersProps,
+} from './power-technique-filters';
 export {
   dedupeSelectOptions,
   dedupeStrings,

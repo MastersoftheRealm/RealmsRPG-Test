@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-08-02
+Generated: 2026-08-06
 
 ## `src/components/shared/index.ts`
 
@@ -14,7 +14,9 @@ Generated: 2026-08-02
 - AddSkillModal
 - AddSubSkillModal
 - ArmorListSection
+- CHARACTER_FILTER_NONE_LABEL
 - CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME
+- CharacterFilter
 - ChipSelect
 - ChoiceTraitOptionListPicker
 - CodexBrowseListShell
@@ -64,6 +66,7 @@ Generated: 2026-08-02
 - PointStatus
 - PoweredMartialSlider
 - PowersListSection
+- PowerTechniqueFilters
 - prependThumbnailHeaderColumn
 - QuantityBadge
 - QuantitySelector
@@ -99,12 +102,14 @@ Generated: 2026-08-02
 - THUMBNAIL_HEADER_COLUMN_KEY
 - type AbilityRequirement
 - type AbilityScoreGridProps
+- type CharacterFilterProps
 - type CreatureLibraryStatBlockRowProps
 - type CreatureLibraryStatBlockRowsProps
 - type DescriptorChipWithTipProps
 - type EditState
 - type LoadoutBudgetBarProps
 - type PointStatusProps
+- type PowerTechniqueFiltersProps
 - type RollButtonProps
 - type SectionDualModeTogglesProps
 - type SectionEditMode

@@ -1,6 +1,24 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-03 (merge origin/master + TASK-649 Supabase hardening)
+Last updated: 2026-08-06 (My Library GLR header alignment)
+
+**Raw Feedback Log — 2026-08-06 (My Library GLR header/column alignment vs Realms)**
+- Context: `/library` — My Library vs Realms Library GLR lists (powers, techniques, armaments, creatures)
+- Feedback: Column headers and row values misalign on My Library; Realms Library is correct. Likely caused by edit/delete/sync action chrome — sync button is conditional (patch drift) but spacing must stay consistent when present or absent. Should be enforced codebase-wide on GLR (shared component).
+- Expected: ListHeader `rowChrome` and row flex chrome match on every row; conditional `rightSlot` (sync) still reserves the same footprint when absent; parity with Realms Library column alignment.
+- Disposition: **TASK-674** done — `GridListRow.rowChrome` reserves empty right/left slot chrome; My Library tabs pass matching `*_ROW_CHROME` to shell + rows; CI `validateMyLibraryRowChromeOnRows`. verification_status pending-qa (DEV-V-034 T001).
+
+**Raw Feedback Log — 2026-08-06 (Character sheet tour — Next blocked by roll-log FAB)**
+- Context: Post-save sheet tour on character sheet (TASK-388 §11.2)
+- Feedback: Tour **Next** button sometimes hidden behind the dice roll log FAB; cannot continue the tour.
+- Expected: Tour card above roll-log FAB; Next always clickable; optional retake from settings.
+- Disposition: **Consolidated** `ONBOARDING_FLOATING_CARD_CLASS` + `z-tour` (1100); repositioned card bottom-left on desktop; **added** Take the tour again in Character settings. BUILD_VALIDATION DEV-V-029-T004. verification_status pending-qa.
+
+**Raw Feedback Log — 2026-08-06 (Post-save play-together modal — sheet-first CTAs)**
+- Context: Character creator finish — `PlayTogetherModal` after first save (TASK-388 §11.1)
+- Feedback: Priority on **See my character** (primary blue, top). Join campaign / Join Discord / Run games as RM secondary below. Use **Join campaign** not Browse (browse not available yet).
+- Expected: Primary sheet CTA at top; secondary outline group; join links to `/campaigns?tab=join`.
+- Disposition: Implemented — `play-together-modal.tsx`, `onboarding-copy.ts`; BUILD_VALIDATION DEV-V-029 + DEV-V-013 aligned; REALMS_PRODUCT_OVERVIEW §11.1 updated. verification_status pending-qa.
 
 **Raw Feedback Log — 2026-08-03 (TASK-649 — public read + VTT scope)**
 - Context: TASK-649 Phase 2 Supabase least-privilege hardening before live apply
@@ -2841,3 +2859,19 @@ Notes
 - Feedback (verbatim summary): For “Choose your species skills” and other skill cards/row pickers, show skill descriptions (truncated as normal) instead of name-only chips/pills.
 - Expected: Guided `GuidedChoiceCard` skill picks show codex description; Advanced + sheet mixed pickers show description in TraitSection-style rows with clamp/See more.
 - Disposition: **TASK-670** — `buildMixedSpeciesSkillOptions` + `MixedSpeciesSkillPicker`; pending-qa **DEV-V-013 T079**.
+
+**Raw Feedback Log — 2026-08-06 (Codex character filter UX)**
+- Date: 2026-08-06
+- Context: Codex feats tab — character qualification filter
+- Priority: Medium
+- Feedback (verbatim summary): Rename "View as character" to "Filter by character"; move control into the Feats tab filters section (not page chrome); only on tabs where character filtering applies; grey out manual level/ability requirement filters with "Set by character" when a character is selected; shared component for reuse (e.g. Library later).
+- Expected: `CharacterFilter` in shared filters; feats tab only; distinct subsection in filters with tooltip; level + ability/defense requirement filters disabled when character selected.
+- Disposition: Implemented — `CharacterFilter` in `shared/filters`; moved from Codex page header into `CodexFeatsTab` FilterSection (feats tab only); manual max-level + ability/defense requirement filters disabled with "Set by character" placeholders when active; qualification banner removed; Show unqualified feats inline with character select; max-level helper moved to InfoTippy; redundant "Set by character" subtext removed. Deleted deprecated `CodexCharacterFilter` shim. pending-qa **DEV-V-045-T001**.
+
+**Raw Feedback Log — 2026-08-06 (Library powers/techniques categories + filters)**
+- Date: 2026-08-06
+- Context: Library page — Realms + My tabs for Powers / Techniques
+- Priority: High
+- Feedback (verbatim): Powers and techniques will need categories assigned from power/technique part categories (excluding mechanic parts). Multi-category OK; dedupe duplicate part categories. Library (Realms + My) powers/techniques get a top FilterSection (shared filters like Codex): Category; min/max Energy; Action Type / Reaction. Power-only: Power Threshold (Innate) dropdown of live core-rules threshold values (same progression as sheet — e.g. 6 at Power Prof 1 / PM, 8 at Power Prof 2, then 9+), selecting it auto-checks "Innate Eligible" which reuses the shared innate-eligibility filter used in guided creator (Basic/Reaction, no heal/energy-gain parts, energy ≤ threshold). Category is for sort/filter and should be a desc chip when not a column header; prefer column header when spacing permits (owner said "codex" — clarify: Library Realms/My + Admin public lists); uninvasive desc chip in expanded power details. Future filters may be added later.
+- Expected: Derived categories (not a new DB field); FilterSection on power/technique library surfaces; GLR column-or-chip for category; shared innate eligibility; threshold options from `useGameRules` / progression helpers.
+- Disposition: Filed **TASK-673** (categories + display + shared filters). Architect note: compose `@/components/shared/filters` first; extract a shared panel file only if Official + My + USM need identical chrome (owner ack / ADR if new shared UI). **Implemented 2026-08-06** — `PowerTechniqueFilters` + derived categories; Realms/My/Admin wired; pending-qa **DEV-V-046**.

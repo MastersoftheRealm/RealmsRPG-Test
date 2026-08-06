@@ -1729,13 +1729,13 @@ Verifies play-together after first save, optional sheet tour, level-up milestone
 
 **Steps**
 1. Complete a character and save (no `?returnTo=`).
-2. Confirm play-together modal: Discord, Browse campaigns, Run games as RM, View my character.
+2. Confirm play-together modal: **See my character** (primary, top), then secondary section — Join campaign, Join Discord, Run games as RM.
 3. Optionally uncheck Don't show again, dismiss, then save another character — modal may reappear.
 4. With Don't show again checked (default), dismiss — subsequent saves skip the modal.
 5. Save with `?returnTo=/campaigns` — no play-together; redirect honors returnTo.
 
 **Expected**
-- Modal only on first-seen save path without returnTo; sheet navigation works after View my character.
+- Modal only on first-seen save path without returnTo; sheet navigation works after See my character.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1749,12 +1749,32 @@ Verifies play-together after first save, optional sheet tour, level-up milestone
 | **Needs** | Tutorials on; sheet tour not dismissed forever |
 
 **Steps**
-1. After play-together → View my character (or save when play-together already seen), land on sheet with tour offer.
+1. After play-together → See my character (or save when play-together already seen), land on sheet with tour offer.
 2. Skip — no tour; Don't show again — never offers again; Take the tour — step card highlights sections; finish/skip completes.
 3. Confirm home `/` does not show a sheet tour.
 
 **Expected**
 - Offer is post-save only; Skip / Don't show again / tour complete behave as labeled.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-029-T004 — Sheet tour retake + roll-log overlap
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-029 — Post-activation onboarding |
+| **Related task** | TASK-388 |
+| **Where** | Character sheet settings (gear) + tour step card |
+| **Needs** | Owned character; tutorials on |
+
+**Steps**
+1. Open an owned character sheet → gear → **Character settings** → **Take the tour again** — tour starts at step 1/6; **Next** is clickable (not blocked by the d20 roll-log FAB).
+2. Advance through all six steps — highlights move (abilities, skills, library, roll log, edit toolbar, header help); finish or skip completes.
+3. With tutorials off (My Account) — retake button disabled with hint; re-enable tutorials — retake works again.
+
+**Expected**
+- Tour card sits above roll-log FAB (`z-tour`); desktop card is bottom-left; mobile leaves room for the FAB.
+- Retake always restarts at step 1; settings modal closes when tour starts.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2055,7 +2075,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Steps**
 1. Enter name, allocate HP/EN, click **Save character** (or Finish).
 2. Wait for the success toast ("Your character is ready!").
-3. If the play-together modal appears, click **View character** (or close the modal).
+3. If the play-together modal appears, click **See my character** (or close the modal).
 4. On the character sheet → Proficiencies tab: confirm required part/property proficiencies for the loadout/powers were saved (not empty when the build spends TP).
 5. On Library → Feats: confirm archetype and character feat **names** match the Codex (not raw feat ids).
 6. Optionally: force a failed save (e.g. offline) and confirm the wizard draft is still intact.
@@ -4582,7 +4602,7 @@ Verifies behavior parity after removing setState-in-effect / fixing exhaustive-d
 
 **Steps**
 1. Crafting: change quantity/options — DS/session labels update; enter rolls; change Difficulty Score Bonus — success/failure chips update live; Complete saves correct netDelta.
-2. Open character with `?offerTour=1` (tutorials on) — offer modal shows; URL loses the query; Start/Dismiss work; re-run tour from My Account if available.
+2. Open character with `?offerTour=1` (tutorials on) — offer modal shows; URL loses the query; Start/Dismiss work; retake via Character settings (gear) → Take the tour again.
 3. Sheet tour: advance steps — highlights move; Skip completes; reopen tour later starts at step 1.
 4. Admin Core Rules: switch tabs — editor reseeds; edit a field (dirty); Save; switch away and back — saved values show.
 5. Admin Codex spreadsheet: switch entity tabs — rows reload; edit a cell (dirty); tab switch clears dirty for the new tab.
@@ -5406,12 +5426,13 @@ Library / Official GLR rows: action icons share chrome (header spacers + hover),
 | **Needs** | At least one user power with edit + delete |
 
 **Steps**
-1. Open My Library → Powers. Confirm Name/Energy/…/Damage headers align with row values (no drift from edit/delete icons).
-2. Hover a collapsed power row: edit pencil and delete X are both outside the row hover highlight (same chrome), not split (one in / one out).
-3. Expand a power: Parts chips show `TP: N` (not `Training Points: N`); chips with no TP and no option level show no `(0)`.
-4. My Library → Techniques: expand a technique that has a TP column — confirm there is **no** expanded "Total TP" / "Total Training Points" chip (TP already in the collapsed column).
-5. Optional: Realms Library → Powers with Add (+): header reserves space so columns stay centered over values.
-6. Codex → Equipment (browse): no empty trailing action column; Admin Codex → Equipment: edit/duplicate/delete sit in reserved right chrome aligned with the header.
+1. Open My Library → Powers. Confirm Name/Energy/…/Damage headers align with row values (no drift from edit/delete/sync icons).
+2. Include at least one row **without** a “Needs sync” badge: confirm its columns still align with the header (empty sync spacer reserved — same width as drifted rows).
+3. Hover a collapsed power row: edit pencil and delete X are both outside the row hover highlight (same chrome), not split (one in / one out).
+4. Expand a power: Parts chips show `TP: N` (not `Training Points: N`); chips with no TP and no option level show no `(0)`.
+5. My Library → Techniques: expand a technique that has a TP column — confirm there is **no** expanded "Total TP" / "Total Training Points" chip (TP already in the collapsed column).
+6. Optional: Realms Library → Powers with Add (+): header reserves space so columns stay centered over values.
+7. Codex → Equipment (browse): no empty trailing action column; Admin Codex → Equipment: edit/duplicate/delete sit in reserved right chrome aligned with the header.
 
 **Expected**
 - Edit/delete (and add when present) reserved via `rowChrome`, not a single leftover grid track that splits hover.
@@ -5599,6 +5620,79 @@ Feat expanded rows must label the Tags section even for a single tag, and Tags m
 
 ---
 
+## DEV-V-045 — Codex character filter UX (session)
+
+Feats tab character qualification filter: shared `CharacterFilter` in filters panel, disabled manual level/ability filters when active, inline show-unqualified toggle.
+
+#### DEV-V-045-T001 — Codex Feats character filter
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-045 — Codex character filter UX |
+| **Related task** | Session — 2026-08-06 feedback |
+| **Where** | `/codex` → Feats → Filters |
+| **Needs** | Signed-in user with at least one character |
+
+**Steps**
+1. Open Feats; expand **Filters**. Confirm **Filter by character** is in the filters panel (not beside Realms/My Codex toggle).
+2. Select a character — list narrows to qualified feats; **Show unqualified feats** appears on the same row as the select (right side).
+3. Confirm **Max Required Level** and **Ability/Defense Requirement** are disabled with **Set by character** placeholders; max-level label has an InfoTippy (no helper line below).
+4. Toggle **Show unqualified feats** — unqualified feats appear; toggle off — hidden again.
+5. Switch to Skills or Species — no character filter control on those tabs.
+6. Clear character filter — manual level/ability filters re-enable.
+
+**Expected**
+- Filter by character only on Feats; qualification uses character stats; clutter-free filter panel (no qualification banner).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-046 — Library power/technique categories + filters (TASK-673)
+
+Derived part categories (non-mechanic) as Category column; shared `PowerTechniqueFilters` on Realms Library, My Library, and Admin public lists.
+
+#### DEV-V-046-T001 — Powers filters + Category column (Library + Admin)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-046 — Library power/technique filters |
+| **Related task** | TASK-673 |
+| **Where** | `/library` → Realms + My → Powers; `/admin/public-library` → Powers |
+| **Needs** | Powers with varied part categories, energy, action types; at least one innate-eligible and one heal power |
+
+**Steps**
+1. Open Realms Library → Powers. Confirm **CATEGORY** column and **Filters** (collapsed by default).
+2. Expand Filters: Category, Min/Max Energy, Action Type, Action/Reaction, Power Threshold (Innate) + tip, Innate Eligible.
+3. Filter by a category — list narrows; Category column shows that category (multi joined with commas when applicable).
+4. Select Power Threshold (Innate) e.g. **8** — Innate Eligible auto-checks; heal / high-energy / non-Basic powers drop out.
+5. Repeat on My Library → Powers and Admin public Powers — same filters and Category column.
+
+**Expected**
+- Shared filter UX; no duplicate Category desc chip when column is present; Admin/Realms/My stay in sync.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-046-T002 — Techniques filters + Category column
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-046 |
+| **Related task** | TASK-673 |
+| **Where** | `/library` → Techniques; Admin public Techniques |
+| **Needs** | Techniques with part categories |
+
+**Steps**
+1. Open Techniques (Realms + My + Admin). Confirm Category column + Filters (no Innate Threshold / Innate Eligible).
+2. Filter by category and energy — list updates; empowered techniques tab still lists without power-only filters.
+
+**Expected**
+- Technique filters match powers minus innate controls.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-042 — Campaigns RLS SELECT consolidation (TASK-650)
 
 Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Automated SQL parity + RLS access: `node scripts/verify-task-650.mjs`.
@@ -5704,6 +5798,7 @@ Saving a power must persist Area **Apply duration** and Duration modifiers (Focu
 | DEV-V-038 | Empowered technique nested power part chips (TASK-626) | — | Manual — see suite above |
 | DEV-V-039 | Codex feat Tags section (session) | — | Automated (`feat-list.test.ts`) + manual smoke |
 | DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
+| DEV-V-045 | Codex character filter UX (session) | — | Manual — see suite above |
 
 ## DEV-V-041 — Supabase least-privilege Phase 2 (TASK-649)
 
@@ -5941,6 +6036,8 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 | DEV-V-038 | Empowered technique nested power part chips (TASK-626) | — | Manual — see suite above |
 | DEV-V-039 | Codex feat Tags section (session) | — | Automated (`feat-list.test.ts`) + manual smoke |
 | DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
+| DEV-V-045 | Codex character filter UX (session) | — | Manual — see suite above |
+| DEV-V-046 | Library power/technique categories + filters (TASK-673) | — | Automated (category/filter/innate tests) + manual DEV-V-046 T001–T002 |
 | DEV-V-044 | Power Creator AoE applyDuration persistence (TASK-672) | — | Automated (library-columnar + power-calc tests) + manual DEV-V-044-T001 |
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649) | — | Manual DEV-V-041 + `node scripts/verify-task-649.mjs` |
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |

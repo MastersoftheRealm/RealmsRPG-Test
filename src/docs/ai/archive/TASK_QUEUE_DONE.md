@@ -1,3 +1,87 @@
+- id: TASK-673
+  title: Library powers/techniques - derived categories + FilterSection
+  priority: high
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-06
+  completed_at: 2026-08-06
+  created_by: owner
+  related_files:
+    - src/lib/library/power-technique-categories.ts
+    - src/lib/library/power-technique-categories.test.ts
+    - src/lib/library/power-technique-filters.ts
+    - src/lib/library/power-technique-filters.test.ts
+    - src/lib/library/official-power-list.ts
+    - src/lib/library/official-technique-list.ts
+    - src/lib/game/innate-eligibility.ts
+    - src/lib/game/innate-eligibility.test.ts
+    - src/lib/glr/required-facts-registry.ts
+    - src/components/shared/filters/power-technique-filters.tsx
+    - src/components/shared/filters/select-filter.tsx
+    - src/components/shared/filters/index.ts
+    - src/components/shared/official-entity-list.tsx
+    - src/components/shared/official-power-list.tsx
+    - src/components/shared/official-technique-list.tsx
+    - src/app/(main)/library/LibraryPowersTab.tsx
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
+    - scripts/shared-ui-allowlist.json
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-046
+    tests:
+      - DEV-V-046-T001
+      - DEV-V-046-T002
+  developer_test_plan: |
+    Suite DEV-V-046 T001-T002 - see BUILD_VALIDATION.md
+  description: |
+    Powers/techniques get derived categories from non-mechanic part categories; Library Realms + My + Admin share PowerTechniqueFilters.
+  acceptance_criteria:
+    - Domain helper derives unique non-mechanic part categories; unit tests cover multi/dedupe/empty.
+    - Official + My Library power/technique tabs expose FilterSection via shared filters.
+    - Power-only innate threshold from core rules auto-enables Innate Eligible (shared innate-eligibility).
+    - Category as column on library lists (not duplicated as desc chip).
+    - GLR + BUILD_VALIDATION updated; npm run build + targeted tests pass.
+  evidence: |
+    vitest category/filter/innate/GLR tests pass; npm run build pass; cleanup consolidated My Library onto official row builders.
+  notes: |
+    Owner ACK for shared PowerTechniqueFilters. Cleanup: dropped soft energy-only threshold; SelectFilter labelAccessory; collectCategoryOptionsFromItems. Follow-up TASK-675 USM compact.
+
+---
+- id: TASK-674
+  title: My Library GLR header alignment - conditional sync rightSlot chrome
+  priority: high
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-06
+  completed_at: 2026-08-06
+  created_by: owner
+  related_files:
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/grid-list-row-collapsed.tsx
+    - src/components/shared/grid-list-row-types.ts
+    - src/components/shared/grid-list-row-chrome.ts
+    - src/components/shared/creature-stat-block.tsx
+    - src/components/shared/creature-stat-block-types.ts
+    - src/app/(main)/library/LibraryPowersTab.tsx
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/app/(main)/library/LibraryItemsTab.tsx
+    - src/app/(main)/library/LibraryCreaturesTab.tsx
+    - src/app/(main)/library/LibraryEnhancedTab.tsx
+    - src/lib/glr/validate-glr-chrome-spacing.ts
+    - src/lib/glr/validate-glr-chrome-spacing.test.ts
+    - src/docs/ai/guide/02-components-and-lists.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  notes: |
+    Restored archive entry after accidental git checkout during TASK-673 cleanup encoding fix.
+
+---
+
+
 - id: TASK-668
   title: Reconcile project docs with CODEBASE_AUDIT_2026-08-01 findings
   priority: medium

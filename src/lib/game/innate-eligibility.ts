@@ -9,12 +9,20 @@
 
 import type { ArchetypeCategory } from '@/types/archetype';
 import type { PowerPart } from '@/hooks/codex-types';
+import type { CoreRulesMap } from '@/types/core-rules';
 import { ARCHETYPE_CONFIGS } from '@/lib/game/constants';
-import { calculateArchetypeProgression } from '@/lib/game/formulas';
+import {
+  calculateArchetypeProgression,
+  calculateBaseInnateThreshold,
+  getArchetypeConfig,
+  getArchetypeMilestoneLevels,
+} from '@/lib/game/formulas';
 import {
   derivePowerDisplay,
   type PowerDocument,
 } from '@/lib/calculators/power-calc';
+
+type Rules = Partial<CoreRulesMap>;
 
 /** Known healing / energy-gain power part ids (codex_parts). */
 const DISALLOWED_INNATE_PART_IDS = new Set([
@@ -267,4 +275,57 @@ export function validateRecommendedInnatePowers(
   }
 
   return issues;
+}
+
+/**
+ * Distinct Innate Threshold values from live core rules / progression helpers
+ * (Power L1–20 + Powered-Martial base and milestone bumps). Used by library filters.
+ */
+export function listInnateThresholdFilterOptions(rules?: Rules): number[] {
+  const set = new Set<number>();
+
+  for (let level = 1; level <= 20; level++) {
+    const threshold = calculateBaseInnateThreshold(level, rules);
+    if (threshold > 0) set.add(threshold);
+  }
+
+  const mixed = getArchetypeConfig('powered-martial', rules);
+  const base = mixed.innateThreshold ?? 0;
+  if (base > 0) set.add(base);
+
+  const milestones = getArchetypeMilestoneLevels(20, rules);
+  for (let i = 1; i <= milestones.length; i++) {
+    const threshold = base + i;
+    if (threshold > 0) set.add(threshold);
+  }
+
+  return [...set].sort((a, b) => a - b);
+}
+
+/**
+ * True when a power passes Appendix G innate constraints.
+ * When `innateThreshold` is null/undefined/≤0, energy is not checked (filter toggle without a threshold).
+ */
+export function isPowerInnateEligible(
+  power: InnatePowerSnapshot,
+  innateThreshold?: number | null
+): boolean {
+  if (!isInnateEligibleActionType(power.actionType, power.isReaction)) return false;
+
+  const partCount = Math.max(power.partIds.length, power.partNames.length);
+  for (let i = 0; i < partCount; i++) {
+    if (isHealingOrEnergyGainPart({ id: power.partIds[i], name: power.partNames[i] })) {
+      return false;
+    }
+  }
+
+  if (
+    innateThreshold != null &&
+    innateThreshold > 0 &&
+    power.energy > innateThreshold
+  ) {
+    return false;
+  }
+
+  return true;
 }

@@ -5,9 +5,10 @@
 
 'use client';
 
-import { type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Swords } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
+import { PowerTechniqueFilters } from '@/components/shared/filters';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
 import {
@@ -17,6 +18,11 @@ import {
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
   type OfficialTechniqueRow,
 } from '@/lib/library/official-technique-list';
+import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
+import {
+  EMPTY_POWER_TECHNIQUE_FILTERS,
+  type PowerTechniqueFilterState,
+} from '@/lib/library/power-technique-filters';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
@@ -68,6 +74,24 @@ export function OfficialTechniqueList({
   onDelete,
 }: OfficialTechniqueListProps) {
   const empowered = mode === 'empowered';
+  const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
+    EMPTY_POWER_TECHNIQUE_FILTERS
+  );
+
+  const categoryOptions = useMemo(() => {
+    if (empowered) return [];
+    return collectCategoryOptionsFromItems(items, partsDb);
+  }, [empowered, items, partsDb]);
+
+  const filterRows = useCallback(
+    (
+      rows: OfficialTechniqueRow[],
+      search: string,
+      sortItems: (items: OfficialTechniqueRow[]) => OfficialTechniqueRow[]
+    ) => filterOfficialTechniqueRows(rows, search, sortItems, advancedFilters),
+    [advancedFilters]
+  );
+
   return (
     <OfficialEntityList<OfficialTechniqueRow, LibraryTechnique>
       items={items}
@@ -75,10 +99,21 @@ export function OfficialTechniqueList({
       error={error}
       onRetry={onRetry}
       buildRows={(raw) => buildOfficialTechniqueRows(raw, partsDb, mode)}
-      filterRows={filterOfficialTechniqueRows}
+      filterRows={filterRows}
       gridColumns={OFFICIAL_TECHNIQUE_GRID}
       headerColumns={OFFICIAL_TECHNIQUE_HEADER_COLUMNS}
+      filters={
+        empowered ? undefined : (
+          <PowerTechniqueFilters
+            kind="technique"
+            value={advancedFilters}
+            onChange={setAdvancedFilters}
+            categoryOptions={categoryOptions}
+          />
+        )
+      }
       getColumns={(t) => [
+        { key: 'Category', value: t.category, align: 'left' },
         { key: 'Energy', value: t.energy, highlight: true, align: 'center' },
         { key: 'TP', value: t.tp, align: 'center' },
         { key: 'Action', value: t.action, align: 'center' },

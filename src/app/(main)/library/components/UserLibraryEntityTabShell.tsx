@@ -38,6 +38,8 @@ type UserLibraryEntityTabShellBaseProps = {
   listClassName?: string;
   /** Optional content after the list (e.g. RollLog). */
   afterList?: ReactNode;
+  /** Slot between search and ListHeader (FilterSection, etc.). */
+  filters?: ReactNode;
 };
 
 type UserLibraryEntityTabShellSyncProps = UserLibraryEntityTabShellBaseProps & {
@@ -99,6 +101,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
     children,
     listClassName = 'flex flex-col gap-1 mt-2',
     afterList,
+    filters,
   } = props;
   const syncEnabled = isSyncMode(props);
 
@@ -157,6 +160,8 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
           </Button>
         ) : null}
       </div>
+
+      {filters}
 
       <ListHeader
         columns={headerColumns}

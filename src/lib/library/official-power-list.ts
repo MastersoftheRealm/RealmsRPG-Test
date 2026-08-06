@@ -8,12 +8,21 @@ import type { LibraryPower } from '@/types/library';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import {
+  derivePartCategories,
+  formatPartCategoriesColumn,
+} from '@/lib/library/power-technique-categories';
+import {
+  applyPowerTechniqueFilters,
+  type PowerTechniqueFilterState,
+} from '@/lib/library/power-technique-filters';
 
 /** Data columns only — edit/delete/add use ListHeader `rowChrome` (not a leftover 40px track). */
-export const OFFICIAL_POWER_GRID = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr';
+export const OFFICIAL_POWER_GRID = '1.4fr 1fr 0.7fr 0.9fr 0.9fr 0.7fr 0.9fr 0.9fr';
 
 export const OFFICIAL_POWER_HEADER_COLUMNS = [
   { key: 'name', label: 'NAME', align: 'left' as const },
+  { key: 'category', label: 'CATEGORY', align: 'left' as const },
   { key: 'energy', label: 'ENERGY', align: 'center' as const },
   { key: 'action', label: 'ACTION', align: 'center' as const },
   { key: 'duration', label: 'DURATION', align: 'center' as const },
@@ -27,14 +36,20 @@ export interface OfficialPowerRow {
   raw: LibraryPower;
   name: string;
   description: string;
+  categories: string[];
+  category: string;
   energy: string | number | undefined;
   action: string | undefined;
+  actionTypeRaw: string | undefined;
+  isReaction: boolean;
   duration: string | undefined;
   range: string | undefined;
   area: string | undefined;
   damage: string;
   tp: number;
   parts: ChipData[];
+  partIds: string[];
+  partNames: string[];
 }
 
 export function buildOfficialPowerRows(
@@ -42,10 +57,13 @@ export function buildOfficialPowerRows(
   partsDb: PowerPart[]
 ): OfficialPowerRow[] {
   return items.map((p) => {
+    const savedParts: NonNullable<PowerDocument['parts']> = Array.isArray(p.parts)
+      ? (p.parts as NonNullable<PowerDocument['parts']>)
+      : [];
     const doc: PowerDocument = {
       name: String(p.name ?? ''),
       description: String(p.description ?? ''),
-      parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
+      parts: savedParts,
       damage: p.damage as PowerDocument['damage'],
       actionType: p.actionType,
       isReaction: p.isReaction,
@@ -56,27 +74,52 @@ export function buildOfficialPowerRows(
     const display = derivePowerDisplay(doc, partsDb);
     const damageStr = formatPowerDamage(doc.damage);
     const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
+    const categories = derivePartCategories(savedParts, partsDb);
     return {
       id: String(p.id ?? p.docId ?? ''),
       raw: p,
       name: display.name,
       description: display.description,
+      categories,
+      category: formatPartCategoriesColumn(categories),
       energy: display.energy,
       action: display.actionType,
+      actionTypeRaw: p.actionType ?? display.actionType,
+      isReaction: p.isReaction === true,
       duration: display.duration,
       range: display.range,
       area: display.area,
       damage: damageStr,
       tp: display.tp,
       parts,
+      partIds: savedParts
+        .map((part) => (part.id != null ? String(part.id) : ''))
+        .filter(Boolean),
+      partNames: savedParts
+        .map((part) => (part.name != null ? String(part.name) : ''))
+        .filter(Boolean),
     };
   });
 }
 
-export function filterOfficialPowerRows<T extends { name?: string; description?: string }>(
+export function filterOfficialPowerRows<
+  T extends {
+    name?: string;
+    description?: string;
+    categories?: string[];
+    energy?: string | number | null;
+    action?: string | null;
+    actionTypeRaw?: string | null;
+    isReaction?: boolean;
+    partIds?: string[];
+    partNames?: string[];
+    category?: string;
+  },
+>(
   rows: T[],
   search: string,
-  sortItems: (items: T[]) => T[]
+  sortItems: (items: T[]) => T[],
+  advanced?: PowerTechniqueFilterState
 ): T[] {
   let result = rows;
   if (search) {
@@ -84,8 +127,12 @@ export function filterOfficialPowerRows<T extends { name?: string; description?:
     result = result.filter(
       (x) =>
         String(x.name ?? '').toLowerCase().includes(s) ||
-        String(x.description ?? '').toLowerCase().includes(s)
+        String(x.description ?? '').toLowerCase().includes(s) ||
+        String(x.category ?? '').toLowerCase().includes(s)
     );
+  }
+  if (advanced) {
+    result = applyPowerTechniqueFilters(result, advanced, 'power');
   }
   return sortItems(result);
 }

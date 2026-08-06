@@ -6,7 +6,7 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 
 **Agents:** When you finish a user-facing task (`done` or `partial`), add granular tests to `BUILD_VALIDATION.md` and index the suite below. See `[ARCHITECTURE_CONSTITUTION.md](ARCHITECTURE_CONSTITUTION.md)`.
 
-**Last updated:** 2026-08-03
+**Last updated:** 2026-08-06
 
 ---
 
@@ -123,6 +123,8 @@ Each suite is a **category** of step-by-step tests. Full steps live in `[BUILD_V
 | **DEV-V-035** | Realms Library redundant source badge                 | Session cleanup                                                                                                                                                          | T001 (1)          | Ready — [open suite](BUILD_VALIDATION.md#dev-v-035--realms-library-redundant-source-badge-session)              |
 | **DEV-V-034** | GLR chrome + Parts chip grammar                       | TASK-622, TASK-630                                                                                                                                                       | T001–T002 (2)     | Ready — [open suite](BUILD_VALIDATION.md#dev-v-034--glr-chrome--parts-chip-grammar-task-622)                    |
 | **DEV-V-043** | Wave 5 page facade splits                             | TASK-666                                                                                                                                                                 | T001–T007 (7)     | Ready — [open suite](BUILD_VALIDATION.md#dev-v-043--wave-5-page-facade-splits-task-666)                         |
+| **DEV-V-045** | Codex character filter UX                              | Session                                                                                                                                                                  | T001 (1)          | Ready — [open suite](BUILD_VALIDATION.md#dev-v-045--codex-character-filter-ux-session)                            |
+| **DEV-V-046** | Library power/technique categories + filters          | TASK-673                                                                                                                                                                 | T001–T002 (2)     | Ready — [open suite](BUILD_VALIDATION.md#dev-v-046--library-powertechnique-categories--filters-task-673)         |
 | DEV-V-002     | Campaign & rolls security                             | TASK-329                                                                                                                                                                 | —                 | Planned (legacy DEV-T-002)                                                                                        |
 | DEV-V-003     | Admin role change safety                              | TASK-330                                                                                                                                                                 | —                 | Planned                                                                                                           |
 | DEV-V-004     | Storage & account security                            | TASK-326, TASK-331                                                                                                                                                       | —                 | Planned                                                                                                           |
@@ -142,6 +144,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-674** | DEV-V-034 **T001** | My Library Powers/Techniques/Items: headers align with row values on rows **with and without** “Needs sync” badge (empty sync spacer reserved). |
 | **TASK-667** | DEV-V-009 **T040** | Sheet modals (recovery, level-up, add library item, feats, edit archetype/species) + Library tabs via context; campaign RM view still read-only |
 | **TASK-666** | DEV-V-043 **T001–T007** | Wave 5 facade smoke: combat encounter play; my-account cards; campaign detail; character sheet load/edit; crafting tool session; Edit Species modal; admin core-rules category tabs — no blank flash / behavior change vs pre-split |
 | **TASK-650** | DEV-V-042 **T001** (`node scripts/verify-task-650.mjs`) + optional **T002** browser | T001 automated: advisor parity + owner/member/stranger RLS smoke — PASS 2026-08-03. T002: owner/member campaign UI + invite join unchanged. |
@@ -159,6 +162,8 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-638** | DEV-V-013 **T072–T074** (+ T001 update) | Chooser Custom → guided Path L3; L1 **Custom Archetype** hatch; L3 type/ability Continue + **View archetype paths** back to L1 |
 | **Session** | DEV-V-040 **T001** | Creature levels: creator select + summary, Library/Realms stat blocks, Add Combatant picker, Codex creature-feat Req. Lvl show ¼/½/¾ (not 0.25/0.5) |
 | **Session** | DEV-V-039 **T001** | Codex Feats expand: **TAGS** label on single-tag feats (e.g. Abundant Harvest → Craft); Tags section last after skill/ability/feat levels |
+| **Session** | DEV-V-045 **T001** | Codex Feats filters: **Filter by character** in filters panel; disabled level/ability filters when active; inline show-unqualified; no qualification banner |
+| **TASK-673** | DEV-V-046 **T001–T002** | Library/Admin powers & techniques: Category column + FilterSection (category, energy, action/reaction; powers: innate threshold + eligible) |
 | **TASK-630** | DEV-V-034 **T002** | Library Creatures: same row gap as Powers; headers align with Level/Size/… columns (rowChrome); Realms Creatures same tight spacing |
 | **TASK-628** | DEV-V-033 **T002** | Library Armor tab: Abl. Req. + Crit + columns; Critical Range +1 not duplicated as property chip |
 | **TASK-626** | DEV-V-038 **T001** | Library Realms + My empowered techniques expand: Parts & Proficiencies shows power + technique chips; load/add USM empowered rows show same chips |
@@ -193,7 +198,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-586** | DEV-V-009 **T033–T034** | Temp Modifier on header LargeStatBlocks (Speed/Evasion/DR/crit) + Health `Terminal: X` + dual mode on Abilities (+ defenses + resource-maxima toggle) / Skills; tint + persist + cascade; pencil spend locks (Speed/Evasion pencil removed — see TASK-600) |
 | **TASK-430** | DEV-V-019 **T001–T007, T009–T013** | React Compiler hook cleanup batches 1–7: remount/bootstrap, crafting FSM, sheet tour offer, admin queries, USM reopen; sitewide those three react-hooks rules at 0 |
 | **TASK-440** | DEV-V-020 **T004** | Library Creatures + compact CombatantCard + Creature Creator quickStats: Health / Energy (not HP / EN) |
-| **TASK-388** | DEV-V-029 **T001–T003** | Play-together after first save; optional sheet tour (Skip / Don't show again); level-up highlight cards (ability = scroll + edit mode) + My Account tutorials toggle |
+| **TASK-388** | DEV-V-029 **T001–T004** | Play-together after first save; optional sheet tour (Skip / Don't show again); level-up highlight cards (ability = scroll + edit mode) + My Account tutorials toggle; sheet tour retake in character settings; tour card above roll-log FAB |
 | **TASK-583** | DEV-V-009 **T031** | Parts/Properties & Proficiencies default collapsed + section InfoTippy (family copy); descriptor chips stay open |
 | **TASK-582** | DEV-V-009 **T028–T030** | Abilities/Defenses label parity; roll log die max/min badges dark contrast; desktop pencil icon-hugging |
 | **TASK-581** | DEV-V-009 **T036** | Inventory Armament Proficiency label tip (`armamentProficiencyHelp`, same as Path More details) |

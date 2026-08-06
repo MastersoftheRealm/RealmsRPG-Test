@@ -5,9 +5,11 @@
 
 'use client';
 
-import { type ReactNode } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import { Wand2 } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
+import { PowerTechniqueFilters } from '@/components/shared/filters';
+import { useGameRules } from '@/hooks/use-game-rules';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryPower } from '@/types/library';
 import {
@@ -17,6 +19,12 @@ import {
   OFFICIAL_POWER_HEADER_COLUMNS,
   type OfficialPowerRow,
 } from '@/lib/library/official-power-list';
+import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
+import {
+  EMPTY_POWER_TECHNIQUE_FILTERS,
+  type PowerTechniqueFilterState,
+} from '@/lib/library/power-technique-filters';
+import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
@@ -61,6 +69,30 @@ export function OfficialPowerList({
   onEdit,
   onDelete,
 }: OfficialPowerListProps) {
+  const { rules } = useGameRules();
+  const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
+    EMPTY_POWER_TECHNIQUE_FILTERS
+  );
+
+  const categoryOptions = useMemo(
+    () => collectCategoryOptionsFromItems(items, partsDb),
+    [items, partsDb]
+  );
+
+  const innateThresholdOptions = useMemo(
+    () => listInnateThresholdFilterOptions(rules),
+    [rules]
+  );
+
+  const filterRows = useCallback(
+    (
+      rows: OfficialPowerRow[],
+      search: string,
+      sortItems: (items: OfficialPowerRow[]) => OfficialPowerRow[]
+    ) => filterOfficialPowerRows(rows, search, sortItems, advancedFilters),
+    [advancedFilters]
+  );
+
   return (
     <OfficialEntityList<OfficialPowerRow, LibraryPower>
       items={items}
@@ -68,10 +100,20 @@ export function OfficialPowerList({
       error={error}
       onRetry={onRetry}
       buildRows={(raw) => buildOfficialPowerRows(raw, partsDb)}
-      filterRows={filterOfficialPowerRows}
+      filterRows={filterRows}
       gridColumns={OFFICIAL_POWER_GRID}
       headerColumns={OFFICIAL_POWER_HEADER_COLUMNS}
+      filters={
+        <PowerTechniqueFilters
+          kind="power"
+          value={advancedFilters}
+          onChange={setAdvancedFilters}
+          categoryOptions={categoryOptions}
+          innateThresholdOptions={innateThresholdOptions}
+        />
+      }
       getColumns={(p) => [
+        { key: 'Category', value: p.category, align: 'left' },
         { key: 'Energy', value: p.energy, highlight: true, align: 'center' },
         { key: 'Action', value: p.action, align: 'center' },
         { key: 'Duration', value: p.duration, align: 'center' },

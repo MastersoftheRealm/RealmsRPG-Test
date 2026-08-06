@@ -9,12 +9,21 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Swords } from 'lucide-react';
 import { GridListRow } from '@/components/shared';
+import { PowerTechniqueFilters } from '@/components/shared/filters';
 import { useSort } from '@/hooks/use-sort';
-import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
-import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
-import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
+import {
+  buildOfficialTechniqueRows,
+  filterOfficialTechniqueRows,
+  OFFICIAL_TECHNIQUE_GRID,
+  OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
+} from '@/lib/library/official-technique-list';
+import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
+import {
+  EMPTY_POWER_TECHNIQUE_FILTERS,
+  type PowerTechniqueFilterState,
+} from '@/lib/library/power-technique-filters';
 import {
   useUserTechniques,
   useUserEmpoweredTechniques,
@@ -37,15 +46,6 @@ import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
-const TECHNIQUE_GRID_COLUMNS = '1.5fr 0.8fr 0.8fr 1fr 1fr 1fr';
-const TECHNIQUE_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'energy', label: 'ENERGY' },
-  { key: 'tp', label: 'TP' },
-  { key: 'action', label: 'ACTION' },
-  { key: 'weapon', label: 'ATTACK' },
-  { key: 'damage', label: 'DAMAGE' },
-];
 const TECHNIQUE_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
 
 interface LibraryTechniquesTabProps {
@@ -53,25 +53,22 @@ interface LibraryTechniquesTabProps {
   mode?: 'standard' | 'empowered';
 }
 
-function getEmpoweredTotals(technique: unknown): { energy?: number; tp?: number } {
-  const raw = technique as Record<string, unknown>;
-  const totals = raw.totals as Record<string, unknown> | undefined;
-  const energy = typeof totals?.energy === 'number' ? totals.energy : undefined;
-  const tp = typeof totals?.trainingPoints === 'number' ? totals.trainingPoints : undefined;
-  return { energy, tp };
-}
-
 export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTechniquesTabProps) {
   const router = useRouter();
   const standardTechniquesQuery = useUserTechniques({ enabled: mode === 'standard' });
   const empoweredTechniquesQuery = useUserEmpoweredTechniques({ enabled: mode === 'empowered' });
-  const { data: standardTechniques = [], isLoading: standardLoading, error: standardError } = standardTechniquesQuery;
-  const { data: empoweredTechniques = [], isLoading: empoweredLoading, error: empoweredError } = empoweredTechniquesQuery;
+  const { data: standardTechniques = [], isLoading: standardLoading, error: standardError } =
+    standardTechniquesQuery;
+  const { data: empoweredTechniques = [], isLoading: empoweredLoading, error: empoweredError } =
+    empoweredTechniquesQuery;
   const { data: partsDb = [] } = useTechniqueParts();
   const { data: powerPartsDb = [] } = usePowerParts({ enabled: mode === 'empowered' });
   const duplicateTechnique = useDuplicateTechnique();
   const duplicateEmpoweredTechnique = useDuplicateEmpoweredTechnique();
   const [search, setSearch] = useState('');
+  const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
+    EMPTY_POWER_TECHNIQUE_FILTERS
+  );
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const techniques = mode === 'empowered' ? empoweredTechniques : standardTechniques;
@@ -82,42 +79,22 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   const duplicateMutation = mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique;
 
   const cardData = useMemo(() => {
-    return techniques.map((tech) => {
-      const empowered = mode === 'empowered';
-      const doc: TechniqueDocument = {
-        name: String(tech.name ?? ''),
-        description: String(tech.description ?? ''),
-        parts: Array.isArray(tech.parts) ? (tech.parts as TechniqueDocument['parts']) : [],
-        damage: Array.isArray(tech.damage)
-          ? (tech.damage[0] as TechniqueDocument['damage'])
-          : (tech.damage as TechniqueDocument['damage']),
-        attackMode: tech.attackMode,
-        weaponName: tech.weaponName,
-        weapon: tech.weapon as TechniqueDocument['weapon'],
-      };
-      const display = deriveTechniqueDisplay(doc, partsDb);
-      const syncResult = getTechniqueSyncResult(tech, partsDb);
-      const totals = getEmpoweredTotals(tech);
-      const damageStr = formatTechniqueDamage(doc.damage);
-      const parts = empowered
-        ? []
-        : partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
+    return buildOfficialTechniqueRows(techniques, partsDb, mode).map((row) => {
+      const syncResult = getTechniqueSyncResult(row.raw, partsDb);
       return {
-        id: String(tech.docId ?? tech.id ?? ''),
-        name: display.name,
-        description: display.description,
-        energy: empowered ? (totals.energy ?? display.energy) : display.energy,
-        tp: empowered ? (totals.tp ?? display.tp) : display.tp,
-        action: display.actionType,
-        weapon: display.weaponName || '-',
-        damage: damageStr,
-        parts,
+        ...row,
+        id: String(row.raw.docId ?? row.raw.id ?? row.id),
         hasDrift: syncResult.hasDrift,
         syncIssues: syncResult.issues,
-        raw: tech,
       };
     });
   }, [mode, techniques, partsDb]);
+
+  const categoryOptions = useMemo(
+    () =>
+      mode === 'empowered' ? [] : collectCategoryOptionsFromItems(techniques, partsDb),
+    [mode, techniques, partsDb]
+  );
 
   const driftedIds = useMemo(
     () => cardData.filter((item) => item.hasDrift).map((item) => item.id),
@@ -144,18 +121,9 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   });
 
   const filteredData = useMemo(() => {
-    let result = cardData;
-    if (search) {
-      const searchLower = search.toLowerCase();
-      result = result.filter(
-        (t) =>
-          String(t.name ?? '').toLowerCase().includes(searchLower) ||
-          String(t.description ?? '').toLowerCase().includes(searchLower) ||
-          String(t.weapon ?? '').toLowerCase().includes(searchLower)
-      );
-    }
-    return sortItems(result);
-  }, [cardData, search, sortItems]);
+    const advanced = mode === 'empowered' ? undefined : advancedFilters;
+    return filterOfficialTechniqueRows(cardData, search, sortItems, advanced);
+  }, [cardData, search, sortItems, mode, advancedFilters]);
 
   return (
     <UserLibraryEntityTabShell
@@ -172,8 +140,8 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
       onSearchChange={setSearch}
       sortState={sortState}
       onSort={handleSort}
-      headerColumns={TECHNIQUE_HEADER_COLUMNS}
-      gridColumns={TECHNIQUE_GRID_COLUMNS}
+      headerColumns={OFFICIAL_TECHNIQUE_HEADER_COLUMNS}
+      gridColumns={OFFICIAL_TECHNIQUE_GRID}
       hasThumbnailColumn
       rowChrome={TECHNIQUE_ROW_CHROME}
       filteredCount={filteredData.length}
@@ -190,6 +158,16 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
       onCloseDuplicate={dup.closeDuplicateConfirm}
       onConfirmDuplicate={dup.onConfirmDuplicate}
       duplicatePending={dup.isPending}
+      filters={
+        mode === 'empowered' ? undefined : (
+          <PowerTechniqueFilters
+            kind="technique"
+            value={advancedFilters}
+            onChange={setAdvancedFilters}
+            categoryOptions={categoryOptions}
+          />
+        )
+      }
     >
       {filteredData.map((tech) => {
         const partsSection =
@@ -205,8 +183,10 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
             name={tech.name}
             description={tech.description}
             thumbnail={resolveListRowThumbnail('technique', tech.raw, tech.name)}
-            gridColumns={TECHNIQUE_GRID_COLUMNS}
+            gridColumns={OFFICIAL_TECHNIQUE_GRID}
+            rowChrome={TECHNIQUE_ROW_CHROME}
             columns={[
+              { key: 'Category', value: tech.category },
               { key: 'Energy', value: tech.energy, highlight: true },
               { key: 'TP', value: tech.tp },
               { key: 'Action', value: tech.action },
@@ -227,7 +207,8 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
               ) : undefined
             }
             onEdit={() => {
-              const creator = mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator';
+              const creator =
+                mode === 'empowered' ? '/empowered-technique-creator' : '/technique-creator';
               router.push(`${creator}?edit=${encodeURIComponent(tech.id)}`);
             }}
             onDelete={() => onDelete({ id: tech.id, name: tech.name } as DisplayItem)}

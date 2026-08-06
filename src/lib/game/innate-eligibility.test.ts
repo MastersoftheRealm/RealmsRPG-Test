@@ -4,6 +4,8 @@ import {
   getLevel1InnateBudget,
   isHealingOrEnergyGainPart,
   isInnateEligibleActionType,
+  isPowerInnateEligible,
+  listInnateThresholdFilterOptions,
   validateRecommendedInnatePowers,
   type InnatePowerSnapshot,
 } from './innate-eligibility';
@@ -95,5 +97,40 @@ describe('innate-eligibility', () => {
         }),
     });
     expect(issues.filter((i) => i.severity === 'error')).toHaveLength(0);
+  });
+
+  it('lists distinct innate threshold filter options from progression', () => {
+    const opts = listInnateThresholdFilterOptions();
+    expect(opts).toContain(6);
+    expect(opts).toContain(8);
+    expect(opts).toContain(9);
+    expect(opts[0]).toBeLessThan(opts[opts.length - 1]);
+  });
+
+  it('isPowerInnateEligible enforces action, parts, and optional threshold', () => {
+    expect(
+      isPowerInnateEligible(
+        snap({ id: '1', energy: 6, actionType: 'basic' }),
+        8
+      )
+    ).toBe(true);
+    expect(
+      isPowerInnateEligible(
+        snap({ id: '1', energy: 10, actionType: 'basic' }),
+        8
+      )
+    ).toBe(false);
+    expect(
+      isPowerInnateEligible(
+        snap({
+          id: '1',
+          energy: 4,
+          actionType: 'basic',
+          partIds: ['307'],
+          partNames: ['Heal'],
+        }),
+        8
+      )
+    ).toBe(false);
   });
 });

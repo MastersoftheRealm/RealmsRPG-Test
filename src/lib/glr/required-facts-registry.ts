@@ -194,6 +194,7 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
     surfaceId: 'library-official-power',
     entityType: 'power',
     requiredFacts: [
+      FACT.category,
       FACT.energy,
       FACT.actionType,
       FACT.duration,
@@ -206,6 +207,7 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
     surfaceId: 'library-official-technique',
     entityType: 'technique',
     requiredFacts: [
+      FACT.category,
       FACT.energy,
       FACT.trainingPoints,
       FACT.actionType,

@@ -4,17 +4,44 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-673
+**Next task ID:** TASK-676
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-672, TASK-654, TASK-641, TASK-640, …)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-673, TASK-672, TASK-654, TASK-641, …)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 3 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-668 done (Aug audit docs reconciled → `REMEDIATION_STATUS_2026-08.md`). TASK-642 remains email-spoof QA. TASK-650/649 applied. TASK-657 hooks. TASK-655/656 CI gates — pending-qa.
+**Hot notes:** TASK-675 filed (USM compact PowerTechniqueFilters). TASK-673 cleanup done. TASK-674 done (My Library GLR chrome). TASK-642 remains email-spoof QA.
+
+---
+
+- id: TASK-675
+  title: Wire PowerTechniqueFilters compact into USM add-power/technique
+  created_at: 2026-08-06
+  created_by: agent
+  priority: medium
+  status: not-started
+  parent_task: TASK-673
+  related_files:
+    - src/components/shared/filters/power-technique-filters.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/lib/library/power-technique-filters.ts
+    - src/lib/library-selectable-builders.ts
+  description: |
+    After TASK-673 library filters, reuse `PowerTechniqueFilters` with `variant="compact"`
+    (and shared apply helpers) in UnifiedSelectionModal add-power / add-technique flows
+    so selection modals match Library browse filters (category, energy, action/reaction;
+    power-only innate threshold + eligible). Do not fork a parallel filter panel.
+  acceptance_criteria:
+    - Add-power and add-technique USM surfaces use shared PowerTechniqueFilters compact variant.
+    - Filter apply delegates to applyPowerTechniqueFilters / innate-eligibility — no local eligibility fork.
+    - Mobile: FilterSection compact toolbar patterns; npm run build + targeted tests pass.
+  notes: |
+    Filed from TASK-673 audit follow-up. Guided creator L1/L2 already use innate-eligibility domain;
+    this task is USM chrome only unless a shared hook is extracted while wiring.
 
 ---
 

@@ -89,6 +89,8 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   onDelete?: (id: string, name: string) => void;
   /** Optional control beside search (e.g. admin Create). Keeps list chrome when empty. */
   searchTrailing?: ReactNode;
+  /** Slot between search and ListHeader (FilterSection, banners, etc.). */
+  filters?: ReactNode;
 }
 
 export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
@@ -125,6 +127,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   onEdit,
   onDelete,
   searchTrailing,
+  filters,
 }: OfficialEntityListProps<TRow, TItem>) {
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -164,6 +167,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
         </div>
         {searchTrailing}
       </div>
+      {filters}
       <ListHeader
         columns={headerColumns}
         gridColumns={gridColumns}

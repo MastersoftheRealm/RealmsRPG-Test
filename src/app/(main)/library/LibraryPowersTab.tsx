@@ -8,17 +8,25 @@ import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Wand2 } from 'lucide-react';
 import { GridListRow } from '@/components/shared';
+import { PowerTechniqueFilters } from '@/components/shared/filters';
 import { useSort } from '@/hooks/use-sort';
-import {
-  derivePowerDisplay,
-  formatPowerDamage,
-  type PowerDocument,
-} from '@/lib/calculators/power-calc';
-import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
+import { useGameRules } from '@/hooks/use-game-rules';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { useUserPowers, usePowerParts, useDuplicatePower } from '@/hooks';
 import type { DisplayItem } from '@/types';
 import { getPowerSyncResult, sanitizePowerForSync } from '@/lib/library-sync';
+import {
+  buildOfficialPowerRows,
+  filterOfficialPowerRows,
+  OFFICIAL_POWER_GRID,
+  OFFICIAL_POWER_HEADER_COLUMNS,
+} from '@/lib/library/official-power-list';
+import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
+import {
+  EMPTY_POWER_TECHNIQUE_FILTERS,
+  type PowerTechniqueFilterState,
+} from '@/lib/library/power-technique-filters';
+import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 import {
   LibrarySyncRowAction,
   UserLibraryEntityTabShell,
@@ -28,16 +36,6 @@ import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
-const POWER_GRID_COLUMNS = '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr';
-const POWER_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'energy', label: 'ENERGY' },
-  { key: 'action', label: 'ACTION' },
-  { key: 'duration', label: 'DURATION' },
-  { key: 'range', label: 'RANGE' },
-  { key: 'area', label: 'AREA' },
-  { key: 'damage', label: 'DAMAGE' },
-];
 const POWER_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
 
 interface LibraryPowersTabProps {
@@ -46,47 +44,37 @@ interface LibraryPowersTabProps {
 
 export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   const router = useRouter();
+  const { rules } = useGameRules();
   const { data: powers = [], isLoading, error, refetch } = useUserPowers();
   const { data: partsDb = [] } = usePowerParts();
   const duplicatePower = useDuplicatePower();
   const [search, setSearch] = useState('');
+  const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
+    EMPTY_POWER_TECHNIQUE_FILTERS
+  );
   const { sortState, handleSort, sortItems } = useSort('name');
 
   const cardData = useMemo(() => {
-    return powers.map((p) => {
-      const doc: PowerDocument = {
-        name: String(p.name ?? ''),
-        description: String(p.description ?? ''),
-        parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
-        damage: p.damage as PowerDocument['damage'],
-        actionType: p.actionType,
-        isReaction: p.isReaction,
-        range: p.range as PowerDocument['range'],
-        area: p.area as PowerDocument['area'],
-        duration: p.duration as PowerDocument['duration'],
-      };
-      const display = derivePowerDisplay(doc, partsDb);
-      const syncResult = getPowerSyncResult(p, partsDb);
-      const damageStr = formatPowerDamage(doc.damage);
-      const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
+    return buildOfficialPowerRows(powers, partsDb).map((row) => {
+      const syncResult = getPowerSyncResult(row.raw, partsDb);
       return {
-        id: String(p.docId ?? p.id ?? ''),
-        name: display.name,
-        description: display.description,
-        energy: display.energy,
-        action: display.actionType,
-        duration: display.duration,
-        range: display.range,
-        area: display.area,
-        damage: damageStr,
-        tp: display.tp,
-        parts,
+        ...row,
+        id: String(row.raw.docId ?? row.raw.id ?? row.id),
         hasDrift: syncResult.hasDrift,
         syncIssues: syncResult.issues,
-        raw: p,
       };
     });
   }, [powers, partsDb]);
+
+  const categoryOptions = useMemo(
+    () => collectCategoryOptionsFromItems(powers, partsDb),
+    [powers, partsDb]
+  );
+
+  const innateThresholdOptions = useMemo(
+    () => listInnateThresholdFilterOptions(rules),
+    [rules]
+  );
 
   const driftedIds = useMemo(
     () => cardData.filter((item) => item.hasDrift).map((item) => item.id),
@@ -111,18 +99,10 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
     mutate: (id, handlers) => duplicatePower.mutate(id, handlers),
   });
 
-  const filteredData = useMemo(() => {
-    let result = cardData;
-    if (search) {
-      const searchLower = search.toLowerCase();
-      result = result.filter(
-        (p) =>
-          String(p.name ?? '').toLowerCase().includes(searchLower) ||
-          String(p.description ?? '').toLowerCase().includes(searchLower)
-      );
-    }
-    return sortItems(result);
-  }, [cardData, search, sortItems]);
+  const filteredData = useMemo(
+    () => filterOfficialPowerRows(cardData, search, sortItems, advancedFilters),
+    [cardData, search, advancedFilters, sortItems]
+  );
 
   return (
     <UserLibraryEntityTabShell
@@ -136,8 +116,8 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
       onSearchChange={setSearch}
       sortState={sortState}
       onSort={handleSort}
-      headerColumns={POWER_HEADER_COLUMNS}
-      gridColumns={POWER_GRID_COLUMNS}
+      headerColumns={OFFICIAL_POWER_HEADER_COLUMNS}
+      gridColumns={OFFICIAL_POWER_GRID}
       hasThumbnailColumn
       rowChrome={POWER_ROW_CHROME}
       filteredCount={filteredData.length}
@@ -154,6 +134,15 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
       onCloseDuplicate={dup.closeDuplicateConfirm}
       onConfirmDuplicate={dup.onConfirmDuplicate}
       duplicatePending={dup.isPending}
+      filters={
+        <PowerTechniqueFilters
+          kind="power"
+          value={advancedFilters}
+          onChange={setAdvancedFilters}
+          categoryOptions={categoryOptions}
+          innateThresholdOptions={innateThresholdOptions}
+        />
+      }
     >
       {filteredData.map((power) => {
         const partsSection = partsProficienciesSection(power.parts, 'power');
@@ -164,8 +153,10 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
             name={power.name}
             description={power.description}
             thumbnail={resolveListRowThumbnail('power', power.raw, power.name)}
-            gridColumns={POWER_GRID_COLUMNS}
+            gridColumns={OFFICIAL_POWER_GRID}
+            rowChrome={POWER_ROW_CHROME}
             columns={[
+              { key: 'Category', value: power.category },
               { key: 'Energy', value: power.energy, highlight: true },
               { key: 'Action', value: power.action },
               { key: 'Duration', value: power.duration },
