@@ -36,9 +36,10 @@ import {
 } from '@/lib/codex/feat-list';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
-
-/** localStorage key for persisted character filter on Codex feats. */
-const CODEX_FEATS_CHARACTER_FILTER_KEY = 'codex:characterFilterId';
+import {
+  readInitialLibraryCharacterFilterId,
+  writePersistedLibraryCharacterFilterId,
+} from '@/lib/library/character-filter-persistence';
 
 const SET_BY_CHARACTER_HINT = 'Set by character';
 
@@ -56,14 +57,9 @@ export function CodexFeatsTab({
   const { data: feats, isLoading, error, refetch } = useCodexFeats({ enabled: loadPublicCodex });
   const { data: skills = [] } = useCodexSkills({ enabled: loadPublicCodex });
 
-  const [characterFilterId, setCharacterFilterId] = useState(() => {
-    if (typeof window === 'undefined') return '';
-    try {
-      return window.localStorage.getItem(CODEX_FEATS_CHARACTER_FILTER_KEY) ?? '';
-    } catch {
-      return '';
-    }
-  });
+  const [characterFilterId, setCharacterFilterId] = useState(() =>
+    readInitialLibraryCharacterFilterId(codexMode === 'public')
+  );
 
   // When a character is selected, hide feats they don't qualify for by default.
   const [showUnqualified, setShowUnqualified] = useState(false);
@@ -90,12 +86,7 @@ export function CodexFeatsTab({
       );
       setShowUnqualified(false);
     }
-    try {
-      if (id) window.localStorage.setItem(CODEX_FEATS_CHARACTER_FILTER_KEY, id);
-      else window.localStorage.removeItem(CODEX_FEATS_CHARACTER_FILTER_KEY);
-    } catch {
-      // ignore storage access errors
-    }
+    writePersistedLibraryCharacterFilterId(id);
   }, []);
 
   const { data: characterResult } = useCharacter(loadPublicCodex ? characterFilterId || undefined : undefined);

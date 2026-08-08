@@ -58,4 +58,11 @@ describe('character-filter-persistence', () => {
     expect(readInitialLibraryCharacterFilterId(true)).toBe('char-2');
     expect(readInitialLibraryCharacterFilterId(false)).toBe('');
   });
+
+  it('migrates legacy Codex character filter key on read', () => {
+    localStorage.setItem('codex:characterFilterId', 'char-codex');
+    expect(readPersistedLibraryCharacterFilterId()).toBe('char-codex');
+    expect(localStorage.getItem(LIBRARY_CHARACTER_FILTER_KEY)).toBe('char-codex');
+    expect(localStorage.getItem('codex:characterFilterId')).toBeNull();
+  });
 });
