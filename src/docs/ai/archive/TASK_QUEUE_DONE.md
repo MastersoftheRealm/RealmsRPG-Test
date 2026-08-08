@@ -1,3 +1,47 @@
+- id: TASK-683
+  title: Empowered creator — cheaper EN overlap parts + No Attack
+  created_at: 2026-08-06
+  completed_at: 2026-08-06
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/empowered-technique-creator/empowered-technique-cost-derivation.ts
+    - src/app/(main)/empowered-technique-creator/use-empowered-technique-creator-workspace.ts
+    - src/app/(main)/empowered-technique-creator/empowered-technique-bootstrap.ts
+    - src/lib/attack-mode.ts
+    - src/lib/attack-mode.test.ts
+    - src/lib/calculators/empowered-overlap-parts.ts
+    - src/lib/calculators/empowered-overlap-parts.test.ts
+    - src/lib/calculators/index.ts
+    - src/lib/library/empowered-technique-display.ts
+    - src/lib/library-columnar.ts
+    - src/lib/library-columnar.test.ts
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-049
+    tests:
+      - DEV-V-049-T001
+  developer_test_plan: |
+    Suite DEV-V-049 T001 — see BUILD_VALIDATION.md
+  description: |
+    Guiding rule for empowered techniques: when a hard-tied UI control maps to similar
+    power and technique parts, use the cheaper Energy part (live base_en). Example: Attack
+    Weapon should pick cheaper of Add Weapon to Power (369) vs Add Weapon to Technique (7).
+    No Weapon/Attack must add the technique No Attack reduction mechanic like the technique creator.
+  acceptance_criteria:
+    - Weapon Attack attaches the cheaper of Add Weapon to Power vs Add Weapon to Technique by base_en.
+    - No Weapon/Attack adds No Attack (technique part) and includes it in attack section cost.
+    - Save/load/display/columnar derive attack mode from either side's attack parts.
+    - GAME_RULES documents the cheaper-EN overlap rule; BUILD_VALIDATION + tests; npm run build.
+  notes: |
+    Live codex (2026-08-06): Add Weapon to Power base_en 4.5; Add Weapon to Technique 2.5; No Attack 0.875 percentage.
+    Implemented pickCheaperEnPart + deriveEmpoweredAttackMode; weapon saves on cheaper side; No Attack on technique autoMechanics.
+
 - id: TASK-680
   title: Armaments library â€” character filter + add to character sheet
   priority: medium
@@ -17287,3 +17331,29 @@ Firebase/RTDB - the project is Supabase-only.
   notes: |
     BUILD_VALIDATION DEV-V-040-T002. Owner feedback 2026-08-06.
 
+
+- id: TASK-681
+  title: Persist character filter across Library + Codex tabs
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  created_at: 2026-08-06
+  completed_at: 2026-08-06
+  created_by: agent
+  parent_task: TASK-676
+  related_files:
+    - src/lib/library/character-filter-persistence.ts
+    - src/lib/library/character-filter-persistence.test.ts
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    When the user picks a character under Filter by character on one Library or Codex tab,
+    switching tabs should keep the same character selected.
+  acceptance_criteria:
+    - Single shared persistence key + helper used by CharacterFilter consumers.
+    - Library all relevant tabs + Codex feats read/write the same character id.
+    - Clearing character on one tab clears globally; localStorage survives refresh.
+    - No duplicate useCharacters / localStorage logic per tab.
+  notes: |
+    Wired CodexFeatsTab to character-filter-persistence.ts; legacy codex:characterFilterId migrates on read.

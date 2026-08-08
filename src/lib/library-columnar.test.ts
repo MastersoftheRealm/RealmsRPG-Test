@@ -187,6 +187,22 @@ describe('library-columnar API round-trip — empowered techniques', () => {
     );
   });
 
+  it('derives Weapon from technique Add Weapon autoMechanic (cheaper-EN path)', () => {
+    const loaded = apiRoundTrip('empowered-techniques', {
+      name: 'Cheap Weapon Empowered',
+      empoweredTechnique: true,
+      attackMode: 'weapon',
+      power: { range: { steps: 0 }, parts: [], autoMechanics: [] },
+      technique: {
+        parts: [],
+        autoMechanics: [{ id: 7, name: 'Add Weapon to Technique', op_1_lvl: 0 }],
+      },
+    });
+
+    expect(loaded.attackMode).toBe('weapon');
+    expect(loaded.weaponName).toBe('Weapon');
+  });
+
   it('defaults empowered powers with no weapon to No Attack', () => {
     const loaded = apiRoundTrip('empowered-techniques', {
       name: 'Unarmed Empowered',

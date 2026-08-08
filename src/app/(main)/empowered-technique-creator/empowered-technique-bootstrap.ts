@@ -8,7 +8,7 @@ import type { PowerPart, TechniquePart } from '@/hooks';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
 import { readCreatorCache } from '@/lib/game/creator-cache';
-import { derivePowerAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
+import { deriveEmpoweredAttackMode, normalizeAttackMode, type AttackMode } from '@/lib/attack-mode';
 
 export const EMPOWERED_TECHNIQUE_CREATOR_CACHE_KEY = CREATOR_CACHE_KEYS.EMPOWERED_TECHNIQUE;
 
@@ -91,6 +91,7 @@ export type EmpoweredLibraryRecord = {
   power?: {
     parts?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
     mechanics?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
+    autoMechanics?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
     damage?: EmpoweredDamageConfig[];
     range?: EmpoweredRangeConfig;
     area?: AreaConfig;
@@ -101,6 +102,7 @@ export type EmpoweredLibraryRecord = {
   };
   technique?: {
     parts?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
+    autoMechanics?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
     additionalDamage?: Array<{ amount?: number; size?: number }>;
   };
 };
@@ -232,12 +234,15 @@ export function empoweredLibraryRecordToFormState(
   const base = emptyEmpoweredTechniqueFormState();
 
   const addWeaponPowerPart = data.power?.addWeaponPowerPart;
-  const attackMode = derivePowerAttackMode({
+  const attackMode = deriveEmpoweredAttackMode({
     attackMode: data.attackMode,
     parts: [
       ...(data.power?.parts ?? []),
       ...(data.power?.mechanics ?? []),
+      ...(data.power?.autoMechanics ?? []),
       ...(addWeaponPowerPart ? [addWeaponPowerPart] : []),
+      ...(data.technique?.parts ?? []),
+      ...(data.technique?.autoMechanics ?? []),
     ],
     weapon: data.power?.addWeapon ?? null,
   });

@@ -844,6 +844,18 @@ Conditions are temporary effects. Leveled conditions have proportional effects. 
 | Duration | Abbreviate: "4 MIN", "2 RNDS", "1 RND", "1 HR" |
 | Valid damage types | Reference `creator-constants.ts` |
 
+### Empowered Techniques (creator costing)
+
+Empowered techniques combine power and technique parts in one profile.
+
+**Cheaper-EN overlap rule:** When a hard-tied creator control maps to similar power and technique parts (same mechanical role, different codex IDs), attach the candidate with the lower live `base_en`. On an Energy tie, prefer the technique-side part.
+
+Examples:
+- **Weapon Attack** — pick cheaper of Add Weapon to Power vs Add Weapon to Technique.
+- **No Weapon/Attack** — add the technique **No Attack** reduction mechanic (same as the technique creator). Unarmed Attack adds no attack part.
+
+Code: `pickCheaperEnPart` (`lib/calculators/empowered-overlap-parts.ts`), `deriveEmpoweredAttackMode` (`lib/attack-mode.ts`).
+
 ---
 
 ## Helpful Subtext Ideas

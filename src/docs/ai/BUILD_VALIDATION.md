@@ -5670,9 +5670,34 @@ Feats tab character qualification filter: shared `CharacterFilter` in filters pa
 4. Toggle **Show unqualified feats** — unqualified feats appear; toggle off — hidden again.
 5. Switch to Skills or Species — no character filter control on those tabs.
 6. Clear character filter — manual level/ability filters re-enable.
+7. Select a character on Feats → open **Library** (Powers or Techniques) — same character pre-selected in **Filter by character**. Switch to Weapons — same character. Clear filter on any tab → return to Codex Feats — filter cleared. Refresh page — last selection restored.
 
 **Expected**
 - Filter by character only on Feats; qualification uses character stats; clutter-free filter panel (no qualification banner).
+- Character selection shared across Library and Codex feats tabs via one persistence key.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-045-T002 — Cross-tab character filter persistence (TASK-681)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-045 — Codex character filter UX |
+| **Related task** | TASK-681 |
+| **Where** | `/codex` Feats ↔ `/library` Powers/Techniques/Weapons |
+| **Needs** | Signed-in user with at least one character |
+
+**Steps**
+1. On Codex Feats, select a character in **Filter by character**.
+2. Navigate to Library → Powers — confirm the same character is selected.
+3. Switch Library tabs (Techniques, Weapons) — selection unchanged.
+4. Clear the filter on any tab — confirm Codex Feats also shows no character when you return.
+5. Re-select a character on Library; refresh the browser — selection persists on both Library and Codex.
+
+**Expected**
+- One shared character filter across Library browse tabs and Codex Feats; clear is global; survives refresh.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5855,6 +5880,33 @@ My Library entity tabs: full-span search to sync button (codex parity); **Enhanc
 
 **Expected**
 - Codex-parity search toolbar in `UserLibraryEntityTabShell`; tab label **Enhanced Items**; order Shields → Enhanced Items → Creatures.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-049 — Empowered cheaper-EN overlap + No Attack (TASK-683)
+
+Empowered Attack mode must prefer the cheaper live Energy part when power and technique both offer a matching mechanic, and No Weapon/Attack must add No Attack like the technique creator.
+
+#### DEV-V-049-T001 — Weapon Attack uses cheaper Add Weapon
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-049 — Empowered cheaper-EN overlap + No Attack |
+| **Related task** | TASK-683 |
+| **Where** | `/empowered-technique-creator` |
+| **Needs** | Signed-in; Codex parts loaded (Add Weapon to Power ~4.5 EN, Add Weapon to Technique ~2.5 EN) |
+
+**Steps**
+1. Open `/empowered-technique-creator`. Set Attack to **Weapon Attack**.
+2. Confirm the Attack section cost badge shows ~2.5 EN (technique Add Weapon), not ~4.5 EN (power Add Weapon), and TP does not jump by +1 from the power part alone.
+3. Open Advanced cost breakdown / save draft and inspect payload: technique `autoMechanics` includes Add Weapon to Technique; `power.addWeaponPowerPart` is null/absent.
+4. Set Attack to **No Weapon/Attack**. Confirm Attack cost reflects No Attack (percentage reduction / non-zero EN contribution vs Unarmed).
+5. Set Attack to **Unarmed Attack**. Confirm Attack section cost is 0 EN / 0 TP (no Add Weapon, no No Attack).
+
+**Expected**
+- Cheaper-EN overlap pick for Weapon; No Attack attached for No Weapon/Attack; Unarmed adds nothing.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

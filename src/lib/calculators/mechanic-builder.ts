@@ -119,7 +119,8 @@ function getActionPartIds(creatorType: CreatorType) {
       longName: 'Power Long Action',
     };
   }
-  // Technique (and empowered uses technique action parts)
+  // Technique action parts. Empowered creator builds shared action via
+  // creatorType: 'power' (EN-equal overlap; see GAME_RULES cheaper-EN rule).
   return {
     reaction: PART_IDS.REACTION,
     reactionName: 'Reaction',

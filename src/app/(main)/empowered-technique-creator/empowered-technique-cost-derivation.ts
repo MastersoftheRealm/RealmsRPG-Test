@@ -1,6 +1,10 @@
 /**
- * Empowered Technique Creator — cost derivation (TASK-610)
+ * Empowered Technique Creator — cost derivation (TASK-610, TASK-683)
  * Payload assembly, section costs, advanced calc rows, and display summaries.
+ *
+ * Attack-mode parts follow the empowered cheaper-EN overlap rule: when both
+ * power and technique have a matching hard-tied part (e.g. Add Weapon), attach
+ * the cheaper live `base_en`. No Weapon/Attack adds technique No Attack.
  */
 
 'use client';
@@ -17,6 +21,8 @@ import {
   deriveRange,
   deriveArea,
   deriveDuration,
+  pickCheaperEnPart,
+  toEmpoweredAutoMechanicPart,
   type PowerPartPayload,
   type TechniquePartPayload,
   type AreaConfig,
@@ -68,6 +74,8 @@ type UseEmpoweredTechniqueCostDerivationArgs = {
   powerParts: PowerPart[];
   techniqueParts: TechniquePart[];
 };
+
+const emptySectionCost = (): EmpoweredSectionCostSlice => ({ energyRaw: 0, totalTP: 0 });
 
 export function useEmpoweredTechniqueCostDerivation({
   actionType,
@@ -130,22 +138,49 @@ export function useEmpoweredTechniqueCostDerivation({
     [techniqueDamage, techniqueParts],
   );
 
-  const addWeaponToPowerPart = useMemo(() => {
-    if (attackMode !== 'weapon') return null;
-    const part = findByIdOrName(powerParts, {
-      id: PART_IDS.ADD_WEAPON_TO_POWER,
-      name: 'Add Weapon to Power',
-    });
-    if (!part) return null;
-    return {
-      id: part.id,
-      name: part.name,
-      op_1_lvl: 0,
-      op_2_lvl: 0,
-      op_3_lvl: 0,
-      applyDuration: false,
-    };
-  }, [powerParts, attackMode]);
+  /** Attack-mode auto parts: cheaper Add Weapon (power vs technique) or No Attack. */
+  const attackModeParts = useMemo(() => {
+    if (attackMode === 'weapon') {
+      const powerWeapon = findByIdOrName(powerParts, {
+        id: PART_IDS.ADD_WEAPON_TO_POWER,
+        name: 'Add Weapon to Power',
+      });
+      const techniqueWeapon = findByIdOrName(techniqueParts, {
+        id: PART_IDS.ADD_WEAPON_TO_TECHNIQUE,
+        name: 'Add Weapon to Technique',
+      });
+      const picked = pickCheaperEnPart([
+        powerWeapon ? { side: 'power' as const, part: powerWeapon } : null,
+        techniqueWeapon ? { side: 'technique' as const, part: techniqueWeapon } : null,
+      ]);
+      if (!picked) {
+        return { powerPart: null, techniquePart: null };
+      }
+      const row = toEmpoweredAutoMechanicPart(picked.part);
+      return picked.side === 'power'
+        ? { powerPart: row, techniquePart: null }
+        : { powerPart: null, techniquePart: row };
+    }
+
+    if (attackMode === 'none') {
+      const noAttack = findByIdOrName(techniqueParts, {
+        id: PART_IDS.NO_ATTACK,
+        name: 'No Attack',
+      });
+      if (!noAttack || !noAttack.mechanic) {
+        return { powerPart: null, techniquePart: null };
+      }
+      return {
+        powerPart: null,
+        techniquePart: toEmpoweredAutoMechanicPart(noAttack),
+      };
+    }
+
+    return { powerPart: null, techniquePart: null };
+  }, [attackMode, powerParts, techniqueParts]);
+
+  const attackModePowerPart = attackModeParts.powerPart;
+  const attackModeTechniquePart = attackModeParts.techniquePart;
 
   const powerPayload: PowerPartPayload[] = useMemo(
     () => [
@@ -164,9 +199,9 @@ export function useEmpoweredTechniqueCostDerivation({
         applyDuration: selected.applyDuration,
       })),
       ...powerMechanicParts,
-      ...(addWeaponToPowerPart ? [addWeaponToPowerPart] : []),
+      ...(attackModePowerPart ? [attackModePowerPart] : []),
     ],
-    [addWeaponToPowerPart, powerMechanicParts, selectedPowerAdvancedParts, selectedPowerParts],
+    [attackModePowerPart, powerMechanicParts, selectedPowerAdvancedParts, selectedPowerParts],
   );
 
   const techniquePayload: TechniquePartPayload[] = useMemo(
@@ -186,8 +221,19 @@ export function useEmpoweredTechniqueCostDerivation({
         op_2_lvl: part.op_2_lvl,
         op_3_lvl: part.op_3_lvl,
       })),
+      ...(attackModeTechniquePart
+        ? [
+            {
+              id: Number(attackModeTechniquePart.id),
+              name: attackModeTechniquePart.name,
+              op_1_lvl: attackModeTechniquePart.op_1_lvl,
+              op_2_lvl: attackModeTechniquePart.op_2_lvl,
+              op_3_lvl: attackModeTechniquePart.op_3_lvl,
+            },
+          ]
+        : []),
     ],
-    [selectedTechniqueParts, techniqueDamageMechanicParts],
+    [attackModeTechniquePart, selectedTechniqueParts, techniqueDamageMechanicParts],
   );
 
   const costs = useMemo(
@@ -310,9 +356,27 @@ export function useEmpoweredTechniqueCostDerivation({
       op_3_lvl: part.op_3_lvl,
     }));
 
+    let weaponCost: EmpoweredSectionCostSlice = emptySectionCost();
+    if (attackModePowerPart) {
+      weaponCost = calculatePowerCosts([attackModePowerPart], powerParts);
+    } else if (attackModeTechniquePart) {
+      weaponCost = calculateTechniqueCosts(
+        [
+          {
+            id: Number(attackModeTechniquePart.id),
+            name: attackModeTechniquePart.name,
+            op_1_lvl: attackModeTechniquePart.op_1_lvl,
+            op_2_lvl: attackModeTechniquePart.op_2_lvl,
+            op_3_lvl: attackModeTechniquePart.op_3_lvl,
+          },
+        ],
+        techniqueParts,
+      );
+    }
+
     return {
       action: calculatePowerCosts(actionParts, powerParts),
-      weapon: calculatePowerCosts(addWeaponToPowerPart ? [addWeaponToPowerPart] : [], powerParts),
+      weapon: weaponCost,
       range: calculatePowerCosts(rangeParts, powerParts),
       area: calculatePowerCosts(areaParts, powerParts),
       duration: calculatePowerCosts(durationParts, powerParts),
@@ -349,7 +413,8 @@ export function useEmpoweredTechniqueCostDerivation({
       techniqueDamage: calculateTechniqueCosts(techniqueDamageParts, techniqueParts),
     };
   }, [
-    addWeaponToPowerPart,
+    attackModePowerPart,
+    attackModeTechniquePart,
     powerMechanicParts,
     powerParts,
     selectedPowerAdvancedParts,
@@ -381,7 +446,8 @@ export function useEmpoweredTechniqueCostDerivation({
   return {
     powerMechanicParts,
     techniqueDamageMechanicParts,
-    addWeaponToPowerPart,
+    attackModePowerPart,
+    attackModeTechniquePart,
     powerPayload,
     techniquePayload,
     costs,

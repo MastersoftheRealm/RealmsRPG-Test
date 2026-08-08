@@ -7,7 +7,7 @@
 
 import {
   attackModeColumnLabel,
-  derivePowerAttackMode,
+  deriveEmpoweredAttackMode,
   deriveTechniqueAttackMode,
   type AttackMode,
 } from '@/lib/attack-mode';
@@ -214,7 +214,7 @@ export function rowToItem(
     const savedParts = collectPayloadParts(payload);
     const attackMode: AttackMode =
       type === 'empowered-techniques'
-        ? derivePowerAttackMode({
+        ? deriveEmpoweredAttackMode({
             attackMode: payload.attackMode,
             parts: savedParts,
             weapon: (payload.power as Record<string, unknown> | undefined)?.addWeapon as
@@ -447,7 +447,7 @@ export function bodyToColumnar(
     const savedParts = collectPayloadParts(payload);
     const attackMode: AttackMode =
       type === 'empowered-techniques'
-        ? derivePowerAttackMode({
+        ? deriveEmpoweredAttackMode({
             attackMode: payload.attackMode ?? body.attackMode,
             parts: savedParts,
             weapon: (payload.power as Record<string, unknown> | undefined)?.addWeapon as

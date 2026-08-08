@@ -94,7 +94,8 @@ export function useEmpoweredTechniqueCreatorWorkspace({
   const {
     powerMechanicParts,
     techniqueDamageMechanicParts,
-    addWeaponToPowerPart,
+    attackModePowerPart,
+    attackModeTechniquePart,
     costs,
     advancedCalcRows,
     sectionCosts,
@@ -234,12 +235,15 @@ export function useEmpoweredTechniqueCreatorWorkspace({
           range,
           area,
           duration,
-          addWeaponPowerPart: addWeaponToPowerPart,
+          addWeaponPowerPart: attackModePowerPart,
         },
         technique: {
           parts: techniquePartsToSave,
           additionalDamage: techniqueDamage.amount > 0 ? [{ amount: techniqueDamage.amount, size: techniqueDamage.size }] : [],
-          autoMechanics: dedupeSavedParts(techniqueDamageMechanicParts),
+          autoMechanics: dedupeSavedParts([
+            ...techniqueDamageMechanicParts,
+            ...(attackModeTechniquePart ? [attackModeTechniquePart] : []),
+          ]),
         },
         totals: {
           energy: costs.totalEnergy,
@@ -249,7 +253,8 @@ export function useEmpoweredTechniqueCreatorWorkspace({
     };
   }, [
     actionType,
-    addWeaponToPowerPart,
+    attackModePowerPart,
+    attackModeTechniquePart,
     area,
     attackMode,
     costs.totalEnergy,

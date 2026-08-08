@@ -40,6 +40,7 @@ function collectEmpoweredTechniqueSavedParts(
 ): TechniqueDocument['parts'] {
   const parts: unknown[] = [];
   if (Array.isArray(technique.parts)) parts.push(...technique.parts);
+  if (Array.isArray(technique.autoMechanics)) parts.push(...technique.autoMechanics);
   // Legacy rows may still store technique parts at the top level.
   if (Array.isArray(raw.parts)) parts.push(...raw.parts);
   return dedupeSavedParts(parts as NonNullable<TechniqueDocument['parts']>);

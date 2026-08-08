@@ -2915,3 +2915,11 @@ Notes
 - Feedback (verbatim summary): Search bar should span full width until the Sync with current patch button (match codex full-span search). Rename Enhanced tab to **Enhanced Items** and place it immediately before Creatures.
 - Expected: `UserLibraryEntityTabShell` search uses codex-style `flex-1` wrapper; tab label **Enhanced Items**; tab order … Shields → Enhanced Items → Creatures.
 - Disposition: **Implemented** — `UserLibraryEntityTabShell` search row aligned to `CodexBrowseListShell`; `page.tsx` `TABS` updated. pending-qa **DEV-V-048-T001** (+ refresh DEV-V-016-T011 / DEV-V-019-T004 labels). Follow-up **TASK-682** — extract shared `ListSearchToolbar`.
+
+**Raw Feedback Log — 2026-08-06 (Empowered creator cheaper EN overlap + No Attack)**
+- Date: 2026-08-06
+- Context: `/empowered-technique-creator` — Attack / overlapping power vs technique mechanic parts
+- Priority: High
+- Feedback (verbatim summary): Empowered creator currently favors more expensive energy-wise parts when similar parts exist between power and techniques. Guiding rule: when technique/power parts overlap for a hard-tied UI control (e.g. Add Weapon), use whichever of the two IDs is cheaper Energy. Also for No Attack, add the No Attack mechanic like the technique creator does.
+- Expected: Cheaper-EN pick between overlapping power/technique parts; Weapon Attack uses cheaper of Add Weapon to Power vs Add Weapon to Technique; No Weapon/Attack adds No Attack reduction part.
+- Disposition: Filed **TASK-683**. **Implemented 2026-08-06** — `pickCheaperEnPart` + `deriveEmpoweredAttackMode`; Weapon uses cheaper Add Weapon (live technique 2.5 vs power 4.5); No Attack on No Weapon/Attack; pending-qa **DEV-V-049-T001**.

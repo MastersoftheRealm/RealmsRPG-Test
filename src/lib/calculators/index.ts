@@ -89,6 +89,13 @@ export {
   type CalculateEmpoweredTechniqueCostsInput,
 } from './empowered-technique-calc';
 
+export {
+  pickCheaperEnPart,
+  toEmpoweredAutoMechanicPart,
+  type EmpoweredPartSide,
+  type EmpoweredPartCostCandidate,
+} from './empowered-overlap-parts';
+
 // Item Calculator
 export {
   calculateItemCosts,
