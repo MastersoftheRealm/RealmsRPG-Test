@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildPowerTechniqueBudgetDisplay,
   buildSelectableItem,
   getItemColumns,
   getListHeaderColumns,
@@ -82,6 +83,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(selectable.columns?.find((c) => c.key === 'Action')?.value).toBe('Basic action');
     expect(selectable.columns?.find((c) => c.key === 'Attack')?.value).toBe('Weapon');
     expect(selectable.data).toMatchObject({ id: 't1', name: 'Strike' });
+    expect(selectable.powerTechniqueFilter?.actionTypeRaw).toBe('basic');
   });
 
   it('mixed armament headers + buildSelectableItem facts (DEV-V-016-T003)', () => {
@@ -148,5 +150,45 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(selectable.data).toBe(weapon);
     expect(selectable.columns?.[0]?.key).toBe('type');
     expect(String(selectable.columns?.[0]?.value).toLowerCase()).toContain('weapon');
+  });
+
+  it('buildPowerTechniqueBudgetDisplay shapes guided budget columns + chips (TASK-691)', () => {
+    const display = buildPowerTechniqueBudgetDisplay(
+      'power',
+      {
+        id: 'p1',
+        name: 'Test Bolt',
+        description: 'A test power.',
+        parts: [],
+        actionType: 'quick',
+      },
+      'p1',
+      [],
+      []
+    );
+    expect(display.name).toBe('Test Bolt');
+    expect(display.columns.map((c) => c.key)).toEqual(['action', 'energy', 'tp']);
+    expect(display.titleChips.some((c) => /^Training Points\b/.test(c.name))).toBe(true);
+    expect(display.titleChips.some((c) => /^Energy\b/.test(c.name))).toBe(false);
+    expect(display.detailChips.some((c) => /^Training Points\b/.test(c.name))).toBe(false);
+  });
+
+  it('buildSelectableItem attaches powerTechniqueFilter for USM filters (TASK-675)', () => {
+    const selectable = buildSelectableItem(
+      {
+        id: 'p1',
+        name: 'Bolt',
+        description: 'Zap.',
+        actionType: 'basic',
+        parts: [],
+      },
+      'power',
+      emptyCodex
+    );
+    expect(selectable.powerTechniqueFilter).toMatchObject({
+      actionTypeRaw: 'basic',
+      isReaction: false,
+    });
+    expect(selectable.data).toMatchObject({ id: 'p1', name: 'Bolt' });
   });
 });

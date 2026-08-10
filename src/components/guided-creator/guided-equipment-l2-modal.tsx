@@ -7,24 +7,15 @@ import {
   type SelectableItem,
 } from '@/components/shared';
 import type { GuidedDraft, GuidedEquipmentPhase } from '@/stores/guided-creator-store';
-import type { LibraryItem } from '@/types/library';
-import type { CodexEquipmentItem } from '@/types/codex';
+import type { EligibleEquipmentRow } from '@/lib/guided-creator/equipment-eligibility';
 import {
   applyGuidedEquipmentL2Selection,
-  buildGuidedEquipmentL2Items,
   computeL2CurrencySpent,
   computeL2GearSpend,
   computeL2TpSpent,
   initialSelectedIdsForPhase,
 } from '@/lib/guided-creator/guided-equipment-l2';
-import { pathRecommendedIdSet } from '@/lib/guided-creator/equipment-phase-candidates';
-import { buildPathLoadoutPool } from '@/lib/guided-creator/loadout-pool';
-import {
-  buildGuidedEquipmentEligibilityContext,
-  useGuidedEquipmentCatalog,
-} from '@/hooks/use-guided-equipment-catalog';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import { normalizeId } from '@/lib/utils';
 import {
   l2GridColumnsForPhase,
   l2HeaderColumnsForPhase,
@@ -36,13 +27,13 @@ export interface GuidedEquipmentL2ModalProps {
   isOpen: boolean;
   phase: GuidedEquipmentPhase;
   draft: GuidedDraft;
-  pathLevel1: Parameters<typeof buildPathLoadoutPool>[0];
-  officialItems: LibraryItem[];
-  codexEquipment: CodexEquipmentItem[];
+  /** Shared catalog + L2 items from the step (single `useGuidedEquipmentCatalog` + L2 hook). */
+  catalog: Map<string, EligibleEquipmentRow>;
+  items: SelectableItem[];
+  tpLimit: number;
+  gearBudget: number;
   /** Level-1 starting Currency (PointStatus total). */
   currencyStarting: number;
-  /** Currency spent on weapons/armor (gear PointStatus budget base). */
-  armsSpent: number;
   onClose: () => void;
   onDraftChange: (partial: Partial<GuidedDraft>) => void;
 }
@@ -51,68 +42,15 @@ export function GuidedEquipmentL2Modal({
   isOpen,
   phase,
   draft,
-  pathLevel1,
-  officialItems,
-  codexEquipment,
+  catalog,
+  items,
+  tpLimit,
+  gearBudget,
   currencyStarting,
-  armsSpent,
   onClose,
   onDraftChange,
 }: GuidedEquipmentL2ModalProps) {
   const [error, setError] = useState<string | null>(null);
-  const { catalog, tpSummary, itemProperties } = useGuidedEquipmentCatalog(
-    draft,
-    officialItems,
-    codexEquipment
-  );
-
-  const pool = useMemo(() => buildPathLoadoutPool(pathLevel1), [pathLevel1]);
-
-  const pathRecommendedIds = useMemo(
-    () => pathRecommendedIdSet(pool, phase, officialItems, codexEquipment),
-    [phase, pool, officialItems, codexEquipment]
-  );
-
-  /** Gear L2 replaces draft.equipment — ceiling is starting − arms (not − current gear). */
-  const gearBudget = currencyStarting - armsSpent;
-
-  /**
-   * Cross-phase TP only — current-phase draft spend is reclaimable when Confirm replaces
-   * that phase's selection.
-   */
-  const crossPhaseTpSpent = useMemo(() => {
-    const refs =
-      phase === 'weapon' ? draft.loadoutArmor : phase === 'armor' ? draft.loadoutWeapons : [];
-    return refs.reduce((sum, ref) => {
-      const row = catalog.get(normalizeId(ref.id));
-      return sum + (row?.trainingPoints ?? 0) * Math.max(1, ref.quantity);
-    }, 0);
-  }, [phase, draft.loadoutArmor, draft.loadoutWeapons, catalog]);
-
-  const eligibilityCtx = useMemo(
-    () =>
-      buildGuidedEquipmentEligibilityContext(
-        phase,
-        draft,
-        { spent: crossPhaseTpSpent, limit: tpSummary.limit },
-        pathRecommendedIds,
-        phase === 'gear' ? gearBudget : undefined
-      ),
-    [phase, draft, crossPhaseTpSpent, tpSummary.limit, pathRecommendedIds, gearBudget]
-  );
-
-  const items = useMemo(
-    () =>
-      buildGuidedEquipmentL2Items(
-        phase,
-        catalog,
-        eligibilityCtx,
-        officialItems,
-        codexEquipment,
-        itemProperties
-      ),
-    [phase, catalog, eligibilityCtx, officialItems, codexEquipment, itemProperties]
-  );
 
   const initialSelectedIds = useMemo(
     () => initialSelectedIdsForPhase(phase, draft),
@@ -148,7 +86,7 @@ export function GuidedEquipmentL2Modal({
         draft,
         selected,
         catalog,
-        tpSummary.limit,
+        tpLimit,
         gearBudget
       );
       if (!result.ok) {
@@ -158,7 +96,7 @@ export function GuidedEquipmentL2Modal({
       setError(null);
       if (result.partial) onDraftChange(result.partial);
     },
-    [phase, draft, catalog, tpSummary.limit, gearBudget, onDraftChange]
+    [phase, draft, catalog, tpLimit, gearBudget, onDraftChange]
   );
 
   const footerExtra = useCallback(
@@ -169,23 +107,20 @@ export function GuidedEquipmentL2Modal({
         <LoadoutBudgetBar
           currencyTotal={currencyStarting}
           currencySpent={currencySpent}
-          tpTotal={tpSummary.limit}
+          tpTotal={tpLimit}
           tpSpent={tpSpent}
           currencyLabel={l2Copy.currencyLabel}
           trainingPointsLabel={l2Copy.tpLabel}
         >
           {error ? (
-            <p
-              className="font-nunito text-sm text-warning-700 dark:text-warning-400 text-center"
-              role="alert"
-            >
+            <p className="font-nunito text-sm text-warning-fg text-center" role="alert">
               {error}
             </p>
           ) : null}
         </LoadoutBudgetBar>
       );
     },
-    [phase, draft, catalog, tpSummary.limit, currencyStarting, error]
+    [phase, draft, catalog, tpLimit, currencyStarting, error]
   );
 
   const confirmDisabled = useCallback(
@@ -193,9 +128,9 @@ export function GuidedEquipmentL2Modal({
       if (phase === 'gear') {
         return computeL2GearSpend(selected) > gearBudget;
       }
-      return computeL2TpSpent(phase, draft, selected, catalog) > tpSummary.limit;
+      return computeL2TpSpent(phase, draft, selected, catalog) > tpLimit;
     },
-    [phase, draft, catalog, tpSummary.limit, gearBudget]
+    [phase, draft, catalog, tpLimit, gearBudget]
   );
 
   return (

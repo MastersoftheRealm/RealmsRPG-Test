@@ -18,6 +18,8 @@ import {
 } from '@/lib/chip/list-row-metadata';
 import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/build-empowered-selectable-item';
 import type { WithSource } from '@/hooks/add-library-item/types';
+import { buildPowerTechniqueFilterableRow } from '@/lib/library-selectable-builders';
+import { TRAINING_POINTS_COST_LABEL } from '@/lib/detail-option/compact-facts';
 
 export type { WithSource };
 
@@ -118,9 +120,15 @@ export function powerListToSelectable(
         ],
         detailSections: detailSections.length > 0 ? detailSections : undefined,
         totalCost: display.tp > 0 ? display.tp : undefined,
-        costLabel: display.tp > 0 ? 'Training Points' : undefined,
+        costLabel: display.tp > 0 ? TRAINING_POINTS_COST_LABEL : undefined,
         badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
         data: power,
+        powerTechniqueFilter: buildPowerTechniqueFilterableRow(
+          'power',
+          power,
+          powerParts ?? [],
+          []
+        ),
       },
     ];
   });
@@ -173,9 +181,18 @@ export function techniqueListToSelectable(
         ],
         detailSections: detailSections.length > 0 ? detailSections : undefined,
         totalCost: typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined,
-        costLabel: typeof display.tp === 'number' && display.tp > 0 ? 'Training Points' : undefined,
+        costLabel:
+          typeof display.tp === 'number' && display.tp > 0
+            ? TRAINING_POINTS_COST_LABEL
+            : undefined,
         badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
         data: tech,
+        powerTechniqueFilter: buildPowerTechniqueFilterableRow(
+          'technique',
+          tech,
+          [],
+          techniqueParts ?? []
+        ),
       },
     ];
   });

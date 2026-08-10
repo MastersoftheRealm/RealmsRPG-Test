@@ -14,6 +14,12 @@ import {
   buildOfficialItemRows,
 } from '@/lib/library/official-item-list';
 import {
+  ARMOR_L2_HEADER_COLUMNS,
+  GEAR_L2_HEADER_COLUMNS,
+  WEAPON_L2_HEADER_COLUMNS,
+} from '@/components/guided-creator/guided-equipment-l2-grid';
+import { POWERS_TECHNIQUES_L2_HEADER_COLUMNS } from '@/lib/guided-creator/powers-techniques-l2';
+import {
   OFFICIAL_POWER_HEADER_COLUMNS,
 } from '@/lib/library/official-power-list';
 import {
@@ -153,6 +159,37 @@ describe('GLR required-facts registry — surface column configs (TASK-629)', ()
     );
     const errors = validateSurfaceColumnConfig('library-official-armor', keys);
     expect(errors.some((e) => e.includes('abilityRequirement'))).toBe(true);
+  });
+
+  it('guided powers/techniques L3 headers satisfy registry (TASK-687)', () => {
+    assertSurfaceColumnConfig(
+      'guided-powers-l3',
+      headerKeys(POWERS_TECHNIQUES_L2_HEADER_COLUMNS)
+    );
+    assertSurfaceColumnConfig(
+      'guided-techniques-l3',
+      headerKeys(POWERS_TECHNIQUES_L2_HEADER_COLUMNS)
+    );
+  });
+
+  it('guided equipment L3 headers satisfy registry (TASK-688)', () => {
+    assertSurfaceColumnConfig(
+      'guided-equipment-weapon-l3',
+      headerKeys(WEAPON_L2_HEADER_COLUMNS)
+    );
+    assertSurfaceColumnConfig(
+      'guided-equipment-armor-l3',
+      headerKeys(ARMOR_L2_HEADER_COLUMNS)
+    );
+    assertSurfaceColumnConfig(
+      'guided-equipment-gear-l3',
+      headerKeys(GEAR_L2_HEADER_COLUMNS)
+    );
+    // Shields share the weapon-phase header set; Block lives in the Damage cell.
+    assertSurfaceColumnConfig(
+      'guided-equipment-shield-l3',
+      headerKeys(WEAPON_L2_HEADER_COLUMNS)
+    );
   });
 });
 

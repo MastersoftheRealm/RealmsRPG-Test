@@ -17,18 +17,10 @@ import { ExpandableImage } from '@/components/shared';
 import { useMergedSpecies, useCodexFeats } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
+import { buildPreviewAbilityChips } from '@/lib/guided-creator/preview-ability-summary';
+import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy/archetype-category-copy';
 import { useGuidedPathData } from './use-guided-path-data';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import type { AbilityName } from '@/types';
-
-const ABILITY_ABBR: Record<AbilityName, string> = {
-  strength: 'STR',
-  vitality: 'VIT',
-  agility: 'AGI',
-  acuity: 'ACU',
-  intelligence: 'INT',
-  charisma: 'CHA',
-};
 
 function PreviewChip({ label, value }: { label: string; value: string }) {
   return (
@@ -85,15 +77,22 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
     return ids.map((id) => byId.get(String(id)) ?? id);
   }, [draft.archetypeFeatIds, draft.characterFeatIds, feats]);
 
-  const topAbilities = useMemo(() => {
-    return (Object.entries(draft.abilities) as [AbilityName, number][])
-      .filter(([, v]) => v !== 0)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 3);
-  }, [draft.abilities]);
+  /** All six abilities with signed values (TASK-686). */
+  const abilityChips = useMemo(
+    () => buildPreviewAbilityChips(draft.abilities),
+    [draft.abilities]
+  );
+
+  /** Path name when forging from a codex path; category label when custom (TASK-686). */
+  const archetypeChipLabel = useMemo(() => {
+    if (archetype?.name) return archetype.name;
+    if (draft.archetypeType) return ARCHETYPE_CATEGORY_INFO[draft.archetypeType].title;
+    return null;
+  }, [archetype, draft.archetypeType]);
 
   const powerTechniqueCount = draft.powerIds.length + draft.techniqueIds.length;
-  const subtitle = [speciesName, archetype?.name].filter(Boolean).join(' · ') || copy.defaultSubtitle;
+  const subtitle =
+    [speciesName, archetypeChipLabel].filter(Boolean).join(' · ') || copy.defaultSubtitle;
   const displayName = draft.name?.trim() || copy.defaultName;
 
   if (variant === 'strip') {
@@ -126,14 +125,14 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
           </div>
           <div className="truncate font-nunito text-xs text-text-secondary sm:text-sm">{subtitle}</div>
         </div>
-        {(archetype?.name || topAbilities.length > 0) && (
-          <div className="hidden shrink-0 items-center gap-2 sm:flex">
-            {archetype?.name && (
-              <DescriptorChip size="sm">{archetype.name}</DescriptorChip>
+        {(archetypeChipLabel || abilityChips.length > 0) && (
+          <div className="flex max-w-[min(100%,22rem)] shrink-0 items-center gap-1 overflow-x-auto sm:max-w-[55%] sm:gap-1.5 md:max-w-none md:flex-wrap">
+            {archetypeChipLabel && (
+              <DescriptorChip size="sm">{archetypeChipLabel}</DescriptorChip>
             )}
-            {topAbilities.slice(0, 2).map(([ability, value]) => (
-              <DescriptorChip key={ability} variant="primary" size="sm">
-                {ABILITY_ABBR[ability]} {value > 0 ? `+${value}` : value}
+            {abilityChips.map((chip) => (
+              <DescriptorChip key={chip.ability} variant="primary" size="sm">
+                {chip.abbr} {chip.display}
               </DescriptorChip>
             ))}
           </div>
@@ -171,23 +170,25 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
         </div>
       </div>
 
-      {topAbilities.length > 0 && (
-        <div className="mt-4 grid grid-cols-3 gap-2">
-          {topAbilities.map(([ability, value]) => (
-            <PreviewChip
-              key={ability}
-              label={ABILITY_ABBR[ability]}
-              value={value > 0 ? `+${value}` : String(value)}
-            />
-          ))}
-        </div>
-      )}
+      <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
+        {abilityChips.map((chip) => (
+          <PreviewChip key={chip.ability} label={chip.abbr} value={chip.display} />
+        ))}
+      </div>
 
       <dl className="mt-4 space-y-2 font-nunito text-sm">
         {archetype?.name && (
           <div className="flex justify-between gap-2">
             <dt className="text-text-secondary">Path</dt>
             <dd className="font-medium text-text-primary text-right truncate">{archetype.name}</dd>
+          </div>
+        )}
+        {!archetype?.name && draft.archetypeType && (
+          <div className="flex justify-between gap-2">
+            <dt className="text-text-secondary">Archetype</dt>
+            <dd className="font-medium text-text-primary text-right truncate">
+              {ARCHETYPE_CATEGORY_INFO[draft.archetypeType].title}
+            </dd>
           </div>
         )}
         {draft.selectedAncestryTraitIds.length > 0 && (

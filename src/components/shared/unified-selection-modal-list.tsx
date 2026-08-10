@@ -5,9 +5,14 @@ import { GridListRow } from './grid-list-row';
 import { gridColumnsWithInlineSelection } from './grid-list-row-chrome';
 import { ListHeader } from './list-header';
 import { EmptyState, LoadingState } from './list-components';
+import { QuantitySelector } from './quantity-selector';
 import { TabContentPanel } from '@/components/ui/tab-navigation';
 import type { SortState } from '@/components/shared/list-header';
 import type { ColumnHeader, SelectableItem } from './unified-selection-modal-types';
+
+/** Far-right quantity stepper width (replaces selection + when showQuantity).
+ * Fits ValueStepper md (2×32px + value) on desktop and 44px touch targets on mobile (TASK-688). */
+export const USM_QUANTITY_RIGHT_SLOT_WIDTH = '7.5rem';
 
 export interface UnifiedSelectionModalListProps {
   isLoading: boolean;
@@ -80,31 +85,36 @@ export function UnifiedSelectionModalList({
                   costLabel={item.costLabel}
                   badges={item.badges}
                   gridColumns={
-                    gridColumns ? gridColumnsWithInlineSelection(gridColumns) : undefined
+                    showQuantity
+                      ? gridColumns
+                      : gridColumns
+                        ? gridColumnsWithInlineSelection(gridColumns)
+                        : undefined
                   }
-                  selectable
+                  // Quantity-first: stepper on the far right replaces the + selection toggle
+                  // (TASK-685). Row click is disabled — only the stepper changes amount.
+                  selectable={!showQuantity}
                   isSelected={isSelected}
                   onSelect={() => onToggleSelection(item.id)}
                   disabled={isSelectionDisabled}
                   warningMessage={item.warningMessage}
                   compact
-                  quantity={qty}
-                  quantityMin={showQuantity ? 0 : 1}
-                  quantityDecrementLabel={
-                    showQuantity
-                      ? `Decrease quantity for ${item.name}`
-                      : undefined
+                  rightSlot={
+                    showQuantity ? (
+                      <QuantitySelector
+                        quantity={qty ?? 0}
+                        onChange={(next) =>
+                          onQuantityChange(itemIdStr, next - (qty ?? 0), isSelected)
+                        }
+                        size="sm"
+                        min={0}
+                        disabled={isSelectionDisabled}
+                        decrementLabel={`Decrease quantity for ${item.name}`}
+                        incrementLabel={`Increase quantity for ${item.name}`}
+                      />
+                    ) : undefined
                   }
-                  quantityIncrementLabel={
-                    showQuantity
-                      ? `Increase quantity for ${item.name}`
-                      : undefined
-                  }
-                  onQuantityChange={
-                    showQuantity && !isSelectionDisabled
-                      ? (delta) => onQuantityChange(itemIdStr, delta, isSelected)
-                      : undefined
-                  }
+                  rowChrome={showQuantity ? { rightSlot: true } : undefined}
                 />
               </div>
             );
@@ -138,12 +148,15 @@ export function UnifiedSelectionModalColumnHeaders({
   hasThumbnailColumn,
   sortState,
   onSort,
+  showQuantity = false,
 }: {
   columns: ColumnHeader[];
   gridColumns?: string;
   hasThumbnailColumn: boolean;
   sortState: SortState;
   onSort: (key: string) => void;
+  /** When true, reserve far-right qty chrome instead of the selection + column. */
+  showQuantity?: boolean;
 }) {
   if (columns.length === 0) return null;
 
@@ -159,7 +172,8 @@ export function UnifiedSelectionModalColumnHeaders({
         gridColumns={gridColumns}
         sortState={sortState}
         onSort={onSort}
-        hasSelectionColumn
+        hasSelectionColumn={!showQuantity}
+        rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined}
         hasThumbnailColumn={hasThumbnailColumn}
         compact
       />

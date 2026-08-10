@@ -49,6 +49,7 @@
     "src/components/shared/grid-list-row-types.ts",
     "src/components/shared/grid-list-row.tsx",
     "src/components/shared/guided-choice/guided-choice-shell.tsx",
+    "src/components/shared/guided-choice/guided-inline-catalog-list.tsx",
     "src/components/shared/guided-choice/guided-layer-nav.tsx",
     "src/components/shared/guided-choice/guided-nav-button-styles.ts",
     "src/components/shared/guided-choice/index.ts",

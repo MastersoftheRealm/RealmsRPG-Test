@@ -29,9 +29,19 @@ import {
   propertiesProficienciesSection,
 } from '@/lib/chip/list-row-metadata';
 import {
+  actionTypeFactChip,
+  energyFactChip,
+  formatActionTypeValue,
   namedPropertyDescriptorChips,
+  trainingPointsFactChip,
   TRAINING_POINTS_COST_LABEL,
 } from '@/lib/detail-option/compact-facts';
+import {
+  derivePartCategories,
+  powerHasDamageCategory,
+  withDamageCategory,
+} from '@/lib/library/power-technique-categories';
+import type { PowerTechniqueFilterableRow } from '@/lib/library/power-technique-filters';
 import type { PowerPart, TechniquePart, ItemProperty } from '@/hooks/codex-types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 
@@ -88,6 +98,236 @@ export type PowerColumnDisplay = {
   damage: string;
   area: string;
 };
+
+/**
+ * Shared Energy / TP / Action Type from derivePowerDisplay / deriveTechniqueDisplay.
+ * Used by Add/Load modals and Guided creator (TASK-687 cleanup) — single derive path.
+ */
+export type PowerTechniqueBudgetKind = 'power' | 'technique';
+
+export interface PowerTechniqueBudgetFacts {
+  energy?: number;
+  tp: number;
+  actionType: string;
+  name: string;
+  description?: string;
+}
+
+type PowerTechniqueBudgetItem = {
+  id?: string | number;
+  docId?: string;
+  name?: string;
+  description?: string;
+  parts?: unknown;
+  actionType?: string;
+  isReaction?: boolean;
+  weapon?: { name?: string } | null;
+  weaponName?: string;
+};
+
+export function derivePowerTechniqueBudgetFacts(
+  kind: PowerTechniqueBudgetKind,
+  item: PowerTechniqueBudgetItem | undefined,
+  powerPartsDb: PowerPart[],
+  techniquePartsDb: TechniquePart[]
+): PowerTechniqueBudgetFacts {
+  const name = item?.name ? String(item.name) : '';
+  const description = item?.description ? String(item.description) : undefined;
+  if (!item) {
+    return { tp: 0, actionType: '—', name, description };
+  }
+  try {
+    if (kind === 'technique') {
+      const doc: TechniqueDocument = {
+        name: String(item.name ?? ''),
+        description: String(item.description ?? ''),
+        parts: (item.parts ?? []) as TechniqueDocument['parts'],
+        actionType: item.actionType,
+        weapon: item.weapon?.name
+          ? { name: item.weapon.name }
+          : item.weaponName
+            ? { name: item.weaponName }
+            : undefined,
+      };
+      const disp = deriveTechniqueDisplay(doc, techniquePartsDb);
+      const energy =
+        typeof disp.energy === 'number' ? Math.max(0, Math.floor(disp.energy)) : undefined;
+      return {
+        energy,
+        tp: Math.max(0, Math.round(disp.tp ?? 0)),
+        actionType: formatActionTypeForDisplay(disp.actionType || item.actionType || ''),
+        name: name || String(item.id ?? item.docId ?? ''),
+        description,
+      };
+    }
+    const doc: PowerDocument = {
+      name: String(item.name ?? ''),
+      description: String(item.description ?? ''),
+      parts: (item.parts ?? []) as PowerDocument['parts'],
+      actionType: item.actionType,
+      isReaction: item.isReaction,
+    };
+    const disp = derivePowerDisplay(doc, powerPartsDb);
+    const energy =
+      typeof disp.energy === 'number' ? Math.max(0, Math.floor(disp.energy)) : undefined;
+    return {
+      energy,
+      tp: Math.max(0, Math.round(disp.tp ?? 0)),
+      actionType:
+        disp.actionType ||
+        formatSavedActionTypeForDisplay(item.actionType, item.isReaction) ||
+        '—',
+      name: name || String(item.id ?? item.docId ?? ''),
+      description,
+    };
+  } catch {
+    return { tp: 0, actionType: '—', name, description };
+  }
+}
+
+/** Guided L2/L3 budget columns: Action Type | Energy | Training Points. */
+export function getPowerTechniqueBudgetColumns(
+  facts: PowerTechniqueBudgetFacts
+): ColumnValue[] {
+  return [
+    { key: 'action', value: facts.actionType || '—', align: 'center' },
+    {
+      key: 'energy',
+      value: facts.energy != null ? String(facts.energy) : '—',
+      align: 'center',
+    },
+    { key: 'tp', value: String(facts.tp), align: 'center' },
+  ];
+}
+
+/**
+ * Guided L1 card + L2/L3 SelectableItem display from the shared budget derive path (TASK-691).
+ * Title chips = Training Points; detail chips = Action Type + Energy.
+ */
+export interface PowerTechniqueBudgetDisplay {
+  name: string;
+  description?: string;
+  energy?: number;
+  tp: number;
+  /** Display Action Type (for columns). */
+  actionType: string;
+  /** Capitalized Action Type value for filters (no "Action Type" prefix). */
+  actionTypeFilter?: string;
+  columns: ColumnValue[];
+  titleChips: ChipData[];
+  detailChips: ChipData[];
+}
+
+export function buildPowerTechniqueBudgetDisplay(
+  kind: PowerTechniqueBudgetKind,
+  item: PowerTechniqueBudgetItem | undefined,
+  fallbackId: string,
+  powerPartsDb: PowerPart[],
+  techniquePartsDb: TechniquePart[]
+): PowerTechniqueBudgetDisplay {
+  const titleChips: ChipData[] = [];
+  const detailChips: ChipData[] = [];
+
+  if (!item) {
+    const tpChip = trainingPointsFactChip(0);
+    if (tpChip) titleChips.push(tpChip);
+    return {
+      name: fallbackId,
+      description: undefined,
+      tp: 0,
+      actionType: '—',
+      columns: getPowerTechniqueBudgetColumns({
+        tp: 0,
+        actionType: '—',
+        name: fallbackId,
+      }),
+      titleChips,
+      detailChips,
+    };
+  }
+
+  const facts = derivePowerTechniqueBudgetFacts(
+    kind,
+    item,
+    powerPartsDb,
+    techniquePartsDb
+  );
+  const name = facts.name || fallbackId;
+  const description = facts.description;
+  const tp = facts.tp;
+  const energy = facts.energy;
+  const rawAction = item.actionType ?? facts.actionType;
+  const actionChip = actionTypeFactChip(rawAction);
+  if (actionChip) detailChips.push(actionChip);
+  const tpChip = trainingPointsFactChip(tp);
+  if (tpChip) titleChips.push(tpChip);
+  const energyChip = energyFactChip(energy);
+  if (energyChip) detailChips.push(energyChip);
+
+  return {
+    name,
+    description,
+    energy,
+    tp,
+    actionType: facts.actionType || '—',
+    actionTypeFilter: formatActionTypeValue(rawAction),
+    columns: getPowerTechniqueBudgetColumns({
+      ...facts,
+      name,
+      description,
+    }),
+    titleChips,
+    detailChips,
+  };
+}
+
+/** Build filter-apply row for USM / library PowerTechniqueFilters (TASK-675). */
+export function buildPowerTechniqueFilterableRow(
+  kind: PowerTechniqueBudgetKind,
+  item: PowerTechniqueBudgetItem & {
+    parts?: unknown;
+    damage?: unknown;
+    isReaction?: boolean;
+  },
+  powerPartsDb: PowerPart[],
+  techniquePartsDb: TechniquePart[]
+): PowerTechniqueFilterableRow {
+  const facts = derivePowerTechniqueBudgetFacts(
+    kind,
+    item,
+    powerPartsDb,
+    techniquePartsDb
+  );
+  const parts = Array.isArray(item.parts) ? item.parts : [];
+  const partsDb = kind === 'technique' ? techniquePartsDb : powerPartsDb;
+  let categories = derivePartCategories(
+    parts as Parameters<typeof derivePartCategories>[0],
+    partsDb
+  );
+  if (kind === 'power') {
+    categories = withDamageCategory(categories, powerHasDamageCategory(item.damage));
+  }
+  return {
+    categories,
+    energy: facts.energy,
+    tp: facts.tp,
+    actionTypeRaw: item.actionType ?? facts.actionType,
+    action: facts.actionType,
+    isReaction: item.isReaction === true,
+    partIds: parts
+      .map((part) => {
+        const p = part as { id?: string | number };
+        return p.id != null ? String(p.id) : '';
+      })
+      .filter(Boolean),
+    partNames: parts
+      .map((part) => {
+        const p = part as { name?: string };
+        return p.name != null ? String(p.name) : '';
+      })
+      .filter(Boolean),
+  };
+}
 
 export function getItemColumns(
   item: UserPower | UserTechnique | UserItem | EqItem,
@@ -395,6 +635,23 @@ export function buildSelectableItem(
     ? resolveListRowThumbnail(imageKind, item, name)
     : undefined;
 
+  const powerTechniqueFilter =
+    itemType === 'power'
+      ? buildPowerTechniqueFilterableRow(
+          'power',
+          item as UserPower,
+          powerPartsDb,
+          techniquePartsDb
+        )
+      : itemType === 'technique'
+        ? buildPowerTechniqueFilterableRow(
+            'technique',
+            item as UserTechnique,
+            powerPartsDb,
+            techniquePartsDb
+          )
+        : undefined;
+
   return {
     id: String(item.id),
     name,
@@ -405,5 +662,6 @@ export function buildSelectableItem(
     costLabel: totalCost != null ? costLabel : undefined,
     thumbnail,
     data: item,
+    powerTechniqueFilter,
   };
 }

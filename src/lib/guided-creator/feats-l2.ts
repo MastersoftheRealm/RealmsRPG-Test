@@ -1,13 +1,18 @@
 /**
  * Guided feats Layer 2 — UnifiedSelectionModal items (TASK-565).
  * Replaces in-step GuidedFeatsBrowsePanel card dump.
+ *
+ * Filter set mirrors the Codex Feats browse tab's non-requirement filters (Category,
+ * State Feats) — TASK-684. Character/level/ability requirement filters are intentionally
+ * omitted as controls: unmet feats are filtered out of the list automatically (selected
+ * unmet rows stay visible so they can be deselected). Feat Type (archetype vs character)
+ * is omitted because each guided step already scopes to one `featType`.
  */
 
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { Feat, Skill } from '@/hooks';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
-import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import {
   checkFeatRequirements,
   type CharacterForFeatRequirement,
@@ -24,6 +29,11 @@ export const FEATS_L2_HEADER_COLUMNS = [
 
 export const FEATS_L2_GRID = '1.5fr 0.6fr 0.6fr 0.8fr';
 
+/** Search covers name/description + tags/category (packed into `keywords`) — TASK-684. */
+export const FEATS_L2_SEARCH_FIELDS: (keyof SelectableItem)[] = ['name', 'description', 'keywords'];
+
+export type StateFeatFilterMode = 'all' | 'only' | 'hide';
+
 export function selectedIdsFromFeatL2Items(selected: SelectableItem[]): string[] {
   return selected.map((row) => String(row.id));
 }
@@ -31,32 +41,26 @@ export function selectedIdsFromFeatL2Items(selected: SelectableItem[]): string[]
 export function buildGuidedFeatsL2FilterOptions(
   feats: Feat[],
   featType: 'archetype' | 'character'
-): { categories: string[]; abilities: string[] } {
+): { categories: string[] } {
   const cats = new Set<string>();
-  const abils = new Set<string>();
   feats.forEach((f) => {
     if (featType === 'character' && !f.char_feat) return;
     if (featType === 'archetype' && f.char_feat) return;
     if (f.category) cats.add(f.category);
-    normalizeFeatAbilities(f.ability).forEach((a) => abils.add(a));
   });
-  return {
-    categories: Array.from(cats).sort(),
-    abilities: Array.from(abils).sort(),
-  };
+  return { categories: Array.from(cats).sort() };
 }
 
 export function buildGuidedFeatsL2Items(opts: {
   featType: 'archetype' | 'character';
   feats: Feat[];
   recommendedIds: string[];
-  /** Keep currently selected rows visible even when requirements are not met. */
+  /** Keep currently selected rows visible even when filters would otherwise hide them. */
   selectedIds?: string[];
   requirementCharacter: CharacterForFeatRequirement;
   codexSkills: Skill[];
-  showBlocked: boolean;
-  category?: string;
-  ability?: string;
+  categories?: string[];
+  stateFeatMode?: StateFeatFilterMode;
   /** Badge label for path / guidance recommended feats. */
   recommendedBadgeLabel?: string;
 }): SelectableItem[] {
@@ -67,9 +71,8 @@ export function buildGuidedFeatsL2Items(opts: {
     selectedIds = [],
     requirementCharacter,
     codexSkills,
-    showBlocked,
-    category = '',
-    ability = '',
+    categories = [],
+    stateFeatMode = 'all',
     recommendedBadgeLabel = 'Recommended',
   } = opts;
 
@@ -81,16 +84,16 @@ export function buildGuidedFeatsL2Items(opts: {
     featType === 'character' ? Boolean(f.char_feat) : !f.char_feat
   );
 
-  // Keep current picks in `items` even when filters would hide them — UnifiedSelectionModal
-  // confirm resolves via `items.filter(selectedIds)`, so dropping rows would wipe draft picks.
+  // Requirement eligibility: hide unmet feats (keep selected rows so the player can deselect
+  // even if they no longer qualify). Category / State Feats remain explicit filters.
   const filtered = typed.filter((feat) => {
     const id = String(feat.id);
     if (selectedSet.has(id)) return true;
-    if (category && feat.category !== category) return false;
-    if (ability && !normalizeFeatAbilities(feat.ability).includes(ability)) return false;
+    if (categories.length > 0 && !categories.includes(feat.category ?? '')) return false;
+    if (stateFeatMode === 'only' && !feat.state_feat) return false;
+    if (stateFeatMode === 'hide' && feat.state_feat) return false;
     const { met } = checkFeatRequirements(feat, requirementCharacter, codexSkills, feats);
-    if (!met && !showBlocked) return false;
-    return true;
+    return met;
   });
 
   const families = groupFeatFamilies(filtered);
@@ -121,11 +124,15 @@ export function buildGuidedFeatsL2Items(opts: {
       const id = String(preferred.id);
       const recommended = recommendedSet.has(id);
       const isSelected = selectedSet.has(id);
+      const keywords = [preferred.category, ...(preferred.tags ?? [])]
+        .filter((v): v is string => Boolean(v))
+        .join(' ');
 
       const row: SelectableItem = {
         id,
         name: formatFeatName(preferred),
         description: preferred.description,
+        keywords: keywords || undefined,
         columns: [
           { key: 'uses_per_rec', label: 'Uses', value: usesDisplay, align: 'center' as const },
           {
@@ -142,9 +149,9 @@ export function buildGuidedFeatsL2Items(opts: {
           },
         ],
         detailSections: detailSections.length > 0 ? detailSections : undefined,
-        // Keep selected rows interactive so the player can deselect; grey only unselected locked rows.
-        disabled: !met && showBlocked && !isSelected,
-        warningMessage: !met ? reason : undefined,
+        // Selected-but-unmet stays visible so the player can deselect; otherwise unmet are hidden above.
+        disabled: !met && isSelected,
+        warningMessage: !met && isSelected ? reason : undefined,
         badges: recommended
           ? [{ label: recommendedBadgeLabel, color: 'blue' as const }]
           : undefined,

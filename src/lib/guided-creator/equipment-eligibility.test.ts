@@ -41,6 +41,21 @@ describe('equipment-eligibility', () => {
     expect(shouldSkipArmorPhase('none')).toBe(true);
   });
 
+  it('Power always skips armor even when path armorStep is required (TASK-689)', () => {
+    expect(resolveArmorStepMode('required', 'power')).toBe('none');
+    expect(resolveArmorStepMode('optional', 'power')).toBe('none');
+    expect(resolveArmorStepMode('none', 'power')).toBe('none');
+  });
+
+  it('Martial / Powered-Martial honor explicit path armorStep', () => {
+    expect(resolveArmorStepMode('optional', 'martial')).toBe('optional');
+    expect(resolveArmorStepMode('none', 'martial')).toBe('none');
+    expect(resolveArmorStepMode('required', 'powered-martial')).toBe('required');
+    expect(resolveArmorStepMode(undefined, 'martial')).toBe('required');
+    expect(resolveArmorStepMode(undefined, 'powered-martial')).toBe('required');
+    expect(resolveArmorStepMode(undefined, null)).toBe('required');
+  });
+
   it('filters common items meeting ability requirements and armament max', () => {
     const rows: EligibleEquipmentRow[] = [
       {

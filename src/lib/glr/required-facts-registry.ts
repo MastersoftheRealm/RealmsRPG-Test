@@ -44,7 +44,19 @@ export type GlrSurfaceId =
   | 'add-modal-power'
   | 'add-modal-technique'
   | 'codex-feat'
-  | 'codex-equipment';
+  | 'codex-equipment'
+  /** Guided creator L2/L3 powers catalog (TASK-687). */
+  | 'guided-powers-l3'
+  /** Guided creator L2/L3 techniques catalog (TASK-687). */
+  | 'guided-techniques-l3'
+  /** Guided creator L2/L3 equipment weapon phase (TASK-688). */
+  | 'guided-equipment-weapon-l3'
+  /** Guided creator L2/L3 equipment armor phase (TASK-688). */
+  | 'guided-equipment-armor-l3'
+  /** Guided creator L2/L3 equipment shield-in-weapon phase (TASK-688). */
+  | 'guided-equipment-shield-l3'
+  /** Guided creator L2/L3 equipment gear phase (TASK-688). */
+  | 'guided-equipment-gear-l3';
 
 export type GlrFactPlacement = 'column' | 'chip' | 'column-or-chip' | 'rightSlot';
 
@@ -317,6 +329,68 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
     surfaceId: 'codex-equipment',
     entityType: 'equipment',
     requiredFacts: [FACT.damage, FACT.damageReduction],
+  },
+  /**
+   * Guided powers L2/L3 — budget-first columns (Action Type, Energy, Training Points).
+   * Intentionally omits Library browse extras (duration/area/damage) — creation filter surface.
+   */
+  'guided-powers-l3': {
+    surfaceId: 'guided-powers-l3',
+    entityType: 'power',
+    requiredFacts: [FACT.actionType, FACT.energy, FACT.trainingPoints],
+  },
+  'guided-techniques-l3': {
+    surfaceId: 'guided-techniques-l3',
+    entityType: 'technique',
+    requiredFacts: [FACT.actionType, FACT.energy, FACT.trainingPoints],
+  },
+  'guided-equipment-weapon-l3': {
+    surfaceId: 'guided-equipment-weapon-l3',
+    entityType: 'weapon',
+    requiredFacts: [
+      FACT.rarity,
+      FACT.currency,
+      FACT.trainingPoints,
+      FACT.range,
+      FACT.damage,
+    ],
+  },
+  'guided-equipment-armor-l3': {
+    surfaceId: 'guided-equipment-armor-l3',
+    entityType: 'armor',
+    requiredFacts: [
+      FACT.rarity,
+      FACT.currency,
+      FACT.trainingPoints,
+      FACT.damageReduction,
+      FACT.agilityReduction,
+      FACT.abilityRequirement,
+      FACT.criticalRangeIncrease,
+    ],
+  },
+  /**
+   * Shields appear in the guided weapon phase (mixed list) using weapon headers;
+   * Block is shown in the Damage cell (not a separate Block column).
+   */
+  'guided-equipment-shield-l3': {
+    surfaceId: 'guided-equipment-shield-l3',
+    entityType: 'shield',
+    requiredFacts: [
+      FACT.rarity,
+      FACT.currency,
+      FACT.trainingPoints,
+      FACT.range,
+      {
+        ...FACT.block,
+        placement: 'column-or-chip',
+        columnKeys: col('damage', 'block'),
+      },
+    ],
+  },
+  'guided-equipment-gear-l3': {
+    surfaceId: 'guided-equipment-gear-l3',
+    entityType: 'equipment',
+    requiredFacts: [FACT.rarity, FACT.currency],
   },
 };
 

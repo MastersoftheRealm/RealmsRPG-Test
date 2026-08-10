@@ -9,7 +9,7 @@
 
 'use client';
 
-import { useCallback, useId, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import {
   UnifiedSelectionModal,
   type SelectableItem,
@@ -21,8 +21,11 @@ import {
   buildGuidedFeatsL2Items,
   FEATS_L2_GRID,
   FEATS_L2_HEADER_COLUMNS,
+  FEATS_L2_SEARCH_FIELDS,
   selectedIdsFromFeatL2Items,
+  type StateFeatFilterMode,
 } from '@/lib/guided-creator/feats-l2';
+import { GuidedFeatsFilterFields } from './guided-feats-filter-fields';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const l2Copy = GUIDED_CREATOR_COPY.steps.featsL2;
@@ -50,14 +53,11 @@ export function GuidedFeatsL2Modal({
   onClose,
   onConfirm,
 }: GuidedFeatsL2ModalProps) {
-  const categorySelectId = useId();
-  const abilitySelectId = useId();
   const { data: codexSkills = [] } = useCodexSkills();
-  const [category, setCategory] = useState('');
-  const [ability, setAbility] = useState('');
-  const [showBlocked, setShowBlocked] = useState(false);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [stateFeatMode, setStateFeatMode] = useState<StateFeatFilterMode>('all');
 
-  const { categories, abilities } = useMemo(
+  const { categories: categoryOptions } = useMemo(
     () => buildGuidedFeatsL2FilterOptions(feats, featType),
     [feats, featType]
   );
@@ -71,9 +71,8 @@ export function GuidedFeatsL2Modal({
         selectedIds: initialSelectedIds,
         requirementCharacter,
         codexSkills,
-        showBlocked,
-        category,
-        ability,
+        categories,
+        stateFeatMode,
         recommendedBadgeLabel: l2Copy.recommendedBadge,
       }),
     [
@@ -83,9 +82,8 @@ export function GuidedFeatsL2Modal({
       initialSelectedIds,
       requirementCharacter,
       codexSkills,
-      showBlocked,
-      category,
-      ability,
+      categories,
+      stateFeatMode,
     ]
   );
 
@@ -112,54 +110,16 @@ export function GuidedFeatsL2Modal({
         : l2Copy.overLimit(maxSelections);
 
   const filterContent = (
-    <div className="flex flex-wrap items-center gap-3">
-      <div className="flex items-center gap-2">
-        <label htmlFor={categorySelectId} className="text-sm text-text-muted dark:text-text-secondary">
-          {l2Copy.categoryLabel}
-        </label>
-        <select
-          id={categorySelectId}
-          value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="min-h-11 text-sm px-2 py-1 rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
-        >
-          <option value="">{l2Copy.allCategories}</option>
-          {categories.map((cat) => (
-            <option key={cat} value={cat}>
-              {cat}
-            </option>
-          ))}
-        </select>
-      </div>
-      <div className="flex items-center gap-2">
-        <label htmlFor={abilitySelectId} className="text-sm text-text-muted dark:text-text-secondary">
-          {l2Copy.abilityLabel}
-        </label>
-        <select
-          id={abilitySelectId}
-          value={ability}
-          onChange={(e) => setAbility(e.target.value)}
-          className="min-h-11 text-sm px-2 py-1 rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
-        >
-          <option value="">{l2Copy.allAbilities}</option>
-          {abilities.map((abil) => (
-            <option key={abil} value={abil}>
-              {abil}
-            </option>
-          ))}
-        </select>
-      </div>
-      <label className="inline-flex min-h-11 cursor-pointer items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
-        <input
-          type="checkbox"
-          checked={showBlocked}
-          onChange={(e) => setShowBlocked(e.target.checked)}
-          className="h-4 w-4 rounded border-border-light"
-        />
-        {l2Copy.showBlocked}
-      </label>
-    </div>
+    <GuidedFeatsFilterFields
+      categories={categoryOptions}
+      selectedCategories={categories}
+      onAddCategory={(v) => setCategories((prev) => [...prev, v])}
+      onRemoveCategory={(v) => setCategories((prev) => prev.filter((c) => c !== v))}
+      stateFeatMode={stateFeatMode}
+      onStateFeatModeChange={setStateFeatMode}
+    />
   );
+  const activeFilterCount = categories.length + (stateFeatMode !== 'all' ? 1 : 0);
 
   return (
     <UnifiedSelectionModal
@@ -177,8 +137,10 @@ export function GuidedFeatsL2Modal({
       itemLabel="feat"
       emptyMessage={l2Copy.emptyMessage}
       searchPlaceholder={l2Copy.searchPlaceholder}
+      searchFields={FEATS_L2_SEARCH_FIELDS}
       filterContent={filterContent}
       showFilters
+      optionsActiveCount={activeFilterCount}
       hideDisabled={false}
       size="xl"
       className="md:max-h-[85vh]"

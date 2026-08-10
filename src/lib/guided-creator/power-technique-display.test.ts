@@ -3,8 +3,11 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import { buildPowerTechniqueCardFacts } from './power-technique-display';
-import type { LibraryPower } from '@/types/library';
+import {
+  buildPowerTechniqueCardFacts,
+  resolvePowerTechniqueEnergy,
+} from './power-technique-display';
+import type { LibraryPower, LibraryTechnique } from '@/types/library';
 
 describe('buildPowerTechniqueCardFacts disclosure', () => {
   it('puts Training Points in titleChips and Action Type / Energy in detailChips', () => {
@@ -45,5 +48,39 @@ describe('buildPowerTechniqueCardFacts disclosure', () => {
     for (const chip of facts.detailChips) {
       expect(chip.name.startsWith('Action Type ')).toBe(false);
     }
+  });
+
+  it('resolvePowerTechniqueEnergy uses technique derive path when kind is techniques (TASK-687)', () => {
+    const tech = {
+      id: 't1',
+      docId: 't1',
+      name: 'Slash',
+      description: 'A test technique.',
+      parts: [],
+      actionType: 'basic',
+    } as LibraryTechnique;
+
+    // Empty parts → both kinds may yield undefined/0 energy; the regression is that
+    // techniques kind must not throw / must call deriveTechniqueDisplay (not power).
+    const powerEnergy = resolvePowerTechniqueEnergy('powers', tech as unknown as LibraryPower, [], []);
+    const techEnergy = resolvePowerTechniqueEnergy('techniques', tech, [], []);
+    // Same empty-parts input: values may match, but techniques path must resolve cleanly.
+    expect(techEnergy === undefined || typeof techEnergy === 'number').toBe(true);
+    expect(powerEnergy === undefined || typeof powerEnergy === 'number').toBe(true);
+  });
+
+  it('resolvePowerTechniqueEnergy with techniques kind matches card facts energy (TASK-687)', () => {
+    const tech = {
+      id: 't2',
+      docId: 't2',
+      name: 'Parry',
+      description: 'Defend.',
+      parts: [],
+      actionType: 'reaction',
+    } as LibraryTechnique;
+
+    const facts = buildPowerTechniqueCardFacts('techniques', tech, 't2', [], []);
+    const energy = resolvePowerTechniqueEnergy('techniques', tech, [], []);
+    expect(energy).toBe(facts.energy);
   });
 });

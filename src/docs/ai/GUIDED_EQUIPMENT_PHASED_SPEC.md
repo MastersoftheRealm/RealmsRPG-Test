@@ -8,7 +8,7 @@
 Within the guided **Loadout** chapter (`loadout` sub-step), users complete **visible** phases only (renumbered 1…N):
 
 1. **Weapons + shields** (if path has weapon options) — Layer 1: path choice cards; Layer 2: full filtered shop (`UnifiedSelectionModal`)
-2. **Armor** (if `armorStep` is not `none` and options exist) — pick from path cards; skip when absent
+2. **Armor** (if `armorStep` is not `none` and options exist) — pick from path cards; skip when absent. **Power archetypes always skip armor** (path + custom), even if path metadata sets `armorStep: required` (TASK-689).
 3. **Equipment** — recommended items + remaining currency; optional **Add all recommended Equipment**
 
 Chapter rail title is **Loadout** (weapons, armor, Equipment, then Powers or Techniques). Internal phase id remains `gear`.
@@ -58,7 +58,7 @@ Entity depth vs catalog breadth: see REALMS §3.1. Cards = quieter presentation 
 }
 ```
 
-Default `armorStep` from `archetypeType` when omitted (power → none). Flat recommendation lists only (no nested kit objects).
+Default `armorStep` from `archetypeType` when omitted (power → none). **Power always resolves to `none`** regardless of explicit path `armorStep` (TASK-689). Flat recommendation lists only (no nested kit objects).
 
 ## Shared components (mandatory)
 

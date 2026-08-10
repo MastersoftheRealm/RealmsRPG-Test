@@ -60,12 +60,17 @@ export function isCommonRarity(rarity: string | null | undefined): boolean {
   return normalizeRarity(rarity) === 'common';
 }
 
+/**
+ * Resolve armor phase mode for guided Loadout.
+ * Power always skips armor — path `armorStep` must not override (TASK-689).
+ * Martial / Powered-Martial honor explicit path metadata; default to required.
+ */
 export function resolveArmorStepMode(
   explicit: ArmorStepMode | undefined,
   archetypeType: ArchetypeCategory | null
 ): ArmorStepMode {
-  if (explicit) return explicit;
   if (archetypeType === 'power') return 'none';
+  if (explicit) return explicit;
   return 'required';
 }
 

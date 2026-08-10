@@ -1,7 +1,10 @@
 /**
- * Guided powers/techniques L2 Energy filter (TASK-463).
+ * Guided powers/techniques L2 Energy filter (TASK-463 / TASK-687).
  * Prefer theoretical L1 max Energy (full HP/EN pool of 18 → Energy + archetype ability);
  * fallback: exclude Energy > 20 when calc inputs are missing.
+ *
+ * Archetype ability (GAME_RULES): Power track uses `pow_abil`; Techniques / Martial
+ * track uses `mart_abil`. Callers must pass the ability for the active kind.
  */
 
 import { calculateMaxEnergy } from '@/lib/game/calculations';
@@ -15,7 +18,10 @@ export const GUIDED_L1_FULL_ENERGY_POOL = PLAYER_CONSTANTS.BASE_HIT_ENERGY;
 export const GUIDED_L2_ENERGY_FALLBACK_MAX = 20;
 
 export interface GuidedL1MaxEnergyInput {
-  /** Archetype ability (pow_abil / mart_abil). */
+  /**
+   * Archetype ability for Energy: `pow_abil` on the Power track,
+   * `mart_abil` on the Techniques / Martial track (TASK-687).
+   */
   archetypeAbility?: AbilityName | string | null;
   abilities?: Partial<Abilities> | null;
   level?: number;

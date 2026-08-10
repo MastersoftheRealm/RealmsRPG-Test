@@ -14,6 +14,7 @@ export {
   buildGuidedEquipmentEligibilityContext,
   useGuidedEquipmentCatalog,
 } from './use-guided-equipment-catalog';
+export { useGuidedEquipmentL2Catalog } from './use-guided-equipment-l2-catalog';
 export { useLoadModalLibrary } from './use-load-modal-library';
 export type {
   LoadModalLibraryType,

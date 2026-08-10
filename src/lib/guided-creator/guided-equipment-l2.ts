@@ -9,7 +9,13 @@ import type { LibraryItem } from '@/types/library';
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
-import { deriveShieldAmountFromProperties } from '@/lib/calculators';
+import {
+  deriveAgilityReductionFromProperties,
+  deriveCriticalRangeIncreaseFromProperties,
+  deriveShieldAmountFromProperties,
+  deriveShieldDamageFromProperties,
+  formatRange,
+} from '@/lib/calculators';
 import {
   armorStatsForRef,
   libraryRowForRef,
@@ -29,7 +35,17 @@ import {
 import { buildEquipmentPhaseCardStats } from '@/lib/guided-creator/equipment-phase-stats';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { resolveCatalogRowUnitCost } from '@/lib/guided-creator/equipment-currency';
-import { normalizeId } from '@/lib/utils';
+import {
+  deriveAbilityRequirementFromProperties,
+} from '@/lib/game/weapon-attack-ability';
+import { formatAbilityRequirementFact } from '@/lib/detail-option/compact-facts';
+import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
+import {
+  armamentRowColumns,
+  normalizeArmamentKind,
+  type OfficialItemRow,
+} from '@/lib/library/official-item-list';
+import { formatListCellLabel, normalizeId } from '@/lib/utils';
 
 export interface GuidedEquipmentL2ItemData {
   ref: PathItemRecommendation;
@@ -62,18 +78,136 @@ function itemDescription(
   return text || undefined;
 }
 
-function weaponDamageOrBlockDisplay(
+function rarityDisplay(row: EligibleEquipmentRow): string {
+  return formatListCellLabel(row.rarity ?? 'common') || 'Common';
+}
+
+function abilityRequirementDisplay(row: EligibleEquipmentRow): string {
+  const req =
+    row.abilityRequirement ??
+    deriveAbilityRequirementFromProperties(row.properties);
+  if (!req?.name?.trim() || req.level == null || Number.isNaN(Number(req.level))) {
+    return '-';
+  }
+  const fact = formatAbilityRequirementFact({
+    name: req.name.trim(),
+    level: Number(req.level),
+  });
+  if (!fact) return '-';
+  return fact.replace(/ Requirement /, ' ');
+}
+
+function rangeDisplay(row: EligibleEquipmentRow): string {
+  if (row.range?.trim()) return row.range.trim();
+  const fromProps = formatRange((row.properties ?? []) as ItemPropertyPayload[]);
+  return fromProps || '-';
+}
+
+/** Build OfficialItemRow so Guided reuses `armamentRowColumns` (TASK-688 cleanup). */
+function toOfficialItemRowForGuided(
   row: EligibleEquipmentRow,
+  unitCost: number,
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[]
-): string {
-  if (row.type.toLowerCase() === 'shield') {
-    const block = deriveShieldAmountFromProperties(
-      (row.properties ?? []) as ItemPropertyPayload[]
-    );
-    return block !== '-' ? `Block ${block}` : 'Shield';
+): OfficialItemRow {
+  const props = (row.properties ?? []) as ItemPropertyPayload[];
+  const lib = libraryRowForRef(row.id, officialItems, codexEquipment);
+  const official = officialItems.find((i) => normalizeId(String(i.id)) === normalizeId(row.id));
+  const armor = armorStatsForRef(row.id, officialItems, codexEquipment);
+  const agility =
+    armor.agilityPenalty != null && armor.agilityPenalty > 0
+      ? armor.agilityPenalty
+      : official && typeof official.agilityReduction === 'number'
+        ? official.agilityReduction
+        : deriveAgilityReductionFromProperties(props);
+  const crit =
+    official && typeof official.criticalRangeIncrease === 'number'
+      ? official.criticalRangeIncrease
+      : deriveCriticalRangeIncreaseFromProperties(props);
+  const block = deriveShieldAmountFromProperties(props);
+  const shieldDamage =
+    deriveShieldDamageFromProperties(props) ??
+    (typeof (lib as CodexEquipmentItem | undefined)?.damage === 'string'
+      ? String((lib as CodexEquipmentItem).damage)
+      : null);
+  const weaponDamage = weaponDamageLineForRef(row.id, officialItems, codexEquipment) ?? '-';
+  const kind = normalizeArmamentKind(row.type);
+  const damageReduction =
+    armor.damageReduction != null && armor.damageReduction > 0
+      ? armor.damageReduction
+      : official
+        ? resolveArmorDamageReduction(official)
+        : 0;
+  const description =
+    lib && 'description' in lib ? String(lib.description ?? '').trim() : '';
+
+  return {
+    id: row.id,
+    raw: (official as LibraryItem) ?? {
+      id: row.id,
+      docId: row.id,
+      name: row.name,
+      type: row.type,
+      properties: row.properties ?? [],
+    },
+    name: row.name,
+    description,
+    type: formatListCellLabel(row.type),
+    rarity: rarityDisplay(row),
+    currency: unitCost,
+    tp: row.trainingPoints ?? 0,
+    range: rangeDisplay(row),
+    damage: kind === 'shield' ? shieldDamage || '-' : weaponDamage,
+    damageReduction,
+    agilityReduction: agility > 0 ? agility : 0,
+    abilityRequirement: abilityRequirementDisplay(row),
+    abilityReq: row.abilityRequirement ?? null,
+    criticalRangeIncrease: crit > 0 ? crit : 0,
+    block: block !== '-' ? block : '-',
+    parts: [],
+  };
+}
+
+/**
+ * Guided L2/L3 columns — weapon/armor via shared `armamentRowColumns`.
+ * Mixed weapon+shield phase keeps weapon headers; shields put Block in Damage.
+ */
+function buildL2Columns(
+  phase: EquipmentPhase,
+  row: EligibleEquipmentRow,
+  unitCost: number,
+  officialItems: LibraryItem[],
+  codexEquipment: CodexEquipmentItem[]
+): NonNullable<SelectableItem['columns']> {
+  if (phase === 'gear') {
+    return [
+      { key: 'rarity', label: 'Rarity', value: rarityDisplay(row), align: 'center' },
+      { key: 'currency', label: 'Currency', value: String(unitCost), align: 'center' },
+    ];
   }
-  return weaponDamageLineForRef(row.id, officialItems, codexEquipment) ?? '-';
+
+  const officialRow = toOfficialItemRowForGuided(
+    row,
+    unitCost,
+    officialItems,
+    codexEquipment
+  );
+  const kind = normalizeArmamentKind(row.type);
+
+  if (phase === 'armor') {
+    return armamentRowColumns(officialRow, 'armor');
+  }
+
+  // Weapon phase (weapons + shields)
+  const cols = armamentRowColumns(officialRow, 'weapon');
+  if (kind === 'shield') {
+    const blockLabel =
+      officialRow.block !== '-' ? `Block ${officialRow.block}` : 'Shield';
+    return cols.map((c) =>
+      c.key === 'damage' ? { ...c, value: blockLabel } : c
+    );
+  }
+  return cols;
 }
 
 export function buildGuidedEquipmentL2Items(
@@ -114,14 +248,20 @@ export function buildGuidedEquipmentL2Items(
       unitCost,
       trainingPoints: phase === 'gear' ? undefined : row.trainingPoints,
       itemProperties,
+      abilityRequirement: row.abilityRequirement,
     });
 
     /** Expand chips match card See more, minus facts already shown as labeled columns. */
     const expandChips = stats.detailChips.filter((c) => {
       const n = c.name.toLowerCase();
       if (/^currency\s/.test(n) || /^training points\s/.test(n)) return false;
+      if (/^rarity\b/.test(n)) return false;
       if (phase === 'weapon' && /\bdamage\b/.test(n) && /\dd\d/.test(n)) return false;
+      if (phase === 'weapon' && /^range\b/.test(n)) return false;
       if (phase === 'armor' && /^damage reduction\b/.test(n)) return false;
+      if (phase === 'armor' && /^agility reduction\b/.test(n)) return false;
+      if (phase === 'armor' && /requirement\s+\d+\+/i.test(n)) return false;
+      if (phase === 'armor' && /critical range/i.test(n)) return false;
       return true;
     });
     const detailSections =
@@ -129,62 +269,7 @@ export function buildGuidedEquipmentL2Items(
         ? [{ label: 'Details', chips: expandChips, hideLabelIfSingle: true as const }]
         : undefined;
 
-    let columns: NonNullable<SelectableItem['columns']>;
-    if (phase === 'gear') {
-      columns = [
-        {
-          key: 'currency',
-          label: 'Currency',
-          value: String(unitCost),
-          align: 'right',
-        },
-      ];
-    } else if (phase === 'armor') {
-      const armor = armorStatsForRef(row.id, officialItems, codexEquipment);
-      columns = [
-        {
-          key: 'dr',
-          label: 'Damage Reduction',
-          value: armor.damageReduction != null ? String(armor.damageReduction) : '-',
-          align: 'center',
-        },
-        {
-          key: 'currency',
-          label: 'Currency',
-          value: String(unitCost),
-          align: 'right',
-        },
-        {
-          key: 'tp',
-          label: 'Training Points',
-          value: row.trainingPoints ?? 0,
-          align: 'center',
-          highlight: true,
-        },
-      ];
-    } else {
-      columns = [
-        {
-          key: 'damage',
-          label: 'Damage',
-          value: weaponDamageOrBlockDisplay(row, officialItems, codexEquipment),
-          align: 'center',
-        },
-        {
-          key: 'currency',
-          label: 'Currency',
-          value: String(unitCost),
-          align: 'right',
-        },
-        {
-          key: 'tp',
-          label: 'Training Points',
-          value: row.trainingPoints ?? 0,
-          align: 'center',
-          highlight: true,
-        },
-      ];
-    }
+    const columns = buildL2Columns(phase, row, unitCost, officialItems, codexEquipment);
 
     return {
       id: row.id,
@@ -203,48 +288,31 @@ export function buildGuidedEquipmentL2Items(
   });
 }
 
+/** Current draft refs for a phase — shared by modal Confirm and inline immediate apply (TASK-684). */
+export function currentRefsForPhase(
+  phase: EquipmentPhase,
+  draft: GuidedDraft
+): PathItemRecommendation[] {
+  return phase === 'weapon'
+    ? draft.loadoutWeapons
+    : phase === 'armor'
+      ? draft.loadoutArmor
+      : draft.equipment;
+}
+
 export function initialSelectedIdsForPhase(
   phase: EquipmentPhase,
   draft: GuidedDraft
 ): Set<string> {
-  const refs =
-    phase === 'weapon'
-      ? draft.loadoutWeapons
-      : phase === 'armor'
-        ? draft.loadoutArmor
-        : draft.equipment;
-  return new Set(refs.map((r) => String(r.id)));
+  return new Set(currentRefsForPhase(phase, draft).map((r) => String(r.id)));
 }
 
-export function computeL2TpSpent(
-  phase: EquipmentPhase,
-  draft: GuidedDraft,
-  selected: SelectableItem[],
-  catalog: Map<string, EligibleEquipmentRow>
-): number {
-  const crossPhaseTp =
-    phase === 'weapon'
-      ? draft.loadoutArmor.reduce((sum, ref) => sum + refTp(ref, catalog), 0)
-      : phase === 'armor'
-        ? draft.loadoutWeapons.reduce((sum, ref) => sum + refTp(ref, catalog), 0)
-        : 0;
-
-  const selectedTp = selected.reduce((sum, item) => {
-    const data = item.data as GuidedEquipmentL2ItemData | undefined;
-    const tp = data?.row.trainingPoints ?? 0;
+function selectedToRefs(selected: SelectableItem[]): PathItemRecommendation[] {
+  return selected.map((item) => {
+    const data = item.data as GuidedEquipmentL2ItemData;
     const qty = (item as SelectableItem & { quantity?: number }).quantity ?? 1;
-    return sum + tp * qty;
-  }, 0);
-
-  return crossPhaseTp + selectedTp;
-}
-
-export function computeL2GearSpend(selected: SelectableItem[]): number {
-  return selected.reduce((sum, item) => {
-    const data = item.data as GuidedEquipmentL2ItemData | undefined;
-    const qty = (item as SelectableItem & { quantity?: number }).quantity ?? 1;
-    return sum + resolveCatalogRowUnitCost(data?.row) * Math.max(1, qty);
-  }, 0);
+    return { id: data.ref.id, quantity: qty };
+  });
 }
 
 function refCurrency(
@@ -253,6 +321,50 @@ function refCurrency(
 ): number {
   const row = catalog.get(normalizeId(ref.id));
   return resolveCatalogRowUnitCost(row) * Math.max(1, ref.quantity);
+}
+
+function computeRefsTpSpent(
+  refs: PathItemRecommendation[],
+  catalog: Map<string, EligibleEquipmentRow>
+): number {
+  return refs.reduce((sum, ref) => sum + refTp(ref, catalog), 0);
+}
+
+function computeRefsGearSpend(
+  refs: PathItemRecommendation[],
+  catalog: Map<string, EligibleEquipmentRow>
+): number {
+  return refs.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
+}
+
+/** Cross-phase TP total (the two phases *not* being edited) — added to the edited phase's refs. */
+export function crossPhaseTpSpent(
+  phase: EquipmentPhase,
+  draft: GuidedDraft,
+  catalog: Map<string, EligibleEquipmentRow>
+): number {
+  if (phase === 'weapon') return computeRefsTpSpent(draft.loadoutArmor, catalog);
+  if (phase === 'armor') return computeRefsTpSpent(draft.loadoutWeapons, catalog);
+  return 0;
+}
+
+export function computeL2TpSpent(
+  phase: EquipmentPhase,
+  draft: GuidedDraft,
+  selected: SelectableItem[],
+  catalog: Map<string, EligibleEquipmentRow>
+): number {
+  return (
+    crossPhaseTpSpent(phase, draft, catalog) + computeRefsTpSpent(selectedToRefs(selected), catalog)
+  );
+}
+
+export function computeL2GearSpend(selected: SelectableItem[]): number {
+  return selected.reduce((sum, item) => {
+    const data = item.data as GuidedEquipmentL2ItemData | undefined;
+    const qty = (item as SelectableItem & { quantity?: number }).quantity ?? 1;
+    return sum + resolveCatalogRowUnitCost(data?.row) * Math.max(1, qty);
+  }, 0);
 }
 
 /**
@@ -267,18 +379,18 @@ export function computeL2CurrencySpent(
 ): number {
   const selectedSpend = computeL2GearSpend(selected);
   if (phase === 'weapon') {
-    const armor = draft.loadoutArmor.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
-    const gear = draft.equipment.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
+    const armor = computeRefsGearSpend(draft.loadoutArmor, catalog);
+    const gear = computeRefsGearSpend(draft.equipment, catalog);
     return selectedSpend + armor + gear;
   }
   if (phase === 'armor') {
-    const weapons = draft.loadoutWeapons.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
-    const gear = draft.equipment.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
+    const weapons = computeRefsGearSpend(draft.loadoutWeapons, catalog);
+    const gear = computeRefsGearSpend(draft.equipment, catalog);
     return weapons + selectedSpend + gear;
   }
   const arms =
-    draft.loadoutWeapons.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0) +
-    draft.loadoutArmor.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
+    computeRefsGearSpend(draft.loadoutWeapons, catalog) +
+    computeRefsGearSpend(draft.loadoutArmor, catalog);
   return arms + selectedSpend;
 }
 
@@ -288,20 +400,20 @@ export interface ApplyL2Result {
   partial?: Partial<GuidedDraft>;
 }
 
-export function applyGuidedEquipmentL2Selection(
+/**
+ * Core validated-apply — hand-slot rules, TP limit, gear budget — shared by the L2 modal's
+ * batch Confirm (`applyGuidedEquipmentL2Selection`) and the L3 inline catalog's immediate
+ * toggle/quantity handlers (`toggleGuidedEquipmentL2Ref` / `changeGuidedEquipmentL2Quantity`),
+ * so eligibility/budget rules never diverge between modal and inline (TASK-684).
+ */
+export function applyGuidedEquipmentL2Refs(
   phase: EquipmentPhase,
   draft: GuidedDraft,
-  selected: SelectableItem[],
+  refs: PathItemRecommendation[],
   catalog: Map<string, EligibleEquipmentRow>,
   tpLimit: number,
   gearBudget: number
 ): ApplyL2Result {
-  const refs: PathItemRecommendation[] = selected.map((item) => {
-    const data = item.data as GuidedEquipmentL2ItemData;
-    const qty = (item as SelectableItem & { quantity?: number }).quantity ?? 1;
-    return { id: data.ref.id, quantity: qty };
-  });
-
   if (phase === 'weapon') {
     const rows = refs
       .map((r) => catalog.get(normalizeId(r.id)))
@@ -310,7 +422,7 @@ export function applyGuidedEquipmentL2Selection(
     if (!handCheck.valid) {
       return { ok: false, message: handCheck.message };
     }
-    const tpSpent = computeL2TpSpent(phase, draft, selected, catalog);
+    const tpSpent = crossPhaseTpSpent(phase, draft, catalog) + computeRefsTpSpent(refs, catalog);
     if (tpSpent > tpLimit) {
       return { ok: false, message: 'Not enough Training Points remaining' };
     }
@@ -327,7 +439,7 @@ export function applyGuidedEquipmentL2Selection(
   }
 
   if (phase === 'armor') {
-    const tpSpent = computeL2TpSpent(phase, draft, selected, catalog);
+    const tpSpent = crossPhaseTpSpent(phase, draft, catalog) + computeRefsTpSpent(refs, catalog);
     if (tpSpent > tpLimit) {
       return { ok: false, message: 'Not enough Training Points remaining' };
     }
@@ -343,7 +455,7 @@ export function applyGuidedEquipmentL2Selection(
     };
   }
 
-  const gearSpend = computeL2GearSpend(selected);
+  const gearSpend = computeRefsGearSpend(refs, catalog);
   if (gearSpend > gearBudget) {
     return { ok: false, message: 'Not enough Currency remaining for this gear' };
   }
@@ -354,4 +466,75 @@ export function applyGuidedEquipmentL2Selection(
       equipment: refs,
     },
   };
+}
+
+export function applyGuidedEquipmentL2Selection(
+  phase: EquipmentPhase,
+  draft: GuidedDraft,
+  selected: SelectableItem[],
+  catalog: Map<string, EligibleEquipmentRow>,
+  tpLimit: number,
+  gearBudget: number
+): ApplyL2Result {
+  return applyGuidedEquipmentL2Refs(
+    phase,
+    draft,
+    selectedToRefs(selected),
+    catalog,
+    tpLimit,
+    gearBudget
+  );
+}
+
+/**
+ * Immediate select/deselect for the L3 inline catalog (TASK-684) — armor is single-slot
+ * (selecting a new one swaps it); weapon/gear append. Runs the same validated-apply as the
+ * modal's Confirm so hand-slot rules and TP/currency budgets stay in lockstep.
+ */
+export function toggleGuidedEquipmentL2Ref(
+  phase: EquipmentPhase,
+  draft: GuidedDraft,
+  id: string,
+  catalog: Map<string, EligibleEquipmentRow>,
+  tpLimit: number,
+  gearBudget: number
+): ApplyL2Result {
+  const current = currentRefsForPhase(phase, draft);
+  const idNorm = normalizeId(id);
+  const exists = current.some((r) => normalizeId(r.id) === idNorm);
+  const nextRefs: PathItemRecommendation[] = exists
+    ? current.filter((r) => normalizeId(r.id) !== idNorm)
+    : phase === 'armor'
+      ? [{ id, quantity: 1 }]
+      : [...current, { id, quantity: 1 }];
+  return applyGuidedEquipmentL2Refs(phase, draft, nextRefs, catalog, tpLimit, gearBudget);
+}
+
+/**
+ * Immediate quantity +/- for the L3 inline catalog gear phase (TASK-684) — mirrors the
+ * modal's `handleQuantityChange` delta semantics (clamped 0–99; 0 removes the row).
+ */
+export function changeGuidedEquipmentL2Quantity(
+  phase: EquipmentPhase,
+  draft: GuidedDraft,
+  id: string,
+  delta: number,
+  catalog: Map<string, EligibleEquipmentRow>,
+  tpLimit: number,
+  gearBudget: number
+): ApplyL2Result {
+  const current = currentRefsForPhase(phase, draft);
+  const idNorm = normalizeId(id);
+  const existing = current.find((r) => normalizeId(r.id) === idNorm);
+  const next = Math.max(0, Math.min(99, (existing?.quantity ?? 0) + delta));
+
+  if (next <= 0) {
+    const nextRefs = current.filter((r) => normalizeId(r.id) !== idNorm);
+    return applyGuidedEquipmentL2Refs(phase, draft, nextRefs, catalog, tpLimit, gearBudget);
+  }
+
+  const nextRefs = existing
+    ? current.map((r) => (normalizeId(r.id) === idNorm ? { ...r, quantity: next } : r))
+    : [...current, { id, quantity: next }];
+  return applyGuidedEquipmentL2Refs(phase, draft, nextRefs, catalog, tpLimit, gearBudget);
 }

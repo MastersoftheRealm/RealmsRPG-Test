@@ -34,3 +34,4 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0009 | GLR required-facts registry | Accepted |
 | 0010 | Lib layer dependency direction | Accepted |
 | 0011 | List search toolbar | Accepted |
+| 0012 | Guided L3 inline catalog list | Accepted |

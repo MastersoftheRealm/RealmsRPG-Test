@@ -53,9 +53,9 @@ export interface PowerTechniqueFiltersProps {
   onCharacterContextChange?: (ctx: PowerTechniqueCharacterContext | null) => void;
   /** Selected character id ('' when none). Used for add-to-character row actions. */
   onCharacterIdChange?: (characterId: string) => void;
-  /** FilterSection page vs compact (selection modals later). */
+  /** FilterSection page vs compact panel (USM embeds compact inside its own FilterSection). */
   variant?: 'page' | 'compact';
-  /** Override FilterSection initial expand (default collapsed). */
+  /** Override FilterSection initial expand (default collapsed). Page variant only. */
   defaultExpanded?: boolean;
   className?: string;
   /** Persist character pick (default true for page variant). */
@@ -156,13 +156,8 @@ export function PowerTechniqueFilters({
   const energyLockedByCharacter = hasCharacter;
   const thresholdLockedByCharacter = hasCharacter && value.innateEligibleOnly;
 
-  return (
-    <FilterSection
-      variant={variant}
-      defaultExpanded={defaultExpanded}
-      activeCount={activeCount}
-      className={className}
-    >
+  const controls = (
+    <>
       <CharacterFilter
         value={characterId}
         onChange={handleCharacterChange}
@@ -330,6 +325,22 @@ export function PowerTechniqueFilters({
           </div>
         ) : null}
       </div>
+    </>
+  );
+
+  // Compact: panel content only — USM / GuidedInlineCatalogList already wrap FilterSection.
+  if (variant === 'compact') {
+    return <div className={cn('space-y-3', className)}>{controls}</div>;
+  }
+
+  return (
+    <FilterSection
+      variant="page"
+      defaultExpanded={defaultExpanded}
+      activeCount={activeCount}
+      className={className}
+    >
+      {controls}
     </FilterSection>
   );
 }

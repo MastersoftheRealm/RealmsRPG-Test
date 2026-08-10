@@ -1,7 +1,24 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
-import { SegmentedControl, SourceFilter, sourceFilterSummary, type SourceFilterValue } from '@/components/shared';
+import {
+  PowerTechniqueFilters,
+  SegmentedControl,
+  SourceFilter,
+  sourceFilterSummary,
+  type SourceFilterValue,
+} from '@/components/shared';
+import { useGameRules } from '@/hooks/use-game-rules';
+import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
+import {
+  applyPowerTechniqueFilters,
+  countActivePowerTechniqueFilters,
+  EMPTY_POWER_TECHNIQUE_FILTERS,
+  type PowerTechniqueFilterState,
+} from '@/lib/library/power-technique-filters';
+import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
+import { collectCategoryFilterOptions } from '@/lib/library/power-technique-categories';
 import {
   POWER_GRID_COLUMNS,
   POWER_MODAL_COLUMNS,
@@ -65,6 +82,90 @@ export function PowersSelectionModals({
   techniqueModalEmptySubMessage,
   publicEmpoweredTechniquesError,
 }: PowersSelectionModalsProps) {
+  const { rules } = useGameRules();
+  const [powerFilters, setPowerFilters] = useState<PowerTechniqueFilterState>(
+    EMPTY_POWER_TECHNIQUE_FILTERS
+  );
+  const [techniqueFilters, setTechniqueFilters] = useState<PowerTechniqueFilterState>(
+    EMPTY_POWER_TECHNIQUE_FILTERS
+  );
+  const [powerCharacterCtx, setPowerCharacterCtx] =
+    useState<PowerTechniqueCharacterContext | null>(null);
+  const [techniqueCharacterCtx, setTechniqueCharacterCtx] =
+    useState<PowerTechniqueCharacterContext | null>(null);
+
+  const showPowerPtFilters = powerModalTab === 'powers';
+  const powerCategoryOptions = useMemo(
+    () =>
+      showPowerPtFilters
+        ? collectCategoryFilterOptions(
+            allPowerSelectableItems.map(
+              (item) => item.powerTechniqueFilter?.categories ?? []
+            )
+          )
+        : [],
+    [showPowerPtFilters, allPowerSelectableItems]
+  );
+  const techniqueCategoryOptions = useMemo(
+    () =>
+      collectCategoryFilterOptions(
+        allTechniqueSelectableItems.map(
+          (item) => item.powerTechniqueFilter?.categories ?? []
+        )
+      ),
+    [allTechniqueSelectableItems]
+  );
+  const innateThresholdOptions = useMemo(
+    () => listInnateThresholdFilterOptions(rules),
+    [rules]
+  );
+
+  const powerPtActive = showPowerPtFilters
+    ? countActivePowerTechniqueFilters(
+        powerFilters,
+        'power',
+        Boolean(powerCharacterCtx)
+      )
+    : 0;
+  const techniquePtActive = countActivePowerTechniqueFilters(
+    techniqueFilters,
+    'technique',
+    Boolean(techniqueCharacterCtx)
+  );
+
+  const powerDisplayFilter = useMemo(() => {
+    return (item: SelectableItem) => {
+      if (!displayFilterFn(item)) return false;
+      if (!showPowerPtFilters) return true;
+      if (powerPtActive === 0 && !powerCharacterCtx) return true;
+      const row = item.powerTechniqueFilter;
+      if (!row) return true;
+      return applyPowerTechniqueFilters([row], powerFilters, 'power', powerCharacterCtx).length >
+        0;
+    };
+  }, [
+    displayFilterFn,
+    showPowerPtFilters,
+    powerPtActive,
+    powerCharacterCtx,
+    powerFilters,
+  ]);
+
+  const techniqueDisplayFilter = useMemo(() => {
+    return (item: SelectableItem) => {
+      if (!displayFilterFn(item)) return false;
+      if (techniquePtActive === 0 && !techniqueCharacterCtx) return true;
+      const row = item.powerTechniqueFilter;
+      if (!row) return true;
+      return (
+        applyPowerTechniqueFilters([row], techniqueFilters, 'technique', techniqueCharacterCtx)
+          .length > 0
+      );
+    };
+  }, [displayFilterFn, techniquePtActive, techniqueCharacterCtx, techniqueFilters]);
+
+  const sourceActive = source !== 'all' ? 1 : 0;
+
   return (
     <>
       <UnifiedSelectionModal
@@ -83,11 +184,25 @@ export function PowersSelectionModals({
           />
         }
         headerExtra={<SourceFilter value={source} onChange={onSourceChange} />}
+        filterContent={
+          showPowerPtFilters ? (
+            <PowerTechniqueFilters
+              kind="power"
+              value={powerFilters}
+              onChange={setPowerFilters}
+              categoryOptions={powerCategoryOptions}
+              innateThresholdOptions={innateThresholdOptions}
+              onCharacterContextChange={setPowerCharacterCtx}
+              variant="compact"
+              persistCharacter={false}
+            />
+          ) : undefined
+        }
         optionsSummary={sourceFilterSummary(source)}
-        optionsActiveCount={source !== 'all' ? 1 : 0}
+        optionsActiveCount={sourceActive + powerPtActive}
         onConfirm={powerModalTab === 'empowered' ? onEmpoweredConfirm : onPowerConfirm}
         items={powerModalTab === 'empowered' ? allEmpoweredSelectableItems : allPowerSelectableItems}
-        displayFilter={displayFilterFn}
+        displayFilter={powerDisplayFilter}
         title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
         initialSelectedIds={selectedPowerIds}
         searchPlaceholder={
@@ -111,11 +226,22 @@ export function PowersSelectionModals({
         isOpen={showTechniqueModal}
         onClose={onCloseTechniqueModal}
         headerExtra={<SourceFilter value={source} onChange={onSourceChange} />}
+        filterContent={
+          <PowerTechniqueFilters
+            kind="technique"
+            value={techniqueFilters}
+            onChange={setTechniqueFilters}
+            categoryOptions={techniqueCategoryOptions}
+            onCharacterContextChange={setTechniqueCharacterCtx}
+            variant="compact"
+            persistCharacter={false}
+          />
+        }
         optionsSummary={sourceFilterSummary(source)}
-        optionsActiveCount={source !== 'all' ? 1 : 0}
+        optionsActiveCount={sourceActive + techniquePtActive}
         onConfirm={onTechniqueConfirm}
         items={allTechniqueSelectableItems}
-        displayFilter={displayFilterFn}
+        displayFilter={techniqueDisplayFilter}
         title="Select Techniques"
         initialSelectedIds={selectedTechniqueIds}
         searchPlaceholder="Search techniques..."

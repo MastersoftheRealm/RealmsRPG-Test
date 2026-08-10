@@ -86,15 +86,15 @@ describe('official-item-list armament kinds', () => {
     ]);
     const cols = armamentRowColumns(row, 'armor');
     expect(cols.map((c) => c.key)).toEqual([
-      'Rarity',
-      'Currency',
-      'TP',
-      'Damage Reduction',
-      'Agility Red.',
-      'Abl. Req.',
-      'Crit +',
+      'rarity',
+      'currency',
+      'tp',
+      'damageReduction',
+      'agilityReduction',
+      'abilityRequirement',
+      'criticalRangeIncrease',
     ]);
-    expect(cols.find((c) => c.key === 'Crit +')?.value).toBe('+1');
+    expect(cols.find((c) => c.key === 'criticalRangeIncrease')?.value).toBe('+1');
   });
 
   it('shield rows expose block and damage columns', () => {
@@ -102,6 +102,12 @@ describe('official-item-list armament kinds', () => {
     const row = rows[0]!;
     expect(row.block).not.toBe('-');
     const cols = armamentRowColumns(row, 'shield');
-    expect(cols.map((c) => c.key)).toEqual(['Rarity', 'Currency', 'TP', 'Block', 'Damage']);
+    expect(cols.map((c) => c.key)).toEqual([
+      'rarity',
+      'currency',
+      'tp',
+      'block',
+      'damage',
+    ]);
   });
 });

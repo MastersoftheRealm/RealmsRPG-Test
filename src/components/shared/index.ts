@@ -304,5 +304,9 @@ export type {
 } from './realms-image-picker';
 
 // GuidedChoiceShell - Unified Layer 1/2/3 chrome for creator steps (three-layer model)
-export { GuidedChoiceShell, GuidedLayerNav } from './guided-choice';
-export type { GuidedChoiceShellProps, GuidedLayerNavProps } from './guided-choice';
+export { GuidedChoiceShell, GuidedLayerNav, GuidedInlineCatalogList } from './guided-choice';
+export type {
+  GuidedChoiceShellProps,
+  GuidedLayerNavProps,
+  GuidedInlineCatalogListProps,
+} from './guided-choice';

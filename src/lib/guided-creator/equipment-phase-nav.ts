@@ -32,8 +32,20 @@ export function resolveEquipmentPhaseVisibility(
     hasWeaponOptions: boolean;
     hasArmorOptions: boolean;
     recommendUnarmed: boolean;
+    /**
+     * Full Customize / no path (TASK-685): always include weapons; armor follows
+     * `armorMode` only (Power skips armor; Martial / Powered-Martial keep it).
+     * Path-based guided still uses pool emptiness to omit empty phases.
+     */
+    fullCatalog?: boolean;
   }
 ): EquipmentPhaseVisibility {
+  if (opts.fullCatalog) {
+    return {
+      includeWeapon: true,
+      includeArmor: !shouldSkipArmorPhase(armorMode),
+    };
+  }
   return {
     includeWeapon: opts.hasWeaponOptions || opts.recommendUnarmed,
     includeArmor: !shouldSkipArmorPhase(armorMode) && opts.hasArmorOptions,

@@ -326,19 +326,17 @@ export const GUIDED_CREATOR_COPY = {
       /** One-line header hint only — avoid multi-sentence chrome (TASK-574). */
       description: (max: number) =>
         max === 1
-          ? 'Feats you qualify for (optional: show locked to read requirements).'
-          : `Feats you qualify for — pick up to ${max}.`,
-      searchPlaceholder: 'Search Feats…',
-      categoryLabel: 'Category',
-      abilityLabel: 'Ability',
-      allCategories: 'All categories',
-      allAbilities: 'All Abilities',
-      showBlocked: "Show Feats I don't qualify for",
+          ? 'All Feats — locked ones show why (read requirements before picking).'
+          : `All Feats — pick up to ${max}. Locked ones show why.`,
+      searchPlaceholder: 'Search feats by name, tags, keywords, or category…',
       recommendedBadge: 'Recommended',
-      emptyMessage: 'No Feats match your filters. Try clearing filters or showing locked Feats.',
+      emptyMessage: 'No Feats match your filters. Try clearing filters.',
       overLimit: (max: number) =>
         `You can select up to ${max} Feats. Deselect some to continue.`,
       overLimitZero: 'No Feat slots left. Deselect a Feat on this step, then try again.',
+      /** L3 (no path) — inline catalog in the step body instead of the L2 modal (TASK-684). */
+      archetypeSelectedTitle: 'Selected Archetype Feats',
+      characterSelectedTitle: 'Selected Character Feat',
     },
     loadout: {
       title: 'Loadout',
@@ -420,6 +418,13 @@ export const GUIDED_CREATOR_COPY = {
               : phase === 'armor'
                 ? 'No matching armor found'
                 : 'No matching weapons or shields found',
+          /** L3 (no path) — inline catalog selected-panel heading (TASK-684). */
+          selectedTitle: (phase: 'weapon' | 'armor' | 'gear') =>
+            phase === 'gear'
+              ? 'Selected Equipment'
+              : phase === 'armor'
+                ? 'Selected Armor'
+                : 'Selected Weapons & Shields',
         },
       },
     },
@@ -471,6 +476,14 @@ export const GUIDED_CREATOR_COPY = {
       innateThresholdBlocked: 'That power exceeds your Innate Threshold.',
       /** Soft hint when Innate Energy remains — Continue stays enabled (TASK-573). */
       innateSoftWarn: 'Innate Energy remaining — you can continue, or pick more innate powers.',
+      /** L3 inline — filter which track(s) to browse (TASK-685). */
+      innateScopeLabel: 'Show',
+      innateScopeAll: 'Innate + Powers',
+      innateScopeInnate: 'Innate Powers only',
+      innateScopeRegular: 'Powers only',
+      innateIntroL3:
+        'Pick innate powers that fit your Innate Threshold. Each costs Training Points like other Powers. Filling your Innate Energy pool is recommended but optional.',
+      maxEnergyHint: (max: number) => `Showing Powers/Techniques within your level 1 Energy (${max}).`,
       powersHeading: 'Powers',
       techniquesHeading: 'Techniques',
       l2: {
@@ -488,6 +501,10 @@ export const GUIDED_CREATOR_COPY = {
         },
         searchPlaceholder: (kind: string) =>
           kind === 'techniques' ? 'Search Techniques…' : 'Search Powers…',
+        /** L3 (no path) — inline catalog selected-panel headings (TASK-684). */
+        selectedTitle: (kind: string) =>
+          kind === 'techniques' ? 'Selected Techniques' : 'Selected Powers',
+        innateSelectedTitle: 'Selected Innate Powers',
       },
     },
     reveal: {

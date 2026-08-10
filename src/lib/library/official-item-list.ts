@@ -234,54 +234,30 @@ export function buildOfficialItemRows(
   });
 }
 
+/** Column keys match `ARMAMENT_LIBRARY_CONFIG` headers (Library + Guided L2/L3). */
 export function armamentRowColumns(row: OfficialItemRow, kind: ArmamentLibraryKind): ColumnValue[] {
-  const rarity = { key: 'Rarity', value: row.rarity, align: 'center' as const };
-  const currency = { key: 'Currency', value: row.currency, align: 'center' as const };
-  const tp = { key: 'TP', value: row.tp, highlight: true, align: 'center' as const };
+  const headers = ARMAMENT_LIBRARY_CONFIG[kind].headers.filter((h) => h.key !== 'name');
+  const byKey: Record<string, string | number> = {
+    rarity: row.rarity,
+    currency: row.currency,
+    tp: row.tp,
+    range: row.range,
+    damage: row.damage,
+    damageReduction: row.damageReduction > 0 ? row.damageReduction : '-',
+    agilityReduction: row.agilityReduction > 0 ? row.agilityReduction : '-',
+    abilityRequirement: row.abilityRequirement,
+    criticalRangeIncrease:
+      row.criticalRangeIncrease > 0 ? `+${row.criticalRangeIncrease}` : '-',
+    block: row.block,
+  };
 
-  if (kind === 'armor') {
-    return [
-      rarity,
-      currency,
-      tp,
-      {
-        key: 'Damage Reduction',
-        value: row.damageReduction > 0 ? row.damageReduction : '-',
-        align: 'center',
-      },
-      {
-        key: 'Agility Red.',
-        value: row.agilityReduction > 0 ? row.agilityReduction : '-',
-        align: 'center',
-      },
-      {
-        key: 'Abl. Req.',
-        value: row.abilityRequirement,
-        align: 'center',
-      },
-      {
-        key: 'Crit +',
-        value: row.criticalRangeIncrease > 0 ? `+${row.criticalRangeIncrease}` : '-',
-        align: 'center',
-      },
-    ];
-  }
-  if (kind === 'shield') {
-    return [
-      rarity,
-      currency,
-      tp,
-      { key: 'Block', value: row.block, align: 'center' },
-      { key: 'Damage', value: row.damage, align: 'center' },
-    ];
-  }
-  return [
-    rarity,
-    currency,
-    tp,
-    { key: 'Range', value: row.range, align: 'center' },
-    { key: 'Damage', value: row.damage, align: 'center' },
-  ];
+  return headers.map((h) => ({
+    key: h.key,
+    label: h.label,
+    value: byKey[h.key] ?? '-',
+    align: h.align,
+    highlight: h.key === 'tp' ? true : undefined,
+  }));
 }
 
 export function filterOfficialItemRows<

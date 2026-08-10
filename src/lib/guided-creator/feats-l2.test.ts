@@ -32,24 +32,22 @@ const character: CharacterForFeatRequirement = {
 };
 
 describe('buildGuidedFeatsL2FilterOptions', () => {
-  it('splits archetype vs character categories and abilities', () => {
+  it('splits archetype vs character categories', () => {
     const feats = [
-      feat({ id: '1', name: 'Strike', category: 'Combat', ability: ['strength'], char_feat: false }),
-      feat({ id: '2', name: 'Charm', category: 'Social', ability: ['fellowship'], char_feat: true }),
+      feat({ id: '1', name: 'Strike', category: 'Combat', char_feat: false }),
+      feat({ id: '2', name: 'Charm', category: 'Social', char_feat: true }),
     ];
     expect(buildGuidedFeatsL2FilterOptions(feats, 'archetype')).toEqual({
       categories: ['Combat'],
-      abilities: ['strength'],
     });
     expect(buildGuidedFeatsL2FilterOptions(feats, 'character')).toEqual({
       categories: ['Social'],
-      abilities: ['fellowship'],
     });
   });
 });
 
 describe('buildGuidedFeatsL2Items', () => {
-  it('pins recommended feats and excludes blocked when showBlocked is false', () => {
+  it('pins recommended feats first and hides unmet-requirement feats', () => {
     const feats = [
       feat({ id: 'a', name: 'Alpha', char_feat: false }),
       feat({ id: 'b', name: 'Bravo', char_feat: false, lvl_req: 5 }),
@@ -61,13 +59,13 @@ describe('buildGuidedFeatsL2Items', () => {
       recommendedIds: ['c'],
       requirementCharacter: character,
       codexSkills: [],
-      showBlocked: false,
     });
     expect(items.map((i) => i.id)).toEqual(['c', 'a']);
     expect(items[0]?.badges?.[0]?.label).toBe('Recommended');
+    expect(items.find((i) => i.id === 'b')).toBeUndefined();
   });
 
-  it('includes blocked feats when showBlocked is true', () => {
+  it('keeps selected unmet feats visible so they can be deselected', () => {
     const feats = [
       feat({ id: 'a', name: 'Alpha', char_feat: false }),
       feat({ id: 'b', name: 'Bravo', char_feat: false, lvl_req: 5 }),
@@ -76,9 +74,9 @@ describe('buildGuidedFeatsL2Items', () => {
       featType: 'archetype',
       feats,
       recommendedIds: [],
+      selectedIds: ['b'],
       requirementCharacter: character,
       codexSkills: [],
-      showBlocked: true,
     });
     expect(items.map((i) => i.id).sort()).toEqual(['a', 'b']);
     expect(items.find((i) => i.id === 'b')?.disabled).toBe(true);
@@ -96,10 +94,35 @@ describe('buildGuidedFeatsL2Items', () => {
       selectedIds: ['a'],
       requirementCharacter: character,
       codexSkills: [],
-      showBlocked: false,
-      category: 'Social',
+      categories: ['Social'],
     });
     expect(items.map((i) => i.id).sort()).toEqual(['a', 'b']);
+  });
+
+  it('filters by stateFeatMode', () => {
+    const feats = [
+      feat({ id: 'a', name: 'Alpha', char_feat: false, state_feat: true }),
+      feat({ id: 'b', name: 'Bravo', char_feat: false, state_feat: false }),
+    ];
+    const onlyState = buildGuidedFeatsL2Items({
+      featType: 'archetype',
+      feats,
+      recommendedIds: [],
+      requirementCharacter: character,
+      codexSkills: [],
+      stateFeatMode: 'only',
+    });
+    expect(onlyState.map((i) => i.id)).toEqual(['a']);
+
+    const hideState = buildGuidedFeatsL2Items({
+      featType: 'archetype',
+      feats,
+      recommendedIds: [],
+      requirementCharacter: character,
+      codexSkills: [],
+      stateFeatMode: 'hide',
+    });
+    expect(hideState.map((i) => i.id)).toEqual(['b']);
   });
 });
 

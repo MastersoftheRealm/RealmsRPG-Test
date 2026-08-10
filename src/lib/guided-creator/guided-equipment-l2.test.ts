@@ -3,8 +3,10 @@ import type { SelectableItem } from '@/components/shared/unified-selection-modal
 import {
   applyGuidedEquipmentL2Selection,
   buildGuidedEquipmentL2Items,
+  changeGuidedEquipmentL2Quantity,
   computeL2GearSpend,
   computeL2TpSpent,
+  toggleGuidedEquipmentL2Ref,
 } from '@/lib/guided-creator/guided-equipment-l2';
 import type {
   EligibleEquipmentRow,
@@ -199,7 +201,7 @@ describe('guided-equipment-l2', () => {
       (c) => c.key
     );
     expect(rowKeys).toEqual(headerKeys);
-    expect(axe!.columns?.find((c) => c.key === 'currency')?.value).toBe('25');
+    expect(axe!.columns?.find((c) => c.key === 'currency')?.value).toBe(25);
   });
 
   it('L2 header data columns are sortable', () => {
@@ -328,6 +330,77 @@ describe('guided-equipment-l2', () => {
       'gear',
       { ...baseDraft, equipment: [{ id: 'g1', quantity: 2 }] },
       [],
+      catalog,
+      30,
+      200
+    );
+    expect(cleared.ok).toBe(true);
+    expect(cleared.partial?.equipment).toEqual([]);
+  });
+
+  it('toggleGuidedEquipmentL2Ref rejects two-handed + shield and applies remove', () => {
+    const withShield = {
+      ...baseDraft,
+      loadoutWeapons: [
+        { id: 'w2', quantity: 1 },
+        { id: 's1', quantity: 1 },
+      ],
+    };
+    const rejected = toggleGuidedEquipmentL2Ref(
+      'weapon',
+      { ...baseDraft, loadoutWeapons: [{ id: 's1', quantity: 1 }] },
+      'w2',
+      catalog,
+      30,
+      200
+    );
+    expect(rejected.ok).toBe(false);
+
+    const removed = toggleGuidedEquipmentL2Ref(
+      'weapon',
+      withShield,
+      's1',
+      catalog,
+      30,
+      200
+    );
+    expect(removed.ok).toBe(true);
+    expect(removed.partial?.loadoutWeapons).toEqual([{ id: 'w2', quantity: 1 }]);
+  });
+
+  it('changeGuidedEquipmentL2Quantity clamps and rejects over-budget gear', () => {
+    const draft = {
+      ...baseDraft,
+      equipment: [{ id: 'g1', quantity: 2 }],
+    };
+    const bumped = changeGuidedEquipmentL2Quantity(
+      'gear',
+      draft,
+      'g1',
+      1,
+      catalog,
+      30,
+      200
+    );
+    expect(bumped.ok).toBe(true);
+    expect(bumped.partial?.equipment).toEqual([{ id: 'g1', quantity: 3 }]);
+
+    const over = changeGuidedEquipmentL2Quantity(
+      'gear',
+      draft,
+      'g1',
+      50,
+      catalog,
+      30,
+      200
+    );
+    expect(over.ok).toBe(false);
+
+    const cleared = changeGuidedEquipmentL2Quantity(
+      'gear',
+      draft,
+      'g1',
+      -99,
       catalog,
       30,
       200

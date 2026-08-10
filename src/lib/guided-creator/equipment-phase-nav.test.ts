@@ -60,6 +60,28 @@ describe('equipment-phase-nav', () => {
     expect(visibleEquipmentPhases('none', visibility)).toEqual(['weapon', 'gear']);
   });
 
+  it('fullCatalog always includes weapons; Power skips armor only', () => {
+    const power = resolveEquipmentPhaseVisibility('none', {
+      hasWeaponOptions: false,
+      hasArmorOptions: false,
+      recommendUnarmed: false,
+      fullCatalog: true,
+    });
+    expect(visibleEquipmentPhases('none', power)).toEqual(['weapon', 'gear']);
+
+    const poweredMartial = resolveEquipmentPhaseVisibility('required', {
+      hasWeaponOptions: false,
+      hasArmorOptions: false,
+      recommendUnarmed: false,
+      fullCatalog: true,
+    });
+    expect(visibleEquipmentPhases('required', poweredMartial)).toEqual([
+      'weapon',
+      'armor',
+      'gear',
+    ]);
+  });
+
   it('allows advancing to the next phase with zero selections', () => {
     const ctx = {
       loadoutWeapons: [],

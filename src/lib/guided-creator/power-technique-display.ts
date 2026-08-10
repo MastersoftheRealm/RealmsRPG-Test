@@ -3,18 +3,17 @@
  * Loadout-style disclosure (TASK-470): title-adjacent Training Points;
  * mechanic facts (Action Type, Energy) as See more desc chips.
  * Innate L1 cards use the same TP title chip (TASK-573); Energy stays in detail.
+ *
+ * Display shaping lives in `library-selectable-builders` (TASK-691).
  */
 
 import { logClientError } from '@/lib/api-client';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
+import { trainingPointsFactChip } from '@/lib/detail-option/compact-facts';
 import {
-  actionTypeFactChip,
-  energyFactChip,
-  formatActionTypeValue,
-  trainingPointsFactChip,
-} from '@/lib/detail-option/compact-facts';
-import { derivePowerDisplay, type PowerDocument } from '@/lib/calculators/power-calc';
-import { deriveTechniqueDisplay, type TechniqueDocument } from '@/lib/calculators/technique-calc';
+  buildPowerTechniqueBudgetDisplay,
+  type PowerTechniqueBudgetKind,
+} from '@/lib/library-selectable-builders';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 
@@ -39,6 +38,10 @@ export interface PowerTechniqueCardFacts {
   actionType?: string;
 }
 
+function toBudgetKind(kind: PowersTechniquesKind): PowerTechniqueBudgetKind {
+  return kind === 'techniques' ? 'technique' : 'power';
+}
+
 export function resolvePowerTechniqueTpCost(
   kind: PowersTechniquesKind,
   item: LibraryPower | LibraryTechnique | undefined,
@@ -47,24 +50,13 @@ export function resolvePowerTechniqueTpCost(
 ): number {
   if (!item) return 0;
   try {
-    if (kind === 'techniques') {
-      const tech = item as LibraryTechnique;
-      const doc: TechniqueDocument = {
-        name: String(tech.name ?? ''),
-        description: String(tech.description ?? ''),
-        parts: tech.parts ?? [],
-        actionType: tech.actionType,
-        weapon: tech.weapon?.name ? { name: tech.weapon.name } : undefined,
-      };
-      return Math.max(0, Math.round(deriveTechniqueDisplay(doc, techniquePartsDb).tp ?? 0));
-    }
-    const power = item as LibraryPower;
-    const doc: PowerDocument = {
-      name: String(power.name ?? ''),
-      description: String(power.description ?? ''),
-      parts: power.parts ?? [],
-    };
-    return Math.max(0, Math.round(derivePowerDisplay(doc, powerPartsDb).tp ?? 0));
+    return buildPowerTechniqueBudgetDisplay(
+      toBudgetKind(kind),
+      item,
+      String(item.id ?? item.docId ?? item.name ?? ''),
+      powerPartsDb,
+      techniquePartsDb
+    ).tp;
   } catch (err) {
     logClientError(
       `power-technique-display: TP cost failed (${kind}, ${item?.name ?? 'unknown'})`,
@@ -74,7 +66,7 @@ export function resolvePowerTechniqueTpCost(
   }
 }
 
-/** Energy cost for catalog filters / innate threshold (0 when unknown). */
+/** Energy cost for catalog filters / innate threshold (undefined when unknown). */
 export function resolvePowerTechniqueEnergy(
   kind: PowersTechniquesKind,
   item: LibraryPower | LibraryTechnique | undefined,
@@ -83,26 +75,13 @@ export function resolvePowerTechniqueEnergy(
 ): number | undefined {
   if (!item) return undefined;
   try {
-    if (kind === 'techniques') {
-      const tech = item as LibraryTechnique;
-      const doc: TechniqueDocument = {
-        name: String(tech.name ?? ''),
-        description: String(tech.description ?? ''),
-        parts: tech.parts ?? [],
-        actionType: tech.actionType,
-        weapon: tech.weapon?.name ? { name: tech.weapon.name } : undefined,
-      };
-      const energy = deriveTechniqueDisplay(doc, techniquePartsDb).energy;
-      return typeof energy === 'number' ? energy : undefined;
-    }
-    const power = item as LibraryPower;
-    const doc: PowerDocument = {
-      name: String(power.name ?? ''),
-      description: String(power.description ?? ''),
-      parts: power.parts ?? [],
-    };
-    const energy = derivePowerDisplay(doc, powerPartsDb).energy;
-    return typeof energy === 'number' ? energy : undefined;
+    return buildPowerTechniqueBudgetDisplay(
+      toBudgetKind(kind),
+      item,
+      String(item.id ?? item.docId ?? item.name ?? ''),
+      powerPartsDb,
+      techniquePartsDb
+    ).energy;
   } catch (err) {
     logClientError(
       `power-technique-display: energy cost failed (${kind}, ${item?.name ?? 'unknown'})`,
@@ -119,89 +98,48 @@ export function buildPowerTechniqueCardFacts(
   powerPartsDb: PowerPart[],
   techniquePartsDb: TechniquePart[]
 ): PowerTechniqueCardFacts {
-  const name = item?.name ? String(item.name) : fallbackId;
-  const description = item?.description ? String(item.description) : undefined;
-  const tpCost = resolvePowerTechniqueTpCost(kind, item, powerPartsDb, techniquePartsDb);
-  const titleChips: ChipData[] = [];
-  const detailChips: ChipData[] = [];
-
   if (!item) {
-    const tpChip = trainingPointsFactChip(tpCost);
+    const titleChips: ChipData[] = [];
+    const tpChip = trainingPointsFactChip(0);
     if (tpChip) titleChips.push(tpChip);
-    return { name, description, titleChips, detailChips, tpCost };
+    return {
+      name: fallbackId,
+      description: undefined,
+      titleChips,
+      detailChips: [],
+      tpCost: 0,
+    };
   }
 
   try {
-    if (kind === 'techniques') {
-      const tech = item as LibraryTechnique;
-      const doc: TechniqueDocument = {
-        name: String(tech.name ?? ''),
-        description: String(tech.description ?? ''),
-        parts: tech.parts ?? [],
-        actionType: tech.actionType,
-        weapon: tech.weapon?.name ? { name: tech.weapon.name } : undefined,
-      };
-      const disp = deriveTechniqueDisplay(doc, techniquePartsDb);
-      const rawAction = disp.actionType ?? tech.actionType;
-      const actionChip = actionTypeFactChip(rawAction);
-      if (actionChip) detailChips.push(actionChip);
-      const energy =
-        typeof disp.energy === 'number' ? Math.max(0, Math.floor(disp.energy)) : undefined;
-      pushBudgetChips(titleChips, detailChips, tpCost, energy);
-      return {
-        name,
-        description,
-        titleChips,
-        detailChips,
-        tpCost,
-        energy,
-        actionType: formatActionTypeValue(rawAction),
-      };
-    }
-
-    const power = item as LibraryPower;
-    const doc: PowerDocument = {
-      name: String(power.name ?? ''),
-      description: String(power.description ?? ''),
-      parts: power.parts ?? [],
-    };
-    const disp = derivePowerDisplay(doc, powerPartsDb);
-    const rawAction = disp.actionType ?? (power as { actionType?: string }).actionType;
-    const actionChip = actionTypeFactChip(rawAction);
-    if (actionChip) detailChips.push(actionChip);
-    const energy =
-      typeof disp.energy === 'number' ? Math.max(0, Math.floor(disp.energy)) : undefined;
-    pushBudgetChips(titleChips, detailChips, tpCost, energy);
+    const display = buildPowerTechniqueBudgetDisplay(
+      toBudgetKind(kind),
+      item,
+      fallbackId,
+      powerPartsDb,
+      techniquePartsDb
+    );
     return {
-      name,
-      description,
-      titleChips,
-      detailChips,
-      tpCost,
-      energy,
-      actionType: formatActionTypeValue(rawAction),
+      name: display.name,
+      description: display.description,
+      titleChips: display.titleChips,
+      detailChips: display.detailChips,
+      tpCost: display.tp,
+      energy: display.energy,
+      actionType: display.actionTypeFilter,
     };
   } catch (err) {
+    const name = item?.name ? String(item.name) : fallbackId;
+    const description = item?.description ? String(item.description) : undefined;
     logClientError(
       `power-technique-display: card facts failed (${kind}, ${name})`,
       err
     );
-    const tpChip = trainingPointsFactChip(tpCost);
+    const titleChips: ChipData[] = [];
+    const tpChip = trainingPointsFactChip(0);
     if (tpChip) titleChips.push(tpChip);
-    return { name, description, titleChips, detailChips, tpCost };
+    return { name, description, titleChips, detailChips: [], tpCost: 0 };
   }
-}
-
-function pushBudgetChips(
-  titleChips: ChipData[],
-  detailChips: ChipData[],
-  tpCost: number,
-  energy: number | undefined
-): void {
-  const tpChip = trainingPointsFactChip(tpCost);
-  if (tpChip) titleChips.push(tpChip);
-  const energyChip = energyFactChip(energy);
-  if (energyChip) detailChips.push(energyChip);
 }
 
 /** Filter helper — capitalized Action Type value (no "Action Type" prefix). */

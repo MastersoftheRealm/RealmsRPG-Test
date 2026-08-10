@@ -6,7 +6,13 @@
 
 import { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { Spinner } from '@/components/ui';
-import { useEquipment, useOfficialLibrary, useGuidedEquipmentCatalog } from '@/hooks';
+import {
+  useEquipment,
+  useOfficialLibrary,
+  useGuidedEquipmentCatalog,
+  useGuidedEquipmentL2Catalog,
+} from '@/hooks';
+import { GuidedInlineCatalogList, LoadoutBudgetBar } from '@/components/shared';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
@@ -15,6 +21,10 @@ import { GuidedEquipmentPhaseLayout } from '../guided-equipment-phase-layout';
 import { GuidedEquipmentL1Phase } from '../guided-equipment-l1-phase';
 import { GuidedEquipmentL2Modal } from '../guided-equipment-l2-modal';
 import {
+  l2GridColumnsForPhase,
+  l2HeaderColumnsForPhase,
+} from '../guided-equipment-l2-grid';
+import {
   buildEquipmentLookup,
   pruneUnresolvedLoadoutRefs,
   rebucketLoadoutByLookup,
@@ -22,6 +32,11 @@ import {
 import { buildPathLoadoutPool } from '@/lib/guided-creator/loadout-pool';
 import { resolveArmorStepMode } from '@/lib/guided-creator/equipment-eligibility';
 import { filterPoolToPhase } from '@/lib/guided-creator/equipment-phase-candidates';
+import {
+  changeGuidedEquipmentL2Quantity,
+  initialSelectedIdsForPhase,
+  toggleGuidedEquipmentL2Ref,
+} from '@/lib/guided-creator/guided-equipment-l2';
 import {
   canCompleteEquipmentPhase,
   equipmentPhaseIndex,
@@ -59,7 +74,7 @@ export function LoadoutStep() {
     navigationIntent,
     entryNonce,
   } = useGuidedCreatorStore();
-  const { pathData, isLoading: pathLoading } = useGuidedPathData();
+  const { pathData, archetype, isLoading: pathLoading } = useGuidedPathData();
   const { data: officialItems = [], isLoading: officialLoading } = useOfficialLibrary('items');
   const { data: codexEquipment = [], isLoading: codexLoading } = useEquipment();
   const { catalog, itemProperties, tpSummary } = useGuidedEquipmentCatalog(
@@ -68,6 +83,13 @@ export function LoadoutStep() {
     codexEquipment
   );
   const [l2Open, setL2Open] = useState(false);
+  const [inlineErrorState, setInlineErrorState] = useState<{
+    phase: string;
+    message: string;
+  } | null>(null);
+
+  // L3 — no archetype path: inline full catalog per phase, no L2 modal (TASK-684).
+  const isInlineCatalog = prefersDeepCatalogEntry(draft);
 
   /**
    * Phase visibility uses catalog classification. While catalogs/path are empty,
@@ -76,7 +98,11 @@ export function LoadoutStep() {
    */
   const isLoading = officialLoading || codexLoading || pathLoading;
   const recommendUnarmed = pathData?.level1?.recommendUnarmedProwess === true;
-  const armorMode = resolveArmorStepMode(pathData?.level1?.armorStep, draft.archetypeType);
+  // Power always skips armor (draft type or path.type) — path armorStep cannot override (TASK-689).
+  const armorMode = resolveArmorStepMode(
+    pathData?.level1?.armorStep,
+    draft.archetypeType ?? archetype?.type ?? null
+  );
 
   const equipmentPhase = draft.equipmentPhase ?? 'weapon';
 
@@ -109,8 +135,10 @@ export function LoadoutStep() {
         hasWeaponOptions,
         hasArmorOptions,
         recommendUnarmed,
+        // Custom / no path: weapons for every archetype; armor only when mode ≠ none (Power).
+        fullCatalog: isInlineCatalog,
       }),
-    [armorMode, hasWeaponOptions, hasArmorOptions, recommendUnarmed]
+    [armorMode, hasWeaponOptions, hasArmorOptions, recommendUnarmed, isInlineCatalog]
   );
 
   const visiblePhases = visibleEquipmentPhases(armorMode, phaseVisibility);
@@ -172,6 +200,89 @@ export function LoadoutStep() {
     [currencyStarting, currencySpent]
   );
 
+  // L3 / L2 modal catalog — reuse the step's base catalog (no second build) (TASK-684).
+  const {
+    catalog: l2Catalog,
+    tpSummary: l2TpSummary,
+    items: inlineItems,
+    gearBudget,
+  } = useGuidedEquipmentL2Catalog(
+    equipmentPhase,
+    draft,
+    pathData?.level1,
+    officialItems,
+    codexEquipment,
+    currencyStarting,
+    armsSpent,
+    { catalog, tpSummary, itemProperties }
+  );
+
+  const inlineSelectedIds = useMemo(
+    () => initialSelectedIdsForPhase(equipmentPhase, draft),
+    [equipmentPhase, draft]
+  );
+
+  const inlineQuantities = useMemo(() => {
+    if (equipmentPhase !== 'gear') return {};
+    const next: Record<string, number> = {};
+    for (const row of draft.equipment) {
+      next[String(row.id)] = Math.max(1, Math.floor(Number(row.quantity)) || 1);
+    }
+    return next;
+  }, [equipmentPhase, draft.equipment]);
+
+  // Scope the error to the phase it was raised on — switching phases clears it
+  // without a state-reset effect (react-hooks/set-state-in-effect).
+  const inlineError =
+    inlineErrorState?.phase === equipmentPhase ? inlineErrorState.message : null;
+
+  const handleInlineToggle = useCallback(
+    (id: string) => {
+      const result = toggleGuidedEquipmentL2Ref(
+        equipmentPhase,
+        draft,
+        id,
+        l2Catalog,
+        l2TpSummary.limit,
+        gearBudget
+      );
+      if (!result.ok) {
+        setInlineErrorState({
+          phase: equipmentPhase,
+          message: result.message ?? phaseCopy.l2.confirmError,
+        });
+        return;
+      }
+      setInlineErrorState(null);
+      if (result.partial) updateDraft(result.partial);
+    },
+    [equipmentPhase, draft, l2Catalog, l2TpSummary.limit, gearBudget, updateDraft]
+  );
+
+  const handleInlineQuantityChange = useCallback(
+    (itemIdStr: string, delta: number) => {
+      const result = changeGuidedEquipmentL2Quantity(
+        equipmentPhase,
+        draft,
+        itemIdStr,
+        delta,
+        l2Catalog,
+        l2TpSummary.limit,
+        gearBudget
+      );
+      if (!result.ok) {
+        setInlineErrorState({
+          phase: equipmentPhase,
+          message: result.message ?? phaseCopy.l2.confirmError,
+        });
+        return;
+      }
+      setInlineErrorState(null);
+      if (result.partial) updateDraft(result.partial);
+    },
+    [equipmentPhase, draft, l2Catalog, l2TpSummary.limit, gearBudget, updateDraft]
+  );
+
   useEffect(() => {
     if (isLoading) return;
     if (!visiblePhases.includes(equipmentPhase)) {
@@ -191,8 +302,7 @@ export function LoadoutStep() {
     lastLoadoutJumpNonce.current = entryNonce;
     const first = visiblePhases[0] ?? 'weapon';
     updateDraft({ equipmentPhase: first });
-    setL2Open(prefersDeepCatalogEntry(draft));
-  }, [isLoading, navigationIntent, entryNonce, visiblePhases, updateDraft, draft]);
+  }, [isLoading, navigationIntent, entryNonce, visiblePhases, updateDraft]);
 
   /** Re-bucket weapons/armor and drop unresolved (stale) refs once lookup is ready. */
   useEffect(() => {
@@ -312,6 +422,46 @@ export function LoadoutStep() {
           <Spinner className="h-5 w-5" />
           <span>{stepCopy.loadingItems}</span>
         </div>
+      ) : isInlineCatalog ? (
+        <div className="space-y-5">
+          <LoadoutBudgetBar
+            currencyTotal={currencyStarting}
+            currencySpent={currencySpent}
+            tpTotal={tpSummary.limit}
+            tpSpent={tpSummary.spent}
+          >
+            {inlineError ? (
+              <p className="font-nunito text-sm text-warning-fg text-center" role="alert">
+                {inlineError}
+              </p>
+            ) : null}
+          </LoadoutBudgetBar>
+
+          <GuidedInlineCatalogList
+            items={inlineItems}
+            selectedIds={inlineSelectedIds}
+            onToggleSelection={equipmentPhase === 'gear' ? undefined : handleInlineToggle}
+            columns={l2HeaderColumnsForPhase(equipmentPhase)}
+            gridColumns={l2GridColumnsForPhase(equipmentPhase)}
+            itemLabel={equipmentPhase === 'gear' ? 'item' : equipmentPhase}
+            emptyMessage={phaseCopy.l2.emptyMessage(equipmentPhase)}
+            searchPlaceholder={phaseCopy.l2.searchPlaceholder(equipmentPhase)}
+            showQuantity={equipmentPhase === 'gear'}
+            quantities={inlineQuantities}
+            onQuantityChange={
+              equipmentPhase === 'gear' ? handleInlineQuantityChange : undefined
+            }
+            maxSelections={equipmentPhase === 'armor' ? 1 : undefined}
+            selectedTitle={phaseCopy.l2.selectedTitle(equipmentPhase)}
+          />
+
+          {equipmentPhase === 'weapon' && recommendUnarmed ? (
+            <GuidedUnarmedProwessPanel
+              level={draft.unarmedProwess ?? 0}
+              onChange={handleUnarmedChange}
+            />
+          ) : null}
+        </div>
       ) : (
         <div className="space-y-5">
           <GuidedEquipmentPhaseLayout
@@ -345,11 +495,11 @@ export function LoadoutStep() {
             isOpen={l2Open}
             phase={equipmentPhase}
             draft={draft}
-            pathLevel1={pathData?.level1}
-            officialItems={officialItems}
-            codexEquipment={codexEquipment}
+            catalog={l2Catalog}
+            items={inlineItems}
+            tpLimit={l2TpSummary.limit}
+            gearBudget={gearBudget}
             currencyStarting={currencyStarting}
-            armsSpent={armsSpent}
             onClose={() => setL2Open(false)}
             onDraftChange={updateDraft}
           />

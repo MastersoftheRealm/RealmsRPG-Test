@@ -1,6 +1,22 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-06 (Library add-to-character from character filter)
+Last updated: 2026-08-10 (Guided creator L3 regression audit)
+
+**Raw Feedback Log — 2026-08-10 (Guided creator — preview, energy, equipment GLR, armor skip, L3 audit)**
+- Context: Guided character creator after TASK-684/685 L3 inline catalogs
+- Feedback: (1) Top **CharacterPreviewPanel** strip should summarize **all six abilities** (negative, positive, and zero) plus **custom archetype type** (Power / Martial / Powered-Martial) — quick reference, not top-3 non-zero only or codex path name only. (2) **Energy** on powers/techniques L3 GLR looks wrong vs Codex/Library — why not shared `library-selectable-builders` / GLR registry? Codex is correct; guided powers path may be forked. (3) **Equipment** inline list needs **all column headers** like Codex/Library (`ARMAMENT_LIBRARY_CONFIG` parity) and better spacing for headers + quantity steppers. (4) **Armor screen** still appears for Power characters — should never show (path or custom). (5) General **regression audit** of guided creator UI/UX vs Codex/GLR after L3 list rollout — functional lists in codex/GLR but many inconsistencies remain.
+- Disposition: **TASK-686–690 done** (2026-08-10) — preview all six abilities + custom type (mobile strip scroll); Energy via `library-selectable-builders` derive + kind fix; equipment cells via `armamentRowColumns` + qty 7.5rem; Power always skips armor; L3 audit closed + cleanup. verification_status pending-qa (DEV-V-050 T001–T002).
+
+**Raw Feedback Log — 2026-08-10 (Guided L3 catalogs — filter / loadout / gear qty / powers)**
+- Context: Guided Full Customize (no path) after TASK-684 inline catalogs
+- Feedback: (1) Unavailable feats must be filtered out (not shown disabled). (2) Custom/no-path must not skip the weapon screen for Martial, Power, or Powered-Martial — all can take weapons within armament proficiency; only Power (not Powered-Martial) skips armor. (3) Powers: filters for innate vs non-innate; add as innate or normally using L1-parallel UI. (4) Gear: quantity stepper replaces the + add button (far right); edit qty in list and selected panel. (5) Powers/techniques must filter by potential max EN like guided L2.
+- Disposition: **TASK-685** done (TASK-684 follow-up) — hide unmet feats; `fullCatalog` loadout phases; gear qty-first; powers innate scope + max EN. verification_status pending-qa (DEV-V-050 T001).
+
+**Raw Feedback Log — 2026-08-10 (Guided creator — L3 inline GLR catalogs)**
+- Context: Guided character creator Full Customize (no archetype path) — feats / loadout / powers-techniques
+- Feedback: L3 should not be an auto-opened "add X" modal filling the screen. Embed the filtered GLR catalog in each step with selected items as cards/rows above the list. Path-based (L1) stays curated cards + "See more" → modal. Feats filters should mirror Codex (Category, State Feats), not Ability/Tags; search "by name, tags, keywords, or categories." Extend the same shared pattern to character feat, loadout (weapon/armor/gear), and powers/techniques. Keep eligibility filters (armament proficiency max, innate threshold, TP/currency budgets).
+- Expected: `prefersDeepCatalogEntry` → inline `GuidedInlineCatalogList`; L1 unchanged; shared builders/filters with L2 modals.
+- Disposition: **TASK-684** done — shared `GuidedInlineCatalogList` + `GuidedFeatsFilterFields` + `useGuidedEquipmentL2Catalog`; wired on all four screens. verification_status pending-qa (DEV-V-050 T001).
 
 **Raw Feedback Log — 2026-08-06 (Library — add power/technique to character from browse)**
 - Context: `/library` → Powers/Techniques with **Filter by character** selected

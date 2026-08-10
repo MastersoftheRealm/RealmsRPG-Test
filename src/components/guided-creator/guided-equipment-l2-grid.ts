@@ -1,11 +1,12 @@
 /**
- * Grid column definitions for guided equipment L2 `UnifiedSelectionModal`.
- * Headers must match GridListRow `columns` keys (name is the row `name` prop, still
- * listed in headers for alignment with `gridColumns`).
- * Data columns are sortable (asc/desc via ListHeader); only spacer/action keys omit sort.
+ * Grid column definitions for guided equipment L2/L3 catalogs.
+ * Align with Codex/Library `ARMAMENT_LIBRARY_CONFIG` (TASK-688).
+ * Weapon phase mixes weapons + shields — uses weapon columns; shields show Block
+ * in the Damage cell (intentional mixed-phase subset).
  */
 
 import type { GuidedEquipmentPhase } from '@/stores/guided-creator-store';
+import { ARMAMENT_LIBRARY_CONFIG } from '@/lib/library/official-item-list';
 
 export type L2ColumnHeader = {
   key: string;
@@ -14,30 +15,39 @@ export type L2ColumnHeader = {
   sortable: boolean;
 };
 
-/** Weapons & shields — Name | Damage | Currency | Training Points */
-export const WEAPON_L2_HEADER_COLUMNS: L2ColumnHeader[] = [
-  { key: 'name', label: 'Name', align: 'left', sortable: true },
-  { key: 'damage', label: 'Damage', align: 'center', sortable: true },
-  { key: 'currency', label: 'Currency', align: 'right', sortable: true },
-  { key: 'tp', label: 'Training Points', align: 'center', sortable: true },
-];
-export const WEAPON_L2_GRID = '1.6fr 0.9fr 0.7fr 0.9fr';
+function fromArmamentConfig(
+  kind: keyof typeof ARMAMENT_LIBRARY_CONFIG
+): { headers: L2ColumnHeader[]; grid: string } {
+  const cfg = ARMAMENT_LIBRARY_CONFIG[kind];
+  return {
+    grid: cfg.grid,
+    headers: cfg.headers.map((h) => ({
+      key: h.key,
+      label: h.label,
+      align: h.align,
+      sortable: h.sortable !== false,
+    })),
+  };
+}
 
-/** Armor — Name | Damage Reduction | Currency | Training Points */
-export const ARMOR_L2_HEADER_COLUMNS: L2ColumnHeader[] = [
-  { key: 'name', label: 'Name', align: 'left', sortable: true },
-  { key: 'dr', label: 'Damage Reduction', align: 'center', sortable: true },
-  { key: 'currency', label: 'Currency', align: 'right', sortable: true },
-  { key: 'tp', label: 'Training Points', align: 'center', sortable: true },
-];
-export const ARMOR_L2_GRID = '1.6fr 1fr 0.7fr 0.9fr';
+const weaponCfg = fromArmamentConfig('weapon');
+const armorCfg = fromArmamentConfig('armor');
 
-/** Gear — Name | Currency */
+/** Weapons (+ shields in same phase) — Codex weapon browse columns. */
+export const WEAPON_L2_HEADER_COLUMNS: L2ColumnHeader[] = weaponCfg.headers;
+export const WEAPON_L2_GRID = weaponCfg.grid;
+
+/** Armor — Codex armor browse columns. */
+export const ARMOR_L2_HEADER_COLUMNS: L2ColumnHeader[] = armorCfg.headers;
+export const ARMOR_L2_GRID = armorCfg.grid;
+
+/** Gear — Name | Rarity | Currency (no TP on Equipment phase). */
 export const GEAR_L2_HEADER_COLUMNS: L2ColumnHeader[] = [
-  { key: 'name', label: 'Name', align: 'left', sortable: true },
-  { key: 'currency', label: 'Currency', align: 'right', sortable: true },
+  { key: 'name', label: 'NAME', align: 'left', sortable: true },
+  { key: 'rarity', label: 'RARITY', align: 'center', sortable: true },
+  { key: 'currency', label: 'CURRENCY', align: 'center', sortable: true },
 ];
-export const GEAR_L2_GRID = '1.6fr 0.7fr';
+export const GEAR_L2_GRID = '1.6fr 0.7fr 0.7fr';
 
 export function l2HeaderColumnsForPhase(phase: GuidedEquipmentPhase): L2ColumnHeader[] {
   if (phase === 'armor') return ARMOR_L2_HEADER_COLUMNS;

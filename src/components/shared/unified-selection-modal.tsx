@@ -332,6 +332,7 @@ export function UnifiedSelectionModal({
           hasThumbnailColumn={hasThumbnailColumn}
           sortState={sortState}
           onSort={handleSort}
+          showQuantity={showQuantity}
         />
 
         <UnifiedSelectionModalList

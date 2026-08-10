@@ -3943,6 +3943,30 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Expected** | Codex-parity search toolbar; Enhanced Items label + order; no layout regression on filter rows below search. |
 | **Report** | DEV-V-016-T016: PASS / FAIL / SKIP — |
 
+#### DEV-V-016-T017 — Add Power/Technique USM PowerTechniqueFilters compact (TASK-675)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-675 |
+| **Where** | `/characters/[id]` → Edit → Library → **Add Power** / **Add Technique**; spot-check Advanced creator Powers/Techniques select modals |
+| **Needs** | Signed-in character; library with multiple powers/techniques spanning categories / energy / action types |
+| **Steps** | 1. Open **Add Power** at desktop + ~360px. 2. Open **Filters** — confirm shared `PowerTechniqueFilters` compact panel (Category, Max Energy, Max TP, Action Type, Action/Reaction, Innate Threshold / Eligible; Character filter + Available TP when a character is selected). 3. Confirm no nested second Filters toggle inside the panel. 4. Set Max Energy / Category / Innate Eligible and confirm the list narrows via `applyPowerTechniqueFilters` (same as Library browse). 5. Switch to Empowered Techniques — advanced P/T filters hidden. 6. Open **Add Technique** — same compact filters without power-only innate controls. 7. Spot-check Advanced creator Select Powers / Select Techniques modals match. |
+| **Expected** | USM add-power/technique reuse Library `PowerTechniqueFilters` + apply helpers; guided L3 still uses innate-scope SelectFilter (not this panel). |
+| **Report** | DEV-V-016-T017: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T018 — Guided P/T budget rows via shared builders (TASK-691)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-691 |
+| **Where** | `/characters/new/guided` → Powers or Techniques (L2 modal + L3 inline) |
+| **Needs** | Signed-in; custom Power draft preferred |
+| **Steps** | 1. Open Powers L3 (Full Customize) or L2 See more. 2. Confirm columns are Action Type / Energy / Training Points (budget-first, not Library duration/area/damage). 3. Confirm Path badges, TP budget gates, and theoretical max-EN / innate threshold filtering still apply. 4. Expand a row — Action Type + Energy chips + Training Points present. 5. Spot-check Martial techniques Energy still kind-correct (DEV-V-050-T002). |
+| **Expected** | Display shaped by `buildPowerTechniqueBudgetDisplay` / library-selectable-builders; guided orchestration preserved. |
+| **Report** | DEV-V-016-T018: PASS / FAIL / SKIP — |
+
 ---
 
 ## DEV-V-027 — Admin Official Enhanced list shell (TASK-575)
@@ -5907,6 +5931,58 @@ Empowered Attack mode must prefer the cheaper live Energy part when power and te
 
 **Expected**
 - Cheaper-EN overlap pick for Weapon; No Attack attached for No Weapon/Attack; Unarmed adds nothing.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-050 — Guided creator L3 inline catalog lists (TASK-684 / TASK-685 / TASK-686–690)
+
+Full Customize (L3, no archetype path) on archetype feats, character feat, loadout (weapon/armor/gear), and powers/techniques must render the filtered catalog inline in the step body (selected items as removable rows above the list) instead of auto-opening a modal. Guided paths (L1, has an archetype path) must be unchanged — curated cards + "See more" still opens the L2 modal. TASK-685 follow-up: hide unmet feats; custom loadout always shows weapons (Power-only skips armor); gear quantity-first; powers innate scope filter + max EN filter. TASK-686–690: preview strip parity, Energy kind fix, equipment Codex columns + qty spacing, Power armor skip regardless of path `armorStep`.
+
+#### DEV-V-050-T001 — L3 inline catalogs render + filter + select correctly
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-050 — Guided creator L3 inline catalog lists |
+| **Related task** | TASK-684 / TASK-685 / TASK-688 |
+| **Where** | `/characters/new/guided` — start a **custom** (no path) character |
+| **Needs** | Signed-in; a draft with no `archetypePathId` (Full Customize) |
+
+**Steps**
+1. Archetype Feats step: confirm the full eligible Feats list renders inline (no modal); Category (multi-select) and State Feats filters work; search covers name/tags/keywords/category; picking a Feat adds a removable card above the list; **unmet-requirement Feats are hidden** (not shown disabled). Selecting then becoming unmet still shows the selected row so it can be removed.
+2. Character Feat step: same as step 1, single-select (max 1); selecting a new Feat swaps the previous one.
+3. Loadout — Weapon phase: **always present** for Martial / Power / Powered-Martial custom drafts; inline list shows eligible weapons/shields within armament proficiency; **columns match Codex/Library** (Name, Rarity, Currency, TP, Range, Damage); Currency + Training Points budget bar updates live; selecting a two-handed weapon with a shield already selected shows the hand-slot error and does not apply.
+4. Loadout — Armor phase: present for Martial and Powered-Martial with **Codex armor columns** (Rarity, Currency, TP, Damage Red., Agility Red., Abl. Req., Crit +); **skipped for Power only**; single-slot swap on select; TP budget shared with weapons.
+5. Loadout — Gear phase: **quantity stepper on the far right replaces the + add button** (no dual chrome; slot wide enough that ± controls are not clipped); Name/Rarity/Currency columns; incrementing from 0 adds; editing qty in the catalog row or the selected panel works; Currency budget enforced.
+6. Powers/Techniques step (Power or Powered-Martial path-less draft): Innate + Powers sections (L1-parallel) with a **Show** filter (Innate + Powers / Innate only / Powers only); regular list filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP/Innate-Energy blocks hide unavailable rows (selected kept).
+7. For all six: verify at ~360px width — search/filter toolbar and selected-panel rows stay usable, touch targets ≥44px.
+8. Sanity check a **path-based** (L1) character still shows curated cards + "See more options" opening the existing L2 modal (no regression). Path with empty weapon pool may still omit weapon (path behavior unchanged).
+
+**Expected**
+- All four L3 screens show the catalog inline with live budgets/eligibility; unavailable feats/powers hidden; custom loadout never skips weapons; Power-only skips armor; gear is quantity-first with readable qty chrome; equipment headers match Codex; L1 path-based flow is unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-050-T002 — L3 parity smoke (preview, Power armor, Energy, equipment headers) (TASK-686–690)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-050 — Guided creator L3 parity |
+| **Related task** | TASK-686 / TASK-687 / TASK-688 / TASK-689 / TASK-690 |
+| **Where** | `/characters/new/guided` |
+| **Needs** | Signed-in; custom Power draft + Martial techniques draft + optional Power path with `armorStep: required` if available |
+
+**Steps**
+1. **Preview strip (TASK-686):** On a custom archetype (no path), pick Power / Martial / Powered-Martial — strip shows the category chip and **all six** ability chips including zeros and negatives (`+N` / `0` / `−N`), including on narrow mobile (horizontal scroll). Path-based draft still shows the path name chip.
+2. **Power armor skip (TASK-689):** Custom Power loadout goes weapon → gear only (no armor). If a Power path exists with armor recommendations / `armorStep: required`, confirm armor phase is still omitted.
+3. **Equipment headers (TASK-688):** On Martial custom loadout, armor list shows Abl. Req. / Crit + / Agility Red. columns aligned with headers; gear qty stepper has breathing room (not overlapping Currency).
+4. **Powers Energy (TASK-687):** Power custom — Energy column matches L2 modal for the same power. Martial techniques — Energy values resolve via techniques path (not skewed as powers); max-EN filter uses `mart_abil`.
+
+**Expected**
+- Preview always shows six signed abilities + type/path chip; Power never sees armor; equipment columns/qty match Codex intent; techniques Energy is correct.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

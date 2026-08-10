@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { ColumnValue, ChipData } from './grid-list-row-types';
 import type { ListRowThumbnailProps } from './list-row-thumbnail';
 import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';
+import type { PowerTechniqueFilterableRow } from '@/lib/library/power-technique-filters';
 
 /** Represents an item that can be selected in the modal */
 export interface SelectableItem {
@@ -28,6 +29,16 @@ export interface SelectableItem {
   thumbnail?: ListRowThumbnailProps;
   /** Any extra data attached to the item (e.g. raw Feat, Skill for onConfirm) */
   data?: unknown;
+  /**
+   * Power/technique advanced-filter row for `applyPowerTechniqueFilters` (USM).
+   * Does not replace `data` — confirm mappers still read the raw library item from `data`.
+   */
+  powerTechniqueFilter?: PowerTechniqueFilterableRow;
+  /**
+   * Extra searchable text (tags, category, etc.) — include in `searchFields`
+   * so search covers more than name/description (guided feats L2/L3 — TASK-684).
+   */
+  keywords?: string;
 }
 
 /** Column header definition for sorting.
