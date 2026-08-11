@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-693
+**Next task ID:** TASK-696
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
@@ -12,9 +12,76 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 6 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** TASK-686–690 pending-qa (DEV-V-050). **TASK-691** + **TASK-675** done pending-qa (DEV-V-016-T017/T018). **TASK-692** filed (guided L3 compact PowerTechniqueFilters — optional). TASK-685/684 pending-qa.
+**Hot notes:** **TASK-694–695** filed (preview summary polish; layer-nav hatch chrome) — corrects TASK-640/686 UX misreads. TASK-693 done pending-qa (DEV-V-013 T079). TASK-686–690 pending-qa (DEV-V-050; preview AC partly superseded by 694). **TASK-691** + **TASK-675** done pending-qa. **TASK-692** optional. TASK-685/684 pending-qa.
+
+---
+
+- id: TASK-694
+  title: Your Character preview — path once + gated ability chips
+  created_at: 2026-08-10
+  created_by: owner
+  priority: high
+  status: in-progress
+  related_tasks:
+    - TASK-686
+  related_files:
+    - src/components/guided-creator/character-preview-panel.tsx
+    - src/lib/guided-creator/preview-ability-summary.ts
+    - src/lib/guided-creator/preview-ability-summary.test.ts
+  description: |
+    Correct CharacterPreviewPanel / strip after TASK-686 overshot owner intent. Archetype path
+    (or custom path type) must appear once — prefer the subtitle under the character name
+    (“Your Character”), not a duplicate DescriptorChip. Custom builds show Power / Martial /
+    Powered-Martial type there (not a fake path name). Ability DescriptorChips stay hidden
+    until the player has selected abilities or completed the Abilities step; when shown, only
+    archetype abilities (`pow_abil` / `mart_abil`) use the alternate highlight color — other
+    ability chips stay default.
+  acceptance_criteria:
+    - Path-based draft: path name once under the name/subtitle; no second path DescriptorChip in the strip.
+    - Custom archetype: path type label once under the name; no duplicate type chip; never show a codex path name when forging custom.
+    - Ability chips absent before ability selection / ability-step completion; appear after that gate.
+    - Only archetype ability chip(s) use the other (e.g. primary / power-martial) highlight; remaining shown abilities are default descriptor styling.
+    - Panel variant stays consistent with strip rules (no double path identity).
+    - Update/supersede DEV-V-050-T002 preview expectations; unit tests for gating + highlight; build/typecheck/lint pass; FEATURE_INDEX if preview behavior is indexed.
+  notes: |
+    Owner feedback 2026-08-10. TASK-686 implemented always-on six primary chips + archetype chip,
+    which duplicated the subtitle and showed zeros before Abilities. Prefer subtitle identity over
+    chip identity. Do not re-litigate Energy/equipment/armor from TASK-687–689.
+
+---
+
+- id: TASK-695
+  title: GuidedLayerNav hatch buttons — not Continue-primary blue
+  created_at: 2026-08-10
+  created_by: owner
+  priority: high
+  status: not-started
+  related_tasks:
+    - TASK-640
+    - TASK-641
+  related_files:
+    - src/components/shared/guided-choice/guided-layer-nav.tsx
+    - src/components/shared/guided-choice/guided-nav-button-styles.ts
+    - src/components/guided-creator/steps/species-step.tsx
+  description: |
+    Species L2 **Create Species** (and other GuidedLayerNav actions in the same location /
+    similar function) must not use primary blue — it currently reads as the sticky Continue
+    CTA rather than an alternate L3/hatch option. Restyle layer-nav expand (and peers with the
+    same role) to a consistent non-primary chrome; keep footer Continue as the sole primary
+    progress button.
+  acceptance_criteria:
+    - Create Species is not `variant="primary"` / Continue-blue; visually distinct from GuidedStepFooter Continue.
+    - Other GuidedLayerNav buttons with the same role (deeper/hatch / lateral options in that nav row) share the new consistent style.
+    - Collapse / shallower buttons remain outline and still distinct from Continue.
+    - Footer Back/Continue chrome unchanged (Continue stays primary).
+    - Mobile touch targets ≥44px preserved; contrast OK; DEV-V-013 T077–T078 (and any layer-nav copy) updated; build/typecheck/lint pass.
+  notes: |
+    Owner feedback 2026-08-10. TASK-640 intentionally matched layer-nav expand to Continue primary
+    so deeper didn’t feel like a downgrade — that made Create Species feel like Continue. Correction:
+    layer-nav family consistent with itself, not with footer Continue. Prefer extending
+    `guided-nav-button-styles` / GuidedLayerNav props over one-off Species styling.
 
 ---
 

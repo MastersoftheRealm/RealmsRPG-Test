@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildCustomArchetypeDraftPatch,
+  buildCreatorResetDraftPatch,
   buildEnterCustomArchetypeLayerPatch,
   buildEnterPathLayerPatch,
   buildOpenCustomPathEntryPatch,
@@ -138,6 +139,25 @@ describe('Path L1↔L3 layer patches', () => {
     const patch = buildOpenGuidedPathEntryPatch();
     expect(patch.creatorEntryMode).toBe('guided');
     expect(patch.pathLayer).toBe('l1');
+  });
+
+  it('reset preserves custom entry face (Path L3, cleared progress)', () => {
+    const patch = buildCreatorResetDraftPatch('custom');
+    expect(patch.creatorEntryMode).toBe('custom');
+    expect(patch.pathLayer).toBe('l3');
+    expect(patch.archetypePathId).toBeNull();
+    expect(patch.archetypeType).toBeNull();
+    expect(patch.abilities).toEqual({ ...DEFAULT_ABILITIES });
+    expect(patch.abilitiesMode).toBeNull();
+    expect(patch.skills).toEqual({});
+    expect(patch.powerIds).toEqual([]);
+  });
+
+  it('reset preserves guided entry face (Path L1)', () => {
+    const patch = buildCreatorResetDraftPatch('guided');
+    expect(patch.creatorEntryMode).toBe('guided');
+    expect(patch.pathLayer).toBe('l1');
+    expect(patch).not.toHaveProperty('abilities');
   });
 
   it('custom archetype complete rules match forge Continue', () => {

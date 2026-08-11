@@ -28,6 +28,7 @@ import {
   type GuidedNavigationIntent,
 } from '@/lib/guided-creator/guided-substep-nav';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { buildCreatorResetDraftPatch } from '@/lib/guided-creator/path-selection-draft';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 
 const chapterCopy = GUIDED_CREATOR_COPY.chapters;
@@ -361,10 +362,14 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
       },
 
       resetCreator: () => {
+        const { creatorEntryMode } = get().draft;
         set({
           currentSubStep: 'path',
           completedSubSteps: [],
-          draft: cloneInitialDraft(),
+          draft: {
+            ...cloneInitialDraft(),
+            ...buildCreatorResetDraftPatch(creatorEntryMode),
+          },
           navigationIntent: 'forward',
           entryNonce: 0,
         });

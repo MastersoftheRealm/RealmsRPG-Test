@@ -1,11 +1,17 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-10 (Guided creator L3 regression audit)
+Last updated: 2026-08-10 (Guided creator preview / restart / layer-nav polish)
+
+**Raw Feedback Log — 2026-08-10 (Guided creator — restart custom, Your Character summary, Create Species chrome)**
+- Context: Guided character creator Custom entry + CharacterPreviewPanel strip + Species L2 layer-nav (post TASK-640 / TASK-686)
+- Feedback: (1) Start in Custom mode → Restart should stay in Custom (Path L3 custom archetype face), not reset to Guided default first screen. (2) Selected archetype path appears twice in **Your Character** summary — show once; prefer the line under the name (not the DescriptorChip). Custom archetype should show path type (Power / Martial / Powered-Martial), once — not a path name and not duplicated. (3) Do not show ability DescriptorChips in Your Character until abilities are actually selected / ability step completed. (4) Only highlight (other color) the archetype ability(ies) (`pow_abil` / `mart_abil`) in that summary — not every ability chip. (5) **Create Species** must not be primary blue (reads as Continue); restyle that GuidedLayerNav / similar-function buttons consistently so layer-nav ≠ footer Continue.
+- Misinterpretation note: TASK-686 treated “summarize abilities + custom type” as always-on six primary chips + archetype chip (duplicating the subtitle). TASK-640 matched layer-nav expand to Continue primary so deeper didn’t feel dull — that made Create Species feel like the progress CTA.
+- Disposition: (1) **TASK-693 done** — `resetCreator` preserves `creatorEntryMode` (Custom → Path L3 after Restart); verification_status pending-qa (DEV-V-013-T079). (2–5) Filed **TASK-694** (preview path once + ability chip gating/highlight), **TASK-695** (layer-nav hatch chrome not primary). Corrects DEV-V-050-T002 preview expectations on implement.
 
 **Raw Feedback Log — 2026-08-10 (Guided creator — preview, energy, equipment GLR, armor skip, L3 audit)**
 - Context: Guided character creator after TASK-684/685 L3 inline catalogs
 - Feedback: (1) Top **CharacterPreviewPanel** strip should summarize **all six abilities** (negative, positive, and zero) plus **custom archetype type** (Power / Martial / Powered-Martial) — quick reference, not top-3 non-zero only or codex path name only. (2) **Energy** on powers/techniques L3 GLR looks wrong vs Codex/Library — why not shared `library-selectable-builders` / GLR registry? Codex is correct; guided powers path may be forked. (3) **Equipment** inline list needs **all column headers** like Codex/Library (`ARMAMENT_LIBRARY_CONFIG` parity) and better spacing for headers + quantity steppers. (4) **Armor screen** still appears for Power characters — should never show (path or custom). (5) General **regression audit** of guided creator UI/UX vs Codex/GLR after L3 list rollout — functional lists in codex/GLR but many inconsistencies remain.
-- Disposition: **TASK-686–690 done** (2026-08-10) — preview all six abilities + custom type (mobile strip scroll); Energy via `library-selectable-builders` derive + kind fix; equipment cells via `armamentRowColumns` + qty 7.5rem; Power always skips armor; L3 audit closed + cleanup. verification_status pending-qa (DEV-V-050 T001–T002).
+- Disposition: **TASK-686–690 done** (2026-08-10) — preview all six abilities + custom type (mobile strip scroll); Energy via `library-selectable-builders` derive + kind fix; equipment cells via `armamentRowColumns` + qty 7.5rem; Power always skips armor; L3 audit closed + cleanup. verification_status pending-qa (DEV-V-050 T001–T002). **Superseded in part by 2026-08-10 preview polish feedback → TASK-694** (ability chips gated; path/type once under name; archetype abilities highlighted only).
 
 **Raw Feedback Log — 2026-08-10 (Guided L3 catalogs — filter / loadout / gear qty / powers)**
 - Context: Guided Full Customize (no path) after TASK-684 inline catalogs

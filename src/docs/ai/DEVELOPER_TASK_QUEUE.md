@@ -148,6 +148,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-693** | DEV-V-013 **T079** | Custom chooser: Restart lands on Path L3 custom archetype face (not Guided L1); Guided entry: Restart lands on Path L1; progress cleared |
 | **TASK-691** | DEV-V-016 **T018** | Guided Powers/Techniques L2/L3: budget columns (Action Type / Energy / TP) via shared builders; Path badges + max-EN / innate gates unchanged |
 | **TASK-675** | DEV-V-016 **T017** | Sheet Add Power/Technique (+ Advanced creator): Filters panel shows shared PowerTechniqueFilters compact; list applies Library filter helpers; guided L3 still uses innate SelectFilter |
 | **TASK-690** | DEV-V-050 **T001–T002** | L3 regression audit close: preview strip, Power armor skip, equipment Codex columns, powers Energy kind |

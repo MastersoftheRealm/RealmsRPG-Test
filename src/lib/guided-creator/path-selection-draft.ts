@@ -2,6 +2,7 @@
  * Guided Path draft patches: path select, Path L1↔L3 layer switches, custom archetype.
  */
 
+import type { CreatorEntryMode } from '@/lib/guided-creator/creator-entry-mode';
 import { resolvePathAbilityLabels } from '@/lib/game/path-ability-labels';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
@@ -103,6 +104,18 @@ export function buildOpenCustomPathEntryPatch(): Partial<GuidedDraft> {
     mart_abil: null,
     ...clearArchetypeDependentDraftFields(),
   };
+}
+
+/**
+ * Restart: clear all chapter progress but keep the chooser entry face (Path L1 vs L3).
+ * URL `?entry=` is stripped after bootstrap, so reset cannot rely on query params.
+ */
+export function buildCreatorResetDraftPatch(
+  creatorEntryMode: CreatorEntryMode
+): Partial<GuidedDraft> {
+  return creatorEntryMode === 'custom'
+    ? buildOpenCustomPathEntryPatch()
+    : buildOpenGuidedPathEntryPatch();
 }
 
 /** Valid custom-archetype selection for Continue on Path L3. */

@@ -1,3 +1,42 @@
+- id: TASK-693
+  title: Guided Restart preserves Custom entry mode
+  created_at: 2026-08-10
+  completed_at: 2026-08-10
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-638
+    - TASK-640
+  related_files:
+    - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
+    - src/lib/guided-creator/path-selection-draft.ts
+    - src/lib/guided-creator/path-selection-draft.test.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T079
+  developer_test_plan: |
+    Suite DEV-V-013-T079 — see BUILD_VALIDATION.md.
+  description: |
+    If the player started character creation in Custom mode (`creatorEntryMode: 'custom'` /
+    Path L3 custom archetype), Restart must clear progress but remain on the Custom face —
+    not dump them onto Guided Path L1 / default first screen.
+  acceptance_criteria:
+    - From chooser Custom (or mid-flow Custom), confirm Restart ? lands on Custom Archetype Path L3 face (type cards), not Guided path cards.
+    - From Guided entry, Restart still lands on Guided Path L1.
+    - Progress (selections, points, steps) is cleared; only entry mode / Path L3 vs L1 face is preserved.
+    - `creatorEntryMode` remains session-only (not saved on character) — do not reintroduce persisted creationMode.
+    - Targeted unit/store coverage for reset-with-preserved-entry; build/typecheck/lint pass.
+    - BUILD_VALIDATION DEV-V-013 (+ notes) updated; FEATURE_INDEX if entry/restart behavior is documented there.
+  completed_work: |
+    Added `buildCreatorResetDraftPatch`; `resetCreator` merges `cloneInitialDraft()` with entry patch
+    preserving `creatorEntryMode` (custom ? Path L3 + cleared dependents; guided ? Path L1).
+    Vitest for reset patches + guided-creator-store resetCreator integration; typecheck/lint/build pass.
 - id: TASK-691
   title: Guided powers/techniques catalog rows via library-selectable-builders display
   created_at: 2026-08-10
@@ -1477,6 +1516,7 @@
     - src/components/guided-creator/steps/ancestry-step.tsx
     - src/lib/constants/copy/guided-creator-copy.ts
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
   acceptance_criteria:
     - Chooser shows Guided, Custom, and temporary Legacy cards; Legacy routes to Advanced wizard
     - Custom entry lands on deeper catalog faces per step when no path is selected (creatorEntryMode session-only)
@@ -1522,6 +1562,7 @@
     - src/components/guided-creator/guided-path-custom-archetype.tsx
     - src/lib/guided-creator/path-selection-draft.ts
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/lib/constants/copy/guided-creator-copy.ts
     - src/app/(main)/characters/new/page.tsx
     - src/app/(main)/characters/new/guided/page.tsx
@@ -2921,6 +2962,7 @@
     - src/lib/guided-creator/guided-substep-nav.ts
     - src/lib/guided-creator/guided-substep-nav.test.ts
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/components/guided-creator/steps/ancestry-step.tsx
     - src/components/guided-creator/steps/loadout-step.tsx
     - src/docs/ai/FEATURE_INDEX.md
@@ -5478,6 +5520,7 @@ Firebase/RTDB - the project is Supabase-only.
   related_files:
     - src/components/guided-creator/steps/ancestry-step.tsx
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ALL_FEEDBACK_CLEAN.md
@@ -5813,6 +5856,7 @@ Firebase/RTDB - the project is Supabase-only.
   verification_status: pending-qa
   related_files:
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/components/guided-creator/steps/ancestry-step.tsx
     - src/components/guided-creator/steps/loadout-step.tsx
     - src/docs/ai/guide/04-floating-ui-tooltips.md
@@ -13662,6 +13706,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/components/shared/innate-toggle.tsx
     - src/components/shared/point-status.tsx
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/lib/guided-creator/build-character.ts
     - src/docs/GAME_RULES.md
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
@@ -13711,6 +13756,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/guided-creator/powers-techniques-l1-candidates.ts
     - src/lib/guided-creator/build-character.ts
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/types/archetype.ts
     - src/components/guided-creator/guided-choice-card.tsx
     - src/components/guided-creator/loadout-budget-bar.tsx
@@ -14073,6 +14119,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/components/guided-creator/guided-health-energy-section.tsx
     - src/lib/constants/copy/guided-creator-copy.ts
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/lib/guided-creator/build-character.ts
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
   description: |
@@ -14310,6 +14357,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/guided-creator/powers-techniques-l1-candidates.test.ts
     - src/components/guided-creator/steps/powers-techniques-step.tsx
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
   description: |
     Ensure a selection made through See more options remains understandable after returning to
     recommendations. A non-path weapon, armor, power, or technique must be promoted into the current
@@ -14349,6 +14397,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/components/guided-creator/steps/loadout-step.tsx
     - src/components/guided-creator/guided-reveal-summary.tsx
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/docs/REALMS_PRODUCT_OVERVIEW.md
     - src/docs/ai/GUIDED_EQUIPMENT_PHASED_SPEC.md
     - src/docs/GAME_RULES.md
@@ -14586,6 +14635,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/components/guided-creator/steps/ancestry-step.tsx
     - src/components/guided-creator/steps/loadout-step.tsx
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/lib/constants/copy/guided-creator-copy.ts
   description: |
     Owner feedback: species/path More details footers Close (left) + Select (right);
@@ -15541,6 +15591,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/guided-creator/resolve-loadout-items.ts
     - src/lib/game/weapon-attack-ability.ts
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/lib/guided-creator/build-character.ts
     - src/types/archetype.ts
     - src/components/shared/unified-selection-modal.tsx
@@ -16231,6 +16282,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/app/(main)/characters/new/advanced/page.tsx
     - src/app/(main)/characters/new/guided/page.tsx
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
   acceptance_criteria:
     - New Character navigates to chooser; both routes load; stores are separate.
     - npm run build passes.
@@ -16404,6 +16456,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/guided-creator/curated-skills.ts
     - src/lib/guided-creator/build-character.ts
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/components/guided-creator/guided-reveal-summary.tsx
     - src/components/guided-creator/character-preview-panel.tsx
     - src/lib/constants/copy/guided-creator-copy.ts
@@ -16439,6 +16492,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/constants/copy/guided-creator-copy.ts
     - src/lib/guided-creator/build-character.ts
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
   acceptance_criteria:
     - Full overview shows names (skills, traits, feats, loadout, powers/techniques) not counts.
     - Edit links jump back to prior guided sub-steps.
@@ -17425,6 +17479,7 @@ Firebase/RTDB - the project is Supabase-only.
     - src/lib/guided-creator/build-character.ts
     - src/lib/guided-creator/build-character.test.ts
     - src/stores/guided-creator-store.ts
+    - src/stores/guided-creator-store.test.ts
     - src/lib/constants/copy/guided-creator-copy.ts
   description: |
     Product overview Species L2 slice: expand to full species catalog, Mixed Species card

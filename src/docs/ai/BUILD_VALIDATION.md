@@ -3585,6 +3585,27 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-013-T079 — Restart preserves chooser entry mode (TASK-693)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 — Guided Simple character creator |
+| **Related task** | TASK-693 |
+| **Where** | `/characters/new/guided` → Restart (header button) |
+| **Needs** | — |
+
+**Steps**
+1. Enter via **Custom** chooser; on Path L3 pick type + abilities (or leave partial) — advance to Species or beyond.
+2. Click **Restart** → confirm — land on Path L3 custom archetype face (type cards), not Guided path cards.
+3. Confirm selections cleared (no species, no spent ability points).
+4. Return to chooser; enter via **Guided**; pick a path and advance to Species.
+5. **Restart** — confirm Path L1 path cards (not L3 custom face).
+
+**Expected**
+- Restart clears chapter progress but preserves `creatorEntryMode` session face; URL has no `?entry=` after bootstrap.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-013-T078 — Guided Species L2 (mixed + Create Species) (TASK-641)
 
 | Field | Value |
@@ -5976,13 +5997,13 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 | **Needs** | Signed-in; custom Power draft + Martial techniques draft + optional Power path with `armorStep: required` if available |
 
 **Steps**
-1. **Preview strip (TASK-686):** On a custom archetype (no path), pick Power / Martial / Powered-Martial — strip shows the category chip and **all six** ability chips including zeros and negatives (`+N` / `0` / `−N`), including on narrow mobile (horizontal scroll). Path-based draft still shows the path name chip.
+1. **Preview strip (TASK-694):** Before the Abilities step, the strip shows name + species/path subtitle only — **no** ability chips and **no** duplicate path/type DescriptorChip (path or Power/Martial/Powered-Martial type lives in the subtitle once). After abilities are selected or the Abilities step is completed, all six signed ability chips appear (`+N` / `0` / `−N`), including on narrow mobile (horizontal scroll). Only `pow_abil` / `mart_abil` chips use power/martial highlight; the rest use default descriptor styling. Path-based draft: path name in subtitle only, not a second chip.
 2. **Power armor skip (TASK-689):** Custom Power loadout goes weapon → gear only (no armor). If a Power path exists with armor recommendations / `armorStep: required`, confirm armor phase is still omitted.
 3. **Equipment headers (TASK-688):** On Martial custom loadout, armor list shows Abl. Req. / Crit + / Agility Red. columns aligned with headers; gear qty stepper has breathing room (not overlapping Currency).
 4. **Powers Energy (TASK-687):** Power custom — Energy column matches L2 modal for the same power. Martial techniques — Energy values resolve via techniques path (not skewed as powers); max-EN filter uses `mart_abil`.
 
 **Expected**
-- Preview always shows six signed abilities + type/path chip; Power never sees armor; equipment columns/qty match Codex intent; techniques Energy is correct.
+- Preview always shows six signed abilities (after Abilities gate) with archetype-ability highlight only; path/type identity is subtitle-only; Power never sees armor; equipment columns/qty match Codex intent; techniques Energy is correct.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
