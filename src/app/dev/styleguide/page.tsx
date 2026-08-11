@@ -452,7 +452,23 @@ export default function StyleguidePage() {
           </Row>
           <Row label="Descriptor vs pill (same text)">
             <DescriptorChip>Fire damage</DescriptorChip>
-            <Chip variant="default">Fire damage</Chip>
+            <Chip variant="default" size="descriptor">Fire damage</Chip>
+          </Row>
+          <Row label="Entity row parity (descriptor + expandable + pill)">
+            <ChipGroup>
+              <DescriptorChip>Archetype Feat</DescriptorChip>
+              <ExpandableChip
+                label="Elemental Damage"
+                variant="listCost"
+                cost={2}
+                costLabel="TP"
+                expandOnCost
+                description="Adds 1d6 fire damage when expanded."
+              />
+              <Chip variant="default" size="descriptor" shape="pill">
+                Tag
+              </Chip>
+            </ChipGroup>
           </Row>
         </Section>
 
@@ -484,7 +500,7 @@ export default function StyleguidePage() {
               />
             </ChipGroup>
           </Row>
-          <Row label="Size by role (md = default for lists; sm = dense only)">
+          <Row label="Size by role (md expandable = descriptor inline; sm = dense only)">
             <ChipGroup>
               <ExpandableChip
                 label="Stealth"

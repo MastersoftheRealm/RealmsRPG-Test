@@ -5,8 +5,8 @@
 import type { ChipData } from '@/components/shared';
 import type { TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
-import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
+import { libraryItemToTechniqueDocument } from '@/lib/library-selectable-builders';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
   derivePartCategories,
@@ -66,22 +66,8 @@ export function buildOfficialTechniqueRows(
 ): OfficialTechniqueRow[] {
   return items.map((t) => {
     const empowered = mode === 'empowered';
-    const savedParts: NonNullable<TechniqueDocument['parts']> = Array.isArray(t.parts)
-      ? (t.parts as NonNullable<TechniqueDocument['parts']>)
-      : [];
-    const doc: TechniqueDocument = {
-      name: String(t.name ?? ''),
-      description: String(t.description ?? ''),
-      parts: savedParts,
-      damage: Array.isArray(t.damage)
-        ? (t.damage[0] as TechniqueDocument['damage'])
-        : (t.damage as TechniqueDocument['damage']),
-      attackMode: t.attackMode,
-      weaponName: t.weaponName,
-      weapon: t.weapon as TechniqueDocument['weapon'],
-      actionType: t.actionType,
-      isReaction: t.isReaction,
-    };
+    const doc = libraryItemToTechniqueDocument(t);
+    const savedParts = doc.parts ?? [];
     const display = deriveTechniqueDisplay(doc, partsDb);
     const totals = empowered ? getEmpoweredTechniqueTotals(t) : {};
     const damageStr = formatTechniqueDamage(doc.damage);

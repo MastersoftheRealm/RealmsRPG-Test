@@ -314,7 +314,7 @@ export function ExpandableChip({
         <div
           className={cn(
             'w-full pt-1.5 mt-1.5 text-text-secondary border-t border-current/15 leading-relaxed',
-            size === 'md' ? 'text-sm' : 'text-xs'
+            size === 'sm' ? 'text-xs' : 'text-sm'
           )}
         >
           {sublabel && <div className="font-medium text-text-primary">{sublabel}</div>}

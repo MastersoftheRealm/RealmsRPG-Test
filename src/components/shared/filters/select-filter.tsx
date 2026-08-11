@@ -9,6 +9,7 @@
 
 import { useId, useMemo, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
+import { FilterNativeSelect } from './filter-native-select';
 import { dedupeSelectOptions, shouldShowSelectPlaceholder } from './filter-utils';
 
 interface SelectFilterProps {
@@ -56,12 +57,11 @@ export function SelectFilter({
         ) : null}
         {labelAccessory}
       </div>
-      <select
+      <FilterNativeSelect
         id={id}
         value={value}
         disabled={disabled}
         onChange={(e) => onChange(e.target.value)}
-        className="h-11 w-full rounded-md border border-border-light bg-surface px-3 text-sm focus:border-primary-outline-border focus:outline-none focus:ring-2 focus:ring-primary-outline-border disabled:cursor-not-allowed"
       >
         {showPlaceholder && <option value="">{placeholder}</option>}
         {uniqueOptions.map((opt) => (
@@ -69,7 +69,7 @@ export function SelectFilter({
             {opt.label}
           </option>
         ))}
-      </select>
+      </FilterNativeSelect>
     </div>
   );
 }

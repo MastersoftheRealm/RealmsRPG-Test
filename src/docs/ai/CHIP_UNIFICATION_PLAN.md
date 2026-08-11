@@ -113,7 +113,7 @@ Background: bg-surface (light) / bg-surface-alt (dark) — fully opaque, not /30
 Border:     border-border-light, 1px
 Text:       text-text-secondary (body); semantic -fg only when meaning matters (rarity, status)
 Radius:     rounded-md (slightly tighter than expandable)
-Size:       sm default in list rows (text-xs px-2 py-0.5)
+Size:       descriptor token default (text-sm px-2.5 py-1); legacy `sm` prop maps here (TASK-699)
 No chevron, no ring, no hover shadow
 ```
 
@@ -123,11 +123,11 @@ Semantic descriptors (rarity, success/warning) may use existing `-light` fills �
 
 | Role | Default size | Collapsed typography | Expanded body |
 |------|--------------|----------------------|---------------|
-| **ExpandableChip** | `md` | `text-sm`, `px-3 py-1.5` | `text-sm` when `md`; `text-xs` when `sm` |
-| **DescriptorChip** | `sm` | `text-xs`, `px-2 py-0.5` | N/A (non-expandable) |
+| **ExpandableChip** | `md` → `descriptor` | `text-sm`, `px-2.5 py-1` | `text-sm` when `md`; `text-xs` when `sm` |
+| **DescriptorChip** | `sm` → `descriptor` | `text-sm`, `px-2.5 py-1` | N/A (non-expandable) |
 | **DescriptorChip** (prominent) | `md` / `lg` | Same tokens, larger padding/type | N/A — step counters, TP totals, hero rarity only |
 
-**Rule:** Size follows **role**, not page. GridListRow expanded chips and `SummaryChipList` use **`md`** expandable chips. Row/card metadata stays **`sm`**. Do not use prominent `md`/`lg` descriptors for entity names that have descriptions — use `ExpandableChip` instead.
+**Rule:** Chips in the same entity row (`data-chip-group`, GridListRow expanded sections) share the **`descriptor`** inline size — descriptor, expandable (`md`), and pill (`size="descriptor"`) must match. Use prominent `md`/`lg` descriptors only **outside** chip groups (budget counters, hero rarity). Filter toolbars keep pill `sm`.
 
 **Variant:** Use `list`, `listWarning`, `listCost`, `power`, `technique`, and part `category` tokens — not one-off Tailwind on each call site.
 

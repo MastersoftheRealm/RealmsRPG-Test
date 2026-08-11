@@ -10,6 +10,7 @@
 import { useId, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Chip } from '@/components/ui';
+import { FilterNativeSelect } from './filter-native-select';
 import { dedupeStrings } from './filter-utils';
 
 interface TagFilterProps {
@@ -52,20 +53,20 @@ export function TagFilter({
       <label htmlFor={id} className="block text-sm font-medium text-text-secondary mb-1">
         {label}
       </label>
-      <div className="flex gap-2 items-center">
-        <select
+      <div className="flex items-center gap-2">
+        <FilterNativeSelect
           id={id}
           onChange={handleChange}
-          className="flex-1 px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-primary-outline-border"
           defaultValue=""
+          wrapperClassName="min-w-0 flex-1"
         >
           <option value="">{placeholder}</option>
-          {availableTags.map(tag => (
+          {availableTags.map((tag) => (
             <option key={tag} value={tag}>
               {tag}
             </option>
           ))}
-        </select>
+        </FilterNativeSelect>
         <div className="flex items-center gap-2 bg-surface-alt px-3 py-2 rounded-md">
           <label className="flex items-center gap-1 cursor-pointer">
             <input

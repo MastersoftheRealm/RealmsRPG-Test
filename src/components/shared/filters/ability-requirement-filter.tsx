@@ -11,6 +11,7 @@ import { useState, useId } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { Chip, IconButton, Input } from '@/components/ui';
+import { FilterNativeSelect } from './filter-native-select';
 
 export interface AbilityRequirement {
   ability: string;
@@ -67,21 +68,21 @@ export function AbilityRequirementFilter({
         {label}
       </label>
       <div className="flex gap-2">
-        <select
+        <FilterNativeSelect
           id={abilitySelectId}
           value={selectedAbility}
           onChange={(e) => setSelectedAbility(e.target.value)}
           disabled={disabled}
           aria-disabled={disabled}
-          className="flex-1 px-3 py-2 border border-border-light rounded-md bg-surface text-sm focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-primary-outline-border disabled:cursor-not-allowed disabled:bg-surface-alt"
+          wrapperClassName="min-w-0 flex-1"
         >
           <option value="">{disabled && disabledHint ? disabledHint : 'Choose ability'}</option>
-          {availableAbilities.map(ability => (
+          {availableAbilities.map((ability) => (
             <option key={ability} value={ability}>
               {ability}
             </option>
           ))}
-        </select>
+        </FilterNativeSelect>
         <div className="w-20 shrink-0">
           <Input
             type="number"

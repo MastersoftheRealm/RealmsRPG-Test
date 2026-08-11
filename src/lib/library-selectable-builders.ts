@@ -22,7 +22,11 @@ import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-c
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
 import type { TechniqueDocument } from '@/lib/calculators/technique-calc';
-import { attackModeColumnLabel, deriveTechniqueAttackMode } from '@/lib/attack-mode';
+import {
+  attackModeColumnLabel,
+  deriveTechniqueAttackMode,
+  type AttackMode,
+} from '@/lib/attack-mode';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
   buildPartsAndMetadataDetailSections,
@@ -119,11 +123,56 @@ type PowerTechniqueBudgetItem = {
   name?: string;
   description?: string;
   parts?: unknown;
+  damage?: unknown;
   actionType?: string;
   isReaction?: boolean;
-  weapon?: { name?: string } | null;
+  range?: PowerDocument['range'];
+  area?: PowerDocument['area'];
+  duration?: PowerDocument['duration'];
+  attackMode?: AttackMode;
+  weapon?: TechniqueDocument['weapon'];
   weaponName?: string;
 };
+
+/** Match `buildOfficialPowerRows` / `buildSelectableItem` PowerDocument shape (TASK-708). */
+export function libraryItemToPowerDocument(item: PowerTechniqueBudgetItem): PowerDocument {
+  const savedParts: NonNullable<PowerDocument['parts']> = Array.isArray(item.parts)
+    ? (item.parts as NonNullable<PowerDocument['parts']>)
+    : [];
+  return {
+    name: String(item.name ?? ''),
+    description: String(item.description ?? ''),
+    parts: savedParts,
+    damage: item.damage as PowerDocument['damage'],
+    actionType: item.actionType,
+    isReaction: item.isReaction,
+    range: item.range,
+    area: item.area,
+    duration: item.duration,
+  };
+}
+
+/** Match `buildOfficialTechniqueRows` / `buildSelectableItem` TechniqueDocument shape (TASK-708). */
+export function libraryItemToTechniqueDocument(
+  item: PowerTechniqueBudgetItem
+): TechniqueDocument {
+  const savedParts: NonNullable<TechniqueDocument['parts']> = Array.isArray(item.parts)
+    ? (item.parts as NonNullable<TechniqueDocument['parts']>)
+    : [];
+  return {
+    name: String(item.name ?? ''),
+    description: String(item.description ?? ''),
+    parts: savedParts,
+    damage: Array.isArray(item.damage)
+      ? (item.damage[0] as TechniqueDocument['damage'])
+      : (item.damage as TechniqueDocument['damage']),
+    attackMode: item.attackMode,
+    weaponName: item.weaponName,
+    weapon: item.weapon,
+    actionType: item.actionType,
+    isReaction: item.isReaction,
+  };
+}
 
 export function derivePowerTechniqueBudgetFacts(
   kind: PowerTechniqueBudgetKind,
@@ -138,18 +187,10 @@ export function derivePowerTechniqueBudgetFacts(
   }
   try {
     if (kind === 'technique') {
-      const doc: TechniqueDocument = {
-        name: String(item.name ?? ''),
-        description: String(item.description ?? ''),
-        parts: (item.parts ?? []) as TechniqueDocument['parts'],
-        actionType: item.actionType,
-        weapon: item.weapon?.name
-          ? { name: item.weapon.name }
-          : item.weaponName
-            ? { name: item.weaponName }
-            : undefined,
-      };
-      const disp = deriveTechniqueDisplay(doc, techniquePartsDb);
+      const disp = deriveTechniqueDisplay(
+        libraryItemToTechniqueDocument(item),
+        techniquePartsDb
+      );
       const energy =
         typeof disp.energy === 'number' ? Math.max(0, Math.floor(disp.energy)) : undefined;
       return {
@@ -160,14 +201,7 @@ export function derivePowerTechniqueBudgetFacts(
         description,
       };
     }
-    const doc: PowerDocument = {
-      name: String(item.name ?? ''),
-      description: String(item.description ?? ''),
-      parts: (item.parts ?? []) as PowerDocument['parts'],
-      actionType: item.actionType,
-      isReaction: item.isReaction,
-    };
-    const disp = derivePowerDisplay(doc, powerPartsDb);
+    const disp = derivePowerDisplay(libraryItemToPowerDocument(item), powerPartsDb);
     const energy =
       typeof disp.energy === 'number' ? Math.max(0, Math.floor(disp.energy)) : undefined;
     return {
@@ -522,17 +556,7 @@ export function buildSelectableItem(
   let powerDisplay: PowerColumnDisplay | undefined;
   if (itemType === 'power') {
     const p = item as UserPower;
-    const doc: PowerDocument = {
-      name: String(p.name ?? ''),
-      description: String(p.description ?? ''),
-      parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
-      damage: p.damage as PowerDocument['damage'],
-      actionType: p.actionType,
-      isReaction: p.isReaction,
-      range: p.range as PowerDocument['range'],
-      area: p.area as PowerDocument['area'],
-      duration: p.duration as PowerDocument['duration'],
-    };
+    const doc = libraryItemToPowerDocument(p);
     const display = derivePowerDisplay(doc, powerPartsDb);
     const partChips = partChipsFromDisplay(display.partChips);
     // Range omitted from dense modal columns → labeled expanded chip (TASK-437)
@@ -551,17 +575,7 @@ export function buildSelectableItem(
     };
   } else if (itemType === 'technique') {
     const t = item as UserTechnique;
-    const doc: TechniqueDocument = {
-      name: String(t.name ?? ''),
-      description: String(t.description ?? ''),
-      parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
-      damage: Array.isArray(t.damage) && t.damage[0] ? t.damage[0] : (t.damage as TechniqueDocument['damage']),
-      attackMode: t.attackMode,
-      weaponName: t.weaponName,
-      weapon: t.weapon as TechniqueDocument['weapon'],
-      actionType: t.actionType,
-      isReaction: t.isReaction,
-    };
+    const doc = libraryItemToTechniqueDocument(t);
     const display = deriveTechniqueDisplay(doc, techniquePartsDb);
     techniqueDisplay = {
       energy: display.energy,

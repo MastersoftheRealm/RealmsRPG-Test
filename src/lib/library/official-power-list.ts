@@ -5,8 +5,8 @@
 import type { ChipData } from '@/components/shared';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryPower } from '@/types/library';
-import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import { libraryItemToPowerDocument } from '@/lib/library-selectable-builders';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
   derivePartCategories,
@@ -60,20 +60,8 @@ export function buildOfficialPowerRows(
   partsDb: PowerPart[]
 ): OfficialPowerRow[] {
   return items.map((p) => {
-    const savedParts: NonNullable<PowerDocument['parts']> = Array.isArray(p.parts)
-      ? (p.parts as NonNullable<PowerDocument['parts']>)
-      : [];
-    const doc: PowerDocument = {
-      name: String(p.name ?? ''),
-      description: String(p.description ?? ''),
-      parts: savedParts,
-      damage: p.damage as PowerDocument['damage'],
-      actionType: p.actionType,
-      isReaction: p.isReaction,
-      range: p.range as PowerDocument['range'],
-      area: p.area as PowerDocument['area'],
-      duration: p.duration as PowerDocument['duration'],
-    };
+    const doc = libraryItemToPowerDocument(p);
+    const savedParts = doc.parts ?? [];
     const display = derivePowerDisplay(doc, partsDb);
     const damageStr = formatPowerDamage(doc.damage);
     const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });

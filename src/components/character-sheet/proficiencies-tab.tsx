@@ -480,7 +480,7 @@ export function ProficienciesTab({
                                   })}
                                 />
                               ) : (
-                                <DescriptorChip variant="listCost" size="md">
+                                <DescriptorChip variant="listCost">
                                   {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
                                 </DescriptorChip>
                               )}
@@ -519,7 +519,7 @@ export function ProficienciesTab({
             ) : (
               <div className="flex flex-wrap gap-2">
                 {missing.map((prof) => (
-                  <DescriptorChip key={prof.id} variant="danger" size="md">
+                  <DescriptorChip key={prof.id} variant="danger">
                     {profChipLabel(prof)} | {calculateProficiencyTP(prof)} TP
                   </DescriptorChip>
                 ))}

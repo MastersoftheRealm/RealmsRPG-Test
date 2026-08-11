@@ -17,6 +17,10 @@ import * as React from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils/cn';
 import { X } from 'lucide-react';
+import {
+  resolveDescriptorChipSize,
+  type DescriptorChipSizeProp,
+} from '@/lib/chip/chip-size-tokens';
 
 const chipVariants = cva(
   'inline-flex items-center gap-1.5 px-3 py-1 text-sm font-medium border transition-colors duration-base ease-standard',
@@ -102,6 +106,8 @@ const chipVariants = cva(
       },
       size: {
         sm: 'px-2 py-0.5 text-xs',
+        /** Inline metadata — DescriptorChip default; between `sm` and `md` (TASK-699). */
+        descriptor: 'px-2.5 py-1 text-sm',
         md: 'px-3 py-1 text-sm',
         lg: 'px-4 py-1.5 text-base',
       },
@@ -153,12 +159,22 @@ const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
 );
 Chip.displayName = 'Chip';
 
-/** Non-expandable metadata chip — opaque fill, rounded-md. */
+export type { DescriptorChipSizeProp as DescriptorChipSize } from '@/lib/chip/chip-size-tokens';
 const DescriptorChip = React.forwardRef<
   HTMLSpanElement,
-  Omit<ChipProps, 'shape' | 'interactive'> & { shape?: ChipProps['shape'] }
+  Omit<ChipProps, 'shape' | 'interactive' | 'size'> & {
+    shape?: ChipProps['shape'];
+    size?: DescriptorChipSizeProp;
+  }
 >(({ variant = 'descriptor', shape = 'rounded', size = 'sm', ...props }, ref) => (
-  <Chip ref={ref} variant={variant} shape={shape} size={size} interactive={false} {...props} />
+  <Chip
+    ref={ref}
+    variant={variant}
+    shape={shape}
+    size={resolveDescriptorChipSize(size)}
+    interactive={false}
+    {...props}
+  />
 ));
 DescriptorChip.displayName = 'DescriptorChip';
 

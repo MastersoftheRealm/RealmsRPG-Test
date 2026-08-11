@@ -5994,7 +5994,7 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-050 — Guided creator L3 parity |
-| **Related task** | TASK-686 / TASK-687 / TASK-688 / TASK-689 / TASK-690 |
+| **Related task** | TASK-686 / TASK-687 / TASK-688 / TASK-689 / TASK-690 / **TASK-708** |
 | **Where** | `/characters/new/guided` |
 | **Needs** | Signed-in; custom Power draft + Martial techniques draft + optional Power path with `armorStep: required` if available |
 
@@ -6002,7 +6002,7 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 1. **Preview strip (TASK-694):** Before the Abilities step, the strip shows name + species/path subtitle only — **no** ability chips and **no** duplicate path/type DescriptorChip (path or Power/Martial/Powered-Martial type lives in the subtitle once). After abilities are selected or the Abilities step is completed, all six signed ability chips appear (`+N` / `0` / `−N`), including on narrow mobile (horizontal scroll). Only `pow_abil` / `mart_abil` chips use power/martial highlight; the rest use default descriptor styling. Path-based draft: path name in subtitle only, not a second chip.
 2. **Power armor skip (TASK-689):** Custom Power loadout goes weapon → gear only (no armor). If a Power path exists with armor recommendations / `armorStep: required`, confirm armor phase is still omitted.
 3. **Equipment headers (TASK-688):** On Martial custom loadout, armor list shows Abl. Req. / Crit + / Agility Red. columns aligned with headers; gear qty stepper has breathing room (not overlapping Currency).
-4. **Powers Energy (TASK-687):** Power custom — Energy column matches L2 modal for the same power. Martial techniques — Energy values resolve via techniques path (not skewed as powers); max-EN filter uses `mart_abil`.
+4. **Powers Energy (TASK-687 / TASK-708):** Power custom — Energy column matches Official Realms Library and L2 modal for the same power id (columnar scalars + parts, not false `0`). Martial techniques — Energy values resolve via techniques path (not skewed as powers); max-EN filter uses `mart_abil`.
 
 **Expected**
 - Preview always shows six signed abilities (after Abilities gate) with archetype-ability highlight only; path/type identity is subtitle-only; Power never sees armor; equipment columns/qty match Codex intent; techniques Energy is correct.

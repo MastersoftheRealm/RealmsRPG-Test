@@ -21,7 +21,7 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, 
 export { SelectionCard, SelectionCardSurface, type SelectionCardProps, type SelectionCardSurfaceProps } from './selection-card';
 
 // Chip/Badge components
-export { Chip, DescriptorChip, chipVariants, type ChipProps } from './chip';
+export { Chip, DescriptorChip, chipVariants, type ChipProps, type DescriptorChipSize } from './chip';
 export { ExpandableChip, ChipGroup, type ExpandableChipProps, type ExpandableChipOption, type ChipGroupProps } from './expandable-chip';
 
 // Navigation components

@@ -12,7 +12,7 @@ import { useMemo, useState, useRef, useEffect, type KeyboardEvent, type ReactNod
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
-import { DescriptorChip, type ChipProps } from '@/components/ui';
+import { DescriptorChip, type ChipProps, type DescriptorChipSize } from '@/components/ui';
 import { ExpandableImage } from '@/components/shared';
 import { usePlaceholderTheme } from '@/hooks/use-placeholder-theme';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -35,14 +35,14 @@ export type GuidedChoiceTag =
   | {
       label: string;
       variant?: ChipProps['variant'];
-      size?: ChipProps['size'];
+      size?: DescriptorChipSize;
     };
 
 function normalizeChoiceTag(tag: GuidedChoiceTag): {
   key: string;
   label: string;
   variant: ChipProps['variant'];
-  size: NonNullable<ChipProps['size']>;
+  size: DescriptorChipSize;
 } {
   if (typeof tag === 'string') {
     return { key: tag, label: tag, variant: 'descriptor', size: 'sm' };

@@ -287,11 +287,12 @@ Two chip **roles** (see `src/docs/ai/CHIP_UNIFICATION_PLAN.md`):
 | Context | Component | Size | Notes |
 |---------|-----------|------|-------|
 | GridListRow expanded sections, summary panels, creator part lists | `ExpandableChip` | **`md`** (default) | `text-sm` header; expanded body scales with size |
-| Inline metadata (tags, feat type, row badges, choice-card tags) | `DescriptorChip` | **`sm`** (default) | Compact opaque labels |
-| Property name + optional description tip | `DescriptorChipWithTip` | **`sm`** | Non-expanding; InfoTippy for description |
-| Summary counters, TP totals, step progress (e.g. "2 / 5 feats") | `DescriptorChip` | **`md`** | **Prominent descriptor** — not entity chips |
+| Inline metadata (tags, feat type, row badges, choice-card tags) | `DescriptorChip` | **`sm`** → `descriptor` token (default) | Entity-row inline size — matches expandable `md` in chip groups |
+| Property name + optional description tip | `DescriptorChipWithTip` | **`sm`** → `descriptor` token | Non-expanding; InfoTippy for description |
+| Summary counters, TP totals, step progress (e.g. "2 / 5 feats") | `DescriptorChip` | **`md`** | **Prominent descriptor** — outside chip groups only |
 | Hero emphasis (creator rarity badge) | `DescriptorChip` | **`lg`** | **Prominent descriptor** — single focal badge |
-| Filter / removable pills | `<Chip shape="pill">` | context-dependent | Often `sm` in dense toolbars |
+| Filter / removable pills | `<Chip shape="pill">` | `sm` in toolbars; `descriptor` when mixed in entity chip groups | Filters stay dense; match inline size when beside descriptor/expandable chips |
+| GridListRow / summary expandable parts | `ExpandableChip` | **`md`** → `descriptor` token | Collapsed header matches DescriptorChip inline size |
 
 Use **`SummaryChipList`** (`@/components/shared`) for read-only entity lists (skills, traits, feats) in creators and modals.
 

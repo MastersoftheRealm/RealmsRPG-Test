@@ -140,7 +140,7 @@ export function GridListRowExpandedBody({
           {/* Total Cost */}
           {totalCost !== undefined && totalCost > 0 && (
             <div className="flex items-center gap-2 mb-4">
-              <DescriptorChip variant="listCost" size="md">
+              <DescriptorChip variant="listCost">
                 Total {costLabel}: {formatCostDisplay(totalCost)}
               </DescriptorChip>
             </div>

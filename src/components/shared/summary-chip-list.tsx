@@ -15,9 +15,9 @@ export interface SummaryChipItem {
   energyCost?: number;
 }
 
-/** Expandable entity chips in summary panels — `md` (matches GridListRow). */
+/** Expandable entity chips in summary panels — `md` maps to entity inline size (matches DescriptorChip default). */
 const SUMMARY_EXPANDABLE_SIZE = 'md' as const;
-/** Descriptor fallback when no description — `sm`. */
+/** Descriptor fallback when no description — entity inline size. */
 const SUMMARY_DESCRIPTOR_SIZE = 'sm' as const;
 
 export function SummaryChipList({

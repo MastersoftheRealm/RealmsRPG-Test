@@ -10,6 +10,7 @@
 import { useId, useMemo } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FilterNativeSelect } from './filter-native-select';
 import { dedupeSelectOptions } from './filter-utils';
 
 interface ChipSelectProps {
@@ -51,19 +52,14 @@ export function ChipSelect({
           {label}
         </label>
       </div>
-      <select
-        id={id}
-        onChange={handleChange}
-        className="h-11 w-full rounded-md border border-border-light bg-surface px-3 text-sm focus:border-primary-outline-border focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
-        defaultValue=""
-      >
+      <FilterNativeSelect id={id} onChange={handleChange} defaultValue="">
         <option value="">{placeholder}</option>
-        {availableOptions.map(opt => (
+        {availableOptions.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
           </option>
         ))}
-      </select>
+      </FilterNativeSelect>
       {selectedValues.length > 0 && (
         <div className="flex flex-wrap gap-2 mt-2">
           {selectedValues.map(value => {

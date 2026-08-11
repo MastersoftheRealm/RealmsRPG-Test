@@ -1,3 +1,10 @@
+export {
+  CHIP_ENTITY_INLINE_SIZE,
+  expandableShellChipSize,
+  resolveDescriptorChipSize,
+  type ChipVariantSize,
+  type DescriptorChipSizeProp,
+} from './chip-size-tokens';
 export { expandableChipShellClass, type ExpandableChipShellSize } from './expandable-chip-shell';
 // Capture/snapshot halves are internal to ExpandableChip — do not re-implement per call site.
 export { applyFullRowExpandLayout } from './full-row-expand-layout';

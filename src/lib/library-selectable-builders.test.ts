@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
+import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import {
   buildPowerTechniqueBudgetDisplay,
   buildSelectableItem,
+  derivePowerTechniqueBudgetFacts,
   getItemColumns,
   getListHeaderColumns,
   getModalGridColumns,
+  libraryItemToPowerDocument,
 } from '@/lib/library-selectable-builders';
+import { derivePowerDisplay } from '@/lib/calculators/power-calc';
+import { PART_IDS } from '@/lib/id-constants';
+import { buildOfficialPowerRows } from '@/lib/library/official-power-list';
+import { buildOfficialTechniqueRows } from '@/lib/library/official-technique-list';
+import { buildPowersTechniquesL2Items } from '@/lib/guided-creator/powers-techniques-l2';
+import type { LibraryPower, LibraryTechnique } from '@/types/library';
 
 const emptyCodex = {
   powerPartsDb: [],
@@ -190,5 +199,201 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       isReaction: false,
     });
     expect(selectable.data).toMatchObject({ id: 'p1', name: 'Bolt' });
+  });
+
+  it('derivePowerTechniqueBudgetFacts matches official list Energy for columnar powers (TASK-708)', () => {
+    const elementalDamagePart: PowerPart = {
+      id: '294',
+      name: 'Elemental Damage',
+      description: 'Elemental Damage',
+      category: 'Damage',
+      mechanic: true,
+      base_en: 4,
+      base_tp: 2,
+      op_1_en: 2,
+      op_1_tp: 1,
+      percentage: false,
+      duration: false,
+    };
+    const power: LibraryPower = {
+      id: 'tri-bolt',
+      docId: 'tri-bolt',
+      name: 'Tri-Element Bolt',
+      description: 'Three elements.',
+      actionType: 'basic',
+      parts: [],
+      damage: [
+        { amount: 1, size: 6, type: 'fire' },
+        { amount: 1, size: 6, type: 'ice' },
+        { amount: 1, size: 6, type: 'lightning' },
+      ],
+    };
+    const partsDb = [elementalDamagePart];
+
+    const officialEnergy = buildOfficialPowerRows([power], partsDb)[0]?.energy;
+    const budgetFacts = derivePowerTechniqueBudgetFacts('power', power, partsDb, []);
+    const budgetDisplay = buildPowerTechniqueBudgetDisplay(
+      'power',
+      power,
+      'tri-bolt',
+      partsDb,
+      []
+    );
+    const directEnergy = derivePowerDisplay(libraryItemToPowerDocument(power), partsDb).energy;
+
+    expect(typeof officialEnergy).toBe('number');
+    expect(officialEnergy).toBeGreaterThan(0);
+    expect(directEnergy).toBe(officialEnergy);
+    expect(budgetFacts.energy).toBe(officialEnergy);
+    expect(budgetDisplay.energy).toBe(officialEnergy);
+    expect(budgetDisplay.columns.find((c) => c.key === 'energy')?.value).toBe(
+      String(officialEnergy)
+    );
+  });
+
+  it('guided L2 builder Energy column matches budget derive for the same catalog id (TASK-708)', () => {
+    const elementalDamagePart: PowerPart = {
+      id: '294',
+      name: 'Elemental Damage',
+      description: 'Elemental Damage',
+      category: 'Damage',
+      mechanic: true,
+      base_en: 4,
+      base_tp: 2,
+      op_1_en: 2,
+      op_1_tp: 1,
+      percentage: false,
+      duration: false,
+    };
+    const catalog: LibraryPower[] = [
+      {
+        id: 'tri-bolt',
+        docId: 'tri-bolt',
+        name: 'Tri-Element Bolt',
+        description: 'Three elements.',
+        actionType: 'basic',
+        parts: [],
+        damage: [
+          { amount: 1, size: 6, type: 'fire' },
+          { amount: 1, size: 6, type: 'ice' },
+          { amount: 1, size: 6, type: 'lightning' },
+        ],
+      },
+    ];
+    const partsDb = [elementalDamagePart];
+    const officialEnergy = buildOfficialPowerRows(catalog, partsDb)[0]?.energy;
+    const rows = buildPowersTechniquesL2Items({
+      kind: 'powers',
+      mode: 'regular',
+      items: catalog,
+      powerPartsDb: partsDb,
+      techniquePartsDb: [],
+      pathRecommendedIds: [],
+      energyInput: { archetypeAbility: 'intelligence', abilities: { intelligence: 4 }, level: 1 },
+    });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.columns?.find((c) => c.key === 'energy')?.value).toBe(String(officialEnergy));
+    expect(rows[0]?.data).toMatchObject({ energy: officialEnergy });
+  });
+
+  it('columnar area/duration scalars required for budget Energy parity (TASK-708)', () => {
+    const spherePart: PowerPart = {
+      id: String(PART_IDS.SPHERE_OF_EFFECT),
+      name: 'Sphere of Effect',
+      description: 'Sphere of Effect',
+      category: 'Area of Effect',
+      mechanic: true,
+      base_en: 4,
+      base_tp: 1,
+      op_1_en: 2,
+      op_1_tp: 0.5,
+      percentage: false,
+      duration: false,
+    };
+    const durationPart: PowerPart = {
+      id: '377',
+      name: 'Duration (Minute)',
+      description: 'Duration (Minute)',
+      category: 'Duration',
+      mechanic: true,
+      base_en: 2,
+      base_tp: 0,
+      percentage: false,
+      duration: true,
+    };
+    const partsDb = [spherePart, durationPart];
+    const power: LibraryPower = {
+      id: 'zone',
+      docId: 'zone',
+      name: 'Zone',
+      description: 'Area with duration.',
+      actionType: 'basic',
+      area: { type: 'sphere', level: 1, applyDuration: true },
+      duration: { type: 'minutes', value: 1 },
+      parts: [],
+    };
+
+    const officialEnergy = buildOfficialPowerRows([power], partsDb)[0]?.energy;
+    const budgetEnergy = derivePowerTechniqueBudgetFacts('power', power, partsDb, []).energy;
+    const partialEnergy = derivePowerDisplay(
+      {
+        name: power.name,
+        description: power.description,
+        parts: [],
+        actionType: power.actionType,
+      },
+      partsDb
+    ).energy;
+
+    expect(officialEnergy).toBe(12);
+    expect(budgetEnergy).toBe(12);
+    expect(partialEnergy).toBeLessThan(12);
+  });
+
+  it('technique budget derive + guided L2 Energy match official list (TASK-708)', () => {
+    const partsDb: TechniquePart[] = [
+      {
+        id: '7',
+        name: 'Add Weapon to Technique',
+        description: 'Weapon attack',
+        category: 'Attack',
+        mechanic: false,
+        base_en: 2,
+        base_tp: 1,
+        percentage: false,
+      },
+    ];
+    const technique: LibraryTechnique = {
+      id: 'slash',
+      docId: 'slash',
+      name: 'Power Slash',
+      description: 'A martial strike.',
+      actionType: 'basic',
+      attackMode: 'weapon',
+      parts: [{ id: 7, name: 'Add Weapon to Technique', op_1_lvl: 0 }],
+    };
+
+    const officialEnergy = buildOfficialTechniqueRows([technique], partsDb)[0]?.energy;
+    const budgetEnergy = derivePowerTechniqueBudgetFacts(
+      'technique',
+      technique,
+      [],
+      partsDb
+    ).energy;
+    const rows = buildPowersTechniquesL2Items({
+      kind: 'techniques',
+      mode: 'regular',
+      items: [technique],
+      powerPartsDb: [],
+      techniquePartsDb: partsDb,
+      pathRecommendedIds: [],
+      energyInput: { archetypeAbility: 'strength', abilities: { strength: 2 }, level: 1 },
+    });
+
+    expect(typeof officialEnergy).toBe('number');
+    expect(officialEnergy).toBeGreaterThan(0);
+    expect(budgetEnergy).toBe(officialEnergy);
+    expect(rows[0]?.columns?.find((c) => c.key === 'energy')?.value).toBe(String(officialEnergy));
   });
 });

@@ -1,5 +1,5 @@
 - id: TASK-701
-  title: Weapon Range column — Melee / spaces via shared formatRange (no raw 0/levels)
+  title: Weapon Range column ï¿½ Melee / spaces via shared formatRange (no raw 0/levels)
   created_at: 2026-08-10
   completed_at: 2026-08-10
   created_by: owner
@@ -23,7 +23,7 @@
     Some rows correctly show Melee. Likely guided `rangeDisplay` preferring a corrupt/raw
     `EligibleEquipmentRow.range` string (e.g. `"0"`) over `formatRange(properties)`, and/or
     sheet/library paths using `normalizeRangeDisplay(item.range)` without validating.
-    Fix at shared display SoT — do not fork per surface; add regression tests so Library,
+    Fix at shared display SoT ï¿½ do not fork per surface; add regression tests so Library,
     sheet character library, and guided L2/L3 stay aligned.
   acceptance_criteria:
     - No Range property ? display Melee (never `0`, `-`, or blank treated as ranged).
@@ -37,12 +37,12 @@
     - Library official-item-list + enrich-items already derived via `formatRange(props)`.
     - Vitest: item-calc-range.test.ts + guided L2 corrupt-range regression.
     - build/typecheck/lint pass.
-    - Data audit: corrupt stored `range` (`0` / bare op_1_lvl) is a display-layer issue; derive-from-properties at render is sufficient — no codex SQL repair filed.
+    - Data audit: corrupt stored `range` (`0` / bare op_1_lvl) is a display-layer issue; derive-from-properties at render is sufficient ï¿½ no codex SQL repair filed.
     - Cleanup: official-item-list, enrich-items, quick-armaments wired to `resolveWeaponRangeDisplay` / `formatWeaponRangeDisplayCompact`.
   notes: |
     Owner 2026-08-10. `formatWeaponRangeCompact` still compresses dense cells after correct derivation.
 - id: TASK-700
-  title: Guided L3 Selected panel — border cushion + vertical rhythm
+  title: Guided L3 Selected panel ï¿½ border cushion + vertical rhythm
   created_at: 2026-08-10
   completed_at: 2026-08-10
   created_by: owner
@@ -18045,20 +18045,19 @@ Firebase/RTDB - the project is Supabase-only.
   related_files:
     - src/lib/library-selectable-builders.ts
     - src/lib/library-selectable-builders.test.ts
+    - src/lib/library/official-power-list.ts
+    - src/lib/library/official-technique-list.ts
     - src/lib/guided-creator/powers-techniques-l2.ts
-    - src/lib/guided-creator/power-technique-display.ts
-    - src/components/guided-creator/steps/powers-techniques-step.tsx
-    - src/lib/calculators/power-calc.ts
   completed_work: |
-    Root cause: `derivePowerTechniqueBudgetFacts` built a partial PowerDocument/TechniqueDocument
+    Root cause: derivePowerTechniqueBudgetFacts built a partial PowerDocument/TechniqueDocument
     (parts + actionType only), so columnar official powers with promoted damage/range/area/duration
     scalars took the creator-style derive path without those fields â€” Energy collapsed to 0 or too low
-    while `buildOfficialPowerRows` passed the full document shape.
-    Added `libraryItemToPowerDocument` / `libraryItemToTechniqueDocument` (same shape as Official
-    list + `buildSelectableItem`); wired budget derive + selectable builders through them.
-    Vitest: budget facts + guided L2 Energy column parity vs `buildOfficialPowerRows` for same id.
+    while buildOfficialPowerRows passed the full document shape.
+    Added libraryItemToPowerDocument / libraryItemToTechniqueDocument; wired budget derive,
+    buildSelectableItem, and Official list builders through them.
+    Vitest: columnar damage, area/duration scalars, technique parity, guided L2 Energy vs Official list.
   acceptance_criteria:
     - Spot-check set of official powers/techniques: creator L2/L3 Energy column matches Official Realms Library Energy for the same id.
-    - No false `0` when Library shows a positive cost; unknown/missing still `â€”` (not fake 0) unless true zero-cost.
+    - No false 0 when Library shows a positive cost; unknown/missing still em dash (not fake 0) unless true zero-cost.
     - Root cause fixed in shared derive + catalog enrichment (not a guided-only display hack).
-    - Vitest: fixture with known Energy â‰  0 through guided L2 builder path; DEV-V-050 T002 Energy step updated; build/typecheck/lint pass.
+    - Vitest: fixture with known Energy not 0 through guided L2 builder path; DEV-V-050 T002 Energy step updated; build/typecheck/lint pass.
