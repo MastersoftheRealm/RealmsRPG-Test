@@ -25,8 +25,8 @@ import {
   type AncestryPickTask,
 } from '@/lib/guided-creator/ancestry-pick-tasks';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
+import { resolveForwardLandingPhaseIndex } from '@/lib/guided-creator/ancestry-forward-landing';
 import { landsOnFirstInnerScreen } from '@/lib/guided-creator/guided-substep-nav';
-import { prefersDeepCatalogEntry } from '@/lib/guided-creator/creator-entry-mode';
 import { useGuidedCreatorStore, type GuidedDraft } from '@/stores/guided-creator-store';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
@@ -83,18 +83,6 @@ function resolveInitialPhaseIndex(
   if (!hasProgress) return 0;
   const firstOpen = tasks.findIndex((task) => !isTaskFilled(task, draft, mixedSkillOptionCount));
   return firstOpen >= 0 ? firstOpen + 1 : tasks.length;
-}
-
-function resolveForwardLandingPhaseIndex(
-  tasks: AncestryPickTask[],
-  draft: GuidedDraft,
-  mixedSkillOptionCount: number
-): number {
-  const hasProgress = tasks.some((task) => isTaskFilled(task, draft, mixedSkillOptionCount));
-  if (prefersDeepCatalogEntry(draft) && !hasProgress && tasks.length > 0) {
-    return 1;
-  }
-  return 0;
 }
 
 export function AncestryStep() {
@@ -224,7 +212,7 @@ export function AncestryStep() {
     if (landsOnFirstInnerScreen(navigationIntent)) {
       if (lastEntryNonce.current !== entryNonce) {
         lastEntryNonce.current = entryNonce;
-        setPhaseIndex(resolveForwardLandingPhaseIndex(tasks, draft, mixedSkillOptionCount));
+        setPhaseIndex(resolveForwardLandingPhaseIndex(tasks, draft));
         phaseInitialized.current = true;
       }
       return;

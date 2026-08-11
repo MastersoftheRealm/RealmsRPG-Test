@@ -148,11 +148,14 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-698** | DEV-V-046 **T003** step 7 | Library/Codex filter dropdowns (SelectFilter/ChipSelect): chevron inset from right edge; muted weight (not heavy native arrow); h-11 preserved |
+| **TASK-697** | DEV-V-013 **T076** step 5 (+ T030) | Ancestry: Continue from Species / chapter rail lands on stable species overview (heritage + size); no flash-then-jump to first pick; second Continue enters first pick in order (Custom + Guided) |
+| **TASK-692** | DEV-V-050 **T001** step 6 + DEV-V-016 **T017** | Guided L3 Powers/Techniques: **one** shared Filters panel above innate/regular lists; Category/Max EN/etc. narrow lists; no sheet Character filter; innate-scope SelectFilter + max-EN / innate threshold / TP gates unchanged |
 | **TASK-695** | DEV-V-013 **T077–T078** | Layer-nav expand (See all species, Create Species, See more) = hatch outline+subtle fill, not solid primary; footer Continue stays sole primary blue |
 | **TASK-694** | DEV-V-050 **T002** | Preview strip/panel: path/type once in subtitle (no duplicate chip); ability chips hidden until Abilities selection/completion; only pow_abil/mart_abil highlighted |
 | **TASK-693** | DEV-V-013 **T079** | Custom chooser: Restart lands on Path L3 custom archetype face (not Guided L1); Guided entry: Restart lands on Path L1; progress cleared |
 | **TASK-691** | DEV-V-016 **T018** | Guided Powers/Techniques L2/L3: budget columns (Action Type / Energy / TP) via shared builders; Path badges + max-EN / innate gates unchanged |
-| **TASK-675** | DEV-V-016 **T017** | Sheet Add Power/Technique (+ Advanced creator): Filters panel shows shared PowerTechniqueFilters compact; list applies Library filter helpers; guided L3 still uses innate SelectFilter |
+| **TASK-675** | DEV-V-016 **T017** | Sheet Add Power/Technique (+ Advanced creator): Filters panel shows shared PowerTechniqueFilters compact; list applies Library filter helpers; guided L3 inline matches (TASK-692) |
 | **TASK-690** | DEV-V-050 **T001–T002** | L3 regression audit close: preview strip, Power armor skip, equipment Codex columns, powers Energy kind |
 | **TASK-689** | DEV-V-050 **T002** | Power (path or custom): Loadout never shows armor phase even if path `armorStep: required` |
 | **TASK-688** | DEV-V-050 **T001–T002** | Equipment L3/L2: Rarity/Range/DR/Abl.Req/Crit+ headers match Library; gear qty stepper not clipped |

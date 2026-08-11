@@ -3559,10 +3559,10 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Confirm **See starter species** (outline) collapses to starter set; **See all species** (primary) expands.
 3. On **Abilities**, confirm customize panel opens; **See recommendations** returns to path suggestions when a path exists (pick path via View archetype paths first).
 4. On **Skills**, confirm browse does **not** auto-open on first landing; scroll and use **Browse all Skills**; in that modal use **Browse all Sub-Skills** for L3. On **Archetype Feats** / **Character Feat** / **Loadout** / **Powers**, confirm browse/L2 still opens on first landing for custom forge (no `archetypePathId`).
-5. **Ancestry**: custom entry skips species overview when picks remain — lands on first pick.
+5. **Ancestry**: Continue from Species (or chapter rail into Ancestry) lands on **species overview** — stable heritage summary / size pick; does **not** flash overview then jump to first pick. Second Continue enters first pick in order.
 
 **Expected**
-- `creatorEntryMode` custom + no path id drives deep landing; picking a path on L1 reverts later steps to guided faces.
+- `creatorEntryMode` custom + no path id drives deep landing on browse/catalog steps; Ancestry overview is never skipped. Picking a path on L1 reverts later steps to guided faces.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5808,6 +5808,7 @@ Derived part categories (non-mechanic) as Category column; shared `PowerTechniqu
 4. Check **Available TP** (≤ N remaining) — entries with TP cost above remaining disappear. Set **Max TP** independently (with or without character) and confirm it caps TP cost.
 5. Spot-check Techniques tab: character caps Max Energy; Available TP + Max TP work; no innate controls. Confirm damaging powers can show **Damage** in Category.
 6. Powers: with character selected, check **Innate Eligible** — Power Threshold greys out with **Set by character** (same as Max Energy).
+7. Spot-check **SelectFilter** / **ChipSelect** dropdowns (Action Type, Action / Reaction, innate threshold): chevron has comfortable right inset (not hugging the border); chevron weight/color reads as muted, matching field text — not the heavy native browser arrow.
 
 **Expected**
 - Character caps compose with Max Energy lock; TP remaining matches sheet proficiency spend model; Damage category appears for powers with damage; innate threshold locks when Innate Eligible + character filter.

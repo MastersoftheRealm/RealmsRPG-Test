@@ -17915,3 +17915,39 @@ Firebase/RTDB - the project is Supabase-only.
     layer-nav family consistent with itself, not with footer Continue. Prefer extending
     `guided-nav-button-styles` / GuidedLayerNav props over one-off Species styling.
   completed_at: 2026-08-10
+
+
+- id: TASK-697
+  title: Ancestry Continue must land on species overview (no skip flash)
+  created_at: 2026-08-10
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  completed_at: 2026-08-10
+  related_tasks:
+    - TASK-640
+    - TASK-591
+    - TASK-592
+  related_files:
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/lib/guided-creator/ancestry-forward-landing.ts
+    - src/lib/guided-creator/ancestry-forward-landing.test.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    After selecting a species and hitting Continue, Ancestry must stay on the species
+    overview (heritage summary / size pick) until the player Continues again — not flash
+    briefly and jump to the first ancestry pick.
+  acceptance_criteria:
+    - Guided and Custom: Species Continue → stable species overview (single or mixed); no flash-then-jump to first pick.
+    - Overview still requires size when multiple sizes; second Continue enters first pick in order (characteristic → … per TASK-591).
+    - Chapter-rail / resume rules unchanged where already specified (T030/T061): landing on Ancestry from rail still prefers overview; Back remains sequential.
+    - Remove/correct DEV-V-013-T076 step 5 ("custom skips species overview"); add explicit overview landing case + automated vitest for forward-landing phase index (extract helper if needed so this cannot regress silently).
+    - BUILD_VALIDATION + FEATURE_INDEX notes updated; build/typecheck/lint pass.
+  completed_work: |
+    - Removed TASK-640 custom deep-entry overview skip (`resolveForwardLandingPhaseIndex` → 1).
+    - Extracted `ancestry-forward-landing.ts` (always phase 0) + vitest regression guard for custom deep entry.
+    - Updated DEV-V-013-T076 step 5 + FEATURE_INDEX; build/typecheck/lint/vitest pass.
+  notes: |
+    Owner 2026-08-10 regression fix. QA: DEV-V-013 T076 step 5, T030.

@@ -4,51 +4,76 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-696
+**Next task ID:** TASK-701
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-695, TASK-694, TASK-691…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-698, TASK-697, TASK-692, TASK-695, TASK-694…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 5 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** **TASK-692** optional (guided L3 compact filters). TASK-695 done pending-qa (DEV-V-013 T077–T078). TASK-694 done pending-qa (DEV-V-050 T002). TASK-693 done pending-qa (DEV-V-013 T079). TASK-686–690 pending-qa (DEV-V-050; preview AC superseded by 694). **TASK-691** + **TASK-675** done pending-qa.
+**Hot notes:** **TASK-699–700** filed (DescriptorChip size; L3 selected spacing). TASK-698 done pending-qa. TASK-697 done pending-qa. TASK-692 done pending-qa. TASK-695/694/693 done pending-qa. TASK-686–690 pending-qa. **TASK-691** + **TASK-675** done pending-qa.
 
 ---
 
-- id: TASK-692
-  title: Guided L3 powers/techniques — reuse PowerTechniqueFilters compact
+- id: TASK-699
+  title: Sitewide DescriptorChip slightly larger / more readable
   created_at: 2026-08-10
-  created_by: agent
-  priority: low
+  created_by: owner
+  priority: medium
   status: not-started
-  parent_task: TASK-675
   related_tasks:
-    - TASK-675
-    - TASK-691
+    - TASK-415
+  related_files:
+    - src/components/ui/chip.tsx
+    - src/lib/chip/descriptor-chip-variants.ts
+    - src/docs/DESIGN_SYSTEM.md
+  description: |
+    DescriptorChips feel slightly too small (padding + font) sitewide — only a nudge, but
+    metadata is harder to read than it should be. Adjust the shared DescriptorChip default /
+    `sm` size token so call sites inherit the bump; screenshot Library/Codex expanded rows and
+    guided fact chips before/after. Keep ExpandableChip and filter pills distinct.
+  acceptance_criteria:
+    - Shared DescriptorChip default (or `sm` token used by DescriptorChip) is slightly larger / more readable; no per-page one-offs.
+    - ExpandableChip / filter Chip roles unchanged unless they incorrectly share the same undersized token.
+    - Contrast still passes; dense GLR rows do not overflow or wrap badly from the bump.
+    - DESIGN_SYSTEM / CHIP docs note the size intent; screenshot-verify a representative surface.
+    - Build/typecheck/lint pass.
+  notes: |
+    Owner 2026-08-10. DescriptorChip currently defaults `size="sm"` → `text-xs` / `py-0.5`. Prefer
+    a modest token bump over forcing every call site to `md`.
+
+---
+
+- id: TASK-700
+  title: Guided L3 Selected panel — border cushion + vertical rhythm
+  created_at: 2026-08-10
+  created_by: owner
+  priority: medium
+  status: not-started
+  related_tasks:
     - TASK-684
   related_files:
-    - src/components/guided-creator/steps/powers-techniques-step.tsx
     - src/components/shared/guided-choice/guided-inline-catalog-list.tsx
-    - src/components/shared/filters/power-technique-filters.tsx
-    - src/lib/library/power-technique-filters.ts
-    - src/lib/library-selectable-builders.ts
-    - src/lib/guided-creator/powers-techniques-l2.ts
   description: |
-    After TASK-675 shipped compact PowerTechniqueFilters on sheet/advanced USM, guided L3
-    still uses innate-scope SelectFilter only. Optionally wire the same compact panel into
-    GuidedInlineCatalogList filters for powers/techniques while preserving guided budget /
-    innate / max-EN orchestration (do not replace those gates with Library character filter alone).
+    On Custom character-creator steps that use GuidedInlineCatalogList, the “Selected X”
+    wireframe panel has poor spacing: GLR content sits flush to the card borders (no cushion),
+    space below the last selected row vs the frame feels wrong, and padding above the Selected
+    title needs rebalancing with the side/bottom inset. Fix once in the shared selected panel
+    so feats / loadout / powers-techniques inherit. Screenshot-test before/after.
   acceptance_criteria:
-    - Guided L3 P/T filter chrome reuses PowerTechniqueFilters variant="compact" (no nested FilterSection fork).
-    - Apply path uses applyPowerTechniqueFilters + powerTechniqueFilter on selectables (or equivalent rows from buildPowerTechniqueFilterableRow).
-    - Innate scope / threshold / theoretical max-EN / TP budget gates remain correct for guided draft context.
-    - Mobile + a11y: filter panel readable at ~360px; labels intact; targeted tests + build/typecheck pass.
-    - FEATURE_INDEX / BUILD_VALIDATION updated if user-facing filter behavior changes.
+    - Selected panel has consistent horizontal cushion between card border and ListHeader/GLR rows.
+    - Bottom padding under the last selected row matches the visual weight of the title/top spacing (no cramped floor or oversized empty band).
+    - Title top padding rebalanced so the block does not feel top-heavy relative to side/bottom cushion.
+    - Empty selected state unchanged; quantity and remove right-slots still align with headers.
+    - Applies on all GuidedInlineCatalogList consumers (archetype/character feats, loadout, powers/techniques); update DEV-V-050 if spacing is called out.
+    - Build/typecheck/lint pass.
   notes: |
-    Optional until prioritized. Filed from TASK-691/675 cleanup. Keep SelectFilter innate-scope only if compact panel cannot express guided-only scope without a fork.
+    Owner 2026-08-10. Current chrome: `Card … p-0`, title `px-4 pt-4 pb-2`, rows `gap-1 pb-2` without
+    horizontal pad — likely the missing cushion. Prefer shared list/card padding tokens over
+    step-local wrappers.
 
 ---
 
