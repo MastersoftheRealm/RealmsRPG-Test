@@ -183,4 +183,10 @@ export interface GridListRowProps {
   className?: string;
   /** Override hover class for colored rows (e.g. senses/movement) - use hover:bg-* to match row color */
   rowHoverClass?: string;
+  /**
+   * Fixed width for external `rightSlot` chrome (quantity steppers, etc.).
+   * Must match ListHeader `rightSlotWidth` — default energy/use slot is narrower
+   * (`GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH`). USM/guided quantity uses 7.5rem (TASK-702).
+   */
+  rightSlotWidth?: string;
 }

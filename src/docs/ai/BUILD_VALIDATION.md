@@ -5478,21 +5478,21 @@ Library / Official GLR rows: action icons share chrome (header spacers + hover),
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-034 — GLR chrome + Parts chip grammar |
-| **Related task** | TASK-622 |
+| **Related task** | TASK-622 / **TASK-702** |
 | **Where** | `/library` → My Library → Powers (also Techniques / Weapons) |
 | **Needs** | At least one user power with edit + delete |
 
 **Steps**
 1. Open My Library → Powers. Confirm Name/Energy/…/Damage headers align with row values (no drift from edit/delete/sync icons).
 2. Include at least one row **without** a “Needs sync” badge: confirm its columns still align with the header (empty sync spacer reserved — same width as drifted rows).
-3. Hover a collapsed power row: edit pencil and delete X are both outside the row hover highlight (same chrome), not split (one in / one out).
+3. Hover a collapsed power row: highlight extends through edit pencil + delete X (one continuous band — not split; right chrome shares hover with name/columns — TASK-702).
 4. Expand a power: Parts chips show `TP: N` (not `Training Points: N`); chips with no TP and no option level show no `(0)`.
 5. My Library → Techniques: expand a technique that has a TP column — confirm there is **no** expanded "Total TP" / "Total Training Points" chip (TP already in the collapsed column).
-6. Optional: Realms Library → Powers with Add (+): header reserves space so columns stay centered over values.
+6. Optional: Realms Library → Powers with Add (+): header reserves space so columns stay centered over values; expand a selectable (+) row — description fully readable (no + overlay/blackout).
 7. Codex → Equipment (browse): no empty trailing action column; Admin Codex → Equipment: edit/duplicate/delete sit in reserved right chrome aligned with the header.
 
 **Expected**
-- Edit/delete (and add when present) reserved via `rowChrome`, not a single leftover grid track that splits hover.
+- Edit/delete (and add when present) reserved via `rowChrome`, not a single leftover grid track that splits hover; hover band includes right chrome (TASK-702).
 - Powers without a TP column may still show expanded Total TP when cost is greater than 0.
 - Codex/Admin shell lists (TASK-624) match the same chrome pattern.
 
@@ -5968,7 +5968,7 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-050 — Guided creator L3 inline catalog lists |
-| **Related task** | TASK-684 / TASK-685 / TASK-688 / **TASK-699** |
+| **Related task** | TASK-684 / TASK-685 / TASK-688 / **TASK-699** / **TASK-702** |
 | **Where** | `/characters/new/guided` — start a **custom** (no path) character |
 | **Needs** | Signed-in; a draft with no `archetypePathId` (Full Customize) |
 
@@ -5977,14 +5977,14 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 2. Character Feat step: same as step 1, single-select (max 1); selecting a new Feat swaps the previous one.
 3. Loadout — Weapon phase: **always present** for Martial / Power / Powered-Martial custom drafts; inline list shows eligible weapons/shields within armament proficiency; **columns match Codex/Library** (Name, Rarity, Currency, TP, Range, Damage); Currency + Training Points budget bar updates live; selecting a two-handed weapon with a shield already selected shows the hand-slot error and does not apply.
 4. Loadout — Armor phase: present for Martial and Powered-Martial with **Codex armor columns** (Rarity, Currency, TP, Damage Red., Agility Red., Abl. Req., Crit +); **skipped for Power only**; single-slot swap on select; TP budget shared with weapons.
-5. Loadout — Gear phase: **quantity stepper on the far right replaces the + add button** (no dual chrome; slot wide enough that ± controls are not clipped); Name/Rarity/Currency columns; incrementing from 0 adds; editing qty in the catalog row or the selected panel works; Currency budget enforced.
+5. Loadout — Gear phase: **quantity stepper on the far right replaces the + add button** (no dual chrome; slot wide enough that ± controls are not clipped); Name/Rarity/Currency columns; incrementing from 0 adds; editing qty in the catalog row or the selected panel works; Currency budget enforced. **TASK-702 chrome:** ListHeader bar spans full width through the qty track; column titles align with row cells; row hover highlight extends behind the stepper; expand a selectable (+) feat/weapon row — description is fully readable (no + blackout overlay).
 6. Powers/Techniques step (Power or Powered-Martial path-less draft): Innate + Powers sections (L1-parallel) with a **Show** filter (Innate + Powers / Innate only / Powers only); regular list filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP/Innate-Energy blocks hide unavailable rows (selected kept).
 7. For all six: verify at ~360px width — search/filter toolbar and selected-panel rows stay usable, touch targets ≥44px; **Selected** panel has even horizontal cushion from the card border (title, column header, and GLR rows inset — not flush to the frame) and balanced top/bottom padding under the last row (TASK-700).
 8. Sanity check a **path-based** (L1) character still shows curated cards + "See more options" opening the existing L2 modal (no regression). Path with empty weapon pool may still omit weapon (path behavior unchanged).
 9. **Descriptor chips (TASK-699):** Expand a Library or Codex GLR row — descriptor metadata chips and expandable part/cost chips share the same inline size (readable `text-sm`, not undersized `text-xs`). Filter toolbar pills remain the smaller `sm` role. Optional: `/dev/styleguide` → Entity row parity row matches GLR expanded chips.
 
 **Expected**
-- All four L3 screens show the catalog inline with live budgets/eligibility; unavailable feats/powers hidden; custom loadout never skips weapons; Power-only skips armor; gear is quantity-first with readable qty chrome; equipment headers match Codex; L1 path-based flow is unchanged.
+- All four L3 screens show the catalog inline with live budgets/eligibility; unavailable feats/powers hidden; custom loadout never skips weapons; Power-only skips armor; gear is quantity-first with readable qty chrome (full-width header + hover through stepper); equipment headers match Codex; L1 path-based flow is unchanged; + expand does not overlay description.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

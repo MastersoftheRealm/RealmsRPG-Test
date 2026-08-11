@@ -7,19 +7,19 @@ import { IconButton, DescriptorChip } from '@/components/ui';
 import { descriptorChipVariantForBadgeColor } from '@/lib/chip/grid-list-chip-utils';
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
-import { GRID_LIST_ROW_LEFT_SLOT_WIDTH, GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH } from './grid-list-row-chrome';
+import {
+  GRID_LIST_ROW_ICON_COLUMN_WIDTH,
+  GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH,
+  GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
+} from './grid-list-row-chrome';
 import { columnDisplayLabel } from './grid-list-row-columns';
 import type { ColumnValue } from './grid-list-row-types';
 import { ListRowThumbnail, type ListRowThumbnailProps } from './list-row-thumbnail';
 
 interface GridListRowCollapsedProps {
-  leftSlot?: ReactNode;
   isRowClickable: boolean;
   handleRowClickWithGuard: (e: MouseEvent) => void;
   handleRowClick: () => void;
-  showExpander: boolean;
-  selectable: boolean;
-  rowHoverClass?: string;
   compact: boolean;
   disabled: boolean;
   gridColumns?: string;
@@ -50,8 +50,6 @@ interface GridListRowCollapsedProps {
   warningMessage?: string;
   inlineRightSlot: boolean;
   rightSlot?: ReactNode;
-  reserveRightSlotChrome?: boolean;
-  reserveLeftSlotChrome?: boolean;
   inlineEdit: boolean;
   onEdit?: () => void;
   inlineDelete: boolean;
@@ -62,13 +60,9 @@ interface GridListRowCollapsedProps {
 }
 
 export function GridListRowCollapsed({
-  leftSlot,
   isRowClickable,
   handleRowClickWithGuard,
   handleRowClick,
-  showExpander,
-  selectable,
-  rowHoverClass,
   compact,
   disabled,
   gridColumns,
@@ -99,8 +93,6 @@ export function GridListRowCollapsed({
   warningMessage,
   inlineRightSlot,
   rightSlot,
-  reserveRightSlotChrome = false,
-  reserveLeftSlotChrome = false,
   inlineEdit,
   onEdit,
   inlineDelete,
@@ -110,20 +102,10 @@ export function GridListRowCollapsed({
   onSelect,
 }: GridListRowCollapsedProps) {
   return (
-    <div className="flex items-center min-h-[44px]">
-      {/* Left Slot - fixed width so column content aligns with headers */}
-      {(leftSlot || reserveLeftSlotChrome) && (
-        <div
-          className="flex-shrink-0 flex items-center justify-center w-8 min-w-[2rem]"
-          style={reserveLeftSlotChrome && !leftSlot ? { width: GRID_LIST_ROW_LEFT_SLOT_WIDTH } : undefined}
-          onClick={(e) => e.stopPropagation()}
-          aria-hidden={reserveLeftSlotChrome && !leftSlot ? true : undefined}
-        >
-          {leftSlot}
-        </div>
-      )}
-
-      {/* Clickable Row Content - div not button to allow RollButton/other buttons inside without nesting */}
+    <>
+      {/* Clickable Row Content - div not button to allow RollButton/other buttons inside without nesting.
+          Hover highlight lives on the outer row chrome wrapper (TASK-702) so quantity/selection
+          tracks share the same band — do not re-add hover here. */}
       <div
         data-grid-row-trigger
         role={isRowClickable ? 'button' : undefined}
@@ -137,7 +119,6 @@ export function GridListRowCollapsed({
         } : undefined}
         className={cn(
           'flex-1 text-left transition-colors min-h-[44px] min-w-0',
-          (showExpander || selectable) && (rowHoverClass ?? 'hover:bg-surface-alt'),
           // Compact rows are used heavily in add/load modals; keep 44px minimum touch target,
           // but avoid exceeding it via extra vertical padding.
           compact ? 'px-3 py-1.5' : 'px-4 py-2',
@@ -334,12 +315,59 @@ export function GridListRowCollapsed({
         )}
 
       </div>
+    </>
+  );
+}
 
-      {/* Right Slot - use button, roll buttons, quantity, etc. (before delete so X is at far right) */}
-      {(rightSlot || reserveRightSlotChrome) && !inlineRightSlot && (
+/**
+ * Far-right GridListRow actions rendered outside the name/column grid.
+ * Sibling of collapsed+expanded so SelectionToggle / quantity cannot overlay
+ * the expanded body (TASK-702). Width must match ListHeader spacers.
+ */
+export interface GridListRowExternalChromeProps {
+  compact?: boolean;
+  disabled?: boolean;
+  warningMessage?: string;
+  rightSlot?: ReactNode;
+  reserveRightSlotChrome?: boolean;
+  /** Overrides default energy/use rightSlot width (e.g. USM quantity 7.5rem). */
+  rightSlotWidth?: string;
+  onEdit?: () => void;
+  onDelete?: () => void;
+  selectable?: boolean;
+  isSelected?: boolean;
+  onSelect?: () => void;
+}
+
+export function GridListRowExternalChrome({
+  disabled = false,
+  warningMessage,
+  rightSlot,
+  reserveRightSlotChrome = false,
+  rightSlotWidth,
+  onEdit,
+  onDelete,
+  selectable = false,
+  isSelected = false,
+  onSelect,
+}: GridListRowExternalChromeProps) {
+  const showRightSlot = !!(rightSlot || reserveRightSlotChrome);
+  if (!showRightSlot && !onEdit && !onDelete && !selectable) return null;
+
+  const resolvedRightSlotWidth = rightSlotWidth ?? GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH;
+
+  return (
+    <div
+      className={cn(
+        // DESIGN_INTENT: self-start so + / qty / X stay header-tall and never
+        // stretch beside the expanded description panel (TASK-702 overlay).
+        'flex items-center flex-shrink-0 self-start min-h-[44px]'
+      )}
+    >
+      {showRightSlot && (
         <div
           className="flex items-center flex-shrink-0 justify-center pr-1"
-          style={{ width: GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH }}
+          style={{ width: resolvedRightSlotWidth }}
           onClick={(e) => e.stopPropagation()}
           aria-hidden={reserveRightSlotChrome && !rightSlot ? true : undefined}
         >
@@ -347,13 +375,19 @@ export function GridListRowCollapsed({
         </div>
       )}
 
-      {/* Inline Edit pencil - visible in collapsed state for quick editing */}
-      {onEdit && !inlineEdit && (
-        <div className="flex items-center flex-shrink-0 w-9 justify-center" onClick={(e) => e.stopPropagation()}>
+      {onEdit && (
+        <div
+          className="flex items-center flex-shrink-0 justify-center"
+          style={{ width: GRID_LIST_ROW_ICON_COLUMN_WIDTH }}
+          onClick={(e) => e.stopPropagation()}
+        >
           <IconButton
             variant="ghost"
             size="sm"
-            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
             label="Edit"
             className="text-text-muted dark:text-text-secondary hover:text-primary-fg-hover hover:bg-transparent"
           >
@@ -362,13 +396,19 @@ export function GridListRowCollapsed({
         </div>
       )}
 
-      {/* Delete X - at far right after use button */}
-      {onDelete && !inlineDelete && (
-        <div className="flex items-center flex-shrink-0 justify-center w-9 pr-1" onClick={(e) => e.stopPropagation()}>
+      {onDelete && (
+        <div
+          className="flex items-center flex-shrink-0 justify-center pr-1"
+          style={{ width: GRID_LIST_ROW_ICON_COLUMN_WIDTH }}
+          onClick={(e) => e.stopPropagation()}
+        >
           <IconButton
             variant="ghost"
             size="sm"
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
             label="Remove"
             className="text-danger-fg hover:opacity-80 hover:bg-transparent"
           >
@@ -377,15 +417,20 @@ export function GridListRowCollapsed({
         </div>
       )}
 
-      {/* Selection Button (for modals) - uses unified SelectionToggle - positioned on right */}
-      {selectable && !inlineSelectable && (
+      {selectable && (
         <div
           className={cn(
-            'min-w-[44px] w-11 flex-shrink-0 flex items-center justify-center min-h-[44px]',
+            'flex-shrink-0 flex items-center justify-center',
             disabled && 'cursor-not-allowed opacity-50'
           )}
+          style={{
+            width: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
+            minWidth: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
+            minHeight: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
+          }}
           onClick={(e) => e.stopPropagation()}
           role="presentation"
+          title={disabled && warningMessage ? warningMessage : undefined}
         >
           <SelectionToggle
             isSelected={!!isSelected}

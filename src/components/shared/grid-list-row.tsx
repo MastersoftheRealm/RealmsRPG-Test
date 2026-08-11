@@ -29,8 +29,9 @@ import {
   buildMobileCollapsedGridColumns,
   countGridTemplateTracks,
   gridTemplateColumnsWithThumbnail,
+  GRID_LIST_ROW_LEFT_SLOT_WIDTH,
 } from './grid-list-row-chrome';
-import { GridListRowCollapsed } from './grid-list-row-collapsed';
+import { GridListRowCollapsed, GridListRowExternalChrome } from './grid-list-row-collapsed';
 import {
   columnsAlreadyShowTrainingPoints,
   columnsForExpandedMobileStats,
@@ -87,6 +88,7 @@ export const GridListRow = memo(function GridListRow({
   compact = false,
   className,
   rowHoverClass,
+  rightSlotWidth,
 }: GridListRowProps) {
   const [internalExpanded, setInternalExpanded] = useState(defaultExpanded);
   const [expandedChipIndex, setExpandedChipIndex] = useState<number | null>(null);
@@ -216,6 +218,15 @@ export const GridListRow = memo(function GridListRow({
   const inlineWarning = !!warningMessage && remainingInlineActionTracks > 0;
   if (inlineWarning) remainingInlineActionTracks -= 1;
 
+  // External chrome (outside the name/column grid): sibling of collapsed+expanded so
+  // SelectionToggle / quantity cannot overlay the description body (TASK-702).
+  const externalRightSlot = showRightSlotChrome && !inlineRightSlot;
+  const externalEdit = !!onEdit && !inlineEdit;
+  const externalDelete = !!onDelete && !inlineDelete;
+  const externalSelectable = selectable && !inlineSelectable;
+  const hasExternalChrome =
+    externalRightSlot || externalEdit || externalDelete || externalSelectable;
+
   const suppressDescriptionPreview =
     isExpanded && !!descTrimmed && !expandedContent;
   const headerColumns = columnsWithoutDescriptionPreview(columns, suppressDescriptionPreview);
@@ -246,96 +257,134 @@ export const GridListRow = memo(function GridListRow({
   );
   const expandedMobileStatColumns = columnsForExpandedMobileStats(columns, !!descTrimmed);
 
+  const showRowHover = showExpander || selectable || hasExternalChrome;
+  const hoverClass = showRowHover ? (rowHoverClass ?? 'hover:bg-surface-alt') : undefined;
+
   return (
     <div className={rowStyles}>
-      <GridListRowCollapsed
-        leftSlot={leftSlot}
-        isRowClickable={isRowClickable}
-        handleRowClickWithGuard={handleRowClickWithGuard}
-        handleRowClick={handleRowClick}
-        showExpander={showExpander}
-        selectable={selectable}
-        rowHoverClass={rowHoverClass}
-        compact={compact}
-        disabled={disabled}
-        gridColumns={gridColumns}
-        resolvedGridColumns={resolvedGridColumns}
-        mobileGridColumns={mobileGridColumns}
-        useThumbnailColumn={useThumbnailColumn}
-        thumbnail={thumbnail}
-        useFlex={useFlex}
-        nameGridColumnSpan={nameGridColumnSpan}
-        nameContent={nameContent}
-        name={name}
-        innate={innate}
-        hideInnateBadge={hideInnateBadge}
-        uses={uses}
-        hideUsesInName={hideUsesInName}
-        quantity={quantity}
-        onQuantityChange={onQuantityChange}
-        quantityMin={quantityMin}
-        quantityDecrementLabel={quantityDecrementLabel}
-        quantityIncrementLabel={quantityIncrementLabel}
-        badges={badges}
-        columns={columns}
-        columnSpans={columnSpans}
-        suppressDescriptionPreview={suppressDescriptionPreview}
-        allDataColumnsAreDescription={allDataColumnsAreDescription}
-        headerColumns={headerColumns}
-        inlineWarning={inlineWarning}
-        warningMessage={warningMessage}
-        inlineRightSlot={inlineRightSlot}
-        rightSlot={rightSlot}
-        reserveRightSlotChrome={reserveRightSlotChrome}
-        reserveLeftSlotChrome={reserveLeftSlotChrome}
-        inlineEdit={inlineEdit}
-        onEdit={onEdit}
-        inlineDelete={inlineDelete}
-        onDelete={onDelete}
-        inlineSelectable={inlineSelectable}
-        isSelected={isSelected}
-        onSelect={onSelect}
-      />
+      {/* DESIGN_INTENT (TASK-702): hover on this chrome wrapper so quantity / selection /
+          edit / delete tracks share the same highlight band as name/columns. External
+          actions sit beside the content column (self-start) so + never covers expand.
+          leftSlot is a sibling (not inside flex-1) so columns align with ListHeader. */}
+      <div className={cn('flex items-start', hoverClass)}>
+        {(leftSlot || reserveLeftSlotChrome) && (
+          <div
+            className="flex-shrink-0 self-start flex items-center justify-center w-8 min-w-[2rem] min-h-[44px]"
+            style={
+              reserveLeftSlotChrome && !leftSlot
+                ? { width: GRID_LIST_ROW_LEFT_SLOT_WIDTH }
+                : undefined
+            }
+            onClick={(e) => e.stopPropagation()}
+            aria-hidden={reserveLeftSlotChrome && !leftSlot ? true : undefined}
+          >
+            {leftSlot}
+          </div>
+        )}
 
-      {gridColumns && mobileSummaryColumns.length > 0 && (
-        <GridListRowMobileSummary
-          mobileSummaryColumns={mobileSummaryColumns}
-          isRowClickable={isRowClickable}
-          handleRowBodyClickWithGuard={handleRowBodyClickWithGuard}
-        />
-      )}
+        <div className="flex-1 min-w-0 flex flex-col">
+          <div className="flex items-center min-h-[44px] min-w-0">
+            <GridListRowCollapsed
+              isRowClickable={isRowClickable}
+              handleRowClickWithGuard={handleRowClickWithGuard}
+              handleRowClick={handleRowClick}
+              compact={compact}
+              disabled={disabled}
+              gridColumns={gridColumns}
+              resolvedGridColumns={resolvedGridColumns}
+              mobileGridColumns={mobileGridColumns}
+              useThumbnailColumn={useThumbnailColumn}
+              thumbnail={thumbnail}
+              useFlex={useFlex}
+              nameGridColumnSpan={nameGridColumnSpan}
+              nameContent={nameContent}
+              name={name}
+              innate={innate}
+              hideInnateBadge={hideInnateBadge}
+              uses={uses}
+              hideUsesInName={hideUsesInName}
+              quantity={quantity}
+              onQuantityChange={onQuantityChange}
+              quantityMin={quantityMin}
+              quantityDecrementLabel={quantityDecrementLabel}
+              quantityIncrementLabel={quantityIncrementLabel}
+              badges={badges}
+              columns={columns}
+              columnSpans={columnSpans}
+              suppressDescriptionPreview={suppressDescriptionPreview}
+              allDataColumnsAreDescription={allDataColumnsAreDescription}
+              headerColumns={headerColumns}
+              inlineWarning={inlineWarning}
+              warningMessage={warningMessage}
+              inlineRightSlot={inlineRightSlot}
+              rightSlot={rightSlot}
+              inlineEdit={inlineEdit}
+              onEdit={onEdit}
+              inlineDelete={inlineDelete}
+              onDelete={onDelete}
+              inlineSelectable={inlineSelectable}
+              isSelected={isSelected}
+              onSelect={onSelect}
+            />
+          </div>
 
-      {isExpanded && hasDetails && (
-        <GridListRowExpandedBody
-          compact={compact}
-          selectable={selectable}
-          isRowClickable={isRowClickable}
-          handleRowBodyClickWithGuard={handleRowBodyClickWithGuard}
-          expandedContent={expandedContent}
-          descTrimmed={descTrimmed}
-          description={description}
-          warningMessage={warningMessage}
-          badges={badges}
-          gridColumns={gridColumns}
-          expandedMobileStatColumns={expandedMobileStatColumns}
-          totalCost={showExpandedTotalCost ? totalCost : undefined}
-          costLabel={costLabel}
-          requirements={requirements}
-          hasDetailSections={hasDetailSections}
-          expandedDetailSections={expandedDetailSections}
-          openDetailSections={openDetailSections}
-          setOpenDetailSections={setOpenDetailSections}
-          expandedChipIndex={expandedChipIndex}
-          handleChipClick={handleChipClick}
-          expandedOptionsChipIndex={expandedOptionsChipIndex}
-          setExpandedOptionsChipIndex={setExpandedOptionsChipIndex}
-          supplementalExpandedContent={supplementalExpandedContent}
-          showActions={showActions}
-          onAddToLibrary={onAddToLibrary}
-          onEdit={onEdit}
-          onDuplicate={onDuplicate}
-        />
-      )}
+          {gridColumns && mobileSummaryColumns.length > 0 && (
+            <GridListRowMobileSummary
+              mobileSummaryColumns={mobileSummaryColumns}
+              isRowClickable={isRowClickable}
+              handleRowBodyClickWithGuard={handleRowBodyClickWithGuard}
+            />
+          )}
+
+          {isExpanded && hasDetails && (
+            <GridListRowExpandedBody
+              compact={compact}
+              selectable={inlineSelectable}
+              isRowClickable={isRowClickable}
+              handleRowBodyClickWithGuard={handleRowBodyClickWithGuard}
+              expandedContent={expandedContent}
+              descTrimmed={descTrimmed}
+              description={description}
+              warningMessage={warningMessage}
+              badges={badges}
+              gridColumns={gridColumns}
+              expandedMobileStatColumns={expandedMobileStatColumns}
+              totalCost={showExpandedTotalCost ? totalCost : undefined}
+              costLabel={costLabel}
+              requirements={requirements}
+              hasDetailSections={hasDetailSections}
+              expandedDetailSections={expandedDetailSections}
+              openDetailSections={openDetailSections}
+              setOpenDetailSections={setOpenDetailSections}
+              expandedChipIndex={expandedChipIndex}
+              handleChipClick={handleChipClick}
+              expandedOptionsChipIndex={expandedOptionsChipIndex}
+              setExpandedOptionsChipIndex={setExpandedOptionsChipIndex}
+              supplementalExpandedContent={supplementalExpandedContent}
+              showActions={showActions}
+              onAddToLibrary={onAddToLibrary}
+              onEdit={onEdit}
+              onDuplicate={onDuplicate}
+            />
+          )}
+        </div>
+
+        {hasExternalChrome && (
+          <GridListRowExternalChrome
+            compact={compact}
+            disabled={disabled}
+            warningMessage={warningMessage}
+            rightSlot={externalRightSlot ? rightSlot : undefined}
+            reserveRightSlotChrome={externalRightSlot && reserveRightSlotChrome}
+            rightSlotWidth={rightSlotWidth}
+            onEdit={externalEdit ? onEdit : undefined}
+            onDelete={externalDelete ? onDelete : undefined}
+            selectable={externalSelectable}
+            isSelected={isSelected}
+            onSelect={onSelect}
+          />
+        )}
+      </div>
     </div>
   );
 });

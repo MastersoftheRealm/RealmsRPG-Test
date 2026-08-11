@@ -80,7 +80,10 @@ export function GridListRowExpandedBody({
       className={cn(
         'border-t border-border-light bg-surface-alt',
         compact ? 'px-3 py-3' : 'px-4 py-4',
-        selectable && 'mr-10', // Indent on right when selection button present
+        // Only indent when selection is an *inline* grid track (header + lives in the
+        // collapsed grid). External SelectionToggle is a sibling column — no mr needed
+        // (TASK-702). Callers pass selectable={inlineSelectable} from GridListRow.
+        selectable && 'mr-10',
         isRowClickable && 'cursor-pointer'
       )}
       onClick={isRowClickable ? handleRowBodyClickWithGuard : undefined}
