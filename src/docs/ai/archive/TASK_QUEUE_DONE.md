@@ -1,4 +1,46 @@
-- id: TASK-701
+﻿- id: TASK-699
+  title: Sitewide DescriptorChip slightly larger / more readable
+  created_at: 2026-08-10
+  completed_at: 2026-08-10
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-415
+  related_files:
+    - src/components/ui/chip.tsx
+    - src/components/ui/expandable-chip.tsx
+    - src/lib/chip/chip-size-tokens.ts
+    - src/lib/chip/chip-size-tokens.test.ts
+    - src/lib/chip/expandable-chip-shell.ts
+    - src/lib/chip/index.ts
+    - src/components/shared/grid-list-row-expanded.tsx
+    - src/components/shared/summary-chip-list.tsx
+    - src/app/dev/styleguide/page.tsx
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/CHIP_UNIFICATION_PLAN.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    DescriptorChips feel slightly too small (padding + font) sitewide — only a nudge, but
+    metadata is harder to read than it should be. Adjust the shared DescriptorChip default /
+    `sm` size token so call sites inherit the bump; screenshot Library/Codex expanded rows and
+    guided fact chips before/after. Keep ExpandableChip and filter pills distinct.
+  acceptance_criteria:
+    - Shared DescriptorChip default (or `sm` token used by DescriptorChip) is slightly larger / more readable; no per-page one-offs.
+    - ExpandableChip / filter Chip roles unchanged unless they incorrectly share the same undersized token.
+    - Contrast still passes; dense GLR rows do not overflow or wrap badly from the bump.
+    - DESIGN_SYSTEM / CHIP docs note the size intent; screenshot-verify a representative surface.
+    - Build/typecheck/lint pass.
+  completed_work: |
+    - Added `descriptor` chipVariants size (`text-sm px-2.5 py-1`) and `CHIP_ENTITY_INLINE_SIZE` in chip-size-tokens.ts.
+    - DescriptorChip default/`sm` resolves to descriptor token; expandable shell `md` maps to same inline size in entity rows.
+    - Wired expandable-chip-shell through chipVariants; grid-list-row-expanded + summary-chip-list use entity inline size.
+    - DESIGN_SYSTEM + CHIP_UNIFICATION_PLAN document role-based sizing; styleguide entity-row parity row.
+    - Vitest chip-size-tokens.test.ts; build/typecheck/lint pass; DEV-V-050 T001 step 9.
+  notes: |
+    Owner 2026-08-10. Filter toolbar pills keep `sm`; prominent md/lg descriptors outside chip groups unchanged.
+    verification_status pending-qa (DEV-V-050 T001 step 9).- id: TASK-701
   title: Weapon Range column � Melee / spaces via shared formatRange (no raw 0/levels)
   created_at: 2026-08-10
   completed_at: 2026-08-10

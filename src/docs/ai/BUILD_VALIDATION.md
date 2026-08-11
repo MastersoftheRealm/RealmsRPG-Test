@@ -5968,7 +5968,7 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-050 — Guided creator L3 inline catalog lists |
-| **Related task** | TASK-684 / TASK-685 / TASK-688 |
+| **Related task** | TASK-684 / TASK-685 / TASK-688 / **TASK-699** |
 | **Where** | `/characters/new/guided` — start a **custom** (no path) character |
 | **Needs** | Signed-in; a draft with no `archetypePathId` (Full Customize) |
 
@@ -5981,6 +5981,7 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 6. Powers/Techniques step (Power or Powered-Martial path-less draft): Innate + Powers sections (L1-parallel) with a **Show** filter (Innate + Powers / Innate only / Powers only); regular list filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP/Innate-Energy blocks hide unavailable rows (selected kept).
 7. For all six: verify at ~360px width — search/filter toolbar and selected-panel rows stay usable, touch targets ≥44px; **Selected** panel has even horizontal cushion from the card border (title, column header, and GLR rows inset — not flush to the frame) and balanced top/bottom padding under the last row (TASK-700).
 8. Sanity check a **path-based** (L1) character still shows curated cards + "See more options" opening the existing L2 modal (no regression). Path with empty weapon pool may still omit weapon (path behavior unchanged).
+9. **Descriptor chips (TASK-699):** Expand a Library or Codex GLR row — descriptor metadata chips and expandable part/cost chips share the same inline size (readable `text-sm`, not undersized `text-xs`). Filter toolbar pills remain the smaller `sm` role. Optional: `/dev/styleguide` → Entity row parity row matches GLR expanded chips.
 
 **Expected**
 - All four L3 screens show the catalog inline with live budgets/eligibility; unavailable feats/powers hidden; custom loadout never skips weapons; Power-only skips armor; gear is quantity-first with readable qty chrome; equipment headers match Codex; L1 path-based flow is unchanged.

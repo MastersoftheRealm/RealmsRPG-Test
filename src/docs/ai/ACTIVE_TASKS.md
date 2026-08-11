@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-708, TASK-701, TASK-700, TASK-698…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-699, TASK-708, TASK-701, TASK-700…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 11 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 10 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** **TASK-706–709** filed (resource trackers; tippy color; P/T Energy=0; L3↔Library GLR parity). **TASK-702** high chrome; **TASK-709** high. TASK-708 done pending-qa. **TASK-703–705** + **TASK-699** medium.
+**Hot notes:** **TASK-706–709** filed (resource trackers; tippy color; P/T Energy=0; L3↔Library GLR parity). **TASK-702** high chrome; **TASK-709** high. TASK-699 done pending-qa. TASK-708 done pending-qa. **TASK-703–705** medium.
 
 ---
 
@@ -261,35 +261,6 @@ Do **not** read the done archive at session start.
   notes: |
     Owner 2026-08-10. Mirror `species-step` `openSpeciesCreator` + SourceFilter used on Library
     tabs. Confirm item-creator supports the intended armament types before linking.
-
----
-
-- id: TASK-699
-  title: Sitewide DescriptorChip slightly larger / more readable
-  created_at: 2026-08-10
-  created_by: owner
-  priority: medium
-  status: not-started
-  related_tasks:
-    - TASK-415
-  related_files:
-    - src/components/ui/chip.tsx
-    - src/lib/chip/descriptor-chip-variants.ts
-    - src/docs/DESIGN_SYSTEM.md
-  description: |
-    DescriptorChips feel slightly too small (padding + font) sitewide — only a nudge, but
-    metadata is harder to read than it should be. Adjust the shared DescriptorChip default /
-    `sm` size token so call sites inherit the bump; screenshot Library/Codex expanded rows and
-    guided fact chips before/after. Keep ExpandableChip and filter pills distinct.
-  acceptance_criteria:
-    - Shared DescriptorChip default (or `sm` token used by DescriptorChip) is slightly larger / more readable; no per-page one-offs.
-    - ExpandableChip / filter Chip roles unchanged unless they incorrectly share the same undersized token.
-    - Contrast still passes; dense GLR rows do not overflow or wrap badly from the bump.
-    - DESIGN_SYSTEM / CHIP docs note the size intent; screenshot-verify a representative surface.
-    - Build/typecheck/lint pass.
-  notes: |
-    Owner 2026-08-10. DescriptorChip currently defaults `size="sm"` → `text-xs` / `py-0.5`. Prefer
-    a modest token bump over forcing every call site to `md`.
 
 ---
 
