@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-11T01:57:31.464Z",
+  "generated_at": "2026-08-11T02:01:55.093Z",
   "tasks": [
     {
       "id": "TASK-706",
@@ -7,7 +7,44 @@
       "status": "not-started",
       "completed_at": "",
       "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "bc12c4bba21aef20410594d0fe449fb13685fdf1",
+          "subject": "TASK-698 TASK-708 TASK-699: Filter chevrons, Energy derive DRY, descriptor chip sizes.",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/app/dev/styleguide/page.tsx",
+            "src/components/character-sheet/proficiencies-tab.tsx",
+            "src/components/guided-creator/guided-choice-card.tsx",
+            "src/components/shared/filters/ability-requirement-filter.tsx",
+            "src/components/shared/filters/chip-select.tsx",
+            "src/components/shared/filters/filter-native-select.tsx",
+            "src/components/shared/filters/select-filter.tsx",
+            "src/components/shared/filters/tag-filter.tsx",
+            "src/components/shared/grid-list-row-expanded.tsx",
+            "src/components/shared/summary-chip-list.tsx",
+            "src/components/ui/chip.tsx",
+            "src/components/ui/expandable-chip.tsx",
+            "src/components/ui/index.ts",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DESIGN_SYSTEM.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/CHIP_UNIFICATION_PLAN.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/chip/chip-size-tokens.test.ts",
+            "src/lib/chip/chip-size-tokens.ts",
+            "src/lib/chip/expandable-chip-shell.ts",
+            "src/lib/chip/index.ts",
+            "src/lib/library-selectable-builders.test.ts",
+            "src/lib/library-selectable-builders.ts",
+            "src/lib/library/official-power-list.ts",
+            "src/lib/library/official-technique-list.ts"
+          ]
+        }
+      ],
       "related_files": [
         "src/components/shared/point-status.tsx",
         "src/components/shared/loadout-budget-bar.tsx",
@@ -122,13 +159,53 @@
       "status": "not-started",
       "completed_at": "",
       "source": "src\\docs\\ai\\ACTIVE_TASKS.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "bc12c4bba21aef20410594d0fe449fb13685fdf1",
+          "subject": "TASK-698 TASK-708 TASK-699: Filter chevrons, Energy derive DRY, descriptor chip sizes.",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/app/dev/styleguide/page.tsx",
+            "src/components/character-sheet/proficiencies-tab.tsx",
+            "src/components/guided-creator/guided-choice-card.tsx",
+            "src/components/shared/filters/ability-requirement-filter.tsx",
+            "src/components/shared/filters/chip-select.tsx",
+            "src/components/shared/filters/filter-native-select.tsx",
+            "src/components/shared/filters/select-filter.tsx",
+            "src/components/shared/filters/tag-filter.tsx",
+            "src/components/shared/grid-list-row-expanded.tsx",
+            "src/components/shared/summary-chip-list.tsx",
+            "src/components/ui/chip.tsx",
+            "src/components/ui/expandable-chip.tsx",
+            "src/components/ui/index.ts",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DESIGN_SYSTEM.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/CHIP_UNIFICATION_PLAN.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/chip/chip-size-tokens.test.ts",
+            "src/lib/chip/chip-size-tokens.ts",
+            "src/lib/chip/expandable-chip-shell.ts",
+            "src/lib/chip/index.ts",
+            "src/lib/library-selectable-builders.test.ts",
+            "src/lib/library-selectable-builders.ts",
+            "src/lib/library/official-power-list.ts",
+            "src/lib/library/official-technique-list.ts"
+          ]
+        }
+      ],
       "related_files": [
         "src/components/ui/chip.tsx",
         "src/lib/chip/descriptor-chip-variants.ts",
         "src/docs/DESIGN_SYSTEM.md"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/components/ui/chip.tsx",
+        "src/docs/DESIGN_SYSTEM.md"
+      ]
     },
     {
       "id": "TASK-326",
@@ -24788,7 +24865,44 @@
       "status": "done",
       "completed_at": "2026-08-10",
       "source": "src\\docs\\ai\\archive\\TASK_QUEUE_DONE.md",
-      "matches": [],
+      "matches": [
+        {
+          "hash": "bc12c4bba21aef20410594d0fe449fb13685fdf1",
+          "subject": "TASK-698 TASK-708 TASK-699: Filter chevrons, Energy derive DRY, descriptor chip sizes.",
+          "files": [
+            "reports/task-reconcile-report.json",
+            "src/app/dev/styleguide/page.tsx",
+            "src/components/character-sheet/proficiencies-tab.tsx",
+            "src/components/guided-creator/guided-choice-card.tsx",
+            "src/components/shared/filters/ability-requirement-filter.tsx",
+            "src/components/shared/filters/chip-select.tsx",
+            "src/components/shared/filters/filter-native-select.tsx",
+            "src/components/shared/filters/select-filter.tsx",
+            "src/components/shared/filters/tag-filter.tsx",
+            "src/components/shared/grid-list-row-expanded.tsx",
+            "src/components/shared/summary-chip-list.tsx",
+            "src/components/ui/chip.tsx",
+            "src/components/ui/expandable-chip.tsx",
+            "src/components/ui/index.ts",
+            "src/docs/ALL_FEEDBACK_CLEAN.md",
+            "src/docs/DESIGN_SYSTEM.md",
+            "src/docs/ai/ACTIVE_TASKS.md",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/docs/ai/BUILD_VALIDATION.md",
+            "src/docs/ai/CHIP_UNIFICATION_PLAN.md",
+            "src/docs/ai/FEATURE_INDEX.md",
+            "src/docs/ai/archive/TASK_QUEUE_DONE.md",
+            "src/lib/chip/chip-size-tokens.test.ts",
+            "src/lib/chip/chip-size-tokens.ts",
+            "src/lib/chip/expandable-chip-shell.ts",
+            "src/lib/chip/index.ts",
+            "src/lib/library-selectable-builders.test.ts",
+            "src/lib/library-selectable-builders.ts",
+            "src/lib/library/official-power-list.ts",
+            "src/lib/library/official-technique-list.ts"
+          ]
+        }
+      ],
       "related_files": [
         "src/lib/library-selectable-builders.ts",
         "src/lib/library-selectable-builders.test.ts",
@@ -24796,7 +24910,12 @@
         "src/lib/library/official-technique-list.ts",
         "src/lib/guided-creator/powers-techniques-l2.ts"
       ],
-      "related_overlap": []
+      "related_overlap": [
+        "src/lib/library-selectable-builders.ts",
+        "src/lib/library-selectable-builders.test.ts",
+        "src/lib/library/official-power-list.ts",
+        "src/lib/library/official-technique-list.ts"
+      ]
     }
   ]
 }
