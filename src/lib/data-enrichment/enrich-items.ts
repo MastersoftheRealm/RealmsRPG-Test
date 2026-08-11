@@ -1,5 +1,9 @@
 import type { UserItem } from '@/hooks/use-user-library';
-import { formatRange, deriveShieldAmountFromProperties, deriveShieldDamageFromProperties } from '@/lib/calculators';
+import {
+  resolveWeaponRangeDisplay,
+  deriveShieldAmountFromProperties,
+  deriveShieldDamageFromProperties,
+} from '@/lib/calculators';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import type { CodexEquipmentItem, EnrichedItem } from './types';
 import { deriveAbilityRequirementFromProperties } from '@/lib/game/weapon-attack-ability';
@@ -63,7 +67,10 @@ export function enrichItems(
         damage: libraryItem.damage,
         armorValue,
         properties: propertyNames,
-        range: (itemType === 'weapon' || itemType === 'shield') ? formatRange(props) : undefined,
+        range:
+          itemType === 'weapon' || itemType === 'shield'
+            ? resolveWeaponRangeDisplay(undefined, props)
+            : undefined,
         // Armor-specific fields
         critRange: libraryItem.criticalRangeIncrease,
         agilityReduction: libraryItem.agilityReduction,

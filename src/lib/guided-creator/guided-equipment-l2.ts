@@ -14,7 +14,7 @@ import {
   deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
-  formatRange,
+  resolveWeaponRangeDisplay,
 } from '@/lib/calculators';
 import {
   armorStatsForRef,
@@ -98,9 +98,7 @@ function abilityRequirementDisplay(row: EligibleEquipmentRow): string {
 }
 
 function rangeDisplay(row: EligibleEquipmentRow): string {
-  if (row.range?.trim()) return row.range.trim();
-  const fromProps = formatRange((row.properties ?? []) as ItemPropertyPayload[]);
-  return fromProps || '-';
+  return resolveWeaponRangeDisplay(row.range, (row.properties ?? []) as ItemPropertyPayload[]);
 }
 
 /** Build OfficialItemRow so Guided reuses `armamentRowColumns` (TASK-688 cleanup). */

@@ -8,7 +8,6 @@ import type { ChipData } from '@/components/shared';
 import type { ColumnValue } from '@/components/shared/grid-list-row';
 import type { ItemProperty } from '@/hooks/codex-types';
 import type { LibraryItem } from '@/types/library';
-import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
@@ -16,7 +15,8 @@ import {
   deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
-  formatRange,
+  resolveWeaponRangeDisplay,
+  type ItemPropertyPayload,
 } from '@/lib/calculators/item-calc';
 import {
   deriveAbilityRequirementFromProperties,
@@ -200,7 +200,10 @@ export function buildOfficialItemRows(
     const props = (Array.isArray(item.properties) ? item.properties : []) as ItemPropertyPayload[];
     const costs = calculateItemCosts(props, propertiesDb);
     const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
-    const rangeStr = formatRange(props) || '-';
+    const rangeStr = resolveWeaponRangeDisplay(
+      (item as LibraryItem & { range?: string }).range,
+      props
+    );
     const damageStr = formatDamageDisplay(item.damage) || '-';
     const damageReduction = resolveArmorDamageReduction({ ...item, properties: props });
     const agilityReduction = resolveAgilityReduction(item, props);

@@ -101,6 +101,18 @@ describe('guided-equipment-l2', () => {
       },
     ],
     [
+      'w3',
+      {
+        id: 'w3',
+        name: 'Longbow',
+        type: 'weapon',
+        rarity: 'common',
+        trainingPoints: 4,
+        range: '0',
+        properties: [{ id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 }],
+      },
+    ],
+    [
       's1',
       {
         id: 's1',
@@ -202,6 +214,12 @@ describe('guided-equipment-l2', () => {
     );
     expect(rowKeys).toEqual(headerKeys);
     expect(axe!.columns?.find((c) => c.key === 'currency')?.value).toBe(25);
+  });
+
+  it('weapon range column derives from properties when stored range is corrupt (TASK-701)', () => {
+    const items = buildGuidedEquipmentL2Items('weapon', catalog, ctx, [], []);
+    const longbow = items.find((i) => i.id === 'w3');
+    expect(longbow?.columns?.find((c) => c.key === 'range')?.value).toBe('16 spaces');
   });
 
   it('L2 header data columns are sortable', () => {

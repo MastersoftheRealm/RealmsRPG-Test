@@ -186,16 +186,26 @@ export function normalizeRangeDisplay(range: string | number | null | undefined)
 }
 
 /**
- * Compact weapon range for dense table cells (matches sheet settings "Spaces (sp)").
- * Melee unchanged; "16 spaces" → "16 sp".
+ * Compact an already-resolved weapon range for dense table cells ("16 spaces" → "16 sp").
+ * Callers with properties should use `formatWeaponRangeDisplayCompact` from item-calc first.
+ */
+export function compactResolvedWeaponRange(resolved: string): string {
+  if (!resolved || /^melee$/i.test(resolved)) return 'Melee';
+  const match = resolved.match(/^(\d+(?:\.\d+)?)\s*(?:spaces?|sp)?$/i);
+  if (match) return `${match[1]} sp`;
+  return resolved.replace(/\bspaces?\b/gi, 'sp');
+}
+
+/**
+ * Compact weapon range for dense table cells when only a stored value is available.
+ * Rejects corrupt bare integers / `"0"`; prefer `formatWeaponRangeDisplayCompact` when properties exist.
  */
 export function formatWeaponRangeCompact(range: string | number | null | undefined): string {
   const normalized = normalizeRangeDisplay(range);
-  if (!normalized) return 'Melee';
+  if (!normalized || normalized === '0' || normalized === '-') return 'Melee';
   if (/^melee$/i.test(normalized)) return 'Melee';
-  const match = normalized.match(/^(\d+(?:\.\d+)?)\s*(?:spaces?|sp)?$/i);
-  if (match) return `${match[1]} sp`;
-  return normalized.replace(/\bspaces?\b/gi, 'sp');
+  if (/^\d+$/.test(normalized)) return 'Melee';
+  return compactResolvedWeaponRange(normalized);
 }
 
 /**

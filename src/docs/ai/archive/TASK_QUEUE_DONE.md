@@ -1,3 +1,46 @@
+- id: TASK-701
+  title: Weapon Range column — Melee / spaces via shared formatRange (no raw 0/levels)
+  created_at: 2026-08-10
+  completed_at: 2026-08-10
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-290
+    - TASK-688
+  related_files:
+    - src/lib/calculators/item-calc.ts
+    - src/lib/calculators/item-calc-range.test.ts
+    - src/lib/calculators/index.ts
+    - src/lib/guided-creator/guided-equipment-l2.ts
+    - src/lib/guided-creator/guided-equipment-l2.test.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+  description: |
+    Weapons GLR Range cells sometimes show `0` (should be Melee) or raw level integers
+    (`1`, `2`) instead of spaces from GAME_RULES / ITEM_PROPERTY_CONSTANTS
+    (`RANGE_BASE_SPACES` 8 + `op_1_lvl * RANGE_SPACES_PER_LEVEL` 8 via `formatRange`).
+    Some rows correctly show Melee. Likely guided `rangeDisplay` preferring a corrupt/raw
+    `EligibleEquipmentRow.range` string (e.g. `"0"`) over `formatRange(properties)`, and/or
+    sheet/library paths using `normalizeRangeDisplay(item.range)` without validating.
+    Fix at shared display SoT — do not fork per surface; add regression tests so Library,
+    sheet character library, and guided L2/L3 stay aligned.
+  acceptance_criteria:
+    - No Range property ? display Melee (never `0`, `-`, or blank treated as ranged).
+    - Range property present ? display spaces from `formatRange` (e.g. level 0 ? 8 spaces, level 1 ? 16 spaces), never raw `op_1_lvl`.
+    - Guided L2/L3, Library Official armaments, and character-sheet library weapon rows all use the same shared path (or thin wrappers that always call it).
+    - Audit whether stored `item.range` / eligibility `range` fields are corrupt; if so, prefer derive-from-properties at display time and note any one-off data repair (codex writes still follow realms-codex-data).
+    - Vitest covers Melee / level?spaces / rejects raw `"0"`/`"1"` short-circuit; build/typecheck/lint pass; BUILD_VALIDATION + FEATURE_INDEX touch if user-facing copy changes.
+  completed_work: |
+    - Added `resolveWeaponRangeDisplay` in item-calc (properties-first; rejects corrupt stored `0`/bare integers).
+    - Wired guided-equipment-l2 `rangeDisplay` + sheet library weapon/shield rows.
+    - Library official-item-list + enrich-items already derived via `formatRange(props)`.
+    - Vitest: item-calc-range.test.ts + guided L2 corrupt-range regression.
+    - build/typecheck/lint pass.
+    - Data audit: corrupt stored `range` (`0` / bare op_1_lvl) is a display-layer issue; derive-from-properties at render is sufficient — no codex SQL repair filed.
+    - Cleanup: official-item-list, enrich-items, quick-armaments wired to `resolveWeaponRangeDisplay` / `formatWeaponRangeDisplayCompact`.
+  notes: |
+    Owner 2026-08-10. `formatWeaponRangeCompact` still compresses dense cells after correct derivation.
 - id: TASK-700
   title: Guided L3 Selected panel — border cushion + vertical rhythm
   created_at: 2026-08-10
@@ -17985,3 +18028,37 @@ Firebase/RTDB - the project is Supabase-only.
     - Updated DEV-V-013-T076 step 5 + FEATURE_INDEX; build/typecheck/lint/vitest pass.
   notes: |
     Owner 2026-08-10 regression fix. QA: DEV-V-013 T076 step 5, T030.
+
+- id: TASK-708
+  title: Guided creator powers/techniques Energy column â€” fix 0 vs Library
+  created_at: 2026-08-10
+  completed_at: 2026-08-10
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-687
+    - TASK-691
+    - TASK-686
+    - TASK-709
+  related_files:
+    - src/lib/library-selectable-builders.ts
+    - src/lib/library-selectable-builders.test.ts
+    - src/lib/guided-creator/powers-techniques-l2.ts
+    - src/lib/guided-creator/power-technique-display.ts
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/lib/calculators/power-calc.ts
+  completed_work: |
+    Root cause: `derivePowerTechniqueBudgetFacts` built a partial PowerDocument/TechniqueDocument
+    (parts + actionType only), so columnar official powers with promoted damage/range/area/duration
+    scalars took the creator-style derive path without those fields â€” Energy collapsed to 0 or too low
+    while `buildOfficialPowerRows` passed the full document shape.
+    Added `libraryItemToPowerDocument` / `libraryItemToTechniqueDocument` (same shape as Official
+    list + `buildSelectableItem`); wired budget derive + selectable builders through them.
+    Vitest: budget facts + guided L2 Energy column parity vs `buildOfficialPowerRows` for same id.
+  acceptance_criteria:
+    - Spot-check set of official powers/techniques: creator L2/L3 Energy column matches Official Realms Library Energy for the same id.
+    - No false `0` when Library shows a positive cost; unknown/missing still `â€”` (not fake 0) unless true zero-cost.
+    - Root cause fixed in shared derive + catalog enrichment (not a guided-only display hack).
+    - Vitest: fixture with known Energy â‰  0 through guided L2 builder path; DEV-V-050 T002 Energy step updated; build/typecheck/lint pass.

@@ -4,9 +4,13 @@ import type { ReactNode } from 'react';
 import { SectionHeader } from '@/components/shared/section-header';
 import { RollButton } from '@/components/shared/roll-button';
 import { TableScroll } from '@/components/ui';
-import { cn, formatWeaponRangeCompact, splitDamageDiceAndType } from '@/lib/utils';
+import { cn, splitDamageDiceAndType } from '@/lib/utils';
 import { isMechanicPropertyName } from '@/lib/detail-option/compact-facts';
-import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
+import {
+  deriveShieldAmountFromProperties,
+  formatWeaponRangeDisplayCompact,
+  type ItemPropertyPayload,
+} from '@/lib/calculators/item-calc';
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
 import { useRollsOptional } from '@/components/rolls';
 
@@ -164,7 +168,10 @@ export function QuickWeaponsTable({
                   <NamedPropertiesUnderName names={displayProps} />
                 </td>
                 <td className={QUICK_WEAPON_COL.rangeTd}>
-                  {formatWeaponRangeCompact(weapon.range)}
+                  {formatWeaponRangeDisplayCompact(
+                    weapon.range,
+                    resolveQuickArmamentProperties(weapon) as ItemPropertyPayload[]
+                  )}
                 </td>
                 <td className={QUICK_WEAPON_COL.attackTd}>
                   {rollContext?.canRoll !== false && rollContext ? (

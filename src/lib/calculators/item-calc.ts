@@ -13,6 +13,7 @@ import {
   type HasIdAndName,
 } from '@/lib/id-constants';
 import { ITEM_PROPERTY_CONSTANTS } from '@/lib/game/constants';
+import { compactResolvedWeaponRange, normalizeRangeDisplay } from '@/lib/utils/string';
 import type { ItemProperty } from '@/hooks/codex-types';
 
 // Re-export for convenience
@@ -345,6 +346,42 @@ export function formatRange(properties: ItemPropertyPayload[]): string {
     ITEM_PROPERTY_CONSTANTS.RANGE_BASE_SPACES +
     lvl * ITEM_PROPERTY_CONSTANTS.RANGE_SPACES_PER_LEVEL;
   return `${n} ${n === 1 ? 'space' : 'spaces'}`;
+}
+
+/**
+ * Display SoT for weapon/shield range (TASK-701).
+ * Prefer `formatRange(properties)` when properties are present; fall back to stored
+ * range only when properties are absent. Never surface raw op_1_lvl integers or `"0"`.
+ */
+export function resolveWeaponRangeDisplay(
+  storedRange: string | number | null | undefined,
+  properties?: ItemPropertyPayload[] | null
+): string {
+  const props = properties ?? [];
+  if (props.length > 0) {
+    return formatRange(props);
+  }
+
+  const normalized = normalizeRangeDisplay(storedRange);
+  if (!normalized || normalized === '0' || normalized === '-') {
+    return 'Melee';
+  }
+  if (/^melee$/i.test(normalized)) {
+    return 'Melee';
+  }
+  // Corrupt stored values: bare integers are op_1_lvl, not display spaces.
+  if (/^\d+$/.test(normalized)) {
+    return 'Melee';
+  }
+  return normalized;
+}
+
+/** Resolved + compact weapon range for dense cells (TASK-701). */
+export function formatWeaponRangeDisplayCompact(
+  storedRange: string | number | null | undefined,
+  properties?: ItemPropertyPayload[] | null
+): string {
+  return compactResolvedWeaponRange(resolveWeaponRangeDisplay(storedRange, properties));
 }
 
 /**

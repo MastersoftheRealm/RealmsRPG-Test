@@ -148,6 +148,8 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-708** | DEV-V-050 **T002** step 4 | Guided/custom Powers L2/L3 Energy column matches Official Realms Library for the same power id (no false `0` when Library shows positive EN). Spot-check a columnar power with damage scalars + a martial technique. |
+| **TASK-701** | DEV-V-050 **T001–T002** + DEV-V-009 **T017** | Weapon/shield Range: Melee when no Range property (never `0`); ranged shows `8 spaces` / `16 spaces` from properties (not raw level ints). Spot-check guided L2/L3, Library Official armaments, sheet weapon/shield library rows. |
 | **TASK-700** | DEV-V-050 **T001** step 7 | Guided L3 Selected panel: even horizontal cushion from card border; balanced top/bottom padding; qty/remove slots still align with headers |
 | **TASK-698** | DEV-V-046 **T003** step 7 | Library/Codex filter dropdowns (SelectFilter/ChipSelect): chevron inset from right edge; muted weight (not heavy native arrow); h-11 preserved |
 | **TASK-697** | DEV-V-013 **T076** step 5 (+ T030) | Ancestry: Continue from Species / chapter rail lands on stable species overview (heritage + size); no flash-then-jump to first pick; second Continue enters first pick in order (Custom + Guided) |

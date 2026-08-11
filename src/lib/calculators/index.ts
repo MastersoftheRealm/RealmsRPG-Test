@@ -104,6 +104,8 @@ export {
   computeSplits as computeItemSplits,
   formatDamage as formatItemDamage,
   formatRange,
+  resolveWeaponRangeDisplay,
+  formatWeaponRangeDisplayCompact,
   deriveDamageReductionFromProperties,
   deriveAgilityReductionFromProperties,
   deriveCriticalRangeIncreaseFromProperties,

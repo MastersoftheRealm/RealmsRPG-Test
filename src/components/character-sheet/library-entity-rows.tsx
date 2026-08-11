@@ -9,8 +9,8 @@ import {
   formatDurationCompact,
   formatSavedActionTypeForDisplay,
   formatListCellLabel,
-  normalizeRangeDisplay,
 } from '@/lib/utils';
+import { resolveWeaponRangeDisplay, type ItemPropertyPayload } from '@/lib/calculators';
 import {
   InnateToggle,
   RollButton,
@@ -276,7 +276,10 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
     const propertyChips = partDataToChips(
       propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
     );
-    const rangeValue = normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee';
+    const rangeValue = resolveWeaponRangeDisplay(
+      (item as Item & { range?: string }).range,
+      (resolveItemProperties(item as ItemWithLibrarySource) ?? []) as ItemPropertyPayload[]
+    );
     const { dice: damageDice, type: damageType, rollStr: damageRollStr } = splitDamageDiceAndType(item.damage);
 
     const attackButton =
@@ -355,7 +358,10 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
     const shieldBlock = enriched.shieldAmount ?? '-';
     const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? String(item.damage) : '-');
     const { bonus: attackBonus } = getWeaponAttackBonus(item, ctx.abilities, ctx.martialProficiency);
-    const rangeValue = normalizeRangeDisplay((item as Item & { range?: string }).range) || 'Melee';
+    const rangeValue = resolveWeaponRangeDisplay(
+      (item as Item & { range?: string }).range,
+      (resolveItemProperties(item as ItemWithLibrarySource) ?? []) as ItemPropertyPayload[]
+    );
     const {
       dice: shieldDamageDice,
       type: shieldDamageType,
