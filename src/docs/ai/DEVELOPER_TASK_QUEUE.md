@@ -148,6 +148,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-700** | DEV-V-050 **T001** step 7 | Guided L3 Selected panel: even horizontal cushion from card border; balanced top/bottom padding; qty/remove slots still align with headers |
 | **TASK-698** | DEV-V-046 **T003** step 7 | Library/Codex filter dropdowns (SelectFilter/ChipSelect): chevron inset from right edge; muted weight (not heavy native arrow); h-11 preserved |
 | **TASK-697** | DEV-V-013 **T076** step 5 (+ T030) | Ancestry: Continue from Species / chapter rail lands on stable species overview (heritage + size); no flash-then-jump to first pick; second Continue enters first pick in order (Custom + Guided) |
 | **TASK-692** | DEV-V-050 **T001** step 6 + DEV-V-016 **T017** | Guided L3 Powers/Techniques: **one** shared Filters panel above innate/regular lists; Category/Max EN/etc. narrow lists; no sheet Character filter; innate-scope SelectFilter + max-EN / innate threshold / TP gates unchanged |

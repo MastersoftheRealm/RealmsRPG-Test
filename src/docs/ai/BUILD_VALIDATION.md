@@ -5979,7 +5979,7 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 4. Loadout — Armor phase: present for Martial and Powered-Martial with **Codex armor columns** (Rarity, Currency, TP, Damage Red., Agility Red., Abl. Req., Crit +); **skipped for Power only**; single-slot swap on select; TP budget shared with weapons.
 5. Loadout — Gear phase: **quantity stepper on the far right replaces the + add button** (no dual chrome; slot wide enough that ± controls are not clipped); Name/Rarity/Currency columns; incrementing from 0 adds; editing qty in the catalog row or the selected panel works; Currency budget enforced.
 6. Powers/Techniques step (Power or Powered-Martial path-less draft): Innate + Powers sections (L1-parallel) with a **Show** filter (Innate + Powers / Innate only / Powers only); regular list filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP/Innate-Energy blocks hide unavailable rows (selected kept).
-7. For all six: verify at ~360px width — search/filter toolbar and selected-panel rows stay usable, touch targets ≥44px.
+7. For all six: verify at ~360px width — search/filter toolbar and selected-panel rows stay usable, touch targets ≥44px; **Selected** panel has even horizontal cushion from the card border (title, column header, and GLR rows inset — not flush to the frame) and balanced top/bottom padding under the last row (TASK-700).
 8. Sanity check a **path-based** (L1) character still shows curated cards + "See more options" opening the existing L2 modal (no regression). Path with empty weapon pool may still omit weapon (path behavior unchanged).
 
 **Expected**

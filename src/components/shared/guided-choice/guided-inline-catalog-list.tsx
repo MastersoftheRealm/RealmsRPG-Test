@@ -33,6 +33,10 @@ import {
 } from '../unified-selection-modal-list';
 import type { ColumnHeader, SelectableItem } from '../unified-selection-modal-types';
 
+/** Card inset for the selected-items panel — shared horizontal cushion + balanced vertical rhythm (TASK-700). */
+const GUIDED_INLINE_CATALOG_SELECTED_PANEL_CHROME =
+  'px-4 pt-3 pb-3 flex flex-col gap-2';
+
 export interface GuidedInlineCatalogListProps {
   /** Full eligible catalog (already filtered/flagged by the same builder used for the L2 modal). */
   items: SelectableItem[];
@@ -154,70 +158,73 @@ export function GuidedInlineCatalogList({
     <div className={cn('flex flex-col gap-4', className)}>
       {selectedItems.length > 0 ? (
         <Card className="bg-surface-alt dark:bg-surface overflow-hidden p-0">
-          {selectedTitle ? (
-            <div className="flex items-center justify-between gap-2 px-4 pt-4 pb-2">
-              <h3 className="font-medium text-text-primary">{selectedTitle}</h3>
-              {selectedCountLabel}
+          <div className={GUIDED_INLINE_CATALOG_SELECTED_PANEL_CHROME}>
+            {selectedTitle ? (
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="font-medium text-text-primary">{selectedTitle}</h3>
+                {selectedCountLabel}
+              </div>
+            ) : null}
+            <ListHeader
+              columns={columns.map((c) => ({ key: c.key, label: c.label, sortable: false, align: c.align }))}
+              gridColumns={gridColumns}
+              compact
+              hasThumbnailColumn={hasThumbnailColumn}
+              rowChrome={showQuantity ? undefined : { rightSlot: true }}
+              rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined}
+              hasSelectionColumn={false}
+              className="mb-0"
+            />
+            <div className="flex flex-col gap-1">
+              {selectedItems.map((item) => {
+                const idStr = String(item.id);
+                const qty = showQuantity
+                  ? quantities[idStr] ?? 1
+                  : undefined;
+                return (
+                  <GridListRow
+                    key={idStr}
+                    id={idStr}
+                    name={item.name}
+                    description={item.description}
+                    thumbnail={item.thumbnail}
+                    columns={item.columns}
+                    gridColumns={gridColumns}
+                    detailSections={item.detailSections}
+                    totalCost={item.totalCost}
+                    costLabel={item.costLabel}
+                    badges={item.badges}
+                    rightSlot={
+                      renderSelectedRightSlot ? (
+                        renderSelectedRightSlot(item)
+                      ) : showQuantity ? (
+                        <QuantitySelector
+                          quantity={qty ?? 1}
+                          onChange={(next) =>
+                            onQuantityChange?.(idStr, next - (qty ?? 1), true)
+                          }
+                          size="sm"
+                          min={0}
+                          decrementLabel={`Decrease quantity for ${item.name}`}
+                          incrementLabel={`Increase quantity for ${item.name}`}
+                        />
+                      ) : (
+                        <IconButton
+                          variant="danger"
+                          size="sm"
+                          onClick={() => onToggleSelection?.(idStr)}
+                          label={`Remove ${item.name}`}
+                        >
+                          <X className="w-4 h-4" />
+                        </IconButton>
+                      )
+                    }
+                    rowChrome={showQuantity ? { rightSlot: true } : undefined}
+                    compact
+                  />
+                );
+              })}
             </div>
-          ) : null}
-          <ListHeader
-            columns={columns.map((c) => ({ key: c.key, label: c.label, sortable: false, align: c.align }))}
-            gridColumns={gridColumns}
-            compact
-            hasThumbnailColumn={hasThumbnailColumn}
-            rowChrome={showQuantity ? undefined : { rightSlot: true }}
-            rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined}
-            hasSelectionColumn={false}
-          />
-          <div className="flex flex-col gap-1 pb-2">
-            {selectedItems.map((item) => {
-              const idStr = String(item.id);
-              const qty = showQuantity
-                ? quantities[idStr] ?? 1
-                : undefined;
-              return (
-                <GridListRow
-                  key={idStr}
-                  id={idStr}
-                  name={item.name}
-                  description={item.description}
-                  thumbnail={item.thumbnail}
-                  columns={item.columns}
-                  gridColumns={gridColumns}
-                  detailSections={item.detailSections}
-                  totalCost={item.totalCost}
-                  costLabel={item.costLabel}
-                  badges={item.badges}
-                  rightSlot={
-                    renderSelectedRightSlot ? (
-                      renderSelectedRightSlot(item)
-                    ) : showQuantity ? (
-                      <QuantitySelector
-                        quantity={qty ?? 1}
-                        onChange={(next) =>
-                          onQuantityChange?.(idStr, next - (qty ?? 1), true)
-                        }
-                        size="sm"
-                        min={0}
-                        decrementLabel={`Decrease quantity for ${item.name}`}
-                        incrementLabel={`Increase quantity for ${item.name}`}
-                      />
-                    ) : (
-                      <IconButton
-                        variant="danger"
-                        size="sm"
-                        onClick={() => onToggleSelection?.(idStr)}
-                        label={`Remove ${item.name}`}
-                      >
-                        <X className="w-4 h-4" />
-                      </IconButton>
-                    )
-                  }
-                  rowChrome={showQuantity ? { rightSlot: true } : undefined}
-                  compact
-                />
-              );
-            })}
           </div>
         </Card>
       ) : null}

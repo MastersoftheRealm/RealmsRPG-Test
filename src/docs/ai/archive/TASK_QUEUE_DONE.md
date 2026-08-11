@@ -1,3 +1,37 @@
+- id: TASK-700
+  title: Guided L3 Selected panel — border cushion + vertical rhythm
+  created_at: 2026-08-10
+  completed_at: 2026-08-10
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-684
+  related_files:
+    - src/components/shared/guided-choice/guided-inline-catalog-list.tsx
+    - src/components/shared/guided-choice/guided-inline-catalog-list.test.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    On Custom character-creator steps that use GuidedInlineCatalogList, the Selected X
+    wireframe panel has poor spacing: GLR content sits flush to the card borders (no cushion),
+    space below the last selected row vs the frame feels wrong, and padding above the Selected
+    title needs rebalancing with the side/bottom inset. Fix once in the shared selected panel
+    so feats / loadout / powers-techniques inherit.
+  acceptance_criteria:
+    - Selected panel has consistent horizontal cushion between card border and ListHeader/GLR rows.
+    - Bottom padding under the last selected row matches the visual weight of the title/top spacing (no cramped floor or oversized empty band).
+    - Title top padding rebalanced so the block does not feel top-heavy relative to side/bottom cushion.
+    - Empty selected state unchanged; quantity and remove right-slots still align with headers.
+    - Applies on all GuidedInlineCatalogList consumers (archetype/character feats, loadout, powers/techniques); update DEV-V-050 if spacing is called out.
+    - Build/typecheck/lint pass.
+  completed_work: |
+    - Added private selected-panel chrome (`px-4 pt-3 pb-3 gap-2`) wrapping title, ListHeader, and selected GLR rows inside the Card.
+    - Removed title-only px-4 pt-4 pb-2 and row-only pb-2 without horizontal inset; ListHeader mb-0 to avoid double gap with wrapper gap-2.
+    - Vitest guided-inline-catalog-list.test.ts guards panel chrome via source grep; BUILD_VALIDATION DEV-V-050 T001 step 7 spacing note.
+    - npm run build + typecheck + lint pass.
+  notes: |
+    Owner 2026-08-10. verification_status pending-qa (DEV-V-050 T001 step 7).
 - id: TASK-694
   title: Your Character preview ï¿½ path once + gated ability chips
   created_at: 2026-08-10
