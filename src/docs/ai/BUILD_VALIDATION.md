@@ -3566,22 +3566,23 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T077 — Layer nav button chrome (TASK-640)
+#### DEV-V-013-T077 — Layer nav button chrome (TASK-640, TASK-695)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-640 |
+| **Related task** | TASK-640, TASK-695 |
 | **Where** | Any guided step with `GuidedLayerNav` (Species, Abilities, Loadout L2 footer) |
 | **Needs** | — |
 
 **Steps**
-1. On Species L1, confirm **See all species** uses primary (same weight as footer Continue) and sits **bottom left** below the grid (not in footer).
-2. On Species L2, confirm **See starter species** (outline, bottom left) and **Create Species** (primary, bottom right) sit below the grid — not in the sticky footer.
-3. On Loadout L2 browse, confirm footer **See recommendations** uses outline, not primary.
+1. On Species L1, confirm **See all species** uses hatch chrome (outline + subtle fill, **not** solid primary blue) and sits **bottom left** below the grid (not in footer).
+2. On Species L2, confirm **See starter species** (outline, bottom left) and **Create Species** (hatch chrome, bottom right) sit below the grid — not in the sticky footer.
+3. Confirm sticky footer **Continue** remains the only solid primary-blue progress CTA on those steps.
+4. On Loadout L2 browse, confirm footer **See recommendations** uses outline, not primary.
 
 **Expected**
-- Deeper = primary `lg`; shallower = outline `lg`; no gray secondary layer-nav buttons.
+- Deeper/hatch = outline `lg` + `guidedNavExpandClassName` (subtle fill); shallower = outline `lg` transparent; footer Continue = primary `lg`; no layer-nav button matches Continue solid blue.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3618,7 +3619,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Steps**
 1. On Species L1, **See all species** — confirm full catalog.
 2. On Species L2, confirm **Mixed Species** card at end of grid; open modal, pick two distinct species, confirm selection ring.
-3. Confirm **Create Species** (primary, bottom-right below grid via `GuidedLayerNav`) opens `/species-creator` in a new tab — not in the sticky Back/Continue footer.
+3. Confirm **Create Species** (hatch chrome, bottom-right below grid via `GuidedLayerNav`) opens `/species-creator` in a new tab — not in the sticky Back/Continue footer.
 4. Continue to **Ancestry** — mixed overview shows both parent names; complete trait/skill/characteristic picks (choose 2 skills when 4 options).
 5. Continue through Skills — locked species skills match mixed picks; save character — `ancestry.mixed` + `speciesIds` on sheet.
 

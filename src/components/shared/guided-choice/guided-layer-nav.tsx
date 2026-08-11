@@ -3,10 +3,11 @@
  *
  * **Placement:** Always below the step's primary content (never in the sticky footer).
  * **Layout:** One action → bottom left; two actions → shallower (collapse) left, deeper (expand) right.
- * **Expand:** Primary button — go deeper (same weight as footer Continue).
+ * **Expand:** Hatch button — go deeper (subtle fill; not footer Continue primary).
  * **Collapse:** Outline button — simpler view (same weight as footer Back).
  *
- * Matches GuidedChoiceShell + GuidedStepFooter; use on any guided step or creator surface.
+ * Collapse uses outline (transparent); expand uses outline + subtle hatch fill.
+ * Footer Continue remains the sole solid primary progress CTA (GuidedStepFooter).
  */
 
 'use client';
@@ -14,8 +15,8 @@
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
 import {
+  guidedNavExpandClassName,
   guidedNavPreviousClassName,
-  guidedNavProgressClassName,
 } from './guided-nav-button-styles';
 
 export interface GuidedLayerNavProps {
@@ -63,10 +64,10 @@ export function GuidedLayerNav({
       {hasExpand ? (
         <Button
           type="button"
-          variant="primary"
+          variant="outline"
           size="lg"
           onClick={onExpand}
-          className={guidedNavProgressClassName}
+          className={guidedNavExpandClassName}
         >
           {expandLabel}
         </Button>

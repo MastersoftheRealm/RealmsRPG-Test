@@ -1,3 +1,43 @@
+- id: TASK-694
+  title: Your Character preview ï¿½ path once + gated ability chips
+  created_at: 2026-08-10
+  completed_at: 2026-08-10
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-686
+  related_files:
+    - src/components/guided-creator/character-preview-panel.tsx
+    - src/lib/guided-creator/preview-ability-summary.ts
+    - src/lib/guided-creator/preview-ability-summary.test.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Correct CharacterPreviewPanel / strip after TASK-686 overshot owner intent. Archetype path
+    (or custom path type) must appear once ï¿½ prefer the subtitle under the character name
+    (ï¿½Your Characterï¿½), not a duplicate DescriptorChip. Custom builds show Power / Martial /
+    Powered-Martial type there (not a fake path name). Ability DescriptorChips stay hidden
+    until the player has selected abilities or completed the Abilities step; when shown, only
+    archetype abilities (`pow_abil` / `mart_abil`) use the alternate highlight color ï¿½ other
+    ability chips stay default.
+  acceptance_criteria:
+    - Path-based draft: path name once under the name/subtitle; no second path DescriptorChip in the strip.
+    - Custom archetype: path type label once under the name; no duplicate type chip; never show a codex path name when forging custom.
+    - Ability chips absent before ability selection / ability-step completion; appear after that gate.
+    - Only archetype ability chip(s) use the other (e.g. primary / power-martial) highlight; remaining shown abilities are default descriptor styling.
+    - Panel variant stays consistent with strip rules (no double path identity).
+    - Update/supersede DEV-V-050-T002 preview expectations; unit tests for gating + highlight; build/typecheck/lint pass; FEATURE_INDEX if preview behavior is indexed.
+  completed_work: |
+    - Removed duplicate path/type DescriptorChip from strip; path identity lives in subtitle only.
+    - Gated ability chips via `shouldShowPreviewAbilityChips` (abilitiesMode set or abilities step completed).
+    - Only pow_abil/mart_abil chips use power/technique highlight; others use descriptor default.
+    - Panel variant: gated ability grid, removed duplicate Path/Archetype dl rows; matching tile highlights.
+    - Unit tests for gating + highlight; DEV-V-050-T002 preview steps updated; FEATURE_INDEX updated.
+    - npm run build + typecheck + lint + vitest pass.
+  notes: |
+    Owner feedback 2026-08-10. Supersedes TASK-686 preview strip AC (DEV-V-050 T002). verification_status pending-qa.
 - id: TASK-693
   title: Guided Restart preserves Custom entry mode
   created_at: 2026-08-10
@@ -21,16 +61,16 @@
     tests:
       - DEV-V-013-T079
   developer_test_plan: |
-    Suite DEV-V-013-T079 — see BUILD_VALIDATION.md.
+    Suite DEV-V-013-T079 ï¿½ see BUILD_VALIDATION.md.
   description: |
     If the player started character creation in Custom mode (`creatorEntryMode: 'custom'` /
-    Path L3 custom archetype), Restart must clear progress but remain on the Custom face —
+    Path L3 custom archetype), Restart must clear progress but remain on the Custom face ï¿½
     not dump them onto Guided Path L1 / default first screen.
   acceptance_criteria:
     - From chooser Custom (or mid-flow Custom), confirm Restart ? lands on Custom Archetype Path L3 face (type cards), not Guided path cards.
     - From Guided entry, Restart still lands on Guided Path L1.
     - Progress (selections, points, steps) is cleared; only entry mode / Path L3 vs L1 face is preserved.
-    - `creatorEntryMode` remains session-only (not saved on character) — do not reintroduce persisted creationMode.
+    - `creatorEntryMode` remains session-only (not saved on character) ï¿½ do not reintroduce persisted creationMode.
     - Targeted unit/store coverage for reset-with-preserved-entry; build/typecheck/lint pass.
     - BUILD_VALIDATION DEV-V-013 (+ notes) updated; FEATURE_INDEX if entry/restart behavior is documented there.
   completed_work: |
@@ -64,7 +104,7 @@
     tests:
       - DEV-V-016-T018
   developer_test_plan: |
-    Suite DEV-V-016-T018 — see BUILD_VALIDATION.md; also spot-check DEV-V-050-T002 Energy parity.
+    Suite DEV-V-016-T018 ï¿½ see BUILD_VALIDATION.md; also spot-check DEV-V-050-T002 Energy parity.
   description: |
     Migrate guided P/T catalog row shaping onto library-selectable-builders while keeping
     guided-only budget / innate / max-EN orchestration.
@@ -109,12 +149,12 @@
     tests:
       - DEV-V-016-T017
   developer_test_plan: |
-    Suite DEV-V-016-T017 — see BUILD_VALIDATION.md
+    Suite DEV-V-016-T017 ï¿½ see BUILD_VALIDATION.md
   description: |
     Reuse PowerTechniqueFilters compact in USM add-power / add-technique flows.
   acceptance_criteria:
     - Add-power and add-technique USM surfaces use shared PowerTechniqueFilters compact variant.
-    - Filter apply delegates to applyPowerTechniqueFilters / innate-eligibility — no local eligibility fork.
+    - Filter apply delegates to applyPowerTechniqueFilters / innate-eligibility ï¿½ no local eligibility fork.
     - Mobile: FilterSection compact toolbar patterns; npm run build + targeted tests pass.
   completed_work: |
     Compact variant embeds controls without nested FilterSection (USM owns disclosure).
@@ -17839,3 +17879,39 @@ Firebase/RTDB - the project is Supabase-only.
     - No duplicate useCharacters / localStorage logic per tab.
   notes: |
     Wired CodexFeatsTab to character-filter-persistence.ts; legacy codex:characterFilterId migrates on read.
+
+
+- id: TASK-695
+  title: GuidedLayerNav hatch buttons â€” not Continue-primary blue
+  created_at: 2026-08-10
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-640
+    - TASK-641
+  related_files:
+    - src/components/shared/guided-choice/guided-layer-nav.tsx
+    - src/components/shared/guided-choice/guided-nav-button-styles.ts
+    - src/components/guided-creator/steps/species-step.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Species L2 **Create Species** (and other GuidedLayerNav actions in the same location /
+    similar function) must not use primary blue â€” it currently reads as the sticky Continue
+    CTA rather than an alternate L3/hatch option. Restyle layer-nav expand (and peers with the
+    same role) to a consistent non-primary chrome; keep footer Continue as the sole primary
+    progress button.
+  acceptance_criteria:
+    - Create Species is not `variant="primary"` / Continue-blue; visually distinct from GuidedStepFooter Continue.
+    - Other GuidedLayerNav buttons with the same role (deeper/hatch / lateral options in that nav row) share the new consistent style.
+    - Collapse / shallower buttons remain outline and still distinct from Continue.
+    - Footer Back/Continue chrome unchanged (Continue stays primary).
+    - Mobile touch targets â‰¥44px preserved; contrast OK; DEV-V-013 T077â€“T078 (and any layer-nav copy) updated; build/typecheck/lint pass.
+  notes: |
+    Owner feedback 2026-08-10. TASK-640 intentionally matched layer-nav expand to Continue primary
+    so deeper didn't feel like a downgrade â€” that made Create Species feel like Continue. Correction:
+    layer-nav family consistent with itself, not with footer Continue. Prefer extending
+    `guided-nav-button-styles` / GuidedLayerNav props over one-off Species styling.
+  completed_at: 2026-08-10

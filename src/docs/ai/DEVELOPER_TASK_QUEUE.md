@@ -148,6 +148,8 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-695** | DEV-V-013 **T077–T078** | Layer-nav expand (See all species, Create Species, See more) = hatch outline+subtle fill, not solid primary; footer Continue stays sole primary blue |
+| **TASK-694** | DEV-V-050 **T002** | Preview strip/panel: path/type once in subtitle (no duplicate chip); ability chips hidden until Abilities selection/completion; only pow_abil/mart_abil highlighted |
 | **TASK-693** | DEV-V-013 **T079** | Custom chooser: Restart lands on Path L3 custom archetype face (not Guided L1); Guided entry: Restart lands on Path L1; progress cleared |
 | **TASK-691** | DEV-V-016 **T018** | Guided Powers/Techniques L2/L3: budget columns (Action Type / Energy / TP) via shared builders; Path badges + max-EN / innate gates unchanged |
 | **TASK-675** | DEV-V-016 **T017** | Sheet Add Power/Technique (+ Advanced creator): Filters panel shows shared PowerTechniqueFilters compact; list applies Library filter helpers; guided L3 still uses innate SelectFilter |
@@ -155,7 +157,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-689** | DEV-V-050 **T002** | Power (path or custom): Loadout never shows armor phase even if path `armorStep: required` |
 | **TASK-688** | DEV-V-050 **T001–T002** | Equipment L3/L2: Rarity/Range/DR/Abl.Req/Crit+ headers match Library; gear qty stepper not clipped |
 | **TASK-687** | DEV-V-050 **T002** | Martial techniques Energy column + max-EN filter use techniques derive path (not powers) |
-| **TASK-686** | DEV-V-050 **T002** | Preview strip: all six abilities (+/0/−) + custom Power/Martial/Powered-Martial chip |
+| **TASK-686** | DEV-V-050 **T002** | ~~Preview strip: all six abilities (+/0/−) + custom Power/Martial/Powered-Martial chip~~ — superseded by TASK-694 preview AC |
 | **TASK-685** | DEV-V-050 **T001** | L3 feedback: hide unmet feats; custom loadout always shows weapons (Power-only skips armor); gear qty stepper replaces +; powers innate scope + max EN filter |
 | **TASK-684** | DEV-V-050 **T001** | Guided creator (Full Customize / no path): archetype feats, character feat, loadout (weapon/armor/gear), powers/techniques render filtered catalog inline (no modal); path-based (L1) flow unchanged |
 | **TASK-683** | DEV-V-049 **T001** | Empowered creator: Weapon Attack uses cheaper Add Weapon (technique ~2.5 EN); No Weapon/Attack adds No Attack; Unarmed adds nothing |
@@ -176,7 +178,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 | **TASK-644** | Armor DR parity smoke | Same armor item shows identical DR on character sheet, library list, guided creator, and advanced creator (flat scalar + property-based DR item). |
 | **TASK-643** | Creature builder / admin rules smoke | Admin `featPointsPerLevel` change affects creature feat budget totals (level bonus = `(level−1)×featPointsPerLevel`, base 4 not 1.5). Spot-check L1/L3 creature in creator or Codex stat block. |
 | **TASK-654** | Campaign character sheet smoke | RM views roster member's sheet — library-derived powers/techniques/equipment/feats render (not empty). Campaign-visibility character: fellow member sees populated `libraryForView`. Non-member gets 403 on campaign character API. Owner self-view unchanged. |
-| **TASK-640** | DEV-V-013 **T075–T077** | Chooser Legacy card; Custom deep catalogs per step; layer nav primary/outline parity |
+| **TASK-640** | DEV-V-013 **T075–T077** | Chooser Legacy card; Custom deep catalogs per step; layer-nav placement (T077 expand hatch superseded by TASK-695 — not footer primary) |
 | **TASK-641** | DEV-V-013 **T078** | Species L2: all species + Mixed Species card + Create Species (`GuidedLayerNav`, not footer); guided mixed Ancestry flow |
 | **TASK-670** | DEV-V-013 **T079** | Mixed species skill picks: guided cards + Advanced/sheet picker rows show skill descriptions (truncated / See more) |
 | **TASK-638** | DEV-V-013 **T072–T074** (+ T001 update) | Chooser Custom → guided Path L3; L1 **Custom Archetype** hatch; L3 type/ability Continue + **View archetype paths** back to L1 |
