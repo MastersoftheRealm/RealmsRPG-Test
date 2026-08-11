@@ -34,6 +34,7 @@
     "src/components/shared/filters/character-filter.tsx",
     "src/components/shared/filters/chip-select.tsx",
     "src/components/shared/filters/filter-section.tsx",
+    "src/components/shared/filters/filter-native-select.tsx",
     "src/components/shared/filters/filter-utils.ts",
     "src/components/shared/filters/index.ts",
     "src/components/shared/filters/power-technique-filters.tsx",
