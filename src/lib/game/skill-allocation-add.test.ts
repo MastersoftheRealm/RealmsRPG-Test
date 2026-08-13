@@ -39,7 +39,7 @@ describe('skill-allocation-add', () => {
       new Set(['10']),
       { '10': 0 }
     );
-    expect(rows).toEqual([{ id: '10', name: 'Athletics', prof: false }]);
+    expect(rows).toEqual([{ id: '10', name: 'Athletics', prof: true }]);
   });
 
   it('buildExistingSkillNames resolves names from ids', () => {
