@@ -219,7 +219,8 @@ export function GuidedInlineCatalogList({
                         </IconButton>
                       )
                     }
-                    rowChrome={showQuantity ? { rightSlot: true } : undefined}
+                    rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined}
+                    rowChrome={{ rightSlot: true }}
                     compact
                   />
                 );

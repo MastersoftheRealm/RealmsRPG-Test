@@ -4,14 +4,18 @@
  * Row actions (rightSlot, edit, delete, selection) render outside the inner CSS grid.
  * ListHeader must reserve the same flex footprint so `fr` columns line up with row values.
  *
- * **Spacing + rowChrome contract (TASK-631 / TASK-637):** Library / Official / Codex / USM /
- * creator-embedded GLR lists use `flex flex-col gap-1` row containers; edit/delete/add/
- * leftSlot/rightSlot must pass matching `rowChrome` on ListHeader (or `rightSlotWidth` for
- * equipment-step qty/remove). When header reserves a slot but row content is conditional
- * (e.g. patch sync), pass the same `rowChrome` on `GridListRow` so empty rows keep alignment.
- * No leftover 40px grid tracks. CI: `validate-glr-chrome-spacing.test.ts`.
+ * **Spacing + rowChrome contract (TASK-631 / TASK-637 / TASK-702):** Library / Official /
+ * Codex / USM / creator-embedded GLR lists use `flex flex-col gap-1` row containers;
+ * edit/delete/add/leftSlot/rightSlot must pass matching `rowChrome` on ListHeader (or
+ * `rightSlotWidth` for quantity/remove). When header reserves a slot but row content is
+ * conditional (e.g. patch sync), pass the same `rowChrome` on `GridListRow` so empty rows
+ * keep alignment. External chrome is a sibling of collapsed+expanded (self-start) so
+ * SelectionToggle / qty never overlay the description; hover lives on the outer chrome
+ * wrapper so the right track shares the highlight band. Quantity mode: pass the same
+ * `rightSlotWidth` on ListHeader + GridListRow (USM uses 7.5rem). No leftover 40px grid
+ * tracks. CI: `validate-glr-chrome-spacing.test.ts`.
  *
- * Widths mirror classes in `grid-list-row.tsx` (w-8, w-[4rem] mr-2, w-9, w-11).
+ * Widths mirror ListHeader spacers / `GridListRowExternalChrome` in grid-list-row-collapsed.
  */
 
 /** Matches GridListRow leftSlot wrapper: w-8 min-w-[2rem] */
@@ -33,9 +37,10 @@ export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = '2.75rem';
  * Grid track appended for inline selection toggles — pair with `ListHeader hasSelectionColumn`
  * on **custom** Modal / editor-chrome GridListRow lists (e.g. AdminTraits choice-option
  * picker — intentional nested editor chrome, not an add-X USM; TASK-572).
- * Do **not** pre-wrap columns passed into `UnifiedSelectionModal` — it applies
- * `gridColumnsWithInlineSelection` internally. Encounter participant pick uses
- * `AddCombatantModal` (non-USM; no GridListRow selection column).
+ * Do **not** pre-wrap columns passed into `UnifiedSelectionModal` — USM selection chrome
+ * is `rowChrome.externalSelection` (TASK-702), not an inline grid track. Quantity mode
+ * uses matching `rightSlotWidth` (`USM_QUANTITY_RIGHT_SLOT_WIDTH`) on header + row.
+ * Encounter participant pick uses `AddCombatantModal` (non-USM; no GridListRow selection column).
  * Matches `GridListRow` inline selection wrapper (`min-w-[44px] w-11`).
  */
 export const GRID_LIST_INLINE_SELECTION_COLUMN_TRACK = GRID_LIST_ROW_SELECTION_COLUMN_WIDTH;

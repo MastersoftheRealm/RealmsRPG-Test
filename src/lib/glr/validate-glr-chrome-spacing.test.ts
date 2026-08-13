@@ -12,6 +12,7 @@ import {
   validateGlrListClassName,
   validateMyLibraryEntityTabSource,
   validateUsmListShellSource,
+  validateUsmQuantityChromeSource,
 } from './validate-glr-chrome-spacing';
 
 const repoRoot = path.resolve(__dirname, '../../..');
@@ -129,6 +130,34 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
       `<div className="space-y-1 min-w-0">{filteredItems.map`
     );
     expect(errors.some((e) => e.includes(DEFAULT_USM_LIST_CLASSNAME))).toBe(true);
+  });
+
+  it('flags USM list that still appends an inline selection track', () => {
+    const errors = validateUsmListShellSource(
+      'unified-selection-modal-list.tsx',
+      `<div className="${DEFAULT_USM_LIST_CLASSNAME}">{filteredItems.map(item => gridColumnsWithInlineSelection(gridColumns)`
+    );
+    expect(errors.some((e) => e.includes('externalSelection') || e.includes('inline selection'))).toBe(
+      true
+    );
+  });
+
+  it('flags quantity chrome missing matching rightSlotWidth on header+row', () => {
+    const errors = validateUsmQuantityChromeSource(
+      'guided-inline-catalog-list.tsx',
+      `<ListHeader rightSlotWidth={RIGHT_SLOT_WIDTH} /><GridListRow rightSlot={<Qty />} />`
+    );
+    expect(errors.some((e) => e.includes('USM_QUANTITY_RIGHT_SLOT_WIDTH'))).toBe(true);
+  });
+
+  it('accepts quantity chrome when header and row share USM_QUANTITY_RIGHT_SLOT_WIDTH', () => {
+    expect(
+      validateUsmQuantityChromeSource(
+        'unified-selection-modal-list.tsx',
+        `<ListHeader rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined} />
+         <GridListRow rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined} />`
+      )
+    ).toEqual([]);
   });
 
   it('registered GLR shells and browse lists satisfy chrome + spacing contract', () => {

@@ -237,16 +237,17 @@ export function ListHeader({
   if (rightSlotWidth) {
     return (
       <>
-        {/* Desktop: grid header */}
-        <div className="hidden lg:flex items-stretch w-full mb-2">
+        {/* Desktop: full-width header bar including qty chrome spacer (TASK-702) */}
+        <div
+          className={cn(
+            'hidden lg:flex items-stretch w-full mb-2 overflow-hidden',
+            headerBarSurface,
+            headerTypography,
+            className
+          )}
+        >
           <div
-            className={cn(
-              'flex-1 min-w-0 grid gap-2 py-2 rounded-lg',
-              headerBarSurface,
-              headerTypography,
-              'px-3 min-w-0',
-              className
-            )}
+            className={cn('flex-1 min-w-0 grid gap-2 py-2', 'px-3 min-w-0')}
             style={{ gridTemplateColumns: gridTemplate }}
           >
             {headerContent}

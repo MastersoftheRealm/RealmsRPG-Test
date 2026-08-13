@@ -2,7 +2,6 @@
 
 import { Alert } from '@/components/ui';
 import { GridListRow } from './grid-list-row';
-import { gridColumnsWithInlineSelection } from './grid-list-row-chrome';
 import { ListHeader } from './list-header';
 import { EmptyState, LoadingState } from './list-components';
 import { QuantitySelector } from './quantity-selector';
@@ -11,7 +10,8 @@ import type { SortState } from '@/components/shared/list-header';
 import type { ColumnHeader, SelectableItem } from './unified-selection-modal-types';
 
 /** Far-right quantity stepper width (replaces selection + when showQuantity).
- * Fits ValueStepper md (2×32px + value) on desktop and 44px touch targets on mobile (TASK-688). */
+ * Fits ValueStepper md (2×32px + value) on desktop and 44px touch targets on mobile (TASK-688).
+ * Must match GridListRow `rightSlotWidth` and ListHeader `rightSlotWidth` (TASK-702). */
 export const USM_QUANTITY_RIGHT_SLOT_WIDTH = '7.5rem';
 
 export interface UnifiedSelectionModalListProps {
@@ -84,15 +84,10 @@ export function UnifiedSelectionModalList({
                   totalCost={item.totalCost}
                   costLabel={item.costLabel}
                   badges={item.badges}
-                  gridColumns={
-                    showQuantity
-                      ? gridColumns
-                      : gridColumns
-                        ? gridColumnsWithInlineSelection(gridColumns)
-                        : undefined
-                  }
+                  gridColumns={gridColumns}
                   // Quantity-first: stepper on the far right replaces the + selection toggle
-                  // (TASK-685). Row click is disabled — only the stepper changes amount.
+                  // (TASK-685). Selection + is external chrome (not an inline grid track) so
+                  // expand never paints under the toggle (TASK-702).
                   selectable={!showQuantity}
                   isSelected={isSelected}
                   onSelect={() => onToggleSelection(item.id)}
@@ -114,7 +109,12 @@ export function UnifiedSelectionModalList({
                       />
                     ) : undefined
                   }
-                  rowChrome={showQuantity ? { rightSlot: true } : undefined}
+                  rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined}
+                  rowChrome={
+                    showQuantity
+                      ? { rightSlot: true }
+                      : { externalSelection: true }
+                  }
                 />
               </div>
             );
@@ -172,7 +172,8 @@ export function UnifiedSelectionModalColumnHeaders({
         gridColumns={gridColumns}
         sortState={sortState}
         onSort={onSort}
-        hasSelectionColumn={!showQuantity}
+        hasSelectionColumn={false}
+        rowChrome={showQuantity ? undefined : { externalSelection: true }}
         rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined}
         hasThumbnailColumn={hasThumbnailColumn}
         compact

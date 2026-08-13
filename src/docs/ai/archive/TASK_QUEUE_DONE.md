@@ -1,3 +1,57 @@
+- id: TASK-702
+  title: GLR right-chrome — expand overlay, quantity header alignment, hover bleed
+  created_at: 2026-08-10
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-08-11
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-685
+    - TASK-688
+    - TASK-674
+    - TASK-709
+  related_files:
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/grid-list-row-collapsed.tsx
+    - src/components/shared/grid-list-row-expanded.tsx
+    - src/components/shared/grid-list-row-types.ts
+    - src/components/shared/grid-list-row-chrome.ts
+    - src/components/shared/list-header.tsx
+    - src/components/shared/unified-selection-modal-list.tsx
+    - src/components/shared/guided-choice/guided-inline-catalog-list.tsx
+    - src/components/shared/selection-toggle.tsx
+    - src/components/shared/quantity-selector.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    Shared GridListRow right chrome has multiple Custom L3 / equipment regressions: (1) the
+    `+` SelectionToggle column blacks out / covers the expanded description panel (does not
+    happen with remove `X`); may affect any GLR with interactive right chrome. (2) Equipment
+    quantity mode: ListHeader strip must span the full row with titles aligned to columns;
+    far-right quantity stepper is clipped / too far right and feels bolted on despite being
+    the intended sitewide add replacement. (3) Row hover background stops before the quantity
+    stepper (does not extend behind it). Fix once in GridListRow / ListHeader /
+    USM_QUANTITY_RIGHT_SLOT_WIDTH patterns so Library USM, guided inline catalogs, and sheet
+    lists inherit — screenshot-verify.
+  acceptance_criteria:
+    - Expanding a selectable (+ chrome) row: expanded body fully readable; + does not overlay/black-out description (z-index / layout / sticky stacking fixed in shared row).
+    - Quantity mode: header bar full-width; column titles align with row cells; stepper fully visible (not clipped) with reserved chrome matching ListHeader `rightSlotWidth`.
+    - Hover/selected highlight extends through the quantity / right-slot track (same band as the name/columns).
+    - Remove-`X` and energy rightSlots remain correct; no regression on non-quantity selection +.
+    - Chrome/spacing CI (`validate-glr-chrome-spacing`) updated if norms change; DEV-V-050 / DEV-V-034 notes; build/typecheck/lint pass.
+  completed_work: |
+    - Restructured GridListRow: external right chrome (selection/qty/edit/delete) is a sibling of collapsed+expanded with self-start — + no longer overlays description.
+    - Hover band moved to outer chrome wrapper so quantity/right-slot shares highlight with name/columns.
+    - ListHeader quantity mode: header bar surface spans full width including rightSlotWidth spacer.
+    - USM/guided quantity: GridListRow rightSlotWidth matches USM_QUANTITY_RIGHT_SLOT_WIDTH (7.5rem); selection uses externalSelection (not inline grid track).
+    - DEV-V-034-T001 + DEV-V-050-T001 chrome notes; FEATURE_INDEX chrome CI refs TASK-702.
+  notes: |
+    Owner 2026-08-10 — screenshot-friendly. Prefer fixing shared layout over guided-only CSS.
+    Hover currently applies on the inner clickable grid (`hover:bg-surface-alt`) while rightSlot
+    sits outside that node — likely the hover bleed root cause. Slice of TASK-709 L3 parity.
+
+---
 ﻿- id: TASK-699
   title: Sitewide DescriptorChip slightly larger / more readable
   created_at: 2026-08-10

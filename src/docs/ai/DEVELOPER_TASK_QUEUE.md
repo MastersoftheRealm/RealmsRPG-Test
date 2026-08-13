@@ -148,6 +148,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **TASK-702** | DEV-V-034 **T001** + DEV-V-050 **T001** step 5 (+ expand spot-check) | GLR right chrome: expand a selectable (+) row — description fully readable (no + overlay); gear quantity ListHeader bar full-width + titles align; hover extends through qty/right-slot; remove-X / energy slots still correct |
 | **TASK-699** | DEV-V-050 **T001** step 9 + `/dev/styleguide` | Descriptor + expandable + pill chips in entity rows share readable inline size (`text-sm`, `px-2.5 py-1`); filter toolbar pills stay smaller `sm`; GLR expanded rows do not overflow badly |
 | **TASK-708** | DEV-V-050 **T002** step 4 | Guided/custom Powers L2/L3 Energy column matches Official Realms Library for the same power id (no false `0` when Library shows positive EN). Spot-check a columnar power with damage scalars + a martial technique. |
 | **TASK-701** | DEV-V-050 **T001–T002** + DEV-V-009 **T017** | Weapon/shield Range: Melee when no Range property (never `0`); ranged shows `8 spaces` / `16 spaces` from properties (not raw level ints). Spot-check guided L2/L3, Library Official armaments, sheet weapon/shield library rows. |

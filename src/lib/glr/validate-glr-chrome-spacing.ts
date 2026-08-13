@@ -15,6 +15,7 @@ import {
   CODEX_BROWSE_SHELL_SOURCES,
   MY_LIBRARY_ENTITY_TAB_SOURCES,
   USM_LIST_SHELL_SOURCES,
+  USM_QUANTITY_CHROME_SOURCES,
 } from './glr-chrome-spacing-norms';
 
 export interface RowChromeFlags {
@@ -392,6 +393,35 @@ export function validateUsmListShellSource(
   }
 
   errors.push(...validateGlrListClassName(className, `${relativePath} USM list container`));
+
+  // TASK-702: selection + is external chrome, not an appended grid track.
+  if (source.includes('gridColumnsWithInlineSelection')) {
+    errors.push(
+      `${relativePath}: USM must not append inline selection tracks — use rowChrome.externalSelection`
+    );
+  }
+  if (!/externalSelection:\s*true/.test(source)) {
+    errors.push(`${relativePath}: USM selection chrome must use rowChrome.externalSelection`);
+  }
+
+  return errors;
+}
+
+const USM_QTY_RIGHT_SLOT_WIDTH_EXPR =
+  /rightSlotWidth=\{showQuantity \? USM_QUANTITY_RIGHT_SLOT_WIDTH/g;
+
+/** ListHeader + GridListRow quantity chrome must share `USM_QUANTITY_RIGHT_SLOT_WIDTH`. */
+export function validateUsmQuantityChromeSource(
+  relativePath: string,
+  source: string
+): string[] {
+  const errors: string[] = [];
+  const matches = source.match(USM_QTY_RIGHT_SLOT_WIDTH_EXPR) ?? [];
+  if (matches.length < 2) {
+    errors.push(
+      `${relativePath}: ListHeader and GridListRow must both pass rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH} (TASK-702)`
+    );
+  }
   return errors;
 }
 
@@ -443,6 +473,10 @@ export function scanGlrChromeSpacingSources(
 
   for (const path of USM_LIST_SHELL_SOURCES) {
     errors.push(...validateUsmListShellSource(path, readFile(path)));
+  }
+
+  for (const path of USM_QUANTITY_CHROME_SOURCES) {
+    errors.push(...validateUsmQuantityChromeSource(path, readFile(path)));
   }
 
   for (const path of CREATOR_EMBEDDED_GLR_SOURCES) {
