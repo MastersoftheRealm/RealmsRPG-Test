@@ -12,6 +12,7 @@
 import type { DefenseSkills } from '@/types';
 import type { Item } from '@/types/equipment';
 import type { CoreRulesMap, SkillsAndDefensesRules } from '@/types/core-rules';
+import { calculateSkillPointsForEntity } from './formulas';
 
 // =============================================================================
 // Constants (defaults — match SKILLS_AND_DEFENSES seed / Supabase core_rules)
@@ -118,16 +119,14 @@ export function resolveSkillAllocationRules(rules?: Partial<CoreRulesMap>): Skil
 /**
  * Get total skill points for an entity at a given level.
  * Characters: 3 * level. Creatures: 5 + 3 * (level - 1).
+ * Delegates to `calculateSkillPointsForEntity` so there is one implementation.
  */
 export function getTotalSkillPoints(
   level: number,
-  entityType: 'character' | 'creature'
+  entityType: 'character' | 'creature',
+  rules?: Partial<CoreRulesMap>
 ): number {
-  const parsedLevel = Math.max(1, Math.floor(level));
-  if (entityType === 'creature') {
-    return CREATURE_SKILL_POINTS.base + CREATURE_SKILL_POINTS.perLevel * (parsedLevel - 1);
-  }
-  return CHARACTER_SKILL_POINTS_PER_LEVEL * parsedLevel;
+  return calculateSkillPointsForEntity(level, entityType, rules);
 }
 
 /**
@@ -148,18 +147,21 @@ export function getSkillValueIncreaseCost(
 /**
  * Can we increase a defense bonus?
  * - Costs defenseIncreaseCost skill points
- * - Defense bonus from skill points cannot exceed level
+ * - Only the Skill-Point portion of the Defense Bonus is capped at character level;
+ *   the ability-derived portion is unrestricted (GAME_RULES "Defense bonus cap").
+ *
+ * @param currentSkillPointDefense Defense Bonus bought with Skill Points (not including the Ability).
+ * @param abilityBonus Accepted for call-site compatibility; deliberately not part of the cap.
  */
 export function canIncreaseDefense(
-  currentDefenseBonus: number,
+  currentSkillPointDefense: number,
   level: number,
   abilityBonus: number,
   availablePoints: number,
   skillRules?: SkillAllocationRules
 ): boolean {
   const r = skillRules ?? DEFAULT_SKILL_ALLOCATION_RULES;
-  const totalBonus = currentDefenseBonus + abilityBonus;
-  if (totalBonus >= level) return false;
+  if (currentSkillPointDefense >= level) return false;
   return availablePoints >= r.defenseIncreaseCost;
 }
 
@@ -261,7 +263,10 @@ export function calculateSimpleSkillPointsSpent(
     }
   }
   if (defenseSkills) {
-    const defenseTotal = Object.values(defenseSkills).reduce((a, b) => a + b, 0);
+    const defenseTotal = Object.values(defenseSkills).reduce(
+      (sum: number, value) => sum + (Number.isFinite(value) ? value : 0),
+      0
+    );
     spent += defenseTotal * r.defenseIncreaseCost;
   }
   return spent;

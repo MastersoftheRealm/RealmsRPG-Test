@@ -18,6 +18,7 @@ import {
   calculateMaxCharacterFeats,
   calculateProficiency,
   calculateSkillPointsForEntity,
+  calculateXpToLevelUp,
   resolveParentSkillNameForSubSkill,
 } from '@/lib/game/formulas';
 import { getArchetypeCodexLookupId, mergeArchetypeFromCodex } from '@/lib/game/archetype-display';
@@ -230,10 +231,7 @@ export function useCharacterSheetDerived({
       0
     );
 
-    const rawTotalSkillPoints = 2 + level * 3;
-    const speciesSkillCount = characterSpeciesSkills.filter((id) => id !== '0').length;
-    const hasAnySpeciesSkill = characterSpeciesSkills.some((id) => id === '0');
-    const totalSkillPoints = rawTotalSkillPoints - speciesSkillCount + (hasAnySpeciesSkill ? 1 : 0);
+    const totalSkillPoints = calculateSkillPointsForEntity(level, 'character', rules);
 
     const skillsList = (character.skills || []) as Array<{
       skill_val?: number;
@@ -281,7 +279,7 @@ export function useCharacterSheetDerived({
 
     const level = character.level || 1;
     const xp = character.experience ?? 0;
-    const canLevelUp = xp >= level * 4;
+    const canLevelUp = xp >= calculateXpToLevelUp(level);
 
     const totalAbilityPoints = calculateAbilityPoints(level, false, rules);
     const currentAbilities = character.abilities || {};
@@ -295,10 +293,7 @@ export function useCharacterSheetDerived({
     const spentHEPoints = (character.healthPoints || 0) + (character.energyPoints || 0);
     const hePointsRemaining = totalHEPoints - spentHEPoints;
 
-    const rawTotalSkillPoints = 2 + level * 3;
-    const speciesCount = characterSpeciesSkills.filter((id) => id !== '0').length;
-    const hasAnySpeciesSkill = characterSpeciesSkills.some((id) => id === '0');
-    const totalSkillPoints = rawTotalSkillPoints - speciesCount + (hasAnySpeciesSkill ? 1 : 0);
+    const totalSkillPoints = calculateSkillPointsForEntity(level, 'character', rules);
     const skillsList = (character.skills || []) as Array<{
       skill_val?: number;
       prof?: boolean;
@@ -372,7 +367,7 @@ export function useCharacterSheetDerived({
     };
   }, [character?.archetypeFeats, character?.feats, featsDb]);
 
-  const stateUsesMax = character ? calculateProficiency(character.level || 1) : 0;
+  const stateUsesMax = character ? calculateProficiency(character.level || 1, false, rules) : 0;
   const stateUsesCurrent = character != null ? (character.stateUsesCurrent ?? stateUsesMax) : 0;
 
   const skills = useMemo((): CharacterSheetSkillRow[] => {
@@ -450,9 +445,6 @@ export function useCharacterSheetDerived({
     });
   }, [character, codexSkills, characterSpeciesSkills]);
 
-  const defaultSkillPointTotal =
-    character != null ? calculateSkillPointsForEntity(character.level || 1, 'character') : 0;
-
   return {
     enrichedData,
     characterSpeciesTraits,
@@ -468,6 +460,5 @@ export function useCharacterSheetDerived({
     stateFeatsList,
     stateUsesMax,
     stateUsesCurrent,
-    defaultSkillPointTotal,
   };
 }

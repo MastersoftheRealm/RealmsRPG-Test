@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_ABILITIES } from '@/types';
-import { useGuidedCreatorStore } from './guided-creator-store';
+import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { GUIDED_SUBSTEP_ORDER, useGuidedCreatorStore } from './guided-creator-store';
+import { buildPathSelectionDraftPatch } from '@/lib/guided-creator/path-selection-draft';
+import { isGuidedDraftSaveable } from '@/lib/guided-creator/substep-satisfaction';
 
 const storage: Record<string, string> = {};
 
@@ -22,7 +25,6 @@ describe('useGuidedCreatorStore resetCreator', () => {
     for (const key of Object.keys(storage)) delete storage[key];
     useGuidedCreatorStore.setState({
       currentSubStep: 'species',
-      completedSubSteps: ['path'],
       draft: {
         ...useGuidedCreatorStore.getState().draft,
         creatorEntryMode: 'custom',
@@ -41,11 +43,9 @@ describe('useGuidedCreatorStore resetCreator', () => {
 
   it('preserves custom entry on Path L3 and clears chapter progress', () => {
     useGuidedCreatorStore.getState().resetCreator();
-    const { currentSubStep, completedSubSteps, draft, entryNonce } =
-      useGuidedCreatorStore.getState();
+    const { currentSubStep, draft, entryNonce } = useGuidedCreatorStore.getState();
 
     expect(currentSubStep).toBe('path');
-    expect(completedSubSteps).toEqual([]);
     expect(entryNonce).toBe(0);
     expect(draft.creatorEntryMode).toBe('custom');
     expect(draft.pathLayer).toBe('l3');
@@ -74,5 +74,53 @@ describe('useGuidedCreatorStore resetCreator', () => {
     expect(draft.pathLayer).toBe('l1');
     expect(draft.archetypePathId).toBeNull();
     expect(draft.archetypeType).toBeNull();
+  });
+});
+
+describe('useGuidedCreatorStore path change blocks Reveal', () => {
+  beforeEach(() => {
+    for (const key of Object.keys(storage)) delete storage[key];
+    useGuidedCreatorStore.getState().resetCreator();
+    useGuidedCreatorStore.setState({
+      currentSubStep: 'reveal',
+      draft: {
+        ...useGuidedCreatorStore.getState().draft,
+        archetypePathId: 'path-a',
+        archetypeType: 'power',
+        pow_abil: 'intelligence',
+        speciesId: 'sp-1',
+        speciesName: 'Elf',
+        selectedAncestryTraitIds: ['trait-1'],
+        selectedCharacteristicId: 'char-1',
+        abilities: { ...DEFAULT_ABILITIES, intelligence: 2 },
+        abilitiesMode: 'recommended',
+        skills: { '10': 0 },
+        archetypeFeatIds: ['feat-a'],
+        characterFeatIds: ['feat-c'],
+        currency: CHARACTER_STARTING_CURRENCY,
+        name: 'Hero',
+        hpAllocated: 3,
+        energyAllocated: 2,
+      },
+    });
+  });
+
+  it('changing path from Foundation re-locks Reveal', () => {
+    const store = useGuidedCreatorStore.getState();
+    expect(isGuidedDraftSaveable(GUIDED_SUBSTEP_ORDER, store.draft)).toBe(true);
+
+    store.setSubStep('path');
+    store.updateDraft(
+      buildPathSelectionDraftPatch('path-a', {
+        id: 'path-b',
+        name: 'Other Path',
+        type: 'martial',
+        mart_abil: 'strength',
+      })
+    );
+
+    const next = useGuidedCreatorStore.getState();
+    expect(next.canNavigateToSubStep('reveal')).toBe(false);
+    expect(isGuidedDraftSaveable(GUIDED_SUBSTEP_ORDER, next.draft)).toBe(false);
   });
 });

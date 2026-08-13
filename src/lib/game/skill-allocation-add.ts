@@ -37,7 +37,9 @@ export function buildCharacterSkillsForSubModal(
     .map((s) => ({
       id: s.id,
       name: s.name,
-      prof: (allocations[String(s.id)] ?? 0) > 0,
+      // A base skill you paid proficiency for but put no ranks in is allocated at 0 and
+      // is proficient — same predicate as `readProficiency` in formulas.ts.
+      prof: (allocations[String(s.id)] ?? 0) >= 0,
     }));
 }
 

@@ -9,12 +9,15 @@ import { saveCharacter } from '@/services/character-service';
 import { apiUpload } from '@/lib/api-client';
 import { getArchetypeCodexLookupId, applyPathProficiencyForLevel } from '@/lib/game/archetype-display';
 import { calculateProficiency } from '@/lib/game/formulas';
+import { computeMaxHealthEnergy } from '@/lib/game/calculations';
+import { ACTION_POINT_DEFAULTS } from '@/lib/game/constants';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 import {
   withSyncedResourceFields,
   notifyLocalResourceEdit,
 } from '@/lib/encounter/character-resource-sync';
 import type { AbilityName, Archetype, Character, CharacterFeat, CharacterTempModifiers } from '@/types';
+import type { CoreRulesMap } from '@/types/core-rules';
 import type { CodexFeat, Trait } from '@/hooks/codex-types';
 import { patchTempModifiers } from '@/lib/character/temp-modifiers';
 import type { CharacterSheetStats } from './use-character-sheet-derived';
@@ -26,6 +29,7 @@ type UseSheetResourceActionsArgs = {
   featsDb: CodexFeat[];
   traitsDb: Trait[];
   codexArchetypes: Archetype[];
+  rules: Partial<CoreRulesMap> | undefined;
   showToast: (message: string, variant?: 'success' | 'error' | 'warning' | 'info') => void;
   user: { uid: string } | null;
   setError: (message: string | null) => void;
@@ -40,6 +44,7 @@ export function useSheetResourceActions({
   featsDb,
   traitsDb,
   codexArchetypes,
+  rules,
   showToast,
   user,
   setError,
@@ -75,7 +80,7 @@ export function useSheetResourceActions({
         notifyLocalResourceEdit(prev.id);
         return {
           ...prev,
-          actionPoints: Math.max(0, Math.min(10, value)),
+          actionPoints: Math.max(0, Math.min(ACTION_POINT_DEFAULTS.MAX_TRACKED, value)),
         };
       });
     },
@@ -212,17 +217,14 @@ export function useSheetResourceActions({
         if (delta <= 0) {
           return { ...prev, healthPoints: newPoints };
         }
-        const level = prev.level || 1;
-        const vitality = prev.abilities?.vitality ?? 0;
-        const oldMax =
-          vitality < 0 ? 8 + vitality + oldPoints : 8 + vitality * level + oldPoints;
+        const { maxHealth: oldMax } = computeMaxHealthEnergy(prev, rules);
         const currentHP = prev.currentHealth ?? prev.health?.current ?? oldMax;
         const shouldBump = currentHP >= oldMax;
         const newCurrent = shouldBump ? currentHP + delta : currentHP;
         return withSyncedResourceFields({ ...prev, healthPoints: newPoints }, { currentHealth: newCurrent });
       });
     },
-    [character, setCharacter],
+    [character, setCharacter, rules],
   );
 
   const handleEnergyPointsChange = useCallback(
@@ -236,17 +238,14 @@ export function useSheetResourceActions({
         if (delta <= 0) {
           return { ...prev, energyPoints: newPoints };
         }
-        const level = prev.level || 1;
-        const powerAbil = prev.pow_abil?.toLowerCase() as AbilityName | undefined;
-        const powerVal = powerAbil ? (prev.abilities?.[powerAbil] ?? 0) : 0;
-        const oldMax = powerVal * level + oldPoints;
+        const { maxEnergy: oldMax } = computeMaxHealthEnergy(prev, rules);
         const currentEN = prev.currentEnergy ?? prev.energy?.current ?? oldMax;
         const shouldBump = currentEN >= oldMax;
         const newCurrent = shouldBump ? currentEN + delta : currentEN;
         return withSyncedResourceFields({ ...prev, energyPoints: newPoints }, { currentEnergy: newCurrent });
       });
     },
-    [character, setCharacter],
+    [character, setCharacter, rules],
   );
 
   const handleFullRecovery = useCallback(() => {
@@ -299,7 +298,7 @@ export function useSheetResourceActions({
       });
     }
 
-    const stateUsesMaxRec = calculateProficiency(character.level || 1);
+    const stateUsesMaxRec = calculateProficiency(character.level || 1, false, rules);
     setCharacter((prev) =>
       prev
         ? withSyncedResourceFields(
@@ -320,7 +319,7 @@ export function useSheetResourceActions({
     );
 
     showToast('Full recovery complete!', 'success');
-  }, [character, calculatedStats, traitsDb, featsDb, showToast, setCharacter]);
+  }, [character, calculatedStats, traitsDb, featsDb, rules, showToast, setCharacter]);
 
   const handlePartialRecovery = useCallback(
     (hpRestored: number, enRestored: number, resetPartialFeats: boolean) => {

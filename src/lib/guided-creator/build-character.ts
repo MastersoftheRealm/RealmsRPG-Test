@@ -20,12 +20,16 @@ import type {
   Item,
 } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
-import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
+import { calculateMaxHealth, calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
 import type { Species } from '@/hooks';
 import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
-import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
+import {
+  clampSavedCurrency,
+  computeStartingCurrency,
+} from '@/lib/guided-creator/equipment-currency';
+import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
 import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
@@ -171,7 +175,13 @@ export function buildGuidedCharacterPayload(
     ctx.rules,
     martAbil
   );
-  const maxEnergy = calculateMaxEnergy(enAlloc, powAbil || martAbil, abilities, level);
+  const maxEnergy = calculateMaxEnergyForArchetype(
+    enAlloc,
+    abilities,
+    level,
+    powAbil,
+    martAbil
+  );
 
   const mixedPhysical =
     draft.speciesMixed && ctx.speciesA && ctx.speciesB
@@ -233,6 +243,7 @@ export function buildGuidedCharacterPayload(
   const skillsArray = buildCreatorSkillSaveRows(skillsForSave, {
     speciesSkillIds,
     codexSkills: ctx.codexSkills ?? [],
+    abilities,
   });
 
   // Lean save refs — resolve feat names from codex (same pattern as powers/techniques).
@@ -333,14 +344,25 @@ export function buildGuidedCharacterPayload(
   });
 
   const startingCurrency = computeStartingCurrency(level);
-  const savedCurrency =
-    typeof draft.currency === 'number' ? draft.currency : startingCurrency;
+  const savedCurrency = clampSavedCurrency(
+    typeof draft.currency === 'number' ? draft.currency : startingCurrency
+  );
+  const { pow_prof, mart_prof } = resolveArchetypeProficiencyStart(type, ctx.archetype);
 
   // DESIGN_INTENT: same libraryTabVisibility prefs as sheet eye toggle (TASK-501).
   const libraryTabVisibility = defaultLibraryTabVisibilityForArchetype(type);
 
   const archetypePayload = ctx.archetype
-    ? { id: String(ctx.archetype.id), type }
+    ? {
+        id: String(ctx.archetype.id),
+        type,
+        ...(ctx.archetype.power_prof_start != null
+          ? { power_prof_start: ctx.archetype.power_prof_start }
+          : {}),
+        ...(ctx.archetype.martial_prof_start != null
+          ? { martial_prof_start: ctx.archetype.martial_prof_start }
+          : {}),
+      }
     : { id: type, type };
 
   return {
@@ -352,8 +374,8 @@ export function buildGuidedCharacterPayload(
     archetype: archetypePayload,
     ...(powAbil && { pow_abil: powAbil }),
     ...(martAbil && { mart_abil: martAbil }),
-    mart_prof: type === 'martial' ? 2 : type === 'powered-martial' ? 1 : 0,
-    pow_prof: type === 'power' ? 2 : type === 'powered-martial' ? 1 : 0,
+    mart_prof,
+    pow_prof,
     healthPoints: hpAlloc,
     energyPoints: enAlloc,
     currentHealth: maxHealth,

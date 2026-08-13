@@ -29,6 +29,10 @@ import {
 } from '@/lib/guided-creator/guided-substep-nav';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { buildCreatorResetDraftPatch } from '@/lib/guided-creator/path-selection-draft';
+import {
+  canOpenGuidedSubStep,
+  isGuidedSubStepSatisfied,
+} from '@/lib/guided-creator/substep-satisfaction';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 
 const chapterCopy = GUIDED_CREATOR_COPY.chapters;
@@ -107,25 +111,6 @@ export const GUIDED_CHAPTERS: GuidedChapterMeta[] = [
 /** Flat, ordered list of sub-steps derived from the chapter backbone. */
 export const GUIDED_SUBSTEP_ORDER: GuidedSubStep[] = GUIDED_CHAPTERS.flatMap((c) => c.subSteps);
 
-export const GUIDED_SUBSTEP_LABELS: Record<GuidedSubStep, string> = {
-  path: 'Path',
-  species: 'Species',
-  ancestry: 'Ancestry',
-  abilities: 'Abilities',
-  skills: 'Skills',
-  'archetype-feats': 'Archetype Feats',
-  'character-feat': 'Character Feat',
-  loadout: 'Loadout',
-  'powers-techniques': 'Powers & Techniques',
-  reveal: 'Your Hero',
-};
-
-export function getChapterForSubStep(subStep: GuidedSubStep): GuidedChapterMeta {
-  return (
-    GUIDED_CHAPTERS.find((c) => c.subSteps.includes(subStep)) ?? GUIDED_CHAPTERS[0]
-  );
-}
-
 /** Path step catalog face: L1 = path cards; L3 = custom archetype (no distinct L2). */
 export type GuidedPathLayer = 'l1' | 'l3';
 
@@ -185,7 +170,11 @@ export interface GuidedDraft {
   /** Combined weapons/shields/armor — kept in sync for legacy callers. */
   armaments: PathItemRecommendation[];
   equipment: PathItemRecommendation[];
-  /** Remaining currency after weapon/armor purchases (starts at 200). */
+  /**
+   * Signed remaining Currency after weapon/armor/gear spend. LoadoutStep syncs this
+   * as picks change so the rail can lock on overspend (`currency >= 0`). The saved
+   * character clamps at 0 via `clampSavedCurrency`.
+   */
   currency: number;
   /** 0 = not taken; level 1 at character creation when path recommends unarmed. */
   unarmedProwess: number;
@@ -264,7 +253,6 @@ function cloneInitialDraft(): GuidedDraft {
 
 interface GuidedCreatorState {
   currentSubStep: GuidedSubStep;
-  completedSubSteps: GuidedSubStep[];
   draft: GuidedDraft;
   /**
    * How the current sub-step was entered (multi-screen steps use this for landing):
@@ -282,20 +270,20 @@ interface GuidedCreatorState {
   setSubStep: (subStep: GuidedSubStep) => void;
   nextSubStep: () => void;
   prevSubStep: () => void;
-  markSubStepComplete: (subStep: GuidedSubStep) => void;
+  /** Derived: does the draft carry this step's required picks? (no stored progress list) */
+  isSubStepSatisfied: (subStep: GuidedSubStep) => boolean;
   canNavigateToSubStep: (subStep: GuidedSubStep) => boolean;
   updateDraft: (partial: Partial<GuidedDraft>) => void;
   resetCreator: () => void;
 }
 
 /** Bump when persisted draft shape changes; old versions migrate forward. */
-const GUIDED_STORE_SCHEMA_VERSION = 11;
+const GUIDED_STORE_SCHEMA_VERSION = 12;
 
 export const useGuidedCreatorStore = create<GuidedCreatorState>()(
   persist(
     (set, get) => ({
       currentSubStep: 'path',
-      completedSubSteps: [],
       draft: cloneInitialDraft(),
       navigationIntent: 'forward',
       entryNonce: 0,
@@ -314,7 +302,6 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         const current = get().currentSubStep;
         const next = nextGuidedSubStep(current, GUIDED_SUBSTEP_ORDER);
         if (!next) return;
-        get().markSubStepComplete(current);
         set((state) => ({
           currentSubStep: next,
           navigationIntent: 'forward',
@@ -333,23 +320,17 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         }));
       },
 
-      markSubStepComplete: (subStep) => {
-        const completed = get().completedSubSteps;
-        if (!completed.includes(subStep)) {
-          set({ completedSubSteps: [...completed, subStep] });
-        }
-      },
+      isSubStepSatisfied: (subStep) => isGuidedSubStepSatisfied(subStep, get().draft),
 
+      /**
+       * Derived from the draft, not from visit history: a step opens only while every step
+       * ahead of it still holds its required picks. Clearing a chapter (path/species change)
+       * therefore re-locks everything downstream instead of leaving a stale ✓ behind.
+       */
       canNavigateToSubStep: (subStep) => {
-        const targetIdx = GUIDED_SUBSTEP_ORDER.indexOf(subStep);
-        if (targetIdx <= 0) return true;
-        // Allow navigating to any already-completed step, the current step,
-        // or the immediate next step after the furthest completed one.
-        const { completedSubSteps, currentSubStep } = get();
+        const { currentSubStep, draft } = get();
         if (subStep === currentSubStep) return true;
-        if (completedSubSteps.includes(subStep)) return true;
-        const prev = GUIDED_SUBSTEP_ORDER[targetIdx - 1];
-        return completedSubSteps.includes(prev);
+        return canOpenGuidedSubStep(subStep, GUIDED_SUBSTEP_ORDER, draft);
       },
 
       updateDraft: (partial) => {
@@ -365,7 +346,6 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         const { creatorEntryMode } = get().draft;
         set({
           currentSubStep: 'path',
-          completedSubSteps: [],
           draft: {
             ...cloneInitialDraft(),
             ...buildCreatorResetDraftPatch(creatorEntryMode),
@@ -381,19 +361,18 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         currentSubStep: state.currentSubStep,
-        completedSubSteps: state.completedSubSteps,
         draft: state.draft,
       }),
       migrate: (persisted, version) => {
         if (!persisted || typeof persisted !== 'object') {
           return {
             currentSubStep: 'path' as GuidedSubStep,
-            completedSubSteps: [] as GuidedSubStep[],
             draft: cloneInitialDraft(),
           };
         }
 
         let state = persisted as GuidedCreatorState & {
+          completedSubSteps?: GuidedSubStep[];
           draft?: GuidedDraft & { skillIds?: string[] };
         };
 
@@ -516,6 +495,14 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
               selectedFlawSpeciesId: state.draft.selectedFlawSpeciesId ?? null,
             },
           };
+        }
+
+        if (version < 12) {
+          // Progress is derived from the draft now (substep-satisfaction), so a recorded
+          // list can only go stale — drop it instead of migrating it forward.
+          const { completedSubSteps: _dropped, ...rest } = state;
+          void _dropped;
+          state = rest as typeof state;
         }
 
         if (version < 3 && state.draft) {

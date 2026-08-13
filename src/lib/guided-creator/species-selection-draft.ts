@@ -10,6 +10,11 @@ function mixedSpeciesDraftId(speciesAId: string, speciesBId: string): string {
   return `mixed:${speciesAId}+${speciesBId}`;
 }
 
+/**
+ * Species change invalidates every ancestry pick. Health/Energy allocation goes with them:
+ * species drives free skills and traits, and leaving `hpAllocated`/`energyAllocated` behind
+ * lets the Reveal save gate pass on a draft with no characteristic and no ancestry trait.
+ */
 function clearAncestryDependentDraftFields(): Partial<GuidedDraft> {
   return {
     selectedSize: null,
@@ -20,6 +25,8 @@ function clearAncestryDependentDraftFields(): Partial<GuidedDraft> {
     selectedSpeciesSkillIds: [],
     selectedSpeciesTraits: [],
     selectedFlawSpeciesId: null,
+    hpAllocated: null,
+    energyAllocated: null,
   };
 }
 

@@ -78,6 +78,7 @@ export function useCharacterSheetPage(id: string) {
     powerPartsDb: data.powerPartsDb,
     techniquePartsDb: data.techniquePartsDb,
     itemPropertiesDb: data.itemPropertiesDb,
+    rules: data.rules,
     showToast: data.showToast,
     user: data.user,
     addModalType: ui.addModalType,

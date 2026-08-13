@@ -56,6 +56,24 @@ describe('buildCreatorSkillSaveRows', () => {
     });
   });
 
+  it('persists the highest linked ability, not the first listed, when abilities are provided', () => {
+    const rows = buildCreatorSkillSaveRows(
+      { '30': 0 },
+      {
+        codexSkills,
+        abilities: {
+          strength: 0,
+          vitality: 0,
+          agility: 0,
+          acuity: 0,
+          intelligence: 3,
+          charisma: 0,
+        },
+      }
+    );
+    expect(rows[0]).toMatchObject({ id: '30', ability: 'intelligence' });
+  });
+
   it('ignores negative allocations', () => {
     const rows = buildCreatorSkillSaveRows({ '10': -1, '20': 0 }, { codexSkills });
     expect(rows.map((r) => r.id)).toEqual(['20']);

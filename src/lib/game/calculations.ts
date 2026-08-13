@@ -71,6 +71,19 @@ export function calculateSpeed(agility: number, speedBase?: number, rules?: Rule
 }
 
 /**
+ * Creature speed: player Speed formula plus the creature size modifier
+ * (Miniscule -3 … Gargantuan +4, `CREATURE_SIZES[].modifier`).
+ */
+export function calculateCreatureSpeed(agility: number, sizeModifier = 0, rules?: Rules): number {
+  return calculateSpeed(agility, undefined, rules) + sizeModifier;
+}
+
+/** Score = 10 + Bonus (GAME_RULES "The Score Pattern") — Defense Score, Martial/Power Potency. */
+export function calculateScoreFromBonus(bonus: number, rules?: Rules): number {
+  return (rules?.COMBAT?.baseDefense ?? COMBAT_DEFAULTS.BASE_SCORE) + bonus;
+}
+
+/**
  * Calculate evasion from agility.
  * Evasion = evasionBase + agility
  */
@@ -96,15 +109,16 @@ export function calculateMaxHealth(
     powAbil?.toLowerCase() === 'vitality' || martAbil?.toLowerCase() === 'vitality';
   const abilityMod = vitalityIsArchetype ? (abilities?.strength || 0) : vitality;
   
-  if (abilityMod < 0) {
-    return baseHealth + abilityMod + healthPoints;
-  } else {
-    return baseHealth + (abilityMod * level) + healthPoints;
-  }
+  const raw =
+    abilityMod < 0
+      ? baseHealth + abilityMod + healthPoints
+      : baseHealth + (abilityMod * level) + healthPoints;
+  return Math.max(0, raw);
 }
 
 /**
- * Calculate max energy from allocated points and abilities.
+ * Calculate max energy from allocated points and a single Archetype Ability name.
+ * Prefer `calculateMaxEnergyForArchetype` when both Power and Martial names are known.
  */
 export function calculateMaxEnergy(
   energyPoints: number,
@@ -113,7 +127,40 @@ export function calculateMaxEnergy(
   level: number
 ): number {
   const abilityMod = abilities?.[archetypeAbility?.toLowerCase() as keyof Abilities] || 0;
-  return (abilityMod * level) + energyPoints;
+  return Math.max(0, (abilityMod * level) + energyPoints);
+}
+
+/**
+ * Archetype Ability used for Energy: the higher of the Power and Martial Archetype
+ * Abilities (GAME_RULES "Archetype Ability" / "Health & Energy Allocation" — a
+ * Powered-Martial path has two, and neither is secondary).
+ */
+export function resolveEnergyArchetypeAbility(
+  abilities: Partial<Abilities>,
+  powAbil: AbilityName | string | undefined,
+  martAbil: AbilityName | string | undefined
+): AbilityName | string | undefined {
+  if (!powAbil) return martAbil;
+  if (!martAbil) return powAbil;
+  const powVal = abilities?.[powAbil.toLowerCase() as keyof Abilities] ?? 0;
+  const martVal = abilities?.[martAbil.toLowerCase() as keyof Abilities] ?? 0;
+  return martVal > powVal ? martAbil : powAbil;
+}
+
+/** Max Energy using the higher of pow/mart Archetype Abilities. */
+export function calculateMaxEnergyForArchetype(
+  energyPoints: number,
+  abilities: Partial<Abilities>,
+  level: number,
+  powAbil: AbilityName | string | undefined,
+  martAbil: AbilityName | string | undefined
+): number {
+  return calculateMaxEnergy(
+    energyPoints,
+    resolveEnergyArchetypeAbility(abilities, powAbil, martAbil),
+    abilities,
+    level
+  );
 }
 
 /**
@@ -206,24 +253,6 @@ export function calculatePowerAttackBonus(charData: Partial<Character>): number 
 }
 
 // =============================================================================
-// Helper Functions
-// =============================================================================
-
-/**
- * Get the current speed base value.
- */
-export function getSpeedBase(charData: Partial<Character>, rules?: Rules): number {
-  return charData?.speedBase ?? rules?.COMBAT?.baseSpeed ?? COMBAT_DEFAULTS.BASE_SPEED;
-}
-
-/**
- * Get the current evasion base value.
- */
-export function getEvasionBase(charData: Partial<Character>, rules?: Rules): number {
-  return charData?.evasionBase ?? rules?.COMBAT?.baseEvasion ?? COMBAT_DEFAULTS.BASE_EVASION;
-}
-
-// =============================================================================
 // Terminal Threshold
 // =============================================================================
 
@@ -298,7 +327,13 @@ export function calculateAllStats(character: Partial<Character>, rules?: Rules):
     rules,
     martAbil
   );
-  const maxEnergy = calculateMaxEnergy(energyPoints, powAbil || martAbil, abilities, level);
+  const maxEnergy = calculateMaxEnergyForArchetype(
+    energyPoints,
+    abilities,
+    level,
+    powAbil,
+    martAbil
+  );
 
   const terminal = calculateTerminal(maxHealth);
 
@@ -348,7 +383,13 @@ export function computeMaxHealthEnergy(
     rules,
     martAbil
   );
-  const maxEnergy = calculateMaxEnergy(energyPoints, powAbil || martAbil, abilities, level);
+  const maxEnergy = calculateMaxEnergyForArchetype(
+    energyPoints,
+    abilities,
+    level,
+    powAbil,
+    martAbil
+  );
 
   return { maxHealth, maxEnergy };
 }

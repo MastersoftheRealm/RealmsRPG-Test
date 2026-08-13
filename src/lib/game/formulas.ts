@@ -40,6 +40,20 @@ export function unproficientBonus(abilityMod: number): number {
 }
 
 // =============================================================================
+// Level parsing
+// =============================================================================
+
+/**
+ * Parse a level input without collapsing 0 to 1. Creature levels are legitimately
+ * sub-1 (¼ / ½ / ¾ — see `creature-level-display.ts`), so `|| 1` would swallow both
+ * 0 and the sub-level branch of every progression function.
+ */
+function parseLevel(level: number): number {
+  const parsed = parseFloat(String(level));
+  return Number.isFinite(parsed) ? parsed : 1;
+}
+
+// =============================================================================
 // Level Progression Calculations
 // =============================================================================
 
@@ -48,7 +62,7 @@ export function unproficientBonus(abilityMod: number): number {
  * Formula: 7 at level 1, +1 at level 3 and each 3 levels (3, 6, 9, 12...)
  */
 export function calculateAbilityPoints(level: number, allowSubLevel = false, rules?: Rules): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
+  const parsedLevel = parseLevel(level);
   const base = rules?.PROGRESSION_PLAYER?.baseAbilityPoints ?? SHARED_CONSTANTS.BASE_ABILITY_POINTS;
   const perIncrease = rules?.PROGRESSION_PLAYER?.abilityPointsPerIncrease ?? SHARED_CONSTANTS.ABILITY_POINTS_PER_3_LEVELS;
   const interval = rules?.PROGRESSION_PLAYER?.abilityPointsEveryNLevels ?? 3;
@@ -72,7 +86,7 @@ export function calculateSkillPointsForEntity(
   entityType: 'character' | 'creature',
   rules?: Rules
 ): number {
-  const parsedLevel = Math.max(1, Math.floor(parseFloat(String(level)) || 1));
+  const parsedLevel = Math.max(1, Math.floor(parseLevel(level)));
   if (entityType === 'creature') {
     const baseSkills = rules?.PROGRESSION_CREATURE?.skillPointsAtLevel1 ?? CREATURE_CONSTANTS.BASE_SKILL_POINTS;
     const perLevel = rules?.PROGRESSION_CREATURE?.skillPointsPerLevel ?? CREATURE_CONSTANTS.SKILL_POINTS_PER_LEVEL;
@@ -91,7 +105,7 @@ export function calculateHealthEnergyPool(
   allowSubLevel = false,
   rules?: Rules
 ): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
+  const parsedLevel = parseLevel(level);
   const basePool = entityType === 'CREATURE'
     ? (rules?.PROGRESSION_CREATURE?.baseHitEnergyPool ?? CREATURE_CONSTANTS.BASE_HIT_ENERGY)
     : (rules?.PROGRESSION_PLAYER?.baseHitEnergyPool ?? PLAYER_CONSTANTS.BASE_HIT_ENERGY);
@@ -103,6 +117,7 @@ export function calculateHealthEnergyPool(
     return Math.ceil(basePool * parsedLevel);
   }
   
+  if (parsedLevel < 1) return 0;
   return basePool + (perLevel * (parsedLevel - 1));
 }
 
@@ -144,7 +159,7 @@ export function pickHighestEnergyCost(picks: EnergyCostPick[]): EnergyCostPick |
  * Formula: 2 + 1 every 5 levels starting at level 5
  */
 export function calculateProficiency(level: number, allowSubLevel = false, rules?: Rules): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
+  const parsedLevel = parseLevel(level);
   const base = rules?.PROGRESSION_PLAYER?.baseProficiency ?? SHARED_CONSTANTS.BASE_PROFICIENCY;
   const perIncrease = rules?.PROGRESSION_PLAYER?.proficiencyPerIncrease ?? SHARED_CONSTANTS.PROFICIENCY_PER_5_LEVELS;
   const interval = rules?.PROGRESSION_PLAYER?.proficiencyEveryNLevels ?? 5;
@@ -176,7 +191,7 @@ export function calculateTrainingPoints(level: number, highestArchetypeAbility =
  * Calculate training points for a creature.
  */
 export function calculateCreatureTrainingPoints(level: number, highestNonVitality = 0, rules?: Rules): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
+  const parsedLevel = parseLevel(level);
   const ability = highestNonVitality || 0;
   const base = rules?.PROGRESSION_CREATURE?.baseTrainingPoints ?? CREATURE_CONSTANTS.BASE_TRAINING_POINTS;
   const perLevel = (rules?.PROGRESSION_CREATURE?.tpPerLevelMultiplier ?? CREATURE_CONSTANTS.TP_PER_LEVEL) + ability;
@@ -193,7 +208,7 @@ export function calculateCreatureTrainingPoints(level: number, highestNonVitalit
  * Calculate creature feat points based on level and martial proficiency.
  */
 export function calculateCreatureFeatPoints(level: number, martialProficiency = 0, rules?: Rules): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
+  const parsedLevel = parseLevel(level);
   const martial = martialProficiency || 0;
   const baseFeat = rules?.PROGRESSION_CREATURE?.baseFeatPoints ?? CREATURE_CONSTANTS.BASE_FEAT_POINTS;
   const perLevel = rules?.PROGRESSION_CREATURE?.featPointsPerLevel ?? CREATURE_CONSTANTS.FEAT_POINTS_PER_LEVEL;
@@ -211,7 +226,7 @@ export function calculateCreatureFeatPoints(level: number, martialProficiency = 
  * Calculate creature currency based on level.
  */
 export function calculateCreatureCurrency(level: number, rules?: Rules): number {
-  const parsedLevel = parseFloat(String(level)) || 1;
+  const parsedLevel = parseLevel(level);
   const baseCurrency = rules?.PROGRESSION_CREATURE?.baseCurrency ?? CREATURE_CONSTANTS.BASE_CURRENCY;
   const growth = rules?.PROGRESSION_CREATURE?.currencyGrowthRate ?? CREATURE_CONSTANTS.CURRENCY_GROWTH;
   return Math.round(baseCurrency * Math.pow(growth, parsedLevel - 1));
@@ -226,12 +241,9 @@ export function calculateMaxArchetypeFeats(
   rules?: Rules
 ): number {
   const parsedLevel = Math.max(1, Math.floor(level));
-  const martialBase = rules?.ARCHETYPES?.martialBonusFeatsBase ?? 2;
-  const martialInterval = rules?.ARCHETYPES?.martialBonusFeatsInterval ?? 3;
   
   if (archetypeType === 'martial') {
-    const martialBonus = martialBase + Math.floor((parsedLevel - 1) / martialInterval);
-    return parsedLevel + martialBonus;
+    return parsedLevel + calculateBonusArchetypeFeats(parsedLevel, rules);
   }
   
   if (archetypeType === 'powered-martial') {
@@ -246,6 +258,11 @@ export function calculateMaxArchetypeFeats(
  */
 export function calculateMaxCharacterFeats(level: number): number {
   return Math.max(1, Math.floor(level));
+}
+
+/** Experience needed to reach the next level: level × 4 (GAME_RULES "Experience"). */
+export function calculateXpToLevelUp(level: number): number {
+  return Math.max(1, Math.floor(parseLevel(level))) * 4;
 }
 
 // =============================================================================
@@ -332,6 +349,27 @@ export function getArchetypeConfig(archetypeType: ArchetypeCategory | string, ru
 export function getArmamentMax(archetype: ArchetypeCategory | { type?: ArchetypeCategory }, rules?: Rules): number {
   const type = typeof archetype === 'string' ? archetype : archetype?.type;
   return getArchetypeConfig(type || 'power', rules).armamentMax;
+}
+
+/**
+ * Level-1 Power / Martial Proficiency: path columns when present, else type defaults
+ * (Power 2/0, Martial 0/2, Powered-Martial 1/1). Shared by Guided save and Advanced
+ * path select so the same codex row cannot produce two different characters.
+ */
+export function resolveArchetypeProficiencyStart(
+  type: ArchetypeCategory | string | null | undefined,
+  archetype?: {
+    power_prof_start?: number | null;
+    martial_prof_start?: number | null;
+  } | null
+): { pow_prof: number; mart_prof: number } {
+  const t = (type || 'power') as ArchetypeCategory;
+  const powDefault = t === 'power' ? 2 : t === 'powered-martial' ? 1 : 0;
+  const martDefault = t === 'martial' ? 2 : t === 'powered-martial' ? 1 : 0;
+  return {
+    pow_prof: archetype?.power_prof_start ?? powDefault,
+    mart_prof: archetype?.martial_prof_start ?? martDefault,
+  };
 }
 
 /**

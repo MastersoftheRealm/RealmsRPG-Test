@@ -16,6 +16,7 @@ import { fileFromCroppedBlob } from '@/lib/crop-image';
 import { useEffectivePortrait } from '@/hooks/use-effective-portrait';
 import { usePortraitFallbackUrl } from '@/hooks/use-portrait-fallback-url';
 import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
+import { calculateXpToLevelUp } from '@/lib/game/formulas';
 import { ArchetypePathGuidance } from './archetype-path-identity';
 
 export function SheetHeaderIdentity({
@@ -51,10 +52,9 @@ export function SheetHeaderIdentity({
   const [isEditingXP, setIsEditingXP] = useState(false);
   const [xpInput, setXpInput] = useState(String(character.experience ?? 0));
 
-  // Check if character can level up (XP >= level * 4)
   const xp = character.experience ?? 0;
   const level = character.level || 1;
-  const canLevelUp = xp >= (level * 4);
+  const canLevelUp = xp >= calculateXpToLevelUp(level);
 
   // Handle XP submission
   const handleXPSubmit = () => {

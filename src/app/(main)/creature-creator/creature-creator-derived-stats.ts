@@ -11,9 +11,11 @@ import {
   calculateAbilityPoints,
   calculateSkillPointsForEntity,
 } from '@/lib/game/formulas';
+import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculations';
+import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
-import { CREATURE_SIZES } from '@/lib/game/creator-constants';
+import { CREATURE_MECHANICAL_FEAT_POINTS, CREATURE_SIZES } from '@/lib/game/creator-constants';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { SENSE_TO_FEAT_ID, MOVEMENT_TO_FEAT_ID } from './creature-creator-constants';
 import type { CreatureState } from './creature-creator-types';
@@ -71,16 +73,24 @@ export function calculateCreatureCreatorStats(
   const abilityPoints = calculateAbilityPoints(level, true, rules);
   const skillPoints = calculateSkillPointsForEntity(Math.max(1, Math.floor(level)), 'creature', rules);
 
-  const maxProficiencyPoints = level < 1 ? Math.ceil(2 * level) : 2 + Math.floor(level / 5);
+  const maxProficiencyPoints = proficiency;
   const proficiencySpent = creature.powerProficiency + creature.martialProficiency;
   const proficiencyRemaining = maxProficiencyPoints - proficiencySpent;
 
   const featPoints = calculateCreatureFeatPoints(level, creature.martialProficiency, rules);
 
-  const resistanceFeatCost = featPointsMap.get(String(CREATURE_FEAT_IDS.RESISTANCE)) ?? 1;
-  const immunityFeatCost = featPointsMap.get(String(CREATURE_FEAT_IDS.IMMUNITY)) ?? 2;
-  const weaknessFeatCost = featPointsMap.get(String(CREATURE_FEAT_IDS.WEAKNESS)) ?? -1;
-  const conditionImmunityFeatCost = featPointsMap.get(String(CREATURE_FEAT_IDS.CONDITION_IMMUNITY)) ?? 1;
+  const resistanceFeatCost =
+    featPointsMap.get(String(CREATURE_FEAT_IDS.RESISTANCE)) ??
+    CREATURE_MECHANICAL_FEAT_POINTS.RESISTANCE;
+  const immunityFeatCost =
+    featPointsMap.get(String(CREATURE_FEAT_IDS.IMMUNITY)) ??
+    CREATURE_MECHANICAL_FEAT_POINTS.IMMUNITY;
+  const weaknessFeatCost =
+    featPointsMap.get(String(CREATURE_FEAT_IDS.WEAKNESS)) ??
+    CREATURE_MECHANICAL_FEAT_POINTS.WEAKNESS;
+  const conditionImmunityFeatCost =
+    featPointsMap.get(String(CREATURE_FEAT_IDS.CONDITION_IMMUNITY)) ??
+    CREATURE_MECHANICAL_FEAT_POINTS.CONDITION_IMMUNITY;
 
   const senseFeatPoints = creature.senses.reduce((sum, sense) => {
     const featId = SENSE_TO_FEAT_ID[sense];
@@ -137,8 +147,8 @@ export function calculateCreatureCreatorStats(
 
   const sizeData = CREATURE_SIZES.find((s) => s.value === creature.size);
   const sizeModifier = sizeData?.modifier || 0;
-  const speed = 6 + Math.ceil(abilities.agility / 2) + sizeModifier;
-  const evasion = 10 + abilities.agility;
+  const speed = calculateCreatureSpeed(abilities.agility, sizeModifier, rules);
+  const evasion = calculateEvasion(abilities.agility, undefined, rules);
 
   const abilitySpent = Object.values(abilities).reduce((sum, val) => sum + val, 0);
   const heSpent = creature.hitPoints + creature.energyPoints;
@@ -152,7 +162,10 @@ export function calculateCreatureCreatorStats(
     }
     return sum + s.value + (s.proficient ? 1 : 0);
   }, 0);
-  const defenseSpent = Object.values(creature.defenses).reduce((sum, val) => sum + val * 2, 0);
+  const defenseSpent = Object.values(creature.defenses).reduce(
+    (sum, val) => sum + val * DEFENSE_INCREASE_COST,
+    0
+  );
 
   return {
     trainingPoints,

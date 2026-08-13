@@ -184,23 +184,12 @@ function getDurationPartInfo(durationType: string): { id: number | string; name:
 // =============================================================================
 
 /**
- * Calculate power damage opt1 level
- * Formula: floor((totalDamage - 4) / 2)
+ * Damage part option-1 level from dice: floor((dice × size − 4) / 2).
+ * 1d4 → 0, 1d6 → 1, 1d8 → 2 … Shared by power damage parts and the technique
+ * Additional Damage part.
  */
-export function calculatePowerDamageLevel(diceAmount: number, dieSize: number): number {
-  const totalDamage = diceAmount * dieSize;
-  return Math.max(0, Math.floor((totalDamage - 4) / 2));
-}
-
-/**
- * Calculate technique additional damage level
- * From technique-calc.ts computeAdditionalDamageLevel
- */
-export function calculateTechniqueDamageLevel(diceAmount: number, dieSize: number): number {
+export function calculateDamageOptionLevel(diceAmount: number, dieSize: number): number {
   if (diceAmount <= 0 || dieSize < 4) return 0;
-  // Match technique-calc computeAdditionalDamageLevel:
-  // level = floor((totalDamage - 4) / 2)
-  // So 1d4 -> 0, 1d6 -> 1, 1d8 -> 2, etc.
   const totalDamage = diceAmount * dieSize;
   return Math.max(0, Math.floor((totalDamage - 4) / 2));
 }
@@ -275,7 +264,7 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
       if (dmg.type === 'none' || dmg.diceAmount <= 0 || dmg.dieSize < 4) continue;
       const partInfo = getPowerDamagePartInfo(dmg.type);
       if (partInfo) {
-        const level = calculatePowerDamageLevel(dmg.diceAmount, dmg.dieSize);
+        const level = calculateDamageOptionLevel(dmg.diceAmount, dmg.dieSize);
         addPart(partInfo.id, partInfo.name, level, dmg.applyDuration);
         
         // Accumulate for split damage
@@ -299,7 +288,7 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
   if (ctx.techniqueDamage) {
     const { diceAmount, dieSize } = ctx.techniqueDamage;
     if (diceAmount > 0 && dieSize >= 4) {
-      const level = calculateTechniqueDamageLevel(diceAmount, dieSize);
+      const level = calculateDamageOptionLevel(diceAmount, dieSize);
       addPart(PART_IDS.ADDITIONAL_DAMAGE, 'Additional Damage', level);
 
       // Split damage dice - use proper computeSplits formula

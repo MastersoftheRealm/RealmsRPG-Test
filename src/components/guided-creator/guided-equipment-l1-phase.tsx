@@ -177,6 +177,19 @@ export function GuidedEquipmentL1Phase({
         }
       }
 
+      const unitCost = resolveCatalogRowUnitCost(catalog.get(normalizeId(ref.id)));
+      const qty = Math.max(1, ref.quantity ?? 1);
+      if (wouldExceedCurrency(currencyRemaining, unitCost, qty)) {
+        setHandMessage(
+          phase === 'armor'
+            ? phaseCopy.armorPhase.currencyBlocked
+            : phase === 'weapon'
+              ? phaseCopy.weaponPhase.currencyBlocked
+              : phaseCopy.gearPhase.currencyBlocked
+        );
+        return;
+      }
+
       if (phase === 'armor') {
         const cleared = {
           ...draft,
@@ -202,13 +215,6 @@ export function GuidedEquipmentL1Phase({
         return;
       }
 
-      const unitCost = resolveCatalogRowUnitCost(catalog.get(normalizeId(ref.id)));
-      const qty = Math.max(1, ref.quantity ?? 1);
-      if (wouldExceedCurrency(currencyRemaining, unitCost, qty)) {
-        setHandMessage(phaseCopy.gearPhase.currencyBlocked);
-        return;
-      }
-
       const next = addItemToGuidedDraft(draft, ref, 'equipment');
       onDraftChange({ ...next });
     },
@@ -228,14 +234,18 @@ export function GuidedEquipmentL1Phase({
   const handleQuantityChange = useCallback(
     (ref: PathItemRecommendation, quantity: number) => {
       const qty = Math.max(1, quantity);
-      if (phase === 'gear') {
-        const unitCost = resolveCatalogRowUnitCost(catalog.get(normalizeId(ref.id)));
-        const currentQty = selectedQuantity(phase, draft, ref.id);
-        const deltaCost = unitCost * (qty - currentQty);
-        if (deltaCost > 0 && deltaCost > currencyRemaining) {
-          setHandMessage(phaseCopy.gearPhase.currencyBlocked);
-          return;
-        }
+      const unitCost = resolveCatalogRowUnitCost(catalog.get(normalizeId(ref.id)));
+      const currentQty = selectedQuantity(phase, draft, ref.id);
+      const deltaCost = unitCost * (qty - currentQty);
+      if (deltaCost > 0 && deltaCost > currencyRemaining) {
+        setHandMessage(
+          phase === 'armor'
+            ? phaseCopy.armorPhase.currencyBlocked
+            : phase === 'weapon'
+              ? phaseCopy.weaponPhase.currencyBlocked
+              : phaseCopy.gearPhase.currencyBlocked
+        );
+        return;
       }
       const category =
         phase === 'weapon' ? 'weapon' : phase === 'armor' ? 'armor' : 'equipment';

@@ -13,7 +13,7 @@ import {
   useUserTechniques,
 } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
-import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
+import { calculateMaxHealth, calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
 import { allocateHealthEnergyPool, calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { findHighestEnergyCostPick } from '@/lib/guided-creator/power-technique-display';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -38,7 +38,7 @@ export function GuidedHealthEnergySection() {
   const powAbil = draft.pow_abil ?? undefined;
   const martAbil = draft.mart_abil ?? undefined;
 
-  const baseEnergy = calculateMaxEnergy(0, powAbil || martAbil, abilities, level);
+  const baseEnergy = calculateMaxEnergyForArchetype(0, abilities, level, powAbil, martAbil);
   const hePool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
 
   const hpBonus = draft.hpAllocated ?? 0;
@@ -54,7 +54,7 @@ export function GuidedHealthEnergySection() {
     rules,
     martAbil
   );
-  const maxEnergy = calculateMaxEnergy(enBonus, powAbil || martAbil, abilities, level);
+  const maxEnergy = calculateMaxEnergyForArchetype(enBonus, abilities, level, powAbil, martAbil);
 
   const highestPick = useMemo(
     () =>

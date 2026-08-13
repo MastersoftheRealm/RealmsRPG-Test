@@ -172,6 +172,17 @@ export const CREATURE_SIZES = [
 
 export type CreatureSize = typeof CREATURE_SIZES[number]['value'];
 
+/**
+ * Feat-point cost fallbacks for creature mechanical traits when the codex row is
+ * missing. Weakness refunds a point, which is why it is negative.
+ */
+export const CREATURE_MECHANICAL_FEAT_POINTS = {
+  RESISTANCE: 1,
+  IMMUNITY: 2,
+  WEAKNESS: -1,
+  CONDITION_IMMUNITY: 1,
+} as const;
+
 // =============================================================================
 // Levels by Rarity (Reference)
 // =============================================================================
@@ -290,13 +301,6 @@ export function formatCostDisplay(value: number): string {
     return String(Math.round(n));
   }
   return n.toFixed(1);
-}
-
-/**
- * Format a cost with a label (e.g., "EN: 5" or "TP: 10")
- */
-export function formatCostWithLabel(label: string, value: number, isPercentage = false): string {
-  return `${label}: ${formatCost(value, isPercentage)}`;
 }
 
 // =============================================================================

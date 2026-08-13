@@ -13,7 +13,12 @@ import {
   type ArchetypeCategory,
 } from '@/types';
 
-/** Clears chapter picks that depend on archetype / path identity. */
+/**
+ * Clears chapter picks that depend on archetype / path identity.
+ * Health/Energy allocation is derived from abilities and the highest-cost power pick, so it
+ * has to go with them — otherwise the Reveal save gate still reads "all points allocated"
+ * for a build whose abilities and powers were just wiped.
+ */
 export function clearArchetypeDependentDraftFields(): Partial<GuidedDraft> {
   return {
     abilities: { ...DEFAULT_ABILITIES },
@@ -32,6 +37,8 @@ export function clearArchetypeDependentDraftFields(): Partial<GuidedDraft> {
     powerIds: [],
     innatePowerIds: [],
     techniqueIds: [],
+    hpAllocated: null,
+    energyAllocated: null,
   };
 }
 

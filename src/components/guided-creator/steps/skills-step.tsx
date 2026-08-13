@@ -7,7 +7,7 @@
 
 'use client';
 
-import React, { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from '../guided-choice-styles';
 import { GuidedSkillsPanel } from '../guided-skills-panel';
@@ -39,6 +39,7 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
 import { buildMixedSpeciesSkillOptions } from '@/lib/ancestry/ancestry-selection';
 import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
+import { pruneUnresolvedSkillAllocations } from '@/lib/guided-creator/skill-reconcile';
 import type { Skill } from '@/hooks';
 
 import { EMPTY_NUMBER_RECORD, EMPTY_STRING_ARRAY } from '@/lib/empty';
@@ -119,21 +120,6 @@ export function SkillsStep() {
   const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
   const totalPoints = getTotalSkillPoints(level, 'character') + extraSkillPoints;
 
-  const allocationsWithDefaults = useMemo(() => {
-    const next = { ...allocations };
-    speciesSkillIds.forEach((id) => {
-      if (id === '0') return;
-      if (!(id in next)) next[id] = 0;
-    });
-    recommendedSkillIds.forEach((id) => {
-      const key = String(id);
-      if (key === '0') return;
-      if (declinedPathSkillIds.has(key)) return;
-      if (!(key in next)) next[key] = 0;
-    });
-    return next;
-  }, [allocations, speciesSkillIds, recommendedSkillIds, declinedPathSkillIds]);
-
   const skillMeta = useMemo(() => {
     const map = new Map<string, { isSubSkill: boolean }>();
     codexSkills.forEach((s: Skill) => {
@@ -141,6 +127,41 @@ export function SkillsStep() {
     });
     return map;
   }, [codexSkills]);
+
+  /**
+   * Codex-resolved keys only. An unresolvable id still costs a Skill Point in the spend calc
+   * but `GuidedSkillsPanel` renders no row for it, so it can never be removed and Continue is
+   * dead (audit P0-2). Skipped while the codex is empty so a cold cache cannot drop valid
+   * allocations, and applied to species/path defaults too — a deleted path skill bricks the
+   * step the same way a deleted draft skill does.
+   */
+  const allocationsWithDefaults = useMemo(() => {
+    const codexReady = skillMeta.size > 0;
+    const resolves = (id: string) => !codexReady || skillMeta.has(id);
+    const next: Record<string, number> = {};
+    Object.entries(allocations).forEach(([id, value]) => {
+      if (resolves(id)) next[id] = value;
+    });
+    speciesSkillIds.forEach((id) => {
+      if (id === '0' || !resolves(id)) return;
+      if (!(id in next)) next[id] = 0;
+    });
+    recommendedSkillIds.forEach((id) => {
+      const key = String(id);
+      if (key === '0' || !resolves(key)) return;
+      if (declinedPathSkillIds.has(key)) return;
+      if (!(key in next)) next[key] = 0;
+    });
+    return next;
+  }, [allocations, speciesSkillIds, recommendedSkillIds, declinedPathSkillIds, skillMeta]);
+
+  /** Same reconciliation on the persisted draft, so the stale key does not survive a reload. */
+  useEffect(() => {
+    if (skillMeta.size === 0) return;
+    const { skills, removedIds } = pruneUnresolvedSkillAllocations(draft.skills, skillMeta);
+    if (removedIds.length === 0) return;
+    updateDraft({ skills });
+  }, [skillMeta, draft.skills, updateDraft]);
 
   const spentPoints = useMemo(
     () =>

@@ -16,8 +16,12 @@ export interface CodexPartTpDef {
   op_3_tp?: number;
 }
 
-/** Shared TP calculation used by library PartData and calculator chip formatters. */
-export function computePartTrainingPoints(
+/**
+ * Per-part Training Points before rounding. Single source of truth for the
+ * base + option-level sum (and the technique-side Additional Damage opt1 floor)
+ * shared by the power, technique and library cost paths.
+ */
+export function computePartTrainingPointsRaw(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
   levels: { op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number },
   variant: PartTpVariant = 'power'
@@ -34,8 +38,18 @@ export function computePartTrainingPoints(
     }
   }
 
-  const rawTP =
-    (def.base_tp || 0) + opt1Contribution + (def.op_2_tp || 0) * l2 + (def.op_3_tp || 0) * l3;
+  return (def.base_tp || 0) + opt1Contribution + (def.op_2_tp || 0) * l2 + (def.op_3_tp || 0) * l3;
+}
 
-  return Math.floor(rawTP);
+/**
+ * Shared TP calculation used by library PartData and calculator chip formatters.
+ * Floors per part (see GAME_RULES "Rounding": the doc rounds up once at the end;
+ * per-part floor is the shipped cost behaviour for Training Points).
+ */
+export function computePartTrainingPoints(
+  def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
+  levels: { op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number },
+  variant: PartTpVariant = 'power'
+): number {
+  return Math.floor(computePartTrainingPointsRaw(def, levels, variant));
 }

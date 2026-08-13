@@ -304,27 +304,6 @@ export function getEnhancedMarketPrice(
   return materialCost * mult;
 }
 
-/**
- * Get requirements for upgrading an enhanced item's potency (25% of original time, cost, successes; same DS).
- * Uses the same enhanced table as initial craft; effectiveEnergyCost should match the item's power (base or multiple-use adjusted).
- */
-export function getUpgradePotencyRequirements(
-  effectiveEnergyCost: number,
-  rules: CraftingRules
-): CraftingRequirements | null {
-  const base = getEnhancedCraftingRequirements(effectiveEnergyCost, rules);
-  if (!base) return null;
-  return {
-    rarity: base.rarity,
-    difficultyScore: base.difficultyScore,
-    requiredSuccesses: Math.max(1, Math.ceil(base.requiredSuccesses * 0.25)),
-    materialCost: base.materialCost * 0.25,
-    timeValue: Math.max(1, Math.ceil(base.timeValue * 0.25)),
-    timeUnit: base.timeUnit,
-    sessionCount: Math.max(1, Math.ceil(base.sessionCount * 0.25)),
-  };
-}
-
 /** Requirements shape used by getCraftingRequirements, getUpgradeRequirements, and optional modifiers */
 export interface CraftingRequirements {
   rarity: string;

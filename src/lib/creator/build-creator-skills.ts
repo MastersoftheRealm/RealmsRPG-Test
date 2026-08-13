@@ -4,6 +4,9 @@
  * (Record→array in cleanForSave drops val <= 0).
  */
 
+import type { Abilities } from '@/types';
+import { getHighestLinkedAbilityKey, getLinkedAbilityKeys } from '@/lib/game/formulas';
+
 export interface CreatorSkillCodexEntry {
   id: string | number;
   name?: string;
@@ -29,6 +32,34 @@ export interface BuildCreatorSkillSaveRowsOptions {
   codexSkills?: CreatorSkillCodexEntry[];
   /** When true, attach baseSkill display name from codex base_skill_id. */
   includeBaseSkillName?: boolean;
+  /**
+   * Character abilities. Required for multi-ability skills: the Skill Bonus uses the
+   * highest linked Ability (GAME_RULES "Skill Bonus Formulas"), so persisting the first
+   * codex ability instead makes the sheet disagree with the creator.
+   */
+  abilities?: Partial<Abilities>;
+  /** Explicit per-skill Ability choice (skill id → ability key), e.g. `draft.skillAbilities`. */
+  skillAbilities?: Record<string, string | undefined>;
+}
+
+/** Ability persisted for a skill row: explicit choice, else highest linked, else first listed. */
+function resolveSkillAbility(
+  skillKey: string,
+  codexAbility: string | undefined,
+  options: BuildCreatorSkillSaveRowsOptions
+): string | undefined {
+  const linkedKeys = getLinkedAbilityKeys(codexAbility);
+  if (linkedKeys.length === 0) return undefined;
+
+  const chosen = options.skillAbilities?.[skillKey]?.trim().toLowerCase();
+  if (chosen && linkedKeys.includes(chosen as keyof Abilities)) return chosen;
+
+  if (options.abilities) {
+    const highest = getHighestLinkedAbilityKey(codexAbility, options.abilities as Abilities);
+    if (highest) return highest;
+  }
+
+  return linkedKeys[0];
 }
 
 function resolveCodexSkill(
@@ -62,7 +93,7 @@ export function buildCreatorSkillSaveRows(
   return Array.from(ids).map((skillKey) => {
     const skillData = resolveCodexSkill(skillKey, codexSkills);
     const skillVal = skills[skillKey] ?? 0;
-    const ability = skillData?.ability?.split(',')[0]?.trim().toLowerCase();
+    const ability = resolveSkillAbility(skillKey, skillData?.ability, options);
     const category =
       skillData?.category || skillData?.ability?.split(',')[0]?.trim() || 'other';
 

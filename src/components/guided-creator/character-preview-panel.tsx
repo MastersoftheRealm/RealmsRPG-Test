@@ -18,6 +18,7 @@ import { useMergedSpecies, useCodexFeats } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
 import { buildPreviewAbilityChips, previewAbilityTileClass, shouldShowPreviewAbilityChips } from '@/lib/guided-creator/preview-ability-summary';
+import { isGuidedSubStepSatisfied } from '@/lib/guided-creator/substep-satisfaction';
 import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy/archetype-category-copy';
 import { useGuidedPathData } from './use-guided-path-data';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
@@ -48,7 +49,6 @@ export interface CharacterPreviewPanelProps {
 
 export function CharacterPreviewPanel({ className, variant = 'panel' }: CharacterPreviewPanelProps) {
   const draft = useGuidedCreatorStore((s) => s.draft);
-  const completedSubSteps = useGuidedCreatorStore((s) => s.completedSubSteps);
   const { archetype } = useGuidedPathData();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: feats = [] } = useCodexFeats();
@@ -91,7 +91,7 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
   /** All six abilities with signed values; gated until Abilities step (TASK-694). */
   const showAbilityChips = shouldShowPreviewAbilityChips({
     abilitiesMode: draft.abilitiesMode,
-    abilitiesStepCompleted: completedSubSteps.includes('abilities'),
+    abilitiesStepCompleted: isGuidedSubStepSatisfied('abilities', draft),
   });
 
   const abilityChips = useMemo(

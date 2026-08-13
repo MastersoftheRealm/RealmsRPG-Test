@@ -3,7 +3,9 @@ import {
   allocateHealthEnergyPool,
   calculateArchetypeProgression,
   calculateSkillBonusWithProficiency,
+  calculateSkillPointsForEntity,
   pickHighestEnergyCost,
+  resolveArchetypeProficiencyStart,
   unproficientBonus,
 } from '@/lib/game/formulas';
 import type { Abilities } from '@/types';
@@ -24,6 +26,26 @@ describe('unproficientBonus', () => {
     expect(unproficientBonus(3)).toBe(2);
     expect(unproficientBonus(5)).toBe(3);
   });
+
+  // T2 / M1 / M2 — sheet unarmed attack and unproficient damage
+  // (`archetype-section.tsx`) both call `unproficientBonus`; do not reintroduce
+  // floor() or Math.max(1, …). Unproficient damage display is String(that bonus).
+  it.each([
+    [-3, -6],
+    [-2, -4],
+    [-1, -2],
+    [0, 0],
+    [1, 1],
+    [2, 1],
+    [3, 2],
+    [4, 2],
+    [5, 3],
+  ] as const)(
+    'unarmed unproficient attack/damage for ability %i is %i',
+    (ability, expected) => {
+      expect(unproficientBonus(ability)).toBe(expected);
+    }
+  );
 
   it('calculateSkillBonusWithProficiency uses unproficientBonus when not proficient', () => {
     expect(
@@ -84,6 +106,21 @@ describe('allocateHealthEnergyPool', () => {
   });
 });
 
+describe('calculateSkillPointsForEntity (T3 / M4)', () => {
+  it.each([1, 5, 20] as const)(
+    'character skill points are 3 × level (%i), independent of species',
+    (level) => {
+      // Sheet `use-character-sheet-derived` and creator `getTotalSkillPoints`
+      // both call this function (no speciesCount dance).
+      const engine = calculateSkillPointsForEntity(level, 'character');
+      expect(engine).toBe(3 * level);
+      // Historical sheet `2 + level*3 − speciesCount` granted +2 when species
+      // lookup failed (speciesCount 0). Engine must not.
+      expect(engine).not.toBe(2 + level * 3);
+    }
+  );
+});
+
 describe('pickHighestEnergyCost', () => {
   it('returns the highest Energy pick and keeps the first on a tie', () => {
     expect(
@@ -97,5 +134,22 @@ describe('pickHighestEnergyCost', () => {
 
   it('returns null for an empty list', () => {
     expect(pickHighestEnergyCost([])).toBeNull();
+  });
+});
+
+describe('resolveArchetypeProficiencyStart', () => {
+  it('uses type defaults when the path has no start columns', () => {
+    expect(resolveArchetypeProficiencyStart('power')).toEqual({ pow_prof: 2, mart_prof: 0 });
+    expect(resolveArchetypeProficiencyStart('martial')).toEqual({ pow_prof: 0, mart_prof: 2 });
+    expect(resolveArchetypeProficiencyStart('powered-martial')).toEqual({
+      pow_prof: 1,
+      mart_prof: 1,
+    });
+  });
+
+  it('prefers path start columns over type defaults', () => {
+    expect(
+      resolveArchetypeProficiencyStart('power', { power_prof_start: 3, martial_prof_start: 1 })
+    ).toEqual({ pow_prof: 3, mart_prof: 1 });
   });
 });

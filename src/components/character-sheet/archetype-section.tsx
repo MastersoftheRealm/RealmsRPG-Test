@@ -8,7 +8,14 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { calculateProficiency, getArchetypeType, getArchetypeMilestoneLevels } from '@/lib/game/formulas';
+import {
+  calculateProficiency,
+  getArchetypeType,
+  getArchetypeMilestoneLevels,
+  unproficientBonus,
+} from '@/lib/game/formulas';
+import { calculateBonuses, calculateScoreFromBonus } from '@/lib/game/calculations';
+import { useGameRules } from '@/hooks/use-game-rules';
 import { useRollsOptional } from '@/components/rolls';
 import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider, DecrementButton, IncrementButton } from '@/components/shared';
 import { TableScroll } from '@/components/ui';
@@ -77,35 +84,20 @@ function AttackBonusesTable({
   powerAbility?: string; // The archetype's power ability (pow_abil)
   onRollBonus?: (name: string, bonus: number) => void;
 }) {
-  // Calculate bonuses for each ability
-  // Prof = ability + martial_prof, Unprof = ability only
+  // Prof = Ability + Proficiency; Unprof = half the Ability, doubled if negative.
+  const bonuses = calculateBonuses(martialProf, powerProf, abilities, powerAbility);
   const martialBonuses = {
-    strength: {
-      prof: (abilities.strength ?? 0) + martialProf,
-      unprof: abilities.strength ?? 0,
-    },
-    agility: {
-      prof: (abilities.agility ?? 0) + martialProf,
-      unprof: abilities.agility ?? 0,
-    },
-    acuity: {
-      prof: (abilities.acuity ?? 0) + martialProf,
-      unprof: abilities.acuity ?? 0,
-    },
+    strength: bonuses.strength,
+    agility: bonuses.agility,
+    acuity: bonuses.acuity,
   };
-  
-  // Use the archetype's power ability for power bonus calculation
-  // Default to charisma if not specified
-  const powAbilKey = (powerAbility?.toLowerCase() || 'charisma') as keyof Abilities;
-  const powAbilValue = abilities[powAbilKey] ?? 0;
+
+  // Power bonus defaults to Charisma when the path has no Power Ability.
   const powAbilDisplayName = powerAbility 
     ? powerAbility.charAt(0).toUpperCase() + powerAbility.slice(1).toLowerCase()
     : 'Charisma';
   
-  const powerBonus = {
-    prof: powAbilValue + powerProf,
-    unprof: powAbilValue,
-  };
+  const powerBonus = bonuses.powerAttack;
 
   return (
     <div className="bg-surface-alt rounded-lg p-3 mb-4">
@@ -215,19 +207,20 @@ function WeaponsSection({
   const agi = abilities.agility ?? 0;
   const unarmedAbility = Math.max(str, agi);
   
-  // Calculate unarmed attack bonus based on proficiency
+  // Attack Bonus: proficient = Ability + Martial Proficiency; unproficient =
+  // unproficientBonus (T2 / formulas.test.ts). Do not hand-roll floor() or max(1,…).
   const hasProwess = unarmedProwess > 0;
-  const unarmedAttackBonus = hasProwess 
-    ? unarmedAbility + martialProf  // Proficient: full ability + martial prof
-    : (unarmedAbility < 0 ? unarmedAbility * 2 : Math.floor(unarmedAbility / 2)); // Unproficient: half ability (double if negative)
+  const unarmedAttackBonus = hasProwess
+    ? unarmedAbility + martialProf
+    : unproficientBonus(unarmedAbility);
   
-  // Calculate unarmed damage: proficient = Attack Bonus (ability + martial prof) + dice at prowess 2+
+  // Damage equals the Attack Bonus, plus dice from Prowess II upward.
   const prowessData = UNARMED_PROWESS_DAMAGE[unarmedProwess] || UNARMED_PROWESS_DAMAGE[0];
   const unarmedDamageDisplay = hasProwess 
     ? (prowessData.damage 
         ? `${prowessData.damage} + ${unarmedAttackBonus}` 
         : String(unarmedAttackBonus)) // Prowess I: full Attack Bonus, no dice
-    : String(Math.max(1, Math.floor(unarmedAbility / 2)));
+    : String(unarmedAttackBonus);
 
   // Same QUICK_WEAPON_COL cells as weapon rows so Name/Range/Attack/Damage stay aligned.
   const unarmedRow = (
@@ -354,6 +347,7 @@ export function ArchetypeSection({
   const martialProf = character.mart_prof ?? character.martialProficiency ?? 0;
   const powerProf = character.pow_prof ?? character.powerProficiency ?? 0;
   const rollContext = useRollsOptional();
+  const { rules } = useGameRules();
   
   // Local state for whether this section is actively being edited
   const [isSectionEditing, setIsSectionEditing] = useState(false);
@@ -362,7 +356,7 @@ export function ArchetypeSection({
 
   // Calculate proficiency points (effective max = level-based, or higher if manually raised)
   const level = character.level || 1;
-  const levelBasedMax = calculateProficiency(level);
+  const levelBasedMax = calculateProficiency(level, false, rules);
   // Ignore stale overrides at/below level max (derive — no sync effect)
   const effectiveMaxProfOverride =
     maxProfOverride !== null && maxProfOverride > levelBasedMax ? maxProfOverride : null;
@@ -375,19 +369,19 @@ export function ArchetypeSection({
   
   // Determine archetype type for milestone UI
   const archetypeType = getArchetypeType(martialProf, powerProf);
-  const milestoneLevels = getArchetypeMilestoneLevels(level);
+  const milestoneLevels = getArchetypeMilestoneLevels(level, rules);
   const archetypeChoices = character.archetypeChoices || {};
   
   // Three-state color for proficiency points
   const profPointsVariant = profPointsDescriptorVariant(remainingProfPoints);
   
-  // Calculate Power Potency: 10 + pow_prof + pow_abil value
+  // Potency = Bonus + 10 (GAME_RULES "The Score Pattern").
   const powAbilName = character.pow_abil?.toLowerCase() || 'charisma';
   const martAbilName = character.mart_abil?.toLowerCase() || 'strength';
   const powAbilValue = character.abilities?.[powAbilName as keyof Abilities] ?? 0;
   const martAbilValue = character.abilities?.[martAbilName as keyof Abilities] ?? 0;
-  const powerPotency = 10 + powerProf + powAbilValue;
-  const martialPotency = 10 + martialProf + martAbilValue;
+  const powerPotency = calculateScoreFromBonus(powerProf + powAbilValue, rules);
+  const martialPotency = calculateScoreFromBonus(martialProf + martAbilValue, rules);
   
   // Handle attack bonus roll
   const handleRollBonus = (name: string, bonus: number) => {

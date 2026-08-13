@@ -48,7 +48,8 @@ const STEP_COMPONENTS: Record<GuidedSubStep, React.ComponentType> = {
 };
 
 function ChapterRail({ className }: { className?: string }) {
-  const { currentSubStep, completedSubSteps, canNavigateToSubStep, setSubStep } = useGuidedCreatorStore();
+  const { currentSubStep, isSubStepSatisfied, canNavigateToSubStep, setSubStep } =
+    useGuidedCreatorStore();
   const activeChapterIndex = GUIDED_CHAPTERS.findIndex((c) => c.subSteps.includes(currentSubStep));
 
   return (
@@ -58,8 +59,11 @@ function ChapterRail({ className }: { className?: string }) {
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         {GUIDED_CHAPTERS.map((chapter, index) => {
-          const isComplete = chapter.subSteps.every((s) => completedSubSteps.includes(s));
           const isActive = index === activeChapterIndex;
+          // ✓ only for chapters the player has moved past — Equipment and Powers hold no
+          // required picks, so "satisfied" alone would tick them before they are reached.
+          const isComplete =
+            index < activeChapterIndex && chapter.subSteps.every(isSubStepSatisfied);
           const firstSub = chapter.subSteps[0];
           const canOpen = canNavigateToSubStep(firstSub);
 

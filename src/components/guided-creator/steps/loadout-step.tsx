@@ -40,7 +40,6 @@ import {
   toggleGuidedEquipmentL2Ref,
 } from '@/lib/guided-creator/guided-equipment-l2';
 import {
-  canCompleteEquipmentPhase,
   equipmentPhaseIndex,
   isLastEquipmentPhase,
   nextEquipmentPhase,
@@ -151,24 +150,6 @@ export function LoadoutStep() {
 
   const visiblePhases = visibleEquipmentPhases(armorMode, phaseVisibility);
 
-  const phaseCompletion = useMemo(
-    () => ({
-      loadoutWeapons: draft.loadoutWeapons,
-      loadoutArmor: draft.loadoutArmor,
-      recommendUnarmed,
-      unarmedProwess: draft.unarmedProwess ?? 0,
-      armorMode,
-    }),
-    [
-      draft.loadoutWeapons,
-      draft.loadoutArmor,
-      recommendUnarmed,
-      draft.unarmedProwess,
-      armorMode,
-    ]
-  );
-
-  const phaseComplete = canCompleteEquipmentPhase(equipmentPhase, phaseCompletion);
   const onLastPhase = isLastEquipmentPhase(equipmentPhase, armorMode, phaseVisibility);
 
   const resolveSpendCost = useCallback(
@@ -208,12 +189,26 @@ export function LoadoutStep() {
     [currencyStarting, currencySpent]
   );
 
+  /**
+   * Weapon / armor / gear picks are all optional (TASK-456), so the only phase blocker is an
+   * overspent budget — which a draft written before the ceiling was enforced can still carry.
+   */
+  const currencyOverspend = Math.max(0, -currencyRemaining);
+  const phaseComplete = currencyOverspend === 0;
+
+  // Signed remainder drives loadout satisfaction / Reveal save. Persist clamps
+  // at 0 in `build-character` (`clampSavedCurrency`) — do not clamp here or the
+  // rail would treat an overspent kit as complete.
+  useEffect(() => {
+    if (draft.currency === currencyRemaining) return;
+    updateDraft({ currency: currencyRemaining });
+  }, [currencyRemaining, draft.currency, updateDraft]);
+
   // L3 / L2 modal catalog — reuse the step's base catalog (no second build) (TASK-684).
   const {
     catalog: l2Catalog,
     tpSummary: l2TpSummary,
     items: inlineItems,
-    gearBudget,
   } = useGuidedEquipmentL2Catalog(
     equipmentPhase,
     draft,
@@ -252,7 +247,7 @@ export function LoadoutStep() {
         id,
         l2Catalog,
         l2TpSummary.limit,
-        gearBudget
+        currencyStarting
       );
       if (!result.ok) {
         setInlineErrorState({
@@ -264,7 +259,7 @@ export function LoadoutStep() {
       setInlineErrorState(null);
       if (result.partial) updateDraft(result.partial);
     },
-    [equipmentPhase, draft, l2Catalog, l2TpSummary.limit, gearBudget, updateDraft]
+    [equipmentPhase, draft, l2Catalog, l2TpSummary.limit, currencyStarting, updateDraft]
   );
 
   const handleInlineQuantityChange = useCallback(
@@ -276,7 +271,7 @@ export function LoadoutStep() {
         delta,
         l2Catalog,
         l2TpSummary.limit,
-        gearBudget
+        currencyStarting
       );
       if (!result.ok) {
         setInlineErrorState({
@@ -288,7 +283,7 @@ export function LoadoutStep() {
       setInlineErrorState(null);
       if (result.partial) updateDraft(result.partial);
     },
-    [equipmentPhase, draft, l2Catalog, l2TpSummary.limit, gearBudget, updateDraft]
+    [equipmentPhase, draft, l2Catalog, l2TpSummary.limit, currencyStarting, updateDraft]
   );
 
   const openItemCreator = useCallback(() => {
@@ -380,22 +375,26 @@ export function LoadoutStep() {
       setL2Open(false);
       return;
     }
-    if (!phaseComplete) return;
+    if (currencyOverspend > 0) {
+      setInlineErrorState({
+        phase: equipmentPhase,
+        message: stepCopy.overspent(currencyOverspend),
+      });
+      return;
+    }
     const next = nextEquipmentPhase(equipmentPhase, armorMode, phaseVisibility);
     if (next) {
       updateDraft({ equipmentPhase: next });
       return;
     }
-    updateDraft({ currency: currencyRemaining });
     nextSubStep();
   }, [
     l2Open,
-    phaseComplete,
+    currencyOverspend,
     equipmentPhase,
     armorMode,
     phaseVisibility,
     updateDraft,
-    currencyRemaining,
     nextSubStep,
   ]);
 
@@ -419,6 +418,13 @@ export function LoadoutStep() {
 
   const phaseTitleCopy = phaseCopy[equipmentPhase];
 
+  const overspendNotice =
+    currencyOverspend > 0 ? (
+      <p className="font-nunito text-sm text-warning-fg" role="alert">
+        {stepCopy.overspent(currencyOverspend)}
+      </p>
+    ) : null;
+
   return (
     <GuidedStepLayout
       subStep="loadout"
@@ -438,6 +444,7 @@ export function LoadoutStep() {
         </div>
       ) : isInlineCatalog ? (
         <div className="space-y-5">
+          {overspendNotice}
           <LoadoutBudgetBar
             currencyTotal={currencyStarting}
             currencySpent={currencySpent}
@@ -488,6 +495,7 @@ export function LoadoutStep() {
         </div>
       ) : (
         <div className="space-y-5">
+          {overspendNotice}
           <GuidedEquipmentPhaseLayout
             currencyTotal={currencyStarting}
             currencySpent={currencySpent}
@@ -522,7 +530,6 @@ export function LoadoutStep() {
             catalog={l2Catalog}
             items={inlineItems}
             tpLimit={l2TpSummary.limit}
-            gearBudget={gearBudget}
             currencyStarting={currencyStarting}
             scopeExtra={
               <SourceFilter value={librarySource} onChange={setLibrarySource} />

@@ -27,7 +27,7 @@ import {
 } from '@/lib/guided-creator/ancestry-pick-tasks';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
 import { buildGuidedMixedSpeciesDraftPatch } from '@/lib/guided-creator/species-selection-draft';
-import { resolveForwardLandingPhaseIndex } from '@/lib/guided-creator/ancestry-forward-landing';
+import { canContinueAncestryPick } from '@/lib/guided-creator/ancestry-pick-gate';
 import { landsOnFirstInnerScreen } from '@/lib/guided-creator/guided-substep-nav';
 import { useGuidedCreatorStore, type GuidedDraft } from '@/stores/guided-creator-store';
 import { GuidedChoiceCard } from '../guided-choice-card';
@@ -93,7 +93,7 @@ export function AncestryStep() {
     updateDraft,
     prevSubStep,
     nextSubStep,
-    completedSubSteps,
+    isSubStepSatisfied,
     navigationIntent,
     entryNonce,
   } = useGuidedCreatorStore();
@@ -105,7 +105,7 @@ export function AncestryStep() {
   const [showMixedModal, setShowMixedModal] = useState(false);
   const phaseInitialized = useRef(false);
   const lastEntryNonce = useRef<number | null>(null);
-  const ancestryChapterComplete = completedSubSteps.includes('ancestry');
+  const ancestryChapterComplete = isSubStepSatisfied('ancestry');
 
   const speciesContext = useMemo(
     () => resolveGuidedSpeciesContext(draft, allSpecies as Species[]),
@@ -218,10 +218,11 @@ export function AncestryStep() {
   useEffect(() => {
     if (!ready) return;
 
+    // Forward navigation always lands on the species overview — never skips to a pick (TASK-697).
     if (landsOnFirstInnerScreen(navigationIntent)) {
       if (lastEntryNonce.current !== entryNonce) {
         lastEntryNonce.current = entryNonce;
-        setPhaseIndex(resolveForwardLandingPhaseIndex(tasks, draft));
+        setPhaseIndex(0);
         phaseInitialized.current = true;
       }
       return;
@@ -363,14 +364,21 @@ export function AncestryStep() {
     [draft.selectedSpeciesSkillIds, updateDraft]
   );
 
+  const allPicksFilled = useMemo(
+    () => tasks.every((task) => isTaskFilled(task, draft, mixedSkillOptionCount)),
+    [tasks, draft, mixedSkillOptionCount]
+  );
+
   const advanceAfterPick = useCallback(() => {
     const isLastTask = pickIndex >= totalPicks - 1;
-    if (isLastTask) {
-      nextSubStep();
-    } else {
+    if (!isLastTask) {
       setPhaseIndex((i) => i + 1);
+      return;
     }
-  }, [pickIndex, totalPicks, nextSubStep]);
+    // Leaving the chapter is where unfilled picks become invisible — require them all first.
+    if (!allPicksFilled) return;
+    nextSubStep();
+  }, [pickIndex, totalPicks, allPicksFilled, nextSubStep]);
 
   const handleSkipFlaw = useCallback(() => {
     updateDraft({
@@ -481,9 +489,13 @@ export function AncestryStep() {
 
   const footerCanContinue = isOverview
     ? (totalPicks > 0 || ancestryComplete) && sizeOk
-    : currentTask
-      ? currentTask.phase === 'mixed-species-skills' || currentTask.optional || hasCurrentPick
-      : ancestryComplete;
+    : canContinueAncestryPick({
+        task: currentTask,
+        mixedSkillOptionCount,
+        selectedSpeciesSkillIdCount: draft.selectedSpeciesSkillIds.length,
+        hasPick: hasCurrentPick,
+        ancestryComplete,
+      });
 
   const overviewTitle = isMixed
     ? overviewCopy.title(displayName ?? 'Mixed species')

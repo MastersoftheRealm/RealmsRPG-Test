@@ -16,6 +16,7 @@
 
 import { useMemo } from 'react';
 import type { Archetype, Character, CharacterFeat } from '@/types';
+import type { CoreRulesMap } from '@/types/core-rules';
 import type { CodexFeat, Skill, Trait } from '@/hooks/codex-types';
 import type { CharacterSheetStats, CharacterSheetDerivedHandlers } from './use-character-sheet-derived';
 import type { AddModalType, FeatModalType, SkillModalType } from './character-sheet-context';
@@ -37,6 +38,7 @@ export interface UseCharacterSheetActionsArgs {
   powerPartsDb: LibrarySectionData['powerPartsDb'];
   techniquePartsDb: LibrarySectionData['techniquePartsDb'];
   itemPropertiesDb: LibrarySectionData['itemPropertiesDb'];
+  rules: Partial<CoreRulesMap> | undefined;
   showToast: (message: string, variant?: 'success' | 'error' | 'warning' | 'info') => void;
   user: { uid: string } | null;
   addModalType: AddModalType;
@@ -65,6 +67,7 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
     powerPartsDb,
     techniquePartsDb,
     itemPropertiesDb,
+    rules,
     showToast,
     user,
     addModalType,
@@ -88,6 +91,7 @@ export function useCharacterSheetActions(args: UseCharacterSheetActionsArgs) {
     featsDb,
     traitsDb,
     codexArchetypes,
+    rules,
     showToast,
     user,
     setError,

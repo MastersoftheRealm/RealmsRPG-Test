@@ -277,8 +277,6 @@ export const GUIDED_CREATOR_COPY = {
       title: 'Your Skills',
       description:
         'Species Skills are free. Spend Skill Points to gain proficiency in other Skills and to raise their value. The counter shows how many you have left.',
-      applyRecommended: 'Restore path Skills',
-      applyRecommendedHint: 'Puts back path Skill proficiencies you removed.',
       emptySkills: 'No Skills yet. Use suggestions below or browse the full list.',
       pointsRemaining: (n: number) =>
         `Spend ${n} more Skill Point${n === 1 ? '' : 's'} to continue.`,
@@ -347,7 +345,8 @@ export const GUIDED_CREATOR_COPY = {
       emptyDescription:
         'This path has no recommended weapons, armor, or Equipment yet. Use See more options to browse common items, or pick another path.',
       loadingItems: 'Loading items…',
-      unresolvedItem: 'Unknown item',
+      overspent: (over: number) =>
+        `You are ${over} Currency over budget. Remove an item to continue.`,
       unarmed: {
         title: 'Unarmed combat',
         description:
@@ -379,18 +378,19 @@ export const GUIDED_CREATOR_COPY = {
         continueToGear: 'Continue to Equipment →',
         currencyLabel: 'Currency',
         trainingPointsLabel: 'Training Points',
-        unresolvedItem: 'Unknown item',
         weaponPhase: {
           emptyTitle: 'No weapons on your path',
           emptyDescription: 'Use See more options to browse more weapons and shields.',
           handBlocked: 'A two-handed weapon cannot be used with a shield.',
           tpBlocked: 'Not enough Training Points for that item.',
+          currencyBlocked: 'Not enough Currency remaining for that weapon.',
         },
         armorPhase: {
           emptyTitle: 'No armor on your path',
           emptyDescription:
             'Use See more options to browse armor, or continue without armor if your path allows.',
           tpBlocked: 'Not enough Training Points for that item.',
+          currencyBlocked: 'Not enough Currency remaining for that armor.',
         },
         gearPhase: {
           emptyTitle: 'No Equipment on your path',
@@ -512,7 +512,9 @@ export const GUIDED_CREATOR_COPY = {
     reveal: {
       title: 'Meet your hero',
       description: 'Name them, set the finishing touches, then create your character.',
-      heroUnnamed: 'Unnamed Hero',
+      incompleteHint:
+        'Some earlier chapters still need choices. Use the chapters above to finish them.',
+      saveRetryHint: 'Check My Characters before trying again so you do not create a duplicate.',
       nameLabel: 'Character name',
       namePlaceholder: 'Give your hero a name',
       identityTitle: 'Identity',
@@ -564,12 +566,6 @@ export const GUIDED_CREATOR_COPY = {
         powersTitle: 'Powers & Techniques',
         powersOnlyTitle: 'Powers',
         techniquesOnlyTitle: 'Techniques',
-      },
-      loginModal: {
-        title: 'Sign in to save',
-        description: 'Create a free account to save your character and play with friends.',
-        signIn: 'Sign in',
-        register: 'Create account',
       },
     },
   },

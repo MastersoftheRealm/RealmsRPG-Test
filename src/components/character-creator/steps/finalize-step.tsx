@@ -23,7 +23,7 @@ import type { Character, CharacterPower, CharacterTechnique, Item } from '@/type
 import { Button, Alert, Textarea, useToast } from '@/components/ui';
 import { useCharacterCreatorStore, CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
 import { getAllValidationIssues } from '@/lib/character-creator-validation';
-import { calculateMaxEnergy } from '@/lib/game/calculations';
+import { calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
 import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { LoginPromptModal, InfoTippy, PointStatus, LoadoutBudgetBar } from '@/components/shared';
@@ -113,7 +113,13 @@ export function FinalizeStep() {
     const level = draft.level || 1;
     const powAbil = draft.pow_abil || draft.archetype?.pow_abil || draft.archetype?.ability;
     const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
-    return calculateMaxEnergy(draft.energyPoints || 0, powAbil || martAbil, abilities, level);
+    return calculateMaxEnergyForArchetype(
+      draft.energyPoints || 0,
+      abilities,
+      level,
+      powAbil,
+      martAbil
+    );
   }, [draft]);
 
   const startingCurrency = useMemo(() => {
@@ -161,6 +167,8 @@ export function FinalizeStep() {
           {
             codexSkills: codexSkills ?? [],
             includeBaseSkillName: true,
+            abilities: characterData.abilities,
+            skillAbilities: draft.skillAbilities,
           }
         ) as unknown as Character['skills'];
       }

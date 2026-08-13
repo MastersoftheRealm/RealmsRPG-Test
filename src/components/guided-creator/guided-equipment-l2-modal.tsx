@@ -11,7 +11,6 @@ import type { EligibleEquipmentRow } from '@/lib/guided-creator/equipment-eligib
 import {
   applyGuidedEquipmentL2Selection,
   computeL2CurrencySpent,
-  computeL2GearSpend,
   computeL2TpSpent,
   initialSelectedIdsForPhase,
 } from '@/lib/guided-creator/guided-equipment-l2';
@@ -31,8 +30,7 @@ export interface GuidedEquipmentL2ModalProps {
   catalog: Map<string, EligibleEquipmentRow>;
   items: SelectableItem[];
   tpLimit: number;
-  gearBudget: number;
-  /** Level-1 starting Currency (PointStatus total). */
+  /** Level-1 starting Currency — PointStatus total and the ceiling for every phase. */
   currencyStarting: number;
   scopeExtra?: ReactNode;
   onClose: () => void;
@@ -46,7 +44,6 @@ export function GuidedEquipmentL2Modal({
   catalog,
   items,
   tpLimit,
-  gearBudget,
   currencyStarting,
   scopeExtra,
   onClose,
@@ -89,7 +86,7 @@ export function GuidedEquipmentL2Modal({
         selected,
         catalog,
         tpLimit,
-        gearBudget
+        currencyStarting
       );
       if (!result.ok) {
         setError(result.message ?? l2Copy.confirmError);
@@ -98,7 +95,7 @@ export function GuidedEquipmentL2Modal({
       setError(null);
       if (result.partial) onDraftChange(result.partial);
     },
-    [phase, draft, catalog, tpLimit, gearBudget, onDraftChange]
+    [phase, draft, catalog, tpLimit, currencyStarting, onDraftChange]
   );
 
   const footerExtra = useCallback(
@@ -127,12 +124,11 @@ export function GuidedEquipmentL2Modal({
 
   const confirmDisabled = useCallback(
     (selected: SelectableItem[]) => {
-      if (phase === 'gear') {
-        return computeL2GearSpend(selected) > gearBudget;
-      }
+      if (computeL2CurrencySpent(phase, draft, selected, catalog) > currencyStarting) return true;
+      if (phase === 'gear') return false;
       return computeL2TpSpent(phase, draft, selected, catalog) > tpLimit;
     },
-    [phase, draft, catalog, tpLimit, gearBudget]
+    [phase, draft, catalog, tpLimit, currencyStarting]
   );
 
   return (

@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
 import { Button, Input, Textarea, useToast } from '@/components/ui';
@@ -25,7 +25,8 @@ import {
 } from '@/hooks';
 import { LoginPromptModal } from '@/components/shared';
 import { PlayTogetherModal } from '@/components/onboarding';
-import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
+import { GUIDED_SUBSTEP_ORDER, useGuidedCreatorStore } from '@/stores/guided-creator-store';
+import { isGuidedDraftSaveable } from '@/lib/guided-creator/substep-satisfaction';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GuidedRevealSummary } from '../guided-reveal-summary';
@@ -88,6 +89,8 @@ export function RevealStep() {
   const [showLogin, setShowLogin] = useState(false);
   const [showPlayTogether, setShowPlayTogether] = useState(false);
   const [savedCharacterId, setSavedCharacterId] = useState<string | null>(null);
+  /** `saving` state lands a render late — a ref latch closes the same-tick double submit. */
+  const saveInFlight = useRef(false);
 
   const creatorReturnPath = useMemo(() => {
     const qs = searchParams.toString();
@@ -130,7 +133,13 @@ export function RevealStep() {
   const heightPlaceholder = stepCopy.heightPlaceholder(avgHeight);
   const weightPlaceholder = stepCopy.weightPlaceholder(avgWeight);
 
-  const canSave = draft.name.trim().length > 0 && remaining === 0;
+  /**
+   * Every sub-step must still hold its picks — a chapter-rail jump back to Foundation clears
+   * abilities/skills/feats/loadout/powers, and this is the gate that used to let the gutted
+   * draft through on name + Health/Energy alone.
+   */
+  const draftSaveable = isGuidedDraftSaveable(GUIDED_SUBSTEP_ORDER, draft);
+  const canSave = draftSaveable && remaining === 0;
 
   /** Navigate only after a confirmed create; clear draft as we leave. Honors ?returnTo= like custom finalize. */
   const goAfterSave = (characterId: string, offerTour = false) => {
@@ -150,7 +159,9 @@ export function RevealStep() {
       setShowLogin(true);
       return;
     }
-    if (savedCharacterId || saving) return;
+    if (savedCharacterId || saveInFlight.current) return;
+    if (!canSave) return;
+    saveInFlight.current = true;
     setSaving(true);
     try {
       const payload = buildGuidedCharacterPayload(draft, {
@@ -196,11 +207,13 @@ export function RevealStep() {
 
       // Keep the guided draft until create succeeded — only clear when leaving for the sheet.
       setSavedCharacterId(characterId);
+      // `savedCharacterId` keeps the button disabled from here on, so `saving` can settle:
+      // leaving it true stranded Finish whenever play-together closed by another route.
+      setSaving(false);
       showToast('Your character is ready!', 'success');
       // Campaign/join returnTo skips play-together (custom finalize goes straight to returnTo).
       if (!postSaveReturnTo && !hasSeenPlayTogether()) {
         setShowPlayTogether(true);
-        // Leave `saving` true so Finish stays disabled while play-together is open.
       } else {
         goAfterSave(characterId, !postSaveReturnTo);
       }
@@ -209,7 +222,8 @@ export function RevealStep() {
         err instanceof Error && err.message.trim()
           ? err.message
           : 'Failed to save character. Please try again.';
-      showToast(message, 'error');
+      showToast(`${message} ${stepCopy.saveRetryHint}`, 'error');
+      saveInFlight.current = false;
       setSaving(false);
     }
   };
@@ -231,6 +245,11 @@ export function RevealStep() {
         title={stepCopy.title}
         description={stepCopy.description}
         hideBack={false}
+        completionHint={
+          !draftSaveable ? (
+            <span className="font-nunito text-warning-fg">{stepCopy.incompleteHint}</span>
+          ) : undefined
+        }
         primaryAction={
           <Button
             onClick={handleSave}

@@ -322,6 +322,33 @@ export function crossPhaseTpSpent(
   return 0;
 }
 
+/**
+ * Cross-phase Currency total (the two phases *not* being edited) — the edited phase's own
+ * spend is reclaimable because apply replaces that phase's refs wholesale.
+ */
+export function crossPhaseCurrencySpent(
+  phase: EquipmentPhase,
+  draft: GuidedDraft,
+  catalog: Map<string, EligibleEquipmentRow>
+): number {
+  if (phase === 'weapon') {
+    return (
+      computeRefsGearSpend(draft.loadoutArmor, catalog) +
+      computeRefsGearSpend(draft.equipment, catalog)
+    );
+  }
+  if (phase === 'armor') {
+    return (
+      computeRefsGearSpend(draft.loadoutWeapons, catalog) +
+      computeRefsGearSpend(draft.equipment, catalog)
+    );
+  }
+  return (
+    computeRefsGearSpend(draft.loadoutWeapons, catalog) +
+    computeRefsGearSpend(draft.loadoutArmor, catalog)
+  );
+}
+
 export function computeL2TpSpent(
   phase: EquipmentPhase,
   draft: GuidedDraft,
@@ -374,11 +401,22 @@ export interface ApplyL2Result {
   partial?: Partial<GuidedDraft>;
 }
 
+const CURRENCY_BLOCKED_MESSAGE: Record<EquipmentPhase, string> = {
+  weapon: 'Not enough Currency remaining for this weapon selection',
+  armor: 'Not enough Currency remaining for this armor',
+  gear: 'Not enough Currency remaining for this gear',
+};
+
 /**
- * Core validated-apply — hand-slot rules, TP limit, gear budget — shared by the L2 modal's
- * batch Confirm (`applyGuidedEquipmentL2Selection`) and the L3 inline catalog's immediate
- * toggle/quantity handlers (`toggleGuidedEquipmentL2Ref` / `changeGuidedEquipmentL2Quantity`),
- * so eligibility/budget rules never diverge between modal and inline (TASK-684).
+ * Core validated-apply — hand-slot rules, TP limit, Currency ceiling — shared by the L2
+ * modal's batch Confirm (`applyGuidedEquipmentL2Selection`) and the L3 inline catalog's
+ * immediate toggle/quantity handlers (`toggleGuidedEquipmentL2Ref` /
+ * `changeGuidedEquipmentL2Quantity`), so eligibility/budget rules never diverge between
+ * modal and inline (TASK-684).
+ *
+ * `currencyBudget` is the level-1 starting Currency and applies to all three phases: it used
+ * to be a gear-only ceiling, which let weapons and armor spend past the budget and write a
+ * negative balance onto the saved character (audit P1-1).
  */
 export function applyGuidedEquipmentL2Refs(
   phase: EquipmentPhase,
@@ -386,8 +424,14 @@ export function applyGuidedEquipmentL2Refs(
   refs: PathItemRecommendation[],
   catalog: Map<string, EligibleEquipmentRow>,
   tpLimit: number,
-  gearBudget: number
+  currencyBudget: number
 ): ApplyL2Result {
+  const currencySpent =
+    crossPhaseCurrencySpent(phase, draft, catalog) + computeRefsGearSpend(refs, catalog);
+  if (currencySpent > currencyBudget) {
+    return { ok: false, message: CURRENCY_BLOCKED_MESSAGE[phase] };
+  }
+
   if (phase === 'weapon') {
     const rows = refs
       .map((r) => catalog.get(normalizeId(r.id)))
@@ -429,11 +473,6 @@ export function applyGuidedEquipmentL2Refs(
     };
   }
 
-  const gearSpend = computeRefsGearSpend(refs, catalog);
-  if (gearSpend > gearBudget) {
-    return { ok: false, message: 'Not enough Currency remaining for this gear' };
-  }
-
   return {
     ok: true,
     partial: {
@@ -448,7 +487,7 @@ export function applyGuidedEquipmentL2Selection(
   selected: SelectableItem[],
   catalog: Map<string, EligibleEquipmentRow>,
   tpLimit: number,
-  gearBudget: number
+  currencyBudget: number
 ): ApplyL2Result {
   return applyGuidedEquipmentL2Refs(
     phase,
@@ -456,7 +495,7 @@ export function applyGuidedEquipmentL2Selection(
     selectedToRefs(selected),
     catalog,
     tpLimit,
-    gearBudget
+    currencyBudget
   );
 }
 
@@ -471,7 +510,7 @@ export function toggleGuidedEquipmentL2Ref(
   id: string,
   catalog: Map<string, EligibleEquipmentRow>,
   tpLimit: number,
-  gearBudget: number
+  currencyBudget: number
 ): ApplyL2Result {
   const current = currentRefsForPhase(phase, draft);
   const idNorm = normalizeId(id);
@@ -481,7 +520,7 @@ export function toggleGuidedEquipmentL2Ref(
     : phase === 'armor'
       ? [{ id, quantity: 1 }]
       : [...current, { id, quantity: 1 }];
-  return applyGuidedEquipmentL2Refs(phase, draft, nextRefs, catalog, tpLimit, gearBudget);
+  return applyGuidedEquipmentL2Refs(phase, draft, nextRefs, catalog, tpLimit, currencyBudget);
 }
 
 /**
@@ -495,7 +534,7 @@ export function changeGuidedEquipmentL2Quantity(
   delta: number,
   catalog: Map<string, EligibleEquipmentRow>,
   tpLimit: number,
-  gearBudget: number
+  currencyBudget: number
 ): ApplyL2Result {
   const current = currentRefsForPhase(phase, draft);
   const idNorm = normalizeId(id);
@@ -504,11 +543,11 @@ export function changeGuidedEquipmentL2Quantity(
 
   if (next <= 0) {
     const nextRefs = current.filter((r) => normalizeId(r.id) !== idNorm);
-    return applyGuidedEquipmentL2Refs(phase, draft, nextRefs, catalog, tpLimit, gearBudget);
+    return applyGuidedEquipmentL2Refs(phase, draft, nextRefs, catalog, tpLimit, currencyBudget);
   }
 
   const nextRefs = existing
     ? current.map((r) => (normalizeId(r.id) === idNorm ? { ...r, quantity: next } : r))
     : [...current, { id, quantity: next }];
-  return applyGuidedEquipmentL2Refs(phase, draft, nextRefs, catalog, tpLimit, gearBudget);
+  return applyGuidedEquipmentL2Refs(phase, draft, nextRefs, catalog, tpLimit, currencyBudget);
 }

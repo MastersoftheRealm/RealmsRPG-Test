@@ -253,7 +253,7 @@ export function checkFeatRequirements(
 export function characterToFeatRequirementCharacter(
   character: import('@/types').Character
 ): CharacterForFeatRequirement {
-  const skillsRecord: Record<string, { prof?: boolean; val?: number }> = {};
+  const skillsRecord: Record<string, number | { prof?: boolean; val?: number }> = {};
   const rawSkills = character.skills as
     | Record<string, number | { prof?: boolean; val?: number }>
     | undefined;
@@ -262,7 +262,10 @@ export function characterToFeatRequirementCharacter(
       if (sk && typeof sk === 'object' && 'val' in sk) {
         skillsRecord[key] = { prof: sk.prof, val: sk.val };
       } else if (typeof sk === 'number') {
-        skillsRecord[key] = { val: sk };
+        // Pass the number through: `{ val: sk }` would drop `prof` and make every
+        // skill-gated feat report "Requires proficiency" (readProficiency in formulas.ts
+        // reads numeric allocations directly).
+        skillsRecord[key] = sk;
       }
     });
   }

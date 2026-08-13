@@ -13,8 +13,7 @@ export {
   buildMechanicParts,
   buildPowerMechanicParts,
   buildTechniqueMechanicParts,
-  calculatePowerDamageLevel,
-  calculateTechniqueDamageLevel,
+  calculateDamageOptionLevel,
   type CreatorType,
   type MechanicPartResult,
   type MechanicBuilderContext,
@@ -41,7 +40,6 @@ export {
   calculatePowerSectionContribution,
   computeActionType as computePowerActionType,
   computeActionTypeFromSelection as computePowerActionTypeFromSelection,
-  buildPowerMechanicPartPayload,
   formatPowerRangeFromSteps,
   deriveRange,
   deriveArea,
@@ -56,7 +54,6 @@ export {
   type PowerDisplayData,
   type PartChipData,
   type PowerDocument,
-  type PowerMechanicContext,
 } from './power-calc';
 
 // Duration display (shared: character sheet, library, codex)
@@ -68,7 +65,6 @@ export {
   computeActionType as computeTechniqueActionType,
   computeActionTypeFromSelection as computeTechniqueActionTypeFromSelection,
   computeSplits as computeTechniqueSplits,
-  computeAdditionalDamageLevel,
   formatTechniquePartChip,
   deriveTechniqueDisplay,
   formatTechniqueDamage,

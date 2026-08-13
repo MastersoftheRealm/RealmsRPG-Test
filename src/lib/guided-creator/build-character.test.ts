@@ -385,4 +385,45 @@ describe('buildGuidedCharacterPayload', () => {
     expect(armorRows.find((a) => a.id === 'a-heavy')?.equipped).toBe(true);
     expect(armorRows.find((a) => a.id === 'a-light')?.equipped).toBe(false);
   });
+
+  it('clamps negative remaining Currency to 0 on save', () => {
+    const payload = buildGuidedCharacterPayload(minimalDraft({ currency: -40 }), {});
+    expect(payload.currency).toBe(0);
+  });
+
+  it('persists the highest linked skill ability so the sheet matches the creator', () => {
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        abilities: { ...DEFAULT_ABILITIES, agility: 0, intelligence: 3 },
+        skills: { '30': 0 },
+      }),
+      {
+        codexSkills: [
+          { id: '30', name: 'Lockpick', ability: 'Agility,Intelligence', category: 'mental' },
+        ],
+      }
+    );
+    const rows = payload.skills as unknown as Array<{ id?: string; ability?: string }>;
+    expect(rows.find((s) => s.id === '30')?.ability).toBe('intelligence');
+  });
+
+  it('honours path power_prof_start / martial_prof_start instead of type defaults', () => {
+    const payload = buildGuidedCharacterPayload(minimalDraft({ archetypeType: 'power' }), {
+      archetype: {
+        id: '1',
+        name: 'Arcanist',
+        type: 'power',
+        power_prof_start: 3,
+        martial_prof_start: 0,
+      },
+    });
+    expect(payload.pow_prof).toBe(3);
+    expect(payload.mart_prof).toBe(0);
+    expect(payload.archetype).toMatchObject({
+      id: '1',
+      type: 'power',
+      power_prof_start: 3,
+      martial_prof_start: 0,
+    });
+  });
 });

@@ -15,11 +15,12 @@ import type {
   Item,
 } from '@/types';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
-import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
+import { calculateMaxHealth, calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
 import { applyStarterEquippedFlags, itemDamageReduction } from '@/lib/game/equipment-equipped';
+import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
 
 export const CHARACTER_STARTING_CURRENCY = 200;
 
@@ -286,8 +287,8 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
 
       setArchetypePath: (archetype) => {
         const type = (archetype.type || 'power') as ArchetypeCategory;
-        const pathPowerProf = archetype.power_prof_start ?? (type === 'power' ? 2 : type === 'powered-martial' ? 1 : 0);
-        const pathMartialProf = archetype.martial_prof_start ?? (type === 'martial' ? 2 : type === 'powered-martial' ? 1 : 0);
+        const { pow_prof: pathPowerProf, mart_prof: pathMartialProf } =
+          resolveArchetypeProficiencyStart(type, archetype);
         const primaryAbility = archetype.archetype_ability;
         const fallbackPowerAbility = archetype.pow_abil || archetype.ability || primaryAbility;
         const fallbackMartialAbility = archetype.mart_abil || archetype.ability || primaryAbility;
@@ -445,7 +446,13 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           options?.rules,
           martAbil
         );
-        const maxEnergy = calculateMaxEnergy(allocatedEnergy, powAbil || martAbil, abilities, level);
+        const maxEnergy = calculateMaxEnergyForArchetype(
+          allocatedEnergy,
+          abilities,
+          level,
+          powAbil,
+          martAbil
+        );
         
         // Save lean archetype — just id + type. Name/description derived from codex on load.
         // pow_abil/mart_abil saved at top level as user choices.
@@ -487,6 +494,10 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         const libraryTabVisibility = defaultLibraryTabVisibilityForArchetype(
           draft.archetype?.type
         );
+        const profStart = resolveArchetypeProficiencyStart(
+          draft.archetype?.type,
+          draft.archetype
+        );
         
         return {
           name: draft.name || 'Unnamed Character',
@@ -496,15 +507,8 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           ...(draft.archetypePathId && { archetypePathId: draft.archetypePathId }),
           ...(draft.pow_abil && { pow_abil: draft.pow_abil }),
           ...(draft.mart_abil && { mart_abil: draft.mart_abil }),
-          // Proficiency allocation - set based on archetype type
-          mart_prof: draft.mart_prof ?? (
-            draft.archetype?.type === 'martial' ? 2 : 
-            draft.archetype?.type === 'powered-martial' ? 1 : 0
-          ),
-          pow_prof: draft.pow_prof ?? (
-            draft.archetype?.type === 'power' ? 2 : 
-            draft.archetype?.type === 'powered-martial' ? 1 : 0
-          ),
+          mart_prof: draft.mart_prof ?? profStart.mart_prof,
+          pow_prof: draft.pow_prof ?? profStart.pow_prof,
           // Health/Energy point allocations from character creation
           healthPoints: draft.healthPoints || 0,
           energyPoints: draft.energyPoints || 0,

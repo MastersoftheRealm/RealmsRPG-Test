@@ -5,7 +5,7 @@ import { Button } from '@/components/ui';
 import { InfoTippy } from '@/components/shared';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { usePowerParts, useTechniqueParts, useGameRules } from '@/hooks';
-import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
+import { calculateMaxHealth, calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
 import { allocateHealthEnergyPool, calculateHealthEnergyPool } from '@/lib/game/formulas';
 import { HealthEnergyAllocator } from '@/components/creator';
 import { findHighestEnergyCostPick } from '@/lib/guided-creator/power-technique-display';
@@ -30,7 +30,7 @@ export function HealthEnergyAllocationSection() {
   const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
 
   const baseHealth = calculateMaxHealth(0, abilities.vitality || 0, level, powAbil, abilities, rules, martAbil);
-  const baseEnergy = calculateMaxEnergy(0, powAbil || martAbil, abilities, level);
+  const baseEnergy = calculateMaxEnergyForArchetype(0, abilities, level, powAbil, martAbil);
 
   const hePool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
 
@@ -38,7 +38,7 @@ export function HealthEnergyAllocationSection() {
   const enBonus = draft.energyPoints || 0;
 
   const maxHp = calculateMaxHealth(hpBonus, abilities.vitality || 0, level, powAbil, abilities, rules, martAbil);
-  const maxEnergy = calculateMaxEnergy(enBonus, powAbil || martAbil, abilities, level);
+  const maxEnergy = calculateMaxEnergyForArchetype(enBonus, abilities, level, powAbil, martAbil);
 
   const highestPick = useMemo(
     () =>
@@ -69,7 +69,7 @@ export function HealthEnergyAllocationSection() {
   return (
     <div>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <p className="text-xs text-text-muted dark:text-text-secondary">
+        <p className="text-xs text-text-muted">
           Base Health: {baseHealth} | Base Energy: {baseEnergy}
         </p>
         <div className="flex items-center gap-1">

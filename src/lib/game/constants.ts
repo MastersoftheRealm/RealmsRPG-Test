@@ -11,7 +11,6 @@ import type { ArchetypeCategory, ArchetypeConfig } from '@/types';
 export const SHARED_CONSTANTS = {
   BASE_ABILITY_POINTS: 7,
   ABILITY_POINTS_PER_3_LEVELS: 1,
-  BASE_SKILL_POINTS: 2,
   SKILL_POINTS_PER_LEVEL: 3,
   BASE_PROFICIENCY: 2,
   PROFICIENCY_PER_5_LEVELS: 1,
@@ -51,12 +50,6 @@ export const ABILITY_LIMITS = {
   COST_INCREASE_THRESHOLD: 4,
 } as const;
 
-/** Skill limits */
-export const SKILL_LIMITS = {
-  MAX_PER_SKILL: 3,
-  DEFENSE_MAX: 3,
-} as const;
-
 /** Archetype configurations (level 1 starting values) */
 export const ARCHETYPE_CONFIGS: Record<ArchetypeCategory, ArchetypeConfig> = {
   power: {
@@ -88,16 +81,6 @@ export const ARCHETYPE_CONFIGS: Record<ArchetypeCategory, ArchetypeConfig> = {
   },
 } as const;
 
-/** All game constants grouped */
-export const GAME_CONSTANTS = {
-  SHARED: SHARED_CONSTANTS,
-  PLAYER: PLAYER_CONSTANTS,
-  CREATURE: CREATURE_CONSTANTS,
-  ABILITY: ABILITY_LIMITS,
-  SKILL: SKILL_LIMITS,
-  ARCHETYPE: ARCHETYPE_CONFIGS,
-} as const;
-
 /** Item property derivation (range spaces from Range property level). */
 export const ITEM_PROPERTY_CONSTANTS = {
   RANGE_BASE_SPACES: 8,
@@ -126,6 +109,16 @@ export const COMBAT_DEFAULTS = {
   BASE_SPEED: 6,
   BASE_EVASION: 10,
   BASE_DEFENSE: 10,
+  /** Score = 10 + Bonus (GAME_RULES "The Score Pattern"): Defense, Potency, Skill Score. */
+  BASE_SCORE: 10,
+  /** Critical Range is +10 over the target Defense / Evasion (GAME_RULES "Critical Hits"). */
+  CRITICAL_RANGE_OVER_TARGET: 10,
+} as const;
+
+/** Action Points: 4 per round (GAME_RULES "Action Points"); tracker allows a headroom cap. */
+export const ACTION_POINT_DEFAULTS = {
+  PER_ROUND: 4,
+  MAX_TRACKED: 10,
 } as const;
 
 /** Six Abilities + Six Defenses for feat requirements and sorting. Display names per GAME_RULES. */

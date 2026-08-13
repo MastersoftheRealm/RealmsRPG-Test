@@ -91,15 +91,6 @@ export interface MechanicContext {
 export { computeSplits } from './dice-splits';
 
 /**
- * Compute the option level for Additional Damage based on dice.
- */
-export function computeAdditionalDamageLevel(diceAmt: number, dieSize: number): number {
-  const total = diceAmt * dieSize;
-  if (total <= 0) return 0;
-  return Math.max(0, Math.floor((total - 4) / 2));
-}
-
-/**
  * Format damage object as a string like "+2d6".
  */
 export function formatTechniqueDamage(
@@ -198,17 +189,11 @@ export function calculateTechniqueCosts(
       sumNonPercentage += energyContribution;
     }
 
-    // TP (special floor for Additional Damage option1)
-    let opt1TPRaw = (def.op_1_tp || 0) * l1;
-    const defId = typeof def.id === 'string' ? parseInt(def.id, 10) : def.id;
-    if (defId === PART_IDS.ADDITIONAL_DAMAGE || def.name === 'Additional Damage') {
-      opt1TPRaw = Math.floor(opt1TPRaw);
-    }
-
-    const rawTP =
-      (def.base_tp || 0) + opt1TPRaw + (def.op_2_tp || 0) * l2 + (def.op_3_tp || 0) * l3;
-
-    const partTP = Math.floor(rawTP);
+    const partTP = computePartTrainingPoints(
+      def,
+      { op_1_lvl: l1, op_2_lvl: l2, op_3_lvl: l3 },
+      'technique'
+    );
     if (partTP > 0) {
       let src = `${partTP} TP: ${def.name}`;
       if (l1 > 0) src += ` (Opt1 ${l1})`;
@@ -220,7 +205,9 @@ export function calculateTechniqueCosts(
   });
 
   const energyRaw = sumNonPercentage * productPercentage;
-  const totalEnergy = Math.ceil(energyRaw);
+  // Reduction parts (e.g. No Attack) can drive the sum below zero; Energy cannot be
+  // negative (GAME_RULES "Energy Below Zero").
+  const totalEnergy = Math.max(0, Math.ceil(energyRaw));
   return { totalEnergy, totalTP, tpSources, energyRaw };
 }
 
