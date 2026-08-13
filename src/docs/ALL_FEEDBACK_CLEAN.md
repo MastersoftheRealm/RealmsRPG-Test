@@ -1,6 +1,13 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-13 (Guided creator tooltips, skills chips, species overview traits)
+Last updated: 2026-08-13 (Species overview size hug + mixed parent cards)
+
+**Raw Feedback Log — 2026-08-13 (Species overview size hug + mixed parent cards)**
+- Context: Guided Ancestry species overview (incl. mixed)
+- Priority: High
+- Feedback: (1) **Choose your size** wireframe spans the whole species overview — unnecessary when there are only two options. (2) Mixed species overview: show **both parent species as cards** (details, pictures, descriptions) in one place; **change mixed-species choices on this page** (mixed only).
+- Disposition: **TASK-720** implemented 2026-08-13 pending-qa DEV-V-013 T081.
+
 
 **Raw Feedback Log — 2026-08-13 (Custom archetype tips, species overview traits, skills chips, Skill Bonus tip)**
 - Context: Guided creator Path L3 custom archetype; Ancestry species overview; Skills step

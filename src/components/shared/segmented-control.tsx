@@ -53,8 +53,9 @@ export function SegmentedControl<T extends string>({
       {...wrapperProps}
       className={cn(
         // Track + bordered idle segments so options read as distinct choices before selection.
-        'flex flex-wrap items-center gap-1 p-1 rounded-lg bg-surface-alt border border-border-light',
-        equalWidth && 'w-full',
+        // Hug the pills unless equalWidth stretches the group (TASK-720 size pickers).
+        'flex-wrap items-center gap-1 p-1 rounded-lg bg-surface-alt border border-border-light',
+        equalWidth ? 'flex w-full' : 'inline-flex w-fit max-w-full',
         className
       )}
     >

@@ -3,12 +3,13 @@
  * =============================================
  * Intentional non-USM shell (TASK-605): ordered pair of distinct species via
  * dual `<select>`s + source SegmentedControl — not list add-X / USM.
- * Call sites: Advanced `species-step`, sheet `edit-species-modal`.
+ * Call sites: Advanced `species-step`, sheet `edit-species-modal`, Guided `species-step` L2 card,
+ * Guided Ancestry mixed overview (change parents).
  */
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Modal, Button } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
 import type { Species } from '@/hooks';
@@ -21,6 +22,9 @@ interface MixedSpeciesModalProps {
   onConfirm: (speciesA: { id: string; name: string }, speciesB: { id: string; name: string }) => void;
   allSpecies: Species[];
   userSpeciesIds: Set<string>;
+  /** Prefill when changing an existing mixed pair (Ancestry overview). */
+  initialSpeciesAId?: string;
+  initialSpeciesBId?: string;
 }
 
 export function MixedSpeciesModal({
@@ -29,10 +33,29 @@ export function MixedSpeciesModal({
   onConfirm,
   allSpecies,
   userSpeciesIds,
+  initialSpeciesAId,
+  initialSpeciesBId,
 }: MixedSpeciesModalProps) {
   const [source, setSource] = useState<SourceFilterValue>('public');
   const [speciesAId, setSpeciesAId] = useState<string>('');
   const [speciesBId, setSpeciesBId] = useState<string>('');
+  const wasOpen = useRef(false);
+
+  useEffect(() => {
+    if (isOpen && !wasOpen.current) {
+      const a = initialSpeciesAId ?? '';
+      const b = initialSpeciesBId ?? '';
+      setSpeciesAId(a);
+      setSpeciesBId(b);
+      setSource(a || b ? 'all' : 'public');
+    }
+    if (!isOpen && wasOpen.current) {
+      setSpeciesAId('');
+      setSpeciesBId('');
+      setSource('public');
+    }
+    wasOpen.current = isOpen;
+  }, [isOpen, initialSpeciesAId, initialSpeciesBId]);
 
   const filteredSpecies = useMemo(() => {
     if (source === 'my') return allSpecies.filter((s) => userSpeciesIds.has(s.id));
@@ -56,14 +79,6 @@ export function MixedSpeciesModal({
   const handleConfirm = () => {
     if (!speciesA || !speciesB) return;
     onConfirm({ id: speciesA.id, name: speciesA.name }, { id: speciesB.id, name: speciesB.name });
-    setSpeciesAId('');
-    setSpeciesBId('');
-    onClose();
-  };
-
-  const handleClose = () => {
-    setSpeciesAId('');
-    setSpeciesBId('');
     onClose();
   };
 
@@ -72,7 +87,7 @@ export function MixedSpeciesModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={handleClose}
+      onClose={onClose}
       title="Mixed species"
       size="lg"
       fullScreenOnMobile
@@ -80,7 +95,7 @@ export function MixedSpeciesModal({
       contentClassName="p-0"
       footer={
         <div className="shrink-0 border-t border-border-light p-4 flex justify-end gap-2">
-          <Button variant="outline" onClick={handleClose} className="min-h-[44px] min-w-[44px]">
+          <Button variant="outline" onClick={onClose} className="min-h-[44px] min-w-[44px]">
             Cancel
           </Button>
           <Button onClick={handleConfirm} disabled={!canConfirm} className="min-h-[44px] min-w-[44px]">

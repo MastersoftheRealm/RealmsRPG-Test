@@ -220,8 +220,6 @@ export function SpeciesRevealPanel({
               label: titleCase(size),
             }))}
             aria-label="Species size"
-            equalWidth
-            className="max-w-md"
           />
           {!selectedSize && (
             <p className="mt-2 font-nunito text-sm text-text-secondary">{copy.sizeChoiceRequired}</p>

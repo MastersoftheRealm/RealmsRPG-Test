@@ -17,6 +17,10 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { MixedSpeciesModal } from '@/components/character-creator/MixedSpeciesModal';
+import {
+  buildGuidedMixedSpeciesDraftPatch,
+  buildGuidedSingleSpeciesDraftPatch,
+} from '@/lib/guided-creator/species-selection-draft';
 import { cn } from '@/lib/utils';
 import { GuidedChoiceCard } from '../guided-choice-card';
 import { getSpeciesSizeOptions } from '../guided-species-utils';
@@ -27,20 +31,6 @@ import { GuidedStepLayout } from '../guided-step-layout';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.species;
 const SPECIES_CREATOR_PATH = '/species-creator';
-
-function resetAncestryOnSpeciesChange(changed: boolean) {
-  if (!changed) return {};
-  return {
-    selectedSize: null,
-    selectedSpeciesTraitChoices: {},
-    selectedAncestryTraitIds: [],
-    selectedCharacteristicId: null,
-    selectedFlawId: null,
-    selectedSpeciesSkillIds: [],
-    selectedSpeciesTraits: [],
-    selectedFlawSpeciesId: null,
-  };
-}
 
 export function SpeciesStep() {
   const { draft, updateDraft, navigationIntent, entryNonce } = useGuidedCreatorStore();
@@ -82,38 +72,16 @@ export function SpeciesStep() {
   const isMixedSelected = draft.speciesMixed;
 
   const handleSelect = (species: Species) => {
-    const nextId = String(species.id);
-    const changed = draft.speciesId !== nextId || draft.speciesMixed;
-    const sizeOptions = getSpeciesSizeOptions(species);
-    updateDraft({
-      speciesId: nextId,
-      speciesName: species.name,
-      speciesMixed: false,
-      mixedSpeciesIds: null,
-      mixedSpeciesNames: null,
-      ...resetAncestryOnSpeciesChange(changed),
-      ...(changed && sizeOptions.length === 1 ? { selectedSize: sizeOptions[0] } : {}),
-    });
+    updateDraft(
+      buildGuidedSingleSpeciesDraftPatch(draft, species, getSpeciesSizeOptions(species))
+    );
   };
 
   const handleMixedConfirm = (
     speciesA: { id: string; name: string },
     speciesB: { id: string; name: string }
   ) => {
-    const nextId = `mixed:${speciesA.id}+${speciesB.id}`;
-    const changed =
-      draft.speciesId !== nextId ||
-      !draft.speciesMixed ||
-      draft.mixedSpeciesIds?.[0] !== speciesA.id ||
-      draft.mixedSpeciesIds?.[1] !== speciesB.id;
-    updateDraft({
-      speciesId: nextId,
-      speciesName: `${speciesA.name} / ${speciesB.name}`,
-      speciesMixed: true,
-      mixedSpeciesIds: [speciesA.id, speciesB.id],
-      mixedSpeciesNames: [speciesA.name, speciesB.name],
-      ...resetAncestryOnSpeciesChange(changed),
-    });
+    updateDraft(buildGuidedMixedSpeciesDraftPatch(draft, speciesA, speciesB));
     setShowMixedModal(false);
   };
 

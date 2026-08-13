@@ -255,9 +255,10 @@ export const GUIDED_CREATOR_COPY = {
         sizeChoiceRequired: 'Select a size to continue.',
       },
       mixedOverview: {
-        title: (nameA: string, nameB: string) => `Mixed: ${nameA} / ${nameB}`,
         description:
           'You combine two species. Next, you will pick traits, skills, and ancestry options from both.',
+        parentsTitle: 'Parent species',
+        changeParents: 'Change species',
         choicesAheadTitle: 'Choices ahead',
         choicesAheadHint:
           'You will choose one species trait from each parent, your species skills (when needed), a characteristic, ancestry traits, and an optional flaw.',

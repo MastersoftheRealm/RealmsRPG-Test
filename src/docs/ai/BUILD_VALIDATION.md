@@ -2111,6 +2111,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Expected**
 - Unselected size options show distinct borders/surfaces (not flat text on a track).
 - Selected option uses primary fill; other options remain bordered idle chips.
+- The size track **hugs** the pills (does not stretch full overview width when there are few sizes).
 - Continue stays blocked until a size is chosen (existing behavior).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -3622,7 +3623,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. On Species L1, **See all species** — confirm full catalog.
 2. On Species L2, confirm **Mixed Species** card at end of grid; open modal, pick two distinct species, confirm selection ring.
 3. Confirm **Create Species** (hatch chrome, bottom-right below grid via `GuidedLayerNav`) opens `/species-creator` in a new tab — not in the sticky Back/Continue footer.
-4. Continue to **Ancestry** — mixed overview shows both parent names; complete trait/skill/characteristic picks (choose 2 skills when 4 options).
+4. Continue to **Ancestry** — mixed overview shows both parent species as cards (art, description, **More details**) plus **Change species**; complete trait/skill/characteristic picks (choose 2 skills when 4 options).
 5. Continue through Skills — locked species skills match mixed picks; save character — `ancestry.mixed` + `speciesIds` on sheet.
 
 **Expected**
@@ -3647,6 +3648,29 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Expected**
 - No name-only skill pick cards/rows in mixed species skill selection flows.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+
+#### DEV-V-013-T081 — Mixed Ancestry overview parent cards + size hug (TASK-720)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-720 |
+| **Where** | Guided `/characters/new/guided` → Ancestry (single-species size pick + mixed overview) |
+| **Needs** | A species with 2+ sizes; two distinct species for mixed |
+
+**Steps**
+1. Pick a multi-size species → Ancestry overview. Confirm **Choose your size** track hugs the pills (not a full-width bar).
+2. Back to Species L2 → Mixed Species → confirm two parents → Ancestry. Confirm both parents are cards with art, description, and **More details** (opens the species deep-dive; Close only — does not switch to a single species).
+3. Click **Change species** — MixedSpeciesModal opens (same dual-select as Species L2), prefilled with the current pair. Confirm a different pair without leaving Ancestry. Confirm ancestry picks reset and the overview still shows the new parents.
+4. Desktop + ~360px: cards stack; Change species stays tappable; size track does not overflow.
+
+**Expected**
+- Size picker hugs few options on single-species and mixed overviews.
+- Mixed overview shows both parents as read-only `GuidedChoiceCard`s and can change them via `MixedSpeciesModal` in place.
+- Single-species overview is unchanged aside from the hugging size track (granted-trait cards still TASK-711).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

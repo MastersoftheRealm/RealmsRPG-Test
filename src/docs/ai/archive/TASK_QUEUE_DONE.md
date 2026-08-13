@@ -1,3 +1,53 @@
+- id: TASK-720
+  title: Species overview - size track hug + mixed parent cards and change
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/segmented-control.tsx
+    - src/components/guided-creator/species-reveal-panel.tsx
+    - src/components/guided-creator/guided-mixed-species-overview.tsx
+    - src/components/guided-creator/steps/ancestry-step.tsx
+    - src/components/guided-creator/steps/species-step.tsx
+    - src/components/character-creator/MixedSpeciesModal.tsx
+    - src/lib/guided-creator/species-selection-draft.ts
+    - src/lib/guided-creator/species-selection-draft.test.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/guide/02-components-and-lists.md
+  description: |
+    Species overview Choose your size SegmentedControl track is a block-level flex
+    bar so the wireframe spans the whole overview even when there are only two size pills.
+    Hug the control when there are few options. For mixed species, show both parent species
+    as cards and let the user change those two choices here via MixedSpeciesModal.
+  acceptance_criteria:
+    - Size picker track hugs two (or few) options; it does not stretch full overview width.
+    - Mixed overview shows both parent species as cards with access to pictures, description, and more details in one place.
+    - Mixed overview has a change-parents control that updates the two species without leaving Ancestry; single-species overview is unchanged.
+    - MixedSpeciesModal remains the dual-select (not USM); build/typecheck/lint pass.
+  completed_work: |
+    - SegmentedControl hugs pills (inline-flex) unless equalWidth; removed equalWidth+max-w-md on species size picker.
+    - Mixed Ancestry overview shows parent GuidedChoiceCards (art, description, More details) plus Change species.
+    - Change species reuses MixedSpeciesModal (prefilled pair); draft patches live in species-selection-draft.ts.
+    - Vitest species-selection-draft; BUILD_VALIDATION DEV-V-013 T081.
+  remaining_work: |
+    - Owner QA: DEV-V-013 T081 (plus T008 hug / T078 step 4).
+  notes: |
+    No second dual-picker. Archived from ACTIVE 2026-08-13 — implementable AC met; verification_status pending-qa.
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T081
+  developer_test_plan: |
+    Suite DEV-V-013 T081 — see BUILD_VALIDATION.md
+
+---
+
 - id: TASK-642
   title: Fix profile email spoofing in createUserProfileAction
   created_at: 2026-08-01

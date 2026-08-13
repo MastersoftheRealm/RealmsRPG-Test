@@ -7,7 +7,8 @@
 
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Spinner } from '@/components/ui';
-import { useMergedSpecies, useTraits, useCodexSkills, resolveTraitIds } from '@/hooks';
+import { MixedSpeciesModal } from '@/components/character-creator/MixedSpeciesModal';
+import { useMergedSpecies, useTraits, useCodexSkills, useUserSpecies, resolveTraitIds } from '@/hooks';
 import type { Species, Trait } from '@/hooks';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
 import {
@@ -25,6 +26,7 @@ import {
   type AncestryPickTask,
 } from '@/lib/guided-creator/ancestry-pick-tasks';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
+import { buildGuidedMixedSpeciesDraftPatch } from '@/lib/guided-creator/species-selection-draft';
 import { resolveForwardLandingPhaseIndex } from '@/lib/guided-creator/ancestry-forward-landing';
 import { landsOnFirstInnerScreen } from '@/lib/guided-creator/guided-substep-nav';
 import { useGuidedCreatorStore, type GuidedDraft } from '@/stores/guided-creator-store';
@@ -96,9 +98,11 @@ export function AncestryStep() {
     entryNonce,
   } = useGuidedCreatorStore();
   const { data: allSpecies = [], isLoading: speciesLoading } = useMergedSpecies();
+  const { data: userSpeciesList = [] } = useUserSpecies();
   const { data: allTraits = [], isLoading: traitsLoading } = useTraits();
   const { data: codexSkills = [] } = useCodexSkills();
   const [phaseIndex, setPhaseIndex] = useState(0);
+  const [showMixedModal, setShowMixedModal] = useState(false);
   const phaseInitialized = useRef(false);
   const lastEntryNonce = useRef<number | null>(null);
   const ancestryChapterComplete = completedSubSteps.includes('ancestry');
@@ -108,6 +112,11 @@ export function AncestryStep() {
     [draft, allSpecies]
   );
   const { isMixed, species, speciesA, speciesB, displayName, ready } = speciesContext;
+
+  const userSpeciesIds = useMemo(
+    () => new Set((userSpeciesList ?? []).map((s) => s.id)),
+    [userSpeciesList]
+  );
 
   const mixedSkillOptionCount = useMemo(() => {
     if (!isMixed || !speciesA || !speciesB) return 0;
@@ -453,6 +462,14 @@ export function AncestryStep() {
     advanceAfterPick();
   };
 
+  const handleMixedConfirm = (
+    nextA: { id: string; name: string },
+    nextB: { id: string; name: string }
+  ) => {
+    updateDraft(buildGuidedMixedSpeciesDraftPatch(draft, nextA, nextB));
+    setShowMixedModal(false);
+  };
+
   const sizeOptions = isMixed
     ? speciesA && speciesB
       ? combineSpeciesSizes(speciesA, speciesB)
@@ -512,6 +529,7 @@ export function AncestryStep() {
             speciesB={speciesB}
             selectedSize={draft.selectedSize}
             onSizeChange={(size) => updateDraft({ selectedSize: size })}
+            onChangeParents={() => setShowMixedModal(true)}
           />
         ) : species ? (
           <SpeciesRevealPanel
@@ -566,6 +584,17 @@ export function AncestryStep() {
           ) : null}
         </div>
       )}
+      {isMixed ? (
+        <MixedSpeciesModal
+          isOpen={showMixedModal}
+          onClose={() => setShowMixedModal(false)}
+          onConfirm={handleMixedConfirm}
+          allSpecies={allSpecies}
+          userSpeciesIds={userSpeciesIds}
+          initialSpeciesAId={draft.mixedSpeciesIds?.[0]}
+          initialSpeciesBId={draft.mixedSpeciesIds?.[1]}
+        />
+      ) : null}
     </GuidedStepLayout>
   );
 }

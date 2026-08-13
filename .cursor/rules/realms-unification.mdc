@@ -20,7 +20,7 @@ alwaysApply: false
 | Sortable column headers | `@/components/shared` → ListHeader (default styling; see below) |
 | List selection modal (add-X, pick from library) | `@/components/shared` → UnifiedSelectionModal (list-first: Search+Filters; mode tabs in `scopeExtra`; SourceFilter/advanced in `headerExtra`; ≤1-line header help or none; leave-with-selection Add selected? — TASK-574) |
 | Encounter / session participant picker (combat, skill, VTT, downtime) | `@/components/shared` → **AddCombatantModal** — intentional non-USM (TASK-571); extend, do not fork or migrate to USM |
-| Mixed-species dual picker (Advanced creator + sheet Edit Species) | `character-creator/MixedSpeciesModal` — intentional non-USM (TASK-605); dual ordered species picks, not list add-X; do not fork or migrate to USM |
+| Mixed-species dual picker (Advanced creator + sheet Edit Species + Guided Ancestry change) | `character-creator/MixedSpeciesModal` — intentional non-USM (TASK-605); dual ordered species picks, not list add-X; do not fork or migrate to USM |
 | Source scope: All / Realms Library / My Library | `@/components/shared` → SourceFilter (built on SegmentedControl) |
 | Two–N option pill toggle (same look as Library / source filter) | `@/components/shared` → SegmentedControl |
 | Admin Codex / Codex browse list chrome | `@/components/shared` → **CodexBrowseListShell** (ADR-0005); not for Official* grids or Admin Archetypes path rows |
