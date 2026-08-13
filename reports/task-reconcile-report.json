@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-11T02:20:20.379Z",
+  "generated_at": "2026-08-13T12:22:31.921Z",
   "tasks": [
     {
       "id": "TASK-706",
@@ -288,6 +288,32 @@
       "completed_at": "2026-08-11",
       "source": "src/docs/ai/archive/TASK_QUEUE_DONE.md",
       "matches": [
+        {
+          "hash": "1dea9d94862f1c047e28e200ccff4e37c041a6b5",
+          "subject": "TASK-702 cleanup: Drop unused compact; lock USM qty chrome CI.",
+          "files": [
+            "src/components/shared/grid-list-row-chrome.ts",
+            "src/components/shared/grid-list-row-collapsed.tsx",
+            "src/components/shared/grid-list-row.tsx",
+            "src/docs/ai/AI_CHANGELOG.md",
+            "src/lib/glr/glr-chrome-spacing-norms.ts",
+            "src/lib/glr/validate-glr-chrome-spacing.test.ts",
+            "src/lib/glr/validate-glr-chrome-spacing.ts",
+            "tests/visual/screenshots.pw.ts-snapshots/styleguide-desktop-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/styleguide-desktop-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/styleguide-mobile-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/styleguide-mobile-light-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-dark-chromium-linux.png",
+            "tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-light-chromium-linux.png"
+          ]
+        },
+        {
+          "hash": "e74baca3cd33657d19cfa74ed4aab4e2e359961c",
+          "subject": "chore: Update task-reconcile-report after TASK-702 commit.",
+          "files": [
+            "reports/task-reconcile-report.json"
+          ]
+        },
         {
           "hash": "2a01e01cdb6547bd4626c4147f19f4799d8664af",
           "subject": "TASK-702 done: Fix GLR right-chrome expand overlay, qty header, hover.",
