@@ -2,6 +2,8 @@
  * Codex Spreadsheet — tab/column config (TASK-617)
  */
 
+import type { CodexCollection } from '@/lib/codex/collections';
+
 export type CodexSpreadsheetTabId =
   | 'feats'
   | 'skills'
@@ -12,17 +14,6 @@ export type CodexSpreadsheetTabId =
   | 'equipment'
   | 'archetypes'
   | 'creature_feats';
-
-export type CodexCollection =
-  | 'codex_feats'
-  | 'codex_skills'
-  | 'codex_species'
-  | 'codex_traits'
-  | 'codex_parts'
-  | 'codex_properties'
-  | 'codex_equipment'
-  | 'codex_archetypes'
-  | 'codex_creature_feats';
 
 export const TAB_CONFIG: Record<
   CodexSpreadsheetTabId,

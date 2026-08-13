@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it, beforeEach, vi } from 'vitest';
-import { FakeSupabase } from './fake-supabase';
+import { FakeSupabase } from '@/lib/codex/fake-supabase';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('@/lib/supabase/session', () => ({

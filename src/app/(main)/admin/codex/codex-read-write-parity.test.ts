@@ -9,7 +9,7 @@
  */
 
 import { describe, expect, it, beforeAll, vi } from 'vitest';
-import { COLUMNAR_COLLECTIONS } from './codex-collections';
+import { COLUMNAR_COLLECTIONS } from '@/lib/codex/collections';
 import { columnarDbColumns } from './codex-column-map';
 import { buildArchetypeLevelRows, buildArchetypeRow } from './codex-archetype-write';
 

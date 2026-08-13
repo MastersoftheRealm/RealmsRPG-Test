@@ -25,7 +25,7 @@ import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import {
   allocateCodexNumericId,
   retireCodexId,
-} from '@/app/(main)/admin/codex/codex-id-allocation';
+} from '@/lib/codex/id-allocation';
 
 const SPECIES_TABLE = 'codex_species';
 

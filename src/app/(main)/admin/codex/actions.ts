@@ -10,14 +10,14 @@ import {
   assertCodexCollection,
   isColumnarCollection,
   type CodexCollection,
-} from './codex-collections';
+} from '@/lib/codex/collections';
 import { toColumnarPayload, toDbPayload } from './codex-column-map';
 import {
   allocateCodexNumericId,
   fetchRetiredIds,
   retireCodexId,
-} from './codex-id-allocation';
-import { findReferencesInRows, REFERENCE_PROBES } from './codex-references';
+} from '@/lib/codex/id-allocation';
+import { findReferencesInRows, REFERENCE_PROBES } from '@/lib/codex/references';
 import {
   buildArchetypeLevelRows,
   buildArchetypeRow,

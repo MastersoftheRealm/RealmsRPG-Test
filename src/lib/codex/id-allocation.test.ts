@@ -10,7 +10,7 @@ import {
   lowestUnusedNumericId,
   parseNumericId,
   retireCodexId,
-} from './codex-id-allocation';
+} from './id-allocation';
 
 describe('lowestUnusedNumericId', () => {
   it('fills a gap that was never used', () => {

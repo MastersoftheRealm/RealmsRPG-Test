@@ -1,11 +1,11 @@
 /**
- * Admin Codex — referential integrity probes for delete (F-13).
- * Codex cross-references are plain id strings in CSV TEXT columns, so a delete cannot be
+ * Codex referential-integrity probes for delete.
+ * Cross-references are plain id strings in CSV TEXT columns, so a delete cannot be
  * caught by a foreign key. These probes describe which columns can point at each collection;
  * `deleteCodexDoc` runs them before removing a row and refuses until the admin acknowledges.
  */
 
-import type { CodexCollection } from './codex-collections';
+import type { CodexCollection } from './collections';
 
 export type ReferenceProbe = {
   table: string;

@@ -11,7 +11,7 @@
 import { useCallback, useState } from 'react';
 import { ConfirmActionModal } from '@/components/shared';
 import { deleteCodexDoc } from './actions';
-import type { CodexCollection } from './codex-spreadsheet-config';
+import type { CodexCollection } from '@/lib/codex/collections';
 
 const REFERENCES_SHOWN = 8;
 

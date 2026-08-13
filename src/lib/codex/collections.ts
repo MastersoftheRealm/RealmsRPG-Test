@@ -1,7 +1,7 @@
 /**
- * Admin Codex — collection allowlist (SEC audit F-03).
- * The codex server actions write through an RLS-bypassing service-role client, so the
- * table name has to be checked at runtime; the `CodexCollection` union is erased at build.
+ * Codex collection allowlist.
+ * Codex server actions (and any service-role writer) must validate the table name at
+ * runtime; the `CodexCollection` union is erased at build.
  */
 
 export type CodexCollection =

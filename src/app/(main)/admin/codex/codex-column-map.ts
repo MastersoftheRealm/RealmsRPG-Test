@@ -5,7 +5,7 @@
  * column set so the read/write parity test can compare it against the `/api/codex` projection.
  */
 
-import type { CodexCollection } from './codex-collections';
+import type { CodexCollection } from '@/lib/codex/collections';
 
 function snakeToCamel(s: string): string {
   // Handle common codex column patterns like op_1_desc -> op1Desc

@@ -13,6 +13,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
 import { useCodexFull } from '@/hooks/use-codex';
 import { createCodexDoc, updateCodexDoc } from './actions';
+import type { CodexCollection } from '@/lib/codex/collections';
 import {
   ACTIONS_COL_WIDTH,
   getColumnWidth,
@@ -21,7 +22,6 @@ import {
   READONLY_COLUMNS,
   searchableColumns as filterSearchableColumns,
   TAB_CONFIG,
-  type CodexCollection,
   type CodexSpreadsheetTabId,
 } from './codex-spreadsheet-config';
 import {
