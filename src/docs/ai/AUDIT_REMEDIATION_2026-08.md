@@ -90,17 +90,19 @@ traceable without reading the diff.
 | **P1** id reuse (consume `codex_retired_ids`) | `in-progress` |
 | **P1** `copyRow` corrupts the dirty set; no optimistic locking; unsaved core-rules edits discarded | `in-progress` |
 
-### Ops, CI & recoverability (reports 11, 12) — in progress
+### Ops, CI & recoverability (reports 11, 12) — done
 
-| Finding | Status |
-|---|---|
-| **P0** `db:seed` clears 9 codex tables before checking for input; no archetypes CSV to restore from | `in-progress` |
-| **P0** backup script's failure looks like its success (CLI fails → silent `pg_dump` fallback) | `in-progress` |
-| **P0** nothing blocks a bad deploy (workflows race the Vercel build); no error monitoring | `in-progress` |
-| **P1** no schema drift detection (`db:migrate` is an `echo`) | `in-progress` |
-| **P1** codex drift scan — must compare against `changed_fields`, or it pages on every legitimate edit | `in-progress` |
-| **P2** 14 dead scripts, empty lint rule, no Prettier config, unused deps, unsound staged typecheck | `in-progress` |
-| `noUncheckedIndexedAccess` (~1,523 index reads) | `queued` | Opt-in `tsconfig.strictest.json` first, then a measured burn-down. Not flipped in this wave. |
+| Finding | Status | Note |
+|---|---|---|
+| **P0** `db:seed` destroyed the codex before checking for input | `done` | Decision logic extracted to a pure, tested `scripts/seed-plan.mjs` (20 tests). Upsert-only by default; `--reset` is actually read; clears only CSV-backed tables; refuses while any codex table cannot be fully repopulated; needs `--allow-partial-reset` plus a typed confirmation. `--dry-run` prints CSV vs live counts per table. Also fixed env loading — it read only `.env`, so it could never have run on this machine. |
+| **P0** backup script's failure looked like its success | `done` | CLI-probe noise captured to a log; every output file checked for minimum size **and** a required SQL marker; explicit SUCCESS/FAILURE with sizes; failed runs renamed `…-FAILED`; hard failure when `pg_dump` is absent. Storage backup now covers all four buckets — `codex-art` (15 objects) and `vtt-maps` (2) were previously unbacked. |
+| **P0** nothing blocked a bad deploy | `done` (in-repo) / `owner-decision` (settings) | `.husky/pre-push` runs typecheck + tests; `npm audit --audit-level=high` added; `next build` per PR cut from 3 to 1; the authenticated e2e step no longer `exit 0`s into a false green. **Branch protection still has to be enabled in GitHub for any of this to block a merge.** |
+| **P0** no error monitoring | `done` (wiring) / `owner-decision` (DSN) | `@sentry/nextjs` wired via `instrumentation.ts`, `instrumentation-client.ts`, `global-error.tsx`, and a `src/lib/observability/report-error.ts` seam. No DSN invented — every path returns early and the SDK is dynamically imported, so an unset DSN is a true no-op. `withSentryConfig` deliberately not added so the build path is byte-identical until a real project exists. |
+| **P1** no schema drift detection | `done` | `npm run db:diff` / `db:baseline:update` (`scripts/db-schema-diff.mjs`), dollar-quote-aware normaliser, refuses on a `pg_dump` major mismatch. **Proven in use:** it immediately caught this program's own wave-1 migration as drift; baseline refreshed and it now reports clean. |
+| **P1** codex drift scan | `done` | `npm run db:check-codex-drift` compares against `changed_fields` so it does not page on legitimate edits. Ran live: 708 rows, 0 collateral nulls. |
+| **P2** dead scripts, lint rule, deps, unsound staged typecheck | `done` | 9 scripts + the empty `raw-color-backlog` rule deleted; 5 kept with cited reasons (the task-649/650 replay path is referenced by `SUPABASE_SCHEMA.md` and `BUILD_VALIDATION.md`; `sync-feat-tags-csv.js` is the only tool that can close the CSV↔DB drift just quantified). `typecheck-staged.mjs` deleted as unsound. `@tailwindcss/forms`/`typography` removed (no `@plugin` directives) with the lockfile re-resolved so `npm ci` still works. |
+| `noUncheckedIndexedAccess` | `queued` | Measured at **163 errors**, not the ~1,523 sites implied. `tsconfig.strictest.json` + `npm run typecheck:strictest` exist for the burn-down. |
+| Prettier | `partial` | `.prettierrc.json` added (plugin + `tailwindStylesheet` for v4) but deliberately **not** wired into `lint-staged`: 1,277 files are unformatted, so `--write` would bury every future commit in unrelated churn, and class reordering would likely break `validate-glr-chrome-spacing.ts`, which string-matches class literals. One line to enable, after a standalone repo-wide format commit. |
 
 ---
 
@@ -164,7 +166,19 @@ These are product calls with real consequences. Each has the numbers gathered.
    −2 applying at creation only.
 4. **Orphan profile row** and **leaked-password protection** (see Wave 1 table).
 5. **Branch protection** must be enabled in GitHub settings for the CI gates to actually block a
-   merge — not settable from the repo.
+   merge — not settable from the repo. Require a PR plus the checks
+   `Lint, contrast & static gates`, `Visual regression & accessibility`, and `verify`.
+6. **URGENT — the next PR will go red until one of these exists.** The authenticated visual/a11y CI
+   step used to `exit 0` when E2E secrets were missing, reading green while testing nothing. It now
+   fails loudly instead. Either set repo secrets `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` (there is a
+   provisioning script: `npm run e2e:provision`) or set repo variable `E2E_OPTIONAL=1` to
+   acknowledge the gap explicitly.
+7. **Sentry project + DSN.** Monitoring is wired but inert until `SENTRY_DSN` /
+   `NEXT_PUBLIC_SENTRY_DSN` exist in Vercel env. Optional third var:
+   `NEXT_PUBLIC_SENTRY_ENVIRONMENT` (falls back to `VERCEL_ENV` → `NODE_ENV`).
+8. **Local Node is v22.14.0 but `engines` requires 24.x**, so every install prints `EBADENGINE`.
+   Either upgrade local Node to match production or relax `engines` — a version skew between local
+   and Vercel is exactly the kind of thing that produces "works on my machine" build failures.
 
 ---
 
@@ -194,3 +208,26 @@ Recorded because the value of an audit is in being right, not in having been rig
 6. **Codex-layer dead-export count was overstated** in a first pass because PowerShell globbing
    treats `[type]` in App Router paths as a character class, skipping every API route. Re-measured
    with ripgrep.
+7. **`noUncheckedIndexedAccess` is far cheaper than implied.** The audit cited ~1,523 unchecked index
+   reads, which reads as the size of the job. Actually enabling the flag produces **163 errors**
+   (TS2532 63, TS2345 49, TS18048 30, TS2322 16), concentrated in `src/app/**` (27),
+   `lib/glr/validate-glr-chrome-spacing.ts` (13) and `character-sheet/library-entity-rows.test.ts`
+   (10). That is one or two sessions, not a wave — measured via `tsconfig.strictest.json` /
+   `npm run typecheck:strictest`.
+8. **The raw-color lint exemption was narrower than reported.** Report 04 said the
+   `components/ui/**` override disabled `realms/no-raw-color` for all 124 files. In fact the empty
+   `RAW_COLOR_BACKLOG` array and the `components/ui/**` waiver are separate blocks, and only **3**
+   files actually violate the rule (`chip.tsx:146`, `modal.tsx:225`, `spinner.tsx:29` — all
+   black/white alpha scrims). The waiver is now scoped to those three and the rule is live for the
+   other 121.
+9. **Seed CSV parity is worse than reported, and now quantified.** Report 12 called 7 of 9 codex
+   tables "roughly reproducible with losses". Measured against live: **every** CSV is behind the
+   database — feats 784/809, parts 414/420, properties 48/53, traits 200/210 — and `codex_feats` has
+   4 id-less rows. So a `--reset` would have been lossy *even for the tables the audit considered
+   reproducible*, not just for `codex_archetypes` (which has no CSV at all). This strengthens the
+   P0 rather than changing it, and is why the new seed guard refuses `--reset` unless every codex
+   table can be fully repopulated.
+10. **Report 13's verdict independently confirmed by tooling.** The new
+    `npm run db:check-codex-drift` scanned all 708 changelog rows and found **0** collateral nulls —
+    i.e. every null was recorded in `changed_fields` as a deliberate edit. That is the same
+    conclusion reached by hand, reproduced by a check that now runs on demand.

@@ -1,0 +1,15 @@
+# Last gate before a broken tree reaches the remote: full-project typecheck + unit tests.
+# CI runs after the push that also triggers the Vercel build, so this is the only check
+# that happens early enough to stop a bad deploy.
+#
+# Deliberate skip (documented in scripts/README.md § Git hooks):
+#   REALMS_SKIP_PREPUSH=1 git push
+if [ "$REALMS_SKIP_PREPUSH" = "1" ]; then
+  echo "pre-push: skipped via REALMS_SKIP_PREPUSH=1"
+  exit 0
+fi
+
+set -e
+
+npm run typecheck
+npm test

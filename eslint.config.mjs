@@ -3,7 +3,6 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 import nextTs from "eslint-config-next/typescript";
 import noRawColor from "./eslint-rules/no-raw-color.mjs";
 import noRawUploadFetch from "./eslint-rules/no-raw-upload-fetch.mjs";
-import { RAW_COLOR_BACKLOG } from "./eslint-rules/raw-color-backlog.mjs";
 
 const realmsPlugin = {
   rules: {
@@ -61,32 +60,22 @@ const eslintConfig = defineConfig([
   // Exemptions:
   // 1. Auth shell (`(auth)/`, `components/auth/`) intentionally uses gray-* for
   //    its dark marketing-style shell (documented exception).
-  // 2. UI primitives define the semantic ramps and still carry a few deprecated
-  //    palette variants slated for removal — they are the source of tokens.
+  // 2. Three UI primitives use a bare black/white alpha for a scrim or track
+  //    (modal overlay, chip pressed state, spinner track) and have no semantic
+  //    overlay token yet. This replaces a blanket `components/ui/**` exemption
+  //    that switched the rule off for 124 files to hide these 3 violations.
   {
     files: [
       "src/app/(auth)/**/*.{ts,tsx}",
       "src/components/auth/**/*.{ts,tsx}",
-      "src/components/ui/**/*.{ts,tsx}",
+      "src/components/ui/chip.tsx",
+      "src/components/ui/modal.tsx",
+      "src/components/ui/spinner.tsx",
     ],
     rules: {
       "realms/no-raw-color": "off",
     },
   },
-  // Migration backlog (ratchet): files that still contain raw colors as of the
-  // Phase 0a audit. The rule stays ON (error) everywhere else and for all new
-  // files. DELETE entries from this list as each file is migrated to tokens
-  // (Phase 1/4) — the goal is an empty list.
-  ...(RAW_COLOR_BACKLOG.length
-    ? [
-        {
-          files: RAW_COLOR_BACKLOG,
-          rules: {
-            "realms/no-raw-color": "off",
-          },
-        },
-      ]
-    : []),
 ]);
 
 export default eslintConfig;

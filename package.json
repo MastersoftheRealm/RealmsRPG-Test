@@ -5,6 +5,7 @@
   "engines": {
     "node": "24.x"
   },
+  "//overrides": "Transitive pins added by `chore: apply npm audit fixes` (133aa520). postcss 8.5.25 hoists one copy across @tailwindcss/postcss, next and vitest's vite; sharp 0.35.3 pins next's optional image-optimization dep. `npm audit` is clean WITH these pins in place, so neither advisory can be re-confirmed from here: to retire them, delete this block, run `npm install`, then `npm audit` — if it stays at 0 vulnerabilities the pins were leftovers and should stay deleted.",
   "overrides": {
     "postcss": "8.5.25",
     "sharp": "0.35.3"
@@ -17,9 +18,9 @@
     "test:api": "vitest run src/app/api",
     "lint": "eslint . --max-warnings 0",
     "typecheck": "tsc --noEmit",
-    "typecheck:staged": "node scripts/typecheck-staged.mjs",
+    "typecheck:strictest": "tsc --noEmit -p tsconfig.strictest.json",
     "format": "prettier --write .",
-    "verify": "npm run build && npm run verify:contrast && npm run lint && npm run verify:visual && npm run verify:a11y",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run verify:contrast && npm run build && npm run verify:visual && npm run verify:a11y",
     "verify:contrast": "node scripts/check-contrast.mjs",
     "verify:contrast:update": "node scripts/check-contrast.mjs --update-baseline",
     "verify:visual": "playwright test tests/visual/screenshots.pw.ts",
@@ -36,8 +37,12 @@
     "verify:chip-unification:update": "npm run build && playwright test -c playwright.chip-unification.config.ts --update-snapshots",
     "e2e:provision": "node scripts/provision-e2e-baseline.js",
     "db:seed": "node scripts/seed-to-supabase.js",
+    "db:seed:dry-run": "node scripts/seed-to-supabase.js --dry-run",
     "db:seed:reset": "node scripts/seed-to-supabase.js --reset",
     "db:migrate": "echo Run SQL in Supabase Dashboard. See sql/README.md and src/docs/SUPABASE_SCHEMA.md.",
+    "db:diff": "node scripts/db-schema-diff.mjs",
+    "db:baseline:update": "node scripts/db-schema-diff.mjs --update",
+    "db:check-codex-drift": "node scripts/check-codex-drift.mjs",
     "tasks:reconcile": "node scripts/reconcile_tasks.js",
     "tasks:reconcile:strict": "node scripts/reconcile_tasks.js --strict --strict-since=2026-07-15",
     "tasks:generate-index": "node scripts/generate-feature-index-barrels.js",
@@ -57,6 +62,7 @@
     "@floating-ui/react": "^0.27.19",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-slot": "^1.2.4",
+    "@sentry/nextjs": "^10.70.0",
     "@supabase/ssr": "^0.8.0",
     "@supabase/supabase-js": "^2.95.3",
     "@tanstack/react-query": "^5.90.16",
@@ -79,9 +85,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@playwright/test": "^1.61.1",
-    "@tailwindcss/forms": "^0.5.11",
     "@tailwindcss/postcss": "^4",
-    "@tailwindcss/typography": "^0.5.19",
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -99,7 +103,6 @@
     "vitest": "^4.1.6"
   },
   "lint-staged": {
-    "*.{js,jsx,mjs,cjs,ts,tsx}": "eslint --fix --max-warnings 0",
-    "*.{ts,tsx}": "npm run typecheck:staged --"
+    "*.{js,jsx,mjs,cjs,ts,tsx}": "eslint --fix --max-warnings 0"
   }
 }

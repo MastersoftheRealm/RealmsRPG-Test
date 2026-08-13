@@ -27,11 +27,13 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 ## Pre-commit hooks
 
-After `npm install`, Husky runs `lint-staged` on every commit. Staged `*.{js,jsx,mjs,cjs,ts,tsx}` files are checked with ESLint (`--max-warnings 0`); staged `*.{ts,tsx}` files also get a scoped TypeScript check via `scripts/typecheck-staged.mjs` (project `tsconfig`, staged paths only).
+After `npm install`, Husky runs `lint-staged` on every commit: staged `*.{js,jsx,mjs,cjs,ts,tsx}` files are checked with ESLint (`--max-warnings 0`).
 
-- Bypass once (emergency only): `git commit --no-verify`
-- Run the same checks manually: `npx lint-staged`
-- Full project checks (CI parity): `npm run lint` and `npm run typecheck`
+A **pre-push** hook then runs `npm run typecheck` and `npm test` on the whole project. The previous per-commit scoped typecheck was removed because it was unsound — its temporary `tsconfig` included only the staged files, so a changed type's *consumers* went unchecked. Whole-project checks on push cost a few seconds and actually catch that.
+
+- Bypass pre-commit once (emergency only): `git commit --no-verify`
+- Bypass pre-push once (emergency only): `REALMS_SKIP_PREPUSH=1 git push`
+- Run the same checks manually: `npx lint-staged`, `npm run typecheck`, `npm test`
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

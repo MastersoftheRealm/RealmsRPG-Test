@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict AC8F3j98Eqwx1ZpgFjYA4dEqCDA6SRwpgfcSoG2eW6eTA5MhKIIKUXfat0uVPqj
+\restrict 8HdrUsSoXTa3tdBcscQf1Nxny2hHThx7yg0vrWRYDreMNdbhDasDW0gaFoSACai
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.3
@@ -1255,14 +1255,16 @@ CREATE FUNCTION public.prevent_unauthorized_role_change() RETURNS trigger
     LANGUAGE plpgsql
     SET search_path TO 'public'
     AS $$
-BEGIN
-  IF NEW.role IS DISTINCT FROM OLD.role
-     AND COALESCE(auth.role(), '') <> 'service_role' THEN
-    RAISE EXCEPTION 'Changing user role is not permitted'
-      USING ERRCODE = '42501';
-  END IF;
-  RETURN NEW;
-END;
+begin
+  if coalesce(auth.role(), '') <> 'service_role' then
+    if tg_op = 'INSERT' then
+      new.role := 'new_player';
+    elsif new.role is distinct from old.role then
+      raise exception 'Changing user role is not permitted' using errcode = '42501';
+    end if;
+  end if;
+  return new;
+end;
 $$;
 
 
@@ -3911,7 +3913,8 @@ CREATE TABLE public.characters (
     archetype_name text,
     ancestry_name text,
     status text,
-    visibility text
+    visibility text DEFAULT 'private'::text NOT NULL,
+    CONSTRAINT characters_visibility_check CHECK ((visibility = ANY (ARRAY['private'::text, 'campaign'::text, 'public'::text])))
 );
 
 
@@ -4170,6 +4173,25 @@ CREATE TABLE public.codex_properties (
     type text,
     mechanic boolean
 );
+
+
+--
+-- Name: codex_retired_ids; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.codex_retired_ids (
+    entity_type text NOT NULL,
+    id text NOT NULL,
+    retired_at timestamp with time zone DEFAULT now() NOT NULL,
+    retired_by text
+);
+
+
+--
+-- Name: TABLE codex_retired_ids; Type: COMMENT; Schema: public; Owner: -
+--
+
+COMMENT ON TABLE public.codex_retired_ids IS 'Tombstones for deleted codex/official entity ids. Id allocation must never reuse an id present here. Service-role access only (RLS enabled, no policies).';
 
 
 --
@@ -5711,6 +5733,14 @@ ALTER TABLE ONLY public.codex_properties
 
 
 --
+-- Name: codex_retired_ids codex_retired_ids_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.codex_retired_ids
+    ADD CONSTRAINT codex_retired_ids_pkey PRIMARY KEY (entity_type, id);
+
+
+--
 -- Name: codex_skills codex_skills_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -6580,6 +6610,13 @@ CREATE INDEX idx_admin_role_audit_target ON public.admin_role_audit USING btree 
 
 
 --
+-- Name: idx_characters_visibility; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_characters_visibility ON public.characters USING btree (visibility);
+
+
+--
 -- Name: idx_codex_change_logs_changed_by_changed_at; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -6794,6 +6831,13 @@ CREATE INDEX idx_user_techniques_image_id ON public.user_techniques USING btree 
 --
 
 CREATE INDEX idx_usernames_user_id ON public.usernames USING btree (user_id);
+
+
+--
+-- Name: idx_vtt_actions_token_id; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX idx_vtt_actions_token_id ON public.vtt_actions USING btree (token_id);
 
 
 --
@@ -7164,7 +7208,7 @@ CREATE TRIGGER set_official_enhanced_items_updated_at BEFORE UPDATE ON public.of
 -- Name: user_profiles trg_prevent_unauthorized_role_change; Type: TRIGGER; Schema: public; Owner: -
 --
 
-CREATE TRIGGER trg_prevent_unauthorized_role_change BEFORE UPDATE OF role ON public.user_profiles FOR EACH ROW EXECUTE FUNCTION public.prevent_unauthorized_role_change();
+CREATE TRIGGER trg_prevent_unauthorized_role_change BEFORE INSERT OR UPDATE ON public.user_profiles FOR EACH ROW EXECUTE FUNCTION public.prevent_unauthorized_role_change();
 
 
 --
@@ -8193,13 +8237,6 @@ CREATE POLICY "Users can delete own powers" ON public.user_powers FOR DELETE TO 
 
 
 --
--- Name: user_profiles Users can delete own profile; Type: POLICY; Schema: public; Owner: -
---
-
-CREATE POLICY "Users can delete own profile" ON public.user_profiles FOR DELETE TO authenticated USING ((id = (( SELECT auth.uid() AS uid))::text));
-
-
---
 -- Name: user_species Users can delete own species; Type: POLICY; Schema: public; Owner: -
 --
 
@@ -8513,7 +8550,7 @@ ALTER TABLE public.characters ENABLE ROW LEVEL SECURITY;
 -- Name: characters characters_select_authenticated; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY characters_select_authenticated ON public.characters FOR SELECT TO authenticated USING (((user_id = (( SELECT auth.uid() AS uid))::text) OR (COALESCE((data ->> 'visibility'::text), ''::text) = 'public'::text) OR ((COALESCE((data ->> 'visibility'::text), ''::text) = 'campaign'::text) AND (EXISTS ( SELECT 1
+CREATE POLICY characters_select_authenticated ON public.characters FOR SELECT TO authenticated USING (((user_id = (( SELECT auth.uid() AS uid))::text) OR (visibility = 'public'::text) OR ((visibility = 'campaign'::text) AND (EXISTS ( SELECT 1
    FROM (public.campaigns c
      CROSS JOIN LATERAL jsonb_array_elements(
         CASE
@@ -8528,7 +8565,7 @@ CREATE POLICY characters_select_authenticated ON public.characters FOR SELECT TO
 -- Name: characters characters_select_public_anon; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY characters_select_public_anon ON public.characters FOR SELECT TO anon USING ((COALESCE((data ->> 'visibility'::text), ''::text) = 'public'::text));
+CREATE POLICY characters_select_public_anon ON public.characters FOR SELECT TO anon USING ((visibility = 'public'::text));
 
 
 --
@@ -8587,6 +8624,12 @@ ALTER TABLE public.codex_parts ENABLE ROW LEVEL SECURITY;
 --
 
 ALTER TABLE public.codex_properties ENABLE ROW LEVEL SECURITY;
+
+--
+-- Name: codex_retired_ids; Type: ROW SECURITY; Schema: public; Owner: -
+--
+
+ALTER TABLE public.codex_retired_ids ENABLE ROW LEVEL SECURITY;
 
 --
 -- Name: codex_skills; Type: ROW SECURITY; Schema: public; Owner: -
@@ -8736,10 +8779,14 @@ CREATE POLICY role_policies_admin_update ON public.role_policies FOR UPDATE TO a
 
 
 --
--- Name: role_policies role_policies_select_authenticated; Type: POLICY; Schema: public; Owner: -
+-- Name: role_policies role_policies_select_scoped; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY role_policies_select_authenticated ON public.role_policies FOR SELECT TO authenticated USING (true);
+CREATE POLICY role_policies_select_scoped ON public.role_policies FOR SELECT TO authenticated USING (((role = ( SELECT up.role
+   FROM public.user_profiles up
+  WHERE (up.id = (( SELECT auth.uid() AS uid))::text))) OR (EXISTS ( SELECT 1
+   FROM public.user_profiles up
+  WHERE ((up.id = (( SELECT auth.uid() AS uid))::text) AND (up.role = 'admin'::public."UserRole"))))));
 
 
 --
@@ -9177,5 +9224,5 @@ CREATE EVENT TRIGGER pgrst_drop_watch ON sql_drop
 -- PostgreSQL database dump complete
 --
 
-\unrestrict AC8F3j98Eqwx1ZpgFjYA4dEqCDA6SRwpgfcSoG2eW6eTA5MhKIIKUXfat0uVPqj
+\unrestrict 8HdrUsSoXTa3tdBcscQf1Nxny2hHThx7yg0vrWRYDreMNdbhDasDW0gaFoSACai
 

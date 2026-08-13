@@ -49,6 +49,6 @@ Set `priority`, `status: not-started`, `related_files`, and clear `acceptance_cr
 
 - `node scripts/extract_feedback.js` — Convert raw feedback → tasks
 - `node scripts/triage_tasks.js` — Infer related_files for tasks (--apply to update)
-- `node scripts/session_submit.js "feedback..."` — Append feedback, extract, triage
+- (removed 2026-08) `scripts/session_submit.js` — deleted as dead tooling; run `extract_feedback.js` then `triage_tasks.js` directly
 - `npm run tasks:validate` — Strict reconcile + doc/path/related_files checks (CI)
 - `node scripts/reconcile_tasks.js --strict --strict-since=2026-07-15` — TASK-### ↔ commits (baseline allowlist for legacy)

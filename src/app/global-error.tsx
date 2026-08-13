@@ -8,6 +8,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { reportError } from '@/lib/observability';
 
 interface GlobalErrorProps {
   error: Error & { digest?: string };
@@ -16,7 +17,7 @@ interface GlobalErrorProps {
 
 export default function GlobalError({ error, reset }: GlobalErrorProps) {
   useEffect(() => {
-    console.error('[GlobalError]', error);
+    reportError(error, { scope: 'GlobalError', extra: { digest: error.digest } });
   }, [error]);
 
   return (

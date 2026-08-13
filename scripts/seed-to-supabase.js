@@ -2,25 +2,32 @@
 /**
  * Seed Codex Data from CSV (columnar tables)
  * ==========================================
- * Reads CSV files from scripts/seed-data/ or codex_csv/ and inserts into Supabase
+ * Reads CSV files from scripts/seed-data/ or codex_csv/ and upserts them into Supabase
  * codex tables using Supabase client (no Prisma).
  *
  * Requires: NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in .env
- * Run: npm run db:seed
- * Or:  node scripts/seed-to-supabase.js
+ * Run: npm run db:seed                          # upsert only, never deletes
+ * Or:  npm run db:seed:reset                    # clear-then-seed, requires confirmation
  *
- * This script always clears all codex tables before seeding. Use with care.
+ * Flags: --reset --allow-partial-reset --dry-run --yes
+ * Deletion rules live in scripts/seed-plan.mjs (unit-tested); nothing is deleted before
+ * every CSV has been parsed, validated and reported.
  */
 
-require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const fs = require('fs');
 const path = require('path');
+const readline = require('readline');
+
+for (const name of ['.env.local', '.env']) {
+  require('dotenv').config({ path: path.join(__dirname, '..', name) });
+}
+
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env');
+  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local or .env');
   process.exit(1);
 }
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -28,6 +35,8 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const SEED_DIR = path.join(__dirname, 'seed-data');
 const CODEX_CSV_DIR = path.join(__dirname, '..', 'codex_csv');
 const CODEX_CSV_DIR_LEGACY = path.join(__dirname, '..', 'Codex csv');
+
+const CONFIRMATION_PHRASE = 'reset codex';
 
 const FILE_TO_TABLE = {
   feats: 'codex_feats',
@@ -144,102 +153,168 @@ function slugify(str) {
     .replace(/[^a-z0-9_-]/g, '');
 }
 
-async function clearCodexTables() {
-  console.log('Clearing codex tables...');
-  for (const tableName of CODEX_TABLES) {
-    try {
-      const { data: rows } = await supabase.from(tableName).select('id');
-      const ids = (rows || []).map((r) => r.id);
-      if (ids.length > 0) {
-        const batch = 200;
-        for (let i = 0; i < ids.length; i += batch) {
-          const chunk = ids.slice(i, i + batch);
-          await supabase.from(tableName).delete().in('id', chunk);
-        }
-      }
-      console.log(`  Cleared ${tableName}`);
-    } catch (err) {
-      console.error(`  Failed to clear ${tableName}:`, err.message);
-    }
-  }
-  console.log('');
+/** A row is only seedable when it yields a stable id; index fallbacks would create junk rows. */
+function rowId(row, idColumn = 'id') {
+  const raw = row[idColumn] || row.id || slugify(row.name || row.Name || '');
+  return String(raw || '').trim();
 }
 
-async function seedTable(tableName, rows, idColumn = 'id') {
+function resolveSeedDir() {
+  for (const dir of [SEED_DIR, CODEX_CSV_DIR, CODEX_CSV_DIR_LEGACY]) {
+    if (!fs.existsSync(dir)) continue;
+    if (fs.readdirSync(dir).some((file) => file.endsWith('.csv'))) return dir;
+  }
+  return null;
+}
+
+/** Parse and validate every CSV up front, so no decision is made on unread input. */
+function loadCsvTables(seedDir) {
+  const loaded = {};
+  const unmapped = [];
+
+  for (const file of fs.readdirSync(seedDir).filter((f) => f.endsWith('.csv'))) {
+    const base = path.basename(file, '.csv');
+    const tableName = FILE_TO_TABLE[base] || FILE_TO_TABLE[fileNameToTableKey(base)];
+    if (!tableName) {
+      unmapped.push(file);
+      continue;
+    }
+
+    const rows = parseCSV(fs.readFileSync(path.join(seedDir, file), 'utf-8'));
+    const invalidRows = rows.filter((row) => !rowId(row)).length;
+    const existing = loaded[tableName];
+    if (existing) {
+      existing.rows.push(...rows);
+      existing.rowCount = existing.rows.length;
+      existing.invalidRows += invalidRows;
+      existing.file = `${existing.file} + ${file}`;
+      continue;
+    }
+    loaded[tableName] = { file, rows, rowCount: rows.length, invalidRows };
+  }
+
+  return { loaded, unmapped };
+}
+
+async function fetchLiveCounts(tables) {
+  const counts = {};
+  for (const table of tables) {
+    const { count, error } = await supabase.from(table).select('id', { count: 'exact', head: true });
+    counts[table] = error ? null : (count ?? null);
+  }
+  return counts;
+}
+
+function confirm(phrase) {
+  if (!process.stdin.isTTY) return Promise.resolve(false);
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  return new Promise((resolve) => {
+    rl.question(`Type "${phrase}" to proceed: `, (answer) => {
+      rl.close();
+      resolve(answer.trim() === phrase);
+    });
+  });
+}
+
+async function clearTable(tableName) {
+  const { data: rows, error: selectError } = await supabase.from(tableName).select('id');
+  if (selectError) throw new Error(`Cannot read ${tableName} before clearing: ${selectError.message}`);
+
+  const ids = (rows || []).map((r) => r.id);
+  const batch = 200;
+  for (let i = 0; i < ids.length; i += batch) {
+    const chunk = ids.slice(i, i + batch);
+    const { error } = await supabase.from(tableName).delete().in('id', chunk);
+    if (error) throw new Error(`Failed to clear ${tableName}: ${error.message}`);
+  }
+  return ids.length;
+}
+
+async function seedTable(tableName, rows) {
   let count = 0;
-  for (let i = 0; i < rows.length; i++) {
-    const row = rows[i];
-    const id = (row[idColumn] || row.id || slugify(row.name || row.Name || `row-${i}`)).trim();
-    const idStr = id || `row-${i}`;
-    if (!idStr) continue;
+  let skipped = 0;
+  for (const row of rows) {
+    const id = rowId(row);
+    if (!id) {
+      skipped++;
+      continue;
+    }
 
     const payload = rowToColumnarPayload(tableName, row);
-    const dbRow = { id: idStr, ...toSnakeRow(payload) };
+    const dbRow = { id, ...toSnakeRow(payload) };
 
     const { error } = await supabase.from(tableName).upsert(dbRow, { onConflict: 'id' });
     if (error) {
-      console.error(`  Error upserting ${idStr} in ${tableName}:`, error.message);
+      console.error(`  Error upserting ${id} in ${tableName}:`, error.message);
     } else {
       count++;
     }
   }
-  return count;
+  return { count, skipped };
 }
 
 async function main() {
-  await clearCodexTables();
+  const { parseSeedArgs, buildSeedPlan, formatSeedPlan } = await import('./seed-plan.mjs');
+  const options = parseSeedArgs(process.argv.slice(2));
 
-  console.log('Seeding codex data from CSV...\n');
-
-  if (!fs.existsSync(SEED_DIR)) {
-    console.log(`Creating ${SEED_DIR} (add your CSV files here)`);
+  const seedDir = resolveSeedDir();
+  if (!seedDir) {
     fs.mkdirSync(SEED_DIR, { recursive: true });
-    console.log('No CSV files found. Add feats.csv, parts.csv, etc. and run again.');
+    console.error(
+      `No CSV files found in ${SEED_DIR}, ${CODEX_CSV_DIR} or ${CODEX_CSV_DIR_LEGACY}.\n` +
+        'Add feats.csv, parts.csv, etc. and run again. Nothing was changed.',
+    );
+    process.exit(1);
+  }
+
+  const { loaded, unmapped } = loadCsvTables(seedDir);
+  const liveCounts = await fetchLiveCounts(CODEX_TABLES);
+  const plan = buildSeedPlan({ tables: CODEX_TABLES, loaded, liveCounts, options });
+
+  console.log(formatSeedPlan(plan, { seedDir }));
+  if (unmapped.length > 0) {
+    console.log(`\nIgnored (no table mapping): ${unmapped.join(', ')}`);
+  }
+
+  if (plan.blockers.length > 0) {
+    console.error('\nRefusing to run:');
+    for (const blocker of plan.blockers) console.error(`  - ${blocker}`);
+    process.exit(1);
+  }
+
+  if (plan.dryRun) {
+    console.log('\nDry run — no rows were read into or deleted from the database.');
     return;
   }
 
-  let seedDir = SEED_DIR;
-  const seedCsvCount = fs.existsSync(SEED_DIR) ? fs.readdirSync(SEED_DIR).filter((f) => f.endsWith('.csv')).length : 0;
-  const codexCsvCount = fs.existsSync(CODEX_CSV_DIR) ? fs.readdirSync(CODEX_CSV_DIR).filter((f) => f.endsWith('.csv')).length : 0;
-  const legacyCsvCount = fs.existsSync(CODEX_CSV_DIR_LEGACY) ? fs.readdirSync(CODEX_CSV_DIR_LEGACY).filter((f) => f.endsWith('.csv')).length : 0;
-  if (seedCsvCount === 0 && codexCsvCount > 0) {
-    seedDir = CODEX_CSV_DIR;
-    console.log('Using codex_csv folder\n');
-  } else if (seedCsvCount === 0 && legacyCsvCount > 0) {
-    seedDir = CODEX_CSV_DIR_LEGACY;
-    console.log('Using Codex csv folder\n');
-  } else if (seedCsvCount === 0) {
-    if (!fs.existsSync(SEED_DIR)) fs.mkdirSync(SEED_DIR, { recursive: true });
-    console.log('No CSV files. Add feats.csv, etc. to scripts/seed-data/ or Codex csv/');
-    return;
-  }
-
-  const files = fs.readdirSync(seedDir).filter((f) => f.endsWith('.csv'));
-  if (files.length === 0) {
-    console.log('No CSV files found.');
-    return;
-  }
-
-  for (const file of files) {
-    const base = path.basename(file, '.csv');
-    const tableKey = fileNameToTableKey(base);
-    const tableName = FILE_TO_TABLE[base] || FILE_TO_TABLE[tableKey];
-    if (!tableName) {
-      console.log(`Skipping ${file} (no table mapping)`);
-      continue;
+  if (plan.clearTables.length > 0) {
+    console.log(
+      `\nThis will DELETE every row from: ${plan.clearTables.map((row) => row.table).join(', ')}`,
+    );
+    if (plan.requiresConfirmation) {
+      const confirmed = await confirm(CONFIRMATION_PHRASE);
+      if (!confirmed) {
+        console.error(
+          process.stdin.isTTY
+            ? 'Confirmation did not match. Nothing was changed.'
+            : 'Confirmation required but stdin is not interactive. Re-run with --yes. Nothing was changed.',
+        );
+        process.exit(1);
+      }
     }
 
-    const filePath = path.join(seedDir, file);
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const rows = parseCSV(content);
-
-    if (rows.length === 0) {
-      console.log(`${file}: no rows`);
-      continue;
+    for (const row of plan.clearTables) {
+      const deleted = await clearTable(row.table);
+      console.log(`  Cleared ${row.table} (${deleted} rows)`);
     }
+  }
 
-    const count = await seedTable(tableName, rows);
-    console.log(`${file} -> ${tableName}: ${count} rows`);
+  console.log('');
+  for (const row of plan.upsertTables) {
+    const entry = loaded[row.table];
+    const { count, skipped } = await seedTable(row.table, entry.rows);
+    const suffix = skipped > 0 ? ` (${skipped} skipped — no id)` : '';
+    console.log(`${entry.file} -> ${row.table}: ${count} rows${suffix}`);
   }
 
   console.log('\nDone.');

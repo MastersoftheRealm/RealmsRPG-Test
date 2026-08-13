@@ -8,6 +8,30 @@
 
 ---
 
+## Drift detection (`schema/`)
+
+`sql/schema/0000_baseline_<date>.sql` is a committed `pg_dump --schema-only --no-owner --no-acl`
+of the live database. It is the diff target that makes "did someone change the DB without a
+migration?" answerable.
+
+| Command | What it does |
+|---------|--------------|
+| `npm run db:diff` | Dumps the live schema with the same tool + flags, normalises both sides (strips the random `\restrict` token, tool-version headers, comments and object ordering), then `git diff --no-index`. **Exits non-zero on drift.** |
+| `npm run db:baseline:update` | Writes a fresh `0000_baseline_<today>.sql`. Use this only after the corresponding migration file has been added to `sql/`, and delete the superseded baseline in the same commit so exactly one stays committed. |
+| `npm run db:check-codex-drift` | Scans `codex_change_logs` for fields that went value → null **without** the null appearing in `changed_fields` — i.e. collateral loss rather than a deliberate edit. |
+
+Requires `DIRECT_URL` (preferred) or `DATABASE_URL` in `.env.local` / `.env`, plus `pg_dump`.
+The dump must come from the same **major** pg_dump version as the baseline (recorded in its
+header) or every object reports as drift; `db:diff` refuses to run on a mismatch unless
+`--allow-tool-mismatch` is passed. Working files land in `.db-diff/` (gitignored).
+
+**Workflow.** Run `npm run db:diff` before a release and after any Dashboard/MCP apply. Drift
+output is a list of live objects that no committed SQL creates: for each one, add the migration
+to `sql/`, apply nothing new, then refresh the baseline. Neither command is a PR gate — both
+need database credentials — so they are manual or scheduled checks.
+
+---
+
 ## Applied Supabase migrations (schema_migrations)
 
 These are recorded in `supabase_migrations.schema_migrations` on RealmsRPG-Test. Local file = source to re-run on a **new** environment (idempotent where noted).
