@@ -3,6 +3,7 @@
  */
 
 import type { ChipData } from '@/components/shared';
+import type { ColumnValue } from '@/components/shared/grid-list-row';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryPower } from '@/types/library';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
@@ -94,6 +95,19 @@ export function buildOfficialPowerRows(
         .filter(Boolean),
     };
   });
+}
+
+/** Dense browse columns — same keys as `OFFICIAL_POWER_HEADER_COLUMNS` (Library + Guided L2/L3). */
+export function officialPowerRowColumns(row: OfficialPowerRow): ColumnValue[] {
+  return [
+    { key: 'category', value: row.category || '-', align: 'center' },
+    { key: 'energy', value: row.energy ?? '-', highlight: true, align: 'center' },
+    { key: 'action', value: row.action || '-', align: 'center' },
+    { key: 'duration', value: row.duration || '-', align: 'center' },
+    { key: 'range', value: row.range || '-', align: 'center' },
+    { key: 'area', value: row.area || '-', align: 'center' },
+    { key: 'damage', value: row.damage || '-', align: 'center' },
+  ];
 }
 
 export function filterOfficialPowerRows<

@@ -194,6 +194,8 @@ export function GuidedInlineCatalogList({
                     totalCost={item.totalCost}
                     costLabel={item.costLabel}
                     badges={item.badges}
+                    warningMessage={item.warningMessage}
+                    chips={item.chips}
                     rightSlot={
                       renderSelectedRightSlot ? (
                         renderSelectedRightSlot(item)

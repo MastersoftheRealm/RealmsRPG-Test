@@ -13,6 +13,7 @@ import {
   type MetadataDetailSection,
 } from '@/lib/chip/list-row-metadata';
 import { columnDisplayLabel } from './grid-list-row-columns';
+import { GRID_LIST_ROW_EXPANDED_BAND_CLASS } from './grid-list-row-chrome';
 import { DetailSectionLabel, partsPropertiesHelpContent } from './grid-list-row-detail';
 import type { ColumnValue } from './grid-list-row-types';
 
@@ -78,7 +79,7 @@ export function GridListRowExpandedBody({
   return (
     <div
       className={cn(
-        'border-t border-border-light bg-surface-alt',
+        GRID_LIST_ROW_EXPANDED_BAND_CLASS,
         compact ? 'px-3 py-3' : 'px-4 py-4',
         // Only indent when selection is an *inline* grid track (header + lives in the
         // collapsed grid). External SelectionToggle is a sibling column — no mr needed

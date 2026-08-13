@@ -552,7 +552,7 @@ Powers and techniques follow the same unified pattern as the other steps (§3.1)
 | Contextual synergy copy | Why a power fits the build's role |
 | Layer 2 (guided) | **See more options** → `UnifiedSelectionModal` + GridListRow (Energy ≤ theoretical L1 max; fallback Energy > 20 excluded); innate See more → threshold-filtered modal |
 
-**Shipped (guided):** [`powers-techniques-step.tsx`](../components/guided-creator/steps/powers-techniques-step.tsx) — Loadout-style L1 cards (title-adjacent Training Points; Action Type value-only + Energy in See more); dual innate/regular lists for Power users; shared **LoadoutBudgetBar** TP + **PointStatus** Innate Energy; L2 via [`GuidedPowersTechniquesL2Modal`](../components/guided-creator/guided-powers-techniques-l2-modal.tsx) (TASK-463/470–472). Path recommended innates from `level1.innatePowers` when authored (TASK-473 admin field). Advanced [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx) unchanged.
+**Shipped (guided):** [`powers-techniques-step.tsx`](../components/guided-creator/steps/powers-techniques-step.tsx) — Loadout-style L1 cards (title-adjacent Training Points; Action Type value-only + Energy in See more); dual innate/regular lists for Power users; shared **LoadoutBudgetBar** with Innate Energy as `leading` + Training Points (same inline PointStatus as Skills/Abilities — TASK-706); L2 via [`GuidedPowersTechniquesL2Modal`](../components/guided-creator/guided-powers-techniques-l2-modal.tsx) (TASK-463/470–472). Path recommended innates from `level1.innatePowers` when authored (TASK-473 admin field). Advanced [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx) unchanged.
 
 ### 5.9 Resource Clarity (Training Points / Energy / Currency) — cross-cutting
 

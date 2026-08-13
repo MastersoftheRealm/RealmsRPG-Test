@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH,
+  GRID_LIST_ROW_EXPANDED_BAND_CLASS,
   buildMobileCollapsedGridColumns,
   countGridTemplateTracks,
   expandGridTemplateTokens,
@@ -72,5 +73,12 @@ describe('grid-list-row-chrome mobile collapse', () => {
         mobileVisibleDataTracks: 1,
       })
     ).toBe('minmax(0, 1fr) auto 40px');
+  });
+});
+
+describe('GLR expanded band (TASK-710)', () => {
+  it('uses surface-alt with a top border so chrome fill matches the body', () => {
+    expect(GRID_LIST_ROW_EXPANDED_BAND_CLASS).toContain('bg-surface-alt');
+    expect(GRID_LIST_ROW_EXPANDED_BAND_CLASS).toContain('border-t');
   });
 });

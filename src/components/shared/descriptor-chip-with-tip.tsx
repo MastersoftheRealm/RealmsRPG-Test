@@ -53,7 +53,8 @@ export function DescriptorChipWithTip({
           content={tip}
           label={`${chip.name} details`}
           size="inline"
-          className="!min-h-6 !min-w-6 md:!min-h-5 md:!min-w-5 -my-0.5 text-text-muted dark:text-text-secondary hover:text-primary-link-fg"
+          tone="current"
+          className="!min-h-6 !min-w-6 md:!min-h-5 md:!min-w-5 -my-0.5"
         />
       </DescriptorChip>
     </span>

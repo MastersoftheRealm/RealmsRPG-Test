@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback, type ReactNode } from 'react';
 import {
   UnifiedSelectionModal,
   LoadoutBudgetBar,
@@ -34,6 +34,7 @@ export interface GuidedEquipmentL2ModalProps {
   gearBudget: number;
   /** Level-1 starting Currency (PointStatus total). */
   currencyStarting: number;
+  scopeExtra?: ReactNode;
   onClose: () => void;
   onDraftChange: (partial: Partial<GuidedDraft>) => void;
 }
@@ -47,6 +48,7 @@ export function GuidedEquipmentL2Modal({
   tpLimit,
   gearBudget,
   currencyStarting,
+  scopeExtra,
   onClose,
   onDraftChange,
 }: GuidedEquipmentL2ModalProps) {
@@ -153,6 +155,7 @@ export function GuidedEquipmentL2Modal({
       itemLabel={phase === 'gear' ? 'item' : phase}
       emptyMessage={l2Copy.emptyMessage(phase)}
       searchPlaceholder={l2Copy.searchPlaceholder(phase)}
+      scopeExtra={scopeExtra}
       footerExtra={footerExtra}
       confirmDisabled={confirmDisabled}
       size="xl"

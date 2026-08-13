@@ -9,15 +9,8 @@ import type { LibraryItem } from '@/types/library';
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
+import { deriveShieldDamageFromProperties, resolveWeaponRangeDisplay } from '@/lib/calculators';
 import {
-  deriveAgilityReductionFromProperties,
-  deriveCriticalRangeIncreaseFromProperties,
-  deriveShieldAmountFromProperties,
-  deriveShieldDamageFromProperties,
-  resolveWeaponRangeDisplay,
-} from '@/lib/calculators';
-import {
-  armorStatsForRef,
   libraryRowForRef,
   rowsForEquipmentPhase,
   weaponDamageLineForRef,
@@ -32,20 +25,17 @@ import {
   type EquipmentEligibilityContext,
   type EquipmentPhase,
 } from '@/lib/guided-creator/equipment-eligibility';
-import { buildEquipmentPhaseCardStats } from '@/lib/guided-creator/equipment-phase-stats';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { resolveCatalogRowUnitCost } from '@/lib/guided-creator/equipment-currency';
 import {
-  deriveAbilityRequirementFromProperties,
-} from '@/lib/game/weapon-attack-ability';
-import { formatAbilityRequirementFact } from '@/lib/detail-option/compact-facts';
-import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
-import {
   armamentRowColumns,
+  buildOfficialItemRows,
   normalizeArmamentKind,
   type OfficialItemRow,
 } from '@/lib/library/official-item-list';
+import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { formatListCellLabel, normalizeId } from '@/lib/utils';
+import type { ItemProperty } from '@/hooks/codex-types';
 
 export interface GuidedEquipmentL2ItemData {
   ref: PathItemRecommendation;
@@ -56,6 +46,12 @@ export interface GuidedEquipmentL2ItemData {
 function mapCategory(phase: EquipmentPhase): GuidedEquipmentL2ItemData['category'] {
   if (phase === 'armor') return 'armor';
   if (phase === 'gear') return 'equipment';
+  return 'weapon';
+}
+
+function asLibraryItemType(type: string | undefined): LibraryItem['type'] {
+  const t = String(type ?? '').toLowerCase();
+  if (t === 'armor' || t === 'shield' || t === 'equipment') return t;
   return 'weapon';
 }
 
@@ -82,87 +78,60 @@ function rarityDisplay(row: EligibleEquipmentRow): string {
   return formatListCellLabel(row.rarity ?? 'common') || 'Common';
 }
 
-function abilityRequirementDisplay(row: EligibleEquipmentRow): string {
-  const req =
-    row.abilityRequirement ??
-    deriveAbilityRequirementFromProperties(row.properties);
-  if (!req?.name?.trim() || req.level == null || Number.isNaN(Number(req.level))) {
-    return '-';
-  }
-  const fact = formatAbilityRequirementFact({
-    name: req.name.trim(),
-    level: Number(req.level),
-  });
-  if (!fact) return '-';
-  return fact.replace(/ Requirement /, ' ');
-}
-
 function rangeDisplay(row: EligibleEquipmentRow): string {
   return resolveWeaponRangeDisplay(row.range, (row.properties ?? []) as ItemPropertyPayload[]);
 }
 
-/** Build OfficialItemRow so Guided reuses `armamentRowColumns` (TASK-688 cleanup). */
+function catalogRowAsLibraryItem(
+  row: EligibleEquipmentRow,
+  official: LibraryItem | undefined
+): LibraryItem {
+  if (official) return official;
+  return {
+    id: row.id,
+    docId: row.id,
+    name: row.name,
+    type: asLibraryItemType(row.type),
+    properties: (row.properties ?? []) as LibraryItem['properties'],
+    abilityRequirement: row.abilityRequirement ?? undefined,
+  };
+}
+
+/** Official GLR row + catalog overlays (unit cost, TP, range, mixed-list damage). */
 function toOfficialItemRowForGuided(
   row: EligibleEquipmentRow,
   unitCost: number,
   officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
+  codexEquipment: CodexEquipmentItem[],
+  itemProperties: ItemPropertyTpRow[] = []
 ): OfficialItemRow {
-  const props = (row.properties ?? []) as ItemPropertyPayload[];
-  const lib = libraryRowForRef(row.id, officialItems, codexEquipment);
   const official = officialItems.find((i) => normalizeId(String(i.id)) === normalizeId(row.id));
-  const armor = armorStatsForRef(row.id, officialItems, codexEquipment);
-  const agility =
-    armor.agilityPenalty != null && armor.agilityPenalty > 0
-      ? armor.agilityPenalty
-      : official && typeof official.agilityReduction === 'number'
-        ? official.agilityReduction
-        : deriveAgilityReductionFromProperties(props);
-  const crit =
-    official && typeof official.criticalRangeIncrease === 'number'
-      ? official.criticalRangeIncrease
-      : deriveCriticalRangeIncreaseFromProperties(props);
-  const block = deriveShieldAmountFromProperties(props);
+  const kind = normalizeArmamentKind(row.type);
+  const [built] = buildOfficialItemRows(
+    [catalogRowAsLibraryItem(row, official)],
+    itemProperties as ItemProperty[]
+  );
+  const lib = libraryRowForRef(row.id, officialItems, codexEquipment);
+  const description =
+    lib && 'description' in lib ? String(lib.description ?? '').trim() : built?.description ?? '';
   const shieldDamage =
-    deriveShieldDamageFromProperties(props) ??
+    deriveShieldDamageFromProperties((row.properties ?? []) as ItemPropertyPayload[]) ??
     (typeof (lib as CodexEquipmentItem | undefined)?.damage === 'string'
       ? String((lib as CodexEquipmentItem).damage)
       : null);
   const weaponDamage = weaponDamageLineForRef(row.id, officialItems, codexEquipment) ?? '-';
-  const kind = normalizeArmamentKind(row.type);
-  const damageReduction =
-    armor.damageReduction != null && armor.damageReduction > 0
-      ? armor.damageReduction
-      : official
-        ? resolveArmorDamageReduction(official)
-        : 0;
-  const description =
-    lib && 'description' in lib ? String(lib.description ?? '').trim() : '';
 
   return {
+    ...(built as OfficialItemRow),
     id: row.id,
-    raw: (official as LibraryItem) ?? {
-      id: row.id,
-      docId: row.id,
-      name: row.name,
-      type: row.type,
-      properties: row.properties ?? [],
-    },
     name: row.name,
     description,
-    type: formatListCellLabel(row.type),
     rarity: rarityDisplay(row),
     currency: unitCost,
     tp: row.trainingPoints ?? 0,
     range: rangeDisplay(row),
-    damage: kind === 'shield' ? shieldDamage || '-' : weaponDamage,
-    damageReduction,
-    agilityReduction: agility > 0 ? agility : 0,
-    abilityRequirement: abilityRequirementDisplay(row),
-    abilityReq: row.abilityRequirement ?? null,
-    criticalRangeIncrease: crit > 0 ? crit : 0,
-    block: block !== '-' ? block : '-',
-    parts: [],
+    damage: kind === 'shield' ? shieldDamage || built?.damage || '-' : weaponDamage,
+    abilityReq: row.abilityRequirement ?? built?.abilityReq ?? null,
   };
 }
 
@@ -174,8 +143,7 @@ function buildL2Columns(
   phase: EquipmentPhase,
   row: EligibleEquipmentRow,
   unitCost: number,
-  officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
+  officialRow: OfficialItemRow
 ): NonNullable<SelectableItem['columns']> {
   if (phase === 'gear') {
     return [
@@ -184,12 +152,6 @@ function buildL2Columns(
     ];
   }
 
-  const officialRow = toOfficialItemRowForGuided(
-    row,
-    unitCost,
-    officialItems,
-    codexEquipment
-  );
   const kind = normalizeArmamentKind(row.type);
 
   if (phase === 'armor') {
@@ -228,46 +190,25 @@ export function buildGuidedEquipmentL2Items(
     const category = mapCategory(phase);
     const unitCost = resolveCatalogRowUnitCost(row);
     const description = itemDescription(row.id, officialItems, codexEquipment);
-    const stats = buildEquipmentPhaseCardStats({
-      category: phase === 'gear' ? 'equipment' : phase === 'armor' ? 'armor' : 'weapon',
-      properties: row.properties,
-      damageLine:
-        phase === 'weapon'
-          ? weaponDamageLineForRef(row.id, officialItems, codexEquipment)
-          : undefined,
-      damageReduction:
-        phase === 'armor'
-          ? armorStatsForRef(row.id, officialItems, codexEquipment).damageReduction
-          : undefined,
-      agilityPenalty:
-        phase === 'armor'
-          ? armorStatsForRef(row.id, officialItems, codexEquipment).agilityPenalty
-          : undefined,
+    const officialRow = toOfficialItemRowForGuided(
+      row,
       unitCost,
-      trainingPoints: phase === 'gear' ? undefined : row.trainingPoints,
-      itemProperties,
-      abilityRequirement: row.abilityRequirement,
-    });
-
-    /** Expand chips match card See more, minus facts already shown as labeled columns. */
-    const expandChips = stats.detailChips.filter((c) => {
-      const n = c.name.toLowerCase();
-      if (/^currency\s/.test(n) || /^training points\s/.test(n)) return false;
-      if (/^rarity\b/.test(n)) return false;
-      if (phase === 'weapon' && /\bdamage\b/.test(n) && /\dd\d/.test(n)) return false;
-      if (phase === 'weapon' && /^range\b/.test(n)) return false;
-      if (phase === 'armor' && /^damage reduction\b/.test(n)) return false;
-      if (phase === 'armor' && /^agility reduction\b/.test(n)) return false;
-      if (phase === 'armor' && /requirement\s+\d+\+/i.test(n)) return false;
-      if (phase === 'armor' && /critical range/i.test(n)) return false;
-      return true;
-    });
-    const detailSections =
-      expandChips.length > 0
-        ? [{ label: 'Details', chips: expandChips, hideLabelIfSingle: true as const }]
-        : undefined;
-
-    const columns = buildL2Columns(phase, row, unitCost, officialItems, codexEquipment);
+      officialItems,
+      codexEquipment,
+      itemProperties
+    );
+    const kind = normalizeArmamentKind(row.type);
+    const family =
+      phase === 'gear'
+        ? 'item'
+        : kind === 'armor'
+          ? 'armor'
+          : kind === 'shield'
+            ? 'shield'
+            : 'weapon';
+    const propertySection = propertiesProficienciesSection(officialRow.parts, family);
+    const detailSections = propertySection ? [propertySection] : undefined;
+    const columns = buildL2Columns(phase, row, unitCost, officialRow);
 
     return {
       id: row.id,

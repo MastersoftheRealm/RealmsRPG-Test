@@ -99,6 +99,37 @@ describe('buildGuidedFeatsL2Items', () => {
     expect(items.map((i) => i.id).sort()).toEqual(['a', 'b']);
   });
 
+  it('uses Codex feat columns including req level and ability (TASK-709)', () => {
+    const feats = [
+      feat({
+        id: 'a',
+        name: 'Alpha',
+        char_feat: false,
+        lvl_req: 2,
+        category: 'Combat',
+        ability: ['Strength'],
+        uses_per_rec: 1,
+        rec_period: 'Rest',
+      }),
+    ];
+    const items = buildGuidedFeatsL2Items({
+      featType: 'archetype',
+      feats,
+      recommendedIds: [],
+      requirementCharacter: { ...character, level: 3 },
+      codexSkills: [],
+    });
+    expect(items).toHaveLength(1);
+    expect(items[0]?.columns?.map((c) => c.key)).toEqual([
+      'lvl_req',
+      'category',
+      'ability',
+      'uses_per_rec',
+      'rec_period',
+    ]);
+    expect(items[0]?.columns?.find((c) => c.key === 'lvl_req')?.value).toBe('2');
+  });
+
   it('filters by stateFeatMode', () => {
     const feats = [
       feat({ id: 'a', name: 'Alpha', char_feat: false, state_feat: true }),

@@ -1,3 +1,439 @@
+- id: TASK-713
+  title: API auth/IDOR vitest -- user library, enhanced items, encounters, crafting
+  created_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-08-13
+  verification_status: n/a
+  parent_task: TASK-658
+  related_files:
+    - src/app/api/user/library/[type]/route.ts
+    - src/app/api/user/library/[type]/route.test.ts
+    - src/app/api/user/library/[type]/[id]/route.ts
+    - src/app/api/user/library/[type]/[id]/route.test.ts
+    - src/app/api/user/enhanced-items/route.ts
+    - src/app/api/user/enhanced-items/route.test.ts
+    - src/app/api/user/enhanced-items/[id]/route.ts
+    - src/app/api/user/enhanced-items/[id]/route.test.ts
+    - src/app/api/encounters/route.ts
+    - src/app/api/encounters/route.test.ts
+    - src/app/api/encounters/[id]/route.ts
+    - src/app/api/encounters/[id]/route.test.ts
+    - src/app/api/crafting/route.ts
+    - src/app/api/crafting/route.test.ts
+    - src/app/api/crafting/[id]/route.ts
+    - src/app/api/crafting/[id]/route.test.ts
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/REMEDIATION_STATUS_2026-08.md
+  description: |
+    TASK-658 covered characters, campaigns list/detail, and admin users. Next highest-risk
+    remainder is user-owned resources: My Library items, enhanced items, encounters, and
+    crafting sessions. Add vitest 401 + cross-user 404 (not 403) on GET/PATCH/DELETE,
+    matching the character/campaign IDOR pattern. Leave images/uploads, remaining admin,
+    and nested campaign routes in the DEV-queue gap table.
+  acceptance_criteria:
+    - user/library/[type]/[id] GET/PATCH/DELETE 401 + cross-user 404 (user_id scoped).
+    - user/enhanced-items/[id] PATCH 401 + cross-user 404; DELETE 401 + user_id-scoped.
+    - encounters/[id] and crafting/[id] GET/PATCH/DELETE 401 + cross-user 404.
+    - Collection GET 401 for library type, enhanced-items, encounters, crafting.
+    - DEV-queue TASK-658 gap table updated; npm test for new files + typecheck/lint pass.
+  completed_work: |
+    - Added 8 route.test.ts files (37 cases) for library, enhanced-items, encounters, crafting.
+    - Cross-user reads/writes return 404 (library GET returns null body); enhanced DELETE is user_id-scoped (204, no oracle).
+    - Updated DEV-queue gap table and REMEDIATION_STATUS_2026-08 TASK-658/713 row.
+  notes: |
+    Follow-up to TASK-658 remainder. Implemented 2026-08-13. verification_status n/a (vitest only).
+
+---
+
+- id: TASK-707
+  title: InfoTippy icon — default blue / contextual match (TP green)
+  created_at: 2026-08-10
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-08-13
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-465
+    - TASK-706
+  related_files:
+    - src/components/shared/info-tippy.tsx
+    - src/components/shared/loadout-budget-bar.tsx
+    - src/components/shared/descriptor-chip-with-tip.tsx
+    - src/components/shared/point-status.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    InfoTippy (i) triggers should prefer a blue/info link color by default, or inherit the
+    color of the surface they sit on — e.g. Training Points tippy inside the TP PointStatus
+    should be green (text-tp / success-TP tokens), not muted gray. Today LoadoutBudgetBar
+    forces text-text-muted on the TP tip. Add a shared tone/class API on InfoTippy so call
+    sites can opt into contextual color without one-off class fights.
+  acceptance_criteria:
+    - Default InfoTippy icon reads blue/info (or existing primary-link blue), not washed muted gray, unless an explicit tone is set.
+    - TP tip inside Training Points PointStatus uses TP/green token color matching the tracker.
+    - Other on-chip / on-status tips can pass the same contextual tone API (document in FEATURE_INDEX / tip guide).
+    - Contrast OK in light/dark; touch targets unchanged; build/typecheck/lint pass.
+  completed_work: |
+    - Added InfoTippy tone prop (info default / tp / current).
+    - LoadoutBudgetBar TP tip uses tone=tp; DescriptorChipWithTip uses tone=current.
+    - Removed muted text-text-muted class fights on those call sites.
+    - Cleanup: dropped unused muted tone and no-op allowHTML on the TP tip.
+  notes: |
+    Owner 2026-08-10. Prefer tone prop on InfoTippy over copying muted overrides
+    in every LoadoutBudgetBar call site. Implemented 2026-08-13.
+
+---
+- id: TASK-706
+  title: Unify creator resource trackers — PointStatus size/style parity
+  created_at: 2026-08-10
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-08-13
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-606
+    - TASK-614
+    - TASK-465
+    - TASK-707
+  related_files:
+    - src/components/shared/point-status.tsx
+    - src/components/shared/loadout-budget-bar.tsx
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/components/guided-creator/guided-skills-panel.tsx
+    - src/components/guided-creator/guided-abilities-customize-panel.tsx
+    - src/components/guided-creator/guided-powers-techniques-l2-modal.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  description: |
+    Innate Energy, Currency, Training Points, Skill Points, Ability Points (and peers) must
+    render at the same size and PointStatus style across guided creator steps — especially
+    Powers where Innate Energy sits beside LoadoutBudgetBar TP. Today Innate PointStatus omits
+    the text-base / shared chrome used by Skills, Abilities, and LoadoutBudgetBar. Prefer one
+    shared composition (LoadoutBudgetBar trailing / shared resource row) over ad-hoc pills.
+  acceptance_criteria:
+    - Powers step: Innate Energy + TP (+ Currency where shown) match height, padding, font, border/radius of Skills/Abilities PointStatus.
+    - All guided resource trackers use the same PointStatus variant + shared size class (or LoadoutBudgetBar / one resource-row helper).
+    - No one-off smaller/larger pills on Powers vs Skills vs Loadout.
+    - Mobile wrap still readable; a11y labels intact; DEV-V-013 / DEV-V-050 note if visual; build/typecheck/lint pass.
+  completed_work: |
+    - PointStatus inline variant is text-base (canonical creator tracker size); removed per-site className sprinkles.
+    - Added LoadoutBudgetBar leading slot; Powers L1 + innate L2 footer pass Innate Energy there (same row as TP).
+    - Consolidated duplicate Innate Energy PointStatus onto InnateEnergyPointStatus in guided-powers-techniques-l2-modal.tsx.
+    - Skills / Abilities / finalize Energy keep inline PointStatus without size overrides.
+  notes: |
+    Owner 2026-08-10 (Powers screen). Pair with TASK-707 for tippy-on-tracker color.
+
+---
+
+- id: TASK-712
+  title: Wire creature source merge onto mergeLibraryBySource
+  created_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: done
+  completed_at: 2026-08-13
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-705
+    - TASK-709
+    - TASK-610
+  related_files:
+    - src/lib/library/source-scope.ts
+    - src/lib/library/source-scope.test.ts
+    - src/app/(main)/creature-creator/creature-creator-library-selectables.ts
+    - src/app/(main)/creature-creator/creature-creator-library-selectables.test.ts
+    - src/app/(main)/creature-creator/use-creature-creator-workspace.ts
+    - src/components/shared/filters/source-filter.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Creature creator still concatenates My + Realms rows in a local `mergeCreatureLibraryBySource`
+    (`creature-creator-library-selectables.ts`, also imported by the workspace hook). Guided catalogs
+    already use shared `mergeLibraryBySource` in `lib/library/source-scope.ts` (public wins on id;
+    optional keep-selected). Delete the creature fork and call the shared helper. Do not change
+    creature-specific post-filters (armament list still excludes already-selected `docId`s; empowered
+    list still dedupes on `docId`).
+  acceptance_criteria:
+    - `mergeCreatureLibraryBySource` is deleted; all call sites use `mergeLibraryBySource` (watch arg order: shared is publicItems then userItems).
+    - Creature All / Realms / My still scopes catalogs; public wins on id collision (no duplicate ids from concat).
+    - Armament picker still hides already-selected items; guided keep-selected behavior is unchanged (do not pass creature selected ids into the keep-selected argument unless that is the intended UX).
+    - Align `LibrarySourceScope` with `SourceFilterValue` if they remain identical unions (one type or a documented alias).
+    - Vitest for source-scope + any creature selectable merge tests; FEATURE_INDEX creature/source note; build/typecheck/lint pass.
+  completed_work: |
+    - Deleted `mergeCreatureLibraryBySource`; creature workspace + armament/empowered builders call `mergeLibraryBySource` (publicItems then userItems; no keep-selected).
+    - `SourceFilterValue` is an alias of `LibrarySourceScope`.
+    - Vitest: source-scope keep-selected opt-in + creature armament/empowered post-filters.
+    - FEATURE_INDEX creature/source notes; DEV-V-016-T019.
+  notes: |
+    Audit/cleanup follow-up after TASK-705/709. Public-wins on id is the shared rule; spot-check
+    creature Load/library pickers if a user row shadows an official id.
+
+---
+
+- id: TASK-711
+  title: Species overview — granted traits as read-only cards (not GLR list)
+  created_at: 2026-08-13
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-08-13
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-435
+    - TASK-433
+  related_files:
+    - src/components/guided-creator/species-reveal-panel.tsx
+    - src/components/guided-creator/guided-trait-option-list.tsx
+    - src/components/guided-creator/guided-choice-card.tsx
+    - src/components/guided-creator/guided-species-detail-modal.tsx
+    - src/components/guided-creator/guided-restriction-notice.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    On the guided Ancestry species overview (`SpeciesRevealPanel`), auto-granted species traits
+    currently render via `GuidedTraitOptionList` / DetailOptionList (GLR elongated rows). Owner
+    feedback: GLR is correct in the species More details modal, but on the overview screen traits
+    look off as list rows — prefer un-selectable card-type displays (similar to ancestry pick cards
+    or read-only GuidedChoiceCard grid). Modal deep-dive keeps GLR/DetailOptionList.
+  acceptance_criteria:
+    - Species overview granted traits use card-style read-only layout (not DetailOptionList rows).
+    - Species More details modal trait catalogs unchanged (GLR/DetailOptionList OK).
+    - Cards show name + description preview; expand/See more if long copy; no false select affordance.
+    - Mixed-species overview follows same pattern if it shows granted traits.
+    - Screenshot-verify at desktop + ~360px; DEV-V-013 visual note updated; build/typecheck/lint pass.
+  completed_work: |
+    - Added `GuidedChoiceCard` `readOnly` (no select chrome, checkmark, or Choose aria).
+    - Ancestry overview granted traits render as compact read-only cards with See more + uses notice.
+    - Species More details (`readOnlyDetail`) granted traits stay `GuidedTraitOptionList`; catalogs unchanged.
+    - Mixed-species overview has no granted-trait list (choices-ahead only).
+    - DEV-V-013-T019 step 3 updated; FEATURE_INDEX noted; typecheck/lint/build pass.
+  notes: |
+    Owner 2026-08-13. Reverses TASK-435 overview choice (BUILD_VALIDATION T019 listed elongated list).
+    Prefer reusing GuidedChoiceCard read-only pattern over a third trait renderer.
+
+---
+
+- id: TASK-710
+  title: GLR expanded band + action chrome - restore shared Library layout
+  created_at: 2026-08-13
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-08-13
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-702
+    - TASK-709
+    - TASK-622
+  related_files:
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/grid-list-row-collapsed.tsx
+    - src/components/shared/grid-list-row-expanded.tsx
+    - src/components/shared/grid-list-row-chrome.ts
+    - src/lib/glr/validate-glr-chrome-spacing.ts
+    - src/components/shared/library-add-to-library-button.tsx
+    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    TASK-702 self-start external chrome stopped + overlaying description but regressed the
+    master GLR layout sitewide (Library, Codex, add-X, guided L3): expanded bg-surface-alt
+    no longer continues into the action column; edit/delete/add/sync icons look smaller,
+    top-aligned, and poorly spaced; equipment qty hover does not read as one band with the
+    row. Fix once in GridListRow (stretch header row + shared expanded-band class in the
+    action column); keep + in the header so description stays unobscured. Do not fork a
+    creator-only row.
+  acceptance_criteria:
+    - Expanding any GridListRow paints surface-alt through the + / edit / delete / qty column; no empty bg-surface band beside the description.
+    - Action icons are vertically centered with the collapsed name row and use shared GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE (md / w-5).
+    - Collapsed hover highlight extends through qty steppers and other right chrome.
+    - + / qty still do not overlay expanded description (TASK-702 overlay AC preserved).
+    - No parallel GLR row component; CI locks stretch-grid + shared expanded-band class; DEV-V-034 T001 + DEV-V-050 T001 step 5; build/typecheck/lint pass.
+  completed_work: |
+    - GridListRow chrome is a stretch grid: header row 1 shares name + actions (icons centered); expanded body is a later row.
+    - Shared GRID_LIST_ROW_EXPANDED_BAND_CLASS fills left/action columns so expanded surface-alt is one strip.
+    - Shared GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE (md / w-5) on edit/delete/add/sync.
+    - Chrome CI: GLR_ROW_LAYOUT_SOURCES rejects self-start / items-start fork.
+    - TASK-702 overlay kept: + stays in header, never covers description.
+  notes: |
+    Owner 2026-08-13. Same shared path as Library is why the TASK-702 overlay fix leaked
+    there. TASK-709 remains the broader L3 vs Library parity umbrella.
+
+---
+
+- id: TASK-709
+  title: L3 GuidedInlineCatalogList — full Library/Codex GLR system parity
+  created_at: 2026-08-10
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-08-13
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-684
+    - TASK-702
+    - TASK-710
+    - TASK-703
+    - TASK-705
+    - TASK-708
+    - TASK-691
+  related_files:
+    - src/components/shared/guided-choice/guided-inline-catalog-list.tsx
+    - src/lib/guided-creator/feats-l2.ts
+    - src/lib/guided-creator/powers-techniques-l2.ts
+    - src/lib/guided-creator/guided-equipment-l2.ts
+    - src/lib/library/official-item-list.ts
+    - src/lib/library/official-power-list.ts
+    - src/lib/library/official-technique-list.ts
+    - src/lib/codex/feat-list.ts
+    - src/lib/glr/required-facts-registry.ts
+    - src/docs/ai/ADR/0012-guided-inline-catalog-list.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Owner intent: the entire L3 embedded GLR stack in the character creator must use the same
+    styles and logic as working Library / Codex GLRs. Creator-only differences are those
+    clearly required by context (TP/currency/innate budgets, eligibility gates, immediate
+    selection, selected panel). Everything else — column builders, ListHeader chrome, row
+    expand/chips, filters where applicable, SourceFilter, quantity right-slot — must be shared.
+    Coordinates TASK-702, TASK-710, TASK-703, TASK-705, TASK-708 as slices of this parity goal.
+  acceptance_criteria:
+    - Written allowlist of intentional L3-vs-Library differences (budgets, eligibility, selection UX); no other forks remain.
+    - Feats / loadout / powers-techniques L3 lists reuse Library/Codex builders + GridListRow/ListHeader norms (same as Official lists / USM where applicable).
+    - Visual + behavioral spot-check: same item in Library vs creator L3 matches columns/chips/expand (modulo allowlist).
+    - Delete or thin any guided-only column/filter/chrome forks found in the audit.
+    - FEATURE_INDEX + ADR/product note if needed; DEV-V-050 expanded; build/typecheck/lint pass.
+  completed_work: |
+    - Feats L2/L3 reuse Codex FEAT_GRID_COLUMNS + featSelectableColumns; type section hidden on expand.
+    - Powers/techniques L2/L3 rows from buildOfficialPowerRows / buildOfficialTechniqueRows; expand = Parts & Proficiencies; TP via totalCost.
+    - Equipment expand uses armamentPropertyChips + propertiesProficienciesSection (no L1 Details chips).
+    - Selected panel passes chips + warningMessage; ADR-0012 allowlist table written.
+    - SourceFilter + Create Armament shipped under TASK-705; required-facts under TASK-703.
+  notes: |
+    Owner 2026-08-10. Did not rebuild a second GLR. TASK-702/710/708 already archived separately.
+
+---
+
+- id: TASK-705
+  title: Guided L3 loadout — Create Armament hatch + SourceFilter defaults
+  created_at: 2026-08-10
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-08-13
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-641
+    - TASK-684
+    - TASK-695
+    - TASK-709
+  related_files:
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/guided-equipment-l2-modal.tsx
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/hooks/use-guided-equipment-catalog.ts
+    - src/lib/library/source-scope.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/components/shared/filters/source-filter.tsx
+    - src/components/shared/guided-choice/guided-layer-nav.tsx
+    - src/app/(main)/item-creator/page.tsx
+  description: |
+    On Custom/L3 weapons, shields, armor, and related armament browse screens, add a
+    GuidedLayerNav hatch to Create Armament (open item/armament creator in a new tab — same
+    pattern as Species Create Species). Also wire SourceFilter (All / Realms Library / My
+    Library): Custom L3 defaults to All; path-based L1–L2 modules default to Realms/public but
+    remain toggleable to All / My / Realms. Reuse shared SourceFilter + hatch chrome (not
+    Continue-primary).
+  acceptance_criteria:
+    - L3 weapon/shield/armor (armament) screens expose Create Armament → /item-creator in a new tab; hatch uses GuidedLayerNav non-primary style (TASK-695).
+    - SourceFilter present on those catalogs; Custom/prefersDeepCatalogEntry default all; guided L1–L2 path browse default public with ability to switch to all/my/public.
+    - Filtering actually scopes the selectable catalog (official vs user library), not chrome-only.
+    - Copy in guided-creator-copy; DEV-V-050 / DEV-V-013 updated; FEATURE_INDEX loadout/L3 note; build/typecheck/lint pass.
+  completed_work: |
+    - mergeLibraryBySource (all/public/my; public wins on id; keeps selected ids) shared in lib/library/source-scope.ts.
+    - Loadout L3 SourceFilter default all + Create Armament hatch; path L2 SourceFilter default public.
+    - Powers/techniques L3 + path L2 also get SourceFilter (same merge helper).
+    - Catalog lookup/TP uses full libraries so source switch does not drop spend.
+  notes: |
+    Create Armament is hidden on gear phase (weapons/shields/armor only).
+
+---
+
+- id: TASK-703
+  title: Character-creator GLR — required facts in columns or desc chips
+  created_at: 2026-08-10
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-08-13
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-629
+    - TASK-437
+    - TASK-690
+    - TASK-709
+  related_files:
+    - src/lib/glr/required-facts-registry.ts
+    - src/lib/glr/required-facts-registry.test.ts
+    - src/lib/guided-creator/guided-equipment-l2.ts
+    - src/lib/guided-creator/feats-l2.ts
+    - src/lib/guided-creator/powers-techniques-l2.ts
+    - src/components/shared/guided-choice/guided-inline-catalog-list.tsx
+  description: |
+    Audit guided/custom character-creator GLR surfaces (L2 modals + L3 GuidedInlineCatalogList
+    for feats, loadout weapons/armor/gear, powers/techniques) so every required fact appears
+    in a collapsed column or expanded descriptor chip — never missing, never duplicated —
+    per ADR-0009 / required-facts-registry. Extend registry bindings + CI assertions where
+    creator lists drift from Library/Codex SoT builders.
+  acceptance_criteria:
+    - Matrix of creator GLR surfaces checked against registry entity facts; gaps closed via shared builders (armamentRowColumns, power/technique Official columns, feat chips) — no parallel fact formatters.
+    - Missing facts promoted to column or labeled desc chip; column+chip duplicates removed.
+    - Registry + vitest updated for any new/changed surface ids; FEATURE_INDEX GLR row notes if surfaces change.
+    - BUILD_VALIDATION spot-checks for at least one weapon/armor/feat/power L3 expand; build/typecheck/lint pass.
+  completed_work: |
+    - Registered guided-feats-l3; guided powers/techniques surfaces now match Official columns (powers TP = rightSlot).
+    - Equipment expand dropped duplicate L1 Details chips; properties live in Official property sections.
+    - Registry vitest asserts guided L3 headers against Codex/Official column keys.
+  notes: |
+    Shipped under TASK-709 umbrella. Range display already fixed in TASK-701.
+
+---
+
+- id: TASK-704
+  title: Guided Skills — DescriptorChips inline right of name
+  created_at: 2026-08-10
+  created_by: owner
+  priority: medium
+  status: done
+  completed_at: 2026-08-13
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-566
+    - TASK-548
+  related_files:
+    - src/components/guided-creator/guided-skills-panel.tsx
+  description: |
+    On the guided Skills screen, Ability / Species / Path / sub-skill DescriptorChips currently
+    wrap on a line below the skill name, making rows too tall. Place chips to the right of the
+    name (same row), keeping expand chevron and ± steppers usable without collision — especially
+    on desktop; mobile may wrap only when width forces it.
+  acceptance_criteria:
+    - Default layout: name (+ chevron) and desc chips on one horizontal band; chips to the right of the name, not a dedicated below-name block that always doubles row height.
+    - ± / remove controls remain shrink-0 and tappable (≥44px touch on mobile).
+    - No overlap with chevron or steppers at ~360px and desktop; DESIGN_INTENT comment updated if layout policy changes.
+    - DEV-V-013 skills visual note if T067/T066 assert chip placement; build/typecheck/lint pass.
+  notes: |
+    Owner 2026-08-10; re-confirmed 2026-08-13. Implemented 2026-08-13 — flex-wrap row keeps chips beside name.
+
+---
 - id: TASK-702
   title: GLR right-chrome — expand overlay, quantity header alignment, hover bleed
   created_at: 2026-08-10

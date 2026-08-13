@@ -4,14 +4,16 @@
  * Row actions (rightSlot, edit, delete, selection) render outside the inner CSS grid.
  * ListHeader must reserve the same flex footprint so `fr` columns line up with row values.
  *
- * **Spacing + rowChrome contract (TASK-631 / TASK-637 / TASK-702):** Library / Official /
- * Codex / USM / creator-embedded GLR lists use `flex flex-col gap-1` row containers;
- * edit/delete/add/leftSlot/rightSlot must pass matching `rowChrome` on ListHeader (or
- * `rightSlotWidth` for quantity/remove). When header reserves a slot but row content is
- * conditional (e.g. patch sync), pass the same `rowChrome` on `GridListRow` so empty rows
- * keep alignment. External chrome is a sibling of collapsed+expanded (self-start) so
- * SelectionToggle / qty never overlay the description; hover lives on the outer chrome
- * wrapper so the right track shares the highlight band. Quantity mode: pass the same
+ * **Spacing + rowChrome contract (TASK-631 / TASK-637 / TASK-702 / TASK-710):** Library /
+ * Official / Codex / USM / creator-embedded GLR lists use `flex flex-col gap-1` row
+ * containers; edit/delete/add/leftSlot/rightSlot must pass matching `rowChrome` on
+ * ListHeader (or `rightSlotWidth` for quantity/remove). When header reserves a slot but
+ * row content is conditional (e.g. patch sync), pass the same `rowChrome` on `GridListRow`
+ * so empty rows keep alignment. Master row layout is a **stretch grid**: collapsed header
+ * + action chrome share row 1 (icons vertically centered); expanded `bg-surface-alt`
+ * continues into the action column via `GRID_LIST_ROW_EXPANDED_BAND_CLASS` (actions stay
+ * in the header so + never overlays description). Hover lives on that grid so qty /
+ * edit / delete / + share the highlight band. Quantity mode: pass the same
  * `rightSlotWidth` on ListHeader + GridListRow (USM uses 7.5rem). No leftover 40px grid
  * tracks. CI: `validate-glr-chrome-spacing.test.ts`.
  *
@@ -27,8 +29,23 @@ export const GRID_LIST_ROW_LEFT_SLOT_WIDTH = '2rem';
  */
 export const GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH = 'calc(4rem + 0.5rem)';
 
-/** Matches w-9 (edit / delete icon column) */
+/** Matches GridListRow edit/delete spacer (2.25rem) — pair with IconButton md. */
 export const GRID_LIST_ROW_ICON_COLUMN_WIDTH = '2.25rem';
+
+/**
+ * Shared GLR action IconButton size (edit / delete / add / sync).
+ * `md` (32px) matches SelectionToggle glyph weight without inflating desktop chrome to 44px.
+ */
+export const GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE = 'md' as const;
+
+/** Lucide class for GLR action glyphs — pair with `GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE`. */
+export const GRID_LIST_ROW_ACTION_ICON_CLASS = 'w-5 h-5';
+
+/**
+ * Expanded-panel surface. GridListRow paints this on the description body **and** the
+ * left/action chrome columns so the band is one full-width strip (TASK-710).
+ */
+export const GRID_LIST_ROW_EXPANDED_BAND_CLASS = 'border-t border-border-light bg-surface-alt';
 
 /** Matches min-w-[44px] w-11 selection column */
 export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = '2.75rem';

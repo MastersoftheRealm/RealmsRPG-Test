@@ -94,6 +94,12 @@ Points for Techniques and proficiencies. Common picks include Strength, Vitality
 /** Guided / L1 tip — Path step title (what an Archetype Path is; not "class"). */
 export const guidedArchetypePathHelp = `An Archetype Path is the type of adventurer your character is. Paths guide you with suggestions for Abilities, Skills, Feats, and Loadout - you can still deviate or rebuild the Path to make it your own.`;
 
+/** Guided / L3 tip — Custom Archetype step title (not the same as Archetype Path). */
+export const guidedCustomArchetypeHelp = `A Custom Archetype lets you define your adventuring style from scratch — pick Power, Martial, or Powered-Martial, then choose your Power and/or Martial Abilities. You won't get curated path recommendations, but you have full freedom to build your own concept.`;
+
+/** Guided / L3 tip — "Choose your archetype" type cards (Power / Martial / Powered-Martial). */
+export const guidedChooseArchetypeTypeHelp = `Your archetype type sets how your character leans into Powers, Techniques, and martial training. Power focuses on supernatural ability; Martial on weapons and physical skill; Powered-Martial blends both at a lighter level than a pure path.`;
+
 /** Guided / L1 Path step section tips (Power / Powered-Martial / Martial). */
 export const guidedPowerPathTypeHelp = `Power paths focus on supernatural ability - think spellcasters, artificers, elemental benders, warlocks, and bards. You lean on Powers and Energy more than weapons or Techniques.`;
 
@@ -311,7 +317,11 @@ export function getGuidedSkillBonusHelp(options: {
   const signed = (n: number) => (n >= 0 ? `+${n}` : `${n}`);
   return (
     <div>
-      <div>Skill Bonus</div>
+      <div>
+        Your <strong>Skill Bonus</strong> is added to d20 Skill Rolls. It reflects proficiency with this
+        Skill and includes your full linked Ability. Each Skill Point you allocate here increases the
+        bonus by +1.
+      </div>
       <div>
         <strong>{abilityLabel}</strong> ({signed(abilityValue)}) + Skill Value ({signed(skillValue)}) ={' '}
         <strong>{signed(skillBonus)}</strong>

@@ -28,7 +28,7 @@ alwaysApply: false
 | Roll buttons | `@/components/shared` → RollButton |
 | +/- steppers | `@/components/shared` → **ValueStepper** / Dec/Inc (ADR-0002 chrome); quantities → **QuantitySelector** (wraps ValueStepper). Never hand-roll ± |
 | Point display (spent/total) | `@/components/shared` → PointStatus |
-| Loadout / creator budget chrome (Currency + Training Points) | `@/components/shared` → **LoadoutBudgetBar** (ADR-0008; Guided + Advanced equipment/powers/finalize) |
+| Loadout / creator budget chrome (Currency + Training Points + extra trackers) | `@/components/shared` → **LoadoutBudgetBar** (ADR-0008; Guided + Advanced; `leading`/`trailing` for Innate Energy / Energy) |
 | Sheet spend vs Temp Modifier | `@/components/shared` → **SectionDualModeToggles** (+ `TempModifierToggle`); helpers `lib/character/temp-modifiers.ts` (ADR-0006) — do not fork icon pairs |
 | Skill rows | `@/components/shared` → SkillRow |
 | Search | `@/components/ui` → SearchInput |

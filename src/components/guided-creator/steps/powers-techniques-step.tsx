@@ -9,18 +9,22 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { Spinner } from '@/components/ui';
-import { PointStatus, LoadoutBudgetBar, GuidedInlineCatalogList } from '@/components/shared';
-import { SelectFilter } from '@/components/shared/filters';
+import { LoadoutBudgetBar, GuidedInlineCatalogList } from '@/components/shared';
+import { PowerTechniqueFilters, SelectFilter, FilterSection } from '@/components/shared/filters';
+import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
 import {
   useEquipment,
   useOfficialLibrary,
   usePowerParts,
   useTechniqueParts,
   useGuidedEquipmentCatalog,
+  useUserPowers,
+  useUserTechniques,
+  useGameRules,
 } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
-import { GuidedPowersTechniquesL2Modal } from '../guided-powers-techniques-l2-modal';
+import { GuidedPowersTechniquesL2Modal, InnateEnergyPointStatus } from '../guided-powers-techniques-l2-modal';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GuidedPowersTechniquesL1Content } from '../guided-powers-techniques-l1-content';
 import { GuidedSectionTitle } from '../guided-section-title';
@@ -32,8 +36,9 @@ import {
 } from '@/lib/guided-creator/power-technique-display';
 import {
   buildPowersTechniquesL2Items,
-  POWERS_TECHNIQUES_L2_GRID,
-  POWERS_TECHNIQUES_L2_HEADER_COLUMNS,
+  filterPowersTechniquesL2ByPtFilters,
+  powersTechniquesL2Grid,
+  powersTechniquesL2Headers,
 } from '@/lib/guided-creator/powers-techniques-l2';
 import { getPowersTechniquesL1Ids } from '@/lib/guided-creator/powers-techniques-l1-candidates';
 import { buildLookup, resolveLibraryItem, stepCopy } from '@/lib/guided-creator/powers-techniques-step-helpers';
@@ -47,6 +52,14 @@ import { ARCHETYPE_CONFIGS } from '@/lib/game/constants';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 import { prefersDeepCatalogEntry } from '@/lib/guided-creator/creator-entry-mode';
+import { mergeLibraryBySource } from '@/lib/library/source-scope';
+import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
+import {
+  EMPTY_POWER_TECHNIQUE_FILTERS,
+  countActivePowerTechniqueFilters,
+  type PowerTechniqueFilterState,
+} from '@/lib/library/power-technique-filters';
+import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 
 const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
 
@@ -65,9 +78,16 @@ export function PowersTechniquesStep() {
   const [l2Modal, setL2Modal] = useState<L2ModalKind>(null);
   /** L3 — which track(s) to show when innate applies (TASK-685). */
   const [innateScope, setInnateScope] = useState<InnateScopeFilter>('all');
+  const [ptFilters, setPtFilters] = useState<PowerTechniqueFilterState>(
+    EMPTY_POWER_TECHNIQUE_FILTERS
+  );
+  const [ptFiltersExpanded, setPtFiltersExpanded] = useState(false);
 
   // L3 — no archetype path: inline full catalog per track, no L2 modal (TASK-684).
   const isInlineCatalog = prefersDeepCatalogEntry(draft);
+  const [librarySource, setLibrarySource] = useState<SourceFilterValue>(
+    isInlineCatalog ? 'all' : 'public'
+  );
 
   const { data: officialPowers = [], isLoading: powersLoading } = useOfficialLibrary('powers', {
     enabled: !isTechniques,
@@ -76,6 +96,12 @@ export function PowersTechniquesStep() {
     'techniques',
     { enabled: isTechniques },
   );
+  const { data: userPowers = [], isLoading: userPowersLoading } = useUserPowers({
+    enabled: !isTechniques,
+  });
+  const { data: userTechniques = [], isLoading: userTechniquesLoading } = useUserTechniques({
+    enabled: isTechniques,
+  });
   const { data: officialItems = [] } = useOfficialLibrary('items');
   const { data: codexEquipment = [] } = useEquipment();
   const { tpSummary: loadoutTp } = useGuidedEquipmentCatalog(
@@ -86,8 +112,27 @@ export function PowersTechniquesStep() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
 
-  const isLoading = isTechniques ? techniquesLoading : powersLoading;
-  const libraryItems = isTechniques ? officialTechniques : officialPowers;
+  const isLoading =
+    (isTechniques ? techniquesLoading || userTechniquesLoading : powersLoading || userPowersLoading);
+  const officialLibraryItems = isTechniques ? officialTechniques : officialPowers;
+  const userLibraryItems = isTechniques ? userTechniques : userPowers;
+  const selectedPtIds = useMemo(
+    () =>
+      isTechniques
+        ? [...draft.techniqueIds, ...draft.innatePowerIds]
+        : [...draft.powerIds, ...draft.innatePowerIds],
+    [isTechniques, draft.techniqueIds, draft.innatePowerIds, draft.powerIds]
+  );
+  const libraryItems = useMemo(
+    () =>
+      mergeLibraryBySource(
+        librarySource,
+        officialLibraryItems,
+        userLibraryItems,
+        selectedPtIds
+      ),
+    [librarySource, officialLibraryItems, userLibraryItems, selectedPtIds]
+  );
 
   const openDeepBrowse = useCallback(() => {
     setL2Modal(showInnateTrack ? 'innate' : 'regular');
@@ -99,6 +144,24 @@ export function PowersTechniquesStep() {
     enabled: !isLoading && !isInlineCatalog,
     onDeepEntry: openDeepBrowse,
   });
+
+  const { rules } = useGameRules();
+  const ptCategoryOptions = useMemo(
+    () =>
+      collectCategoryOptionsFromItems(libraryItems, isTechniques ? techniquePartsDb : powerPartsDb, {
+        includeDamageCategory: !isTechniques,
+      }),
+    [libraryItems, isTechniques, techniquePartsDb, powerPartsDb]
+  );
+  const innateThresholdOptions = useMemo(
+    () => listInnateThresholdFilterOptions(rules),
+    [rules]
+  );
+  const ptFilterActiveCount = countActivePowerTechniqueFilters(
+    ptFilters,
+    isTechniques ? 'technique' : 'power',
+    false
+  );
 
   const lookup = useMemo(() => buildLookup(libraryItems), [libraryItems]);
 
@@ -340,7 +403,8 @@ export function PowersTechniquesStep() {
     return built.filter((item) => {
       const idStr = String(item.id);
       if (isSelectedId(idStr, selectedIds)) return true;
-      return !regularUnavailableReason(idStr);
+      if (regularUnavailableReason(idStr)) return false;
+      return filterPowersTechniquesL2ByPtFilters([item], ptFilters, copy.kind).length > 0;
     });
   }, [
     copy.kind,
@@ -352,6 +416,7 @@ export function PowersTechniquesStep() {
     isSelectedId,
     selectedIds,
     regularUnavailableReason,
+    ptFilters,
   ]);
 
   const inlineInnateItems = useMemo(() => {
@@ -369,7 +434,8 @@ export function PowersTechniquesStep() {
     return built.filter((item) => {
       const idStr = String(item.id);
       if (isSelectedId(idStr, selectedInnateIds)) return true;
-      return !innateUnavailableReason(idStr);
+      if (innateUnavailableReason(idStr)) return false;
+      return filterPowersTechniquesL2ByPtFilters([item], ptFilters, copy.kind).length > 0;
     });
   }, [
     showInnateTrack,
@@ -383,6 +449,7 @@ export function PowersTechniquesStep() {
     isSelectedId,
     selectedInnateIds,
     innateUnavailableReason,
+    ptFilters,
   ]);
 
   const inlineSelectedIdSet = useMemo(() => new Set(selectedIds.map(String)), [selectedIds]);
@@ -392,17 +459,15 @@ export function PowersTechniquesStep() {
   );
 
   const budgetBar = (
-    <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
-      {showInnateTrack && innateEnergyMax > 0 ? (
-        <PointStatus
-          total={innateEnergyMax}
-          spent={innateEnergySpent}
-          label={ptCopy.innateEnergyLabel}
-          variant="inline"
-        />
-      ) : null}
-      <LoadoutBudgetBar tpTotal={tpBudget.limit} tpSpent={tpBudget.spent} />
-    </div>
+    <LoadoutBudgetBar
+      tpTotal={tpBudget.limit}
+      tpSpent={tpBudget.spent}
+      leading={
+        showInnateTrack && innateEnergyMax > 0 ? (
+          <InnateEnergyPointStatus total={innateEnergyMax} spent={innateEnergySpent} />
+        ) : null
+      }
+    />
   );
 
   const archetypeAbility = draft.pow_abil ?? draft.mart_abil;
@@ -465,6 +530,28 @@ export function PowersTechniquesStep() {
             />
           ) : null}
 
+          <div className="space-y-2">
+            <SourceFilter value={librarySource} onChange={setLibrarySource} />
+            <FilterSection
+              variant="compact"
+              label="Filters"
+              expanded={ptFiltersExpanded}
+              onExpandedChange={setPtFiltersExpanded}
+              activeCount={ptFilterActiveCount}
+            >
+              <PowerTechniqueFilters
+                kind={isTechniques ? 'technique' : 'power'}
+                value={ptFilters}
+                onChange={setPtFilters}
+                categoryOptions={ptCategoryOptions}
+                innateThresholdOptions={innateThresholdOptions}
+                variant="compact"
+                persistCharacter={false}
+                showCharacterFilter={false}
+              />
+            </FilterSection>
+          </div>
+
           {showInnateTrack && (innateScope === 'all' || innateScope === 'innate') ? (
             <section className="space-y-3">
               <GuidedSectionTitle>{ptCopy.innateHeading}</GuidedSectionTitle>
@@ -476,8 +563,8 @@ export function PowersTechniquesStep() {
                 items={inlineInnateItems}
                 selectedIds={inlineSelectedInnateIdSet}
                 onToggleSelection={toggleInnateId}
-                columns={POWERS_TECHNIQUES_L2_HEADER_COLUMNS}
-                gridColumns={POWERS_TECHNIQUES_L2_GRID}
+                columns={powersTechniquesL2Headers(copy.kind)}
+                gridColumns={powersTechniquesL2Grid(copy.kind)}
                 itemLabel="innate power"
                 emptyMessage={ptCopy.l2.emptyMessage(copy.kind, 'innate')}
                 searchPlaceholder={ptCopy.l2.searchPlaceholder(copy.kind)}
@@ -497,8 +584,8 @@ export function PowersTechniquesStep() {
                 items={inlineRegularItems}
                 selectedIds={inlineSelectedIdSet}
                 onToggleSelection={toggleRegularId}
-                columns={POWERS_TECHNIQUES_L2_HEADER_COLUMNS}
-                gridColumns={POWERS_TECHNIQUES_L2_GRID}
+                columns={powersTechniquesL2Headers(copy.kind)}
+                gridColumns={powersTechniquesL2Grid(copy.kind)}
                 itemLabel={isTechniques ? 'technique' : 'power'}
                 emptyMessage={ptCopy.l2.emptyMessage(copy.kind, 'regular')}
                 searchPlaceholder={ptCopy.l2.searchPlaceholder(copy.kind)}
@@ -565,6 +652,9 @@ export function PowersTechniquesStep() {
           innateEnergyMax={innateEnergyMax}
           onClose={() => setL2Modal(null)}
           onConfirm={onL2Confirm}
+          scopeExtra={
+            <SourceFilter value={librarySource} onChange={setLibrarySource} />
+          }
         />
       ) : null}
     </GuidedStepLayout>

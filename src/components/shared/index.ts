@@ -98,6 +98,8 @@ export {
   gridColumnsWithInlineSelection,
   GRID_LIST_INLINE_SELECTION_COLUMN_TRACK,
   GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH,
+  GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE,
+  GRID_LIST_ROW_ACTION_ICON_CLASS,
   THUMBNAIL_HEADER_COLUMN_KEY,
   CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
 } from './grid-list-row-chrome';
@@ -279,7 +281,7 @@ export {
 // ThemeToggle - Dark/Light/System theme switcher
 export { ThemeToggle } from './theme-toggle';
 export { InfoTippy, WordHelpTip } from './info-tippy';
-export type { InfoTippyProps, WordHelpTipProps } from './info-tippy';
+export type { InfoTippyProps, InfoTippyTone, WordHelpTipProps } from './info-tippy';
 export {
   DescriptorChipWithTip,
   type DescriptorChipWithTipProps,

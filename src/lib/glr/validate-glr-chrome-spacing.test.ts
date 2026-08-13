@@ -13,6 +13,7 @@ import {
   validateMyLibraryEntityTabSource,
   validateUsmListShellSource,
   validateUsmQuantityChromeSource,
+  validateGlrRowLayoutSource,
 } from './validate-glr-chrome-spacing';
 
 const repoRoot = path.resolve(__dirname, '../../..');
@@ -148,6 +149,24 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
       `<ListHeader rightSlotWidth={RIGHT_SLOT_WIDTH} /><GridListRow rightSlot={<Qty />} />`
     );
     expect(errors.some((e) => e.includes('USM_QUANTITY_RIGHT_SLOT_WIDTH'))).toBe(true);
+  });
+
+  it('flags GridListRow chrome pinned with items-start / self-start', () => {
+    const errors = validateGlrRowLayoutSource(
+      'grid-list-row.tsx',
+      `<div className={cn('flex items-start', hoverClass)}>`
+    );
+    expect(errors.some((e) => e.includes('items-start') || e.includes('items-stretch'))).toBe(true);
+  });
+
+  it('accepts stretch-grid GridListRow layout with shared expanded band', () => {
+    expect(
+      validateGlrRowLayoutSource(
+        'grid-list-row.tsx',
+        `<div data-glr-row className={cn('grid items-stretch', hoverClass)}>
+           <div className={GRID_LIST_ROW_EXPANDED_BAND_CLASS} />`
+      )
+    ).toEqual([]);
   });
 
   it('accepts quantity chrome when header and row share USM_QUANTITY_RIGHT_SLOT_WIDTH', () => {

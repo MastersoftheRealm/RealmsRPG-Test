@@ -15,6 +15,7 @@ import type { LibraryTechnique } from '@/types/library';
 import {
   buildOfficialTechniqueRows,
   filterOfficialTechniqueRows,
+  officialTechniqueRowColumns,
   OFFICIAL_TECHNIQUE_GRID,
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
   type OfficialTechniqueRow,
@@ -122,14 +123,7 @@ export function OfficialTechniqueList({
           />
         )
       }
-      getColumns={(t) => [
-        { key: 'Category', value: t.category, align: 'center' },
-        { key: 'Energy', value: t.energy, highlight: true, align: 'center' },
-        { key: 'TP', value: t.tp, align: 'center' },
-        { key: 'Action', value: t.action, align: 'center' },
-        { key: 'Weapon', value: t.weapon, align: 'center' },
-        { key: 'Damage', value: t.damage, align: 'center' },
-      ]}
+      getColumns={(t) => officialTechniqueRowColumns(t)}
       getDetailSections={(t) => {
         const section = empowered
           ? empoweredTechniquePartsSection(t.raw, powerPartsDb, partsDb, {

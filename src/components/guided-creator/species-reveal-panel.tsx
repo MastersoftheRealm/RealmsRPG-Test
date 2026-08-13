@@ -14,11 +14,19 @@ import { useCodexSkills, findTraitByIdOrName, type Species, type Trait } from '@
 import { getChoiceOptionIds } from '@/lib/choice-trait';
 import { cn } from '@/lib/utils';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import { GUIDED_CHOICE_STYLES, GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
+import {
+  GUIDED_CHOICE_COMPACT_GRID_CLASS,
+  GUIDED_CHOICE_GRID_ITEM_CLASS,
+  GUIDED_CHOICE_STYLES,
+  GUIDED_OVERVIEW_STYLES as o,
+} from './guided-choice-styles';
 import { speciesSkillToSummaryChipItem, ANY_SPECIES_SKILL_ID } from '@/lib/chip/species-skill-chips';
 import { resolveChoiceCardImage } from './guided-choice-image';
 import { usePlaceholderTheme } from '@/hooks/use-placeholder-theme';
+import { getTraitRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
+import { GuidedChoiceCard } from './guided-choice-card';
 import { GuidedTraitOptionList } from './guided-trait-option-list';
+import { GuidedTraitRestrictionNotice } from './guided-restriction-notice';
 import { GuidedOverviewSection } from './guided-overview-section';
 import { GuidedSectionTitle } from './guided-section-title';
 import { titleCase } from './guided-text';
@@ -34,7 +42,8 @@ export interface SpeciesRevealPanelProps {
   onSizeChange?: (size: string) => void;
   /**
    * Deep-dive modal mode (TASK-433): no size picker; multi-size shown as vitals text;
-   * optional title hide (modal already titles the entity).
+   * optional title hide (modal already titles the entity). Granted traits stay GLR
+   * rows in this mode (TASK-711 cards are Ancestry overview only).
    */
   readOnlyDetail?: boolean;
   /** Hide the “Choices ahead” teaser when option catalogs are listed below. */
@@ -253,7 +262,27 @@ export function SpeciesRevealPanel({
               <p className={o.sectionHint}>{copy.grantedHint}</p>
             </div>
           </div>
-          <GuidedTraitOptionList traits={granted} />
+          {readOnlyDetail ? (
+            <GuidedTraitOptionList traits={granted} />
+          ) : (
+            <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
+              {granted.map((trait) => (
+                <div key={String(trait.id)} className={GUIDED_CHOICE_GRID_ITEM_CLASS}>
+                  <GuidedChoiceCard
+                    readOnly
+                    density="compact"
+                    title={trait.name}
+                    description={trait.description}
+                    expandedExtra={
+                      getTraitRestrictionNotice(trait) ? (
+                        <GuidedTraitRestrictionNotice trait={trait} />
+                      ) : undefined
+                    }
+                  />
+                </div>
+              ))}
+            </div>
+          )}
         </section>
       )}
 

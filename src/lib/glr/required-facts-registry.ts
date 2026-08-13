@@ -45,10 +45,12 @@ export type GlrSurfaceId =
   | 'add-modal-technique'
   | 'codex-feat'
   | 'codex-equipment'
-  /** Guided creator L2/L3 powers catalog (TASK-687). */
+  /** Guided creator L2/L3 powers catalog — Official Library columns + TP cost (TASK-709). */
   | 'guided-powers-l3'
-  /** Guided creator L2/L3 techniques catalog (TASK-687). */
+  /** Guided creator L2/L3 techniques catalog — Official Library columns (TASK-709). */
   | 'guided-techniques-l3'
+  /** Guided creator L2/L3 feat catalogs — Codex feat columns (TASK-709). */
+  | 'guided-feats-l3'
   /** Guided creator L2/L3 equipment weapon phase (TASK-688). */
   | 'guided-equipment-weapon-l3'
   /** Guided creator L2/L3 equipment armor phase (TASK-688). */
@@ -331,18 +333,46 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
     requiredFacts: [FACT.damage, FACT.damageReduction],
   },
   /**
-   * Guided powers L2/L3 — budget-first columns (Action Type, Energy, Training Points).
-   * Intentionally omits Library browse extras (duration/area/damage) — creation filter surface.
+   * Guided powers L2/L3 — Official Library browse columns (TASK-709).
+   * Training Points stay on GridListRow totalCost (creator budget), not a dense column
+   * (Official powers have no TP column).
    */
   'guided-powers-l3': {
     surfaceId: 'guided-powers-l3',
     entityType: 'power',
-    requiredFacts: [FACT.actionType, FACT.energy, FACT.trainingPoints],
+    requiredFacts: [
+      FACT.category,
+      FACT.energy,
+      FACT.actionType,
+      FACT.duration,
+      FACT.range,
+      FACT.area,
+      FACT.damage,
+      { ...FACT.trainingPoints, placement: 'rightSlot' },
+    ],
   },
   'guided-techniques-l3': {
     surfaceId: 'guided-techniques-l3',
     entityType: 'technique',
-    requiredFacts: [FACT.actionType, FACT.energy, FACT.trainingPoints],
+    requiredFacts: [
+      FACT.category,
+      FACT.energy,
+      FACT.trainingPoints,
+      FACT.actionType,
+      FACT.weapon,
+      FACT.damage,
+    ],
+  },
+  'guided-feats-l3': {
+    surfaceId: 'guided-feats-l3',
+    entityType: 'feat',
+    requiredFacts: [
+      FACT.reqLevel,
+      FACT.category,
+      { id: 'abilityRequirement', placement: 'column', columnKeys: col('ability') },
+      FACT.uses,
+      FACT.recovery,
+    ],
   },
   'guided-equipment-weapon-l3': {
     surfaceId: 'guided-equipment-weapon-l3',

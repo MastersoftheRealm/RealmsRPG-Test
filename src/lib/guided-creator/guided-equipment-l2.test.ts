@@ -19,7 +19,7 @@ import {
   GEAR_L2_HEADER_COLUMNS,
   WEAPON_L2_HEADER_COLUMNS,
 } from '@/components/guided-creator/guided-equipment-l2-grid';
-import { POWERS_TECHNIQUES_L2_HEADER_COLUMNS } from '@/lib/guided-creator/powers-techniques-l2';
+import { GUIDED_POWERS_L2_HEADER_COLUMNS } from '@/lib/guided-creator/powers-techniques-l2';
 
 const baseDraft: GuidedDraft = {
   creatorEntryMode: 'guided',
@@ -216,6 +216,14 @@ describe('guided-equipment-l2', () => {
     expect(axe!.columns?.find((c) => c.key === 'currency')?.value).toBe(25);
   });
 
+  it('weapon expand uses Official Properties & Proficiencies, not card-stat Details (TASK-709)', () => {
+    const items = buildGuidedEquipmentL2Items('weapon', catalog, ctx, [], []);
+    for (const item of items) {
+      const labels = item.detailSections?.map((s) => s.label) ?? [];
+      expect(labels).not.toContain('Details');
+    }
+  });
+
   it('weapon range column derives from properties when stored range is corrupt (TASK-701)', () => {
     const items = buildGuidedEquipmentL2Items('weapon', catalog, ctx, [], []);
     const longbow = items.find((i) => i.id === 'w3');
@@ -227,7 +235,7 @@ describe('guided-equipment-l2', () => {
       ...WEAPON_L2_HEADER_COLUMNS,
       ...ARMOR_L2_HEADER_COLUMNS,
       ...GEAR_L2_HEADER_COLUMNS,
-      ...POWERS_TECHNIQUES_L2_HEADER_COLUMNS,
+      ...GUIDED_POWERS_L2_HEADER_COLUMNS,
     ]) {
       expect(col.sortable).toBe(true);
     }

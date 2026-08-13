@@ -32,8 +32,8 @@ const pointStatusVariants = cva('font-semibold transition-colors', {
     variant: {
       /** Block layout with Total - Spent = Remaining breakdown */
       block: 'flex items-center justify-center gap-4 p-3 rounded-xl border',
-      /** Inline badge style */
-      inline: 'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm',
+      /** Inline badge — canonical creator tracker size (Skills / Abilities / LoadoutBudgetBar) */
+      inline: 'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg border text-base',
       /** Compact pill for tight spaces */
       compact: 'inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm',
     },

@@ -837,6 +837,12 @@
     transition-duration: var(--duration-fast);
   }
 
+  /* GridListRow: inherit the row surface so hover:bg-surface-alt is one band
+     (TASK-710). Do not change global stepper chrome on skills / sheet allocators. */
+  [data-glr-row] .btn-stepper {
+    @apply bg-transparent hover:bg-transparent;
+  }
+
   /* ---------------------------------------------------------------------------
      SEARCH INPUT - Unified component style
      --------------------------------------------------------------------------- */

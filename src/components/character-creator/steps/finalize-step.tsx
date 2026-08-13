@@ -265,7 +265,6 @@ export function FinalizeStep() {
             spent={0}
             label="Energy"
             variant="inline"
-            className="text-base"
           />
         }
       />

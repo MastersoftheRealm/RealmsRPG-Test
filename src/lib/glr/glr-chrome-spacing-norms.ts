@@ -1,5 +1,5 @@
 /**
- * GLR list chrome + spacing norms (TASK-631, TASK-637, TASK-702).
+ * GLR list chrome + spacing norms (TASK-631, TASK-637, TASK-702, TASK-710).
  *
  * Library / Official / Codex browse lists share tight row density (`gap-1`) and
  * ListHeader `rowChrome` tracks that mirror GridListRow edit/delete/add/rightSlot actions.
@@ -87,6 +87,16 @@ export const CREATOR_EMBEDDED_GLR_SOURCES = [
   'src/components/character-creator/steps/powers/powers-selected-section.tsx',
   'src/components/character-creator/steps/powers/techniques-selected-section.tsx',
   'src/components/character-creator/steps/equipment/selected-equipment-list.tsx',
+] as const;
+
+/**
+ * GridListRow master layout (TASK-710). Expanded surface-alt must continue into the
+ * action column; chrome must not `self-start` beside the expanded body.
+ */
+export const GLR_ROW_LAYOUT_SOURCES = [
+  'src/components/shared/grid-list-row.tsx',
+  'src/components/shared/grid-list-row-collapsed.tsx',
+  'src/components/shared/grid-list-row-expanded.tsx',
 ] as const;
 
 /** Callers that may pass `listClassName` into GLR shells. */

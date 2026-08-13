@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-08-11
+Generated: 2026-08-13
 
 ## `src/components/shared/index.ts`
 
@@ -38,6 +38,8 @@ Generated: 2026-08-11
 - FilterSection
 - getEditState
 - GRID_LIST_INLINE_SELECTION_COLUMN_TRACK
+- GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE
+- GRID_LIST_ROW_ACTION_ICON_CLASS
 - GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH
 - gridColumnsWithInlineSelection
 - GridListChip

@@ -10,6 +10,8 @@ import {
   ListHeader,
   ListSearchToolbar,
   LoadingState,
+  GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE,
+  GRID_LIST_ROW_ACTION_ICON_CLASS,
   type ListColumn,
   type ListHeaderRowChrome,
   type SortState,
@@ -226,7 +228,7 @@ export function LibrarySyncRowAction({
   return (
     <IconButton
       variant="ghost"
-      size="sm"
+      size={GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE}
       onClick={(e) => {
         e.stopPropagation();
         onSync();
@@ -234,7 +236,7 @@ export function LibrarySyncRowAction({
       label="Sync with current patch"
       className="text-warning-fg hover:opacity-80"
     >
-      <RefreshCw className={`w-4 h-4 ${syncing ? 'animate-spin' : ''}`} />
+      <RefreshCw className={`${GRID_LIST_ROW_ACTION_ICON_CLASS} ${syncing ? 'animate-spin' : ''}`} />
     </IconButton>
   );
 }

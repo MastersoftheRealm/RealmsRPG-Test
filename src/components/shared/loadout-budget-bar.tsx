@@ -23,6 +23,8 @@ export interface LoadoutBudgetBarProps {
   className?: string;
   /** Budget row alignment (Guided default center; Advanced equipment header uses end). */
   align?: 'center' | 'end';
+  /** Extra PointStatus (or similar) before Currency/TP — e.g. Guided Powers Innate Energy. */
+  leading?: ReactNode;
   /** Extra PointStatus (or similar) in the budget row — e.g. Advanced finalize Energy. */
   trailing?: ReactNode;
   /** Extra content above the PointStatus row (e.g. L2 confirm error). */
@@ -31,8 +33,9 @@ export interface LoadoutBudgetBarProps {
 
 /**
  * Shared Currency + Training Points PointStatus chrome for Guided Loadout
- * and Advanced creator equipment/powers/finalize (TASK-465 / TASK-606 / TASK-614).
- * Training Points help sits inside the PointStatus label.
+ * and Advanced creator equipment/powers/finalize (TASK-465 / TASK-606 / TASK-614 / TASK-706).
+ * Optional `leading` / `trailing` PointStatus share the same inline variant. Training Points
+ * help sits inside the PointStatus label.
  */
 export function LoadoutBudgetBar({
   currencyTotal,
@@ -43,21 +46,22 @@ export function LoadoutBudgetBar({
   trainingPointsLabel = ptCopy.trainingPointsLabel,
   className,
   align = 'center',
+  leading,
   trailing,
   children,
 }: LoadoutBudgetBarProps) {
   const showCurrency = currencyTotal != null && currencySpent != null;
   const showTp = tpTotal != null && tpSpent != null;
-  const showRow = showCurrency || showTp || trailing != null;
+  const showRow = showCurrency || showTp || leading != null || trailing != null;
   if (!showRow && !children) return null;
 
   const tpHelp = (
     <InfoTippy
       content={trainingPointsHelp}
-      allowHTML
       label="Training Points help"
       size="inline"
-      className="!min-h-6 !min-w-6 md:!min-h-5 md:!min-w-5 text-text-muted dark:text-text-secondary hover:text-primary-link-fg"
+      tone="tp"
+      className="!min-h-6 !min-w-6 md:!min-h-5 md:!min-w-5"
     />
   );
 
@@ -75,13 +79,13 @@ export function LoadoutBudgetBar({
             align === 'end' ? 'justify-end' : 'justify-center'
           )}
         >
+          {leading}
           {showCurrency ? (
             <PointStatus
               total={currencyTotal}
               spent={currencySpent}
               label={currencyLabel}
               variant="inline"
-              className="text-base"
             />
           ) : null}
           {showTp ? (
@@ -91,7 +95,6 @@ export function LoadoutBudgetBar({
               label={trainingPointsLabel}
               labelAccessory={tpHelp}
               variant="inline"
-              className="text-base"
             />
           ) : null}
           {trailing}

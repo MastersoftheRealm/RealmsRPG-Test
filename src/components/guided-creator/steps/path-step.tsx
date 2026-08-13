@@ -29,6 +29,7 @@ import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { type AbilityName, type Archetype, type ArchetypeCategory } from '@/types';
 import {
   guidedArchetypePathHelp,
+  guidedCustomArchetypeHelp,
   guidedMartialPathTypeHelp,
   guidedPoweredMartialPathTypeHelp,
   guidedPowerPathTypeHelp,
@@ -141,7 +142,7 @@ export function PathStep() {
       title={isCustomLayer ? stepCopy.customTitle : stepCopy.title}
       titleAddon={
         <InfoTippy
-          content={guidedArchetypePathHelp}
+          content={isCustomLayer ? guidedCustomArchetypeHelp : guidedArchetypePathHelp}
           label={isCustomLayer ? 'About Custom Archetype' : 'About Archetype Path'}
           size="inline"
         />

@@ -58,6 +58,7 @@ export interface PowerTechniqueFiltersProps {
   /** Override FilterSection initial expand (default collapsed). Page variant only. */
   defaultExpanded?: boolean;
   className?: string;
+  showCharacterFilter?: boolean;
   /** Persist character pick (default true for page variant). */
   persistCharacter?: boolean;
 }
@@ -74,6 +75,7 @@ export function PowerTechniqueFilters({
   defaultExpanded,
   className,
   persistCharacter = variant === 'page',
+  showCharacterFilter = true,
 }: PowerTechniqueFiltersProps) {
   const energyMaxId = useId();
   const tpMaxId = useId();
@@ -158,22 +160,24 @@ export function PowerTechniqueFilters({
 
   const controls = (
     <>
-      <CharacterFilter
-        value={characterId}
-        onChange={handleCharacterChange}
-        className="mb-4 max-w-md border-b border-border-light pb-4"
-        helpContent={CHARACTER_FILTER_HELP}
-      >
-        {hasCharacter && characterContext ? (
-          <p className="mt-2 text-xs text-text-secondary dark:text-text-secondary">
-            {character?.name}: max Energy {characterContext.maxEnergy}
-            {kind === 'power' && characterContext.innateThreshold > 0
-              ? ` · Innate Threshold ${characterContext.innateThreshold}`
-              : ''}
-            {` · TP ${characterContext.tpSpent}/${characterContext.tpTotal} (${characterContext.tpRemaining} remaining)`}
-          </p>
-        ) : null}
-      </CharacterFilter>
+      {showCharacterFilter ? (
+        <CharacterFilter
+          value={characterId}
+          onChange={handleCharacterChange}
+          className="mb-4 max-w-md border-b border-border-light pb-4"
+          helpContent={CHARACTER_FILTER_HELP}
+        >
+          {hasCharacter && characterContext ? (
+            <p className="mt-2 text-xs text-text-secondary dark:text-text-secondary">
+              {character?.name}: max Energy {characterContext.maxEnergy}
+              {kind === 'power' && characterContext.innateThreshold > 0
+                ? ` · Innate Threshold ${characterContext.innateThreshold}`
+                : ''}
+              {` · TP ${characterContext.tpSpent}/${characterContext.tpTotal} (${characterContext.tpRemaining} remaining)`}
+            </p>
+          ) : null}
+        </CharacterFilter>
+      ) : null}
 
       <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         <ChipSelect
