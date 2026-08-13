@@ -36,6 +36,7 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 | `0a0f5496` | Refresh baseline after `0002`; tracker corrections (archetype spreadsheet bug, delete-account ordering) |
 | `3a31aef4` | Wave 1 follow-up: relocate admin codex helpers to `src/lib/codex/` |
 | `ebe2c3ce` | Wave 2: sheet formula unification + guided funnel integrity (P0/P1-1–P1-4) |
+| `a0fe048d` | TASK-714 / TASK-734–737 leftovers (ChoiceCard keyboard, GET visibility, autosave, query cache) |
 
 ### Live DB migrations applied
 
@@ -47,7 +48,7 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 
 ### Uncommitted work (must land or continue before merge)
 
-Landing on this merge as three commits: `3a31aef4` relocate, `ebe2c3ce` Wave 2 rules + guided funnel, and this commit (TASK-714 / TASK-734–737 leftovers + tracker). Follow-ups TASK-738 / TASK-739 stay open.
+Landing on this merge as `3a31aef4` relocate, `ebe2c3ce` Wave 2 rules + guided funnel, `a0fe048d` TASK-714 / TASK-734–737 leftovers. Follow-ups TASK-738 / TASK-739 stay open.
 
 ---
 
