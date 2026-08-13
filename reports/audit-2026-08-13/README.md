@@ -100,6 +100,12 @@ library GET routes discard Supabase errors and render "no content yet"; creator 
 target row by *display name*, so a name collision destroys the wrong item with a success toast; and
 username renames report success after deleting the old mapping.
 
+## Remediation is underway
+
+Live status per finding — what is fixed, what is queued, what needs an owner decision, and which
+audit claims have been retracted — is tracked in **`src/docs/ai/AUDIT_REMEDIATION_2026-08.md`**.
+Read that first; the plan below is the original ordering it follows.
+
 ## Ordered remediation plan
 
 ### Week 1 — stop the bleeding
