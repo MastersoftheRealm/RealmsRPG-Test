@@ -24,7 +24,7 @@ Chapter rail title is **Loadout** (weapons, armor, Equipment, then Powers or Tec
 | Layer | Weapons / armor | Equipment (`gear` phase) |
 |-------|-----------------|-------------------------|
 | **1** | Optional picks; image + title + title-adjacent Currency + Training Points; See more = mechanic facts + named property InfoTippy chips (no expand); PointStatus Currency + Training Points | Optional recommended cards + qty (above disclosure); optional Add all (budget-aware); PointStatus Currency + Training Points |
-| **2** | `UnifiedSelectionModal` (GridListRow): weapons Name/Damage/Currency/Training Points; armor Damage Reduction; Equipment Currency; properties on expand; footer PointStatus Currency + Training Points | Modal; PointStatus Currency + Training Points |
+| **2** | `UnifiedSelectionModal` (GridListRow): weapons/armor via `ARMAMENT_LIBRARY_CONFIG`; Equipment Name/Category/Rarity/Currency (taxonomy, not type — TASK-724); properties on expand; footer PointStatus Currency + Training Points | Modal; PointStatus Currency + Training Points |
 
 Entity depth vs catalog breadth: see REALMS §3.1. Cards = quieter presentation of the same facts as browse rows.
 

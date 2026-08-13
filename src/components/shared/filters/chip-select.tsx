@@ -11,7 +11,7 @@ import { useId, useMemo } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FilterNativeSelect } from './filter-native-select';
-import { dedupeSelectOptions } from './filter-utils';
+import { dedupeSelectOptions, FILTER_LABEL_ROW_CLASS } from './filter-utils';
 
 interface ChipSelectProps {
   label: string;
@@ -47,7 +47,7 @@ export function ChipSelect({
 
   return (
     <div className={cn('filter-group', className)}>
-      <div className="mb-1 flex h-5 items-center">
+      <div className={FILTER_LABEL_ROW_CLASS}>
         <label htmlFor={id} className="text-sm font-medium leading-5 text-text-secondary">
           {label}
         </label>

@@ -269,6 +269,7 @@ export function filterOfficialItemRows<
     description?: string;
     currency?: number | null;
     tp?: number | null;
+    rarity?: string | null;
     abilityReq?: AbilityRequirement | null;
     properties?: WeaponPropertyRef[];
   },
@@ -288,8 +289,8 @@ export function filterOfficialItemRows<
         String(x.description ?? '').toLowerCase().includes(s)
     );
   }
-  if (filters && characterContext) {
-    result = applyArmamentFilters(result, filters, characterContext);
+  if (filters) {
+    result = applyArmamentFilters(result, filters, characterContext ?? null);
   }
   return sortItems(result);
 }

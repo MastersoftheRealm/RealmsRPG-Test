@@ -12,7 +12,7 @@
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import {
-  formatRange,
+  resolveWeaponRangeDisplay,
   trainingPointsForItemPropertyRef,
   type ItemPropertyPayload,
   type ItemPropertyTpRow,
@@ -97,11 +97,15 @@ export type HandednessLabel = 'Two-handed' | 'One-handed' | 'Thrown' | 'Ranged';
 
 /** Bare handedness — "Two-handed", never "Handedness: Two-handed". */
 export function formatHandednessFact(
-  properties: WeaponPropertyRef[] | undefined
+  properties: WeaponPropertyRef[] | undefined,
+  storedRange?: string | number | null
 ): HandednessLabel {
   if (hasTwoHandedProperty(properties)) return 'Two-handed';
   if (hasThrownProperty(properties)) return 'Thrown';
-  const range = formatRange((properties ?? []) as ItemPropertyPayload[]);
+  const range = resolveWeaponRangeDisplay(
+    storedRange,
+    (properties ?? []) as ItemPropertyPayload[]
+  );
   if (range.toLowerCase() !== 'melee') return 'Ranged';
   return 'One-handed';
 }
@@ -156,13 +160,6 @@ export function formatRangeFact(
   if (raw.toLowerCase() === 'melee') return undefined;
   if (/^range\b/i.test(raw)) return raw.replace(/^range\b/i, 'Range');
   return `Range ${raw}`;
-}
-
-export function formatRangeFactFromProperties(
-  properties: WeaponPropertyRef[] | undefined
-): string | undefined {
-  const range = formatRange((properties ?? []) as ItemPropertyPayload[]);
-  return formatRangeFact(range);
 }
 
 /** Standalone Spaces value — e.g. "3 Spaces". */
@@ -292,9 +289,10 @@ export function abilityRequirementChip(
 }
 
 export function handednessChip(
-  properties: WeaponPropertyRef[] | undefined
+  properties: WeaponPropertyRef[] | undefined,
+  storedRange?: string | number | null
 ): ChipData {
-  return descriptorChipData(formatHandednessFact(properties), 'default');
+  return descriptorChipData(formatHandednessFact(properties, storedRange), 'default');
 }
 
 export function damageFactChip(damage: unknown): ChipData | null {

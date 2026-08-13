@@ -1,17 +1,18 @@
 /**
- * Shared native-select chrome for filter dropdowns.
- * Matches ui/Select chevron inset (appearance-none + muted ChevronDown).
+ * Shared native-select + text/number chrome for filter panels (TASK-725).
+ * Matches height/radius/border; selects add appearance-none + muted ChevronDown inset.
  */
 
 'use client';
 
+import { forwardRef, type InputHTMLAttributes, type SelectHTMLAttributes } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FILTER_CONTROL_CLASS } from './filter-utils';
 
-const FILTER_NATIVE_SELECT_CLASS =
-  'h-11 w-full appearance-none rounded-md border border-border-light bg-surface px-3 pr-10 text-sm text-text-primary focus:border-primary-outline-border focus:outline-none focus:ring-2 focus:ring-primary-outline-border disabled:cursor-not-allowed disabled:bg-surface-alt';
+const FILTER_NATIVE_SELECT_CLASS = cn(FILTER_CONTROL_CLASS, 'appearance-none pr-10');
 
-type FilterNativeSelectProps = React.SelectHTMLAttributes<HTMLSelectElement> & {
+type FilterNativeSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
   wrapperClassName?: string;
 };
 
@@ -30,3 +31,10 @@ export function FilterNativeSelect({
     </div>
   );
 }
+
+/** Filter text/number field — same h-11 rounded-md chrome as FilterNativeSelect. */
+export const FilterInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
+  function FilterInput({ className, ...props }, ref) {
+    return <input ref={ref} className={cn(FILTER_CONTROL_CLASS, className)} {...props} />;
+  }
+);

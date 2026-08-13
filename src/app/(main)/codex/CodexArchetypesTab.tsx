@@ -16,7 +16,12 @@ import type { ColumnValue } from '@/components/shared/grid-list-row';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
 import { useCodexArchetypes, useCodexFeats, useCodexSkills, useEquipment, useOfficialLibrary } from '@/hooks';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
-import { formatListCellLabel, capitalize } from '@/lib/utils';
+import {
+  formatListCellLabel,
+  capitalize,
+  indexDisplayNamesByNormalizedIds,
+  resolveNormalizedRefList,
+} from '@/lib/utils';
 import type { Archetype, ArchetypePathRecommendations } from '@/types/archetype';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 
@@ -38,52 +43,13 @@ function formatAbilityEmphasis(archetype: Archetype): string {
   return '-';
 }
 
-function buildLookupMaps(
-  items: Array<{ id?: string | number; name?: string; docId?: string }>
-): { byId: Map<string, string>; byName: Map<string, string> } {
-  const byId = new Map<string, string>();
-  const byName = new Map<string, string>();
-  for (const item of items) {
-    const name = String(item.name ?? '').trim();
-    if (!name) continue;
-    const ids = [item.id, item.docId].filter(Boolean).map(String);
-    for (const id of ids) {
-      byId.set(id, name);
-      byId.set(id.toLowerCase(), name);
-    }
-    byName.set(name.toLowerCase(), name);
-  }
-  return { byId, byName };
-}
-
-function resolveRefLabel(
-  ref: string,
-  byId: Map<string, string>,
-  byName: Map<string, string>
-): string {
-  const trimmed = ref.trim();
-  const colon = trimmed.indexOf(':');
-  const idPart = colon >= 0 ? trimmed.slice(0, colon).trim() : trimmed;
-  const qtyPart = colon >= 0 ? trimmed.slice(colon + 1).trim() : '';
-  const label =
-    byId.get(idPart) ??
-    byId.get(idPart.toLowerCase()) ??
-    byName.get(idPart.toLowerCase()) ??
-    idPart;
-  if (qtyPart && Number.parseInt(qtyPart, 10) > 1) {
-    return `${label} ×${qtyPart}`;
-  }
-  return label;
-}
-
-function resolveRefList(
-  refs: string[] | undefined,
-  byId: Map<string, string>,
-  byName: Map<string, string>
-): string[] {
-  if (!refs?.length) return [];
-  return refs.map((ref) => resolveRefLabel(ref, byId, byName));
-}
+type PathLookups = {
+  feats: ReturnType<typeof indexDisplayNamesByNormalizedIds>;
+  skills: ReturnType<typeof indexDisplayNamesByNormalizedIds>;
+  equipment: ReturnType<typeof indexDisplayNamesByNormalizedIds>;
+  powers: ReturnType<typeof indexDisplayNamesByNormalizedIds>;
+  techniques: ReturnType<typeof indexDisplayNamesByNormalizedIds>;
+};
 
 function RecommendationSummary({
   title,
@@ -112,31 +78,25 @@ function PathRecommendationsBlock({
 }: {
   heading: string;
   recommendations: ArchetypePathRecommendations | undefined;
-  lookups: {
-    feats: ReturnType<typeof buildLookupMaps>;
-    skills: ReturnType<typeof buildLookupMaps>;
-    equipment: ReturnType<typeof buildLookupMaps>;
-    powers: ReturnType<typeof buildLookupMaps>;
-    techniques: ReturnType<typeof buildLookupMaps>;
-  };
+  lookups: PathLookups;
 }) {
   if (!recommendations) return null;
 
   const resolved = {
-    feats: resolveRefList(recommendations.feats, lookups.feats.byId, lookups.feats.byName),
-    skills: resolveRefList(recommendations.skills, lookups.skills.byId, lookups.skills.byName),
-    powers: resolveRefList(recommendations.powers, lookups.powers.byId, lookups.powers.byName),
-    techniques: resolveRefList(
+    feats: resolveNormalizedRefList(recommendations.feats, lookups.feats.byId, lookups.feats.byName),
+    skills: resolveNormalizedRefList(recommendations.skills, lookups.skills.byId, lookups.skills.byName),
+    powers: resolveNormalizedRefList(recommendations.powers, lookups.powers.byId, lookups.powers.byName),
+    techniques: resolveNormalizedRefList(
       recommendations.techniques,
       lookups.techniques.byId,
       lookups.techniques.byName
     ),
-    armaments: resolveRefList(
+    armaments: resolveNormalizedRefList(
       recommendations.armaments,
       lookups.equipment.byId,
       lookups.equipment.byName
     ),
-    equipment: resolveRefList(
+    equipment: resolveNormalizedRefList(
       recommendations.equipment,
       lookups.equipment.byId,
       lookups.equipment.byName
@@ -173,13 +133,7 @@ function ArchetypePathCard({
   lookups,
 }: {
   archetype: Archetype;
-  lookups: {
-    feats: ReturnType<typeof buildLookupMaps>;
-    skills: ReturnType<typeof buildLookupMaps>;
-    equipment: ReturnType<typeof buildLookupMaps>;
-    powers: ReturnType<typeof buildLookupMaps>;
-    techniques: ReturnType<typeof buildLookupMaps>;
-  };
+  lookups: PathLookups;
 }) {
   const columns: ColumnValue[] = [
     { key: 'type', value: formatListCellLabel(archetype.type) },
@@ -281,11 +235,11 @@ export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
 
   const lookups = useMemo(
     () => ({
-      feats: buildLookupMaps(feats),
-      skills: buildLookupMaps(skills),
-      equipment: buildLookupMaps([...equipment, ...publicItems]),
-      powers: buildLookupMaps(publicPowers),
-      techniques: buildLookupMaps(publicTechniques),
+      feats: indexDisplayNamesByNormalizedIds(feats),
+      skills: indexDisplayNamesByNormalizedIds(skills),
+      equipment: indexDisplayNamesByNormalizedIds([...equipment, ...publicItems]),
+      powers: indexDisplayNamesByNormalizedIds(publicPowers),
+      techniques: indexDisplayNamesByNormalizedIds(publicTechniques),
     }),
     [feats, skills, equipment, publicPowers, publicTechniques, publicItems]
   );

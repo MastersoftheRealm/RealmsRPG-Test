@@ -12,13 +12,21 @@
  *
  * Intended for any guided-creator L3 screen (feats, weapons/armor/gear,
  * powers/techniques) — keep this generic; put domain copy/columns in the caller.
+ *
+ * Selected panel mounts only when N>0 (no reserved empty hole). Height growth is
+ * compensated with a window/overflow scrollBy so the catalog row stays under the
+ * pointer (TASK-728). Do not scroll the new selected row into view.
  */
 
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  nearestVerticalScroller,
+  stabilizeAfterSelectedHeightChange,
+} from '@/lib/utils/stabilize-vertical-scroll';
 import { Alert, Card, IconButton } from '@/components/ui';
 import { SearchInput } from '@/components/ui/search-input';
 import { useSort } from '@/hooks/use-sort';
@@ -114,6 +122,10 @@ export function GuidedInlineCatalogList({
   const [searchQuery, setSearchQuery] = useState('');
   const [optionsExpanded, setOptionsExpanded] = useState(false);
   const { sortState, handleSort, sortItems } = useSort('name');
+  const selectedRegionRef = useRef<HTMLDivElement>(null);
+  const prevSelectedHeightRef = useRef(0);
+  const skipNextStabilizeRef = useRef(true);
+  const prevItemsLengthRef = useRef(items.length);
 
   const filteredItems = useMemo(() => {
     let result = items;
@@ -144,6 +156,22 @@ export function GuidedInlineCatalogList({
   const resolvedSearchPlaceholder = searchPlaceholder || `Search ${itemLabel}s...`;
   const resolvedEmptyMessage = emptyMessage || `No ${itemLabel}s found`;
   const hasOptions = Boolean(showFilters && filterContent);
+  const hasSelectedPanel = selectedItems.length > 0;
+  const selectedSignature = selectedItems.map((item) => String(item.id)).join('\0');
+
+  useLayoutEffect(() => {
+    const nextHeight = selectedRegionRef.current?.offsetHeight ?? 0;
+    const catalogHydrated = prevItemsLengthRef.current === 0 && items.length > 0;
+    prevItemsLengthRef.current = items.length;
+    const skip = skipNextStabilizeRef.current || catalogHydrated;
+    skipNextStabilizeRef.current = false;
+    prevSelectedHeightRef.current = stabilizeAfterSelectedHeightChange({
+      previousHeight: prevSelectedHeightRef.current,
+      nextHeight,
+      skip,
+      scroller: nearestVerticalScroller(selectedRegionRef.current),
+    });
+  }, [selectedSignature, items.length, selectedTitle, selectedCountLabel, showQuantity]);
 
   const searchField = (
     <SearchInput
@@ -155,9 +183,13 @@ export function GuidedInlineCatalogList({
   );
 
   return (
-    <div className={cn('flex flex-col gap-4', className)}>
-      {selectedItems.length > 0 ? (
-        <Card className="bg-surface-alt dark:bg-surface overflow-hidden p-0">
+    <div className={cn('flex flex-col', className)}>
+      <div
+        ref={selectedRegionRef}
+        className={cn(hasSelectedPanel && 'pb-4')}
+      >
+        {hasSelectedPanel ? (
+          <Card className="bg-surface-alt dark:bg-surface overflow-hidden p-0 [overflow-anchor:none]">
           <div className={GUIDED_INLINE_CATALOG_SELECTED_PANEL_CHROME}>
             {selectedTitle ? (
               <div className="flex items-center justify-between gap-2">
@@ -230,7 +262,8 @@ export function GuidedInlineCatalogList({
             </div>
           </div>
         </Card>
-      ) : null}
+        ) : null}
+      </div>
 
       <div className="flex flex-col gap-2">
         {hasOptions ? (

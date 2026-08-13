@@ -32,7 +32,9 @@ export function GuidedSectionTitle({
       <Tag id={id} className={GUIDED_SECTION_TITLE_CLASS}>
         {children}
       </Tag>
-      {titleAddon}
+      {titleAddon ? (
+        <span className="inline-flex shrink-0 items-center self-center leading-none">{titleAddon}</span>
+      ) : null}
     </div>
   );
 }

@@ -193,7 +193,6 @@ export function PowersSelectionModals({
               categoryOptions={powerCategoryOptions}
               innateThresholdOptions={innateThresholdOptions}
               onCharacterContextChange={setPowerCharacterCtx}
-              variant="compact"
               persistCharacter={false}
             />
           ) : undefined
@@ -233,7 +232,6 @@ export function PowersSelectionModals({
             onChange={setTechniqueFilters}
             categoryOptions={techniqueCategoryOptions}
             onCharacterContextChange={setTechniqueCharacterCtx}
-            variant="compact"
             persistCharacter={false}
           />
         }

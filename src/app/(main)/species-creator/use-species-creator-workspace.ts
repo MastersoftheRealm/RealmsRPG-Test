@@ -15,6 +15,7 @@ import {
   type Skill,
 } from '@/hooks';
 import { CACHE_EXPIRY_MS } from '@/lib/game/creator-constants';
+import { findByNormalizedId } from '@/lib/utils';
 import {
   SPECIES_CREATOR_CACHE_KEY,
   DEFAULT_SPECIES_SPEED,
@@ -42,6 +43,11 @@ type UseSpeciesCreatorWorkspaceArgs = {
   traitsLoading: boolean;
   closeLoadModal: () => void;
 };
+
+function resolveSpeciesSkillLabel(skills: Skill[], id: string): string {
+  if (id === '0' || !id) return 'Any';
+  return findByNormalizedId(skills, id)?.name ?? '';
+}
 
 export function useSpeciesCreatorWorkspace({
   traits,
@@ -313,8 +319,8 @@ export function useSpeciesCreatorWorkspace({
   }, [form.name, form.type]);
   const sizesSummary = useMemo(() => form.sizes.join(', ') || 'Medium', [form.sizes]);
   const baseSkillsSummary = useMemo(() => {
-    const names = form.skillIds.map((id) => (id === '0' || !id ? 'Any' : skills.find((s) => String(s.id) === id)?.name ?? id));
-    return names.filter(Boolean).length ? names.join(', ') : 'Select base skills';
+    const names = form.skillIds.map((id) => resolveSpeciesSkillLabel(skills, id)).filter(Boolean);
+    return names.length ? names.join(', ') : 'Select base skills';
   }, [form.skillIds, skills]);
   const languagesSummary = useMemo(() => form.languages.join(', ') || 'None', [form.languages]);
   const traitsSummary = useMemo(() => {
@@ -372,6 +378,6 @@ export function useSpeciesCreatorWorkspace({
     setPendingTraitAdd,
     setPendingBatch,
     isSaveReady: isSpeciesFormSaveReady(form),
-    skillLabel: (id: string) => (id === '0' ? 'Any' : skills.find((s) => String(s.id) === id)?.name ?? id),
+    skillLabel: (id: string) => resolveSpeciesSkillLabel(skills, id),
   };
 }

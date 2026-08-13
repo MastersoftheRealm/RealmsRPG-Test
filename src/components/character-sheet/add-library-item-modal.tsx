@@ -152,7 +152,6 @@ export function AddLibraryItemModal({
       categoryOptions={categoryOptions}
       innateThresholdOptions={innateThresholdOptions}
       onCharacterContextChange={setCharacterContext}
-      variant="compact"
       persistCharacter={false}
     />
   ) : undefined;

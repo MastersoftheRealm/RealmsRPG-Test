@@ -34,7 +34,7 @@ Common scales are encoded as semantic tokens so components share one ladder inst
 | Motion | `--duration-fast` (150ms), `--duration-base` (200ms), `--duration-slow` (300ms), `--ease-standard` | one easing curve for all transitions; use `duration-base ease-standard` in TSX; in `@apply` use `var(--duration-base)` + `var(--ease-standard)` |
 | Z-index | `--z-sticky` (10), `--z-header` / `--z-overlay` (50), `--z-popover` (70), `--z-toast` (100), `--z-floating` (1000), `--z-tour` (1100), `--z-skip-link` (9999), `--z-toast-stack` (10000) | sticky → header/modal → popovers/tooltips → floating widgets → onboarding tour cards → skip link / toast stack |
 | Focus | `focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2` | buttons, icon buttons, tabs; form controls use `:focus:` (same ring token); errors use `ring-danger-border` |
-| Touch | `--touch-target-min: 44px`; utilities `.touch-target`, `.touch-target-md-compact` | 44px below `md`; compact on desktop; `Button`/`IconButton` also use `@media(pointer:coarse)` |
+| Touch | `--touch-target-min: 44px`; utilities `.touch-target`, `.touch-target-md-compact`, `.hit-area-layout-neutral` | 44px below `md`; compact on desktop; `Button`/`IconButton` also use `@media(pointer:coarse)`. InfoTippy uses `.hit-area-layout-neutral` so the (i) does not stretch label rows. |
 | Container | `--container-narrow` (4xl), `--container-standard` (7xl), `--container-wide` (1440px), `--container-full-tool` (1600px) | page max-widths; marketing chrome uses `.layout-shell-wide` |
 
 ## Color Palette
@@ -645,7 +645,7 @@ These components are used across multiple pages and should be imported rather th
 | `SelectionToggle` | `@/components/shared/selection-toggle` | + → ✓ toggle for adding items in modals |
 | `EquipToggle` | `@/components/shared/equip-toggle` | Equipment equipped/unequipped toggle |
 | `InnateToggle` | `@/components/shared/innate-toggle` | Innate power toggle |
-| `HealthEnergyAllocator` | `@/components/creator/health-energy-allocator` | HP/EN point allocation with stepper |
+| `HealthEnergyAllocator` | `@/components/creator/health-energy-allocator` | Health/Energy pool allocation (PointStatus + steppers; HP/EN only when compact) |
 | `CreatorSummaryPanel` | `@/components/creator/creator-summary-panel` | Cost/point summary in creators |
 | `RecoveryModal` | `@/components/character-sheet/recovery-modal` | Full/partial recovery dialog |
 | `RollLog` | `@/components/rolls` | Dice roll history display (RollProvider / useRolls*) |

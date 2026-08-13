@@ -16,6 +16,9 @@ import {
   useGameRules,
   useOfficialLibrary,
   useEquipment,
+  useUserItems,
+  useUserPowers,
+  useUserTechniques,
   usePowerParts,
   useTechniqueParts,
   useItemProperties,
@@ -30,6 +33,7 @@ import { GuidedPortraitUpload } from '../guided-portrait-upload';
 import { GuidedHealthEnergySection } from '../guided-health-energy-section';
 import { GuidedSectionTitle } from '../guided-section-title';
 import { buildGuidedCharacterPayload } from '@/lib/guided-creator/build-character';
+import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
 import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
 import { cleanForSave } from '@/lib/data-enrichment';
@@ -70,8 +74,11 @@ export function RevealStep() {
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: codexFeats = [] } = useCodexFeats();
   const { data: officialItems = [] } = useOfficialLibrary('items');
+  const { data: userItems = [] } = useUserItems();
   const { data: officialPowers = [] } = useOfficialLibrary('powers');
   const { data: officialTechniques = [] } = useOfficialLibrary('techniques');
+  const { data: userPowers = [] } = useUserPowers();
+  const { data: userTechniques = [] } = useUserTechniques();
   const { data: codexEquipment = [] } = useEquipment();
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
@@ -155,9 +162,9 @@ export function RevealStep() {
         codexSkills,
         codexFeats,
         rules,
-        officialItems,
-        officialPowers,
-        officialTechniques,
+        officialItems: mergeLibraryBySource('all', officialItems, userItems),
+        officialPowers: mergeLibraryBySource('all', officialPowers, userPowers),
+        officialTechniques: mergeLibraryBySource('all', officialTechniques, userTechniques),
         codexEquipment,
         powerPartsDb,
         techniquePartsDb,

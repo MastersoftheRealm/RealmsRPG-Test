@@ -40,8 +40,10 @@ type UserLibraryEntityTabShellBaseProps = {
   listClassName?: string;
   /** Optional content after the list (e.g. RollLog). */
   afterList?: ReactNode;
-  /** Slot between search and ListHeader (FilterSection, etc.). */
+  /** Filter panel body only — ListSearchToolbar wraps FilterSection compact (TASK-721). */
   filters?: ReactNode;
+  /** Active-filter badge on the collapsed Filters toggle. */
+  filterActiveCount?: number;
 };
 
 type UserLibraryEntityTabShellSyncProps = UserLibraryEntityTabShellBaseProps & {
@@ -104,6 +106,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
     listClassName = 'flex flex-col gap-1 mt-2',
     afterList,
     filters,
+    filterActiveCount,
   } = props;
   const syncEnabled = isSyncMode(props);
 
@@ -155,9 +158,9 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
             </Button>
           ) : null
         }
+        filters={filters}
+        filterActiveCount={filterActiveCount}
       />
-
-      {filters}
 
       <ListHeader
         columns={headerColumns}

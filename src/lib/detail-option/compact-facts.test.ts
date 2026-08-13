@@ -57,6 +57,9 @@ describe('compact-facts formatters', () => {
       formatHandednessFact([{ id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 }])
     ).toBe('Ranged');
     expect(formatHandednessFact([])).toBe('One-handed');
+    expect(formatHandednessFact([], '16 spaces')).toBe('Ranged');
+    expect(formatHandednessFact([], '0')).toBe('One-handed');
+    expect(formatHandednessFact([], '1')).toBe('One-handed');
   });
 
   it('formats damage as XdY Type Damage', () => {

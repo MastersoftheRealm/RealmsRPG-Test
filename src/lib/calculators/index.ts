@@ -102,7 +102,6 @@ export {
   calculateCurrencyCostAndRarity,
   calculateGoldCostAndRarity,
   computeSplits as computeItemSplits,
-  formatRange,
   resolveWeaponRangeDisplay,
   formatWeaponRangeDisplayCompact,
   deriveDamageReductionFromProperties,

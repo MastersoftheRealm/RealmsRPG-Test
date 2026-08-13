@@ -1,12 +1,11 @@
 /**
  * PowerTechniqueFilters — Category / Energy / TP / Action / (power) Innate filters.
- * Composes ChipSelect, SelectFilter, CharacterFilter, FilterSection (TASK-673 / TASK-676).
+ * Composes ChipSelect, SelectFilter, CharacterFilter (TASK-673 / TASK-676).
  */
 
 'use client';
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
-import { Input } from '@/components/ui';
 import { InfoTippy } from '@/components/shared/info-tippy';
 import { useCharacter } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
@@ -15,11 +14,10 @@ import type { PowerTechniqueCharacterContext } from '@/lib/library/power-techniq
 import { ChipSelect } from './chip-select';
 import { SelectFilter } from './select-filter';
 import { CharacterFilter } from './character-filter';
-import { FilterSection } from './filter-section';
+import { FilterInput } from './filter-native-select';
 import {
   POWER_TECHNIQUE_ACTION_FILTER_OPTIONS,
   REACTION_FILTER_OPTIONS,
-  countActivePowerTechniqueFilters,
   withCharacterContextApplied,
   withInnateThresholdSelected,
   type PowerTechniqueFilterKind,
@@ -30,7 +28,7 @@ import {
   readInitialLibraryCharacterFilterId,
   writePersistedLibraryCharacterFilterId,
 } from '@/lib/library/character-filter-persistence';
-import { FILTER_CONTROL_ROW_CLASS } from './filter-utils';
+import { FILTER_CONTROL_ROW_CLASS, FILTER_LABEL_ROW_CLASS } from './filter-utils';
 import { cn } from '@/lib/utils';
 
 const INNATE_THRESHOLD_HELP =
@@ -53,13 +51,9 @@ export interface PowerTechniqueFiltersProps {
   onCharacterContextChange?: (ctx: PowerTechniqueCharacterContext | null) => void;
   /** Selected character id ('' when none). Used for add-to-character row actions. */
   onCharacterIdChange?: (characterId: string) => void;
-  /** FilterSection page vs compact panel (USM embeds compact inside its own FilterSection). */
-  variant?: 'page' | 'compact';
-  /** Override FilterSection initial expand (default collapsed). Page variant only. */
-  defaultExpanded?: boolean;
   className?: string;
   showCharacterFilter?: boolean;
-  /** Persist character pick (default true for page variant). */
+  /** Persist character pick (default true). USM/L3 pass false. */
   persistCharacter?: boolean;
 }
 
@@ -71,10 +65,8 @@ export function PowerTechniqueFilters({
   innateThresholdOptions = [],
   onCharacterContextChange,
   onCharacterIdChange,
-  variant = 'page',
-  defaultExpanded,
   className,
-  persistCharacter = variant === 'page',
+  persistCharacter = true,
   showCharacterFilter = true,
 }: PowerTechniqueFiltersProps) {
   const energyMaxId = useId();
@@ -133,8 +125,6 @@ export function PowerTechniqueFilters({
   }, [characterId, characterContext, onChange]);
 
   const hasCharacter = Boolean(characterId && characterContext);
-  const activeCount =
-    countActivePowerTechniqueFilters(value, kind, hasCharacter) + (characterId ? 1 : 0);
 
   const set = (patch: Partial<PowerTechniqueFilterState>) => {
     onChange({ ...value, ...patch });
@@ -192,7 +182,7 @@ export function PowerTechniqueFilters({
         />
 
         <div className={cn('filter-group min-w-0', energyLockedByCharacter && 'opacity-60')}>
-          <div className="mb-1 flex h-5 items-center gap-1.5">
+          <div className={FILTER_LABEL_ROW_CLASS}>
             <label htmlFor={energyMaxId} className="text-sm font-medium leading-5 text-text-secondary">
               Max Energy
             </label>
@@ -202,7 +192,7 @@ export function PowerTechniqueFilters({
               </span>
             ) : null}
           </div>
-          <Input
+          <FilterInput
             id={energyMaxId}
             type="number"
             min={0}
@@ -214,17 +204,16 @@ export function PowerTechniqueFilters({
               })
             }
             placeholder={energyLockedByCharacter ? SET_BY_CHARACTER_HINT : 'No max'}
-            className="h-11"
           />
         </div>
 
         <div className="filter-group min-w-0">
-          <div className="mb-1 flex h-5 items-center">
+          <div className={FILTER_LABEL_ROW_CLASS}>
             <label htmlFor={tpMaxId} className="text-sm font-medium leading-5 text-text-secondary">
               Max TP
             </label>
           </div>
-          <Input
+          <FilterInput
             id={tpMaxId}
             type="number"
             min={0}
@@ -235,7 +224,6 @@ export function PowerTechniqueFilters({
               })
             }
             placeholder="No max"
-            className="h-11"
           />
         </div>
 
@@ -276,13 +264,12 @@ export function PowerTechniqueFilters({
                   content={INNATE_THRESHOLD_HELP}
                   label="Innate threshold filter help"
                   size="inline"
-                  className="!min-h-4 !min-w-4 !my-0 md:!min-h-4 md:!min-w-4"
                 />
               }
             />
 
             <div className="filter-group min-w-0">
-              <div className="mb-1 flex h-5 items-center">
+              <div className={FILTER_LABEL_ROW_CLASS}>
                 <label
                   htmlFor={innateEligibleId}
                   className="text-sm font-medium leading-5 text-text-secondary"
@@ -306,7 +293,7 @@ export function PowerTechniqueFilters({
 
         {hasCharacter ? (
           <div className="filter-group min-w-0">
-            <div className="mb-1 flex h-5 items-center">
+            <div className={FILTER_LABEL_ROW_CLASS}>
               <label
                 htmlFor={affordableTpId}
                 className="text-sm font-medium leading-5 text-text-secondary"
@@ -332,19 +319,5 @@ export function PowerTechniqueFilters({
     </>
   );
 
-  // Compact: panel content only — USM / GuidedInlineCatalogList already wrap FilterSection.
-  if (variant === 'compact') {
-    return <div className={cn('space-y-3', className)}>{controls}</div>;
-  }
-
-  return (
-    <FilterSection
-      variant="page"
-      defaultExpanded={defaultExpanded}
-      activeCount={activeCount}
-      className={className}
-    >
-      {controls}
-    </FilterSection>
-  );
+  return <div className={cn('space-y-3', className)}>{controls}</div>;
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChipSelect, FilterSection } from '@/components/shared/filters';
+import { ChipSelect } from '@/components/shared/filters';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
@@ -169,8 +169,7 @@ export function AdminSpeciesTab() {
         onSearchChange={setSearch}
         searchPlaceholder="Search species..."
         filters={
-          <FilterSection>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <ChipSelect
                 label="Type"
                 placeholder="Choose type"
@@ -187,8 +186,7 @@ export function AdminSpeciesTab() {
                 onSelect={(v) => setSizeFilters((prev) => [...prev, v])}
                 onRemove={(v) => setSizeFilters((prev) => prev.filter((s) => s !== v))}
               />
-            </div>
-          </FilterSection>
+          </div>
         }
         headerColumns={[
           { key: 'name', label: 'NAME' },

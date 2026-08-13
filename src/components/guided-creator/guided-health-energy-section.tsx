@@ -1,15 +1,25 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui';
 import { HealthEnergyAllocator } from '@/components/creator';
-import { useGameRules, usePowerParts, useTechniqueParts, useOfficialLibrary } from '@/hooks';
+import { InfoTippy } from '@/components/shared';
+import {
+  useGameRules,
+  usePowerParts,
+  useTechniqueParts,
+  useOfficialLibrary,
+  useUserPowers,
+  useUserTechniques,
+} from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { calculateMaxHealth, calculateMaxEnergy } from '@/lib/game/calculations';
-import { calculateHealthEnergyPool } from '@/lib/game/formulas';
-import { resolvePowerTechniqueEnergy } from '@/lib/guided-creator/power-technique-display';
+import { allocateHealthEnergyPool, calculateHealthEnergyPool } from '@/lib/game/formulas';
+import { findHighestEnergyCostPick } from '@/lib/guided-creator/power-technique-display';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { getGuidedAutoAllocateHelp } from '../../../public/tooltip-text';
 import { GuidedSectionTitle } from './guided-section-title';
+import type { LibraryPower, LibraryTechnique } from '@/types/library';
 
 const copy = GUIDED_CREATOR_COPY.steps.reveal.healthEnergy;
 
@@ -20,7 +30,8 @@ export function GuidedHealthEnergySection() {
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: officialPowers = [] } = useOfficialLibrary('powers');
   const { data: officialTechniques = [] } = useOfficialLibrary('techniques');
-  const autoApplied = useRef(false);
+  const { data: userPowers = [] } = useUserPowers();
+  const { data: userTechniques = [] } = useUserTechniques();
 
   const level = 1;
   const abilities = draft.abilities;
@@ -45,41 +56,43 @@ export function GuidedHealthEnergySection() {
   );
   const maxEnergy = calculateMaxEnergy(enBonus, powAbil || martAbil, abilities, level);
 
-  const highestEnergyCost = useMemo(() => {
-    let max = 0;
-    const powerById = new Map(officialPowers.map((p) => [String(p.id), p]));
-    const techniqueById = new Map(officialTechniques.map((t) => [String(t.id), t]));
-
-    draft.powerIds.forEach((id) => {
-      const raw = powerById.get(String(id));
-      const energy = resolvePowerTechniqueEnergy('powers', raw, powerPartsDb, techniquePartsDb);
-      if (typeof energy === 'number') max = Math.max(max, energy);
-    });
-
-    draft.techniqueIds.forEach((id) => {
-      const raw = techniqueById.get(String(id));
-      const energy = resolvePowerTechniqueEnergy('techniques', raw, powerPartsDb, techniquePartsDb);
-      if (typeof energy === 'number') max = Math.max(max, energy);
-    });
-
-    return max;
-  }, [draft.powerIds, draft.techniqueIds, officialPowers, officialTechniques, powerPartsDb, techniquePartsDb]);
+  const highestPick = useMemo(
+    () =>
+      findHighestEnergyCostPick({
+        powerIds: [...draft.powerIds, ...draft.innatePowerIds],
+        techniqueIds: draft.techniqueIds,
+        powers: [...officialPowers, ...userPowers] as LibraryPower[],
+        techniques: [...officialTechniques, ...userTechniques] as LibraryTechnique[],
+        powerPartsDb,
+        techniquePartsDb,
+      }),
+    [
+      draft.powerIds,
+      draft.innatePowerIds,
+      draft.techniqueIds,
+      officialPowers,
+      officialTechniques,
+      userPowers,
+      userTechniques,
+      powerPartsDb,
+      techniquePartsDb,
+    ]
+  );
 
   const onAutoAllocate = useCallback(() => {
-    const maxAchievableEN = baseEnergy + hePool;
-    const targetEN = Math.min(highestEnergyCost, maxAchievableEN);
-    const energyBonusNeeded = Math.max(0, targetEN - baseEnergy);
-    const energyBonusFinal = Math.min(hePool, energyBonusNeeded);
-    const hpBonusFinal = hePool - energyBonusFinal;
+    const { hpBonus: hpBonusFinal, energyBonus: energyBonusFinal } = allocateHealthEnergyPool({
+      baseEnergy,
+      pool: hePool,
+      highestEnergyCost: highestPick?.energy ?? 0,
+    });
     updateDraft({ hpAllocated: hpBonusFinal, energyAllocated: energyBonusFinal });
-  }, [baseEnergy, hePool, highestEnergyCost, updateDraft]);
+  }, [baseEnergy, hePool, highestPick?.energy, updateDraft]);
 
-  useEffect(() => {
-    if (autoApplied.current) return;
-    if (draft.hpAllocated !== null || draft.energyAllocated !== null) return;
-    autoApplied.current = true;
-    onAutoAllocate();
-  }, [draft.hpAllocated, draft.energyAllocated, onAutoAllocate]);
+  const autoAllocateHelp = getGuidedAutoAllocateHelp(
+    highestPick
+      ? { name: highestPick.name, energy: highestPick.energy, kind: highestPick.kind }
+      : undefined
+  );
 
   return (
     <div className="rounded-card border border-border-light bg-surface p-5 shadow-sm">
@@ -88,16 +101,23 @@ export function GuidedHealthEnergySection() {
           <GuidedSectionTitle>{copy.title}</GuidedSectionTitle>
           <p className="mt-1 font-nunito text-sm text-text-secondary">{copy.description}</p>
         </div>
-        <Button
-          type="button"
-          variant="secondary"
-          size="sm"
-          onClick={onAutoAllocate}
-          aria-label={copy.autoAllocateAria}
-          className="min-h-11 shrink-0"
-        >
-          {copy.autoAllocate}
-        </Button>
+        <div className="flex items-center gap-1 shrink-0">
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={onAutoAllocate}
+            aria-label={copy.autoAllocateAria}
+            className="min-h-11"
+          >
+            {copy.autoAllocate}
+          </Button>
+          <InfoTippy
+            content={autoAllocateHelp}
+            label="How auto-allocate works"
+            size="inline"
+          />
+        </div>
       </div>
 
       <HealthEnergyAllocator

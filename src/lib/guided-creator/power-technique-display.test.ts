@@ -5,6 +5,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildPowerTechniqueCardFacts,
+  findHighestEnergyCostPick,
   resolvePowerTechniqueEnergy,
 } from './power-technique-display';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
@@ -82,5 +83,37 @@ describe('buildPowerTechniqueCardFacts disclosure', () => {
     const facts = buildPowerTechniqueCardFacts('techniques', tech, 't2', [], []);
     const energy = resolvePowerTechniqueEnergy('techniques', tech, [], []);
     expect(energy).toBe(facts.energy);
+  });
+
+  it('findHighestEnergyCostPick resolves selected ids including docId', () => {
+    const spark = {
+      id: 'p1',
+      docId: 'spark-doc',
+      name: 'Spark',
+      parts: [],
+    } as LibraryPower;
+    const pick = findHighestEnergyCostPick({
+      powerIds: ['spark-doc', 'missing'],
+      powers: [spark],
+      powerPartsDb: [],
+      techniquePartsDb: [],
+    });
+    expect(pick?.name).toBe('Spark');
+    expect(typeof pick?.energy).toBe('number');
+  });
+
+  it('findHighestEnergyCostPick scans resolved rows when ids are omitted', () => {
+    const bolt = {
+      id: 'p2',
+      docId: 'p2',
+      name: 'Bolt',
+      parts: [],
+    } as LibraryPower;
+    const pick = findHighestEnergyCostPick({
+      powers: [bolt],
+      powerPartsDb: [],
+      techniquePartsDb: [],
+    });
+    expect(pick?.name).toBe('Bolt');
   });
 });

@@ -3,6 +3,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
+import { PROPERTY_IDS } from '@/lib/id-constants';
 import { buildEquipmentPhaseCardStats } from '@/lib/guided-creator/equipment-phase-stats';
 
 describe('buildEquipmentPhaseCardStats (TASK-457)', () => {
@@ -103,6 +104,28 @@ describe('buildEquipmentPhaseCardStats (TASK-457)', () => {
     expect(stats.detailChips).toEqual([]);
     expect(stats.factChips.map((c) => c.name)).toEqual(['Currency 8']);
     expect(stats.tags.some((t) => /^use\b/i.test(t))).toBe(false);
+  });
+
+  it('chips Range from properties and rejects corrupt stored range (TASK-716)', () => {
+    const ranged = buildEquipmentPhaseCardStats({
+      category: 'weapon',
+      properties: [{ id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 }],
+      storedRange: '0',
+    });
+    expect(ranged.detailChips.map((c) => c.name)).toContain('Range 16 Spaces');
+    expect(ranged.detailChips.map((c) => c.name)).toContain('Ranged');
+    expect(ranged.detailChips.map((c) => c.name)).toContain('Acuity Weapon');
+
+    const corruptMelee = buildEquipmentPhaseCardStats({
+      category: 'weapon',
+      properties: [],
+      storedRange: '0',
+    });
+    const corruptNames = corruptMelee.detailChips.map((c) => c.name);
+    expect(corruptNames.some((n) => /^range\b/i.test(n))).toBe(false);
+    expect(corruptNames).toContain('One-handed');
+    expect(corruptNames).toContain('Strength Weapon');
+    expect(corruptNames).not.toContain('0');
   });
 });
 

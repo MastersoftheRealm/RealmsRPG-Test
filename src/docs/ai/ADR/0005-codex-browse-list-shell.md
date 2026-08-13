@@ -13,8 +13,7 @@ Admin Codex tabs, Codex browse tabs, and Admin Images each hand-roll `SectionHea
 Add **`CodexBrowseListShell`** under `src/components/shared/` for Admin Codex + Codex browse sortable list chrome only:
 
 - Optional `SectionHeader` (`sectionTitle` / `onAdd`) — admin
-- Search row (+ optional `searchTrailing`)
-- `filters` slot (FilterSection, banners)
+- Search row (+ optional `searchTrailing` after Filters; `filters` panel body in ListSearchToolbar compact FilterSection — TASK-721)
 - `ListHeader` + loading / empty / `children` rows
 
 Keep **`OfficialEntityList`** for official library entity grids. Do **not** put My Library sync chrome here (ADR-0001).

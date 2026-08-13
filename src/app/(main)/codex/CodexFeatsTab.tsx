@@ -12,8 +12,9 @@ import {
   AbilityRequirementFilter,
   TagFilter,
   SelectFilter,
-  FilterSection,
   CharacterFilter,
+  FilterInput,
+  FILTER_LABEL_ROW_CLASS,
 } from '@/components/shared/filters';
 import { CodexFeatRow } from '@/components/codex';
 import {
@@ -23,7 +24,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
-import { Input, Button } from '@/components/ui';
+import { Button } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, useCharacter, type Feat, type Skill } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { groupFeatFamilies } from '@/lib/leveled-feats';
@@ -130,37 +131,35 @@ export function CodexFeatsTab({
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search names, tags, descriptions..."
         filters={
-          <FilterSection>
-            <div className="col-span-full mb-4 border-b border-border-light pb-4">
-              <div className="flex flex-wrap items-end gap-3">
-                <CharacterFilter
-                  value={characterFilterId}
-                  onChange={handleCharacterFilterChange}
-                  className="min-w-0 flex-1"
-                  helpContent="Show only feats this character qualifies for. Level and ability requirements use the character's stats instead of the manual filters below."
-                />
-                {filteringByCharacter ? (
-                  <Button
-                    type="button"
-                    variant={showUnqualified ? 'outline' : 'secondary'}
-                    onClick={() => setShowUnqualified((v) => !v)}
-                    aria-pressed={showUnqualified}
-                    className={cn(
-                      'min-h-11 flex-shrink-0',
-                      !showUnqualified &&
-                        'border-success-300 bg-success-50 text-success-fg hover:bg-success-50 dark:border-success-600/50 dark:bg-success-900/30'
-                    )}
-                  >
-                    {showUnqualified ? 'Hide unqualified feats' : 'Show unqualified feats'}
-                  </Button>
-                ) : null}
-              </div>
+          <>
+            <div className="mb-4 flex flex-wrap items-end gap-3 empty:hidden">
+              <CharacterFilter
+                value={characterFilterId}
+                onChange={handleCharacterFilterChange}
+                className="min-w-0 flex-1 border-b border-border-light pb-4"
+                helpContent="Show only feats this character qualifies for. Level and ability requirements use the character's stats instead of the manual filters below."
+              />
+              {filteringByCharacter ? (
+                <Button
+                  type="button"
+                  variant={showUnqualified ? 'outline' : 'secondary'}
+                  onClick={() => setShowUnqualified((v) => !v)}
+                  aria-pressed={showUnqualified}
+                  className={cn(
+                    'min-h-11 flex-shrink-0',
+                    !showUnqualified &&
+                      'border-success-300 bg-success-50 text-success-fg hover:bg-success-50 dark:border-success-600/50 dark:bg-success-900/30'
+                  )}
+                >
+                  {showUnqualified ? 'Hide unqualified feats' : 'Show unqualified feats'}
+                </Button>
+              ) : null}
             </div>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <div className={cn('filter-group', filteringByCharacter && 'opacity-60')}>
-                <div className="mb-1 flex items-center gap-1.5">
-                  <label htmlFor={maxLevelFilterId} className="text-sm font-medium text-text-secondary">
+                <div className={FILTER_LABEL_ROW_CLASS}>
+                  <label htmlFor={maxLevelFilterId} className="text-sm font-medium leading-5 text-text-secondary">
                     Max Required Level
                   </label>
                   <InfoTippy
@@ -169,7 +168,7 @@ export function CodexFeatsTab({
                     size="inline"
                   />
                 </div>
-                <Input
+                <FilterInput
                   id={maxLevelFilterId}
                   type="number"
                   min={0}
@@ -251,7 +250,7 @@ export function CodexFeatsTab({
                 placeholder={null}
               />
             </div>
-          </FilterSection>
+          </>
         }
         headerColumns={CODEX_FEAT_HEADER_COLUMNS}
         gridColumns={FEAT_GRID_COLUMNS}

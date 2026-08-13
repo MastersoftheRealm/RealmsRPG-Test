@@ -1,4 +1,6 @@
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import { wouldExceedSharedTp } from '@/lib/guided-creator/loadout-tp';
+import { indexByNormalizedIds, normalizeId } from '@/lib/utils/normalize-id';
 import type { ArchetypeCategory } from '@/types';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
 
@@ -23,13 +25,11 @@ export function stepCopy(type: ArchetypeCategory | null): {
 }
 
 export function buildLookup(items: GuidedPathLibraryRow[]): Map<string, GuidedPathLibraryRow> {
-  const map = new Map<string, GuidedPathLibraryRow>();
-  items.forEach((item) => {
-    const id = item.id != null ? String(item.id) : '';
-    const name = item.name != null ? String(item.name) : '';
-    if (id) map.set(id.toLowerCase(), item);
-    if (name) map.set(name.toLowerCase(), item);
-  });
+  const map = indexByNormalizedIds(items);
+  for (const item of items) {
+    const nameKey = normalizeId(item.name);
+    if (nameKey) map.set(nameKey, item);
+  }
   return map;
 }
 
@@ -37,7 +37,7 @@ export function resolveLibraryItem(
   id: string,
   lookup: Map<string, GuidedPathLibraryRow>
 ): GuidedPathLibraryRow | undefined {
-  return lookup.get(String(id).toLowerCase());
+  return lookup.get(normalizeId(id));
 }
 
 export function pickAffordableIds(
@@ -90,4 +90,78 @@ export function pickInnateFillIds(
     if (energySpent === energyMax) break;
   }
   return picked;
+}
+
+type InnateSelectionBlockReason = 'threshold' | 'energy' | 'tp';
+
+type ApplyInnateSelectionResult =
+  | { ok: true; nextIds: string[] }
+  | { ok: false; reason: InnateSelectionBlockReason };
+
+export function innateSelectionBlockMessage(reason: InnateSelectionBlockReason): string {
+  if (reason === 'threshold') return ptCopy.innateThresholdBlocked;
+  if (reason === 'energy') return ptCopy.innateEnergyBlocked;
+  return ptCopy.tpBlocked;
+}
+
+function sumResolvedEnergy(
+  ids: string[],
+  energyOf: (id: string) => number | undefined
+): number {
+  return ids.reduce((sum, id) => {
+    const energy = energyOf(id);
+    return sum + (energy != null ? energy : 0);
+  }, 0);
+}
+
+function sumTp(ids: string[], tpOf: (id: string) => number): number {
+  return ids.reduce((sum, id) => sum + tpOf(id), 0);
+}
+
+/**
+ * Add an innate pick, dropping last-selected innates until Innate Energy fits
+ * (TASK-727). Threshold-ineligible or over-max-alone stays blocked. TP is
+ * checked against the remaining innates after those drops — not swapped for TP.
+ */
+export function applyInnateSelection(opts: {
+  selectedIds: string[];
+  id: string;
+  energyOf: (id: string) => number | undefined;
+  tpOf: (id: string) => number;
+  threshold: number;
+  energyMax: number;
+  otherTpSpent: number;
+  tpLimit: number;
+}): ApplyInnateSelectionResult {
+  const key = String(opts.id);
+  const energy = opts.energyOf(key);
+  if (energy == null || energy < 0 || energy > opts.threshold) {
+    return { ok: false, reason: 'threshold' };
+  }
+  if (energy > opts.energyMax) {
+    return { ok: false, reason: 'energy' };
+  }
+
+  let remaining = [...opts.selectedIds];
+  while (
+    remaining.length > 0 &&
+    sumResolvedEnergy(remaining, opts.energyOf) + energy > opts.energyMax
+  ) {
+    remaining = remaining.slice(0, -1);
+  }
+  if (sumResolvedEnergy(remaining, opts.energyOf) + energy > opts.energyMax) {
+    return { ok: false, reason: 'energy' };
+  }
+
+  if (
+    wouldExceedSharedTp(
+      opts.otherTpSpent + sumTp(remaining, opts.tpOf),
+      opts.tpLimit,
+      opts.tpOf(key)
+    )
+  ) {
+    return { ok: false, reason: 'tp' };
+  }
+
+  return { ok: true, nextIds: [...remaining, key] };
 }

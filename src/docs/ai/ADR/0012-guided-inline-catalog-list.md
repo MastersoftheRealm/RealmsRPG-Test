@@ -36,6 +36,11 @@ Add **`GuidedInlineCatalogList`** under `src/components/shared/guided-choice/` (
   (e.g. `applyCappedIdSelection`) the same way L1 cards already do.
 - Renders a "selected" panel (GLR rows with a default remove `IconButton`, overridable via
   `renderSelectedRightSlot`) above the catalog when there is at least one selection.
+  Empty state stays unmounted (no reserved hole). On select, measure the selected-region
+  height (including the catalog gap) and `scrollBy` that delta on the nearest vertical
+  scroller so the clicked catalog row stays under the pointer (TASK-728).
+  `overflow-anchor: none` on the panel avoids double-adjustment. Do not `scrollIntoView`
+  the new selected row.
 - Gate: callers branch on `prefersDeepCatalogEntry(draft)`. L1 (has a path) is unchanged (cards +
   "See more" → L2 modal). L3 (no path) renders `GuidedInlineCatalogList` in the step body instead
   of auto-opening the modal, and passes an empty `recommendedIds` list (no path ⇒ no
@@ -53,8 +58,8 @@ SourceFilter, quantity right-slot) must match Library/Codex.
 | Keep (creator context) | Do not fork |
 |------------------------|-------------|
 | TP / Currency / Innate Energy **budgets** (`LoadoutBudgetBar`, PointStatus, `totalCost` TP on powers) | Column/chip formatters — use Official/Codex builders |
-| Eligibility gates (unmet feats hidden, max-EN / innate threshold, hand-slot, draft ability/TP) | Library `ArmamentFilters` CharacterFilter of a *saved* sheet |
-| Immediate selection (no Add Selected confirm); selected panel + remove/qty | A second GridListRow / ListHeader implementation |
+| Eligibility gates (unmet feats hidden, max-EN / innate threshold, hand-slot, draft ability/TP; **TASK-727** innate energy-over-cap stays listed and swaps last-in via `applyInnateSelection` on L3 + path L2 USM `nextSelectedIds`) | Library `ArmamentFilters` CharacterFilter of a *saved* sheet |
+| Immediate selection (no Add Selected confirm); selected panel + remove/qty; **TASK-728** selected insert `scrollBy` (no reserved empty hole) | A second GridListRow / ListHeader implementation |
 | Path badge; feat-type step scoping (`hideTypeSection`); gear quantity-first | Guided-only budget columns on powers (Action/Energy/TP only) |
 | Mixed weapon+shield phase: Block in Damage cell (weapon headers) | Parallel expand "Details" chips from L1 card stats |
 | Feats: Category + State filters only (requirements are auto-gated) | Codex Max Level / Ability Requirement / Tags / Feat Type controls |

@@ -23,6 +23,7 @@ import {
 } from '@/lib/library/official-item-list';
 import {
   EMPTY_ARMAMENT_FILTERS,
+  countActiveArmamentFilters,
   type ArmamentFilterState,
 } from '@/lib/library/armament-filters';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
@@ -116,6 +117,11 @@ export function OfficialItemList({
               onCharacterIdChange={setCharacterFilterId}
             />
           ) : undefined
+        }
+        filterActiveCount={
+          variant === 'library'
+            ? countActiveArmamentFilters(advancedFilters, Boolean(characterContext))
+            : undefined
         }
         getColumns={(row) => armamentRowColumns(row, armamentKind)}
         getDetailSections={(row) => {

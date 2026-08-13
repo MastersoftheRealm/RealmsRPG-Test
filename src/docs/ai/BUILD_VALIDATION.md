@@ -12,7 +12,7 @@ Step-by-step manual checks for QA after a build or PR. **One behavior = one test
 
 | Prefix | Meaning | Example |
 |--------|---------|---------|
-| **DEV-V-###** | Validation **suite** (category) | DEV-V-001 — Character creator step guards |
+| **DEV-V-###** | Validation **suite** (category) | DEV-V-001 — Advanced character creator step guards |
 | **DEV-V-###-T###** | Single test inside a suite | DEV-V-001-T001 |
 
 - Suite number = next free `DEV-V-###` in this file.
@@ -31,7 +31,7 @@ Step-by-step manual checks for QA after a build or PR. **One behavior = one test
 | **Suite** | DEV-V-### — Category name |
 | **Section** | N. Step or area name |
 | **Related task** | TASK-### |
-| **Where** | Route or page (e.g. `/characters/new`) |
+| **Where** | Route or page |
 | **Needs** | Account role, data, or environment |
 
 **Steps**
@@ -57,13 +57,14 @@ Step-by-step manual checks for QA after a build or PR. **One behavior = one test
 
 ---
 
-## DEV-V-001 — Character creator step guards
+## DEV-V-001 — Advanced character creator step guards
 
-**Related tasks:** TASK-356  
-**Start URL:** `/characters/new`  
+**Related tasks:** TASK-356, TASK-717  
+**Chooser vs Advanced:** `/characters/new` is the Guided / Custom / Legacy chooser (DEV-V-013-T001 / T075). Numbered steps (**1. Archetype** … **9. Finalize**), **Forge Your Own**, and **Choose a Path** live at `/characters/new/advanced` (chooser **Legacy**). Do not treat the chooser as step 1 Archetype.  
+**Start URL:** `/characters/new/advanced`  
 **Needs:** Logged-in test account  
 
-Use **Forge Your Own** for tab-guard and validation tests unless the test title says otherwise.
+Reach Advanced via **Characters** → **Add Character** → **Legacy**, or open `/characters/new/advanced` directly. Use **Forge Your Own** for tab-guard and validation tests unless the test title says otherwise.
 
 ---
 
@@ -75,13 +76,14 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 |-------|-------|
 | **Suite** | DEV-V-001 |
 | **Section** | 1. Archetype |
-| **Related task** | TASK-356 |
-| **Where** | `/characters/new` → **1. Archetype** |
+| **Related task** | TASK-356, TASK-717 |
+| **Where** | `/characters/new/advanced` → **1. Archetype** |
 | **Needs** | Logged-in test account |
 
 **Steps**
-1. Go to **Characters** → **Add Character** (or open `/characters/new`).
-2. On step **1. Archetype**, click the **Choose a Path** card.
+1. Go to **Characters** → **Add Character** (chooser at `/characters/new` — Guided / Custom / Legacy).
+2. Click **Legacy** (or open `/characters/new/advanced` directly).
+3. On step **1. Archetype**, click the **Choose a Path** card.
 
 **Expected**
 - **Choose a Path** card shows selected styling (highlighted border/background).
@@ -99,11 +101,11 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 1. Archetype |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` → **1. Archetype** |
+| **Where** | `/characters/new/advanced` → **1. Archetype** |
 | **Needs** | Logged-in test account |
 
 **Steps**
-1. Go to **Characters** → **Add Character**.
+1. Go to **Characters** → **Add Character** → **Legacy** (or open `/characters/new/advanced`).
 2. On **1. Archetype**, click the **Forge Your Own** card.
 
 **Expected**
@@ -122,7 +124,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 1. Archetype |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` → **1. Archetype** |
+| **Where** | `/characters/new/advanced` → **1. Archetype** |
 | **Needs** | Logged-in test account |
 
 **Steps**
@@ -144,7 +146,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 1. Archetype |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` → **1. Archetype** |
+| **Where** | `/characters/new/advanced` → **1. Archetype** |
 | **Needs** | Logged-in test account |
 
 **Steps**
@@ -166,7 +168,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 1. Archetype |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` → **1. Archetype** |
+| **Where** | `/characters/new/advanced` → **1. Archetype** |
 | **Needs** | Logged-in test account |
 
 **Steps**
@@ -191,7 +193,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 1. Archetype |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` → **1. Archetype** |
+| **Where** | `/characters/new/advanced` → **1. Archetype** |
 | **Needs** | Logged-in test account; archetype already confirmed (see T005)
 
 **Steps**
@@ -215,7 +217,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 2. Tab navigation |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` |
+| **Where** | `/characters/new/advanced` |
 | **Needs** | Logged-in; archetype confirmed and **Continue →** used to reach **2. Species** or later only through step **1** complete
 
 **Steps**
@@ -237,7 +239,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 2. Tab navigation |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` |
+| **Where** | `/characters/new/advanced` |
 | **Needs** | Logged-in; progress through **2. Species** and **3. Ancestry**
 
 **Steps**
@@ -262,7 +264,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 3. Abilities |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` → **4. Abilities** |
+| **Where** | `/characters/new/advanced` → **4. Abilities** |
 | **Needs** | Logged-in; reach Abilities with prior steps complete
 
 **Steps**
@@ -283,7 +285,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 3. Abilities |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` → **4. Abilities** |
+| **Where** | `/characters/new/advanced` → **4. Abilities** |
 | **Needs** | Same session as T009
 
 **Steps**
@@ -307,7 +309,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 4. Feats |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` → **6. Feats** |
+| **Where** | `/characters/new/advanced` → **6. Feats** |
 | **Needs** | Logged-in; reach Feats with skills step completed
 
 **Steps**
@@ -328,7 +330,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 4. Feats |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` → **6. Feats** |
+| **Where** | `/characters/new/advanced` → **6. Feats** |
 | **Needs** | Same session as T011
 
 **Steps**
@@ -351,7 +353,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 5. Downstream reset |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` |
+| **Where** | `/characters/new/advanced` |
 | **Needs** | Logged-in; partial progress through species, ancestry, skills, or feats
 
 **Steps**
@@ -377,7 +379,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 6. Equipment |
 | **Related task** | TASK-356 · TASK-596 · TASK-606 |
-| **Where** | `/characters/new` → **7. Equipment** (Forge / Advanced) |
+| **Where** | `/characters/new/advanced` → **7. Equipment** (Forge / Advanced) |
 | **Needs** | Logged-in; reach Equipment without spending currency yet
 | **CI** | Partial — `src/lib/creator/advanced-equipment-catalog.test.ts` asserts `computeStartingCurrency(1) === 200` (display chrome stays human)
 
@@ -399,7 +401,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 6. Equipment |
 | **Related task** | TASK-356 |
-| **Where** | `/characters/new` → **7. Equipment** → saved character sheet |
+| **Where** | `/characters/new/advanced` → **7. Equipment** → saved character sheet |
 | **Needs** | Logged-in; note item prices before buying
 
 **Steps**
@@ -421,7 +423,7 @@ Use **Forge Your Own** for tab-guard and validation tests unless the test title 
 | **Suite** | DEV-V-001 |
 | **Section** | 6. Equipment · Powers · Finalize |
 | **Related task** | TASK-606 |
-| **Where** | `/characters/new` → **7. Equipment** → **8. Powers & Techniques** → **9. Finalize** (Forge / Advanced) |
+| **Where** | `/characters/new/advanced` → **7. Equipment** → **8. Powers & Techniques** → **9. Finalize** (Forge / Advanced) |
 | **Needs** | Logged-in; path or forge Advanced session with budgets visible |
 
 **Steps**
@@ -678,11 +680,11 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 | **Suite** | DEV-V-008 — Archetype path completion |
 | **Section** | Creator skills |
 | **Related task** | TASK-373 |
-| **Where** | `/characters/new` → **5. Skills** (path mode) |
+| **Where** | `/characters/new/advanced` → **5. Skills** (path mode) |
 | **Needs** | Path with level-1 skill recommendations |
 
 **Steps**
-1. Create path character through to **5. Skills**.
+1. Create a path character through to **5. Skills**.
 2. Remove a recommended path skill if present.
 3. Click **Apply recommended skills**.
 
@@ -700,7 +702,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 | **Suite** | DEV-V-008 — Archetype path completion |
 | **Section** | Creator feats |
 | **Related task** | TASK-373 |
-| **Where** | `/characters/new` → **6. Feats** (path mode) |
+| **Where** | `/characters/new/advanced` → **6. Feats** (path mode) |
 | **Needs** | Path with level-1 feat recommendations character qualifies for |
 
 **Steps**
@@ -1027,6 +1029,26 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 **Rollback**
 - Inline workspace body back into `AdminArchetypesTab.tsx`; delete `use-admin-archetype-workspace.ts`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-008-T026 — Path guidance and Codex Archetypes resolve names (TASK-732)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-008 — Archetype path completion |
+| **Section** | Sheet + public codex |
+| **Related task** | TASK-732 |
+| **Where** | `/characters/[id]` path guidance / level-up; `/codex` → **Archetypes** |
+| **Needs** | Path character with level-up recommendations; at least one visible path in Codex |
+
+**Steps**
+1. Open a path character sheet (and level-up if the target level has recommended feats/skills/armaments). Confirm guidance lists **names**, not raw ids. Quantity suffixes still show as `Name ×N`.
+2. Codex → Archetypes → expand a path. Level 1 and progression summaries use names (feats, skills, powers/techniques, armaments/equipment).
+
+**Expected**
+- Lookups match id and `docId` (case-insensitive); name fallback still works for name-keyed path refs.
+- Unmatched refs may still show the stored id string; matched library/codex rows show names.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2268,7 +2290,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-406, TASK-462 |
+| **Related task** | TASK-406, TASK-462, TASK-729 |
 | **Where** | Guided creator → Your Hero |
 | **Needs** | Complete prior steps; signed-in optional for save/portrait |
 
@@ -2276,10 +2298,10 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Open reveal: hero band shows clickable portrait + name field; identity (age/height/weight/appearance/background) and Health/Energy sit above Your Build.
 2. Click the portrait to upload/change; type a name in the hero band (not only a lower form).
 3. Confirm Your Build has no Edit jump links, no Type card, and no standalone Power/Martial ability cards (pills remain on the abilities grid).
-4. Confirm HP/EN auto-allocate is quiet (short copy); Save (or guest login prompt).
+4. Confirm **Auto-allocate** is short copy with an (i) tip; click it — Health/Energy PointStatus remaining ticks down to 0/18 (same as spending the pool with the steppers). Labels read **Health / Energy** on desktop; **HP / EN** below `md`. Save (or guest login prompt).
 
 **Expected**
-- Cherry-on-top finale: name/portrait in header; identity + HP/EN before summary; summary is show-off only (chapter rail to edit); T005 save still works when signed in.
+- Cherry-on-top finale: name/portrait in header; identity + Health/Energy before summary; summary is show-off only (chapter rail to edit); T005 save still works when signed in. Auto-allocate spends the pool (remaining → 0) and names the highest Energy-cost Power/Technique in the tip when known.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2377,7 +2399,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Steps**
 1. Guided Species → **More details** → expand an option catalog; confirm GridListRow name + truncated description + Uses when limited; expand row for full copy / uses hint.
 2. Guided Path → **More details** → expand weapons (or armor); expand a row with properties; confirm chips expand for description/TP (same language as species trait rows). Optionally expand powers/techniques and confirm energy stats via shared combat builders.
-3. Select a species → Ancestry overview (`SpeciesRevealPanel`): granted species traits render as **read-only compact cards** (name + description preview; **See more…** when copy overflows or uses notice exists; limited-uses notice on expand). Cards must **not** look selectable (no checkmark, no hover-as-pick, no Choose aria). Check desktop + ~360px (cards stack to one column; See more stays tappable). Species **More details** catalogs stay elongated `DetailOptionList` / GLR rows. Mixed-species Ancestry overview has no granted-trait list (choices-ahead copy only).
+3. Select a species → Ancestry overview (`SpeciesRevealPanel`): granted species traits render as **read-only compact cards** (name + description preview; **See more…** when copy overflows or uses notice exists; limited-uses notice on expand). Cards must **not** look selectable (no checkmark, no hover-as-pick, no Choose aria). Check desktop + ~360px (cards stack to one column; See more stays tappable). Species **More details** catalogs stay elongated `DetailOptionList` / GLR rows. Mixed-species Ancestry overview has **parent species cards** (art, description, More details) and no granted-trait list (choices-ahead copy still below).
 4. Optional Advanced: open species info modal → trait sections use expandable DetailOptionList rows (choice traits group options under the parent name; limited-use options show Uses). Unresolved trait placeholders (if any) appear dimmed. Confirm Select Species still works; Close dismisses.
 5. Spot-check light + dark: description/`text-text-secondary` readable; muted uses `dark:text-text-secondary` where applicable.
 
@@ -2906,13 +2928,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-457 |
+| **Related task** | TASK-457 / **TASK-716** |
 | **Where** | Guided Loadout → Weapons and Armor (~360px + desktop, light and dark) |
 | **Needs** | Path with weapon/armor picks (e.g. Berserker); items with named properties and Finesse / ranged as available |
 
 **Steps**
 1. Collapsed weapon card: confirm only title-adjacent **Currency N** and **Training Points N** beside the name — no Graze/Cleave/mechanic chips in the collapsed body, and nothing under **See more…**.
-2. Expand **See more…**: confirm non-expanding chips for Abilityname Requirement (e.g. `Strength Requirement N+`), handedness (`Two-handed` / `One-handed` / …), damage (`XdY Type Damage`), and **Strength Weapon** / **Agility Weapon** / **Acuity Weapon**. Finesse weapons show Agility Weapon (no separate Finesse chip); ranged non-Finesse show Acuity Weapon.
+2. Expand **See more…**: confirm non-expanding chips for Abilityname Requirement (e.g. `Strength Requirement N+`), handedness (`Two-handed` / `One-handed` / `Ranged` / …), damage (`XdY Type Damage`), and **Strength Weapon** / **Agility Weapon** / **Acuity Weapon**. Finesse weapons show Agility Weapon (no separate Finesse chip); ranged non-Finesse show Acuity Weapon. Ranged weapons chip **Range 8 Spaces** / **Range 16 Spaces** (never raw `0` or a bare level int); melee omits a Range chip (TASK-716).
 3. Named properties (Graze, Cleave, …) appear as descriptor chips with a small InfoTippy info trigger — not "Property: description" and not click-to-expand.
 4. Confirm no facts, chips, or controls render below See more / See less.
 5. Repeat on armor (Damage Reduction / Agility facts under See more; Currency + TP title-adjacent). Check ~360px width and desktop in light and dark.
@@ -3651,6 +3673,26 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-013-T080 — Your Hero Loadout and power/technique chips show names (TASK-730)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-730 |
+| **Where** | Guided creator → Loadout (weapon + armor) → Powers/Techniques → Your Hero → Your Build |
+| **Needs** | A path (or Custom) with a weapon pick; include at least one My Library weapon if available; if possible also a My Library power or technique |
+
+**Steps**
+1. Pick a weapon and armor on Loadout (official and, if possible, a user-library weapon). Continue to **Your Hero**.
+2. In **Your Build → Loadout**, confirm the weapon chip shows the item **name** (expandable when a description exists), not a raw UUID/id. Armor still shows its name.
+3. Confirm Unarmed Prowess still appears when selected; general gear is still omitted from this summary.
+4. If a My Library power and/or technique is on the build, confirm those chips show **names**, not UUIDs. Unresolved rows may show “Unknown power” / “Unknown technique” — not a raw id.
+
+**Expected**
+- Loadout weapon and armor chips use library names (official or My Library); no raw ids in the summary.
+- Power/technique chips use library names (official or My Library); no raw ids.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
 #### DEV-V-013-T081 — Mixed Ancestry overview parent cards + size hug (TASK-720)
 
@@ -3671,6 +3713,66 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 - Size picker hugs few options on single-species and mixed overviews.
 - Mixed overview shows both parents as read-only `GuidedChoiceCard`s and can change them via `MixedSpeciesModal` in place.
 - Single-species overview is unchanged aside from the hugging size track (granted-trait cards still TASK-711).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T082 — Your Hero Auto-allocate pool, tip, and Health/Energy labels (TASK-729)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-729 |
+| **Where** | Guided creator → Your Hero (Health & Energy); Advanced `/characters/new/advanced` → Finalize |
+| **Needs** | Complete prior steps; at least one Power or Technique with a known Energy cost |
+
+**Steps**
+1. On Your Hero, confirm the allocator pool is PointStatus remaining/total (starts unspent, e.g. 18/18). Desktop totals read **Health** / **Energy**; below `md` they may read **HP** / **EN**.
+2. Click **Auto-allocate** — remaining ticks to 0 (same as spending the pool with the steppers); Health/Energy totals update. Hover the (i) — tip names the highest Energy-cost Power/Technique and its Energy when known (enough to use it once, rest to Health).
+3. Decrement a stepper so remaining is not 0; click Auto-allocate again — remaining returns to 0 with the same split.
+4. Advanced Finalize: same pool tick + tip on **Auto-allocate to match highest cost**. Sheet edit-mode allocator may keep **HP** / **EN**.
+
+**Expected**
+- Auto-allocate spends the shared pool through the same PointStatus as the steppers; tip copy matches GAME_RULES Energy/Health terms; no raw HP/EN on the creator card at desktop width.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T083 — Innate Energy and Innate Powers InfoTippys (TASK-726)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-726 |
+| **Where** | Guided Powers step (Power or Powered-Martial — Innate Energy tracker visible); L1 cards and L3 Full Customize; L2 See more Innate Powers footer |
+| **Needs** | Path or custom draft with an innate track (not Martial-only) |
+
+**Steps**
+1. On Powers, confirm the **Innate Energy** PointStatus has an **(i)** inside the pill (same `labelAccessory` slot as Training Points). Hover/focus/touch-hold: copy says Innate Energy is the total combined energy of innate powers and that the pool is Innate Pools × Innate Threshold. Icon stays link-blue (not TP green).
+2. Confirm the **Innate Powers** heading has an **(i)** (`GuidedSectionTitle` addon). Tip: powers you can use without spending Energy; each must cost at or below Innate Threshold; Energy totals count against the Innate Energy pool.
+3. Open **See more Innate Powers** (path L2) — footer Innate Energy pill has the same **(i)** and copy. Repeat on L3 Full Customize (heading + budget bar). Desktop + ~360px tap (layout-neutral hit; heading stays one line).
+4. Advanced `/characters/new/advanced` Powers: no Innate Energy tracker / Innate Powers heading — do not expect these tips there.
+
+**Expected**
+- Copy lives in `tooltip-text.tsx` (`innateEnergyHelp` / `innatePowersHelp`) and matches GAME_RULES terms; one Innate Energy tip via `InnateEnergyPointStatus` (L1/L2/L3); Innate Powers heading tip on L1 + L3 via `InnatePowersHelpTip`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T084 — Preview feats and path More details use names (TASK-732)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-732 |
+| **Where** | Guided creator → Path (More details) → feats on preview strip/panel |
+| **Needs** | A path with recommended weapons/gear; optional My Library item whose `docId` differs from `id` |
+
+**Steps**
+1. On Path L1, open **More details** for a path that lists weapons/armor/gear. Confirm each row shows the **item name**, not a raw UUID. If a My Library copy is the only match (draft key is `docId`), the name still appears.
+2. Pick feats on Archetype Feats / Character Feat. Confirm the preview strip/panel feat line uses feat **names** (not ids). Unresolved feats are omitted rather than shown as UUIDs.
+3. Desktop + ~360px: names remain readable (preview strip may side-scroll).
+
+**Expected**
+- Path More details equipment names resolve via official + My Library + `docId`.
+- Preview feat labels never fall back to a raw id.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3887,15 +3989,15 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Expected** | No omitted Energy/Duration without a column or labeled chip; Damage cell is self-describing under its header. |
 | **Report** | DEV-V-016-T007: PASS / FAIL / SKIP — |
 
-#### DEV-V-016-T008 — Codex Equipment Damage / Dmg. Red. columns (TASK-437)
+#### DEV-V-016-T008 — Codex Equipment Category / Currency / Rarity (TASK-723)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-016 |
-| **Task** | TASK-437 |
-| **Where** | `/codex` → Equipment |
-| **Steps** | 1. Open Equipment tab. 2. Confirm Damage and Dmg. Red. column headers. 3. Spot-check a weapon (damage filled) and armor (Dmg. Red. filled). 4. Expand a row with weight → `Weight N kg` labeled chip (not a bare number). |
-| **Expected** | Dense browse keeps Damage / Damage Reduction as columns; Weight uses a labeled chip when present. |
+| **Task** | TASK-723 |
+| **Where** | `/codex` → Equipment; `/admin/codex` → Equipment |
+| **Steps** | 1. Open Codex Equipment. 2. Confirm headers: Category, Currency, Rarity — no Cost, Damage, or Dmg. Red. columns. 3. Currency cells are plain numbers (no trailing “c”, not blue/highlighted). 4. Expand a weapon → damage chip; expand armor → Damage Reduction chip; weight still `Weight N kg`. 5. Filters: optional min/max currency. With a character selected, optional “rarity this level can access” and “within currency” are **off** by default; turning them on narrows the list. 6. Admin Equipment: same three headers and plain Currency cells. |
+| **Expected** | Mixed browse matches Library currency chrome; damage/DR live in expand chips; character filters are opt-in. |
 | **Report** | DEV-V-016-T008: PASS / FAIL / SKIP — |
 
 #### DEV-V-016-T009 — Creator powers/techniques omitted facts (TASK-437)
@@ -3988,7 +4090,7 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Where** | `/library` → My Library → **Powers** (primary); spot-check Techniques / Weapons |
 | **Needs** | Signed-in user; at least one drifted item optional (sync button visible) |
 | **Steps** | 1. Open My Library → Powers at desktop width. 2. Confirm search input grows to fill the row and ends at the **Sync with current patch** button (not a short fixed-width field). 3. Repeat at ~360px — search wraps above sync button if needed (`flex-wrap`). 4. Open **Enhanced Items** — search spans full width (no sync button). 5. Confirm tab bar order: … Shields → **Enhanced Items** → Creatures. |
-| **Expected** | Codex-parity search toolbar; Enhanced Items label + order; no layout regression on filter rows below search. |
+| **Expected** | Codex-parity search toolbar; Search + Filters on one row; Enhanced Items label + order; Sync stays after Filters. |
 | **Report** | DEV-V-016-T016: PASS / FAIL / SKIP — |
 
 #### DEV-V-016-T017 — Add Power/Technique USM PowerTechniqueFilters compact (TASK-675)
@@ -4424,6 +4526,24 @@ islands (Phase 4) and workspace hook (Phase 5).
 - No regression vs T005 / T009 / DEV-V-019-T010.
 
 **Rollback** — Delete co-located workspace modules and restore monolithic `use-creature-creator-workspace.ts` from git; keep editor islands.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T011 — Species creator skill labels are names (TASK-732)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-732 |
+| **Where** | `/species-creator` |
+| **Needs** | Signed in; Codex skills loaded |
+
+**Steps**
+1. Pick two base skills. Confirm the sidebar Skills line and the Base skills summary show **skill names** (or **Any** for the any-skill option).
+2. If a stale/unknown skill id is on the form (optional), confirm it is omitted — not shown as a UUID.
+
+**Expected**
+- Skill labels resolve via `findByNormalizedId`; unmatched ids do not appear as raw UUIDs.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5736,29 +5856,30 @@ Feat expanded rows must label the Tags section even for a single tag, and Tags m
 
 ## DEV-V-045 — Codex character filter UX (session)
 
-Feats tab character qualification filter: shared `CharacterFilter` in filters panel, disabled manual level/ability filters when active, inline show-unqualified toggle.
+Feats + Skills character filter: shared collapsible `CharacterFilter` (default collapsed, InfoTippy on the header). Feats: qualification + show-unqualified. Skills: known / not known / base-owned. Persistence shared with Library.
 
 #### DEV-V-045-T001 — Codex Feats character filter
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-045 — Codex character filter UX |
-| **Related task** | Session — 2026-08-06 feedback |
+| **Related task** | Session — 2026-08-06 feedback / **TASK-722** |
 | **Where** | `/codex` → Feats → Filters |
 | **Needs** | Signed-in user with at least one character |
 
 **Steps**
-1. Open Feats; expand **Filters**. Confirm **Filter by character** is in the filters panel (not beside Realms/My Codex toggle).
-2. Select a character — list narrows to qualified feats; **Show unqualified feats** appears on the same row as the select (right side).
+1. Open Feats; expand **Filters**. Confirm **Filter by character** is in the filters panel (not beside Realms/My Codex toggle) and starts **collapsed**; the (i) tippy is still on the header.
+2. Expand Filter by character; select a character — list narrows to qualified feats; **Show unqualified feats** appears on the same row as the select (right side).
 3. Confirm **Max Required Level** and **Ability/Defense Requirement** are disabled with **Set by character** placeholders; max-level label has an InfoTippy (no helper line below).
 4. Toggle **Show unqualified feats** — unqualified feats appear; toggle off — hidden again.
-5. Switch to Skills or Species — no character filter control on those tabs.
+5. Switch to Species — no character filter. Skills **does** have Filter by character (see T003).
 6. Clear character filter — manual level/ability filters re-enable.
 7. Select a character on Feats → open **Library** (Powers or Techniques) — same character pre-selected in **Filter by character**. Switch to Weapons — same character. Clear filter on any tab → return to Codex Feats — filter cleared. Refresh page — last selection restored.
 
 **Expected**
-- Filter by character only on Feats; qualification uses character stats; clutter-free filter panel (no qualification banner).
-- Character selection shared across Library and Codex feats tabs via one persistence key.
+- Filter by character on Feats (and Skills); qualification uses character stats; clutter-free filter panel (no qualification banner).
+- Character selection shared across Library and Codex feats/skills tabs via one persistence key.
+- Filter by character subsection is collapsed until expanded; (i) remains usable while collapsed.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5769,19 +5890,45 @@ Feats tab character qualification filter: shared `CharacterFilter` in filters pa
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-045 — Codex character filter UX |
-| **Related task** | TASK-681 |
-| **Where** | `/codex` Feats ↔ `/library` Powers/Techniques/Weapons |
+| **Related task** | TASK-681 / TASK-722 |
+| **Where** | `/codex` Feats/Skills ↔ `/library` Powers/Techniques/Weapons |
 | **Needs** | Signed-in user with at least one character |
 
 **Steps**
 1. On Codex Feats, select a character in **Filter by character**.
 2. Navigate to Library → Powers — confirm the same character is selected.
 3. Switch Library tabs (Techniques, Weapons) — selection unchanged.
-4. Clear the filter on any tab — confirm Codex Feats also shows no character when you return.
-5. Re-select a character on Library; refresh the browser — selection persists on both Library and Codex.
+4. Open Codex → Skills — same character (expand Filter by character if collapsed).
+5. Clear the filter on any tab — confirm Codex Feats also shows no character when you return.
+6. Re-select a character on Library; refresh the browser — selection persists on Library, Codex Feats, and Codex Skills.
 
 **Expected**
-- One shared character filter across Library browse tabs and Codex Feats; clear is global; survives refresh.
+- One shared character filter across Library browse tabs and Codex Feats/Skills; clear is global; survives refresh.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-045-T003 — Codex Skills character filters (TASK-722)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-045 — Codex character filter UX |
+| **Related task** | TASK-722 |
+| **Where** | `/codex` → Skills → Filters |
+| **Needs** | Signed-in user with ≥1 character that has at least one base skill |
+
+**Steps**
+1. Open Skills; expand **Filters**. Confirm Ability / Base Skill / Skill Type are visible even before picking a character (and if the account has no characters, those filters still show).
+2. Confirm **Filter by character** starts collapsed with the (i) tippy on the header. Expand it and pick a character (same persistence as Feats/Library).
+3. Confirm **Known** (All / Known / Not known) and **Sub-skills whose base skill I have** appear. Leave Known on All — list still shows other skills.
+4. Set Known → **Known** — only skills on that character remain. **Not known** — those drop out.
+5. Check **Sub-skills whose base skill I have** — list is sub-skills for bases the character has (not unrelated subs).
+6. Clear the character — Known / base-owned controls hide; Ability / Base Skill / Skill Type remain.
+7. Repeat collapse check on Library Powers **Filter by character** (and Feats): starts collapsed; (i) still works.
+
+**Expected**
+- Shared `CharacterFilter` (no Codex-only fork); skills character extras stay simple; other skill filters never depend on having a character.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5789,7 +5936,7 @@ Feats tab character qualification filter: shared `CharacterFilter` in filters pa
 
 ## DEV-V-046 — Library power/technique categories + filters (TASK-673 / TASK-676)
 
-Derived part categories (non-mechanic) as Category column; shared `PowerTechniqueFilters` on Realms Library, My Library, and Admin public lists. TASK-676: character/TP filters, Max Energy only, aligned filter cells, center Category.
+Derived part categories (non-mechanic) as Category column; shared `PowerTechniqueFilters` on Realms Library, My Library, and Admin public lists. TASK-676: character/TP filters, Max Energy only, aligned filter cells, center Category. TASK-731: add-to-library is **BookPlus**; add-to-character is **UserPlus** (T006 when both show).
 
 #### DEV-V-046-T001 — Powers filters + Category column (Library + Admin)
 
@@ -5864,10 +6011,10 @@ Derived part categories (non-mechanic) as Category column; shared `PowerTechniqu
 
 **Steps**
 1. Library → Powers → Filters → pick a character under **Filter by character**.
-2. Confirm each GLR row shows a **+** (add to character) when the entry is not already on that character.
-3. Click **+** on a power → confirm modal names the character and power → **Add**.
+2. Confirm each GLR row not already on that character shows a **person-plus** (UserPlus) control whose label is **Add to character's powers** (not a second identical + / BookPlus).
+3. Click that person-plus → confirm modal names the character and power → **Add**.
 4. Open that character's sheet → Powers tab → entry appears; required proficiencies auto-added if applicable.
-5. Return to Library with same character filter — **+** hidden for the added power. Repeat on Techniques tab and Realms Library browse.
+5. Return to Library with same character filter — person-plus hidden for the added power. Repeat on Techniques tab and Realms Library browse.
 
 **Expected**
 - Confirm/cancel modal matches other library confirms; save persists; duplicate adds blocked per row id.
@@ -5889,12 +6036,55 @@ Derived part categories (non-mechanic) as Category column; shared `PowerTechniqu
 1. Library → Weapons → Filters → **Filter by character** → pick a character.
 2. Confirm summary shows Armament Proficiency + Currency; list drops items over proficiency TP max or unmet ability requirements.
 3. Check **Within currency** — high-currency rows disappear.
-4. Confirm GLR **+** on rows not already on that character; click **+** → confirm modal → **Add**.
+4. Confirm GLR **person-plus** (UserPlus, label **Add to character's weapons** / armor / shields) on rows not already on that character; click it → confirm modal → **Add**.
 5. Open character sheet → Inventory → entry appears; required proficiencies auto-added if applicable.
-6. Return to Library with same character — **+** hidden for added item. Repeat Armor / Shields and Realms Library browse.
+6. Return to Library with same character — person-plus hidden for added item. Repeat Armor / Shields and Realms Library browse.
 
 **Expected**
 - Shared `ArmamentFilters` + `useAddToCharacterFromLibrary` (no parallel hook); admin public-library has no add-to-character; character pick shares persistence key with power/technique filters.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-046-T006 — Dual-action row icons (library vs character)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-046 |
+| **Related task** | TASK-731 |
+| **Where** | `/library` → Realms Library → Powers (also Techniques, Weapons, Armor, Shields) |
+| **Needs** | Signed-in user with ≥1 character; at least one Realms row not in My Library and not already on that character |
+
+**Steps**
+1. Library → Realms Library → Powers → Filters → **Filter by character** → pick a character.
+2. Find a row with **two** action icons (not already in My Library, not already on the character).
+3. Confirm the icons are **different**: **book-plus** (BookPlus, label **Add to my library**) vs **person-plus** (UserPlus, label **Add to character's powers**). Not two identical Plus glyphs.
+4. Hover / focus each — `title` / `aria-label` name the destination (library vs character). Action column stays narrow (no header legend).
+5. Repeat on Techniques, Weapons, Armor, Shields. Spot-check **light and dark**. On My Library with character filter, only person-plus appears (already in library). Creatures: book-plus add-to-library only (no character add).
+
+**Expected**
+- Distinction comes from shared `LibraryAddToLibraryButton` / `LibraryAddToCharacterButton` (no per-tab icon forks). Compact `md` desktop chrome; 44px touch on coarse pointers.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-046-T007 — Filter control height + InfoTippy label spacing (TASK-725)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-046 |
+| **Related task** | TASK-725 |
+| **Where** | `/library` → Powers Filters; `/codex` → Feats Filters; Guided Path subsection titles with (i) |
+| **Needs** | Signed-in user (Library/Codex filters) |
+
+**Steps**
+1. Library → Powers → expand Filters. Confirm **Max Energy** / **Max TP** number fields match **Category** / **Action Type** dropdowns: same height (`h-11`), same `rounded-md` border (not a shorter `h-10` / `rounded-lg` input beside a taller select). Ability Requirement on Codex Feats: ability select, Max number, and + button share that height.
+2. Codex Feats → **Max Required Level** label + (i): the (i) does **not** add a gap under the label or wrap the title; the number field still matches adjacent ChipSelect height. Library Powers **Power Threshold (Innate)** (i) same.
+3. Guided Path (or any `GuidedSectionTitle` with `titleAddon`): section title + (i) sit on one line; the (i) does not inflate heading line-height. Hover/focus/touch-hold still opens the tip.
+4. Repeat at ~360px width: (i) remains tappable (overlay hit, not a 44px hole in the heading). Desktop (`md+`) (i) stays icon-hugging in the label row.
+
+**Expected**
+- Filter text/number/select chrome is shared `FilterInput` / `FilterNativeSelect`. InfoTippy layout box is the 16px icon; 44px touch via `.hit-area-layout-neutral`. No per-page `!min-h-*` on the (i).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5934,8 +6124,8 @@ Owner feedback: reduce initial visual load — creator `CollapsibleSection` bloc
 | **Needs** | None |
 
 **Steps**
-1. Codex → Feats — confirm **Show Filters** is collapsed; list is primary focus; click Show Filters — panel opens.
-2. Library → Powers (Realms or My) — Filters collapsed by default; expand and apply a filter; collapse again — active count badge shows when collapsed.
+1. Codex → Feats — confirm **Filters** is on the same row as Search (right side) and collapsed; list is primary focus; click Filters — panel opens (**Hide Filters**).
+2. Library → Powers (Realms or My) — Filters collapsed by default on the search row; expand and apply a filter; collapse again — active count badge shows when collapsed.
 
 **Expected**
 - Browse filter panels use collapsed default sitewide via `FilterSection`.
@@ -5946,25 +6136,47 @@ Owner feedback: reduce initial visual load — creator `CollapsibleSection` bloc
 
 ## DEV-V-048 — Library search toolbar + Enhanced Items tab (session)
 
-My Library entity tabs: full-span search to sync button (codex parity); **Enhanced Items** tab label and order (before Creatures).
+My Library entity tabs: Search + Filters on one row (guided/USM pattern); sync after Filters; **Enhanced Items** tab label and order (before Creatures). Codex / Admin browse lists share the same toolbar (TASK-721).
 
 #### DEV-V-048-T001 — Search span + Enhanced Items tab
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-048 — Library search toolbar + Enhanced Items tab |
-| **Related task** | Session — 2026-08-06 feedback; **TASK-682** (ListSearchToolbar) |
+| **Related task** | Session — 2026-08-06 feedback; **TASK-682** (ListSearchToolbar); **TASK-721** (Filters on row) |
 | **Where** | `/library` → My Library |
 | **Needs** | Signed-in user |
 
 **Steps**
-1. Open My Library → **Powers** (desktop). Confirm search grows to the **Sync with current patch** button (not a short field).
-2. Narrow to ~360px — search may wrap above sync (`flex-wrap`); no overlap/clipping.
-3. Open **Enhanced Items** — tab sits immediately before **Creatures**; search spans full width (no sync button).
-4. Spot-check Techniques or Weapons — same search span behavior.
+1. Open My Library → **Powers** (desktop). Confirm search grows toward **Filters**, then **Sync with current patch** (Filters is not replaced by Sync).
+2. Narrow to ~360px — row wraps without clipping; Filters control is ≥44px; search may wrap above Filters/sync (`flex-wrap`).
+3. Open **Enhanced Items** — tab sits immediately before **Creatures**; search spans full width (no Filters, no sync button).
+4. Spot-check Techniques or Weapons — Search + Filters on one row; sync still after Filters.
 
 **Expected**
-- Codex-parity search toolbar in `UserLibraryEntityTabShell`; tab label **Enhanced Items**; order Shields → Enhanced Items → Creatures.
+- Codex-parity search toolbar in `UserLibraryEntityTabShell`; Filters on the search row (TASK-721); tab label **Enhanced Items**; order Shields → Enhanced Items → Creatures.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-048-T002 — Codex / Library / Admin Filters on the search row (TASK-721)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-048 — Library search toolbar + Enhanced Items tab |
+| **Related task** | TASK-721 |
+| **Where** | `/codex` → Feats; `/library` → Realms Powers; `/admin/codex` → Skills; `/admin/images` |
+| **Needs** | Signed-in; admin for admin routes |
+
+**Steps**
+1. Codex → Feats — **Search** and **Filters** on one row (Filters on the right). Panel collapsed. Expand Filters — character + other fields; no second Filters toggle inside the panel.
+2. Library → Realms Library → Powers — same row; Filters on the right. Admin Official Create (if present) stays after Filters, not in the Filters slot.
+3. Admin Codex → Skills — SectionHeader Add stays in the header; Search + Filters on one row.
+4. Admin Images — Search + Filters (category) on one row; Add image still in SectionHeader.
+5. Repeat Feats or Powers at ~360px — row wraps without clipping; Filters ≥44px.
+6. Spot-check USM Add Power — Search + Filters unchanged (do not regress L3/USM).
+
+**Expected**
+- Browse lists reuse FilterSection compact `toolbarStart` via ListSearchToolbar; no third toolbar; USM/L3 unchanged.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5997,7 +6209,7 @@ Empowered Attack mode must prefer the cheaper live Energy part when power and te
 
 ---
 
-## DEV-V-050 — Guided creator L3 inline catalog lists (TASK-684 / TASK-685 / TASK-686–690 / **TASK-709**)
+## DEV-V-050 — Guided creator L3 inline catalog lists (TASK-684 / TASK-685 / TASK-686–690 / **TASK-709** / **TASK-727** / **TASK-724** / **TASK-728**)
 
 Full Customize (L3, no archetype path) on archetype feats, character feat, loadout (weapon/armor/gear), and powers/techniques must render the filtered catalog inline in the step body (selected items as removable rows above the list) instead of auto-opening a modal. Guided paths (L1, has an archetype path) must be unchanged — curated cards + "See more" still opens the L2 modal. TASK-685 follow-up: hide unmet feats; custom loadout always shows weapons (Power-only skips armor); gear quantity-first; powers innate scope filter + max EN filter. TASK-686–690: preview strip parity, Energy kind fix, equipment Codex columns + qty spacing, Power armor skip regardless of path `armorStep`.
 
@@ -6006,23 +6218,23 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-050 — Guided creator L3 inline catalog lists |
-| **Related task** | TASK-684 / TASK-685 / TASK-688 / **TASK-699** / **TASK-702** / **TASK-710** / **TASK-709** / **TASK-703** / **TASK-705** / **TASK-706** |
+| **Related task** | TASK-684 / TASK-685 / TASK-688 / **TASK-699** / **TASK-702** / **TASK-710** / **TASK-709** / **TASK-703** / **TASK-705** / **TASK-706** / **TASK-727** / **TASK-724** |
 | **Where** | `/characters/new/guided` — start a **custom** (no path) character |
 | **Needs** | Signed-in; a draft with no `archetypePathId` (Full Customize) |
 
 **Steps**
 1. Archetype Feats step: confirm the full eligible Feats list renders inline (no modal); **columns match Codex** (Req. Level / Category / Ability / Uses / Recovery); Category (multi-select) and State Feats filters work; search covers name/tags/keywords/category; picking a Feat adds a removable card above the list; **unmet-requirement Feats are hidden** (not shown disabled). Selecting then becoming unmet still shows the selected row so it can be removed.
 2. Character Feat step: same as step 1, single-select (max 1); selecting a new Feat swaps the previous one.
-3. Loadout — Weapon phase: **always present** for Martial / Power / Powered-Martial custom drafts; inline list shows eligible weapons/shields within armament proficiency; **columns match Codex/Library** (Name, Rarity, Currency, TP, Range, Damage); **SourceFilter** All / Realms / My scopes the catalog (Custom defaults All); **Create Armament** hatch opens `/item-creator` in a new tab; Currency + Training Points budget bar updates live; selecting a two-handed weapon with a shield already selected shows the hand-slot error and does not apply.
+3. Loadout — Weapon phase: **always present** for Martial / Power / Powered-Martial custom drafts; inline list shows eligible weapons/shields within armament proficiency; **columns match Codex/Library** (Name, Rarity, Currency, TP, Range, Damage); Range is **Melee** (never `0`) or `8 spaces` / `16 spaces` from properties (TASK-701 / **TASK-716**); **SourceFilter** All / Realms / My scopes the catalog (Custom defaults All); **Create Armament** hatch opens `/item-creator` in a new tab; Currency + Training Points budget bar updates live; selecting a two-handed weapon with a shield already selected shows the hand-slot error and does not apply.
 4. Loadout — Armor phase: present for Martial and Powered-Martial with **Codex armor columns** (Rarity, Currency, TP, Damage Red., Agility Red., Abl. Req., Crit +); **skipped for Power only**; single-slot swap on select; TP budget shared with weapons. Same SourceFilter + Create Armament hatch.
-5. Loadout — Gear phase: **quantity stepper on the far right replaces the + add button** (no dual chrome; slot wide enough that ± controls are not clipped); Name/Rarity/Currency columns; incrementing from 0 adds; editing qty in the catalog row or the selected panel works; Currency budget enforced. **TASK-702 / TASK-710 chrome:** ListHeader bar spans full width through the qty track; column titles align with row cells; row hover highlight extends through the stepper **including the ± buttons** (no `bg-surface` / `bg-surface-alt` island); expand a selectable (+) feat/weapon row — description is fully readable (no + blackout overlay) and expanded surface-alt continues into the + / qty column (no empty band below the control).
-6. Powers/Techniques step (Power or Powered-Martial path-less draft): Innate + Powers sections (L1-parallel) with a **Show** filter (Innate + Powers / Innate only / Powers only); **one** shared Filters panel (PowerTechniqueFilters compact, no sheet Character filter) + SourceFilter; **columns match Official Library**; regular list filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP/Innate-Energy blocks hide unavailable rows (selected kept). Expand = Parts & Proficiencies (not duplicate budget chips). **TASK-706:** Innate Energy and Training Points sit in one `LoadoutBudgetBar` row and match Skills / Ability Points PointStatus size (not a smaller sibling pill). L2 innate modal footer same.
+5. Loadout — Gear phase: **quantity stepper on the far right replaces the + add button** (no dual chrome; slot wide enough that ± controls are not clipped); **Name / Category / Rarity / Currency** columns (TASK-724 — Category is Adventuring/Tools/… taxonomy, not “Equipment”); incrementing from 0 adds; editing qty in the catalog row or the selected panel works; Currency budget enforced. **TASK-702 / TASK-710 chrome:** ListHeader bar spans full width through the qty track; column titles align with row cells; row hover highlight extends through the stepper **including the ± buttons** (no `bg-surface` / `bg-surface-alt` island); expand a selectable (+) feat/weapon row — description is fully readable (no + blackout overlay) and expanded surface-alt continues into the + / qty column (no empty band below the control).
+6. Powers/Techniques step (Power or Powered-Martial path-less draft): Innate + Powers sections (L1-parallel) with a **Show** filter (Innate + Powers / Innate only / Powers only); **one** shared Filters panel (PowerTechniqueFilters compact, no sheet Character filter) + SourceFilter; **columns match Official Library**; regular list filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP-blocked rows still hidden (selected kept); **energy-over-cap innate rows stay visible** (TASK-727 — see T003). Expand = Parts & Proficiencies (not duplicate budget chips). **TASK-706:** Innate Energy and Training Points sit in one `LoadoutBudgetBar` row and match Skills / Ability Points PointStatus size (not a smaller sibling pill). L2 innate modal footer same.
 7. For all six: verify at ~360px width — search/filter toolbar and selected-panel rows stay usable, touch targets ≥44px; **Selected** panel has even horizontal cushion from the card border (title, column header, and GLR rows inset — not flush to the frame) and balanced top/bottom padding under the last row (TASK-700). Selected rows keep warning/chips when present.
 8. Sanity check a **path-based** (L1) character still shows curated cards + "See more options" opening the existing L2 modal (no regression). Path L2 SourceFilter defaults to Realms Library. Path with empty weapon pool may still omit weapon (path behavior unchanged).
 9. **Descriptor chips (TASK-699):** Expand a Library or Codex GLR row — descriptor metadata chips and expandable part/cost chips share the same inline size (readable `text-sm`, not undersized `text-xs`). Filter toolbar pills remain the smaller `sm` role. Optional: `/dev/styleguide` → Entity row parity row matches GLR expanded chips. **Library vs L3 spot-check (TASK-709):** same power/weapon/feat in Official/Codex vs creator L3 matches columns/expand modulo ADR-0012 allowlist.
 
 **Expected**
-- All four L3 screens show the catalog inline with live budgets/eligibility; unavailable feats/powers hidden; custom loadout never skips weapons; Power-only skips armor; gear is quantity-first with readable qty chrome (full-width header + hover through stepper buttons + expanded band through qty/+); equipment headers match Codex; L1 path-based flow is unchanged; + expand does not overlay description.
+- All four L3 screens show the catalog inline with live budgets/eligibility; unavailable feats/powers hidden except innate energy-over-cap (T003); custom loadout never skips weapons; Power-only skips armor; gear is quantity-first with readable qty chrome (full-width header + hover through stepper buttons + expanded band through qty/+); equipment headers match Codex; L1 path-based flow is unchanged except innate energy-at-cap now swaps last-in (same `applyInnateSelection` as L3 / path L2 — TASK-727); + expand does not overlay description.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6040,11 +6252,79 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 **Steps**
 1. **Preview strip (TASK-694):** Before the Abilities step, the strip shows name + species/path subtitle only — **no** ability chips and **no** duplicate path/type DescriptorChip (path or Power/Martial/Powered-Martial type lives in the subtitle once). After abilities are selected or the Abilities step is completed, all six signed ability chips appear (`+N` / `0` / `−N`), including on narrow mobile (horizontal scroll). Only `pow_abil` / `mart_abil` chips use power/martial highlight; the rest use default descriptor styling. Path-based draft: path name in subtitle only, not a second chip.
 2. **Power armor skip (TASK-689):** Custom Power loadout goes weapon → gear only (no armor). If a Power path exists with armor recommendations / `armorStep: required`, confirm armor phase is still omitted.
-3. **Equipment headers (TASK-688):** On Martial custom loadout, armor list shows Abl. Req. / Crit + / Agility Red. columns aligned with headers; gear qty stepper has breathing room (not overlapping Currency).
+3. **Equipment headers (TASK-688 / TASK-724):** On Martial custom loadout, armor list shows Abl. Req. / Crit + / Agility Red. columns aligned with headers; **gear** list shows **Category** (Adventuring/Tools/…) aligned with the header — not a duplicate “Equipment” type; qty stepper has breathing room (not overlapping Currency).
 4. **Powers Energy (TASK-687 / TASK-708):** Power custom — Energy column matches Official Realms Library and L2 modal for the same power id (columnar scalars + parts, not false `0`). Martial techniques — Energy values resolve via techniques path (not skewed as powers); max-EN filter uses `mart_abil`.
 
 **Expected**
 - Preview always shows six signed abilities (after Abilities gate) with archetype-ability highlight only; path/type identity is subtitle-only; Power never sees armor; equipment columns/qty match Codex intent; techniques Energy is correct.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-050-T003 — L3 innate powers stay listed at energy cap; select swaps last-in (TASK-727)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-050 — Guided creator L3 inline catalog lists |
+| **Related task** | TASK-727 |
+| **Where** | `/characters/new/guided` — custom (no path) Power/Powered-Martial for steps 1–4; path-based draft for step 5 |
+| **Needs** | Signed-in; Powers step with Innate Energy filled (or fill it with one/two innates) |
+
+**Steps**
+1. On Powers L3, select innate power(s) until the Innate Energy tracker is full (spent = total).
+2. Confirm the innate catalog **does not empty** — other threshold-eligible powers remain listed (over-threshold rows may still be hidden).
+3. Select a different listed innate. Confirm it becomes selected, last-selected innate(s) drop until the new pick fits, and the Innate Energy tracker stays in sync (not over the cap).
+4. Confirm a power above Innate Threshold still cannot be selected (blocked / hidden). Training Points over-budget still blocks (does not swap extra innates just for TP).
+5. Path-based (L1) character: fill Innate Energy on curated cards, then **See more options**. In the innate L2 modal, the catalog stays listed at cap; selecting another innate swaps last-in (Add Selected stays enabled when the swap fits).
+
+**Expected**
+- Energy-full innate list stays browsable; new select swaps last-in rather than hiding the catalog; threshold and TP rules unchanged. Path L2 USM uses the same swap helper as L3.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-050-T004 — Guided equipment gear Category column (TASK-724)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-050 — Guided creator L3 inline catalog lists |
+| **Related task** | TASK-724 |
+| **Where** | `/characters/new/guided` — custom Loadout → Equipment (gear), and path L1 **See more options** Browse Equipment |
+| **Needs** | Signed-in; custom Martial draft (or any type that reaches gear); desktop (`lg+`) for ListHeader |
+
+**Steps**
+1. Custom L3 Loadout → Equipment (gear) list: confirm **CATEGORY** header between Name and Rarity; row cells show taxonomy (Adventuring, Tools, Consumable, …) aligned with that header — not a blank column and not the word Equipment as type.
+2. Confirm weapon and armor phases still have no Category column (type is implied by the phase).
+3. Path L1: open **See more options** on Equipment — same Category header + cells in the L2 modal.
+4. Spot-check ~360px: Category still visible in the expanded row / sort-by if headers collapse.
+
+**Expected**
+- Gear GLR has Category header + matching cells; weapon/armor unchanged; L2 modal matches L3.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-050-T005 — L3 Selected panel does not jump the catalog on select (TASK-728)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-050 — Guided creator L3 inline catalog lists |
+| **Related task** | TASK-728 |
+| **Where** | `/characters/new/guided` — custom (no path) Archetype Feats, Character Feat, Loadout, Powers |
+| **Needs** | Signed-in; Full Customize draft; desktop pointer (mouse) for the jump check |
+
+**Steps**
+1. On Archetype Feats L3 with nothing selected, click a catalog row. Confirm the clicked row stays under the cursor (the Selected card may appear above without shoving the list). Empty selected state before the click is not a large blank hole.
+2. Select a second feat. Confirm the extra selected row does not jump the catalog out from under the pointer.
+3. Repeat on Character Feat (swap still must not jump), Loadout weapon, and Powers innate + regular lists.
+4. Gear quantity-first: incrementing 0→1 adds the selected panel without jumping the qty row.
+5. ~360px: first select still usable; selected panel remains visible enough to remove; no huge empty reserved slot when nothing is selected.
+
+**Expected**
+- Catalog row stays visually stable on select; Selected items remain available above the list; no reserved empty hole.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6396,7 +6676,7 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 | DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
 | DEV-V-045 | Codex character filter UX (session) | — | Manual — see suite above |
 | DEV-V-048 | Library search toolbar + Enhanced Items tab (session) | — | Manual — see suite above |
-| DEV-V-046 | Library power/technique categories + filters (TASK-673 / TASK-676) | — | Automated (category/filter/innate/formulas tests) + manual DEV-V-046 T001–T003 |
+| DEV-V-046 | Library power/technique categories + filters (TASK-673 / TASK-676 / TASK-731 / TASK-725) | — | Automated (category/filter/innate/formulas tests) + manual DEV-V-046 T001–T007 |
 | DEV-V-044 | Power Creator AoE applyDuration persistence (TASK-672) | — | Automated (library-columnar + power-calc tests) + manual DEV-V-044-T001 |
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649) | — | Manual DEV-V-041 + `node scripts/verify-task-649.mjs` |
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |

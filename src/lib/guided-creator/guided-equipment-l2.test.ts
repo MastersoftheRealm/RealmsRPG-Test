@@ -141,9 +141,48 @@ describe('guided-equipment-l2', () => {
         id: 'g1',
         name: 'Rope',
         type: 'equipment',
+        itemCategory: 'Adventuring',
         rarity: 'common',
         trainingPoints: 0,
         gold_cost: 5,
+        properties: [],
+      },
+    ],
+    [
+      'g2',
+      {
+        id: 'g2',
+        name: 'Lockpicks',
+        type: 'equipment',
+        itemCategory: 'equipment',
+        rarity: 'common',
+        trainingPoints: 0,
+        gold_cost: 8,
+        properties: [],
+      },
+    ],
+    [
+      'g3',
+      {
+        id: 'g3',
+        name: 'Toolkit',
+        type: 'equipment',
+        itemCategory: 'Tools',
+        rarity: 'common',
+        trainingPoints: 0,
+        gold_cost: 12,
+        properties: [],
+      },
+    ],
+    [
+      'g4',
+      {
+        id: 'g4',
+        name: 'Sack',
+        type: 'equipment',
+        rarity: 'common',
+        trainingPoints: 0,
+        gold_cost: 2,
         properties: [],
       },
     ],
@@ -265,6 +304,32 @@ describe('guided-equipment-l2', () => {
     expect((rope!.columns ?? []).map((c) => c.key)).toEqual(
       GEAR_L2_HEADER_COLUMNS.filter((c) => c.key !== 'name').map((c) => c.key)
     );
+    expect(rope!.columns?.find((c) => c.key === 'category')?.value).toBe('Adventuring');
+
+    const lockpicks = gearItems.find((i) => i.id === 'g2');
+    expect(lockpicks!.columns?.find((c) => c.key === 'category')?.value).toBe('-');
+    expect(gearItems.find((i) => i.id === 'g3')?.columns?.find((c) => c.key === 'category')?.value).toBe(
+      'Tools'
+    );
+    expect(gearItems.find((i) => i.id === 'g4')?.columns?.find((c) => c.key === 'category')?.value).toBe(
+      '-'
+    );
+  });
+
+  it('does not add a type-duplicate Category column on weapon/armor phases (TASK-724)', () => {
+    const items = buildGuidedEquipmentL2Items('weapon', catalog, ctx, [], []);
+    const axe = items.find((i) => i.id === 'w1');
+    expect((axe!.columns ?? []).map((c) => c.key)).not.toContain('category');
+
+    const armorItems = buildGuidedEquipmentL2Items(
+      'armor',
+      catalog,
+      { ...ctx, phase: 'armor' },
+      [],
+      []
+    );
+    const chain = armorItems.find((i) => i.id === 'a1');
+    expect((chain!.columns ?? []).map((c) => c.key)).not.toContain('category');
   });
 
   it('gear Confirm allows spend up to full gear budget (reclaims current gear)', () => {

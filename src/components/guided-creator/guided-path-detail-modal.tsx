@@ -12,9 +12,12 @@ import {
   useOfficialLibrary,
   usePowerParts,
   useTechniqueParts,
+  useUserItems,
 } from '@/hooks';
 import { buildEquipmentCatalogRows } from '@/lib/guided-creator/equipment-catalog-rows';
 import { buildEquipmentLookup } from '@/lib/guided-creator/resolve-loadout-items';
+import { mergeLibraryBySource } from '@/lib/library/source-scope';
+import { normalizeId } from '@/lib/utils';
 import { parseArchetypePathData, parseIdQuantityStrings } from '@/lib/game/archetype-path';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import {
@@ -107,7 +110,7 @@ function collectEquipmentRefs(
   if (!level1) return [];
   const byId = new Map<string, PathItemRecommendation>();
   const add = (ref: PathItemRecommendation) => {
-    const key = String(ref.id).trim().toLowerCase();
+    const key = normalizeId(ref.id);
     if (!key) return;
     const prev = byId.get(key);
     if (!prev || ref.quantity > prev.quantity) byId.set(key, ref);
@@ -140,6 +143,7 @@ export function GuidedPathDetailModal({
 
   const { data: feats = [], isLoading: featsLoading } = useCodexFeats();
   const { data: officialItems = [], isLoading: itemsLoading } = useOfficialLibrary('items');
+  const { data: userItems = [] } = useUserItems();
   const { data: codexEquipment = [], isLoading: equipmentLoading } = useEquipment();
   const { data: itemProperties = [], isLoading: propertiesLoading } = useItemProperties();
   const { data: officialPowers = [], isLoading: powersLoading } = useOfficialLibrary('powers', {
@@ -163,18 +167,17 @@ export function GuidedPathDetailModal({
         (showTechniques && techniquesLoading && officialTechniques.length === 0))
   );
 
+  const mergedItems = useMemo(
+    () => mergeLibraryBySource('all', officialItems as LibraryItem[], userItems),
+    [officialItems, userItems]
+  );
   const equipmentMap = useMemo(
-    () => buildEquipmentLookup(officialItems as LibraryItem[], codexEquipment),
-    [officialItems, codexEquipment]
+    () => buildEquipmentLookup(mergedItems, codexEquipment),
+    [mergedItems, codexEquipment]
   );
   const catalog = useMemo(
-    () =>
-      buildEquipmentCatalogRows(
-        officialItems as LibraryItem[],
-        codexEquipment,
-        itemProperties
-      ),
-    [officialItems, codexEquipment, itemProperties]
+    () => buildEquipmentCatalogRows(mergedItems, codexEquipment, itemProperties),
+    [mergedItems, codexEquipment, itemProperties]
   );
 
   const sections = useMemo((): GuidedEntityDetailSection[] => {
@@ -229,7 +232,7 @@ export function GuidedPathDetailModal({
           ref,
           equipmentMap,
           catalog,
-          officialItems as LibraryItem[],
+          mergedItems,
           codexEquipment,
           itemProperties
         )
@@ -237,15 +240,15 @@ export function GuidedPathDetailModal({
       .filter((row): row is GuidedDetailOptionItem => Boolean(row));
 
     const weapons = equipmentOptions.filter((row) => {
-      const entry = equipmentMap.get(String(row.id).toLowerCase());
+      const entry = equipmentMap.get(normalizeId(row.id));
       return entry?.category === 'weapon';
     });
     const armor = equipmentOptions.filter((row) => {
-      const entry = equipmentMap.get(String(row.id).toLowerCase());
+      const entry = equipmentMap.get(normalizeId(row.id));
       return entry?.category === 'armor';
     });
     const gear = equipmentOptions.filter((row) => {
-      const entry = equipmentMap.get(String(row.id).toLowerCase());
+      const entry = equipmentMap.get(normalizeId(row.id));
       return entry?.category === 'equipment';
     });
 
@@ -374,7 +377,7 @@ export function GuidedPathDetailModal({
     feats,
     equipmentMap,
     catalog,
-    officialItems,
+    mergedItems,
     codexEquipment,
     itemProperties,
     showTechniques,

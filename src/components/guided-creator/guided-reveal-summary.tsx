@@ -13,11 +13,21 @@ import {
   useCodexFeats,
   useTraits,
   useOfficialLibrary,
+  useEquipment,
+  useUserItems,
+  useUserPowers,
+  useUserTechniques,
   usePowerParts,
   useTechniqueParts,
 } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';
+import {
+  buildEquipmentLookup,
+  resolveDraftArmaments,
+} from '@/lib/guided-creator/resolve-loadout-items';
+import { mergeLibraryBySource } from '@/lib/library/source-scope';
+import { indexByNormalizedIds, normalizeId } from '@/lib/utils';
 import { useGuidedPathData } from './use-guided-path-data';
 import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
 import type { TraitWithChoiceOptions } from '@/lib/choice-trait';
@@ -46,7 +56,11 @@ export function GuidedRevealSummary() {
   const { data: allTraits = [] } = useTraits();
   const { data: officialPowers = [] } = useOfficialLibrary('powers');
   const { data: officialTechniques = [] } = useOfficialLibrary('techniques');
+  const { data: userPowers = [] } = useUserPowers();
+  const { data: userTechniques = [] } = useUserTechniques();
   const { data: officialItems = [] } = useOfficialLibrary('items');
+  const { data: userItems = [] } = useUserItems();
+  const { data: codexEquipment = [] } = useEquipment();
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
 
@@ -58,7 +72,7 @@ export function GuidedRevealSummary() {
 
   const pathType = draft.archetypeType;
 
-  const traitById = useMemo(() => new Map(allTraits.map((t) => [String(t.id), t])), [allTraits]);
+  const traitById = useMemo(() => indexByNormalizedIds(allTraits), [allTraits]);
 
   const ancestryTraitNames = useMemo((): SummaryChipItem[] => {
     const resolvedSpeciesTraits = speciesContext.isMixed
@@ -75,7 +89,7 @@ export function GuidedRevealSummary() {
       ...(draft.selectedFlawId ? [draft.selectedFlawId] : []),
     ];
     return ids.map((id) => {
-      const trait = traitById.get(String(id));
+      const trait = traitById.get(normalizeId(id));
       return {
         key: String(id),
         label: trait?.name ?? String(id),
@@ -84,6 +98,8 @@ export function GuidedRevealSummary() {
       };
     });
   }, [speciesContext.isMixed, species, draft, allTraits, traitById]);
+
+  const skillById = useMemo(() => indexByNormalizedIds(codexSkills), [codexSkills]);
 
   const skillNames = useMemo((): SummaryChipItem[] => {
     const ids = new Set<string>();
@@ -98,7 +114,7 @@ export function GuidedRevealSummary() {
     }
     Object.keys(draft.skills ?? {}).forEach((id) => ids.add(String(id)));
     return Array.from(ids).map((id) => {
-      const skill = codexSkills.find((s) => String(s.id) === id);
+      const skill = skillById.get(normalizeId(id));
       return {
         key: id,
         label: skill?.name ?? id,
@@ -106,13 +122,13 @@ export function GuidedRevealSummary() {
         variant: 'list' as const,
       };
     });
-  }, [draft.skills, draft.selectedSpeciesSkillIds, speciesContext.isMixed, species, codexSkills]);
+  }, [draft.skills, draft.selectedSpeciesSkillIds, speciesContext.isMixed, species, skillById]);
 
-  const featById = useMemo(() => new Map(feats.map((f) => [String(f.id), f])), [feats]);
+  const featById = useMemo(() => indexByNormalizedIds(feats), [feats]);
 
   const featChipsForIds = (ids: string[]): SummaryChipItem[] =>
     ids.map((id) => {
-      const feat = featById.get(String(id));
+      const feat = featById.get(normalizeId(id));
       return {
         key: id,
         label: feat?.name ?? id,
@@ -124,22 +140,21 @@ export function GuidedRevealSummary() {
   const archetypeFeatChips = featChipsForIds(draft.archetypeFeatIds);
   const characterFeatChips = featChipsForIds(draft.characterFeatIds);
 
-  const itemById = useMemo(
-    () => new Map(officialItems.map((i) => [String(i.id), i])),
-    [officialItems]
+  const equipmentLookup = useMemo(
+    () =>
+      buildEquipmentLookup(mergeLibraryBySource('all', officialItems, userItems), codexEquipment),
+    [officialItems, userItems, codexEquipment]
   );
 
   const loadoutItems = useMemo((): SummaryChipItem[] => {
-    const items: SummaryChipItem[] = [];
-    draft.armaments.forEach((a) => {
-      const item = itemById.get(String(a.id));
-      const qty = a.quantity > 1 ? ` ×${a.quantity}` : '';
-      items.push({
-        key: `w-${a.id}`,
-        label: `${item?.name ?? a.id}${qty}`,
-        description: item?.description ? String(item.description) : undefined,
+    const items: SummaryChipItem[] = resolveDraftArmaments(draft, equipmentLookup).map((item) => {
+      const qty = item.quantity > 1 ? ` ×${item.quantity}` : '';
+      return {
+        key: `${item.category}-${item.id}`,
+        label: `${item.name}${qty}`,
+        description: item.description,
         variant: 'list' as const,
-      });
+      };
     });
     // Omit draft.equipment — reveal Loadout is weapons/armor (+ Unarmed Prowess) only.
     if ((draft.unarmedProwess ?? 0) > 0) {
@@ -150,41 +165,50 @@ export function GuidedRevealSummary() {
       });
     }
     return items;
-  }, [draft.armaments, draft.unarmedProwess, itemById]);
+  }, [draft, equipmentLookup]);
+
+  const powerLibrary = useMemo(
+    () => mergeLibraryBySource('all', officialPowers, userPowers),
+    [officialPowers, userPowers]
+  );
+  const techniqueLibrary = useMemo(
+    () => mergeLibraryBySource('all', officialTechniques, userTechniques),
+    [officialTechniques, userTechniques]
+  );
+  const powerById = useMemo(() => indexByNormalizedIds(powerLibrary), [powerLibrary]);
+  const techniqueById = useMemo(() => indexByNormalizedIds(techniqueLibrary), [techniqueLibrary]);
 
   const powerChips = useMemo((): SummaryChipItem[] => {
-    const byId = new Map(officialPowers.map((p) => [String(p.id), p]));
     return draft.powerIds.map((id) => {
-      const raw = byId.get(String(id));
+      const raw = powerById.get(normalizeId(id));
       const energyCost = raw
         ? resolvePowerTechniqueEnergy('powers', raw, powerPartsDb, techniquePartsDb)
         : undefined;
       return {
         key: id,
-        label: String(raw?.name ?? id),
+        label: String(raw?.name?.trim() || 'Unknown power'),
         description: raw?.description ? String(raw.description) : undefined,
         energyCost,
         variant: 'power' as const,
       };
     });
-  }, [draft.powerIds, officialPowers, powerPartsDb, techniquePartsDb]);
+  }, [draft.powerIds, powerById, powerPartsDb, techniquePartsDb]);
 
   const techniqueChips = useMemo((): SummaryChipItem[] => {
-    const byId = new Map(officialTechniques.map((t) => [String(t.id), t]));
     return draft.techniqueIds.map((id) => {
-      const raw = byId.get(String(id));
+      const raw = techniqueById.get(normalizeId(id));
       const energyCost = raw
         ? resolvePowerTechniqueEnergy('techniques', raw, powerPartsDb, techniquePartsDb)
         : undefined;
       return {
         key: id,
-        label: String(raw?.name ?? id),
+        label: String(raw?.name?.trim() || 'Unknown technique'),
         description: raw?.description ? String(raw.description) : undefined,
         energyCost,
         variant: 'technique' as const,
       };
     });
-  }, [draft.techniqueIds, officialTechniques, powerPartsDb, techniquePartsDb]);
+  }, [draft.techniqueIds, techniqueById, powerPartsDb, techniquePartsDb]);
 
   const powersSectionTitle =
     powerChips.length > 0 && techniqueChips.length > 0

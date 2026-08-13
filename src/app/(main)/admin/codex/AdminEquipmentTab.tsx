@@ -8,55 +8,39 @@ import {
   RealmsImageField,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
-import { SelectFilter, FilterSection } from '@/components/shared/filters';
+import { SelectFilter } from '@/components/shared/filters';
 import { useEquipment } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
 import { Pencil, Copy, X } from 'lucide-react';
-import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
-import { metadataDescriptorChip } from '@/lib/chip/list-row-metadata';
-import type { ChipData } from '@/components/shared/grid-list-row';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import {
+  buildCodexEquipmentColumns,
+  buildCodexEquipmentDetailSections,
+  collectCodexEquipmentFilterOptions,
+  CODEX_EQUIPMENT_HEADER_COLUMNS,
+  EQUIPMENT_GRID_COLUMNS,
+  filterCodexEquipment,
+  type CodexEquipmentListFilters,
+} from '@/lib/codex/equipment-list';
+import type { CodexEquipmentItem } from '@/types/codex';
+import { EMPTY_ARMAMENT_FILTERS } from '@/lib/library/armament-filters';
 
 const COPY_NAME_SUFFIX = ' copy';
-
-const EQUIPMENT_GRID_COLUMNS = '1.3fr 0.9fr 0.65fr 0.75fr 1fr 0.7fr';
-
-interface EquipmentListItem {
-  id: string;
-  name: string;
-  description?: string;
-  type?: string;
-  category?: string;
-  gold_cost?: number;
-  currency?: number;
-  rarity?: string;
-  damage?: string;
-  armor_value?: number;
-  weight?: number;
-  image_id?: string | null;
-  image_url?: string | null;
-}
-
-interface EquipmentFilters {
-  search: string;
-  categoryFilter: string;
-  rarityFilter: string;
-}
 
 export function AdminEquipmentTab() {
   const { showToast } = useToast();
   const { data: equipment, isLoading, error, refetch } = useEquipment();
   const queryClient = useQueryClient();
   const { sortState, handleSort, sortItems } = useSort('name');
-  const [filters, setFilters] = useState<EquipmentFilters>({
+  const [filters, setFilters] = useState<CodexEquipmentListFilters>({
     search: '',
     categoryFilter: '',
     rarityFilter: '',
   });
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<EquipmentListItem | null>(null);
+  const [editing, setEditing] = useState<CodexEquipmentItem | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -73,44 +57,20 @@ export function AdminEquipmentTab() {
   });
   const [categoryIsNew, setCategoryIsNew] = useState(false);
 
-  const filterOptions = useMemo(() => {
-    if (!equipment) return { categories: [] as string[], rarities: [] as string[] };
-    const categories = new Set<string>();
-    const rarities = new Set<string>();
-    equipment.forEach((e: EquipmentListItem) => {
-      if (e.category) categories.add(e.category);
-      if (e.rarity) rarities.add(e.rarity);
-    });
-    return {
-      categories: Array.from(categories).sort(),
-      rarities: Array.from(rarities).sort(),
-    };
-  }, [equipment]);
+  const filterOptions = useMemo(
+    () => collectCodexEquipmentFilterOptions(equipment),
+    [equipment]
+  );
 
   const filteredEquipment = useMemo(() => {
     if (!equipment) return [];
-
-    const filtered = equipment.filter((e: EquipmentListItem) => {
-      if (
-        filters.search &&
-        !e.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-        !e.description?.toLowerCase().includes(filters.search.toLowerCase())
-      ) {
-        return false;
-      }
-      if (filters.categoryFilter && e.category !== filters.categoryFilter) return false;
-      if (filters.rarityFilter && e.rarity !== filters.rarityFilter) return false;
-      return true;
-    });
-
-    type FilteredItem = EquipmentListItem & { category: string; cost: number; rarity: string };
-    return sortItems<FilteredItem>(
-      filtered.map((e: EquipmentListItem) => ({
-        ...e,
-        category: e.category || '',
-        cost: e.currency ?? e.gold_cost ?? 0,
-        rarity: e.rarity || '',
-      })),
+    return sortItems(
+      filterCodexEquipment(
+        equipment,
+        filters,
+        EMPTY_ARMAMENT_FILTERS,
+        null
+      )
     );
   }, [equipment, filters, sortItems]);
 
@@ -122,7 +82,7 @@ export function AdminEquipmentTab() {
     setModalOpen(true);
   };
 
-  const openDuplicate = (e: EquipmentListItem & { category?: string; currency?: number; rarity?: string }) => {
+  const openDuplicate = (e: CodexEquipmentItem) => {
     setEditing(null);
     setCopySourceName(e.name);
     const cat = e.category || '';
@@ -135,12 +95,12 @@ export function AdminEquipmentTab() {
       imageId: e.image_id ?? null,
       imageUrl: e.image_url ?? null,
     });
-    const existingCats = new Set((equipment || []).map((eq: EquipmentListItem) => eq.category).filter(Boolean));
+    const existingCats = new Set((equipment || []).map((eq) => eq.category).filter(Boolean));
     setCategoryIsNew(cat !== '' && !existingCats.has(cat));
     setModalOpen(true);
   };
 
-  const openEdit = (e: EquipmentListItem & { category?: string; currency?: number; rarity?: string }) => {
+  const openEdit = (e: CodexEquipmentItem) => {
     setEditing(e);
     setCopySourceName(null);
     const cat = e.category || '';
@@ -153,7 +113,7 @@ export function AdminEquipmentTab() {
       imageId: e.image_id ?? null,
       imageUrl: e.image_url ?? null,
     });
-    const existingCats = new Set((equipment || []).map((eq: EquipmentListItem) => eq.category).filter(Boolean));
+    const existingCats = new Set((equipment || []).map((eq) => eq.category).filter(Boolean));
     setCategoryIsNew(cat !== '' && !existingCats.has(cat));
     setModalOpen(true);
   };
@@ -235,8 +195,7 @@ export function AdminEquipmentTab() {
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search equipment..."
         filters={
-          <FilterSection>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <SelectFilter
                 label="Category"
                 value={filters.categoryFilter}
@@ -251,17 +210,9 @@ export function AdminEquipmentTab() {
                 onChange={(v) => setFilters(f => ({ ...f, rarityFilter: v }))}
                 placeholder="All Rarities"
               />
-            </div>
-          </FilterSection>
+          </div>
         }
-        headerColumns={[
-          { key: 'name', label: 'NAME' },
-          { key: 'category', label: 'CATEGORY' },
-          { key: 'cost', label: 'COST' },
-          { key: 'rarity', label: 'RARITY' },
-          { key: 'damage', label: 'DAMAGE' },
-          { key: 'dr', label: 'DMG. RED.' },
-        ]}
+        headerColumns={CODEX_EQUIPMENT_HEADER_COLUMNS}
         gridColumns={EQUIPMENT_GRID_COLUMNS}
         sortState={sortState}
         onSort={handleSort}
@@ -273,15 +224,8 @@ export function AdminEquipmentTab() {
         emptyMessage="No equipment matches your filters."
         emptyAction={{ label: 'Add Equipment', onClick: openAdd }}
       >
-        {filteredEquipment.map((e: EquipmentListItem & { category: string; cost: number; rarity: string }) => {
-              const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
-              if (e.weight !== undefined) {
-                detailSections.push({
-                  label: 'Details',
-                  chips: [metadataDescriptorChip(`Weight ${e.weight} kg`)],
-                  hideLabelIfSingle: true,
-                });
-              }
+        {filteredEquipment.map((e) => {
+              const detailSections = buildCodexEquipmentDetailSections(e);
               return (
               <GridListRow
                 key={e.id}
@@ -290,25 +234,7 @@ export function AdminEquipmentTab() {
                 description={e.description || ''}
                 thumbnail={resolveListRowThumbnail('equipment', e, e.name)}
                 gridColumns={EQUIPMENT_GRID_COLUMNS}
-                columns={[
-                  { key: 'Category', value: formatListCellLabel(e.category || 'equipment') },
-                  {
-                    key: 'Cost',
-                    value: typeof e.cost === 'number' && !Number.isNaN(e.cost) ? `${e.cost} c` : '-',
-                    highlight: true,
-                  },
-                  { key: 'Rarity', value: formatListCellLabel(e.rarity) },
-                  {
-                    key: 'Damage',
-                    value: e.damage ? formatDamageDisplay(e.damage) : '-',
-                    align: 'center' as const,
-                  },
-                  {
-                    key: 'Dmg. Red.',
-                    value: e.armor_value != null ? String(e.armor_value) : '-',
-                    align: 'center' as const,
-                  },
-                ]}
+                columns={buildCodexEquipmentColumns(e)}
                 detailSections={detailSections.length > 0 ? detailSections : undefined}
                 rightSlot={
                   <div className="flex items-center gap-1 pr-2">

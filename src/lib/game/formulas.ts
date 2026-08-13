@@ -107,6 +107,39 @@ export function calculateHealthEnergyPool(
 }
 
 /**
+ * Split a Health/Energy pool so max Energy can cover the highest Power/Technique
+ * cost once; leftover pool points go to Health (TASK-729).
+ */
+export function allocateHealthEnergyPool(args: {
+  baseEnergy: number;
+  pool: number;
+  highestEnergyCost: number;
+}): { hpBonus: number; energyBonus: number } {
+  const pool = Math.max(0, args.pool);
+  const baseEnergy = Math.max(0, args.baseEnergy);
+  const highestEnergyCost = Math.max(0, args.highestEnergyCost);
+  const maxAchievableEnergy = baseEnergy + pool;
+  const targetEnergy = Math.min(highestEnergyCost, maxAchievableEnergy);
+  const energyBonus = Math.min(pool, Math.max(0, targetEnergy - baseEnergy));
+  return { hpBonus: pool - energyBonus, energyBonus };
+}
+
+export type EnergyCostPick = {
+  name: string;
+  energy: number;
+  kind: 'power' | 'technique';
+};
+
+/** Highest Energy-cost pick; ties keep the first. */
+export function pickHighestEnergyCost(picks: EnergyCostPick[]): EnergyCostPick | null {
+  let best: EnergyCostPick | null = null;
+  for (const pick of picks) {
+    if (!best || pick.energy > best.energy) best = pick;
+  }
+  return best;
+}
+
+/**
  * Calculate proficiency points based on level.
  * Formula: 2 + 1 every 5 levels starting at level 5
  */

@@ -7,7 +7,15 @@
 export { cn } from './cn';
 export { generateId } from './id';
 export { formatActionTypeForDisplay, formatSavedActionTypeForDisplay } from './action-type';
-export { normalizeId } from './normalize-id';
+export {
+  findByNormalizedId,
+  indexByNormalizedIds,
+  indexDisplayNamesByNormalizedIds,
+  normalizeId,
+  resolveNormalizedRefList,
+  rowMatchesNormalizedId,
+} from './normalize-id';
+export type { NormalizedIdRow } from './normalize-id';
 export * from './string';
 export * from './number';
 export * from './object';

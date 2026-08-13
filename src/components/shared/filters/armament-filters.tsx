@@ -1,31 +1,38 @@
 /**
  * ArmamentFilters — Filter by character + optional currency affordability (TASK-680).
- * Composes CharacterFilter + FilterSection. Shared library character persistence.
+ * Codex mixed equipment extras: min/max currency + rarity-by-level (TASK-723).
+ * Composes CharacterFilter (panel body). Shared library character persistence.
  */
 
 'use client';
 
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState, type ReactNode } from 'react';
 import { useCharacter } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { deriveArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
-import {
-  countActiveArmamentFilters,
-  EMPTY_ARMAMENT_FILTERS,
-  type ArmamentFilterState,
-} from '@/lib/library/armament-filters';
+import type { ArmamentFilterState } from '@/lib/library/armament-filters';
+import { maxRarityForCharacterLevel } from '@/lib/game/creator-constants';
 import {
   readInitialLibraryCharacterFilterId,
   writePersistedLibraryCharacterFilterId,
 } from '@/lib/library/character-filter-persistence';
 import { CharacterFilter } from './character-filter';
-import { FilterSection } from './filter-section';
-import { FILTER_CONTROL_ROW_CLASS } from './filter-utils';
+import { FilterInput } from './filter-native-select';
+import { FILTER_CONTROL_ROW_CLASS, FILTER_LABEL_ROW_CLASS } from './filter-utils';
 import { cn } from '@/lib/utils';
 
-const CHARACTER_FILTER_HELP =
+const ARMAMENT_CHARACTER_FILTER_HELP =
   'Show only armaments this character can use: ability requirements and Armament Proficiency (max TP). Optionally keep only entries within their Currency.';
+
+const EQUIPMENT_CHARACTER_FILTER_HELP =
+  'Filter this mixed equipment list by a character. Optionally keep only rarities that level can access (Levels by Rarity) and items they can afford.';
+
+function parseOptionalNumber(raw: string): number | null {
+  if (raw === '') return null;
+  const n = Number(raw);
+  return Number.isFinite(n) ? n : null;
+}
 
 export interface ArmamentFiltersProps {
   value: ArmamentFilterState;
@@ -33,10 +40,16 @@ export interface ArmamentFiltersProps {
   onCharacterContextChange?: (ctx: ArmamentCharacterContext | null) => void;
   /** Selected character id ('' when none). Used for add-to-character row actions. */
   onCharacterIdChange?: (characterId: string) => void;
-  variant?: 'page' | 'compact';
-  defaultExpanded?: boolean;
   className?: string;
+  /** Persist character pick (default true). USM/L3 pass false. */
   persistCharacter?: boolean;
+  /**
+   * Codex mixed equipment: min/max currency always, plus rarity-by-level when a
+   * character is selected. Library weapons/armor/shields leave this off.
+   */
+  showEquipmentExtras?: boolean;
+  /** Extra filter controls (e.g. Category / Rarity selects) in the panel body. */
+  children?: ReactNode;
 }
 
 export function ArmamentFilters({
@@ -44,12 +57,15 @@ export function ArmamentFilters({
   onChange,
   onCharacterContextChange,
   onCharacterIdChange,
-  variant = 'page',
-  defaultExpanded,
   className,
-  persistCharacter = variant === 'page',
+  persistCharacter = true,
+  showEquipmentExtras = false,
+  children,
 }: ArmamentFiltersProps) {
   const affordableId = useId();
+  const rarityId = useId();
+  const minCurrencyId = useId();
+  const maxCurrencyId = useId();
   const { rules } = useGameRules();
 
   const [characterId, setCharacterId] = useState(() =>
@@ -77,38 +93,43 @@ export function ArmamentFilters({
       setCharacterId(id);
       if (persistCharacter) writePersistedLibraryCharacterFilterId(id);
       if (!id) {
-        onChange({ ...EMPTY_ARMAMENT_FILTERS });
+        onChange({
+          ...value,
+          affordableCurrencyOnly: false,
+          rarityAccessibleOnly: false,
+        });
       }
     },
-    [onChange, persistCharacter]
+    [onChange, persistCharacter, value]
   );
 
   const hasCharacter = Boolean(characterId && characterContext);
-  const activeCount = countActiveArmamentFilters(value, hasCharacter);
+  const maxAccessibleRarity = characterContext
+    ? maxRarityForCharacterLevel(characterContext.level)
+    : null;
 
-  return (
-    <FilterSection
-      variant={variant}
-      defaultExpanded={defaultExpanded}
-      activeCount={activeCount}
-      className={className}
-    >
+  const controls = (
+    <>
       <CharacterFilter
         value={characterId}
         onChange={handleCharacterChange}
         className="mb-4 max-w-md border-b border-border-light pb-4"
-        helpContent={CHARACTER_FILTER_HELP}
+        helpContent={
+          showEquipmentExtras ? EQUIPMENT_CHARACTER_FILTER_HELP : ARMAMENT_CHARACTER_FILTER_HELP
+        }
       >
         {hasCharacter && characterContext ? (
           <p className="mt-2 text-xs text-text-secondary dark:text-text-secondary">
-            {character?.name}: Armament Proficiency {characterContext.armamentMax} TP
-            {` · Currency ${characterContext.currency}`}
+            {character?.name}:{' '}
+            {showEquipmentExtras
+              ? `Level ${characterContext.level} · Currency ${characterContext.currency}`
+              : `Armament Proficiency ${characterContext.armamentMax} TP · Currency ${characterContext.currency}`}
           </p>
         ) : null}
       </CharacterFilter>
 
       {hasCharacter ? (
-        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="mb-4 grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3">
           <div className="filter-group min-w-0">
             <div className="mb-1 text-sm font-medium text-text-secondary">Currency</div>
             <label
@@ -118,7 +139,7 @@ export function ArmamentFilters({
               <input
                 id={affordableId}
                 type="checkbox"
-                className="h-4 w-4 shrink-0 rounded border-border text-primary focus:ring-primary"
+                className="h-4 w-4 shrink-0 rounded border-border-light text-primary-fg focus:ring-primary-outline-border"
                 checked={value.affordableCurrencyOnly}
                 onChange={(e) =>
                   onChange({ ...value, affordableCurrencyOnly: e.target.checked })
@@ -129,8 +150,80 @@ export function ArmamentFilters({
               </span>
             </label>
           </div>
+          {showEquipmentExtras && maxAccessibleRarity ? (
+            <div className="filter-group min-w-0">
+              <div className="mb-1 text-sm font-medium text-text-secondary">Rarity</div>
+              <label
+                htmlFor={rarityId}
+                className={cn(FILTER_CONTROL_ROW_CLASS, 'cursor-pointer gap-2')}
+              >
+                <input
+                  id={rarityId}
+                  type="checkbox"
+                  className="h-4 w-4 shrink-0 rounded border-border-light text-primary-fg focus:ring-primary-outline-border"
+                  checked={value.rarityAccessibleOnly}
+                  onChange={(e) =>
+                    onChange({ ...value, rarityAccessibleOnly: e.target.checked })
+                  }
+                />
+                <span className="text-sm text-text-primary">
+                  Rarity this level can access (≤ {maxAccessibleRarity})
+                </span>
+              </label>
+            </div>
+          ) : null}
         </div>
       ) : null}
-    </FilterSection>
+
+      {showEquipmentExtras ? (
+        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {children}
+          <div className="filter-group min-w-0">
+            <div className={FILTER_LABEL_ROW_CLASS}>
+              <label htmlFor={minCurrencyId} className="text-sm font-medium leading-5 text-text-secondary">
+                Min currency
+              </label>
+            </div>
+            <FilterInput
+              id={minCurrencyId}
+              type="number"
+              min={0}
+              value={value.minCurrency ?? ''}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  minCurrency: parseOptionalNumber(e.target.value),
+                })
+              }
+              placeholder="No min"
+            />
+          </div>
+          <div className="filter-group min-w-0">
+            <div className={FILTER_LABEL_ROW_CLASS}>
+              <label htmlFor={maxCurrencyId} className="text-sm font-medium leading-5 text-text-secondary">
+                Max currency
+              </label>
+            </div>
+            <FilterInput
+              id={maxCurrencyId}
+              type="number"
+              min={0}
+              value={value.maxCurrency ?? ''}
+              onChange={(e) =>
+                onChange({
+                  ...value,
+                  maxCurrency: parseOptionalNumber(e.target.value),
+                })
+              }
+              placeholder="No max"
+            />
+          </div>
+        </div>
+      ) : (
+        children
+      )}
+    </>
   );
+
+  return <div className={cn('space-y-3', className)}>{controls}</div>;
 }

@@ -67,7 +67,7 @@ export function TagFilter({
             </option>
           ))}
         </FilterNativeSelect>
-        <div className="flex items-center gap-2 bg-surface-alt px-3 py-2 rounded-md">
+        <div className="flex min-h-11 items-center gap-2 rounded-md bg-surface-alt px-3">
           <label className="flex items-center gap-1 cursor-pointer">
             <input
               type="radio"

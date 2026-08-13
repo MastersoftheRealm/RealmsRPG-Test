@@ -7,7 +7,7 @@ import {
   GridListRow,
 } from '@/components/shared';
 import { Button, IconButton, useToast } from '@/components/ui';
-import { SelectFilter, FilterSection } from '@/components/shared/filters';
+import { SelectFilter } from '@/components/shared/filters';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
@@ -202,8 +202,7 @@ export function AdminPropertiesTab() {
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search properties..."
         filters={
-          <FilterSection>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <SelectFilter
                 label="Type"
                 value={filters.typeFilter}
@@ -222,8 +221,7 @@ export function AdminPropertiesTab() {
                 onChange={(v) => setFilters((f) => ({ ...f, typeFilter: v }))}
                 placeholder="All Types"
               />
-            </div>
-          </FilterSection>
+          </div>
         }
         headerColumns={[
           { key: 'name', label: 'NAME' },

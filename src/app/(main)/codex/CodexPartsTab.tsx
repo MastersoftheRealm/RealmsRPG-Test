@@ -8,7 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { formatListCellLabel } from '@/lib/utils';
-import { SelectFilter, FilterSection } from '@/components/shared/filters';
+import { SelectFilter } from '@/components/shared/filters';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
@@ -173,8 +173,7 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
       onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
       searchPlaceholder="Search parts..."
       filters={
-        <FilterSection>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <SelectFilter
               label="Category"
               value={filters.categoryFilter}
@@ -206,8 +205,7 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
               onChange={(v) => setFilters(f => ({ ...f, mechanicMode: v as 'all' | 'only' | 'hide' }))}
               placeholder={null}
             />
-          </div>
-        </FilterSection>
+        </div>
       }
       headerColumns={PART_COLUMNS}
       gridColumns={PART_GRID_COLUMNS}

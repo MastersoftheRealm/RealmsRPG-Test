@@ -10,7 +10,7 @@
 
 import { useMemo } from 'react';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn, indexByNormalizedIds, normalizeId } from '@/lib/utils';
 import { User } from 'lucide-react';
 import { DescriptorChip } from '@/components/ui';
 import { ExpandableImage } from '@/components/shared';
@@ -82,8 +82,10 @@ export function CharacterPreviewPanel({ className, variant = 'panel' }: Characte
   const featNames = useMemo(() => {
     const ids = [...draft.archetypeFeatIds, ...draft.characterFeatIds];
     if (ids.length === 0) return [];
-    const byId = new Map(feats.map((f) => [String(f.id), f.name]));
-    return ids.map((id) => byId.get(String(id)) ?? id);
+    const byId = indexByNormalizedIds(feats);
+    return ids
+      .map((id) => byId.get(normalizeId(id))?.name)
+      .filter((name): name is string => Boolean(name));
   }, [draft.archetypeFeatIds, draft.characterFeatIds, feats]);
 
   /** All six abilities with signed values; gated until Abilities step (TASK-694). */

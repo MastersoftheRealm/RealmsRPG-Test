@@ -6,6 +6,8 @@ import { wouldExceedSharedTp } from '@/lib/guided-creator/loadout-tp';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { normalizeId } from '@/lib/utils';
 import {
+  applyInnateSelection,
+  innateSelectionBlockMessage,
   pickAffordableIds,
   pickInnateFillIds,
   resolveLibraryItem,
@@ -258,32 +260,26 @@ export function usePowersTechniquesSelection({
         updateDraft({ innatePowerIds: removeSelectedAlias(draft.innatePowerIds, key) });
         return;
       }
-      const energy = resolveEnergy(key);
-      if (energy == null || energy > innateThreshold) {
-        setBudgetMessage(ptCopy.innateThresholdBlocked);
-        return;
-      }
-      const othersEnergy = draft.innatePowerIds.reduce((sum, x) => {
-        const e = resolveEnergy(x);
-        return sum + (e != null ? e : 0);
-      }, 0);
-      if (othersEnergy + energy > innateEnergyMax) {
-        setBudgetMessage(ptCopy.innateEnergyBlocked);
-        return;
-      }
-      const addTp = resolveTpCost(key);
-      const othersTp =
-        draft.innatePowerIds.reduce((sum, x) => sum + resolveTpCost(x), 0) +
-        draft.powerIds.reduce((sum, x) => sum + resolveTpCost(x), 0);
-      if (wouldExceedSharedTp(loadoutTpSpent + othersTp, loadoutTpLimit, addTp)) {
-        setBudgetMessage(ptCopy.tpBlocked);
+      const regularTp = draft.powerIds.reduce((sum, x) => sum + resolveTpCost(x), 0);
+      const applied = applyInnateSelection({
+        selectedIds: draft.innatePowerIds,
+        id: key,
+        energyOf: resolveEnergy,
+        tpOf: resolveTpCost,
+        threshold: innateThreshold,
+        energyMax: innateEnergyMax,
+        otherTpSpent: loadoutTpSpent + regularTp,
+        tpLimit: loadoutTpLimit,
+      });
+      if (!applied.ok) {
+        setBudgetMessage(innateSelectionBlockMessage(applied.reason));
         return;
       }
       const nextRegular = isSelectedId(key, draft.powerIds)
         ? removeSelectedAlias(draft.powerIds, key)
         : draft.powerIds;
       updateDraft({
-        innatePowerIds: [...draft.innatePowerIds, key],
+        innatePowerIds: applied.nextIds,
         powerIds: nextRegular,
       });
     },
@@ -322,18 +318,17 @@ export function usePowersTechniquesSelection({
   const isInnateUnavailable = useCallback(
     (id: string) => {
       if (isSelectedId(id, selectedInnateIds)) return false;
-      const energy = resolveEnergy(id);
-      if (energy == null || energy > innateThreshold) return true;
-      const othersEnergy = selectedInnateIds.reduce((sum, x) => {
-        const e = resolveEnergy(x);
-        return sum + (e != null ? e : 0);
-      }, 0);
-      if (othersEnergy + energy > innateEnergyMax) return true;
-      return wouldExceedSharedTp(
-        loadoutTpSpent + regularTpSpent + innateTpSpent,
-        loadoutTpLimit,
-        resolveTpCost(id),
-      );
+      const applied = applyInnateSelection({
+        selectedIds: selectedInnateIds,
+        id,
+        energyOf: resolveEnergy,
+        tpOf: resolveTpCost,
+        threshold: innateThreshold,
+        energyMax: innateEnergyMax,
+        otherTpSpent: loadoutTpSpent + regularTpSpent,
+        tpLimit: loadoutTpLimit,
+      });
+      return !applied.ok;
     },
     [
       isSelectedId,
@@ -345,7 +340,6 @@ export function usePowersTechniquesSelection({
       loadoutTpSpent,
       loadoutTpLimit,
       regularTpSpent,
-      innateTpSpent,
     ],
   );
 

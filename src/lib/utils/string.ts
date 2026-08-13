@@ -100,9 +100,9 @@ export function formatListCellLabel(value: unknown): string {
 }
 
 /**
- * Safely format a damage value for display.
- * Handles both string damage values and damage objects.
- * Prevents React Error #31 (objects as children).
+ * Item damage display SoT (string, `{ amount, size, type }`, or array of those).
+ * Capitalizes the damage type. Prevents React Error #31 (objects as children).
+ * Item-calc `deriveItemDisplay` delegates here — do not add a second join.
  */
 export function formatDamageDisplay(
   damage: unknown

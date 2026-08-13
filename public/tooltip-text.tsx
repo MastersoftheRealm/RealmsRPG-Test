@@ -387,6 +387,34 @@ export const trainingPointsHelp = (
   </div>
 );
 
+/**
+ * Global term tip — Innate Energy (Pools × Threshold; combined energy of innate powers).
+ * Reuse anywhere the label appears (TASK-726).
+ */
+export const innateEnergyHelp = (
+  <div>
+    <div>
+      <strong>Innate Energy</strong> is the total combined energy of all your innate powers.
+    </div>
+    <div>Your pool is Innate Pools × Innate Threshold.</div>
+  </div>
+);
+
+/**
+ * Global term tip — Innate Powers (usable without spending Energy; Energy ≤ Innate Threshold).
+ */
+export const innatePowersHelp = (
+  <div>
+    <div>
+      <strong>Innate Powers</strong> are powers you can use without spending Energy.
+    </div>
+    <div>
+      Each must cost at or below your Innate Threshold — the max energy cost to be innate. Their
+      Energy totals count against your Innate Energy pool.
+    </div>
+  </div>
+);
+
 export const finalizeSummaryHelp = (
   <div>
     <div>Finalize Checklist</div>
@@ -505,3 +533,39 @@ export const guidedPathDetailPowers = (
     </div>
   </div>
 );
+
+/**
+ * Your Hero / Advanced finalize — Auto-allocate Health/Energy (TASK-729).
+ * Names the live highest-cost Power/Technique when known.
+ */
+export function getGuidedAutoAllocateHelp(options?: {
+  name?: string;
+  energy?: number;
+  kind?: 'power' | 'technique';
+}) {
+  const { name, energy, kind } = options ?? {};
+  if (name && energy != null && energy > 0) {
+    const kindLabel = kind === 'technique' ? 'Technique' : 'Power';
+    return (
+      <div>
+        <div>
+          Your highest Energy-cost {kindLabel}, <strong>{name}</strong>, is{' '}
+          <strong>{energy} Energy</strong>.
+        </div>
+        <div>
+          Auto-allocate gives you enough Energy to use {name} once, and puts the rest of the pool
+          into Health.
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div>
+      <div>
+        Auto-allocate gives you enough Energy to use your highest Energy-cost Power or Technique
+        once, and puts the rest of the pool into Health.
+      </div>
+      <div>If none of those cost Energy, the whole pool goes to Health.</div>
+    </div>
+  );
+}

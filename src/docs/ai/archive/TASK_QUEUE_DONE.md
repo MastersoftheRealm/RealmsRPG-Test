@@ -1,3 +1,708 @@
+- id: TASK-732
+  title: Unify remaining id→name lookups onto normalizeId + docId
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-730
+  related_files:
+    - src/lib/utils/normalize-id.ts
+    - src/lib/utils/normalize-id.test.ts
+    - src/lib/utils/index.ts
+    - src/lib/guided-creator/equipment-catalog-rows.ts
+    - src/lib/guided-creator/equipment-catalog-rows.test.ts
+    - src/lib/guided-creator/loadout-tp.ts
+    - src/components/guided-creator/character-preview-panel.tsx
+    - src/components/guided-creator/guided-path-detail-modal.tsx
+    - src/components/character-sheet/path-level-guidance.tsx
+    - src/app/(main)/codex/CodexArchetypesTab.tsx
+    - src/app/(main)/species-creator/use-species-creator-workspace.ts
+    - src/app/(main)/species-creator/page.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    TASK-730 cleanup wired Your Hero Loadout and power/technique chips through
+    findByNormalizedId / indexByNormalizedIds (id + docId, official + user).
+    Remaining call sites still use id-only finds or String(id) Maps and can
+    show a raw UUID when the draft key is docId or a user-library row.
+    Wire those onto the existing normalize-id helpers (keep byName maps only
+    where name fallback is still required). No new shared UI.
+  acceptance_criteria:
+    - libraryRowForRef / weaponDamageLineForRef / armorStatsForRef and loadout-tp findLibraryRow match id and docId via rowMatchesNormalizedId or findByNormalizedId.
+    - character-preview-panel feat labels use indexByNormalizedIds (not String(id) Map with ?? id).
+    - guided-path-detail-modal equipment lookup includes user items (or at least docId) via buildEquipmentLookup / mergeLibraryBySource, not official-id-only.
+    - Duplicate buildLookupMaps in path-level-guidance.tsx and CodexArchetypesTab.tsx deleted or wired to indexByNormalizedIds + normalizeId.
+    - species-creator skill labels use findByNormalizedId; unmatched skills do not show a raw UUID.
+    - No new shared/ui/store/API; vitest/typecheck/lint pass.
+  notes: |
+    Filed from TASK-730 /audit + /cleanup. Archived from ACTIVE 2026-08-13 —
+    implementable AC met; verification_status pending-qa (DEV-V-013 T084,
+    DEV-V-008 T026, DEV-V-018 T011).
+  completed_work: |
+    - Deleted duplicate buildLookupMaps / resolveRefLabel in path-level-guidance
+      and CodexArchetypesTab; consolidated onto indexDisplayNamesByNormalizedIds
+      + resolveNormalizedRefLabel (id + docId + name fallback, id:qty).
+    - Wired libraryRowForRef / weaponDamageLineForRef / armorStatsForRef /
+      loadout-tp findLibraryRow onto findByNormalizedId; catalog indexes docId.
+    - Path More details merges official + user items via mergeLibraryBySource.
+    - Preview feat labels use indexByNormalizedIds; unmatched omitted.
+    - Species creator skill labels use findByNormalizedId; unmatched omitted.
+  developer_test_plan: |
+    DEV-V-013 T084; DEV-V-008 T026; DEV-V-018 T011.
+
+---
+- id: TASK-717
+  title: Rewrite DEV-V-001 for chooser vs Advanced archetype steps
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/guide/06-creators-and-loadouts.md
+  description: |
+    DEV-V-001 start URL is /characters/new -> step "1. Archetype" / Forge Your Own, but that
+    route is now the Guided/Custom/Legacy chooser. Archetype path/forge steps live at
+    /characters/new/advanced. Rewrite the suite so steps can pass as written; spot-check
+    sibling suites for the same pre-chooser assumption.
+  acceptance_criteria:
+    - DEV-V-001 Where/Start URL/steps distinguish chooser (`/characters/new`) vs Advanced
+      (`/characters/new/advanced`) Archetype.
+    - Forge Your Own / Choose a Path steps target Advanced, not the chooser.
+    - DEVELOPER_TASK_QUEUE index blurb updated if the suite title/count changes.
+    - No other DEV-V-001 tests left describing pre-chooser `/characters/new` as step 1 Archetype.
+  notes: |
+    Filed from 2026-08-13 /global-audit. QA-authority rewrite -- not a /debt fold.
+    Archived from ACTIVE 2026-08-13 -- implementable AC met; verification_status n/a
+    (QA-doc rewrite).
+  completed_work: |
+    - Rewrote DEV-V-001 Start URL / Where / first steps onto /characters/new/advanced.
+    - Chooser /characters/new is Guided/Custom/Legacy, not step 1 Archetype.
+    - Retargeted DEV-V-008 T009-T010 path-mode Skills/Feats the same way.
+    - Index is T001-T016 (16).
+
+---
+
+- id: TASK-716
+  title: Finish TASK-701 -- remaining formatRange callers use resolveWeaponRangeDisplay
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  parent_task: TASK-701
+  related_files:
+    - src/lib/calculators/item-calc.ts
+    - src/lib/calculators/item-calc-range.test.ts
+    - src/lib/calculators/index.ts
+    - src/components/character-creator/steps/equipment/equipment-catalog-panel.tsx
+    - src/lib/guided-creator/equipment-phase-stats.ts
+    - src/lib/guided-creator/equipment-phase-stats.test.ts
+    - src/lib/detail-option/compact-facts.ts
+    - src/lib/detail-option/compact-facts.test.ts
+    - src/lib/detail-option/equipment-builder.ts
+    - src/lib/game/weapon-attack-ability.ts
+    - src/lib/game/weapon-attack-ability.test.ts
+    - src/components/guided-creator/guided-equipment-l1-phase.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    TASK-701 made resolveWeaponRangeDisplay the display SoT (properties-first, reject corrupt
+    stored 0/bare integers). Direct formatRange calls remain when properties are assumed present.
+    Route remaining callers through resolveWeaponRangeDisplay so corrupt stored range cannot
+    resurface.
+  acceptance_criteria:
+    - equipment-catalog-panel, equipment-phase-stats, compact-facts, weapon-attack-ability do not
+      call formatRange for user-facing labels (use resolveWeaponRangeDisplay / compact helper).
+    - formatRange may remain as an internal properties-only derive used by the SoT.
+    - Melee / spaces labels match TASK-701; vitest for item-calc range + typecheck/lint pass.
+  notes: |
+    Filed from 2026-08-13 /global-audit. Behavior-sensitive -- do not fold into docs-only debt.
+    Archived from ACTIVE 2026-08-13 -- implementable AC met; verification_status pending-qa
+    (DEV-V-013 T044, DEV-V-050 T001).
+  completed_work: |
+    - Dropped user-facing formatRange calls in Advanced catalog, guided L1 chips, compact-facts,
+      and attack-ability.
+    - Wired them onto resolveWeaponRangeDisplay so corrupt stored 0/bare level ints cannot
+      resurface. formatRange stays the properties-only internal derive.
+
+---
+
+- id: TASK-726
+  title: Innate Energy and Innate Powers tooltips on creator powers
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  follow_up_tasks:
+    - TASK-733
+  related_files:
+    - public/tooltip-text.tsx
+    - src/components/guided-creator/guided-powers-techniques-l2-modal.tsx
+    - src/components/guided-creator/guided-powers-techniques-l1-content.tsx
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Powers screen (guided creator): Innate Energy resource tracker and Innate Powers
+    heading need tooltips explaining what they are. Copy from GAME_RULES (Innate Energy =
+    Pools x Threshold, combined energy of innate powers; Innate Threshold = max energy
+    cost to be innate). Use InfoTippy + tooltip-text.tsx (guided* if teaching-length,
+    else global term tips).
+  acceptance_criteria:
+    - Innate Energy tracker (LoadoutBudgetBar leading / InnateEnergyPointStatus) has an (i) or equivalent InfoTippy describing the pool.
+    - Innate Powers heading has an InfoTippy describing innate powers.
+    - Copy lives in tooltip-text.tsx and matches GAME_RULES terminology; Advanced powers step gets the same tips if it shows the same chrome.
+  notes: |
+    GAME_RULES: Innate Energy is total combined energy of all innate powers; Innate
+    Pools is how many innate powers if each uses max threshold. Keep L1-simple if this
+    is creator teaching copy. Advanced powers has no Innate Energy tracker / Innate
+    Powers heading -- skipped. Archived from ACTIVE 2026-08-13 -- implementable AC met;
+    verification_status pending-qa (DEV-V-013 T083).
+  completed_work: |
+    - Added innateEnergyHelp / innatePowersHelp in tooltip-text.tsx (Pools x Threshold;
+      usable without spending Energy; Energy <= Innate Threshold).
+    - InnateEnergyPointStatus labelAccessory InfoTippy covers L1 budget bar, L3 bar, and
+      L2 innate footer.
+    - Innate Powers GuidedSectionTitle titleAddon on L1 cards and L3 inline catalog.
+
+---
+
+- id: TASK-715
+  title: Route item damage display through formatDamageDisplay
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/lib/utils/string.ts
+    - src/lib/utils/string.test.ts
+    - src/lib/calculators/item-calc.ts
+    - src/lib/guided-creator/resolve-loadout-items.ts
+    - src/lib/guided-creator/resolve-loadout-items.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    formatDamage in item-calc.ts duplicated formatDamageDisplay (string.ts) for typed
+    ItemDamage[]. One remaining caller: resolve-loadout-items.ts. Wired that caller and
+    deriveItemDisplay through the display SoT and deleted formatDamage.
+  acceptance_criteria:
+    - resolve-loadout-items uses formatDamageDisplay (or a typed wrapper that delegates to it).
+    - No second damage-join implementation in item-calc (delete or one-line delegate).
+    - Guided loadout damage strings unchanged for valid dice+type rows; vitest/typecheck/lint pass.
+  notes: |
+    Filed from 2026-08-13 /global-audit. Did not change sheet formatDamageType (string chip
+    wrapper). Archived from ACTIVE 2026-08-13 -- implementable AC met; verification_status n/a
+    (lib consolidation; vitest covers NdS Type join).
+  completed_work: |
+    - Deleted formatDamage from item-calc; deriveItemDisplay uses formatDamageDisplay.
+    - resolve-loadout-items official lookup uses formatDamageDisplay (no ItemDamage cast).
+    - vitest: string.test.ts SoT + resolve-loadout-items statsLine 1d8 Slashing.
+
+---
+
+- id: TASK-728
+  title: L3 GLR — stop Selected panel from jumping the list on select
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/guided-choice/guided-inline-catalog-list.tsx
+    - src/components/shared/guided-choice/guided-inline-catalog-list.test.ts
+    - src/lib/utils/stabilize-vertical-scroll.ts
+    - src/lib/utils/stabilize-vertical-scroll.test.ts
+    - src/docs/ai/ADR/0012-guided-inline-catalog-list.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    GuidedInlineCatalogList renders the Selected card only when selectedItems.length > 0,
+    so the first (and each additional) selection inserts content above the catalog and
+    pushes the clicked row down. Implemented height-delta scrollBy so the clicked row
+    stays under the pointer without a reserved empty hole.
+  acceptance_criteria:
+    - Selecting an item on any L3 GuidedInlineCatalogList (feats, loadout, powers/techniques) does not jump the clicked row out from under the cursor.
+    - Selected items remain visible (panel above the list is OK if it does not steal viewport).
+    - Empty selected state does not leave a huge blank hole; first selection must not feel like the page shoved the list down.
+    - Shared fix in GuidedInlineCatalogList (not per-step forks); ADR-0012 note if the layout contract changes.
+  notes: |
+    Scroll-compensating insert (not reserved min-height, not sticky overlay). Skip
+    compensation on first paint / catalog hydrate. Do not scrollIntoView the new row.
+  completed_work: |
+    - Selected card still mounts only when N>0 (no reserved empty hole).
+    - Measured selected-region height (including catalog gap) and scrollBy on the nearest
+      vertical scroller in useLayoutEffect; skip first paint / catalog hydrate.
+    - overflow-anchor: none on the panel so the browser does not double-adjust.
+    - ADR-0012 layout note; DEV-V-050 T005.
+
+---
+
+- id: TASK-722
+  title: CharacterFilter collapsed by default + Codex skills character filters
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/filters/character-filter.tsx
+    - src/components/shared/filters/index.ts
+    - src/app/(main)/codex/CodexSkillsTab.tsx
+    - src/lib/codex/skill-list.ts
+    - src/lib/codex/skill-list.test.ts
+    - src/lib/library/character-filter-persistence.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Filter by character should be a collapsible subsection, collapsed by default, with
+    the existing (i) InfoTippy still available when collapsed. Codex skills currently
+    have no character filter — add shared CharacterFilter (same persistence as feats /
+    powers / armaments) plus a small set of character-scoped skill filters: known vs
+    not known, and sub-skills the character has the base skill for. Keep it simple.
+  acceptance_criteria:
+    - CharacterFilter is collapsible, default collapsed, on every consumer (feats, powers/techniques, armaments, skills).
+    - Collapsed header still shows the (i) tippy; expanded select + children unchanged.
+    - Codex skills can filter by a character (shared persistence key). Optional known / not known; optional "sub-skills whose base skill I have." No extra complexity (no new filter system).
+    - No character + empty skills still shows the rest of the skill filters; vitest for skill-list helpers; build/typecheck/lint pass.
+  completed_work: |
+    - CharacterFilter is a collapsible subsection (default collapsed); InfoTippy stays on the header; select + children mount when expanded.
+    - Codex Skills uses shared CharacterFilter + LIBRARY_CHARACTER_FILTER_KEY; Known / Not known / sub-skills whose base I have.
+    - skill-list helpers collectCharacterSkillKeys + filterSkills character scope; vitest.
+    - BUILD_VALIDATION DEV-V-045 T001-T003.
+  remaining_work: |
+    - Owner QA: DEV-V-045 T001-T003.
+  notes: |
+    No CodexCharacterFilter fork. Known = skill ids/names on the saved character. Archived from ACTIVE 2026-08-13 -- implementable AC met; verification_status pending-qa.
+  build_validation: |
+    suite: DEV-V-045
+    tests:
+      - DEV-V-045-T001
+      - DEV-V-045-T002
+      - DEV-V-045-T003
+  developer_test_plan: |
+    Suite DEV-V-045 T001-T003 -- see BUILD_VALIDATION.md
+
+---
+
+- id: TASK-725
+  title: Unify filter control height and InfoTippy label spacing
+  created_at: 2026-08-13
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  completed_at: 2026-08-13
+  related_files:
+    - src/components/shared/info-tippy.tsx
+    - src/components/shared/filters/select-filter.tsx
+    - src/components/shared/filters/chip-select.tsx
+    - src/components/shared/filters/filter-native-select.tsx
+    - src/components/shared/filters/filter-utils.ts
+    - src/components/shared/filters/filter-utils.test.ts
+    - src/components/shared/filters/ability-requirement-filter.tsx
+    - src/components/shared/filters/character-filter.tsx
+    - src/components/shared/filters/power-technique-filters.tsx
+    - src/components/shared/filters/armament-filters.tsx
+    - src/components/ui/input.tsx
+    - src/components/guided-creator/guided-section-title.tsx
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+  description: |
+    Filter inputs (ui Input h-10) and dropdowns (FilterNativeSelect h-11) do not match.
+    Titles with an (i) often break label/heading spacing sitewide because InfoTippy's
+    hit target (min-h-8 inline / 44px icon on touch) sits in the document flow beside
+    h-5 filter labels and GuidedSectionTitle. One shared fix for control chrome and one
+    for the (i) trigger — preserve hover/focus/touch-hold and a11y.
+  acceptance_criteria:
+    - Filter box number inputs, text inputs, and selects share the same height and border/radius (h-11 + FilterNativeSelect chrome, including AbilityRequirementFilter).
+    - InfoTippy next to a label or section title does not increase that row's height or wrap the title; 44px touch target is preserved via padding/negative margin that does not affect layout, or an equivalent overlay hit area.
+    - No per-page InfoTippy forks; update the shared component (and label-row pattern if needed). Copy/behavior of tooltips unchanged.
+    - Guide 04 notes the layout rule so new call sites don't reintroduce the gap.
+  completed_work: |
+    Added FilterInput + FILTER_CONTROL_CLASS (h-11 rounded-md) shared with FilterNativeSelect.
+    Wired AbilityRequirementFilter, PowerTechniqueFilters, ArmamentFilters, Codex/Admin Feats
+    max-level, and CharacterFilter onto that chrome. InfoTippy layout box is the 16px icon;
+    .hit-area-layout-neutral overlay preserves 44px mobile hit without stretching label rows.
+    Deleted per-page !min-h-* className fights on DescriptorChipWithTip, LoadoutBudgetBar,
+    and Power Threshold InfoTippy. GuidedSectionTitle titleAddon is shrink-0.
+  notes: |
+    Overlay hit (::after), not padding+negative margin. Did not add a new shared/ui primitive.
+  build_validation: |
+    suite: DEV-V-046
+    tests:
+      - DEV-V-046-T007
+  developer_test_plan: |
+    Suite DEV-V-046 T007 — see BUILD_VALIDATION.md
+
+---
+
+- id: TASK-721
+  title: Codex/Library/Admin GLR — Filters button on the same row as search
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/filters/filter-section.tsx
+    - src/components/shared/list-search-toolbar.tsx
+    - src/components/shared/codex-browse-list-shell.tsx
+    - src/components/shared/official-entity-list.tsx
+    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
+    - src/components/shared/filters/armament-filters.tsx
+    - src/components/shared/filters/power-technique-filters.tsx
+    - src/lib/library/power-technique-filters.ts
+    - src/lib/library/power-technique-filters.test.ts
+    - src/docs/ai/ADR/0011-list-search-toolbar.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/MOBILE_UX.md
+  description: |
+    Guided/USM lists already put Search + Filters on one row via FilterSection compact
+    toolbarStart. CodexBrowseListShell, OfficialEntityList, and UserLibraryEntityTabShell
+    still use ADR-0011 ListSearchToolbar with the page FilterSection stacked below.
+    Match the guided row sitewide on Codex / Library / Admin GLR filter pages.
+  acceptance_criteria:
+    - Codex, Library (Official + My), and Admin Codex browse lists show Search with the Filters toggle on the same row, Filters on the right (guided/USM pattern).
+    - Reuse FilterSection compact toolbarStart (or extend ListSearchToolbar to compose it). No third toolbar primitive.
+    - ADR-0011 amended to document the Filters-on-row layout; searchTrailing (Create/sync) still works.
+    - Mobile: row wraps without clipping; 44px touch on the Filters control below md.
+  completed_work: |
+    - ListSearchToolbar composes FilterSection compact toolbarStart when filters is set; trailing is toolbarEnd after Filters.
+    - Shells pass filter panel bodies only; PowerTechniqueFilters/ArmamentFilters compact is panel-only on browse lists.
+    - Nested page FilterSection wrappers removed from Codex/Admin/Images tabs.
+    - ADR-0011 amended; DEV-V-048 T002; USM/L3 FilterSection compact unchanged.
+  remaining_work: |
+    - Owner QA: DEV-V-048 T001-T002 (plus DEV-V-047 T002 / DEV-V-016 T016).
+  notes: |
+    Owner: universally across the codex/library/admin GLR filtering pages. Did not restyle USM/L3. searchTrailing does not steal the Filters slot.
+  build_validation: |
+    suite: DEV-V-048
+    tests:
+      - DEV-V-048-T001
+      - DEV-V-048-T002
+
+---
+
+- id: TASK-724
+  title: Guided equipment list — Category column header
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-equipment-l2-grid.ts
+    - src/lib/guided-creator/guided-equipment-l2.ts
+    - src/lib/guided-creator/guided-equipment-l2.test.ts
+    - src/lib/guided-creator/equipment-catalog-rows.ts
+    - src/lib/guided-creator/equipment-catalog-rows.test.ts
+    - src/lib/guided-creator/equipment-eligibility.ts
+    - src/lib/glr/required-facts-registry.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  description: |
+    Guided creator equipment GLR is missing a Category column header. Gear L2/L3 headers
+    are Name / Rarity / Currency only; row cells have no category. Add Category to the
+    list (header + cell), especially the gear phase where category (Adventuring, Tools, …)
+    is the useful discriminator.
+  acceptance_criteria:
+    - Guided equipment GLR shows a Category column header aligned with row cells.
+    - Gear phase includes category in headers and cells; weapon/armor phases include it if the row has a meaningful category, without duplicating type that’s already implied by the phase.
+    - Required-facts / guided-equipment-l2 tests updated; ListHeader and row keys match.
+  completed_work: |
+    - Gear L2/L3 headers/cells: Name / Category / Rarity / Currency via GEAR_L2_HEADER_COLUMNS + buildL2Columns.
+    - Catalog rows carry Codex taxonomy (itemCategory); official override keeps Codex category when the library row has none.
+    - taxonomyCategoryColumnValue blanks phase-type duplicates (Weapon/Armor/Equipment); weapon/armor keep ARMAMENT_LIBRARY_CONFIG (no Category column).
+    - Registry guided-equipment-gear-l3 requires FACT.category; vitest header/row keys + catalog preserve; DEV-V-050 T004.
+  remaining_work: |
+    - Owner QA: DEV-V-050 T004 (plus T001 step 5 / T002 step 3).
+  notes: |
+    Owner called out guided creator specifically (not Codex). Did not fork weapon/armor column arrays. Archived from ACTIVE 2026-08-13 — implementable AC met; verification_status pending-qa.
+  build_validation: |
+    suite: DEV-V-050
+    tests:
+      - DEV-V-050-T004
+      - DEV-V-050-T001
+      - DEV-V-050-T002
+
+---
+
+- id: TASK-723
+  title: Codex/Admin equipment columns + currency and character filters
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/codex/CodexEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/lib/codex/equipment-list.ts
+    - src/lib/codex/equipment-list.test.ts
+    - src/lib/glr/required-facts-registry.ts
+    - src/lib/glr/required-facts-registry.test.ts
+    - src/components/shared/filters/armament-filters.tsx
+    - src/lib/library/armament-filters.ts
+    - src/lib/library/armament-filters.test.ts
+    - src/lib/library/armament-character-context.ts
+    - src/lib/game/rarity-by-level.ts
+    - src/lib/game/rarity-by-level.test.ts
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+  description: |
+    Codex (and Admin) equipment is a forked mixed GLR: COST (blue highlight, trailing “c”),
+    DAMAGE, and DMG. RED. headers. Library armaments already use ARMAMENT_LIBRARY_CONFIG
+    (CURRENCY, no suffix, no highlight). Registry surface `codex-equipment` currently
+    requires damage + damageReduction, which forced those columns onto a mixed list.
+    Rename Cost → Currency, drop c/blue, drop Damage and Dmg. Red. as columns (facts
+    that still matter belong in expand chips). Add min/max currency filters. When a
+    character is selected: optional rarity-bracket (GAME_RULES Levels by Rarity vs
+    character level) and optional affordability (max currency = character currency).
+  acceptance_criteria:
+    - Codex + Admin equipment headers: Category, Currency, Rarity (no Cost/Damage/Dmg. Red. columns).
+    - Currency cells are plain numbers (no “c”, no highlight/blue).
+    - `codex-equipment` required-facts + tests updated so CI does not re-require Damage/DR columns.
+    - Min and max currency filters on Codex equipment (optional).
+    - Character filter on Codex equipment reuses CharacterFilter / ArmamentFilters persistence; optional “rarity this level can access” and optional “only what I can afford.” Both off by default.
+    - Prefer extending ArmamentFilters / armament-filters.ts over a Codex-only fork.
+  completed_work: |
+    - Deleted Cost / Damage / Dmg. Red. columns and `c`/highlight currency chrome on Codex + Admin mixed equipment.
+    - Consolidated row/header/filter helpers onto `lib/codex/equipment-list.ts`; required-facts `codex-equipment` is Category / Currency / Rarity.
+    - Extended ArmamentFilters (`showEquipmentExtras`) + armament-filters apply: min/max currency always; optional affordability + rarity-by-level when a character is selected (equipment profile skips ability/TP). Persistence unchanged (TASK-681).
+    - Vitest: rarity-by-level, armament-filters, equipment-list, required-facts-registry. BUILD_VALIDATION DEV-V-016 T008 rewritten.
+  remaining_work: |
+    - Owner QA: DEV-V-016 T008.
+  notes: |
+    Cause: mixed CodexEquipmentTab + registry FACT.damage / FACT.damageReduction + Cost highlight.
+    Rarity (owner-confirmed 2026-08-13): level 6 → Uncommon → Common + Uncommon.
+    Archived from ACTIVE 2026-08-13 — implementable AC met; verification_status pending-qa.
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T008
+  developer_test_plan: |
+    Suite DEV-V-016 T008 — see BUILD_VALIDATION.md
+
+---
+
+- id: TASK-729
+  title: Your Hero auto-allocate pool, tooltip, and HP/Energy labels
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-health-energy-section.tsx
+    - src/components/creator/health-energy-allocator.tsx
+    - src/components/character-creator/steps/finalize/health-energy-section.tsx
+    - src/lib/game/formulas.ts
+    - src/lib/game/formulas.test.ts
+    - src/lib/guided-creator/power-technique-display.ts
+    - src/lib/guided-creator/power-technique-display.test.ts
+    - public/tooltip-text.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/06-creators-and-loadouts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Auto-allocate on Your Hero does not tick down the Health/Energy point pool
+    (spent / total) the way manual HP/EN steppers do. Add a hover tooltip in lay terms
+    (highest Energy-cost power/technique Y is X; auto-allocate gives enough Energy to
+    use that once and puts the rest in Health). Do not abbreviate Health/Energy to HP/EN
+    on the allocator unless the row is tight (mobile).
+  acceptance_criteria:
+    - Clicking Auto-allocate updates the allocator pool spent/total the same as allocating the same bonuses with the steppers.
+    - Auto-allocate has an InfoTippy (or button tooltip) with the layman formula; names the actual highest-cost power/technique and its Energy when known.
+    - Labels read Health / Energy when space allows; HP / EN only in the compact/inline or narrow breakpoint.
+    - Same pool-tick behavior on Advanced finalize if it shares HealthEnergyAllocator.
+  notes: |
+    Auto-allocate math lives in allocateHealthEnergyPool (lib/game/formulas.ts).
+    Silent mount auto-apply removed so the PointStatus remaining/total visibly ticks.
+  completed_work: |
+    PointStatus remaining/total on HealthEnergyAllocator; Auto-allocate writes the full
+    pool split; InfoTippy names highest Energy-cost Power/Technique; card labels Health/Energy
+    on md+, HP/EN inline/narrow; Advanced finalize shares the helper + tip.
+  developer_test_plan: |
+    DEV-V-013 T082 (+ T015 step 4).
+  follow_up_tasks: []
+
+---
+
+- id: TASK-731
+  title: Distinct icons for add-to-library vs add-to-character
+  created_at: 2026-08-13
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  completed_at: 2026-08-13
+  related_tasks:
+    - TASK-679
+    - TASK-680
+  related_files:
+    - src/components/shared/library-add-to-library-button.tsx
+    - src/components/shared/library-row-action-slot.tsx
+    - src/components/shared/official-entity-list.tsx
+    - src/components/shared/grid-list-row-expanded.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    With Filter by character active, Realms Library rows can show two identical Lucide
+    Plus buttons — add to My Library and add to the selected character — because
+    LibraryAddToCharacterButton reuses LibraryAddToLibraryButton (same icon). The
+    action column is intentionally narrow, so a header legend is not viable. Pick
+    distinct, learn-once icons for the two intents and apply them universally wherever
+    those shared buttons are used (powers, techniques, armaments; My + Realms). Keep
+    clear aria-labels; do not widen the action column or add header text.
+  acceptance_criteria:
+    - Add-to-library and add-to-character use different icons sitewide via the shared
+      buttons (no duplicate Plus when both actions are visible on one row).
+    - Icon meaning is self-evident without a column-header description; aria-labels still
+      name the destination (library vs character / entity kind).
+    - All current callers (official-entity-list, Library* tabs, creature add-to-library)
+      inherit the distinction with no per-tab icon forks.
+    - FEATURE_INDEX note updated; BUILD_VALIDATION step(s) for dual-action rows when
+      character filter is on; build/typecheck/lint pass.
+  completed_work: |
+    LibraryAddToLibraryButton uses BookPlus; LibraryAddToCharacterButton renders its own
+    UserPlus IconButton (no longer wraps the library button). Expanded Add to my library
+    labeled control uses BookPlus. FEATURE_INDEX + DEV-V-046 T006.
+  notes: |
+    Root cause: LibraryAddToCharacterButton wrapped LibraryAddToLibraryButton + Plus.
+    Lucide BookPlus vs UserPlus. No new shared file.
+  build_validation: |
+    suite: DEV-V-046
+    tests:
+      - DEV-V-046-T006
+      - DEV-V-046-T004
+      - DEV-V-046-T005
+  developer_test_plan: |
+    Suite DEV-V-046 T006 (dual-action icons) plus T004/T005 icon names — see BUILD_VALIDATION.md
+
+---
+
+- id: TASK-730
+  title: Your Hero loadout — weapon name instead of id
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-reveal-summary.tsx
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/lib/guided-creator/resolve-loadout-items.ts
+    - src/lib/guided-creator/resolve-loadout-items.test.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/lib/guided-creator/build-character.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Your Hero summary Loadout shows armor by name but the weapon as a raw id instead of
+    the name / card-dropdown used for other summary items. guided-reveal-summary mapped
+    draft.armaments through officialItems (item name or raw id). Find why the weapon
+    misses that lookup (id type, user-library item, equipment vs armaments, or armor
+    coming from a different field) and show the same name + expandable chip/card as armor.
+  acceptance_criteria:
+    - Loadout weapon displays name (and description card/chip) like armor; no raw UUID/id in the summary.
+    - User-library / non-official weapons still resolve a name (same resolver as the loadout step).
+    - Expand/chip interaction matches other reveal summary list items.
+  completed_work: |
+    - Root cause: reveal used an officialItems Map keyed by String(id), so user-library
+      weapons, docId-only refs, and case-mismatched UUIDs fell through to the raw id.
+    - Loadout chips and guided save now share resolveDraftArmaments / buildEquipmentLookup
+      (official + user + codex; docId indexed).
+    - Advanced BuildSummary already displays inventory names; no parallel leak.
+    - Vitest: resolve-loadout-items + build-character. BUILD_VALIDATION DEV-V-013 T080.
+  remaining_work: |
+    - Owner QA: DEV-V-013 T080.
+  notes: |
+    Prefer resolve-loadout-items over a second officialItems-only map.
+    Archived from ACTIVE 2026-08-13 — implementable AC met; verification_status pending-qa.
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T080
+  developer_test_plan: |
+    Suite DEV-V-013 T080 — see BUILD_VALIDATION.md
+
+---
+
+- id: TASK-727
+  title: L3 innate powers GLR -- keep list at cap; swap on new select
+  created_at: 2026-08-13
+  created_by: owner
+  priority: high
+  status: done
+  completed_at: 2026-08-13
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/components/guided-creator/steps/use-powers-techniques-selection.ts
+    - src/lib/guided-creator/powers-techniques-step-helpers.ts
+    - src/lib/guided-creator/powers-techniques-step-helpers.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0012-guided-inline-catalog-list.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Custom L3 innate-powers catalog currently drops rows that fail innateUnavailableReason
+    (including energy-over-cap), so meeting the Innate Energy limit empties the browse
+    list. Keep the list visible. Selecting a new innate when at/over the energy cap
+    should deselect one (or more, if needed) of the currently selected innates and
+    select the new one so the user can browse and swap without unselecting first.
+  acceptance_criteria:
+    - Innate L3 catalog remains populated when Innate Energy is full (threshold-ineligible may still be hidden; energy-over-cap must not hide the row).
+    - Choosing a new innate at cap selects it and drops existing innate(s) until the pick fits (prefer last-selected).
+    - Selected innate panel and Innate Energy tracker stay in sync; TP rules unchanged.
+    - Vitest for swap-at-cap; L2 modal behavior can match if it shares the toggle helper.
+  completed_work: |
+    - Added applyInnateSelection (drop last-in until energy fits; threshold / cannot-fit-alone / TP still block).
+    - Wired toggleInnateId + isInnateUnavailable through the helper so energy-over-cap rows stay listed and selectable.
+    - L3 filter no longer hides energy-over-cap (threshold/TP still hide). L2 USM stays confirm-gated (batch select, not immediate toggle).
+    - Vitest swap-at-cap; DEV-V-050-T003; FEATURE_INDEX + ADR-0012 notes.
+  notes: |
+    L3 previously hid energy-over-cap via innateUnavailableReason. Catalog now stays populated;
+    last-in drops until the new pick fits; cannot-fit-alone / over-threshold stays blocked.
+    QA: DEV-V-050 T003 (+ T001 step 6).
+
+---
+
 - id: TASK-720
   title: Species overview - size track hug + mixed parent cards and change
   created_at: 2026-08-13

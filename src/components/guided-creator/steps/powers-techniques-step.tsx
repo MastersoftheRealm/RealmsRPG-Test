@@ -3,6 +3,7 @@
  * L1: path cards (innate vs regular when Power) + shared Training Points.
  * L2: UnifiedSelectionModal (TASK-463); innate modal (TASK-471/472/573).
  * Innate Energy fill is soft-warn only; innate picks spend TP like regular Powers.
+ * L3 innate catalog stays populated at energy cap and swaps last-selected (TASK-727).
  */
 
 'use client';
@@ -24,7 +25,11 @@ import {
 } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
-import { GuidedPowersTechniquesL2Modal, InnateEnergyPointStatus } from '../guided-powers-techniques-l2-modal';
+import {
+  GuidedPowersTechniquesL2Modal,
+  InnateEnergyPointStatus,
+  InnatePowersHelpTip,
+} from '../guided-powers-techniques-l2-modal';
 import { GuidedStepLayout } from '../guided-step-layout';
 import { GuidedPowersTechniquesL1Content } from '../guided-powers-techniques-l1-content';
 import { GuidedSectionTitle } from '../guided-section-title';
@@ -345,26 +350,11 @@ export function PowersTechniquesStep() {
     showInnateTrack && innateEnergyMax > 0 && innateRemaining !== 0;
 
   // L3 inline catalog — same builder as GuidedPowersTechniquesL2Modal so ranking/columns
-  // stay identical; toggle handlers are the same immediate `toggleRegularId`/`toggleInnateId`
-  // used by L1 cards, so budget rules never diverge modal vs. inline (TASK-684).
+  // stay identical. Regular toggle matches L1. Innate energy-at-cap swaps last-in via
+  // `applyInnateSelection` (L1 cards + L3 list + path L2 USM — TASK-727).
   const regularUnavailableReason = useCallback(
     (id: string): string | undefined => (isRegularUnavailable(id) ? ptCopy.tpBlocked : undefined),
     [isRegularUnavailable],
-  );
-
-  const innateUnavailableReason = useCallback(
-    (id: string): string | undefined => {
-      if (!isInnateUnavailable(id)) return undefined;
-      const energy = resolveEnergy(id);
-      if (energy == null || energy > innateThreshold) return ptCopy.innateThresholdBlocked;
-      const othersEnergy = selectedInnateIds.reduce((sum, x) => {
-        const e = resolveEnergy(x);
-        return sum + (e != null ? e : 0);
-      }, 0);
-      if (othersEnergy + energy > innateEnergyMax) return ptCopy.innateEnergyBlocked;
-      return ptCopy.tpBlocked;
-    },
-    [isInnateUnavailable, resolveEnergy, innateThreshold, selectedInnateIds, innateEnergyMax],
   );
 
   /**
@@ -434,7 +424,8 @@ export function PowersTechniquesStep() {
     return built.filter((item) => {
       const idStr = String(item.id);
       if (isSelectedId(idStr, selectedInnateIds)) return true;
-      if (innateUnavailableReason(idStr)) return false;
+      // Threshold / TP still hide. Energy-over-cap stays visible so swap-at-cap works (TASK-727).
+      if (isInnateUnavailable(idStr)) return false;
       return filterPowersTechniquesL2ByPtFilters([item], ptFilters, copy.kind).length > 0;
     });
   }, [
@@ -448,7 +439,7 @@ export function PowersTechniquesStep() {
     innateThreshold,
     isSelectedId,
     selectedInnateIds,
-    innateUnavailableReason,
+    isInnateUnavailable,
     ptFilters,
   ]);
 
@@ -545,7 +536,6 @@ export function PowersTechniquesStep() {
                 onChange={setPtFilters}
                 categoryOptions={ptCategoryOptions}
                 innateThresholdOptions={innateThresholdOptions}
-                variant="compact"
                 persistCharacter={false}
                 showCharacterFilter={false}
               />
@@ -554,7 +544,9 @@ export function PowersTechniquesStep() {
 
           {showInnateTrack && (innateScope === 'all' || innateScope === 'innate') ? (
             <section className="space-y-3">
-              <GuidedSectionTitle>{ptCopy.innateHeading}</GuidedSectionTitle>
+              <GuidedSectionTitle titleAddon={<InnatePowersHelpTip />}>
+                {ptCopy.innateHeading}
+              </GuidedSectionTitle>
               <p className="font-nunito text-sm text-text-secondary">{ptCopy.innateIntroL3}</p>
               <p className="font-nunito text-xs text-text-secondary dark:text-text-secondary">
                 {ptCopy.innateThresholdHint(innateThreshold)}

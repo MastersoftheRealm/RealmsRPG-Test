@@ -3,7 +3,7 @@
  * @see GAME_RULES.md — Melee/Thrown → Strength, Ranged → Acuity, Finesse → Agility
  */
 
-import { formatRange, type ItemPropertyPayload } from '@/lib/calculators/item-calc';
+import { resolveWeaponRangeDisplay, type ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import { PROPERTY_IDS } from '@/lib/id-constants';
 import type { Abilities, AbilityName } from '@/types';
 
@@ -113,9 +113,10 @@ export function getWeaponAttackAbility(
   if (hasFinesseProperty(properties)) return 'agility';
   if (hasThrownProperty(properties)) return 'strength';
 
-  const rangeStr =
-    rangeOverride?.trim() ||
-    formatRange((properties ?? []) as ItemPropertyPayload[]);
+  const rangeStr = resolveWeaponRangeDisplay(
+    rangeOverride,
+    (properties ?? []) as ItemPropertyPayload[]
+  );
   if (rangeStr.toLowerCase() !== 'melee') return 'acuity';
 
   return 'strength';

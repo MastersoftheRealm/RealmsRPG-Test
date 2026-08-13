@@ -334,6 +334,7 @@ export function GuidedEquipmentL1Phase({
               trainingPoints: row.trainingPoints,
               abilityRequirement: row.abilityRequirement,
               itemProperties,
+              storedRange: row.range,
             });
           } else if (phase === 'armor') {
             const armorStats = armorStatsForRef(row.id, officialItems, codexEquipment);

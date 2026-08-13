@@ -20,7 +20,7 @@ import {
   type LoadoutItemCategory,
 } from '@/lib/guided-creator/resolve-loadout-items';
 import { isItemSelectedInDraft } from '@/lib/guided-creator/loadout-pool';
-import { normalizeId } from '@/lib/utils';
+import { findByNormalizedId } from '@/lib/utils';
 
 export { isItemSelectedInDraft };
 
@@ -56,25 +56,14 @@ function normalizeProperties(
   });
 }
 
-function findLibraryRow(
-  id: string,
-  officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
-): LibraryItem | CodexEquipmentItem | undefined {
-  const key = normalizeId(id);
-  return (
-    officialItems.find((i) => normalizeId(i.id) === key) ??
-    codexEquipment.find((i) => normalizeId(i.id) === key)
-  );
-}
-
 export function resolveItemTrainingPoints(
   itemId: string,
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
   itemProperties: ItemPropertyTpRow[]
 ): number | null {
-  const row = findLibraryRow(itemId, officialItems, codexEquipment);
+  const row =
+    findByNormalizedId(officialItems, itemId) ?? findByNormalizedId(codexEquipment, itemId);
   if (!row) return null;
   const props = normalizeProperties(
     'properties' in row ? row.properties : [],

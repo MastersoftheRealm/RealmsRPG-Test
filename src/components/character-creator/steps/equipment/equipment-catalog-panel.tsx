@@ -2,7 +2,7 @@
 
 import { cn, formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import {
-  formatRange,
+  resolveWeaponRangeDisplay,
   trainingPointsForItemPropertyRef,
   type ItemPropertyPayload,
 } from '@/lib/calculators/item-calc';
@@ -324,7 +324,7 @@ export function EquipmentCatalogPanel({
 
                     if (activeTab === 'weapon') {
                       const propPayloads = (item.properties ?? []) as ItemPropertyPayload[];
-                      const rangeLabel = formatRange(propPayloads);
+                      const rangeLabel = resolveWeaponRangeDisplay(undefined, propPayloads);
                       const rangeFacts = buildEntityMetadataDetailSections({
                         range:
                           rangeLabel && rangeLabel.toLowerCase() !== 'melee'

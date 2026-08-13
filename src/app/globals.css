@@ -678,6 +678,31 @@
     }
   }
 
+  /*
+    Expand tap target without growing flex/grid track (TASK-725).
+    Layout box stays the 16px icon; ::after is the extra hit area.
+  */
+  .hit-area-layout-neutral {
+    position: relative;
+  }
+
+  .hit-area-layout-neutral::after {
+    content: '';
+    position: absolute;
+    inset: -14px;
+  }
+
+  @media (min-width: 768px) {
+    .hit-area-layout-neutral::after {
+      inset: -6px;
+    }
+  }
+
+  .hit-area-layout-neutral:hover,
+  .hit-area-layout-neutral:focus-visible {
+    z-index: 1;
+  }
+
   /* Modal pop-in animation matching vanilla site */
   @keyframes modal-pop {
     0% {

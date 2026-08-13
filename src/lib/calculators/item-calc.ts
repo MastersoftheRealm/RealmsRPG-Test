@@ -13,7 +13,7 @@ import {
   type HasIdAndName,
 } from '@/lib/id-constants';
 import { ITEM_PROPERTY_CONSTANTS } from '@/lib/game/constants';
-import { compactResolvedWeaponRange, normalizeRangeDisplay } from '@/lib/utils/string';
+import { compactResolvedWeaponRange, formatDamageDisplay, normalizeRangeDisplay } from '@/lib/utils/string';
 import type { ItemProperty } from '@/hooks/codex-types';
 
 // Re-export for convenience
@@ -322,17 +322,6 @@ export function calculateItemCosts(
 }
 
 /**
- * Format damage array as a string.
- */
-export function formatDamage(damageArr?: ItemDamage[]): string {
-  if (!Array.isArray(damageArr)) return '';
-  return damageArr
-    .filter((d) => d && d.amount && d.size && d.type && d.type !== 'none')
-    .map((d) => `${d.amount}d${d.size} ${d.type}`)
-    .join(', ');
-}
-
-/**
  * Format range from properties.
  */
 export function formatRange(properties: ItemPropertyPayload[]): string {
@@ -500,8 +489,8 @@ export function deriveItemDisplay(
     costs.totalCurrency,
     costs.totalIP
   );
-  const damageStr = formatDamage(item.damage);
-  const rangeStr = formatRange(properties);
+  const damageStr = formatDamageDisplay(item.damage);
+  const rangeStr = resolveWeaponRangeDisplay(undefined, properties);
   const dr = deriveDamageReductionFromProperties(properties);
   const profs = extractProficiencies(properties, propertiesData);
 

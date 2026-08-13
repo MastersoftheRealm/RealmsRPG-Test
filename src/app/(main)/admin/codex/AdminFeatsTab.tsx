@@ -1,19 +1,20 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useId } from 'react';
 import {
   ChipSelect,
   AbilityRequirementFilter,
   TagFilter,
   SelectFilter,
-  FilterSection,
+  FilterInput,
+  FILTER_LABEL_ROW_CLASS,
 } from '@/components/shared/filters';
 import { CodexFeatRow } from '@/components/codex';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
 } from '@/components/shared';
-import { Button, Input, IconButton, useToast } from '@/components/ui';
+import { Button, IconButton, useToast } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
@@ -50,6 +51,7 @@ export function AdminFeatsTab() {
   const { data: skills = [] } = useCodexSkills();
   const { sortState, handleSort, sortItems } = useSort('name');
   const queryClient = useQueryClient();
+  const maxLevelFilterId = useId();
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Feat | null>(null);
   const [saving, setSaving] = useState(false);
@@ -241,11 +243,15 @@ export function AdminFeatsTab() {
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search names, tags, descriptions..."
         filters={
-          <FilterSection>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               <div className="filter-group">
-                <label className="block text-sm font-medium text-text-secondary mb-1">Max Required Level</label>
-                <Input
+                <div className={FILTER_LABEL_ROW_CLASS}>
+                  <label htmlFor={maxLevelFilterId} className="text-sm font-medium leading-5 text-text-secondary">
+                    Max Required Level
+                  </label>
+                </div>
+                <FilterInput
+                  id={maxLevelFilterId}
                   type="number"
                   min={0}
                   value={filters.maxLevel ?? ''}
@@ -308,8 +314,7 @@ export function AdminFeatsTab() {
                 onChange={(v) => setFilters((f) => ({ ...f, stateFeatMode: (v || '') as '' | 'only' | 'hide' }))}
                 placeholder="All states"
               />
-            </div>
-          </FilterSection>
+          </div>
         }
         headerColumns={ADMIN_FEAT_HEADER_COLUMNS}
         gridColumns={FEAT_GRID_COLUMNS}

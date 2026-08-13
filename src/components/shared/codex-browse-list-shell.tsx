@@ -1,7 +1,7 @@
 /**
  * CodexBrowseListShell — shared list chrome for Admin Codex + Codex browse.
  *
- * Owns SectionHeader (optional) → Search → filters slot → ListHeader →
+ * Owns SectionHeader (optional) → Search + Filters (same row) → ListHeader →
  * loading / empty / row children. Entity-specific rows and modals stay in each tab.
  *
  * Not for Official* library grids (`OfficialEntityList`) or Admin Archetypes
@@ -26,10 +26,12 @@ export interface CodexBrowseListShellProps {
   onSearchChange: (value: string) => void;
   searchPlaceholder: string;
   searchAriaLabel?: string;
-  /** Optional control beside search (e.g. admin Create). */
+  /** Optional control after Filters (e.g. admin Create). Does not replace the Filters slot. */
   searchTrailing?: ReactNode;
-  /** Slot between search and ListHeader (FilterSection, banners, etc.). */
+  /** Filter panel body only — ListSearchToolbar wraps FilterSection compact (TASK-721). */
   filters?: ReactNode;
+  /** Active-filter badge on the collapsed Filters toggle. */
+  filterActiveCount?: number;
   headerColumns: ListColumn[];
   gridColumns: string;
   sortState: SortState;
@@ -59,6 +61,7 @@ export function CodexBrowseListShell({
   searchAriaLabel,
   searchTrailing,
   filters,
+  filterActiveCount,
   headerColumns,
   gridColumns,
   sortState,
@@ -93,10 +96,10 @@ export function CodexBrowseListShell({
         placeholder={searchPlaceholder}
         searchAriaLabel={searchAriaLabel}
         trailing={searchTrailing}
+        filters={filters}
+        filterActiveCount={filterActiveCount}
         className={sectionTitle != null ? 'mt-2' : undefined}
       />
-
-      {filters}
 
       <ListHeader
         columns={headerColumns}

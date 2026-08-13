@@ -1,6 +1,6 @@
 'use client';
 
-import { Edit, Copy, Plus, AlertCircle } from 'lucide-react';
+import { Edit, Copy, BookPlus, AlertCircle } from 'lucide-react';
 import type { Dispatch, MouseEvent, ReactNode, SetStateAction } from 'react';
 import { cn } from '@/lib/utils';
 import { formatCostDisplay } from '@/lib/game/creator-constants';
@@ -224,7 +224,7 @@ export function GridListRowExpandedBody({
                   size="sm"
                   onClick={(e) => { e.stopPropagation(); onAddToLibrary(); }}
                 >
-                  <Plus className="w-4 h-4" />
+                  <BookPlus className="w-4 h-4" />
                   Add to my library
                 </Button>
               )}

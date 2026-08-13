@@ -8,7 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { formatListCellLabel } from '@/lib/utils';
-import { ChipSelect, FilterSection } from '@/components/shared/filters';
+import { ChipSelect } from '@/components/shared/filters';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
@@ -284,8 +284,7 @@ export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public'
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search names, descriptions..."
         filters={
-          <FilterSection>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <ChipSelect
                 label="Type"
                 placeholder="Choose type"
@@ -303,8 +302,7 @@ export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public'
                 onSelect={(v) => setFilters(f => ({ ...f, sizes: [...f.sizes, v] }))}
                 onRemove={(v) => setFilters(f => ({ ...f, sizes: f.sizes.filter(s => s !== v) }))}
               />
-            </div>
-          </FilterSection>
+          </div>
         }
         headerColumns={SPECIES_COLUMNS}
         gridColumns={SPECIES_GRID_COLUMNS}

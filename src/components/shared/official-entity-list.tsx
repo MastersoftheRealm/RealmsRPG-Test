@@ -19,11 +19,11 @@ import {
   SectionHeader,
 } from '@/components/shared';
 import { ListSearchToolbar } from './list-search-toolbar';
-import { LibraryAddToLibraryButton } from '@/components/shared/library-add-to-library-button';
 import {
+  LibraryAddToLibraryButton,
   LibraryAddToCharacterButton,
-  LibraryRowActionSlot,
-} from '@/components/shared/library-row-action-slot';
+} from '@/components/shared/library-add-to-library-button';
+import { LibraryRowActionSlot } from '@/components/shared/library-row-action-slot';
 import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
 import type { ListHeaderRowChrome } from '@/components/shared/grid-list-row-chrome';
 import type { ListRowThumbnailProps } from '@/components/shared/list-row-thumbnail';
@@ -97,10 +97,12 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   };
   onEdit?: (id: string) => void;
   onDelete?: (id: string, name: string) => void;
-  /** Optional control beside search (e.g. admin Create). Keeps list chrome when empty. */
+  /** Optional control after Filters (e.g. admin Create). Keeps list chrome when empty. */
   searchTrailing?: ReactNode;
-  /** Slot between search and ListHeader (FilterSection, banners, etc.). */
+  /** Filter panel body only — ListSearchToolbar wraps FilterSection compact (TASK-721). */
   filters?: ReactNode;
+  /** Active-filter badge on the collapsed Filters toggle. */
+  filterActiveCount?: number;
 }
 
 export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
@@ -139,6 +141,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   onDelete,
   searchTrailing,
   filters,
+  filterActiveCount,
 }: OfficialEntityListProps<TRow, TItem>) {
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
@@ -178,8 +181,9 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
         onSearchChange={setSearch}
         placeholder={searchPlaceholder}
         trailing={searchTrailing}
+        filters={filters}
+        filterActiveCount={filterActiveCount}
       />
-      {filters}
       <ListHeader
         columns={headerColumns}
         gridColumns={gridColumns}

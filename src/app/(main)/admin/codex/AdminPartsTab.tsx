@@ -7,7 +7,7 @@ import {
   GridListRow,
 } from '@/components/shared';
 import { Button, IconButton, useToast } from '@/components/ui';
-import { SelectFilter, FilterSection } from '@/components/shared/filters';
+import { SelectFilter } from '@/components/shared/filters';
 import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { formatListCellLabel } from '@/lib/utils';
@@ -257,8 +257,7 @@ export function AdminPartsTab() {
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search parts..."
         filters={
-          <FilterSection>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <SelectFilter
                 label="Category"
                 value={filters.categoryFilter}
@@ -287,8 +286,7 @@ export function AdminPartsTab() {
                 onChange={(v) => setFilters((f) => ({ ...f, mechanicMode: (v || '') as '' | 'only' | 'hide' }))}
                 placeholder="All parts"
               />
-            </div>
-          </FilterSection>
+          </div>
         }
         headerColumns={ADMIN_PART_COLUMNS}
         gridColumns={PART_GRID_COLUMNS}

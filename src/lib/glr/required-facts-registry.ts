@@ -327,10 +327,14 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
       FACT.recovery,
     ],
   },
+  /**
+   * Mixed Codex/Admin equipment browse (TASK-723): Category / Currency / Rarity columns.
+   * Damage and Damage Reduction are expand chips, not required columns.
+   */
   'codex-equipment': {
     surfaceId: 'codex-equipment',
     entityType: 'equipment',
-    requiredFacts: [FACT.damage, FACT.damageReduction],
+    requiredFacts: [FACT.category, FACT.currency, FACT.rarity],
   },
   /**
    * Guided powers L2/L3 — Official Library browse columns (TASK-709).
@@ -417,10 +421,14 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
       },
     ],
   },
+  /**
+   * Guided gear L2/L3 (TASK-724): Category (taxonomy) / Rarity / Currency.
+   * Weapon/armor keep ARMAMENT_LIBRARY_CONFIG (no type-as-category column).
+   */
   'guided-equipment-gear-l3': {
     surfaceId: 'guided-equipment-gear-l3',
     entityType: 'equipment',
-    requiredFacts: [FACT.rarity, FACT.currency],
+    requiredFacts: [FACT.category, FACT.rarity, FACT.currency],
   },
 };
 

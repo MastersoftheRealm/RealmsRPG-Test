@@ -1,13 +1,19 @@
 /**
  * Codex Skills Tab
  * ================
- * Skill list with filters: search, abilities, base skill, sub-skill mode.
+ * Skill list with filters: search, abilities, base skill, sub-skill mode,
+ * plus shared CharacterFilter (known / not known / base-owned).
  */
 
 'use client';
 
-import { useState, useMemo } from 'react';
-import { ChipSelect, SelectFilter, FilterSection } from '@/components/shared/filters';
+import { useState, useMemo, useCallback, useId } from 'react';
+import {
+  ChipSelect,
+  SelectFilter,
+  CharacterFilter,
+  FILTER_CONTROL_ROW_CLASS,
+} from '@/components/shared/filters';
 import { CodexSkillRow } from '@/components/codex';
 import {
   CodexBrowseListShell,
@@ -15,38 +21,66 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
-import { useCodexSkills, type Skill } from '@/hooks';
+import { useCodexSkills, useCharacter, type Skill } from '@/hooks';
+import { cn } from '@/lib/utils';
 import {
   SKILL_GRID_COLUMNS,
   SKILL_HEADER_COLUMNS,
   buildSkillFilterOptions,
   buildSkillIdToName,
+  collectCharacterSkillKeys,
   filterSkills,
   sortSkillsForBaseFilter,
+  type SkillKnownMode,
   type SkillListFilters,
 } from '@/lib/codex/skill-list';
+import {
+  readInitialLibraryCharacterFilterId,
+  writePersistedLibraryCharacterFilterId,
+} from '@/lib/library/character-filter-persistence';
 
-interface SkillFilters extends SkillListFilters {
-  subSkillMode: 'all' | 'only' | 'hide';
-}
-
-function SkillCard({ skill, skillIdToName }: { skill: Skill; skillIdToName: Map<string, string> }) {
-  return <CodexSkillRow skill={skill} skillIdToName={skillIdToName} />;
-}
+const SKILL_CHARACTER_FILTER_HELP =
+  'Filter this list by a character you own. Optionally keep only skills they know, skills they do not know, or sub-skills for a base skill they have.';
 
 export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
   const loadPublicCodex = codexMode === 'public';
   const { data: skills, isLoading, error, refetch } = useCodexSkills({ enabled: loadPublicCodex });
   const { sortState, handleSort, sortItems } = useSort('name');
+  const baseOwnedId = useId();
 
-  const skillIdToName = useMemo(() => buildSkillIdToName(skills), [skills]);
+  const [characterFilterId, setCharacterFilterId] = useState(() =>
+    readInitialLibraryCharacterFilterId(codexMode === 'public')
+  );
 
-  const [filters, setFilters] = useState<SkillFilters>({
+  const [filters, setFilters] = useState<SkillListFilters>({
     search: '',
     abilities: [],
     baseSkill: '',
     subSkillMode: 'all',
+    knownMode: 'all',
+    baseSkillOwnedOnly: false,
   });
+
+  const handleCharacterFilterChange = useCallback((id: string) => {
+    setCharacterFilterId(id);
+    if (!id) {
+      setFilters((f) => ({ ...f, knownMode: 'all', baseSkillOwnedOnly: false }));
+    }
+    writePersistedLibraryCharacterFilterId(id);
+  }, []);
+
+  const { data: characterResult } = useCharacter(
+    loadPublicCodex ? characterFilterId || undefined : undefined
+  );
+  const character = characterResult?.character ?? undefined;
+  const hasCharacter = Boolean(characterFilterId && character);
+
+  const skillIdToName = useMemo(() => buildSkillIdToName(skills), [skills]);
+
+  const characterKnownIds = useMemo(() => {
+    if (!characterFilterId || !character) return null;
+    return collectCharacterSkillKeys(character.skills);
+  }, [characterFilterId, character]);
 
   const filterOptions = useMemo(
     () => buildSkillFilterOptions(skills, skillIdToName, { includeCategoryBaseSkills: true }),
@@ -55,10 +89,10 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
 
   const filteredSkills = useMemo(() => {
     if (!skills) return [];
-    const filtered = filterSkills(skills, filters, skillIdToName);
+    const filtered = filterSkills(skills, filters, skillIdToName, characterKnownIds);
     if (filters.baseSkill) return sortSkillsForBaseFilter(filtered, filters.baseSkill);
     return sortItems<Skill>(filtered);
-  }, [skills, filters, sortItems, skillIdToName]);
+  }, [skills, filters, sortItems, skillIdToName, characterKnownIds]);
 
   if (codexMode === 'my') {
     return <CodexMyCodexEmpty />;
@@ -72,7 +106,14 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
       onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
       searchPlaceholder="Search names, descriptions..."
       filters={
-        <FilterSection>
+        <>
+          <CharacterFilter
+            value={characterFilterId}
+            onChange={handleCharacterFilterChange}
+            className="mb-4 min-w-0 max-w-md border-b border-border-light pb-4"
+            helpContent={SKILL_CHARACTER_FILTER_HELP}
+          />
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <ChipSelect
               label="Ability"
@@ -112,8 +153,47 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
               }
               placeholder={null}
             />
+
+            {hasCharacter ? (
+              <>
+                <SelectFilter
+                  label="Known"
+                  value={filters.knownMode ?? 'all'}
+                  options={[
+                    { value: 'all', label: 'All skills' },
+                    { value: 'known', label: 'Known' },
+                    { value: 'not-known', label: 'Not known' },
+                  ]}
+                  onChange={(v) =>
+                    setFilters((f) => ({ ...f, knownMode: v as SkillKnownMode }))
+                  }
+                  placeholder={null}
+                />
+
+                <div className="filter-group min-w-0">
+                  <div className="mb-1 text-sm font-medium text-text-secondary">Base skill</div>
+                  <label
+                    htmlFor={baseOwnedId}
+                    className={cn(FILTER_CONTROL_ROW_CLASS, 'cursor-pointer gap-2')}
+                  >
+                    <input
+                      id={baseOwnedId}
+                      type="checkbox"
+                      className="h-4 w-4 shrink-0 rounded border-border-light text-primary-fg focus:ring-primary-outline-border"
+                      checked={Boolean(filters.baseSkillOwnedOnly)}
+                      onChange={(e) =>
+                        setFilters((f) => ({ ...f, baseSkillOwnedOnly: e.target.checked }))
+                      }
+                    />
+                    <span className="text-sm text-text-primary">
+                      Sub-skills whose base skill I have
+                    </span>
+                  </label>
+                </div>
+              </>
+            ) : null}
           </div>
-        </FilterSection>
+        </>
       }
       headerColumns={SKILL_HEADER_COLUMNS}
       gridColumns={SKILL_GRID_COLUMNS}
@@ -124,7 +204,7 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
       emptyTitle="No skills match your filters."
     >
       {filteredSkills.map((skill: Skill) => (
-        <SkillCard key={skill.id} skill={skill} skillIdToName={skillIdToName} />
+        <CodexSkillRow key={skill.id} skill={skill} skillIdToName={skillIdToName} />
       ))}
     </CodexBrowseListShell>
   );

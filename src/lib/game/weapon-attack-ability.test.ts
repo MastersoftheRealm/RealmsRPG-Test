@@ -132,5 +132,17 @@ describe('weapon-attack-ability', () => {
         ability: 'acuity',
       });
     });
+
+    it('treats corrupt stored range override as melee', () => {
+      expect(getWeaponAttackAbility([], '0')).toBe('strength');
+      expect(getWeaponAttackAbility([], '1')).toBe('strength');
+      expect(
+        getWeaponAttackBonusFromProperties([], abilities, martialProficiency, '0')
+      ).toEqual({
+        bonus: 5,
+        abilityName: 'Strength',
+        ability: 'strength',
+      });
+    });
   });
 });

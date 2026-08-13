@@ -4,6 +4,10 @@ import { useMemo } from 'react';
 import { MapPin } from 'lucide-react';
 import { useCodexFeats, useCodexSkills, useEquipment, useOfficialLibrary } from '@/hooks';
 import { getPathRecommendationsForLevel } from '@/lib/game/archetype-path';
+import {
+  indexDisplayNamesByNormalizedIds,
+  resolveNormalizedRefList,
+} from '@/lib/utils';
 import type { ArchetypePathRecommendations, CharacterArchetype } from '@/types/archetype';
 
 function pathRecommendationsHasContent(rec: ArchetypePathRecommendations | undefined): boolean {
@@ -22,53 +26,6 @@ function pathRecommendationsHasContent(rec: ArchetypePathRecommendations | undef
   ];
   if (lists.some((list) => list && list.length > 0)) return true;
   return Boolean(rec.notes?.trim());
-}
-
-function buildLookupMaps(
-  items: Array<{ id?: string | number; name?: string; docId?: string }>
-): { byId: Map<string, string>; byName: Map<string, string> } {
-  const byId = new Map<string, string>();
-  const byName = new Map<string, string>();
-  for (const item of items) {
-    const name = String(item.name ?? '').trim();
-    if (!name) continue;
-    const ids = [item.id, item.docId].filter(Boolean).map(String);
-    for (const id of ids) {
-      byId.set(id, name);
-      byId.set(id.toLowerCase(), name);
-    }
-    byName.set(name.toLowerCase(), name);
-  }
-  return { byId, byName };
-}
-
-function resolveRefLabel(
-  ref: string,
-  byId: Map<string, string>,
-  byName: Map<string, string>
-): string {
-  const trimmed = ref.trim();
-  const colon = trimmed.indexOf(':');
-  const idPart = colon >= 0 ? trimmed.slice(0, colon).trim() : trimmed;
-  const qtyPart = colon >= 0 ? trimmed.slice(colon + 1).trim() : '';
-  const label =
-    byId.get(idPart) ??
-    byId.get(idPart.toLowerCase()) ??
-    byName.get(idPart.toLowerCase()) ??
-    idPart;
-  if (qtyPart && Number.parseInt(qtyPart, 10) > 1) {
-    return `${label} ×${qtyPart}`;
-  }
-  return label;
-}
-
-function resolveRefList(
-  refs: string[] | undefined,
-  byId: Map<string, string>,
-  byName: Map<string, string>
-): string[] {
-  if (!refs?.length) return [];
-  return refs.map((ref) => resolveRefLabel(ref, byId, byName));
 }
 
 function GuidanceSection({
@@ -128,20 +85,24 @@ export function PathRemoveGuidance({
 
   const resolved = useMemo(() => {
     if (!recommendations) return null;
-    const featLookup = buildLookupMaps(feats);
-    const equipLookup = buildLookupMaps([...equipment, ...publicItems]);
-    const powerLookup = buildLookupMaps(publicPowers);
-    const techniqueLookup = buildLookupMaps(publicTechniques);
+    const featLookup = indexDisplayNamesByNormalizedIds(feats);
+    const equipLookup = indexDisplayNamesByNormalizedIds([...equipment, ...publicItems]);
+    const powerLookup = indexDisplayNamesByNormalizedIds(publicPowers);
+    const techniqueLookup = indexDisplayNamesByNormalizedIds(publicTechniques);
 
     return {
-      removeFeats: resolveRefList(recommendations.removeFeats, featLookup.byId, featLookup.byName),
-      removePowers: resolveRefList(recommendations.removePowers, powerLookup.byId, powerLookup.byName),
-      removeTechniques: resolveRefList(
+      removeFeats: resolveNormalizedRefList(recommendations.removeFeats, featLookup.byId, featLookup.byName),
+      removePowers: resolveNormalizedRefList(recommendations.removePowers, powerLookup.byId, powerLookup.byName),
+      removeTechniques: resolveNormalizedRefList(
         recommendations.removeTechniques,
         techniqueLookup.byId,
         techniqueLookup.byName
       ),
-      removeArmaments: resolveRefList(recommendations.removeArmaments, equipLookup.byId, equipLookup.byName),
+      removeArmaments: resolveNormalizedRefList(
+        recommendations.removeArmaments,
+        equipLookup.byId,
+        equipLookup.byName
+      ),
     };
   }, [recommendations, feats, equipment, publicPowers, publicTechniques, publicItems]);
 
@@ -215,27 +176,35 @@ export function PathLevelGuidance({ archetype, pathName, targetLevel }: PathLeve
 
   const resolved = useMemo(() => {
     if (!recommendations) return null;
-    const featLookup = buildLookupMaps(feats);
-    const skillLookup = buildLookupMaps(skills);
-    const equipLookup = buildLookupMaps([...equipment, ...publicItems]);
-    const powerLookup = buildLookupMaps(publicPowers);
-    const techniqueLookup = buildLookupMaps(publicTechniques);
+    const featLookup = indexDisplayNamesByNormalizedIds(feats);
+    const skillLookup = indexDisplayNamesByNormalizedIds(skills);
+    const equipLookup = indexDisplayNamesByNormalizedIds([...equipment, ...publicItems]);
+    const powerLookup = indexDisplayNamesByNormalizedIds(publicPowers);
+    const techniqueLookup = indexDisplayNamesByNormalizedIds(publicTechniques);
 
     return {
-      feats: resolveRefList(recommendations.feats, featLookup.byId, featLookup.byName),
-      skills: resolveRefList(recommendations.skills, skillLookup.byId, skillLookup.byName),
-      powers: resolveRefList(recommendations.powers, powerLookup.byId, powerLookup.byName),
-      techniques: resolveRefList(recommendations.techniques, techniqueLookup.byId, techniqueLookup.byName),
-      armaments: resolveRefList(recommendations.armaments, equipLookup.byId, equipLookup.byName),
-      equipment: resolveRefList(recommendations.equipment, equipLookup.byId, equipLookup.byName),
-      removeFeats: resolveRefList(recommendations.removeFeats, featLookup.byId, featLookup.byName),
-      removePowers: resolveRefList(recommendations.removePowers, powerLookup.byId, powerLookup.byName),
-      removeTechniques: resolveRefList(
+      feats: resolveNormalizedRefList(recommendations.feats, featLookup.byId, featLookup.byName),
+      skills: resolveNormalizedRefList(recommendations.skills, skillLookup.byId, skillLookup.byName),
+      powers: resolveNormalizedRefList(recommendations.powers, powerLookup.byId, powerLookup.byName),
+      techniques: resolveNormalizedRefList(
+        recommendations.techniques,
+        techniqueLookup.byId,
+        techniqueLookup.byName
+      ),
+      armaments: resolveNormalizedRefList(recommendations.armaments, equipLookup.byId, equipLookup.byName),
+      equipment: resolveNormalizedRefList(recommendations.equipment, equipLookup.byId, equipLookup.byName),
+      removeFeats: resolveNormalizedRefList(recommendations.removeFeats, featLookup.byId, featLookup.byName),
+      removePowers: resolveNormalizedRefList(recommendations.removePowers, powerLookup.byId, powerLookup.byName),
+      removeTechniques: resolveNormalizedRefList(
         recommendations.removeTechniques,
         techniqueLookup.byId,
         techniqueLookup.byName
       ),
-      removeArmaments: resolveRefList(recommendations.removeArmaments, equipLookup.byId, equipLookup.byName),
+      removeArmaments: resolveNormalizedRefList(
+        recommendations.removeArmaments,
+        equipLookup.byId,
+        equipLookup.byName
+      ),
       notes: recommendations.notes?.trim(),
     };
   }, [recommendations, feats, skills, equipment, publicPowers, publicTechniques, publicItems]);

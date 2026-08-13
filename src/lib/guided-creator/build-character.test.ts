@@ -124,6 +124,56 @@ describe('buildGuidedCharacterPayload', () => {
     expect((lean.powers?.[0] as { parts?: unknown })?.parts).toBeUndefined();
   });
 
+  it('resolves user-library weapon names by docId when saving', () => {
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        loadoutWeapons: [{ id: 'user-weapon-uuid', quantity: 1 }],
+        armaments: [{ id: 'stale-official-id', quantity: 1 }],
+      }),
+      {
+        officialItems: [
+          {
+            id: 'user-row',
+            docId: 'user-weapon-uuid',
+            name: 'Homebrew Blade',
+            type: 'weapon',
+            properties: [],
+            description: 'A custom sword.',
+          },
+        ],
+      }
+    );
+
+    expect(payload.equipment?.weapons?.[0]).toMatchObject({
+      id: 'user-weapon-uuid',
+      name: 'Homebrew Blade',
+    });
+  });
+
+  it('resolves user-library power names by docId when saving', () => {
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        powerIds: ['user-power-uuid'],
+        innatePowerIds: [],
+      }),
+      {
+        officialPowers: [
+          {
+            id: 'user-row',
+            docId: 'user-power-uuid',
+            name: 'Homebrew Bolt',
+            parts: [],
+          },
+        ],
+      }
+    );
+
+    expect(payload.powers?.[0]).toMatchObject({
+      id: 'user-power-uuid',
+      name: 'Homebrew Bolt',
+    });
+  });
+
   it('returns empty proficiencies when loadout has no TP-costing parts/properties', () => {
     const payload = buildGuidedCharacterPayload(minimalDraft({ loadoutWeapons: [], armaments: [] }), {
       officialItems: [],

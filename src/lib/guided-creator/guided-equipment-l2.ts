@@ -78,6 +78,33 @@ function rarityDisplay(row: EligibleEquipmentRow): string {
   return formatListCellLabel(row.rarity ?? 'common') || 'Common';
 }
 
+/** Phase type labels — not taxonomy (Adventuring, Tools, …). */
+const PHASE_IMPLIED_CATEGORY = new Set([
+  'weapon',
+  'armor',
+  'shield',
+  'equipment',
+  'item',
+  'gear',
+]);
+
+/**
+ * Gear Category cell: Codex taxonomy only. Blank when missing or when the
+ * value just repeats the phase type (Weapon/Armor/Equipment).
+ */
+function taxonomyCategoryColumnValue(
+  itemCategory: string | null | undefined,
+  type: string | undefined
+): string {
+  const raw = String(itemCategory ?? '').trim();
+  if (!raw) return '-';
+  const lower = raw.toLowerCase();
+  if (PHASE_IMPLIED_CATEGORY.has(lower)) return '-';
+  const typeLower = String(type ?? '').trim().toLowerCase();
+  if (typeLower && lower === typeLower) return '-';
+  return formatListCellLabel(raw);
+}
+
 function rangeDisplay(row: EligibleEquipmentRow): string {
   return resolveWeaponRangeDisplay(row.range, (row.properties ?? []) as ItemPropertyPayload[]);
 }
@@ -138,6 +165,8 @@ function toOfficialItemRowForGuided(
 /**
  * Guided L2/L3 columns — weapon/armor via shared `armamentRowColumns`.
  * Mixed weapon+shield phase keeps weapon headers; shields put Block in Damage.
+ * Gear adds Category (taxonomy); weapon/armor do not — type is implied by phase
+ * and ARMAMENT_LIBRARY_CONFIG has no category column (TASK-724).
  */
 function buildL2Columns(
   phase: EquipmentPhase,
@@ -147,6 +176,12 @@ function buildL2Columns(
 ): NonNullable<SelectableItem['columns']> {
   if (phase === 'gear') {
     return [
+      {
+        key: 'category',
+        label: 'Category',
+        value: taxonomyCategoryColumnValue(row.itemCategory, row.type),
+        align: 'center',
+      },
       { key: 'rarity', label: 'Rarity', value: rarityDisplay(row), align: 'center' },
       { key: 'currency', label: 'Currency', value: String(unitCost), align: 'center' },
     ];

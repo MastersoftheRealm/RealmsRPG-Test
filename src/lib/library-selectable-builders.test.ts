@@ -293,7 +293,10 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     });
 
     expect(rows).toHaveLength(1);
-    expect(rows[0]?.columns?.find((c) => c.key === 'energy')?.value).toBe(String(officialEnergy));
+    // Guided L2 reuses the official-list column builders, so the Energy cell carries the
+    // numeric value through unchanged. Comparing to the raw value (not a stringified copy)
+    // is what actually pins parity between the two surfaces.
+    expect(rows[0]?.columns?.find((c) => c.key === 'energy')?.value).toBe(officialEnergy);
     expect(rows[0]?.data).toMatchObject({ energy: officialEnergy });
   });
 
@@ -394,6 +397,6 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(typeof officialEnergy).toBe('number');
     expect(officialEnergy).toBeGreaterThan(0);
     expect(budgetEnergy).toBe(officialEnergy);
-    expect(rows[0]?.columns?.find((c) => c.key === 'energy')?.value).toBe(String(officialEnergy));
+    expect(rows[0]?.columns?.find((c) => c.key === 'energy')?.value).toBe(officialEnergy);
   });
 });

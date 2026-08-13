@@ -44,7 +44,7 @@ export interface InfoTippyProps {
   /** @deprecated JSX and strings render natively; kept for existing call sites. */
   allowHTML?: boolean;
   placement?: TooltipPlacement;
-  /** `inline` = compact trigger aligned with step headings; `icon` = default touch-friendly trigger. */
+  /** @deprecated No-op; layout is always the 16px icon + overlay hit (TASK-725). Kept for existing call sites. */
   size?: 'inline' | 'icon';
   /** Trigger icon color. Default `info` (link blue). Prefer this over one-off `text-*` class fights. */
   tone?: InfoTippyTone;
@@ -70,7 +70,6 @@ export function InfoTippy({
   content,
   label,
   placement = 'top',
-  size = 'icon',
   tone = 'info',
   className,
   children,
@@ -143,10 +142,7 @@ export function InfoTippy({
   const referenceProps = getReferenceProps(touchHoldProps);
 
   const triggerClassName = cn(
-    'inline-flex items-center justify-center rounded-full shrink-0',
-    size === 'inline'
-      ? 'min-h-8 min-w-8 md:min-h-7 md:min-w-7 -my-0.5'
-      : 'min-h-[var(--touch-target-min,44px)] min-w-[var(--touch-target-min,44px)] md:min-h-7 md:min-w-7',
+    'inline-flex size-4 shrink-0 items-center justify-center rounded-full hit-area-layout-neutral',
     TONE_CLASS[tone],
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2',
     className

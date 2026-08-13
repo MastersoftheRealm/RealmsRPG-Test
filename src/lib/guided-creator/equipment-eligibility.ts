@@ -27,6 +27,8 @@ export interface EligibleEquipmentRow {
   id: string;
   name: string;
   type: string;
+  /** Codex/library taxonomy (Adventuring, Tools, …) — not weapon/armor/equipment type. */
+  itemCategory?: string | null;
   rarity?: string | null;
   properties?: WeaponPropertyRef[];
   gold_cost?: number;

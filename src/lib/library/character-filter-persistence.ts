@@ -1,6 +1,6 @@
 /**
  * Shared character-filter persistence (TASK-680 / TASK-681).
- * Library (powers, techniques, armaments) and Codex feats share one localStorage key.
+ * Library (powers, techniques, armaments) and Codex feats/skills share one localStorage key.
  */
 
 export const LIBRARY_CHARACTER_FILTER_KEY = 'library:powerTechniqueCharacterFilterId';

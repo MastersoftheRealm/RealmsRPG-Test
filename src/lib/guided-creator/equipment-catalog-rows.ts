@@ -14,7 +14,13 @@ import { resolveItemUnitCost } from '@/lib/guided-creator/equipment-currency';
 import { resolveItemTrainingPoints } from '@/lib/guided-creator/loadout-tp';
 import { formatWeaponDamageLine } from '@/lib/guided-creator/equipment-phase-stats';
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
-import { normalizeId } from '@/lib/utils';
+import { findByNormalizedId, normalizeId } from '@/lib/utils';
+
+function readTaxonomyCategory(item: unknown): string | undefined {
+  if (!item || typeof item !== 'object') return undefined;
+  const trimmed = String((item as { category?: unknown }).category ?? '').trim();
+  return trimmed || undefined;
+}
 
 /**
  * Official rows: Currency column = market cost (OfficialItemList / Library GLR protocol),
@@ -41,6 +47,7 @@ function rowFromOfficial(
     id: String(item.id),
     name: String(item.name ?? item.id),
     type: item.type,
+    itemCategory: readTaxonomyCategory(item),
     rarity: item.rarity ?? 'common',
     properties: item.properties ?? [],
     gold_cost: currencyCost,
@@ -66,6 +73,7 @@ function rowFromCodex(
     id: String(item.id),
     name: item.name,
     type: item.type,
+    itemCategory: readTaxonomyCategory(item),
     rarity: item.rarity ?? 'common',
     properties: props,
     gold_cost: item.gold_cost ?? item.currency,
@@ -86,7 +94,17 @@ export function buildEquipmentCatalogRows(
     map.set(normalizeId(String(item.id)), rowFromCodex(item, itemProperties));
   }
   for (const item of officialItems) {
-    map.set(normalizeId(String(item.id)), rowFromOfficial(item, itemProperties));
+    const officialRow = rowFromOfficial(item, itemProperties);
+    const existing =
+      map.get(normalizeId(item.id)) ?? map.get(normalizeId(item.docId));
+    const merged = {
+      ...officialRow,
+      itemCategory: officialRow.itemCategory || existing?.itemCategory,
+    };
+    const idKey = normalizeId(item.id);
+    if (idKey) map.set(idKey, merged);
+    const docKey = normalizeId(item.docId);
+    if (docKey) map.set(docKey, merged);
   }
   return map;
 }
@@ -103,10 +121,9 @@ export function weaponDamageLineForRef(
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[]
 ): string | undefined {
-  const key = normalizeId(refId);
-  const official = officialItems.find((i) => normalizeId(String(i.id)) === key);
+  const official = findByNormalizedId(officialItems, refId);
   if (official?.damage?.length) return formatWeaponDamageLine(official.damage);
-  const codex = codexEquipment.find((i) => normalizeId(String(i.id)) === key);
+  const codex = findByNormalizedId(codexEquipment, refId);
   if (codex?.damage?.trim()) return codex.damage.trim();
   return undefined;
 }
@@ -116,11 +133,7 @@ export function libraryRowForRef(
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[]
 ): LibraryItem | CodexEquipmentItem | undefined {
-  const key = normalizeId(refId);
-  return (
-    officialItems.find((i) => normalizeId(String(i.id)) === key) ??
-    codexEquipment.find((i) => normalizeId(String(i.id)) === key)
-  );
+  return findByNormalizedId(officialItems, refId) ?? findByNormalizedId(codexEquipment, refId);
 }
 
 export function armorStatsForRef(
@@ -128,8 +141,7 @@ export function armorStatsForRef(
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[]
 ): { damageReduction?: number | null; agilityPenalty?: number | null } {
-  const key = normalizeId(refId);
-  const official = officialItems.find((i) => normalizeId(String(i.id)) === key);
+  const official = findByNormalizedId(officialItems, refId);
   if (official) {
     const damageReduction = resolveArmorDamageReduction(official);
     return {
@@ -137,7 +149,7 @@ export function armorStatsForRef(
       agilityPenalty: official.agilityReduction ?? null,
     };
   }
-  const codex = codexEquipment.find((i) => normalizeId(String(i.id)) === key);
+  const codex = findByNormalizedId(codexEquipment, refId);
   if (codex) {
     const damageReduction = resolveArmorDamageReduction({
       armor_value: codex.armor_value,

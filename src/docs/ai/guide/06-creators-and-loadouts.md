@@ -24,7 +24,7 @@ See **`REALMS_PRODUCT_OVERVIEW.md` §5.0** for product intent. Two creators coex
 
 1. Archetype → 2. Species → 3. Ancestry → 4. Abilities → 5. Skills → 6. Feats → 7. Equipment → 8. Powers → 9. Finalize
 
-Steps live in `src/components/character-creator/steps/` (e.g., `archetype-step.tsx`, `species-step.tsx`). Matches BUILD_VALIDATION DEV-V-001.
+Steps live in `src/components/character-creator/steps/` (e.g., `archetype-step.tsx`, `species-step.tsx`). Matches BUILD_VALIDATION DEV-V-001 at `/characters/new/advanced` (chooser `/characters/new` is Guided / Custom / Legacy — not step 1 Archetype).
 
 ## Creator load logic (avoid duplication)
 
@@ -69,7 +69,7 @@ Ability, defense, skill, and health/energy allocation should use shared componen
 
 - **Ability / defense editing:** `AbilityScoreEditor` (creators, character sheet) or `AbilitiesSection` (sheet) — both use `PointStatus`, `DecrementButton`, `IncrementButton` from `@/components/shared`.
 - **Skill point allocation:** `SkillsAllocationPage` (character/creature creator) or skills section with `PointStatus` (character sheet).
-- **Health/Energy pool:** `HealthEnergyAllocator` (creators, character sheet) with `ValueStepper` (ADR-0002 neutral button chrome; `colorVariant` colors the value only); use `enableHoldRepeat` only for pool allocation, not for ability/defense steppers.
+- **Health/Energy pool:** `HealthEnergyAllocator` (creators, character sheet) with `ValueStepper` (ADR-0002 neutral button chrome; `colorVariant` colors the value only); pool remaining/total is shared **`PointStatus`** (TASK-729 — Auto-allocate ticks the same chrome as Ability/Skill/TP). Card labels **Health / Energy** on `md+`, **HP / EN** on inline sheet / narrow. `enableHoldRepeat` only for pool allocation, not for ability/defense steppers. Auto-allocate math: `allocateHealthEnergyPool` in `lib/game/formulas.ts`; named highest-cost tip: `getGuidedAutoAllocateHelp` in `tooltip-text.tsx`.
 - **Powered-martial proficiency:** `PoweredMartialSlider` from `@/components/shared` in creature creator and character sheet (ArchetypeSection) when both power and martial proficiency are present.
 
 Use design tokens for colors; avoid raw `blue-*` / `green-*` outside auth.

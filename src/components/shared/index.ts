@@ -102,7 +102,7 @@ export {
   CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
 } from './grid-list-row-chrome';
 
-// ListSearchToolbar — full-span search + trailing slot (ADR-0011)
+// ListSearchToolbar — search + Filters row + trailing slot (ADR-0011 / TASK-721)
 export { ListSearchToolbar } from './list-search-toolbar';
 export type { ListSearchToolbarProps } from './list-search-toolbar';
 
@@ -179,11 +179,11 @@ export {
   CreatureLibraryStatBlockRow,
   CreatureLibraryStatBlockRows,
 } from './creature-library-stat-block-rows';
-export { LibraryAddToLibraryButton } from './library-add-to-library-button';
 export {
+  LibraryAddToLibraryButton,
   LibraryAddToCharacterButton,
-  LibraryRowActionSlot,
-} from './library-row-action-slot';
+} from './library-add-to-library-button';
+export { LibraryRowActionSlot } from './library-row-action-slot';
 
 // Entity library sections (shared list section renderers)
 export {

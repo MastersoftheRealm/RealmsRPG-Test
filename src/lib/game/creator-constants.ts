@@ -187,6 +187,33 @@ export const LEVELS_BY_RARITY = [
   { rarity: 'Ascended', minLevel: 30, maxLevel: Infinity },
 ] as const;
 
+export type LevelRarity = (typeof LEVELS_BY_RARITY)[number]['rarity'];
+
+const RARITY_RANK = new Map(
+  LEVELS_BY_RARITY.map((row, index) => [row.rarity.toLowerCase(), index] as const)
+);
+
+/** Highest rarity bracket whose minLevel ≤ character level (Common at 1–4, …). */
+export function maxRarityForCharacterLevel(level: number): LevelRarity {
+  const lvl = Number.isFinite(level) ? Math.floor(level) : 1;
+  for (let i = LEVELS_BY_RARITY.length - 1; i >= 0; i--) {
+    if (lvl >= LEVELS_BY_RARITY[i].minLevel) return LEVELS_BY_RARITY[i].rarity;
+  }
+  return 'Common';
+}
+
+/** True when the item is at or below `maxRarity`. Missing/unknown rarities stay visible. */
+export function rarityAtOrBelowMax(
+  itemRarity: string | null | undefined,
+  maxRarity: string
+): boolean {
+  if (!itemRarity?.trim()) return true;
+  const itemRank = RARITY_RANK.get(itemRarity.trim().toLowerCase());
+  const maxRank = RARITY_RANK.get(maxRarity.trim().toLowerCase());
+  if (itemRank == null || maxRank == null) return true;
+  return itemRank <= maxRank;
+}
+
 // =============================================================================
 // Conditions
 // =============================================================================

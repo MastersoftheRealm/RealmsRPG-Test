@@ -1,6 +1,6 @@
 /**
  * Guided powers/techniques L2 — UnifiedSelectionModal (TASK-463 / TASK-471 / TASK-573).
- * Replaces in-step GuidedPowersTechniquesBrowsePanel card dump.
+ * Innate mode: add-path uses applyInnateSelection (last-in energy swap, TASK-727).
  */
 
 'use client';
@@ -10,8 +10,10 @@ import {
   UnifiedSelectionModal,
   LoadoutBudgetBar,
   PointStatus,
+  InfoTippy,
   type SelectableItem,
 } from '@/components/shared';
+import { innateEnergyHelp, innatePowersHelp } from '../../../public/tooltip-text';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { Abilities, AbilityName } from '@/types';
@@ -24,6 +26,10 @@ import {
   type PowersTechniquesL2Mode,
 } from '@/lib/guided-creator/powers-techniques-l2';
 import type { PowersTechniquesKind } from '@/lib/guided-creator/power-technique-display';
+import {
+  applyInnateSelection,
+  innateSelectionBlockMessage,
+} from '@/lib/guided-creator/powers-techniques-step-helpers';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
 const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
@@ -62,16 +68,37 @@ function energySpentOf(selected: SelectableItem[]): number {
   }, 0);
 }
 
-/** Innate Energy PointStatus for Powers L1 budget bar + innate L2 footer (TASK-706). */
+function l2InnateEnergyOf(items: SelectableItem[], id: string): number | undefined {
+  const row = items.find((item) => String(item.id) === id);
+  const data = row?.data as { energy?: number } | undefined;
+  return data?.energy;
+}
+
+function l2InnateTpOf(items: SelectableItem[], id: string): number {
+  const row = items.find((item) => String(item.id) === id);
+  const data = row?.data as { tpCost?: number } | undefined;
+  if (data?.tpCost != null) return data.tpCost;
+  return Math.max(0, Math.floor(row?.totalCost ?? 0));
+}
+
+/** Innate Energy PointStatus for Powers L1 budget bar + innate L2 footer (TASK-706 / TASK-726). */
 export function InnateEnergyPointStatus({ total, spent }: { total: number; spent: number }) {
   return (
     <PointStatus
       total={total}
       spent={spent}
       label={ptCopy.innateEnergyLabel}
+      labelAccessory={
+        <InfoTippy content={innateEnergyHelp} label="Innate Energy help" size="inline" />
+      }
       variant="inline"
     />
   );
+}
+
+/** Innate Powers heading (i) — L1 cards + L3 inline catalog (TASK-726). */
+export function InnatePowersHelpTip() {
+  return <InfoTippy content={innatePowersHelp} label="Innate Powers help" size="inline" />;
 }
 
 export function GuidedPowersTechniquesL2Modal({
@@ -154,6 +181,28 @@ export function GuidedPowersTechniquesL2Modal({
     [mode, loadoutTpSpent, tpLimit, innateEnergyMax, onConfirm]
   );
 
+  const nextInnateSelectedIds = useCallback(
+    (currentIds: string[], id: string) => {
+      const applied = applyInnateSelection({
+        selectedIds: currentIds,
+        id,
+        energyOf: (itemId) => l2InnateEnergyOf(selectable, itemId),
+        tpOf: (itemId) => l2InnateTpOf(selectable, itemId),
+        threshold: innateThreshold,
+        energyMax: innateEnergyMax,
+        otherTpSpent: loadoutTpSpent,
+        tpLimit,
+      });
+      if (!applied.ok) {
+        setError(innateSelectionBlockMessage(applied.reason));
+        return currentIds;
+      }
+      setError(null);
+      return applied.nextIds;
+    },
+    [selectable, innateThreshold, innateEnergyMax, loadoutTpSpent, tpLimit]
+  );
+
   const footerExtra = useCallback(
     (selected: SelectableItem[]) => {
       const tpSpent = computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent);
@@ -222,6 +271,7 @@ export function GuidedPowersTechniquesL2Modal({
       scopeExtra={scopeExtra}
       footerExtra={footerExtra}
       confirmDisabled={confirmDisabled}
+      nextSelectedIds={mode === 'innate' ? nextInnateSelectedIds : undefined}
       size="xl"
     />
   );

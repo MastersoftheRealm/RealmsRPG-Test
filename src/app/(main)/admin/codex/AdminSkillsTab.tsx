@@ -6,7 +6,7 @@ import {
   ErrorDisplay as ErrorState,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
-import { ChipSelect, SelectFilter, FilterSection } from '@/components/shared/filters';
+import { ChipSelect, SelectFilter } from '@/components/shared/filters';
 import { CodexSkillRow } from '@/components/codex';
 import { useCodexSkills, type Skill } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
@@ -278,8 +278,7 @@ export function AdminSkillsTab() {
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search names, descriptions..."
         filters={
-          <FilterSection>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <ChipSelect
                 label="Ability"
                 placeholder="Choose ability"
@@ -317,8 +316,7 @@ export function AdminSkillsTab() {
                 }
                 placeholder="All skills"
               />
-            </div>
-          </FilterSection>
+          </div>
         }
         headerColumns={SKILL_HEADER_COLUMNS}
         gridColumns={SKILL_GRID_COLUMNS}

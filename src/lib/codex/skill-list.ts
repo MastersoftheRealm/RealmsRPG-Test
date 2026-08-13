@@ -3,6 +3,8 @@
  */
 
 import type { Skill } from '@/hooks';
+import type { Character } from '@/types';
+import { normalizeId } from '@/lib/utils';
 
 /** Data columns only — admin action chrome uses CodexBrowseListShell `rowChrome`. */
 export const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr';
@@ -18,11 +20,59 @@ export interface SkillFilterOptions {
   baseSkills: string[];
 }
 
+export type SkillKnownMode = 'all' | 'known' | 'not-known';
+
 export interface SkillListFilters {
   search: string;
   abilities: string[];
   baseSkill: string;
   subSkillMode: 'all' | 'only' | 'hide' | '';
+  /** Codex character filter: known vs not known. Ignored without characterKnownIds. */
+  knownMode?: SkillKnownMode;
+  /** Codex character filter: keep sub-skills whose base the character has. */
+  baseSkillOwnedOnly?: boolean;
+}
+
+/** Normalized id + name keys for skills on a saved character (TASK-722). */
+export function collectCharacterSkillKeys(skills: Character['skills'] | undefined): Set<string> {
+  const keys = new Set<string>();
+  if (!skills) return keys;
+  if (Array.isArray(skills)) {
+    for (const row of skills) {
+      const id = normalizeId(row.id);
+      if (id) keys.add(id);
+      const name = normalizeId(row.name);
+      if (name) keys.add(name);
+    }
+    return keys;
+  }
+  for (const key of Object.keys(skills)) {
+    const nk = normalizeId(key);
+    if (nk) keys.add(nk);
+  }
+  return keys;
+}
+
+function skillIsKnown(skill: Skill, knownIds: Set<string>): boolean {
+  return knownIds.has(normalizeId(skill.id)) || knownIds.has(normalizeId(skill.name));
+}
+
+function isSubSkill(skill: Skill): boolean {
+  return skill.base_skill_id !== undefined;
+}
+
+function characterOwnsBaseSkill(
+  skill: Skill,
+  knownIds: Set<string>,
+  skillIdToName: Map<string, string>
+): boolean {
+  if (!isSubSkill(skill) || skill.base_skill_id === 0) return false;
+  const baseId = normalizeId(skill.base_skill_id);
+  const baseName = skillIdToName.get(String(skill.base_skill_id));
+  return (
+    (baseId !== '' && knownIds.has(baseId)) ||
+    (baseName != null && knownIds.has(normalizeId(baseName)))
+  );
 }
 
 export function buildSkillIdToName(skills: Skill[] | undefined): Map<string, string> {
@@ -66,8 +116,11 @@ export function buildSkillFilterOptions(
 export function filterSkills(
   skills: Skill[],
   filters: SkillListFilters,
-  skillIdToName: Map<string, string>
+  skillIdToName: Map<string, string>,
+  characterKnownIds?: Set<string> | null
 ): Skill[] {
+  const knownMode = filters.knownMode ?? 'all';
+
   return skills.filter((s) => {
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
@@ -92,9 +145,20 @@ export function filterSkills(
       if (!isThisBaseSkill && !hasThisBaseSkill) return false;
     }
 
-    const isSubSkill = s.base_skill_id !== undefined;
-    if (filters.subSkillMode === 'only' && !isSubSkill) return false;
-    if (filters.subSkillMode === 'hide' && isSubSkill) return false;
+    const subSkill = isSubSkill(s);
+    if (filters.subSkillMode === 'only' && !subSkill) return false;
+    if (filters.subSkillMode === 'hide' && subSkill) return false;
+
+    if (characterKnownIds != null) {
+      if (knownMode === 'known' && !skillIsKnown(s, characterKnownIds)) return false;
+      if (knownMode === 'not-known' && skillIsKnown(s, characterKnownIds)) return false;
+      if (
+        filters.baseSkillOwnedOnly &&
+        !characterOwnsBaseSkill(s, characterKnownIds, skillIdToName)
+      ) {
+        return false;
+      }
+    }
 
     return true;
   });

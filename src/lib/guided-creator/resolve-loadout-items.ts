@@ -5,7 +5,6 @@
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { LibraryItem } from '@/types/library';
 import type { PathItemRecommendation, PathLoadout } from '@/types/archetype';
-import { formatDamage, type ItemDamage } from '@/lib/calculators/item-calc';
 import { flattenLoadoutEntries } from '@/lib/game/loadout-entries';
 import { normalizeId } from '@/lib/utils';
 
@@ -16,7 +15,6 @@ export interface EquipmentLookupEntry {
   name: string;
   description?: string;
   category: LoadoutItemCategory;
-  statsLine?: string;
 }
 
 export interface ResolvedLoadoutItem {
@@ -26,7 +24,6 @@ export interface ResolvedLoadoutItem {
   description?: string;
   category: LoadoutItemCategory;
   categoryLabel: string;
-  statsLine?: string;
   resolved: boolean;
 }
 
@@ -44,36 +41,33 @@ function mapLibraryType(type: string | undefined): LoadoutItemCategory {
 }
 
 function entryFromOfficial(item: LibraryItem): EquipmentLookupEntry {
-  const category = mapLibraryType(item.type);
-  const damageStats = formatDamage(
-    Array.isArray(item.damage) ? (item.damage as ItemDamage[]) : undefined
-  );
-  const statsLine =
-    category === 'armor' && item.damageReduction != null
-      ? `DR ${item.damageReduction}`
-      : damageStats || undefined;
   return {
     id: String(item.id),
     name: String(item.name ?? item.id),
     description: item.description?.trim() || undefined,
-    category,
-    statsLine,
+    category: mapLibraryType(item.type),
   };
 }
 
 function entryFromCodex(item: CodexEquipmentItem): EquipmentLookupEntry {
-  const category = item.type === 'armor' ? 'armor' : item.type === 'equipment' ? 'equipment' : 'weapon';
-  const statsLine =
-    category === 'armor' && item.armor_value != null
-      ? `DR ${item.armor_value}`
-      : item.damage?.trim() || undefined;
   return {
     id: String(item.id),
     name: item.name,
     description: item.description?.trim() || undefined,
-    category,
-    statsLine,
+    category:
+      item.type === 'armor' ? 'armor' : item.type === 'equipment' ? 'equipment' : 'weapon',
   };
+}
+
+function indexLookupEntry(
+  map: Map<string, EquipmentLookupEntry>,
+  entry: EquipmentLookupEntry,
+  extraKeys: Array<string | number | null | undefined> = []
+) {
+  for (const raw of [entry.id, ...extraKeys]) {
+    const key = normalizeId(String(raw ?? ''));
+    if (key) map.set(key, entry);
+  }
 }
 
 export function buildEquipmentLookup(
@@ -82,10 +76,10 @@ export function buildEquipmentLookup(
 ): Map<string, EquipmentLookupEntry> {
   const map = new Map<string, EquipmentLookupEntry>();
   for (const item of codexEquipment) {
-    map.set(normalizeId(String(item.id)), entryFromCodex(item));
+    indexLookupEntry(map, entryFromCodex(item));
   }
   for (const item of officialItems) {
-    map.set(normalizeId(String(item.id)), entryFromOfficial(item));
+    indexLookupEntry(map, entryFromOfficial(item), [item.docId]);
   }
   return map;
 }
@@ -105,7 +99,6 @@ export function resolveEquipmentRef(
     description: entry?.description,
     category,
     categoryLabel: CATEGORY_LABELS[category],
-    statsLine: entry?.statsLine,
     resolved: Boolean(entry),
   };
 }
@@ -118,6 +111,31 @@ export function resolveLoadoutItems(
   return flattenLoadoutEntries(loadout).map((ref) =>
     resolveEquipmentRef(ref, lookup, unresolvedLabel)
   );
+}
+
+/** Phased weapon+armor buckets when present; otherwise legacy `armaments`. */
+export function draftArmamentRefs(draft: {
+  loadoutWeapons?: PathItemRecommendation[];
+  loadoutArmor?: PathItemRecommendation[];
+  armaments?: PathItemRecommendation[];
+}): PathItemRecommendation[] {
+  const merged = mergeLoadoutArmaments({
+    loadoutWeapons: draft.loadoutWeapons ?? [],
+    loadoutArmor: draft.loadoutArmor ?? [],
+  });
+  return merged.length > 0 ? merged : (draft.armaments ?? []);
+}
+
+export function resolveDraftArmaments(
+  draft: {
+    loadoutWeapons?: PathItemRecommendation[];
+    loadoutArmor?: PathItemRecommendation[];
+    armaments?: PathItemRecommendation[];
+  },
+  lookup: Map<string, EquipmentLookupEntry>,
+  unresolvedLabel = 'Unknown item'
+): ResolvedLoadoutItem[] {
+  return draftArmamentRefs(draft).map((ref) => resolveEquipmentRef(ref, lookup, unresolvedLabel));
 }
 
 export function loadoutDraftFromSelection(

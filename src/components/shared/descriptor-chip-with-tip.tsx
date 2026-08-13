@@ -54,7 +54,6 @@ export function DescriptorChipWithTip({
           label={`${chip.name} details`}
           size="inline"
           tone="current"
-          className="!min-h-6 !min-w-6 md:!min-h-5 md:!min-w-5 -my-0.5"
         />
       </DescriptorChip>
     </span>

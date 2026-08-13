@@ -29,6 +29,7 @@ import {
 import { collectCategoryOptionsFromItems } from '@/lib/library/power-technique-categories';
 import {
   EMPTY_POWER_TECHNIQUE_FILTERS,
+  countActivePowerTechniqueFilters,
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
@@ -156,6 +157,13 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
           onCharacterContextChange={setCharacterContext}
           onCharacterIdChange={setCharacterFilterId}
         />
+      }
+      filterActiveCount={
+        countActivePowerTechniqueFilters(
+          advancedFilters,
+          'power',
+          Boolean(characterContext)
+        ) + (characterFilterId ? 1 : 0)
       }
     >
       {filteredData.map((power) => {

@@ -61,7 +61,6 @@ export function LoadoutBudgetBar({
       label="Training Points help"
       size="inline"
       tone="tp"
-      className="!min-h-6 !min-w-6 md:!min-h-5 md:!min-w-5"
     />
   );
 

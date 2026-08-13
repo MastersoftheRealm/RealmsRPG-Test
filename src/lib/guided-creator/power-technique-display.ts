@@ -11,9 +11,15 @@ import { logClientError } from '@/lib/api-client';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { trainingPointsFactChip } from '@/lib/detail-option/compact-facts';
 import {
+  pickHighestEnergyCost,
+  type EnergyCostPick,
+} from '@/lib/game/formulas';
+import { buildLookup } from '@/lib/guided-creator/powers-techniques-step-helpers';
+import {
   buildPowerTechniqueBudgetDisplay,
   type PowerTechniqueBudgetKind,
 } from '@/lib/library-selectable-builders';
+import { normalizeId } from '@/lib/utils/normalize-id';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 
@@ -155,4 +161,64 @@ export function resolvePowerTechniqueActionType(
 
 function itemId(item: LibraryPower | LibraryTechnique): string {
   return String(item.id ?? item.docId ?? item.name ?? '');
+}
+
+function toEnergyCostPick(
+  kind: 'power' | 'technique',
+  item: LibraryPower | LibraryTechnique | undefined,
+  powerPartsDb: PowerPart[],
+  techniquePartsDb: TechniquePart[]
+): EnergyCostPick | null {
+  const catalogKind: PowersTechniquesKind = kind === 'technique' ? 'techniques' : 'powers';
+  const energy = resolvePowerTechniqueEnergy(catalogKind, item, powerPartsDb, techniquePartsDb);
+  if (typeof energy !== 'number') return null;
+  const name =
+    typeof item?.name === 'string' && item.name.trim()
+      ? item.name.trim()
+      : kind === 'technique'
+        ? 'Technique'
+        : 'Power';
+  return { name, energy, kind };
+}
+
+/**
+ * Highest Energy-cost Power/Technique among selected ids (incl. innates) and/or
+ * already-resolved library rows (Advanced finalize).
+ */
+export function findHighestEnergyCostPick(args: {
+  powerIds?: Iterable<string>;
+  techniqueIds?: Iterable<string>;
+  powers?: Array<LibraryPower | undefined>;
+  techniques?: Array<LibraryTechnique | undefined>;
+  powerPartsDb: PowerPart[];
+  techniquePartsDb: TechniquePart[];
+}): EnergyCostPick | null {
+  const picks: EnergyCostPick[] = [];
+  const powerByKey = buildLookup((args.powers ?? []).filter((p): p is LibraryPower => !!p));
+  const techniqueByKey = buildLookup(
+    (args.techniques ?? []).filter((t): t is LibraryTechnique => !!t)
+  );
+
+  const consider = (
+    kind: 'power' | 'technique',
+    item: LibraryPower | LibraryTechnique | undefined
+  ) => {
+    const pick = toEnergyCostPick(kind, item, args.powerPartsDb, args.techniquePartsDb);
+    if (pick) picks.push(pick);
+  };
+
+  for (const id of args.powerIds ?? []) {
+    consider('power', powerByKey.get(normalizeId(id)));
+  }
+  for (const id of args.techniqueIds ?? []) {
+    consider('technique', techniqueByKey.get(normalizeId(id)));
+  }
+  if (!args.powerIds) {
+    for (const item of args.powers ?? []) consider('power', item);
+  }
+  if (!args.techniqueIds) {
+    for (const item of args.techniques ?? []) consider('technique', item);
+  }
+
+  return pickHighestEnergyCost(picks);
 }

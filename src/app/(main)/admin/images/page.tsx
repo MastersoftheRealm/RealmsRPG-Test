@@ -10,7 +10,6 @@ import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ChipSelect,
-  FilterSection,
   CodexBrowseListShell,
   GridListRow,
   ErrorDisplay,
@@ -166,16 +165,14 @@ export default function AdminImagesPage() {
         searchPlaceholder="Search by name..."
         searchAriaLabel="Search images by name"
         filters={
-          <FilterSection>
-            <ChipSelect
-              label="Filter by category"
-              placeholder="Any category..."
-              options={CATEGORY_FILTER_OPTIONS}
-              selectedValues={categoryFilters}
-              onSelect={addCategoryFilter}
-              onRemove={removeCategoryFilter}
-            />
-          </FilterSection>
+          <ChipSelect
+            label="Filter by category"
+            placeholder="Any category..."
+            options={CATEGORY_FILTER_OPTIONS}
+            selectedValues={categoryFilters}
+            onSelect={addCategoryFilter}
+            onRemove={removeCategoryFilter}
+          />
         }
         headerColumns={[
           { key: 'name', label: 'Name' },

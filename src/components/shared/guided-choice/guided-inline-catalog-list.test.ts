@@ -22,3 +22,13 @@ describe('GuidedInlineCatalogList selected panel chrome (TASK-700)', () => {
     expect(componentSource).toContain('className="mb-0"');
   });
 });
+
+describe('GuidedInlineCatalogList selected-panel jump (TASK-728)', () => {
+  it('mounts the Selected card only when there is a selection (no reserved empty hole)', () => {
+    expect(componentSource).toMatch(/hasSelectedPanel \? \(/);
+    expect(componentSource).toContain('stabilizeAfterSelectedHeightChange');
+    expect(componentSource).toContain('[overflow-anchor:none]');
+    expect(componentSource).toMatch(/hasSelectedPanel && 'pb-4'/);
+    expect(componentSource).not.toMatch(/min-h-\[(?:1[2-9]|[2-9]\d)/);
+  });
+});

@@ -46,6 +46,7 @@ export function UnifiedSelectionModal({
   onConfirm,
   maxSelections,
   selectionLimitMessage,
+  nextSelectedIds,
   initialSelectedIds = new Set(),
   hideDisabled = false,
   columns = [],
@@ -152,6 +153,18 @@ export function UnifiedSelectionModal({
           delete newQ[key];
           return newQ;
         });
+      } else if (nextSelectedIds) {
+        const nextSet = new Set(nextSelectedIds([...prev], key));
+        if (showQuantity) {
+          setQuantities(q => {
+            const nextQ: Record<string, number> = {};
+            for (const idKey of nextSet) {
+              nextQ[idKey] = q[idKey] ?? 1;
+            }
+            return nextQ;
+          });
+        }
+        return nextSet;
       } else if (maxSelections === 1) {
         setQuantities(showQuantity ? { [key]: 1 } : {});
         return new Set([key]);
@@ -163,7 +176,7 @@ export function UnifiedSelectionModal({
       }
       return newSet;
     });
-  }, [showQuantity, maxSelections]);
+  }, [showQuantity, maxSelections, nextSelectedIds]);
 
   const selectedItems = useMemo(
     () => items.filter(item => selectedIds.has(String(item.id))),

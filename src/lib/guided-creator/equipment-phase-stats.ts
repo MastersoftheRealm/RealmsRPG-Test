@@ -22,7 +22,11 @@ import {
   weaponAbilityChip,
 } from '@/lib/detail-option/compact-facts';
 import { formatDamageDisplay } from '@/lib/utils';
-import { formatRange, type ItemPropertyPayload, type ItemPropertyTpRow } from '@/lib/calculators/item-calc';
+import {
+  resolveWeaponRangeDisplay,
+  type ItemPropertyPayload,
+  type ItemPropertyTpRow,
+} from '@/lib/calculators/item-calc';
 import {
   deriveAbilityRequirementFromProperties,
   type AbilityRequirement,
@@ -67,6 +71,8 @@ export interface BuildPhaseCardStatsInput {
   trainingPoints?: number | null;
   abilityRequirement?: AbilityRequirement | null;
   itemProperties?: ItemPropertyTpRow[];
+  /** Stored range (may be corrupt `0` / bare level); display SoT is resolveWeaponRangeDisplay. */
+  storedRange?: string | number | null;
 }
 
 /** Build title / See more / L2 fact chips for GuidedChoiceCard. */
@@ -81,6 +87,7 @@ export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): E
     trainingPoints,
     abilityRequirement,
     itemProperties = [],
+    storedRange,
   } = input;
 
   const factChips: ChipData[] = [];
@@ -102,16 +109,21 @@ export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): E
     const reqChip = abilityRequirementChip(req);
     if (reqChip) detailChips.push(reqChip);
 
-    detailChips.push(handednessChip(properties));
+    detailChips.push(handednessChip(properties, storedRange));
 
-    const range = formatRange((properties ?? []) as ItemPropertyPayload[]);
+    const range = resolveWeaponRangeDisplay(
+      storedRange,
+      (properties ?? []) as ItemPropertyPayload[]
+    );
     const rangeChip = rangeFactChip(range);
     if (rangeChip) detailChips.push(rangeChip);
 
     const dmgChip = damageFactChip(damageLine);
     if (dmgChip) detailChips.push(dmgChip);
 
-    detailChips.push(weaponAbilityChip(properties));
+    const rangeOverride =
+      storedRange == null ? undefined : String(storedRange);
+    detailChips.push(weaponAbilityChip(properties, rangeOverride));
     detailChips.push(...named);
 
     cardChips.push(...named);
@@ -126,7 +138,7 @@ export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): E
       cardChips,
       detailChips,
       primaryLine: formatDamageFact(damageLine),
-      secondaryLine: formatWeaponAbilityFactFromProperties(properties),
+      secondaryLine: formatWeaponAbilityFactFromProperties(properties, rangeOverride),
       factChips,
     };
   }

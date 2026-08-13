@@ -13,6 +13,8 @@ export interface ArmamentCharacterContext {
   armamentMax: number;
   /** Current currency on the character sheet. */
   currency: number;
+  /** Character level for GAME_RULES Levels-by-Rarity filters. */
+  level: number;
 }
 
 type Rules = Partial<CoreRulesMap>;
@@ -36,5 +38,6 @@ export function deriveArmamentCharacterContext(
     abilities,
     armamentMax: calculateArmamentProficiency(character.mart_prof || 0, rules),
     currency: Math.max(0, Math.round(Number(character.currency) || 0)),
+    level: Math.max(1, Math.floor(Number(character.level) || 1)),
   };
 }

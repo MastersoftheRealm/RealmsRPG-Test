@@ -4,6 +4,7 @@ import {
   type LibraryEntityRowContext,
 } from '@/components/character-sheet/library-entity-rows';
 import { CODEX_FEAT_HEADER_COLUMNS } from '@/lib/codex/feat-list';
+import { CODEX_EQUIPMENT_HEADER_COLUMNS } from '@/lib/codex/equipment-list';
 import {
   CHARACTER_SHEET_TECHNIQUE_COLUMNS,
   POWER_COLUMNS,
@@ -76,15 +77,6 @@ function headerKeys(
 function columnValueKeys(columns: Array<{ key: string }>): string[] {
   return columns.map((c) => c.key);
 }
-
-const CODEX_EQUIPMENT_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'category', label: 'CATEGORY' },
-  { key: 'cost', label: 'COST' },
-  { key: 'rarity', label: 'RARITY' },
-  { key: 'damage', label: 'DAMAGE' },
-  { key: 'dr', label: 'DMG. RED.' },
-];
 
 describe('GLR required-facts registry — surface column configs (TASK-629)', () => {
   it('library-official-power headers satisfy registry', () => {

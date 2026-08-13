@@ -10,8 +10,9 @@
 import { useState, useId } from 'react';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
-import { Chip, IconButton, Input } from '@/components/ui';
-import { FilterNativeSelect } from './filter-native-select';
+import { Chip, IconButton } from '@/components/ui';
+import { FilterInput, FilterNativeSelect } from './filter-native-select';
+import { FILTER_LABEL_ROW_CLASS } from './filter-utils';
 
 export interface AbilityRequirement {
   ability: string;
@@ -56,7 +57,7 @@ export function AbilityRequirementFilter({
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
       handleAdd();
     }
@@ -64,10 +65,12 @@ export function AbilityRequirementFilter({
 
   return (
     <div className={cn('filter-group', disabled && 'opacity-60', className)}>
-      <label htmlFor={abilitySelectId} className="block text-sm font-medium text-text-secondary mb-1">
-        {label}
-      </label>
-      <div className="flex gap-2">
+      <div className={FILTER_LABEL_ROW_CLASS}>
+        <label htmlFor={abilitySelectId} className="text-sm font-medium leading-5 text-text-secondary">
+          {label}
+        </label>
+      </div>
+      <div className="flex items-center gap-2">
         <FilterNativeSelect
           id={abilitySelectId}
           value={selectedAbility}
@@ -84,15 +87,15 @@ export function AbilityRequirementFilter({
           ))}
         </FilterNativeSelect>
         <div className="w-20 shrink-0">
-          <Input
+          <FilterInput
             type="number"
             value={maxValue}
             onChange={(e) => setMaxValue(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder={disabled && disabledHint ? disabledHint : 'Max'}
             min={0}
             disabled={disabled}
-            className="w-full"
+            aria-label={`${label} max value`}
           />
         </div>
         <IconButton
@@ -100,6 +103,7 @@ export function AbilityRequirementFilter({
           label="Add requirement"
           onClick={handleAdd}
           disabled={disabled || !selectedAbility || !maxValue}
+          className="h-11 w-11"
         >
           <Plus className="w-4 h-4" />
         </IconButton>

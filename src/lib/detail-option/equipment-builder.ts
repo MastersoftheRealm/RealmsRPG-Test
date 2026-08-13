@@ -53,6 +53,9 @@ export function equipmentRefToDetailOption(
   ).toLowerCase();
   const isShield = itemType === 'shield';
   const factChips: ChipData[] = [];
+  const storedRange =
+    row?.range ??
+    (lib && 'rangeLevel' in lib && lib.rangeLevel != null ? String(lib.rangeLevel) : undefined);
 
   if (resolved.category === 'weapon' && !isShield) {
     const damage = weaponDamageLineForRef(ref.id, officialItems, codexEquipment ?? []);
@@ -61,6 +64,7 @@ export function equipmentRefToDetailOption(
       properties: properties as never,
       damageLine: damage,
       itemProperties,
+      storedRange,
     });
     const dmgChip = damageFactChip(damage);
     if (dmgChip) factChips.push(dmgChip);
@@ -78,6 +82,7 @@ export function equipmentRefToDetailOption(
       category: 'weapon',
       properties: properties as never,
       itemProperties,
+      storedRange,
     });
     for (const chip of phase.factChips) {
       const n = chip.name.toLowerCase();

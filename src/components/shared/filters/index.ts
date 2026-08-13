@@ -10,9 +10,10 @@
  * - AbilityRequirementFilter: Filter by ability score requirements
  * - TagFilter: Multi-select tag filter with Any/All mode
  * - SelectFilter: Simple single-select dropdown
- * - CharacterFilter: Filter list content by a user's character stats
- * - ArmamentFilters: Character + currency affordability for weapons/armor/shields
- * - FilterSection: Collapsible container (`page` for Codex; `compact` + toolbarStart for selection modals)
+ * - CharacterFilter: Filter list content by a user's character (collapsible, default collapsed)
+ * - PowerTechniqueFilters: Category / Energy / TP / Action / Innate — panel body only
+ * - ArmamentFilters: Character + currency affordability; Codex mixed extras — panel body only
+ * - FilterSection: Collapsible container (`page` for Advanced creator; `compact` + toolbarStart for USM/L3 and ListSearchToolbar browse lists)
  * - SourceFilter: All / Realms Library / My Library scope
  */
 
@@ -33,9 +34,13 @@ export {
   dedupeSelectOptions,
   dedupeStrings,
   shouldShowSelectPlaceholder,
+  FILTER_CONTROL_CLASS,
   FILTER_CONTROL_ROW_CLASS,
+  FILTER_LABEL_ROW_CLASS,
   type SelectOption,
-} from './filter-utils';export { FilterSection, type FilterSectionProps } from './filter-section';
+} from './filter-utils';
+export { FilterSection, type FilterSectionProps } from './filter-section';
+export { FilterInput, FilterNativeSelect } from './filter-native-select';
 export {
   SourceFilter,
   sourceFilterSummary,

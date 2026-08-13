@@ -2,6 +2,7 @@
 
 import { DescriptorChip, EmptyState } from '@/components/ui';
 import { GuidedLayerNav } from '@/components/shared';
+import { InnatePowersHelpTip } from './guided-powers-techniques-l2-modal';
 import { cn } from '@/lib/utils';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { isPathRecommendedPowersTechniquesId } from '@/lib/guided-creator/powers-techniques-l1-candidates';
@@ -149,7 +150,9 @@ export function GuidedPowersTechniquesL1Content({
     <>
       {showInnateTrack ? (
         <section className="space-y-3">
-          <GuidedSectionTitle>{ptCopy.innateHeading}</GuidedSectionTitle>
+          <GuidedSectionTitle titleAddon={<InnatePowersHelpTip />}>
+            {ptCopy.innateHeading}
+          </GuidedSectionTitle>
           <p className="font-nunito text-sm text-text-secondary">{ptCopy.innateIntro}</p>
           <p className="font-nunito text-xs text-text-secondary dark:text-text-secondary">
             {ptCopy.innateThresholdHint(innateThreshold)}

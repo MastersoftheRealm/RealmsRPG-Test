@@ -8,6 +8,7 @@ import type { CodexEquipmentItem } from '@/types/codex';
 import type { LibraryItem, LibraryPower, LibraryTechnique } from '@/types/library';
 import {
   buildEquipmentLookup,
+  draftArmamentRefs,
   inventoryTypeForResolvedItem,
   resolveEquipmentRef,
 } from '@/lib/guided-creator/resolve-loadout-items';
@@ -25,7 +26,6 @@ import type { Archetype, ArchetypePathData } from '@/types/archetype';
 import type { Species } from '@/hooks';
 import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
 import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
-import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
 import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
@@ -34,7 +34,7 @@ import {
   applyStarterEquippedFlags,
   itemDamageReduction,
 } from '@/lib/game/equipment-equipped';
-import { normalizeId } from '@/lib/utils';
+import { findByNormalizedId, normalizeId } from '@/lib/utils';
 import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 
 interface CodexPartLike {
@@ -66,22 +66,13 @@ export interface BuildGuidedCharacterContext {
   rules?: Parameters<typeof calculateMaxHealth>[5];
   officialItems?: LibraryItem[];
   codexEquipment?: CodexEquipmentItem[];
-  /** Official library powers — needed to resolve parts for proficiency build. */
+  /** Library powers (official + user) — resolve names/parts for proficiency and save. */
   officialPowers?: LibraryPower[];
-  /** Official library techniques — needed to resolve parts for proficiency build. */
+  /** Library techniques (official + user) — resolve names/parts for proficiency and save. */
   officialTechniques?: LibraryTechnique[];
   powerPartsDb?: CodexPartLike[];
   techniquePartsDb?: CodexPartLike[];
   itemPropertiesDb?: CodexPropertyLike[];
-}
-
-function findByNormalizedId<T extends { id?: string | number }>(
-  list: T[] | undefined,
-  id: string | number
-): T | undefined {
-  const key = normalizeId(id);
-  if (!key) return undefined;
-  return list?.find((row) => normalizeId(row.id) === key);
 }
 
 /** Resolve draft power ids to CharacterPower shapes with parts/damage for proficiency TP. */
@@ -252,7 +243,7 @@ export function buildGuidedCharacterPayload(
   const archetypeFeats = dedupeEntityRefs(draft.archetypeFeatIds.map(resolveFeatRef));
   const characterFeats = dedupeEntityRefs(draft.characterFeatIds.map(resolveFeatRef));
 
-  // Lean save refs (parts stripped by cleanForSave) — resolve names from official library.
+  // Lean save refs (parts stripped by cleanForSave) — resolve names from official + user library.
   const innatePowerIds = dedupeEntityRefs(draft.innatePowerIds ?? []);
   const innateKeys = new Set(innatePowerIds.map((id) => normalizeId(id)));
   const powersForSave: CharacterPower[] = [
@@ -299,13 +290,7 @@ export function buildGuidedCharacterPayload(
       });
     };
 
-    const armamentRefs = mergeLoadoutArmaments({
-      loadoutWeapons: draft.loadoutWeapons ?? [],
-      loadoutArmor: draft.loadoutArmor ?? [],
-    });
-    const allRefs =
-      armamentRefs.length > 0 ? armamentRefs : draft.armaments;
-    allRefs.forEach(pushRow);
+    draftArmamentRefs(draft).forEach(pushRow);
     draft.equipment.forEach(pushRow);
     return rows;
   })();

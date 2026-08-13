@@ -41,13 +41,14 @@ export const WEAPON_L2_GRID = weaponCfg.grid;
 export const ARMOR_L2_HEADER_COLUMNS: L2ColumnHeader[] = armorCfg.headers;
 export const ARMOR_L2_GRID = armorCfg.grid;
 
-/** Gear — Name | Rarity | Currency (no TP on Equipment phase). */
+/** Gear — Name | Category | Rarity | Currency (taxonomy, not phase type). */
 export const GEAR_L2_HEADER_COLUMNS: L2ColumnHeader[] = [
   { key: 'name', label: 'NAME', align: 'left', sortable: true },
+  { key: 'category', label: 'CATEGORY', align: 'center', sortable: true },
   { key: 'rarity', label: 'RARITY', align: 'center', sortable: true },
   { key: 'currency', label: 'CURRENCY', align: 'center', sortable: true },
 ];
-export const GEAR_L2_GRID = '1.6fr 0.7fr 0.7fr';
+export const GEAR_L2_GRID = '1.5fr 1fr 0.7fr 0.7fr';
 
 export function l2HeaderColumnsForPhase(phase: GuidedEquipmentPhase): L2ColumnHeader[] {
   if (phase === 'armor') return ARMOR_L2_HEADER_COLUMNS;

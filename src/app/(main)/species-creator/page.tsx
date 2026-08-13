@@ -102,7 +102,7 @@ export default function SpeciesCreatorPage() {
           statRows={ws.summaryStatRows}
           lineItems={[
             { label: 'Sizes', items: ws.form.sizes },
-            { label: 'Skills', items: ws.form.skillIds.map((id) => ws.skillLabel(id)) },
+            { label: 'Skills', items: ws.form.skillIds.map((id) => ws.skillLabel(id)).filter(Boolean) },
             { label: 'Languages', items: ws.form.languages },
           ]}
         />

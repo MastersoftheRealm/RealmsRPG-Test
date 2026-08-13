@@ -33,8 +33,8 @@ All product help copy still lives in **`public/tooltip-text.tsx`**. Scope the **
 
 | Scope | Purpose | Naming | Examples |
 |-------|---------|--------|----------|
-| **Global term tip** | Same definition everywhere the term appears (sheet, Path overview, Codex, etc.) | Plain term + `Help` — no `guided` prefix | `armamentProficiencyHelp`, `getAbilityHelp` / `getDefenseHelp`, `defenseScoreHelp`, `trainingPointsHelp` |
-| **Guided / L1-simplified tip** | Shorter teaching copy for creator steps or More details (may omit formulas the sheet assumes) | `guided*` prefix | `guidedArchetypePathHelp`, `guidedArchetypeAbilityHelp`, `guidedPowerPathTypeHelp` / `guidedMartialPathTypeHelp` / `guidedPoweredMartialPathTypeHelp` |
+| **Global term tip** | Same definition everywhere the term appears (sheet, Path overview, Codex, etc.) | Plain term + `Help` — no `guided` prefix | `armamentProficiencyHelp`, `getAbilityHelp` / `getDefenseHelp`, `defenseScoreHelp`, `trainingPointsHelp`, `innateEnergyHelp` / `innatePowersHelp` (TASK-726) |
+| **Guided / L1-simplified tip** | Shorter teaching copy for creator steps or More details (may omit formulas the sheet assumes) | `guided*` prefix | `guidedArchetypePathHelp`, `guidedArchetypeAbilityHelp`, `guidedPowerPathTypeHelp` / `guidedMartialPathTypeHelp` / `guidedPoweredMartialPathTypeHelp`, `getGuidedAutoAllocateHelp` (TASK-729) |
 
 **Rules for agents**
 
@@ -99,7 +99,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 1. **Search** — grep `tooltip-text.tsx` and existing `InfoTippy` on the same surface; reuse or extend copy.
 2. **Copy** — add a string, JSX export, or helper to `public/tooltip-text.tsx` (one file; no DB).
 3. **Wire** — import `InfoTippy` / `WordHelpTip` from `@/components/shared`:
-   - Page/step title: `<InfoTippy content={…} label="…" size="inline" />`
+   - Page/step title: `<InfoTippy content={…} label="…" size="inline" />` (layout-neutral hit; do not add `min-h-*` className)
    - Default icon trigger: omit `children`; **`label` is required** (becomes `aria-label`).
    - Custom trigger: pass `children` (single element); child needs its own `aria-label`; keep `label` for consistency.
    - Label-word tip (no icon): `<WordHelpTip content={getAbilityHelp(…)} label="About Strength">Strength</WordHelpTip>` (ability/defense names; tip copy names the term once).
@@ -107,13 +107,22 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 5. **A11y** — every trigger has a discernable name; do not rely on `title` alone.
 6. **Verify** — hover, keyboard focus, touch-hold on ~360px width; JSX lists allow pointer into panel.
 
+## Label / heading layout (TASK-725)
+
+`InfoTippy` next to a filter label or section title **must not** increase that row’s height or wrap the title. The 16px Info icon stays in the line box; `.hit-area-layout-neutral` expands the tap target with an overlay (`::after`), not `min-h-8` / 44px in-flow padding.
+
+- Filter labels use `FILTER_LABEL_ROW_CLASS` (`h-5`). Put `labelAccessory` (InfoTippy) in that row — do not add per-page `!min-h-*` on the trigger.
+- `GuidedSectionTitle` `titleAddon` is `shrink-0` so the (i) stays on the title line.
+- Do **not** switch sitewide help to `WordHelpTip` — that is for word-tied definitions (ability/defense names).
+- New call sites: omit extra `className` sizing on `InfoTippy`; the shared trigger already preserves 44px touch without stretching flex/grid tracks.
+
 ## `InfoTippy` / `WordHelpTip` API (quick reference)
 
 | Prop | Purpose |
 |------|---------|
 | `content` | `string` or JSX from `tooltip-text.tsx` |
 | `label` | Accessible name (required) |
-| `size` | `InfoTippy` only: `'icon'` (default, 44px touch) or `'inline'` (compact, step headings) |
+| `size` | **Deprecated** no-op (TASK-725) — kept for call-site compat. Trigger is always the 16px icon + `.hit-area-layout-neutral`. Do not pass `min-h-*` className fights. |
 | `tone` | `InfoTippy` only (TASK-707): `'info'` (default, `text-primary-link-fg`) · `'tp'` (`text-tp-text` on Training Points PointStatus) · `'current'` (inherit chip/status text). Prefer `tone` over `className` color fights. |
 | `placement` | `'top' \| 'bottom' \| 'left' \| 'right'` |
 | `children` | `InfoTippy`: optional custom trigger element. `WordHelpTip`: visible label text/spans |
@@ -165,10 +174,10 @@ Implementation: `src/components/shared/info-tippy.tsx` (`InfoTippy` + `WordHelpT
   - **L1 named property chips:** property **name only** (Graze, Cleave) — do not append Training Points on those desc chips; budgets stay in title-adjacent Currency / Training Points. Pass `includeCost: true` only for dense browse surfaces that still need TP on the chip.
   - **Non-mechanic properties** (Graze, Cleave, …): non-expanding `kind: 'descriptor'` chips via `namedPropertyDescriptorChips` / `propertyDescriptorChip`. When a description exists, render with **`DescriptorChipWithTip`** — InfoTippy `size="inline"` **inside** the chip (not a sibling beside it). Guided cards: `GuidedFactChipRow`. GridListRow: `GridListChip` routes descriptors through `DescriptorChipWithTip`. Same inside-pattern for section help (e.g. Training Points `InfoTippy` via `PointStatus.labelAccessory` in `LoadoutBudgetBar`).
   - **Character sheet parts/properties (TASK-505 / TASK-583):** Always expandable chips with dense `TP: N` (`partDataToChips` + `TP_COST_LABEL`). Do **not** use descriptor + InfoTippy *on the chips* for sheet Parts & Proficiencies — the sheet is a play surface where users expand chips to delve deeper. The **section** (Parts/Properties & Proficiencies) defaults collapsed sitewide with a chevron + label InfoTippy (`labelHelpKey` / `tooltip-text` family tips). Guided L1/L2 keeps spelled-out **Training Points** and descriptor tips for metadata facts.
-  - **Loadout budgets (Guided + Advanced):** reuse `LoadoutBudgetBar` from `@/components/shared` (Currency optional + Training Points + tip inside label) — Guided phase layout / L2 footer / powers; Advanced equipment / powers / finalize (TASK-606 / TASK-614 / TASK-706). Put extra trackers in `leading` (Innate Energy) or `trailing` (finalize Energy) — same inline PointStatus size. Do not fork PointStatus chrome.
+  - **Loadout budgets (Guided + Advanced):** reuse `LoadoutBudgetBar` from `@/components/shared` (Currency optional + Training Points + tip inside label) — Guided phase layout / L2 footer / powers; Advanced equipment / powers / finalize (TASK-606 / TASK-614 / TASK-706). Put extra trackers in `leading` (Innate Energy + `innateEnergyHelp` via `labelAccessory` — TASK-726) or `trailing` (finalize Energy) — same inline PointStatus size. Do not fork PointStatus chrome. Innate Powers section titles use `GuidedSectionTitle` `titleAddon={<InnatePowersHelpTip />}` (same module as `InnateEnergyPointStatus`). Advanced powers has no Innate Energy tracker / Innate Powers heading — skip.
   - **Deep-dive / progressive-disclosure catalogs** (`DetailOptionList`, choice-card More details): Name + Description only is fine (`showColumnHeaders={false}`); every omitted column fact must appear as a self-describing chip in the expanded row.
   - **Card anatomy / disclosure boundary:** Supporting facts, chips, and controls belong **above** See more / See less / More details. Do **not** append orphan facts or controls below that disclosure row. Guided weapon/armor cards (TASK-457): **Currency** / **Training Points** are `titleMeta` beside the name; mechanic + named-property chips live in `expandedExtra` (See more) via `DescriptorChipWithTip` — never expandable chips in the collapsed body, never chips under the disclosure row.
-  - **Audit inventory (TASK-437 / TASK-461 / TASK-505 / TASK-629):** Required quick-ref facts per GLR surface: `lib/glr/required-facts-registry.ts` + CI `required-facts-registry.test.ts` (ADR-0009). Library / Official / sheet sections column-complete; sheet expandable part/property chips use `TP`; guided L1/L2 keep Training Points cost labels. Codex + Admin Equipment: Damage + Dmg. Red. columns (Weight chip). Add/load powers: Energy/Action/Duration/Area/Damage + Range chip from `buildSelectableItem` detailSections. Creator powers: compact columns + Duration/Area/Range chips; techniques keep Action; empowered remap preserves Duration/Area as chips. Creature creator: power Duration chip; armament Damage/Range/DR chips. Sheet inventory cost badge = `Cost Nc`. Equipment-step weapons: Range chip. Sheet armor: DR/Crit columns + ability/agility descriptor chips in expanded metadata. Do not strip browse columns to chip-ify them.
+  - **Audit inventory (TASK-437 / TASK-461 / TASK-505 / TASK-629):** Required quick-ref facts per GLR surface: `lib/glr/required-facts-registry.ts` + CI `required-facts-registry.test.ts` (ADR-0009). Library / Official / sheet sections column-complete; sheet expandable part/property chips use `TP`; guided L1/L2 keep Training Points cost labels. Codex + Admin Equipment: Category / Currency / Rarity columns; Damage + Damage Reduction + Weight as expand chips (TASK-723). Add/load powers: Energy/Action/Duration/Area/Damage + Range chip from `buildSelectableItem` detailSections. Creator powers: compact columns + Duration/Area/Range chips; techniques keep Action; empowered remap preserves Duration/Area as chips. Creature creator: power Duration chip; armament Damage/Range/DR chips. Sheet inventory cost badge = `Cost Nc`. Equipment-step weapons: Range chip. Sheet armor: DR/Crit columns + ability/agility descriptor chips in expanded metadata. Do not strip browse columns to chip-ify them.
   - **Id keys:** prefer `normalizeId` from `@/lib/utils` for trim+lowercase map/Set keys (guided equipment catalog helpers).
 - **Stable vertical expand (sitewide, TASK-445 / TASK-504 / TASK-539):** Click-to-expand controls must keep the opened control on its collapsed vertical row. Horizontal movement is allowed for a clearer reading layout: the expanded chip moves to the group’s left edge and occupies the full width. Every chip from that same row onward reflows below it. **Hit target:** header/trigger **or** expanded body toggles; Options accordion, buttons, links, and `[data-expand-ignore]` are excluded.
   - **ExpandableChip / ChipGroup:** Host wrap groups with `data-chip-group` (ChipGroup does this). `applyFullRowExpandLayout` centrally promotes the chip or its local action wrapper to a full-width row, preserves all earlier rows, and orders same-row/later siblings below it. Do not implement per-call-site expansion widths or ordering. Shell click toggles when the tap is not on a nested control (description body collapses/expands the chip).
