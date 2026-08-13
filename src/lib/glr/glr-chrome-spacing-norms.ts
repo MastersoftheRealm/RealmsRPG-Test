@@ -1,9 +1,11 @@
 /**
- * GLR list chrome + spacing norms (TASK-631, TASK-637).
+ * GLR list chrome + spacing norms (TASK-631, TASK-637, TASK-702).
  *
  * Library / Official / Codex browse lists share tight row density (`gap-1`) and
  * ListHeader `rowChrome` tracks that mirror GridListRow edit/delete/add/rightSlot actions.
- * USM and creator-embedded GLR lists follow the same row-container + rowChrome contract.
+ * USM selection chrome is `rowChrome.externalSelection`; quantity mode pairs ListHeader +
+ * GridListRow `rightSlotWidth` via `USM_QUANTITY_RIGHT_SLOT_WIDTH`. Creator-embedded GLR
+ * lists follow the same row-container + rowChrome contract.
  * Complements required-facts registry (TASK-629 / ADR-0009).
  *
  * CI: `validate-glr-chrome-spacing.test.ts` · Guide: `guide/02-components-and-lists.md`
@@ -68,6 +70,15 @@ export const CODEX_BROWSE_SHELL_SOURCES = [
 /** UnifiedSelectionModal list row container (selection modals). */
 export const USM_LIST_SHELL_SOURCES = [
   'src/components/shared/unified-selection-modal-list.tsx',
+] as const;
+
+/**
+ * Surfaces that pair ListHeader + GridListRow quantity chrome with
+ * `USM_QUANTITY_RIGHT_SLOT_WIDTH` (TASK-702).
+ */
+export const USM_QUANTITY_CHROME_SOURCES = [
+  'src/components/shared/unified-selection-modal-list.tsx',
+  'src/components/shared/guided-choice/guided-inline-catalog-list.tsx',
 ] as const;
 
 /** Creator pages with embedded ListHeader + GridListRow lists (not library/codex shells). */

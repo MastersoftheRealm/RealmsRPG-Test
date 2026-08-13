@@ -325,7 +325,6 @@ export function GridListRowCollapsed({
  * the expanded body (TASK-702). Width must match ListHeader spacers.
  */
 export interface GridListRowExternalChromeProps {
-  compact?: boolean;
   disabled?: boolean;
   warningMessage?: string;
   rightSlot?: ReactNode;

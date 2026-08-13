@@ -371,7 +371,6 @@ export const GridListRow = memo(function GridListRow({
 
         {hasExternalChrome && (
           <GridListRowExternalChrome
-            compact={compact}
             disabled={disabled}
             warningMessage={warningMessage}
             rightSlot={externalRightSlot ? rightSlot : undefined}
