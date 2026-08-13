@@ -1,3 +1,167 @@
+- id: TASK-737
+  title: Clear query cache on auth identity change; gate campaigns
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/hooks/use-auth.ts
+    - src/hooks/use-campaigns.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    Audit 06 P1-2 / P1-3: getUser can overwrite a later SIGNED_OUT; QueryClient is not
+    cleared on sign-in (soft nav keeps guest 401 cache); useCampaignsFull has no enabled gate.
+  acceptance_criteria:
+    - Drop getUser result once onAuthStateChange has fired.
+    - queryClient.clear() on SIGNED_IN / SIGNED_OUT / USER_UPDATED (not INITIAL_SESSION).
+    - useCampaignsFull enabled only when signed in.
+    - FEATURE_INDEX; typecheck/lint pass.
+  notes: |
+    User-scoping characterKeys remains open. Sheet write-path unification is queued separately.
+    Archived from ACTIVE 2026-08-13 — implementable AC met; verification_status pending-qa.
+  completed_work: |
+    - onAuthStateChange sets listenerFired; getUser is ignored afterward.
+    - queryClient.clear() on SIGNED_IN / SIGNED_OUT / USER_UPDATED.
+    - useCampaignsFull enabled: !!user.
+  developer_test_plan: |
+    Sign-in from a guest session: campaigns/characters lists are the signed-in data (not a cached 401).
+
+---
+- id: TASK-736
+  title: useAutoSave — stable debounce, retry, pagehide flush
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/hooks/use-auto-save.ts
+    - src/hooks/use-auto-save.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    Audit 06 P0-2 / 09 P0-2: inline onSave identities reset the 2s debounce every render;
+    a failed save never retries; beforeunload only prompts.
+  acceptance_criteria:
+    - Debounce effect depends on data/delay/enabled, not onSave identity.
+    - Failed save schedules retry (2s/5s/15s/60s cap); hasUnsavedChanges stays true until success.
+    - pagehide / visibility hidden calls saveNow when dirty.
+    - FEATURE_INDEX; DEV-V-009 T042; vitest for retry delays.
+  notes: |
+    Dirty-key PATCH + 409 merge remains queued (Architect). Archived 2026-08-13.
+    verification_status pending-qa (DEV-V-009 T042).
+  completed_work: |
+    - onSave / onSaveError held in refs; performSave is stable so debounce is not reset every render.
+    - Failed saves retry 2s/5s/15s then cap at 60s; new edits cancel a pending retry.
+    - pagehide + visibility hidden flush dirty data; beforeunload prompt kept.
+  developer_test_plan: |
+    DEV-V-009 T042.
+
+---
+- id: TASK-735
+  title: Character GET uses visibility column as SoT
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/api/characters/[id]/route.ts
+    - src/app/api/characters/[id]/route.test.ts
+    - src/app/api/characters/route.ts
+    - src/lib/character-list-columns.ts
+    - src/lib/character-list-columns.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    Wave 1 leftover: GET /api/characters/[id] still authorized on data.visibility.
+  acceptance_criteria:
+    - GET selects and reads characters.visibility; blob is fallback only.
+    - Column private + blob public ? 404 for non-owners (no leak).
+    - Vitest covers the desync case; typecheck/lint pass.
+  notes: |
+    Dirty-key PATCH + updatedAt 409 is Architect — not this task. Archived 2026-08-13.
+    verification_status pending-qa (DEV-V-041 T004).
+  completed_work: |
+    - resolveCharacterVisibility prefers the column; GET [id] + list use it.
+    - Vitest: column private + blob public ? 404 for non-owners.
+  developer_test_plan: |
+    DEV-V-041 T004.
+
+---
+- id: TASK-734
+  title: GuidedChoiceCard — See more keyboard + valid select semantics
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-choice-card.tsx
+    - src/components/guided-creator/guided-choice-card.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    Audit 03 P1-5: Enter/Space on See more/See less selected the card instead of expanding.
+  acceptance_criteria:
+    - See more / See less keydown does not select the card; More details already stops keys.
+    - Card select keys only fire when the event target is the card root.
+    - Invalid aria-selected on a generic div is removed; selection is announced via aria-label.
+    - FEATURE_INDEX + DEV-V-013 T085; vitest/typecheck/lint pass.
+  notes: |
+    Parent role=listbox wrapping left for after funnel WIP lands. Archived 2026-08-13.
+    verification_status pending-qa (DEV-V-013 T085).
+  completed_work: |
+    - isGuidedChoiceCardSelectKey requires target === currentTarget.
+    - See more / See less / beforeDisclosure / titleMeta stop nested select keys.
+    - Dropped aria-selected; aria-label suffixes ', selected'.
+  developer_test_plan: |
+    DEV-V-013 T085.
+
+---
+- id: TASK-714
+  title: MixedSpeciesModal — drop local SourceFilterValue, use shared alias
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-712
+    - TASK-605
+    - TASK-641
+  related_files:
+    - src/components/character-creator/MixedSpeciesModal.tsx
+    - src/components/shared/filters/source-filter.tsx
+    - src/lib/library/source-scope.ts
+    - src/docs/ai/FEATURE_INDEX.md
+  description: |
+    MixedSpeciesModal declared a local SourceFilterValue and a hand-rolled SegmentedControl.
+  acceptance_criteria:
+    - Local type SourceFilterValue in MixedSpeciesModal is deleted; source state uses the shared alias.
+    - Source chrome is either shared SourceFilter or SegmentedControl typed with that alias (no second union).
+    - Mixed dual-select confirm flow unchanged; not migrated to USM.
+    - Advanced species-step 'make' source stays a local wider union.
+    - FEATURE_INDEX MixedSpeciesModal note; build/typecheck/lint pass.
+  notes: |
+    Kept species-specific labels (Public species / My species) on purpose. Archived 2026-08-13.
+    verification_status pending-qa (DEV-V-013 T081 source chrome).
+  completed_work: |
+    - Deleted local SourceFilterValue; imported shared alias from @/components/shared.
+    - SegmentedControl still uses Public species / My species labels.
+  developer_test_plan: |
+    DEV-V-013 T081 (source chrome).
+
+---
 - id: TASK-732
   title: Unify remaining idâ†’name lookups onto normalizeId + docId
   created_at: 2026-08-13

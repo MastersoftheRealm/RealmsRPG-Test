@@ -181,6 +181,29 @@ function resolveBody(
   return { kind: 'none' };
 }
 
+/** Enter/Space on nested controls (See more, More details, steppers) must not select the card. */
+export function isGuidedChoiceCardSelectKey(e: {
+  key: string;
+  target: EventTarget | null;
+  currentTarget: EventTarget;
+}): boolean {
+  if (e.key !== 'Enter' && e.key !== ' ') return false;
+  return e.target === e.currentTarget;
+}
+
+export function guidedChoiceCardSelectAriaLabel(
+  title: string,
+  selected: boolean,
+  selectAriaLabel?: string
+): string {
+  const base = selectAriaLabel?.trim() || `Choose ${title}`;
+  return selected ? `${base}, selected` : base;
+}
+
+function stopNestedSelectKeys(e: KeyboardEvent<HTMLElement>) {
+  if (e.key === 'Enter' || e.key === ' ') e.stopPropagation();
+}
+
 /**
  * Detect whether clamped body copy overflows its fixed preview area.
  * Keeps the last measurement while expanded so callers can still know
@@ -311,10 +334,9 @@ export function GuidedChoiceCard({
   const showActionRow = showBodySection && (hasVisibleActions || keepBodyFloor);
 
   const handleCardKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onSelect?.();
-    }
+    if (!isGuidedChoiceCardSelectKey(e)) return;
+    e.preventDefault();
+    onSelect?.();
   };
 
   const toggleExpand = (e: React.MouseEvent) => {
@@ -353,8 +375,9 @@ export function GuidedChoiceCard({
   return (
     <div
       tabIndex={readOnly ? undefined : 0}
-      aria-label={readOnly ? undefined : (selectAriaLabel ?? `Choose ${title}`)}
-      aria-selected={readOnly ? undefined : selected}
+      aria-label={
+        readOnly ? undefined : guidedChoiceCardSelectAriaLabel(title, selected, selectAriaLabel)
+      }
       onClick={readOnly ? undefined : onSelect}
       onKeyDown={readOnly ? undefined : handleCardKeyDown}
       className={cn(
@@ -405,7 +428,7 @@ export function GuidedChoiceCard({
                 <div
                   className="flex min-w-0 flex-wrap items-center gap-1.5"
                   onClick={(e) => e.stopPropagation()}
-                  onKeyDown={(e) => e.stopPropagation()}
+                  onKeyDown={stopNestedSelectKeys}
                 >
                   {titleMeta}
                 </div>
@@ -431,7 +454,15 @@ export function GuidedChoiceCard({
                 {expanded && expandedExtra ? (
                   <div className="mt-2">{expandedExtra}</div>
                 ) : null}
-                {beforeDisclosure ? <div className="mt-2">{beforeDisclosure}</div> : null}
+                {beforeDisclosure ? (
+                  <div
+                    className="mt-2"
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={stopNestedSelectKeys}
+                  >
+                    {beforeDisclosure}
+                  </div>
+                ) : null}
                 {/*
                   See more / See less / More details stay below body copy (product
                   placement). Shared min-h-11 row so deep-dive does not add a second strip.
@@ -442,6 +473,7 @@ export function GuidedChoiceCard({
                       <button
                         type="button"
                         onClick={toggleExpand}
+                        onKeyDown={stopNestedSelectKeys}
                         aria-expanded={false}
                         className={s.readMore}
                       >
@@ -452,6 +484,7 @@ export function GuidedChoiceCard({
                       <button
                         type="button"
                         onClick={toggleExpand}
+                        onKeyDown={stopNestedSelectKeys}
                         aria-expanded={expanded}
                         className={s.readMore}
                       >

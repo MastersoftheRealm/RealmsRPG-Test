@@ -4,53 +4,17 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-734
+**Next task ID:** TASK-740
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-732, TASK-716, TASK-726, TASK-725, TASK-728, TASK-722, TASK-721, TASK-724, TASK-723, TASK-720, TASK-729, TASK-731…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 5 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** **TASK-733** sheet Innate Energy/Powers tips. **TASK-714** MixedSpeciesModal source type. **TASK-718** BUILD_VALIDATION archive. **TASK-719** archive ID collisions.
-
----
-
-- id: TASK-714
-  title: MixedSpeciesModal — drop local SourceFilterValue, use shared alias
-  created_at: 2026-08-13
-  created_by: agent
-  priority: low
-  status: not-started
-  related_tasks:
-    - TASK-712
-    - TASK-605
-    - TASK-641
-  related_files:
-    - src/components/character-creator/MixedSpeciesModal.tsx
-    - src/components/shared/filters/source-filter.tsx
-    - src/lib/library/source-scope.ts
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    MixedSpeciesModal declares a local `SourceFilterValue = 'all' | 'public' | 'my'` and a
-    hand-rolled SegmentedControl with All / Public species / My species. TASK-712 made
-    `SourceFilterValue` an alias of `LibrarySourceScope`. Delete the local type and import
-    the shared alias. Prefer `SourceFilter` for All / Realms Library / My Library chrome
-    unless species-specific labels ("Public species" / "My species") are kept on purpose —
-    in that case still type the control with the shared union. Do not alias Advanced
-    `species-step`'s local union (it includes `'make'`). Dual-select UX stays MixedSpeciesModal
-    (not USM).
-  acceptance_criteria:
-    - Local `type SourceFilterValue` in MixedSpeciesModal is deleted; source state uses the shared `SourceFilterValue` / `LibrarySourceScope` alias.
-    - Source chrome is either shared `SourceFilter` or SegmentedControl typed with that alias (no second union).
-    - Mixed dual-select confirm flow unchanged; not migrated to USM.
-    - Advanced species-step `'make'` source stays a local wider union.
-    - FEATURE_INDEX MixedSpeciesModal note; build/typecheck/lint pass.
-  notes: |
-    TASK-712 cleanup follow-up. Labels today differ from SourceFilter ("Public species" vs
-    "Realms Library") — pick shared chrome unless owner wants the species wording.
+**Hot notes:** **TASK-738** Guided P1-6–P1-10. **TASK-739** Advanced getCharacter currency clamp. **TASK-733** sheet Innate Energy/Powers tips. **TASK-718** BUILD_VALIDATION archive. **TASK-719** archive ID collisions. Wave 2 after this land: Advanced store migrate, dirty-key PATCH (Architect).
 
 ---
 
@@ -132,3 +96,61 @@ Do **not** read the done archive at session start.
     shared/ui file. Threshold / Pools SummaryItems do not need their own tips unless copy
     is unclear without them.
 
+---
+
+- id: TASK-738
+  title: Guided creator P1-6–P1-10 leftovers (auth gate, trusted save, feats)
+  created_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/app/(main)/characters/new/guided/page.tsx
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/components/guided-creator/steps/abilities-step.tsx
+    - src/components/guided-creator/steps/character-feat-step.tsx
+    - src/lib/api-validation.ts
+    - src/app/api/characters/route.ts
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+    - reports/audit-2026-08-13/03-guided-creator.md
+  description: |
+    Owner ack 2026-08-13: do after the Wave 2 funnel land. Report 03 P1-6–P1-10 still
+    open: guest funnel waits on auth loading; character create is fully client-trusted;
+    flaky POST can duplicate characters; recommended abilities can display without
+    write-back; character feat is auto-selected without a requirement check.
+  acceptance_criteria:
+    - Guided shell renders without blocking the Path step on `useAuth().loading` (client-only guard for persist hydration; Reveal still gates save on login).
+    - Level-1 create has a server legality check (ability/skill budgets, feat counts, currency >= 0, HP+EN pool) or an explicit owner waiver in the tracker.
+    - Create uses an idempotency key (or equivalent) so a lost response cannot insert two characters.
+    - `abilitiesMode === 'recommended'` persists the abilities the player saw (pathData resolved, no fallback lock-in).
+    - Character-feat step does not auto-pick an unchecked feat; L1 select honors `checkFeatRequirements`.
+    - FEATURE_INDEX / AUDIT_REMEDIATION rows updated; typecheck/lint pass.
+  notes: |
+    P1-5 keyboard is done (TASK-734). P2 catalog/virtualization is out of scope. Server
+    legality may need Architect if it changes the characters POST contract.
+
+---
+
+- id: TASK-739
+  title: Clamp Advanced getCharacter currency at 0 on save
+  created_at: 2026-08-13
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/lib/guided-creator/equipment-currency.ts
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    Owner ack 2026-08-13: do after the Wave 2 funnel land. Guided save uses
+    `clampSavedCurrency` so a character cannot start in debt. Advanced `getCharacter`
+    still writes `draft.currency ?? CHARACTER_STARTING_CURRENCY` unclamped.
+  acceptance_criteria:
+    - Advanced create/save persists `Math.max(0, remaining)` (same floor as Guided).
+    - Do not import `clampSavedCurrency` into the Advanced store if that creates a cycle
+      (`equipment-currency.ts` already imports `CHARACTER_STARTING_CURRENCY` from the store) —
+      inline the floor or move the helper to a leaf module.
+    - Targeted test: negative draft currency saves as 0. Typecheck/lint pass.
+  notes: |
+    Guided Loadout keeps the signed remainder on the draft for the rail; only the
+    persisted character is clamped. Match that split if Advanced ever shows overspend.

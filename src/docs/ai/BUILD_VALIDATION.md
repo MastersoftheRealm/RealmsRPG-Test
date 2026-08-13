@@ -1528,6 +1528,25 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Expected** | All sheet modals open/save via context (no blank/error). Library tabs still add/remove/equip; campaign RM view remains read-only. |
 | **Report** | DEV-V-009-T040: PASS / FAIL / SKIP — |
 
+#### DEV-V-009-T042 — Sheet autosave survives re-renders and failed saves (TASK-736)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-736 |
+| **Where** | `/characters/[id]` (edit mode) |
+| **Needs** | Editable owned character; optional: throttle network in DevTools |
+
+**Steps**
+1. Edit a note (or name) and wait ~2s without further typing — confirm the save toast / dirty indicator clears (debounce still fires even if the sheet re-renders from queries).
+2. Offline or block `/api/characters/*` PATCH, edit again — confirm an error toast; wait and restore network — a retry should persist without requiring another keystroke.
+3. Optional: edit, then switch away from the tab (hide) — returning should not lose the edit.
+
+**Expected**
+- Autosave is not starved by re-renders. Failed saves retry. Hiding the tab flushes a dirty save.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-005 — RLS policy consolidation (TASK-352, TASK-327)
@@ -3773,6 +3792,26 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Expected**
 - Path More details equipment names resolve via official + My Library + `docId`.
 - Preview feat labels never fall back to a raw id.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T085 — Choice card See more is keyboard-usable (TASK-734)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-734 |
+| **Where** | Guided creator → Path L1 (or Species / Ancestry choice cards) |
+| **Needs** | Keyboard; a card with truncated copy so **See more…** appears |
+
+**Steps**
+1. Tab to a path/species card, then Tab to **See more…**. Press Enter (and Space). Confirm the card **expands** and is **not** selected.
+2. Tab to **See less** (if shown) and activate — card collapses without selecting.
+3. Tab to **More details** (if present) — still opens the modal without selecting. Enter/Space on the card itself still selects.
+4. Repeat at ~360px: See more remains tappable (≥44px on touch).
+
+**Expected**
+- See more / See less / More details never select the card from the keyboard. Card root announces “selected” in its accessible name when chosen.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6499,9 +6538,26 @@ Post-apply smoke for anon grant hardening, public read paths, and guest characte
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
----
+#### DEV-V-041-T004 — GET honors visibility column over blob (TASK-735)
 
-## DEV-V-043 — Wave 5 page facade splits (TASK-666)
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-041 |
+| **Related task** | TASK-735 |
+| **Where** | Public / private character URLs while logged out |
+| **Needs** | A public character; a private character (owner URL) |
+
+**Steps**
+1. Logged out: public sheet still loads (column `public`).
+2. Logged out: private sheet 404s even if you previously saw it as owner.
+3. Signed-in owner: private sheet still loads.
+
+**Expected**
+- Cross-user GET uses `characters.visibility` (not a stale `data.visibility` blob). Automated: `route.test.ts` column-private + blob-public → 404.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
 
 Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC; verify routes still load and core actions work after splits (no behavior change intended).
 
@@ -6678,7 +6734,7 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 | DEV-V-048 | Library search toolbar + Enhanced Items tab (session) | — | Manual — see suite above |
 | DEV-V-046 | Library power/technique categories + filters (TASK-673 / TASK-676 / TASK-731 / TASK-725) | — | Automated (category/filter/innate/formulas tests) + manual DEV-V-046 T001–T007 |
 | DEV-V-044 | Power Creator AoE applyDuration persistence (TASK-672) | — | Automated (library-columnar + power-calc tests) + manual DEV-V-044-T001 |
-| DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649) | — | Manual DEV-V-041 + `node scripts/verify-task-649.mjs` |
+| DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649 / TASK-735) | — | Manual DEV-V-041 T001–T004 + `node scripts/verify-task-649.mjs` |
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |
 | DEV-V-043 | Wave 5 page facade splits (TASK-666) | — | Manual — see suite above |
 

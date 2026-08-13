@@ -42,9 +42,13 @@ vi.mock('@/lib/character-save', () => ({
   prepareCharacterForSave: vi.fn((data: unknown) => data),
 }));
 
-vi.mock('@/lib/character-list-columns', () => ({
-  getCharacterListColumns: vi.fn(() => ({})),
-}));
+vi.mock('@/lib/character-list-columns', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/character-list-columns')>();
+  return {
+    ...actual,
+    getCharacterListColumns: vi.fn(() => ({})),
+  };
+});
 
 vi.mock('@/lib/game/archetype-display', () => ({
   fetchArchetypeNameMap: vi.fn(() => Promise.resolve(new Map())),
@@ -72,19 +76,23 @@ type CharacterRow = {
   data: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+  visibility?: string | null;
 };
 
 function makeCharacterRow(
   id: string,
   userId: string,
-  overrides: Partial<CharacterRow['data']> = {}
+  overrides: Partial<CharacterRow['data']> = {},
+  column?: { visibility?: string | null }
 ): CharacterRow {
+  const data = { name: 'Test Hero', level: 1, visibility: 'private', ...overrides };
   return {
     id,
     user_id: userId,
-    data: { name: 'Test Hero', level: 1, visibility: 'private', ...overrides },
+    data,
     created_at: '2026-07-01T12:00:00.000Z',
     updated_at: '2026-07-01T12:00:00.000Z',
+    visibility: column && 'visibility' in column ? column.visibility : (data.visibility as string),
   };
 }
 
@@ -267,6 +275,25 @@ describe('GET /api/characters/[id]', () => {
       items: ['item-1'],
       creatures: [],
     });
+  });
+
+  it('returns 404 when the visibility column is private even if the blob says public', async () => {
+    const row = makeCharacterRow(
+      'char-desync',
+      OWNER.uid,
+      { visibility: 'public' },
+      { visibility: 'private' }
+    );
+    mockGetSession.mockResolvedValue({ user: OTHER, error: null });
+    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+    const response = await GET(makeGetRequest('char-desync'), {
+      params: Promise.resolve({ id: 'char-desync' }),
+    });
+
+    expect(response.status).toBe(404);
+    await expect(readJson(response)).resolves.toBeNull();
+    expect(mockGetOwnerLibraryForView).not.toHaveBeenCalled();
   });
 });
 

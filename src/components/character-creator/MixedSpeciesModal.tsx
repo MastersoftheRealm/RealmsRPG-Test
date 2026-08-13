@@ -11,10 +11,8 @@
 
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { Modal, Button } from '@/components/ui';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl, type SourceFilterValue } from '@/components/shared';
 import type { Species } from '@/hooks';
-
-type SourceFilterValue = 'all' | 'public' | 'my';
 
 interface MixedSpeciesModalProps {
   isOpen: boolean;

@@ -14,11 +14,18 @@ import { prepareCharacterForSave } from '@/lib/character-save';
 import { normalizeCharacterForSave, normalizeCharacterOnLoad } from '@/lib/character/schema-normalize';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import { collectCharacterLibraryRefIds, getOwnerLibraryForView } from '@/lib/owner-library-for-view';
-import { getCharacterListColumns } from '@/lib/character-list-columns';
+import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
-import type { Character, CharacterVisibility } from '@/types';
+import type { Character } from '@/types';
 
-type CharRow = { id: string; user_id: string; data: unknown; created_at: string | null; updated_at: string | null };
+type CharRow = {
+  id: string;
+  user_id: string;
+  data: unknown;
+  created_at: string | null;
+  updated_at: string | null;
+  visibility?: string | null;
+};
 
 function rowToCharacter(row: CharRow): Character {
   const d = normalizeCharacterOnLoad((row.data as Record<string, unknown>) ?? {});
@@ -47,7 +54,7 @@ export async function GET(
     const supabase = await createClient();
     const { data: row, error: rowErr } = await supabase
       .from('characters')
-      .select('id, user_id, data, created_at, updated_at')
+      .select('id, user_id, data, created_at, updated_at, visibility')
       .eq('id', id.trim())
       .maybeSingle();
     if (rowErr) throw rowErr;
@@ -62,7 +69,7 @@ export async function GET(
       return NextResponse.json({ character: rowToCharacter(charRow) });
     }
 
-    const visibility = ((charRow.data as Record<string, unknown>)?.visibility as CharacterVisibility) ?? 'private';
+    const visibility = resolveCharacterVisibility(charRow);
     if (visibility === 'public') {
       const libraryForView = await getOwnerLibraryForView(
         charRow.user_id,

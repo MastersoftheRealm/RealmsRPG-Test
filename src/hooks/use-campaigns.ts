@@ -29,9 +29,11 @@ export function useCampaigns() {
 }
 
 export function useCampaignsFull() {
+  const { user } = useAuthStore();
   return useQuery({
     queryKey: [...campaignKeys.lists(), 'full'] as const,
     queryFn: getMyCampaignsFull,
+    enabled: !!user,
   });
 }
 

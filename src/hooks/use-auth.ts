@@ -7,6 +7,7 @@
 'use client';
 
 import { useEffect, useCallback, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AuthUser } from '@/types/auth';
@@ -43,6 +44,7 @@ export function useAuth() {
 
   const isClient = useIsClient();
   const mountedRef = useRef(true);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!isClient) return;
@@ -58,11 +60,16 @@ export function useAuth() {
     }
 
     const supabase = createClient();
+    let listenerFired = false;
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      listenerFired = true;
       if (mountedRef.current) {
         setUser(toAuthUser(session?.user ?? null));
         setInitialized(true);
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT' || event === 'USER_UPDATED') {
+          queryClient.clear();
+        }
         if (event === 'SIGNED_IN' && session?.user && hasGuestEncountersToMigrate()) {
           migrateGuestEncountersOnSignIn().catch((err) => {
             logClientError('use-auth: guest encounter migration failed', err);
@@ -71,14 +78,14 @@ export function useAuth() {
       }
     });
 
-    // Get initial session (only sets state if onAuthStateChange hasn't fired yet)
+    // Ignore getUser if onAuthStateChange already delivered the live session.
     supabase.auth.getUser().then(({ data: { user: u } }) => {
-      if (mountedRef.current) {
+      if (mountedRef.current && !listenerFired) {
         setUser(toAuthUser(u));
         setInitialized(true);
       }
     }).catch(() => {
-      if (mountedRef.current) {
+      if (mountedRef.current && !listenerFired) {
         setError('Failed to initialize auth');
         setInitialized(true);
       }
@@ -88,7 +95,7 @@ export function useAuth() {
       mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [isClient, setUser, setError, setInitialized, setLoading]);
+  }, [isClient, setUser, setError, setInitialized, setLoading, queryClient]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {

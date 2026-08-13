@@ -14,7 +14,7 @@ import { validateJson, characterCreateSchema } from '@/lib/api-validation';
 import { prepareCharacterForCreate } from '@/lib/character-save';
 import { normalizeCharacterForSave, normalizeCharacterOnLoad } from '@/lib/character/schema-normalize';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
-import { getCharacterListColumns } from '@/lib/character-list-columns';
+import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import type { Character, CharacterSummary } from '@/types';
 
@@ -63,7 +63,7 @@ export async function GET() {
         archetypeName: archName ?? undefined,
         ancestryName: r.ancestry_name ?? (d.ancestry as { name?: string })?.name ?? (d.species as string),
         status: (r.status as CharacterSummary['status']) ?? (d.status as CharacterSummary['status']),
-        visibility: (r.visibility as CharacterSummary['visibility']) ?? (d.visibility as CharacterSummary['visibility']) ?? 'private',
+        visibility: resolveCharacterVisibility({ visibility: r.visibility, data: d }),
         updatedAt: r.updated_at ?? undefined,
       };
     });
