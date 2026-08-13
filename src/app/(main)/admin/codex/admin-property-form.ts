@@ -38,12 +38,17 @@ function rawOptNum(v: unknown): number | undefined {
   return v != null && v !== '' ? (v as number) : undefined;
 }
 
+/** Values `savedPropertyFromPayload` accepts; General properties apply to any armament. */
+export const PROPERTY_TYPES = ['Armor', 'Shield', 'Weapon', 'General'] as const;
+
+/**
+ * Runs on load as well as save, so anything it does not recognise is rewritten in the DB.
+ * It used to collapse every non-armor/shield/weapon value to Armor, which silently
+ * reclassified General properties on any edit.
+ */
 export function normalizePropertyType(rawType: string | undefined): string {
-  const lower = (rawType || '').toLowerCase();
-  if (lower === 'armor') return 'Armor';
-  if (lower === 'shield') return 'Shield';
-  if (lower === 'weapon') return 'Weapon';
-  return 'Armor';
+  const lower = (rawType || '').trim().toLowerCase();
+  return PROPERTY_TYPES.find((type) => type.toLowerCase() === lower) ?? 'General';
 }
 
 export function propertyToFormState(p: ItemProperty, copyName?: string): PropertyFormState {

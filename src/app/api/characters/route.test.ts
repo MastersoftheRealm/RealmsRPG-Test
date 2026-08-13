@@ -29,11 +29,15 @@ vi.mock('@/lib/game/archetype-display', async (importOriginal) => {
   };
 });
 
-vi.mock('@/lib/rate-limit', () => ({
-  standardLimiter: {
-    check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
-  },
-}));
+vi.mock('@/lib/rate-limit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/rate-limit')>();
+  return {
+    ...actual,
+    standardLimiter: {
+      check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+    },
+  };
+});
 
 import { GET, POST } from './route';
 import { getSession } from '@/lib/supabase/session';
@@ -108,6 +112,7 @@ function makePostRequest(body: unknown, headers: Record<string, string> = {}) {
     headers: {
       'content-type': 'application/json',
       'x-forwarded-for': '203.0.113.1',
+      origin: 'http://localhost',
       ...headers,
     },
     body: JSON.stringify(body),
@@ -211,7 +216,7 @@ describe('POST /api/characters', () => {
 
     const request = new NextRequest('http://localhost/api/characters', {
       method: 'POST',
-      headers: { 'content-type': 'text/html' },
+      headers: { 'content-type': 'text/html', origin: 'http://localhost' },
       body: '<p>not json</p>',
     });
 
@@ -221,6 +226,30 @@ describe('POST /api/characters', () => {
     await expect(readJson(response)).resolves.toEqual({
       error: 'Content-Type must be application/json',
     });
+  });
+
+  it('returns 415 for text/plain (no CORS preflight content type)', async () => {
+    mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+
+    const request = new NextRequest('http://localhost/api/characters', {
+      method: 'POST',
+      headers: { 'content-type': 'text/plain', origin: 'http://localhost' },
+      body: JSON.stringify({ name: 'Sneaky Hero' }),
+    });
+
+    const response = await POST(request);
+
+    expect(response.status).toBe(415);
+  });
+
+  it('returns 403 for a cross-origin create', async () => {
+    mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+
+    const response = await POST(
+      makePostRequest({ name: 'New Hero' }, { origin: 'https://evil.example' })
+    );
+
+    expect(response.status).toBe(403);
   });
 
   it('returns 400 when the body fails Zod validation', async () => {

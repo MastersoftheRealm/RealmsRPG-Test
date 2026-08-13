@@ -8,8 +8,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson, libraryItemUpdateSchema } from '@/lib/api-validation';
-import { standardLimiter } from '@/lib/rate-limit';
+import { validateJson, verifyMutationRequest, libraryItemUpdateSchema } from '@/lib/api-validation';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import {
   COLUMNAR_LIBRARY_TYPES,
   rowToItem,
@@ -55,24 +55,26 @@ export async function GET(
     const supabase = await createClient();
 
     if (isColumnar(type)) {
-      const { data: row } = await supabase
+      const { data: row, error: dbError } = await supabase
         .from(TABLE[type])
         .select('*')
         .eq('id', id.trim())
         .eq('user_id', user.uid)
         .maybeSingle();
+      if (dbError) throw dbError;
       if (!row) return NextResponse.json(null, { status: 404 });
       const record = row as Record<string, unknown>;
       await enrichRowsWithBankImageUrls(supabase, [record]);
       return NextResponse.json(rowToItem(type, record, 'user'));
     }
 
-    const { data: row } = await supabase
+    const { data: row, error: dbError } = await supabase
       .from('user_species')
       .select('*')
       .eq('id', id.trim())
       .eq('user_id', user.uid)
       .maybeSingle();
+    if (dbError) throw dbError;
     if (!row) return NextResponse.json(null, { status: 404 });
     const r = row as Record<string, unknown>;
     await enrichRowsWithBankImageUrls(supabase, [r]);
@@ -91,15 +93,16 @@ export async function PATCH(
   { params }: { params: Promise<{ type: string; id: string }> }
 ) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = await standardLimiter.check(`lib-patch:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('lib-patch', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const { type, id } = await params;
@@ -110,12 +113,13 @@ export async function PATCH(
     const supabase = await createClient();
 
     if (isColumnar(type)) {
-      const { data: existing } = await supabase
+      const { data: existing, error: existingErr } = await supabase
         .from(TABLE[type])
         .select('*')
         .eq('id', id.trim())
         .eq('user_id', user.uid)
         .maybeSingle();
+      if (existingErr) throw existingErr;
       if (!existing) {
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
@@ -139,12 +143,13 @@ export async function PATCH(
       return NextResponse.json({ ok: true });
     }
 
-    const { data: existing } = await supabase
+    const { data: existing, error: existingErr } = await supabase
       .from('user_species')
       .select('*')
       .eq('id', id.trim())
       .eq('user_id', user.uid)
       .maybeSingle();
+    if (existingErr) throw existingErr;
     if (!existing) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }
@@ -193,15 +198,19 @@ export async function DELETE(
   { params }: { params: Promise<{ type: string; id: string }> }
 ) {
   try {
-    const ip = _request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = await standardLimiter.check(`lib-del:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const denied = verifyMutationRequest(_request);
+    if (denied) return denied;
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('lib-del', { userId: user.uid, ip: resolveClientIp(_request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const { type, id } = await params;
@@ -212,12 +221,13 @@ export async function DELETE(
     const supabase = await createClient();
 
     if (isColumnar(type)) {
-      const { data: existing } = await supabase
+      const { data: existing, error: existingErr } = await supabase
         .from(TABLE[type])
         .select('id')
         .eq('id', id.trim())
         .eq('user_id', user.uid)
         .maybeSingle();
+      if (existingErr) throw existingErr;
       if (!existing) {
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }
@@ -230,12 +240,13 @@ export async function DELETE(
       return NextResponse.json({ ok: true });
     }
 
-    const { data: existing } = await supabase
+    const { data: existing, error: existingErr } = await supabase
       .from('user_species')
       .select('id')
       .eq('id', id.trim())
       .eq('user_id', user.uid)
       .maybeSingle();
+    if (existingErr) throw existingErr;
     if (!existing) {
       return NextResponse.json({ error: 'Item not found' }, { status: 404 });
     }

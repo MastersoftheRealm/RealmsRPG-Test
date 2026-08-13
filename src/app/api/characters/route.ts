@@ -13,7 +13,7 @@ import { buildRoleQuotaExceededResponse } from '@/lib/role-quota-messages';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
 import { prepareCharacterForCreate } from '@/lib/character-save';
 import { normalizeCharacterForSave, normalizeCharacterOnLoad } from '@/lib/character/schema-normalize';
-import { standardLimiter } from '@/lib/rate-limit';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import type { Character, CharacterSummary } from '@/types';
@@ -77,15 +77,16 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = await standardLimiter.check(`char-post:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('char-post', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const validation = await validateJson(request, characterCreateSchema);
@@ -113,12 +114,13 @@ export async function POST(request: NextRequest) {
     }
 
     if (duplicateOf) {
-      const { data: existing } = await supabase
+      const { data: existing, error: existingErr } = await supabase
         .from('characters')
         .select('id, data')
         .eq('id', duplicateOf)
         .eq('user_id', user.uid)
         .maybeSingle();
+      if (existingErr) throw existingErr;
       if (!existing) {
         return NextResponse.json({ error: 'Character not found' }, { status: 404 });
       }

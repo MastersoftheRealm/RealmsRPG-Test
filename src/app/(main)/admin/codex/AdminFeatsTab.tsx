@@ -18,7 +18,8 @@ import { Button, IconButton, useToast } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
+import { createCodexDoc, updateCodexDoc } from './actions';
+import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
 import { Pencil, Copy, X, Layers } from 'lucide-react';
 import { groupFeatFamilies, formatFeatName, getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
 import {
@@ -156,8 +157,11 @@ export function AdminFeatsTab() {
     setSaving(true);
     const data = featFormToSavePayload(form);
 
+    const savingId = editId ?? editing?.id;
     const result = editing
-      ? await updateCodexDoc('codex_feats', editId ?? editing.id, data)
+      ? await updateCodexDoc('codex_feats', savingId ?? editing.id, data, {
+          expectedUpdatedAt: (feats ?? []).find((f) => String(f.id) === String(savingId))?.updated_at,
+        })
       : await createCodexDoc('codex_feats', undefined, data);
 
     setSaving(false);
@@ -183,7 +187,9 @@ export function AdminFeatsTab() {
         continue;
       }
 
-      const result = await updateCodexDoc('codex_feats', id, featFormToSavePayload(form));
+      const result = await updateCodexDoc('codex_feats', id, featFormToSavePayload(form), {
+        expectedUpdatedAt: (feats ?? []).find((f) => String(f.id) === id)?.updated_at,
+      });
       if (!result.success) errors.push(`Update ${id}: ${result.error}`);
     }
 
@@ -201,19 +207,26 @@ export function AdminFeatsTab() {
     closeModal();
   };
 
+  const codexDelete = useAdminCodexDelete({
+    collection: 'codex_feats',
+    onDeleted: async () => {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+      closeModal();
+    },
+    onError: (message) => {
+      setPendingDeleteId(null);
+      showToast(message, 'error');
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (deleteConfirm !== id) {
       setDeleteConfirm(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_feats', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    await codexDelete.requestDelete(id);
   };
 
   const handleInlineDelete = async (id: string) => {
@@ -221,15 +234,7 @@ export function AdminFeatsTab() {
       setPendingDeleteId(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_feats', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-      setPendingDeleteId(null);
-    }
+    await codexDelete.requestDelete(id);
   };
 
   if (error) return <ErrorState message="Failed to load feats" onRetry={() => { void refetch(); }} />;
@@ -397,6 +402,8 @@ export function AdminFeatsTab() {
           onAddLevel={openAddLevelFromEditModal}
         />
       ) : null}
+
+      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="feat" />
     </div>
   );
 }

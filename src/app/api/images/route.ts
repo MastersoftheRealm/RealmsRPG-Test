@@ -19,6 +19,7 @@ import {
   type RealmsImageCategory,
 } from '@/lib/realms-images';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
+import { verifyMutationRequest } from '@/lib/api-validation';
 import {
   REALMS_IMAGE_SELECT,
   fetchRealmsImageById,
@@ -106,6 +107,9 @@ export async function POST(request: NextRequest) {
   if (!(await isAdmin(user.uid))) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   }
+
+  const denied = verifyMutationRequest(request);
+  if (denied) return denied;
 
   const key = buildRateLimitKey('upload-realms-image', {
     userId: user.uid,

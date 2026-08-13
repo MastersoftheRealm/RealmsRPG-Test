@@ -9,20 +9,34 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
-vi.mock('@/lib/owner-library-for-view', () => ({
-  getOwnerLibraryForView: vi.fn(),
-}));
+// collectCharacterLibraryRefIds stays real: the scoping it produces is the P0 fix.
+vi.mock('@/lib/owner-library-for-view', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/owner-library-for-view')>();
+  return {
+    ...actual,
+    getOwnerLibraryForView: vi.fn(),
+  };
+});
 
-vi.mock('@/lib/rate-limit', () => ({
-  standardLimiter: {
-    check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
-  },
-}));
+vi.mock('@/lib/rate-limit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/rate-limit')>();
+  return {
+    ...actual,
+    standardLimiter: {
+      check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+    },
+  };
+});
 
-vi.mock('@/lib/api-validation', () => ({
-  validateJson: vi.fn(),
-  characterUpdateSchema: {},
-}));
+// verifyMutationRequest stays real so the same-origin guard is exercised.
+vi.mock('@/lib/api-validation', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/api-validation')>();
+  return {
+    ...actual,
+    validateJson: vi.fn(),
+    characterUpdateSchema: {},
+  };
+});
 
 vi.mock('@/lib/character-save', () => ({
   prepareCharacterForSave: vi.fn((data: unknown) => data),
@@ -140,15 +154,19 @@ function makeGetRequest(id: string) {
 function makePatchRequest(id: string, body: unknown) {
   return new NextRequest(`http://localhost/api/characters/${id}`, {
     method: 'PATCH',
-    headers: { 'content-type': 'application/json', 'x-forwarded-for': '203.0.113.1' },
+    headers: {
+      'content-type': 'application/json',
+      'x-forwarded-for': '203.0.113.1',
+      origin: 'http://localhost',
+    },
     body: JSON.stringify(body),
   });
 }
 
-function makeDeleteRequest(id: string) {
+function makeDeleteRequest(id: string, headers: Record<string, string> = {}) {
   return new NextRequest(`http://localhost/api/characters/${id}`, {
     method: 'DELETE',
-    headers: { 'x-forwarded-for': '203.0.113.1' },
+    headers: { 'x-forwarded-for': '203.0.113.1', origin: 'http://localhost', ...headers },
   });
 }
 
@@ -229,6 +247,26 @@ describe('GET /api/characters/[id]', () => {
     const body = await readJson<{ character: { id: string }; libraryForView: unknown }>(response);
     expect(body.character.id).toBe('char-public');
     expect(body.libraryForView).toEqual({ powers: [], techniques: [], items: [], creatures: [] });
+  });
+
+  it('scopes the owner library to the ids the public character references', async () => {
+    const row = makeCharacterRow('char-public', OWNER.uid, {
+      visibility: 'public',
+      powers: [{ id: 'power-1', name: 'Firebolt' }],
+      techniques: [{ id: 'technique-1', name: 'Riposte' }],
+      equipment: { weapons: [{ id: 'item-1', name: 'Sword' }] },
+    });
+    mockGetSession.mockResolvedValue({ user: OTHER, error: null });
+    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+    await GET(makeGetRequest('char-public'), { params: Promise.resolve({ id: 'char-public' }) });
+
+    expect(mockGetOwnerLibraryForView).toHaveBeenCalledWith(OWNER.uid, {
+      powers: ['power-1'],
+      techniques: ['technique-1'],
+      items: ['item-1'],
+      creatures: [],
+    });
   });
 });
 

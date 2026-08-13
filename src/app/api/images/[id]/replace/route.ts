@@ -11,6 +11,7 @@ import { createServiceRoleClient } from '@/lib/supabase/server';
 import { detectImageMime, extensionForImageMime, validateImageMagicBytes } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
+import { verifyMutationRequest } from '@/lib/api-validation';
 import {
   REALMS_IMAGES_BUCKET,
   realmsImageStoragePath,
@@ -33,6 +34,9 @@ export async function POST(request: NextRequest, context: RouteContext) {
   if (!(await isAdmin(user.uid))) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   }
+
+  const denied = verifyMutationRequest(request);
+  if (denied) return denied;
 
   const key = buildRateLimitKey('replace-realms-image', {
     userId: user.uid,

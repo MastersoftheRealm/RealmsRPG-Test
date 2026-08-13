@@ -3,7 +3,7 @@
 import type { Dispatch, SetStateAction } from 'react';
 import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { Plus, X } from 'lucide-react';
-import type { PropertyFormState } from './admin-property-form';
+import { PROPERTY_TYPES, type PropertyFormState } from './admin-property-form';
 
 export type AdminPropertyEditModalProps = {
   isOpen: boolean;
@@ -107,9 +107,11 @@ export function AdminPropertyEditModal({
               className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
               aria-label="Property type"
             >
-              <option value="Armor">Armor</option>
-              <option value="Shield">Shield</option>
-              <option value="Weapon">Weapon</option>
+              {PROPERTY_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
             </select>
           </div>
           <label className="flex items-center gap-2 mt-6">

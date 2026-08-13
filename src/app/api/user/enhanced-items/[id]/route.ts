@@ -7,24 +7,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson, enhancedItemPatchSchema } from '@/lib/api-validation';
+import { validateJson, verifyMutationRequest, enhancedItemPatchSchema } from '@/lib/api-validation';
 import { apiErrorResponse } from '@/lib/api-error';
-import { standardLimiter } from '@/lib/rate-limit';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = await standardLimiter.check(`enhanced-patch:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('enhanced-patch', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const validation = await validateJson(request, enhancedItemPatchSchema);
@@ -38,9 +39,10 @@ export async function PATCH(
       .select('data, name')
       .eq('id', id)
       .eq('user_id', user.uid)
-      .single();
+      .maybeSingle();
+    if (fetchErr) throw fetchErr;
 
-    if (fetchErr || !row) {
+    if (!row) {
       return NextResponse.json({ error: 'Enhanced item not found' }, { status: 404 });
     }
 
@@ -77,19 +79,23 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ip = (_request as unknown as NextRequest).headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = await standardLimiter.check(`enhanced-del:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const denied = verifyMutationRequest(_request);
+    if (denied) return denied;
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('enhanced-del', { userId: user.uid, ip: resolveClientIp(_request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const { id } = await params;

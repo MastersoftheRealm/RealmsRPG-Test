@@ -7,11 +7,10 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
-import { validateJson, publicItemSchema } from '@/lib/api-validation';
+import { validateJson, verifyMutationRequest, publicItemSchema } from '@/lib/api-validation';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import {
   rowToItem,
@@ -23,6 +22,10 @@ import {
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
+import {
+  allocateCodexNumericId,
+  retireCodexId,
+} from '@/app/(main)/admin/codex/codex-id-allocation';
 
 const SPECIES_TABLE = 'codex_species';
 
@@ -55,31 +58,6 @@ const SPECIES_CODEX_DB_KEYS = new Set([
   'image_id',
   'image_url',
 ]);
-
-function parseNumericId(id: unknown): number | null {
-  if (typeof id !== 'string') return null;
-  if (!/^\d+$/.test(id)) return null;
-  const n = Number(id);
-  if (!Number.isSafeInteger(n) || n <= 0) return null;
-  return n;
-}
-
-async function allocateLowestUnusedSpeciesCodexId(supabase: SupabaseClient): Promise<string> {
-  const { data, error } = await supabase.from(SPECIES_TABLE).select('id');
-  if (error) throw error;
-  const used = new Set<number>();
-  let max = 0;
-  for (const row of (data ?? []) as Array<{ id?: unknown }>) {
-    const n = parseNumericId(row.id);
-    if (n == null) continue;
-    used.add(n);
-    if (n > max) max = n;
-  }
-  for (let i = 1; i <= max + 1; i++) {
-    if (!used.has(i)) return String(i);
-  }
-  return String(max + 1);
-}
 
 /** Creator payloads use ave_height / ave_weight; columnar expects ave_hgt_cm / ave_wgt_kg. */
 function normalizeSpeciesBody(body: Record<string, unknown>): Record<string, unknown> {
@@ -220,7 +198,7 @@ export async function POST(
       }
 
       for (let attempt = 0; attempt < 3; attempt++) {
-        const id = await allocateLowestUnusedSpeciesCodexId(supabase);
+        const id = await allocateCodexNumericId(supabase, SPECIES_TABLE);
         const { error: insertError } = await supabase.from(SPECIES_TABLE).insert({ id, ...dbRow }).select('id').single();
         if (!insertError) {
           return NextResponse.json({ id });
@@ -282,6 +260,9 @@ export async function DELETE(
       return NextResponse.json({ error: 'Admin only' }, { status: 403 });
     }
 
+    const denied = verifyMutationRequest(_request);
+    if (denied) return denied;
+
     const { type } = await params;
     if (!VALID_TYPES.includes(type as OfficialType)) {
       return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
@@ -302,6 +283,9 @@ export async function DELETE(
     if (!deleted || deleted.length === 0) {
       return NextResponse.json({ error: 'Item not found or already deleted' }, { status: 404 });
     }
+    // Tombstone so the id is never handed to a different entity, which would silently
+    // repoint every saved character that referenced the deleted one.
+    await retireCodexId(supabase, table, id);
     return NextResponse.json({ ok: true });
   } catch (err) {
     logApiError('DELETE /api/official/[type]', err);

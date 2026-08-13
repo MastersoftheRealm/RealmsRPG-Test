@@ -24,7 +24,8 @@ import {
 const ABILITY_OPTIONS_SKILLS = ABILITIES_AND_DEFENSES.slice(0, 6);
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
+import { createCodexDoc, updateCodexDoc } from './actions';
+import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
 import { Pencil, Copy, X } from 'lucide-react';
 const COPY_NAME_SUFFIX = ' copy';
 
@@ -44,18 +45,7 @@ export function AdminSkillsTab() {
     subSkillMode: '',
   });
   const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<{
-    id: string;
-    name: string;
-    description: string;
-    ability: string;
-    base_skill_id?: number;
-    success_desc?: string;
-    failure_desc?: string;
-    ds_calc?: string;
-    craft_success_desc?: string;
-    craft_failure_desc?: string;
-  } | null>(null);
+  const [editing, setEditing] = useState<Skill | null>(null);
   const [saving, setSaving] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
@@ -223,7 +213,7 @@ export function AdminSkillsTab() {
     };
 
     const result = editing
-      ? await updateCodexDoc('codex_skills', editing.id, data)
+      ? await updateCodexDoc('codex_skills', editing.id, data, { expectedUpdatedAt: editing.updated_at })
       : await createCodexDoc('codex_skills', undefined, data);
 
     setSaving(false);
@@ -236,19 +226,26 @@ export function AdminSkillsTab() {
     }
   };
 
+  const codexDelete = useAdminCodexDelete({
+    collection: 'codex_skills',
+    onDeleted: async () => {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+      closeModal();
+    },
+    onError: (message) => {
+      setPendingDeleteId(null);
+      showToast(message, 'error');
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (deleteConfirm !== id) {
       setDeleteConfirm(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_skills', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    await codexDelete.requestDelete(id);
   };
 
   const handleInlineDelete = async (id: string) => {
@@ -256,15 +253,7 @@ export function AdminSkillsTab() {
       setPendingDeleteId(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_skills', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-      setPendingDeleteId(null);
-    }
+    await codexDelete.requestDelete(id);
   };
 
   if (error) return <ErrorState message="Failed to load skills" onRetry={() => { void refetch(); }} />;
@@ -484,6 +473,8 @@ export function AdminSkillsTab() {
           </div>
         </div>
       </Modal>
+
+      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="skill" />
     </div>
   );
 }

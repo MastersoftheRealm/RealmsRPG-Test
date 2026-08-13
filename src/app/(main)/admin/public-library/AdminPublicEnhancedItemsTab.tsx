@@ -6,6 +6,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DeleteConfirmModal, OfficialEnhancedList } from '@/components/shared';
 import {
   useOfficialLibrary,
@@ -15,8 +16,25 @@ import {
   type OfficialEnhancedItem,
   type CreateOfficialEnhancedItemInput,
 } from '@/hooks';
+import { enhancedItemsKeys } from '@/hooks/use-enhanced-items';
+import { apiFetch } from '@/lib/api-client';
 import { Button, Modal, Select, Input } from '@/components/ui';
 import type { LibraryItem, LibraryPower } from '@/types/library';
+
+/** Edit sends the same body as create to `PATCH ?id=`; POST would insert a second entity. */
+function useUpdateOfficialEnhancedItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, body }: { id: string; body: CreateOfficialEnhancedItemInput }) =>
+      apiFetch(`/api/official/enhanced-items?id=${encodeURIComponent(id)}`, {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('official') });
+    },
+  });
+}
 
 export function AdminPublicEnhancedItemsTab() {
   const { data: enhanced = [], isLoading, error, refetch } = useEnhancedItems('official');
@@ -28,6 +46,7 @@ export function AdminPublicEnhancedItemsTab() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const createMutation = useCreateOfficialEnhancedItem();
+  const updateMutation = useUpdateOfficialEnhancedItem();
   const deleteMutation = useDeleteOfficialEnhancedItem();
 
   return (
@@ -86,8 +105,10 @@ export function AdminPublicEnhancedItemsTab() {
           items={items}
           powers={powers}
           initial={editTarget ?? undefined}
+          isSaving={createMutation.isPending || updateMutation.isPending}
           onSave={async (body) => {
-            await createMutation.mutateAsync(body);
+            if (editTarget) await updateMutation.mutateAsync({ id: editTarget.id, body });
+            else await createMutation.mutateAsync(body);
             setIsCreateOpen(false);
           }}
         />
@@ -104,6 +125,7 @@ function EnhancedItemEditModal({
   items,
   powers,
   initial,
+  isSaving,
   onSave,
 }: {
   isOpen: boolean;
@@ -111,12 +133,13 @@ function EnhancedItemEditModal({
   items: LibraryItem[];
   powers: LibraryPower[];
   initial?: OfficialEnhancedItem;
+  isSaving: boolean;
   onSave: (body: EnhancedEditBody) => Promise<void>;
 }) {
   const [name, setName] = useState(initial?.name ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
-  const [selectedItemId, setSelectedItemId] = useState<string | ''>('');
-  const [selectedPowerId, setSelectedPowerId] = useState<string | ''>('');
+  const [selectedItemId, setSelectedItemId] = useState<string | ''>(initial?.base_item_id ?? '');
+  const [selectedPowerId, setSelectedPowerId] = useState<string | ''>(initial?.power_id ?? '');
   const [usesType, setUsesType] = useState<'full' | 'partial' | 'permanent'>(
     (initial?.uses_type as 'full' | 'partial' | 'permanent' | undefined) ?? 'full'
   );
@@ -246,10 +269,15 @@ function EnhancedItemEditModal({
           )}
         </div>
         <div className="flex justify-end gap-2 pt-2">
-          <Button variant="ghost" onClick={onClose}>
+          <Button variant="ghost" onClick={onClose} disabled={isSaving}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit}>Save</Button>
+          <Button
+            onClick={handleSubmit}
+            disabled={isSaving || !name.trim() || !selectedItemId || !selectedPowerId}
+          >
+            {isSaving ? 'Saving...' : 'Save'}
+          </Button>
         </div>
       </div>
     </Modal>

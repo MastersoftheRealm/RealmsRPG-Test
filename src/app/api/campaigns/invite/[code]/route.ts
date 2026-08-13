@@ -44,11 +44,12 @@ export async function GET(
       return NextResponse.json({ error: 'Invite lookup unavailable' }, { status: 503 });
     }
 
-    const { data: row } = await supabase
+    const { data: row, error: lookupErr } = await supabase
       .from('campaigns')
       .select('id, name')
       .eq('invite_code', inviteCode)
       .maybeSingle();
+    if (lookupErr) throw lookupErr;
 
     if (!row) {
       return NextResponse.json(null, { status: 404 });

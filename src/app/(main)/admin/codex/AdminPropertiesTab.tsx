@@ -11,7 +11,8 @@ import { SelectFilter } from '@/components/shared/filters';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
+import { createCodexDoc, updateCodexDoc } from './actions';
+import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
 import { Pencil, Copy, X } from 'lucide-react';
 import { formatListCellLabel } from '@/lib/utils';
 import {
@@ -130,7 +131,7 @@ export function AdminPropertiesTab() {
     const data = propertyFormToSavePayload(form);
 
     const result = editing
-      ? await updateCodexDoc('codex_properties', editing.id, data)
+      ? await updateCodexDoc('codex_properties', editing.id, data, { expectedUpdatedAt: editing.updated_at })
       : await createCodexDoc('codex_properties', undefined, data);
 
     setSaving(false);
@@ -160,19 +161,26 @@ export function AdminPropertiesTab() {
     }
   };
 
+  const codexDelete = useAdminCodexDelete({
+    collection: 'codex_properties',
+    onDeleted: async () => {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+      closeModal();
+    },
+    onError: (message) => {
+      setPendingDeleteId(null);
+      showToast(message, 'error');
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (deleteConfirm !== id) {
       setDeleteConfirm(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_properties', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    await codexDelete.requestDelete(id);
   };
 
   const handleInlineDelete = async (id: string) => {
@@ -180,15 +188,7 @@ export function AdminPropertiesTab() {
       setPendingDeleteId(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_properties', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-      setPendingDeleteId(null);
-    }
+    await codexDelete.requestDelete(id);
   };
 
   if (error) return <ErrorState message="Failed to load properties" onRetry={() => { void refetch(); }} />;
@@ -373,6 +373,8 @@ export function AdminPropertiesTab() {
         onRequestDelete={() => editing && handleDelete(editing.id)}
         onSave={handleSave}
       />
+
+      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="property" />
     </div>
   );
 }

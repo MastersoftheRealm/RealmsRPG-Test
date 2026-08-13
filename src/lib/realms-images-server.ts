@@ -79,9 +79,10 @@ export async function fetchRealmsImageById(
     .eq('id', id)
     .maybeSingle();
 
+  // A query failure must not masquerade as "not found": callers map null to 404, so
+  // swallowing the error here reported a missing image for a transient fault.
   if (error) {
-    console.error('[realms-images] fetch by id failed:', error);
-    return null;
+    throw new Error(`realms_images lookup failed for id ${id}: ${error.message}`);
   }
   if (!data) return null;
   return mapRealmsImageRow(data as RealmsImageRow);

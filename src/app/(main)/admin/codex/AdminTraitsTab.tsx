@@ -12,7 +12,8 @@ import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useModalListState } from '@/hooks/use-modal-list-state';
 import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
+import { createCodexDoc, updateCodexDoc } from './actions';
+import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
 import { Pencil, Copy, X } from 'lucide-react';
 import {
   COPY_NAME_SUFFIX,
@@ -133,7 +134,7 @@ export function AdminTraitsTab() {
     setSaving(true);
     const data = traitFormToSavePayload(form);
     const result = editing
-      ? await updateCodexDoc('codex_traits', editing.id, data)
+      ? await updateCodexDoc('codex_traits', editing.id, data, { expectedUpdatedAt: editing.updated_at })
       : await createCodexDoc('codex_traits', undefined, data);
 
     setSaving(false);
@@ -146,19 +147,26 @@ export function AdminTraitsTab() {
     }
   };
 
+  const codexDelete = useAdminCodexDelete({
+    collection: 'codex_traits',
+    onDeleted: async () => {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+      closeModal();
+    },
+    onError: (message) => {
+      setPendingDeleteId(null);
+      showToast(message, 'error');
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (deleteConfirm !== id) {
       setDeleteConfirm(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_traits', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    await codexDelete.requestDelete(id);
   };
 
   const handleInlineDelete = async (id: string) => {
@@ -166,15 +174,7 @@ export function AdminTraitsTab() {
       setPendingDeleteId(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_traits', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-      setPendingDeleteId(null);
-    }
+    await codexDelete.requestDelete(id);
   };
 
   if (error) return <ErrorState message="Failed to load traits" onRetry={() => { void refetch(); }} />;
@@ -310,6 +310,8 @@ export function AdminTraitsTab() {
         creating={creatingTrait}
         onCreate={handleCreateTraitAndAdd}
       />
+
+      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="trait" />
     </div>
   );
 }

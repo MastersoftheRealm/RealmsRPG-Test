@@ -10,7 +10,8 @@ import { Modal, Button, Input, IconButton, useToast } from '@/components/ui';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
+import { createCodexDoc, updateCodexDoc } from './actions';
+import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
 import { formatCreatureLevel } from '@/lib/game';
 import { Pencil, Copy, X } from 'lucide-react';
 
@@ -115,7 +116,7 @@ export function AdminCreatureFeatsTab() {
     };
 
     const result = editing
-      ? await updateCodexDoc('codex_creature_feats', editing.id, data)
+      ? await updateCodexDoc('codex_creature_feats', editing.id, data, { expectedUpdatedAt: editing.updated_at })
       : await createCodexDoc('codex_creature_feats', undefined, data);
 
     setSaving(false);
@@ -128,19 +129,26 @@ export function AdminCreatureFeatsTab() {
     }
   };
 
+  const codexDelete = useAdminCodexDelete({
+    collection: 'codex_creature_feats',
+    onDeleted: async () => {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+      closeModal();
+    },
+    onError: (message) => {
+      setPendingDeleteId(null);
+      showToast(message, 'error');
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (deleteConfirm !== id) {
       setDeleteConfirm(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_creature_feats', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    await codexDelete.requestDelete(id);
   };
 
   const handleInlineDelete = async (id: string) => {
@@ -148,15 +156,7 @@ export function AdminCreatureFeatsTab() {
       setPendingDeleteId(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_creature_feats', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-      setPendingDeleteId(null);
-    }
+    await codexDelete.requestDelete(id);
   };
 
   if (error) return <ErrorState message="Failed to load creature feats" onRetry={() => { void refetch(); }} />;
@@ -315,6 +315,8 @@ export function AdminCreatureFeatsTab() {
           </label>
         </div>
       </Modal>
+
+      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="creature feat" />
     </div>
   );
 }

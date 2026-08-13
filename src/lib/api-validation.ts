@@ -8,6 +8,9 @@
  *   import { validateJson, characterCreateSchema } from '@/lib/api-validation';
  *   const result = await validateJson(request, characterCreateSchema);
  *   if (!result.success) return result.error; // NextResponse with 400
+ *
+ * Handlers that parse their own body (multipart uploads, bodyless DELETEs) must
+ * still call `verifyMutationRequest` — it is the app's only CSRF defence.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -19,51 +22,161 @@ import { z, ZodSchema } from 'zod';
 
 const MAX_PAYLOAD_BYTES = 2 * 1024 * 1024; // 2 MB
 
-/**
- * Validate Content-Type header and parse + validate JSON body.
- * Returns { success: true, data } or { success: false, error: NextResponse }.
- */
-export async function validateJson<T>(
-  request: NextRequest,
-  schema: ZodSchema<T>
-): Promise<{ success: true; data: T } | { success: false; error: NextResponse }> {
-  // Content-Type check
-  const ct = request.headers.get('content-type') ?? '';
-  if (!ct.includes('application/json') && !ct.includes('text/plain')) {
-    return {
-      success: false,
-      error: NextResponse.json(
-        { error: 'Content-Type must be application/json' },
-        { status: 415 }
-      ),
-    };
-  }
+const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-  // Size check (if Content-Length available)
-  const cl = request.headers.get('content-length');
-  if (cl && parseInt(cl, 10) > MAX_PAYLOAD_BYTES) {
-    return {
-      success: false,
-      error: NextResponse.json(
-        { error: 'Payload too large (max 2 MB)' },
-        { status: 413 }
-      ),
-    };
-  }
-
-  // Parse body
-  let body: unknown;
+function hostOf(value: string | undefined | null): string | null {
+  if (!value?.trim()) return null;
   try {
-    body = await request.json();
+    return new URL(value.trim()).host.toLowerCase();
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Hosts a state-changing request may claim as its Origin: the host this request
+ * was actually served on, plus the configured canonical site URL.
+ */
+function allowedRequestHosts(request: NextRequest): Set<string> {
+  const hosts = new Set<string>();
+  const nextUrlHost = request.nextUrl.host.toLowerCase();
+  if (nextUrlHost) hosts.add(nextUrlHost);
+  const hostHeader = request.headers.get('host')?.trim().toLowerCase();
+  if (hostHeader) hosts.add(hostHeader);
+  const configured = hostOf(process.env.NEXT_PUBLIC_SITE_URL);
+  if (configured) hosts.add(configured);
+  return hosts;
+}
+
+function forbiddenCrossOrigin(): NextResponse<{ error: string }> {
+  return NextResponse.json({ error: 'Cross-origin request rejected' }, { status: 403 });
+}
+
+/**
+ * Same-origin check for state-changing requests. Session auth is cookie-based
+ * with no CSRF token, so a cross-site POST would otherwise be authenticated by
+ * the browser. Fails closed: a request that presents no verifiable origin is
+ * rejected rather than trusted.
+ *
+ * Non-browser callers (scripts, smoke tests) must send an `Origin` header
+ * matching the deployment origin.
+ */
+export function verifyRequestOrigin(request: NextRequest): NextResponse<{ error: string }> | null {
+  if (!STATE_CHANGING_METHODS.has(request.method.toUpperCase())) return null;
+
+  // `none` is a user-initiated navigation; `same-origin` is our own fetch.
+  const fetchSite = request.headers.get('sec-fetch-site');
+  if (fetchSite && fetchSite !== 'same-origin' && fetchSite !== 'none') {
+    return forbiddenCrossOrigin();
+  }
+
+  const originHost = hostOf(request.headers.get('origin'));
+  if (originHost) {
+    return allowedRequestHosts(request).has(originHost) ? null : forbiddenCrossOrigin();
+  }
+
+  // No Origin at all: accept only when fetch metadata already vouched for it.
+  return fetchSite ? null : forbiddenCrossOrigin();
+}
+
+/**
+ * Guard every mutating handler: reject cross-origin requests, and (for JSON
+ * handlers) reject the CORS-simple content types that dodge a preflight.
+ */
+export function verifyMutationRequest(
+  request: NextRequest,
+  options: { requireJsonBody?: boolean } = {}
+): NextResponse<{ error: string }> | null {
+  if (options.requireJsonBody) {
+    const contentType = request.headers.get('content-type') ?? '';
+    if (!contentType.includes('application/json')) {
+      return NextResponse.json({ error: 'Content-Type must be application/json' }, { status: 415 });
+    }
+  }
+  return verifyRequestOrigin(request);
+}
+
+/**
+ * Read the body with a hard byte cap. `Content-Length` is only a fast path —
+ * chunked requests omit it, so the stream is counted as it arrives.
+ */
+export async function readBodyWithLimit(
+  request: NextRequest
+): Promise<{ success: true; text: string } | { success: false; error: NextResponse }> {
+  const tooLarge = {
+    success: false as const,
+    error: NextResponse.json({ error: 'Payload too large (max 2 MB)' }, { status: 413 }),
+  };
+
+  const declaredLength = Number.parseInt(request.headers.get('content-length') ?? '', 10);
+  if (Number.isFinite(declaredLength) && declaredLength > MAX_PAYLOAD_BYTES) {
+    return tooLarge;
+  }
+
+  const stream = request.body;
+  if (!stream) {
+    const text = await request.text();
+    if (new TextEncoder().encode(text).byteLength > MAX_PAYLOAD_BYTES) return tooLarge;
+    return { success: true, text };
+  }
+
+  const reader = stream.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (!value) continue;
+    total += value.byteLength;
+    if (total > MAX_PAYLOAD_BYTES) {
+      await reader.cancel().catch(() => {});
+      return tooLarge;
+    }
+    chunks.push(value);
+  }
+
+  const buffer = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    buffer.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return { success: true, text: new TextDecoder().decode(buffer) };
+}
+
+/** Read + parse a JSON body under the size cap. */
+export async function readJsonBodyWithLimit(
+  request: NextRequest
+): Promise<{ success: true; body: unknown } | { success: false; error: NextResponse }> {
+  const read = await readBodyWithLimit(request);
+  if (!read.success) return read;
+
+  try {
+    return { success: true, body: JSON.parse(read.text) as unknown };
   } catch {
     return {
       success: false,
       error: NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }),
     };
   }
+}
+
+/**
+ * Validate Content-Type and Origin, then parse + validate the JSON body.
+ * Returns { success: true, data } or { success: false, error: NextResponse }.
+ */
+export async function validateJson<T>(
+  request: NextRequest,
+  schema: ZodSchema<T>
+): Promise<{ success: true; data: T } | { success: false; error: NextResponse }> {
+  const denied = verifyMutationRequest(request, { requireJsonBody: true });
+  if (denied) return { success: false, error: denied };
+
+  const read = await readJsonBodyWithLimit(request);
+  if (!read.success) return read;
 
   // Validate against schema
-  const result = schema.safeParse(body);
+  const result = schema.safeParse(read.body);
   if (!result.success) {
     const issues = result.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`);
     return {

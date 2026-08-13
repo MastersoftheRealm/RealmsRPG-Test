@@ -12,11 +12,32 @@ import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { PageContainer, PageHeader, Button, TabNavigation, TabContentPanel, useTabGroup, Alert, LoadingState, Spinner } from '@/components/ui';
+import { ConfirmActionModal } from '@/components/shared';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { updateCodexDoc, createCodexDoc } from '../codex/actions';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { TABS, type CategoryId } from './core-rules-tabs';
 import { CategoryEditor } from './core-rules-category-editor';
+
+/**
+ * Only a missing row justifies falling back to create. Treating every failure as "not there
+ * yet" reported succeeded saves as failures and masked real errors behind "already exists".
+ */
+async function saveCategory(
+  docId: string,
+  data: Record<string, unknown>,
+  failureMessage: string
+): Promise<void> {
+  const result = await updateCodexDoc('core_rules', docId, data);
+  if (result.success) return;
+  if (result.error !== 'Document not found') {
+    throw new Error(result.error || failureMessage);
+  }
+  const createResult = await createCodexDoc('core_rules', docId, data);
+  if (!createResult.success) {
+    throw new Error(createResult.error || failureMessage);
+  }
+}
 
 export default function AdminCoreRulesPage() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
@@ -29,9 +50,11 @@ export default function AdminCoreRulesPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [pendingTab, setPendingTab] = useState<string | null>(null);
 
   const activeTabDef = TABS.find(t => t.id === activeTab)!;
   const categoryId = activeTabDef.category;
+  const pendingTabLabel = TABS.find(t => t.id === pendingTab)?.label ?? '';
 
   // Re-seed editor when category or fetched rules change (render-time — TASK-430)
   const [seededRules, setSeededRules] = useState<CoreRulesMap | null>(null);
@@ -66,6 +89,26 @@ export default function AdminCoreRulesPage() {
     setSuccess(null);
   }, []);
 
+  // Switching category re-seeds the editor from the fetched rules, so an unguarded tab
+  // change silently discards the edits (these are live game rules for every player).
+  const handleTabChange = useCallback((tabId: string) => {
+    setActiveTab((current) => {
+      if (tabId === current) return current;
+      if (dirty) {
+        setPendingTab(tabId);
+        return current;
+      }
+      return tabId;
+    });
+  }, [dirty]);
+
+  const discardAndSwitchTab = useCallback(() => {
+    if (!pendingTab) return;
+    setDirty(false);
+    setActiveTab(pendingTab);
+    setPendingTab(null);
+  }, [pendingTab]);
+
   const handleSave = useCallback(async () => {
     try {
       setSaving(true);
@@ -73,23 +116,15 @@ export default function AdminCoreRulesPage() {
       setSuccess(null);
 
       // Save main category
-      const result = await updateCodexDoc('core_rules', categoryId, editData);
-      if (!result.success) {
-        const createResult = await createCodexDoc('core_rules', categoryId, editData);
-        if (!createResult.success) {
-          throw new Error(createResult.error || 'Failed to save');
-        }
-      }
+      await saveCategory(categoryId, editData, 'Failed to save');
 
       // Also save creature progression if on progression tab
       if (categoryId === 'PROGRESSION_PLAYER' && Object.keys(creatureEditData).length > 0) {
-        const creatureResult = await updateCodexDoc('core_rules', 'PROGRESSION_CREATURE', creatureEditData);
-        if (!creatureResult.success) {
-          const createResult = await createCodexDoc('core_rules', 'PROGRESSION_CREATURE', creatureEditData);
-          if (!createResult.success) {
-            throw new Error(createResult.error || 'Failed to save creature progression');
-          }
-        }
+        await saveCategory(
+          'PROGRESSION_CREATURE',
+          creatureEditData,
+          'Failed to save creature progression'
+        );
       }
 
       queryClient.invalidateQueries({ queryKey: ['core-rules'] });
@@ -128,9 +163,20 @@ export default function AdminCoreRulesPage() {
         variant="underline"
         tabs={TABS.map(t => ({ id: t.id, label: t.label }))}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={handleTabChange}
         tabGroupId={tabGroupId}
         sharedTabPanelId={sharedPanelId}
+      />
+
+      <ConfirmActionModal
+        isOpen={pendingTab !== null}
+        title="Discard unsaved changes?"
+        description={`${activeTabDef.label} has unsaved edits. Opening ${pendingTabLabel} will discard them.`}
+        confirmLabel="Discard changes"
+        cancelLabel="Keep editing"
+        confirmVariant="danger"
+        onConfirm={discardAndSwitchTab}
+        onClose={() => setPendingTab(null)}
       />
 
       <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-4 rounded-lg border border-border bg-surface p-6">

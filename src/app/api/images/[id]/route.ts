@@ -11,6 +11,7 @@ import { isAdmin } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { REALMS_IMAGES_BUCKET, parseRealmsImageCategories } from '@/lib/realms-images';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
+import { readJsonBodyWithLimit, verifyMutationRequest } from '@/lib/api-validation';
 import { clearRealmsImageRefs } from '@/lib/realms-image-consumers';
 import { fetchRealmsImageById, replaceImageCategories } from '@/lib/realms-images-server';
 
@@ -50,17 +51,19 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   }
 
+  const denied = verifyMutationRequest(request, { requireJsonBody: true });
+  if (denied) return denied;
+
   try {
     const { id } = await context.params;
     if (!id?.trim()) {
       return NextResponse.json({ error: 'id required' }, { status: 400 });
     }
 
-    const body = (await request.json().catch(() => null)) as {
-      name?: unknown;
-      categories?: unknown;
-    } | null;
-    if (!body || (body.name === undefined && body.categories === undefined)) {
+    const read = await readJsonBodyWithLimit(request);
+    if (!read.success) return read.error;
+    const body = read.body as { name?: unknown; categories?: unknown } | null;
+    if (!body || typeof body !== 'object' || (body.name === undefined && body.categories === undefined)) {
       return NextResponse.json({ error: 'name and/or categories required' }, { status: 400 });
     }
 
@@ -119,6 +122,9 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
   if (!(await isAdmin(user.uid))) {
     return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
   }
+
+  const denied = verifyMutationRequest(_request);
+  if (denied) return denied;
 
   try {
     const { id } = await context.params;

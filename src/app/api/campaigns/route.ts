@@ -61,12 +61,17 @@ export async function GET(request: NextRequest) {
     const full = request.nextUrl.searchParams.get('full') === 'true';
     const supabase = await createClient();
 
-    const { data: memberRows } = await supabase
+    const { data: memberRows, error: memberErr } = await supabase
       .from('campaign_members')
       .select('campaign_id')
       .eq('user_id', userId);
+    if (memberErr) throw memberErr;
     const memberCampaignIds = (memberRows ?? []).map((r: { campaign_id: string }) => r.campaign_id);
-    const { data: ownedRows } = await supabase.from('campaigns').select('id').eq('owner_id', userId);
+    const { data: ownedRows, error: ownedErr } = await supabase
+      .from('campaigns')
+      .select('id')
+      .eq('owner_id', userId);
+    if (ownedErr) throw ownedErr;
     const ownedIds = (ownedRows ?? []).map((r: { id: string }) => r.id);
     const allIds = [...new Set([...memberCampaignIds, ...ownedIds])];
 
@@ -74,17 +79,19 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(full ? [] : []);
     }
 
-    const { data: campaignRows } = await supabase
+    const { data: campaignRows, error: campaignsErr } = await supabase
       .from('campaigns')
       .select('id, name, description, owner_id, owner_username, invite_code, characters, created_at, updated_at')
       .in('id', allIds)
       .order('updated_at', { ascending: false });
+    if (campaignsErr) throw campaignsErr;
 
     // Single query for all members (avoid N+1)
-    const { data: allMemberRows } = await supabase
+    const { data: allMemberRows, error: allMemberErr } = await supabase
       .from('campaign_members')
       .select('campaign_id, user_id')
       .in('campaign_id', allIds);
+    if (allMemberErr) throw allMemberErr;
     const membersByCampaignId = new Map<string, string[]>();
     for (const m of allMemberRows ?? []) {
       const row = m as { campaign_id: string; user_id: string };

@@ -20,6 +20,8 @@ interface CodexSpreadsheetViewProps {
   activeTab: CodexSpreadsheetTabId;
 }
 
+const CHANGE_PREVIEW_LIMIT = 12;
+
 export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
   const ws = useCodexSpreadsheet({ activeTab });
 
@@ -52,7 +54,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
         onFindWholeCellChange={ws.setFindWholeCell}
         findLimitToColumn={ws.findLimitToColumn}
         onFindLimitToColumnChange={ws.setFindLimitToColumn}
-        columns={ws.columns}
+        columns={ws.searchableColumns}
         replaceMode={ws.replaceMode}
         onReplaceModeChange={ws.setReplaceMode}
         replaceValue={ws.replaceValue}
@@ -75,6 +77,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
               ? `Save ${ws.dirty.size} new row(s)?`
               : `Save ${ws.dirty.size} updated row(s)?`
         }
+        fullScreenOnMobile
         footer={
           <div className="flex justify-end gap-2">
             <Button
@@ -92,22 +95,43 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
           </div>
         }
       >
-        <p className="text-sm text-text-secondary">
-          This will persist all unsaved edits. You cannot undo after saving.
-        </p>
+        <div className="text-sm text-text-secondary space-y-3">
+          <p>
+            Entry ids are never modified by a save — each row is written back to the id it was
+            loaded with. You cannot undo after saving.
+          </p>
+          <ul className="max-h-64 overflow-auto space-y-1">
+            {ws.pendingChanges.slice(0, CHANGE_PREVIEW_LIMIT).map((change) => (
+              <li key={change.key} className="flex flex-wrap items-baseline gap-x-2">
+                <span className="font-medium text-text-primary">{change.name}</span>
+                <span className="text-xs text-text-muted dark:text-text-secondary">
+                  {change.isNew
+                    ? 'new entry'
+                    : change.changedColumns.length === 0
+                      ? 'no cell changes'
+                      : `${change.changedColumns.length} cell(s): ${change.changedColumns.join(', ')}`}
+                </span>
+              </li>
+            ))}
+          </ul>
+          {ws.pendingChanges.length > CHANGE_PREVIEW_LIMIT && (
+            <p className="text-xs text-text-muted dark:text-text-secondary">
+              and {ws.pendingChanges.length - CHANGE_PREVIEW_LIMIT} more row(s).
+            </p>
+          )}
+        </div>
       </Modal>
 
       <CodexSpreadsheetTable
         columns={ws.columns}
         columnWidths={ws.columnWidths}
         minTableWidth={ws.minTableWidth}
-        sortedRowIndices={ws.sortedRowIndices}
-        rows={ws.rows}
+        sortedRows={ws.sortedRows}
         dirty={ws.dirty}
         sortKey={ws.sortKey}
         sortDir={ws.sortDir}
         focusedCell={ws.focusedCell}
-        savingRowIndex={ws.savingRowIndex}
+        savingRowKey={ws.savingRowKey}
         onSort={ws.handleSort}
         onFocusCell={ws.setFocusedCell}
         onUpdateCell={ws.updateCell}

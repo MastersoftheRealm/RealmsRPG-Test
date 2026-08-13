@@ -9,16 +9,25 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
-vi.mock('@/lib/rate-limit', () => ({
-  standardLimiter: {
-    check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
-  },
-}));
+vi.mock('@/lib/rate-limit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/rate-limit')>();
+  return {
+    ...actual,
+    standardLimiter: {
+      check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+    },
+  };
+});
 
-vi.mock('@/lib/api-validation', () => ({
-  validateJson: vi.fn(),
-  enhancedItemPatchSchema: {},
-}));
+// verifyMutationRequest stays real so the same-origin guard is exercised.
+vi.mock('@/lib/api-validation', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/api-validation')>();
+  return {
+    ...actual,
+    validateJson: vi.fn(),
+    enhancedItemPatchSchema: {},
+  };
+});
 
 import { PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
@@ -49,21 +58,25 @@ function createMockSupabase(row: EnhancedRow | null) {
   const deleteEqCalls: [string, string][] = [];
   const buildSelectChain = () => {
     const eqCalls: [string, string][] = [];
+    const matchRow = () => {
+      if (!row) return null;
+      const filters = Object.fromEntries(eqCalls);
+      if (filters.id && filters.id !== row.id) return null;
+      if (filters.user_id && filters.user_id !== row.user_id) return null;
+      return row;
+    };
     const chain = {
       eq: vi.fn((col: string, val: string) => {
         eqCalls.push([col, val]);
         return chain;
       }),
+      // maybeSingle reports a missing row as `data: null` with no error, so the
+      // route can tell "not found" apart from a real query failure.
+      maybeSingle: vi.fn(async () => ({ data: matchRow(), error: null })),
       single: vi.fn(async () => {
-        if (!row) return { data: null, error: { message: 'not found', code: 'PGRST116' } };
-        const filters = Object.fromEntries(eqCalls);
-        if (filters.id && filters.id !== row.id) {
-          return { data: null, error: { message: 'not found', code: 'PGRST116' } };
-        }
-        if (filters.user_id && filters.user_id !== row.user_id) {
-          return { data: null, error: { message: 'not found', code: 'PGRST116' } };
-        }
-        return { data: row, error: null };
+        const found = matchRow();
+        if (!found) return { data: null, error: { message: 'not found', code: 'PGRST116' } };
+        return { data: found, error: null };
       }),
     };
     return chain;
@@ -100,13 +113,16 @@ function createMockSupabase(row: EnhancedRow | null) {
 function makePatchRequest(id: string, body: Record<string, unknown>) {
   return new NextRequest(`http://localhost/api/user/enhanced-items/${id}`, {
     method: 'PATCH',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', origin: 'http://localhost' },
     body: JSON.stringify(body),
   });
 }
 
-function makeDeleteRequest(id: string) {
-  return new NextRequest(`http://localhost/api/user/enhanced-items/${id}`, { method: 'DELETE' });
+function makeDeleteRequest(id: string, headers: Record<string, string> = {}) {
+  return new NextRequest(`http://localhost/api/user/enhanced-items/${id}`, {
+    method: 'DELETE',
+    headers: { origin: 'http://localhost', ...headers },
+  });
 }
 
 async function readJson<T>(response: Response): Promise<T> {

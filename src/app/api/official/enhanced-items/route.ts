@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireAdminSession } from '@/lib/admin';
 import { getGameRulesFallback } from '@/hooks/use-game-rules';
 import { apiErrorResponse } from '@/lib/api-error';
-import { validateJson } from '@/lib/api-validation';
+import { validateJson, verifyMutationRequest } from '@/lib/api-validation';
 import {
   getEnhancedCraftingRequirements,
   getEnhancedMarketPrice,
@@ -35,12 +35,38 @@ const enhancedPatchBodySchema = z
   .object({
     name: z.string().min(1).max(200).optional(),
     description: z.string().max(5000).nullable().optional(),
+    baseItemSource: z.enum(['codex', 'public', 'custom']).optional(),
+    baseItemId: z.string().nullable().optional(),
+    baseItemName: z.string().min(1).optional(),
+    baseItemDescription: z.string().nullable().optional(),
+    powerSource: z.enum(['official', 'public', 'library']).optional(),
+    powerId: z.string().min(1).optional(),
+    powerName: z.string().min(1).optional(),
+    powerEnergy: z.number().min(0).optional(),
     usesType: z.enum(['full', 'partial', 'permanent']).optional(),
     usesCount: z.number().int().min(0).nullable().optional(),
     payload: z.record(z.string(), z.unknown()).optional(),
   })
   .strict()
   .refine((v) => Object.keys(v).length > 0, { message: 'No fields to update' });
+
+/** Market price and rarity are derived from the power's energy after the uses adjustment. */
+function computeEnhancedPricing(
+  powerEnergy: number,
+  usesType: 'full' | 'partial' | 'permanent',
+  usesCount?: number
+): { currencyCost: number; rarity: string } | null {
+  const rules = getGameRulesFallback().CRAFTING;
+  const idx = getMultipleUseIndex(rules, usesType, usesCount);
+  const effectiveEnergy =
+    idx >= 0 ? getMultipleUseAdjustedEnergy(powerEnergy, idx, rules) : powerEnergy;
+  const enhancedReq = getEnhancedCraftingRequirements(effectiveEnergy, rules);
+  if (!enhancedReq) return null;
+  return {
+    currencyCost: getEnhancedMarketPrice(enhancedReq.materialCost, rules),
+    rarity: enhancedReq.rarity,
+  };
+}
 
 function getMultipleUseIndex(
   rules: ReturnType<typeof getGameRulesFallback>['CRAFTING'],
@@ -114,22 +140,14 @@ export async function POST(req: NextRequest) {
     if (!validation.success) return validation.error;
     const parsed = validation.data;
 
-    const rules = getGameRulesFallback().CRAFTING;
-    const idx = getMultipleUseIndex(rules, parsed.usesType, parsed.usesCount);
-    const effectiveEnergy =
-      idx >= 0 ? getMultipleUseAdjustedEnergy(parsed.powerEnergy, idx, rules) : parsed.powerEnergy;
-
-    const enhancedReq = getEnhancedCraftingRequirements(effectiveEnergy, rules);
-    if (!enhancedReq) {
+    const pricing = computeEnhancedPricing(parsed.powerEnergy, parsed.usesType, parsed.usesCount);
+    if (!pricing) {
       return NextResponse.json(
         { error: 'No enhanced crafting row found for this energy' },
         { status: 400 }
       );
     }
-
-    const materialCost = enhancedReq.materialCost;
-    const currencyCost = getEnhancedMarketPrice(materialCost, rules);
-    const rarity = enhancedReq.rarity;
+    const { currencyCost, rarity } = pricing;
 
     const supabase = await createClient();
     const { error } = await supabase.from('official_enhanced_items').insert({
@@ -186,10 +204,37 @@ export async function PATCH(req: NextRequest) {
     if (!validation.success) return validation.error;
     const body = validation.data;
 
+    const supabase = await createClient();
+    const { data: current, error: loadError } = await supabase
+      .from('official_enhanced_items')
+      .select('uses_type, uses_count')
+      .eq('id', id)
+      .maybeSingle();
+    if (loadError) {
+      return apiErrorResponse(
+        'Failed to update enhanced item',
+        500,
+        'PATCH /api/official/enhanced-items (load)',
+        loadError
+      );
+    }
+    if (!current) {
+      return NextResponse.json({ error: 'Enhanced item not found' }, { status: 404 });
+    }
+
     // Build the update from only the validated, provided fields.
     const updates: Record<string, unknown> = {};
     if (body.name !== undefined) updates.name = body.name;
     if (body.description !== undefined) updates.description = body.description;
+    if (body.baseItemSource !== undefined) updates.base_item_source = body.baseItemSource;
+    if (body.baseItemId !== undefined) updates.base_item_id = body.baseItemId;
+    if (body.baseItemName !== undefined) updates.base_item_name = body.baseItemName;
+    if (body.baseItemDescription !== undefined) {
+      updates.base_item_description = body.baseItemDescription;
+    }
+    if (body.powerSource !== undefined) updates.power_source = body.powerSource;
+    if (body.powerId !== undefined) updates.power_id = body.powerId;
+    if (body.powerName !== undefined) updates.power_name = body.powerName;
     if (body.usesType !== undefined) {
       updates.uses_type = body.usesType;
       updates.uses_count = body.usesType === 'permanent' ? null : body.usesCount ?? null;
@@ -198,7 +243,25 @@ export async function PATCH(req: NextRequest) {
     }
     if (body.payload !== undefined) updates.payload = body.payload;
 
-    const supabase = await createClient();
+    // Cost and rarity are derived, so they have to be recomputed whenever the power or its
+    // uses change; leaving the stored values would price the item off its previous power.
+    if (body.powerEnergy !== undefined) {
+      const usesType = body.usesType ?? (current.uses_type as 'full' | 'partial' | 'permanent');
+      const usesCount =
+        body.usesType !== undefined
+          ? body.usesCount ?? undefined
+          : (current.uses_count as number | null) ?? undefined;
+      const pricing = computeEnhancedPricing(body.powerEnergy, usesType, usesCount);
+      if (!pricing) {
+        return NextResponse.json(
+          { error: 'No enhanced crafting row found for this energy' },
+          { status: 400 }
+        );
+      }
+      updates.currency_cost = pricing.currencyCost;
+      updates.rarity = pricing.rarity;
+    }
+
     const { error } = await supabase
       .from('official_enhanced_items')
       .update(updates)
@@ -230,6 +293,9 @@ export async function DELETE(req: NextRequest) {
     if (!auth.ok) {
       return NextResponse.json(auth.body, { status: auth.status });
     }
+
+    const denied = verifyMutationRequest(req);
+    if (denied) return denied;
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get('id');

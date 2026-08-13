@@ -12,7 +12,8 @@ import { SelectFilter } from '@/components/shared/filters';
 import { useEquipment } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
+import { createCodexDoc, updateCodexDoc } from './actions';
+import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
 import { Pencil, Copy, X } from 'lucide-react';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import {
@@ -140,7 +141,7 @@ export function AdminEquipmentTab() {
     };
 
     const result = editing
-      ? await updateCodexDoc('codex_equipment', editing.id, data)
+      ? await updateCodexDoc('codex_equipment', editing.id, data, { expectedUpdatedAt: editing.updated_at })
       : await createCodexDoc('codex_equipment', undefined, data);
 
     setSaving(false);
@@ -153,19 +154,26 @@ export function AdminEquipmentTab() {
     }
   };
 
+  const codexDelete = useAdminCodexDelete({
+    collection: 'codex_equipment',
+    onDeleted: async () => {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+      closeModal();
+    },
+    onError: (message) => {
+      setPendingDeleteId(null);
+      showToast(message, 'error');
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (deleteConfirm !== id) {
       setDeleteConfirm(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_equipment', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    await codexDelete.requestDelete(id);
   };
 
   const handleInlineDelete = async (id: string) => {
@@ -173,15 +181,7 @@ export function AdminEquipmentTab() {
       setPendingDeleteId(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_equipment', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-      setPendingDeleteId(null);
-    }
+    await codexDelete.requestDelete(id);
   };
 
   if (error) return <ErrorState message="Failed to load equipment" onRetry={() => { void refetch(); }} />;
@@ -377,6 +377,8 @@ export function AdminEquipmentTab() {
           </div>
         </div>
       </Modal>
+
+      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="equipment entry" />
     </div>
   );
 }

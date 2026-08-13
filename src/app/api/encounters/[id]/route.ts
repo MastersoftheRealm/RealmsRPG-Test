@@ -8,9 +8,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
-import { validateJson, encounterUpdateSchema } from '@/lib/api-validation';
+import { validateJson, verifyMutationRequest, encounterUpdateSchema } from '@/lib/api-validation';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
-import { standardLimiter } from '@/lib/rate-limit';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import type { Encounter } from '@/types/encounter';
 
 export async function GET(
@@ -70,15 +70,16 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = await standardLimiter.check(`enc-patch:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('enc-patch', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const { id } = await params;
@@ -129,19 +130,23 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: Request,
+  _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ip = (_request as unknown as NextRequest).headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = await standardLimiter.check(`enc-del:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const denied = verifyMutationRequest(_request);
+    if (denied) return denied;
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('enc-del', { userId: user.uid, ip: resolveClientIp(_request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const { id } = await params;

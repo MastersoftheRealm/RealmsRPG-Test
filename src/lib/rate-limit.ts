@@ -4,8 +4,11 @@
  * Sliding-window rate limiter with optional Upstash Redis / Vercel KV backend
  * for consistent limits across Vercel serverless instances.
  *
- * When Redis/KV env vars are unset, falls back to per-instance in-memory limiting.
- * On Redis errors, falls back to in-memory (never crashes the request path).
+ * When Redis/KV env vars are unset, falls back to per-instance in-memory limiting
+ * (warned once per process — on serverless this is effectively "limit × instances").
+ * On Redis errors the default is the same in-memory fallback; limiters created with
+ * `failClosed: true` reject instead, so a configured-but-broken backend cannot
+ * silently remove the limit from an auth/invite/upload path.
  *
  * Usage:
  *   import { standardLimiter, buildRateLimitKey } from '@/lib/rate-limit';
@@ -30,6 +33,12 @@ interface RateLimitOptions {
   limit: number;
   /** Redis key namespace segment (required for durable backend) */
   prefix: string;
+  /**
+   * Reject the request when a durable backend is configured but its check fails,
+   * instead of falling back to the per-instance window. Only affects the error
+   * path — with no backend configured at all, in-memory limiting still applies.
+   */
+  failClosed?: boolean;
 }
 
 export interface RateLimitResult {
@@ -71,6 +80,17 @@ function getSharedRedis(): Redis | null {
 /** True when Upstash/Vercel KV credentials are configured. */
 export function isDurableRateLimitEnabled(): boolean {
   return getSharedRedis() !== null;
+}
+
+let warnedMissingDurableBackend = false;
+
+function warnMissingDurableBackendOnce(): void {
+  if (warnedMissingDurableBackend) return;
+  warnedMissingDurableBackend = true;
+  console.warn(
+    '[rate-limit] No durable backend configured (UPSTASH_REDIS_REST_URL/_TOKEN or KV_REST_API_URL/_TOKEN). ' +
+      'Limits are per serverless instance only.'
+  );
 }
 
 function msToDuration(ms: number): `${number} ms` | `${number} s` {
@@ -137,7 +157,7 @@ function createMemoryLimiter({ interval, limit }: Pick<RateLimitOptions, 'interv
  * Create a rate limiter instance with a sliding window.
  * Uses Redis/KV when configured; otherwise in-memory per instance.
  */
-export function rateLimit({ interval, limit, prefix }: RateLimitOptions) {
+export function rateLimit({ interval, limit, prefix, failClosed = false }: RateLimitOptions) {
   const memory = createMemoryLimiter({ interval, limit });
   let upstashLimiter: Ratelimit | null = null;
 
@@ -158,31 +178,44 @@ export function rateLimit({ interval, limit, prefix }: RateLimitOptions) {
   return {
     async check(key: string): Promise<RateLimitResult> {
       const durable = getUpstashLimiter();
-      if (durable) {
-        try {
-          const result = await durable.limit(key);
-          return {
-            success: result.success,
-            remaining: result.remaining,
-            reset: result.reset,
-          };
-        } catch (err) {
-          console.error(`[rate-limit] Redis check failed (${prefix}), using in-memory fallback:`, err);
-        }
+      if (!durable) {
+        warnMissingDurableBackendOnce();
+        return memory.check(key);
       }
-      return memory.check(key);
+
+      try {
+        const result = await durable.limit(key);
+        return {
+          success: result.success,
+          remaining: result.remaining,
+          reset: result.reset,
+        };
+      } catch (err) {
+        if (failClosed) {
+          console.error(`[rate-limit] Redis check failed (${prefix}), failing closed:`, err);
+          return { success: false, remaining: 0, reset: Date.now() + interval };
+        }
+        console.error(`[rate-limit] Redis check failed (${prefix}), using in-memory fallback:`, err);
+        return memory.check(key);
+      }
     },
   };
 }
 
 /**
  * Extract the most useful client IP value from request headers.
- * Prefers first value from x-forwarded-for, then x-real-ip.
+ * Prefers `x-real-ip` (set by the platform), then the *last* `x-forwarded-for`
+ * entry: entries a client prepends cannot displace the hop the edge appended.
  */
 export function resolveClientIp(headers: Headers): string {
-  const forwarded = headers.get('x-forwarded-for');
-  const realIp = headers.get('x-real-ip');
-  const raw = forwarded?.split(',')[0]?.trim() || realIp?.trim() || 'unknown';
+  const realIp = headers.get('x-real-ip')?.trim();
+  if (realIp) return realIp.slice(0, 64);
+
+  const forwardedHops = (headers.get('x-forwarded-for') ?? '')
+    .split(',')
+    .map((hop) => hop.trim())
+    .filter(Boolean);
+  const raw = forwardedHops[forwardedHops.length - 1] ?? 'unknown';
   return raw.slice(0, 64);
 }
 
@@ -205,14 +238,38 @@ export function buildRateLimitKey(prefix: string, input: RateLimitKeyInput): str
 /** Standard mutation limiter: 30 requests per minute */
 export const standardLimiter = rateLimit({ interval: 60_000, limit: 30, prefix: 'standard' });
 
-/** Strict limiter for sensitive operations: 10 per minute */
-export const strictLimiter = rateLimit({ interval: 60_000, limit: 10, prefix: 'strict' });
+/**
+ * Strict limiter for sensitive operations: 10 per minute. Fails closed — it guards
+ * the username-existence oracle and admin role writes, where a configured-but-broken
+ * backend removing the limit is worse than rejecting the request.
+ */
+export const strictLimiter = rateLimit({
+  interval: 60_000,
+  limit: 10,
+  prefix: 'strict',
+  failClosed: true,
+});
 
-/** Invite code lookup / join: 5 per minute (prevent brute-force) */
-export const inviteCodeLimiter = rateLimit({ interval: 60_000, limit: 5, prefix: 'invite' });
+/** Invite code lookup / join: 5 per minute (prevent brute-force). Fails closed. */
+export const inviteCodeLimiter = rateLimit({
+  interval: 60_000,
+  limit: 5,
+  prefix: 'invite',
+  failClosed: true,
+});
 
-/** Auth-adjacent actions (resend, forgot-username stub): 5 per minute per IP/email key */
-export const authActionLimiter = rateLimit({ interval: 60_000, limit: 5, prefix: 'auth' });
+/** Auth-adjacent actions (resend, forgot-username stub): 5 per minute. Fails closed. */
+export const authActionLimiter = rateLimit({
+  interval: 60_000,
+  limit: 5,
+  prefix: 'auth',
+  failClosed: true,
+});
 
-/** Upload limiter: 12 uploads per minute */
-export const uploadLimiter = rateLimit({ interval: 60_000, limit: 12, prefix: 'upload' });
+/** Upload limiter: 12 uploads per minute. Fails closed (storage abuse is billable). */
+export const uploadLimiter = rateLimit({
+  interval: 60_000,
+  limit: 12,
+  prefix: 'upload',
+  failClosed: true,
+});

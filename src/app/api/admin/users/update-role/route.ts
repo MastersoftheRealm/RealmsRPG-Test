@@ -46,9 +46,16 @@ export async function PATCH(request: NextRequest) {
 
     const supabase = getSupabaseAdmin();
     const profileQuery = supabase.from('user_profiles').select('id, role').limit(1);
-    const { data: profile } = userId
+    const { data: profile, error: profileError } = userId
       ? await profileQuery.eq('id', userId).maybeSingle()
-      : await profileQuery.ilike('username', (username ?? '').toLowerCase()).maybeSingle();
+      // eq, not ilike: `_` and `%` are legal username characters but ilike wildcards,
+      // so a pasted name could match a different account and promote it instead.
+      // Usernames are stored canonically lowercased.
+      : await profileQuery.eq('username', (username ?? '').toLowerCase()).maybeSingle();
+    if (profileError) {
+      console.error('[API Error] update-role profile lookup:', profileError);
+      return NextResponse.json({ error: 'Failed to look up user' }, { status: 500 });
+    }
     if (!profile) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }

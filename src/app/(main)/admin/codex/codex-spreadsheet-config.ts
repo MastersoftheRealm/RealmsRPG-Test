@@ -134,6 +134,20 @@ export const NUMERIC_COLUMNS = new Set([
   'adulthood_lifespan',
 ]);
 
+/**
+ * Never editable in the grid and never touched by find/replace: an edited id retargets the
+ * save at a different entity, overwriting it with this row's content.
+ */
+export const READONLY_COLUMNS = new Set(['id']);
+
+/** Carried on the row for the optimistic lock, not shown as a column. */
+export const HIDDEN_COLUMNS = new Set(['updated_at']);
+
+/** Columns find/replace is allowed to rewrite. */
+export function searchableColumns(columns: string[]): string[] {
+  return columns.filter((col) => !READONLY_COLUMNS.has(col));
+}
+
 /** Known boolean columns (spreadsheet uses checkbox). */
 export const BOOLEAN_COLUMNS = new Set([
   'flaw',

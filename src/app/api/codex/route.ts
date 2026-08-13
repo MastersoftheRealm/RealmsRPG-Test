@@ -45,6 +45,11 @@ function toNum(val: unknown): number | undefined {
   return Number.isNaN(n) ? undefined : n;
 }
 
+/** Row version for the admin optimistic lock; absent on tables without the column. */
+function toVersion(val: unknown): string | undefined {
+  return typeof val === 'string' && val ? val : undefined;
+}
+
 /** DB row shape (snake_case from Supabase) */
 type Row = Record<string, unknown>;
 
@@ -139,9 +144,11 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
       feat_cat_req: r.feat_cat_req ?? undefined,
       pow_abil_req: toNum(r.pow_abil_req),
       pow_prof_req: toNum(r.pow_prof_req),
+      mart_prof_req: toNum(r.mart_prof_req),
       speed_req: toNum(r.speed_req),
       feat_lvl: toNum(r.feat_lvl),
       base_feat_id: r.base_feat_id != null && r.base_feat_id !== '' ? String(r.base_feat_id) : undefined,
+      updated_at: toVersion(r.updated_at),
     }));
 
     const codexSkills = skillRows.map((r) => {
@@ -161,6 +168,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         ds_calc: r.ds_calc ?? undefined,
         craft_success_desc: r.craft_success_desc ?? undefined,
         craft_failure_desc: r.craft_failure_desc ?? undefined,
+        updated_at: toVersion(r.updated_at),
       };
     });
 
@@ -209,6 +217,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         is_starter: r.is_starter === true,
         image_url: typeof r.image_url === 'string' && r.image_url.trim() ? r.image_url.trim() : null,
         image_id: typeof r.image_id === 'string' && r.image_id.trim() ? r.image_id.trim() : null,
+        updated_at: toVersion(r.updated_at),
       };
     });
 
@@ -222,6 +231,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
       flaw: r.flaw === true,
       characteristic: r.characteristic === true,
       option_trait_ids: toStrArray(r.option_trait_ids),
+      updated_at: toVersion(r.updated_at),
     }));
 
     const allParts = partRows.map((r) => {
@@ -247,6 +257,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         mechanic: r.mechanic === true,
         duration: r.duration === true,
         defense: toStrArray(r.defense),
+        updated_at: toVersion(r.updated_at),
       };
     });
 
@@ -268,6 +279,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
       op_1_tp: toNum(r.op_1_tp),
       op_1_c: toNum(r.op_1_c),
       mechanic: r.mechanic === true,
+      updated_at: toVersion(r.updated_at),
     }));
 
     const codexEquipment = equipRows.map((r) => {
@@ -288,6 +300,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         weight: undefined,
         image_url: typeof r.image_url === 'string' && r.image_url.trim() ? r.image_url.trim() : null,
         image_id: typeof r.image_id === 'string' && r.image_id.trim() ? r.image_id.trim() : null,
+        updated_at: toVersion(r.updated_at),
       };
     });
 
@@ -403,6 +416,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         level1_remove_armaments: toStrArray(r.level1_remove_armaments),
         level1_notes: r.level1_notes ?? level1FromLegacy?.notes ?? '',
         level1_guidance_groups: level1FromColumns.guidance_groups ?? null,
+        updated_at: toVersion(r.updated_at),
       };
     });
 
@@ -419,6 +433,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         mechanic: r.mechanic === true,
         tiers: undefined,
         prereqs: [] as string[],
+        updated_at: toVersion(r.updated_at),
       };
     });
 

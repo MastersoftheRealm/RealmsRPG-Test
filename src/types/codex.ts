@@ -11,7 +11,15 @@ import type { Archetype, PathGuidanceGroup } from './archetype';
 // Entity types (codex collections)
 // =============================================================================
 
-export interface CodexPowerPart {
+/**
+ * Row version carried through `/api/codex` so admin saves can send the value they loaded
+ * and be rejected when another admin has written since. Absent until the table has the column.
+ */
+export interface CodexRowVersion {
+  updated_at?: string;
+}
+
+export interface CodexPowerPart extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
@@ -35,7 +43,7 @@ export interface CodexPowerPart {
   type?: string;
 }
 
-export interface CodexTechniquePart {
+export interface CodexTechniquePart extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
@@ -58,7 +66,7 @@ export interface CodexTechniquePart {
 
 export type CodexPart = CodexPowerPart & { type: 'power' | 'technique' | string };
 
-export interface CodexItemProperty {
+export interface CodexItemProperty extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
@@ -75,7 +83,7 @@ export interface CodexItemProperty {
   mechanic?: boolean;
 }
 
-export interface CodexFeat {
+export interface CodexFeat extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
@@ -102,7 +110,7 @@ export interface CodexFeat {
   speed_req?: number;
 }
 
-export interface CodexSkill {
+export interface CodexSkill extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
@@ -115,7 +123,7 @@ export interface CodexSkill {
   craft_failure_desc?: string;
 }
 
-export interface CodexSpecies {
+export interface CodexSpecies extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
@@ -139,7 +147,7 @@ export interface CodexSpecies {
   image_url?: string | null;
 }
 
-export interface CodexTrait {
+export interface CodexTrait extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
@@ -151,7 +159,7 @@ export interface CodexTrait {
   option_trait_ids?: string[];
 }
 
-export interface CodexEquipmentItem {
+export interface CodexEquipmentItem extends CodexRowVersion {
   id: string;
   name: string;
   type: 'weapon' | 'armor' | 'equipment';
@@ -169,7 +177,7 @@ export interface CodexEquipmentItem {
   image_url?: string | null;
 }
 
-export interface CodexCreatureFeat {
+export interface CodexCreatureFeat extends CodexRowVersion {
   id: string;
   name: string;
   description: string;
@@ -183,7 +191,7 @@ export interface CodexCreatureFeat {
 }
 
 /** Archetype row as returned by `/api/codex` (includes flat level1 columns). */
-export interface CodexArchetype extends Archetype {
+export interface CodexArchetype extends Archetype, CodexRowVersion {
   level1_feats?: string[];
   level1_skills?: string[];
   level1_powers?: string[];

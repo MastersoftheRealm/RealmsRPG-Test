@@ -20,6 +20,25 @@ import { buildRateLimitKey, resolveClientIp, strictLimiter } from '@/lib/rate-li
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+/** Postgres unique-violation; RLS/permission denial. */
+const UNIQUE_VIOLATION = '23505';
+const INSUFFICIENT_PRIVILEGE = '42501';
+const USERNAME_TAKEN_ERROR = 'This username is already taken';
+const MAX_GENERATED_USERNAME_ATTEMPTS = 5;
+
+function isUniqueViolation(error: { code?: string } | null): boolean {
+  return error?.code === UNIQUE_VIOLATION;
+}
+
+/**
+ * A username claim can fail two ways: the row exists (unique violation) or it
+ * exists and belongs to someone else, so the owner-scoped UPDATE policy refuses
+ * the upsert. Both mean the same thing to the user.
+ */
+function isUsernameConflict(error: { code?: string } | null): boolean {
+  return isUniqueViolation(error) || error?.code === INSUFFICIENT_PRIVILEGE;
+}
+
 export async function signOutAction() {
   const supabase = await createServerClient();
   await supabase.auth.signOut();
@@ -27,16 +46,15 @@ export async function signOutAction() {
   redirect('/login');
 }
 
-async function generateDefaultUsername(): Promise<string> {
-  const supabase = await createServerClient();
-  for (let i = 0; i < 20; i++) {
-    const num = Math.floor(100000 + Math.random() * 900000);
-    const displayUsername = `Player${num}`;
-    const normalized = displayUsername.toLowerCase();
-    const { data } = await supabase.from('user_profiles').select('id').eq('username', normalized).maybeSingle();
-    if (!data) return displayUsername;
-  }
-  return `Player${Date.now().toString(36).toUpperCase()}`;
+/**
+ * Random default username. Availability is deliberately NOT pre-checked: the only
+ * SELECT policy on `user_profiles` is `id = auth.uid()`, so a session client can
+ * never see another user's row and any pre-check would always report "free".
+ * Callers retry on the unique violation the write returns instead.
+ */
+function generateDefaultUsername(): string {
+  const num = Math.floor(100000 + Math.random() * 900000);
+  return `Player${num}`;
 }
 
 export async function createUserProfileAction(data: {
@@ -58,57 +76,80 @@ export async function createUserProfileAction(data: {
 
     const supabase = await createServerClient();
     const now = new Date().toISOString();
-    const { data: existing } = await supabase
+    const { data: existing, error: existingError } = await supabase
       .from('user_profiles')
       .select('id, username, username_display')
       .eq('id', uid)
       .maybeSingle();
+    if (existingError) throw existingError;
 
     const existingUsername = ((existing as { username?: string | null } | null)?.username ?? null)?.toString().trim() || null;
     const existingUsernameDisplay = ((existing as { username_display?: string | null } | null)?.username_display ?? null)?.toString().trim() || null;
 
-    let usernameDisplay = data.username?.trim();
-    if (usernameDisplay) {
-      const usernameCheck = validateUsername(usernameDisplay);
+    const requestedUsername = data.username?.trim() || null;
+    if (requestedUsername) {
+      const usernameCheck = validateUsername(requestedUsername);
       if (!usernameCheck.ok) {
         return { success: false, error: usernameCheck.error };
       }
     }
-    if (!usernameDisplay) {
-      // Critical: never overwrite a user's chosen username with a generated default.
-      // This action can be called from auth callback/confirm routes on subsequent logins.
-      usernameDisplay = existingUsernameDisplay ?? existingUsername ?? (await generateDefaultUsername());
-    }
-    const normalized = usernameDisplay.toLowerCase();
 
-    if (existing) {
-      const updates: Record<string, unknown> = {
-        email,
-        display_name: data.displayName ?? null,
-        updated_at: now,
-      };
-      if (!existingUsername) {
-        updates.username = normalized;
-        updates.username_display = usernameDisplay;
-        updates.last_username_change = null;
+    // Critical: never overwrite a user's chosen username with a generated default.
+    // This action can be called from auth callback/confirm routes on subsequent logins.
+    const needsUsername = !existingUsername;
+    const chosenUsername = needsUsername ? requestedUsername ?? existingUsernameDisplay : existingUsername;
+
+    for (let attempt = 1; attempt <= MAX_GENERATED_USERNAME_ATTEMPTS; attempt++) {
+      const usernameDisplay = chosenUsername ?? generateDefaultUsername();
+      const normalized = usernameDisplay.toLowerCase();
+      // Only a generated name may be swapped for another on collision.
+      const canRetry = chosenUsername === null && attempt < MAX_GENERATED_USERNAME_ATTEMPTS;
+
+      const profileWrite = existing
+        ? await supabase
+            .from('user_profiles')
+            .update({
+              email,
+              display_name: data.displayName ?? null,
+              updated_at: now,
+              ...(needsUsername
+                ? { username: normalized, username_display: usernameDisplay, last_username_change: null }
+                : {}),
+            })
+            .eq('id', uid)
+        : await supabase.from('user_profiles').insert({
+            id: uid,
+            email,
+            display_name: data.displayName ?? null,
+            username: normalized,
+            username_display: usernameDisplay,
+            created_at: now,
+            updated_at: now,
+          });
+
+      if (profileWrite.error) {
+        if (isUniqueViolation(profileWrite.error)) {
+          if (canRetry) continue;
+          return { success: false, error: USERNAME_TAKEN_ERROR };
+        }
+        throw profileWrite.error;
       }
-      await supabase.from('user_profiles').update(updates).eq('id', uid);
-    } else {
-      await supabase.from('user_profiles').insert({
-        id: uid,
-        email,
-        display_name: data.displayName ?? null,
-        username: normalized,
-        username_display: usernameDisplay,
-        created_at: now,
-        updated_at: now,
-      });
+
+      // Keep the `usernames` mapping in step with what the profile now holds.
+      const { error: usernameError } = await supabase
+        .from('usernames')
+        .upsert({ username: normalized, user_id: uid }, { onConflict: 'username' });
+      if (usernameError) {
+        if (isUsernameConflict(usernameError)) {
+          return { success: false, error: USERNAME_TAKEN_ERROR };
+        }
+        throw usernameError;
+      }
+
+      return { success: true };
     }
-    await supabase.from('usernames').upsert(
-      { username: normalized, user_id: uid },
-      { onConflict: 'username' }
-    );
-    return { success: true };
+
+    return { success: false, error: 'Could not assign a username. Please try again.' };
   } catch (error) {
     console.error('Error creating user profile:', error);
     return { success: false, error: 'Failed to create user profile' };
@@ -126,7 +167,11 @@ export async function updateUserProfileAction(data: { displayName?: string; user
     }
     if (data.displayName !== undefined) {
       const supabase = await createServerClient();
-      await supabase.from('user_profiles').update({ display_name: data.displayName }).eq('id', user.uid);
+      const { error } = await supabase
+        .from('user_profiles')
+        .update({ display_name: data.displayName })
+        .eq('id', user.uid);
+      if (error) throw error;
     }
     revalidatePath('/my-account');
     return { success: true };
@@ -170,26 +215,39 @@ export async function getUserProfileAction() {
   }
 }
 
-export async function checkUsernameAvailableAction(username: string) {
+/**
+ * Format-only username pre-check.
+ *
+ * `available` is intentionally `null` ("unknown") for a well-formed name: RLS
+ * scopes every readable `user_profiles` / `usernames` row to `auth.uid()`, so a
+ * session client cannot observe another user's name and any "available: true"
+ * would be fabricated. The write path (`changeUsernameAction` /
+ * `createUserProfileAction`) is the single source of truth — it maps the unique
+ * violation to "already taken". This never blocks submission.
+ */
+export async function checkUsernameAvailableAction(
+  username: string
+): Promise<{ available: boolean | null; error?: string }> {
   try {
-    // SEC-07: this endpoint is a username-existence oracle. Require an
-    // authenticated session and rate-limit per user/IP to prevent enumeration.
+    // SEC-07: rate-limited and session-gated so it cannot be used to probe names.
     const { user } = await getSession();
     if (!user?.uid) {
-      return { available: false, error: 'Not authenticated' };
+      return { available: null, error: 'Not authenticated' };
     }
     const ip = resolveClientIp(await headers());
     const { success } = await strictLimiter.check(buildRateLimitKey('username-check', { userId: user.uid, ip }));
     if (!success) {
-      return { available: false, error: 'Too many requests' };
+      return { available: null, error: 'Too many requests' };
     }
-    const normalized = username.toLowerCase().trim();
-    const supabase = await createServerClient();
-    const { data } = await supabase.from('user_profiles').select('id').eq('username', normalized).maybeSingle();
-    return { available: !data };
+
+    const usernameCheck = validateUsername(username.trim());
+    if (!usernameCheck.ok) {
+      return { available: false, error: usernameCheck.error };
+    }
+    return { available: null };
   } catch (error) {
     console.error('Error checking username:', error);
-    return { available: false, error: 'Failed to check username' };
+    return { available: null, error: 'Failed to check username' };
   }
 }
 
@@ -208,7 +266,12 @@ export async function changeUsernameAction(newUsername: string) {
     }
 
     const supabase = await createServerClient();
-    const { data: profile } = await supabase.from('user_profiles').select('username, last_username_change').eq('id', user.uid).maybeSingle();
+    const { data: profile, error: profileError } = await supabase
+      .from('user_profiles')
+      .select('username, last_username_change')
+      .eq('id', user.uid)
+      .maybeSingle();
+    if (profileError) throw profileError;
     const currentUsername = ((profile as { username?: string } | null)?.username ?? '').toLowerCase();
     if (normalized === currentUsername) return { success: false, error: 'New username is the same as your current username' };
 
@@ -224,19 +287,27 @@ export async function changeUsernameAction(newUsername: string) {
       }
     }
 
-    const { data: taken } = await supabase
-      .from('user_profiles')
-      .select('id')
-      .eq('username', normalized)
-      .neq('id', user.uid)
-      .maybeSingle();
-    if (taken) return { success: false, error: 'This username is already taken' };
-
-    if (currentUsername) {
-      await supabase.from('usernames').delete().eq('username', currentUsername);
+    // No availability pre-check: RLS hides other users' rows, so it could only ever
+    // report "free". `usernames.username` is the primary key, so claiming the new
+    // row IS the uniqueness test — and it happens before the old row is released.
+    const { error: claimError } = await supabase
+      .from('usernames')
+      .insert({ username: normalized, user_id: user.uid });
+    const claimedNewRow = !claimError;
+    if (claimError) {
+      if (!isUsernameConflict(claimError)) throw claimError;
+      // A conflicting row we can still read is our own (a previous partial rename);
+      // anything else belongs to another user.
+      const { data: ownRow, error: ownRowError } = await supabase
+        .from('usernames')
+        .select('username')
+        .eq('username', normalized)
+        .maybeSingle();
+      if (ownRowError) throw ownRowError;
+      if (!ownRow) return { success: false, error: USERNAME_TAKEN_ERROR };
     }
-    await supabase.from('usernames').upsert({ username: normalized, user_id: user.uid }, { onConflict: 'username' });
-    await supabase
+
+    const { error: updateError } = await supabase
       .from('user_profiles')
       .update({
         username: normalized,
@@ -244,6 +315,34 @@ export async function changeUsernameAction(newUsername: string) {
         last_username_change: new Date().toISOString(),
       })
       .eq('id', user.uid);
+    if (updateError) {
+      if (claimedNewRow) {
+        // Release the name we reserved so a failed rename leaves nothing behind.
+        const { error: releaseError } = await supabase
+          .from('usernames')
+          .delete()
+          .eq('username', normalized)
+          .eq('user_id', user.uid);
+        if (releaseError) {
+          console.error('Failed to release reserved username after a failed rename:', releaseError);
+        }
+      }
+      if (isUniqueViolation(updateError)) return { success: false, error: USERNAME_TAKEN_ERROR };
+      throw updateError;
+    }
+
+    // Only now is the previous mapping safe to drop.
+    if (currentUsername) {
+      const { error: oldRowError } = await supabase
+        .from('usernames')
+        .delete()
+        .eq('username', currentUsername)
+        .eq('user_id', user.uid);
+      if (oldRowError) {
+        // The rename itself succeeded; a stale mapping is recoverable.
+        console.error('Failed to remove previous username mapping:', oldRowError);
+      }
+    }
 
     revalidatePath('/my-account');
     return { success: true };
@@ -253,38 +352,97 @@ export async function changeUsernameAction(newUsername: string) {
   }
 }
 
-export async function deleteAccountAction() {
+type DeleteAccountResult = { success: true } | { success: false; error: string };
+
+/**
+ * Delete the caller's account and all of their content.
+ *
+ * Runs with the service role: the session client has no DELETE policy on
+ * `user_profiles`, so the row it must remove — the one whose cascade takes the
+ * rest of the user's content with it — would be silently filtered out and leave
+ * an orphaned profile behind. Authorization is the verified session below and
+ * every statement is scoped to that uid.
+ *
+ * Every step is checked and the auth identity is destroyed last: a half-finished
+ * cascade with no matching auth user is unrecoverable, so a failure must abort.
+ */
+export async function deleteAccountAction(): Promise<DeleteAccountResult> {
   try {
     const user = await requireAuth();
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-    const supabase = await createServerClient();
+
+    const failed = (step: string, error: unknown): DeleteAccountResult => {
+      console.error(`Error deleting account (${step}):`, error);
+      return { success: false, error: 'Failed to delete account. Please try again.' };
+    };
 
     // BE-02/06: membership is tracked solely in campaign_members; strip this
-    // user's characters from each campaign roster, then drop their memberships.
-    const { data: memberRows } = await supabase.from('campaign_members').select('campaign_id').eq('user_id', user.uid);
+    // user's characters from each campaign roster they appear on. Rosters are a
+    // JSONB array, so no FK cascade covers them.
+    const { data: memberRows, error: memberReadError } = await supabaseAdmin
+      .from('campaign_members')
+      .select('campaign_id')
+      .eq('user_id', user.uid);
+    if (memberReadError) return failed('campaign_members read', memberReadError);
+
     for (const { campaign_id: campaignId } of memberRows ?? []) {
-      const { data: c } = await supabase.from('campaigns').select('characters').eq('id', campaignId).maybeSingle();
-      if (!c) continue;
-      const chars = ((c.characters as Array<{ userId: string; characterId: string }>) || []).filter((cc) => cc.userId !== user.uid);
-      await supabase.from('campaigns').update({ characters: chars }).eq('id', campaignId);
+      const { data: campaign, error: campaignReadError } = await supabaseAdmin
+        .from('campaigns')
+        .select('characters')
+        .eq('id', campaignId)
+        .maybeSingle();
+      if (campaignReadError) return failed('campaign roster read', campaignReadError);
+      if (!campaign) continue;
+
+      const roster = ((campaign.characters as Array<{ userId?: string; user_id?: string }>) ?? []).filter(
+        (entry) => (entry.userId ?? entry.user_id) !== user.uid
+      );
+      const { error: rosterError } = await supabaseAdmin
+        .from('campaigns')
+        .update({ characters: roster })
+        .eq('id', campaignId);
+      if (rosterError) return failed('campaign roster update', rosterError);
     }
-    await supabase.from('campaign_members').delete().eq('user_id', user.uid);
 
-    await supabase.from('characters').delete().eq('user_id', user.uid);
-    await supabase.from('user_powers').delete().eq('user_id', user.uid);
-    await supabase.from('user_techniques').delete().eq('user_id', user.uid);
-    await supabase.from('user_empowered_techniques').delete().eq('user_id', user.uid);
-    await supabase.from('user_items').delete().eq('user_id', user.uid);
-    await supabase.from('user_creatures').delete().eq('user_id', user.uid);
-    await supabase.from('user_species').delete().eq('user_id', user.uid);
-    await supabase.from('crafting_sessions').delete().eq('user_id', user.uid);
-    await supabase.from('user_enhanced_items').delete().eq('user_id', user.uid);
-    await supabase.from('usernames').delete().eq('user_id', user.uid);
-    await supabase.from('encounters').delete().eq('user_id', user.uid);
-    await supabase.from('campaigns').delete().eq('owner_id', user.uid);
-    await supabase.from('user_profiles').delete().eq('id', user.uid);
+    // Rolls authored in campaigns the user does not own embed their character
+    // name and are not reached by any cascade.
+    const { error: rollsError } = await supabaseAdmin
+      .from('campaign_rolls')
+      .delete()
+      .eq('user_id', user.uid);
+    if (rollsError) return failed('campaign_rolls', rollsError);
 
-    await supabaseAdmin.auth.admin.deleteUser(user.uid);
+    const { error: membershipError } = await supabaseAdmin
+      .from('campaign_members')
+      .delete()
+      .eq('user_id', user.uid);
+    if (membershipError) return failed('campaign_members', membershipError);
+
+    // encounters has no FK to user_profiles, so it needs its own delete.
+    const { error: encountersError } = await supabaseAdmin
+      .from('encounters')
+      .delete()
+      .eq('user_id', user.uid);
+    if (encountersError) return failed('encounters', encountersError);
+
+    // Owned campaigns cascade their members and rolls.
+    const { error: campaignsError } = await supabaseAdmin
+      .from('campaigns')
+      .delete()
+      .eq('owner_id', user.uid);
+    if (campaignsError) return failed('campaigns', campaignsError);
+
+    // This cascades characters, crafting_sessions, usernames, user_enhanced_items
+    // and every user_* library table (all FKs are ON DELETE CASCADE).
+    const { error: profileError } = await supabaseAdmin
+      .from('user_profiles')
+      .delete()
+      .eq('id', user.uid);
+    if (profileError) return failed('user_profiles', profileError);
+
+    const { error: authError } = await supabaseAdmin.auth.admin.deleteUser(user.uid);
+    if (authError) return failed('auth user', authError);
+
     return { success: true };
   } catch (error) {
     console.error('Error deleting account:', error);

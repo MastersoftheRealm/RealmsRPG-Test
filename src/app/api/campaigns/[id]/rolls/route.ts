@@ -226,10 +226,15 @@ export async function POST(
       return NextResponse.json({ error: 'Failed to save roll' }, { status: 500 });
     }
 
-    const { count } = await supabase
+    // Trim is best-effort: the roll is already saved, so a failure here only
+    // leaves history longer than intended.
+    const { count, error: countError } = await supabase
       .from('campaign_rolls')
       .select('id', { count: 'exact', head: true })
       .eq('campaign_id', campaignId);
+    if (countError) {
+      console.warn('[API] Roll history trim skipped (count failed):', countError);
+    }
 
     if ((count ?? 0) > MAX_CAMPAIGN_ROLLS) {
       // The trim deletes the oldest rolls regardless of who authored them, so it
@@ -243,16 +248,25 @@ export async function POST(
         dbAdmin = null;
       }
       if (dbAdmin) {
-        const { data: oldRows } = await dbAdmin
+        const { data: oldRows, error: oldRowsError } = await dbAdmin
           .from('campaign_rolls')
           .select('id')
           .eq('campaign_id', campaignId)
           .order('created_at', { ascending: true, nullsFirst: true })
           .order('id', { ascending: true })
           .limit((count ?? 0) - MAX_CAMPAIGN_ROLLS);
+        if (oldRowsError) {
+          console.warn('[API] Roll history trim skipped (select failed):', oldRowsError);
+        }
         const idsToDelete = (oldRows ?? []).map((r: { id: string }) => r.id);
         if (idsToDelete.length) {
-          await dbAdmin.from('campaign_rolls').delete().in('id', idsToDelete);
+          const { error: trimError } = await dbAdmin
+            .from('campaign_rolls')
+            .delete()
+            .in('id', idsToDelete);
+          if (trimError) {
+            console.warn('[API] Roll history trim failed:', trimError);
+          }
         }
       }
     }

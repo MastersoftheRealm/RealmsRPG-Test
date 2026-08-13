@@ -9,16 +9,25 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
-vi.mock('@/lib/rate-limit', () => ({
-  standardLimiter: {
-    check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
-  },
-}));
+vi.mock('@/lib/rate-limit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/rate-limit')>();
+  return {
+    ...actual,
+    standardLimiter: {
+      check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+    },
+  };
+});
 
-vi.mock('@/lib/api-validation', () => ({
-  validateJson: vi.fn(),
-  craftingSessionUpdateSchema: {},
-}));
+// verifyMutationRequest stays real so the same-origin guard is exercised.
+vi.mock('@/lib/api-validation', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/api-validation')>();
+  return {
+    ...actual,
+    validateJson: vi.fn(),
+    craftingSessionUpdateSchema: {},
+  };
+});
 
 import { GET, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
@@ -98,13 +107,16 @@ function makeGetRequest(id: string) {
 function makePatchRequest(id: string, body: Record<string, unknown>) {
   return new NextRequest(`http://localhost/api/crafting/${id}`, {
     method: 'PATCH',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', origin: 'http://localhost' },
     body: JSON.stringify(body),
   });
 }
 
-function makeDeleteRequest(id: string) {
-  return new NextRequest(`http://localhost/api/crafting/${id}`, { method: 'DELETE' });
+function makeDeleteRequest(id: string, headers: Record<string, string> = {}) {
+  return new NextRequest(`http://localhost/api/crafting/${id}`, {
+    method: 'DELETE',
+    headers: { origin: 'http://localhost', ...headers },
+  });
 }
 
 async function readJson<T>(response: Response): Promise<T> {

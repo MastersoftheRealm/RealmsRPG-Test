@@ -10,7 +10,7 @@ import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
 import { validateJson, encounterCreateSchema } from '@/lib/api-validation';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
-import { standardLimiter } from '@/lib/rate-limit';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import type { EncounterSummary } from '@/types/encounter';
 
 type Row = {
@@ -69,15 +69,16 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = await standardLimiter.check(`enc-post:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('enc-post', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const validation = await validateJson(request, encounterCreateSchema);

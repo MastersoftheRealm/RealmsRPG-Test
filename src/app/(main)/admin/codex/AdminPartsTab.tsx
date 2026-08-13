@@ -13,7 +13,8 @@ import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { formatListCellLabel } from '@/lib/utils';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
+import { createCodexDoc, updateCodexDoc } from './actions';
+import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
 import { Pencil, Copy, X } from 'lucide-react';
 import {
   COPY_NAME_SUFFIX,
@@ -185,7 +186,7 @@ export function AdminPartsTab() {
     const data = partFormToSavePayload(form);
 
     const result = editing
-      ? await updateCodexDoc('codex_parts', editing.id, data)
+      ? await updateCodexDoc('codex_parts', editing.id, data, { expectedUpdatedAt: editing.updated_at })
       : await createCodexDoc('codex_parts', undefined, data);
 
     setSaving(false);
@@ -216,19 +217,26 @@ export function AdminPartsTab() {
     }
   };
 
+  const codexDelete = useAdminCodexDelete({
+    collection: 'codex_parts',
+    onDeleted: async () => {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+      setDeleteConfirm(null);
+      closeModal();
+    },
+    onError: (message) => {
+      setPendingDeleteId(null);
+      showToast(message, 'error');
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (deleteConfirm !== id) {
       setDeleteConfirm(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_parts', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      closeModal();
-      setDeleteConfirm(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    await codexDelete.requestDelete(id);
   };
 
   const handleInlineDelete = async (id: string) => {
@@ -236,14 +244,7 @@ export function AdminPartsTab() {
       setPendingDeleteId(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_parts', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-      setPendingDeleteId(null);
-    }
+    await codexDelete.requestDelete(id);
   };
 
   if (error) return <ErrorState message="Failed to load parts" onRetry={() => { void refetch(); }} />;
@@ -413,6 +414,8 @@ export function AdminPartsTab() {
         onRequestDelete={() => editing && handleDelete(editing.id)}
         onSave={handleSave}
       />
+
+      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="part" />
     </div>
   );
 }

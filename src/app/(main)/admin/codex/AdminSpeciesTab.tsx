@@ -11,7 +11,8 @@ import {
 import { Button, IconButton, useToast } from '@/components/ui';
 import { useSpecies, useCodexSkills, useTraits, type Species, type Trait, type Skill } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc, deleteCodexDoc } from './actions';
+import { createCodexDoc, updateCodexDoc } from './actions';
+import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
 import { Pencil, Copy, X } from 'lucide-react';
 import { formatListCellLabel } from '@/lib/utils';
 import { resolveSpeciesListRowThumbnail } from '@/lib/list-row-image';
@@ -112,7 +113,7 @@ export function AdminSpeciesTab() {
     setSaving(true);
     const data = speciesFormToSavePayload(form);
     const result = editing
-      ? await updateCodexDoc('codex_species', editing.id, data)
+      ? await updateCodexDoc('codex_species', editing.id, data, { expectedUpdatedAt: editing.updated_at })
       : await createCodexDoc('codex_species', undefined, data);
 
     if (!result.success) {
@@ -127,19 +128,26 @@ export function AdminSpeciesTab() {
     closeModal();
   };
 
+  const codexDelete = useAdminCodexDelete({
+    collection: 'codex_species',
+    onDeleted: async () => {
+      queryClient.invalidateQueries({ queryKey: ['codex'] });
+      await queryClient.refetchQueries({ queryKey: ['codex'] });
+      setPendingDeleteId(null);
+      closeModal();
+    },
+    onError: (message) => {
+      setPendingDeleteId(null);
+      showToast(message, 'error');
+    },
+  });
+
   const handleDelete = async (id: string) => {
     if (deleteConfirm !== id) {
       setDeleteConfirm(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_species', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    await codexDelete.requestDelete(id);
   };
 
   const handleInlineDelete = async (id: string) => {
@@ -147,15 +155,7 @@ export function AdminSpeciesTab() {
       setPendingDeleteId(id);
       return;
     }
-    const result = await deleteCodexDoc('codex_species', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-      setPendingDeleteId(null);
-    }
+    await codexDelete.requestDelete(id);
   };
 
   if (error) return <ErrorState message="Failed to load species" onRetry={() => { void refetch(); }} />;
@@ -336,6 +336,8 @@ export function AdminSpeciesTab() {
         onRequestDelete={() => editing && handleDelete(editing.id)}
         onSave={handleSave}
       />
+
+      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="species" />
     </div>
   );
 }

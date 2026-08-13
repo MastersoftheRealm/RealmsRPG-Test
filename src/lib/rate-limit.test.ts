@@ -88,6 +88,84 @@ describe('rate-limit', () => {
     consoleSpy.mockRestore();
   });
 
+  it('fails closed when a configured Redis backend errors', async () => {
+    process.env.UPSTASH_REDIS_REST_URL = 'https://example.upstash.io';
+    process.env.UPSTASH_REDIS_REST_TOKEN = 'test-token';
+    mockLimit.mockRejectedValue(new Error('Redis unavailable'));
+
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+    const { rateLimit } = await import('./rate-limit');
+    const limiter = rateLimit({ interval: 60_000, limit: 10, prefix: 'test-closed', failClosed: true });
+
+    const result = await limiter.check('user-c');
+
+    expect(result.success).toBe(false);
+    expect(result.remaining).toBe(0);
+    expect(result.reset).toBeGreaterThan(Date.now());
+    expect(consoleSpy).toHaveBeenCalled();
+
+    consoleSpy.mockRestore();
+  });
+
+  it('failClosed does not reject when no durable backend is configured', async () => {
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const { rateLimit } = await import('./rate-limit');
+    const limiter = rateLimit({ interval: 60_000, limit: 1, prefix: 'test-closed-nobackend', failClosed: true });
+
+    const allowed = await limiter.check('user-d');
+    const blocked = await limiter.check('user-d');
+
+    expect(allowed.success).toBe(true);
+    expect(blocked.success).toBe(false);
+    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No durable backend configured'));
+
+    consoleSpy.mockRestore();
+  });
+
+  it('warns only once per process about the missing durable backend', async () => {
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    const { rateLimit } = await import('./rate-limit');
+    const limiter = rateLimit({ interval: 60_000, limit: 5, prefix: 'test-warn-once' });
+
+    await limiter.check('user-e');
+    await limiter.check('user-f');
+
+    expect(consoleSpy).toHaveBeenCalledTimes(1);
+
+    consoleSpy.mockRestore();
+  });
+
+  it('buildRateLimitKey prefers the authenticated user over the IP', async () => {
+    const { buildRateLimitKey } = await import('./rate-limit');
+
+    expect(buildRateLimitKey('char-patch', { userId: 'user-1', ip: '203.0.113.1' })).toBe(
+      'char-patch:uid:user-1'
+    );
+    expect(buildRateLimitKey('char-patch', { userId: '  ', ip: '203.0.113.1' })).toBe(
+      'char-patch:ip:203.0.113.1'
+    );
+    expect(buildRateLimitKey('char-patch', { userId: null, ip: null })).toBe('char-patch:ip:unknown');
+  });
+
+  it('resolveClientIp prefers x-real-ip and otherwise takes the last forwarded hop', async () => {
+    const { resolveClientIp } = await import('./rate-limit');
+
+    expect(resolveClientIp(new Headers({ 'x-real-ip': '198.51.100.9' }))).toBe('198.51.100.9');
+    expect(
+      resolveClientIp(
+        new Headers({ 'x-real-ip': '198.51.100.9', 'x-forwarded-for': 'spoofed, 203.0.113.7' })
+      )
+    ).toBe('198.51.100.9');
+    // A client-prepended hop must not become the limiter key.
+    expect(resolveClientIp(new Headers({ 'x-forwarded-for': 'spoofed, 203.0.113.7' }))).toBe(
+      '203.0.113.7'
+    );
+    expect(resolveClientIp(new Headers())).toBe('unknown');
+  });
+
   it('retryAfterSecondsFromReset returns at least 1 second', async () => {
     const { retryAfterSecondsFromReset } = await import('./rate-limit');
     const now = Date.now();

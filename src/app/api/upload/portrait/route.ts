@@ -11,6 +11,7 @@ import { getSession } from '@/lib/supabase/session';
 import { detectImageMime, extensionForImageMime } from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
+import { verifyMutationRequest } from '@/lib/api-validation';
 
 const BUCKET = 'portraits';
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
@@ -21,6 +22,9 @@ export async function POST(request: NextRequest) {
   if (error || !user?.uid) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
+
+  const denied = verifyMutationRequest(request);
+  if (denied) return denied;
 
   const key = buildRateLimitKey('upload-portrait', {
     userId: user.uid,
@@ -78,14 +82,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
-    // Delete any existing portrait for this character (different extensions)
-    const { data: existing } = await supabase.storage.from(BUCKET).list(user.uid);
+    // Delete any existing portrait for this character (different extensions).
+    // Cleanup only: a failure leaves an orphaned object but must not fail the upload.
+    const { data: existing, error: listError } = await supabase.storage.from(BUCKET).list(user.uid);
+    if (listError) {
+      logApiError('POST /api/upload/portrait (stale portrait list)', listError);
+    }
     if (existing?.length) {
       const toRemove = existing
         .filter((f) => f.name?.startsWith(`${charId}.`))
         .map((f) => `${user.uid}/${f.name}`);
       if (toRemove.length) {
-        await supabase.storage.from(BUCKET).remove(toRemove);
+        const { error: removeError } = await supabase.storage.from(BUCKET).remove(toRemove);
+        if (removeError) {
+          logApiError('POST /api/upload/portrait (stale portrait remove)', removeError);
+        }
       }
     }
 

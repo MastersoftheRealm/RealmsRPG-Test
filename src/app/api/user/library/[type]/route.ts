@@ -65,11 +65,12 @@ export async function GET(
       if (isColumnar(type)) {
         // ilike narrows server-side (escape LIKE metacharacters); strict match in JS.
         const pattern = nameFilter.replace(/[%_\\]/g, (c) => `\\${c}`);
-        const { data: rows } = await supabase
+        const { data: rows, error: dbError } = await supabase
           .from(TABLE[type])
           .select('id, name')
           .eq('user_id', user.uid)
           .ilike('name', pattern);
+        if (dbError) throw dbError;
         const matches = ((rows ?? []) as Array<Record<string, unknown>>)
           .map((r) => ({ id: String(r.id), name: String(r.name ?? '') }))
           .filter((r) => r.name.trim().toLowerCase() === target);
@@ -77,10 +78,11 @@ export async function GET(
       }
       // Species: legacy rows keep the name inside `data`, so scan the (small)
       // species set and match the column or the JSON name.
-      const { data: rows } = await supabase
+      const { data: rows, error: dbError } = await supabase
         .from('user_species')
         .select('id, name, data')
         .eq('user_id', user.uid);
+      if (dbError) throw dbError;
       const matches = ((rows ?? []) as Array<Record<string, unknown>>)
         .map((r) => {
           const name =
@@ -94,10 +96,11 @@ export async function GET(
     }
 
     if (isColumnar(type)) {
-      const { data: rows } = await supabase
+      const { data: rows, error: dbError } = await supabase
         .from(TABLE[type])
         .select('*')
         .eq('user_id', user.uid);
+      if (dbError) throw dbError;
       const list = (rows ?? []) as Record<string, unknown>[];
       await enrichRowsWithBankImageUrls(supabase, list);
       const items = list.map((r) => rowToItem(type, r, 'user'));
@@ -109,7 +112,11 @@ export async function GET(
       return NextResponse.json(items);
     }
 
-    const { data: rows } = await supabase.from('user_species').select('*').eq('user_id', user.uid);
+    const { data: rows, error: dbError } = await supabase
+      .from('user_species')
+      .select('*')
+      .eq('user_id', user.uid);
+    if (dbError) throw dbError;
     const list = (rows ?? []) as Record<string, unknown>[];
     await enrichRowsWithBankImageUrls(supabase, list);
     const items = list.map((r) => {
@@ -250,12 +257,13 @@ export async function POST(
       }
 
       if (duplicateOf) {
-        const { data: existing } = await supabase
+        const { data: existing, error: existingErr } = await supabase
           .from(table)
           .select('*')
           .eq('id', duplicateOf)
           .eq('user_id', user.uid)
           .maybeSingle();
+        if (existingErr) throw existingErr;
         if (!existing) {
           return NextResponse.json({ error: 'Item not found' }, { status: 404 });
         }
@@ -297,12 +305,13 @@ export async function POST(
 
     const now = new Date().toISOString();
     if (duplicateOf) {
-      const { data: existing } = await supabase
+      const { data: existing, error: existingErr } = await supabase
         .from('user_species')
         .select('*')
         .eq('id', duplicateOf)
         .eq('user_id', user.uid)
         .maybeSingle();
+      if (existingErr) throw existingErr;
       if (!existing) {
         return NextResponse.json({ error: 'Item not found' }, { status: 404 });
       }

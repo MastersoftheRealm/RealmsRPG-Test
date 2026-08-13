@@ -10,7 +10,7 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isCharacterOnCampaignRoster } from '@/lib/campaign-roster';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
-import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
+import { collectCharacterLibraryRefIds, getOwnerLibraryForView } from '@/lib/owner-library-for-view';
 import type { CharacterVisibility } from '@/types';
 
 export async function GET(
@@ -28,20 +28,22 @@ export async function GET(
 
     const supabase = await createClient();
 
-    const { data: campaignRow } = await supabase
+    const { data: campaignRow, error: campaignErr } = await supabase
       .from('campaigns')
       .select('id, owner_id, characters')
       .eq('id', campaignId)
       .maybeSingle();
+    if (campaignErr) throw campaignErr;
 
     if (!campaignRow) {
       return NextResponse.json({ error: 'Campaign not found' }, { status: 404 });
     }
 
-    const { data: memberRows } = await supabase
+    const { data: memberRows, error: memberErr } = await supabase
       .from('campaign_members')
       .select('user_id')
       .eq('campaign_id', campaignId);
+    if (memberErr) throw memberErr;
     const memberIds = (memberRows ?? []).map((m: { user_id: string }) => m.user_id);
     const isRM = campaignRow.owner_id === user.uid;
     const isMember = isRM || memberIds.includes(user.uid);
@@ -60,30 +62,28 @@ export async function GET(
       return NextResponse.json({ error: 'Only the Realm Master can view player character sheets' }, { status: 403 });
     }
 
-    const { data: charRowUser } = await supabase
+    const { data: charRowUser, error: charErr } = await supabase
       .from('characters')
       .select('id, user_id, data, created_at, updated_at')
       .eq('id', characterId)
       .eq('user_id', userId)
       .maybeSingle();
+    if (charErr) {
+      console.warn('[campaign character GET] session-scoped fetch failed, trying service role:', charErr);
+    }
 
     let charRow = charRowUser;
     // RLS often blocks non-owners from reading other players' rows; roster + membership were verified above.
     if (!charRow) {
-      try {
-        const admin = createServiceRoleClient();
-        const { data: charRowAdmin, error: adminErr } = await admin
-          .from('characters')
-          .select('id, user_id, data, created_at, updated_at')
-          .eq('id', characterId)
-          .eq('user_id', userId)
-          .maybeSingle();
-        if (!adminErr) {
-          charRow = charRowAdmin ?? null;
-        }
-      } catch (e) {
-        console.warn('[campaign character GET] service role fetch unavailable:', e);
-      }
+      const admin = createServiceRoleClient();
+      const { data: charRowAdmin, error: adminErr } = await admin
+        .from('characters')
+        .select('id, user_id, data, created_at, updated_at')
+        .eq('id', characterId)
+        .eq('user_id', userId)
+        .maybeSingle();
+      if (adminErr) throw adminErr;
+      charRow = charRowAdmin ?? null;
     }
 
     if (!charRow) {
@@ -138,7 +138,7 @@ export async function GET(
       updatedAt: charData?.updatedAt ?? charRow.updated_at,
     };
 
-    const libraryForView = await getOwnerLibraryForView(userId);
+    const libraryForView = await getOwnerLibraryForView(userId, collectCharacterLibraryRefIds(charData));
     return NextResponse.json({ ...character, libraryForView });
   } catch (error) {
     console.error('Campaign character view error:', error);

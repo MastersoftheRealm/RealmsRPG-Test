@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, enhancedItemCreateSchema } from '@/lib/api-validation';
 import { apiErrorResponse } from '@/lib/api-error';
-import { standardLimiter } from '@/lib/rate-limit';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import type { UserEnhancedItem } from '@/types/crafting';
 
 export async function GET() {
@@ -20,11 +20,12 @@ export async function GET() {
     }
 
     const supabase = await createClient();
-    const { data: rows } = await supabase
+    const { data: rows, error: dbError } = await supabase
       .from('user_enhanced_items')
       .select('id, data, name, created_at, updated_at')
       .eq('user_id', user.uid)
       .order('updated_at', { ascending: false });
+    if (dbError) throw dbError;
 
     const items: UserEnhancedItem[] = (rows ?? []).map((r) => {
       const d = ((r as { data?: unknown }).data as Record<string, unknown>) ?? {};
@@ -57,15 +58,16 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = await standardLimiter.check(`enhanced-post:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('enhanced-post', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const validation = await validateJson(request, enhancedItemCreateSchema);

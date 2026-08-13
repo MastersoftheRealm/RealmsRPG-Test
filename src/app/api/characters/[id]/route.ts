@@ -9,11 +9,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
-import { validateJson, characterUpdateSchema } from '@/lib/api-validation';
+import { validateJson, verifyMutationRequest, characterUpdateSchema } from '@/lib/api-validation';
 import { prepareCharacterForSave } from '@/lib/character-save';
 import { normalizeCharacterForSave, normalizeCharacterOnLoad } from '@/lib/character/schema-normalize';
-import { standardLimiter } from '@/lib/rate-limit';
-import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
+import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
+import { collectCharacterLibraryRefIds, getOwnerLibraryForView } from '@/lib/owner-library-for-view';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import type { Character, CharacterVisibility } from '@/types';
@@ -45,11 +45,12 @@ export async function GET(
     }
 
     const supabase = await createClient();
-    const { data: row } = await supabase
+    const { data: row, error: rowErr } = await supabase
       .from('characters')
       .select('id, user_id, data, created_at, updated_at')
       .eq('id', id.trim())
       .maybeSingle();
+    if (rowErr) throw rowErr;
 
     if (!row) {
       return NextResponse.json(null, { status: 404 });
@@ -63,27 +64,33 @@ export async function GET(
 
     const visibility = ((charRow.data as Record<string, unknown>)?.visibility as CharacterVisibility) ?? 'private';
     if (visibility === 'public') {
-      const libraryForView = await getOwnerLibraryForView(charRow.user_id);
+      const libraryForView = await getOwnerLibraryForView(
+        charRow.user_id,
+        collectCharacterLibraryRefIds(charRow.data)
+      );
       return NextResponse.json({ character: rowToCharacter(charRow), libraryForView });
     }
 
     if (visibility === 'campaign' && user?.uid) {
-      const { data: memberRows } = await supabase
+      const { data: memberRows, error: memberErr } = await supabase
         .from('campaign_members')
         .select('campaign_id')
         .eq('user_id', user.uid);
+      if (memberErr) throw memberErr;
       const memberCampaignIds = (memberRows ?? []).map((m: { campaign_id: string }) => m.campaign_id);
-      const { data: ownedCampaigns } = await supabase
+      const { data: ownedCampaigns, error: ownedErr } = await supabase
         .from('campaigns')
         .select('id')
         .eq('owner_id', user.uid);
+      if (ownedErr) throw ownedErr;
       const ownedIds = (ownedCampaigns ?? []).map((c: { id: string }) => c.id);
       const allCampaignIds = [...new Set([...memberCampaignIds, ...ownedIds])];
       if (allCampaignIds.length > 0) {
-        const { data: campaigns } = await supabase
+        const { data: campaigns, error: campaignsErr } = await supabase
           .from('campaigns')
           .select('id, characters')
           .in('id', allCampaignIds);
+        if (campaignsErr) throw campaignsErr;
         const list = (campaigns ?? []) as { id: string; characters: unknown }[];
         const inCampaign = list.some((c) => {
           const arr = (c.characters as Array<{ user_id?: string; character_id?: string; userId?: string; characterId?: string }>) ?? [];
@@ -92,7 +99,10 @@ export async function GET(
           );
         });
         if (inCampaign) {
-          const libraryForView = await getOwnerLibraryForView(charRow.user_id);
+          const libraryForView = await getOwnerLibraryForView(
+            charRow.user_id,
+            collectCharacterLibraryRefIds(charRow.data)
+          );
           return NextResponse.json({ character: rowToCharacter(charRow), libraryForView });
         }
       }
@@ -110,15 +120,16 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ip = request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = await standardLimiter.check(`char-patch:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('char-patch', { userId: user.uid, ip: resolveClientIp(request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const { id } = await params;
@@ -132,12 +143,13 @@ export async function PATCH(
     const cleanedData = prepareCharacterForSave(data);
 
     const supabase = await createClient();
-    const { data: existing } = await supabase
+    const { data: existing, error: existingErr } = await supabase
       .from('characters')
       .select('id, data')
       .eq('id', id.trim())
       .eq('user_id', user.uid)
       .maybeSingle();
+    if (existingErr) throw existingErr;
 
     if (!existing) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
@@ -168,15 +180,19 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const ip = _request.headers.get('x-forwarded-for') ?? 'unknown';
-    const { success } = await standardLimiter.check(`char-del:${ip}`);
-    if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
-    }
-
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const denied = verifyMutationRequest(_request);
+    if (denied) return denied;
+
+    const { success } = await standardLimiter.check(
+      buildRateLimitKey('char-del', { userId: user.uid, ip: resolveClientIp(_request.headers) })
+    );
+    if (!success) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
     }
 
     const { id } = await params;
@@ -185,25 +201,29 @@ export async function DELETE(
     }
 
     const supabase = await createClient();
-    const { data: existing } = await supabase
+    const { data: existing, error: existingErr } = await supabase
       .from('characters')
       .select('id')
       .eq('id', id.trim())
       .eq('user_id', user.uid)
       .maybeSingle();
+    if (existingErr) throw existingErr;
 
     if (!existing) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
+    // Portrait cleanup is best-effort; a storage failure must not block the delete.
     try {
-      const { data: files } = await supabase.storage.from('portraits').list(user.uid);
+      const { data: files, error: listErr } = await supabase.storage.from('portraits').list(user.uid);
+      if (listErr) throw listErr;
       if (files?.length) {
         const toRemove = files
           .filter((f) => f.name?.startsWith(`${id.trim()}.`))
           .map((f) => `${user.uid}/${f.name}`);
         if (toRemove.length) {
-          await supabase.storage.from('portraits').remove(toRemove);
+          const { error: removeErr } = await supabase.storage.from('portraits').remove(toRemove);
+          if (removeErr) throw removeErr;
         }
       }
     } catch (storageErr) {

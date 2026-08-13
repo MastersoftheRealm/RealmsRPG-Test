@@ -50,3 +50,18 @@ export function generateNextNumericId(existingIds: Set<string>): string {
 export function rowDataWithoutId(row: Record<string, unknown>): Record<string, unknown> {
   return Object.fromEntries(Object.entries(row).filter(([key]) => key !== 'id'));
 }
+
+/** Columns whose value differs from the snapshot taken when the grid loaded. */
+export function changedColumns(
+  current: Record<string, unknown>,
+  original: Record<string, unknown> | null
+): string[] {
+  if (!original) return Object.keys(current).filter((key) => key !== 'id');
+  const keys = new Set([...Object.keys(current), ...Object.keys(original)]);
+  const changed: string[] = [];
+  for (const key of keys) {
+    if (key === 'id') continue;
+    if (cellValueToString(current[key]) !== cellValueToString(original[key])) changed.push(key);
+  }
+  return changed.sort();
+}

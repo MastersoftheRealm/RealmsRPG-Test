@@ -9,16 +9,25 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
-vi.mock('@/lib/rate-limit', () => ({
-  standardLimiter: {
-    check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
-  },
-}));
+vi.mock('@/lib/rate-limit', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/rate-limit')>();
+  return {
+    ...actual,
+    standardLimiter: {
+      check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+    },
+  };
+});
 
-vi.mock('@/lib/api-validation', () => ({
-  validateJson: vi.fn(),
-  libraryItemUpdateSchema: {},
-}));
+// verifyMutationRequest stays real so the same-origin guard is exercised.
+vi.mock('@/lib/api-validation', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/api-validation')>();
+  return {
+    ...actual,
+    validateJson: vi.fn(),
+    libraryItemUpdateSchema: {},
+  };
+});
 
 vi.mock('@/lib/entity-image-enrich-server', () => ({
   enrichRowsWithBankImageUrls: vi.fn(() => Promise.resolve()),
@@ -109,13 +118,16 @@ function makeGetRequest(type: string, id: string) {
 function makePatchRequest(type: string, id: string, body: Record<string, unknown>) {
   return new NextRequest(`http://localhost/api/user/library/${type}/${id}`, {
     method: 'PATCH',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', origin: 'http://localhost' },
     body: JSON.stringify(body),
   });
 }
 
-function makeDeleteRequest(type: string, id: string) {
-  return new NextRequest(`http://localhost/api/user/library/${type}/${id}`, { method: 'DELETE' });
+function makeDeleteRequest(type: string, id: string, headers: Record<string, string> = {}) {
+  return new NextRequest(`http://localhost/api/user/library/${type}/${id}`, {
+    method: 'DELETE',
+    headers: { origin: 'http://localhost', ...headers },
+  });
 }
 
 async function readJson<T>(response: Response): Promise<T> {
@@ -235,6 +247,19 @@ describe('DELETE /api/user/library/[type]/[id]', () => {
 
     expect(response.status).toBe(401);
     await expect(readJson(response)).resolves.toEqual({ error: 'Unauthorized' });
+  });
+
+  it('returns 403 for a cross-origin delete', async () => {
+    const row = makeLibraryRow('pow-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+
+    const response = await DELETE(
+      makeDeleteRequest('powers', 'pow-owned', { origin: 'https://evil.example' }),
+      params('powers', 'pow-owned')
+    );
+
+    expect(response.status).toBe(403);
   });
 
   it('returns 404 when another user tries to delete a library item (IDOR)', async () => {
