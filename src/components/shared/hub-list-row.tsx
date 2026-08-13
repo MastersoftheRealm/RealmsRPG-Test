@@ -125,7 +125,9 @@ export function HubListRow({
                   onDelete();
                 }}
                 label={deleteAriaLabel}
-                className="opacity-0 group-hover:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-danger-50 dark:hover:bg-danger-900/20 min-w-[44px] min-h-[44px]"
+                // Hover-reveal is desktop-only chrome: coarse pointers never fire
+                // :hover, and a zero-opacity control cannot show a focus ring.
+                className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-danger-light min-w-[44px] min-h-[44px]"
               >
                 <Trash2 className="w-4 h-4" />
               </IconButton>

@@ -62,6 +62,14 @@ interface GridListRowCollapsedProps {
   isRowClickable: boolean;
   handleRowClickWithGuard: (e: MouseEvent) => void;
   handleRowClick: () => void;
+  /**
+   * Expansion state of the panel this row toggles. Leave undefined when the row
+   * is clickable but controls no panel (selection-only rows) so no `aria-expanded`
+   * is emitted for a widget that never expands.
+   */
+  isExpanded?: boolean;
+  /** Id of the rendered expanded body; only pass while that body is in the DOM. */
+  expandedPanelId?: string;
   compact: boolean;
   disabled: boolean;
   gridColumns?: string;
@@ -105,6 +113,8 @@ export function GridListRowCollapsed({
   isRowClickable,
   handleRowClickWithGuard,
   handleRowClick,
+  isExpanded,
+  expandedPanelId,
   compact,
   disabled,
   gridColumns,
@@ -152,6 +162,10 @@ export function GridListRowCollapsed({
         data-grid-row-trigger
         role={isRowClickable ? 'button' : undefined}
         tabIndex={isRowClickable ? 0 : undefined}
+        aria-expanded={isRowClickable && isExpanded !== undefined ? isExpanded : undefined}
+        // Only reference the panel while it exists — a dangling idref is worse
+        // than none for screen readers.
+        aria-controls={isRowClickable && isExpanded && expandedPanelId ? expandedPanelId : undefined}
         onClick={isRowClickable ? handleRowClickWithGuard : undefined}
         onKeyDown={isRowClickable ? (e) => {
           if (e.key === 'Enter' || e.key === ' ') {

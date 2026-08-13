@@ -21,7 +21,6 @@ const iconButtonVariants = cva(
         primary: 'text-primary-link-fg hover:text-primary-fg-hover hover:bg-primary-subtle-bg',
         danger: 'text-danger-fg hover:text-danger-dark hover:bg-danger-light',
         success: 'text-success hover:text-success-dark hover:bg-success-light',
-        muted: 'text-text-muted hover:bg-surface-alt',
       },
       size: {
         sm: 'p-1 h-7 w-7',

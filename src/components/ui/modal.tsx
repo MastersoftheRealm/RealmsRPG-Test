@@ -35,10 +35,10 @@ interface ModalProps {
   contentClassName?: string;
   /**
    * Desktop max-width. Prefer `sm`–`md` for confirms, `lg`–`2xl` for typical forms/lists,
-   * `3xl`/`full` for high-complexity editors (admin codex, multi-section forms).
+   * `full` for high-complexity editors (admin codex, multi-section forms).
    * On viewports &lt; md with `fullScreenOnMobile`, size is ignored (full viewport).
    */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
   showCloseButton?: boolean;
   /** Use flex layout for scrollable content with sticky header/footer */
   flexLayout?: boolean;
@@ -54,8 +54,6 @@ const sizeClasses = {
   lg: 'max-w-lg',
   xl: 'max-w-2xl',
   '2xl': 'max-w-3xl',
-  /** Dense multi-field editors (~1024px) */
-  '3xl': 'max-w-5xl',
   /** High-complexity admin / multi-section editors (~1152px; still inset via overlay padding) */
   full: 'max-w-6xl',
 };
@@ -64,6 +62,31 @@ const MOBILE_BREAKPOINT_PX = 768;
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
+/**
+ * Every Modal portals into `document.body`, so nested dialogs cannot coordinate
+ * through the React tree. These two module-level registries are what let a
+ * stacked dialog behave correctly:
+ * - the lock counter stops a closing child from restoring background scroll
+ *   while its parent is still open;
+ * - the id stack stops one Escape keypress from closing the whole stack.
+ */
+let bodyScrollLockCount = 0;
+const openDialogIds: string[] = [];
+
+function lockBodyScroll() {
+  bodyScrollLockCount += 1;
+  if (bodyScrollLockCount === 1) {
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function releaseBodyScroll() {
+  bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
+  if (bodyScrollLockCount === 0) {
+    document.body.style.overflow = '';
+  }
+}
 
 export function Modal({
   isOpen,
@@ -86,6 +109,10 @@ export function Modal({
   const [isMobileViewport, setIsMobileViewport] = React.useState(false);
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = React.useRef<HTMLElement | null>(null);
+  const onCloseRef = React.useRef(onClose);
+  const dialogId = React.useId();
+  const titleId = `${dialogId}-title`;
+  const descriptionId = `${dialogId}-description`;
 
   // Render-time adjust: first open paint stays opacity-0, then transitions in.
   if (isOpen && !animating) {
@@ -104,25 +131,32 @@ export function Modal({
   }, [mounted]);
 
   React.useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   React.useEffect(() => {
+    if (!isOpen) return;
+    lockBodyScroll();
+    return releaseBodyScroll;
+  }, [isOpen]);
+
+  // Keyed on the stable dialog id (never on `onClose`) so a parent re-render
+  // cannot re-push this dialog above an already-open child.
+  React.useEffect(() => {
+    if (!isOpen) return;
+    openDialogIds.push(dialogId);
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
+      if (e.key !== 'Escape') return;
+      if (openDialogIds[openDialogIds.length - 1] !== dialogId) return;
+      onCloseRef.current();
     };
     document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [isOpen, onClose]);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      const index = openDialogIds.lastIndexOf(dialogId);
+      if (index !== -1) openDialogIds.splice(index, 1);
+    };
+  }, [isOpen, dialogId]);
 
   // Focus management: remember the trigger, move focus into the dialog on open,
   // and restore focus to the trigger on close/unmount (a11y — TASK-332).
@@ -214,17 +248,17 @@ export function Modal({
         )}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={(title && hasSimpleHeader) || (!title && hasCustomHeader) ? 'modal-title' : undefined}
+        aria-labelledby={(title && hasSimpleHeader) || (!title && hasCustomHeader) ? titleId : undefined}
         aria-label={
           ((title && hasSimpleHeader) || (!title && hasCustomHeader))
             ? undefined
             : (titleA11y ?? (!title && !hasCustomHeader ? 'Dialog' : undefined))
         }
-        aria-describedby={description ? 'modal-description' : undefined}
+        aria-describedby={description && hasSimpleHeader ? descriptionId : undefined}
       >
         {/* Visually hidden title when custom header without title, for screen readers */}
         {!title && hasCustomHeader && (
-          <span id="modal-title" className="sr-only">{titleA11y ?? 'Dialog'}</span>
+          <span id={titleId} className="sr-only">{titleA11y ?? 'Dialog'}</span>
         )}
         {/* Simple Header (title/description mode) — shrink-0 keeps it sticky outside scroll body */}
         {hasSimpleHeader && (
@@ -235,13 +269,13 @@ export function Modal({
             )}
           >
             {title && (
-              <h2 id="modal-title" className="text-xl font-semibold text-text-primary">
+              <h2 id={titleId} className="text-xl font-semibold text-text-primary">
                 {title}
               </h2>
             )}
             {description && (
               <p
-                id="modal-description"
+                id={descriptionId}
                 className="mt-1 text-sm text-text-secondary dark:text-text-secondary"
               >
                 {description}

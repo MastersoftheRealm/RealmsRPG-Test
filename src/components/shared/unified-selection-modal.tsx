@@ -223,7 +223,6 @@ export function UnifiedSelectionModal({
     (confirmDisabled?.(selectedItems) ?? false);
 
   const handleRequestClose = useCallback(() => {
-    if (leaveConfirmOpen) return;
     const hasUnconfirmedSelection = selectionDiffersFromInitial(
       selectedIds,
       openInitialIds,
@@ -236,7 +235,7 @@ export function UnifiedSelectionModal({
       return;
     }
     onClose();
-  }, [leaveConfirmOpen, selectedIds, openInitialIds, showQuantity, quantities, openInitialQuantities, onClose]);
+  }, [selectedIds, openInitialIds, showQuantity, quantities, openInitialQuantities, onClose]);
 
   const handleDiscardAndClose = useCallback(() => {
     setLeaveConfirmOpen(false);

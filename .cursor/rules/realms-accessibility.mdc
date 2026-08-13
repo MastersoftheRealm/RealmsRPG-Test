@@ -7,7 +7,7 @@ alwaysApply: true
 
 When **creating or editing** UI:
 
-1. **Contrast:** Semantic tokens (`text-text-primary`, `text-text-secondary`). Prefer theme-aware status/archetype tokens: `text-success-fg`, `text-danger-fg`, `text-warning-fg`, `text-info-fg`, `text-power-fg`, `text-martial-fg` (not numbered ramp + ad-hoc `dark:`). If using `text-text-muted`, add `dark:text-text-secondary`. See `ACCESSIBILITY.md` / `DESIGN_SYSTEM.md`.
+1. **Contrast:** Semantic tokens (`text-text-primary`, `text-text-secondary`). Prefer theme-aware status/archetype tokens: `text-success-fg`, `text-danger-fg`, `text-warning-fg`, `text-info-fg`, `text-power-fg`, `text-martial-fg` (not numbered ramp + ad-hoc `dark:`). Use `text-text-muted` **on its own** — do not add `dark:text-text-secondary`; the two tokens resolve to the same colour in dark mode by design, so the override is dead CSS (see `DESIGN_SYSTEM.md` § "Muted vs secondary text"). See `ACCESSIBILITY.md` / `DESIGN_SYSTEM.md`.
 
 2. **Buttons:** Discernable text; icon-only need `aria-label`.
 

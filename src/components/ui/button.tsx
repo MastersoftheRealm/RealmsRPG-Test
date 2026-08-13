@@ -3,18 +3,13 @@
  * ==================
  * Reusable button with variants using class-variance-authority
  * 
- * RECOMMENDED VARIANTS (use these):
+ * VARIANTS:
  * - primary: Main CTA, solid bg (clean, no gradient)
  * - outline: Secondary CTA, border only (clean outline style)
  * - secondary: Alternative actions, cancel buttons
  * - danger: Destructive actions (delete, remove)
  * - ghost: Minimal emphasis, inline actions
  * - link: Text link styling
- * 
- * DEPRECATED VARIANTS (avoid, will be removed):
- * - gradient: Use 'primary' instead
- * - success: Use 'primary' instead (context provides meaning)
- * - utility: Use 'secondary' or 'ghost' instead
  */
 
 import * as React from 'react';
@@ -44,8 +39,6 @@ const buttonVariants = cva(
         lg: 'h-12 px-6 text-base',
         xl: 'h-14 px-8 text-lg',
         icon: 'h-10 w-10',
-        'icon-sm': 'h-8 w-8',
-        'icon-lg': 'h-12 w-12',
       },
     },
     defaultVariants: {

@@ -12,7 +12,7 @@ interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Size variant */
   size?: 'sm' | 'md' | 'lg' | 'xl';
   /** Color variant */
-  variant?: 'primary' | 'white' | 'muted';
+  variant?: 'primary' | 'white';
   /** Optional label for accessibility */
   label?: string;
 }
@@ -27,7 +27,6 @@ const sizeClasses = {
 const variantClasses = {
   primary: 'border-primary-subtle-border border-t-primary-button',
   white: 'border-white/30 border-t-white',
-  muted: 'border-border-light border-t-neutral-500',
 };
 
 export function Spinner({

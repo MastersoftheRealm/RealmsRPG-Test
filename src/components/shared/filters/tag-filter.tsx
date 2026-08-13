@@ -37,6 +37,9 @@ export function TagFilter({
   className = '',
 }: TagFilterProps) {
   const id = useId();
+  // Radio-group scope is the whole document, so two mounted TagFilters would
+  // share one group and silently clear each other's mode.
+  const tagModeName = `${id}-tagMode`;
   const uniqueTags = useMemo(() => dedupeStrings(tags), [tags]);
   const availableTags = uniqueTags.filter(t => !selectedTags.includes(t));
 
@@ -67,11 +70,15 @@ export function TagFilter({
             </option>
           ))}
         </FilterNativeSelect>
-        <div className="flex min-h-11 items-center gap-2 rounded-md bg-surface-alt px-3">
+        <div
+          role="group"
+          aria-label="Tag match mode"
+          className="flex min-h-11 items-center gap-2 rounded-md bg-surface-alt px-3"
+        >
           <label className="flex items-center gap-1 cursor-pointer">
             <input
               type="radio"
-              name="tagMode"
+              name={tagModeName}
               checked={tagMode === 'any'}
               onChange={() => onModeChange('any')}
               className="w-4 h-4 text-primary-link-fg focus:ring-primary-outline-border"
@@ -81,7 +88,7 @@ export function TagFilter({
           <label className="flex items-center gap-1 cursor-pointer">
             <input
               type="radio"
-              name="tagMode"
+              name={tagModeName}
               checked={tagMode === 'all'}
               onChange={() => onModeChange('all')}
               className="w-4 h-4 text-primary-link-fg focus:ring-primary-outline-border"

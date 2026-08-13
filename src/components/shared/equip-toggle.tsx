@@ -60,6 +60,8 @@ export function EquipToggle({
       aria-pressed={isEquipped}
       className={cn(
         'flex items-center justify-center transition-all duration-base ease-standard',
+        // 44px floor on touch only; desktop keeps the compact icon box (MOBILE_UX.md).
+        '[@media(pointer:coarse)]:min-w-[44px] [@media(pointer:coarse)]:min-h-[44px]',
         SIZE_STYLES[size],
         isEquipped
           ? 'text-success-fg'

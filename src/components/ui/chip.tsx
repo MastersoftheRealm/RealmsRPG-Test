@@ -71,8 +71,6 @@ const chipVariants = cva(
         secondary: 'bg-surface text-text-secondary border-border-light',
         /** @deprecated Use 'default' instead */
         outline: 'border-border-light bg-transparent text-text-secondary hover:bg-surface-alt',
-        /** @deprecated Use 'primary' instead */
-        accent: 'bg-accent-chip text-primary-subtle-fg border-accent-200',
         /** @deprecated Use 'default' instead */
         info: 'bg-info-light text-info-fg border-info-border',
 
@@ -89,8 +87,6 @@ const chipVariants = cva(
         feat: 'bg-surface-alt text-text-secondary border-border-light',
         /** @deprecated Use 'default' - context provides meaning */
         proficiency: 'bg-info-light text-info-fg border-info-border',
-        /** @deprecated Use 'default' - context provides meaning */
-        weakness: 'bg-danger-light text-danger-fg border-danger-border',
         /** @deprecated Use 'default' - context provides meaning */
         power: 'bg-power-light text-power-fg border-power-border',
         /** @deprecated Use 'default' - context provides meaning */

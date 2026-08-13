@@ -109,7 +109,7 @@ function getPathAbilityHighlight(
 function abilityBorderClass(role: PathAbilityRole | null): string {
   if (role === 'power') return 'border-power dark:border-power-border';
   if (role === 'martial') return 'border-martial dark:border-martial-border';
-  if (role === 'secondary') return 'border-primary-subtle-border dark:border-primary-border';
+  if (role === 'secondary') return 'border-primary-subtle-border';
   return 'border-border-light';
 }
 
@@ -160,7 +160,7 @@ function PathAbilityLabel({ role, hybrid }: { role: PathAbilityRole; hybrid: boo
         role === 'power' && 'border-power-border bg-power-light text-power-fg',
         role === 'martial' && 'border-martial-border bg-martial-light text-martial-fg',
         role === 'secondary' &&
-          'border-primary-subtle-border bg-primary-subtle-bg text-primary-subtle-fg dark:border-primary-border dark:bg-primary-900/40 dark:text-primary-subtle-fg'
+          'border-primary-subtle-border bg-primary-subtle-bg text-primary-subtle-fg dark:bg-primary-900/40'
       )}
     >
       {pathAbilityVisibleLabel(role, hybrid)}

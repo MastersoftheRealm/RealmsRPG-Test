@@ -48,7 +48,6 @@
   
   /* Accent semantic aliases */
   --color-accent-gold: #c79956;
-  --color-accent-chip: #fef8f0;
   --color-accent-light: #fdf0dc;
 
   /* ---------------------------------------------------------------------------
@@ -405,7 +404,11 @@
     --color-destructive: #f85149;
     --color-text-primary: #e6edf3;
     --color-text-secondary: #8b949e;
-    --color-text-muted: #8b949e; /* WCAG AA contrast on dark surfaces */
+    /* Deliberately collapsed onto secondary: #8b949e is the dimmest grey that still
+       clears AA on --color-surface-alt (4.95:1), so dark mode has no room for a
+       separate, dimmer "muted" step. `text-text-muted dark:text-text-secondary` is
+       therefore a no-op by design — see DESIGN_SYSTEM.md "Muted vs secondary text". */
+    --color-text-muted: var(--color-text-secondary);
     --color-border: #30363d;
     /* Visible on surface-alt (#21262d) — chips, inputs, cards */
     --color-border-light: #6e7681;
@@ -529,8 +532,7 @@
     --color-companion-light: #1e1633;
     --color-companion-text: #d8b4fe;
 
-    /* Accent (gold) chip surface — Chip component `accent` variant */
-    --color-accent-chip: #2a2416;
+    /* Accent (gold) chip surface — Chip `rarityAscended` variant */
     --color-accent-light: #2a2416;
   }
   
@@ -645,16 +647,6 @@
      --------------------------------------------------------------------------- */
   .font-display {
     font-family: var(--font-display);
-  }
-
-  /* ---------------------------------------------------------------------------
-     FORM INPUT COMPONENTS
-     --------------------------------------------------------------------------- */
-  .input-field {
-    @apply w-full rounded-lg border border-border-light bg-surface px-4 py-2.5
-           text-text-primary placeholder:text-text-muted
-           focus:border-primary-outline-border focus:outline-none focus:ring-2 focus:ring-primary-outline-border
-           disabled:cursor-not-allowed disabled:opacity-50;
   }
 }
 
@@ -785,22 +777,6 @@
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
-  
-  /* Hover lift effect for cards */
-  .hover-lift {
-    transition-property: transform;
-    transition-duration: var(--duration-base);
-    transition-timing-function: var(--ease-standard);
-  }
-  
-  .hover-lift:hover {
-    @apply -translate-y-0.5;
-  }
-  
-  /* Focus ring utility */
-  .focus-ring {
-    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2;
-  }
 }
 
 /* =============================================================================
@@ -905,42 +881,6 @@
     background-size: 200% 100%;
     animation: shimmer 1.5s infinite;
   }
-  
-  .skeleton-text {
-    @apply h-4 rounded;
-    background: linear-gradient(
-      90deg,
-      var(--color-surface-secondary) 25%,
-      var(--color-surface-alt) 50%,
-      var(--color-surface-secondary) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-  
-  .skeleton-title {
-    @apply h-6 rounded;
-    background: linear-gradient(
-      90deg,
-      var(--color-surface-secondary) 25%,
-      var(--color-surface-alt) 50%,
-      var(--color-surface-secondary) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
-  
-  .skeleton-card {
-    @apply h-32 rounded-xl;
-    background: linear-gradient(
-      90deg,
-      var(--color-surface-secondary) 25%,
-      var(--color-surface-alt) 50%,
-      var(--color-surface-secondary) 75%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 1.5s infinite;
-  }
 
   /* ---------------------------------------------------------------------------
      RANGE SLIDER
@@ -973,54 +913,6 @@
      --------------------------------------------------------------------------- */
   .divider {
     @apply border-t border-divider;
-  }
-  
-  .divider-light {
-    @apply border-t border-border-light;
-  }
-
-  /* ---------------------------------------------------------------------------
-     UNIFIED LIST COMPONENTS
-     Consistent styling for all list-based displays (Library, Codex, Modals)
-     --------------------------------------------------------------------------- */
-  
-  /* List headers - darker background for visibility */
-  .list-header {
-    @apply hidden lg:grid gap-2 px-4 py-3 bg-primary-50 border-b border-border-light 
-           rounded-t-lg font-semibold text-sm text-primary-700 uppercase tracking-wide;
-  }
-  
-  /* List container - gap-based instead of dividers for softer look */
-  .list-container {
-    @apply flex flex-col gap-2;
-  }
-  
-  /* Individual list item - rounded with soft border */
-  .list-item {
-    @apply bg-surface rounded-lg border border-border-light overflow-hidden hover:border-primary-200;
-    transition-property: all;
-    transition-duration: var(--duration-base);
-    transition-timing-function: var(--ease-standard);
-  }
-  
-  /* Selectable list item */
-  .list-item-selectable {
-    @apply cursor-pointer hover:bg-surface-alt;
-  }
-  
-  /* Selected list item */
-  .list-item-selected {
-    @apply bg-primary-50 border-l-4 border-l-primary-500;
-  }
-  
-  /* Expanded content area */
-  .list-item-expanded {
-    @apply border-t border-border-light bg-surface-alt px-4 py-3;
-  }
-  
-  /* Modal filters section */
-  .modal-filters {
-    @apply px-5 py-4 border-b border-border-light bg-surface-alt;
   }
 
   /* Filter group - layout for filter controls (label + inputs) */

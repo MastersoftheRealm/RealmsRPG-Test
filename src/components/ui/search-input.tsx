@@ -22,6 +22,8 @@ interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputEleme
   icon?: React.ReactNode;
   /** Size variant */
   size?: 'sm' | 'md' | 'lg';
+  /** Forwarded to the input and merged with the internal ref used by clear-then-refocus. */
+  ref?: React.Ref<HTMLInputElement>;
 }
 
 const sizeClasses = {
@@ -53,10 +55,20 @@ export function SearchInput({
   size = 'md',
   placeholder = 'Search...',
   className,
+  ref,
   ...props
 }: SearchInputProps) {
   const sizes = sizeClasses[size];
   const inputRef = React.useRef<HTMLInputElement>(null);
+
+  const setInputRef = React.useCallback(
+    (node: HTMLInputElement | null) => {
+      inputRef.current = node;
+      if (typeof ref === 'function') ref(node);
+      else if (ref) ref.current = node;
+    },
+    [ref]
+  );
 
   const handleClear = () => {
     onChange('');
@@ -69,7 +81,6 @@ export function SearchInput({
         {icon || <Search className="w-full h-full" />}
       </span>
       <input
-        ref={inputRef}
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -81,6 +92,7 @@ export function SearchInput({
           className
         )}
         {...props}
+        ref={setInputRef}
       />
       {showClear && value && (
         <button

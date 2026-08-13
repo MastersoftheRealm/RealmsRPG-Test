@@ -18,7 +18,7 @@
  * - Accessible and responsive
  */
 
-import { useEffect, useState, memo } from 'react';
+import { useEffect, useId, useState, memo } from 'react';
 import { cn } from '@/lib/utils';
 import {
   helpKeyForPartsOrPropertiesLabel,
@@ -95,6 +95,7 @@ export const GridListRow = memo(function GridListRow({
   const [expandedChipIndex, setExpandedChipIndex] = useState<number | null>(null);
   const [expandedOptionsChipIndex, setExpandedOptionsChipIndex] = useState<number | null>(null);
   const [openDetailSections, setOpenDetailSections] = useState<Record<string, boolean>>({});
+  const expandedPanelId = useId();
 
   const isExpanded = controlledExpanded !== undefined ? controlledExpanded : internalExpanded;
 
@@ -305,6 +306,8 @@ export const GridListRow = memo(function GridListRow({
           style={{ gridColumn: contentCol, gridRow: 1 }}
         >
           <GridListRowCollapsed
+            isExpanded={showExpander ? isExpanded : undefined}
+            expandedPanelId={showExpanded ? expandedPanelId : undefined}
             isRowClickable={isRowClickable}
             handleRowClickWithGuard={handleRowClickWithGuard}
             handleRowClick={handleRowClick}
@@ -387,7 +390,7 @@ export const GridListRow = memo(function GridListRow({
                 aria-hidden
               />
             )}
-            <div className="min-w-0" style={{ gridColumn: contentCol, gridRow: expandedRow }}>
+            <div id={expandedPanelId} className="min-w-0" style={{ gridColumn: contentCol, gridRow: expandedRow }}>
               <GridListRowExpandedBody
                 compact={compact}
                 selectable={inlineSelectable}

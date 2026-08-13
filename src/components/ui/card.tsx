@@ -2,7 +2,7 @@
  * Card Component
  * ================
  * Container component with header, content, and footer.
- * Variants consolidate legacy `.card`, `.interactive-card`, and `.selection-card` CSS (Phase 2.3).
+ * Variants consolidate the legacy `.card` and `.selection-card` CSS (Phase 2.3).
  */
 
 import * as React from 'react';
@@ -13,8 +13,6 @@ export const cardVariants = cva('rounded-xl bg-surface text-text-primary', {
   variants: {
     variant: {
       default: 'border border-border-light shadow-sm',
-      interactive:
-        'border border-border-light shadow-sm transition-all duration-base ease-standard cursor-pointer hover:shadow-md hover:border-primary-outline-border hover:-translate-y-0.5',
       selectable:
         'border-2 border-border-light p-4 transition-all duration-base ease-standard cursor-pointer hover:border-primary-outline-border hover:shadow-md hover:-translate-y-0.5',
       selected:

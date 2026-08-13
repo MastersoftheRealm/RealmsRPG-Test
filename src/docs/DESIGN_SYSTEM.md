@@ -23,6 +23,18 @@ Dark mode overrides **only** the canonical `--color-*` tokens inside `.dark { �
 
 Status and archetype "on-color" text uses dedicated foreground tokens that are **theme-aware** (correct contrast in both light and dark): `--color-success-fg`, `--color-danger-fg`, `--color-warning-fg`, `--color-info-fg`, `--color-power-fg`, `--color-martial-fg`, and `--color-primary-button`. Prefer these over picking a ramp step by hand when placing text on a tinted/solid background — they are contrast-validated by `scripts/check-contrast.mjs`.
 
+### Muted vs secondary text (decision, 2026-08-13)
+
+**`text-text-muted dark:text-text-secondary` is a no-op, and that is intentional. Write `text-text-muted` alone in new code.**
+
+`--color-text-muted` and `--color-text-secondary` differ in light mode (`#707070` vs `#41464a`) but resolve to the same `#8b949e` in dark mode, where `--color-text-muted` is now written as `var(--color-text-secondary)` so the collapse is explicit rather than a duplicated hex.
+
+**Why they cannot differ in dark mode.** Muted text must clear WCAG AA (4.5:1) on `--color-surface-alt` (`#21262d`), the densest surface it lands on. `#8b949e` measures **4.95:1** there — the entire remaining headroom is about four 8-bit steps (`#878f99` = 4.65:1; `#838b95` = 4.42:1 already fails and would trip `scripts/check-contrast.mjs`, whose baseline is empty). A "dimmer muted" step that stays legal would be visually indistinguishable from secondary, so a two-tier dark grey ramp buys nothing and costs a `dark:` override on every muted string.
+
+**Consequence:** the pairing is redundant, not meaningful — the `dark:` half should be dropped, not made to matter.
+
+**Follow-up (not yet done):** 335 occurrences of `text-text-muted dark:text-text-secondary` across 151 files under `src/`. Removing the `dark:` half is a mechanical codemod with **zero rendered change** — schedule it as one standalone commit so the diff stays reviewable, and amend `.cursor/rules/realms-accessibility.mdc`, which currently mandates the pairing ("If using `text-text-muted`, add `dark:text-text-secondary`"). Until the rule is amended, existing pairings may be left alone; do not add new ones.
+
 ### Standard ladders (semantic scales)
 
 Common scales are encoded as semantic tokens so components share one ladder instead of arbitrary values:
@@ -62,7 +74,7 @@ Warm accent colors for highlights and special elements.
 |-------|-------|-------|
 | `accent-gold` | #c79956 | Primary accent |
 | `accent-bronze` | #d99735 | Secondary accent |
-| `accent-chip` | #fef8f0 | `<Chip variant="accent">` background |
+| `accent-light` | #fdf0dc | `<Chip variant="rarityAscended">` background |
 
 ### Utility Colors (Cool Blue)
 Secondary blue shades for utility buttons and accents.
@@ -155,7 +167,7 @@ Standard patterns for consistent UX across the app.
 - **Base component:** All modals must use `@/components/ui/modal` (Modal). Pass `isOpen`, `onClose`, and use `title`/`description` (simple) or `header`/`footer` (custom).
 - **Confirm/delete:** Use `ConfirmActionModal` or `DeleteConfirmModal` from `@/components/shared`; both compose base Modal and accept `isOpen`.
 - **Selection:** Use `UnifiedSelectionModal` for add-feat, add-power, add-technique, etc.
-- **Size guidance:** `sm`–`md` confirms; `lg`–`2xl` typical forms/lists; `3xl` (`max-w-5xl`) / `full` (`max-w-6xl`) for high-complexity multi-section editors (admin codex add/edit). Large dialogs use `fullScreenOnMobile`.
+- **Size guidance:** `sm`–`md` confirms; `lg`–`2xl` typical forms/lists; `full` (`max-w-6xl`) for high-complexity multi-section editors (admin codex add/edit). Large dialogs use `fullScreenOnMobile`.
 
 ### Error display
 - **Persistent errors** (form validation, failed load, permission): Use `<Alert variant="danger">` (or `warning`/`info`). Keep in layout until user dismisses or fixes.
@@ -209,20 +221,15 @@ Use the `<PageContainer>` component for all page layouts. Container widths and p
 ```tsx
 import { Button } from '@/components/ui';
 
-// RECOMMENDED Variants
+// Variants (the full set — `gradient` / `success` / `utility` were removed in Phase 2.1)
 <Button variant="primary">Primary Action</Button>
 <Button variant="secondary">Secondary</Button>
+<Button variant="outline">Outline</Button>
 <Button variant="danger">Delete</Button>
 <Button variant="ghost">Ghost</Button>
 <Button variant="link">Link</Button>
 
-// DEPRECATED (avoid - will be removed)
-// <Button variant="success"> // Use 'primary' instead
-// <Button variant="outline"> // Use 'secondary' instead
-// <Button variant="utility"> // Use 'secondary' or 'ghost' instead
-// <Button variant="gradient"> // Use 'primary' instead
-
-// Sizes
+// Sizes (`icon-sm` / `icon-lg` were removed 2026-08-13 — zero call sites)
 <Button size="sm">Small</Button>
 <Button size="md">Medium</Button>
 <Button size="lg">Large</Button>
@@ -263,10 +270,11 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 </Card>
 ```
 
-CSS classes available:
-- `.card` - Base card styling (`bg-surface` + `rounded-xl` + border + `shadow-sm`)
-- `.interactive-card` - Hoverable/clickable card
-- `.selection-card`, `.selection-card--selected` - Selection card + selected state
+`cardVariants` (the legacy `.card` / `.interactive-card` / `.selection-card` CSS was removed in Phase 2.3):
+- `default` — `bg-surface` + `rounded-xl` + border + `shadow-sm`
+- `selectable` / `selected` — selection card + selected state (used by `SelectionCard`)
+
+The unused `interactive` variant was removed 2026-08-13; for a hoverable card, compose `default` with the hover utilities you need.
 
 ### Chips/Badges
 
@@ -443,8 +451,9 @@ import { Input, SearchInput } from '@/components/ui';
 ```
 
 CSS classes available:
-- `.input-field` - Standard input styling
 - `.search-input-wrapper`, `.search-input`, `.search-input-icon`
+
+`.input-field` was removed (2026-08-13) — it duplicated `<Input>` and had zero call sites.
 
 ### Loading States
 
@@ -460,8 +469,8 @@ import { Spinner, LoadingState } from '@/components/ui/spinner';
 // Full overlay
 ```
 
-Use the `<Spinner>` / `<LoadingState>` components for spinners (the raw `.loading-spinner` classes were removed in Phase 0.4). Skeleton classes remain for placeholders:
-- `.skeleton`, `.skeleton-text`, `.skeleton-title`, `.skeleton-card`
+Use the `<Spinner>` / `<LoadingState>` components for spinners (the raw `.loading-spinner` classes were removed in Phase 0.4). `Spinner` variants: `primary`, `white`. One skeleton class remains for placeholders:
+- `.skeleton` — pair with your own `h-*` / `rounded-*` utilities. The `.skeleton-text` / `.skeleton-title` / `.skeleton-card` presets were removed (2026-08-13, zero call sites).
 
 ### Alerts
 
@@ -506,7 +515,7 @@ import { Modal } from '@/components/ui';
   onClose={() => setOpen(false)}
   title="Modal Title"
   description="Optional description"
-  size="md" // sm | md | lg | xl | 2xl | 3xl | full
+  size="md" // sm | md | lg | xl | 2xl | full
   fullScreenOnMobile // large / complex dialogs
 >
   Modal content
@@ -517,7 +526,6 @@ import { Modal } from '@/components/ui';
 |------|-----------|---------|
 | `sm` / `md` | max-w-sm / md | Confirms, short prompts |
 | `lg` / `xl` / `2xl` | max-w-lg / max-w-2xl / max-w-3xl | Typical forms, selection lists |
-| `3xl` | max-w-5xl | Dense multi-field editors |
 | `full` | max-w-6xl | High-complexity admin / multi-section editors |
 
 ---
