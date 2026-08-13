@@ -59,6 +59,7 @@ import {
 } from './creature-skill-utils';
 import { bootstrapCreatureState } from './creature-creator-bootstrap';
 import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
 import {
   buildArmamentLibraryList,
@@ -68,7 +69,6 @@ import {
   buildPowerSelectableItems,
   buildTechniqueSelectableItems,
   filterCreatureInventorySelectable,
-  mergeCreatureLibraryBySource,
   selectedArmamentIdsFromCreature,
   type CreatureInventoryTab,
 } from './creature-creator-library-selectables';
@@ -159,11 +159,11 @@ export function useCreatureCreatorWorkspace() {
   const { data: publicItems = [] } = useOfficialLibrary('items', { enabled: libraryQueriesEnabled });
 
   const powerList = useMemo(
-    () => mergeCreatureLibraryBySource(librarySource, userPowers, publicPowers) as UserPower[],
+    () => mergeLibraryBySource(librarySource, publicPowers, userPowers) as UserPower[],
     [userPowers, publicPowers, librarySource],
   );
   const techniqueList = useMemo(
-    () => mergeCreatureLibraryBySource(librarySource, userTechniques, publicTechniques) as UserTechnique[],
+    () => mergeLibraryBySource(librarySource, publicTechniques, userTechniques) as UserTechnique[],
     [userTechniques, publicTechniques, librarySource],
   );
   const empoweredTechniqueList = useMemo(

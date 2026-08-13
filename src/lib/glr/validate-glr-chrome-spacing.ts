@@ -16,6 +16,7 @@ import {
   MY_LIBRARY_ENTITY_TAB_SOURCES,
   USM_LIST_SHELL_SOURCES,
   USM_QUANTITY_CHROME_SOURCES,
+  GLR_ROW_LAYOUT_SOURCES,
 } from './glr-chrome-spacing-norms';
 
 export interface RowChromeFlags {
@@ -425,6 +426,61 @@ export function validateUsmQuantityChromeSource(
   return errors;
 }
 
+/** GridListRow chrome layout: stretch grid + shared expanded band (TASK-710). */
+export function validateGlrRowLayoutSource(
+  relativePath: string,
+  source: string
+): string[] {
+  const errors: string[] = [];
+  const file = relativePath.replace(/\\/g, '/');
+
+  if (file.endsWith('grid-list-row.tsx')) {
+    if (!source.includes('grid items-stretch')) {
+      errors.push(
+        `${relativePath}: chrome wrapper must be grid items-stretch so hover/expand fill the action column`
+      );
+    }
+    if (!source.includes('GRID_LIST_ROW_EXPANDED_BAND_CLASS')) {
+      errors.push(
+        `${relativePath}: expanded action-column fill must use GRID_LIST_ROW_EXPANDED_BAND_CLASS`
+      );
+    }
+    if (!source.includes('data-glr-row')) {
+      errors.push(
+        `${relativePath}: hover wrapper must set data-glr-row so .btn-stepper inherits row surface`
+      );
+    }
+    if (/flex items-start/.test(source)) {
+      errors.push(
+        `${relativePath}: do not pin chrome with flex items-start (empty band beside expanded body)`
+      );
+    }
+  }
+
+  if (file.endsWith('grid-list-row-collapsed.tsx')) {
+    if (/\bself-start\b/.test(source)) {
+      errors.push(
+        `${relativePath}: ExternalChrome must not self-start — header cell stretch centers actions`
+      );
+    }
+    if (!source.includes('GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE')) {
+      errors.push(
+        `${relativePath}: GLR action IconButtons must use GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE`
+      );
+    }
+  }
+
+  if (file.endsWith('grid-list-row-expanded.tsx')) {
+    if (!source.includes('GRID_LIST_ROW_EXPANDED_BAND_CLASS')) {
+      errors.push(
+        `${relativePath}: expanded body must use GRID_LIST_ROW_EXPANDED_BAND_CLASS (same strip as chrome fill)`
+      );
+    }
+  }
+
+  return errors;
+}
+
 /** Creator-embedded GLR lists: rowChrome pairing, no 40px tracks, tight row gaps. */
 export function validateCreatorEmbeddedGlrSource(
   relativePath: string,
@@ -481,6 +537,10 @@ export function scanGlrChromeSpacingSources(
 
   for (const path of CREATOR_EMBEDDED_GLR_SOURCES) {
     errors.push(...validateCreatorEmbeddedGlrSource(path, readFile(path)));
+  }
+
+  for (const path of GLR_ROW_LAYOUT_SOURCES) {
+    errors.push(...validateGlrRowLayoutSource(path, readFile(path)));
   }
 
   return { errors };

@@ -28,6 +28,15 @@ import type { TooltipPlacement } from '@/types/tooltips';
 
 const TOUCH_HOLD_MS = 400;
 
+/** Icon color. Default `info` is primary-link blue; use `tp` / `current` on colored surfaces. */
+export type InfoTippyTone = 'info' | 'tp' | 'current';
+
+const TONE_CLASS: Record<InfoTippyTone, string> = {
+  info: 'text-primary-link-fg hover:text-primary-fg-hover',
+  tp: 'text-tp-text hover:text-tp',
+  current: 'text-current',
+};
+
 export interface InfoTippyProps {
   content: ReactNode;
   /** Accessible name for the trigger (required). */
@@ -37,6 +46,8 @@ export interface InfoTippyProps {
   placement?: TooltipPlacement;
   /** `inline` = compact trigger aligned with step headings; `icon` = default touch-friendly trigger. */
   size?: 'inline' | 'icon';
+  /** Trigger icon color. Default `info` (link blue). Prefer this over one-off `text-*` class fights. */
+  tone?: InfoTippyTone;
   className?: string;
   /** Optional custom trigger element (must be a single DOM element). */
   children?: ReactElement;
@@ -60,6 +71,7 @@ export function InfoTippy({
   label,
   placement = 'top',
   size = 'icon',
+  tone = 'info',
   className,
   children,
   disabled = false,
@@ -135,7 +147,7 @@ export function InfoTippy({
     size === 'inline'
       ? 'min-h-8 min-w-8 md:min-h-7 md:min-w-7 -my-0.5'
       : 'min-h-[var(--touch-target-min,44px)] min-w-[var(--touch-target-min,44px)] md:min-h-7 md:min-w-7',
-    'text-primary-link-fg hover:text-primary-fg-hover',
+    TONE_CLASS[tone],
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2',
     className
   );

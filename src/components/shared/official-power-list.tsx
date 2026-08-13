@@ -16,6 +16,7 @@ import type { LibraryPower } from '@/types/library';
 import {
   buildOfficialPowerRows,
   filterOfficialPowerRows,
+  officialPowerRowColumns,
   OFFICIAL_POWER_GRID,
   OFFICIAL_POWER_HEADER_COLUMNS,
   type OfficialPowerRow,
@@ -121,15 +122,7 @@ export function OfficialPowerList({
           onCharacterIdChange={setCharacterFilterId}
         />
       }
-      getColumns={(p) => [
-        { key: 'Category', value: p.category, align: 'center' },
-        { key: 'Energy', value: p.energy, highlight: true, align: 'center' },
-        { key: 'Action', value: p.action, align: 'center' },
-        { key: 'Duration', value: p.duration, align: 'center' },
-        { key: 'Range', value: p.range, align: 'center' },
-        { key: 'Area', value: p.area, align: 'center' },
-        { key: 'Damage', value: p.damage, align: 'center' },
-      ]}
+      getColumns={(p) => officialPowerRowColumns(p)}
       getDetailSections={(p) => {
         const section = partsProficienciesSection(p.parts, 'power');
         return section ? [section] : undefined;

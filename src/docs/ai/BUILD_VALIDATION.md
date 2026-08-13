@@ -1392,7 +1392,7 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Task** | TASK-584 |
 | **Where** | `/characters/[id]` → Skills section (edit mode) |
 | **Needs** | Editable character; Codex skills loaded |
-| **Steps** | 1. Open Skills (play view) — confirm every Codex **base** skill appears (not only previously added). 2. Toggle **Proficient** filter — only proficient rows remain; **All** restores full catalog. 3. Uncheck **Show sub-skills** — sub-skill rows hide; re-check — proficient subs return; unproficient subs only if previously added via Add Sub-Skill. 4. Enter edit → pencil (spend): confirm dual toggles float top-right; Skill Points pill does not ugly-wrap; no **Add Skill** button; **Sub-Skill** remains. 5. No per-row **X**. On a base skill: **+** gains proficiency (value 0), further **+** raises value; **−** lowers value then clears proficiency (row stays in catalog). 6. Add a sub-skill, gain proficiency, then **−** until proficiency clears, then **−** again — sub-skill leaves the list. 7. Optional ~360px: filters usable; Value stepper still visible (TableScroll). |
+| **Steps** | 1. Open Skills (play view) — confirm every Codex **base** skill appears (not only previously added). 2. Toggle **Proficient** filter — only proficient rows remain; **All** restores full catalog. 3. Uncheck **Show sub-skills** — sub-skill rows hide; re-check — proficient subs return; unproficient subs only if previously added via Add Sub-Skill. 4. Enter edit → pencil (spend): confirm dual toggles float top-right; Skill Points pill does not ugly-wrap and matches guided inline PointStatus size (`text-base`, TASK-706); no **Add Skill** button; **Sub-Skill** remains. 5. No per-row **X**. On a base skill: **+** gains proficiency (value 0), further **+** raises value; **−** lowers value then clears proficiency (row stays in catalog). 6. Add a sub-skill, gain proficiency, then **−** until proficiency clears, then **−** again — sub-skill leaves the list. 7. Optional ~360px: filters usable; Value stepper still visible (TableScroll). |
 | **Expected** | Catalog-all base skills; filters as above; − path replaces remove-X; header chrome uncramped; species skills still locked. |
 | **Report** | DEV-V-009-T032: PASS / FAIL / SKIP — |
 
@@ -2369,19 +2369,20 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-435 |
+| **Related task** | TASK-435 / TASK-711 |
 | **Where** | Guided creator → Path / Species deep-dives; Advanced creator species modal (if opened from Advanced flow) |
 | **Needs** | Codex species + archetypes |
 
 **Steps**
 1. Guided Species → **More details** → expand an option catalog; confirm GridListRow name + truncated description + Uses when limited; expand row for full copy / uses hint.
 2. Guided Path → **More details** → expand weapons (or armor); expand a row with properties; confirm chips expand for description/TP (same language as species trait rows). Optionally expand powers/techniques and confirm energy stats via shared combat builders.
-3. Select a species → Ancestry overview (`SpeciesRevealPanel`): granted species traits render as the same elongated expandable list (not card grid).
+3. Select a species → Ancestry overview (`SpeciesRevealPanel`): granted species traits render as **read-only compact cards** (name + description preview; **See more…** when copy overflows or uses notice exists; limited-uses notice on expand). Cards must **not** look selectable (no checkmark, no hover-as-pick, no Choose aria). Check desktop + ~360px (cards stack to one column; See more stays tappable). Species **More details** catalogs stay elongated `DetailOptionList` / GLR rows. Mixed-species Ancestry overview has no granted-trait list (choices-ahead copy only).
 4. Optional Advanced: open species info modal → trait sections use expandable DetailOptionList rows (choice traits group options under the parent name; limited-use options show Uses). Unresolved trait placeholders (if any) appear dimmed. Confirm Select Species still works; Close dismisses.
 5. Spot-check light + dark: description/`text-text-secondary` readable; muted uses `dark:text-text-secondary` where applicable.
 
 **Expected**
-- One visual/interaction language for deep-dive catalogs and remodeled legacy trait lists (shared `@/lib/detail-option` builders for traits/feats/equipment/powers/techniques).
+- One visual/interaction language for **deep-dive catalogs** (shared `@/lib/detail-option` builders for traits/feats/equipment/powers/techniques).
+- Ancestry **overview** granted traits are read-only `GuidedChoiceCard`s (TASK-711) — not GLR rows. Modal catalogs stay DetailOptionList.
 - No regression to card select / **More details** independence (T016–T018).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -2998,22 +2999,22 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T050 — InfoTippy inside chips and Training Points label (TASK-465)
+#### DEV-V-013-T050 — InfoTippy inside chips and Training Points label (TASK-465 / TASK-707)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-465 |
+| **Related task** | TASK-465, TASK-707 |
 | **Where** | Guided Loadout Weapons (See more) + budget bar; light/dark |
 | **Needs** | Weapon with a named property that has a description |
 
 **Steps**
-1. Expand See more: property chip with tip shows the **i** inside the chip boundary (not floating beside it).
-2. Training Points PointStatus: **i** sits inside the status pill next to the label.
-3. Hover/focus/touch-hold still opens help; accessible names present.
+1. Expand See more: property chip with tip shows the **i** inside the chip boundary (not floating beside it). Chip **i** matches the chip text color (not washed muted gray).
+2. Training Points PointStatus: **i** sits inside the status pill next to the label and reads **TP green** (`text-tp-text`), not muted gray. Nearby heading InfoTippys stay link-blue.
+3. Hover/focus/touch-hold still opens help; accessible names present. Repeat in dark theme — contrast holds; touch targets unchanged.
 
 **Expected**
-- Tips feel attached to their control; no layout jump from sibling icons.
+- Tips feel attached to their control; no layout jump from sibling icons. Default InfoTippy is link-blue; on-chip inherits; TP tracker tip is TP green.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3050,9 +3051,10 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Increase an unselected row from 0 → 1: row becomes selected.
 3. Decrease a selected row to 0: row deselects.
 4. Confirm Add Selected carries quantities; Modal fullScreenOnMobile.
+5. **SourceFilter (TASK-705):** Path L2 defaults to Realms Library and can switch All / My / Realms (always visible under search via `scopeExtra`; scopes the catalog, not chrome-only).
 
 **Expected**
-- Quantity-first selection; shared UnifiedSelectionModal (no guided-only fork).
+- Quantity-first selection; shared UnifiedSelectionModal (no guided-only fork). Path L2 SourceFilter defaults to Realms.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3137,25 +3139,25 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T057 — Innate Energy soft warn + threshold + TP parity (TASK-472 / TASK-573 / TASK-590)
+#### DEV-V-013-T057 — Innate Energy soft warn + threshold + TP parity (TASK-472 / TASK-573 / TASK-590 / TASK-706)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-472, TASK-573, TASK-590 |
+| **Related task** | TASK-472, TASK-573, TASK-590, TASK-706 |
 | **Where** | Guided Powers step (Power archetype preferred — Innate Energy 16 at L1) |
 | **Needs** | Path or catalog with innate-eligible powers (Energy ≤ threshold 8 for Power) |
 | **Automated** | Threshold filter + shared TP spend: `npm test` — `powers-techniques-l2.test.ts` (TASK-590). Soft Continue warn + L1 TP chip UI remain manual. |
 
 **Steps**
-1. Confirm **Innate Energy** PointStatus uses progression budget (Power L1 = 16, Powered-Martial = 6), not threshold-only 8.
+1. Confirm **Innate Energy** PointStatus uses progression budget (Power L1 = 16, Powered-Martial = 6), not threshold-only 8. Confirm it sits in the same `LoadoutBudgetBar` row as **Training Points** and matches Skills / Ability Points height, padding, font, and border (TASK-706 — not a smaller sibling pill).
 2. Attempt to select a power with Energy > Innate Threshold — blocked.
 3. With remaining Innate Energy > 0, Continue stays enabled; footer/hint shows a soft warning (not a hard block). Spending to remaining 0 clears the soft warning.
 4. Innate L1 cards show a **Training Points** title chip (same as regular Powers); Energy stays in See more / detail chips. Selecting innate powers increases the shared Training Points spent (Loadout budget bar).
 5. Regular powers remain optional. Save character: innate picks persist with `innate: true`.
 
 **Expected**
-- Threshold gate preserved; Innate Energy under-fill is soft-warn only; innate TP spend + TP chip parity; sheet-compatible save.
+- Threshold gate preserved; Innate Energy under-fill is soft-warn only; innate TP spend + TP chip parity; Innate Energy + Training Points share LoadoutBudgetBar inline PointStatus size with Skills/Abilities; sheet Abilities/Skills spend PointStatus uses the same inline size; sheet-compatible save.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3985,9 +3987,21 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Task** | TASK-691 |
 | **Where** | `/characters/new/guided` → Powers or Techniques (L2 modal + L3 inline) |
 | **Needs** | Signed-in; custom Power draft preferred |
-| **Steps** | 1. Open Powers L3 (Full Customize) or L2 See more. 2. Confirm columns are Action Type / Energy / Training Points (budget-first, not Library duration/area/damage). 3. Confirm Path badges, TP budget gates, and theoretical max-EN / innate threshold filtering still apply. 4. Expand a row — Action Type + Energy chips + Training Points present. 5. Spot-check Martial techniques Energy still kind-correct (DEV-V-050-T002). |
-| **Expected** | Display shaped by `buildPowerTechniqueBudgetDisplay` / library-selectable-builders; guided orchestration preserved. |
+| **Steps** | 1. Open Powers L3 (Full Customize) or L2 See more. 2. Confirm **L2/L3 columns match Official Library** (powers: Category / Energy / Action / Duration / Range / Area / Damage; techniques: Category / Energy / TP / Action / Attack / Damage). TP still shows as row totalCost. 3. Confirm Path badges, TP budget gates, and theoretical max-EN / innate threshold filtering still apply. 4. Expand a row — Parts & Proficiencies (not duplicate Action/Energy chips). 5. Spot-check Martial techniques Energy still kind-correct (DEV-V-050-T002). L1 cards may still show compact Action/Energy/TP facts. |
+| **Expected** | L2/L3 shaped by Official list builders; L1 cards may still use `buildPowerTechniqueBudgetDisplay`; guided orchestration preserved (TASK-709). |
 | **Report** | DEV-V-016-T018: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T019 — Creature creator library source merge (TASK-712)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-712 |
+| **Where** | `/creature-creator` → Select Powers / Techniques / Inventory |
+| **Needs** | Signed-in account with at least one My Library power/item and matching Realms Library content (or an id collision you can spot) |
+| **Steps** | 1. Open Select Powers with **All sources** — list includes Realms + My; if the same library id exists in both, only the Realms row appears. 2. Switch **Realms Library** / **My Library** — catalogs scope accordingly. 3. Open Select Inventory, add an armament, reopen the picker — that `docId` is hidden (already selected). 4. Empowered tab: duplicate `docId`s across My + Realms do not appear twice. 5. Guided keep-selected is unchanged (creature picker does not re-show a My-only item after switching to Realms). |
+| **Expected** | Creature pickers use shared `mergeLibraryBySource` (public wins on id). Armament still hides selected ids; empowered still dedupes on `docId`. |
+| **Report** | DEV-V-016-T019: PASS / FAIL / SKIP — |
 
 ---
 
@@ -5478,21 +5492,21 @@ Library / Official GLR rows: action icons share chrome (header spacers + hover),
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-034 — GLR chrome + Parts chip grammar |
-| **Related task** | TASK-622 / **TASK-702** |
+| **Related task** | TASK-622 / **TASK-702** / **TASK-710** |
 | **Where** | `/library` → My Library → Powers (also Techniques / Weapons) |
 | **Needs** | At least one user power with edit + delete |
 
 **Steps**
 1. Open My Library → Powers. Confirm Name/Energy/…/Damage headers align with row values (no drift from edit/delete/sync icons).
 2. Include at least one row **without** a “Needs sync” badge: confirm its columns still align with the header (empty sync spacer reserved — same width as drifted rows).
-3. Hover a collapsed power row: highlight extends through edit pencil + delete X (one continuous band — not split; right chrome shares hover with name/columns — TASK-702).
-4. Expand a power: Parts chips show `TP: N` (not `Training Points: N`); chips with no TP and no option level show no `(0)`.
+3. Hover a collapsed power row: highlight extends through edit pencil + delete X (one continuous band — not split; right chrome shares hover with name/columns — TASK-702 / TASK-710). Icons are vertically centered with the name and use the shared GLR action size (not a smaller top-pinned set).
+4. Expand a power: Parts chips show `TP: N` (not `Training Points: N`); chips with no TP and no option level show no `(0)`. Expanded `bg-surface-alt` continues through the edit/delete column (no empty band of row background beside the description; icons stay in the header row).
 5. My Library → Techniques: expand a technique that has a TP column — confirm there is **no** expanded "Total TP" / "Total Training Points" chip (TP already in the collapsed column).
-6. Optional: Realms Library → Powers with Add (+): header reserves space so columns stay centered over values; expand a selectable (+) row — description fully readable (no + overlay/blackout).
+6. Optional: Realms Library → Powers with Add (+): header reserves space so columns stay centered over values; expand a selectable (+) row — description fully readable (no + overlay/blackout); expanded surface continues into the + column.
 7. Codex → Equipment (browse): no empty trailing action column; Admin Codex → Equipment: edit/duplicate/delete sit in reserved right chrome aligned with the header.
 
 **Expected**
-- Edit/delete (and add when present) reserved via `rowChrome`, not a single leftover grid track that splits hover; hover band includes right chrome (TASK-702).
+- Edit/delete (and add when present) reserved via `rowChrome`, not a single leftover grid track that splits hover; hover band includes right chrome (TASK-702 / TASK-710). Expanded surface-alt fills the action column; action icons stay header-centered at shared `md` size.
 - Powers without a TP column may still show expanded Total TP when cost is greater than 0.
 - Codex/Admin shell lists (TASK-624) match the same chrome pattern.
 
@@ -5959,7 +5973,7 @@ Empowered Attack mode must prefer the cheaper live Energy part when power and te
 
 ---
 
-## DEV-V-050 — Guided creator L3 inline catalog lists (TASK-684 / TASK-685 / TASK-686–690)
+## DEV-V-050 — Guided creator L3 inline catalog lists (TASK-684 / TASK-685 / TASK-686–690 / **TASK-709**)
 
 Full Customize (L3, no archetype path) on archetype feats, character feat, loadout (weapon/armor/gear), and powers/techniques must render the filtered catalog inline in the step body (selected items as removable rows above the list) instead of auto-opening a modal. Guided paths (L1, has an archetype path) must be unchanged — curated cards + "See more" still opens the L2 modal. TASK-685 follow-up: hide unmet feats; custom loadout always shows weapons (Power-only skips armor); gear quantity-first; powers innate scope filter + max EN filter. TASK-686–690: preview strip parity, Energy kind fix, equipment Codex columns + qty spacing, Power armor skip regardless of path `armorStep`.
 
@@ -5968,23 +5982,23 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-050 — Guided creator L3 inline catalog lists |
-| **Related task** | TASK-684 / TASK-685 / TASK-688 / **TASK-699** / **TASK-702** |
+| **Related task** | TASK-684 / TASK-685 / TASK-688 / **TASK-699** / **TASK-702** / **TASK-710** / **TASK-709** / **TASK-703** / **TASK-705** / **TASK-706** |
 | **Where** | `/characters/new/guided` — start a **custom** (no path) character |
 | **Needs** | Signed-in; a draft with no `archetypePathId` (Full Customize) |
 
 **Steps**
-1. Archetype Feats step: confirm the full eligible Feats list renders inline (no modal); Category (multi-select) and State Feats filters work; search covers name/tags/keywords/category; picking a Feat adds a removable card above the list; **unmet-requirement Feats are hidden** (not shown disabled). Selecting then becoming unmet still shows the selected row so it can be removed.
+1. Archetype Feats step: confirm the full eligible Feats list renders inline (no modal); **columns match Codex** (Req. Level / Category / Ability / Uses / Recovery); Category (multi-select) and State Feats filters work; search covers name/tags/keywords/category; picking a Feat adds a removable card above the list; **unmet-requirement Feats are hidden** (not shown disabled). Selecting then becoming unmet still shows the selected row so it can be removed.
 2. Character Feat step: same as step 1, single-select (max 1); selecting a new Feat swaps the previous one.
-3. Loadout — Weapon phase: **always present** for Martial / Power / Powered-Martial custom drafts; inline list shows eligible weapons/shields within armament proficiency; **columns match Codex/Library** (Name, Rarity, Currency, TP, Range, Damage); Currency + Training Points budget bar updates live; selecting a two-handed weapon with a shield already selected shows the hand-slot error and does not apply.
-4. Loadout — Armor phase: present for Martial and Powered-Martial with **Codex armor columns** (Rarity, Currency, TP, Damage Red., Agility Red., Abl. Req., Crit +); **skipped for Power only**; single-slot swap on select; TP budget shared with weapons.
-5. Loadout — Gear phase: **quantity stepper on the far right replaces the + add button** (no dual chrome; slot wide enough that ± controls are not clipped); Name/Rarity/Currency columns; incrementing from 0 adds; editing qty in the catalog row or the selected panel works; Currency budget enforced. **TASK-702 chrome:** ListHeader bar spans full width through the qty track; column titles align with row cells; row hover highlight extends behind the stepper; expand a selectable (+) feat/weapon row — description is fully readable (no + blackout overlay).
-6. Powers/Techniques step (Power or Powered-Martial path-less draft): Innate + Powers sections (L1-parallel) with a **Show** filter (Innate + Powers / Innate only / Powers only); regular list filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP/Innate-Energy blocks hide unavailable rows (selected kept).
-7. For all six: verify at ~360px width — search/filter toolbar and selected-panel rows stay usable, touch targets ≥44px; **Selected** panel has even horizontal cushion from the card border (title, column header, and GLR rows inset — not flush to the frame) and balanced top/bottom padding under the last row (TASK-700).
-8. Sanity check a **path-based** (L1) character still shows curated cards + "See more options" opening the existing L2 modal (no regression). Path with empty weapon pool may still omit weapon (path behavior unchanged).
-9. **Descriptor chips (TASK-699):** Expand a Library or Codex GLR row — descriptor metadata chips and expandable part/cost chips share the same inline size (readable `text-sm`, not undersized `text-xs`). Filter toolbar pills remain the smaller `sm` role. Optional: `/dev/styleguide` → Entity row parity row matches GLR expanded chips.
+3. Loadout — Weapon phase: **always present** for Martial / Power / Powered-Martial custom drafts; inline list shows eligible weapons/shields within armament proficiency; **columns match Codex/Library** (Name, Rarity, Currency, TP, Range, Damage); **SourceFilter** All / Realms / My scopes the catalog (Custom defaults All); **Create Armament** hatch opens `/item-creator` in a new tab; Currency + Training Points budget bar updates live; selecting a two-handed weapon with a shield already selected shows the hand-slot error and does not apply.
+4. Loadout — Armor phase: present for Martial and Powered-Martial with **Codex armor columns** (Rarity, Currency, TP, Damage Red., Agility Red., Abl. Req., Crit +); **skipped for Power only**; single-slot swap on select; TP budget shared with weapons. Same SourceFilter + Create Armament hatch.
+5. Loadout — Gear phase: **quantity stepper on the far right replaces the + add button** (no dual chrome; slot wide enough that ± controls are not clipped); Name/Rarity/Currency columns; incrementing from 0 adds; editing qty in the catalog row or the selected panel works; Currency budget enforced. **TASK-702 / TASK-710 chrome:** ListHeader bar spans full width through the qty track; column titles align with row cells; row hover highlight extends through the stepper **including the ± buttons** (no `bg-surface` / `bg-surface-alt` island); expand a selectable (+) feat/weapon row — description is fully readable (no + blackout overlay) and expanded surface-alt continues into the + / qty column (no empty band below the control).
+6. Powers/Techniques step (Power or Powered-Martial path-less draft): Innate + Powers sections (L1-parallel) with a **Show** filter (Innate + Powers / Innate only / Powers only); **one** shared Filters panel (PowerTechniqueFilters compact, no sheet Character filter) + SourceFilter; **columns match Official Library**; regular list filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP/Innate-Energy blocks hide unavailable rows (selected kept). Expand = Parts & Proficiencies (not duplicate budget chips). **TASK-706:** Innate Energy and Training Points sit in one `LoadoutBudgetBar` row and match Skills / Ability Points PointStatus size (not a smaller sibling pill). L2 innate modal footer same.
+7. For all six: verify at ~360px width — search/filter toolbar and selected-panel rows stay usable, touch targets ≥44px; **Selected** panel has even horizontal cushion from the card border (title, column header, and GLR rows inset — not flush to the frame) and balanced top/bottom padding under the last row (TASK-700). Selected rows keep warning/chips when present.
+8. Sanity check a **path-based** (L1) character still shows curated cards + "See more options" opening the existing L2 modal (no regression). Path L2 SourceFilter defaults to Realms Library. Path with empty weapon pool may still omit weapon (path behavior unchanged).
+9. **Descriptor chips (TASK-699):** Expand a Library or Codex GLR row — descriptor metadata chips and expandable part/cost chips share the same inline size (readable `text-sm`, not undersized `text-xs`). Filter toolbar pills remain the smaller `sm` role. Optional: `/dev/styleguide` → Entity row parity row matches GLR expanded chips. **Library vs L3 spot-check (TASK-709):** same power/weapon/feat in Official/Codex vs creator L3 matches columns/expand modulo ADR-0012 allowlist.
 
 **Expected**
-- All four L3 screens show the catalog inline with live budgets/eligibility; unavailable feats/powers hidden; custom loadout never skips weapons; Power-only skips armor; gear is quantity-first with readable qty chrome (full-width header + hover through stepper); equipment headers match Codex; L1 path-based flow is unchanged; + expand does not overlay description.
+- All four L3 screens show the catalog inline with live budgets/eligibility; unavailable feats/powers hidden; custom loadout never skips weapons; Power-only skips armor; gear is quantity-first with readable qty chrome (full-width header + hover through stepper buttons + expanded band through qty/+); equipment headers match Codex; L1 path-based flow is unchanged; + expand does not overlay description.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6095,7 +6109,7 @@ Saving a power must persist Area **Apply duration** and Duration modifiers (Focu
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
-| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541) | — | Manual — see suite above (T001–T016) |
+| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541, TASK-712) | — | Manual — see suite above (T001–T019) |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 | DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
@@ -6334,7 +6348,7 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
-| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541) | — | Manual — see suite above (T001–T016) |
+| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541, TASK-712) | — | Manual — see suite above (T001–T019) |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 | DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |

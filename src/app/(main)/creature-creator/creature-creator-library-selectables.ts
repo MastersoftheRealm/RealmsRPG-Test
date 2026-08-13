@@ -1,5 +1,5 @@
 /**
- * Creature Creator — library modal selectable builders (TASK-610)
+ * Creature Creator — library modal selectable builders (TASK-610 / TASK-712)
  * Co-located extract from use-creature-creator-workspace.
  */
 
@@ -19,7 +19,10 @@ import { deriveTechniqueDisplay, type TechniqueDocument } from '@/lib/calculator
 import { trainingPointsForItemPropertyRef } from '@/lib/calculators';
 import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/build-empowered-selectable-item';
 import type { ItemProperty, UserPower, UserTechnique, UserItem } from '@/hooks';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
+import {
+  mergeLibraryBySource,
+  type LibrarySourceScope,
+} from '@/lib/library/source-scope';
 import { normalizeRangeDisplay } from '@/lib/utils';
 import type { DisplayItem } from '@/types/items';
 import {
@@ -40,25 +43,15 @@ export function normalizeCreatureInventoryType(type: string | undefined): Exclud
   return 'equipment';
 }
 
-export function mergeCreatureLibraryBySource<T>(
-  librarySource: SourceFilterValue,
-  userItems: T[],
-  publicItems: T[],
-): T[] {
-  const my = librarySource === 'my' || librarySource === 'all' ? userItems : [];
-  const pub = librarySource === 'public' || librarySource === 'all' ? publicItems : [];
-  return [...my, ...pub];
-}
-
 export function buildEmpoweredTechniqueLibraryList(
-  librarySource: SourceFilterValue,
+  librarySource: LibrarySourceScope,
   userEmpoweredTechniques: UserTechnique[],
   publicEmpoweredTechniques: UserTechnique[],
 ): UserTechnique[] {
-  const merged = mergeCreatureLibraryBySource(
+  const merged = mergeLibraryBySource(
     librarySource,
-    userEmpoweredTechniques,
     publicEmpoweredTechniques,
+    userEmpoweredTechniques,
   );
   const seen = new Set<string>();
   return merged.filter((technique) => {
@@ -70,13 +63,13 @@ export function buildEmpoweredTechniqueLibraryList(
 }
 
 export function buildArmamentLibraryList(
-  librarySource: SourceFilterValue,
+  librarySource: LibrarySourceScope,
   userItems: UserItem[],
   publicItems: UserItem[],
   selectedArmamentIds: string[],
 ): UserItem[] {
   const selectedIds = new Set(selectedArmamentIds.filter((id) => id.length > 0));
-  return mergeCreatureLibraryBySource(librarySource, userItems, publicItems).filter(
+  return mergeLibraryBySource(librarySource, publicItems, userItems).filter(
     (item) => !selectedIds.has(item.docId),
   );
 }

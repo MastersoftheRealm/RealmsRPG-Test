@@ -3,7 +3,7 @@
  */
 
 import type { AbilityRequirement } from '@/components/shared/filters';
-import type { ChipData } from '@/components/shared/grid-list-row';
+import type { ChipData, ColumnValue } from '@/components/shared/grid-list-row';
 import type { Feat } from '@/hooks';
 import { buildFeatLevelChips } from '@/lib/leveled-feats';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
@@ -33,6 +33,29 @@ export const ADMIN_FEAT_HEADER_COLUMNS = [
   { key: 'rec_period', label: 'RECOVERY' },
   { key: 'uses_per_rec', label: 'USES' },
 ];
+
+/** Codex browse headers with USM/L3 sortable + align (TASK-709). */
+export const FEAT_SELECTABLE_HEADER_COLUMNS = CODEX_FEAT_HEADER_COLUMNS.map((h) => ({
+  key: h.key,
+  label: h.label,
+  align: (h.key === 'name' ? 'left' : 'center') as 'left' | 'center',
+  sortable: true,
+}));
+
+/**
+ * Same cells as Codex `buildFeatGridColumns('codex')`, keyed to `CODEX_FEAT_HEADER_COLUMNS`
+ * so Guided L2/L3 sort matches Library/Codex (TASK-709).
+ */
+export function featSelectableColumns(feat: Feat): ColumnValue[] {
+  const values = buildFeatGridColumns(feat, 'codex');
+  const headers = CODEX_FEAT_HEADER_COLUMNS.filter((h) => h.key !== 'name');
+  return headers.map((h, i) => ({
+    key: h.key,
+    label: h.label,
+    value: values[i]?.value ?? '-',
+    align: 'center' as const,
+  }));
+}
 
 export interface FeatFilterOptions {
   levels: number[];

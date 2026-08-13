@@ -7,9 +7,11 @@
 
 'use client';
 
+import type { LibrarySourceScope } from '@/lib/library/source-scope';
 import { SegmentedControl } from '../segmented-control';
 
-export type SourceFilterValue = 'all' | 'public' | 'my';
+/** Alias of `LibrarySourceScope` — keep identical to the catalog merge union. */
+export type SourceFilterValue = LibrarySourceScope;
 
 interface SourceFilterProps {
   value: SourceFilterValue;

@@ -5,7 +5,7 @@
 
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, type ReactNode } from 'react';
 import {
   UnifiedSelectionModal,
   LoadoutBudgetBar,
@@ -18,8 +18,8 @@ import type { Abilities, AbilityName } from '@/types';
 import {
   buildPowersTechniquesL2Items,
   computeL2PowersTechniquesTpSpent,
-  POWERS_TECHNIQUES_L2_GRID,
-  POWERS_TECHNIQUES_L2_HEADER_COLUMNS,
+  powersTechniquesL2Grid,
+  powersTechniquesL2Headers,
   selectedIdsFromL2Items,
   type PowersTechniquesL2Mode,
 } from '@/lib/guided-creator/powers-techniques-l2';
@@ -51,6 +51,8 @@ export interface GuidedPowersTechniquesL2ModalProps {
   innateEnergyMax?: number;
   onClose: () => void;
   onConfirm: (selectedIds: string[]) => void;
+  /** SourceFilter — always-visible `scopeExtra` (same as L3), not collapsed Filters. */
+  scopeExtra?: ReactNode;
 }
 
 function energySpentOf(selected: SelectableItem[]): number {
@@ -58,6 +60,18 @@ function energySpentOf(selected: SelectableItem[]): number {
     const data = row.data as { energy?: number } | undefined;
     return sum + Math.max(0, Math.floor(data?.energy ?? 0));
   }, 0);
+}
+
+/** Innate Energy PointStatus for Powers L1 budget bar + innate L2 footer (TASK-706). */
+export function InnateEnergyPointStatus({ total, spent }: { total: number; spent: number }) {
+  return (
+    <PointStatus
+      total={total}
+      spent={spent}
+      label={ptCopy.innateEnergyLabel}
+      variant="inline"
+    />
+  );
 }
 
 export function GuidedPowersTechniquesL2Modal({
@@ -77,6 +91,7 @@ export function GuidedPowersTechniquesL2Modal({
   innateEnergyMax = 0,
   onClose,
   onConfirm,
+  scopeExtra,
 }: GuidedPowersTechniquesL2ModalProps) {
   const [error, setError] = useState<string | null>(null);
 
@@ -150,18 +165,18 @@ export function GuidedPowersTechniquesL2Modal({
 
       if (mode === 'innate') {
         return (
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
-              <PointStatus
+          <LoadoutBudgetBar
+            tpTotal={tpLimit}
+            tpSpent={tpSpent}
+            leading={
+              <InnateEnergyPointStatus
                 total={innateEnergyMax}
                 spent={energySpentOf(selected)}
-                label={ptCopy.innateEnergyLabel}
-                variant="inline"
               />
-              <LoadoutBudgetBar tpTotal={tpLimit} tpSpent={tpSpent} />
-            </div>
+            }
+          >
             {errorEl}
-          </div>
+          </LoadoutBudgetBar>
         );
       }
 
@@ -199,11 +214,12 @@ export function GuidedPowersTechniquesL2Modal({
       items={selectable}
       onConfirm={handleConfirm}
       initialSelectedIds={initialSet}
-      columns={POWERS_TECHNIQUES_L2_HEADER_COLUMNS}
-      gridColumns={POWERS_TECHNIQUES_L2_GRID}
+      columns={powersTechniquesL2Headers(kind)}
+      gridColumns={powersTechniquesL2Grid(kind)}
       itemLabel={mode === 'innate' ? 'innate power' : kind === 'techniques' ? 'technique' : 'power'}
       emptyMessage={l2Copy.emptyMessage(kind, mode)}
       searchPlaceholder={l2Copy.searchPlaceholder(kind)}
+      scopeExtra={scopeExtra}
       footerExtra={footerExtra}
       confirmDisabled={confirmDisabled}
       size="xl"

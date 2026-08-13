@@ -116,6 +116,31 @@ describe('buildPowersTechniquesL2Items innate threshold', () => {
     expect(innate[0]?.totalCost).toBe(regular[0]?.totalCost);
     expect(innate[0]?.data).toMatchObject({ tpCost: 2, energy: 4 });
   });
+
+  it('uses Official Library columns and part sections, not budget chips (TASK-709)', () => {
+    const rows = buildPowersTechniquesL2Items({
+      kind: 'powers',
+      mode: 'regular',
+      items: [catalog[0]!],
+      powerPartsDb: partsDb,
+      techniquePartsDb: [],
+      pathRecommendedIds: [],
+      energyInput,
+    });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.columns?.map((c) => c.key)).toEqual([
+      'category',
+      'energy',
+      'action',
+      'duration',
+      'range',
+      'area',
+      'damage',
+    ]);
+    expect(rows[0]?.chips).toBeUndefined();
+    expect(rows[0]?.detailSections?.[0]?.label).toMatch(/Parts/i);
+    expect(rows[0]?.totalCost).toBe(2);
+  });
 });
 
 describe('computeL2PowersTechniquesTpSpent + combineGuidedTpBudgets', () => {

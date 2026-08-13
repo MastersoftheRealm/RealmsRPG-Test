@@ -2,6 +2,10 @@
 
 import { Plus } from 'lucide-react';
 import { IconButton } from '@/components/ui';
+import {
+  GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE,
+  GRID_LIST_ROW_ACTION_ICON_CLASS,
+} from './grid-list-row-chrome';
 
 /** Realms Library row action — add official item to My Library. */
 export function LibraryAddToLibraryButton({
@@ -14,12 +18,12 @@ export function LibraryAddToLibraryButton({
   return (
     <IconButton
       variant="ghost"
-      size="sm"
+      size={GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE}
       onClick={onClick}
       label={label}
       className="text-primary-link-fg hover:text-primary-fg-hover hover:bg-primary-subtle-bg"
     >
-      <Plus className="w-4 h-4" />
+      <Plus className={GRID_LIST_ROW_ACTION_ICON_CLASS} />
     </IconButton>
   );
 }

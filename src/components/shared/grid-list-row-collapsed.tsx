@@ -8,6 +8,8 @@ import { descriptorChipVariantForBadgeColor } from '@/lib/chip/grid-list-chip-ut
 import { SelectionToggle } from './selection-toggle';
 import { QuantitySelector, QuantityBadge } from './quantity-selector';
 import {
+  GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE,
+  GRID_LIST_ROW_ACTION_ICON_CLASS,
   GRID_LIST_ROW_ICON_COLUMN_WIDTH,
   GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH,
   GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
@@ -15,6 +17,46 @@ import {
 import { columnDisplayLabel } from './grid-list-row-columns';
 import type { ColumnValue } from './grid-list-row-types';
 import { ListRowThumbnail, type ListRowThumbnailProps } from './list-row-thumbnail';
+
+function GridListRowChromeIconButton({
+  kind,
+  onClick,
+  columnWidth,
+}: {
+  kind: 'edit' | 'delete';
+  onClick: () => void;
+  columnWidth?: string;
+}) {
+  const isDelete = kind === 'delete';
+  return (
+    <div
+      className="flex items-center justify-center min-w-0 flex-shrink-0"
+      style={columnWidth ? { width: columnWidth } : undefined}
+      onClick={(e) => e.stopPropagation()}
+    >
+      <IconButton
+        variant="ghost"
+        size={GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE}
+        onClick={(e) => {
+          e.stopPropagation();
+          onClick();
+        }}
+        label={isDelete ? 'Remove' : 'Edit'}
+        className={
+          isDelete
+            ? 'text-danger-fg hover:opacity-80 hover:bg-transparent'
+            : 'text-text-muted dark:text-text-secondary hover:text-primary-fg-hover hover:bg-transparent'
+        }
+      >
+        {isDelete ? (
+          <X className={GRID_LIST_ROW_ACTION_ICON_CLASS} />
+        ) : (
+          <Edit className={GRID_LIST_ROW_ACTION_ICON_CLASS} />
+        )}
+      </IconButton>
+    </div>
+  );
+}
 
 interface GridListRowCollapsedProps {
   isRowClickable: boolean;
@@ -268,31 +310,11 @@ export function GridListRowCollapsed({
             {rightSlot}
           </div>
         )}
-        {inlineEdit && (
-          <div className="flex items-center justify-center min-w-0" onClick={(e) => e.stopPropagation()}>
-            <IconButton
-              variant="ghost"
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); onEdit?.(); }}
-              label="Edit"
-              className="text-text-muted dark:text-text-secondary hover:text-primary-fg-hover hover:bg-transparent"
-            >
-              <Edit className="w-4 h-4" />
-            </IconButton>
-          </div>
+        {inlineEdit && onEdit && (
+          <GridListRowChromeIconButton kind="edit" onClick={onEdit} />
         )}
-        {inlineDelete && (
-          <div className="flex items-center justify-center min-w-0" onClick={(e) => e.stopPropagation()}>
-            <IconButton
-              variant="ghost"
-              size="sm"
-              onClick={(e) => { e.stopPropagation(); onDelete?.(); }}
-              label="Remove"
-              className="text-danger-fg hover:opacity-80 hover:bg-transparent"
-            >
-              <X className="w-4 h-4" />
-            </IconButton>
-          </div>
+        {inlineDelete && onDelete && (
+          <GridListRowChromeIconButton kind="delete" onClick={onDelete} />
         )}
         {inlineSelectable && (
           <div
@@ -320,9 +342,10 @@ export function GridListRowCollapsed({
 }
 
 /**
- * Far-right GridListRow actions rendered outside the name/column grid.
- * Sibling of collapsed+expanded so SelectionToggle / quantity cannot overlay
- * the expanded body (TASK-702). Width must match ListHeader spacers.
+ * Far-right GridListRow actions in the collapsed header row (grid row 1).
+ * Parent GridListRow stretches this cell to the header height so icons center
+ * with the name; expanded fill is a separate grid row (TASK-702 / TASK-710).
+ * Widths must match ListHeader spacers.
  */
 export interface GridListRowExternalChromeProps {
   disabled?: boolean;
@@ -356,16 +379,10 @@ export function GridListRowExternalChrome({
   const resolvedRightSlotWidth = rightSlotWidth ?? GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH;
 
   return (
-    <div
-      className={cn(
-        // DESIGN_INTENT: self-start so + / qty / X stay header-tall and never
-        // stretch beside the expanded description panel (TASK-702 overlay).
-        'flex items-center flex-shrink-0 self-start min-h-[44px]'
-      )}
-    >
+    <div className="flex items-center flex-shrink-0 min-h-[44px] pr-1">
       {showRightSlot && (
         <div
-          className="flex items-center flex-shrink-0 justify-center pr-1"
+          className="flex items-center flex-shrink-0 justify-center"
           style={{ width: resolvedRightSlotWidth }}
           onClick={(e) => e.stopPropagation()}
           aria-hidden={reserveRightSlotChrome && !rightSlot ? true : undefined}
@@ -375,45 +392,19 @@ export function GridListRowExternalChrome({
       )}
 
       {onEdit && (
-        <div
-          className="flex items-center flex-shrink-0 justify-center"
-          style={{ width: GRID_LIST_ROW_ICON_COLUMN_WIDTH }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <IconButton
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onEdit();
-            }}
-            label="Edit"
-            className="text-text-muted dark:text-text-secondary hover:text-primary-fg-hover hover:bg-transparent"
-          >
-            <Edit className="w-4 h-4" />
-          </IconButton>
-        </div>
+        <GridListRowChromeIconButton
+          kind="edit"
+          onClick={onEdit}
+          columnWidth={GRID_LIST_ROW_ICON_COLUMN_WIDTH}
+        />
       )}
 
       {onDelete && (
-        <div
-          className="flex items-center flex-shrink-0 justify-center pr-1"
-          style={{ width: GRID_LIST_ROW_ICON_COLUMN_WIDTH }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          <IconButton
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete();
-            }}
-            label="Remove"
-            className="text-danger-fg hover:opacity-80 hover:bg-transparent"
-          >
-            <X className="w-4 h-4" />
-          </IconButton>
-        </div>
+        <GridListRowChromeIconButton
+          kind="delete"
+          onClick={onDelete}
+          columnWidth={GRID_LIST_ROW_ICON_COLUMN_WIDTH}
+        />
       )}
 
       {selectable && (

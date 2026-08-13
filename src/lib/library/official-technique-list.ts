@@ -3,6 +3,7 @@
  */
 
 import type { ChipData } from '@/components/shared';
+import type { ColumnValue } from '@/components/shared/grid-list-row';
 import type { TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';
@@ -98,6 +99,18 @@ export function buildOfficialTechniqueRows(
         .filter(Boolean),
     };
   });
+}
+
+/** Dense browse columns — same keys as `OFFICIAL_TECHNIQUE_HEADER_COLUMNS` (Library + Guided L2/L3). */
+export function officialTechniqueRowColumns(row: OfficialTechniqueRow): ColumnValue[] {
+  return [
+    { key: 'category', value: row.category || '-', align: 'center' },
+    { key: 'energy', value: row.energy ?? '-', highlight: true, align: 'center' },
+    { key: 'tp', value: row.tp, align: 'center' },
+    { key: 'action', value: row.action || '-', align: 'center' },
+    { key: 'weapon', value: row.weapon || '-', align: 'center' },
+    { key: 'damage', value: row.damage || '-', align: 'center' },
+  ];
 }
 
 export function filterOfficialTechniqueRows<

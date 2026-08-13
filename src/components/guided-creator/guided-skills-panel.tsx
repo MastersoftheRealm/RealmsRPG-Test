@@ -110,70 +110,68 @@ function GuidedSkillRow({
 
   return (
     <li className="border-b border-border-light last:border-b-0">
-      {/* DESIGN_INTENT: Name+chevron on one line; chips wrap below so they never collide with
-          expand control or ± steppers. Controls stay a shrink-0 column (not fighting chip width). */}
+      {/* DESIGN_INTENT: Name, chevron, and desc chips share one horizontal band (chips to the
+          right of the name); wrap only when width forces it. Controls stay shrink-0. */}
       <div className="flex items-start gap-2 py-2">
         <div className="min-w-0 flex-1">
-          <button
-            type="button"
-            onClick={() => hasDescription && setExpanded(!expanded)}
-            disabled={!hasDescription}
-            className={cn(
-              'flex max-w-full items-center gap-1.5 text-left min-h-11 py-0',
-              hasDescription ? 'cursor-pointer' : 'cursor-default'
+          <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+            <button
+              type="button"
+              onClick={() => hasDescription && setExpanded(!expanded)}
+              disabled={!hasDescription}
+              className={cn(
+                'inline-flex max-w-full items-center gap-1.5 text-left min-h-11 py-0 shrink-0',
+                hasDescription ? 'cursor-pointer' : 'cursor-default'
+              )}
+              aria-expanded={hasDescription ? expanded : undefined}
+              aria-label={
+                hasDescription
+                  ? `${expanded ? 'Collapse' : 'Expand'} ${skillName} description`
+                  : undefined
+              }
+            >
+              <span className="font-nunito font-semibold text-text-primary">
+                {item.isSubSkill ? (
+                  <span className="pl-1 text-text-secondary">↳ </span>
+                ) : null}
+                {skill.name}
+              </span>
+              {hasDescription && (
+                <ChevronDown
+                  className={cn(
+                    'h-4 w-4 shrink-0 text-text-muted dark:text-text-secondary transition-transform',
+                    expanded && 'rotate-180'
+                  )}
+                  aria-hidden
+                />
+              )}
+            </button>
+            {/* DESIGN_INTENT: Ability = primary (guided ability chips); Species = descriptor; path = primary source */}
+            {abilityLabel && (
+              <DescriptorChip
+                variant="primary"
+                size="sm"
+                title={`Contributing Ability: ${abilityLabel}`}
+              >
+                {abilityLabel}
+              </DescriptorChip>
             )}
-            aria-expanded={hasDescription ? expanded : undefined}
-            aria-label={
-              hasDescription
-                ? `${expanded ? 'Collapse' : 'Expand'} ${skillName} description`
-                : undefined
-            }
-          >
-            <span className="font-nunito font-semibold text-text-primary">
-              {item.isSubSkill ? (
-                <span className="pl-1 text-text-secondary">↳ </span>
-              ) : null}
-              {skill.name}
-            </span>
-            {hasDescription && (
-              <ChevronDown
-                className={cn(
-                  'h-4 w-4 shrink-0 text-text-muted dark:text-text-secondary transition-transform',
-                  expanded && 'rotate-180'
-                )}
-                aria-hidden
-              />
+            {isSubSkill && baseSkillName && (
+              <DescriptorChip variant="descriptor" size="sm" title={baseSkillName}>
+                {baseSkillName}
+              </DescriptorChip>
             )}
-          </button>
-          {(abilityLabel || isSpecies || (isPath && pathSourceLabel) || isSubSkill) && (
-            <div className="flex flex-wrap items-center gap-1.5 pb-0.5">
-              {/* DESIGN_INTENT: Ability = primary (guided ability chips); Species = descriptor; path = primary source */}
-              {abilityLabel && (
-                <DescriptorChip
-                  variant="primary"
-                  size="sm"
-                  title={`Contributing Ability: ${abilityLabel}`}
-                >
-                  {abilityLabel}
-                </DescriptorChip>
-              )}
-              {isSubSkill && baseSkillName && (
-                <DescriptorChip variant="descriptor" size="sm" title={baseSkillName}>
-                  {baseSkillName}
-                </DescriptorChip>
-              )}
-              {isSpecies && (
-                <DescriptorChip variant="descriptor" size="sm">
-                  Species
-                </DescriptorChip>
-              )}
-              {isPath && pathSourceLabel && (
-                <DescriptorChip variant="primary" size="sm" title={pathSourceLabel}>
-                  {pathSourceLabel}
-                </DescriptorChip>
-              )}
-            </div>
-          )}
+            {isSpecies && (
+              <DescriptorChip variant="descriptor" size="sm">
+                Species
+              </DescriptorChip>
+            )}
+            {isPath && pathSourceLabel && (
+              <DescriptorChip variant="primary" size="sm" title={pathSourceLabel}>
+                {pathSourceLabel}
+              </DescriptorChip>
+            )}
+          </div>
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-1">
@@ -438,7 +436,6 @@ export function GuidedSkillsPanel({
           spent={spentPoints}
           label="Skill Points"
           variant="inline"
-          className="text-base"
         />
       </div>
 

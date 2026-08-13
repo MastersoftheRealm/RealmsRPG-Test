@@ -42,7 +42,6 @@ export function GuidedAbilitiesCustomizePanel({
           spent={spentPoints}
           label={panelCopy.abilityPointsLabel}
           variant="inline"
-          className="text-base"
         />
       </div>
 

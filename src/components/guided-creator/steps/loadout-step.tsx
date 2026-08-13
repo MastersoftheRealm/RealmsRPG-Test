@@ -6,13 +6,15 @@
 
 import { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { Spinner } from '@/components/ui';
+import { GuidedInlineCatalogList, GuidedLayerNav, LoadoutBudgetBar } from '@/components/shared';
+import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
 import {
   useEquipment,
   useOfficialLibrary,
   useGuidedEquipmentCatalog,
   useGuidedEquipmentL2Catalog,
+  useUserItems,
 } from '@/hooks';
-import { GuidedInlineCatalogList, LoadoutBudgetBar } from '@/components/shared';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
@@ -76,12 +78,8 @@ export function LoadoutStep() {
   } = useGuidedCreatorStore();
   const { pathData, archetype, isLoading: pathLoading } = useGuidedPathData();
   const { data: officialItems = [], isLoading: officialLoading } = useOfficialLibrary('items');
+  const { data: userItems = [], isLoading: userItemsLoading } = useUserItems();
   const { data: codexEquipment = [], isLoading: codexLoading } = useEquipment();
-  const { catalog, itemProperties, tpSummary } = useGuidedEquipmentCatalog(
-    draft,
-    officialItems,
-    codexEquipment
-  );
   const [l2Open, setL2Open] = useState(false);
   const [inlineErrorState, setInlineErrorState] = useState<{
     phase: string;
@@ -90,13 +88,23 @@ export function LoadoutStep() {
 
   // L3 — no archetype path: inline full catalog per phase, no L2 modal (TASK-684).
   const isInlineCatalog = prefersDeepCatalogEntry(draft);
+  const [librarySource, setLibrarySource] = useState<SourceFilterValue>(
+    isInlineCatalog ? 'all' : 'public'
+  );
+
+  const { catalog, itemProperties, tpSummary, allOfficial } = useGuidedEquipmentCatalog(
+    draft,
+    officialItems,
+    codexEquipment,
+    { userItems, source: librarySource }
+  );
 
   /**
    * Phase visibility uses catalog classification. While catalogs/path are empty,
    * unresolved pool refs default to "equipment" and weapon/armor look absent —
    * so do not commit equipmentPhase jumps until ready (TASK-527).
    */
-  const isLoading = officialLoading || codexLoading || pathLoading;
+  const isLoading = officialLoading || codexLoading || pathLoading || userItemsLoading;
   const recommendUnarmed = pathData?.level1?.recommendUnarmedProwess === true;
   // Power always skips armor (draft type or path.type) — path armorStep cannot override (TASK-689).
   const armorMode = resolveArmorStepMode(
@@ -107,8 +115,8 @@ export function LoadoutStep() {
   const equipmentPhase = draft.equipmentPhase ?? 'weapon';
 
   const equipmentLookup = useMemo(
-    () => buildEquipmentLookup(officialItems, codexEquipment),
-    [officialItems, codexEquipment]
+    () => buildEquipmentLookup(allOfficial, codexEquipment),
+    [allOfficial, codexEquipment]
   );
 
   /**
@@ -210,8 +218,8 @@ export function LoadoutStep() {
     equipmentPhase,
     draft,
     pathData?.level1,
-    officialItems,
-    codexEquipment,
+    allOfficial,
+    librarySource === 'my' ? [] : codexEquipment,
     currencyStarting,
     armsSpent,
     { catalog, tpSummary, itemProperties }
@@ -282,6 +290,12 @@ export function LoadoutStep() {
     },
     [equipmentPhase, draft, l2Catalog, l2TpSummary.limit, gearBudget, updateDraft]
   );
+
+  const openItemCreator = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.open('/item-creator', '_blank', 'noopener,noreferrer');
+    }
+  }, []);
 
   useEffect(() => {
     if (isLoading) return;
@@ -453,7 +467,17 @@ export function LoadoutStep() {
             }
             maxSelections={equipmentPhase === 'armor' ? 1 : undefined}
             selectedTitle={phaseCopy.l2.selectedTitle(equipmentPhase)}
+            scopeExtra={
+              <SourceFilter value={librarySource} onChange={setLibrarySource} />
+            }
           />
+
+          {equipmentPhase !== 'gear' ? (
+            <GuidedLayerNav
+              expandLabel={phaseCopy.createArmament}
+              onExpand={openItemCreator}
+            />
+          ) : null}
 
           {equipmentPhase === 'weapon' && recommendUnarmed ? (
             <GuidedUnarmedProwessPanel
@@ -500,6 +524,9 @@ export function LoadoutStep() {
             tpLimit={l2TpSummary.limit}
             gearBudget={gearBudget}
             currencyStarting={currencyStarting}
+            scopeExtra={
+              <SourceFilter value={librarySource} onChange={setLibrarySource} />
+            }
             onClose={() => setL2Open(false)}
             onDraftChange={updateDraft}
           />

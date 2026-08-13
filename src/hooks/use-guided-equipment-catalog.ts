@@ -15,33 +15,65 @@ import type {
   EquipmentEligibilityContext,
   EquipmentPhase,
 } from '@/lib/guided-creator/equipment-eligibility';
+import {
+  mergeLibraryBySource,
+  type LibrarySourceScope,
+} from '@/lib/library/source-scope';
 
 export function useGuidedEquipmentCatalog(
   draft: GuidedDraft,
   officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
+  codexEquipment: CodexEquipmentItem[],
+  options?: {
+    userItems?: LibraryItem[];
+    source?: LibrarySourceScope;
+  }
 ) {
   const { rules } = useGameRules();
   const { data: itemProperties = [] } = useItemProperties();
+  const userItems = useMemo(() => options?.userItems ?? [], [options?.userItems]);
+  const source = options?.source ?? 'public';
+
+  const selectedIds = useMemo(
+    () =>
+      [...draft.loadoutWeapons, ...draft.loadoutArmor, ...draft.equipment].map((r) =>
+        String(r.id)
+      ),
+    [draft.loadoutWeapons, draft.loadoutArmor, draft.equipment]
+  );
+
+  const scopedOfficial = useMemo(
+    () => mergeLibraryBySource(source, officialItems, userItems, selectedIds),
+    [source, officialItems, userItems, selectedIds]
+  );
+  const scopedCodex = useMemo(
+    () => (source === 'my' ? [] : codexEquipment),
+    [source, codexEquipment]
+  );
+
+  const allOfficial = useMemo(
+    () => mergeLibraryBySource('all', officialItems, userItems),
+    [officialItems, userItems]
+  );
 
   const catalog = useMemo(
-    () => buildEquipmentCatalogRows(officialItems, codexEquipment, itemProperties),
-    [officialItems, codexEquipment, itemProperties]
+    () => buildEquipmentCatalogRows(scopedOfficial, scopedCodex, itemProperties),
+    [scopedOfficial, scopedCodex, itemProperties]
   );
 
   const tpSummary = useMemo(
     () =>
       computeGuidedLoadoutTpSummary(
         draft,
-        officialItems,
+        allOfficial,
         codexEquipment,
         itemProperties,
         rules
       ),
-    [draft, officialItems, codexEquipment, itemProperties, rules]
+    [draft, allOfficial, codexEquipment, itemProperties, rules]
   );
 
-  return { catalog, tpSummary, itemProperties, rules };
+  return { catalog, tpSummary, itemProperties, rules, scopedOfficial, allOfficial };
 }
 
 export function buildGuidedEquipmentEligibilityContext(

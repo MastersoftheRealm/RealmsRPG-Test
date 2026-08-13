@@ -426,6 +426,7 @@ export const GUIDED_CREATOR_COPY = {
                 ? 'Selected Armor'
                 : 'Selected Weapons & Shields',
         },
+        createArmament: 'Create Armament',
       },
     },
     powersTechniques: {

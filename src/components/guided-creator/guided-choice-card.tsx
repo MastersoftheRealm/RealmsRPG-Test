@@ -1,5 +1,6 @@
 /**
  * GuidedChoiceCard — shared selectable card for the guided creator.
+ * `readOnly` omits select chrome (granted traits on species overview).
  * Supports thumb or hero image layouts; inline See more for long copy;
  * optional More details opens a read-only deep-dive modal (not card select)
  * or expands lots of chip/fact disclosure.
@@ -55,7 +56,7 @@ function normalizeChoiceTag(tag: GuidedChoiceTag): {
   };
 }
 
-export interface GuidedChoiceCardProps {
+type GuidedChoiceCardBase = {
   title: string;
   description?: string | null;
   tagline?: string;
@@ -75,8 +76,6 @@ export interface GuidedChoiceCardProps {
   imageLayout?: ChoiceCardImageLayout;
   icon?: ReactNode;
   badge?: string;
-  selected?: boolean;
-  onSelect: () => void;
   children?: ReactNode;
   /**
    * Content above See more / See less / More details (e.g. quantity stepper).
@@ -103,7 +102,6 @@ export interface GuidedChoiceCardProps {
   onDetails?: () => void;
   /** Visible label for the details control (default: guided copy “More details”). */
   detailsLabel?: string;
-  selectAriaLabel?: string;
   className?: string;
   fullWidth?: boolean;
   /**
@@ -113,7 +111,26 @@ export interface GuidedChoiceCardProps {
    * - compact — 3 lines (feats, traits, loadouts)
    */
   density?: GuidedChoiceCardDensity;
-}
+};
+
+/** Display-only card: no select chrome. See more / See less still work. */
+type GuidedChoiceCardReadOnlyProps = GuidedChoiceCardBase & {
+  readOnly: true;
+  onSelect?: never;
+  selected?: never;
+  selectAriaLabel?: never;
+};
+
+type GuidedChoiceCardSelectableProps = GuidedChoiceCardBase & {
+  readOnly?: false;
+  onSelect: () => void;
+  selected?: boolean;
+  selectAriaLabel?: string;
+};
+
+export type GuidedChoiceCardProps =
+  | GuidedChoiceCardReadOnlyProps
+  | GuidedChoiceCardSelectableProps;
 
 type BodyMode =
   | { kind: 'none' }
@@ -207,6 +224,7 @@ export function GuidedChoiceCard({
   badge,
   selected = false,
   onSelect,
+  readOnly = false,
   children,
   beforeDisclosure,
   expandedExtra,
@@ -295,7 +313,7 @@ export function GuidedChoiceCard({
   const handleCardKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      onSelect();
+      onSelect?.();
     }
   };
 
@@ -334,21 +352,26 @@ export function GuidedChoiceCard({
 
   return (
     <div
-      tabIndex={0}
-      aria-label={selectAriaLabel ?? `Choose ${title}`}
-      aria-selected={selected}
-      onClick={onSelect}
-      onKeyDown={handleCardKeyDown}
+      tabIndex={readOnly ? undefined : 0}
+      aria-label={readOnly ? undefined : (selectAriaLabel ?? `Choose ${title}`)}
+      aria-selected={readOnly ? undefined : selected}
+      onClick={readOnly ? undefined : onSelect}
+      onKeyDown={readOnly ? undefined : handleCardKeyDown}
       className={cn(
-        'flex w-full cursor-pointer flex-col overflow-hidden rounded-card border bg-surface-alt/40 transition-shadow duration-base',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+        'flex w-full flex-col overflow-hidden rounded-card border bg-surface-alt/40',
         'h-full',
         // Always keep density min-height — selected/expanded cards auto-expand and
         // previously dropped this class, so short options (e.g. Skip — no flaw) shrank.
         preset.cardCollapsed,
-        selected
-          ? 'border-primary ring-2 ring-primary shadow-raised'
-          : 'border-border-light dark:border-border hover:border-border hover:shadow-card',
+        readOnly
+          ? 'border-border-light dark:border-border'
+          : cn(
+              'cursor-pointer transition-shadow duration-base',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+              selected
+                ? 'border-primary ring-2 ring-primary shadow-raised'
+                : 'border-border-light dark:border-border hover:border-border hover:shadow-card'
+            ),
         fullWidth && 'w-full',
         className
       )}
@@ -451,12 +474,14 @@ export function GuidedChoiceCard({
               </div>
             ) : null}
           </div>
-          <span
-            className={cn(s.selectedCheck, !selected && 'invisible')}
-            aria-hidden={!selected}
-          >
-            <Check className="h-4 w-4" aria-hidden="true" />
-          </span>
+          {readOnly ? null : (
+            <span
+              className={cn(s.selectedCheck, !selected && 'invisible')}
+              aria-hidden={!selected}
+            >
+              <Check className="h-4 w-4" aria-hidden="true" />
+            </span>
+          )}
         </div>
 
         {showTags ? (

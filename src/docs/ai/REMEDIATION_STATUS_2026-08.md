@@ -43,7 +43,7 @@ The Aug 1 audit was run **without project docs**. Companion tasks are **TASK-642
 | §3 | Lint warnings allowed in CI | TASK-656 | `done` (pending-qa) |
 | §3 | No pre-commit hooks | TASK-657 | `done` |
 | §3 | Creator Playwright not in default CI | TASK-659 | `done` |
-| §3 | Thin API route auth/IDOR tests | TASK-658 | `done` — gap remainder in DEV queue |
+| §3 | Thin API route auth/IDOR tests | TASK-658 / TASK-713 | `done` — user-owned slice covered; remainder (images, nested campaign, remaining admin, official/codex) in DEV queue |
 | §7 | Mega prop bags | TASK-667 | `done` (pending-qa) |
 | §7 | 600+ LOC god files | TASK-666 | `done` (pending-qa) |
 | §7 | Twin character creators | — | **Deferred by design** — Guided + Advanced coexist (`guide/06`, CHARACTER_CREATOR_AUDIT); do not merge stores/routes |

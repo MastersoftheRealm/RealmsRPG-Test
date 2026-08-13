@@ -3,16 +3,34 @@
  * Regular catalog: Energy ≤ theoretical L1 max (TASK-463).
  * Innate catalog: Energy ≤ Innate Threshold (TASK-471 soft / TASK-472).
  *
- * Row display from `buildPowerTechniqueBudgetDisplay` (library-selectable-builders, TASK-691).
- * Guided-only: innate / max-EN orchestration + Path badges + TP costLabel.
+ * Row columns/expand match Official Library GLR (`buildOfficialPowerRows` /
+ * `buildOfficialTechniqueRows`) — TASK-709. Guided-only: innate / max-EN
+ * orchestration + Path badges + TP totalCost.
  */
 
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import { type PowersTechniquesKind } from '@/lib/guided-creator/power-technique-display';
-import { buildPowerTechniqueBudgetDisplay } from '@/lib/library-selectable-builders';
+import { buildPowerTechniqueFilterableRow } from '@/lib/library-selectable-builders';
+import {
+  buildOfficialPowerRows,
+  officialPowerRowColumns,
+  OFFICIAL_POWER_GRID,
+  OFFICIAL_POWER_HEADER_COLUMNS,
+} from '@/lib/library/official-power-list';
+import {
+  buildOfficialTechniqueRows,
+  officialTechniqueRowColumns,
+  OFFICIAL_TECHNIQUE_GRID,
+  OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
+} from '@/lib/library/official-technique-list';
+import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
+import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import {
+  applyPowerTechniqueFilters,
+  type PowerTechniqueFilterState,
+} from '@/lib/library/power-technique-filters';
 import {
   calculateGuidedL1TheoreticalMaxEnergy,
   isGuidedL2EnergyAllowed,
@@ -23,14 +41,33 @@ import { TRAINING_POINTS_COST_LABEL } from '@/lib/detail-option/compact-facts';
 
 export type PowersTechniquesL2Mode = 'regular' | 'innate';
 
-export const POWERS_TECHNIQUES_L2_HEADER_COLUMNS = [
-  { key: 'name', label: 'Name', align: 'left' as const, sortable: true },
-  { key: 'action', label: 'Action Type', align: 'center' as const, sortable: true },
-  { key: 'energy', label: 'Energy', align: 'center' as const, sortable: true },
-  { key: 'tp', label: 'Training Points', align: 'center' as const, sortable: true },
-];
+function toSelectableHeaders(
+  headers: ReadonlyArray<{ key: string; label: string; align?: 'left' | 'center' | 'right' }>
+) {
+  return headers.map((h) => ({
+    key: h.key,
+    label: h.label,
+    align: (h.align ?? 'center') as 'left' | 'center' | 'right',
+    sortable: true,
+  }));
+}
 
-export const POWERS_TECHNIQUES_L2_GRID = '1.6fr 1fr 0.7fr 0.9fr';
+export const GUIDED_POWERS_L2_HEADER_COLUMNS = toSelectableHeaders(OFFICIAL_POWER_HEADER_COLUMNS);
+export const GUIDED_POWERS_L2_GRID = OFFICIAL_POWER_GRID;
+export const GUIDED_TECHNIQUES_L2_HEADER_COLUMNS = toSelectableHeaders(
+  OFFICIAL_TECHNIQUE_HEADER_COLUMNS
+);
+export const GUIDED_TECHNIQUES_L2_GRID = OFFICIAL_TECHNIQUE_GRID;
+
+export function powersTechniquesL2Headers(kind: PowersTechniquesKind) {
+  return kind === 'techniques'
+    ? GUIDED_TECHNIQUES_L2_HEADER_COLUMNS
+    : GUIDED_POWERS_L2_HEADER_COLUMNS;
+}
+
+export function powersTechniquesL2Grid(kind: PowersTechniquesKind) {
+  return kind === 'techniques' ? GUIDED_TECHNIQUES_L2_GRID : GUIDED_POWERS_L2_GRID;
+}
 
 function itemId(item: LibraryPower | LibraryTechnique): string {
   return String(item.id ?? item.docId ?? item.name ?? '').trim();
@@ -47,6 +84,30 @@ function pathRecommendedSet(ids: string[]): Set<string> {
 
 function toBudgetKind(kind: PowersTechniquesKind) {
   return kind === 'techniques' ? 'technique' : 'power';
+}
+
+function numericEnergy(value: string | number | undefined): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return Math.max(0, Math.floor(value));
+  }
+  if (typeof value === 'string' && value.trim() !== '' && value !== '-') {
+    const n = Number(value);
+    if (Number.isFinite(n)) return Math.max(0, Math.floor(n));
+  }
+  return undefined;
+}
+
+function energyAllowed(
+  energy: number | undefined,
+  mode: PowersTechniquesL2Mode,
+  maxEnergy: number | null,
+  innateThreshold: number
+): boolean {
+  if (mode === 'regular') {
+    return isGuidedL2EnergyAllowed(energy, maxEnergy);
+  }
+  if (energy == null) return false;
+  return energy <= innateThreshold;
 }
 
 export function buildPowersTechniquesL2Items(opts: {
@@ -78,45 +139,85 @@ export function buildPowersTechniquesL2Items(opts: {
   const budgetKind = toBudgetKind(kind);
 
   const rows: SelectableItem[] = [];
-  for (const item of items) {
-    const id = itemId(item);
-    if (!id) continue;
 
-    const display = buildPowerTechniqueBudgetDisplay(
-      budgetKind,
-      item,
-      id,
-      powerPartsDb,
-      techniquePartsDb
-    );
-    const energy = display.energy;
-    if (mode === 'regular') {
-      if (!isGuidedL2EnergyAllowed(energy, maxEnergy)) continue;
-    } else {
-      // Innate: must have known Energy ≤ threshold
-      if (energy == null || energy > innateThreshold) continue;
+  if (kind === 'techniques') {
+    const officialRows = buildOfficialTechniqueRows(items as LibraryTechnique[], techniquePartsDb);
+    for (const row of officialRows) {
+      const id = row.id || itemId(row.raw);
+      if (!id) continue;
+      const energy = numericEnergy(row.energy);
+      if (!energyAllowed(energy, mode, maxEnergy, innateThreshold)) continue;
+
+      const isPath =
+        pathSet.has(normalizeId(id)) || pathSet.has(normalizeId(String(row.name ?? '')));
+      const section = partsProficienciesSection(row.parts, 'technique');
+
+      rows.push({
+        id,
+        name: row.name,
+        description: row.description,
+        columns: officialTechniqueRowColumns(row),
+        detailSections: section ? [section] : undefined,
+        thumbnail: resolveListRowThumbnail('technique', row.raw, row.name),
+        totalCost: row.tp,
+        costLabel: TRAINING_POINTS_COST_LABEL,
+        badges: isPath ? [{ label: 'Path', color: 'blue' }] : undefined,
+        data: { kind, energy, tpCost: row.tp },
+        powerTechniqueFilter: buildPowerTechniqueFilterableRow(
+          budgetKind,
+          row.raw,
+          powerPartsDb,
+          techniquePartsDb
+        ),
+      });
     }
+  } else {
+    const officialRows = buildOfficialPowerRows(items as LibraryPower[], powerPartsDb);
+    for (const row of officialRows) {
+      const id = row.id || itemId(row.raw);
+      if (!id) continue;
+      const energy = numericEnergy(row.energy);
+      if (!energyAllowed(energy, mode, maxEnergy, innateThreshold)) continue;
 
-    const chips: ChipData[] = [...display.detailChips, ...display.titleChips];
+      const isPath =
+        pathSet.has(normalizeId(id)) || pathSet.has(normalizeId(String(row.name ?? '')));
+      const section = partsProficienciesSection(row.parts, 'power');
 
-    const isPath =
-      pathSet.has(normalizeId(id)) || pathSet.has(normalizeId(String(item.name ?? '')));
-
-    rows.push({
-      id,
-      name: display.name,
-      description: display.description,
-      columns: display.columns,
-      chips: chips.length > 0 ? chips : undefined,
-      // Innate and regular both spend shared Training Points (TASK-573).
-      totalCost: display.tp,
-      costLabel: TRAINING_POINTS_COST_LABEL,
-      badges: isPath ? [{ label: 'Path', color: 'blue' }] : undefined,
-      data: { kind, energy, tpCost: display.tp },
-    });
+      rows.push({
+        id,
+        name: row.name,
+        description: row.description,
+        columns: officialPowerRowColumns(row),
+        detailSections: section ? [section] : undefined,
+        thumbnail: resolveListRowThumbnail('power', row.raw, row.name),
+        totalCost: row.tp,
+        costLabel: TRAINING_POINTS_COST_LABEL,
+        badges: isPath ? [{ label: 'Path', color: 'blue' }] : undefined,
+        data: { kind, energy, tpCost: row.tp },
+        powerTechniqueFilter: buildPowerTechniqueFilterableRow(
+          budgetKind,
+          row.raw,
+          powerPartsDb,
+          techniquePartsDb
+        ),
+      });
+    }
   }
 
   return rows.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: 'base' }));
+}
+
+export function filterPowersTechniquesL2ByPtFilters(
+  items: SelectableItem[],
+  filters: PowerTechniqueFilterState,
+  kind: PowersTechniquesKind
+): SelectableItem[] {
+  const filterKind = kind === 'techniques' ? 'technique' : 'power';
+  return items.filter((item) => {
+    const row = item.powerTechniqueFilter;
+    if (!row) return true;
+    return applyPowerTechniqueFilters([row], filters, filterKind, null).length > 0;
+  });
 }
 
 /** Map selected modal rows to draft id list (canonical catalog ids). */

@@ -11,23 +11,22 @@
 
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { Feat, Skill } from '@/hooks';
-import { buildFeatDetailSections } from '@/lib/codex/feat-list';
+import {
+  buildFeatDetailSections,
+  FEAT_GRID_COLUMNS,
+  FEAT_SELECTABLE_HEADER_COLUMNS,
+  featSelectableColumns,
+} from '@/lib/codex/feat-list';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import {
   checkFeatRequirements,
   type CharacterForFeatRequirement,
 } from '@/lib/game/feat-requirements';
 import { formatFeatName, getFeatLevel, groupFeatFamilies } from '@/lib/leveled-feats';
-import { formatListCellLabel } from '@/lib/utils';
 
-export const FEATS_L2_HEADER_COLUMNS = [
-  { key: 'name', label: 'Name', align: 'left' as const, sortable: true },
-  { key: 'uses_per_rec', label: 'Uses', align: 'center' as const, sortable: true },
-  { key: 'rec_period', label: 'Recovery', align: 'center' as const, sortable: true },
-  { key: 'category', label: 'Category', align: 'center' as const, sortable: true },
-];
-
-export const FEATS_L2_GRID = '1.5fr 0.6fr 0.6fr 0.8fr';
+/** Codex feat headers — Guided L2/L3 reuses the same columns as Codex browse (TASK-709). */
+export const FEATS_L2_HEADER_COLUMNS = FEAT_SELECTABLE_HEADER_COLUMNS;
+export const FEATS_L2_GRID = FEAT_GRID_COLUMNS;
 
 /** Search covers name/description + tags/category (packed into `keywords`) — TASK-684. */
 export const FEATS_L2_SEARCH_FIELDS: (keyof SelectableItem)[] = ['name', 'description', 'keywords'];
@@ -118,9 +117,8 @@ export function buildGuidedFeatsL2Items(opts: {
       );
       const detailSections = buildFeatDetailSections(preferred, skillIdToName, levels, {
         isCharacterFeat: preferred.char_feat,
+        hideTypeSection: true,
       });
-      const usesVal = preferred.uses_per_rec;
-      const usesDisplay = usesVal === 0 || usesVal === undefined ? '-' : String(usesVal);
       const id = String(preferred.id);
       const recommended = recommendedSet.has(id);
       const isSelected = selectedSet.has(id);
@@ -133,21 +131,7 @@ export function buildGuidedFeatsL2Items(opts: {
         name: formatFeatName(preferred),
         description: preferred.description,
         keywords: keywords || undefined,
-        columns: [
-          { key: 'uses_per_rec', label: 'Uses', value: usesDisplay, align: 'center' as const },
-          {
-            key: 'rec_period',
-            label: 'Recovery',
-            value: formatListCellLabel(preferred.rec_period),
-            align: 'center' as const,
-          },
-          {
-            key: 'category',
-            label: 'Category',
-            value: formatListCellLabel(preferred.category),
-            align: 'center' as const,
-          },
-        ],
+        columns: featSelectableColumns(preferred),
         detailSections: detailSections.length > 0 ? detailSections : undefined,
         // Selected-but-unmet stays visible so the player can deselect; otherwise unmet are hidden above.
         disabled: !met && isSelected,

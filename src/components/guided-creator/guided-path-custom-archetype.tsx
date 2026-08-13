@@ -13,7 +13,7 @@ import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { AbilityName, ArchetypeCategory } from '@/types';
 import {
-  chooseCharacterCreationStyle,
+  guidedChooseArchetypeTypeHelp,
   guidedMartialPathTypeHelp,
   guidedPoweredMartialPathTypeHelp,
   guidedPowerPathTypeHelp,
@@ -58,8 +58,8 @@ export function GuidedPathCustomArchetype({
           className="mb-3"
           titleAddon={
             <InfoTippy
-              content={chooseCharacterCreationStyle}
-              label="About custom archetype"
+              content={guidedChooseArchetypeTypeHelp}
+              label="About choosing your archetype type"
               size="inline"
             />
           }
