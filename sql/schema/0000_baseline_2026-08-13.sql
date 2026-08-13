@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict 8HdrUsSoXTa3tdBcscQf1Nxny2hHThx7yg0vrWRYDreMNdbhDasDW0gaFoSACai
+\restrict hDTMoAYltlmb24sE4O74Mc2oqPXdxL24XD8Ems7YaAHKV9jzoLqXj82U7NYZzw8
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 18.3
@@ -1294,6 +1294,45 @@ $$;
 
 
 --
+-- Name: replace_archetype_levels(text, jsonb); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.replace_archetype_levels(p_archetype_id text, p_levels jsonb) RETURNS integer
+    LANGUAGE plpgsql SECURITY DEFINER
+    SET search_path TO 'public'
+    AS $$
+declare
+  inserted integer;
+begin
+  if p_levels is null or jsonb_typeof(p_levels) <> 'array' then
+    raise exception 'replace_archetype_levels: p_levels must be a JSON array';
+  end if;
+
+  if jsonb_array_length(p_levels) = 0 then
+    raise exception 'refusing to clear all levels for archetype %', p_archetype_id;
+  end if;
+
+  delete from public.codex_archetype_levels where archetype_id = p_archetype_id;
+
+  insert into public.codex_archetype_levels (
+    archetype_id, level, feats, skills, powers, techniques, armaments, equipment,
+    remove_feats, remove_powers, remove_techniques, remove_armaments, notes
+  )
+  select
+    p_archetype_id,
+    (e ->> 'level')::int,
+    e ->> 'feats', e ->> 'skills', e ->> 'powers', e ->> 'techniques',
+    e ->> 'armaments', e ->> 'equipment', e ->> 'remove_feats', e ->> 'remove_powers',
+    e ->> 'remove_techniques', e ->> 'remove_armaments', e ->> 'notes'
+  from jsonb_array_elements(p_levels) e;
+
+  get diagnostics inserted = row_count;
+  return inserted;
+end;
+$$;
+
+
+--
 -- Name: rls_auto_enable(); Type: FUNCTION; Schema: public; Owner: -
 --
 
@@ -1385,6 +1424,21 @@ BEGIN
   RETURN NEW;
 END;
 $_$;
+
+
+--
+-- Name: touch_updated_at(); Type: FUNCTION; Schema: public; Owner: -
+--
+
+CREATE FUNCTION public.touch_updated_at() RETURNS trigger
+    LANGUAGE plpgsql
+    SET search_path TO 'public'
+    AS $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
 
 
 --
@@ -3993,7 +4047,8 @@ CREATE TABLE public.codex_archetypes (
     level1_guidance_groups jsonb,
     level1_recommended_abilities jsonb,
     level1_loadouts jsonb,
-    level1_innate_powers text
+    level1_innate_powers text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -4054,7 +4109,8 @@ CREATE TABLE public.codex_creature_feats (
     feat_points numeric,
     feat_lvl integer,
     lvl_req integer,
-    mechanic boolean
+    mechanic boolean,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -4070,7 +4126,8 @@ CREATE TABLE public.codex_equipment (
     currency numeric,
     rarity text,
     image_id uuid,
-    image_url text
+    image_url text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -4116,7 +4173,8 @@ CREATE TABLE public.codex_feats (
     tags text,
     char_feat boolean,
     state_feat boolean,
-    base_feat_id text
+    base_feat_id text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -4151,7 +4209,8 @@ CREATE TABLE public.codex_parts (
     mechanic boolean,
     percentage boolean,
     duration boolean,
-    defense text
+    defense text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -4171,7 +4230,8 @@ CREATE TABLE public.codex_properties (
     op_1_tp numeric,
     op_1_c numeric,
     type text,
-    mechanic boolean
+    mechanic boolean,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -4208,7 +4268,8 @@ CREATE TABLE public.codex_skills (
     failure_desc text,
     ds_calc text,
     craft_failure_desc text,
-    craft_success_desc text
+    craft_success_desc text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -4233,7 +4294,8 @@ CREATE TABLE public.codex_species (
     languages text,
     is_starter boolean DEFAULT false NOT NULL,
     image_url text,
-    image_id uuid
+    image_id uuid,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -4270,7 +4332,8 @@ CREATE TABLE public.codex_traits (
     rec_period text,
     flaw boolean,
     characteristic boolean,
-    option_trait_ids text
+    option_trait_ids text,
+    updated_at timestamp with time zone DEFAULT now() NOT NULL
 );
 
 
@@ -7198,6 +7261,69 @@ ALTER INDEX realtime.messages_pkey ATTACH PARTITION realtime.messages_2026_08_16
 
 
 --
+-- Name: codex_archetypes codex_archetypes_touch_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER codex_archetypes_touch_updated_at BEFORE UPDATE ON public.codex_archetypes FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+
+--
+-- Name: codex_creature_feats codex_creature_feats_touch_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER codex_creature_feats_touch_updated_at BEFORE UPDATE ON public.codex_creature_feats FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+
+--
+-- Name: codex_equipment codex_equipment_touch_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER codex_equipment_touch_updated_at BEFORE UPDATE ON public.codex_equipment FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+
+--
+-- Name: codex_feats codex_feats_touch_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER codex_feats_touch_updated_at BEFORE UPDATE ON public.codex_feats FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+
+--
+-- Name: codex_parts codex_parts_touch_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER codex_parts_touch_updated_at BEFORE UPDATE ON public.codex_parts FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+
+--
+-- Name: codex_properties codex_properties_touch_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER codex_properties_touch_updated_at BEFORE UPDATE ON public.codex_properties FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+
+--
+-- Name: codex_skills codex_skills_touch_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER codex_skills_touch_updated_at BEFORE UPDATE ON public.codex_skills FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+
+--
+-- Name: codex_species codex_species_touch_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER codex_species_touch_updated_at BEFORE UPDATE ON public.codex_species FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+
+--
+-- Name: codex_traits codex_traits_touch_updated_at; Type: TRIGGER; Schema: public; Owner: -
+--
+
+CREATE TRIGGER codex_traits_touch_updated_at BEFORE UPDATE ON public.codex_traits FOR EACH ROW EXECUTE FUNCTION public.touch_updated_at();
+
+
+--
 -- Name: official_enhanced_items set_official_enhanced_items_updated_at; Type: TRIGGER; Schema: public; Owner: -
 --
 
@@ -9224,5 +9350,5 @@ CREATE EVENT TRIGGER pgrst_drop_watch ON sql_drop
 -- PostgreSQL database dump complete
 --
 
-\unrestrict 8HdrUsSoXTa3tdBcscQf1Nxny2hHThx7yg0vrWRYDreMNdbhDasDW0gaFoSACai
+\unrestrict hDTMoAYltlmb24sE4O74Mc2oqPXdxL24XD8Ems7YaAHKV9jzoLqXj82U7NYZzw8
 

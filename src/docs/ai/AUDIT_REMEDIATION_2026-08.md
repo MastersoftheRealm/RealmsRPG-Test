@@ -231,3 +231,20 @@ Recorded because the value of an audit is in being right, not in having been rig
     `npm run db:check-codex-drift` scanned all 708 changelog rows and found **0** collateral nulls —
     i.e. every null was recorded in `changed_fields` as a deliberate edit. That is the same
     conclusion reached by hand, reproduced by a check that now runs on demand.
+11. **A defect the audit missed entirely: every archetype save from the spreadsheet tab was
+    failing.** Found by the new read/write parity test, not by the audit. `toDbPayload` split digits
+    when mapping keys to columns, emitting `level_1_feats` and `power_prof_level_5` against real
+    columns named `level1_feats` and `power_prof_level5`. Confirmed against the live schema. This is
+    the strongest argument for the parity test being the deliverable rather than the one-line
+    projection fix: it found a second, larger bug within minutes of existing.
+12. **Wave 1 briefly broke account deletion, and the fix was required rather than optional.**
+    Dropping the self-delete policy on `user_profiles` was correct, but `deleteAccountAction` was
+    still using the *session* client for that delete — so it silently affected 0 rows and the FK
+    cascade never fired. Verified: `user_profiles` now has 0 DELETE policies. The account-deletion
+    path was moved to the service-role client in the same session. This combination is also the most
+    likely origin of the orphaned profile row: the same silent-0-rows delete followed by a
+    successful `auth.admin.deleteUser`. Recorded because a migration that assumes an app change
+    which has not landed yet is exactly the kind of ordering hazard worth naming.
+13. **One routed fix resolved itself.** The API work needed `Origin` headers added to
+    `scripts/smoke-realms-images-api.js`; the ops work had already deleted that script as dead
+    code. Noted so nobody re-adds it.
