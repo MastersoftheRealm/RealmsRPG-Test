@@ -9,7 +9,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { PageContainer, PageHeader, Button, LoadingState, EmptyState, Alert, Input, TableScroll } from '@/components/ui';
+import { PageContainer, PageHeader, Button, LoadingState, EmptyState, Alert, SearchInput, TableScroll } from '@/components/ui';
 import { ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { apiFetch } from '@/lib/api-client';
 
@@ -144,9 +144,9 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="mb-4">
-        <Input
+        <SearchInput
           value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          onChange={setSearchQuery}
           placeholder="Search username, display name, email, or role"
           aria-label="Search users"
         />

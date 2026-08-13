@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdminSession } from '@/lib/admin';
 import { getGameRulesFallback } from '@/hooks/use-game-rules';
+import { apiErrorResponse } from '@/lib/api-error';
+import { validateJson } from '@/lib/api-validation';
 import {
   getEnhancedCraftingRequirements,
   getEnhancedMarketPrice,
@@ -82,15 +84,21 @@ export async function GET() {
       .order('updated_at', { ascending: false });
 
     if (error) {
-      throw error;
+      return apiErrorResponse(
+        'Failed to load official enhanced items',
+        500,
+        'GET /api/official/enhanced-items',
+        error
+      );
     }
 
     return NextResponse.json(data ?? []);
   } catch (err) {
-    console.error('[API Error] GET /api/official/enhanced-items:', err);
-    return NextResponse.json(
-      { error: 'Failed to load official enhanced items' },
-      { status: 500 }
+    return apiErrorResponse(
+      'Failed to load official enhanced items',
+      500,
+      'GET /api/official/enhanced-items',
+      err
     );
   }
 }
@@ -102,8 +110,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(auth.body, { status: auth.status });
     }
 
-    const json = await req.json();
-    const parsed = enhancedBodySchema.parse(json);
+    const validation = await validateJson(req, enhancedBodySchema);
+    if (!validation.success) return validation.error;
+    const parsed = validation.data;
 
     const rules = getGameRulesFallback().CRAFTING;
     const idx = getMultipleUseIndex(rules, parsed.usesType, parsed.usesCount);
@@ -141,18 +150,21 @@ export async function POST(req: NextRequest) {
     });
 
     if (error) {
-      throw error;
+      return apiErrorResponse(
+        'Failed to create enhanced item',
+        500,
+        'POST /api/official/enhanced-items (insert)',
+        error
+      );
     }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[API Error] POST /api/official/enhanced-items:', err);
-    return NextResponse.json(
-      {
-        error:
-          err instanceof Error ? err.message : 'Failed to create enhanced item',
-      },
-      { status: 500 }
+    return apiErrorResponse(
+      'Failed to create enhanced item',
+      500,
+      'POST /api/official/enhanced-items',
+      err
     );
   }
 }
@@ -170,15 +182,9 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: 'Missing id' }, { status: 400 });
     }
 
-    const json = await req.json();
-    const parsed = enhancedPatchBodySchema.safeParse(json);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { error: 'Validation failed', details: parsed.error.issues.map((i) => `${i.path.join('.')}: ${i.message}`) },
-        { status: 400 }
-      );
-    }
-    const body = parsed.data;
+    const validation = await validateJson(req, enhancedPatchBodySchema);
+    if (!validation.success) return validation.error;
+    const body = validation.data;
 
     // Build the update from only the validated, provided fields.
     const updates: Record<string, unknown> = {};
@@ -198,17 +204,22 @@ export async function PATCH(req: NextRequest) {
       .update(updates)
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      return apiErrorResponse(
+        'Failed to update enhanced item',
+        500,
+        'PATCH /api/official/enhanced-items (update)',
+        error
+      );
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[API Error] PATCH /api/official/enhanced-items:', err);
-    return NextResponse.json(
-      {
-        error:
-          err instanceof Error ? err.message : 'Failed to update enhanced item',
-      },
-      { status: 500 }
+    return apiErrorResponse(
+      'Failed to update enhanced item',
+      500,
+      'PATCH /api/official/enhanced-items',
+      err
     );
   }
 }
@@ -232,17 +243,22 @@ export async function DELETE(req: NextRequest) {
       .delete()
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      return apiErrorResponse(
+        'Failed to delete enhanced item',
+        500,
+        'DELETE /api/official/enhanced-items',
+        error
+      );
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {
-    console.error('[API Error] DELETE /api/official/enhanced-items:', err);
-    return NextResponse.json(
-      {
-        error:
-          err instanceof Error ? err.message : 'Failed to delete enhanced item',
-      },
-      { status: 500 }
+    return apiErrorResponse(
+      'Failed to delete enhanced item',
+      500,
+      'DELETE /api/official/enhanced-items',
+      err
     );
   }
 }

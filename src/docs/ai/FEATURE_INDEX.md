@@ -58,10 +58,10 @@
 | Auth / current user | `useAuth`, `useAuthStore`, `useProfile`, `useAccountProfile`, `useAdmin` |
 | Codex rules data (feats, skills, species, traits, parts, equipment, properties, archetypes) | `useCodexFull` + the `useCodex*` family (aliased `useSkills`/`useSpecies`/`usePowerParts`/etc.) |
 | Game rules constants | `useGameRules`, `getGameRulesFallback` |
-| Trait / skill id↔name resolution | `useResolvedTraits`, `resolveTraitIds`, `resolveSkillIdsToNames`; skill maps via `buildSkillIdToName` (`lib/codex/skill-list`) |
+| Trait / skill id↔name resolution | `resolveTraitIds`, `resolveSkillIdsToNames`; skill maps via `buildSkillIdToName` (`lib/codex/skill-list`) |
 | Official library (browse + add to my library) | `useOfficialLibrary`, `useAddOfficialToLibrary` (`hooks/use-official-library.ts`) |
 | User-created content (CRUD: powers/techniques/items/creatures/species) | `useUser*`, `useDelete*`, `useDuplicate*` from `use-user-library` |
-| Characters CRUD | `useCharacters`, `useCharacter`, `useSaveCharacter`, `useCreateCharacter`, `useDeleteCharacter`, `useDuplicateCharacter` |
+| Characters CRUD | `useCharacters`, `useCharacter`, `useSaveCharacter`, `useDeleteCharacter`, `useDuplicateCharacter`; create via `createCharacter` (`character-service`) |
 | Campaigns | `useCampaigns*`, `useCampaign`, `useCampaignRolls` |
 | Encounters | `useEncounters`, `useEncounter`, `useCreate/Save/DeleteEncounter` |
 | Crafting + enhanced items | `useCraftingSession(s)`, `useEnhancedItems` + CRUD |
@@ -119,7 +119,7 @@
 | Tab summary header section | `TabSummarySection`, `SummaryItem` (`labelAccessory` for InfoTippy), `SummaryRow` — solid theme fills (`bg-*-light` / `bg-surface-alt`, no gradients); sheet Inventory Currency + Armament Proficiency stack below `sm` (TASK-537); Armament tip via `armamentProficiencyHelp` (TASK-581) |
 | Chip roles (descriptor vs expandable) | `DescriptorChip`, `ExpandableChip` (`@/components/ui`); entity-row inline size `CHIP_ENTITY_INLINE_SIZE` / `chip-size-tokens.ts` (TASK-699); `GridListChip` + `lib/chip/expandable-chip-props.ts`; `ChipData.kind` + `descriptorChipData()` in `lib/chip/chip-data-helpers.ts`; metadata builders in `lib/chip/list-row-metadata.ts` |
 | Stable expand toggle (chips) | `ExpandableChip` + `ChipGroup` (`data-chip-group`); `applyFullRowExpandLayout` (`lib/chip/full-row-expand-layout.ts`) — grow into remaining row width; do not force `w-full` on wrap expand (TASK-445). Header **or** expanded body toggles; Options uses `data-expand-ignore` (TASK-539). |
-| Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts`; `sql/feat-tags-unification-phase*.sql` (phase 4 = live normalize chain); `docs/FEAT_TAGS.md` |
+| Feat tags (normalize + taxonomy) | `lib/codex/feat-tags.ts`, `lib/codex/feat-list.ts`; `sql/feat-tags-unification-phase*.sql` (phase 4 = live normalize chain) |
 | Part/property chips | `ExpandableChip` + `expandableChipPropsFromPartData` (`lib/chip/expandable-chip-props.ts`); `PartData` in `lib/chip/part-data.ts` (re-exported from `@/components/shared`); `partChipsFromDisplay` in `lib/chip/part-chips-from-display.ts` |
 | Part/property → PartData (library rows) | `lib/library/part-display.ts` — `characterPartsToPartData`, `itemPropertiesToPartData` |
 | Part TP math (powers/techniques) | `lib/calculators/part-training-points.ts` — `computePartTrainingPoints`, `PartTpVariant` |
@@ -180,7 +180,7 @@
 | Character sheet Library tab visibility defaults | `lib/character-library-tab-visibility.ts` (`defaultLibraryTabVisibilityForArchetype` → persisted `libraryTabVisibility`; power/martial-only create hides opposite tab) |
 | Library columnar mapping & sync | `lib/library-columnar.ts`, `lib/library-sync.ts`, **`lib/library-selectable-builders.ts`** (shared add+load SelectableItem pipeline; `libraryItemToPowerDocument` / `libraryItemToTechniqueDocument` + `buildPowerTechniqueBudgetDisplay` / `buildPowerTechniqueFilterableRow` for guided + Official list derive parity — TASK-691 / TASK-675 / **TASK-708**; vitest covers DEV-V-016-T001/T002/T003 column contracts) |
 | Load from library (creators) | `LoadFromLibraryModal` + `useLoadModalLibrary`; species/creature rows: `@/lib/library/creator-load-selectables` |
-| Tooltips (defaults + interpolation) | `lib/tooltips/` — **`lib/tooltips/README.md`** (PR #14 onboarding), `legacy-tooltip-key-map.ts` |
+| Tooltips (defaults + interpolation) | `lib/tooltips/` — **`lib/tooltips/README.md`** (PR #14 onboarding; legacy DB key map in that README) |
 | Roles / quotas / limits | `lib/role-policy.ts`, `lib/role-limits.ts`, `lib/role-quota-messages.ts`, `lib/admin.ts` |
 | API client / validation / rate limit | `lib/api-client.ts` (`apiFetch`, `apiUpload`, `getErrorMessage`, `logClientError`), `lib/api-validation.ts`, `lib/validation/schemas.ts` (auth emails trim+lowercase), `lib/rate-limit.ts` (Upstash Redis / Vercel KV when env set — TASK-645; in-memory fallback until **TASK-669** provisions prod) — client error convention: `ARCHITECTURE.md` § Client error handling |
 | Auth error copy (login/register/reset/update-email/update-password/delete-account) | `lib/auth-errors.ts` (`getAuthErrorMessage`) — do not map every message containing “email” to invalid address; my-account uses `update-email` / `update-password` / `delete-account` |

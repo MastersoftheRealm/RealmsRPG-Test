@@ -33,8 +33,6 @@ export type {
 export {
   useProfile,
   useAccountProfile,
-  userProfileQueryKey,
-  type ProfileDisplay,
   type AccountProfile,
 } from './use-profile';
 export { useIsClient } from './use-is-client';
@@ -44,29 +42,24 @@ export { usePortraitFallbackUrl } from './use-portrait-fallback-url';
 
 // Campaigns
 export {
-  campaignKeys,
   useCampaigns,
   useCampaignsFull,
   useCampaign,
-  useCampaignByInviteCode,
   useInvalidateCampaigns,
 } from './use-campaigns';
 export { useCampaignRolls } from './use-campaign-rolls';
 
 // Encounters
 export {
-  encounterKeys,
   useEncounters,
   useEncounter,
   useCreateEncounter,
   useSaveEncounter,
   useDeleteEncounter,
-  useInvalidateEncounters,
 } from './use-encounters';
 
 // Crafting
 export {
-  craftingKeys,
   useCraftingSessions,
   useCraftingSession,
   useCreateCraftingSession,
@@ -76,16 +69,12 @@ export {
 
 // Enhanced items (user library + official admin)
 export {
-  enhancedItemsKeys,
   useEnhancedItems,
-  useOfficialEnhancedItems,
   useCreateEnhancedItem,
   useCreateOfficialEnhancedItem,
   useDeleteEnhancedItem,
   useDeleteOfficialEnhancedItem,
   useUpdateEnhancedItem,
-  useUpdateOfficialEnhancedItem,
-  type EnhancedItemsScope,
   type OfficialEnhancedItem,
   type OfficialEnhancedItemPayload,
   type CreateOfficialEnhancedItemInput,
@@ -95,17 +84,12 @@ export {
 
 // Characters
 export {
-  characterKeys,
   useCharacters,
   useCharacter,
   useSaveCharacter,
-  useCreateCharacter,
   useDeleteCharacter,
   useDuplicateCharacter,
 } from './use-characters';
-
-// Game Data (useArchetype for single archetype by id; useArchetypes = useCodexArchetypes)
-export { useArchetype } from './use-game-data';
 
 // Codex Data (Supabase via API) — single codex fetch shared by all useCodex* and useGameRules
 export {
@@ -121,16 +105,13 @@ export {
   useCodexEquipment as useEquipment,
   useCodexCreatureFeats as useCreatureFeats,
   useCodexArchetypes,
-  useCodexArchetypes as useArchetypes,
 } from './use-codex';
 export { useGameRules, getGameRulesFallback } from './use-game-rules';
 
 // Codex utilities (trait/skill resolution) — use use-codex types
 export {
-  useResolvedTraits,
   findTraitByIdOrName,
   resolveTraitIds,
-  useResolvedSkillNames,
   resolveSkillIdsToNames,
   type Feat,
   type Skill,
@@ -149,7 +130,6 @@ export { useOfficialLibrary, useAddOfficialToLibrary } from './use-official-libr
 
 // User Library (user-specific content)
 export {
-  useUserLibrary,
   useUserPowers,
   useUserTechniques,
   useUserEmpoweredTechniques,
@@ -163,13 +143,11 @@ export {
   useDeleteEmpoweredTechnique,
   useDeleteItem,
   useDeleteCreature,
-  useDeleteSpecies,
   useDuplicatePower,
   useDuplicateTechnique,
   useDuplicateEmpoweredTechnique,
   useDuplicateItem,
   useDuplicateCreature,
-  useDuplicateSpecies,
   type UserPower,
   type UserTechnique,
   type UserItem,

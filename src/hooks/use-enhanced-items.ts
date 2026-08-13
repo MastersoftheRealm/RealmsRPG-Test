@@ -17,7 +17,6 @@ import type {
   CreateOfficialEnhancedItemInput,
   OfficialEnhancedItem,
   OfficialEnhancedItemPayload,
-  UpdateOfficialEnhancedItemInput,
   UserEnhancedItem,
 } from '@/types/crafting';
 import { apiFetch } from '@/lib/api-client';
@@ -70,10 +69,6 @@ export function useEnhancedItems(scope: EnhancedItemsScope = 'user', options?: {
     queryFn: () => fetchEnhancedItems(scope),
     enabled: options?.enabled ?? true,
   });
-}
-
-export function useOfficialEnhancedItems() {
-  return useEnhancedItems('official');
 }
 
 /** Create a user library enhanced item (from crafting). */
@@ -132,20 +127,6 @@ export function useUpdateEnhancedItem() {
       updateEnhancedItem(id, patch),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('user') });
-    },
-  });
-}
-
-export function useUpdateOfficialEnhancedItem() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({ id, patch }: { id: string; patch: UpdateOfficialEnhancedItemInput }) =>
-      apiFetch(`${OFFICIAL_API}?id=${encodeURIComponent(id)}`, {
-        method: 'PATCH',
-        body: JSON.stringify(patch),
-      }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('official') });
     },
   });
 }

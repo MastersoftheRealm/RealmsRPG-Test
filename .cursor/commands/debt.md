@@ -40,7 +40,7 @@ Whole repo within gates below. Prefer evidence (grep, `FEATURE_INDEX`, barrels) 
 
 - **Duplication greps** — raw `fetch('/api/upload`, local `formatDuration`-style forks, parallel selection/list shells vs `FEATURE_INDEX` + barrels (`npm run tasks:validate-shared-ui` if shared/ui touched).
 - **ACTIVE_TASKS** — Archive `done` / superseded blocks; trim noise; keep agent-eligible hot path lean (target &lt;20KB). Fix `status`/`remaining_work` that lag shipped code.
-- **AI_CHANGELOG** — Move entries older than ~60 days to `src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md` (create if missing).
+- **AI_CHANGELOG** — Keep at most **150** newest entries in `src/docs/ai/AI_CHANGELOG.md`; prepend overflow to `src/docs/ai/archive/AI_CHANGELOG_ARCHIVE.md` (create if missing).
 - **Parallel systems** — Delete the weaker fork and wire the canonical pattern; ship a first slice + `TASK-###` if the rest is large.
 
 ## Apply freely

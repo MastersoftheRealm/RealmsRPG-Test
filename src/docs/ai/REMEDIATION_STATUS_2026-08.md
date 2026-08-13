@@ -15,7 +15,7 @@ The Aug 1 audit was run **without project docs**. Companion tasks are **TASK-642
 
 | Audit | Finding (short) | Task | Status |
 |-------|-----------------|------|--------|
-| H1 | Profile email spoofing | TASK-642 | `partial` — code fix landed; signup QA open (DEV-008) |
+| H1 | Profile email spoofing | TASK-642 | `done` — code fix landed; signup QA open (DEV-008, pending-qa) |
 | H2 | In-memory rate limits on Vercel | TASK-645 → TASK-669 | Code + Upstash path done; **prod Redis = WAITING / DEV-011** |
 | H3 | Invite join unthrottled | TASK-645 | `done` (pending-qa) |
 | M1 | Codex `?debug=1` leaks DB errors | TASK-647 | `done` (pending-qa) |
@@ -54,7 +54,7 @@ The Aug 1 audit was run **without project docs**. Companion tasks are **TASK-642
 
 ## Still open (do not rediscover)
 
-1. **TASK-642** — manual signup QA (profile email from session only).
+1. **TASK-642** — manual signup QA (profile email from session only) — archived `pending-qa` / DEV-008.
 2. **TASK-669** / **DEV-011** — provision Upstash / Vercel KV so durable rate limits are live (code falls back to in-memory when unset).
 3. **TASK-353** / **DEV-001** — enable Supabase leaked-password protection (HIBP).
 4. **Character-creator consolidation** — intentionally deferred; product keeps two creators with shared chrome (`CreatorPageShell`, `LoadoutBudgetBar`, etc.).

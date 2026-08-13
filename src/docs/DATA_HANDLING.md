@@ -26,7 +26,7 @@
 - **Query key:** `['codex']` — all codex hooks and `useGameRules` use this key so React Query deduplicates: one request, many subscribers.
 - **Hooks:** `useCodexFeats`, `useCodexSkills`, `useCodexSpecies`, `useCodexTraits`, `useCodexPowerParts`, `useCodexTechniqueParts`, `useCodexParts`, `useCodexItemProperties`, `useCodexEquipment`, `useCodexArchetypes`, `useCodexCreatureFeats`, `useCodexFull` — same `queryKey: ['codex']`, same `queryFn: fetchCodex`, different `select` for each slice.
 - **useGameRules:** Uses `queryKey: ['codex']` and `select` to derive `coreRules` from the codex response (no separate `/api/codex` call).
-- **useArchetypes / useArchetype:** `useArchetypes` is `useCodexArchetypes` (re-export). `useArchetype(id)` uses `['codex']` with `select` to return the single archetype by id.
+- **Single archetype:** `useCodexArchetypes` and `select` the row by id — do not add a parallel codex fetch.
 
 ### Prefetch
 

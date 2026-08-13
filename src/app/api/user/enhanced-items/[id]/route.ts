@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, enhancedItemPatchSchema } from '@/lib/api-validation';
+import { apiErrorResponse } from '@/lib/api-error';
 import { standardLimiter } from '@/lib/rate-limit';
 
 export async function PATCH(
@@ -56,14 +57,22 @@ export async function PATCH(
       .eq('user_id', user.uid);
 
     if (updateErr) {
-      console.error('[API Error] PATCH /api/user/enhanced-items/[id]:', updateErr.message);
-      return NextResponse.json({ error: 'Failed to update enhanced item' }, { status: 500 });
+      return apiErrorResponse(
+        'Failed to update enhanced item',
+        500,
+        'PATCH /api/user/enhanced-items/[id] (update)',
+        updateErr
+      );
     }
 
     return new NextResponse(null, { status: 204 });
   } catch (err) {
-    console.error('[API Error] PATCH /api/user/enhanced-items/[id]:', err);
-    return NextResponse.json({ error: 'Failed to update enhanced item' }, { status: 500 });
+    return apiErrorResponse(
+      'Failed to update enhanced item',
+      500,
+      'PATCH /api/user/enhanced-items/[id]',
+      err
+    );
   }
 }
 
@@ -92,13 +101,21 @@ export async function DELETE(
       .eq('user_id', user.uid);
 
     if (delErr) {
-      console.error('[API Error] DELETE /api/user/enhanced-items/[id]:', delErr.message);
-      return NextResponse.json({ error: 'Failed to delete enhanced item' }, { status: 500 });
+      return apiErrorResponse(
+        'Failed to delete enhanced item',
+        500,
+        'DELETE /api/user/enhanced-items/[id]',
+        delErr
+      );
     }
 
     return new NextResponse(null, { status: 204 });
   } catch (err) {
-    console.error('[API Error] DELETE /api/user/enhanced-items/[id]:', err);
-    return NextResponse.json({ error: 'Failed to delete enhanced item' }, { status: 500 });
+    return apiErrorResponse(
+      'Failed to delete enhanced item',
+      500,
+      'DELETE /api/user/enhanced-items/[id]',
+      err
+    );
   }
 }

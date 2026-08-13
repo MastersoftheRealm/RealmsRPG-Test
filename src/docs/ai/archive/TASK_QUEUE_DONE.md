@@ -1,3 +1,69 @@
+- id: TASK-642
+  title: Fix profile email spoofing in createUserProfileAction
+  created_at: 2026-08-01
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: critical
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(auth)/actions.ts
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/REMEDIATION_STATUS_2026-08.md
+  description: |
+    Audit finding H1: createUserProfileAction accepted a client-supplied email and wrote it
+    to user_profiles. Always derive email server-side from the authenticated session user.
+  acceptance_criteria:
+    - createUserProfileAction ignores any client-supplied email and sets it from sessionUser.email only.
+    - Signup/profile-creation flow still works end-to-end (manual QA: sign up, profile shows correct email).
+    - npm run build passes.
+  completed_work: |
+    - createUserProfileAction derives email only from sessionUser.email (client email ignored).
+    - npm run build passed (TASK-644 cleared shared build blocker).
+  remaining_work: |
+    - Manual signup QA (DEV-008).
+  notes: |
+    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 H1.
+    2026-08-03 merge: remote also used TASK-642 for power AoE — that work is archived as TASK-672.
+    Archived from ACTIVE 2026-08-13 (/debt) — implementable AC met; verification_status pending-qa.
+
+---
+
+- id: TASK-381
+  title: God-file decomposition — creator workspaces/editors + AdminArchetypes + sheet facade
+  created_at: 2026-06-26
+  completed_at: 2026-07-20
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/guide/06-creators-and-loadouts.md
+  description: |
+    BIG-01/02 phased decomposition: extract power/item/creature creator pages into shell +
+    workspace hook + editor islands; AdminArchetypes form helpers/editor/workspace; character
+    sheet actions facade. Species creator deferred (later TASK-601).
+  acceptance_criteria:
+    - Power/item/creature creators are thin pages over workspace hooks + editor islands.
+    - AdminArchetypes tab is shell-only over workspace + editor + path-form helpers.
+    - Character sheet actions facade composes domain hooks with a stable public return shape.
+    - Parity suites DEV-V-018 T008–T010 and DEV-V-008 T023–T025 indexed.
+  completed_work: |
+    - Phases 1–5: power/item workspace+editor; creature editor+workspace; sheet actions facade.
+    - Phase 6a–6c: AdminArchetypes path-form helpers, editor island, workspace hook.
+    - Species creator later extracted in TASK-601 (not this task).
+  notes: |
+    Restored 2026-08-13 (/debt): changelog said archived 2026-07-20 but the `- id: TASK-381`
+    block was missing from TASK_QUEUE_DONE.md. Pending-qa: DEV-V-008 T023–T025, DEV-V-018 T008–T010.
+
+---
+
 - id: TASK-713
   title: API auth/IDOR vitest -- user library, enhanced items, encounters, crafting
   created_at: 2026-08-13

@@ -68,9 +68,8 @@ Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexP
 |------|---------|---------|
 | `useAuth` | Auth state, user | `{ user, loading, signOut, ... }` |
 | `useCharacters` | User's characters | `{ characters, loading, createCharacter, updateCharacter, deleteCharacter }` |
-| `useUserLibrary` | User's powers, techniques, items, creatures | `{ powers, techniques, items, creatures, loading }` |
+| `useUserPowers` / `useUserItems` / … | User's powers, techniques, items, creatures (`use-user-library.ts`) | typed query results |
 | `useCodexPowerParts`, `useCodexTechniqueParts`, `useCodexFeats`, `useCodexSkills`, etc. | Codex reference data | Parts, feats, skills, species from Supabase |
-| `useGameData` | Combined game data (Codex + optional library) | `{ gameData, loading }` |
 | `useAutoSave` | Auto-save character on change | Used in character sheet |
 
 ### Services
@@ -114,8 +113,8 @@ Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexP
 ## Common Patterns
 
 1. **List views with costs:** Load library + Codex parts, then enrich before rendering. Do not block render on `!partsDb.length` — show data as soon as library loads; costs update when parts are available.
-2. **Character sheet:** Uses `useCharacters`, `useUserLibrary`, Codex hooks. Enrichment happens in `library-section.tsx` and similar components.
-3. **Creators:** Use Codex hooks for part/property options. Save to Supabase via `useUserLibrary` mutations.
+2. **Character sheet:** Uses `useCharacters`, `useUserPowers` / `useUserItems` / …, Codex hooks. Enrichment happens in `library-section.tsx` and similar components.
+3. **Creators:** Use Codex hooks for part/property options. Save to Supabase via `useUser*` mutations.
 
 ---
 

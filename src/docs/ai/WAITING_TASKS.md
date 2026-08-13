@@ -8,6 +8,56 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
 
 ---
 
+- id: TASK-326
+  title: Tighten Supabase security advisors (bucket listing + leaked-password protection)
+  priority: medium
+  status: partial
+  created_at: 2026-06-12
+  created_by: agent
+  assignee: human
+  related_files:
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+  description: |
+    Storage SELECT policies scoped; enable HIBP leaked-password check in Supabase Auth.
+  acceptance_criteria:
+    - Storage SELECT policies scoped so buckets aren't broadly listable (read-by-key still works).
+    - Leaked-password protection enabled in Supabase Auth.
+    - SQL/migration documented; advisors re-checked.
+  completed_work: |
+    - Storage SELECT hardening applied live (MCP).
+  remaining_work: |
+    - Enable HIBP in Supabase Auth (DEV-001 / TASK-353). Re-checked 2026-08-13 via
+      Supabase security advisors: `auth_leaked_password_protection` still WARN.
+  follow_up_tasks:
+    - TASK-353
+  notes: |
+    2026-06-13. Human-only remainder. Moved off ACTIVE 2026-08-13 (/debt). See DEVELOPER_TASK_QUEUE DEV-001.
+
+---
+
+- id: TASK-500
+  title: Deferred — enhanced-item images via Realms Image Library
+  created_at: 2026-07-16
+  created_by: agent
+  priority: low
+  status: not-started
+  assignee: owner
+  parent_task: TASK-491
+  related_files:
+    - src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+  description: |
+    Owner: enhanced items get images eventually, not now. When scheduled, add category tag and/or
+    picker filter + image_id on enhanced-item rows using the same bank patterns as TASK-491+.
+  acceptance_criteria:
+    - Not in MVP Image Library ship; reopen when owner prioritizes.
+    - Reuses RealmsImagePicker + bank — no parallel media system.
+  notes: |
+    Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
+    Moved off ACTIVE 2026-08-13 (/debt).
+
+---
+
 - id: TASK-669
   title: Provision Redis-backed rate limiting store (Upstash or Vercel KV)
   priority: high

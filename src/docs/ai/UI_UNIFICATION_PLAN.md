@@ -1,9 +1,9 @@
-# UI/UX Unification Plan (durable roadmap)
+# UI/UX Unification Plan (historical)
 
-> **This is the guiding document for the UI/UX unification effort.** It supersedes
+> **Status:** Complete (phases 0–5). Keep as historical reference; live rules live in `FEATURE_INDEX.md`, `AGENT_GUIDE.md`, and `.cursor/rules/realms-unification.mdc`.
+> **This was the guiding document for the UI/UX unification effort.** It superseded
 > ad-hoc task-queue entries for this work. The original audit + plan were produced in
 > Cursor plan mode (not persisted); this file is the durable, source-controlled copy.
-> Keep the **Progress** section current as phases land.
 
 ## North-star
 

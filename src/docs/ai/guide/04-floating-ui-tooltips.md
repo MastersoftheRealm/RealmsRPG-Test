@@ -13,7 +13,7 @@ Your Floating UI work **is in the repo** — it was extracted into shared primit
 | You remember… | Look here now |
 |---------------|---------------|
 | `tooltip.tsx` with inline `useFloating` | `floating-help.tsx` (panel/placement) + `tooltip.tsx` (thin wrapper) |
-| `ContextHelpTooltip` + `tooltipKey` | `InfoTippy` + `tooltip-text.tsx`; keys → `legacy-tooltip-key-map.ts` |
+| `ContextHelpTooltip` + `tooltipKey` | `InfoTippy` + `tooltip-text.tsx` (legacy DB keys documented in `lib/tooltips/README.md`) |
 | `HelpTooltip` | `InfoTippy` |
 | Skills help inside `skills-allocation-page.tsx` | Parent passes `headingAddon` / `addSubSkillAddon` (`skills-step.tsx`, creature creator) |
 | DB `/api/tooltips`, admin tooltips page | **Removed** — edit `tooltip-text.tsx` and deploy |

@@ -8,6 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, enhancedItemCreateSchema } from '@/lib/api-validation';
+import { apiErrorResponse } from '@/lib/api-error';
 import { standardLimiter } from '@/lib/rate-limit';
 import type { UserEnhancedItem } from '@/types/crafting';
 
@@ -45,8 +46,12 @@ export async function GET() {
 
     return NextResponse.json(items);
   } catch (err) {
-    console.error('[API Error] GET /api/user/enhanced-items:', err);
-    return NextResponse.json({ error: 'Failed to load enhanced items' }, { status: 500 });
+    return apiErrorResponse(
+      'Failed to load enhanced items',
+      500,
+      'GET /api/user/enhanced-items',
+      err
+    );
   }
 }
 
@@ -93,16 +98,21 @@ export async function POST(request: NextRequest) {
 
     const { error: insertErr } = await supabase.from('user_enhanced_items').insert(row);
     if (insertErr) {
-      console.error('[API Error] POST /api/user/enhanced-items:', insertErr.message);
-      return NextResponse.json(
-        { error: insertErr.message ?? 'Failed to create enhanced item' },
-        { status: 500 }
+      return apiErrorResponse(
+        'Failed to create enhanced item',
+        500,
+        'POST /api/user/enhanced-items (insert)',
+        insertErr
       );
     }
 
     return NextResponse.json({ id });
   } catch (err) {
-    console.error('[API Error] POST /api/user/enhanced-items:', err);
-    return NextResponse.json({ error: 'Failed to create enhanced item' }, { status: 500 });
+    return apiErrorResponse(
+      'Failed to create enhanced item',
+      500,
+      'POST /api/user/enhanced-items',
+      err
+    );
   }
 }

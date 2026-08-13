@@ -11,33 +11,31 @@
 // Use these instead of creating inline/duplicate implementations.
 
 // RollButton - Unified dice roll button (character sheet, creatures, encounters)
-export { RollButton, type RollButtonProps } from './roll-button';
+export { RollButton } from './roll-button';
 
 // PointStatus - Unified point allocation display (creators, character sheet edit mode)
-export { PointStatus, type PointStatusProps } from './point-status';
+export { PointStatus } from './point-status';
 
 // LoadoutBudgetBar - Currency + Training Points budget row (Guided + Advanced creators; ADR-0008)
-export { LoadoutBudgetBar, type LoadoutBudgetBarProps } from './loadout-budget-bar';
+export { LoadoutBudgetBar } from './loadout-budget-bar';
 
 // AbilityScoreGrid - Six-ability tile row (sheet layout; display or edit)
 export {
   AbilityScoreGrid,
   ABILITY_DISPLAY_ORDER,
   resolveDistinctSecondaryAbility,
-  type AbilityScoreGridProps,
 } from './ability-score-grid';
 
 // ValueStepper - Unified +/- controls (ADR-0002: guided skills bonus chrome)
-export { ValueStepper, DecrementButton, IncrementButton, type ValueStepperProps, type StepperButtonProps } from './value-stepper';
+export { ValueStepper, DecrementButton, IncrementButton } from './value-stepper';
 
 // EditSectionToggle - Blue pencil icon for edit mode sections
 export { EditSectionToggle, getEditState, type EditState } from './edit-section-toggle';
 
 // Temp Modifier dual affordance (ADR-0006 / TASK-585) — pencil + SlidersHorizontal; mutual exclusive modes
-export { TempModifierToggle, type TempModifierToggleProps } from './temp-modifier-toggle';
+export { TempModifierToggle } from './temp-modifier-toggle';
 export {
   SectionDualModeToggles,
-  type SectionDualModeTogglesProps,
   type SectionEditMode,
 } from './section-dual-mode-toggles';
 
@@ -180,8 +178,6 @@ export type { CreatureData, CreatureStatBlockProps } from './creature-stat-block
 export {
   CreatureLibraryStatBlockRow,
   CreatureLibraryStatBlockRows,
-  type CreatureLibraryStatBlockRowProps,
-  type CreatureLibraryStatBlockRowsProps,
 } from './creature-library-stat-block-rows';
 export { LibraryAddToLibraryButton } from './library-add-to-library-button';
 export {
@@ -250,11 +246,7 @@ export { QuantitySelector, QuantityBadge } from './quantity-selector';
 export type { QuantitySelectorProps, QuantityBadgeProps } from './quantity-selector';
 
 // SegmentedControl — My Library / Realms / All toggles (library page, modals, SourceFilter)
-export {
-  SegmentedControl,
-  type SegmentedOption,
-  type SegmentedControlProps,
-} from './segmented-control';
+export { SegmentedControl } from './segmented-control';
 
 // ============================================================================
 // FILTER COMPONENTS
@@ -282,10 +274,7 @@ export {
 export { ThemeToggle } from './theme-toggle';
 export { InfoTippy, WordHelpTip } from './info-tippy';
 export type { InfoTippyProps, InfoTippyTone, WordHelpTipProps } from './info-tippy';
-export {
-  DescriptorChipWithTip,
-  type DescriptorChipWithTipProps,
-} from './descriptor-chip-with-tip';
+export { DescriptorChipWithTip } from './descriptor-chip-with-tip';
 
 // PoweredMartialSlider - Allocation slider for powered-martial characters
 export { PoweredMartialSlider } from './powered-martial-slider';

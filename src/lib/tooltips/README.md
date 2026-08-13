@@ -11,7 +11,7 @@ Onboarding map for contributors who worked on **PR #14 (`Collin-tooltipExperimen
 | Inline Floating UI in `src/components/ui/tooltip.tsx` | `floating-help.tsx` + thin `tooltip.tsx` wrapper | Placement fallbacks, arrow, transitions, hover delays |
 | `ContextHelpTooltip` + `useTooltipByKey` | `InfoTippy` + `public/tooltip-text.tsx` | Same UX; copy is TypeScript, not DB keys |
 | `HelpTooltip` | `InfoTippy` (`size="icon"` default) | 44px touch target kept |
-| `default-tooltips.ts` / `/api/tooltips` | **Removed** | See `legacy-tooltip-key-map.ts` for key → export map |
+| `default-tooltips.ts` / `/api/tooltips` | **Removed** | Legacy DB keys → `tooltip-text` exports (table below) |
 | Tippy.js / `@tippyjs/react` | **Removed** (TASK-392) | |
 
 **Start here after a fresh pull:**
@@ -51,7 +51,19 @@ import { getAbilityPointsHelp } from '../../../../public/tooltip-text';
 
 **Word-tied label tips (no Info icon):** use `WordHelpTip` + `getAbilityHelp` / `getDefenseHelp` / `defenseScoreHelp` from `tooltip-text.tsx` (ability/defense names — TASK-547; sheet defense Score values — TASK-587). Name tip copy should name the term once (not “Acuity. Acuity…” — TASK-566). Score tips should keep the numeric value in `aria-label`. Same Floating UI engine as `InfoTippy`.
 
-Lookup table: `legacy-tooltip-key-map.ts`.
+Removed DB keys (PR #14) map to `tooltip-text.tsx` exports:
+
+| Old `tooltipKey` | Current export |
+|------------------|----------------|
+| `global.nav.library` | `navbarLibrary` |
+| `global.nav.codex` | `navbarCodex` |
+| `characters.new.step.abilities.pointsHelp` | `getAbilityPointsHelp` |
+| `characters.new.step.archetype.pathHelp` | `createNewCharacter` |
+| `characters.new.step.archetype.powerAbilityHelp` | `powerAbility` |
+| `characters.new.step.archetype.martialAbilityHelp` | `martialAbility` |
+| `characters.new.step.skills.pointsHelp` | `getSkillPointsHelp` |
+| `characters.new.step.skills.subskillsHelp` | `subSkillsHelp` |
+| `characters.new.step.archetype.ability.${ability}` | `getTooltipTextByPowerAbility` |
 
 ## Adding help on `SkillsAllocationPage`
 

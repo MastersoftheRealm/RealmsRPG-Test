@@ -4,17 +4,17 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-715
+**Next task ID:** TASK-720
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-707, TASK-706, TASK-712, TASK-711, TASK-709…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-642, TASK-707, TASK-706, TASK-712, TASK-711, TASK-709…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 6 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** **TASK-714** open (MixedSpeciesModal source type). TASK-713 done (API IDOR vitest). TASK-707/706/712/711/709 pending-qa.
+**Hot notes:** **TASK-714** MixedSpeciesModal source type. **TASK-715/716** damage/range display SoT. **TASK-717/718** BUILD_VALIDATION honesty. **TASK-719** archive ID collisions. TASK-642 archived pending-qa (DEV-008). TASK-326/500 moved to WAITING.
 
 ---
 
@@ -54,74 +54,126 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-326
-  title: Tighten Supabase security advisors (bucket listing + leaked-password protection)
-  priority: medium
-  status: partial
-  created_at: 2026-06-12
+- id: TASK-715
+  title: Route item damage display through formatDamageDisplay
+  created_at: 2026-08-13
   created_by: agent
-  description: |
-    Storage SELECT policies scoped; enable HIBP leaked-password check in Supabase Auth.
+  priority: medium
+  status: not-started
   related_files:
-    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+    - src/lib/utils/string.ts
+    - src/lib/calculators/item-calc.ts
+    - src/lib/guided-creator/resolve-loadout-items.ts
+    - src/lib/calculators/index.ts
+  description: |
+    `formatDamage` in item-calc.ts duplicates `formatDamageDisplay` (string.ts) for typed
+    `ItemDamage[]`. One remaining caller: resolve-loadout-items.ts. Wire that caller through
+    the display SoT and delete or thin-delegate `formatDamage`.
   acceptance_criteria:
-    - Storage SELECT policies scoped so buckets aren't broadly listable (read-by-key still works).
-    - Leaked-password protection enabled in Supabase Auth.
-    - SQL/migration documented; advisors re-checked.
-  completed_work: |
-    - Storage SELECT hardening applied live (MCP).
-  remaining_work: |
-    - Enable HIBP in Supabase Auth (DEV-001).
-  follow_up_tasks:
-    - TASK-353
-  notes: "2026-06-13. See DEVELOPER_TASK_QUEUE."
+    - resolve-loadout-items uses formatDamageDisplay (or a typed wrapper that delegates to it).
+    - No second damage-join implementation in item-calc (delete or one-line delegate).
+    - Guided loadout damage strings unchanged for valid dice+type rows; vitest/typecheck/lint pass.
+  notes: |
+    Filed from 2026-08-13 /global-audit. Do not change sheet `formatDamageType` (string chip
+    wrapper) in this task.
 
 ---
 
-- id: TASK-500
-  title: Deferred — enhanced-item images via Realms Image Library
-  created_at: 2026-07-16
+- id: TASK-716
+  title: Finish TASK-701 — remaining formatRange callers use resolveWeaponRangeDisplay
+  created_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: not-started
+  parent_task: TASK-701
+  related_files:
+    - src/lib/calculators/item-calc.ts
+    - src/components/character-creator/steps/equipment/equipment-catalog-panel.tsx
+    - src/lib/guided-creator/equipment-phase-stats.ts
+    - src/lib/detail-option/compact-facts.ts
+    - src/lib/game/weapon-attack-ability.ts
+  description: |
+    TASK-701 made resolveWeaponRangeDisplay the display SoT (properties-first, reject corrupt
+    stored 0/bare integers). Direct formatRange calls remain when properties are assumed present.
+    Route remaining callers through resolveWeaponRangeDisplay so corrupt stored range cannot
+    resurface.
+  acceptance_criteria:
+    - equipment-catalog-panel, equipment-phase-stats, compact-facts, weapon-attack-ability do not
+      call formatRange for user-facing labels (use resolveWeaponRangeDisplay / compact helper).
+    - formatRange may remain as an internal properties-only derive used by the SoT.
+    - Melee / spaces labels match TASK-701; vitest for item-calc range + typecheck/lint pass.
+  notes: |
+    Filed from 2026-08-13 /global-audit. Behavior-sensitive — do not fold into docs-only debt.
+
+---
+
+- id: TASK-717
+  title: Rewrite DEV-V-001 for chooser vs Advanced archetype steps
+  created_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/app/(main)/characters/new/page.tsx
+    - src/app/(main)/characters/new/advanced/page.tsx
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    DEV-V-001 start URL is `/characters/new` → step "1. Archetype" / Forge Your Own, but that
+    route is now the Guided/Custom/Legacy chooser. Archetype path/forge steps live at
+    `/characters/new/advanced`. Rewrite the suite so steps can pass as written; spot-check
+    sibling suites for the same pre-chooser assumption.
+  acceptance_criteria:
+    - DEV-V-001 Where/Start URL/steps distinguish chooser (`/characters/new`) vs Advanced
+      (`/characters/new/advanced`) Archetype.
+    - Forge Your Own / Choose a Path steps target Advanced, not the chooser.
+    - DEVELOPER_TASK_QUEUE index blurb updated if the suite title/count changes.
+    - No other DEV-V-001 tests left describing pre-chooser `/characters/new` as step 1 Archetype.
+  notes: |
+    Filed from 2026-08-13 /global-audit. QA-authority rewrite — not a /debt fold.
+
+---
+
+- id: TASK-718
+  title: Archive BUILD_VALIDATION suites that cannot stay in the 322KB hot file
+  created_at: 2026-08-13
   created_by: agent
   priority: low
   status: not-started
-  parent_task: TASK-491
   related_files:
-    - src/app/(main)/admin/public-library/AdminPublicEnhancedItemsTab.tsx
-    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
   description: |
-    Owner: enhanced items get images eventually, not now. When scheduled, add category tag and/or
-    picker filter + image_id on enhanced-item rows using the same bank patterns as TASK-491+.
+    BUILD_VALIDATION.md is ~322KB / 45 suites / 320 tests with no archive file. Create
+    archive/BUILD_VALIDATION_ARCHIVE.md and move verified or long-superseded suites out of
+    the hot file. Keep suites still cited by Pending owner QA in the hot file.
   acceptance_criteria:
-    - Not in MVP Image Library ship; reopen when owner prioritizes.
-    - Reuses RealmsImagePicker + bank — no parallel media system.
+    - archive/BUILD_VALIDATION_ARCHIVE.md exists with a pointer from BUILD_VALIDATION.md.
+    - Hot file shrinks; Pending owner QA linked suites remain in the hot file.
+    - DEVELOPER_TASK_QUEUE build-validation index links still resolve.
   notes: |
-    Placeholder so the yes eventually decision is not rediscovered. Leave not-started until asked.
+    Filed from 2026-08-13 /global-audit. Do not delete tests — move them.
 
 ---
 
-- id: TASK-642
-  title: Fix profile email spoofing in createUserProfileAction
-  priority: critical
-  status: partial
-  created_at: 2026-08-01
+- id: TASK-719
+  title: Disambiguate duplicate archive IDs TASK-615 and TASK-284
+  created_at: 2026-08-13
   created_by: agent
+  priority: low
+  status: not-started
   related_files:
-    - src/app/(auth)/actions.ts
+    - src/docs/ai/archive/TASK_QUEUE_DONE.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
   description: |
-    Audit finding H1: `createUserProfileAction` accepts a client-supplied `email` field and writes it
-    to `user_profiles`, letting a malicious client spoof another email address. Always derive email
-    server-side from the authenticated session user, never from request input.
+    Archive has two distinct done blocks each for TASK-615 (facade shrink vs Web Analytics)
+    and TASK-284 (role-based admin vs mixed-species list dedupe). Not copy-paste dupes —
+    ID collisions. Re-id one of each (new TASK-###) and retarget DEVELOPER_TASK_QUEUE /
+    BUILD_VALIDATION citations so reconcile and pending-QA rows are unique.
   acceptance_criteria:
-    - createUserProfileAction ignores any client-supplied `email` and sets it from `sessionUser.email` only.
-    - Signup/profile-creation flow still works end-to-end (manual QA: sign up, profile shows correct email).
-    - npm run build passes.
-  completed_work: |
-    - createUserProfileAction now derives email only from sessionUser.email (client email ignored).
-    - npm run build passes (TASK-644 cleared shared build blocker).
-  remaining_work: |
-    - Manual signup QA (profile shows session email) — see DEV-008.
+    - Each `- id: TASK-615` / `TASK-284` in the done archive refers to one piece of work.
+    - The other block has a new unique TASK-###; DTQ pending-QA and DEV-006/DEV-V-018 links match.
+    - `npm run tasks:validate` strict reconcile still passes for both IDs (commit subjects).
   notes: |
-    Audit ref: archive/CODEBASE_AUDIT_2026-08-01.md §4.2 H1.
-    2026-08-03 merge: remote also used TASK-642 for power AoE — that work is archived as TASK-672.
-
----
+    Filed from 2026-08-13 /global-audit. Do not delete either block. Re-id needs a commit
+    subject containing the new ID if strict-since covers completed_at.
