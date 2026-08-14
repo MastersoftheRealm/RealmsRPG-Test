@@ -1054,7 +1054,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-736, TASK-741)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1544,6 +1544,25 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Expected**
 - Autosave is not starved by re-renders. Failed saves retry. Hiding the tab flushes a dirty save.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T043 — Dirty-key PATCH keeps other-tab edits; stale lock 409s (TASK-741)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-741 |
+| **Where** | `/characters/[id]` (edit mode); two tabs or Network panel |
+| **Needs** | Editable owned character |
+
+**Steps**
+1. Open the same character in two tabs. In tab A change a note (or add an inventory item) and wait for autosave. In tab B change current HP and wait. Reload both — notes/inventory **and** HP should both persist (not last-tab-wins the whole sheet).
+2. Optional: in DevTools, PATCH a stale `updatedAt` (copy an old token) — the response is **409**; the next autosave after a refresh still works.
+3. Settings visibility / speed-unit save still persists without wiping notes.
+
+**Expected**
+- Concurrent edits to different fields both survive. A stale write does not silently restore an old full character.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

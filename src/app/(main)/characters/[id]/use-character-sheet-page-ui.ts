@@ -8,8 +8,7 @@
 
 import { useState, useEffect, useCallback, type Dispatch, type SetStateAction } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { saveCharacter } from '@/services/character-service';
-import { cleanForSave } from '@/lib/data-enrichment';
+import { saveCharacterWithConflictRetry } from '@/services/character-service';
 import { type LevelUpGuideContent } from '@/lib/level-up-guide';
 import { shouldOfferSheetTour } from '@/lib/onboarding-preferences';
 import type { Character, CharacterLibraryTabId, CharacterVisibility } from '@/types';
@@ -83,8 +82,20 @@ export function useCharacterSheetPageUi({
     async (v: CharacterVisibility) => {
       if (!character) return;
       setCharacter((prev) => (prev ? { ...prev, visibility: v } : null));
-      const payload = cleanForSave({ ...character, visibility: v });
-      await saveCharacter(id, payload);
+      const result = await saveCharacterWithConflictRetry(
+        id,
+        { visibility: v },
+        {
+          updatedAt: character.updatedAt,
+          mergeOnConflict: (remote) => ({
+            dirty: { visibility: v },
+            updatedAt: remote.updatedAt,
+          }),
+        }
+      );
+      if (result.updatedAt) {
+        setCharacter((prev) => (prev ? { ...prev, visibility: v, updatedAt: result.updatedAt } : null));
+      }
       const label = v === 'public' ? 'Public' : v === 'private' ? 'Private' : 'Campaign';
       showToast(`Visibility set to ${label}.`, 'success');
       setShowSettingsModal(false);
@@ -98,10 +109,17 @@ export function useCharacterSheetPageUi({
       speedDisplayUnit?: SpeedDisplayUnit;
     }) => {
       if (!character) return;
-      const next = { ...character, ...updates };
       setCharacter((prev) => (prev ? { ...prev, ...updates } : null));
-      const payload = cleanForSave(next);
-      await saveCharacter(id, payload);
+      const result = await saveCharacterWithConflictRetry(id, updates, {
+        updatedAt: character.updatedAt,
+        mergeOnConflict: (remote) => ({
+          dirty: updates,
+          updatedAt: remote.updatedAt,
+        }),
+      });
+      if (result.updatedAt) {
+        setCharacter((prev) => (prev ? { ...prev, ...updates, updatedAt: result.updatedAt } : null));
+      }
       if (updates.visibility) {
         const label =
           updates.visibility === 'public'

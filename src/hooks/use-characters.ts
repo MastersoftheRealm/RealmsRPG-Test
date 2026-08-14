@@ -15,15 +15,20 @@ import {
   deleteCharacter,
   duplicateCharacter,
 } from '@/services/character-service';
+import { useAuthStore } from '@/stores/auth-store';
 import type { Character } from '@/types';
 
-/** Query keys for character data */
+function viewerId(userId?: string | null): string {
+  return userId?.trim() || 'anon';
+}
+
+/** Query keys for character data — scoped by viewer (ADR-0013 / TASK-741). */
 export const characterKeys = {
   all: ['characters'] as const,
-  lists: () => [...characterKeys.all, 'list'] as const,
-  list: () => [...characterKeys.lists()] as const,
-  details: () => [...characterKeys.all, 'detail'] as const,
-  detail: (id: string) => [...characterKeys.details(), id] as const,
+  lists: (userId: string) => [...characterKeys.all, 'list', viewerId(userId)] as const,
+  list: (userId: string) => [...characterKeys.lists(userId)] as const,
+  details: (userId: string) => [...characterKeys.all, 'detail', viewerId(userId)] as const,
+  detail: (userId: string, id: string) => [...characterKeys.details(userId), id] as const,
 };
 
 export interface UseCharactersOptions {
@@ -35,9 +40,11 @@ export interface UseCharactersOptions {
  * Get all characters for the current user.
  */
 export function useCharacters(options?: UseCharactersOptions) {
-  const enabled = options?.enabled ?? true;
+  const { user } = useAuthStore();
+  const userId = user?.uid || '';
+  const enabled = (options?.enabled ?? true) && !!userId;
   return useQuery({
-    queryKey: characterKeys.list(),
+    queryKey: characterKeys.list(userId),
     queryFn: getCharacters,
     enabled,
   });
@@ -47,8 +54,10 @@ export function useCharacters(options?: UseCharactersOptions) {
  * Get a single character by ID.
  */
 export function useCharacter(characterId: string | undefined) {
+  const { user } = useAuthStore();
+  const userId = viewerId(user?.uid);
   return useQuery({
-    queryKey: characterKeys.detail(characterId || ''),
+    queryKey: characterKeys.detail(userId, characterId || ''),
     queryFn: () => getCharacter(characterId || ''),
     enabled: !!characterId,
   });
@@ -59,13 +68,15 @@ export function useCharacter(characterId: string | undefined) {
  */
 export function useSaveCharacter() {
   const queryClient = useQueryClient();
-  
+  const { user } = useAuthStore();
+  const userId = viewerId(user?.uid);
+
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: Partial<Character> }) =>
-      saveCharacter(id, data),
+      saveCharacter(id, data, { updatedAt: data.updatedAt }),
     onSuccess: (_, { id }) => {
-      queryClient.invalidateQueries({ queryKey: characterKeys.detail(id) });
-      queryClient.invalidateQueries({ queryKey: characterKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: characterKeys.detail(userId, id) });
+      queryClient.invalidateQueries({ queryKey: characterKeys.lists(userId) });
     },
   });
 }
@@ -75,11 +86,13 @@ export function useSaveCharacter() {
  */
 export function useCreateCharacter() {
   const queryClient = useQueryClient();
-  
+  const { user } = useAuthStore();
+  const userId = viewerId(user?.uid);
+
   return useMutation({
     mutationFn: (data: Partial<Character>) => createCharacter(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: characterKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: characterKeys.lists(userId) });
     },
   });
 }
@@ -89,12 +102,14 @@ export function useCreateCharacter() {
  */
 export function useDeleteCharacter() {
   const queryClient = useQueryClient();
-  
+  const { user } = useAuthStore();
+  const userId = viewerId(user?.uid);
+
   return useMutation({
     mutationFn: (id: string) => deleteCharacter(id),
     onSuccess: (_, id) => {
-      queryClient.removeQueries({ queryKey: characterKeys.detail(id) });
-      queryClient.invalidateQueries({ queryKey: characterKeys.lists() });
+      queryClient.removeQueries({ queryKey: characterKeys.detail(userId, id) });
+      queryClient.invalidateQueries({ queryKey: characterKeys.lists(userId) });
     },
   });
 }
@@ -104,11 +119,13 @@ export function useDeleteCharacter() {
  */
 export function useDuplicateCharacter() {
   const queryClient = useQueryClient();
-  
+  const { user } = useAuthStore();
+  const userId = viewerId(user?.uid);
+
   return useMutation({
     mutationFn: (id: string) => duplicateCharacter(id),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: characterKeys.lists() });
+      queryClient.invalidateQueries({ queryKey: characterKeys.lists(userId) });
     },
   });
 }

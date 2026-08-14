@@ -119,16 +119,51 @@ function createMockSupabase(characterRow: CharacterRow | null) {
     return chain;
   };
 
+  const lastUpdate: { payload: Record<string, unknown> | null } = { payload: null };
+
+  const buildUpdateChain = (payload: Record<string, unknown>) => {
+    lastUpdate.payload = payload;
+    const eqCalls: [string, string][] = [];
+    const chain = {
+      eq: vi.fn((col: string, val: string) => {
+        eqCalls.push([col, val]);
+        return chain;
+      }),
+      select: vi.fn(() => chain),
+      maybeSingle: vi.fn(async () => {
+        if (!characterRow) return { data: null, error: null };
+        const filters = Object.fromEntries(eqCalls);
+        if (filters.id && filters.id !== characterRow.id) {
+          return { data: null, error: null };
+        }
+        if (filters.user_id && filters.user_id !== characterRow.user_id) {
+          return { data: null, error: null };
+        }
+        if (filters.updated_at && filters.updated_at !== characterRow.updated_at) {
+          return { data: null, error: null };
+        }
+        return {
+          data: {
+            id: characterRow.id,
+            updated_at: (payload.updated_at as string | undefined) ?? '2026-08-14T00:00:00.000Z',
+          },
+          error: null,
+        };
+      }),
+    };
+    return chain;
+  };
+
+  const update = vi.fn((payload: Record<string, unknown>) => buildUpdateChain(payload));
+
   return {
+    lastUpdate,
+    update,
     from: vi.fn((table: string) => {
       if (table === 'characters') {
         return {
           select: vi.fn(() => buildSelectChain()),
-          update: vi.fn().mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({ error: null }),
-            }),
-          }),
+          update,
           delete: vi.fn().mockReturnValue({
             eq: vi.fn().mockReturnValue({
               eq: vi.fn().mockResolvedValue({ error: null }),
@@ -338,14 +373,84 @@ describe('PATCH /api/characters/[id]', () => {
   it('updates the character for the owner', async () => {
     const row = makeCharacterRow('char-owned', OWNER.uid);
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
-    mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
 
     const response = await PATCH(makePatchRequest('char-owned', { name: 'Updated Hero' }), {
       params: Promise.resolve({ id: 'char-owned' }),
     });
 
     expect(response.status).toBe(200);
-    await expect(readJson(response)).resolves.toEqual({ ok: true });
+    const body = await readJson<{ ok: boolean; updatedAt: string }>(response);
+    expect(body.ok).toBe(true);
+    expect(body.updatedAt).toBeTruthy();
+  });
+
+  it('merges a partial payload and leaves omitted keys intact', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid, { notes: 'keep me', level: 3 });
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+    mockValidateJson.mockResolvedValue({
+      success: true,
+      data: { name: 'Updated Hero' },
+    } as never);
+
+    const response = await PATCH(makePatchRequest('char-owned', { name: 'Updated Hero' }), {
+      params: Promise.resolve({ id: 'char-owned' }),
+    });
+
+    expect(response.status).toBe(200);
+    expect(supabase.update).toHaveBeenCalled();
+    const payload = supabase.lastUpdate.payload;
+    expect(payload).toBeTruthy();
+    const data = payload!.data as Record<string, unknown>;
+    expect(data.name).toBe('Updated Hero');
+    expect(data.notes).toBe('keep me');
+    expect(data.level).toBe(3);
+    expect(typeof data.updatedAt).toBe('string');
+  });
+
+  it('returns 409 and does not write when updatedAt is stale', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+    mockValidateJson.mockResolvedValue({
+      success: true,
+      data: { name: 'Stale write', updatedAt: '2026-01-01T00:00:00.000Z' },
+    } as never);
+
+    const response = await PATCH(
+      makePatchRequest('char-owned', { name: 'Stale write', updatedAt: '2026-01-01T00:00:00.000Z' }),
+      { params: Promise.resolve({ id: 'char-owned' }) }
+    );
+
+    expect(response.status).toBe(409);
+    await expect(readJson(response)).resolves.toEqual({ error: 'Character was updated elsewhere' });
+    expect(supabase.update).not.toHaveBeenCalled();
+  });
+
+  it('applies a matching updatedAt lock and stamps a new token', async () => {
+    const row = makeCharacterRow('char-owned', OWNER.uid);
+    mockGetSession.mockResolvedValue({ user: OWNER, error: null });
+    const supabase = createMockSupabase(row);
+    mockCreateClient.mockResolvedValue(supabase as never);
+    mockValidateJson.mockResolvedValue({
+      success: true,
+      data: { notes: 'fresh', updatedAt: row.updated_at },
+    } as never);
+
+    const response = await PATCH(
+      makePatchRequest('char-owned', { notes: 'fresh', updatedAt: row.updated_at }),
+      { params: Promise.resolve({ id: 'char-owned' }) }
+    );
+
+    expect(response.status).toBe(200);
+    const body = await readJson<{ ok: boolean; updatedAt: string }>(response);
+    expect(body.ok).toBe(true);
+    expect(body.updatedAt).not.toBe(row.updated_at);
+    expect(supabase.lastUpdate.payload?.updated_at).toBeTruthy();
   });
 });
 

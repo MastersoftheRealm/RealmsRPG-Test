@@ -224,13 +224,15 @@ export const characterCreateSchema = withSafeJsonBlob({
   clientRequestId: z.string().uuid().optional(),
 });
 
-/** Character update — partial, all fields optional */
+/** Character update — partial, all fields optional. `updatedAt` is the lock token (ADR-0013). */
 export const characterUpdateSchema = withSafeJsonBlob({
   name: z.string().min(1).max(100).optional(),
   level: z.number().int().min(1).max(20).optional(),
   visibility: z.enum(['private', 'campaign', 'public']).optional(),
   /** Storage public URL or external URL after upload */
   portrait: z.string().min(1).max(4000).optional(),
+  /** `characters.updated_at` the client loaded; mismatch → 409. Omitted = no lock. */
+  updatedAt: z.string().min(1).max(40).optional(),
 });
 
 // =============================================================================

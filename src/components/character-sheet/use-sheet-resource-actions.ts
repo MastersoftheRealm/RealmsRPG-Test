@@ -5,7 +5,7 @@
 'use client';
 
 import { useCallback } from 'react';
-import { saveCharacter } from '@/services/character-service';
+import { saveCharacterWithConflictRetry } from '@/services/character-service';
 import { apiUpload } from '@/lib/api-client';
 import { getArchetypeCodexLookupId, applyPathProficiencyForLevel } from '@/lib/game/archetype-display';
 import { calculateProficiency } from '@/lib/game/formulas';
@@ -130,7 +130,22 @@ export function useSheetResourceActions({
 
         setCharacter((prev) => (prev ? { ...prev, portrait: url } : null));
         setPortraitRefreshKey(Date.now());
-        await saveCharacter(character.id, { portrait: url });
+        const result = await saveCharacterWithConflictRetry(
+          character.id,
+          { portrait: url },
+          {
+            updatedAt: character.updatedAt,
+            mergeOnConflict: (remote) => ({
+              dirty: { portrait: url },
+              updatedAt: remote.updatedAt,
+            }),
+          }
+        );
+        if (result.updatedAt) {
+          setCharacter((prev) =>
+            prev ? { ...prev, portrait: url, updatedAt: result.updatedAt } : null
+          );
+        }
       } catch {
         setError('Failed to upload portrait');
       } finally {
@@ -148,7 +163,22 @@ export function useSheetResourceActions({
         setError(null);
         setCharacter((prev) => (prev ? { ...prev, portrait: url } : null));
         setPortraitRefreshKey(Date.now());
-        await saveCharacter(character.id, { portrait: url });
+        const result = await saveCharacterWithConflictRetry(
+          character.id,
+          { portrait: url },
+          {
+            updatedAt: character.updatedAt,
+            mergeOnConflict: (remote) => ({
+              dirty: { portrait: url },
+              updatedAt: remote.updatedAt,
+            }),
+          }
+        );
+        if (result.updatedAt) {
+          setCharacter((prev) =>
+            prev ? { ...prev, portrait: url, updatedAt: result.updatedAt } : null
+          );
+        }
       } catch {
         setError('Failed to update portrait');
       } finally {

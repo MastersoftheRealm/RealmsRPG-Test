@@ -22,8 +22,8 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 |---|---|---|
 | **0 — foundation** | `done` | Backups, schema baseline, codex data-loss determination. |
 | **1 — stop the bleeding** | `done` (code + DB + ops) | GitHub required checks + Actions public Supabase secrets + `E2E_OPTIONAL=1` + orphan profile delete. **2026-08-13 Vercel:** Upstash Redis + Sentry DSN live on production/preview; `NEXT_PUBLIC_SITE_URL` on production; production rebuilt. Still owner: HIBP, E2E test user, optional “require PR”. |
-| **2 — correctness** | `partial` | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**; TASK-744 styleguide Linux baselines **done**. Remaining: 741–742, 739. |
-| **3 — structure** | `queued` | After Wave 2 P0s (Advanced migrate + dirty-key PATCH). No parallel Prettier/`text-muted` mega-diffs until then. |
+| **2 — correctness** | `partial` | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**; TASK-744 styleguide Linux baselines **done**; TASK-741 dirty-key PATCH **done**. Remaining: 742, 739. |
+| **3 — structure** | `queued` | Wave 2 P0 TASK-741 (dirty-key PATCH) is green in code. Cheap Prettier/`text-muted` mega-diffs still wait for owner to start Wave 3. |
 
 ### Commits on `master` (audit program, oldest → newest)
 
@@ -54,7 +54,7 @@ Later `master` commits (`6adf344f`, `21ffcd18`, …) are unrelated product work 
 ### Uncommitted / follow-up coding
 
 Plan refresh + GAME_RULES / SIZES seed / admin editor prose may still be uncommitted.
-Wave 2 coding: TASK-740, TASK-738, and TASK-744 done; next is TASK-741 (dirty-key PATCH, Architect / ADR).
+Wave 2 coding: TASK-740, TASK-738, TASK-744, and TASK-741 done; next is TASK-742 (acked rules leftovers).
 
 ---
 
@@ -243,9 +243,9 @@ P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`eb
 
 | Finding | Status | Note |
 |---|---|---|
-| Dirty-key PATCH + `updatedAt` precondition; autosave refs/retry/timeout; per-user rate key | `partial` | Autosave callback-refs + retry + pagehide flush landed (`useAutoSave`). PATCH already uses per-user `buildRateLimitKey`. Dirty-key PATCH + `updatedAt` 409 is TASK-741 (Architect / ADR), after Advanced migrate. |
+| Dirty-key PATCH + `updatedAt` precondition; autosave refs/retry/timeout; per-user rate key | `done` | Autosave callback-refs + retry + pagehide (`useAutoSave`). PATCH per-user `buildRateLimitKey`. Dirty-key PATCH + `updatedAt` 409 + user-scoped character query keys: TASK-741 / ADR-0013. |
 | Two disconnected character write paths (`useState`+effect vs unused TanStack Query) | `queued` | — |
-| Query cache not cleared on sign-in; keys not user-scoped | `partial` | `queryClient.clear()` on SIGNED_IN / SIGNED_OUT / USER_UPDATED; `useCampaignsFull` gated on user. Character query-key user-scoping still open. |
+| Query cache not cleared on sign-in; keys not user-scoped | `done` | `queryClient.clear()` on SIGNED_IN / SIGNED_OUT / USER_UPDATED; `useCampaignsFull` gated on user. Character query keys include viewer uid (TASK-741). |
 | Align GET with visibility **column** | `done` | `resolveCharacterVisibility` on GET `[id]` + list. |
 
 ---
@@ -319,13 +319,13 @@ parallel.
 
 ## Suggested next agent sessions (ordered)
 
-Wave 2 coding pass is open (TASK-740, TASK-738, and TASK-744 done):
+Wave 2 coding pass is open (TASK-740, TASK-738, TASK-744, and TASK-741 done):
 
-1. **TASK-741** — Dirty-key PATCH + `updatedAt` 409 (Architect / ADR).
-2. **TASK-742** — Owner-acked rules leftovers (TP comments, rarity clamp, feat 2×, drop size Speed add, N2/D4–D7, tests).
-3. **TASK-739** — Advanced `getCharacter` currency clamp.
-4. Existing product leftovers (TASK-733, TASK-718, TASK-719) after the Wave 2 P0s above.
-5. **Wave 3** only after TASK-741 is green.
+1. **TASK-742** — Owner-acked rules leftovers (TP comments, rarity clamp, feat 2×, drop size Speed add, N2/D4–D7, tests).
+2. **TASK-739** — Advanced `getCharacter` currency clamp.
+3. **TASK-746** / **TASK-747** — library add-to-character `updatedAt` lock; sheet realtime merge for non-resource keys (filed from TASK-741 cleanup).
+4. Existing product leftovers (TASK-733, TASK-718, TASK-719).
+5. **Wave 3** — start only when the owner opens that pass (avoid Prettier/`text-muted` mega-diffs colliding with 742/739).
 
 ---
 

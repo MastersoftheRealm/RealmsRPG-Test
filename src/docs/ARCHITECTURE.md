@@ -124,7 +124,7 @@ Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexP
 
 | Boundary | Convention |
 |----------|------------|
-| **`apiFetch` / `apiUpload` / `apiFetchOrNull`** (`@/lib/api-client`) | Failures **throw** `Error` with a parsed message. Callers `catch` and surface (toast or inline Alert). Prefer these over raw `fetch` for `/api/*`. |
+| **`apiFetch` / `apiUpload` / `apiFetchOrNull`** (`@/lib/api-client`) | Failures **throw** `ApiError` (extends `Error`) with a parsed message and HTTP `status`. Callers `catch` and surface (toast or inline Alert). Use `isConflictError` for 409. Prefer these over raw `fetch` for `/api/*`. |
 | **Supabase JS client** (`createClient()` / server client) | Always inspect `{ data, error }`. On `error`, **throw** or return a typed failure — Supabase does **not** throw by default. |
 | **Server actions** returning `{ success, error }` / `{ profile, error }` | Check the `error` / `success` field; do not treat a null payload as success when `error` is set. |
 | **React Query mutations** | Prefer `onError` → `showToast(...)`, or `mutateAsync` inside `try/catch` with toast/Alert. Load errors → `ErrorDisplay` + retry (library tabs). |

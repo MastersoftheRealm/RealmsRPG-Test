@@ -6,7 +6,8 @@
 
 import type { Character, CharacterSummary } from '@/types';
 import type { UserCreature, UserItem, UserPower, UserTechnique } from '@/hooks/use-user-library';
-import { apiFetch, apiFetchOrNull } from '@/lib/api-client';
+import { apiFetch, apiFetchOrNull, isConflictError } from '@/lib/api-client';
+import { characterLockToken } from '@/lib/character/dirty-patch';
 
 const API_BASE = '/api/characters';
 
@@ -57,20 +58,59 @@ export async function getCharacter(characterId: string): Promise<GetCharacterRes
 }
 
 /**
- * Save a character (create or update).
+ * Save a character (update). Send a dirty-key subset plus optional `updatedAt`
+ * (the token from GET / last PATCH). Stale `updatedAt` → 409; refetch and retry
+ * via `saveCharacterWithConflictRetry` (ADR-0013).
  */
 export async function saveCharacter(
   characterId: string,
-  data: Partial<Character>
-): Promise<void> {
+  data: Partial<Character>,
+  options: { updatedAt?: string | Date | null } = {}
+): Promise<{ ok: true; updatedAt?: string }> {
   if (!characterId?.trim()) {
     throw new Error('Invalid character ID');
   }
 
-  await apiFetch<void>(`${API_BASE}/${encodeURIComponent(characterId.trim())}`, {
-    method: 'PATCH',
-    body: JSON.stringify(data),
-  });
+  const body: Record<string, unknown> = { ...data };
+  const lock = characterLockToken(options.updatedAt) ?? characterLockToken(data.updatedAt);
+  if (lock) body.updatedAt = lock;
+  else delete body.updatedAt;
+
+  return apiFetch<{ ok: true; updatedAt?: string }>(
+    `${API_BASE}/${encodeURIComponent(characterId.trim())}`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    }
+  );
+}
+
+/**
+ * PATCH dirty keys; on 409 refetch, let the caller re-apply local dirty keys, retry once.
+ */
+export async function saveCharacterWithConflictRetry(
+  characterId: string,
+  dirty: Partial<Character>,
+  options: {
+    updatedAt?: string | Date | null;
+    mergeOnConflict: (remote: Character) => {
+      dirty: Partial<Character>;
+      updatedAt?: string | Date | null;
+    };
+  }
+): Promise<{ updatedAt?: string }> {
+  try {
+    return await saveCharacter(characterId, dirty, { updatedAt: options.updatedAt });
+  } catch (err) {
+    if (!isConflictError(err)) throw err;
+    const { character: remote } = await getCharacter(characterId);
+    if (!remote) throw err;
+    const next = options.mergeOnConflict(remote);
+    if (Object.keys(next.dirty).length === 0) {
+      return { updatedAt: characterLockToken(remote.updatedAt) };
+    }
+    return await saveCharacter(characterId, next.dirty, { updatedAt: next.updatedAt });
+  }
 }
 
 /**

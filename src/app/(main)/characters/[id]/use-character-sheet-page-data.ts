@@ -7,8 +7,8 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { getCharacter, saveCharacter, type LibraryForView } from '@/services/character-service';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { getCharacter, saveCharacterWithConflictRetry, type LibraryForView } from '@/services/character-service';
 import {
   useAuth,
   useAutoSave,
@@ -31,6 +31,7 @@ import {
 } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { cleanForSave } from '@/lib/data-enrichment';
+import { mergeRemotePreservingDirty, pickDirtyCharacterFields } from '@/lib/character/dirty-patch';
 import { getArchetypeCodexLookupId, applyPathProficiencyForLevel } from '@/lib/game/archetype-display';
 import { useCharacterSheetDerived } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
@@ -50,6 +51,7 @@ export function useCharacterSheetPageData(id: string) {
   const [libraryForView, setLibraryForView] = useState<LibraryForView | undefined>(undefined);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const savedCleanRef = useRef<Record<string, unknown> | null>(null);
 
   const { data: userPowers = [] } = useUserPowers();
   const { data: userTechniques = [] } = useUserTechniques();
@@ -155,6 +157,7 @@ export function useCharacterSheetPageData(id: string) {
         }
         setCharacter(data.character);
         setLibraryForView(data.libraryForView);
+        savedCleanRef.current = cleanForSave(data.character) as Record<string, unknown>;
       } catch {
         setError('Failed to load character');
       } finally {
@@ -249,8 +252,40 @@ export function useCharacterSheetPageData(id: string) {
     data: character,
     onSave: async (data) => {
       if (!user || !data) return;
-      const cleanedData = cleanForSave(data);
-      await saveCharacter(id, cleanedData);
+      const cleaned = cleanForSave(data) as Record<string, unknown>;
+      const dirty = pickDirtyCharacterFields(cleaned, savedCleanRef.current);
+      if (Object.keys(dirty).length === 0) {
+        savedCleanRef.current = cleaned;
+        return;
+      }
+      const mergedCleanRef: { current: Record<string, unknown> | null } = { current: null };
+      const result = await saveCharacterWithConflictRetry(id, dirty as Partial<Character>, {
+        updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : undefined,
+        mergeOnConflict: (remote) => {
+          const remoteClean = cleanForSave(remote) as Record<string, unknown>;
+          const mergedClean = mergeRemotePreservingDirty(remoteClean, cleaned, Object.keys(dirty));
+          mergedCleanRef.current = mergedClean;
+          savedCleanRef.current = remoteClean;
+          setCharacter((prev) => {
+            if (!prev || prev.id !== remote.id) return prev;
+            const kept = Object.fromEntries(
+              Object.keys(dirty).map((key) => [key, cleaned[key]])
+            );
+            return { ...prev, ...remote, ...kept, updatedAt: remote.updatedAt };
+          });
+          return {
+            dirty: pickDirtyCharacterFields(mergedClean, remoteClean) as Partial<Character>,
+            updatedAt: remote.updatedAt,
+          };
+        },
+      });
+      const nextClean = mergedCleanRef.current ?? cleaned;
+      savedCleanRef.current = result.updatedAt
+        ? { ...nextClean, updatedAt: result.updatedAt }
+        : nextClean;
+      if (result.updatedAt) {
+        setCharacter((prev) => (prev ? { ...prev, updatedAt: result.updatedAt } : prev));
+      }
     },
     delay: 2000,
     enabled: isOwner,
