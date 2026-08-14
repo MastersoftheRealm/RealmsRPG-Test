@@ -1,3 +1,120 @@
+- id: TASK-755
+  title: Energy abbreviation is EN, never EP
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-754
+    - TASK-729
+    - TASK-440
+  related_files:
+    - src/components/ui/expandable-chip.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T015
+      - DEV-V-013-T080
+      - DEV-V-013-T082
+  developer_test_plan: |
+    Suite DEV-V-013 T015 / T080 / T082 — see BUILD_VALIDATION.md
+  description: |
+    Your Hero power/technique chips show Energy as EP. GAME_RULES / TASK-440 / TASK-729
+    use EN (HP / EN). ExpandableChip hardcodes `{energyCost} EP`.
+  acceptance_criteria:
+    - No user-facing "EP" for Energy (chips, HUD, copy, comments that describe the
+      rendered label). Dense labels use EN; L1/L2 still spell Energy in full
+      (GAME_RULES Layer 1 / Layer 2 copy).
+    - GAME_RULES states Energy abbreviates as EN, never EP. FEATURE_INDEX ExpandableChip
+      note. Typecheck/lint.
+    - DEV-V-013 T015 / T080 / T082: Your Hero chips and allocator show EN or Energy,
+      never EP. Desktop + ~360px.
+  completed_work: |
+    ExpandableChip energyCost header is `N EN` (comment + render). Repo grep has no
+    remaining user-facing EP. GAME_RULES states Energy abbreviates as EN, never EP.
+    Shared chip covers Your Hero, sheet, Codex, and creature blocks that pass energyCost.
+    Did not add a new formatter file.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-013 T015/T080/T082).
+- id: TASK-754
+  title: Fix character create 500 (codex_skills.base_skill) and unfriendly error copy
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: critical
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-738
+  related_files:
+    - src/app/api/characters/route.ts
+    - src/app/api/characters/route.test.ts
+    - src/lib/game/character-legality.ts
+    - src/lib/game/character-legality.test.ts
+    - src/app/api/codex/route.ts
+    - src/lib/api-error.ts
+    - src/lib/api-client.ts
+    - src/lib/api-client.test.ts
+    - src/lib/character-save.ts
+    - src/lib/character-save.test.ts
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  build_validation: |
+    suite: DEV-V-051
+    tests:
+      - DEV-V-051-T009
+      - DEV-V-051-T010
+  developer_test_plan: |
+    Suite DEV-V-051 T009–T010 — see BUILD_VALIDATION.md
+  description: |
+    Finish character is broken: POST /api/characters 500s with Postgres 42703
+    `column codex_skills.base_skill_id does not exist` (hint: `codex_skills.base_skill`).
+    TASK-738's level-1 legality catalog selects the app-layer name; the live column is
+    `base_skill` (TEXT). Codex GET already maps `base_skill` → `base_skill_id`. The
+    toast concatenates `{ error: 'Failed to create character' }` with
+    `saveRetryHint` ("Check My Characters… duplicate"), which is wrong for a 500 that
+    never inserted a row and does not tell the user what happened or what to do.
+  acceptance_criteria:
+    - `fetchFeatRequirementCatalog` selects real `codex_skills` columns (`base_skill`,
+      not `base_skill_id`). `catalogFromCodexRows` maps `base_skill` → `base_skill_id`
+      the same way `api/codex/route.ts` does (empty/null → undefined; numeric text → id).
+    - Audit other selects in this POST path for DB vs app names; do not leave a second
+      42703. App types stay `base_skill_id`.
+    - A legal Guided (and Legacy) create succeeds; vitest covers the skill-column map
+      and that the select string does not contain `base_skill_id`.
+    - Client never sees Postgres `message`/`hint`/`code` (constitution `apiErrorResponse`
+      / `logApiError`). 500 copy is actionable without "duplicate" (e.g. could not create,
+      try again). Do not append `saveRetryHint` to every failure. Mention My Characters
+      only when a retry/idempotency case could already have a row. 400 legality still
+      surfaces the violation list, not the 500 string.
+    - FEATURE_INDEX legality note; DEV-V-051 T009 (create succeeds) + T010 (error copy).
+      Typecheck/lint.
+  completed_work: |
+    POST catalog select is `id, name, base_skill, ability`. Shared `mapCodexBaseSkillToId`
+    maps TEXT → app `base_skill_id` in catalogFromCodexRows and GET /api/codex. Create
+    500s use apiErrorResponse ("Could not create your character. Please try again.") so
+    Postgres fields stay server-side. Guided/Legacy use formatCharacterCreateFailureMessage:
+    400 keeps the violation list; 500s omit saveRetryHint; My Characters only on
+    network/abort. Did not rename the DB column.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-051 T009–T010).
+    Root cause was the TASK-738 catalog fetch, not a true duplicate. client_request_id
+    replay unchanged. Other POST selects (codex_feats, core_rules, characters, archetypes)
+    already used live column names.
 - id: TASK-750
   title: Sheet document SoT is useCharacter / useSaveCharacter
   created_at: 2026-08-14

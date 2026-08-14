@@ -10,7 +10,7 @@ import { useState, useMemo } from 'react';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter, saveCharacter } from '@/services/character-service';
-import { resolveClientRequestId } from '@/lib/character-save';
+import { formatCharacterCreateFailureMessage, resolveClientRequestId } from '@/lib/character-save';
 import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useGameRules } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
@@ -27,6 +27,7 @@ import { getAllValidationIssues } from '@/lib/character-creator-validation';
 import { calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
 import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
+import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { LoginPromptModal, InfoTippy, PointStatus, LoadoutBudgetBar } from '@/components/shared';
 import { PlayTogetherModal } from '@/components/onboarding';
 import {
@@ -258,11 +259,7 @@ export function FinalizeStep() {
         goAfterSave(!safeReturnTo);
       }
     } catch (err) {
-      const message =
-        err instanceof Error && err.message.trim()
-          ? err.message
-          : 'Failed to save character. Please try again.';
-      setError(message);
+      setError(formatCharacterCreateFailureMessage(err, GUIDED_CREATOR_COPY.steps.reveal));
       setSaving(false);
     }
   };

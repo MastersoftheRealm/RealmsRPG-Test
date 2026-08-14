@@ -534,6 +534,7 @@ export const GUIDED_CREATOR_COPY = {
       description: 'Name them, set the finishing touches, then create your character.',
       incompleteHint:
         'Some earlier chapters still need choices. Use the chapters above to finish them.',
+      saveFailed: 'Could not create your character. Please try again.',
       saveRetryHint: 'Check My Characters before trying again so you do not create a duplicate.',
       nameLabel: 'Character name',
       namePlaceholder: 'Give your hero a name',

@@ -40,6 +40,7 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
 });
 
 import { GET, POST } from './route';
+import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
 import { getRolePolicyForUser } from '@/lib/role-policy';
@@ -56,6 +57,7 @@ const mockFetchArchetypeNameMap = vi.mocked(fetchArchetypeNameMap);
 const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
 
 const TEST_USER = { uid: 'user-123', email: 'hero@example.com' };
+const CREATE_FAILED = GUIDED_CREATOR_COPY.steps.reveal.saveFailed;
 
 type MockSupabaseConfig = {
   characters?: unknown[];
@@ -75,6 +77,8 @@ type MockSupabaseConfig = {
   /** Official feats for the level-1 requirement check. Default [] skips the check. */
   codexFeats?: unknown[];
   codexSkills?: unknown[];
+  /** When set, the catalog skill select fails (e.g. a 42703 from a wrong column). */
+  codexSkillsError?: { message?: string; hint?: string; code?: string } | null;
 };
 
 function createMockSupabase(config: MockSupabaseConfig = {}) {
@@ -89,9 +93,11 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     coreRules = [],
     codexFeats = [],
     codexSkills = [],
+    codexSkillsError = null,
   } = config;
 
   let insertAttempted = false;
+  let skillSelectColumns: string | undefined;
   const insertedRows: Array<Record<string, unknown>> = [];
   const insert = vi.fn((row: Record<string, unknown>) => {
     insertAttempted = true;
@@ -141,7 +147,16 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
         return { select: vi.fn().mockResolvedValue({ data: codexFeats, error: null }) };
       }
       if (table === 'codex_skills') {
-        return { select: vi.fn().mockResolvedValue({ data: codexSkills, error: null }) };
+        return {
+          select: vi.fn((cols?: string) => {
+            skillSelectColumns = cols;
+            return Promise.resolve(
+              codexSkillsError
+                ? { data: null, error: codexSkillsError }
+                : { data: codexSkills, error: null }
+            );
+          }),
+        };
       }
       if (table === 'user_profiles') {
         return {
@@ -152,9 +167,12 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     }),
     insertMock: insert,
     insertedRows,
+    get skillSelectColumns() {
+      return skillSelectColumns;
+    },
   };
 
-  return Object.assign(client, { insertedRows });
+  return client;
 }
 
 /** A legal level-1 build, so legality checks pass and the create path is exercised. */
@@ -528,7 +546,8 @@ describe('POST /api/characters', () => {
       await expect(readJson(response)).resolves.toEqual({ id: 'race-winner-id' });
     });
 
-    it('still surfaces a non-idempotency insert failure as a 500', async () => {
+    it('still surfaces a non-idempotency insert failure as a 500 without Postgres fields', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       mockCreateClient.mockResolvedValue(
         createMockSupabase({ insertError: { code: '23503', message: 'fk violation' } }) as never
@@ -537,7 +556,48 @@ describe('POST /api/characters', () => {
       const response = await POST(makePostRequest(legalLevel1Payload({ clientRequestId })));
 
       expect(response.status).toBe(500);
-      await expect(readJson(response)).resolves.toEqual({ error: 'Failed to create character' });
+      const body = await readJson<Record<string, unknown>>(response);
+      expect(body).toEqual({ error: CREATE_FAILED });
+      expect(JSON.stringify(body)).not.toMatch(/fk violation|23503/);
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
+    });
+  });
+
+  describe('feat-requirement catalog columns (TASK-754)', () => {
+    it('selects live codex_skills.base_skill, not the app-layer base_skill_id', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      const supabase = createMockSupabase();
+      mockCreateClient.mockResolvedValue(supabase as never);
+
+      const response = await POST(makePostRequest(legalLevel1Payload()));
+
+      expect(response.status).toBe(200);
+      expect(supabase.skillSelectColumns).toBe('id, name, base_skill, ability');
+      expect(supabase.skillSelectColumns).not.toContain('base_skill_id');
+    });
+
+    it('returns a generic 500 when the skill catalog query fails, without Postgres fields', async () => {
+      const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      mockCreateClient.mockResolvedValue(
+        createMockSupabase({
+          codexSkillsError: {
+            code: '42703',
+            message: 'column codex_skills.base_skill_id does not exist',
+            hint: 'Perhaps you meant to reference the column "codex_skills.base_skill".',
+          },
+        }) as never
+      );
+
+      const response = await POST(makePostRequest(legalLevel1Payload()));
+
+      expect(response.status).toBe(500);
+      const body = await readJson<Record<string, unknown>>(response);
+      expect(body).toEqual({ error: CREATE_FAILED });
+      expect(JSON.stringify(body)).not.toMatch(/42703|base_skill_id|does not exist|Perhaps you meant/);
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
     });
   });
 });

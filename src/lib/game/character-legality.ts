@@ -200,6 +200,16 @@ function featRefs(value: unknown): Array<{ id: string; name?: string }> {
   return out;
 }
 
+/**
+ * Live `codex_skills.base_skill` is TEXT (id of the parent skill, or empty). App types use
+ * `base_skill_id`. Empty/null → undefined; numeric text → id. Same mapping as GET /api/codex.
+ */
+export function mapCodexBaseSkillToId(baseSkill: unknown): number | undefined {
+  if (baseSkill === undefined || baseSkill === null || baseSkill === '') return undefined;
+  const parsed = parseInt(String(baseSkill), 10);
+  return Number.isNaN(parsed) ? undefined : parsed;
+}
+
 /** Map columnar `codex_feats` / `codex_skills` rows into the shape `checkFeatRequirements` reads. */
 export function catalogFromCodexRows(
   featRows: unknown[] | null | undefined,
@@ -238,7 +248,8 @@ export function catalogFromCodexRows(
     skills.push({
       id: rec.id as string | number,
       name: typeof rec.name === 'string' ? rec.name : undefined,
-      base_skill_id: rec.base_skill_id as number | string | undefined,
+      // Columnar rows use `base_skill`; never read a non-existent `base_skill_id` column.
+      base_skill_id: mapCodexBaseSkillToId(rec.base_skill),
       ability: typeof rec.ability === 'string' ? rec.ability : undefined,
     });
   }

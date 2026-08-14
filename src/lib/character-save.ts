@@ -5,6 +5,7 @@
 
 import { normalizeTempModifiers } from '@/lib/character/temp-modifiers';
 import { normalizeCharacterForSave } from '@/lib/character/schema-normalize';
+import { getErrorMessage, isApiError } from '@/lib/api-client';
 import { removeUndefined } from '@/lib/utils/object';
 import type { Character, CharacterTempModifiers } from '@/types';
 
@@ -33,6 +34,39 @@ export function clampSavedCurrency(remaining: number): number {
  */
 export function resolveClientRequestId(existing: unknown): string {
   return isClientRequestId(existing) ? existing : crypto.randomUUID();
+}
+
+function isUncertainCreateOutcome(err: unknown): boolean {
+  if (isApiError(err)) return false;
+  if (typeof DOMException !== 'undefined' && err instanceof DOMException && err.name === 'AbortError') {
+    return true;
+  }
+  if (err instanceof TypeError) return true;
+  if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
+    return true;
+  }
+  return /failed to fetch|networkerror|load failed|aborted/i.test(getErrorMessage(err, ''));
+}
+
+/**
+ * Player-facing create failure. 400 legality keeps the violation list. 500s and other
+ * confirmed server failures do not mention My Characters / duplicates. Network/abort
+ * after the POST may already have a row — only then append the retry hint (TASK-754).
+ */
+export function formatCharacterCreateFailureMessage(
+  err: unknown,
+  copy: { saveFailed: string; saveRetryHint: string }
+): string {
+  if (isApiError(err)) {
+    if (err.status === 400) return err.message.trim() || copy.saveFailed;
+    if (err.status >= 500) return copy.saveFailed;
+    return err.message.trim() || copy.saveFailed;
+  }
+  if (isUncertainCreateOutcome(err)) {
+    return `${copy.saveFailed} ${copy.saveRetryHint}`;
+  }
+  const message = getErrorMessage(err, copy.saveFailed).trim();
+  return message || copy.saveFailed;
 }
 
 export function prepareCharacterForSave(data: Partial<Character>): Record<string, unknown> {

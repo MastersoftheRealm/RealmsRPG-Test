@@ -8,100 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 14 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 12 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **Next: TASK-754** (critical — create 500 `codex_skills.base_skill_id` + unfriendly copy; blocks creator QA). Then **TASK-755** (Energy abbrev **EN**, never EP). Then creator UX: **TASK-756** (split innate → powers → techniques screens) **before** TASK-751–753; **TASK-757** (Power path See weapons); **TASK-758–759** (feat GLR: drop REQ LEVEL + State Feats `(i)` — before TASK-753); **TASK-760** (ability tiles). **TASK-733** (sheet innate InfoTippys) can run in parallel with 756+. Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low; after 754 unless re-prioritized. **TASK-751–753** stay **low** — after 733 **and** 756/758/759 so path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
-
----
-
-- id: TASK-754
-  title: Fix character create 500 (codex_skills.base_skill) and unfriendly error copy
-  created_at: 2026-08-14
-  created_by: owner
-  priority: critical
-  status: not-started
-  related_tasks:
-    - TASK-738
-  related_files:
-    - src/app/api/characters/route.ts
-    - src/app/api/characters/route.test.ts
-    - src/lib/game/character-legality.ts
-    - src/lib/game/character-legality.test.ts
-    - src/app/api/codex/route.ts
-    - src/docs/SUPABASE_SCHEMA.md
-    - src/lib/api-error.ts
-    - src/components/guided-creator/steps/reveal-step.tsx
-    - src/components/character-creator/steps/finalize-step.tsx
-    - src/lib/constants/copy/guided-creator-copy.ts
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/BUILD_VALIDATION.md
-  description: |
-    Finish character is broken: POST /api/characters 500s with Postgres 42703
-    `column codex_skills.base_skill_id does not exist` (hint: `codex_skills.base_skill`).
-    TASK-738's level-1 legality catalog selects the app-layer name; the live column is
-    `base_skill` (TEXT). Codex GET already maps `base_skill` → `base_skill_id`. The
-    toast concatenates `{ error: 'Failed to create character' }` with
-    `saveRetryHint` ("Check My Characters… duplicate"), which is wrong for a 500 that
-    never inserted a row and does not tell the user what happened or what to do.
-    Do this before any other creator QA (TASK-755–760).
-  acceptance_criteria:
-    - `fetchFeatRequirementCatalog` selects real `codex_skills` columns (`base_skill`,
-      not `base_skill_id`). `catalogFromCodexRows` maps `base_skill` → `base_skill_id`
-      the same way `api/codex/route.ts` does (empty/null → undefined; numeric text → id).
-    - Audit other selects in this POST path for DB vs app names; do not leave a second
-      42703. App types stay `base_skill_id`.
-    - A legal Guided (and Legacy) create succeeds; vitest covers the skill-column map
-      and that the select string does not contain `base_skill_id`.
-    - Client never sees Postgres `message`/`hint`/`code` (constitution `apiErrorResponse`
-      / `logApiError`). 500 copy is actionable without "duplicate" (e.g. could not create,
-      try again). Do not append `saveRetryHint` to every failure. Mention My Characters
-      only when a retry/idempotency case could already have a row. 400 legality still
-      surfaces the violation list, not the 500 string.
-    - FEATURE_INDEX legality note; DEV-V-051 T009 (create succeeds) + T010 (error copy).
-      Typecheck/lint.
-  notes: |
-    Root cause is the TASK-738 catalog fetch, not a true duplicate. `client_request_id`
-    replay must keep working. Do not rename the DB column. Not Architect.
-
----
-
-- id: TASK-755
-  title: Energy abbreviation is EN, never EP
-  created_at: 2026-08-14
-  created_by: owner
-  priority: high
-  status: not-started
-  related_tasks:
-    - TASK-754
-    - TASK-729
-    - TASK-440
-  related_files:
-    - src/components/ui/expandable-chip.tsx
-    - src/components/shared/summary-chip-list.tsx
-    - src/components/guided-creator/guided-reveal-summary.tsx
-    - src/docs/GAME_RULES.md
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/BUILD_VALIDATION.md
-  description: |
-    Your Hero power/technique chips show Energy as EP. GAME_RULES / TASK-440 / TASK-729
-    use EN (HP / EN). ExpandableChip hardcodes `{energyCost} EP`; GuidedRevealSummary
-    passes energyCost into SummaryChipList. Repo grep currently hits only that chip
-    header — still audit all Energy abbreviations so EP cannot remain anywhere.
-  acceptance_criteria:
-    - No user-facing "EP" for Energy (chips, HUD, copy, comments that describe the
-      rendered label). Dense labels use EN; L1/L2 still spell Energy in full
-      (GAME_RULES Layer 1 / Layer 2 copy).
-    - GAME_RULES states Energy abbreviates as EN, never EP. FEATURE_INDEX ExpandableChip
-      note. Typecheck/lint.
-    - DEV-V-013 T015 / T080 / T082: Your Hero chips and allocator show EN or Energy,
-      never EP. Desktop + ~360px.
-  notes: |
-    After TASK-754. Shared chip fix covers Your Hero, sheet, Codex, creature blocks
-    that pass energyCost. Do not invent a new formatter file unless one already exists.
+**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **Next: TASK-756** (split innate → powers → techniques screens) **before** TASK-751–753; **TASK-757** (Power path See weapons); **TASK-758–759** (feat GLR: drop REQ LEVEL + State Feats `(i)` — before TASK-753); **TASK-760** (ability tiles). **TASK-733** (sheet innate InfoTippys) can run in parallel with 756+. Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — after 733 **and** 756/758/759 so path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
 
 ---
 

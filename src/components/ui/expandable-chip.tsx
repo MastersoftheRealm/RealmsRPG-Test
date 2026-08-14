@@ -45,7 +45,7 @@ export interface ExpandableChipProps {
 
   /** TP cost — renders `TP: N` in header */
   tpCost?: number;
-  /** Energy cost — renders `N EP` in header */
+  /** Energy cost — renders `N EN` in header (never EP) */
   energyCost?: number;
   /** Generic cost with label (GridListRow) — renders `| {costLabel}: N` */
   cost?: number | string;
@@ -369,7 +369,7 @@ function ChipHeaderContent({
       {costSuffix !== undefined &&
         costSuffix !== '' &&
         !(typeof costSuffix === 'number' && costSuffix <= 0) && (
-        <span className="text-xs text-text-muted dark:text-text-secondary shrink-0">
+        <span className="text-xs text-text-muted shrink-0">
           ({costSuffix})
         </span>
       )}
@@ -382,7 +382,7 @@ function ChipHeaderContent({
       {hasEnergy && (
         <>
           <span className="opacity-40 shrink-0">|</span>
-          <span className="text-xs font-semibold text-energy shrink-0">{energyCost} EP</span>
+          <span className="text-xs font-semibold text-energy shrink-0">{energyCost} EN</span>
         </>
       )}
       {hasNumericCost && cost !== undefined && !hasTp && (

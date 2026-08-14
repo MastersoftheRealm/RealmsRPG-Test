@@ -2422,7 +2422,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-406, TASK-462, TASK-729 |
+| **Related task** | TASK-406, TASK-462, TASK-729, TASK-755 |
 | **Where** | Guided creator → Your Hero |
 | **Needs** | Complete prior steps; signed-in optional for save/portrait |
 
@@ -2430,10 +2430,10 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Open reveal: hero band shows clickable portrait + name field; identity (age/height/weight/appearance/background) and Health/Energy sit above Your Build.
 2. Click the portrait to upload/change; type a name in the hero band (not only a lower form).
 3. Confirm Your Build has no Edit jump links, no Type card, and no standalone Power/Martial ability cards (pills remain on the abilities grid).
-4. Confirm **Auto-allocate** is short copy with an (i) tip; click it — Health/Energy PointStatus remaining ticks down to 0/18 (same as spending the pool with the steppers). Labels read **Health / Energy** on desktop; **HP / EN** below `md`. Save (or guest login prompt).
+4. Confirm **Auto-allocate** is short copy with an (i) tip; click it — Health/Energy PointStatus remaining ticks down to 0/18 (same as spending the pool with the steppers). Labels read **Health / Energy** on desktop; **HP / EN** below `md`. Power/technique chips in Your Build show Energy as **EN** (e.g. `4 EN`), never **EP**. Save (or guest login prompt).
 
 **Expected**
-- Cherry-on-top finale: name/portrait in header; identity + Health/Energy before summary; summary is show-off only (chapter rail to edit); T005 save still works when signed in. Auto-allocate spends the pool (remaining → 0) and names the highest Energy-cost Power/Technique in the tip when known.
+- Cherry-on-top finale: name/portrait in header; identity + Health/Energy before summary; summary is show-off only (chapter rail to edit); T005 save still works when signed in. Auto-allocate spends the pool (remaining → 0) and names the highest Energy-cost Power/Technique in the tip when known. Dense Energy abbreviation is **EN**, never **EP**.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3810,7 +3810,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-730 |
+| **Related task** | TASK-730, TASK-755 |
 | **Where** | Guided creator → Loadout (weapon + armor) → Powers/Techniques → Your Hero → Your Build |
 | **Needs** | A path (or Custom) with a weapon pick; include at least one My Library weapon if available; if possible also a My Library power or technique |
 
@@ -3818,11 +3818,11 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Pick a weapon and armor on Loadout (official and, if possible, a user-library weapon). Continue to **Your Hero**.
 2. In **Your Build → Loadout**, confirm the weapon chip shows the item **name** (expandable when a description exists), not a raw UUID/id. Armor still shows its name.
 3. Confirm Unarmed Prowess still appears when selected; general gear is still omitted from this summary.
-4. If a My Library power and/or technique is on the build, confirm those chips show **names**, not UUIDs. Unresolved rows may show “Unknown power” / “Unknown technique” — not a raw id.
+4. If a My Library power and/or technique is on the build, confirm those chips show **names**, not UUIDs. Unresolved rows may show “Unknown power” / “Unknown technique” — not a raw id. Energy on those chips is **N EN**, never **EP**.
 
 **Expected**
 - Loadout weapon and armor chips use library names (official or My Library); no raw ids in the summary.
-- Power/technique chips use library names (official or My Library); no raw ids.
+- Power/technique chips use library names (official or My Library); no raw ids. Energy cost on those chips is **EN**, never **EP**.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3853,7 +3853,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-729 |
+| **Related task** | TASK-729, TASK-755 |
 | **Where** | Guided creator → Your Hero (Health & Energy); Advanced `/characters/new/advanced` → Finalize |
 | **Needs** | Complete prior steps; at least one Power or Technique with a known Energy cost |
 
@@ -3864,7 +3864,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 4. Advanced Finalize: same pool tick + tip on **Auto-allocate to match highest cost**. Sheet edit-mode allocator may keep **HP** / **EN**.
 
 **Expected**
-- Auto-allocate spends the shared pool through the same PointStatus as the steppers; tip copy matches GAME_RULES Energy/Health terms; no raw HP/EN on the creator card at desktop width.
+- Auto-allocate spends the shared pool through the same PointStatus as the steppers; tip copy matches GAME_RULES Energy/Health terms; no raw HP/EN on the creator card at desktop width. Dense labels and chips use **EN** for Energy, never **EP**.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6832,9 +6832,9 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 
 ---
 
-## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738)
+## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754)
 
-Audit report 03 P1-6 through P1-10. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`. These tests are the parts only a browser can show.
+Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`, `character-save.test.ts` (create-error copy). These tests are the parts only a browser can show.
 
 #### DEV-V-051-T001 — Guided creator entry does not wait on the session
 
@@ -7001,6 +7001,50 @@ Audit report 03 P1-6 through P1-10. Automated cover: `character-legality.test.ts
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-051-T009 — Legal Guided and Legacy create succeed (TASK-754)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-754 |
+| **Where** | `/characters/new/guided` → **Your Hero**; `/characters/new/advanced` → Finalize |
+| **Needs** | Signed-in user; a complete legal level-1 build |
+
+**Steps**
+1. Guided: finish a legal level-1 path build (all chapters satisfied, HP/EN remaining 0, named). Press **Create character**.
+2. Confirm the character appears on **My Characters** and the sheet opens (or play-together offers it).
+3. Repeat on **Legacy** (`/characters/new/advanced`) with a legal Finalize create.
+
+**Expected**
+- Neither create 500s. No toast/alert about a missing column, Postgres, or a duplicate.
+- Success toast **Your character is ready!** (Guided) / character is created (Legacy).
+- A second click after success does not insert a second row (idempotency still holds — T003).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-051-T010 — Create error copy is actionable, not a duplicate hint (TASK-754)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-754 |
+| **Where** | `/characters/new/guided` → **Your Hero** (also Legacy Finalize) |
+| **Needs** | Signed-in user; a build that can fail legality (over-budget abilities) **and** a way to observe a generic failure if one occurs |
+
+**Steps**
+1. Guided: from a complete build, temporarily overspend ability points if a test override exists; otherwise skip to step 3 if you cannot force a 400. Press **Create character**.
+2. Read the error toast.
+3. If you can force a server 500 (disconnect DB is out of scope — this is a copy check): confirm the toast is **Could not create your character. Please try again.** with **no** “Check My Characters… duplicate” sentence.
+4. Offline / airplane-mode the tab after the button is armed, press Create, then restore: the toast **may** mention My Characters (lost-response case).
+
+**Expected**
+- A 400 legality failure lists the rule(s) (ability/skill/feat), not the 500 string, and does **not** tell the player they may have created a duplicate.
+- A 500 (if observed) is “Could not create… try again” without My Characters / duplicate.
+- My Characters / duplicate copy appears only when the request may have succeeded (network drop).
+- Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## Planned suites (split from legacy DEV-T)
@@ -7044,6 +7088,6 @@ Audit report 03 P1-6 through P1-10. Automated cover: `character-legality.test.ts
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649 / TASK-735) | — | Manual DEV-V-041 T001–T004 + `node scripts/verify-task-649.mjs` |
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |
 | DEV-V-043 | Wave 5 page facade splits (TASK-666) | — | Manual — see suite above |
-| DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`) + manual DEV-V-051 T001–T008 |
+| DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`, `character-save` create-error copy) + manual DEV-V-051 T001–T010 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.
