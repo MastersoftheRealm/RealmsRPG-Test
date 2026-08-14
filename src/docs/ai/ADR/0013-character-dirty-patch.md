@@ -20,7 +20,8 @@ separate `version int` column.
 1. **Dirty-key body.** Clients send only keys that changed (plus optional `updatedAt`). The route
    merges those keys into the stored `data` JSONB. Omitted keys stay as stored. Meta keys
    (`id`, `userId`, `createdAt`, `updatedAt`) are never copied from the client into the blob
-   (`prepareCharacterForSave` already strips them; the blob `updatedAt` is stamped server-side).
+   (`prepareCharacterForSave` already strips them from the client body; the route stamps blob
+   `updatedAt` via `applyCharacterDirtyPatch(..., { blobUpdatedAt })` to match the column).
 2. **Optimistic lock on `characters.updated_at`.** When the client sends `updatedAt` and the row
    has a column value, mismatch → **409** `{ error: string }` and no write. Match → UPDATE also
    `.eq('updated_at', <value just read>)` so a concurrent writer still 409s. Legacy null column or
@@ -37,7 +38,8 @@ separate `version int` column.
   instead of silently restoring an old full document.
 - Negative / follow-ups: campaign server actions that write `characters.data` should stamp
   `updated_at` (they already merge); resource sync still omits `updatedAt` by design (HP LWW).
-  General remote merge for non-resource realtime keys remains a later slice.
+  Library add-to-character lock/retry is TASK-746. Sheet realtime merge for non-resource keys
+  is TASK-747.
 - Rejected alternatives: `version int` column (extra migration; `updated_at` already exists);
   requiring `updatedAt` on every PATCH (breaks portrait-after-create and encounter HP sync);
   putting `updatedAt` in the 409 body (error shape stays `{ error: string }`; client GETs).

@@ -12,17 +12,15 @@ export function characterLockToken(
   return undefined;
 }
 
-export const CHARACTER_PATCH_META_KEYS = [
+const META_KEY_SET = new Set<string>([
   'id',
   'userId',
   'createdAt',
   'updatedAt',
   'lastPlayedAt',
-] as const;
+]);
 
-const META_KEY_SET = new Set<string>(CHARACTER_PATCH_META_KEYS);
-
-export function isCharacterPatchMetaKey(key: string): boolean {
+function isCharacterPatchMetaKey(key: string): boolean {
   return META_KEY_SET.has(key);
 }
 
@@ -50,7 +48,7 @@ export function isStaleCharacterWrite(
   return !characterTimestampsMatch(expected, actual);
 }
 
-export function stripCharacterPatchMeta(
+function stripCharacterPatchMeta(
   patch: Record<string, unknown>
 ): Record<string, unknown> {
   const next: Record<string, unknown> = {};
@@ -61,12 +59,15 @@ export function stripCharacterPatchMeta(
   return next;
 }
 
-/** Merge a dirty subset onto stored JSONB. Omitted keys stay as stored. */
+/** Merge a dirty subset onto stored JSONB. Omitted keys stay as stored. Client meta is stripped. */
 export function applyCharacterDirtyPatch(
   currentData: Record<string, unknown>,
-  patch: Record<string, unknown>
+  patch: Record<string, unknown>,
+  options?: { blobUpdatedAt?: string }
 ): Record<string, unknown> {
-  return { ...currentData, ...stripCharacterPatchMeta(patch) };
+  const merged = { ...currentData, ...stripCharacterPatchMeta(patch) };
+  if (options?.blobUpdatedAt) merged.updatedAt = options.blobUpdatedAt;
+  return merged;
 }
 
 function stableEqual(a: unknown, b: unknown): boolean {

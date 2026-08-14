@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-746
+**Next task ID:** TASK-748
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 5 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 7 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Wave 2 coding pass is open. TASK-741 (dirty-key PATCH, Architect) **done**. Next: TASK-742 (acked rules) → TASK-739. TASK-733 / 718 / 719 after those. Wave 3 after TASK-741 (now unblocked).
+**Hot notes:** Wave 2 coding pass is open. TASK-741 (dirty-key PATCH) **done**. Next: TASK-742 (acked rules) → TASK-739. TASK-746 (library add lock) / TASK-747 (realtime non-resource merge) filed from 741 cleanup. TASK-733 / 718 / 719 after Wave 2 leftovers. Wave 3 still waits for the owner (avoid Prettier/`text-muted` mega-diffs).
 
 ---
 
@@ -158,6 +158,60 @@ Do **not** read the done archive at session start.
   notes: |
     Size table / core_rules.SIZES / GAME_RULES prose already applied 2026-08-13.
     Do not re-open −2 ability floor (docs+code already agree).
+
+---
+
+- id: TASK-746
+  title: Library add-to-character PATCH should send updatedAt
+  created_at: 2026-08-14
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_tasks:
+    - TASK-741
+  related_files:
+    - src/hooks/use-add-to-character-from-library.tsx
+    - src/services/character-service.ts
+    - src/docs/ai/ADR/0013-character-dirty-patch.md
+  description: |
+    TASK-741 dirty-key PATCH is live, but useAddToCharacterFromLibrary already sends a field
+    subset (equipment/powers/techniques + proficiencies) with no updatedAt lock or 409 retry.
+    A sheet tab can 409 or last-write those keys after a library-row add.
+  acceptance_criteria:
+    - mutate/saveCharacter includes the loaded character.updatedAt.
+    - 409 refetches, re-applies the add, retries once (saveCharacterWithConflictRetry).
+    - Typecheck/lint pass.
+  notes: |
+    Filed from TASK-741 /cleanup. Do not smash the full document. Encounter HP sync omitting
+    the token stays ADR-0013 (HP LWW).
+
+---
+
+- id: TASK-747
+  title: Sheet realtime merge for non-resource character keys
+  created_at: 2026-08-14
+  created_by: agent
+  priority: low
+  status: not-started
+  related_tasks:
+    - TASK-741
+  related_files:
+    - src/lib/encounter/character-resource-sync.ts
+    - src/app/(main)/characters/[id]/use-character-sheet-page-data.ts
+    - src/docs/ai/ADR/0013-character-dirty-patch.md
+  description: |
+    ADR-0013 leftover: postgres realtime on characters still only merges HP/EN/AP
+    (mergeResourceUpdatesIntoCharacter). Inventory, feats, notes, level from another tab
+    stay invisible until reload; the next local edit of those keys can 409-retry correctly
+    but the stale tab UI is wrong until then.
+  acceptance_criteria:
+    - Remote keys the local tab has not dirtied apply into sheet state (or an equivalent
+      "remote wins for untouched keys" merge).
+    - Local dirty keys are not overwritten by the realtime echo.
+    - Typecheck/lint + targeted helper test.
+  notes: |
+    Filed from TASK-741 /cleanup. Do not expand mergeResourceUpdatesIntoCharacter into a
+    second full-document smash. HP suppression window stays.
 
 ---
 

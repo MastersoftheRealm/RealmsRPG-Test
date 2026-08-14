@@ -1,5 +1,5 @@
 - id: TASK-741
-  title: Character PATCH ? dirty keys + updatedAt 409
+  title: Character PATCH - dirty keys + updatedAt 409
   created_at: 2026-08-13
   completed_at: 2026-08-14
   created_by: agent
@@ -37,22 +37,28 @@
   notes: |
     Autosave refs/retry/pagehide already landed. Per-user rate key already uses
     buildRateLimitKey. Character query-key user-scoping rode along.
-    Archived 2026-08-14 ? implementable AC met; verification_status pending-qa (DEV-V-009 T043).
+    Archived 2026-08-14 - implementable AC met; verification_status pending-qa (DEV-V-009 T043).
   completed_work: |
     - ADR-0013: dirty-key merge; lock on characters.updated_at; 409 { error }; success { ok, updatedAt }.
     - PATCH merges only provided keys (lib/character/dirty-patch.ts); stale token 409s before write;
       matching token also .eq('updated_at') on UPDATE. Omitted updatedAt skips the lock (portrait-after-create,
       resource sync) but still stamps the column.
-    - Sheet autosave sends pickDirtyCharacterFields vs last-saved clean snapshot; 409 ? GET, keep local
+    - Sheet autosave sends pickDirtyCharacterFields vs last-saved clean snapshot; 409 then GET, keep local
       dirty keys, retry once. Settings visibility/speed and portrait patches are subsets + lock token.
     - characterKeys include viewer uid; insert/create stamps created_at/updated_at; campaign join/add
       stamp the column so the sheet can 409.
     - Route tests: partial merge keeps omitted keys; stale updatedAt 409s and does not write.
+    - Cleanup: restored archive `- id: TASK-738`; dropped public meta-key exports; PATCH stamps blob
+      `updatedAt` with the column; portrait PATCH uses saveCharacterWithConflictRetry.
+  follow_up_tasks:
+    - TASK-746
+    - TASK-747
   developer_test_plan: |
-    DEV-V-009 T043 ? two-tab notes + HP both survive; stale PATCH is 409.
+    DEV-V-009 T043 - two-tab notes + HP both survive; stale PATCH is 409.
 
 ---
 
+- id: TASK-738
   title: Guided creator P1-6-P1-10 leftovers (auth gate, trusted save, feats)
   created_at: 2026-08-13
   completed_at: 2026-08-13

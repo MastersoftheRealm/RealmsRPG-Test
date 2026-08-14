@@ -171,11 +171,11 @@ export async function PATCH(
     }
 
     const currentData = (existingRow.data as Record<string, unknown>) ?? {};
-    const mergedData = applyCharacterDirtyPatch(currentData, cleanedData);
+    const now = new Date().toISOString();
+    const mergedData = applyCharacterDirtyPatch(currentData, cleanedData, { blobUpdatedAt: now });
     normalizeCharacterForSave(mergedData);
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
     const listCols = getCharacterListColumns(mergedData, { archetypeNameById });
-    const now = new Date().toISOString();
 
     let updateQuery = supabase
       .from('characters')

@@ -6,7 +6,6 @@ import {
   isStaleCharacterWrite,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
-  stripCharacterPatchMeta,
 } from './dirty-patch';
 
 describe('characterLockToken', () => {
@@ -76,14 +75,18 @@ describe('pickDirtyCharacterFields', () => {
 });
 
 describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
-  it('leaves omitted keys intact and does not copy meta from the patch', () => {
+  it('leaves omitted keys intact, strips client meta, and can stamp blob updatedAt', () => {
     const merged = applyCharacterDirtyPatch(
       { name: 'Hero', notes: 'keep', level: 2, extra: 1 },
-      { notes: 'changed', updatedAt: 'client', id: 'ignored' }
+      { notes: 'changed', updatedAt: 'client', id: 'ignored' },
+      { blobUpdatedAt: '2026-08-14T00:00:00.000Z' }
     );
-    expect(merged).toEqual({ name: 'Hero', notes: 'changed', level: 2, extra: 1 });
-    expect(stripCharacterPatchMeta({ notes: 'x', updatedAt: 'T', id: '1' })).toEqual({
-      notes: 'x',
+    expect(merged).toEqual({
+      name: 'Hero',
+      notes: 'changed',
+      level: 2,
+      extra: 1,
+      updatedAt: '2026-08-14T00:00:00.000Z',
     });
   });
 

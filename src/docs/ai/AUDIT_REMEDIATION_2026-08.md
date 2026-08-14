@@ -323,8 +323,9 @@ Wave 2 coding pass is open (TASK-740, TASK-738, TASK-744, and TASK-741 done):
 
 1. **TASK-742** — Owner-acked rules leftovers (TP comments, rarity clamp, feat 2×, drop size Speed add, N2/D4–D7, tests).
 2. **TASK-739** — Advanced `getCharacter` currency clamp.
-3. Existing product leftovers (TASK-733, TASK-718, TASK-719).
-4. **Wave 3** — TASK-741 is green in code; start Wave 3 only when the owner opens that pass (avoid Prettier/`text-muted` mega-diffs colliding with 742/739).
+3. **TASK-746** / **TASK-747** — library add-to-character `updatedAt` lock; sheet realtime merge for non-resource keys (filed from TASK-741 cleanup).
+4. Existing product leftovers (TASK-733, TASK-718, TASK-719).
+5. **Wave 3** — start only when the owner opens that pass (avoid Prettier/`text-muted` mega-diffs colliding with 742/739).
 
 ---
 

@@ -408,6 +408,7 @@ describe('PATCH /api/characters/[id]', () => {
     expect(data.name).toBe('Updated Hero');
     expect(data.notes).toBe('keep me');
     expect(data.level).toBe(3);
+    expect(typeof data.updatedAt).toBe('string');
   });
 
   it('returns 409 and does not write when updatedAt is stale', async () => {
