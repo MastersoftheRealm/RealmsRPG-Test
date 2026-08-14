@@ -2363,7 +2363,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-429, TASK-565 |
+| **Related task** | TASK-429, TASK-565, TASK-758, TASK-759 |
 | **Where** | Guided creator → Archetype Feats, then Character Feat |
 | **Needs** | Path + species + abilities + skills complete |
 
@@ -2373,10 +2373,12 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 3. Select a non-path feat (respect max); Add Selected; confirm counter updates and modal closes.
 4. Re-open See more Feats; deselect / replace; confirm L1 cards and counter stay in sync after confirm. Cancel leaves prior picks unchanged.
 5. On Character Feat, repeat with **See more Character Feats** → **Add Character Feat** modal; confirm single-select replace works.
+6. In both feat modals, confirm there is no **REQ. LEVEL** header/cell; feats requiring level >1 remain hidden. Open the **State Feats (i)** and confirm it explains Quick Action → Enter State, 1-minute duration, and activating multiple state feats together.
 
 **Expected**
 - GuidedLayerNav opens an add modal (same grammar as Browse all Skills / See more options on Loadout & Powers) — does **not** dump all feats as in-step cards.
 - L2 defaults to feats you qualify for; optional "Show Feats I don't qualify for".
+- Creator feat columns omit Req. Level only; Codex/Admin feat lists still show it. State Feats help uses the same sentence as state-feat card notices and remains link-blue/readable at ~360px.
 - Modal uses `fullScreenOnMobile`; Add Selected / Cancel are sticky (≥44px targets).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -3598,13 +3600,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T070 — Path feat deep-dive uses chips + restriction notices (TASK-579)
+#### DEV-V-013-T070 — Path feat deep-dive uses chips + restriction notices (TASK-579 / TASK-759)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-579 |
-| **Where** | Guided creator → Path → More details → Archetype / Character Feats sections |
+| **Related task** | TASK-579, TASK-759 |
+| **Where** | Guided creator → Path → More details → Archetype / Character Feats sections; feat-step filters |
 | **Needs** | Path with at least one limited-use feat and ideally one state feat (e.g. Berserker / Assassin / Sorcerer) |
 
 **Steps**
@@ -3612,10 +3614,11 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Confirm the Uses chip is a non-expanding DescriptorChip (no chevron / no expandable restatement panel).
 3. Confirm there is **no** duplicate “This feat can be used … per … Recovery” sentence when the chip already states uses/recovery.
 4. Expand a **state** feat (if present): confirm the same info-warning callout style as Archetype Feats step cards (`GuidedFeatRestrictionNotice` — State feat / Enter State teaching). Uses chip still present when the feat has a per-feat limit; notice does not restate the uses sentence.
-5. At ~360px: expand a feat row; chip + notice remain readable; touch targets on expand control ≥44px.
+5. On an Archetype Feats or Character Feat catalog, open the **State Feats (i)**. Confirm its State feat / Enter State / 1-minute / multiple-state sentence exactly matches the teaching sentence in the card notice.
+6. At ~360px: expand a feat row and open the filter (i); chip, notice, and tip remain readable; touch targets ≥44px.
 
 **Expected**
-- Uses/recovery = DescriptorChip only; state / meaningful restrictions use shared GuidedRestrictionNotice styling; no parallel warning UI; no uses chip + uses sentence duplication.
+- Uses/recovery = DescriptorChip only; state / meaningful restrictions use shared GuidedRestrictionNotice styling; the State Feats filter reuses that teaching copy; no parallel warning UI or duplicate copy.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6402,7 +6405,7 @@ Empowered Attack mode must prefer the cheaper live Energy part when power and te
 
 ---
 
-## DEV-V-050 — Guided creator L3 inline catalog lists (TASK-684 / TASK-685 / TASK-686–690 / **TASK-709** / **TASK-727** / **TASK-724** / **TASK-728**)
+## DEV-V-050 — Guided creator L3 inline catalog lists (TASK-684 / TASK-685 / TASK-686–690 / **TASK-709** / **TASK-727** / **TASK-724** / **TASK-728** / **TASK-758** / **TASK-759**)
 
 Full Customize (L3, no archetype path) on archetype feats, character feat, loadout (weapon/armor/gear), and powers/techniques must render the filtered catalog inline in the step body (selected items as removable rows above the list) instead of auto-opening a modal. Guided paths (L1, has an archetype path) must be unchanged — curated cards + "See more" still opens the L2 modal. TASK-685 follow-up: hide unmet feats; custom loadout always shows weapons (Power-only skips armor); gear quantity-first; powers innate scope filter + max EN filter. TASK-686–690: preview strip parity, Energy kind fix, equipment Codex columns + qty spacing, Power armor skip regardless of path `armorStep`.
 
@@ -6411,12 +6414,12 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-050 — Guided creator L3 inline catalog lists |
-| **Related task** | TASK-684 / TASK-685 / TASK-688 / **TASK-699** / **TASK-702** / **TASK-710** / **TASK-709** / **TASK-703** / **TASK-705** / **TASK-706** / **TASK-727** / **TASK-724** |
+| **Related task** | TASK-684 / TASK-685 / TASK-688 / **TASK-699** / **TASK-702** / **TASK-710** / **TASK-709** / **TASK-703** / **TASK-705** / **TASK-706** / **TASK-727** / **TASK-724** / **TASK-758** / **TASK-759** |
 | **Where** | `/characters/new/guided` — start a **custom** (no path) character |
 | **Needs** | Signed-in; a draft with no `archetypePathId` (Full Customize) |
 
 **Steps**
-1. Archetype Feats step: confirm the full eligible Feats list renders inline (no modal); **columns match Codex** (Req. Level / Category / Ability / Uses / Recovery); Category (multi-select) and State Feats filters work; search covers name/tags/keywords/category; picking a Feat adds a removable card above the list; **unmet-requirement Feats are hidden** (not shown disabled). Selecting then becoming unmet still shows the selected row so it can be removed.
+1. Archetype Feats step: confirm the full eligible Feats list renders inline (no modal); creator columns compose Codex facts but intentionally omit **Req. Level** (Category / Ability / Uses / Recovery); Category (multi-select) and State Feats filters work; the State Feats **(i)** explains Quick Action → Enter State, 1-minute duration, and activating multiple state feats together; search covers name/tags/keywords/category; picking a Feat adds a removable card above the list; **unmet-requirement Feats are hidden** (including `lvl_req` >1, not shown disabled). Selecting then becoming unmet still shows the selected row so it can be removed.
 2. Character Feat step: same as step 1, single-select (max 1); selecting a new Feat swaps the previous one.
 3. Loadout — Weapon phase: **always present** for Martial / Power / Powered-Martial custom drafts; inline list shows eligible weapons/shields within armament proficiency; **columns match Codex/Library** (Name, Rarity, Currency, TP, Range, Damage); Range is **Melee** (never `0`) or `8 spaces` / `16 spaces` from properties (TASK-701 / **TASK-716**); **SourceFilter** All / Realms / My scopes the catalog (Custom defaults All); **Create Armament** hatch opens `/item-creator` in a new tab; Currency + Training Points budget bar updates live; selecting a two-handed weapon with a shield already selected shows the hand-slot error and does not apply.
 4. Loadout — Armor phase: present for Martial and Powered-Martial with **Codex armor columns** (Rarity, Currency, TP, Damage Red., Agility Red., Abl. Req., Crit +); **skipped for Power only**; single-slot swap on select; TP budget shared with weapons. Same SourceFilter + Create Armament hatch.
@@ -6427,7 +6430,7 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 9. **Descriptor chips (TASK-699):** Expand a Library or Codex GLR row — descriptor metadata chips and expandable part/cost chips share the same inline size (readable `text-sm`, not undersized `text-xs`). Filter toolbar pills remain the smaller `sm` role. Optional: `/dev/styleguide` → Entity row parity row matches GLR expanded chips. **Library vs L3 spot-check (TASK-709):** same power/weapon/feat in Official/Codex vs creator L3 matches columns/expand modulo ADR-0012 allowlist.
 
 **Expected**
-- All four L3 screens show the catalog inline with live budgets/eligibility; unavailable feats/powers hidden except innate energy-over-cap (T003); custom loadout never skips weapons; Power-only skips armor; gear is quantity-first with readable qty chrome (full-width header + hover through stepper buttons + expanded band through qty/+); equipment headers match Codex; L1 path-based flow is unchanged except innate energy-at-cap now swaps last-in (same `applyInnateSelection` as L3 / path L2 — TASK-727); + expand does not overlay description.
+- All four L3 screens show the catalog inline with live budgets/eligibility; creator feat lists omit Req. Level while retaining eligibility and shared State Feats help; unavailable feats/powers hidden except innate energy-over-cap (T003); custom loadout never skips weapons; Power-only skips armor; gear is quantity-first with readable qty chrome (full-width header + hover through stepper buttons + expanded band through qty/+); equipment headers match Codex; L1 path-based flow is unchanged except innate energy-at-cap now swaps last-in (same `applyInnateSelection` as L3 / path L2 — TASK-727); + expand does not overlay description.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

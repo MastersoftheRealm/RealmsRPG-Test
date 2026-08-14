@@ -1,3 +1,96 @@
+- id: TASK-759
+  title: State Feats filter InfoTippy on creator GLR
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-758
+    - TASK-753
+    - TASK-725
+  related_files:
+    - src/components/guided-creator/guided-feats-filter-fields.tsx
+    - src/lib/codex/feat-restriction-notice.ts
+    - src/lib/codex/feat-restriction-notice.test.ts
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+  build_validation: |
+    suite: DEV-V-013 / DEV-V-050
+    tests:
+      - DEV-V-013-T012
+      - DEV-V-013-T070
+      - DEV-V-050-T001
+  developer_test_plan: |
+    Suite DEV-V-013 T012/T070 and DEV-V-050 T001 — see BUILD_VALIDATION.md
+  description: |
+    Creator feat GLR State Feats dropdown had no (i). The existing State feat
+    teaching sentence already lived inside `getFeatRestrictionNotice`.
+  acceptance_criteria:
+    - GuidedFeatsFilterFields State Feats label has default link-blue InfoTippy
+      using the shared State feat sentence and TASK-725 layout-neutral hit area.
+    - Codex Feats State Feats SelectFilter gets the same accessory; Admin shares it.
+    - L1/L2 feat cards keep using getFeatRestrictionNotice from the same source.
+      FEATURE_INDEX and tooltip hub document the exception. Typecheck/lint.
+  completed_work: |
+    Exported `STATE_FEAT_RESTRICTION_NOTICE` and kept `getFeatRestrictionNotice`
+    consuming it. Wired the same accessible default-tone InfoTippy onto creator,
+    Codex, and Admin State Feats filters without duplicating copy in tooltip-text.
+    Added exact-copy coverage and updated DEV-V-013 T012/T070 plus DEV-V-050 T001.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa.
+- id: TASK-758
+  title: Hide REQ. LEVEL on character-creator feat GLR
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-753
+    - TASK-759
+  related_files:
+    - src/lib/guided-creator/feats-l2.ts
+    - src/lib/guided-creator/feats-l2.test.ts
+    - src/lib/codex/feat-list.ts
+    - src/lib/glr/required-facts-registry.ts
+    - src/lib/glr/required-facts-registry.test.ts
+    - src/docs/ai/ADR/0009-glr-required-facts-registry.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-013 / DEV-V-050
+    tests:
+      - DEV-V-013-T012
+      - DEV-V-050-T001
+  developer_test_plan: |
+    Suite DEV-V-013 T012 and DEV-V-050 T001 — see BUILD_VALIDATION.md
+  description: |
+    Creator feat L2/L3 reused Codex selectable columns including Req. Level even
+    though the level-1 creator already hides feats with unmet `lvl_req`.
+  acceptance_criteria:
+    - Guided archetype/character feat L2 USM and L3 inline catalogs omit the
+      Req. Level header/cell while eligibility remains unchanged.
+    - ADR-0009 guided-feats-l3 drops reqLevel; Codex feat required facts remain.
+    - Creator column tests omit lvl_req. FEATURE_INDEX and manual QA updated.
+      Typecheck/lint.
+  completed_work: |
+    Added Codex-backed selectable-header/cell composition options and used the
+    creator-only `omitRequiredLevel` path for both L2 and L3. Reduced the creator
+    grid to five tracks. Registry CI now binds guided-feats-l3 to the creator
+    headers without reqLevel while codex-feat remains unchanged. Eligibility
+    continues through checkFeatRequirements and the existing level-5 fixture.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa.
 - id: TASK-760
   title: AbilityScoreGrid tile spacing and Primary/Secondary pill alignment
   created_at: 2026-08-14

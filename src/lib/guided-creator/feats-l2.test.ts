@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildGuidedFeatsL2FilterOptions,
   buildGuidedFeatsL2Items,
+  FEATS_L2_HEADER_COLUMNS,
   selectedIdsFromFeatL2Items,
 } from './feats-l2';
 import type { Feat } from '@/hooks';
@@ -99,13 +100,13 @@ describe('buildGuidedFeatsL2Items', () => {
     expect(items.map((i) => i.id).sort()).toEqual(['a', 'b']);
   });
 
-  it('uses Codex feat columns including req level and ability (TASK-709)', () => {
+  it('uses Codex-backed creator columns without req level (TASK-758)', () => {
     const feats = [
       feat({
         id: 'a',
         name: 'Alpha',
         char_feat: false,
-        lvl_req: 2,
+        lvl_req: 1,
         category: 'Combat',
         ability: ['Strength'],
         uses_per_rec: 1,
@@ -116,18 +117,24 @@ describe('buildGuidedFeatsL2Items', () => {
       featType: 'archetype',
       feats,
       recommendedIds: [],
-      requirementCharacter: { ...character, level: 3 },
+      requirementCharacter: character,
       codexSkills: [],
     });
     expect(items).toHaveLength(1);
-    expect(items[0]?.columns?.map((c) => c.key)).toEqual([
-      'lvl_req',
+    expect(FEATS_L2_HEADER_COLUMNS.map((column) => column.key)).toEqual([
+      'name',
       'category',
       'ability',
       'uses_per_rec',
       'rec_period',
     ]);
-    expect(items[0]?.columns?.find((c) => c.key === 'lvl_req')?.value).toBe('2');
+    expect(items[0]?.columns?.map((c) => c.key)).toEqual([
+      'category',
+      'ability',
+      'uses_per_rec',
+      'rec_period',
+    ]);
+    expect(items[0]?.columns?.some((c) => c.key === 'lvl_req')).toBe(false);
   });
 
   it('filters by stateFeatMode', () => {

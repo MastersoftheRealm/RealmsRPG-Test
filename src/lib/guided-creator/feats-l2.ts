@@ -13,9 +13,8 @@ import type { SelectableItem } from '@/components/shared/unified-selection-modal
 import type { Feat, Skill } from '@/hooks';
 import {
   buildFeatDetailSections,
-  FEAT_GRID_COLUMNS,
-  FEAT_SELECTABLE_HEADER_COLUMNS,
   featSelectableColumns,
+  featSelectableHeaderColumns,
 } from '@/lib/codex/feat-list';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import {
@@ -24,9 +23,11 @@ import {
 } from '@/lib/game/feat-requirements';
 import { formatFeatName, getFeatLevel, groupFeatFamilies } from '@/lib/leveled-feats';
 
-/** Codex feat headers — Guided L2/L3 reuses the same columns as Codex browse (TASK-709). */
-export const FEATS_L2_HEADER_COLUMNS = FEAT_SELECTABLE_HEADER_COLUMNS;
-export const FEATS_L2_GRID = FEAT_GRID_COLUMNS;
+/** Codex-backed feat headers, minus Req. Level because creator eligibility already enforces level 1. */
+export const FEATS_L2_HEADER_COLUMNS = featSelectableHeaderColumns({
+  omitRequiredLevel: true,
+});
+export const FEATS_L2_GRID = '1.5fr 1fr 0.8fr 0.8fr 1fr';
 
 /** Search covers name/description + tags/category (packed into `keywords`) — TASK-684. */
 export const FEATS_L2_SEARCH_FIELDS: (keyof SelectableItem)[] = ['name', 'description', 'keywords'];
@@ -131,7 +132,7 @@ export function buildGuidedFeatsL2Items(opts: {
         name: formatFeatName(preferred),
         description: preferred.description,
         keywords: keywords || undefined,
-        columns: featSelectableColumns(preferred),
+        columns: featSelectableColumns(preferred, { omitRequiredLevel: true }),
         detailSections: detailSections.length > 0 ? detailSections : undefined,
         // Selected-but-unmet stays visible so the player can deselect; otherwise unmet are hidden above.
         disabled: !met && isSelected,

@@ -3,13 +3,19 @@ import {
   getFeatRestrictionNotice,
   getLimitedUsesNotice,
   getTraitRestrictionNotice,
+  STATE_FEAT_RESTRICTION_NOTICE,
 } from './feat-restriction-notice';
 
 describe('getFeatRestrictionNotice', () => {
   it('describes state feat enter-state uses per full recovery', () => {
     const notice = getFeatRestrictionNotice({ state_feat: true }, { level: 3 });
-    expect(notice).toContain('State feat');
+    expect(notice).toContain(STATE_FEAT_RESTRICTION_NOTICE);
     expect(notice).toContain('2 times per Full Recovery');
+  });
+
+  it('uses the shared State feat teaching sentence once', () => {
+    const notice = getFeatRestrictionNotice({ state_feat: true });
+    expect(notice).toBe(STATE_FEAT_RESTRICTION_NOTICE);
   });
 
   it('state feat per-feat uses always say full recovery, not partial', () => {

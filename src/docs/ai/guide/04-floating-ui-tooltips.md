@@ -29,7 +29,7 @@ Your Floating UI work **is in the repo** — it was extracted into shared primit
 
 ## Copy scoping — global term tips vs guided / L1 tips
 
-All product help copy still lives in **`public/tooltip-text.tsx`**. Scope the **export name and length**, not a second tip system.
+By default, product help copy lives in **`public/tooltip-text.tsx`**. Scope the **export name and length**, not a second tip system; the State feat domain-copy exception is documented below.
 
 | Scope | Purpose | Naming | Examples |
 |-------|---------|--------|----------|
@@ -44,6 +44,11 @@ All product help copy still lives in **`public/tooltip-text.tsx`**. Scope the **
 4. Marketing / landing copy stays in `src/lib/constants/copy/*` (not `tooltip-text.tsx`).
 
 **Armament Proficiency (TASK-578 / TASK-581):** `armamentProficiencyHelp` is the single global export. Path More details (Weapons and Armor) and sheet Inventory both consume it.
+
+**State feat teaching (TASK-759):** `STATE_FEAT_RESTRICTION_NOTICE` in
+`lib/codex/feat-restriction-notice.ts` is an intentional domain-copy exception because
+`getFeatRestrictionNotice` and the creator/Codex/Admin State Feats filter tips must use
+the exact same operational sentence. Do not duplicate it in `tooltip-text.tsx`.
 
 ## Decision matrix — what to use when
 

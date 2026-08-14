@@ -42,19 +42,39 @@ export const FEAT_SELECTABLE_HEADER_COLUMNS = CODEX_FEAT_HEADER_COLUMNS.map((h) 
   sortable: true,
 }));
 
+export interface FeatSelectableColumnOptions {
+  /** Creator eligibility already hides feats above level 1, so its catalog can omit this column. */
+  omitRequiredLevel?: boolean;
+}
+
+/** Compose selectable feat headers without forking the Codex column definitions. */
+export function featSelectableHeaderColumns(
+  options: FeatSelectableColumnOptions = {}
+): typeof FEAT_SELECTABLE_HEADER_COLUMNS {
+  return options.omitRequiredLevel
+    ? FEAT_SELECTABLE_HEADER_COLUMNS.filter((header) => header.key !== 'lvl_req')
+    : FEAT_SELECTABLE_HEADER_COLUMNS;
+}
+
 /**
  * Same cells as Codex `buildFeatGridColumns('codex')`, keyed to `CODEX_FEAT_HEADER_COLUMNS`
  * so Guided L2/L3 sort matches Library/Codex (TASK-709).
  */
-export function featSelectableColumns(feat: Feat): ColumnValue[] {
+export function featSelectableColumns(
+  feat: Feat,
+  options: FeatSelectableColumnOptions = {}
+): ColumnValue[] {
   const values = buildFeatGridColumns(feat, 'codex');
   const headers = CODEX_FEAT_HEADER_COLUMNS.filter((h) => h.key !== 'name');
-  return headers.map((h, i) => ({
+  const columns = headers.map((h, i) => ({
     key: h.key,
     label: h.label,
     value: values[i]?.value ?? '-',
     align: 'center' as const,
   }));
+  return options.omitRequiredLevel
+    ? columns.filter((column) => column.key !== 'lvl_req')
+    : columns;
 }
 
 export interface FeatFilterOptions {

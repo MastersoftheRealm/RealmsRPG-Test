@@ -20,6 +20,9 @@ Introduce a typed **required-facts registry** at `src/lib/glr/required-facts-reg
 3. **Per-surface rules** — each required fact specifies column key matchers and/or chip label patterns. A fact is satisfied when it appears in **either** collapsed columns **or** expanded descriptor chips (never both — redundancy is a separate lint).
 4. **Validation helpers** (`validate-glr-facts.ts`) — `validateSurfaceColumnConfig` for header/column keys; `validateRowFactCoverage` for sample rows with values.
 5. **CI** — `required-facts-registry.test.ts` imports live column configs from builders and fails on drift.
+6. **Creator feat exception (TASK-758)** — `guided-feats-l3` does not require `reqLevel`.
+   Character creation is fixed at level 1 and eligibility already removes feats with unmet
+   `lvl_req`; Codex/Admin/sheet feat surfaces still require and display the level fact.
 
 Consumers keep their existing column constants; the registry is the SoT for *what must be visible* and tests enforce parity. New surfaces add a registry entry + test binding before shipping.
 
