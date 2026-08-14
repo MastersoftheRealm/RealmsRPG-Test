@@ -8,58 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-756, TASK-759, TASK-758, TASK-760, TASK-733, TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-757, TASK-756, TASK-759, TASK-758, TASK-760, TASK-733, TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 7 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 6 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **TASK-733 done** (sheet innate InfoTippys). **TASK-760 done** (ability tiles). **TASK-758–759 done** (feat GLR: no creator REQ LEVEL + shared State Feats `(i)`). **TASK-756 done** (sequential innate → powers → techniques screens). **Next: TASK-757** (Power path See weapons). Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
-
----
-
-- id: TASK-757
-  title: Power path equipment screen — See weapons hatch
-  created_at: 2026-08-14
-  created_by: owner
-  priority: medium
-  status: not-started
-  related_tasks:
-    - TASK-756
-    - TASK-689
-  related_files:
-    - src/components/guided-creator/steps/loadout-step.tsx
-    - src/components/guided-creator/guided-equipment-phase-layout.tsx
-    - src/components/guided-creator/guided-equipment-l2-modal.tsx
-    - src/lib/guided-creator/equipment-phase-nav.ts
-    - src/lib/guided-creator/equipment-eligibility.ts
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/BUILD_VALIDATION.md
-    - src/docs/MOBILE_UX.md
-  description: |
-    Path Power loadout skips the weapon phase when the path has no weapon recs, so
-    Power users cannot pick weapons even though armament proficiency still allows
-    them. On the equipment (gear) screen for a Power archetype path, add a
-    bottom-right control to see weapons. It opens the existing weapon catalog modal
-    (same L2 USM / filters as the weapon phase), still capped by armament
-    proficiency max TP. Mainstream Power flow stays equipment-first; weapons are
-    optional.
-  acceptance_criteria:
-    - Power path gear screen shows a bottom-right See weapons (or equivalent) hatch;
-      Martial / Powered-Martial that already walked the weapon phase do not get a
-      duplicate hatch. Custom `fullCatalog` already includes weapons — do not double
-      the phase.
-    - Modal is existing `GuidedEquipmentL2Modal` (weapon headers, `fullScreenOnMobile`),
-      filtered by current armament proficiency max like the normal weapon catalog.
-      Picks write `loadoutWeapons` and appear on Your Hero / save. Currency + TP
-      still use LoadoutBudgetBar.
-    - Do not show an armor phase for Power (TASK-689). Do not add a new shared/ui
-      file. FEATURE_INDEX loadout note. DEV-V-013 T087. Typecheck/lint. Desktop +
-      ~360px.
-  notes: |
-    After TASK-754; can ship with the TASK-756 creator pass. GuidedLayerNav is the
-    See-more hatch — this is a second, optional catalog entry, not Continue-primary
-    (TASK-695).
+**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **TASK-733 done** (sheet innate InfoTippys). **TASK-760 done** (ability tiles). **TASK-758–759 done** (feat GLR: no creator REQ LEVEL + shared State Feats `(i)`). **TASK-756 done** (sequential innate → powers → techniques screens). **TASK-757 done** (Power gear See weapons). **Next:** TASK-761 (low) or TASK-751–753. Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
 
 ---
 
@@ -97,6 +52,8 @@ Do **not** read the done archive at session start.
 
 ---
 
+---
+
 - id: TASK-718
   title: Archive BUILD_VALIDATION suites that cannot stay in the 322KB hot file
   created_at: 2026-08-13
@@ -116,6 +73,8 @@ Do **not** read the done archive at session start.
     - DEVELOPER_TASK_QUEUE build-validation index links still resolve.
   notes: |
     Filed from 2026-08-13 /global-audit. Do not delete tests — move them.
+
+---
 
 ---
 
@@ -140,6 +99,8 @@ Do **not** read the done archive at session start.
   notes: |
     Filed from 2026-08-13 /global-audit. Do not delete either block. Re-id needs a commit
     subject containing the new ID if strict-since covers completed_at.
+
+---
 
 ---
 
@@ -236,6 +197,8 @@ Do **not** read the done archive at session start.
 
 ---
 
+---
+
 - id: TASK-752
   title: Archetype Path filter — Codex/Library skills, powers, techniques, loadout
   created_at: 2026-08-14
@@ -278,6 +241,8 @@ Do **not** read the done archive at session start.
     PowerTechniqueFilters / ArmamentFilters — add the path control there so
     Codex and Library stay one panel body. Skip creature feats / traits /
     species / parts / properties.
+
+---
 
 ---
 
@@ -351,4 +316,3 @@ Do **not** read the done archive at session start.
     into a Codex copy.
 
 ---
-

@@ -1,3 +1,57 @@
+- id: TASK-757
+  title: Power path equipment screen — See weapons hatch
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-756
+    - TASK-689
+  related_files:
+    - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/guided-equipment-phase-layout.tsx
+    - src/components/shared/guided-choice/guided-layer-nav.tsx
+    - src/lib/guided-creator/equipment-phase-nav.ts
+    - src/lib/guided-creator/equipment-phase-nav.test.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T087
+  developer_test_plan: |
+    Suite DEV-V-013 T087 — see BUILD_VALIDATION.md
+  description: |
+    Path Power loadout skips the weapon phase when the path has no weapon recs, so
+    Power users cannot pick weapons even though armament proficiency still allows
+    them. The Power equipment screen now offers an optional See weapons hatch into
+    the existing weapon catalog without adding a weapon phase to the main flow.
+  acceptance_criteria:
+    - Power path gear screen shows a bottom-right See weapons hatch only when the
+      path skipped weapons. Martial / Powered-Martial and Custom fullCatalog flows
+      do not get a duplicate hatch.
+    - The hatch opens GuidedEquipmentL2Modal in weapon mode with the normal weapon
+      headers, filters, mobile full-screen behavior, armament TP cap, Currency, and
+      LoadoutBudgetBar. Confirmed picks write loadoutWeapons for Your Hero and save.
+    - Power still never shows armor. No new shared/ui file. FEATURE_INDEX and
+      DEV-V-013 T087 document the behavior. Vitest, typecheck, lint, and task
+      validation pass.
+  completed_work: |
+    Added a pure hatch-visibility helper and tests for Power, Martial,
+    Powered-Martial, prior weapon phase, non-gear phase, and fullCatalog cases.
+    LoadoutStep keeps equipmentPhase on gear while the existing L2 modal browses
+    weapons, so confirmed picks use the established loadoutWeapons and budget path.
+    The second GuidedLayerNav hatch is bottom-right and retains its large mobile
+    touch target; UnifiedSelectionModal remains full-screen below md.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa
+    (DEV-V-013 T087).
 - id: TASK-756
   title: Split guided innate powers, powers, and techniques into sequential screens
   created_at: 2026-08-14

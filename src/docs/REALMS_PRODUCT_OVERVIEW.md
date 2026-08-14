@@ -195,7 +195,7 @@ Earlier drafts over-emphasized “accept path defaults and barely touch the midd
 
 #### Shared layer chrome
 
-[`GuidedChoiceShell`](../components/shared/guided-choice/guided-choice-shell.tsx) + [`GuidedLayerNav`](../components/shared/guided-choice/guided-layer-nav.tsx) own expand/collapse for Ladder B. **Placement:** below step content (not the sticky footer); one action → bottom left; two actions → shallower outline left, deeper primary right. Character-creator steps use `GuidedStepLayout` + `GuidedLayerNav` (same labels). Absorb remaining Custom/Advanced catalog behaviors into those layers rather than inventing per-step toggles or a second wizard.
+[`GuidedChoiceShell`](../components/shared/guided-choice/guided-choice-shell.tsx) + [`GuidedLayerNav`](../components/shared/guided-choice/guided-layer-nav.tsx) own expand/collapse for Ladder B. **Placement:** below step content (not the sticky footer); one action → bottom left; two+ actions → shallower left, deeper right (outline collapse and/or hatch expand; optional second hatch for a sibling Layer 2). Character-creator steps use `GuidedStepLayout` + `GuidedLayerNav` (same labels). Absorb remaining Custom/Advanced catalog behaviors into those layers rather than inventing per-step toggles or a second wizard.
 
 Legacy Advanced surfaces still being absorbed into the cohesive creator: [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx), [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx), [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx), [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) forge face, [`PathHelpCard.tsx`](../components/character-creator/PathHelpCard.tsx).
 

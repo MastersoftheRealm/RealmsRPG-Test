@@ -3,6 +3,7 @@
  */
 
 import type { PathItemRecommendation } from '@/types/archetype';
+import type { ArchetypeCategory } from '@/types';
 import type { GuidedEquipmentPhase } from '@/stores/guided-creator-store';
 import {
   shouldSkipArmorPhase,
@@ -24,6 +25,25 @@ export interface EquipmentPhaseCompletionContext {
   recommendUnarmed: boolean;
   unarmedProwess: number;
   armorMode: ArmorStepMode;
+}
+
+export function shouldShowPowerWeaponsHatch({
+  archetypeType,
+  includeWeapon,
+  phase,
+  fullCatalog,
+}: {
+  archetypeType: ArchetypeCategory | null | undefined;
+  includeWeapon: boolean;
+  phase: GuidedEquipmentPhase;
+  fullCatalog: boolean;
+}): boolean {
+  return (
+    archetypeType === 'power' &&
+    !includeWeapon &&
+    phase === 'gear' &&
+    !fullCatalog
+  );
 }
 
 export function resolveEquipmentPhaseVisibility(

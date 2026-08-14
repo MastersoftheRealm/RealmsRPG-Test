@@ -365,6 +365,7 @@ export const GUIDED_CREATOR_COPY = {
       emptyDescription:
         'This path has no recommended weapons, armor, or Equipment yet. Use See more options to browse common items, or pick another path.',
       loadingItems: 'Loading items…',
+      seeWeapons: 'See weapons',
       overspent: (over: number) =>
         `You are ${over} Currency over budget. Remove an item to continue.`,
       unarmed: {

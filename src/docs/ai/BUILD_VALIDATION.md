@@ -3970,6 +3970,29 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-013-T087 — Power gear screen optional See weapons hatch (TASK-757)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-757 |
+| **Where** | Guided creator → path-based Power Loadout → Equipment |
+| **Needs** | A Power path with no weapon recommendations; a Martial or Powered-Martial path with a weapon phase; Custom entry |
+
+**Steps**
+1. Choose the Power path and continue to Loadout. Confirm the first/main screen is **Equipment**, Power still has no armor screen, and a **See weapons** hatch appears at bottom-right on the same GuidedLayerNav row as **See more options**.
+2. Open **See weapons**. Confirm the existing full-screen-on-mobile weapon selection modal opens with weapon headers, search, filters, Currency, and Training Points capped by current Armament Proficiency.
+3. Pick and confirm a weapon. Confirm it remains selected when the modal is reopened, the Equipment screen remains the current phase, and the budget bar includes the weapon spend.
+4. Continue to **Your Hero**, save, and open the character. Confirm the weapon appears by name in Loadout/inventory.
+5. Repeat with Martial / Powered-Martial paths that already show a weapon phase, and with Custom/fullCatalog. Confirm none shows a duplicate **See weapons** hatch on Equipment.
+6. Check desktop and ~360px: hatch is bottom-right, tappable (at least 44px on mobile), and the modal is usable full-screen without horizontal page overflow.
+
+**Expected**
+- Path-based Power users can optionally browse and save weapons without adding a weapon or armor phase to the main flow.
+- Existing weapon-phase and Custom/fullCatalog flows do not duplicate the hatch; all picks use the existing loadout budget and persistence path.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-013-T048 — Sitewide compact facts + Training Points chip labels (TASK-461)
 
 | Field | Value |
