@@ -87,6 +87,7 @@ export async function saveCharacter(
 
 /**
  * PATCH dirty keys; on 409 refetch, let the caller re-apply local dirty keys, retry once.
+ * `applied` is the body that actually persisted (original dirty, or the 409 retry dirty).
  */
 export async function saveCharacterWithConflictRetry(
   characterId: string,
@@ -98,18 +99,20 @@ export async function saveCharacterWithConflictRetry(
       updatedAt?: string | Date | null;
     };
   }
-): Promise<{ updatedAt?: string }> {
+): Promise<{ updatedAt?: string; applied: Partial<Character> }> {
   try {
-    return await saveCharacter(characterId, dirty, { updatedAt: options.updatedAt });
+    const result = await saveCharacter(characterId, dirty, { updatedAt: options.updatedAt });
+    return { updatedAt: result.updatedAt, applied: dirty };
   } catch (err) {
     if (!isConflictError(err)) throw err;
     const { character: remote } = await getCharacter(characterId);
     if (!remote) throw err;
     const next = options.mergeOnConflict(remote);
     if (Object.keys(next.dirty).length === 0) {
-      return { updatedAt: characterLockToken(remote.updatedAt) };
+      return { updatedAt: characterLockToken(remote.updatedAt), applied: {} };
     }
-    return await saveCharacter(characterId, next.dirty, { updatedAt: next.updatedAt });
+    const retried = await saveCharacter(characterId, next.dirty, { updatedAt: next.updatedAt });
+    return { updatedAt: retried.updatedAt, applied: next.dirty };
   }
 }
 

@@ -1,18 +1,23 @@
 /**
  * Character sheet page data layer (TASK-666d follow-up)
  * =====================================================
- * Load, realtime merge, path proficiency apply, autosave, enrichment hooks,
- * and derived stats. UI chrome lives in `use-character-sheet-page-ui`.
+ * Load via `useCharacter` (TASK-750), realtime merge, path proficiency apply,
+ * autosave, enrichment hooks, and derived stats. UI chrome lives in
+ * `use-character-sheet-page-ui`.
  */
 
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { getCharacter, saveCharacterWithConflictRetry, type LibraryForView } from '@/services/character-service';
+import { useState, useEffect, useMemo, useRef, useCallback, type SetStateAction } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { saveCharacterWithConflictRetry } from '@/services/character-service';
 import {
+  characterViewerId,
+  patchCharacterDetailQuery,
   useAuth,
   useAutoSave,
   useCampaignsFull,
+  useCharacter,
   useCharacterResourceSync,
   useUserPowers,
   useUserTechniques,
@@ -32,26 +37,60 @@ import {
 import { useGameRules } from '@/hooks/use-game-rules';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { mergeRemotePreservingDirty, pickDirtyCharacterFields } from '@/lib/character/dirty-patch';
+import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
 import { getArchetypeCodexLookupId, applyPathProficiencyForLevel } from '@/lib/game/archetype-display';
 import { useCharacterSheetDerived } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
-import {
-  mergeResourceUpdatesIntoCharacter,
-  shouldSuppressRemoteResourceMerge,
-} from '@/lib/encounter/character-resource-sync';
+import { shouldSuppressRemoteResourceMerge } from '@/lib/encounter/character-resource-sync';
 import type { Character } from '@/types';
 
 export function useCharacterSheetPageData(id: string) {
   const { user, loading: authLoading } = useAuth();
   const { showToast } = useToast();
   const { rules } = useGameRules();
+  const queryClient = useQueryClient();
+  const viewerKey = characterViewerId(user?.uid);
 
-  const [character, setCharacter] = useState<Character | null>(null);
-  const [libraryForView, setLibraryForView] = useState<LibraryForView | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    data: characterResult,
+    isPending: characterPending,
+    isError: characterQueryError,
+  } = useCharacter(id, { refetchOnWindowFocus: false });
+
+  const character = characterResult?.character ?? null;
+  const libraryForView = characterResult?.libraryForView;
+  const loading = authLoading || characterPending;
+  const [actionError, setError] = useState<string | null>(null);
+  const loadError = characterQueryError
+    ? 'Failed to load character'
+    : !loading && characterResult && !characterResult.character
+      ? 'Character not found'
+      : null;
+  const error = actionError ?? loadError;
+
   const savedCleanRef = useRef<Record<string, unknown> | null>(null);
+  const savedSnapshotIdRef = useRef<string | null>(null);
+
+  const setCharacter = useCallback(
+    (update: SetStateAction<Character | null>) => {
+      patchCharacterDetailQuery(queryClient, viewerKey, id, update);
+    },
+    [queryClient, viewerKey, id]
+  );
+
+  useEffect(() => {
+    if (character?.id === id) {
+      if (savedSnapshotIdRef.current === id) return;
+      savedSnapshotIdRef.current = id;
+      savedCleanRef.current = cleanForSave(character) as Record<string, unknown>;
+      return;
+    }
+    if (savedSnapshotIdRef.current !== id) {
+      savedSnapshotIdRef.current = null;
+      savedCleanRef.current = null;
+    }
+  }, [character, id]);
 
   const { data: userPowers = [] } = useUserPowers();
   const { data: userTechniques = [] } = useUserTechniques();
@@ -144,31 +183,6 @@ export function useCharacterSheetPageData(id: string) {
   });
 
   useEffect(() => {
-    async function loadCharacter() {
-      if (authLoading) return;
-
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await getCharacter(id);
-        if (!data.character) {
-          setError('Character not found');
-          return;
-        }
-        setCharacter(data.character);
-        setLibraryForView(data.libraryForView);
-        savedCleanRef.current = cleanForSave(data.character) as Record<string, unknown>;
-      } catch {
-        setError('Failed to load character');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadCharacter();
-  }, [id, authLoading]);
-
-  useEffect(() => {
     const previousTitle = document.title;
     return () => {
       document.title = previousTitle;
@@ -195,14 +209,32 @@ export function useCharacterSheetPageData(id: string) {
           table: 'characters',
           filter: `id=eq.${character.id}`,
         },
-        (payload: { new: { id: string; data?: Record<string, unknown> } }) => {
+        (payload: {
+          new: { id: string; data?: Record<string, unknown>; updated_at?: string | null };
+        }) => {
           const data = payload.new?.data;
           if (!data) return;
           const charId = payload.new.id;
-          if (shouldSuppressRemoteResourceMerge(charId)) return;
+          const suppressResources = shouldSuppressRemoteResourceMerge(charId);
           setCharacter((prev) => {
             if (!prev || prev.id !== charId) return prev;
-            return mergeResourceUpdatesIntoCharacter(prev, data) ?? prev;
+            const { character: next, nextBaseline } = mergeSheetRealtimePayload(
+              prev,
+              data,
+              savedCleanRef.current,
+              {
+                suppressResources,
+                updatedAt: payload.new.updated_at,
+              }
+            );
+            if (nextBaseline) {
+              const baseline = nextBaseline;
+              // Defer so Strict Mode's double updater both read the same savedCleanRef.
+              queueMicrotask(() => {
+                savedCleanRef.current = baseline;
+              });
+            }
+            return next;
           });
         },
       )
@@ -210,43 +242,40 @@ export function useCharacterSheetPageData(id: string) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [character?.id]);
+  }, [character?.id, setCharacter]);
 
   const isOwner = Boolean(character && user && character.userId === user.uid);
 
   useCharacterResourceSync(character, isOwner);
 
-  const [pathProfAppliedKey, setPathProfAppliedKey] = useState<string | null>(null);
-  if (character && codexArchetypes.length > 0) {
+  const pathProfAppliedKeyRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!character || codexArchetypes.length === 0) return;
     const level = character.level ?? 1;
-    if (level >= 5) {
-      const applyKey = `${character.id}:${level}:${character.pow_prof ?? 0}:${character.mart_prof ?? 0}`;
-      if (pathProfAppliedKey !== applyKey) {
-        const lookupId = getArchetypeCodexLookupId(character);
-        if (lookupId) {
-          const pathArch = codexArchetypes.find((a) => a.id === lookupId) as
-            | Character['archetype']
-            | undefined;
-          const profUpdate = applyPathProficiencyForLevel(
-            character,
-            level,
-            pathArch ?? character.archetype,
-          );
-          if (profUpdate) {
-            const next = { ...character, ...profUpdate };
-            setPathProfAppliedKey(
-              `${next.id}:${level}:${next.pow_prof ?? 0}:${next.mart_prof ?? 0}`,
-            );
-            setCharacter(next);
-          } else {
-            setPathProfAppliedKey(applyKey);
-          }
-        } else {
-          setPathProfAppliedKey(applyKey);
-        }
-      }
+    if (level < 5) return;
+    const applyKey = `${character.id}:${level}:${character.pow_prof ?? 0}:${character.mart_prof ?? 0}`;
+    if (pathProfAppliedKeyRef.current === applyKey) return;
+    const lookupId = getArchetypeCodexLookupId(character);
+    if (!lookupId) {
+      pathProfAppliedKeyRef.current = applyKey;
+      return;
     }
-  }
+    const pathArch = codexArchetypes.find((a) => a.id === lookupId) as
+      | Character['archetype']
+      | undefined;
+    const profUpdate = applyPathProficiencyForLevel(
+      character,
+      level,
+      pathArch ?? character.archetype,
+    );
+    if (profUpdate) {
+      const next = { ...character, ...profUpdate };
+      pathProfAppliedKeyRef.current = `${next.id}:${level}:${next.pow_prof ?? 0}:${next.mart_prof ?? 0}`;
+      setCharacter(next);
+    } else {
+      pathProfAppliedKeyRef.current = applyKey;
+    }
+  }, [character, codexArchetypes, setCharacter]);
 
   const { hasUnsavedChanges, saveNow } = useAutoSave({
     data: character,

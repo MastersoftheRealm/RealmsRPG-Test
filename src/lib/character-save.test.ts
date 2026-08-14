@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
-import { prepareCharacterForCreate, prepareCharacterForSave, resolveClientRequestId } from './character-save';
+import {
+  clampSavedCurrency,
+  prepareCharacterForCreate,
+  prepareCharacterForSave,
+  resolveClientRequestId,
+} from './character-save';
+
+describe('clampSavedCurrency (TASK-739)', () => {
+  it('floors a signed remainder at 0', () => {
+    expect(clampSavedCurrency(40)).toBe(40);
+    expect(clampSavedCurrency(0)).toBe(0);
+    expect(clampSavedCurrency(-25)).toBe(0);
+  });
+});
 
 describe('prepareCharacterForSave (ADR-0006 tempModifiers)', () => {
   it('normalizes sparse tempModifiers and drops all-zero maps', () => {
@@ -46,6 +59,21 @@ describe('prepareCharacterForSave (ADR-0006 tempModifiers)', () => {
     expect(cleaned.pow_prof).toBe(1);
     expect(cleaned.powerProficiency).toBeUndefined();
     expect(cleaned.archetype).toEqual({ id: 'a1', type: 'powered-martial' });
+  });
+
+  it('floors currency when the key is present and does not invent it (TASK-749)', () => {
+    const withDebt = prepareCharacterForSave({
+      name: 'Test',
+      level: 1,
+      currency: -10,
+    } as Parameters<typeof prepareCharacterForSave>[0]);
+    expect(withDebt.currency).toBe(0);
+
+    const omitted = prepareCharacterForSave({
+      name: 'Test',
+      level: 1,
+    } as Parameters<typeof prepareCharacterForSave>[0]);
+    expect(omitted).not.toHaveProperty('currency');
   });
 });
 

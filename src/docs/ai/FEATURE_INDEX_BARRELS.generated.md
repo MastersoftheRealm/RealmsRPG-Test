@@ -166,8 +166,11 @@ Generated: 2026-08-14
 ## `src/hooks/index.ts`
 
 - buildGuidedEquipmentEligibilityContext
+- characterKeys
+- characterViewerId
 - findTraitByIdOrName
 - getGameRulesFallback
+- patchCharacterDetailQuery
 - resolveSkillIdsToNames
 - resolveTraitIds
 - sortByColumn

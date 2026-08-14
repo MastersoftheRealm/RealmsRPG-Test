@@ -277,7 +277,7 @@ Character creation is the **primary onboarding experience** and must be fully gu
 
 **Target:** a **single** character creator — the chapter-based shell at `/characters/new/guided` ([`guided-creator-store.ts`](../stores/guided-creator-store.ts), `src/components/guided-creator/`) — with **L1 ↔ L2 ↔ L3 (and back)** throughout, using shared layer chrome. Complexity is available inside this shell, not via a parallel “Custom” wizard.
 
-**Phase out:** the legacy Custom/Advanced creator at `/characters/new/advanced` (`character-creator-store.ts`, `src/components/character-creator/`). Its full-customization behavior (forge archetype, unrestricted catalogs, etc.) **integrates into** the cohesive creator’s Layer 3 faces. Keep the Advanced route only as a transitional implementation surface until parity is absorbed; do not treat it as a permanent product peer.
+**Phase out:** the legacy Custom/Advanced creator at `/characters/new/advanced` (`character-creator-store.ts`, `src/components/character-creator/`). Its full-customization behavior (forge archetype, unrestricted catalogs, etc.) **integrates into** the cohesive creator’s Layer 3 faces. Keep the Advanced route only as a transitional implementation surface until parity is absorbed; do not treat it as a permanent product peer. **User-facing name is Legacy** (chooser card + in-wizard chip / document title); do not label the live UI “Advanced.”
 
 **Entry chooser** (`/characters/new` — **Guided** / **Custom** / temporary **Legacy**):
 
@@ -285,7 +285,7 @@ Character creation is the **primary onboarding experience** and must be fully gu
 |--------------|-------------|----------|
 | **Guided** (default / first-timer) | Same cohesive creator | Layer 1 entry (Foundation → Path cards, as today) |
 | **Custom** | Same cohesive creator | Layer 3 entry (Foundation → custom archetype face — see §5.1); later chapters open deeper catalog faces when no path is selected (`creatorEntryMode` in session only — not persisted on save) |
-| **Legacy** (temporary) | Advanced wizard at `/characters/new/advanced` | Classic tabbed creator until cohesive L3 parity is absorbed |
+| **Legacy** (temporary) | Tabbed wizard at `/characters/new/advanced` (UI: **Legacy**) | Classic tabbed creator until cohesive L3 parity is absorbed |
 
 Guided and Custom enter **one** creator. **Legacy** is a transitional escape hatch to the old wizard (owner 2026-08-01). Layer navigation inside steps uses the same place/style controls (`GuidedLayerNav`) wherever a simpler or deeper face exists — expand uses primary chrome (Continue weight); collapse uses outline chrome (Back weight). Labels are direction-neutral (**See …**) so they work whether the player started on that face or navigated there.
 

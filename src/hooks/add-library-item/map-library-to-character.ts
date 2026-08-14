@@ -116,3 +116,40 @@ export function isArmamentKind(
 ): kind is 'weapon' | 'armor' | 'shield' {
   return kind === 'weapon' || kind === 'armor' || kind === 'shield';
 }
+
+/** Dirty-key PATCH body for a library add (ADR-0013 / TASK-746). Do not smash the full document. */
+export function libraryAddDirtyFields(
+  kind: LibraryToCharacterKind,
+  character: Character
+): Partial<Character> {
+  const dirty: Partial<Character> = isArmamentKind(kind)
+    ? { equipment: character.equipment }
+    : {
+        powers: character.powers,
+        techniques: character.techniques,
+      };
+  if (character.proficiencies !== undefined) {
+    dirty.proficiencies = character.proficiencies;
+  }
+  return dirty;
+}
+
+/**
+ * 409 merge: re-apply the add onto the remote document so concurrent edits of
+ * other keys survive. If the row is already on the remote character, skip the retry.
+ */
+export function mergeLibraryAddOnConflict(
+  remote: Character,
+  kind: LibraryToCharacterKind,
+  raw: LibraryToCharacterRaw,
+  apply: (character: Character) => { character: Character }
+): { dirty: Partial<Character>; updatedAt?: string | Date | null } {
+  if (characterOwnsLibraryItem(remote, kind, libraryItemRowId(raw))) {
+    return { dirty: {}, updatedAt: remote.updatedAt };
+  }
+  const next = apply(remote);
+  return {
+    dirty: libraryAddDirtyFields(kind, next.character),
+    updatedAt: remote.updatedAt,
+  };
+}

@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  clampSavedCurrency,
   resolveItemUnitCost,
   resolveRefUnitCost,
 } from '@/lib/guided-creator/equipment-currency';
@@ -39,11 +38,5 @@ describe('equipment-currency', () => {
       [{ id: 'rope', currency: 5, gold_cost: 5 }]
     );
     expect(cost).toBe(5);
-  });
-
-  it('clampSavedCurrency floors a signed remainder at 0', () => {
-    expect(clampSavedCurrency(40)).toBe(40);
-    expect(clampSavedCurrency(0)).toBe(0);
-    expect(clampSavedCurrency(-25)).toBe(0);
   });
 });

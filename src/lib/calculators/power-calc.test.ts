@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { PowerPart } from '@/hooks/codex-types';
 import { PART_IDS } from '@/lib/id-constants';
-import { buildMechanicParts } from './mechanic-builder';
+import { buildMechanicParts, calculateDamageOptionLevel } from './mechanic-builder';
 import {
   calculatePowerCosts,
   calculatePowerSectionContribution,
@@ -121,7 +121,11 @@ describe('calculatePowerCosts', () => {
     const costs = calculatePowerCosts(payload, [elementalDamagePart]);
     // 1d6 -> opt1 level 1 -> 3 base + 1 option = 4 EN per row, 3 rows = 12
     expect(costs.totalEnergy).toBe(12);
+    // T6 / M6 — GAME_RULES "Rounding": floor each part, then sum.
+    // Each Elemental Damage row is base_tp 2 + op_1_tp 0.5 × 1 = 2.5 → floor 2.
+    // Three parts → 6. Do not ceil the combined 7.5 to 8.
     expect(costs.totalTP).toBe(6);
+    expect(costs.totalTP).not.toBe(8);
   });
 
   it('counts mixed damage part ids independently', () => {
@@ -301,5 +305,19 @@ describe('derivePowerDisplay', () => {
     expect(withoutApply.energy).toBe(4);
     // dur_all = 2, flat_normal = 4, flat_duration = 4 → 4 + 2*4 = 12
     expect(withApply.energy).toBe(12);
+  });
+});
+
+describe('calculateDamageOptionLevel (D7)', () => {
+  it('is floor((dice × size − 4) / 2) for valid dice', () => {
+    expect(calculateDamageOptionLevel(1, 4)).toBe(0);
+    expect(calculateDamageOptionLevel(1, 6)).toBe(1);
+    expect(calculateDamageOptionLevel(1, 8)).toBe(2);
+    expect(calculateDamageOptionLevel(2, 6)).toBe(4);
+  });
+
+  it('returns 0 for empty or sub-d4 dice', () => {
+    expect(calculateDamageOptionLevel(0, 6)).toBe(0);
+    expect(calculateDamageOptionLevel(1, 2)).toBe(0);
   });
 });

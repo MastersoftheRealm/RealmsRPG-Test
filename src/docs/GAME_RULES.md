@@ -51,7 +51,7 @@ Several rules use **½** or "half":
 | Rule | Formula |
 |------|---------|
 | Companion max level | ½ Character level |
-| Feat level you can acquire | Hard `lvl_req` wins if present; otherwise character level ≥ 2 × feat level (feat level ≤ ½ your level) |
+| Feat level you can acquire | Hard `lvl_req` wins if present; otherwise character level ≥ 2 × feat level. Feat rank 1 with no `lvl_req` stays legal at L1 (literal 2×1 would block untagged L1 feats). |
 | Skill Encounter DS | 10 + ½ Party Level |
 | Skill Encounter successes | # Characters + 1 |
 | Jump beyond limit (per space) | DS 10 + 5 per space over |
@@ -343,6 +343,7 @@ Obscurity affects Stealth, Hide, and attack rolls. **Apply to the active party (
 | **Sub-Skill (Proficient)** | Relevant Ability + Base Skill Value + Sub-Skill Value = Sub-Skill Bonus |
 | **Unproficient Skill** | ½ Relevant Ability (or ×2 if negative) = Unproficient Skill Bonus |
 | **Unproficient Sub-Skill** | Relevant Ability + Base Skill Value = Sub-Skill Bonus |
+| **Unproficient Sub-Skill (base also unproficient)** | Unproficient Skill Bonus of the linked Ability + Base Skill Value |
 
 **Skill Value** = Skill Points allocated after gaining proficiency. Sub-Skill Value includes the point spent to gain proficiency.
 
@@ -844,6 +845,20 @@ Conditions are temporary effects. Leveled conditions have proportional effects. 
 | Legendary | 10,000–49,999 |
 | Mythic | 50,000–99,999 |
 | Ascended | 100,000+ |
+
+---
+
+## Crafting
+
+Crafting numbers live in `core_rules.CRAFTING` (admin Core Rules editor). Code: `lib/game/crafting-utils.ts`.
+
+**General items.** Look up the market Currency cost on the general table (`currencyMin`–`currencyMax`). That row supplies rarity, Difficulty Score, required Successes, and time (`timeValue` + `timeUnit`). Material cost is market price × `craftingCostMultiplier` (default 0.75). Consumables multiply time by `consumableTimeMultiplier` (default ¼, minimum 1). Each required Success is one roll session (8 hours for Common, or one 5-day block otherwise).
+
+**Outcomes.** Compare net Successes to the required count (delta). The successes table sets item worth, retained materials, extra items, or a choice to extra-item vs enhance. Failure deltas reduce worth or waste materials per that table.
+
+**Enhanced / consumable-enhanced.** Separate tables price by Energy cost of the effect (`currencyPerEnergy` / `costPerEnergy`) and use their own DS, Successes, and time. NPC upgrade fees and optional DS/time/cost trades are the `optionalReduce*` / `npc*` fields on the same `CRAFTING` blob.
+
+Until a table row matches, crafting requirements cannot be resolved. Do not invent DS or time in UI.
 
 ---
 

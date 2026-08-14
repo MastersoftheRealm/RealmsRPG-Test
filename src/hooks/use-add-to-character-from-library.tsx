@@ -3,6 +3,7 @@
 /**
  * Add a library power/technique/armament row directly to a filtered character (Library browse).
  * Confirm modal + save + auto-proficiency apply — mirrors sheet add-library handlers.
+ * PATCH sends updatedAt and re-applies the add on 409 (ADR-0013 / TASK-746).
  */
 
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
@@ -16,26 +17,42 @@ import { getErrorMessage } from '@/lib/api-client';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import type { Character, Item } from '@/types';
 import {
-  useCharacter,
-  useItemProperties,
-  usePowerParts,
-  useSaveCharacter,
-  useTechniqueParts,
-} from '@/hooks';
+  useCodexItemProperties,
+  useCodexPowerParts,
+  useCodexTechniqueParts,
+} from './use-codex';
+import { useCharacter, useSaveCharacter } from './use-characters';
 import {
   appendLibraryItemToCharacter,
   characterOwnsLibraryItem,
   entityBucketLabel,
-  isArmamentKind,
+  libraryAddDirtyFields,
   libraryItemRowId,
+  mergeLibraryAddOnConflict,
   type LibraryToCharacterKind,
   type LibraryToCharacterRaw,
 } from './add-library-item/map-library-to-character';
+import type { CodexDbRefs } from './add-library-item/types';
 
 type PendingAdd = {
   name: string;
   raw: LibraryToCharacterRaw;
 };
+
+function applyLibraryAddToCharacter(
+  character: Character,
+  kind: LibraryToCharacterKind,
+  raw: LibraryToCharacterRaw,
+  dbs: CodexDbRefs,
+  buildRequiredForCharacter: (c: Character) => ReturnType<typeof buildRequiredProficiencies>
+) {
+  const withItem = appendLibraryItemToCharacter(character, kind, raw, dbs);
+  return computeAutoProficiencies(
+    withItem,
+    `Adding ${entityBucketLabel(kind)}`,
+    buildRequiredForCharacter
+  );
+}
 
 export function useAddToCharacterFromLibrary(
   kind: LibraryToCharacterKind,
@@ -47,9 +64,9 @@ export function useAddToCharacterFromLibrary(
     characterId || undefined
   );
   const character = characterResult?.character ?? null;
-  const { data: powerPartsDb = [] } = usePowerParts();
-  const { data: techniquePartsDb = [] } = useTechniqueParts();
-  const { data: itemPropertiesDb = [] } = useItemProperties();
+  const { data: powerPartsDb = [] } = useCodexPowerParts();
+  const { data: techniquePartsDb = [] } = useCodexTechniqueParts();
+  const { data: itemPropertiesDb = [] } = useCodexItemProperties();
   const [pending, setPending] = useState<PendingAdd | null>(null);
 
   const active = Boolean(characterId && character);
@@ -88,37 +105,28 @@ export function useAddToCharacterFromLibrary(
 
   const handleConfirm = useCallback(() => {
     if (!pending || !character) return;
-    const withItem = appendLibraryItemToCharacter(character, kind, pending.raw, {
-      powerPartsDb,
-      techniquePartsDb,
-      itemPropertiesDb,
-    });
-    const result = computeAutoProficiencies(
-      withItem,
-      `Adding ${entityBucketLabel(kind)}`,
+    const dbs: CodexDbRefs = { powerPartsDb, techniquePartsDb, itemPropertiesDb };
+    const first = applyLibraryAddToCharacter(
+      character,
+      kind,
+      pending.raw,
+      dbs,
       buildRequiredForCharacter
     );
-
-    const data = isArmamentKind(kind)
-      ? {
-          equipment: result.character.equipment,
-          proficiencies: result.character.proficiencies,
-        }
-      : {
-          powers: result.character.powers,
-          techniques: result.character.techniques,
-          proficiencies: result.character.proficiencies,
-        };
-
     saveCharacter.mutate(
       {
         id: character.id,
-        data,
+        data: libraryAddDirtyFields(kind, first.character),
+        updatedAt: character.updatedAt,
+        mergeOnConflict: (remote) =>
+          mergeLibraryAddOnConflict(remote, kind, pending.raw, (c) =>
+            applyLibraryAddToCharacter(c, kind, pending.raw, dbs, buildRequiredForCharacter)
+          ),
       },
       {
         onSuccess: () => {
           showToast(`Added "${pending.name}" to ${character.name}.`, 'success');
-          deferProficiencyOverLimitToast(showToast, result.overLimitWarning);
+          deferProficiencyOverLimitToast(showToast, first.overLimitWarning);
           setPending(null);
         },
         onError: (e) => {

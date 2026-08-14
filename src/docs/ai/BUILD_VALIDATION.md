@@ -400,9 +400,10 @@ Reach Advanced via **Characters** → **Add Character** → **Legacy**, or open 
 |-------|-------|
 | **Suite** | DEV-V-001 |
 | **Section** | 6. Equipment |
-| **Related task** | TASK-356 |
+| **Related task** | TASK-356 · TASK-739 |
 | **Where** | `/characters/new/advanced` → **7. Equipment** → saved character sheet |
-| **Needs** | Logged-in; note item prices before buying
+| **Needs** | Logged-in; note item prices before buying |
+| **CI** | Partial — `character-creator-store.test.ts` floors negative `getCharacter` currency at 0 |
 
 **Steps**
 1. On **7. Equipment**, add one or more items; note total spent.
@@ -410,7 +411,7 @@ Reach Advanced via **Characters** → **Add Character** → **Legacy**, or open 
 3. Open the saved character sheet and check **currency**.
 
 **Expected**
-- Character **currency** = **200c − total spent** (matches remainder after purchases).
+- Character **currency** = **max(0, 200c − total spent)** (matches remainder after purchases; never negative).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -434,6 +435,53 @@ Reach Advanced via **Characters** → **Add Character** → **Legacy**, or open 
 **Expected**
 - All three steps use PointStatus via `LoadoutBudgetBar` (no plain text resource bar; no separate L1 vs non-L1 currency/TP chrome).
 - Labels spell **Currency** / **Training Points** / **Energy**.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-001-T017 — Legacy label on the tabbed creator (TASK-748)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-001 |
+| **Section** | Entry chrome |
+| **Related task** | TASK-748 |
+| **Where** | `/characters/new` → **Legacy** → `/characters/new/advanced` |
+| **Needs** | — |
+
+**Steps**
+1. Open `/characters/new`. Confirm the third card is **Legacy** (not Advanced). Tagline/bullets refer to the former Advanced / tabbed wizard.
+2. Open the Legacy card. Confirm the wizard heading is **Create New Character** with a **Legacy** chip, the step line starts with **Legacy creator**, and **Choose another way to create** returns to the chooser.
+3. Confirm the browser tab title is **Legacy Character Creator** (or includes that phrase). Repeat at ~360px: chip stays beside the title; back link remains tappable.
+
+**Expected**
+- Players never see “Advanced” as the product name for this wizard. Guided and Custom remain the cohesive creator; Legacy is the transitional tabbed flow.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-001-T018 — Overspent Advanced kit saves at 0 Currency (TASK-739)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-001 |
+| **Section** | 6. Equipment |
+| **Related task** | TASK-739 |
+| **Where** | `/characters/new/advanced` → **7. Equipment** → **9. Finalize** → saved character sheet |
+| **Needs** | Logged-in; a path whose recommended kit costs more than 200c, **or** any Equipment session where remaining Currency is negative |
+| **CI** | Partial — `character-creator-store.test.ts` + `character-save.test.ts` (`clampSavedCurrency`) |
+
+**Steps**
+1. On **7. Equipment**, get remaining Currency **below 0** (path **Add all recommended** that exceeds the 200c budget is enough; catalog add is gated by remaining).
+2. Continue through **9. Finalize**. Confirm the Currency pill can still show the signed remainder (overspend), then **save**.
+3. Open the saved character sheet and check **currency**. Confirm the save did **not** 400 with “cannot start play in debt”.
+
+**Expected**
+- Save succeeds.
+- Sheet **currency** is **0** (not negative). Equipment on the character is the overspent kit.
+- Repeat at ~360px: save still succeeds; sheet currency is 0.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1054,7 +1102,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-736, TASK-741)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-736, TASK-741, TASK-747, TASK-750)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1563,6 +1611,52 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Expected**
 - Concurrent edits to different fields both survive. A stale write does not silently restore an old full character.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T044 — Sheet realtime shows other-tab non-resource edits (TASK-747)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-747 |
+| **Where** | `/characters/[id]` (edit mode); two tabs |
+| **Needs** | Editable owned character |
+| **CI** | Partial — `realtime-merge.test.ts` (remote non-resource apply; dirty notes kept; HP suppress; adopted keys not dirty) |
+
+**Steps**
+1. Open the same character in two tabs. In tab A change **notes** (or add an inventory item) and **do not wait** for autosave — keep typing or leave the field dirty.
+2. In tab B change **feats** or **level** (or add a different inventory item) and wait for autosave.
+3. Without reloading tab A, confirm tab A shows tab B's feats/inventory/level **and** still shows tab A's unsaved notes.
+4. Repeat with tab A editing current HP: tab B's notes should still appear in tab A during the HP echo window. Reload both when done.
+
+**Expected**
+- Untouched keys from the other tab appear in this tab without a reload.
+- Local dirty keys are not overwritten. HP/EN/AP echo suppression still applies.
+- Tab A does not look unsaved for tab B's keys alone (adopted keys are not a second autosave PATCH).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T045 — Sheet document shares useCharacter cache (TASK-750)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-750 |
+| **Where** | `/characters/[id]` (edit mode) + Library add-to-character |
+| **Needs** | Editable owned character; a Library power/technique/weapon not already on the sheet |
+| **CI** | Partial — `use-characters.cache.test.ts` (setCharacter-shaped cache update; merge dirty keys; no-op when empty) |
+
+**Steps**
+1. Open the character sheet. Change **notes** (or the name) and wait for autosave.
+2. In the **same tab**, go to Library Powers (or Weapons), select that character, and **Add to character** an item the sheet does not already have. Confirm the add toast.
+3. Navigate back to the sheet (no full reload). Confirm the new row is present **and** the notes/name from step 1 are still there.
+4. Reload the sheet — notes/name **and** the added item both persist. Optional: start editing notes (leave dirty), alt-tab away and back — notes must not revert to the last GET.
+
+**Expected**
+- Sheet load is `useCharacter` (no parallel getCharacter effect). Library add (`useSaveCharacter`) and sheet edits share `characterKeys.detail` **in this tab**.
+- Adding from Library does not wipe sheet fields. Focus-switching a dirty sheet does not revert notes.
+- Two-tab live appearance of the other tab’s edits is **DEV-V-009-T044** (realtime), not this test.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6063,9 +6157,10 @@ Derived part categories (non-mechanic) as Category column; shared `PowerTechniqu
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-046 |
-| **Related task** | TASK-679 |
+| **Related task** | TASK-679 · TASK-746 |
 | **Where** | `/library` → My Library + Realms Library → Powers and Techniques |
 | **Needs** | Signed-in user with ≥1 character; library power/technique not already on that character |
+| **CI** | Partial — `map-library-to-character.test.ts` dirty-key subset + 409 re-apply
 
 **Steps**
 1. Library → Powers → Filters → pick a character under **Filter by character**.
@@ -6143,6 +6238,28 @@ Derived part categories (non-mechanic) as Category column; shared `PowerTechniqu
 
 **Expected**
 - Filter text/number/select chrome is shared `FilterInput` / `FilterNativeSelect`. InfoTippy layout box is the 16px icon; 44px touch via `.hit-area-layout-neutral`. No per-page `!min-h-*` on the (i).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-046-T008 — Library add keeps sheet edits across a stale lock (TASK-746)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-046 |
+| **Related task** | TASK-746 |
+| **Where** | Character sheet tab + `/library` with **Filter by character** |
+| **Needs** | Signed-in user with ≥1 character; a library power (or weapon) not already on that character |
+| **CI** | Partial — `map-library-to-character.test.ts` (`mergeLibraryAddOnConflict` re-applies onto remote) |
+
+**Steps**
+1. Open the character sheet in tab A. Change **notes** (or add an inventory item) and wait for autosave.
+2. In tab B, open Library → Powers (or Weapons) → **Filter by character** → that character. Add a row that is not already on the character.
+3. Confirm the add succeeds (no error toast). Reload the sheet in tab A.
+
+**Expected**
+- Sheet **notes** (or the other-tab inventory) **and** the newly added library row both survive reload.
+- A failed add because of a stale lock should retry once, not restore an old full document.
+- Repeat at ~360px: add still succeeds; sheet shows the new row after reload.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6922,7 +7039,7 @@ Audit report 03 P1-6 through P1-10. Automated cover: `character-legality.test.ts
 | DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
 | DEV-V-045 | Codex character filter UX (session) | — | Manual — see suite above |
 | DEV-V-048 | Library search toolbar + Enhanced Items tab (session) | — | Manual — see suite above |
-| DEV-V-046 | Library power/technique categories + filters (TASK-673 / TASK-676 / TASK-731 / TASK-725) | — | Automated (category/filter/innate/formulas tests) + manual DEV-V-046 T001–T007 |
+| DEV-V-046 | Library power/technique categories + filters (TASK-673 / TASK-676 / TASK-731 / TASK-725 / TASK-746) | — | Automated (category/filter/innate/formulas tests) + manual DEV-V-046 T001–T008 |
 | DEV-V-044 | Power Creator AoE applyDuration persistence (TASK-672) | — | Automated (library-columnar + power-calc tests) + manual DEV-V-044-T001 |
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649 / TASK-735) | — | Manual DEV-V-041 T001–T004 + `node scripts/verify-task-649.mjs` |
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |

@@ -5,7 +5,7 @@
 ## Pages / Routes
 
 - `(main)/characters`, `(main)/characters/[id]`
-- `(main)/characters/new` — Simple vs Advanced chooser
+- `(main)/characters/new` — Guided / Custom / Legacy chooser
 - `(main)/characters/new/guided` — Guided ("Simple") creator
 - `(main)/characters/new/advanced` — Classic 9-step creator
 - `(main)/library` — user items (powers, techniques, armaments, creatures)

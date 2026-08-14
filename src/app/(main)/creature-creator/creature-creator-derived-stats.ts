@@ -15,7 +15,7 @@ import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculation
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
-import { CREATURE_MECHANICAL_FEAT_POINTS, CREATURE_SIZES } from '@/lib/game/creator-constants';
+import { CREATURE_MECHANICAL_FEAT_POINTS } from '@/lib/game/creator-constants';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { SENSE_TO_FEAT_ID, MOVEMENT_TO_FEAT_ID } from './creature-creator-constants';
 import type { CreatureState } from './creature-creator-types';
@@ -145,9 +145,7 @@ export function calculateCreatureCreatorStats(
   const minEnergy = highestNonVitality * Math.max(1, level);
   const maxEnergy = calculateCreatureMaxEnergy(level, abilities, creature.energyPoints);
 
-  const sizeData = CREATURE_SIZES.find((s) => s.value === creature.size);
-  const sizeModifier = sizeData?.modifier || 0;
-  const speed = calculateCreatureSpeed(abilities.agility, sizeModifier, rules);
+  const speed = calculateCreatureSpeed(abilities.agility, rules);
   const evasion = calculateEvasion(abilities.agility, undefined, rules);
 
   const abilitySpent = Object.values(abilities).reduce((sum, val) => sum + val, 0);

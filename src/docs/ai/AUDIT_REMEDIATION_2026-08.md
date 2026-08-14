@@ -22,7 +22,7 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 |---|---|---|
 | **0 — foundation** | `done` | Backups, schema baseline, codex data-loss determination. |
 | **1 — stop the bleeding** | `done` (code + DB + ops) | GitHub required checks + Actions public Supabase secrets + `E2E_OPTIONAL=1` + orphan profile delete. **2026-08-13 Vercel:** Upstash Redis + Sentry DSN live on production/preview; `NEXT_PUBLIC_SITE_URL` on production; production rebuilt. Still owner: HIBP, E2E test user, optional “require PR”. |
-| **2 — correctness** | `partial` | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**; TASK-744 styleguide Linux baselines **done**; TASK-741 dirty-key PATCH **done**. Remaining: 742, 739. |
+| **2 — correctness** | `done` (code; pending-qa) | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**; TASK-744 styleguide Linux baselines **done**; TASK-741 dirty-key PATCH **done**; TASK-742 acked rules leftovers **done**; TASK-739 Advanced currency clamp **done**; TASK-746 library add lock **done**; TASK-747 realtime non-resource merge **done**; TASK-749 PATCH currency floor **done**; TASK-750 sheet Query SoT **done**. Remaining Wave 2 coding: none. |
 | **3 — structure** | `queued` | Wave 2 P0 TASK-741 (dirty-key PATCH) is green in code. Cheap Prettier/`text-muted` mega-diffs still wait for owner to start Wave 3. |
 
 ### Commits on `master` (audit program, oldest → newest)
@@ -54,7 +54,7 @@ Later `master` commits (`6adf344f`, `21ffcd18`, …) are unrelated product work 
 ### Uncommitted / follow-up coding
 
 Plan refresh + GAME_RULES / SIZES seed / admin editor prose may still be uncommitted.
-Wave 2 coding: TASK-740, TASK-738, TASK-744, and TASK-741 done; next is TASK-742 (acked rules leftovers).
+Wave 2 coding: TASK-740, TASK-738, TASK-744, TASK-741, TASK-742, TASK-739, TASK-746, TASK-747, TASK-749, and TASK-750 done. Next agent work is product leftovers (TASK-733) / owner-priority creator tasks, not a new Wave 2 P0.
 
 ---
 
@@ -159,9 +159,9 @@ Wave 2 coding: TASK-740, TASK-738, TASK-744, and TASK-741 done; next is TASK-742
 
 ---
 
-## Wave 2 — correctness (`partial`)
+## Wave 2 — correctness (`done` — code; pending-qa)
 
-P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`ebe2c3ce`, `a0fe048d`). Resume from the checklists and ACTIVE_TASKS — do not restart from the audit reports blindly. **Do not code remaining tasks until the owner starts that pass.**
+P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`ebe2c3ce`, `a0fe048d`). Resume from the checklists and ACTIVE_TASKS — do not restart from the audit reports blindly. Wave 2 coding pass is complete (through TASK-750).
 
 ### Rules engine + sheet formula unification (reports 05, 09) — `partial`
 
@@ -179,25 +179,24 @@ P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`eb
 | **M5** | P1 | `canIncreaseDefense` caps **skill-point** defense only; ability bonus is unrestricted. |
 | **N1** | P1 | Shared `parseLevel` — no more `parseFloat \|\| 1` swallowing level `0` / sub-levels across progression helpers. |
 | **N3** | P1 | `characterToFeatRequirementCharacter` passes numeric skill allocations through (no longer drops `prof`). |
-| **D4** (partial) | P1 | `calculateCreatureSpeed` + creature-creator derived stats use it. |
-| **M6 prep** | P1 | `computePartTrainingPointsRaw` extracted; per-part **floor** is the rule (owner 2026-08-13). TASK-742 aligns comments/tests. |
 | Misc | — | `calculateXpToLevelUp`; dead `buildPowerMechanicPartPayload` removed from power-calc; formulas/constants/mechanic-builder/technique-calc touch-ups. |
 | **T1 / T2 / T3** | — | `calculations.test.ts` Powered-Martial Energy via `calculateMaxEnergyForArchetype`; `formulas.test.ts` unproficient table {−3…5} (sheet unarmed must keep calling `unproficientBonus`) + skill-point **3×level** (not the `getTotalSkillPoints` alias). |
+| **M6 / T6** | P1 | Per-part TP floor comments + test cite GAME_RULES (three 2.5-TP parts → 6, not ceil 8). |
+| **M10** | P2 | `checkFeatRequirements`: hard `lvl_req`; else character level ≥ 2 × feat level (feat rank 1 with no `lvl_req` stays legal at L1). |
+| **M11 / T10** | P2 | IP picks rarity; `calculateCurrencyCostAndRarity` clamps to band `currencyMax`. |
+| **M12 / D4 / D5** | P1–P2 | `calculateCreatureSpeed` = player Speed (no size add). Stat-block + creature creator call shared helpers + `useGameRules`. Deleted `CREATURE_SIZES[].modifier`. |
+| **N2 / D8 / T8** | P1 | `getTechniquePercentageMultiplier` runs `dedupeSavedParts`. |
+| **D7** | P1 | Damage option level already one helper (`calculateDamageOptionLevel`); tests pin 1d4/1d6/1d8. |
+| **M8** | P2 | `redistributeProficiency` documented as path-switch default (odd remainder to Martial); every-5th-level +1 remains a level-up pick. |
+| **M9** | P2 | `calculateMaxArchetypeFeats` delegates to `calculateArchetypeProgression` (milestone feat picks count). |
+| **M13 / M14** | P3 | GAME_RULES: unproficient-sub-skill-when-base-unproficient row; Crafting section (`core_rules.CRAFTING` + `crafting-utils.ts`). |
+| **T4 / T5 / T7 / T9** | — | `canIncreaseDefense`; parseLevel 0 / 0.25; numeric skill_req; three `calculateAllStats` golden characters. |
 
-#### Still open (rules) — filed, not started
+#### Still open (rules)
 
 | Audit ID | Severity | Remaining work | Task |
 |---|---|---|---|
-| **M6** | P1 | **Decided** — per-part floor. Align comments/tests with GAME_RULES (already shipped). | TASK-742 |
-| **M7** | P1 | **Decided** — −2 ability score floor everywhere (2A). Doc updated; code already `MIN: -2`. | n/a (docs this session) |
-| **M10** | P2 | **Decided** — `lvl_req` overrides; else character level ≥ 2 × feat level. Implement in `checkFeatRequirements`. | TASK-742 |
-| **M11** | P2 | **Decided** — IP → rarity; clamp currency to rarity `currencyMax`. | TASK-742 |
-| **M12** | P2 | **Decided** — no size Speed modifier; rulebook size table in `core_rules.SIZES` (applied). Remove `calculateCreatureSpeed` size add. | TASK-742 |
-| **M8–M9, M13–M14** | P2–P3 | Path-switch proficiency, powered-martial feat dual answer, doc catch-up (crafting). | TASK-742 |
-| **N2 / D8** | P1 | Empowered-technique percentage multiplier must `dedupeSavedParts`. | TASK-742 |
-| **D4 leftover** | P1 | `creature-stat-block.tsx` still hardcodes speed/evasion. | TASK-742 |
-| **D5–D7** | P1 | Evasion creature copies; damage-option-level formula still multi-copied. | TASK-742 |
-| **Tests T4–T10** | — | Highest-value pins from report 05 §6. T1–T3 landed. | TASK-742 |
+| **M7** | P1 | **Closed** — −2 ability score floor (docs + `MIN: -2`). | n/a |
 
 ### Guided creator funnel (report 03) — `partial`
 
@@ -212,7 +211,7 @@ P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`eb
 | **P1-1** | P1 | L2/L3 `applyGuidedEquipmentL2Refs` enforces `currencyBudget` for **weapon, armor, and gear**. L1 add + quantity use `wouldExceedCurrency` on all three phases. Loadout Continue blocked when overspent; overspend notice in UI; loadout satisfaction requires `currency >= 0`. |
 | **P1-2** | P1 | `ancestry-pick-gate.ts` — mixed-species skills screen no longer short-circuits to `true`. |
 | Cleanup | — | Deleted `ancestry-forward-landing.ts` (+ test); path/species draft clear patches still wipe dependent fields (now meaningful because progress is derived). |
-| **P1-1 leftover** | P1 | LoadoutStep syncs the **signed** remainder into `draft.currency` as picks change (rail/Reveal see overspend). `clampSavedCurrency` floors the saved character at 0 (`build-character.ts` only). |
+| **P1-1 leftover** | P1 | LoadoutStep syncs the **signed** remainder into `draft.currency` as picks change (rail/Reveal see overspend). `clampSavedCurrency` floors the saved character at 0 (Guided `build-character` and Advanced `getCharacter`, TASK-739). |
 | **P1-3** | P1 | `buildCreatorSkillSaveRows` already resolved highest linked ability; Guided `build-character` and Advanced finalize now pass `abilities` (Advanced also `draft.skillAbilities`). |
 | **P1-4** | P1 | Shared `resolveArchetypeProficiencyStart` in `formulas.ts`. Guided save + Advanced `setArchetypePath` / `getCharacter` fallback. Guided archetype payload includes `*_prof_start`. |
 | **P1-5** | P1 | `GuidedChoiceCard`: See more/See less stop card-select keys; select only when key target is the card root; selection announced in aria-label (dropped invalid `aria-selected`). |
@@ -231,7 +230,7 @@ P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`eb
 | **P1-5 leftover** | P1 | **Closed.** Grep 2026-08-13: no parent `role="listbox"` around Guided choice cards. |
 | **P1-6–P1-10** | P1 | **Closed** by TASK-738 (see rows above). Manual QA pending: `DEV-V-051`. |
 | **P2+** | P2 | Catalog double-build, virtualization — Wave 3 / later. |
-| Advanced currency clamp | P1 | TASK-739 (after migrate + 738). |
+| Advanced currency clamp | P1 | **Closed** by TASK-739 — `getCharacter` uses `clampSavedCurrency` (`lib/character-save.ts`); draft may stay signed. PATCH floor when the key is present: TASK-749. |
 
 ### Advanced creator store migrate (report 06 P0) — `done` → TASK-740
 
@@ -239,12 +238,12 @@ P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`eb
 |---|---|---|
 | `character-creator-store` destructive `migrate` wipes draft on any schema bump | `done` | Schema v3: `migrateCharacterCreatorPersistedState` + persist `merge` keep known fields and default missing ones (same pattern as Guided). Vitest: v1 in-progress draft survives migrate to current version. |
 
-### Character write-path / cache (reports 06, 01 leftovers) — `queued` → TASK-741
+### Character write-path / cache (reports 06, 01 leftovers) — `done`
 
 | Finding | Status | Note |
 |---|---|---|
-| Dirty-key PATCH + `updatedAt` precondition; autosave refs/retry/timeout; per-user rate key | `done` | Autosave callback-refs + retry + pagehide (`useAutoSave`). PATCH per-user `buildRateLimitKey`. Dirty-key PATCH + `updatedAt` 409 + user-scoped character query keys: TASK-741 / ADR-0013. |
-| Two disconnected character write paths (`useState`+effect vs unused TanStack Query) | `queued` | — |
+| Dirty-key PATCH + `updatedAt` precondition; autosave refs/retry/timeout; per-user rate key | `done` | Autosave callback-refs + retry + pagehide (`useAutoSave`). PATCH per-user `buildRateLimitKey`. Dirty-key PATCH + `updatedAt` 409 + user-scoped character query keys: TASK-741 / ADR-0013. Library add-to-character lock + 409 re-apply: TASK-746. Sheet realtime non-resource merge: TASK-747. |
+| Two disconnected character write paths (`useState`+effect vs unused TanStack Query) | `done` | **TASK-750.** Sheet reads `useCharacter`; `setCharacter` is `setQueryData` on `characterKeys.detail`. Autosave still uses `saveCharacterWithConflictRetry` + cache stamp. `useSaveCharacter` merges into the detail cache and invalidates lists only. |
 | Query cache not cleared on sign-in; keys not user-scoped | `done` | `queryClient.clear()` on SIGNED_IN / SIGNED_OUT / USER_UPDATED; `useCampaignsFull` gated on user. Character query keys include viewer uid (TASK-741). |
 | Align GET with visibility **column** | `done` | `resolveCharacterVisibility` on GET `[id]` + list. |
 
@@ -284,7 +283,7 @@ corrected.
 DO-NOT-RUN.
 
 **Training-Point rounding (2026-08-13 owner).** Per-part **floor** is the rule (only exception to
-round-up). GAME_RULES updated. Code already matches; TASK-742 aligns comments/tests.
+round-up). GAME_RULES updated. Comments/tests pin three 2.5-TP parts → 6 (TASK-742).
 
 **Ability minimum (2026-08-13, 2A).** Ability **scores** floor at −2 for characters and creatures.
 Temp modifiers are how play goes past that. Creatures may break other hard rules; not this floor.
@@ -294,11 +293,11 @@ multiplier). Clamp currency to that rarity’s `currencyMax` so it cannot spill 
 bracket. TASK-742.
 
 **Feat level (2026-08-13, 4A+4B).** Hard `lvl_req` always wins. Otherwise character level must be
-≥ 2 × feat level. TASK-742.
+≥ 2 × feat level (feat rank 1 with no `lvl_req` stays legal at L1). TASK-742.
 
 **Size (2026-08-13).** Rulebook table + space/shape / carrying / enemy-space prose. Live
 `core_rules.SIZES` replaced (was a stale feet/`space` blob). Speed is **not** size-modified;
-TASK-742 removes the undocumented `CREATURE_SIZES.modifier` add. Gargantuan carry recorded as
+TASK-742 removed the undocumented `CREATURE_SIZES.modifier` add. Gargantuan carry recorded as
 `1600 + 800×STR` (rulebook draft typo `x` → `+`).
 
 **Architecture (2026-08-13, owner: agent judgment).** Do not waive server-trusted L1 create
@@ -319,13 +318,11 @@ parallel.
 
 ## Suggested next agent sessions (ordered)
 
-Wave 2 coding pass is open (TASK-740, TASK-738, TASK-744, and TASK-741 done):
+Wave 2 coding pass is complete (through TASK-750):
 
-1. **TASK-742** — Owner-acked rules leftovers (TP comments, rarity clamp, feat 2×, drop size Speed add, N2/D4–D7, tests).
-2. **TASK-739** — Advanced `getCharacter` currency clamp.
-3. **TASK-746** / **TASK-747** — library add-to-character `updatedAt` lock; sheet realtime merge for non-resource keys (filed from TASK-741 cleanup).
-4. Existing product leftovers (TASK-733, TASK-718, TASK-719).
-5. **Wave 3** — start only when the owner opens that pass (avoid Prettier/`text-muted` mega-diffs colliding with 742/739).
+1. Existing product leftovers (TASK-733, TASK-718, TASK-719). Owner-priority creator feedback is TASK-754–760. TASK-761 (campaign RM view Query) is a TASK-750 leftover.
+2. **TASK-751–753** — Archetype Path Filtering (filed 2026-08-14). Low priority; start after TASK-733 **and** TASK-756/758/759 so path-filter wiring lands on the new screens/columns. Does **not** wait for Wave 3 — the shared filter should exist before the Codex/Library duplication collapse so that pass does not fork it.
+3. **Wave 3** — start only when the owner opens that pass (avoid Prettier/`text-muted` mega-diffs colliding with remaining product leftovers).
 
 ---
 

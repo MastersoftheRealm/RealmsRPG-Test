@@ -53,7 +53,8 @@ function calculateLevelGains(
   newLevel: number, 
   highestAbility: number = 0,
   archetypeType?: ArchetypeCategory,
-  rules?: Partial<CoreRulesMap>
+  rules?: Partial<CoreRulesMap>,
+  archetypeChoices?: Record<number, 'innate' | 'feat'>
 ): ProgressionDelta {
   const currentHE = calculateHealthEnergyPool(currentLevel, 'PLAYER', false, rules);
   const newHE = calculateHealthEnergyPool(newLevel, 'PLAYER', false, rules);
@@ -76,7 +77,9 @@ function calculateLevelGains(
     skillPoints: newSP - currentSP,
     trainingPoints: newTP - currentTP,
     proficiency: newProf - currentProf,
-    archetypeFeats: calculateMaxArchetypeFeats(newLevel, archetypeType) - calculateMaxArchetypeFeats(currentLevel, archetypeType),
+    archetypeFeats:
+      calculateMaxArchetypeFeats(newLevel, archetypeType, rules, archetypeChoices) -
+      calculateMaxArchetypeFeats(currentLevel, archetypeType, rules, archetypeChoices),
     characterFeats: calculateMaxCharacterFeats(newLevel) - calculateMaxCharacterFeats(currentLevel),
   };
 }
@@ -106,7 +109,14 @@ export function LevelUpModal({
   // Calculate level gains
   const gains = useMemo(() => {
     const archType = (character.archetype?.type || 'power') as ArchetypeCategory;
-    return calculateLevelGains(currentLevel, targetLevel, highestAbility, archType, rules);
+    return calculateLevelGains(
+      currentLevel,
+      targetLevel,
+      highestAbility,
+      archType,
+      rules,
+      character.archetypeChoices
+    );
   }, [currentLevel, targetLevel, highestAbility, character, rules]);
   
   // Get milestone info

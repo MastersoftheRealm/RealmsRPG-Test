@@ -170,9 +170,19 @@ export function checkFeatRequirements(
   const abilities = (character.abilities || {}) as Partial<Abilities>;
   const level = character.level ?? 1;
 
-  // Level requirement
-  if (feat.lvl_req != null && feat.lvl_req > level) {
-    reasons.push(`Requires level ${feat.lvl_req}`);
+  // Level: hard `lvl_req` always wins. Otherwise character level must be
+  // ≥ 2 × feat level (GAME_RULES "Half Pattern"). Feat rank 1 with no `lvl_req`
+  // stays legal at character level 1 (2×1 would block every untagged L1 feat).
+  if (feat.lvl_req != null) {
+    if (feat.lvl_req > level) {
+      reasons.push(`Requires level ${feat.lvl_req}`);
+    }
+  } else {
+    const featLevel = getFeatLevel(feat);
+    const minCharacterLevel = 2 * featLevel;
+    if (featLevel > 1 && level < minCharacterLevel) {
+      reasons.push(`Requires character level ${minCharacterLevel}+ (feat level ${featLevel})`);
+    }
   }
 
   // Ability / defense requirements

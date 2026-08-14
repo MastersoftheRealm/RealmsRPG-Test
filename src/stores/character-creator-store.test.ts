@@ -1,9 +1,10 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_ABILITIES } from '@/types';
 import {
   CHARACTER_STARTING_CURRENCY,
   CREATOR_STORE_SCHEMA_VERSION,
   migrateCharacterCreatorPersistedState,
+  useCharacterCreatorStore,
 } from './character-creator-store';
 
 // persist() reads localStorage at module load (node vitest has none).
@@ -115,5 +116,31 @@ describe('migrateCharacterCreatorPersistedState', () => {
       3
     );
     expect(dropped.draft.clientRequestId).toBeUndefined();
+  });
+});
+
+describe('getCharacter currency clamp (TASK-739)', () => {
+  afterEach(() => {
+    useCharacterCreatorStore.getState().resetCreator();
+  });
+
+  it('floors negative draft currency at 0 and leaves the draft signed', () => {
+    useCharacterCreatorStore.getState().updateDraft({ currency: -25 });
+    expect(useCharacterCreatorStore.getState().getCharacter().currency).toBe(0);
+    expect(useCharacterCreatorStore.getState().draft.currency).toBe(-25);
+  });
+
+  it('persists a non-negative remainder unchanged', () => {
+    useCharacterCreatorStore.getState().updateDraft({ currency: 40 });
+    expect(useCharacterCreatorStore.getState().getCharacter().currency).toBe(40);
+  });
+
+  it('defaults missing currency to the starting budget', () => {
+    useCharacterCreatorStore.setState((state) => ({
+      draft: { ...state.draft, currency: undefined },
+    }));
+    expect(useCharacterCreatorStore.getState().getCharacter().currency).toBe(
+      CHARACTER_STARTING_CURRENCY
+    );
   });
 });
