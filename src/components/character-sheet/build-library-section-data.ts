@@ -150,7 +150,9 @@ export function buildLibrarySectionData(input: {
     onEnterState: handleEnterState,
     maxArchetypeFeats: calculateMaxArchetypeFeats(
       character.level || 1,
-      (character.archetype?.type || 'power') as 'power' | 'martial' | 'powered-martial'
+      (character.archetype?.type || 'power') as 'power' | 'martial' | 'powered-martial',
+      undefined,
+      character.archetypeChoices
     ),
     maxCharacterFeats: calculateMaxCharacterFeats(character.level || 1),
     onFeatUsesChange: handleFeatUsesChange,

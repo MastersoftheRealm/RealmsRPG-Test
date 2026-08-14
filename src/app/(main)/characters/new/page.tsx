@@ -2,7 +2,7 @@
  * Character Creation Entry Chooser
  * ================================
  * Guided / Custom / Legacy — copy in `src/lib/constants/copy/guided-creator-copy.ts`.
- * Custom → cohesive guided creator Path L3; Legacy → transitional Advanced wizard.
+ * Custom → cohesive guided creator Path L3; Legacy → transitional tabbed wizard (`/advanced`).
  */
 
 'use client';

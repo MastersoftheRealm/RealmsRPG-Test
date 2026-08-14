@@ -21,7 +21,7 @@ import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
 import { applyStarterEquippedFlags, itemDamageReduction } from '@/lib/game/equipment-equipped';
 import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
-import { isClientRequestId } from '@/lib/character-save';
+import { clampSavedCurrency, isClientRequestId } from '@/lib/character-save';
 
 export const CHARACTER_STARTING_CURRENCY = 200;
 
@@ -588,8 +588,9 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           // Health/Energy point allocations from character creation
           healthPoints: draft.healthPoints || 0,
           energyPoints: draft.energyPoints || 0,
-          // Currency remaining from equipment purchases
-          currency: draft.currency ?? CHARACTER_STARTING_CURRENCY,
+          // Currency remaining from equipment purchases. Draft may stay signed
+          // (overspend on the equipment rail); persist floors at 0 like Guided.
+          currency: clampSavedCurrency(draft.currency ?? CHARACTER_STARTING_CURRENCY),
           // Species/ancestry — lean save: { id, name, selectedTraits, selectedFlaw, selectedCharacteristic }
           ancestry: draft.ancestry,
           skills: draft.skills || {},

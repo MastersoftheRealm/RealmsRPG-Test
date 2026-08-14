@@ -149,14 +149,9 @@ export function calculatePowerCosts(
       if (applyToDuration) flat_duration += energyContribution;
     }
 
-    const rawTP = computePartTrainingPointsRaw(
-      def,
-      { op_1_lvl: l1, op_2_lvl: l2, op_3_lvl: l3 },
-      'power'
-    );
-
-    tpRaw += rawTP;
-    const partTP = Math.floor(rawTP);
+    const tpLevels = { op_1_lvl: l1, op_2_lvl: l2, op_3_lvl: l3 };
+    tpRaw += computePartTrainingPointsRaw(def, tpLevels, 'power');
+    const partTP = computePartTrainingPoints(def, tpLevels, 'power');
     if (partTP > 0) {
       let src = `${partTP} TP: ${def.name}`;
       if (l1 > 0) src += ` (Opt1 ${l1})`;

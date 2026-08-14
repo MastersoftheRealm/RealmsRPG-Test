@@ -89,6 +89,9 @@ export {
   useSaveCharacter,
   useDeleteCharacter,
   useDuplicateCharacter,
+  characterKeys,
+  characterViewerId,
+  patchCharacterDetailQuery,
 } from './use-characters';
 
 // Codex Data (Supabase via API) — single codex fetch shared by all useCodex* and useGameRules

@@ -317,7 +317,12 @@ export function useCharacterSheetDerived({
     const skillPointsRemaining = totalSkillPoints - spentSkillPoints;
 
     const archetypeType = character.archetype?.type || 'power';
-    const archetypeFeatSlots = calculateMaxArchetypeFeats(level, archetypeType);
+    const archetypeFeatSlots = calculateMaxArchetypeFeats(
+      level,
+      archetypeType,
+      undefined,
+      character.archetypeChoices
+    );
     const characterFeatSlots = calculateMaxCharacterFeats(level);
     const featLevelById = new Map<string, number>();
     (featsDb || []).forEach((f) => {

@@ -233,24 +233,27 @@ export function calculateCreatureCurrency(level: number, rules?: Rules): number 
 }
 
 /**
- * Calculate maximum archetype feats allowed based on level and archetype type.
+ * Maximum archetype feat slots: 1 per level plus the bonus tracked by
+ * `calculateArchetypeProgression` (martial table, Powered-Martial joining bonus,
+ * and Powered-Martial milestone **feat** picks). Pass `archetypeChoices` so
+ * innate vs feat milestones are not a second answer (GAME_RULES "Archetype Feats").
  */
 export function calculateMaxArchetypeFeats(
-  level: number, 
+  level: number,
   archetypeType?: ArchetypeCategory,
-  rules?: Rules
+  rules?: Rules,
+  archetypeChoices?: Record<number, 'innate' | 'feat'>
 ): number {
   const parsedLevel = Math.max(1, Math.floor(level));
-  
-  if (archetypeType === 'martial') {
-    return parsedLevel + calculateBonusArchetypeFeats(parsedLevel, rules);
-  }
-  
-  if (archetypeType === 'powered-martial') {
-    return parsedLevel + 1;
-  }
-  
-  return parsedLevel;
+  const config = getArchetypeConfig(archetypeType ?? 'power', rules);
+  const progression = calculateArchetypeProgression(
+    parsedLevel,
+    config.proficiency.martial,
+    config.proficiency.power,
+    archetypeChoices ?? {},
+    rules
+  );
+  return parsedLevel + progression.bonusArchetypeFeats;
 }
 
 /**

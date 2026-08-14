@@ -42,6 +42,12 @@ export function inferArchetypeCategoryFromCharacter(c: Character): ArchetypeCate
   return 'power';
 }
 
+/**
+ * Default split when switching path **type**. Powered-Martial even-splits and
+ * gives an odd remainder to Martial. This is not the level-up "+1 to either
+ * Martial or Power Proficiency" pick (GAME_RULES every 5th level) — the player
+ * reallocates afterward via the proficiency editors.
+ */
 export function redistributeProficiency(
   total: number,
   type: ArchetypeCategory,

@@ -72,8 +72,8 @@ export function buildLevelUpGuideContent(
     calculateTrainingPoints(newLevel, highestAbility, rules) -
     calculateTrainingPoints(previousLevel, highestAbility, rules);
   const featGain =
-    calculateMaxArchetypeFeats(newLevel, archType) -
-    calculateMaxArchetypeFeats(previousLevel, archType) +
+    calculateMaxArchetypeFeats(newLevel, archType, rules, character.archetypeChoices) -
+    calculateMaxArchetypeFeats(previousLevel, archType, rules, character.archetypeChoices) +
     (calculateMaxCharacterFeats(newLevel) - calculateMaxCharacterFeats(previousLevel));
 
   let pick: { id: TutorialMilestoneId; title: string } | null = null;

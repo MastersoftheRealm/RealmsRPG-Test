@@ -94,14 +94,6 @@ export function computeRemainingCurrency(starting: number, spent: number): numbe
   return starting - spent;
 }
 
-/**
- * Persistable remainder — never write a debt onto the character.
- * Display / rail keep the signed value from `computeRemainingCurrency`.
- */
-export function clampSavedCurrency(remaining: number): number {
-  return Math.max(0, remaining);
-}
-
 /** Resolve unit cost for a path item ref from official + codex libraries. */
 export function resolveRefUnitCost(
   ref: { id: string },

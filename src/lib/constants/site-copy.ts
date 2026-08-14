@@ -14,7 +14,7 @@
  * | Resources          | `copy/resources-copy.ts`      |
  * | Privacy `/privacy` | `copy/privacy-copy.ts`        |
  * | Terms `/terms`     | `copy/terms-copy.ts`          |
- * | Character creator chooser + guided flow | `copy/guided-creator-copy.ts` |
+ * | Character creator chooser + guided flow + Legacy wizard chrome | `copy/guided-creator-copy.ts` |
  * | Archetype category (Power / Martial / P-M) | `copy/archetype-category-copy.ts` |
  * | Footer             | `copy/footer-copy.ts`         |
  * | Tooltips           | `public/tooltip-text.tsx`     |

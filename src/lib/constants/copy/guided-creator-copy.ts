@@ -38,17 +38,31 @@ export const GUIDED_CREATOR_COPY = {
           'Ideal if you already know the system or want full control',
         ],
       },
-      /** Temporary chooser peer until Advanced is fully absorbed (REALMS §5.0). */
+      /** Temporary chooser peer until the tabbed wizard is fully absorbed (REALMS §5.0). */
       legacy: {
         label: 'Legacy',
-        tagline: 'The classic multi-step creator while we finish the unified flow.',
+        tagline: 'The former Advanced creator — classic tabs while we finish the unified flow.',
         bullets: [
           'Original tabbed wizard with every step up front',
           'Forge your own archetype in the classic layout',
-          'Use if you prefer the previous creator experience',
+          'Use if you prefer the previous creator; Guided and Custom will replace it',
         ],
       },
     },
+  },
+
+  /**
+   * In-wizard chrome for `/characters/new/advanced`.
+   * User-facing name is Legacy; the route stays `advanced` until retirement.
+   */
+  legacyWizard: {
+    documentTitle: 'Legacy Character Creator',
+    documentDescription:
+      'The classic tabbed character creator. Guided and Custom will replace this flow.',
+    badge: 'Legacy',
+    title: 'Create New Character',
+    description: (stepIndex: number, totalSteps: number) =>
+      `Legacy creator — Step ${stepIndex} of ${totalSteps}. Follow the steps below to build your character.`,
   },
 
   shell: {

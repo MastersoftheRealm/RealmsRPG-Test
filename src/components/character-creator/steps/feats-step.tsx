@@ -98,7 +98,12 @@ export function FeatsStep() {
   const pathData = useCreatorPathData();
   const recommendedFeatRefs = useMemo(() => new Set((pathData?.level1?.feats || []).map((v: string) => String(v).toLowerCase())), [pathData?.level1?.feats]);
   const level = draft.level || 1;
-  const maxArchetypeFeats = calculateMaxArchetypeFeats(level, archetypeType);
+  const maxArchetypeFeats = calculateMaxArchetypeFeats(
+    level,
+    archetypeType,
+    undefined,
+    draft.archetypeChoices
+  );
   const maxCharacterFeats = calculateMaxCharacterFeats(level);
   
   // Separate selected feats by type

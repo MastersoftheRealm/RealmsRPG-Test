@@ -38,8 +38,13 @@ separate `version int` column.
   instead of silently restoring an old full document.
 - Negative / follow-ups: campaign server actions that write `characters.data` should stamp
   `updated_at` (they already merge); resource sync still omits `updatedAt` by design (HP LWW).
-  Library add-to-character lock/retry is TASK-746. Sheet realtime merge for non-resource keys
-  is TASK-747.
+  Library add-to-character lock/retry is TASK-746 (done). Sheet realtime merge for
+  non-resource keys is TASK-747 (done): remote wins for untouched keys; HP/EN/AP still
+  use `mergeResourceUpdatesIntoCharacter` and the echo suppress window.
+  Sheet document SoT is `useCharacter` / `characterKeys.detail` (TASK-750): sheet
+  `setCharacter` is `patchCharacterDetailQuery`; `useSaveCharacter` merges the
+  applied PATCH body (including a 409 retry) into that cache and invalidates the
+  list only (detail invalidate would clobber unsaved sheet edits).
 - Rejected alternatives: `version int` column (extra migration; `updated_at` already exists);
   requiring `updatedAt` on every PATCH (breaks portrait-after-create and encounter HP sync);
   putting `updatedAt` in the 409 body (error shape stays `{ error: string }`; client GETs).

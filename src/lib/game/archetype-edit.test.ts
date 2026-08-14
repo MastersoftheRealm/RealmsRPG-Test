@@ -10,7 +10,8 @@ import {
 } from './archetype-edit';
 
 describe('redistributeProficiency / infer category', () => {
-  it('splits powered-martial with martial getting the odd point', () => {
+  it('splits powered-martial with martial getting the odd point (path-switch default, M8)', () => {
+    // Default even split when changing path type — not the every-5th-level +1 pick.
     expect(redistributeProficiency(5, 'powered-martial')).toEqual({
       mart_prof: 3,
       pow_prof: 2,

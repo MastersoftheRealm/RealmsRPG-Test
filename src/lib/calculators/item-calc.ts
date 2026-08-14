@@ -99,14 +99,15 @@ export interface ItemDisplayData {
 // Constants
 // =============================================================================
 
+/** IP band picks rarity; `low` is the pricing floor; `currencyMax` is the GAME_RULES band ceiling. */
 const RARITY_BRACKETS = [
-  { name: 'Common', low: 25, ipLow: 0, ipHigh: 4 },
-  { name: 'Uncommon', low: 100, ipLow: 4.01, ipHigh: 6 },
-  { name: 'Rare', low: 500, ipLow: 6.01, ipHigh: 8 },
-  { name: 'Epic', low: 2500, ipLow: 8.01, ipHigh: 11 },
-  { name: 'Legendary', low: 10000, ipLow: 11.01, ipHigh: 14 },
-  { name: 'Mythic', low: 50000, ipLow: 14.01, ipHigh: 16 },
-  { name: 'Ascended', low: 100000, ipLow: 16.01, ipHigh: Infinity },
+  { name: 'Common', low: 25, currencyMax: 99, ipLow: 0, ipHigh: 4 },
+  { name: 'Uncommon', low: 100, currencyMax: 499, ipLow: 4.01, ipHigh: 6 },
+  { name: 'Rare', low: 500, currencyMax: 1499, ipLow: 6.01, ipHigh: 8 },
+  { name: 'Epic', low: 2500, currencyMax: 9999, ipLow: 8.01, ipHigh: 11 },
+  { name: 'Legendary', low: 10000, currencyMax: 49999, ipLow: 11.01, ipHigh: 14 },
+  { name: 'Mythic', low: 50000, currencyMax: 99999, ipLow: 14.01, ipHigh: 16 },
+  { name: 'Ascended', low: 100000, currencyMax: Infinity, ipLow: 16.01, ipHigh: Infinity },
 ] as const;
 
 /** Property IDs that are driven by dedicated UI (damage, range, DR, etc.) and must not appear in the add-property list on load to avoid duplicating cost/display. */
@@ -202,6 +203,9 @@ export { computeSplits } from './dice-splits';
 
 /**
  * Calculate currency cost and rarity from IP and currency totals.
+ * IP selects the rarity band; currency (`c`) prices inside it; the result is
+ * clamped to that band's `currencyMax` so it cannot spill into the next rarity
+ * (GAME_RULES "Rarity & Currency").
  */
 export function calculateCurrencyCostAndRarity(
   totalCurrency: number,
@@ -221,7 +225,12 @@ export function calculateCurrencyCostAndRarity(
   }
 
   const bracket = RARITY_BRACKETS.find((b) => b.name === rarity);
-  if (bracket) currencyCost = Math.max(currencyCost, bracket.low);
+  if (bracket) {
+    currencyCost = Math.max(currencyCost, bracket.low);
+    if (Number.isFinite(bracket.currencyMax)) {
+      currencyCost = Math.min(currencyCost, bracket.currencyMax);
+    }
+  }
 
   return { currencyCost: Math.floor(currencyCost), rarity };
 }

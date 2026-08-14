@@ -1,3 +1,319 @@
+- id: TASK-750
+  title: Sheet document SoT is useCharacter / useSaveCharacter
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-741
+    - TASK-746
+    - TASK-747
+  related_files:
+    - src/hooks/use-characters.ts
+    - src/app/(main)/characters/[id]/use-character-sheet-page-data.ts
+    - src/docs/ai/ADR/0013-character-dirty-patch.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ARCHITECTURE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T045
+  developer_test_plan: |
+    Suite DEV-V-009 T045 â€” see BUILD_VALIDATION.md
+  description: |
+    Report 06 P0-3 remainder: the sheet still held the character in useState + a
+    getCharacter effect, while Library/Codex used useCharacter Query.
+  acceptance_criteria:
+    - Sheet read is useCharacter (or setQueryData on characterKeys.detail); no parallel
+      getCharacter load effect.
+    - Sheet writes go through useSaveCharacter (already 409-retries) or equivalent
+      setQueryData after saveCharacterWithConflictRetry.
+    - Local UI state (modals, tour) stays useState. Typecheck/lint pass.
+  completed_work: |
+    Sheet reads useCharacter. setCharacter writes characterKeys.detail via
+    patchCharacterDetailQuery. Autosave still uses saveCharacterWithConflictRetry
+    and stamps updatedAt on the cache. useSaveCharacter merges the applied PATCH body (including a 409 retry) + updatedAt
+    into the detail cache and invalidates the list only (detail invalidate would
+    clobber unsaved sheet edits). Deleted the getCharacter load effect (P1-1). Path
+    proficiency apply moved to useEffect. Modals/tour stay useState.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-009 T045).
+    Did not re-implement dirty-key PATCH, library-add re-apply, or realtime merge.
+    Campaign RM view still loads via useState + apiFetch to the campaign character route (out of scope; filed TASK-761).
+- id: TASK-749
+  title: Floor currency in prepareCharacterForSave when the key is present
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  implemented_by: agent
+  related_tasks:
+    - TASK-739
+    - TASK-741
+  related_files:
+    - src/lib/character-save.ts
+    - src/lib/character-save.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    TASK-739 floors Guided build-character and Advanced getCharacter. prepareCharacterForSave
+    still wrote a negative currency if a sheet PATCH included the key. L1 POST already
+    400s currency < 0 (character-legality). Dirty-key PATCH must not invent currency when
+    the key is omitted.
+  acceptance_criteria:
+    - When cleaned.currency is a finite number, persist clampSavedCurrency(that).
+    - Omitted currency stays omitted (ADR-0013 dirty-key).
+    - Targeted test: payload with currency -10 becomes 0; payload without currency does
+      not grow a currency key. Typecheck/lint pass.
+  completed_work: |
+    prepareCharacterForSave clamps currency with clampSavedCurrency when the value is a
+    finite number. Omitted currency is not added. Vitest covers -10 -> 0 and omit.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status n/a (automated only). Did not
+    change creator draft rails.
+
+- id: TASK-747
+  title: Sheet realtime merge for non-resource character keys
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-741
+  related_files:
+    - src/lib/character/dirty-patch.ts
+    - src/lib/character/dirty-patch.test.ts
+    - src/lib/character/realtime-merge.ts
+    - src/lib/character/realtime-merge.test.ts
+    - src/app/(main)/characters/[id]/use-character-sheet-page-data.ts
+    - src/docs/ai/ADR/0013-character-dirty-patch.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T044
+  developer_test_plan: |
+    Suite DEV-V-009 T044 â€” see BUILD_VALIDATION.md
+  description: |
+    ADR-0013 leftover: postgres realtime on characters still only merged HP/EN/AP
+    (mergeResourceUpdatesIntoCharacter). Inventory, feats, notes, level from another tab
+    stayed invisible until reload.
+  acceptance_criteria:
+    - Remote keys the local tab has not dirtied apply into sheet state (or an equivalent
+      remote-wins-for-untouched-keys merge).
+    - Local dirty keys are not overwritten by the realtime echo.
+    - Typecheck/lint + targeted helper test.
+  completed_work: |
+    Added mergeRealtimeNonResourceFields + mergeSheetRealtimePayload. Sheet postgres
+    UPDATE handler applies remote non-resource keys unless pickDirtyCharacterFields
+    marks them dirty. HP/EN/AP still go through mergeResourceUpdatesIntoCharacter
+    unless shouldSuppressRemoteResourceMerge. Did not expand the resource helper.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-009 T044).
+    Encounter HP sync omitting the token stays ADR-0013 (HP LWW).
+
+- id: TASK-746
+  title: Library add-to-character PATCH should send updatedAt
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-741
+  related_files:
+    - src/hooks/use-add-to-character-from-library.tsx
+    - src/hooks/use-characters.ts
+    - src/hooks/add-library-item/map-library-to-character.ts
+    - src/hooks/add-library-item/map-library-to-character.test.ts
+    - src/docs/ai/ADR/0013-character-dirty-patch.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  build_validation: |
+    suite: DEV-V-046
+    tests:
+      - DEV-V-046-T004
+      - DEV-V-046-T008
+  developer_test_plan: |
+    Suite DEV-V-046 T004 / T008 â€” see BUILD_VALIDATION.md
+  description: |
+    TASK-741 dirty-key PATCH is live, but useAddToCharacterFromLibrary already sent a field
+    subset (equipment/powers/techniques + proficiencies) with no updatedAt lock or 409 retry.
+    A sheet tab can 409 or last-write those keys after a library-row add.
+  acceptance_criteria:
+    - mutate/saveCharacter includes the loaded character.updatedAt.
+    - 409 refetches, re-applies the add, retries once (saveCharacterWithConflictRetry).
+    - Typecheck/lint pass.
+  completed_work: |
+    Wired useAddToCharacterFromLibrary onto saveCharacterWithConflictRetry with the loaded
+    character.updatedAt. 409 merge re-applies appendLibraryItemToCharacter onto the remote
+    document (libraryAddDirtyFields / mergeLibraryAddOnConflict). Query cache still invalidates.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-046 T004/T008).
+    Do not smash the full document. Encounter HP sync omitting the token stays ADR-0013 (HP LWW).
+
+- id: TASK-739
+  title: Clamp Advanced getCharacter currency at 0 on save
+  created_at: 2026-08-13
+  completed_at: 2026-08-14
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_files:
+    - src/lib/character-save.ts
+    - src/lib/character-save.test.ts
+    - src/lib/guided-creator/equipment-currency.ts
+    - src/stores/character-creator-store.ts
+    - src/stores/character-creator-store.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  build_validation: |
+    suite: DEV-V-001
+    tests:
+      - DEV-V-001-T015
+      - DEV-V-001-T018
+  developer_test_plan: |
+    Suite DEV-V-001 T015 / T018 â€” see BUILD_VALIDATION.md
+  description: |
+    Owner ack 2026-08-13: do after the Wave 2 funnel land. Guided save uses
+    clampSavedCurrency so a character cannot start in debt. Advanced getCharacter
+    still wrote draft.currency unclamped.
+  acceptance_criteria:
+    - Advanced create/save persists Math.max(0, remaining) (same floor as Guided).
+    - Do not import clampSavedCurrency into the Advanced store if that creates a cycle
+      (equipment-currency.ts already imports CHARACTER_STARTING_CURRENCY from the store) â€”
+      inline the floor or move the helper to a leaf module.
+    - Targeted test: negative draft currency saves as 0. Typecheck/lint pass.
+  completed_work: |
+    Moved clampSavedCurrency to lib/character-save.ts (leaf). Guided equipment-currency
+    re-exports it. Advanced getCharacter floors persist currency at 0; draft may stay signed.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-001 T015/T018).
+
+- id: TASK-748
+  title: Label Advanced character creator as Legacy
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_files:
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/app/(main)/characters/new/advanced/page.tsx
+    - src/app/(main)/characters/new/advanced/layout.tsx
+    - src/app/(main)/characters/new/page.tsx
+    - src/components/ui/page-header.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-001
+    tests:
+      - DEV-V-001-T017
+  developer_test_plan: |
+    Suite DEV-V-001 T017 â€” see BUILD_VALIDATION.md
+  description: |
+    User-facing name for the tabbed wizard at /characters/new/advanced is Legacy.
+    Guided + Custom remain the cohesive L1-L3 creator; Advanced is transitional until retired.
+  acceptance_criteria:
+    - Chooser Legacy card copy names it the former Advanced wizard.
+    - Advanced route header shows a Legacy chip; step copy says Legacy creator; back link to chooser.
+    - Document title is Legacy Character Creator.
+    - FEATURE_INDEX / product overview / DEV-V-001 T017 updated.
+  notes: |
+    Route path stays /characters/new/advanced. Code/store names may still say Advanced.
+
+- id: TASK-742
+  title: Wave 2 rules leftovers after 2026-08-13 owner acks
+  created_at: 2026-08-13
+  completed_at: 2026-08-14
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/lib/calculators/part-training-points.ts
+    - src/lib/calculators/power-calc.ts
+    - src/lib/calculators/power-calc.test.ts
+    - src/lib/calculators/item-calc.ts
+    - src/lib/calculators/item-calc.test.ts
+    - src/lib/calculators/empowered-technique-calc.ts
+    - src/lib/calculators/empowered-technique-calc.test.ts
+    - src/lib/game/feat-requirements.ts
+    - src/lib/game/feat-requirements.test.ts
+    - src/lib/game/calculations.ts
+    - src/lib/game/calculations.test.ts
+    - src/lib/game/formulas.ts
+    - src/lib/game/formulas.test.ts
+    - src/lib/game/skill-allocation.test.ts
+    - src/lib/game/archetype-edit.ts
+    - src/lib/game/archetype-edit.test.ts
+    - src/lib/game/creator-constants.ts
+    - src/lib/level-up-guide.ts
+    - src/components/shared/creature-stat-block.tsx
+    - src/app/(main)/creature-creator/creature-creator-derived-stats.ts
+    - src/components/character-sheet/use-character-sheet-derived.ts
+    - src/components/character-sheet/build-library-section-data.ts
+    - src/components/character-sheet/level-up-modal.tsx
+    - src/components/character-creator/steps/feats-step.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    Owner acks recorded in GAME_RULES + tracker. Implement: TP comment/test alignment
+    (per-part floor, already shipped); clamp item currency to rarity currencyMax (IP
+    still picks rarity); feat check = lvl_req first else character level >= 2 * feat
+    level; remove undocumented size modifier from calculateCreatureSpeed (rulebook has
+    no size Speed add); N2 empowered EN dedupe; D4-D7 creature speed/evasion copies;
+    tests T4-T10 of highest value.
+  acceptance_criteria:
+    - Comments/tests describe per-part TP floor; no ceil-at-end TP.
+    - Item currency is clamped to the IP-derived rarity band max.
+    - checkFeatRequirements enforces lvl_req then 2x feat level.
+    - Creature Speed matches player Speed (no size add); stat-block uses shared helpers.
+    - Empowered technique EN uses dedupeSavedParts like technique calc.
+    - Typecheck/lint pass.
+  notes: |
+    Size table / core_rules.SIZES / GAME_RULES prose already applied 2026-08-13.
+    Do not re-open -2 ability floor (docs+code already agree).
+    Archived 2026-08-14 - implementable AC met; verification_status n/a (vitest T4-T10).
+  completed_work: |
+    - TP comments/tests: per-part floor (three 2.5-TP Elemental Damage rows = 6, not ceil 8).
+    - Item currency clamped to IP-band currencyMax (high-c Uncommon stays 499).
+    - Feat lvl_req wins; else character level >= 2 x feat level (feat rank 1 with no lvl_req stays legal at L1).
+    - Deleted CREATURE_SIZES[].modifier and stat-block small/large Speed forks; creature Speed/Evasion use shared helpers.
+    - Empowered percentage EN dedupes saved parts; calculateMaxArchetypeFeats delegates to progression.
+    - GAME_RULES: unproficient-sub-skill-when-base-unproficient; Crafting section.
+    - Tests T4-T10 plus M8/M9/M13 pins. Typecheck/lint pass.
+
+---
+
 - id: TASK-741
   title: Character PATCH - dirty keys + updatedAt 409
   created_at: 2026-08-13
@@ -205,7 +521,7 @@
     - FEATURE_INDEX; typecheck/lint pass.
   notes: |
     User-scoping characterKeys remains open. Sheet write-path unification is queued separately.
-    Archived from ACTIVE 2026-08-13 — implementable AC met; verification_status pending-qa.
+    Archived from ACTIVE 2026-08-13 ï¿½ implementable AC met; verification_status pending-qa.
   completed_work: |
     - onAuthStateChange sets listenerFired; getUser is ignored afterward.
     - queryClient.clear() on SIGNED_IN / SIGNED_OUT / USER_UPDATED.
@@ -215,7 +531,7 @@
 
 ---
 - id: TASK-736
-  title: useAutoSave — stable debounce, retry, pagehide flush
+  title: useAutoSave ï¿½ stable debounce, retry, pagehide flush
   created_at: 2026-08-13
   completed_at: 2026-08-13
   created_by: agent
@@ -270,7 +586,7 @@
     - Column private + blob public ? 404 for non-owners (no leak).
     - Vitest covers the desync case; typecheck/lint pass.
   notes: |
-    Dirty-key PATCH + updatedAt 409 is Architect — not this task. Archived 2026-08-13.
+    Dirty-key PATCH + updatedAt 409 is Architect ï¿½ not this task. Archived 2026-08-13.
     verification_status pending-qa (DEV-V-041 T004).
   completed_work: |
     - resolveCharacterVisibility prefers the column; GET [id] + list use it.
@@ -280,7 +596,7 @@
 
 ---
 - id: TASK-734
-  title: GuidedChoiceCard — See more keyboard + valid select semantics
+  title: GuidedChoiceCard ï¿½ See more keyboard + valid select semantics
   created_at: 2026-08-13
   completed_at: 2026-08-13
   created_by: agent
@@ -312,7 +628,7 @@
 
 ---
 - id: TASK-714
-  title: MixedSpeciesModal — drop local SourceFilterValue, use shared alias
+  title: MixedSpeciesModal ï¿½ drop local SourceFilterValue, use shared alias
   created_at: 2026-08-13
   completed_at: 2026-08-13
   created_by: agent

@@ -5,7 +5,9 @@ import {
   appendLibraryItemToCharacter,
   characterOwnsLibraryItem,
   entityBucketLabel,
+  libraryAddDirtyFields,
   libraryItemRowId,
+  mergeLibraryAddOnConflict,
 } from './map-library-to-character';
 
 const baseCharacter = {
@@ -73,5 +75,58 @@ describe('map-library-to-character', () => {
   it('entityBucketLabel covers armament kinds', () => {
     expect(entityBucketLabel('weapon')).toBe('weapons');
     expect(entityBucketLabel('armor', true)).toBe("character's armor");
+  });
+
+  it('libraryAddDirtyFields is a subset (TASK-746)', () => {
+    expect(libraryAddDirtyFields('weapon', baseCharacter)).toEqual({
+      equipment: baseCharacter.equipment,
+    });
+    expect(libraryAddDirtyFields('power', baseCharacter)).toEqual({
+      powers: baseCharacter.powers,
+      techniques: baseCharacter.techniques,
+    });
+    expect(libraryAddDirtyFields('weapon', baseCharacter)).not.toHaveProperty('notes');
+    expect(libraryAddDirtyFields('weapon', baseCharacter)).not.toHaveProperty('powers');
+    expect(libraryAddDirtyFields('weapon', baseCharacter)).not.toHaveProperty('proficiencies');
+  });
+
+  it('mergeLibraryAddOnConflict skips retry when remote already owns the row', () => {
+    const remote = {
+      ...baseCharacter,
+      updatedAt: 'T1',
+      powers: [{ id: 'new-power', name: 'New Power', parts: [] }],
+    };
+    const result = mergeLibraryAddOnConflict(remote, 'power', samplePower, () => {
+      throw new Error('should not re-apply');
+    });
+    expect(result.dirty).toEqual({});
+    expect(result.updatedAt).toBe('T1');
+  });
+
+  it('mergeLibraryAddOnConflict re-applies onto remote so concurrent equipment survives', () => {
+    const remote: Character = {
+      ...baseCharacter,
+      updatedAt: 'T2',
+      notes: 'from other tab',
+      equipment: {
+        weapons: [
+          { id: 'existing-weapon', name: 'Sword', type: 'weapon', properties: [] },
+          { id: 'other-tab-weapon', name: 'Bow', type: 'weapon', properties: [] },
+        ],
+        armor: [],
+        shields: [],
+      },
+    };
+    const emptyDbs = { powerPartsDb: [], techniquePartsDb: [], itemPropertiesDb: [] };
+    const result = mergeLibraryAddOnConflict(remote, 'weapon', sampleWeapon, (c) => ({
+      character: appendLibraryItemToCharacter(c, 'weapon', sampleWeapon, emptyDbs),
+    }));
+    expect(result.updatedAt).toBe('T2');
+    expect(result.dirty).not.toHaveProperty('notes');
+    expect(result.dirty).not.toHaveProperty('powers');
+    const weaponIds = (result.dirty.equipment?.weapons as { id: string }[] | undefined)?.map(
+      (w) => w.id
+    );
+    expect(weaponIds).toEqual(['existing-weapon', 'other-tab-weapon', 'new-weapon']);
   });
 });

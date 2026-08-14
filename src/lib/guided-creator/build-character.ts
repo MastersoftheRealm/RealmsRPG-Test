@@ -25,10 +25,8 @@ import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
 import type { Species } from '@/hooks';
 import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
-import {
-  clampSavedCurrency,
-  computeStartingCurrency,
-} from '@/lib/guided-creator/equipment-currency';
+import { clampSavedCurrency } from '@/lib/character-save';
+import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
 import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
 import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';

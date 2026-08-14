@@ -1,9 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
   allocateHealthEnergyPool,
+  calculateAbilityPoints,
   calculateArchetypeProgression,
+  calculateCreatureCurrency,
+  calculateCreatureFeatPoints,
+  calculateCreatureTrainingPoints,
+  calculateHealthEnergyPool,
+  calculateMaxArchetypeFeats,
+  calculateProficiency,
   calculateSkillBonusWithProficiency,
   calculateSkillPointsForEntity,
+  calculateSubSkillBonusWithProficiency,
   pickHighestEnergyCost,
   resolveArchetypeProficiencyStart,
   unproficientBonus,
@@ -151,5 +159,57 @@ describe('resolveArchetypeProficiencyStart', () => {
     expect(
       resolveArchetypeProficiencyStart('power', { power_prof_start: 3, martial_prof_start: 1 })
     ).toEqual({ pow_prof: 3, mart_prof: 1 });
+  });
+});
+
+describe('parseLevel does not collapse 0 or 0.25 to 1 (T5 / N1)', () => {
+  it('treats level 0 as empty progression, not level 1', () => {
+    expect(calculateAbilityPoints(0)).toBe(0);
+    expect(calculateAbilityPoints(0)).not.toBe(calculateAbilityPoints(1));
+    expect(calculateProficiency(0)).toBe(0);
+    expect(calculateProficiency(0)).not.toBe(calculateProficiency(1));
+    expect(calculateHealthEnergyPool(0)).toBe(0);
+    expect(calculateHealthEnergyPool(0)).not.toBe(calculateHealthEnergyPool(1));
+    expect(calculateCreatureTrainingPoints(0)).toBe(0);
+    expect(calculateCreatureTrainingPoints(0)).not.toBe(calculateCreatureTrainingPoints(1));
+    expect(calculateCreatureFeatPoints(0)).toBe(0);
+    expect(calculateCreatureFeatPoints(0)).not.toBe(calculateCreatureFeatPoints(1));
+    expect(calculateCreatureCurrency(0)).not.toBe(calculateCreatureCurrency(1));
+  });
+
+  it('keeps creature sub-levels distinct from level 1', () => {
+    expect(calculateAbilityPoints(0.25, true)).not.toBe(calculateAbilityPoints(1, true));
+    expect(calculateProficiency(0.25, true)).not.toBe(calculateProficiency(1, true));
+    expect(calculateHealthEnergyPool(0.25, 'CREATURE', true)).not.toBe(
+      calculateHealthEnergyPool(1, 'CREATURE', true)
+    );
+    expect(calculateCreatureTrainingPoints(0.25)).not.toBe(calculateCreatureTrainingPoints(1));
+    expect(calculateCreatureFeatPoints(0.25)).not.toBe(calculateCreatureFeatPoints(1));
+    expect(calculateCreatureCurrency(0.25)).not.toBe(calculateCreatureCurrency(1));
+  });
+});
+
+describe('calculateMaxArchetypeFeats (M9)', () => {
+  it('matches GAME_RULES L1 totals: Power 1, Powered-Martial 2, Martial 3', () => {
+    expect(calculateMaxArchetypeFeats(1, 'power')).toBe(1);
+    expect(calculateMaxArchetypeFeats(1, 'powered-martial')).toBe(2);
+    expect(calculateMaxArchetypeFeats(1, 'martial')).toBe(3);
+  });
+
+  it('counts Powered-Martial milestone feat picks and ignores innate picks', () => {
+    expect(calculateMaxArchetypeFeats(4, 'powered-martial')).toBe(5);
+    expect(calculateMaxArchetypeFeats(4, 'powered-martial', undefined, { 4: 'feat' })).toBe(6);
+    expect(calculateMaxArchetypeFeats(4, 'powered-martial', undefined, { 4: 'innate' })).toBe(5);
+    expect(
+      calculateMaxArchetypeFeats(4, 'powered-martial', undefined, { 4: 'feat' })
+    ).toBe(4 + calculateArchetypeProgression(4, 1, 1, { 4: 'feat' }).bonusArchetypeFeats);
+  });
+});
+
+describe('calculateSubSkillBonusWithProficiency (M13)', () => {
+  it('uses unproficientBonus when the base skill is unproficient', () => {
+    expect(
+      calculateSubSkillBonusWithProficiency('strength', 2, 0, false, abilities, false)
+    ).toBe(unproficientBonus(-2) + 0);
   });
 });

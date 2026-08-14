@@ -32,6 +32,6 @@
 | User's characters | `useCharacters` |
 | User's library (powers, techniques, items, creatures) | `useUserPowers`, `useUserTechniques`, `useUserItems`, `useUserCreatures`, `useUserSpecies` |
 | Codex reference data (parts, skills, feats, species) | `useCodexFeats`, `useCodexSkills`, `usePowerParts`, etc. (from `use-codex.ts`; data from Supabase) |
-| Character CRUD | `character-service.ts` (via useCharacters) |
+| Character CRUD | `character-service.ts` (via `useCharacters` / `useCharacter` — sheet document SoT is `useCharacter`, TASK-750) |
 
 **Enrichment:** Use `enrichPowers`, `enrichTechniques`, `enrichItems` from `data-enrichment.ts` when displaying character powers/techniques/items. Pass `powerPartsDb` / `techniquePartsDb` from `useCodexPowerParts()` / `useCodexTechniqueParts()` for correct EN/TP costs. See `ARCHITECTURE.md`. **Codex/library:** Use `useCodex*` hooks (single `['codex']` fetch); avoid duplicate codex fetches. See `DATA_HANDLING.md`.

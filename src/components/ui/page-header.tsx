@@ -43,7 +43,7 @@ export function PageHeader({
   ...props
 }: PageHeaderProps) {
   const titleClasses = cn(
-    'font-bold font-display text-text-primary flex items-center gap-2',
+    'font-bold font-display text-text-primary flex flex-wrap items-center gap-2',
     titleSizeClasses[size],
     onTitleClick && 'cursor-pointer hover:text-primary-link-fg hover:underline text-left'
   );

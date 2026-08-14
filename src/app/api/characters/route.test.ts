@@ -154,7 +154,7 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     insertedRows,
   };
 
-  return client;
+  return Object.assign(client, { insertedRows });
 }
 
 /** A legal level-1 build, so legality checks pass and the create path is exercised. */
@@ -384,7 +384,21 @@ describe('POST /api/characters', () => {
       const body = await readJson<{ error: string; details?: string[] }>(response);
       expect(body.error).toBe('Character is not a legal level 1 build');
       expect(body.details?.some((d) => /Ability points/.test(d))).toBe(true);
-      expect(body.details?.some((d) => /Currency cannot be negative/.test(d))).toBe(true);
+      // Negative currency is floored by prepareCharacterForCreate (TASK-739), so it is
+      // not a legality detail on this path. The helper still rejects unclamped debt.
+    });
+
+    it('creates a legal level-1 build with overspent currency floored to 0', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      const supabase = createMockSupabase({ insertId: 'clamped-currency-id' });
+      mockCreateClient.mockResolvedValue(supabase as never);
+
+      const response = await POST(makePostRequest(legalLevel1Payload({ currency: -25 })));
+
+      expect(response.status).toBe(200);
+      await expect(readJson(response)).resolves.toEqual({ id: 'clamped-currency-id' });
+      const inserted = supabase.insertedRows[0]?.data as { currency?: number } | undefined;
+      expect(inserted?.currency).toBe(0);
     });
 
     it('creates a legal level-1 build', async () => {

@@ -1,5 +1,6 @@
 /**
- * Character save normalization — shared by POST/PATCH character API routes (TASK-359).
+ * Character save helpers: POST/PATCH body normalize (TASK-359) and persist floor
+ * `clampSavedCurrency` (TASK-739 / TASK-749).
  */
 
 import { normalizeTempModifiers } from '@/lib/character/temp-modifiers';
@@ -14,6 +15,16 @@ const CLIENT_REQUEST_ID_RE =
 /** True when `value` is a uuid the create route will accept as `clientRequestId`. */
 export function isClientRequestId(value: unknown): value is string {
   return typeof value === 'string' && CLIENT_REQUEST_ID_RE.test(value);
+}
+
+/**
+ * Persistable remainder — never write a debt onto the character.
+ * Display / rail keep the signed value; Guided `build-character`, Advanced
+ * `getCharacter`, and `prepareCharacterForSave` (when `currency` is present)
+ * floor here (TASK-739 / TASK-749).
+ */
+export function clampSavedCurrency(remaining: number): number {
+  return Math.max(0, remaining);
 }
 
 /**
@@ -45,6 +56,10 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
 
   // Canonical field names + strip legacy aliases (TASK-663)
   normalizeCharacterForSave(cleaned);
+
+  if (typeof cleaned.currency === 'number' && Number.isFinite(cleaned.currency)) {
+    cleaned.currency = clampSavedCurrency(cleaned.currency);
+  }
 
   cleaned.updatedAt = new Date().toISOString();
   return removeUndefined(cleaned);

@@ -2,6 +2,7 @@ import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import { calculatePowerCosts, type PowerPartPayload } from './power-calc';
 import { calculateTechniqueCosts, type TechniquePartPayload } from './technique-calc';
 import { findByIdOrName } from '@/lib/id-constants';
+import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 
 export interface EmpoweredTechniqueCostResult {
   totalEnergy: number;
@@ -30,7 +31,8 @@ export function getTechniquePercentageMultiplier(
   techniquePartsDb: TechniquePart[]
 ): number {
   let multiplier = 1;
-  techniquePartsPayload.forEach((payload) => {
+  const uniqueParts = dedupeSavedParts(techniquePartsPayload);
+  uniqueParts.forEach((payload) => {
     const part = findByIdOrName(techniquePartsDb, {
       id: payload.id ?? payload.part?.id,
       name: payload.name ?? payload.part?.name,

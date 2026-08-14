@@ -10,7 +10,7 @@ See **`REALMS_PRODUCT_OVERVIEW.md` §5.0** for product intent. Two creators coex
 |---------|-------|-------|-------|
 | **Simple (Guided)** | `/characters/new/guided` | `guided-creator-store.ts` | 6 chapters, 10 sub-steps — `src/components/guided-creator/steps/` |
 | **Advanced (Classic)** | `/characters/new/advanced` | `character-creator-store.ts` | 9 steps — `src/components/character-creator/steps/` |
-| **Entry chooser** | `/characters/new` | — | Simple vs Advanced cards; home CTAs land here |
+| **Entry chooser** | `/characters/new` | — | Guided / Custom / Legacy cards; home CTAs land here |
 
 **Guided shell:** `GuidedCreatorShell` — chapter rail, `CharacterPreviewPanel`, `GuidedStepFooter`, landing-cohesive `CreatorFunnelHero`. Path data via `useGuidedPathData`. Save via `buildGuidedCharacterPayload` → `cleanForSave` → `createCharacter` (same lean schema as custom finalize). Payload builds required `proficiencies` from official library parts/properties via `buildRequiredProficiencies` before lean strip — custom `getCharacter` parity. Both save paths set `libraryTabVisibility` via `defaultLibraryTabVisibilityForArchetype` (power/martial-only hides the opposite sheet Library tab; eye toggle can unhide). Guest save uses shared `LoginPromptModal` (same as Advanced). `?returnTo=` forwarded by chooser and honored on finish (`sanitizeRedirectPath`); skips play-together when set. **Ancestry:** `selectedTraits` = ancestry picks only — species traits stay on the species codex and are assembled on the sheet via `collectSheetTraits` (TASK-546). Power/technique/feat id lists are deduped on save.
 

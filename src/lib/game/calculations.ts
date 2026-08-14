@@ -71,11 +71,11 @@ export function calculateSpeed(agility: number, speedBase?: number, rules?: Rule
 }
 
 /**
- * Creature speed: player Speed formula plus the creature size modifier
- * (Miniscule -3 … Gargantuan +4, `CREATURE_SIZES[].modifier`).
+ * Creature Speed uses the player Speed formula. Size does not add a modifier
+ * (GAME_RULES "Size & Carrying Capacity").
  */
-export function calculateCreatureSpeed(agility: number, sizeModifier = 0, rules?: Rules): number {
-  return calculateSpeed(agility, undefined, rules) + sizeModifier;
+export function calculateCreatureSpeed(agility: number, rules?: Rules): number {
+  return calculateSpeed(agility, undefined, rules);
 }
 
 /** Score = 10 + Bonus (GAME_RULES "The Score Pattern") — Defense Score, Martial/Power Potency. */

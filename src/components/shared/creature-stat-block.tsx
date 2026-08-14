@@ -14,8 +14,10 @@ import {
   useOfficialLibrary,
   useUserPowers,
   useUserTechniques,
+  useGameRules,
 } from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
+import { calculateCreatureSpeed, calculateEvasion } from '@/lib/game/calculations';
 import { CREATURE_STAT_BLOCK_GRID } from '@/lib/library/official-creature-list';
 import { formatCreatureLevel, formatCreatureLevelLabel } from '@/lib/game';
 import { formatListCellLabel } from '@/lib/utils';
@@ -67,6 +69,7 @@ export function CreatureStatBlock({
   const { data: officialPowers = [] } = useOfficialLibrary('powers');
   const { data: userTechniques = [] } = useUserTechniques();
   const { data: officialTechniques = [] } = useOfficialLibrary('techniques');
+  const { rules } = useGameRules();
   const level = creature.level ?? 1;
   const abilitiesRecord = creature.abilities ?? {};
   /** Normalized Realms abilities (legacy keys via getAbilityValue) for shared weapon attack math. */
@@ -105,14 +108,8 @@ export function CreatureStatBlock({
   })();
 
   const agility = getAbilityValue(creature.abilities ?? {}, 'agility');
-  const sizeMod = (() => {
-    const s = String(creature.size ?? '').toLowerCase();
-    if (s === 'small') return 1;
-    if (s === 'large') return -1;
-    return 0;
-  })();
-  const speed = 6 + Math.ceil(agility / 2) + sizeMod;
-  const evasion = 10 + agility;
+  const speed = calculateCreatureSpeed(agility, rules);
+  const evasion = calculateEvasion(agility, undefined, rules);
 
   const armaments = useMemo(
     () => (Array.isArray(creature.armaments) ? creature.armaments : []),
