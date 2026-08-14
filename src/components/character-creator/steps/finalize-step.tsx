@@ -259,7 +259,7 @@ export function FinalizeStep() {
         goAfterSave(!safeReturnTo);
       }
     } catch (err) {
-      setError(formatCharacterCreateFailureMessage(err, GUIDED_CREATOR_COPY.reveal));
+      setError(formatCharacterCreateFailureMessage(err, GUIDED_CREATOR_COPY.steps.reveal));
       setSaving(false);
     }
   };
