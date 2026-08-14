@@ -2,6 +2,8 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-08-14 | agent | TASK-756 cleanup — drop unused powers-phase-nav exports | files: powers-phase-nav, AI_CHANGELOG | Summary: **Deleted** unused `POWERS_PHASE_ORDER` and `isFirstPowersPhase`. verification_status pending-qa (DEV-V-013 T086).
+
 - 2026-08-14 | agent | TASK-756 — sequential innate → powers → techniques screens | files: powers-phase-nav(+test), powers-techniques-step, l1-content, use-powers-techniques-selection, guided-creator-store, path-selection-draft, guided-creator-copy, REALMS §5.8, FEATURE_INDEX, BUILD_VALIDATION DEV-V-013 T086, DEVELOPER_TASK_QUEUE, ACTIVE→archive | Summary: **Deleted** the dual-list Powers step and L3 `innateScope` Show filter. **Wired** inner `powersPhase` screens like loadout `equipmentPhase` (Power: innate→powers; Martial: techniques; Powered-Martial: innate→powers→techniques) with shared TP and innate-only Energy chrome. verification_status pending-qa (DEV-V-013 T086).
 
 - 2026-08-14 | agent | TASK-759 — one State Feat filter-help sentence | files: feat-restriction-notice(+test), GuidedFeatsFilterFields, Codex/Admin Feats, tooltip guide, FEATURE_INDEX, BUILD_VALIDATION, DEVELOPER_TASK_QUEUE, ACTIVE→archive | Summary: **Deleted** the inline-only State feat sentence as a separate copy source. **Wired** `STATE_FEAT_RESTRICTION_NOTICE` into `getFeatRestrictionNotice` and the creator/Codex/Admin State Feats filter InfoTippys (default link-blue, accessible label, TASK-725 hit area) without duplicating it in tooltip-text. verification_status pending-qa (DEV-V-013 T012/T070; DEV-V-050 T001).

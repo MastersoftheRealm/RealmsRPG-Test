@@ -6,8 +6,6 @@
 import type { ArchetypeCategory } from '@/types';
 import type { GuidedPowersPhase } from '@/stores/guided-creator-store';
 
-export const POWERS_PHASE_ORDER: GuidedPowersPhase[] = ['innate', 'powers', 'techniques'];
-
 export interface PowersPhaseVisibility {
   includeInnate: boolean;
   includePowers: boolean;
@@ -55,13 +53,6 @@ export function prevPowersPhase(
   const idx = phases.indexOf(current);
   if (idx <= 0) return null;
   return phases[idx - 1] ?? null;
-}
-
-export function isFirstPowersPhase(
-  current: GuidedPowersPhase,
-  visibility: PowersPhaseVisibility
-): boolean {
-  return visiblePowersPhases(visibility)[0] === current;
 }
 
 export function isLastPowersPhase(
