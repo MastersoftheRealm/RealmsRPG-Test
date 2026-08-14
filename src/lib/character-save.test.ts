@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { prepareCharacterForSave } from './character-save';
+import { prepareCharacterForCreate, prepareCharacterForSave, resolveClientRequestId } from './character-save';
 
 describe('prepareCharacterForSave (ADR-0006 tempModifiers)', () => {
   it('normalizes sparse tempModifiers and drops all-zero maps', () => {
@@ -46,5 +46,25 @@ describe('prepareCharacterForSave (ADR-0006 tempModifiers)', () => {
     expect(cleaned.pow_prof).toBe(1);
     expect(cleaned.powerProficiency).toBeUndefined();
     expect(cleaned.archetype).toEqual({ id: 'a1', type: 'powered-martial' });
+  });
+});
+
+describe('create idempotency key (TASK-738)', () => {
+  it('reuses a valid uuid and mints a new one otherwise', () => {
+    const existing = '11111111-2222-4333-8444-555555555555';
+    expect(resolveClientRequestId(existing)).toBe(existing);
+    expect(resolveClientRequestId('not-a-uuid')).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    );
+  });
+
+  it('strips clientRequestId from the saved JSON blob on create', () => {
+    const cleaned = prepareCharacterForCreate({
+      name: 'Test',
+      level: 1,
+      clientRequestId: '11111111-2222-4333-8444-555555555555',
+    } as never);
+    expect(cleaned.clientRequestId).toBeUndefined();
+    expect(cleaned.name).toBe('Test');
   });
 });

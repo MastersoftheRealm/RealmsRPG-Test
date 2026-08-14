@@ -14,6 +14,7 @@ import {
 import {
   canContinueGuidedAbilitiesStep,
   prefersDeepCatalogEntry,
+  resolveGuidedRecommendedAbilitiesPatch,
 } from '@/lib/guided-creator/creator-entry-mode';
 import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
@@ -32,7 +33,7 @@ const layerNavCopy = GUIDED_CREATOR_COPY.layerNav;
 
 export function AbilitiesStep() {
   const { draft, updateDraft, navigationIntent, entryNonce } = useGuidedCreatorStore();
-  const { archetype, pathData } = useGuidedPathData();
+  const { archetype, pathData, isLoading: pathLoading } = useGuidedPathData();
   const { rules } = useGameRules();
 
   /** Custom archetype / custom chooser: no codex path → only full point-buy (no L1 recommendations). */
@@ -108,11 +109,17 @@ export function AbilitiesStep() {
 
   // Soft default: apply path recommended only when not customizing and mode is not custom.
   // Going back keeps custom (or prior recommended) selections; changing path resets abilitiesMode.
+  // Re-syncs while in recommended mode so the array on screen is the array that saves (P1-9).
   useEffect(() => {
-    if (!recommended || customizing || draft.abilitiesMode === 'custom') return;
-    if (draft.abilitiesMode === 'recommended') return;
-    updateDraft({ abilities: recommended, abilitiesMode: 'recommended' });
-  }, [recommended, customizing, draft.abilitiesMode, updateDraft]);
+    const patch = resolveGuidedRecommendedAbilitiesPatch({
+      recommended,
+      draftAbilities: draft.abilities,
+      abilitiesMode: draft.abilitiesMode,
+      customizing,
+      pathLoading,
+    });
+    if (patch) updateDraft(patch);
+  }, [recommended, draft.abilities, draft.abilitiesMode, customizing, pathLoading, updateDraft]);
 
   const applyRecommended = useCallback(() => {
     if (!recommended) return;

@@ -34,6 +34,7 @@ import {
   isGuidedSubStepSatisfied,
 } from '@/lib/guided-creator/substep-satisfaction';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { isClientRequestId } from '@/lib/character-save';
 
 const chapterCopy = GUIDED_CREATOR_COPY.chapters;
 
@@ -196,6 +197,11 @@ export interface GuidedDraft {
   portraitUrl: string | null;
   hpAllocated: number | null;
   energyAllocated: number | null;
+  /**
+   * Idempotency key for POST create. Persisted with the draft so a reload-then-retry
+   * still hits the same row. Cleared by `resetCreator` (new character).
+   */
+  clientRequestId?: string | null;
 }
 
 function createInitialDraft(): GuidedDraft {
@@ -244,6 +250,7 @@ function createInitialDraft(): GuidedDraft {
     portraitUrl: null,
     hpAllocated: null,
     energyAllocated: null,
+    clientRequestId: null,
   };
 }
 
@@ -278,7 +285,7 @@ interface GuidedCreatorState {
 }
 
 /** Bump when persisted draft shape changes; old versions migrate forward. */
-const GUIDED_STORE_SCHEMA_VERSION = 12;
+const GUIDED_STORE_SCHEMA_VERSION = 13;
 
 export const useGuidedCreatorStore = create<GuidedCreatorState>()(
   persist(
@@ -537,6 +544,9 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
                   ? draft.skills
                   : {},
               declinedPathSkillIds: draft.declinedPathSkillIds ?? [],
+              clientRequestId: isClientRequestId(draft.clientRequestId)
+                ? draft.clientRequestId
+                : null,
             },
           };
         }
@@ -579,6 +589,9 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         }
         if (draft.creatorEntryMode !== 'guided' && draft.creatorEntryMode !== 'custom') {
           draft.creatorEntryMode = 'guided';
+        }
+        if (!isClientRequestId(draft.clientRequestId)) {
+          draft.clientRequestId = null;
         }
         return {
           ...currentState,

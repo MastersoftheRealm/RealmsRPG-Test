@@ -7,6 +7,23 @@ import { normalizeCharacterForSave } from '@/lib/character/schema-normalize';
 import { removeUndefined } from '@/lib/utils/object';
 import type { Character, CharacterTempModifiers } from '@/types';
 
+/** Matches `characterCreateSchema.clientRequestId` (uuid). */
+const CLIENT_REQUEST_ID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/** True when `value` is a uuid the create route will accept as `clientRequestId`. */
+export function isClientRequestId(value: unknown): value is string {
+  return typeof value === 'string' && CLIENT_REQUEST_ID_RE.test(value);
+}
+
+/**
+ * Reuse a persisted idempotency key, or mint a new one. Creators persist this on the
+ * draft so a reload-then-retry still hits the same row (TASK-738 AC 3).
+ */
+export function resolveClientRequestId(existing: unknown): string {
+  return isClientRequestId(existing) ? existing : crypto.randomUUID();
+}
+
 export function prepareCharacterForSave(data: Partial<Character>): Record<string, unknown> {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id, createdAt, updatedAt, ...dataToSave } = data;
@@ -36,5 +53,7 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
 export function prepareCharacterForCreate(data: Partial<Character>): Record<string, unknown> {
   const cleaned = prepareCharacterForSave(data);
   cleaned.createdAt = new Date().toISOString();
+  // Routing metadata — lives on `characters.client_request_id`, never in the JSON blob.
+  delete cleaned.clientRequestId;
   return cleaned;
 }

@@ -6696,6 +6696,177 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 
 ---
 
+## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738)
+
+Audit report 03 P1-6 through P1-10. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`. These tests are the parts only a browser can show.
+
+#### DEV-V-051-T001 — Guided creator entry does not wait on the session
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 — TASK-738 |
+| **Related task** | TASK-738 (P1-6) |
+| **Where** | `/characters/new/guided` |
+| **Needs** | Logged out (incognito); throttle the network to Slow 3G to make the auth round-trip visible |
+
+**Steps**
+1. Logged out with Slow 3G throttling, open `/characters/new/guided`.
+2. Watch the first paint after hydration.
+3. Pick a path and continue to **2. Species**.
+
+**Expected**
+- The Path step renders as soon as the page hydrates; it does not sit on a full-screen "Loading..." for the length of the session request.
+- No hydration warning in the console, and a reload mid-flow returns to the sub-step you were on (persisted draft still applies).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-051-T002 — Guest still cannot save without signing in
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-738 (P1-6) |
+| **Where** | `/characters/new/guided` → **10. Your Hero** |
+| **Needs** | Logged out |
+
+**Steps**
+1. Complete the whole funnel while logged out.
+2. On **Your Hero**, name the character and allocate all Health/Energy.
+3. Press **Create character**.
+
+**Expected**
+- The login prompt modal opens; nothing is created.
+- After signing in you return to the creator with the draft intact, and **Create character** then saves.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-051-T003 — A retried save does not create two characters
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-738 (P1-8) |
+| **Where** | `/characters/new/guided` → **10. Your Hero**, then `/characters` |
+| **Needs** | Signed-in user; DevTools Network |
+
+**Steps**
+1. Complete the funnel to **Your Hero** so **Create character** is enabled.
+2. In DevTools → Network, drop the *response* to `POST /api/characters` (request blocking after the request is sent, or go Offline immediately after the click) — the point is a lost response, not a request that never left.
+3. Let the error toast appear, restore the network, and press **Create character** again.
+4. Open `/characters`. Confirm there is still only one new character.
+5. Repeat 1–2 on a second run, then **reload the page** after the lost response (do not press Create again first). Restore the network, press **Create character**. Open `/characters` again.
+
+**Expected**
+- Exactly one character in the list for each run — the retry returned the character the first attempt created.
+- You land on that character's sheet, not on a second copy.
+- The reload-then-retry case also leaves one character (the idempotency key is on the persisted draft, not only in memory).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-051-T004 — Advanced creator save is unaffected
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-738 (P1-7, P1-8) |
+| **Where** | `/characters/new` → Advanced creator → Finalize |
+| **Needs** | Signed-in user |
+
+**Steps**
+1. Build a legal level-1 character in the Advanced creator.
+2. Save from the Finalize step.
+3. Open the saved sheet and check abilities, skills, feats, Currency, Health and Energy.
+
+**Expected**
+- The character saves with no 400; the server legality check accepts a normal Advanced build.
+- Sheet values match what Finalize showed. (A 400 reading "Character is not a legal level 1 build" here is a **FAIL** — report the `details` list from the response.)
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-051-T005 — Recommended abilities save what the step displays
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-738 (P1-9) |
+| **Where** | `/characters/new/guided` → **4. Abilities** |
+| **Needs** | Signed-in user; a path whose recommended array is not all zeros |
+
+**Steps**
+1. Pick a path, reach **4. Abilities** on the recommended (non-customized) view; note the six scores.
+2. Hard-refresh directly onto the Abilities step and let the codex finish loading.
+3. Continue through the funnel and save; open the sheet's ability tiles.
+
+**Expected**
+- The scores after the refresh match the scores from step 1 — no different array flashes in and sticks.
+- Saved abilities equal what **4. Abilities** displayed.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-051-T006 — Character feat is not chosen for the player
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-738 (P1-10) |
+| **Where** | `/characters/new/guided` → **7. Character Feat** |
+| **Needs** | Signed-in user; an archetype path with curated character feats authored |
+
+**Steps**
+1. Reach **7. Character Feat** for the first time.
+2. Read the completion hint next to **Continue →** without touching a card.
+3. Select a card, then select the same card again.
+
+**Expected**
+- On arrival the hint reads **0 / 1** and **Continue →** is disabled — no card is pre-selected.
+- Selecting sets **1 / 1** and enables Continue; selecting the same card again clears it back to **0 / 1**.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-051-T007 — Curated feat cards hide picks the build cannot take
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-738 (P1-10) |
+| **Where** | `/characters/new/guided` → **6. Archetype Feats** and **7. Character Feat** |
+| **Needs** | Signed-in user; a curated feat with an ability or skill requirement this build fails |
+
+**Steps**
+1. Build toward a path whose curated feat list includes a feat with an unmet requirement (low ability score, or a skill you did not take).
+2. Open **6. Archetype Feats** and **7. Character Feat**.
+3. Open **See more…** on each and compare the catalog with the cards on the step.
+
+**Expected**
+- Requirement-failing feats are not offered as cards, matching what the browse catalog shows.
+- If a feat was already selected and the build later stopped qualifying, its card stays visible so it can be deselected.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-051-T008 — Empty L1 after the requirement filter still has See more
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-738 (P1-10) |
+| **Where** | `/characters/new/guided` → **7. Character Feat** (also **6. Archetype Feats** if every curated card is gated) |
+| **Needs** | Signed-in user; a path whose curated Character Feats this build cannot take (Beast Tamer: several `lvl_req` > 1; Berserker: skill-gated) |
+
+**Steps**
+1. Pick a path whose curated Character Feats this level-1 build will not qualify for (Beast Tamer or Berserker are known cases).
+2. Keep abilities/skills such that those curated cards fail requirements.
+3. Open **7. Character Feat**.
+4. Press **See more Character Feats** and pick a feat this build *does* qualify for.
+
+**Expected**
+- Layer 1 shows the empty state that they do not qualify (not “none exist”), and **See more Character Feats** is still available.
+- After confirming a qualifying pick from the catalog, the step is **1 / 1** and Continue is enabled.
+- Saving this character does not 400 on feat requirements.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -6737,5 +6908,6 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649 / TASK-735) | — | Manual DEV-V-041 T001–T004 + `node scripts/verify-task-649.mjs` |
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |
 | DEV-V-043 | Wave 5 page facade splits (TASK-666) | — | Manual — see suite above |
+| DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`) + manual DEV-V-051 T001–T008 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

@@ -58,29 +58,6 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
 
 ---
 
-- id: TASK-669
-  title: Provision Redis-backed rate limiting store (Upstash or Vercel KV)
-  priority: high
-  status: not-started
-  created_at: 2026-08-01
-  created_by: agent
-  parent_task: TASK-645
-  assignee: human
-  related_files:
-    - src/lib/rate-limit.ts
-    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
-  description: |
-    Sign up for Upstash Redis (or enable Vercel KV) and add the resulting env vars (URL/token) to
-    Vercel project settings. TASK-645 (2026-08-03) shipped the code path + `.env.example` +
-    `DEPLOYMENT_AND_SECRETS_SUPABASE.md` docs; in-memory fallback remains until these secrets exist.
-  acceptance_criteria:
-    - Redis/KV instance provisioned.
-    - Env vars set in Vercel (production + preview).
-    - Owner completes TASK-645 pending QA in DEVELOPER_TASK_QUEUE.md (DEV-011).
-  notes: "Human-only — new vendor account / billing decision. AI skip. Blocks durable cross-instance limits (DEV-011)."
-
----
-
 - id: TASK-423
   title: Guided loadout path content — seed flat recommendations for remaining paths
   created_at: 2026-07-05
@@ -107,8 +84,6 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
     - DEV-V-013-T004 passes without Quick kits UI.
   notes: |
     Codex writes require owner approval. Frontend kit UI removed in TASK-442.
-
----
 
 ---
 
@@ -296,3 +271,4 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
   notes: |
     Human-owned design task. Agents may help draft or facilitate review but must not implement TASK-410+ until done.
     2026-07-01: Owner — no perfect L1 vision yet; spec must be exact before build.
+

@@ -160,14 +160,14 @@ export const CREATURE_TYPES = [
 export type CreatureType = typeof CREATURE_TYPES[number];
 
 export const CREATURE_SIZES = [
-  { value: 'miniscule', label: 'Miniscule', modifier: -3, spaces: 0.125, baseCarry: 10, perStrCarry: 5, minCarry: 5, height: 'Under 1 ft' },
-  { value: 'tiny', label: 'Tiny', modifier: -2, spaces: 0.25, baseCarry: 25, perStrCarry: 10, minCarry: 10, height: '1–2 ft' },
-  { value: 'small', label: 'Small', modifier: -1, spaces: 1, baseCarry: 50, perStrCarry: 25, minCarry: 25, height: '2–4 ft' },
-  { value: 'medium', label: 'Medium', modifier: 0, spaces: 1, baseCarry: 100, perStrCarry: 50, minCarry: 50, height: '5–7 ft' },
-  { value: 'large', label: 'Large', modifier: 1, spaces: 2, baseCarry: 200, perStrCarry: 100, minCarry: 100, height: '7–10 ft' },
-  { value: 'huge', label: 'Huge', modifier: 2, spaces: 4, baseCarry: 400, perStrCarry: 200, minCarry: 200, height: '10–15 ft' },
-  { value: 'humongous', label: 'Humongous', modifier: 3, spaces: 9, baseCarry: 800, perStrCarry: 400, minCarry: 400, height: '15–25 ft' },
-  { value: 'gargantuan', label: 'Gargantuan', modifier: 4, spaces: 16, baseCarry: 1600, perStrCarry: 800, minCarry: 800, height: '25+ ft' },
+  { value: 'miniscule', label: 'Miniscule', modifier: -3, spaces: 0.125, baseCarry: 10, perStrCarry: 5, minCarry: 5, height: 'Under 30 cm' },
+  { value: 'tiny', label: 'Tiny', modifier: -2, spaces: 0.25, baseCarry: 25, perStrCarry: 10, minCarry: 10, height: '30–60 cm' },
+  { value: 'small', label: 'Small', modifier: -1, spaces: 1, baseCarry: 50, perStrCarry: 25, minCarry: 25, height: '60–120 cm' },
+  { value: 'medium', label: 'Medium', modifier: 0, spaces: 1, baseCarry: 100, perStrCarry: 50, minCarry: 50, height: '150–200 cm' },
+  { value: 'large', label: 'Large', modifier: 1, spaces: 2, baseCarry: 200, perStrCarry: 100, minCarry: 100, height: '200–300 cm' },
+  { value: 'huge', label: 'Huge', modifier: 2, spaces: 4, baseCarry: 400, perStrCarry: 200, minCarry: 200, height: '300–450 cm' },
+  { value: 'humongous', label: 'Humongous', modifier: 3, spaces: 9, baseCarry: 800, perStrCarry: 400, minCarry: 400, height: '450–750 cm' },
+  { value: 'gargantuan', label: 'Gargantuan', modifier: 4, spaces: 16, baseCarry: 1600, perStrCarry: 800, minCarry: 800, height: '750+ cm' },
 ] as const;
 
 export type CreatureSize = typeof CREATURE_SIZES[number]['value'];

@@ -21,6 +21,7 @@ import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
 import { applyStarterEquippedFlags, itemDamageReduction } from '@/lib/game/equipment-equipped';
 import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
+import { isClientRequestId } from '@/lib/character-save';
 
 export const CHARACTER_STARTING_CURRENCY = 200;
 
@@ -161,8 +162,83 @@ function cloneInitialDraft(): CharacterDraft {
   };
 }
 
-/** Bump when persisted draft shape or defaults change; old versions reset to a fresh draft. */
-const CREATOR_STORE_SCHEMA_VERSION = 2;
+type CharacterCreatorPersistedSlice = Pick<
+  CharacterCreatorState,
+  'currentStep' | 'completedSteps' | 'stepLayer' | 'draft'
+>;
+
+function isCreatorStep(value: unknown): value is CreatorStep {
+  return typeof value === 'string' && (STEP_ORDER as readonly string[]).includes(value);
+}
+
+function isStepLayer(value: unknown): value is Partial<Record<CreatorStep, CreatorLayer>> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function emptyCharacterCreatorPersist(): CharacterCreatorPersistedSlice {
+  return {
+    currentStep: 'archetype',
+    completedSteps: [],
+    stepLayer: {},
+    draft: cloneInitialDraft(),
+  };
+}
+
+function mergeCreatorDraft(base: CharacterDraft, overlay: CharacterDraft | undefined): CharacterDraft {
+  const draft: CharacterDraft = { ...base, ...overlay };
+  const abilitiesOverlay = overlay?.abilities;
+  draft.abilities =
+    abilitiesOverlay && typeof abilitiesOverlay === 'object' && !Array.isArray(abilitiesOverlay)
+      ? { ...DEFAULT_ABILITIES, ...abilitiesOverlay }
+      : { ...DEFAULT_ABILITIES, ...base.abilities };
+  if (typeof draft.name !== 'string') draft.name = base.name;
+  if (typeof draft.level !== 'number') draft.level = base.level;
+  if (typeof draft.currency !== 'number') draft.currency = base.currency;
+  if (typeof draft.step !== 'number') draft.step = base.step ?? 0;
+  if (typeof draft.isComplete !== 'boolean') draft.isComplete = base.isComplete ?? false;
+  if (draft.skills != null && (typeof draft.skills !== 'object' || Array.isArray(draft.skills))) {
+    draft.skills = {};
+  }
+  if (!isClientRequestId(draft.clientRequestId)) {
+    delete draft.clientRequestId;
+  }
+  return draft;
+}
+
+function sanitizePersistedSlice(
+  persisted: Partial<CharacterCreatorPersistedSlice> | undefined,
+  fallback: CharacterCreatorPersistedSlice
+): CharacterCreatorPersistedSlice {
+  const currentStep = persisted?.currentStep;
+  const completedSteps = persisted?.completedSteps;
+  const stepLayer = persisted?.stepLayer;
+  return {
+    currentStep: isCreatorStep(currentStep) ? currentStep : fallback.currentStep,
+    completedSteps: Array.isArray(completedSteps)
+      ? completedSteps.filter(isCreatorStep)
+      : fallback.completedSteps,
+    stepLayer: isStepLayer(stepLayer) ? stepLayer : fallback.stepLayer,
+    draft: mergeCreatorDraft(fallback.draft, persisted?.draft),
+  };
+}
+
+/**
+ * Field-by-field persist migrate. Bump CREATOR_STORE_SCHEMA_VERSION when the
+ * draft shape changes; add `if (version < N)` branches — never wipe to a fresh draft.
+ * v3 is merge-only (no field drops). v4 adds `clientRequestId` (invalid values dropped).
+ */
+export function migrateCharacterCreatorPersistedState(
+  persisted: unknown,
+  version: number
+): CharacterCreatorPersistedSlice {
+  void version;
+  const fresh = emptyCharacterCreatorPersist();
+  if (!persisted || typeof persisted !== 'object') return fresh;
+  return sanitizePersistedSlice(persisted as Partial<CharacterCreatorPersistedSlice>, fresh);
+}
+
+/** Bump when persisted draft shape or defaults change; old versions migrate field-by-field. */
+export const CREATOR_STORE_SCHEMA_VERSION = 4;
 
 export const useCharacterCreatorStore = create<CharacterCreatorState>()(
   persist(
@@ -558,16 +634,20 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
       name: 'character-creator-storage',
       version: CREATOR_STORE_SCHEMA_VERSION,
       storage: createJSONStorage(() => localStorage),
-      migrate: (persistedState, version) => {
-        if (version < CREATOR_STORE_SCHEMA_VERSION) {
-          return {
-            currentStep: 'archetype' as CreatorStep,
-            completedSteps: [] as CreatorStep[],
-            stepLayer: {} as Partial<Record<CreatorStep, CreatorLayer>>,
-            draft: cloneInitialDraft(),
-          };
-        }
-        return persistedState as Pick<CharacterCreatorState, 'currentStep' | 'completedSteps' | 'stepLayer' | 'draft'>;
+      migrate: (persistedState, version) =>
+        migrateCharacterCreatorPersistedState(persistedState, version),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<CharacterCreatorPersistedSlice> | undefined;
+        if (!persisted) return currentState;
+        return {
+          ...currentState,
+          ...sanitizePersistedSlice(persisted, {
+            currentStep: currentState.currentStep,
+            completedSteps: currentState.completedSteps,
+            stepLayer: currentState.stepLayer,
+            draft: currentState.draft,
+          }),
+        };
       },
       partialize: (state) => ({
         currentStep: state.currentStep,

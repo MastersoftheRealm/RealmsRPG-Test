@@ -78,6 +78,9 @@ export function SizesEditor({
         <Plus className="w-3.5 h-3.5" /> Add Size Category
       </button>
       <FieldRow label="Half-Capacity Penalty"><TextInput wide value={data.halfCapacitySpeedPenalty as string ?? ''} onChange={v => set('halfCapacitySpeedPenalty', v)} /></FieldRow>
+      <FieldRow label="Space and shape"><TextInput wide value={data.spaceAndShape as string ?? ''} onChange={v => set('spaceAndShape', v)} /></FieldRow>
+      <FieldRow label="Carrying notes"><TextInput wide value={data.carryingNotes as string ?? ''} onChange={v => set('carryingNotes', v)} /></FieldRow>
+      <FieldRow label="Movement through enemies"><TextInput wide value={data.movementThroughEnemySpaces as string ?? ''} onChange={v => set('movementThroughEnemySpaces', v)} /></FieldRow>
     </>
   );
 }

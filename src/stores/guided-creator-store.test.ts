@@ -56,6 +56,18 @@ describe('useGuidedCreatorStore resetCreator', () => {
     expect(draft.abilitiesMode).toBeNull();
   });
 
+  it('clears a persisted create idempotency key so the next character gets a new one', () => {
+    useGuidedCreatorStore.setState({
+      draft: {
+        ...useGuidedCreatorStore.getState().draft,
+        clientRequestId: '11111111-2222-4333-8444-555555555555',
+      },
+    });
+
+    useGuidedCreatorStore.getState().resetCreator();
+    expect(useGuidedCreatorStore.getState().draft.clientRequestId).toBeNull();
+  });
+
   it('preserves guided entry on Path L1', () => {
     useGuidedCreatorStore.setState({
       draft: {

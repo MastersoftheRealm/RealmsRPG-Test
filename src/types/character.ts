@@ -341,6 +341,11 @@ export interface CharacterDraft extends Partial<Omit<Character, 'skills'>> {
    * Prevents re-adding them on every render while still on the Skills step.
    */
   declinedPathSkillIds?: string[];
+  /**
+   * Idempotency key for POST create. Persisted with the draft so a reload-then-retry
+   * still hits the same row. Not saved on the character document.
+   */
+  clientRequestId?: string | null;
 }
 
 // =============================================================================

@@ -13,6 +13,7 @@ import { calculateMaxArchetypeFeats } from '@/lib/game/formulas';
 import {
   applyCappedIdSelection,
   guidedDraftToFeatRequirementCharacter,
+  selectableCuratedFeatIds,
 } from '@/lib/guided-creator/feat-selection';
 import {
   buildGuidedFeatsL2FilterOptions,
@@ -107,6 +108,19 @@ export function ArchetypeFeatsStep() {
     [draft.archetypeFeatIds, maxFeats, updateDraft]
   );
 
+  /** Curated cards honour requirements like the catalog does (report 03 P1-10). */
+  const selectableIds = useCallback(
+    (ids: readonly (string | number)[]) =>
+      selectableCuratedFeatIds({
+        ids,
+        feats,
+        selectedIds: draft.archetypeFeatIds,
+        requirementCharacter,
+        codexSkills,
+      }),
+    [feats, draft.archetypeFeatIds, requirementCharacter, codexSkills]
+  );
+
   const canContinue = draft.archetypeFeatIds.length === maxFeats;
 
   // Inline (L3) catalog — same builders as GuidedFeatsL2Modal so filtering/eligibility
@@ -178,12 +192,21 @@ export function ArchetypeFeatsStep() {
         <p className="mt-1 font-nunito text-sm text-text-secondary">{group.why}</p>
       ) : null}
       <div className={cn(GUIDED_CHOICE_COMPACT_GRID_CLASS, 'mt-3')}>
-        {(group.feats ?? []).map((id) => renderFeatCard(String(id)))}
+        {selectableIds(group.feats ?? []).map((id) => renderFeatCard(id))}
       </div>
     </section>
   );
 
-  const hasLayer1Options = groups.length > 0 || fallbackFeatIds.length > 0;
+  const visibleGroups = useMemo(
+    () => groups.filter((g) => selectableIds(g.feats ?? []).length > 0),
+    [groups, selectableIds]
+  );
+  const visibleFallbackIds = useMemo(
+    () => selectableIds(fallbackFeatIds),
+    [fallbackFeatIds, selectableIds]
+  );
+  const hasCuratedSource = groups.length > 0 || fallbackFeatIds.length > 0;
+  const hasLayer1Options = visibleGroups.length > 0 || visibleFallbackIds.length > 0;
 
   return (
     <GuidedStepLayout
@@ -238,18 +261,23 @@ export function ArchetypeFeatsStep() {
       ) : (
         <>
           {hasLayer1Options ? (
-            groups.length > 0 ? (
+            visibleGroups.length > 0 ? (
               <div className="space-y-8">
                 <p className="font-nunito text-sm text-text-secondary">{stepCopy.groupIntro}</p>
-                {groups.map(renderGroupSection)}
+                {visibleGroups.map(renderGroupSection)}
               </div>
             ) : (
               <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
-                {fallbackFeatIds.slice(0, maxFeats * 3).map((id) => renderFeatCard(String(id)))}
+                {visibleFallbackIds.slice(0, maxFeats * 3).map((id) => renderFeatCard(id))}
               </div>
             )
           ) : (
-            <EmptyState title={stepCopy.emptyTitle} description={stepCopy.emptyDescription} />
+            <EmptyState
+              title={hasCuratedSource ? stepCopy.emptyFilteredTitle : stepCopy.emptyTitle}
+              description={
+                hasCuratedSource ? stepCopy.emptyFilteredDescription : stepCopy.emptyDescription
+              }
+            />
           )}
 
           <GuidedLayerNav expandLabel={stepCopy.seeMore} onExpand={() => setBrowseOpen(true)} />

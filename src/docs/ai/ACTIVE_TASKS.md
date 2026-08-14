@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-740
+**Next task ID:** TASK-746
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 5 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 7 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** **TASK-738** Guided P1-6–P1-10. **TASK-739** Advanced getCharacter currency clamp. **TASK-733** sheet Innate Energy/Powers tips. **TASK-718** BUILD_VALIDATION archive. **TASK-719** archive ID collisions. Wave 2 after this land: Advanced store migrate, dirty-key PATCH (Architect).
+**Hot notes:** Wave 2 coding pass is open. TASK-740 (Advanced migrate P0) and TASK-738 (guided P1-6–10 + server legality + idempotent create) **done**. Next: TASK-741 (dirty-key PATCH, Architect) → TASK-742 (acked rules) → TASK-739 → TASK-744 (CI styleguide 4px). TASK-733 / 718 / 719 wait until those P0s land. Wave 3 after TASK-741.
 
 ---
 
@@ -98,39 +98,6 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-738
-  title: Guided creator P1-6–P1-10 leftovers (auth gate, trusted save, feats)
-  created_at: 2026-08-13
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_files:
-    - src/app/(main)/characters/new/guided/page.tsx
-    - src/components/guided-creator/steps/reveal-step.tsx
-    - src/components/guided-creator/steps/abilities-step.tsx
-    - src/components/guided-creator/steps/character-feat-step.tsx
-    - src/lib/api-validation.ts
-    - src/app/api/characters/route.ts
-    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
-    - reports/audit-2026-08-13/03-guided-creator.md
-  description: |
-    Owner ack 2026-08-13: do after the Wave 2 funnel land. Report 03 P1-6–P1-10 still
-    open: guest funnel waits on auth loading; character create is fully client-trusted;
-    flaky POST can duplicate characters; recommended abilities can display without
-    write-back; character feat is auto-selected without a requirement check.
-  acceptance_criteria:
-    - Guided shell renders without blocking the Path step on `useAuth().loading` (client-only guard for persist hydration; Reveal still gates save on login).
-    - Level-1 create has a server legality check (ability/skill budgets, feat counts, currency >= 0, HP+EN pool) or an explicit owner waiver in the tracker.
-    - Create uses an idempotency key (or equivalent) so a lost response cannot insert two characters.
-    - `abilitiesMode === 'recommended'` persists the abilities the player saw (pathData resolved, no fallback lock-in).
-    - Character-feat step does not auto-pick an unchecked feat; L1 select honors `checkFeatRequirements`.
-    - FEATURE_INDEX / AUDIT_REMEDIATION rows updated; typecheck/lint pass.
-  notes: |
-    P1-5 keyboard is done (TASK-734). P2 catalog/virtualization is out of scope. Server
-    legality may need Architect if it changes the characters POST contract.
-
----
-
 - id: TASK-739
   title: Clamp Advanced getCharacter currency at 0 on save
   created_at: 2026-08-13
@@ -154,3 +121,85 @@ Do **not** read the done archive at session start.
   notes: |
     Guided Loadout keeps the signed remainder on the draft for the rail; only the
     persisted character is clamped. Match that split if Advanced ever shows overspend.
+
+---
+
+- id: TASK-741
+  title: Character PATCH — dirty keys + updatedAt 409
+  created_at: 2026-08-13
+  created_by: agent
+  priority: high
+  status: not-started
+  related_files:
+    - src/app/api/characters/[id]/route.ts
+    - src/hooks/use-auto-save.ts
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+    - src/docs/ai/ADR/README.md
+  description: |
+    Architect remainder after TASK-736 autosave hardening. PATCH should send dirty keys
+    only and refuse stale writes with updatedAt / 409. After TASK-740 (done). ADR required
+    (API contract).
+  acceptance_criteria:
+    - PATCH body is a dirty-key subset, not a full document smash.
+    - Stale updatedAt returns 409; client retries/refetches instead of silently overwriting.
+    - ADR in src/docs/ai/ADR/. Typecheck/lint + targeted route test.
+  notes: |
+    Autosave refs/retry/pagehide already landed. Per-user rate key already uses
+    buildRateLimitKey. Character query-key user-scoping can ride along if small.
+
+---
+
+- id: TASK-742
+  title: Wave 2 rules leftovers after 2026-08-13 owner acks
+  created_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: not-started
+  related_files:
+    - src/lib/calculators/part-training-points.ts
+    - src/lib/calculators/item-calc.ts
+    - src/lib/game/feat-requirements.ts
+    - src/lib/game/calculations.ts
+    - src/lib/game/creator-constants.ts
+    - src/components/shared/creature-stat-block.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    Owner acks recorded in GAME_RULES + tracker. Implement: TP comment/test alignment
+    (per-part floor, already shipped); clamp item currency to rarity currencyMax (IP
+    still picks rarity); feat check = lvl_req first else character level >= 2 * feat
+    level; remove undocumented size modifier from calculateCreatureSpeed (rulebook has
+    no size Speed add); N2 empowered EN dedupe; D4–D7 creature speed/evasion copies;
+    tests T4–T10 of highest value.
+  acceptance_criteria:
+    - Comments/tests describe per-part TP floor; no ceil-at-end TP.
+    - Item currency is clamped to the IP-derived rarity band max.
+    - checkFeatRequirements enforces lvl_req then 2× feat level.
+    - Creature Speed matches player Speed (no size add); stat-block uses shared helpers.
+    - Empowered technique EN uses dedupeSavedParts like technique calc.
+    - Typecheck/lint pass.
+  notes: |
+    Size table / core_rules.SIZES / GAME_RULES prose already applied 2026-08-13.
+    Do not re-open −2 ability floor (docs+code already agree).
+
+---
+
+- id: TASK-744
+  title: Refresh styleguide visual baselines (4px CI drift)
+  created_at: 2026-08-13
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - tests/visual/screenshots.pw.ts
+  description: |
+    master UI Verify visual-a11y failed on styleguide snapshots (~4px height:
+    11017 vs 11013 mobile, 8803 vs 8799 tablet, 8192 vs 8188 desktop). Linux
+    baselines need a regenerate. Branch protection now requires this check on PRs.
+  acceptance_criteria:
+    - Linux styleguide snapshots updated from the Playwright Docker/CI image, not Windows.
+    - Other visual routes unchanged unless they fail for the same 4px drift.
+    - UI Verify visual-a11y job passes on the next master/PR run.
+  notes: |
+    DEV-002 leftover. Do not update snapshots from a Windows runner.
+

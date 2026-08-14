@@ -75,11 +75,21 @@ export async function saveCharacter(
 
 /**
  * Create a new character with auto-generated ID.
+ *
+ * Pass the same `clientRequestId` on every retry of one save attempt: the route replays
+ * the first create instead of inserting a second character when a response is lost
+ * (TASK-738). Creators persist the key on the draft (`resolveClientRequestId`) so a
+ * reload-then-retry still hits the same row; `resetCreator` clears it for the next character.
  */
-export async function createCharacter(data: Partial<Character>): Promise<string> {
+export async function createCharacter(
+  data: Partial<Character>,
+  options: { clientRequestId?: string } = {}
+): Promise<string> {
   const result = await apiFetch<{ id: string }>(API_BASE, {
     method: 'POST',
-    body: JSON.stringify(data),
+    body: JSON.stringify(
+      options.clientRequestId ? { ...data, clientRequestId: options.clientRequestId } : data
+    ),
   });
   return result.id;
 }

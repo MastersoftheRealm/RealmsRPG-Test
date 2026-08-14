@@ -62,6 +62,19 @@ type MockSupabaseConfig = {
   charactersError?: { message: string } | null;
   characterCount?: number;
   insertId?: string;
+  /** Row the idempotency lookup finds for the request's `clientRequestId`. */
+  replayCharacterId?: string | null;
+  /**
+   * Row the lookup finds only once an insert has been attempted — the concurrent-retry
+   * race, where both requests miss the lookup and the unique index picks a winner.
+   */
+  replayCharacterIdAfterInsert?: string | null;
+  /** Error the insert rejects with (e.g. a 23505 from the idempotency index). */
+  insertError?: { code?: string; message?: string } | null;
+  coreRules?: Array<{ id: string; data: unknown }>;
+  /** Official feats for the level-1 requirement check. Default [] skips the check. */
+  codexFeats?: unknown[];
+  codexSkills?: unknown[];
 };
 
 function createMockSupabase(config: MockSupabaseConfig = {}) {
@@ -70,31 +83,65 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     charactersError = null,
     characterCount = 0,
     insertId = 'char-new-uuid',
+    replayCharacterId = null,
+    replayCharacterIdAfterInsert = null,
+    insertError = null,
+    coreRules = [],
+    codexFeats = [],
+    codexSkills = [],
   } = config;
 
-  return {
+  let insertAttempted = false;
+  const insertedRows: Array<Record<string, unknown>> = [];
+  const insert = vi.fn((row: Record<string, unknown>) => {
+    insertAttempted = true;
+    insertedRows.push(row);
+    return {
+      select: vi.fn().mockReturnValue({
+        single: vi.fn().mockResolvedValue(
+          insertError ? { data: null, error: insertError } : { data: { id: insertId }, error: null }
+        ),
+      }),
+    };
+  });
+
+  const replayedId = () =>
+    (insertAttempted ? replayCharacterIdAfterInsert ?? replayCharacterId : replayCharacterId) ??
+    null;
+
+  const client = {
     from: vi.fn((table: string) => {
       if (table === 'characters') {
         return {
-          select: vi.fn((_cols?: string, opts?: { count?: string; head?: boolean }) => {
+          select: vi.fn((cols?: string, opts?: { count?: string; head?: boolean }) => {
             if (opts?.head) {
               return {
                 eq: vi.fn().mockResolvedValue({ count: characterCount, error: null }),
               };
             }
-            return {
-              eq: vi.fn().mockReturnValue({
-                order: vi.fn().mockResolvedValue({ data: characters, error: charactersError }),
-                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+            // `.eq()` returns itself so the idempotency lookup can chain user_id +
+            // client_request_id before `.maybeSingle()`.
+            const query: Record<string, unknown> = {
+              order: vi.fn().mockResolvedValue({ data: characters, error: charactersError }),
+              maybeSingle: vi.fn(async () => {
+                const id = cols === 'id' ? replayedId() : null;
+                return { data: id ? { id } : null, error: null };
               }),
             };
+            query.eq = vi.fn().mockReturnValue(query);
+            return query;
           }),
-          insert: vi.fn().mockReturnValue({
-            select: vi.fn().mockReturnValue({
-              single: vi.fn().mockResolvedValue({ data: { id: insertId }, error: null }),
-            }),
-          }),
+          insert,
         };
+      }
+      if (table === 'core_rules') {
+        return { select: vi.fn().mockResolvedValue({ data: coreRules, error: null }) };
+      }
+      if (table === 'codex_feats') {
+        return { select: vi.fn().mockResolvedValue({ data: codexFeats, error: null }) };
+      }
+      if (table === 'codex_skills') {
+        return { select: vi.fn().mockResolvedValue({ data: codexSkills, error: null }) };
       }
       if (table === 'user_profiles') {
         return {
@@ -103,6 +150,27 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
       }
       throw new Error(`Unexpected table: ${table}`);
     }),
+    insertMock: insert,
+    insertedRows,
+  };
+
+  return client;
+}
+
+/** A legal level-1 build, so legality checks pass and the create path is exercised. */
+function legalLevel1Payload(extra: Record<string, unknown> = {}) {
+  return {
+    name: 'New Hero',
+    level: 1,
+    abilities: { strength: 2, vitality: 2, agility: 1, acuity: 1, intelligence: 1, charisma: 0 },
+    skills: [{ id: '1', skill_val: 1, prof: true }],
+    archetype: { id: 'a1', type: 'power' },
+    archetypeFeats: [{ id: 'f1' }],
+    feats: [{ id: 'c1' }],
+    currency: 40,
+    healthPoints: 10,
+    energyPoints: 8,
+    ...extra,
   };
 }
 
@@ -289,5 +357,173 @@ describe('POST /api/characters', () => {
     expect(response.status).toBe(403);
     const body = await readJson<{ error: string; code?: string }>(response);
     expect(body.error).toMatch(/character/i);
+  });
+
+  describe('level-1 legality (report 03 P1-7)', () => {
+    it('rejects an over-budget level-1 build with the failing rules', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      mockCreateClient.mockResolvedValue(createMockSupabase() as never);
+
+      const response = await POST(
+        makePostRequest(
+          legalLevel1Payload({
+            abilities: {
+              strength: 3,
+              vitality: 3,
+              agility: 3,
+              acuity: 0,
+              intelligence: 0,
+              charisma: 0,
+            },
+            currency: -25,
+          })
+        )
+      );
+
+      expect(response.status).toBe(400);
+      const body = await readJson<{ error: string; details?: string[] }>(response);
+      expect(body.error).toBe('Character is not a legal level 1 build');
+      expect(body.details?.some((d) => /Ability points/.test(d))).toBe(true);
+      expect(body.details?.some((d) => /Currency cannot be negative/.test(d))).toBe(true);
+    });
+
+    it('creates a legal level-1 build', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      mockCreateClient.mockResolvedValue(
+        createMockSupabase({ insertId: 'legal-char-id' }) as never
+      );
+
+      const response = await POST(makePostRequest(legalLevel1Payload()));
+
+      expect(response.status).toBe(200);
+      await expect(readJson(response)).resolves.toEqual({ id: 'legal-char-id' });
+    });
+
+    it('does not gate levels above 1, whose level-up spend the document cannot show', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      mockCreateClient.mockResolvedValue(createMockSupabase({ insertId: 'lvl5-id' }) as never);
+
+      const response = await POST(
+        makePostRequest(
+          legalLevel1Payload({
+            level: 5,
+            abilities: {
+              strength: 3,
+              vitality: 3,
+              agility: 3,
+              acuity: 3,
+              intelligence: 0,
+              charisma: 0,
+            },
+          })
+        )
+      );
+
+      expect(response.status).toBe(200);
+    });
+
+    it('refuses a catalog feat whose requirements the build does not meet', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      mockCreateClient.mockResolvedValue(
+        createMockSupabase({
+          insertId: 'should-not-insert',
+          codexFeats: [{ id: 'c1', name: 'Needs Level 4', lvl_req: 4 }],
+        }) as never
+      );
+
+      const response = await POST(makePostRequest(legalLevel1Payload()));
+
+      expect(response.status).toBe(400);
+      const body = await readJson<{ error: string; details?: string[] }>(response);
+      expect(body.error).toBe('Character is not a legal level 1 build');
+      expect(body.details?.some((d) => /Needs Level 4/.test(d))).toBe(true);
+    });
+  });
+
+  describe('idempotency key (report 03 P1-8)', () => {
+    const clientRequestId = '11111111-2222-4333-8444-555555555555';
+
+    it('rejects a malformed key rather than silently ignoring it', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+
+      const response = await POST(
+        makePostRequest({ name: 'New Hero', clientRequestId: 'not-a-uuid' })
+      );
+
+      expect(response.status).toBe(400);
+    });
+
+    it('replays the first character instead of inserting a second one', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      const supabase = createMockSupabase({ replayCharacterId: 'already-created-id' });
+      mockCreateClient.mockResolvedValue(supabase as never);
+
+      const response = await POST(makePostRequest(legalLevel1Payload({ clientRequestId })));
+
+      expect(response.status).toBe(200);
+      await expect(readJson(response)).resolves.toEqual({ id: 'already-created-id' });
+      expect(supabase.insertMock).not.toHaveBeenCalled();
+    });
+
+    it('replays ahead of the quota check, so a retry is not refused for the slot it took', async () => {
+      const policy = getDefaultRolePolicy('new_player');
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      mockGetRolePolicyForUser.mockResolvedValue(policy);
+      mockCreateClient.mockResolvedValue(
+        createMockSupabase({
+          characterCount: policy.maxCharacters,
+          replayCharacterId: 'already-created-id',
+        }) as never
+      );
+
+      const response = await POST(makePostRequest(legalLevel1Payload({ clientRequestId })));
+
+      expect(response.status).toBe(200);
+      await expect(readJson(response)).resolves.toEqual({ id: 'already-created-id' });
+    });
+
+    it('persists the key so a later retry can find the row', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      const supabase = createMockSupabase({ insertId: 'fresh-id' });
+      mockCreateClient.mockResolvedValue(supabase as never);
+
+      const response = await POST(makePostRequest(legalLevel1Payload({ clientRequestId })));
+
+      expect(response.status).toBe(200);
+      expect(supabase.insertMock).toHaveBeenCalledWith(
+        expect.objectContaining({ client_request_id: clientRequestId })
+      );
+      // The key is routing metadata, not character data.
+      const savedData = supabase.insertedRows[0].data as Record<string, unknown>;
+      expect(savedData.clientRequestId).toBeUndefined();
+    });
+
+    it('returns the winning row when a concurrent retry loses the unique index', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      // Both requests miss the lookup, then this one's insert hits 23505.
+      mockCreateClient.mockResolvedValue(
+        createMockSupabase({
+          insertError: { code: '23505' },
+          replayCharacterIdAfterInsert: 'race-winner-id',
+        }) as never
+      );
+
+      const response = await POST(makePostRequest(legalLevel1Payload({ clientRequestId })));
+
+      expect(response.status).toBe(200);
+      await expect(readJson(response)).resolves.toEqual({ id: 'race-winner-id' });
+    });
+
+    it('still surfaces a non-idempotency insert failure as a 500', async () => {
+      mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
+      mockCreateClient.mockResolvedValue(
+        createMockSupabase({ insertError: { code: '23503', message: 'fk violation' } }) as never
+      );
+
+      const response = await POST(makePostRequest(legalLevel1Payload({ clientRequestId })));
+
+      expect(response.status).toBe(500);
+      await expect(readJson(response)).resolves.toEqual({ error: 'Failed to create character' });
+    });
   });
 });

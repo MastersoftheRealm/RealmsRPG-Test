@@ -10,6 +10,7 @@ import { useState, useMemo } from 'react';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter, saveCharacter } from '@/services/character-service';
+import { resolveClientRequestId } from '@/lib/character-save';
 import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useGameRules } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
@@ -204,10 +205,17 @@ export function FinalizeStep() {
         delete sanitizedCharacter.portrait;
       }
 
-      const characterId = await createCharacter({
-        ...sanitizedCharacter,
-        userId: user.uid,
-      });
+      const clientRequestId = resolveClientRequestId(draft.clientRequestId);
+      if (clientRequestId !== draft.clientRequestId) {
+        updateDraft({ clientRequestId });
+      }
+      const characterId = await createCharacter(
+        {
+          ...sanitizedCharacter,
+          userId: user.uid,
+        },
+        { clientRequestId }
+      );
       if (!characterId?.trim()) {
         throw new Error('Character was created but no id was returned');
       }

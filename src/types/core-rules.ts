@@ -153,6 +153,9 @@ export interface SizeCategoryDef {
 export interface SizesRules {
   categories: SizeCategoryDef[];
   halfCapacitySpeedPenalty: string;
+  spaceAndShape?: string;
+  carryingNotes?: string;
+  movementThroughEnemySpaces?: string;
 }
 
 // ─── Rarities ─────────────────────────────────────────────────────────────

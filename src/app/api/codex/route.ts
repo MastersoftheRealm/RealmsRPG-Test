@@ -12,6 +12,7 @@ import { logApiError } from '@/lib/api-error';
 import { getSession } from '@/lib/supabase/session';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { coerceJsonRecord, parseArchetypePathData } from '@/lib/game/archetype-path';
+import { fetchCoreRules } from '@/lib/core-rules-server';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import type { CodexPayload } from '@/types/codex';
 import type { ArchetypeCategory } from '@/types/archetype';
@@ -65,7 +66,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
     { data: archetypes, error: eArch },
     { data: archetypeLevels, error: eArchLevels },
     { data: creatureFeats, error: eCreature },
-    coreResult,
+    coreRules,
   ] = await Promise.all([
     supabase.from('codex_feats').select('*'),
     supabase.from('codex_skills').select('*'),
@@ -77,13 +78,8 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
     supabase.from('codex_archetypes').select('*'),
     supabase.from('codex_archetype_levels').select('*'),
     supabase.from('codex_creature_feats').select('*'),
-    (async () => {
-      const r = await supabase.from('core_rules').select('id, data');
-      return r.error ? { data: [] as Row[], error: null } : r;
-    })(),
+    fetchCoreRules(supabase),
   ]);
-
-  const coreRulesRows = (coreResult as { data?: Row[] }).data ?? [];
 
   /** If table is missing (e.g. codex_* still in codex schema), treat as empty instead of 500. Run sql/path-c-phase0-consolidate-to-public-part1c.sql to move codex_* to public. */
   function isTableMissing(e: { message?: string; code?: string } | null): boolean {
@@ -118,7 +114,6 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
     const archRows = ((isTableMissing(eArch) ? [] : archetypes) ?? []) as Row[];
     const archLevelRows = ((isTableMissing(eArchLevels) ? [] : archetypeLevels) ?? []) as Row[];
     const creatureRows = ((isTableMissing(eCreature) ? [] : creatureFeats) ?? []) as Row[];
-    const coreRows = coreRulesRows as Row[];
 
     const codexFeats = featRows.map((r) => ({
       id: r.id,
@@ -436,12 +431,6 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
         updated_at: toVersion(r.updated_at),
       };
     });
-
-  const coreRules: Record<string, unknown> = {};
-  for (const row of coreRows) {
-    const id = row.id as string;
-    if (id != null) coreRules[id] = row.data;
-  }
 
   return {
     feats: codexFeats,

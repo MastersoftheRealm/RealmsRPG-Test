@@ -1,3 +1,127 @@
+- id: TASK-738
+  title: Guided creator P1-6-P1-10 leftovers (auth gate, trusted save, feats)
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/characters/new/guided/page.tsx
+    - src/components/guided-creator/steps/abilities-step.tsx
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+    - src/components/guided-creator/steps/character-feat-step.tsx
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/lib/guided-creator/creator-entry-mode.ts
+    - src/lib/guided-creator/creator-entry-mode.test.ts
+    - src/lib/guided-creator/feat-selection.ts
+    - src/lib/guided-creator/feat-selection.test.ts
+    - src/lib/game/character-legality.ts
+    - src/lib/game/character-legality.test.ts
+    - src/lib/core-rules-server.ts
+    - src/lib/api-validation.ts
+    - src/services/character-service.ts
+    - src/app/api/characters/route.ts
+    - src/app/api/characters/route.test.ts
+    - src/app/api/codex/route.ts
+    - sql/task-738-characters-client-request-id.sql
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+    - src/stores/guided-creator-store.ts
+    - src/stores/character-creator-store.ts
+    - src/lib/character-save.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - reports/audit-2026-08-13/03-guided-creator.md
+  description: |
+    Report 03 P1-6-P1-10: guest funnel waited on auth loading; character create was fully
+    client-trusted; a flaky POST could duplicate characters; recommended abilities could
+    display without write-back; the character feat was auto-selected with no requirement check.
+  acceptance_criteria:
+    - Guided shell renders without blocking the Path step on `useAuth().loading` (client-only guard for persist hydration; Reveal still gates save on login).
+    - Level-1 create has a server legality check (ability/skill budgets, feat counts, currency >= 0, HP+EN pool) or an explicit owner waiver in the tracker.
+    - Create uses an idempotency key (or equivalent) so a lost response cannot insert two characters.
+    - `abilitiesMode === 'recommended'` persists the abilities the player saw (pathData resolved, no fallback lock-in).
+    - Character-feat step does not auto-pick an unchecked feat; L1 select honors `checkFeatRequirements`.
+    - FEATURE_INDEX / AUDIT_REMEDIATION rows updated; typecheck/lint pass.
+  notes: |
+    Owner ack 2026-08-13 (Architect pause): server legality is BOUNDS ONLY - over-budget is
+    refused, under-filled is not, and every budget is taken at the more permissive of
+    core_rules override and code default, so it cannot 400 a build a creator allowed. Skill
+    spend is a deliberate lower bound: species/path proficiencies are free and invisible to
+    the server. Idempotency uses a dedicated client_request_id column + partial unique index
+    (owner: "whatever is best practice for our database/longterm longevity") rather than
+    overloading the primary key.
+    Verified against live data before writing the check: every relevant core_rules value
+    matches the code defaults. Recommended abilities are not a JSONB path_data authoring
+    gap: /api/codex synthesizes path_data.level1 from columnar level1_* fields. Live data
+    2026-08-13: 12/12 archetypes have level1_recommended_abilities and level1_guidance_groups;
+    every recommended array spends exactly 7, max 3, min -1, so the ability bound is safe.
+    Cleanup 2026-08-13: clientRequestId persisted on Guided (schema v13) and Advanced (v4)
+    drafts so reload-then-retry still hits the same row; resetCreator clears it. Create and
+    duplicate share one insert helper with 23505 recovery. Level-1 create refuses official
+    catalog feats that fail checkFeatRequirements.
+    Archived from ACTIVE 2026-08-13 - implementable AC met; verification_status pending-qa (DEV-V-051).
+  completed_work: |
+    - P1-6: guided page renders the shell on useIsClient() instead of useAuth().loading.
+    - P1-7: findLevel1LegalityViolations / shouldCheckLevel1Legality (lib/game/character-legality.ts)
+      wired into POST /api/characters -> 400 { error, details } on level-1 creates only.
+      Spend/counts are bounds only; catalog feats that fail checkFeatRequirements are refused.
+      New lib/core-rules-server.ts fetchCoreRules is now the single server reader of core_rules
+      (the codex route's inline select was replaced with it).
+    - P1-8: characters.client_request_id + partial unique index on (user_id, client_request_id),
+      applied via Supabase MCP; sql/task-738-characters-client-request-id.sql. Route replays the
+      first row ahead of the quota check and recovers from a concurrent 23505 (create and
+      duplicate share one insert helper). Both creators persist one uuid on the draft so a
+      reload-then-retry still hits the same row; resetCreator clears it; the key never lands
+      in the data blob.
+    - P1-9: resolveGuidedRecommendedAbilitiesPatch - no write while the archetype codex is in
+      flight, and re-sync when the recommendation changes under abilitiesMode 'recommended'.
+    - P1-10: deleted the character-feat auto-pick effect; L1 card select routes through the same
+      toggle as the catalog; selectableCuratedFeatIds filters curated L1 ids through
+      checkFeatRequirements in both feat steps, keeping a selected-but-unmet pick deselectable.
+    - Tests: 18 legality cases, 6 new characters-route cases (replay, replay-before-quota,
+      key persisted + absent from blob, concurrent 23505, non-idempotency 500, legality 400),
+      resolveGuidedRecommendedAbilitiesPatch, selectableCuratedFeatIds. 904/904 vitest green;
+      typecheck + lint + build clean.
+  developer_test_plan: |
+    DEV-V-051 T001-T008. T003 (lost response, including after reload, does not duplicate a
+    character) and T004 (Advanced creator save still accepted by the spend/count legality
+    check) are the two that matter most. T008 covers empty L1 after the requirement filter.
+
+---- id: TASK-740
+  title: Advanced creator store - non-destructive schema migrate
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: high
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/stores/character-creator-store.ts
+    - src/stores/character-creator-store.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+    - reports/audit-2026-08-13/06-state-data-architecture.md
+  description: |
+    Report 06 P0: persist migrate wiped the Advanced draft on any schema bump
+    (`if (version < CREATOR_STORE_SCHEMA_VERSION) return fresh draft`). Replaced with a
+    field-by-field migrate that keeps user progress.
+  acceptance_criteria:
+    - Bumping CREATOR_STORE_SCHEMA_VERSION does not replace a valid in-progress draft with cloneInitialDraft.
+    - Unknown/missing fields get defaults; known fields are preserved.
+    - Targeted test: v1 persisted state survives migrate to current version. Typecheck/lint pass.
+  notes: |
+    Guided store already migrated to v12 without wiping. Mirrored that pattern; stores stay separate.
+    Archived from ACTIVE 2026-08-13 - implementable AC met; verification_status n/a (vitest only).
+  completed_work: |
+    - Exported migrateCharacterCreatorPersistedState + persist merge; schema v3.
+    - v1 in-progress drafts keep name/step/abilities/currency/skills; missing fields get defaults.
+    - Destructive wipe-on-bump migrate deleted.
+
+---
 - id: TASK-737
   title: Clear query cache on auth identity change; gate campaigns
   created_at: 2026-08-13
@@ -19578,3 +19702,59 @@ Firebase/RTDB - the project is Supabase-only.
     - No false 0 when Library shows a positive cost; unknown/missing still em dash (not fake 0) unless true zero-cost.
     - Root cause fixed in shared derive + catalog enrichment (not a guided-only display hack).
     - Vitest: fixture with known Energy not 0 through guided L2 builder path; DEV-V-050 T002 Energy step updated; build/typecheck/lint pass.
+- id: TASK-669
+  title: Provision Redis-backed rate limiting store (Upstash or Vercel KV)
+  created_at: 2026-08-01
+  completed_at: 2026-08-13
+  created_by: agent
+  parent_task: TASK-645
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/rate-limit.ts
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Provision Upstash Redis (or Vercel KV) and attach URL/token env vars to Vercel so
+    TASK-645 durable rate limits work across serverless instances.
+  acceptance_criteria:
+    - Redis/KV instance provisioned.
+    - Env vars set in Vercel (production + preview).
+    - Owner completes TASK-645 pending QA in DEVELOPER_TASK_QUEUE.md (DEV-011).
+  completed_work: |
+    Owner provisioned marketplace resource upstash-kv-cordovan-notebook (Upstash for Redis, free plan)
+    and connected it to realms-rpg-test (production, preview, development). Vercel injected
+    KV_REST_API_URL + KV_REST_API_TOKEN (rate-limit.ts already reads those). Production rebuilt
+    2026-08-13 so the new env is live on realmsrpg.com (dpl_FwVQRANEeah7RydyMXRkJ61HDr5D).
+  notes: |
+    Remaining QA is TASK-645 rate-limit smoke (cross-instance 429), not re-provisioning.
+    Archived from WAITING 2026-08-13.
+
+- id: TASK-745
+  title: Put a Sentry DSN in Vercel so error monitoring is live
+  created_at: 2026-08-13
+  completed_at: 2026-08-13
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/observability/config.ts
+    - src/instrumentation.ts
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    Wave 1 wired Sentry; it is a no-op without SENTRY_DSN / NEXT_PUBLIC_SENTRY_DSN.
+    Create a Sentry project and add the DSN to Vercel production + preview.
+  acceptance_criteria:
+    - DSN set in Vercel; a test error appears in Sentry from production or preview.
+    - Local .env.example documents the var names (no secret values).
+  completed_work: |
+    Owner provisioned marketplace resource sentry-copper-canvas (Sentry Developer, $0). Agent
+    connected it to realms-rpg-test production + preview. Vercel injected NEXT_PUBLIC_SENTRY_DSN
+    (plus SENTRY_ORG / SENTRY_PROJECT / SENTRY_AUTH_TOKEN). App getSentryDsn() reads
+    NEXT_PUBLIC_SENTRY_DSN. Production rebuilt 2026-08-13. .env.example already listed the names.
+  notes: |
+    Confirm a real event in the Sentry org (Masters of the Realm) after using production.
+    Archived from WAITING 2026-08-13.
+

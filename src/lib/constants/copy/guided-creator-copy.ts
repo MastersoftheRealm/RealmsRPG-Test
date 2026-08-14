@@ -309,6 +309,9 @@ export const GUIDED_CREATOR_COPY = {
       emptyTitle: 'No Feat recommendations',
       emptyDescription:
         'No path-specific Archetype Feats to suggest. Use See more Feats to browse the full catalog.',
+      emptyFilteredTitle: 'No Feat recommendations qualify',
+      emptyFilteredDescription:
+        'None of this path’s suggested Archetype Feats qualify for this build. Use See more Feats to browse the full catalog.',
     },
     characterFeat: {
       title: 'Who you are beyond the fight',
@@ -316,7 +319,10 @@ export const GUIDED_CREATOR_COPY = {
       seeMore: 'See more Character Feats',
       emptyTitle: 'No Character Feats found',
       emptyDescription:
-        'None are available right now. Use See more Character Feats, or pick another path.',
+        'This path has no Character Feats to suggest. Use See more Character Feats to browse the full catalog, or pick another path.',
+      emptyFilteredTitle: 'No Character Feats qualify',
+      emptyFilteredDescription:
+        'None of this path’s Character Feats qualify for this build. Use See more Character Feats to browse the full catalog, or pick another path.',
     },
     /** Shared Layer 2 add-modal copy for archetype + character feat steps (TASK-565). */
     featsL2: {

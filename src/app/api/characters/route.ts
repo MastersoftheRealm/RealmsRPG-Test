@@ -16,7 +16,90 @@ import { normalizeCharacterForSave, normalizeCharacterOnLoad } from '@/lib/chara
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
+import { fetchCoreRules } from '@/lib/core-rules-server';
+import {
+  catalogFromCodexRows,
+  findLevel1LegalityViolations,
+  shouldCheckLevel1Legality,
+} from '@/lib/game/character-legality';
 import type { Character, CharacterSummary } from '@/types';
+
+/** Postgres unique-violation — the idempotency index rejecting a concurrent retry. */
+const UNIQUE_VIOLATION = '23505';
+
+const FEAT_REQUIREMENT_COLUMNS =
+  'id, name, lvl_req, ability_req, abil_req_val, skill_req, skill_req_val, mart_abil_req, speed_req, feat_lvl, base_feat_id';
+const SKILL_REQUIREMENT_COLUMNS = 'id, name, base_skill_id, ability';
+
+type SupabaseLike = Awaited<ReturnType<typeof createClient>>;
+
+/** The character this user already created with this idempotency key, if any. */
+async function findCharacterByRequestId(
+  supabase: SupabaseLike,
+  userId: string,
+  clientRequestId: string
+): Promise<string | null> {
+  const { data } = await supabase
+    .from('characters')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('client_request_id', clientRequestId)
+    .maybeSingle();
+  return (data?.id as string | undefined) ?? null;
+}
+
+type CharacterInsertRow = {
+  id: string;
+  user_id: string;
+  data: Record<string, unknown>;
+  client_request_id: string | null;
+} & Record<string, unknown>;
+
+/**
+ * One insert path for create and duplicate. Concurrent retries of the same
+ * `client_request_id` recover the winner instead of 500ing.
+ */
+async function insertCharacterRow(
+  supabase: SupabaseLike,
+  row: CharacterInsertRow
+): Promise<{ id: string } | { uniqueViolation: true }> {
+  const { data: created, error: insertErr } = await supabase
+    .from('characters')
+    .insert(row)
+    .select('id')
+    .single();
+  if (insertErr) {
+    if (row.client_request_id && (insertErr as { code?: string }).code === UNIQUE_VIOLATION) {
+      return { uniqueViolation: true };
+    }
+    throw insertErr;
+  }
+  return { id: created.id as string };
+}
+
+async function jsonForInsertResult(
+  supabase: SupabaseLike,
+  userId: string,
+  clientRequestId: string | undefined,
+  result: { id: string } | { uniqueViolation: true }
+): Promise<NextResponse> {
+  if ('id' in result) return NextResponse.json({ id: result.id });
+  if (clientRequestId) {
+    const replayed = await findCharacterByRequestId(supabase, userId, clientRequestId);
+    if (replayed) return NextResponse.json({ id: replayed });
+  }
+  throw new Error('Character insert unique violation without a replay row');
+}
+
+async function fetchFeatRequirementCatalog(supabase: SupabaseLike) {
+  const [featRes, skillRes] = await Promise.all([
+    supabase.from('codex_feats').select(FEAT_REQUIREMENT_COLUMNS),
+    supabase.from('codex_skills').select(SKILL_REQUIREMENT_COLUMNS),
+  ]);
+  if (featRes.error) throw featRes.error;
+  if (skillRes.error) throw skillRes.error;
+  return catalogFromCodexRows(featRes.data ?? [], skillRes.data ?? []);
+}
 
 export async function GET() {
   try {
@@ -91,10 +174,18 @@ export async function POST(request: NextRequest) {
 
     const validation = await validateJson(request, characterCreateSchema);
     if (!validation.success) return validation.error;
-    const { duplicateOf, ...rest } = validation.data;
+    const { duplicateOf, clientRequestId, ...rest } = validation.data;
     const data = rest as Partial<Character>;
 
     const supabase = await createClient();
+
+    // Idempotent replay ahead of the quota check: a retry after a lost response must not
+    // be refused because the first attempt already consumed the caller's last slot.
+    if (clientRequestId) {
+      const replayed = await findCharacterByRequestId(supabase, user.uid, clientRequestId);
+      if (replayed) return NextResponse.json({ id: replayed });
+    }
+
     const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
     const { count: characterCount, error: countError } = await supabase
       .from('characters')
@@ -141,29 +232,49 @@ export async function POST(request: NextRequest) {
 
       await ensureUserProfile(supabase, user.uid);
 
-      const { data: created, error: insertErr } = await supabase
-        .from('characters')
-        .insert({ id: newId, user_id: user.uid, data: newData, ...listCols })
-        .select('id')
-        .single();
-      if (insertErr) throw insertErr;
-      return NextResponse.json({ id: created.id });
+      const inserted = await insertCharacterRow(supabase, {
+        id: newId,
+        user_id: user.uid,
+        data: newData,
+        ...listCols,
+        client_request_id: clientRequestId ?? null,
+      });
+      return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted);
     }
 
     const cleanedData = prepareCharacterForCreate(data);
+
+    // Server-side legality floor (report 03 P1-7). Bounds only — an over-budget payload is
+    // refused, an under-filled one is not, so this can never 400 a build a creator allowed.
+    // Feat requirements are not a budget: unmet official-catalog feats are refused.
+    if (shouldCheckLevel1Legality(cleanedData)) {
+      const [rules, featCatalog] = await Promise.all([
+        fetchCoreRules(supabase),
+        fetchFeatRequirementCatalog(supabase),
+      ]);
+      const violations = findLevel1LegalityViolations(cleanedData, rules, featCatalog);
+      if (violations.length > 0) {
+        return NextResponse.json(
+          { error: 'Character is not a legal level 1 build', details: violations },
+          { status: 400 }
+        );
+      }
+    }
+
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
     const listCols = getCharacterListColumns(cleanedData as Record<string, unknown>, { archetypeNameById });
     const newId = crypto.randomUUID();
 
     await ensureUserProfile(supabase, user.uid);
 
-    const { data: created, error: insertErr } = await supabase
-      .from('characters')
-      .insert({ id: newId, user_id: user.uid, data: cleanedData, ...listCols })
-      .select('id')
-      .single();
-    if (insertErr) throw insertErr;
-    return NextResponse.json({ id: created.id });
+    const inserted = await insertCharacterRow(supabase, {
+      id: newId,
+      user_id: user.uid,
+      data: cleanedData,
+      ...listCols,
+      client_request_id: clientRequestId ?? null,
+    });
+    return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted);
   } catch (err) {
     console.error('[API Error] POST /api/characters:', err);
     return NextResponse.json({ error: 'Failed to create character' }, { status: 500 });

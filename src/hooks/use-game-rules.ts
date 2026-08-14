@@ -161,6 +161,12 @@ const FALLBACK_RULES: CoreRulesMap = {
       minCarry: s.minCarry,
     })),
     halfCapacitySpeedPenalty: 'Movement speed halved',
+    spaceAndShape:
+      'Creatures are classified into size categories based on their height and, in some cases, width. Generally, larger creatures take up more space on a battle map.',
+    carryingNotes:
+      'If you carry more than half your maximum capacity, your movement speed is halved. Minimum carry still applies when Strength is negative.',
+    movementThroughEnemySpaces:
+      'Moving through an enemy your size or smaller is difficult terrain. You cannot end your turn in another creature’s space unless it occupies more than double your spaces.',
   },
   RARITIES: {
     tiers: LEVELS_BY_RARITY.map(r => ({

@@ -51,7 +51,7 @@ Several rules use **½** or "half":
 | Rule | Formula |
 |------|---------|
 | Companion max level | ½ Character level |
-| Feat level you can acquire | Feat level ≤ ½ your level |
+| Feat level you can acquire | Hard `lvl_req` wins if present; otherwise character level ≥ 2 × feat level (feat level ≤ ½ your level) |
 | Skill Encounter DS | 10 + ½ Party Level |
 | Skill Encounter successes | # Characters + 1 |
 | Jump beyond limit (per space) | DS 10 + 5 per space over |
@@ -226,6 +226,8 @@ Shared formatters live in `src/lib/detail-option/compact-facts.ts`. Feature UI m
 
 **Round up** whenever you get a fraction or decimal from division. Complete all calculations first, then round up only at the end.
 
+**Exception — Training Points:** Floor each part or property’s TP contribution **before** adding it to the sum. A part that contributes 2.5 TP costs **2** TP. Do not ceil the combined total. Energy still ceils at the end. This is the only rounding-down exception.
+
 ---
 
 ## Abilities
@@ -246,7 +248,7 @@ Every Character, creature, and monster has six Abilities:
 | Rule | Value | Notes |
 |------|-------|------|
 | Typical range | -3 to 5 | Default for player Characters |
-| Absolute min | -5 | Never below |
+| Absolute min | -2 | Ability **scores** never go below −2 (characters and creatures). Temp modifiers can push past this in play. Creatures may break other hard rules; they still use this score floor. |
 | Hard cap (characters) | 10 | Absolute maximum for player Characters |
 | Hard cap (creatures) | 20 | Absolute maximum for creatures |
 | Max at creation | 3 | From point allocation alone |
@@ -756,18 +758,26 @@ When proficient, unarmed prowess uses **Ability + Martial Proficiency** (Attack 
 
 ## Size & Carrying Capacity
 
+Creatures are classified into size categories based on their height and, in some cases, width. Generally, larger creatures take up more space on a battle map. For instance, a Huge creature occupies 4 spaces.
+
+**Creature space and shape.** When a creature occupies multiple spaces, those spaces are typically adjacent. Some creatures may have unique shapes. A creature whose width matches a larger category’s typical height uses the larger size (for example, a horse about 150 cm tall and 250 cm long is Large).
+
+**Carrying capacity** is determined by size (table below). If you carry more than half your maximum capacity, your movement speed is halved. Regardless of Strength, you can carry at least the size’s minimum (the kilogram bonus you would multiply by Strength) even if Strength is negative — for example, Tiny at Strength −2 still carries 10 kg.
+
+**Movement through enemy spaces.** When moving through the space of an enemy that is your size or smaller, the space is difficult terrain. You cannot end your turn in the same space as another creature unless that creature occupies more than double the number of spaces you do (for example, a Medium creature occupying one space of a Huge creature).
+
+**Speed** is `6 + ½ Agility`. Size does **not** add a Speed modifier. The only size-related Speed rule is the half-capacity penalty above.
+
 | Size | Height | Spaces | Carrying Capacity | Min Carry |
 |------|--------|--------|-------------------|-----------|
-| Miniscule | Under 1 ft | 1/8 | 10 + 5×STR kg | 5 kg |
-| Tiny | 1–2 ft | 1/4 | 25 + 10×STR kg | 10 kg |
-| Small | 2–4 ft | 1 | 50 + 25×STR kg | 25 kg |
-| Medium | 5–7 ft | 1 | 100 + 50×STR kg | 50 kg |
-| Large | 7–10 ft | 1–2 | 200 + 100×STR kg | 100 kg |
-| Huge | 10–15 ft | 4 | 400 + 200×STR kg | 200 kg |
-| Humongous | 15–25 ft | 9 | 800 + 400×STR kg | 400 kg |
-| Gargantuan | 25+ ft | 16+ | 1600 + 800×STR kg | 800 kg |
-
-Carrying > ½ capacity halves movement speed.
+| Miniscule | Under 30 cm | 1/8 | 10 + 5×STR kg | 5 kg |
+| Tiny | 30–60 cm | 1/4 | 25 + 10×STR kg | 10 kg |
+| Small | 60–120 cm | 1 | 50 + 25×STR kg | 25 kg |
+| Medium | 150–200 cm | 1 | 100 + 50×STR kg | 50 kg |
+| Large | 200–300 cm | 1–2 | 200 + 100×STR kg | 100 kg |
+| Huge | 300–450 cm | 4 | 400 + 200×STR kg | 200 kg |
+| Humongous | 450–750 cm | 9 | 800 + 400×STR kg | 400 kg |
+| Gargantuan | 750+ cm | 16+ | 1600 + 800×STR kg | 800 kg |
 
 ---
 
@@ -822,6 +832,8 @@ Conditions are temporary effects. Leveled conditions have proportional effects. 
 ---
 
 ## Rarity & Currency
+
+**Item Point (IP) total determines rarity.** Currency (`c`) determines cost, using a rarity-based multiplier. Clamp the resulting currency so it cannot exceed that rarity’s `currencyMax` (it must not spill into the next bracket). With current properties the ceiling is rarely reachable; the clamp is a backstop.
 
 | Rarity | Currency Range |
 |--------|----------------|

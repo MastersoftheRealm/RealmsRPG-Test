@@ -128,9 +128,13 @@ If Supabase logs show **`permission denied for table user_species`**, the `authe
 
 | Table | Shape | Key columns |
 |-------|--------|-------------|
-| `characters` | Hybrid | id (PK), user_id (FK → user_profiles), data (JSONB), created_at, updated_at; list columns: name, level, archetype_name, ancestry_name, status, visibility |
+| `characters` | Hybrid | id (PK), user_id (FK → user_profiles), data (JSONB), created_at, updated_at, client_request_id (uuid, nullable); list columns: name, level, archetype_name, ancestry_name, status, visibility |
 
 Single document in `data`; list columns for list/filter. Realtime: `public.characters`.
+
+**Idempotent create (`client_request_id`, TASK-738):** Applied 2026-08-13 via **`sql/task-738-characters-client-request-id.sql`**. `POST /api/characters` accepts a client-generated `clientRequestId` and stores it in this column; a repeated key returns the first character instead of inserting a second one, so a create whose response was lost cannot duplicate the character. The partial unique index `characters_user_client_request_id_key (user_id, client_request_id) WHERE client_request_id IS NOT NULL` is what makes the replay race-safe — a losing concurrent insert gets `23505` and the route re-reads the winning row. Nullable: rows created before the key existed, and callers that omit it, are unaffected.
+
+**Level-1 create legality (TASK-738):** `POST /api/characters` runs `findLevel1LegalityViolations` (`lib/game/character-legality.ts`) on level-1 creates and returns `400 { error, details }` for over-budget payloads. Bounds only (spend ≤ budget, counts ≤ max, `currency >= 0`) evaluated at the more permissive of `core_rules` override and code default, so it can never reject a build a creator allowed.
 
 **Character `data` JSON (app-owned, no DB migration for new keys):** Feats are lean entries `{ id, currentUses?, customName?, note? }` on `feats` / `archetypeFeats`; trait player labels live in `traitCustomizations` (map of trait id → `{ customName?, note? }`). Codex names/descriptions are enriched on load, not stored on save.
 

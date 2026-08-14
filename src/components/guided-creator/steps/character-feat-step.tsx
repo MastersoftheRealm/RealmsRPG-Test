@@ -5,11 +5,14 @@
 
 'use client';
 
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import { EmptyState, Spinner } from '@/components/ui';
 import { GuidedInlineCatalogList, GuidedLayerNav } from '@/components/shared';
 import { useCodexFeats, useCodexSkills } from '@/hooks';
-import { guidedDraftToFeatRequirementCharacter } from '@/lib/guided-creator/feat-selection';
+import {
+  guidedDraftToFeatRequirementCharacter,
+  selectableCuratedFeatIds,
+} from '@/lib/guided-creator/feat-selection';
 import {
   buildGuidedFeatsL2FilterOptions,
   buildGuidedFeatsL2Items,
@@ -64,30 +67,33 @@ export function CharacterFeatStep() {
     [guidanceGroups]
   );
 
-  useEffect(() => {
-    if (draft.characterFeatIds.length > 0) return;
-    const firstGroup = characterFeatGroups[0];
-    if (firstGroup?.feats?.[0]) {
-      updateDraft({ characterFeatIds: [String(firstGroup.feats[0])] });
-    }
-  }, [characterFeatGroups, draft.characterFeatIds.length, updateDraft]);
+  const requirementCharacter = useMemo(
+    () => guidedDraftToFeatRequirementCharacter(draft),
+    [draft]
+  );
 
+  /**
+   * No auto-pick (report 03 P1-10): the first curated feat used to be written into the
+   * draft on arrival, unchecked, so a player who tapped Continue had made a choice they
+   * were never shown making — on the step about who they are beyond the fight.
+   */
   const options = useMemo(() => {
     const ids = new Set<string>();
     characterFeatGroups.forEach((g) => g.feats?.forEach((id) => ids.add(String(id))));
-    return Array.from(ids)
+    return selectableCuratedFeatIds({
+      ids: Array.from(ids),
+      feats,
+      selectedIds: draft.characterFeatIds,
+      requirementCharacter,
+      codexSkills,
+    })
       .map((id) => feats.find((f) => String(f.id) === id))
       .filter(Boolean);
-  }, [characterFeatGroups, feats]);
+  }, [characterFeatGroups, feats, draft.characterFeatIds, requirementCharacter, codexSkills]);
 
   const recommendedIds = useMemo(
     () => options.map((f) => (f ? String(f.id) : '')).filter(Boolean),
     [options]
-  );
-
-  const requirementCharacter = useMemo(
-    () => guidedDraftToFeatRequirementCharacter(draft),
-    [draft]
   );
 
   const selectFeat = useCallback(
@@ -138,7 +144,14 @@ export function CharacterFeatStep() {
     [draft.characterFeatIds]
   );
 
+  const curatedCharacterFeatCount = useMemo(() => {
+    const ids = new Set<string>();
+    characterFeatGroups.forEach((g) => g.feats?.forEach((id) => ids.add(String(id))));
+    return ids.size;
+  }, [characterFeatGroups]);
+
   const hasLayer1Options = options.length > 0;
+  const layer1EmptyBecauseFiltered = !hasLayer1Options && curatedCharacterFeatCount > 0;
 
   return (
     <GuidedStepLayout
@@ -202,7 +215,7 @@ export function CharacterFeatStep() {
                     title={feat.name}
                     description={feat.description}
                     selected={draft.characterFeatIds[0] === String(feat.id)}
-                    onSelect={() => updateDraft({ characterFeatIds: [String(feat.id)] })}
+                    onSelect={() => selectFeat(String(feat.id))}
                     expandedExtra={
                       getFeatRestrictionNotice(feat) ? (
                         <GuidedFeatRestrictionNotice feat={feat} />
@@ -213,7 +226,16 @@ export function CharacterFeatStep() {
               )}
             </div>
           ) : (
-            <EmptyState title={stepCopy.emptyTitle} description={stepCopy.emptyDescription} />
+            <EmptyState
+              title={
+                layer1EmptyBecauseFiltered ? stepCopy.emptyFilteredTitle : stepCopy.emptyTitle
+              }
+              description={
+                layer1EmptyBecauseFiltered
+                  ? stepCopy.emptyFilteredDescription
+                  : stepCopy.emptyDescription
+              }
+            />
           )}
 
           <GuidedLayerNav expandLabel={stepCopy.seeMore} onExpand={() => setBrowseOpen(true)} />

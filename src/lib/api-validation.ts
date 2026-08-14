@@ -217,6 +217,11 @@ export const characterCreateSchema = withSafeJsonBlob({
   name: z.string().min(1, 'Name is required').max(100, 'Name too long'),
   level: z.number().int().min(1).max(20).optional().default(1),
   duplicateOf: z.string().uuid().optional(),
+  /**
+   * Idempotency key (TASK-738): the route replays the first result for a repeated key
+   * instead of inserting a second character. Stored in its own column, not the JSON blob.
+   */
+  clientRequestId: z.string().uuid().optional(),
 });
 
 /** Character update — partial, all fields optional */

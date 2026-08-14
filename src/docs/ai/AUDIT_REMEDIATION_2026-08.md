@@ -1,7 +1,8 @@
 # Audit Remediation Program — 2026-08
 
-Living tracker for the sitewide audit in `reports/audit-2026-08-13/`. Branch:
-`audit/remediation-2026-08`.
+Living tracker for the sitewide audit in `reports/audit-2026-08-13/`. **Landed on `master`**
+(the working branch is no longer a separate `audit/remediation-2026-08` fork). Working tree was
+clean as of the 2026-08-13 evening plan refresh.
 
 **Status values:** `done` (implemented + verified), `partial` (landed mid-AC; remaining work listed),
 `in-progress`, `queued`, `owner-decision` (product call, not engineering), `deferred` (with reason).
@@ -10,7 +11,8 @@ Living tracker for the sitewide audit in `reports/audit-2026-08-13/`. Branch:
 row moves to `done`, record the commit subject. When a row is `partial`, record **what landed** and
 **what remains** so the next agent does not re-discover progress from diffs.
 
-**Snapshot date:** 2026-08-13 (evening, America/New_York).
+**Snapshot date:** 2026-08-13 (late evening, America/New_York) — tracker refreshed to match `master`
++ owner acks. Wave 2 coding pass started (TASK-740 first).
 
 ---
 
@@ -18,12 +20,12 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 
 | Wave | Verdict | Notes |
 |---|---|---|
-| **0 — foundation** | `done` | Backups, branch, schema baseline, codex data-loss determination. |
-| **1 — stop the bleeding** | `done` (code + DB) / `owner-decision` (settings) | DB/UI/API/Admin/Ops all implemented. GitHub branch protection, E2E secrets / `E2E_OPTIONAL`, Sentry DSN, Auth leaked-password toggle, orphan profile delete, Node engines still need the owner. |
-| **2 — correctness** | `partial` | Rules + guided funnel P0/P1-1–P1-5 landing this merge. TASK-738 (P1-6–P1-10) and TASK-739 (Advanced currency clamp) filed for later. Advanced migrate + dirty-key PATCH still queued. |
-| **3 — structure** | `queued` | Not started. |
+| **0 — foundation** | `done` | Backups, schema baseline, codex data-loss determination. |
+| **1 — stop the bleeding** | `done` (code + DB + ops) | GitHub required checks + Actions public Supabase secrets + `E2E_OPTIONAL=1` + orphan profile delete. **2026-08-13 Vercel:** Upstash Redis + Sentry DSN live on production/preview; `NEXT_PUBLIC_SITE_URL` on production; production rebuilt. Still owner: HIBP, E2E test user, optional “require PR”. |
+| **2 — correctness** | `partial` | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**. Remaining: 741–742, 739, 744. |
+| **3 — structure** | `queued` | After Wave 2 P0s (Advanced migrate + dirty-key PATCH). No parallel Prettier/`text-muted` mega-diffs until then. |
 
-### Commits on `audit/remediation-2026-08` (oldest → newest)
+### Commits on `master` (audit program, oldest → newest)
 
 | Commit | Scope |
 |---|---|
@@ -38,6 +40,8 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 | `ebe2c3ce` | Wave 2: sheet formula unification + guided funnel integrity (P0/P1-1–P1-4) |
 | `a0fe048d` | TASK-714 / TASK-734–737 leftovers (ChoiceCard keyboard, GET visibility, autosave, query cache) |
 
+Later `master` commits (`6adf344f`, `21ffcd18`, …) are unrelated product work on top of this program.
+
 ### Live DB migrations applied
 
 | File | Applied | Contents |
@@ -45,10 +49,12 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 | `sql/schema/0001_audit_remediation_security_2026-08-13.sql` | yes | Role trigger INSERT+UPDATE; per-column grants excluding `role`; drop self-delete; visibility column authority; `codex_retired_ids`; `role_policies` scoped; vtt index/bucket |
 | `sql/schema/0002_codex_locking_and_atomic_levels_2026-08-13.sql` | yes | `updated_at` + touch triggers on 9 `codex_*` tables; `replace_archetype_levels` RPC (service_role) |
 | `sql/schema/0000_baseline_2026-08-13.sql` | refreshed | Matches live after `0002` (`npm run db:diff` clean at last check) |
+| `sql/core-rules-sizes-rulebook-2026-08-13.sql` | yes (data) | Replaced stale `SIZES` blob with rulebook `categories[]` (8 sizes, cm heights, carrying + movement prose) |
 
-### Uncommitted work (must land or continue before merge)
+### Uncommitted / follow-up coding
 
-Landing on this merge as `3a31aef4` relocate, `ebe2c3ce` Wave 2 rules + guided funnel, `a0fe048d` TASK-714 / TASK-734–737 leftovers. Follow-ups TASK-738 / TASK-739 stay open.
+Plan refresh + GAME_RULES / SIZES seed / admin editor prose may still be uncommitted.
+Wave 2 coding: TASK-740 and TASK-738 done; next is TASK-741 (dirty-key PATCH, Architect / ADR).
 
 ---
 
@@ -96,8 +102,8 @@ Landing on this merge as `3a31aef4` relocate, `ebe2c3ce` Wave 2 rules + guided f
 | **P2** `role_policies` world-readable | `done` | Own role **or admin** (admin roles page needs all rows). |
 | **P2** unindexed FK, unbounded `vtt-maps` bucket | `done` | Index + 25 MB mime-capped bucket. |
 | `auth.users` FK | `deferred` | `user_profiles.id` is `text`, `auth.users.id` is `uuid`. Needs type migration across dependents with branch-DB rehearsal. |
-| Orphan profile `f4f4961c…` | `owner-decision` | Deleting cascades that user's content. Likely failed session-client delete + successful `auth.admin.deleteUser`. |
-| Leaked-password protection | `owner-decision` | Dashboard Auth → Providers → Password only. |
+| Orphan profile `f4f4961c…` | `done` | 2026-08-13: no `auth.users` row, 0 characters/campaigns/library. Deleted `usernames` + `user_profiles` (`player958773`). |
+| Leaked-password protection | `owner-decision` | Dashboard Auth → Password. **Pro plan.** MCP cannot toggle. TASK-353 / DEV-001. |
 
 ### UI safety (report 04) — done
 
@@ -135,7 +141,7 @@ Landing on this merge as `3a31aef4` relocate, `ebe2c3ce` Wave 2 rules + guided f
 | **P1** id reuse consumption | `done` | `src/lib/codex/id-allocation.ts`; official species uses it. |
 | **P1** dirty-set / optimistic lock / core-rules discard | `done` | Dirty-by-key; `updated_at` live after `0002`; dirty tab guard. |
 | Referential delete + property/enhanced-item fixes | `done` | `src/lib/codex/references.ts`; General property type; enhanced-item PATCH recomputes cost/rarity. |
-| Helper layering (admin → lib) | `partial` → near-done | Relocate is in the working tree, not yet committed. |
+| Helper layering (admin → lib) | `done` | Relocate committed as `3a31aef4`. |
 
 ### Ops, CI & recoverability (reports 11, 12) — done (`7217837a`)
 
@@ -143,8 +149,8 @@ Landing on this merge as `3a31aef4` relocate, `ebe2c3ce` Wave 2 rules + guided f
 |---|---|---|
 | **P0** `db:seed` wiped codex before input check | `done` | `scripts/seed-plan.mjs`; upsert default; guarded `--reset`. |
 | **P0** backup script lied on failure | `done` | Size + SQL markers; all four storage buckets. |
-| **P0** nothing blocked a bad deploy | `done` (in-repo) / `owner-decision` (GitHub) | pre-push typecheck+tests; e2e no longer false-green. **Branch protection still off.** |
-| **P0** no error monitoring | `done` (wiring) / `owner-decision` (DSN) | Sentry wired, no-op without DSN. |
+| **P0** nothing blocked a bad deploy | `done` (in-repo + GitHub checks) / `owner-decision` (require PR) | pre-push typecheck+tests; e2e no longer false-green. **2026-08-13:** required status checks on `master` (`Lint, contrast & static gates`, `Visual regression & accessibility`, `verify`); `enforce_admins` off so the owner can still push. Did **not** require PRs (current ship flow). `E2E_OPTIONAL=1` + Actions `NEXT_PUBLIC_SUPABASE_*` secrets set. Full auth e2e still DEV-003. |
+| **P0** no error monitoring | `done` | Sentry wired. Marketplace resource `sentry-copper-canvas` connected; `NEXT_PUBLIC_SENTRY_DSN` on Vercel production + preview. Production rebuilt 2026-08-13. Confirm an event in Sentry (TASK-745 pending-qa). |
 | **P1** schema drift detection | `done` | `npm run db:diff` / `db:baseline:update`. |
 | **P1** codex drift scan | `done` | `npm run db:check-codex-drift` — 708 rows, 0 collateral nulls. |
 | **P2** dead scripts / lint / deps / unsound staged typecheck | `done` | — |
@@ -155,9 +161,7 @@ Landing on this merge as `3a31aef4` relocate, `ebe2c3ce` Wave 2 rules + guided f
 
 ## Wave 2 — correctness (`partial`)
 
-Agents for Rules and Guided **hit usage limits mid-flight** (2026-08-13). A stabilize pass restored
-`tsc --noEmit`. **None of this Wave 2 work is committed yet.** Resume from the checklists below —
-do not restart from the audit reports blindly.
+P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`ebe2c3ce`, `a0fe048d`). Resume from the checklists and ACTIVE_TASKS — do not restart from the audit reports blindly. **Do not code remaining tasks until the owner starts that pass.**
 
 ### Rules engine + sheet formula unification (reports 05, 09) — `partial`
 
@@ -176,22 +180,24 @@ do not restart from the audit reports blindly.
 | **N1** | P1 | Shared `parseLevel` — no more `parseFloat \|\| 1` swallowing level `0` / sub-levels across progression helpers. |
 | **N3** | P1 | `characterToFeatRequirementCharacter` passes numeric skill allocations through (no longer drops `prof`). |
 | **D4** (partial) | P1 | `calculateCreatureSpeed` + creature-creator derived stats use it. |
-| **M6 prep** | P1 / owner | `computePartTrainingPointsRaw` extracted; per-part **floor** kept as shipped behaviour with an explicit comment pointing at the doc conflict. **Did not flip math.** |
+| **M6 prep** | P1 | `computePartTrainingPointsRaw` extracted; per-part **floor** is the rule (owner 2026-08-13). TASK-742 aligns comments/tests. |
 | Misc | — | `calculateXpToLevelUp`; dead `buildPowerMechanicPartPayload` removed from power-calc; formulas/constants/mechanic-builder/technique-calc touch-ups. |
 | **T1 / T2 / T3** | — | `calculations.test.ts` Powered-Martial Energy via `calculateMaxEnergyForArchetype`; `formulas.test.ts` unproficient table {−3…5} (sheet unarmed must keep calling `unproficientBonus`) + skill-point **3×level** (not the `getTotalSkillPoints` alias). |
 
-#### Still open (rules)
+#### Still open (rules) — filed, not started
 
-| Audit ID | Severity | Remaining work |
-|---|---|---|
-| **M6** | P1 | **Owner decision** — keep per-part floor vs doc ceil-at-end. Do not flip without ack. Align comment/doc/test once decided. |
-| **M7** | P1 | Absolute ability min still `MIN: -2` in `constants.ts`. Doc wants −5 absolute / −2 at creation only. |
-| **M8–M14** | P2–P3 | Path-switch proficiency split, powered-martial feat count dual answer, feat level ≤ ½ rule, rarity↔currency, creature speed **doc** catch-up, crafting doc gap, etc. |
-| **N2 / D8** | P1 | Empowered-technique percentage multiplier still does not `dedupeSavedParts` the way technique calc does. |
-| **D4 leftover** | P1 | `creature-stat-block.tsx` still hardcodes `6 + ceil(agi/2) + sizeMod` and `10 + agility` instead of shared helpers. |
-| **D5–D7** | P1 | Evasion creature copies; damage-option-level formula still multi-copied. |
-| **Tests T4–T10** | — | Highest-value pins from report 05 §6 still open (defense cap, level-0 boundaries, TP rounding comment, feat prof, empowered EN, golden characters, rarity). T1–T3 landed. |
-| Commit + changelog | — | Split into one concern-per-commit once AC for chosen slice is met. |
+| Audit ID | Severity | Remaining work | Task |
+|---|---|---|---|
+| **M6** | P1 | **Decided** — per-part floor. Align comments/tests with GAME_RULES (already shipped). | TASK-742 |
+| **M7** | P1 | **Decided** — −2 ability score floor everywhere (2A). Doc updated; code already `MIN: -2`. | n/a (docs this session) |
+| **M10** | P2 | **Decided** — `lvl_req` overrides; else character level ≥ 2 × feat level. Implement in `checkFeatRequirements`. | TASK-742 |
+| **M11** | P2 | **Decided** — IP → rarity; clamp currency to rarity `currencyMax`. | TASK-742 |
+| **M12** | P2 | **Decided** — no size Speed modifier; rulebook size table in `core_rules.SIZES` (applied). Remove `calculateCreatureSpeed` size add. | TASK-742 |
+| **M8–M9, M13–M14** | P2–P3 | Path-switch proficiency, powered-martial feat dual answer, doc catch-up (crafting). | TASK-742 |
+| **N2 / D8** | P1 | Empowered-technique percentage multiplier must `dedupeSavedParts`. | TASK-742 |
+| **D4 leftover** | P1 | `creature-stat-block.tsx` still hardcodes speed/evasion. | TASK-742 |
+| **D5–D7** | P1 | Evasion creature copies; damage-option-level formula still multi-copied. | TASK-742 |
+| **Tests T4–T10** | — | Highest-value pins from report 05 §6. T1–T3 landed. | TASK-742 |
 
 ### Guided creator funnel (report 03) — `partial`
 
@@ -211,27 +217,33 @@ do not restart from the audit reports blindly.
 | **P1-4** | P1 | Shared `resolveArchetypeProficiencyStart` in `formulas.ts`. Guided save + Advanced `setArchetypePath` / `getCharacter` fallback. Guided archetype payload includes `*_prof_start`. |
 | **P1-5** | P1 | `GuidedChoiceCard`: See more/See less stop card-select keys; select only when key target is the card root; selection announced in aria-label (dropped invalid `aria-selected`). |
 | Tests | — | Store + `substep-satisfaction.test.ts`: change path → Reveal blocked; species change; negative currency. Currency clamp, highest-ability persist, path prof start. |
+| **P1-6** | P1 | Guided page renders the shell on `useIsClient()` instead of blocking the whole funnel on `useAuth().loading`. The client-only guard stays (zustand-persist hydration); Reveal still gates save on login via `LoginPromptModal`. |
+| **P1-7** | P1 | `POST /api/characters` runs `findLevel1LegalityViolations` (`lib/game/character-legality.ts`) on level-1 creates → `400 { error, details }`. Owner ack 2026-08-13: **bounds only** for spend/counts (spend ≤ budget, counts ≤ max, `currency >= 0`, HP+EN ≤ pool), each budget at the more permissive of `core_rules` override and code default, so it cannot 400 a build a creator allowed. **Feat requirements are not a budget**: official catalog feats that fail `checkFeatRequirements` are refused. Server rules read via `lib/core-rules-server.ts` (also the codex route's single reader). |
+| **P1-8** | P1 | Idempotent create: `characters.client_request_id` + partial unique index on `(user_id, client_request_id)` (`sql/task-738-characters-client-request-id.sql`, applied 2026-08-13). Route replays the first row for a repeated key **ahead of the quota check**, and recovers from a concurrent `23505` by re-reading the winner (create and duplicate share one insert helper). Both creators persist one uuid on the draft, reused by retries and reload; `resetCreator` clears it. |
+| **P1-9** | P1 | `resolveGuidedRecommendedAbilitiesPatch` (`creator-entry-mode.ts`): no write while the archetype codex is in flight (no fallback lock-in), and re-sync whenever the recommendation changes under `abilitiesMode: 'recommended'` — the array on screen is the array that saves. |
+| **P1-10** | P1 | Character-feat auto-pick effect deleted; L1 card select routes through the same toggle as the catalog. `selectableCuratedFeatIds` (`feat-selection.ts`) filters curated L1 ids through `checkFeatRequirements` in **both** feat steps, keeping an already-selected unmet pick visible so it stays deselectable. |
+| Tests (738) | — | `character-legality.test.ts` (spend/count bounds + feat-requirement cases), route replay / race / legality 400 / unmet-feat 400 / key-not-in-blob, persist `clientRequestId`, `resolveGuidedRecommendedAbilitiesPatch`, `selectableCuratedFeatIds`. |
 
 #### Still open (guided)
 
 | Audit ID | Severity | Remaining work |
 |---|---|---|
-| **P1-5 leftover** | P1 | Parent grids `role="listbox"` around choice cards — skip while ancestry/skills/loadout step files are Wave 2 WIP. |
-| **P1-6–P1-10** | P1 | Auth gate UX, server-trusted save, duplicate-create on flaky network, abilities recommended write-back, auto character-feat — **not started** in this pass. |
-| **P2+** | P2 | Catalog double-build, virtualization, store subscription breadth, error surfaces on failed fetches, etc. |
-| Commit | — | Prefer one funnel-integrity commit for P0-1/P0-2/P1-1/P1-2/P1-3/P1-4 (or split P0 vs currency vs prof/skill). |
+| **P1-5 leftover** | P1 | **Closed.** Grep 2026-08-13: no parent `role="listbox"` around Guided choice cards. |
+| **P1-6–P1-10** | P1 | **Closed** by TASK-738 (see rows above). Manual QA pending: `DEV-V-051`. |
+| **P2+** | P2 | Catalog double-build, virtualization — Wave 3 / later. |
+| Advanced currency clamp | P1 | TASK-739 (after migrate + 738). |
 
-### Advanced creator store migrate (report 06 P0) — `queued` (was mis-labeled in-progress)
-
-| Finding | Status | Note |
-|---|---|---|
-| `character-creator-store` destructive `migrate` wipes draft on any schema bump | `queued` | Still `if (version < CREATOR_STORE_SCHEMA_VERSION) return fresh draft`. **No edits in this session.** Do not mark in-progress until work starts. |
-
-### Character write-path / cache (reports 06, 01 leftovers) — `queued`
+### Advanced creator store migrate (report 06 P0) — `done` → TASK-740
 
 | Finding | Status | Note |
 |---|---|---|
-| Dirty-key PATCH + `updatedAt` precondition; autosave refs/retry/timeout; per-user rate key | `partial` | Autosave callback-refs + retry + pagehide flush landed (`useAutoSave`). PATCH already uses per-user `buildRateLimitKey`. Dirty-key PATCH + `updatedAt` 409 still queued (Architect / ADR). |
+| `character-creator-store` destructive `migrate` wipes draft on any schema bump | `done` | Schema v3: `migrateCharacterCreatorPersistedState` + persist `merge` keep known fields and default missing ones (same pattern as Guided). Vitest: v1 in-progress draft survives migrate to current version. |
+
+### Character write-path / cache (reports 06, 01 leftovers) — `queued` → TASK-741
+
+| Finding | Status | Note |
+|---|---|---|
+| Dirty-key PATCH + `updatedAt` precondition; autosave refs/retry/timeout; per-user rate key | `partial` | Autosave callback-refs + retry + pagehide flush landed (`useAutoSave`). PATCH already uses per-user `buildRateLimitKey`. Dirty-key PATCH + `updatedAt` 409 is TASK-741 (Architect / ADR), after Advanced migrate. |
 | Two disconnected character write paths (`useState`+effect vs unused TanStack Query) | `queued` | — |
 | Query cache not cleared on sign-in; keys not user-scoped | `partial` | `queryClient.clear()` on SIGNED_IN / SIGNED_OUT / USER_UPDATED; `useCampaignsFull` gated on user. Character query-key user-scoping still open. |
 | Align GET with visibility **column** | `done` | `resolveCharacterVisibility` on GET `[id]` + list. |
@@ -240,7 +252,7 @@ do not restart from the audit reports blindly.
 
 ## Wave 3 — structure, growth, process (`queued`)
 
-Not started. Carry-overs from Wave 1 that belong here:
+Not started. **Do not start** until Wave 2 P0 TASK-741 (dirty-key PATCH) is green. Cheap codemods (Prettier, `text-muted`) create huge diffs that conflict with Wave 2. Carry-overs from Wave 1:
 
 | Area | Source | Notes |
 |---|---|---|
@@ -271,39 +283,50 @@ corrected.
 **Codex "data loss" — do not recover.** Intentional editorial clears (report 13). Recovery SQL is
 DO-NOT-RUN.
 
-**Training-Point rounding — do not flip without owner ack.** Working tree documents per-part floor
-as shipped behaviour; doc still says ceil-at-end.
+**Training-Point rounding (2026-08-13 owner).** Per-part **floor** is the rule (only exception to
+round-up). GAME_RULES updated. Code already matches; TASK-742 aligns comments/tests.
+
+**Ability minimum (2026-08-13, 2A).** Ability **scores** floor at −2 for characters and creatures.
+Temp modifiers are how play goes past that. Creatures may break other hard rules; not this floor.
+
+**Rarity vs currency (2026-08-13, 3B).** IP determines rarity; `c` determines cost (rarity
+multiplier). Clamp currency to that rarity’s `currencyMax` so it cannot spill into the next
+bracket. TASK-742.
+
+**Feat level (2026-08-13, 4A+4B).** Hard `lvl_req` always wins. Otherwise character level must be
+≥ 2 × feat level. TASK-742.
+
+**Size (2026-08-13).** Rulebook table + space/shape / carrying / enemy-space prose. Live
+`core_rules.SIZES` replaced (was a stale feet/`space` blob). Speed is **not** size-modified;
+TASK-742 removes the undocumented `CREATURE_SIZES.modifier` add. Gargantuan carry recorded as
+`1600 + 800×STR` (rulebook draft typo `x` → `+`).
+
+**Architecture (2026-08-13, owner: agent judgment).** Do not waive server-trusted L1 create
+(TASK-738 includes legality + idempotency). Advanced migrate (TASK-740) landed before dirty-key
+PATCH (TASK-741) — wiping drafts is worse than lost-update races. Wave 3 after 741, not in
+parallel.
 
 ---
 
 ## Owner decisions outstanding
 
-1. **Training-Point rounding.** Code floors per part; `GAME_RULES.md:227` says sum first, round up
-   at end. Exposure: 1 fractional `base_tp` part, 13 fractional option TP among 420 parts. Flip
-   *increases* costs (could push 119 powers / 47 techniques over budget).
-2. **Rarity vs currency.** IP-derived rarity vs doc currency bands; uncapped
-   `low*(1+0.125c)`.
-3. **Absolute ability minimum.** Code −2 absolute; doc −5 absolute / −2 at creation.
-4. **Orphan profile row** `f4f4961c…` and **leaked-password protection** (Dashboard).
-5. **GitHub branch protection** — require PR + checks `Lint, contrast & static gates`,
-   `Visual regression & accessibility`, `verify`.
-6. **URGENT — next PR CI:** set `E2E_TEST_EMAIL` / `E2E_TEST_PASSWORD` **or**
-   `E2E_OPTIONAL=1`. Authenticated e2e no longer false-greens.
-7. **Sentry DSN** in Vercel (`SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN`, optional
-   `NEXT_PUBLIC_SENTRY_ENVIRONMENT`).
-8. **Local Node v22 vs `engines` 24.x** — upgrade local or relax engines.
+1. **HIBP leaked-password protection** — Dashboard only, Pro plan. TASK-353 / DEV-001.
+2. **E2E test user** — `E2E_OPTIONAL=1` acknowledges the skip; DEV-003 still needed for real auth coverage.
+3. **Optional: require PRs** before merging to `master` (checks are already required; admins can still push).
+4. **`auth.users` FK type migration** — still deferred (needs branch-DB rehearsal).
 
 ---
 
 ## Suggested next agent sessions (ordered)
 
-1. **TASK-738** — Guided P1-6–P1-10 (auth-gate UX, server-trusted save, idempotent create, recommended abilities write-back, character-feat auto-pick). Owner ack to do later.
-2. **TASK-739** — Clamp Advanced `getCharacter` currency at 0 (cycle-safe; do not import `clampSavedCurrency` into the store). Owner ack to do later.
-3. **Write-path integrity remainder** — dirty-key PATCH + `updatedAt` 409 (needs ADR / Architect),
-   sheet `useCharacter` unification. Autosave hook hardening is done (TASK-736).
-4. **Advanced creator migrate** — non-destructive schema migrate (report 06 P0).
-5. **Owner decisions** — TP rounding / ability min / rarity before flipping those numbers.
-6. **Wave 3** only after Wave 2 P0s are green.
+Wave 2 coding pass is open (TASK-740 and TASK-738 done):
+
+1. **TASK-741** — Dirty-key PATCH + `updatedAt` 409 (Architect / ADR).
+2. **TASK-742** — Owner-acked rules leftovers (TP comments, rarity clamp, feat 2×, drop size Speed add, N2/D4–D7, tests).
+3. **TASK-739** — Advanced `getCharacter` currency clamp.
+4. **TASK-744** — Styleguide visual baseline (~4px CI drift). Blocks PRs now that checks are required.
+5. Existing product leftovers (TASK-733, TASK-718, TASK-719) after the Wave 2 P0s above.
+6. **Wave 3** only after TASK-741 is green.
 
 ---
 
@@ -334,4 +357,8 @@ Recorded because the value of an audit is in being right, not in having been rig
 14. **Feat 248 character scan (post-retirement).** 0 characters hold id `248`; current name
     `Elemental Adaptation`; `codex_retired_ids` has 1 row. No remapping needed.
 15. **Wave 2 agents stalled on usage limits** with a broken mid-edit tree. Stabilize pass restored
-    typecheck; progress inventories above are the source of truth for resume — not a fresh audit.
+    typecheck; **later the same day** P0/P1-1–P1-5 committed as `ebe2c3ce` / `a0fe048d`.
+16. **Live `core_rules.SIZES` was a stale 5e-shaped blob** (`tiny.space: 2.5` feet, no Miniscule/
+    Humongous). Seed JSON and the admin editor already expected `categories[]`. Replaced 2026-08-13.
+17. **Local Node 22 vs engines 24.x was stale.** Owner machine and Vercel are already Node 24.x.
+18. **Orphan profile `f4f4961c…` had no auth user and no content.** Deleted profile + username.

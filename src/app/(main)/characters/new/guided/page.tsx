@@ -9,7 +9,7 @@
 
 import { Suspense, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useAuth } from '@/hooks';
+import { useIsClient } from '@/hooks';
 import { LoadingState } from '@/components/ui';
 import { GuidedCreatorShell } from '@/components/guided-creator';
 import {
@@ -45,10 +45,19 @@ function GuidedEntryBootstrap() {
   return null;
 }
 
+/**
+ * The creator is guest-friendly (persists to localStorage; login is required only to save),
+ * so the shell must not wait on the Supabase session round-trip — that put a blank screen on
+ * the entry screen of the acquisition funnel (report 03 P1-6). `RevealStep` consumes `user`
+ * lazily and gates saving behind `LoginPromptModal`.
+ *
+ * The client-only guard stays: the server has no `localStorage`, so rendering the shell
+ * during SSR would mismatch the `currentSubStep` zustand-persist hydrates on the client.
+ */
 function GuidedCharacterCreatorInner() {
-  const { loading } = useAuth();
+  const isClient = useIsClient();
 
-  if (loading) {
+  if (!isClient) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <LoadingState message="Loading..." size="lg" />

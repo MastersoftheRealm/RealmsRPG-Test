@@ -39,6 +39,7 @@ import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species
 import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { createCharacter, saveCharacter } from '@/services/character-service';
+import { resolveClientRequestId } from '@/lib/character-save';
 import {
   PORTRAIT_SAVE_UPLOAD_FALLBACK,
   uploadCharacterPortraitFromDataUrl,
@@ -191,7 +192,14 @@ export function RevealStep() {
         delete (lean as { portrait?: string }).portrait;
       }
 
-      const characterId = await createCharacter({ ...lean, userId: user.uid });
+      const clientRequestId = resolveClientRequestId(draft.clientRequestId);
+      if (clientRequestId !== draft.clientRequestId) {
+        updateDraft({ clientRequestId });
+      }
+      const characterId = await createCharacter(
+        { ...lean, userId: user.uid },
+        { clientRequestId }
+      );
       if (!characterId?.trim()) {
         throw new Error('Character was created but no id was returned');
       }
