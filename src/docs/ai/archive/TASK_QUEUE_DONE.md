@@ -11,8 +11,6 @@
     - TASK-726
   related_files:
     - src/components/character-sheet/library-powers-panel.tsx
-    - public/tooltip-text.tsx
-    - src/components/shared/tab-summary-section.tsx
     - src/components/shared/entity-library-powers-techniques.tsx
     - src/components/shared/section-header.tsx
     - src/docs/ai/FEATURE_INDEX.md
