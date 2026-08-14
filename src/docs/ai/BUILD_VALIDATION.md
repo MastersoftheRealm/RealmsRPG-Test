@@ -1102,7 +1102,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-736, TASK-741, TASK-747, TASK-750)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1575,6 +1575,18 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Steps** | 1. Open Recovery → Full + Partial. 2. Level Up → confirm. 3. Library → Add power/technique/weapon/equipment. 4. Feats → Add archetype + character feat; remove one. 5. Edit Archetype + Edit Species save. 6. Reload; confirm library lists + notes still match. |
 | **Expected** | All sheet modals open/save via context (no blank/error). Library tabs still add/remove/equip; campaign RM view remains read-only. |
 | **Report** | DEV-V-009-T040: PASS / FAIL / SKIP — |
+
+#### DEV-V-009-T041 — Sheet innate help distinguishes Threshold from pool (TASK-733)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Task** | TASK-733 |
+| **Where** | `/characters/[id]` → Library → Powers (character with Innate Energy) |
+| **Needs** | Character with Innate Pools, Innate Threshold, and at least one innate power |
+| **Steps** | 1. Open the Powers tab on desktop and at ~360px. 2. Focus/click the `(i)` beside **Innate Energy**; confirm it explains the total pool as Pools × Threshold. 3. Focus/click the `(i)` beside **Innate Powers**; confirm it says each power is capped by Innate Threshold and its Energy counts against the pool. 4. Collapse and expand Innate Powers; confirm the title/chevron still toggles while the `(i)` opens help. |
+| **Expected** | Both icon-only help triggers have accessible names and show the same global rules copy as the creator. The stale “energy costs up to your innate energy” blurb is absent, so the per-power Threshold cap is not confused with the total Innate Energy pool. Heading order and compact desktop/mobile layout remain intact. |
+| **Report** | DEV-V-009-T041: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T042 — Sheet autosave survives re-renders and failed saves (TASK-736)
 

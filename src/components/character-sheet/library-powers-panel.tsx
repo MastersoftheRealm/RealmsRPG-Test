@@ -9,10 +9,12 @@ import {
   SummaryItem,
   SummaryRow,
   PowersListSection,
+  InfoTippy,
   type SortState,
   type ListHeaderRowChrome,
 } from '@/components/shared';
 import type { EntityPowerRow } from '@/components/shared/entity-library-sections';
+import { innateEnergyHelp, innatePowersHelp } from '../../../public/tooltip-text';
 
 export type LibraryPowersPanelProps = {
   innateEnergy: number;
@@ -51,6 +53,9 @@ export function LibraryPowersPanel({
             <SummaryItem
               icon="✨"
               label="Innate Energy"
+              labelAccessory={
+                <InfoTippy content={innateEnergyHelp} label="Innate Energy help" size="inline" />
+              }
               value={`${displayedCurrentInnateEnergy} / ${innateEnergy}`}
               highlight
               highlightColor={innateEnergyOverBudget ? 'danger' : 'power'}
@@ -58,15 +63,15 @@ export function LibraryPowersPanel({
             <SummaryItem label="Threshold" value={innateThreshold} />
             <SummaryItem label="Pools" value={innatePools} />
           </SummaryRow>
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-1 text-center">
-            Innate powers have no cost to use. You may have powers with energy costs up to your innate energy.
-          </p>
         </TabSummarySection>
       )}
 
       <div className="space-y-2">
         <PowersListSection
           title="Innate Powers"
+          titleAddon={
+            <InfoTippy content={innatePowersHelp} label="Innate Powers help" size="inline" />
+          }
           items={innatePowerRows}
           onAdd={onAddInnatePower}
           addLabel="Add innate power"
