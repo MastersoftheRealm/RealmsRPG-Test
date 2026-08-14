@@ -39,7 +39,7 @@ import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species
 import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { createCharacter, saveCharacter } from '@/services/character-service';
-import { resolveClientRequestId } from '@/lib/character-save';
+import { formatCharacterCreateFailureMessage, resolveClientRequestId } from '@/lib/character-save';
 import {
   PORTRAIT_SAVE_UPLOAD_FALLBACK,
   uploadCharacterPortraitFromDataUrl,
@@ -226,11 +226,7 @@ export function RevealStep() {
         goAfterSave(characterId, !postSaveReturnTo);
       }
     } catch (err) {
-      const message =
-        err instanceof Error && err.message.trim()
-          ? err.message
-          : 'Failed to save character. Please try again.';
-      showToast(`${message} ${stepCopy.saveRetryHint}`, 'error');
+      showToast(formatCharacterCreateFailureMessage(err, stepCopy), 'error');
       saveInFlight.current = false;
       setSaving(false);
     }

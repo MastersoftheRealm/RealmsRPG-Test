@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   clampSavedCurrency,
+  formatCharacterCreateFailureMessage,
   prepareCharacterForCreate,
   prepareCharacterForSave,
   resolveClientRequestId,
 } from './character-save';
+import { ApiError } from './api-client';
 
 describe('clampSavedCurrency (TASK-739)', () => {
   it('floors a signed remainder at 0', () => {
@@ -94,5 +96,48 @@ describe('create idempotency key (TASK-738)', () => {
     } as never);
     expect(cleaned.clientRequestId).toBeUndefined();
     expect(cleaned.name).toBe('Test');
+  });
+});
+
+describe('formatCharacterCreateFailureMessage (TASK-754)', () => {
+  const copy = {
+    saveFailed: 'Could not create your character. Please try again.',
+    saveRetryHint: 'Check My Characters before trying again so you do not create a duplicate.',
+  };
+
+  it('keeps the 400 legality message (violation list), without the duplicate hint', () => {
+    const err = new ApiError(
+      'Character is not a legal level 1 build: Ability points spent (9) exceed the level 1 budget (7).',
+      400
+    );
+    const message = formatCharacterCreateFailureMessage(err, copy);
+    expect(message).toContain('Ability points spent');
+    expect(message).not.toMatch(/My Characters|duplicate/i);
+  });
+
+  it('uses saveFailed for a 500 and does not mention My Characters', () => {
+    const err = new ApiError('Failed to create character', 500, {
+      error: 'Failed to create character',
+      message: 'column codex_skills.base_skill_id does not exist',
+      hint: 'codex_skills.base_skill',
+      code: '42703',
+    });
+    expect(formatCharacterCreateFailureMessage(err, copy)).toBe(copy.saveFailed);
+  });
+
+  it('keeps player-facing 403 quota copy', () => {
+    const err = new ApiError('You have reached the character limit for your role.', 403);
+    expect(formatCharacterCreateFailureMessage(err, copy)).toBe(
+      'You have reached the character limit for your role.'
+    );
+  });
+
+  it('appends the My Characters hint only when the POST may already have a row', () => {
+    expect(formatCharacterCreateFailureMessage(new TypeError('Failed to fetch'), copy)).toBe(
+      `${copy.saveFailed} ${copy.saveRetryHint}`
+    );
+    expect(
+      formatCharacterCreateFailureMessage({ name: 'AbortError', message: 'aborted' }, copy)
+    ).toBe(`${copy.saveFailed} ${copy.saveRetryHint}`);
   });
 });

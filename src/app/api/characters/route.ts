@@ -17,6 +17,7 @@ import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-
 import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import { fetchCoreRules } from '@/lib/core-rules-server';
+import { apiErrorResponse } from '@/lib/api-error';
 import {
   catalogFromCodexRows,
   findLevel1LegalityViolations,
@@ -29,7 +30,10 @@ const UNIQUE_VIOLATION = '23505';
 
 const FEAT_REQUIREMENT_COLUMNS =
   'id, name, lvl_req, ability_req, abil_req_val, skill_req, skill_req_val, mart_abil_req, speed_req, feat_lvl, base_feat_id';
-const SKILL_REQUIREMENT_COLUMNS = 'id, name, base_skill_id, ability';
+/** Live column is `base_skill` (TEXT). App types still use `base_skill_id` after mapping. */
+export const SKILL_REQUIREMENT_COLUMNS = 'id, name, base_skill, ability';
+export const CHARACTER_CREATE_FAILED_MESSAGE =
+  'Could not create your character. Please try again.';
 
 type SupabaseLike = Awaited<ReturnType<typeof createClient>>;
 
@@ -277,7 +281,6 @@ export async function POST(request: NextRequest) {
     });
     return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted);
   } catch (err) {
-    console.error('[API Error] POST /api/characters:', err);
-    return NextResponse.json({ error: 'Failed to create character' }, { status: 500 });
+    return apiErrorResponse(CHARACTER_CREATE_FAILED_MESSAGE, 500, 'POST /api/characters', err);
   }
 }

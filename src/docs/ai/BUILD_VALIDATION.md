@@ -6832,9 +6832,9 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 
 ---
 
-## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738)
+## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754)
 
-Audit report 03 P1-6 through P1-10. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`. These tests are the parts only a browser can show.
+Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`, `character-save.test.ts` (create-error copy). These tests are the parts only a browser can show.
 
 #### DEV-V-051-T001 — Guided creator entry does not wait on the session
 
@@ -7001,6 +7001,50 @@ Audit report 03 P1-6 through P1-10. Automated cover: `character-legality.test.ts
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-051-T009 — Legal Guided and Legacy create succeed (TASK-754)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-754 |
+| **Where** | `/characters/new/guided` → **Your Hero**; `/characters/new/advanced` → Finalize |
+| **Needs** | Signed-in user; a complete legal level-1 build |
+
+**Steps**
+1. Guided: finish a legal level-1 path build (all chapters satisfied, HP/EN remaining 0, named). Press **Create character**.
+2. Confirm the character appears on **My Characters** and the sheet opens (or play-together offers it).
+3. Repeat on **Legacy** (`/characters/new/advanced`) with a legal Finalize create.
+
+**Expected**
+- Neither create 500s. No toast/alert about a missing column, Postgres, or a duplicate.
+- Success toast **Your character is ready!** (Guided) / character is created (Legacy).
+- A second click after success does not insert a second row (idempotency still holds — T003).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-051-T010 — Create error copy is actionable, not a duplicate hint (TASK-754)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-754 |
+| **Where** | `/characters/new/guided` → **Your Hero** (also Legacy Finalize) |
+| **Needs** | Signed-in user; a build that can fail legality (over-budget abilities) **and** a way to observe a generic failure if one occurs |
+
+**Steps**
+1. Guided: from a complete build, temporarily overspend ability points if a test override exists; otherwise skip to step 3 if you cannot force a 400. Press **Create character**.
+2. Read the error toast.
+3. If you can force a server 500 (disconnect DB is out of scope — this is a copy check): confirm the toast is **Could not create your character. Please try again.** with **no** “Check My Characters… duplicate” sentence.
+4. Offline / airplane-mode the tab after the button is armed, press Create, then restore: the toast **may** mention My Characters (lost-response case).
+
+**Expected**
+- A 400 legality failure lists the rule(s) (ability/skill/feat), not the 500 string, and does **not** tell the player they may have created a duplicate.
+- A 500 (if observed) is “Could not create… try again” without My Characters / duplicate.
+- My Characters / duplicate copy appears only when the request may have succeeded (network drop).
+- Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## Planned suites (split from legacy DEV-T)
@@ -7044,6 +7088,6 @@ Audit report 03 P1-6 through P1-10. Automated cover: `character-legality.test.ts
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649 / TASK-735) | — | Manual DEV-V-041 T001–T004 + `node scripts/verify-task-649.mjs` |
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |
 | DEV-V-043 | Wave 5 page facade splits (TASK-666) | — | Manual — see suite above |
-| DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`) + manual DEV-V-051 T001–T008 |
+| DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`, `character-save` create-error copy) + manual DEV-V-051 T001–T010 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

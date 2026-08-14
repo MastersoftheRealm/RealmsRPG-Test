@@ -13,6 +13,7 @@ import { getSession } from '@/lib/supabase/session';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { coerceJsonRecord, parseArchetypePathData } from '@/lib/game/archetype-path';
 import { fetchCoreRules } from '@/lib/core-rules-server';
+import { mapCodexBaseSkillToId } from '@/lib/game/character-legality';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 import type { CodexPayload } from '@/types/codex';
 import type { ArchetypeCategory } from '@/types/archetype';
@@ -148,16 +149,12 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
 
     const codexSkills = skillRows.map((r) => {
       const ability = (r.ability ?? '') as string;
-      const baseSkillId =
-        r.base_skill !== undefined && r.base_skill !== null && r.base_skill !== ''
-          ? parseInt(String(r.base_skill), 10)
-          : undefined;
       return {
         id: r.id,
         name: r.name ?? '',
         description: r.description ?? '',
         ability,
-        base_skill_id: !Number.isNaN(baseSkillId as number) ? baseSkillId : undefined,
+        base_skill_id: mapCodexBaseSkillToId(r.base_skill),
         success_desc: r.success_desc ?? undefined,
         failure_desc: r.failure_desc ?? undefined,
         ds_calc: r.ds_calc ?? undefined,

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   catalogFromCodexRows,
   findLevel1LegalityViolations,
+  mapCodexBaseSkillToId,
   shouldCheckLevel1Legality,
 } from './character-legality';
 
@@ -253,5 +254,32 @@ describe('findLevel1LegalityViolations feat requirements', () => {
       fromRows
     );
     expect(violations.some((v) => /Gated/.test(v) && /strength 3/i.test(v))).toBe(true);
+  });
+});
+
+describe('mapCodexBaseSkillToId / catalogFromCodexRows (TASK-754)', () => {
+  it('maps empty/null TEXT to undefined and numeric text to an id', () => {
+    expect(mapCodexBaseSkillToId(null)).toBeUndefined();
+    expect(mapCodexBaseSkillToId(undefined)).toBeUndefined();
+    expect(mapCodexBaseSkillToId('')).toBeUndefined();
+    expect(mapCodexBaseSkillToId('10')).toBe(10);
+    expect(mapCodexBaseSkillToId(0)).toBe(0);
+    expect(mapCodexBaseSkillToId('not-an-id')).toBeUndefined();
+  });
+
+  it('maps columnar base_skill onto app-layer base_skill_id', () => {
+    const catalog = catalogFromCodexRows(
+      [],
+      [
+        { id: '10', name: 'Athletics', base_skill: null, ability: 'strength' },
+        { id: '11', name: 'Climb', base_skill: '10', ability: 'strength' },
+        { id: '12', name: 'Empty', base_skill: '', ability: 'strength' },
+      ]
+    );
+    expect(catalog.skills).toEqual([
+      { id: '10', name: 'Athletics', base_skill_id: undefined, ability: 'strength' },
+      { id: '11', name: 'Climb', base_skill_id: 10, ability: 'strength' },
+      { id: '12', name: 'Empty', base_skill_id: undefined, ability: 'strength' },
+    ]);
   });
 });

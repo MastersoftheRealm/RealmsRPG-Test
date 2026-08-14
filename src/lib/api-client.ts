@@ -11,10 +11,22 @@
  *   const data = await apiFetch<MyType>('/api/endpoint', { method: 'POST', body: JSON.stringify(payload) });
  */
 
+function formatApiDetails(details: unknown): string | undefined {
+  if (typeof details === 'string' && details.trim()) return details.trim();
+  if (Array.isArray(details)) {
+    const parts = details
+      .map((item) => (typeof item === 'string' ? item.trim() : ''))
+      .filter(Boolean);
+    if (parts.length > 0) return parts.join(' ');
+  }
+  return undefined;
+}
+
 function parseApiErrorBody(err: unknown, fallback: string): string {
-  const payload = err as { error?: string; details?: string };
-  if (payload.details) {
-    return `${payload.error ?? fallback}: ${payload.details}`;
+  const payload = err as { error?: string; details?: unknown };
+  const details = formatApiDetails(payload.details);
+  if (details) {
+    return `${payload.error ?? fallback}: ${details}`;
   }
   return payload.error ?? fallback;
 }
