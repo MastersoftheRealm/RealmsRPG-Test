@@ -2422,7 +2422,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-406, TASK-462, TASK-729 |
+| **Related task** | TASK-406, TASK-462, TASK-729, TASK-755 |
 | **Where** | Guided creator → Your Hero |
 | **Needs** | Complete prior steps; signed-in optional for save/portrait |
 
@@ -2430,10 +2430,10 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Open reveal: hero band shows clickable portrait + name field; identity (age/height/weight/appearance/background) and Health/Energy sit above Your Build.
 2. Click the portrait to upload/change; type a name in the hero band (not only a lower form).
 3. Confirm Your Build has no Edit jump links, no Type card, and no standalone Power/Martial ability cards (pills remain on the abilities grid).
-4. Confirm **Auto-allocate** is short copy with an (i) tip; click it — Health/Energy PointStatus remaining ticks down to 0/18 (same as spending the pool with the steppers). Labels read **Health / Energy** on desktop; **HP / EN** below `md`. Save (or guest login prompt).
+4. Confirm **Auto-allocate** is short copy with an (i) tip; click it — Health/Energy PointStatus remaining ticks down to 0/18 (same as spending the pool with the steppers). Labels read **Health / Energy** on desktop; **HP / EN** below `md`. Power/technique chips in Your Build show Energy as **EN** (e.g. `4 EN`), never **EP**. Save (or guest login prompt).
 
 **Expected**
-- Cherry-on-top finale: name/portrait in header; identity + Health/Energy before summary; summary is show-off only (chapter rail to edit); T005 save still works when signed in. Auto-allocate spends the pool (remaining → 0) and names the highest Energy-cost Power/Technique in the tip when known.
+- Cherry-on-top finale: name/portrait in header; identity + Health/Energy before summary; summary is show-off only (chapter rail to edit); T005 save still works when signed in. Auto-allocate spends the pool (remaining → 0) and names the highest Energy-cost Power/Technique in the tip when known. Dense Energy abbreviation is **EN**, never **EP**.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3810,7 +3810,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-730 |
+| **Related task** | TASK-730, TASK-755 |
 | **Where** | Guided creator → Loadout (weapon + armor) → Powers/Techniques → Your Hero → Your Build |
 | **Needs** | A path (or Custom) with a weapon pick; include at least one My Library weapon if available; if possible also a My Library power or technique |
 
@@ -3818,11 +3818,11 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Pick a weapon and armor on Loadout (official and, if possible, a user-library weapon). Continue to **Your Hero**.
 2. In **Your Build → Loadout**, confirm the weapon chip shows the item **name** (expandable when a description exists), not a raw UUID/id. Armor still shows its name.
 3. Confirm Unarmed Prowess still appears when selected; general gear is still omitted from this summary.
-4. If a My Library power and/or technique is on the build, confirm those chips show **names**, not UUIDs. Unresolved rows may show “Unknown power” / “Unknown technique” — not a raw id.
+4. If a My Library power and/or technique is on the build, confirm those chips show **names**, not UUIDs. Unresolved rows may show “Unknown power” / “Unknown technique” — not a raw id. Energy on those chips is **N EN**, never **EP**.
 
 **Expected**
 - Loadout weapon and armor chips use library names (official or My Library); no raw ids in the summary.
-- Power/technique chips use library names (official or My Library); no raw ids.
+- Power/technique chips use library names (official or My Library); no raw ids. Energy cost on those chips is **EN**, never **EP**.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3853,7 +3853,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-729 |
+| **Related task** | TASK-729, TASK-755 |
 | **Where** | Guided creator → Your Hero (Health & Energy); Advanced `/characters/new/advanced` → Finalize |
 | **Needs** | Complete prior steps; at least one Power or Technique with a known Energy cost |
 
@@ -3864,7 +3864,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 4. Advanced Finalize: same pool tick + tip on **Auto-allocate to match highest cost**. Sheet edit-mode allocator may keep **HP** / **EN**.
 
 **Expected**
-- Auto-allocate spends the shared pool through the same PointStatus as the steppers; tip copy matches GAME_RULES Energy/Health terms; no raw HP/EN on the creator card at desktop width.
+- Auto-allocate spends the shared pool through the same PointStatus as the steppers; tip copy matches GAME_RULES Energy/Health terms; no raw HP/EN on the creator card at desktop width. Dense labels and chips use **EN** for Energy, never **EP**.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

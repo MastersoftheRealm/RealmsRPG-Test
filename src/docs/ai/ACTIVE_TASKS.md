@@ -8,49 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 13 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 12 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500 `codex_skills.base_skill` + error copy). **Next: TASK-755** (Energy abbrev **EN**, never EP). Then creator UX: **TASK-756** (split innate → powers → techniques screens) **before** TASK-751–753; **TASK-757** (Power path See weapons); **TASK-758–759** (feat GLR: drop REQ LEVEL + State Feats `(i)` — before TASK-753); **TASK-760** (ability tiles). **TASK-733** (sheet innate InfoTippys) can run in parallel with 756+. Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low; after 754 unless re-prioritized. **TASK-751–753** stay **low** — after 733 **and** 756/758/759 so path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
-
----
-
-- id: TASK-755
-  title: Energy abbreviation is EN, never EP
-  created_at: 2026-08-14
-  created_by: owner
-  priority: high
-  status: not-started
-  related_tasks:
-    - TASK-754
-    - TASK-729
-    - TASK-440
-  related_files:
-    - src/components/ui/expandable-chip.tsx
-    - src/components/shared/summary-chip-list.tsx
-    - src/components/guided-creator/guided-reveal-summary.tsx
-    - src/docs/GAME_RULES.md
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/BUILD_VALIDATION.md
-  description: |
-    Your Hero power/technique chips show Energy as EP. GAME_RULES / TASK-440 / TASK-729
-    use EN (HP / EN). ExpandableChip hardcodes `{energyCost} EP`; GuidedRevealSummary
-    passes energyCost into SummaryChipList. Repo grep currently hits only that chip
-    header — still audit all Energy abbreviations so EP cannot remain anywhere.
-  acceptance_criteria:
-    - No user-facing "EP" for Energy (chips, HUD, copy, comments that describe the
-      rendered label). Dense labels use EN; L1/L2 still spell Energy in full
-      (GAME_RULES Layer 1 / Layer 2 copy).
-    - GAME_RULES states Energy abbreviates as EN, never EP. FEATURE_INDEX ExpandableChip
-      note. Typecheck/lint.
-    - DEV-V-013 T015 / T080 / T082: Your Hero chips and allocator show EN or Energy,
-      never EP. Desktop + ~360px.
-  notes: |
-    After TASK-754. Shared chip fix covers Your Hero, sheet, Codex, creature blocks
-    that pass energyCost. Do not invent a new formatter file unless one already exists.
+**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **Next: TASK-756** (split innate → powers → techniques screens) **before** TASK-751–753; **TASK-757** (Power path See weapons); **TASK-758–759** (feat GLR: drop REQ LEVEL + State Feats `(i)` — before TASK-753); **TASK-760** (ability tiles). **TASK-733** (sheet innate InfoTippys) can run in parallel with 756+. Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — after 733 **and** 756/758/759 so path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
 
 ---
 

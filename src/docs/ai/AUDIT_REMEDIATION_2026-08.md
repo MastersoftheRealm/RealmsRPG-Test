@@ -320,7 +320,7 @@ parallel.
 
 Wave 2 coding pass is complete (through TASK-750):
 
-1. **TASK-755** (Energy EN, never EP), then creator UX TASK-756–760. TASK-733 can run in parallel. TASK-761 after 754 unless re-prioritized.
+1. **TASK-756** (sequential innate → powers → techniques), then TASK-757–760. TASK-733 can run in parallel. TASK-761 is a 750 leftover — low.
 2. **TASK-751–753** — Archetype Path Filtering (filed 2026-08-14). Low priority; start after TASK-733 **and** TASK-756/758/759 so path-filter wiring lands on the new screens/columns. Does **not** wait for Wave 3 — the shared filter should exist before the Codex/Library duplication collapse so that pass does not fork it.
 3. **Wave 3** — start only when the owner opens that pass (avoid Prettier/`text-muted` mega-diffs colliding with remaining product leftovers).
 

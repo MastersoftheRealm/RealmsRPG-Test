@@ -1,3 +1,49 @@
+- id: TASK-755
+  title: Energy abbreviation is EN, never EP
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-754
+    - TASK-729
+    - TASK-440
+  related_files:
+    - src/components/ui/expandable-chip.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T015
+      - DEV-V-013-T080
+      - DEV-V-013-T082
+  developer_test_plan: |
+    Suite DEV-V-013 T015 / T080 / T082 — see BUILD_VALIDATION.md
+  description: |
+    Your Hero power/technique chips show Energy as EP. GAME_RULES / TASK-440 / TASK-729
+    use EN (HP / EN). ExpandableChip hardcodes `{energyCost} EP`.
+  acceptance_criteria:
+    - No user-facing "EP" for Energy (chips, HUD, copy, comments that describe the
+      rendered label). Dense labels use EN; L1/L2 still spell Energy in full
+      (GAME_RULES Layer 1 / Layer 2 copy).
+    - GAME_RULES states Energy abbreviates as EN, never EP. FEATURE_INDEX ExpandableChip
+      note. Typecheck/lint.
+    - DEV-V-013 T015 / T080 / T082: Your Hero chips and allocator show EN or Energy,
+      never EP. Desktop + ~360px.
+  completed_work: |
+    ExpandableChip energyCost header is `N EN` (comment + render). Repo grep has no
+    remaining user-facing EP. GAME_RULES states Energy abbreviates as EN, never EP.
+    Shared chip covers Your Hero, sheet, Codex, and creature blocks that pass energyCost.
+    Did not add a new formatter file.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-013 T015/T080/T082).
 - id: TASK-754
   title: Fix character create 500 (codex_skills.base_skill) and unfriendly error copy
   created_at: 2026-08-14
