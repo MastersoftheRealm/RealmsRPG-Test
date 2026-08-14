@@ -1,3 +1,44 @@
+- id: TASK-733
+  title: Sheet LibraryPowersPanel — Innate Energy / Innate Powers InfoTippys
+  created_at: 2026-08-13
+  completed_at: 2026-08-14
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-726
+  related_files:
+    - src/components/character-sheet/library-powers-panel.tsx
+    - src/components/shared/entity-library-powers-techniques.tsx
+    - src/components/shared/section-header.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T041
+  developer_test_plan: |
+    Suite DEV-V-009 T041 — see BUILD_VALIDATION.md
+  description: |
+    TASK-726 wired innateEnergyHelp / innatePowersHelp on guided creator chrome. The
+    character sheet Powers tab (LibraryPowersPanel) still had no (i) on Innate Energy or
+    Innate Powers, and the summary blurb said energy costs may go "up to your innate
+    energy" (pool vs Innate Threshold mixup).
+  acceptance_criteria:
+    - Innate Energy SummaryItem uses labelAccessory + innateEnergyHelp (same GAME_RULES copy as creator).
+    - Stale "up to your innate energy" sentence is removed so Threshold vs pool is not confused.
+    - Innate Powers list heading has an InfoTippy with innatePowersHelp through the shared SectionHeader / PowersListSection titleAddon slot.
+    - FEATURE_INDEX sheet Library note; DEV-V-009 T041; typecheck/lint pass.
+  completed_work: |
+    Deleted the stale summary blurb. Wired both existing global tooltip exports into the
+    sheet, extending SectionHeader and PowersListSection with an optional titleAddon
+    without creating a second header or shared file. InfoTippy supplies accessible names.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-009 T041).
+
 - id: TASK-755
   title: Energy abbreviation is EN, never EP
   created_at: 2026-08-14

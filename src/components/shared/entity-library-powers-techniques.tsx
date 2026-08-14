@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { ListHeader } from '@/components/shared/list-header';
 import { SectionHeader } from '@/components/shared/section-header';
 import {
@@ -21,6 +22,7 @@ import type {
 
 export function PowersListSection({
   title = 'Powers',
+  titleAddon,
   items,
   showListHeader = true,
   compactRows = true,
@@ -39,6 +41,8 @@ export function PowersListSection({
   collapsible,
 }: {
   title?: string;
+  /** Optional content beside the section title (e.g. InfoTippy). */
+  titleAddon?: ReactNode;
   items: EntityPowerRow[];
   showListHeader?: boolean;
   compactRows?: boolean;
@@ -59,6 +63,7 @@ export function PowersListSection({
       {showTitle && (
         <SectionHeader
           title={title}
+          titleAddon={titleAddon}
           size="lg"
           onAdd={onAddWrapped}
           addLabel={addLabel}

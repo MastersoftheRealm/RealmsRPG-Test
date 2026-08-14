@@ -19,7 +19,7 @@
  * - Any collapsible/expandable section with add functionality
  */
 
-import { ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { ChevronDown, Plus } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import { cn } from '@/lib/utils';
@@ -28,6 +28,8 @@ import type { LibrarySectionCollapseHeaderProps } from '@/hooks/use-library-sect
 interface SectionHeaderBaseProps {
   /** Section title */
   title: string;
+  /** Optional content beside the title (e.g. InfoTippy) */
+  titleAddon?: ReactNode;
   /** Callback for add button - if provided, shows + button on far right */
   onAdd?: () => void;
   /** Accessibility label for add button (defaults to "Add {title}") */
@@ -62,6 +64,7 @@ const sizePadStyles = {
 
 export function SectionHeader({
   title,
+  titleAddon,
   onAdd,
   addLabel,
   rightContent,
@@ -87,33 +90,38 @@ export function SectionHeader({
         className
       )}
     >
-      {/* Left: title with inline chevron (matches ListHeader / ExpandableChip — no circle chrome) */}
-      <h2 className={cn(titleClassName, canCollapse && 'm-0')}>
-        {canCollapse ? (
-          <button
-            type="button"
-            onClick={() => onExpandedChange(!expanded)}
-            className={cn(
-              // Match Button/IconButton: 44px min only on touch; desktop stays compact when collapsed.
-              'inline-flex items-center gap-1.5 text-left hover:text-text-primary transition-colors [@media(pointer:coarse)]:min-h-[44px]',
-              sizeTextStyles[size]
-            )}
-            aria-expanded={expanded}
-            aria-label={expanded ? `Collapse ${title}` : `Expand ${title}`}
-          >
-            <span>{title}</span>
-            <ChevronDown
+      {/* Left: collapse control stays intact; optional help sits beside it, never nested in the button. */}
+      <div className="flex min-w-0 items-center gap-1.5">
+        <h2 className={cn(titleClassName, canCollapse && 'm-0')}>
+          {canCollapse ? (
+            <button
+              type="button"
+              onClick={() => onExpandedChange(!expanded)}
               className={cn(
-                'w-4 h-4 shrink-0 transition-transform duration-base ease-standard',
-                expanded && 'rotate-180'
+                // Match Button/IconButton: 44px min only on touch; desktop stays compact when collapsed.
+                'inline-flex items-center gap-1.5 text-left hover:text-text-primary transition-colors [@media(pointer:coarse)]:min-h-[44px]',
+                sizeTextStyles[size]
               )}
-              aria-hidden
-            />
-          </button>
-        ) : (
-          title
-        )}
-      </h2>
+              aria-expanded={expanded}
+              aria-label={expanded ? `Collapse ${title}` : `Expand ${title}`}
+            >
+              <span>{title}</span>
+              <ChevronDown
+                className={cn(
+                  'w-4 h-4 shrink-0 transition-transform duration-base ease-standard',
+                  expanded && 'rotate-180'
+                )}
+                aria-hidden
+              />
+            </button>
+          ) : (
+            title
+          )}
+        </h2>
+        {titleAddon ? (
+          <span className="inline-flex shrink-0 items-center self-center leading-none">{titleAddon}</span>
+        ) : null}
+      </div>
 
       {/* Right: custom content and/or add button */}
       <div className="flex items-center gap-2">

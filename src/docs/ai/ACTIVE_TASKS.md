@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-733, TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 12 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 11 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **Next: TASK-756** (split innate → powers → techniques screens) **before** TASK-751–753; **TASK-757** (Power path See weapons); **TASK-758–759** (feat GLR: drop REQ LEVEL + State Feats `(i)` — before TASK-753); **TASK-760** (ability tiles). **TASK-733** (sheet innate InfoTippys) can run in parallel with 756+. Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — after 733 **and** 756/758/759 so path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
+**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **TASK-733 done** (sheet innate InfoTippys). **Next: TASK-756** (split innate → powers → techniques screens) **before** TASK-751–753; **TASK-757** (Power path See weapons); **TASK-758–759** (feat GLR: drop REQ LEVEL + State Feats `(i)` — before TASK-753); **TASK-760** (ability tiles). Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — after 756/758/759 so path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
 
 ---
 
@@ -317,40 +317,6 @@ Do **not** read the done archive at session start.
   notes: |
     Filed from 2026-08-13 /global-audit. Do not delete either block. Re-id needs a commit
     subject containing the new ID if strict-since covers completed_at.
-
----
-
-- id: TASK-733
-  title: Sheet LibraryPowersPanel — Innate Energy / Innate Powers InfoTippys
-  created_at: 2026-08-13
-  created_by: agent
-  priority: medium
-  status: not-started
-  related_tasks:
-    - TASK-726
-  related_files:
-    - src/components/character-sheet/library-powers-panel.tsx
-    - public/tooltip-text.tsx
-    - src/components/shared/tab-summary-section.tsx
-    - src/components/shared/entity-library-powers-techniques.tsx
-    - src/components/shared/section-header.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    TASK-726 wired innateEnergyHelp / innatePowersHelp on guided creator chrome. The
-    character sheet Powers tab (LibraryPowersPanel) still has no (i) on Innate Energy or
-    Innate Powers, and the summary blurb says energy costs may go "up to your innate
-    energy" (pool vs Innate Threshold mixup). Reuse the TASK-726 global tips; do not
-    invent a second copy string.
-  acceptance_criteria:
-    - Innate Energy SummaryItem uses labelAccessory + innateEnergyHelp (same GAME_RULES copy as creator).
-    - Stale "up to your innate energy" sentence is removed or replaced so Threshold vs pool is not confused.
-    - Innate Powers list heading has an InfoTippy with innatePowersHelp; extend SectionHeader / PowersListSection (GuidedSectionTitle titleAddon pattern) — no second header fork.
-    - FEATURE_INDEX sheet Library note; DEV-V-009 T041; typecheck/lint pass.
-  notes: |
-    Filed from TASK-726 /audit. SummaryItem already has labelAccessory. SectionHeader has
-    no titleAddon today — add a slot on the existing shared header, do not create a new
-    shared/ui file. Threshold / Pools SummaryItems do not need their own tips unless copy
-    is unclear without them.
 
 ---
 
