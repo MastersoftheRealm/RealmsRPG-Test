@@ -19758,3 +19758,39 @@ Firebase/RTDB - the project is Supabase-only.
     Confirm a real event in the Sentry org (Masters of the Realm) after using production.
     Archived from WAITING 2026-08-13.
 
+- id: TASK-744
+  title: Refresh styleguide visual baselines (4px CI drift)
+  created_at: 2026-08-13
+  completed_at: 2026-08-14
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - tests/visual/screenshots.pw.ts
+    - tests/visual/screenshots.pw.ts-snapshots/styleguide-mobile-light-chromium-linux.png
+    - tests/visual/screenshots.pw.ts-snapshots/styleguide-mobile-dark-chromium-linux.png
+    - tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-light-chromium-linux.png
+    - tests/visual/screenshots.pw.ts-snapshots/styleguide-tablet-dark-chromium-linux.png
+    - tests/visual/screenshots.pw.ts-snapshots/styleguide-desktop-light-chromium-linux.png
+    - tests/visual/screenshots.pw.ts-snapshots/styleguide-desktop-dark-chromium-linux.png
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    master UI Verify visual-a11y failed on styleguide snapshots (~4px height:
+    11017 vs 11013 mobile, 8803 vs 8799 tablet, 8192 vs 8188 desktop). Linux
+    baselines need a regenerate. Branch protection now requires this check on PRs.
+  acceptance_criteria:
+    - Linux styleguide snapshots updated from the Playwright Docker/CI image, not Windows.
+    - Other visual routes unchanged unless they fail for the same 4px drift.
+    - UI Verify visual-a11y job passes on the next master/PR run.
+  completed_work: |
+    Replaced the six Linux styleguide snapshots with the actual PNGs from GitHub Actions
+    run 31766599813 (ubuntu-latest Chromium, commit cb611f7b). Heights: mobile 11013,
+    tablet 8799, desktop 8188. Win32 snapshots and non-styleguide visual routes left
+    unchanged (they already passed).
+  notes: |
+    DEV-002 leftover. Snapshots taken from CI artifacts, not a Windows runner and not a
+    local Linux regenerate. Archived from ACTIVE 2026-08-14. verification_status n/a
+    (purely automated visual gate).
+

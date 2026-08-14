@@ -22,7 +22,7 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 |---|---|---|
 | **0 — foundation** | `done` | Backups, schema baseline, codex data-loss determination. |
 | **1 — stop the bleeding** | `done` (code + DB + ops) | GitHub required checks + Actions public Supabase secrets + `E2E_OPTIONAL=1` + orphan profile delete. **2026-08-13 Vercel:** Upstash Redis + Sentry DSN live on production/preview; `NEXT_PUBLIC_SITE_URL` on production; production rebuilt. Still owner: HIBP, E2E test user, optional “require PR”. |
-| **2 — correctness** | `partial` | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**. Remaining: 741–742, 739, 744. |
+| **2 — correctness** | `partial` | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**; TASK-744 styleguide Linux baselines **done**. Remaining: 741–742, 739. |
 | **3 — structure** | `queued` | After Wave 2 P0s (Advanced migrate + dirty-key PATCH). No parallel Prettier/`text-muted` mega-diffs until then. |
 
 ### Commits on `master` (audit program, oldest → newest)
@@ -54,7 +54,7 @@ Later `master` commits (`6adf344f`, `21ffcd18`, …) are unrelated product work 
 ### Uncommitted / follow-up coding
 
 Plan refresh + GAME_RULES / SIZES seed / admin editor prose may still be uncommitted.
-Wave 2 coding: TASK-740 and TASK-738 done; next is TASK-741 (dirty-key PATCH, Architect / ADR).
+Wave 2 coding: TASK-740, TASK-738, and TASK-744 done; next is TASK-741 (dirty-key PATCH, Architect / ADR).
 
 ---
 
@@ -319,14 +319,13 @@ parallel.
 
 ## Suggested next agent sessions (ordered)
 
-Wave 2 coding pass is open (TASK-740 and TASK-738 done):
+Wave 2 coding pass is open (TASK-740, TASK-738, and TASK-744 done):
 
 1. **TASK-741** — Dirty-key PATCH + `updatedAt` 409 (Architect / ADR).
 2. **TASK-742** — Owner-acked rules leftovers (TP comments, rarity clamp, feat 2×, drop size Speed add, N2/D4–D7, tests).
 3. **TASK-739** — Advanced `getCharacter` currency clamp.
-4. **TASK-744** — Styleguide visual baseline (~4px CI drift). Blocks PRs now that checks are required.
-5. Existing product leftovers (TASK-733, TASK-718, TASK-719) after the Wave 2 P0s above.
-6. **Wave 3** only after TASK-741 is green.
+4. Existing product leftovers (TASK-733, TASK-718, TASK-719) after the Wave 2 P0s above.
+5. **Wave 3** only after TASK-741 is green.
 
 ---
 
