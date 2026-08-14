@@ -528,6 +528,10 @@ export function LoadoutStep() {
             tpSpent={tpSummary.spent}
             expandLabel={phaseCopy.seeMoreLabel}
             onExpand={() => setL2Open(true)}
+            trailingExpandLabel={showWeaponsHatch ? stepCopy.seeWeapons : undefined}
+            onTrailingExpand={
+              showWeaponsHatch ? () => setWeaponsL2Open(true) : undefined
+            }
           >
             <GuidedEquipmentL1Phase
               phase={equipmentPhase}
@@ -540,14 +544,6 @@ export function LoadoutStep() {
               onDraftChange={updateDraft}
             />
           </GuidedEquipmentPhaseLayout>
-
-          {showWeaponsHatch ? (
-            <GuidedLayerNav
-              className="justify-end"
-              expandLabel={stepCopy.seeWeapons}
-              onExpand={() => setWeaponsL2Open(true)}
-            />
-          ) : null}
 
           {equipmentPhase === 'weapon' && recommendUnarmed ? (
             <GuidedUnarmedProwessPanel

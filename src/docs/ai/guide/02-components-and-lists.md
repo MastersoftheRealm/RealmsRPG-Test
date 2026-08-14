@@ -52,7 +52,7 @@ Goal: "Learn once, use forever" — consistent UI across Library, Codex, Charact
 | GuidedSpeciesDetailModal + GuidedTraitOptionList | Species deep-dive: SpeciesRevealPanel overview + DetailOptionList trait catalogs (TASK-433/435) |
 | GuidedPathDetailModal + GuidedDetailOptionList | Path deep-dive: proficiency / abilities / skills overview + feat / weapon / armor / gear / power|technique catalogs (TASK-434/435; kits removed TASK-442) |
 | DetailOptionList + lib/detail-option | Shared elongated option-row toolkit for deep-dive + remodeled species-modal / SpeciesRevealPanel granted traits (TASK-435) |
-| GuidedLayerNav | Layer 1 expand / Layer 2+ collapse below step content — guided creator (path, species, abilities), GuidedChoiceShell (Advanced path mode) |
+| GuidedLayerNav | Layer 1 expand / Layer 2+ collapse / optional trailing hatch below step content — guided creator (path, species, abilities, loadout), GuidedChoiceShell (Advanced path mode) |
 | SkillRow | skills-section, skills-step, creature-creator, SkillsAllocationPage. Table play view gates source chrome via `isEditing` (TASK-485) |
 | ValueStepper (ADR-0002) | abilities-section, sheet-header, health-energy-allocator, GuidedSkillsPanel Dec/Inc, roll-log, all creators, encounters; QuantitySelector wraps it |
 | SectionHeader | feats-tab, proficiencies-tab, notes-tab, archetype-section, crafting pages |

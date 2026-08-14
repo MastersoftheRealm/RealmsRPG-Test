@@ -3980,7 +3980,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Needs** | A Power path with no weapon recommendations; a Martial or Powered-Martial path with a weapon phase; Custom entry |
 
 **Steps**
-1. Choose the Power path and continue to Loadout. Confirm the first/main screen is **Equipment**, Power still has no armor screen, and a **See weapons** hatch appears at bottom-right.
+1. Choose the Power path and continue to Loadout. Confirm the first/main screen is **Equipment**, Power still has no armor screen, and a **See weapons** hatch appears at bottom-right on the same GuidedLayerNav row as **See more options**.
 2. Open **See weapons**. Confirm the existing full-screen-on-mobile weapon selection modal opens with weapon headers, search, filters, Currency, and Training Points capped by current Armament Proficiency.
 3. Pick and confirm a weapon. Confirm it remains selected when the modal is reopened, the Equipment screen remains the current phase, and the budget bar includes the weapon spend.
 4. Continue to **Your Hero**, save, and open the character. Confirm the weapon appears by name in Loadout/inventory.

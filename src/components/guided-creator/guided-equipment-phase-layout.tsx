@@ -17,6 +17,8 @@ export interface GuidedEquipmentPhaseLayoutProps {
   onExpand?: () => void;
   collapseLabel?: string;
   onCollapse?: () => void;
+  trailingExpandLabel?: string;
+  onTrailingExpand?: () => void;
 }
 
 /**
@@ -33,6 +35,8 @@ export function GuidedEquipmentPhaseLayout({
   onExpand,
   collapseLabel,
   onCollapse,
+  trailingExpandLabel,
+  onTrailingExpand,
 }: GuidedEquipmentPhaseLayoutProps) {
   return (
     <div className="space-y-3">
@@ -50,6 +54,8 @@ export function GuidedEquipmentPhaseLayout({
         onExpand={onExpand}
         collapseLabel={collapseLabel}
         onCollapse={onCollapse}
+        trailingExpandLabel={trailingExpandLabel}
+        onTrailingExpand={onTrailingExpand}
       />
     </div>
   );

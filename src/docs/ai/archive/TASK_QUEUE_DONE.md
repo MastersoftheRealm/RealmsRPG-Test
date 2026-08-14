@@ -12,9 +12,12 @@
     - TASK-689
   related_files:
     - src/components/guided-creator/steps/loadout-step.tsx
+    - src/components/guided-creator/guided-equipment-phase-layout.tsx
+    - src/components/shared/guided-choice/guided-layer-nav.tsx
     - src/lib/guided-creator/equipment-phase-nav.ts
     - src/lib/guided-creator/equipment-phase-nav.test.ts
     - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
