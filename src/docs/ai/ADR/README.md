@@ -35,3 +35,4 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0010 | Lib layer dependency direction | Accepted |
 | 0011 | List search toolbar | Accepted |
 | 0012 | Guided L3 inline catalog list | Accepted |
+| 0013 | Character dirty-key PATCH + updatedAt 409 | Accepted |

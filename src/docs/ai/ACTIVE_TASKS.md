@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 6 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 5 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Wave 2 coding pass is open. TASK-740 (Advanced migrate P0), TASK-738 (guided P1-6–10 + server legality + idempotent create), and TASK-744 (styleguide Linux baselines) **done**. Next: TASK-741 (dirty-key PATCH, Architect) → TASK-742 (acked rules) → TASK-739. TASK-733 / 718 / 719 wait until those P0s land. Wave 3 after TASK-741.
+**Hot notes:** Wave 2 coding pass is open. TASK-741 (dirty-key PATCH, Architect) **done**. Next: TASK-742 (acked rules) → TASK-739. TASK-733 / 718 / 719 after those. Wave 3 after TASK-741 (now unblocked).
 
 ---
 
@@ -124,30 +124,7 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-741
-  title: Character PATCH — dirty keys + updatedAt 409
-  created_at: 2026-08-13
-  created_by: agent
-  priority: high
-  status: not-started
-  related_files:
-    - src/app/api/characters/[id]/route.ts
-    - src/hooks/use-auto-save.ts
-    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
-    - src/docs/ai/ADR/README.md
-  description: |
-    Architect remainder after TASK-736 autosave hardening. PATCH should send dirty keys
-    only and refuse stale writes with updatedAt / 409. After TASK-740 (done). ADR required
-    (API contract).
-  acceptance_criteria:
-    - PATCH body is a dirty-key subset, not a full document smash.
-    - Stale updatedAt returns 409; client retries/refetches instead of silently overwriting.
-    - ADR in src/docs/ai/ADR/. Typecheck/lint + targeted route test.
-  notes: |
-    Autosave refs/retry/pagehide already landed. Per-user rate key already uses
-    buildRateLimitKey. Character query-key user-scoping can ride along if small.
 
----
 
 - id: TASK-742
   title: Wave 2 rules leftovers after 2026-08-13 owner acks

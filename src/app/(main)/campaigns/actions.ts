@@ -245,10 +245,10 @@ export async function joinCampaignAction(data: {
       return { success: false, error: 'Failed to join campaign' };
     }
 
-    const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
-    const merged = { ...charData, visibility, updatedAt: new Date().toISOString() };
+    const now = new Date().toISOString();
+    const merged = { ...charData, visibility, updatedAt: now };
     const listCols = getCharacterListColumns(merged);
-    await supabase.from('characters').update({ data: merged, ...listCols }).eq('id', data.characterId).eq('user_id', user.uid);
+    await supabase.from('characters').update({ data: merged, updated_at: now, ...listCols }).eq('id', data.characterId).eq('user_id', user.uid);
 
     return { success: true, campaignId, visibilityUpdated };
   } catch (error) {
@@ -324,10 +324,10 @@ export async function addCharacterToCampaignAction(data: {
     );
     await supabase.from('campaigns').update({ characters }).eq('id', data.campaignId);
 
-    const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
-    const merged = { ...charData, visibility, updatedAt: new Date().toISOString() };
+    const now = new Date().toISOString();
+    const merged = { ...charData, visibility, updatedAt: now };
     const listCols = getCharacterListColumns(merged);
-    await supabase.from('characters').update({ data: merged, ...listCols }).eq('id', data.characterId).eq('user_id', user.uid);
+    await supabase.from('characters').update({ data: merged, updated_at: now, ...listCols }).eq('id', data.characterId).eq('user_id', user.uid);
 
     return { success: true, visibilityUpdated };
   } catch (error) {

@@ -130,7 +130,7 @@ export function useSheetResourceActions({
 
         setCharacter((prev) => (prev ? { ...prev, portrait: url } : null));
         setPortraitRefreshKey(Date.now());
-        await saveCharacter(character.id, { portrait: url });
+        await saveCharacter(character.id, { portrait: url }, { updatedAt: character.updatedAt });
       } catch {
         setError('Failed to upload portrait');
       } finally {
@@ -148,7 +148,7 @@ export function useSheetResourceActions({
         setError(null);
         setCharacter((prev) => (prev ? { ...prev, portrait: url } : null));
         setPortraitRefreshKey(Date.now());
-        await saveCharacter(character.id, { portrait: url });
+        await saveCharacter(character.id, { portrait: url }, { updatedAt: character.updatedAt });
       } catch {
         setError('Failed to update portrait');
       } finally {

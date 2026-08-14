@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { validateJson, verifyMutationRequest, characterUpdateSchema } from '@/lib/api-validation';
 import { prepareCharacterForSave } from '@/lib/character-save';
+import { applyCharacterDirtyPatch, isStaleCharacterWrite } from '@/lib/character/dirty-patch';
 import { normalizeCharacterForSave, normalizeCharacterOnLoad } from '@/lib/character/schema-normalize';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import { collectCharacterLibraryRefIds, getOwnerLibraryForView } from '@/lib/owner-library-for-view';
@@ -147,12 +148,13 @@ export async function PATCH(
     const validation = await validateJson(request, characterUpdateSchema);
     if (!validation.success) return validation.error;
     const data = validation.data as Partial<Character>;
+    const expectedUpdatedAt = typeof data.updatedAt === 'string' ? data.updatedAt : undefined;
     const cleanedData = prepareCharacterForSave(data);
 
     const supabase = await createClient();
     const { data: existing, error: existingErr } = await supabase
       .from('characters')
-      .select('id, data')
+      .select('id, data, updated_at')
       .eq('id', id.trim())
       .eq('user_id', user.uid)
       .maybeSingle();
@@ -162,20 +164,41 @@ export async function PATCH(
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
     }
 
-    const currentData = (existing.data as Record<string, unknown>) ?? {};
-    const mergedData = { ...currentData, ...cleanedData };
+    const existingRow = existing as CharRow;
+    const currentUpdatedAt = existingRow.updated_at;
+    if (isStaleCharacterWrite(expectedUpdatedAt, currentUpdatedAt)) {
+      return NextResponse.json({ error: 'Character was updated elsewhere' }, { status: 409 });
+    }
+
+    const currentData = (existingRow.data as Record<string, unknown>) ?? {};
+    const mergedData = applyCharacterDirtyPatch(currentData, cleanedData);
     normalizeCharacterForSave(mergedData);
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
     const listCols = getCharacterListColumns(mergedData, { archetypeNameById });
+    const now = new Date().toISOString();
 
-    const { error: updateErr } = await supabase
+    let updateQuery = supabase
       .from('characters')
-      .update({ data: mergedData, ...listCols })
+      .update({ data: mergedData, updated_at: now, ...listCols })
       .eq('id', id.trim())
       .eq('user_id', user.uid);
-    if (updateErr) throw updateErr;
+    if (expectedUpdatedAt && currentUpdatedAt) {
+      updateQuery = updateQuery.eq('updated_at', currentUpdatedAt);
+    }
 
-    return NextResponse.json({ ok: true });
+    const { data: updated, error: updateErr } = await updateQuery
+      .select('updated_at')
+      .maybeSingle();
+    if (updateErr) throw updateErr;
+    if (!updated) {
+      return NextResponse.json({ error: 'Character was updated elsewhere' }, { status: 409 });
+    }
+
+    const savedUpdatedAt =
+      typeof (updated as { updated_at?: string | null }).updated_at === 'string'
+        ? (updated as { updated_at: string }).updated_at
+        : now;
+    return NextResponse.json({ ok: true, updatedAt: savedUpdatedAt });
   } catch (err) {
     console.error('[API Error] PATCH /api/characters/[id]:', err);
     return NextResponse.json({ error: 'Failed to update character' }, { status: 500 });

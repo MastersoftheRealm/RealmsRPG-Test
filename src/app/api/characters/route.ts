@@ -63,9 +63,10 @@ async function insertCharacterRow(
   supabase: SupabaseLike,
   row: CharacterInsertRow
 ): Promise<{ id: string } | { uniqueViolation: true }> {
+  const now = new Date().toISOString();
   const { data: created, error: insertErr } = await supabase
     .from('characters')
-    .insert(row)
+    .insert({ created_at: now, updated_at: now, ...row })
     .select('id')
     .single();
   if (insertErr) {

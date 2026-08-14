@@ -1,4 +1,58 @@
-- id: TASK-738
+- id: TASK-741
+  title: Character PATCH ? dirty keys + updatedAt 409
+  created_at: 2026-08-13
+  completed_at: 2026-08-14
+  created_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/docs/ai/ADR/0013-character-dirty-patch.md
+    - src/lib/character/dirty-patch.ts
+    - src/lib/character/dirty-patch.test.ts
+    - src/lib/api-client.ts
+    - src/lib/api-validation.ts
+    - src/app/api/characters/[id]/route.ts
+    - src/app/api/characters/[id]/route.test.ts
+    - src/app/api/characters/route.ts
+    - src/services/character-service.ts
+    - src/hooks/use-characters.ts
+    - src/app/(main)/characters/[id]/use-character-sheet-page-data.ts
+    - src/app/(main)/characters/[id]/use-character-sheet-page-ui.ts
+    - src/components/character-sheet/use-sheet-resource-actions.ts
+    - src/app/(main)/campaigns/actions.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ARCHITECTURE.md
+  description: |
+    Architect remainder after TASK-736 autosave hardening. PATCH should send dirty keys
+    only and refuse stale writes with updatedAt / 409. After TASK-740 (done). ADR required
+    (API contract).
+  acceptance_criteria:
+    - PATCH body is a dirty-key subset, not a full document smash.
+    - Stale updatedAt returns 409; client retries/refetches instead of silently overwriting.
+    - ADR in src/docs/ai/ADR/. Typecheck/lint + targeted route test.
+  notes: |
+    Autosave refs/retry/pagehide already landed. Per-user rate key already uses
+    buildRateLimitKey. Character query-key user-scoping rode along.
+    Archived 2026-08-14 ? implementable AC met; verification_status pending-qa (DEV-V-009 T043).
+  completed_work: |
+    - ADR-0013: dirty-key merge; lock on characters.updated_at; 409 { error }; success { ok, updatedAt }.
+    - PATCH merges only provided keys (lib/character/dirty-patch.ts); stale token 409s before write;
+      matching token also .eq('updated_at') on UPDATE. Omitted updatedAt skips the lock (portrait-after-create,
+      resource sync) but still stamps the column.
+    - Sheet autosave sends pickDirtyCharacterFields vs last-saved clean snapshot; 409 ? GET, keep local
+      dirty keys, retry once. Settings visibility/speed and portrait patches are subsets + lock token.
+    - characterKeys include viewer uid; insert/create stamps created_at/updated_at; campaign join/add
+      stamp the column so the sheet can 409.
+    - Route tests: partial merge keeps omitted keys; stale updatedAt 409s and does not write.
+  developer_test_plan: |
+    DEV-V-009 T043 ? two-tab notes + HP both survive; stale PATCH is 409.
+
+---
+
   title: Guided creator P1-6-P1-10 leftovers (auth gate, trusted save, feats)
   created_at: 2026-08-13
   completed_at: 2026-08-13
