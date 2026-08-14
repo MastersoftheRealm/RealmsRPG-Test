@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-733, TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-760, TASK-733, TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
 **Counts:** 11 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **TASK-733 done** (sheet innate InfoTippys). **Next: TASK-756** (split innate → powers → techniques screens) **before** TASK-751–753; **TASK-757** (Power path See weapons); **TASK-758–759** (feat GLR: drop REQ LEVEL + State Feats `(i)` — before TASK-753); **TASK-760** (ability tiles). Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — after 756/758/759 so path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
+**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **TASK-733 done** (sheet innate InfoTippys). **TASK-760 done** (ability tiles). **Next: TASK-756** (split innate → powers → techniques screens) **before** TASK-751–753; **TASK-757** (Power path See weapons); **TASK-758–759** (feat GLR: drop REQ LEVEL + State Feats `(i)` — before TASK-753). Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — after 756/758/759 so path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
 
 ---
 
@@ -196,47 +196,6 @@ Do **not** read the done archive at session start.
     Before TASK-753 (`GuidedFeatsFilterFields` + ArchetypePathFilter). Do not create
     a new shared/ui file. GAME_RULES has no State feat section — do not invent extra
     rules copy.
-
----
-
-- id: TASK-760
-  title: AbilityScoreGrid tile spacing and Primary/Secondary pill alignment
-  created_at: 2026-08-14
-  created_by: owner
-  priority: medium
-  status: not-started
-  related_tasks:
-    - TASK-544
-    - TASK-545
-    - TASK-566
-  related_files:
-    - src/components/shared/ability-score-grid.tsx
-    - src/components/guided-creator/steps/abilities-step.tsx
-    - src/components/guided-creator/guided-abilities-customize-panel.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/BUILD_VALIDATION.md
-    - src/docs/MOBILE_UX.md
-  description: |
-    Guided Abilities tiles look uneven: too much space above, too little below, and
-    Primary/Secondary (or Power/Martial) pills shove highlighted tiles down relative
-    to neighbors. Fix once in AbilityScoreGrid (display + customize edit). Screenshot
-    audit until the six-tile row is even.
-  acceptance_criteria:
-    - Display and customize/edit grids: uniform tile height and padding; pills sit on
-      the top edge without dropping the highlighted tile; bottom padding matches top
-      once pills are accounted for. Hybrid Power/Martial pills still fit without
-      wrapping into the ability name (existing truncate/aria-label).
-    - Screenshot audit (implementer): Power path (one Primary), Powered-Martial
-      (Power + Martial), path with a distinct Secondary pill; desktop and ~360px;
-      light + dark. Compare Abilities step and Your Hero summary grid if it uses the
-      same component.
-    - No new shared file; no per-step forks. FEATURE_INDEX AbilityScoreGrid note.
-      DEV-V-013 T034 / T035 / T036. Typecheck/lint.
-  notes: |
-    Independent of TASK-756–759; after TASK-754. TASK-452/455/544/545 already added
-    extra `pt-*` for straddling pills — that is the likely cause of “too much top /
-    displaced down.” Prefer one reserved pill row or consistent padding on every
-    tile, not padding only on highlighted tiles.
 
 ---
 

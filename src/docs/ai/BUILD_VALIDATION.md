@@ -2850,7 +2850,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-451 |
+| **Related task** | TASK-451 · TASK-760 |
 | **Where** | Guided creator → Abilities (and optionally Your Hero summary) |
 | **Needs** | A Power path with a distinct `secondary_ability` (not equal to Archetype Ability) |
 
@@ -2859,11 +2859,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 2. Continue to Abilities.
 3. On the ability grid, confirm the archetype ability tile has a **Primary** pill (accessible name Primary Ability) and the secondary ability tile has a **Secondary** pill (accessible name Secondary Ability).
 4. Optionally Customize Abilities and confirm both pills remain; check Your Hero summary grid if reached.
+5. At desktop six-column width, compare all tiles: highlighted and unhighlighted tiles have the same height and content alignment, with pills straddling the top edge rather than pushing content down.
 
 **Expected**
 - Secondary Ability pill visible and distinct when path secondary ≠ archetype ability.
 - Pills stay single-line and do not overlap ability names (see also T035).
 - Hybrid Powered-Martial paths use **Power** / **Martial** pills (both Archetype Abilities); no duplicate Secondary when `secondary_ability` equals one of those.
+- Every tile reserves the same pill clearance; top and bottom whitespace look balanced after the straddling pill is accounted for.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2872,22 +2874,24 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-452, TASK-455 |
+| **Related task** | TASK-452, TASK-455, TASK-760 |
 | **Where** | Guided creator → Abilities (and Your Hero summary grid) |
 | **Needs** | DevTools ~360px width; path with Archetype Ability (+ Secondary if available) |
 
 **Steps**
 1. Resize viewport to ~360px width.
-2. On Abilities recommended grid, confirm each tile shows a short ability label (e.g. **INT**, not cramped **INTELLIGENCE**).
+2. On Abilities recommended grid, confirm the two-column tiles show full ability names without horizontal overflow.
 3. Confirm path pills show short single-line copy (**Primary** / **Secondary**, or **Power** / **Martial** on hybrids) and do **not** wrap into a taller pill that overlaps the ability name.
 4. Hover or inspect the pill: accessible name / title still exposes the full term (e.g. Primary Ability, Secondary Ability, Archetype Power/Martial Ability on hybrids).
 5. Confirm pills stay inside their tile and do not spill into neighbor tiles at ~360px, tablet, or desktop.
 6. Continue to Your Hero and confirm the same grid behaves.
+7. Compare highlighted and unhighlighted tiles in each two-column row: heights, name/score alignment, and top/bottom whitespace are even.
 
 **Expected**
 - No overflow/spill from labels or pills; pill height growth never covers the ability name.
 - Full terms remain available via aria-label/title when visible copy is shortened.
-- At `sm+`, full ability names still appear on tiles.
+- Full ability names remain visible at phone and `sm+` widths.
+- Highlighted tiles are not taller and their content is not shifted below neighboring tiles.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2896,18 +2900,20 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-452 |
+| **Related task** | TASK-452 · TASK-760 |
 | **Where** | Guided creator → Abilities → Customize |
-| **Needs** | DevTools ~360px width |
+| **Needs** | DevTools ~360px width; path with a Primary/Secondary or Power/Martial pill |
 
 **Steps**
 1. On Abilities, open Customize.
 2. Confirm ability rows use a roomier layout (not 3 cramped columns with colliding ±).
 3. Confirm Decrement/Increment targets are ≥44px and usable without zoom.
+4. Compare highlighted and unhighlighted rows on phone, then the `sm+` column layout: tile heights and content alignment remain even and the pill does not push a highlighted tile down.
 
 **Expected**
 - Steppers do not overflow or overlap neighboring ability values.
 - Point-buy remains usable with recommended Back via LayerNav.
+- Every edit tile reserves the same pill clearance; highlighted rows/columns keep the same padding and height as their neighbors.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
