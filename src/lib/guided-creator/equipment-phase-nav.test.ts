@@ -5,6 +5,7 @@ import {
   nextEquipmentPhase,
   prevEquipmentPhase,
   resolveEquipmentPhaseVisibility,
+  shouldShowPowerWeaponsHatch,
   visibleEquipmentPhases,
 } from '@/lib/guided-creator/equipment-phase-nav';
 
@@ -80,6 +81,52 @@ describe('equipment-phase-nav', () => {
       'armor',
       'gear',
     ]);
+  });
+
+  it('shows the optional weapons hatch only on a Power path gear screen that skipped weapons', () => {
+    expect(
+      shouldShowPowerWeaponsHatch({
+        archetypeType: 'power',
+        includeWeapon: false,
+        phase: 'gear',
+        fullCatalog: false,
+      })
+    ).toBe(true);
+
+    for (const context of [
+      {
+        archetypeType: 'martial' as const,
+        includeWeapon: false,
+        phase: 'gear' as const,
+        fullCatalog: false,
+      },
+      {
+        archetypeType: 'powered-martial' as const,
+        includeWeapon: false,
+        phase: 'gear' as const,
+        fullCatalog: false,
+      },
+      {
+        archetypeType: 'power' as const,
+        includeWeapon: true,
+        phase: 'gear' as const,
+        fullCatalog: false,
+      },
+      {
+        archetypeType: 'power' as const,
+        includeWeapon: false,
+        phase: 'weapon' as const,
+        fullCatalog: false,
+      },
+      {
+        archetypeType: 'power' as const,
+        includeWeapon: false,
+        phase: 'gear' as const,
+        fullCatalog: true,
+      },
+    ]) {
+      expect(shouldShowPowerWeaponsHatch(context)).toBe(false);
+    }
   });
 
   it('allows advancing to the next phase with zero selections', () => {

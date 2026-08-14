@@ -45,6 +45,7 @@ import {
   nextEquipmentPhase,
   prevEquipmentPhase,
   resolveEquipmentPhaseVisibility,
+  shouldShowPowerWeaponsHatch,
   visibleEquipmentPhases,
   type EquipmentPhaseVisibility,
 } from '@/lib/guided-creator/equipment-phase-nav';
@@ -80,6 +81,7 @@ export function LoadoutStep() {
   const { data: userItems = [], isLoading: userItemsLoading } = useUserItems();
   const { data: codexEquipment = [], isLoading: codexLoading } = useEquipment();
   const [l2Open, setL2Open] = useState(false);
+  const [weaponsL2Open, setWeaponsL2Open] = useState(false);
   const [inlineErrorState, setInlineErrorState] = useState<{
     phase: string;
     message: string;
@@ -148,6 +150,15 @@ export function LoadoutStep() {
     [armorMode, hasWeaponOptions, hasArmorOptions, recommendUnarmed, isInlineCatalog]
   );
 
+  const showWeaponsHatch = shouldShowPowerWeaponsHatch({
+    archetypeType: draft.archetypeType,
+    includeWeapon: phaseVisibility.includeWeapon,
+    phase: equipmentPhase,
+    fullCatalog: isInlineCatalog,
+  });
+  const l2Phase = weaponsL2Open ? 'weapon' : equipmentPhase;
+  const modalOpen = l2Open || weaponsL2Open;
+
   const visiblePhases = visibleEquipmentPhases(armorMode, phaseVisibility);
 
   const onLastPhase = isLastEquipmentPhase(equipmentPhase, armorMode, phaseVisibility);
@@ -210,7 +221,7 @@ export function LoadoutStep() {
     tpSummary: l2TpSummary,
     items: inlineItems,
   } = useGuidedEquipmentL2Catalog(
-    equipmentPhase,
+    l2Phase,
     draft,
     pathData?.level1,
     allOfficial,
@@ -357,9 +368,14 @@ export function LoadoutStep() {
     [updateDraft]
   );
 
+  const closeL2Modal = useCallback(() => {
+    setL2Open(false);
+    setWeaponsL2Open(false);
+  }, []);
+
   const handleLoadoutBack = useCallback(() => {
-    if (l2Open) {
-      setL2Open(false);
+    if (modalOpen) {
+      closeL2Modal();
       return;
     }
     const prev = prevEquipmentPhase(equipmentPhase, armorMode, phaseVisibility);
@@ -368,11 +384,19 @@ export function LoadoutStep() {
       return;
     }
     prevSubStep();
-  }, [l2Open, equipmentPhase, armorMode, phaseVisibility, updateDraft, prevSubStep]);
+  }, [
+    modalOpen,
+    closeL2Modal,
+    equipmentPhase,
+    armorMode,
+    phaseVisibility,
+    updateDraft,
+    prevSubStep,
+  ]);
 
   const handleLoadoutContinue = useCallback(() => {
-    if (l2Open) {
-      setL2Open(false);
+    if (modalOpen) {
+      closeL2Modal();
       return;
     }
     if (currencyOverspend > 0) {
@@ -389,7 +413,8 @@ export function LoadoutStep() {
     }
     nextSubStep();
   }, [
-    l2Open,
+    modalOpen,
+    closeL2Modal,
     currencyOverspend,
     equipmentPhase,
     armorMode,
@@ -398,7 +423,7 @@ export function LoadoutStep() {
     nextSubStep,
   ]);
 
-  const continueLabel = l2Open
+  const continueLabel = modalOpen
     ? phaseCopy.seeRecommendations
     : onLastPhase
       ? stepCopy.continueLabel
@@ -414,7 +439,7 @@ export function LoadoutStep() {
       </span>
     ) : undefined;
 
-  const footerCanContinue = l2Open ? true : phaseComplete;
+  const footerCanContinue = modalOpen ? true : phaseComplete;
 
   const phaseTitleCopy = phaseCopy[equipmentPhase];
 
@@ -432,7 +457,7 @@ export function LoadoutStep() {
       description={phaseTitleCopy.description}
       canContinue={footerCanContinue}
       continueLabel={continueLabel}
-      continueTone={l2Open ? 'previous' : 'progress'}
+      continueTone={modalOpen ? 'previous' : 'progress'}
       footerBack={handleLoadoutBack}
       footerContinue={handleLoadoutContinue}
       completionHint={completionHint}
@@ -516,6 +541,14 @@ export function LoadoutStep() {
             />
           </GuidedEquipmentPhaseLayout>
 
+          {showWeaponsHatch ? (
+            <GuidedLayerNav
+              className="justify-end"
+              expandLabel={stepCopy.seeWeapons}
+              onExpand={() => setWeaponsL2Open(true)}
+            />
+          ) : null}
+
           {equipmentPhase === 'weapon' && recommendUnarmed ? (
             <GuidedUnarmedProwessPanel
               level={draft.unarmedProwess ?? 0}
@@ -524,8 +557,8 @@ export function LoadoutStep() {
           ) : null}
 
           <GuidedEquipmentL2Modal
-            isOpen={l2Open}
-            phase={equipmentPhase}
+            isOpen={modalOpen}
+            phase={l2Phase}
             draft={draft}
             catalog={l2Catalog}
             items={inlineItems}
@@ -534,7 +567,7 @@ export function LoadoutStep() {
             scopeExtra={
               <SourceFilter value={librarySource} onChange={setLibrarySource} />
             }
-            onClose={() => setL2Open(false)}
+            onClose={closeL2Modal}
             onDraftChange={updateDraft}
           />
         </div>
