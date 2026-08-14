@@ -39,6 +39,8 @@ import { isClientRequestId } from '@/lib/character-save';
 const chapterCopy = GUIDED_CREATOR_COPY.chapters;
 
 export type GuidedEquipmentPhase = 'weapon' | 'armor' | 'gear';
+/** In-step powers/techniques wizard phase (TASK-756). */
+export type GuidedPowersPhase = 'innate' | 'powers' | 'techniques';
 
 /** Chapters shown in the rail. */
 export type GuidedChapterId =
@@ -164,6 +166,8 @@ export interface GuidedDraft {
   // Chapter 5 — Equipment / Powers / Techniques
   /** In-step equipment wizard phase (TASK-424). */
   equipmentPhase: GuidedEquipmentPhase;
+  /** In-step innate → powers → techniques phase (TASK-756). */
+  powersPhase: GuidedPowersPhase;
   /** Weapons + shields selected in loadout step. */
   loadoutWeapons: PathItemRecommendation[];
   /** Armor selected in loadout step (empty when unarmored / power). */
@@ -232,6 +236,7 @@ function createInitialDraft(): GuidedDraft {
     archetypeFeatIds: [],
     characterFeatIds: [],
     equipmentPhase: 'weapon',
+    powersPhase: 'innate',
     loadoutWeapons: [],
     loadoutArmor: [],
     armaments: [],
@@ -285,7 +290,7 @@ interface GuidedCreatorState {
 }
 
 /** Bump when persisted draft shape changes; old versions migrate forward. */
-const GUIDED_STORE_SCHEMA_VERSION = 13;
+const GUIDED_STORE_SCHEMA_VERSION = 14;
 
 export const useGuidedCreatorStore = create<GuidedCreatorState>()(
   persist(
@@ -512,6 +517,16 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
           state = rest as typeof state;
         }
 
+        if (version < 14 && state.draft) {
+          state = {
+            ...state,
+            draft: {
+              ...state.draft,
+              powersPhase: state.draft.powersPhase ?? 'innate',
+            },
+          };
+        }
+
         if (version < 3 && state.draft) {
           const legacy = state.draft;
           const skills: Record<string, number> = legacy.skills ?? {};
@@ -568,6 +583,9 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         }
         if (!draft.equipmentPhase) {
           draft.equipmentPhase = 'weapon';
+        }
+        if (!draft.powersPhase) {
+          draft.powersPhase = 'innate';
         }
         if (!Array.isArray(draft.loadoutWeapons)) {
           draft.loadoutWeapons = [];

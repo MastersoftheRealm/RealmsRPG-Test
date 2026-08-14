@@ -3060,7 +3060,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Needs** | Path with power or technique recommendations (e.g. a Power archetype path, or Berserker for Techniques); official library loaded |
 
 **Steps**
-1. Reach Powers or Techniques. Confirm the chapter still reads **Loadout** framing for prior phases, and this step title is **Your Powers** or **Your Techniques** (Martial → Techniques only; Power / powered-martial → Powers only).
+1. Reach Powers or Techniques. Confirm the chapter still reads **Loadout** framing for prior phases. Martial lands on **Your Techniques**. Power lands on **Your Innate Powers** (Continue to Powers next). Powered-Martial walks innate → powers → techniques (T086).
 2. Confirm path recommendations appear as **GuidedChoiceCards** with visible selected/unselected state (soft-seeded affordable picks may start selected; deselecting clears them). Continue works with zero selections.
 3. Confirm **Training Points** PointStatus and per-card Training Points cost remain (TASK-456); overspend still shows a blocked reason.
 4. Click **See more options** below the grid; confirm an add modal opens (`GuidedPowersTechniquesL2Modal` / `UnifiedSelectionModal`) while L1 cards stay behind the overlay (same grammar as feats TASK-565 / Loadout L2).
@@ -3070,7 +3070,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Expected**
 - No silent select-all without visible card selection state.
 - GuidedLayerNav opens an add modal below content (feats / Loadout / Powers L2 grammar) — not an in-step full-catalog card dump.
-- Martial never shows Powers browse; Power never shows Techniques browse.
+- Martial never shows Powers browse; Power never shows a Techniques screen; Powered-Martial does (T086).
 - L2 → L1 promotion keeps selected non-path cards visible (TASK-458).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -3294,23 +3294,23 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-013-T056 — Innate vs regular L1 lists + store (TASK-471)
+#### DEV-V-013-T056 — Innate then regular screens + store (TASK-471 / TASK-756)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 |
-| **Related task** | TASK-471 |
+| **Related task** | TASK-471, TASK-756 |
 | **Where** | Guided Powers step (Power or Powered-Martial path) |
 | **Needs** | Power archetype path (innate list may be empty until TASK-473 seeds) |
 
 **Steps**
-1. On Powers step, confirm two sections: **Innate Powers** and **Powers** (Martial Techniques step has no innate section).
-2. Confirm innate and regular picks are independent (selecting one does not double-count in the other list).
-3. **See more Innate Powers** opens the innate modal; **See more options** opens the regular powers modal.
+1. After Loadout, land on **Your Innate Powers** only (no Powers list and no Show Innate+Powers filter). Martial never sees this screen.
+2. Confirm innate and regular picks stay independent after Continue to Powers (selecting one does not double-count in the other screen).
+3. **See more Innate Powers** opens the innate modal; on the Powers screen **See more options** opens the regular powers modal.
 4. Empty innate recommendations show a graceful empty state + browse affordance.
 
 **Expected**
-- Dual L1 lists; draft `innatePowerIds` separate from `powerIds`.
+- Sequential screens; draft `innatePowerIds` separate from `powerIds`; no `innateScope` dropdown.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -3736,7 +3736,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Enter via **Custom**, forge archetype, Continue to **Species** — confirm **all species** visible (not starters-only).
 2. Confirm **See starter species** (outline) collapses to starter set; **See all species** (primary) expands.
 3. On **Abilities**, confirm customize panel opens; **See recommendations** returns to path suggestions when a path exists (pick path via View archetype paths first).
-4. On **Skills**, confirm browse does **not** auto-open on first landing; scroll and use **Browse all Skills**; in that modal use **Browse all Sub-Skills** for L3. On **Archetype Feats** / **Character Feat** / **Loadout** / **Powers**, confirm browse/L2 still opens on first landing for custom forge (no `archetypePathId`).
+4. On **Skills**, confirm browse does **not** auto-open on first landing; scroll and use **Browse all Skills**; in that modal use **Browse all Sub-Skills** for L3. On **Archetype Feats** / **Character Feat** / **Loadout** / **Powers** (innate screen first for Power / Powered-Martial), confirm browse/L2 still opens on first landing for custom forge (no `archetypePathId`).
 5. **Ancestry**: Continue from Species (or chapter rail into Ancestry) lands on **species overview** — stable heritage summary / size pick; does **not** flash overview then jump to first pick. Second Continue enters first pick in order.
 
 **Expected**
@@ -3946,6 +3946,27 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Expected**
 - See more / See less / More details never select the card from the keyboard. Card root announces “selected” in its accessible name when chosen.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T086 — Powered-Martial innate → powers → techniques walk (TASK-756)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-756 |
+| **Where** | Guided creator → Powered-Martial path after Loadout |
+| **Needs** | Powered-Martial path (innate + powers + techniques); desktop + ~360px |
+
+**Steps**
+1. Continue from Loadout. Confirm **Your Innate Powers** only — Innate Energy bar + innate help tips; no regular Powers list; no Show Innate+Powers filter. Continue stays enabled with Innate Energy remaining (soft warn).
+2. Continue → **Your Powers** (non-innate). Innate Energy bar is gone; Training Points still count innate picks. Back returns to the innate screen with prior picks.
+3. Continue → **Your Techniques**. Shared TP still includes innate + powers. Power-only drafts never reach this screen; Martial-only drafts skip innate/powers and land here from Loadout.
+4. Chapter rail onto this step from a later chapter lands on the first inner screen; Back from Reveal/Your Hero resumes the last inner screen.
+5. Repeat a custom (no path) Powered-Martial draft: same screen order with inline catalogs, not a combined list.
+
+**Expected**
+- Inner `powersPhase` matches loadout `equipmentPhase`. Shared TP. Deleted `innateScope` chrome. Desktop + ~360px.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6407,7 +6428,7 @@ Empowered Attack mode must prefer the cheaper live Energy part when power and te
 
 ## DEV-V-050 — Guided creator L3 inline catalog lists (TASK-684 / TASK-685 / TASK-686–690 / **TASK-709** / **TASK-727** / **TASK-724** / **TASK-728** / **TASK-758** / **TASK-759**)
 
-Full Customize (L3, no archetype path) on archetype feats, character feat, loadout (weapon/armor/gear), and powers/techniques must render the filtered catalog inline in the step body (selected items as removable rows above the list) instead of auto-opening a modal. Guided paths (L1, has an archetype path) must be unchanged — curated cards + "See more" still opens the L2 modal. TASK-685 follow-up: hide unmet feats; custom loadout always shows weapons (Power-only skips armor); gear quantity-first; powers innate scope filter + max EN filter. TASK-686–690: preview strip parity, Energy kind fix, equipment Codex columns + qty spacing, Power armor skip regardless of path `armorStep`.
+Full Customize (L3, no archetype path) on archetype feats, character feat, loadout (weapon/armor/gear), and powers/techniques must render the filtered catalog inline in the step body (selected items as removable rows above the list) instead of auto-opening a modal. Guided paths (L1, has an archetype path) must be unchanged — curated cards + "See more" still opens the L2 modal. TASK-685 follow-up: hide unmet feats; custom loadout always shows weapons (Power-only skips armor); gear quantity-first; powers sequential screens (TASK-756; no innate-scope filter) + max EN filter. TASK-686–690: preview strip parity, Energy kind fix, equipment Codex columns + qty spacing, Power armor skip regardless of path `armorStep`.
 
 #### DEV-V-050-T001 — L3 inline catalogs render + filter + select correctly
 
@@ -6424,7 +6445,7 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 3. Loadout — Weapon phase: **always present** for Martial / Power / Powered-Martial custom drafts; inline list shows eligible weapons/shields within armament proficiency; **columns match Codex/Library** (Name, Rarity, Currency, TP, Range, Damage); Range is **Melee** (never `0`) or `8 spaces` / `16 spaces` from properties (TASK-701 / **TASK-716**); **SourceFilter** All / Realms / My scopes the catalog (Custom defaults All); **Create Armament** hatch opens `/item-creator` in a new tab; Currency + Training Points budget bar updates live; selecting a two-handed weapon with a shield already selected shows the hand-slot error and does not apply.
 4. Loadout — Armor phase: present for Martial and Powered-Martial with **Codex armor columns** (Rarity, Currency, TP, Damage Red., Agility Red., Abl. Req., Crit +); **skipped for Power only**; single-slot swap on select; TP budget shared with weapons. Same SourceFilter + Create Armament hatch.
 5. Loadout — Gear phase: **quantity stepper on the far right replaces the + add button** (no dual chrome; slot wide enough that ± controls are not clipped); **Name / Category / Rarity / Currency** columns (TASK-724 — Category is Adventuring/Tools/… taxonomy, not “Equipment”); incrementing from 0 adds; editing qty in the catalog row or the selected panel works; Currency budget enforced. **TASK-702 / TASK-710 chrome:** ListHeader bar spans full width through the qty track; column titles align with row cells; row hover highlight extends through the stepper **including the ± buttons** (no `bg-surface` / `bg-surface-alt` island); expand a selectable (+) feat/weapon row — description is fully readable (no + blackout overlay) and expanded surface-alt continues into the + / qty column (no empty band below the control).
-6. Powers/Techniques step (Power or Powered-Martial path-less draft): Innate + Powers sections (L1-parallel) with a **Show** filter (Innate + Powers / Innate only / Powers only); **one** shared Filters panel (PowerTechniqueFilters compact, no sheet Character filter) + SourceFilter; **columns match Official Library**; regular list filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP-blocked rows still hidden (selected kept); **energy-over-cap innate rows stay visible** (TASK-727 — see T003). Expand = Parts & Proficiencies (not duplicate budget chips). **TASK-706:** Innate Energy and Training Points sit in one `LoadoutBudgetBar` row and match Skills / Ability Points PointStatus size (not a smaller sibling pill). L2 innate modal footer same.
+6. Powers/Techniques (Power or Powered-Martial path-less draft): sequential **innate → powers** screens (Powered-Martial then **techniques**). No **Show** Innate+Powers filter. Each screen has **one** Filters panel (PowerTechniqueFilters compact, no sheet Character filter) + SourceFilter; **columns match Official Library**; regular/technique lists filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP-blocked rows still hidden (selected kept); **energy-over-cap innate rows stay visible on the innate screen** (TASK-727 — see T003). Expand = Parts & Proficiencies (not duplicate budget chips). **TASK-706:** on the innate screen, Innate Energy and Training Points sit in one `LoadoutBudgetBar` row and match Skills / Ability Points PointStatus size (not a smaller sibling pill). L2 innate modal footer same.
 7. For all six: verify at ~360px width — search/filter toolbar and selected-panel rows stay usable, touch targets ≥44px; **Selected** panel has even horizontal cushion from the card border (title, column header, and GLR rows inset — not flush to the frame) and balanced top/bottom padding under the last row (TASK-700). Selected rows keep warning/chips when present.
 8. Sanity check a **path-based** (L1) character still shows curated cards + "See more options" opening the existing L2 modal (no regression). Path L2 SourceFilter defaults to Realms Library. Path with empty weapon pool may still omit weapon (path behavior unchanged).
 9. **Descriptor chips (TASK-699):** Expand a Library or Codex GLR row — descriptor metadata chips and expandable part/cost chips share the same inline size (readable `text-sm`, not undersized `text-xs`). Filter toolbar pills remain the smaller `sm` role. Optional: `/dev/styleguide` → Entity row parity row matches GLR expanded chips. **Library vs L3 spot-check (TASK-709):** same power/weapon/feat in Official/Codex vs creator L3 matches columns/expand modulo ADR-0012 allowlist.
@@ -6468,7 +6489,7 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 | **Needs** | Signed-in; Powers step with Innate Energy filled (or fill it with one/two innates) |
 
 **Steps**
-1. On Powers L3, select innate power(s) until the Innate Energy tracker is full (spent = total).
+1. On the L3 **innate** screen, select innate power(s) until the Innate Energy tracker is full (spent = total).
 2. Confirm the innate catalog **does not empty** — other threshold-eligible powers remain listed (over-threshold rows may still be hidden).
 3. Select a different listed innate. Confirm it becomes selected, last-selected innate(s) drop until the new pick fits, and the Innate Energy tracker stays in sync (not over the cap).
 4. Confirm a power above Innate Threshold still cannot be selected (blocked / hidden). Training Points over-budget still blocks (does not swap extra innates just for TP).

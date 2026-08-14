@@ -41,6 +41,7 @@ function saveableDraft(overrides: Partial<GuidedDraft> = {}): GuidedDraft {
     archetypeFeatIds: ['feat-a'],
     characterFeatIds: ['feat-c'],
     equipmentPhase: 'weapon',
+    powersPhase: 'innate',
     loadoutWeapons: [],
     loadoutArmor: [],
     armaments: [],

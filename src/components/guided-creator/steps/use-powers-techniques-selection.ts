@@ -32,6 +32,11 @@ type PowersTechniquesSelectionArgs = {
   loadoutTpLimit: number;
   regularTpSpent: number;
   innateTpSpent: number;
+  /**
+   * TP already spent on tracks that are not the current inner screen
+   * (e.g. techniques while picking powers). Shared budget (TASK-756).
+   */
+  siblingTpSpent?: number;
   innateEnergyMax: number;
   innateThreshold: number;
   resolveTpCost: (id: string) => number;
@@ -54,6 +59,7 @@ export function usePowersTechniquesSelection({
   loadoutTpLimit,
   regularTpSpent,
   innateTpSpent,
+  siblingTpSpent = 0,
   innateEnergyMax,
   innateThreshold,
   resolveTpCost,
@@ -122,7 +128,7 @@ export function usePowersTechniquesSelection({
           resolveTpCost,
           innateThreshold,
           innateEnergyMax,
-          loadoutTpSpent + regularTpSpent,
+          loadoutTpSpent + regularTpSpent + siblingTpSpent,
           loadoutTpLimit,
         );
         didSeedInnate.current = true;
@@ -148,7 +154,7 @@ export function usePowersTechniquesSelection({
     const seed = pickAffordableIds(
       regularPool,
       resolveTpCost,
-      loadoutTpSpent + innateTpSpent,
+      loadoutTpSpent + innateTpSpent + siblingTpSpent,
       loadoutTpLimit,
     );
     didSeedSelection.current = true;
@@ -176,6 +182,7 @@ export function usePowersTechniquesSelection({
     innateThreshold,
     regularTpSpent,
     innateTpSpent,
+    siblingTpSpent,
   ]);
 
   /** Keep innate vs regular exclusive if both lists somehow share a pick. */
@@ -213,7 +220,7 @@ export function usePowersTechniquesSelection({
         }
         const addTp = resolveTpCost(key);
         const othersSpent = draft.techniqueIds.reduce((sum, x) => sum + resolveTpCost(x), 0);
-        if (wouldExceedSharedTp(loadoutTpSpent + othersSpent, loadoutTpLimit, addTp)) {
+        if (wouldExceedSharedTp(loadoutTpSpent + siblingTpSpent + othersSpent, loadoutTpLimit, addTp)) {
           setBudgetMessage(ptCopy.tpBlocked);
           return;
         }
@@ -229,7 +236,7 @@ export function usePowersTechniquesSelection({
       const othersSpent =
         draft.powerIds.reduce((sum, x) => sum + resolveTpCost(x), 0) +
         draft.innatePowerIds.reduce((sum, x) => sum + resolveTpCost(x), 0);
-      if (wouldExceedSharedTp(loadoutTpSpent + othersSpent, loadoutTpLimit, addTp)) {
+      if (wouldExceedSharedTp(loadoutTpSpent + siblingTpSpent + othersSpent, loadoutTpLimit, addTp)) {
         setBudgetMessage(ptCopy.tpBlocked);
         return;
       }
@@ -247,6 +254,7 @@ export function usePowersTechniquesSelection({
       resolveTpCost,
       loadoutTpSpent,
       loadoutTpLimit,
+      siblingTpSpent,
       isSelectedId,
       removeSelectedAlias,
     ],
@@ -268,7 +276,7 @@ export function usePowersTechniquesSelection({
         tpOf: resolveTpCost,
         threshold: innateThreshold,
         energyMax: innateEnergyMax,
-        otherTpSpent: loadoutTpSpent + regularTp,
+        otherTpSpent: loadoutTpSpent + siblingTpSpent + regularTp,
         tpLimit: loadoutTpLimit,
       });
       if (!applied.ok) {
@@ -292,6 +300,7 @@ export function usePowersTechniquesSelection({
       resolveTpCost,
       loadoutTpSpent,
       loadoutTpLimit,
+      siblingTpSpent,
       isSelectedId,
       removeSelectedAlias,
       updateDraft,
@@ -302,7 +311,7 @@ export function usePowersTechniquesSelection({
     (id: string) => {
       if (isSelectedId(id, selectedIds)) return false;
       const othersSpent = regularTpSpent + innateTpSpent;
-      return wouldExceedSharedTp(loadoutTpSpent + othersSpent, loadoutTpLimit, resolveTpCost(id));
+      return wouldExceedSharedTp(loadoutTpSpent + siblingTpSpent + othersSpent, loadoutTpLimit, resolveTpCost(id));
     },
     [
       isSelectedId,
@@ -312,6 +321,7 @@ export function usePowersTechniquesSelection({
       loadoutTpLimit,
       regularTpSpent,
       innateTpSpent,
+      siblingTpSpent,
     ],
   );
 
@@ -325,7 +335,7 @@ export function usePowersTechniquesSelection({
         tpOf: resolveTpCost,
         threshold: innateThreshold,
         energyMax: innateEnergyMax,
-        otherTpSpent: loadoutTpSpent + regularTpSpent,
+        otherTpSpent: loadoutTpSpent + siblingTpSpent + regularTpSpent,
         tpLimit: loadoutTpLimit,
       });
       return !applied.ok;
@@ -339,6 +349,7 @@ export function usePowersTechniquesSelection({
       innateEnergyMax,
       loadoutTpSpent,
       loadoutTpLimit,
+      siblingTpSpent,
       regularTpSpent,
     ],
   );

@@ -28,6 +28,7 @@ export function clearArchetypeDependentDraftFields(): Partial<GuidedDraft> {
     archetypeFeatIds: [],
     characterFeatIds: [],
     equipmentPhase: 'weapon',
+    powersPhase: 'innate',
     loadoutWeapons: [],
     loadoutArmor: [],
     armaments: [],

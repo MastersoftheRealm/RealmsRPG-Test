@@ -498,11 +498,11 @@ export const GUIDED_CREATOR_COPY = {
       innateThresholdBlocked: 'That power exceeds your Innate Threshold.',
       /** Soft hint when Innate Energy remains — Continue stays enabled (TASK-573). */
       innateSoftWarn: 'Innate Energy remaining — you can continue, or pick more innate powers.',
-      /** L3 inline — filter which track(s) to browse (TASK-685). */
-      innateScopeLabel: 'Show',
-      innateScopeAll: 'Innate + Powers',
-      innateScopeInnate: 'Innate Powers only',
-      innateScopeRegular: 'Powers only',
+      innateTitle: 'Your Innate Powers',
+      innateDescription:
+        'Innate powers cost no Energy to use. Each must fit your Innate Threshold and still spends Training Points.',
+      continueToPowers: 'Continue to Powers →',
+      continueToTechniques: 'Continue to Techniques →',
       innateIntroL3:
         'Pick innate powers that fit your Innate Threshold. Each costs Training Points like other Powers. Filling your Innate Energy pool is recommended but optional.',
       maxEnergyHint: (max: number) => `Showing Powers/Techniques within your level 1 Energy (${max}).`,
