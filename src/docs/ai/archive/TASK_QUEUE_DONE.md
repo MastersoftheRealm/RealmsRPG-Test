@@ -1,3 +1,65 @@
+- id: TASK-756
+  title: Split guided innate powers, powers, and techniques into sequential screens
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-754
+    - TASK-755
+    - TASK-726
+    - TASK-727
+    - TASK-692
+    - TASK-753
+  related_files:
+    - src/components/guided-creator/steps/powers-techniques-step.tsx
+    - src/components/guided-creator/steps/use-powers-techniques-selection.ts
+    - src/components/guided-creator/guided-powers-techniques-l1-content.tsx
+    - src/lib/guided-creator/powers-phase-nav.ts
+    - src/lib/guided-creator/powers-phase-nav.test.ts
+    - src/stores/guided-creator-store.ts
+    - src/lib/guided-creator/path-selection-draft.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-013 / DEV-V-050
+    tests:
+      - DEV-V-013-T086
+      - DEV-V-013-T043
+      - DEV-V-013-T056
+      - DEV-V-013-T076
+      - DEV-V-050-T001
+      - DEV-V-050-T003
+  developer_test_plan: |
+    Suite DEV-V-013 T086 (+ T043/T056/T076) and DEV-V-050 T001 step 6 / T003 — see BUILD_VALIDATION.md
+  description: |
+    Power / Powered-Martial picked innate and regular powers on one screen (dual
+    L1 lists + L3 innateScope dropdown). Sequential inner screens after loadout:
+    innate, then powers, then techniques when the path has them.
+  acceptance_criteria:
+    - Inner-phase pattern like loadout (`equipmentPhase`). Power → innate then
+      powers; Martial → techniques; Powered-Martial → innate, powers, techniques.
+      Continue/Back and chapter rail use `landsOnFirstInnerScreen`.
+    - Innate screen only; no innate-scope SelectFilter. Innate Energy bar + help
+      tips; soft energy-cap warn + last-in swap stay on this screen.
+    - Shared TP across innate + powers + techniques. L1/L2/L3 reused per screen.
+    - REALMS / FEATURE_INDEX sequential screens. Deleted `innateScope` chrome.
+      Vitest phase order. DEV-V-013 T086 + updated T056/T043/T076; DEV-V-050 T001
+      step 6 / T003 against the innate screen.
+  completed_work: |
+    Added `powersPhase` on the existing guided store (schema v14) and
+    `powers-phase-nav` mirroring equipment-phase-nav. Rewrote PowersTechniquesStep
+    and L1 content to one inner screen; deleted L3 innateScope Show filter.
+    Powered-Martial now reaches a techniques screen. Shared TP via siblingTpSpent.
+    Path change resets powersPhase to innate.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-013 T086).
 - id: TASK-759
   title: State Feats filter InfoTippy on creator GLR
   created_at: 2026-08-14

@@ -77,6 +77,7 @@ describe('buildPathSelectionDraftPatch', () => {
     expect(patch.archetypeFeatIds).toEqual([]);
     expect(patch.characterFeatIds).toEqual([]);
     expect(patch.equipmentPhase).toBe('weapon');
+    expect(patch.powersPhase).toBe('innate');
     expect(patch.loadoutWeapons).toEqual([]);
     expect(patch.loadoutArmor).toEqual([]);
     expect(patch.armaments).toEqual([]);

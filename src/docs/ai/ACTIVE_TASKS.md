@@ -8,71 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-759, TASK-758, TASK-760, TASK-733, TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-756, TASK-759, TASK-758, TASK-760, TASK-733, TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 8 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 7 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **TASK-733 done** (sheet innate InfoTippys). **TASK-760 done** (ability tiles). **TASK-758–759 done** (feat GLR: no creator REQ LEVEL + shared State Feats `(i)`). **Next: TASK-756** (split innate → powers → techniques screens) **before** TASK-751–753; **TASK-757** (Power path See weapons). Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — after 756 so path-filter wiring lands on the new screens. TASK-718 / 719 last. Wave 3 still waits for the owner.
-
----
-
-- id: TASK-756
-  title: Split guided innate powers, powers, and techniques into sequential screens
-  created_at: 2026-08-14
-  created_by: owner
-  priority: high
-  status: not-started
-  related_tasks:
-    - TASK-754
-    - TASK-755
-    - TASK-726
-    - TASK-727
-    - TASK-692
-    - TASK-753
-  related_files:
-    - src/components/guided-creator/steps/powers-techniques-step.tsx
-    - src/components/guided-creator/steps/use-powers-techniques-selection.ts
-    - src/components/guided-creator/guided-powers-techniques-l1-content.tsx
-    - src/components/guided-creator/guided-powers-techniques-l2-modal.tsx
-    - src/lib/guided-creator/powers-techniques-step-helpers.ts
-    - src/lib/guided-creator/guided-substep-nav.ts
-    - src/lib/guided-creator/substep-satisfaction.ts
-    - src/stores/guided-creator-store.ts
-    - src/lib/constants/copy/guided-creator-copy.ts
-    - src/docs/REALMS_PRODUCT_OVERVIEW.md
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/BUILD_VALIDATION.md
-  description: |
-    Power / Powered-Martial still pick innate and regular powers on one screen (dual
-    L1 lists + L3 innateScope All / Innate / Powers dropdown). Owner wants sequential
-    screens after loadout: (1) innate powers only — no innate vs non-innate copy or
-    filter; (2) non-innate powers; (3) techniques when the path has them. Example:
-    L1 Powered-Martial → weapons/armor/equipment → innate → powers → techniques.
-    Back still shows prior picks. Martial-only skips innate/powers; Power-only skips
-    techniques. Custom L3 uses the same screen order (TASK-692 combined innate+powers
-    list + scope filter goes away).
-  acceptance_criteria:
-    - Inner-phase pattern like loadout (`equipmentPhase`), not a new shared component
-      or store. Visibility by archetype type: Power → innate then powers; Martial →
-      techniques; Powered-Martial → innate, powers, techniques. Continue/Back and
-      chapter rail land on first inner screen forward / last inner screen back
-      (`landsOnFirstInnerScreen`).
-    - Innate screen: innate catalog only; no Show Innate+Powers / innate-scope
-      SelectFilter. Keep Innate Energy bar + innatePowersHelp / innateEnergyHelp
-      (TASK-726). Soft energy-cap warn + last-in swap (TASK-727) stay on this screen.
-    - Powers screen: non-innate powers only. Techniques screen: techniques only.
-      Shared TP budget still counts innate + powers + techniques. L1 cards + L2 USM
-      + L3 GuidedInlineCatalogList reused per screen (ADR-0012); no second catalog.
-    - REALMS / FEATURE_INDEX: sequential screens, not one combined step with a scope
-      dropdown. Delete `innateScope` chrome. Typecheck/lint. Vitest for phase order /
-      visibility. DEV-V-013 T086 (PM walk) + T056/T043/T076 updated; DEV-V-050 T001
-      step 6 / T003 against the innate screen (not a combined list).
-  notes: |
-    After TASK-754/755. Do before TASK-751–753 (753 add-X / L2 must not re-combine
-    tracks). Not Architect — extend existing store + equipment-phase pattern. Legacy
-    `/advanced` powers step out of scope unless it still uses the same combined UI.
+**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **TASK-733 done** (sheet innate InfoTippys). **TASK-760 done** (ability tiles). **TASK-758–759 done** (feat GLR: no creator REQ LEVEL + shared State Feats `(i)`). **TASK-756 done** (sequential innate → powers → techniques screens). **Next: TASK-757** (Power path See weapons). Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
 
 ---
 

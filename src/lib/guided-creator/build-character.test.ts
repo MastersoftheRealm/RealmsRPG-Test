@@ -37,6 +37,7 @@ function minimalDraft(overrides: Partial<GuidedDraft> = {}): GuidedDraft {
     archetypeFeatIds: [],
     characterFeatIds: [],
     equipmentPhase: 'weapon',
+    powersPhase: 'innate',
     loadoutWeapons: [{ id: 'w1', quantity: 1 }],
     loadoutArmor: [],
     armaments: [{ id: 'w1', quantity: 1 }],

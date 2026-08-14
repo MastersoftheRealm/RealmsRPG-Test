@@ -2,11 +2,11 @@
 
 import { DescriptorChip, EmptyState } from '@/components/ui';
 import { GuidedLayerNav } from '@/components/shared';
-import { InnatePowersHelpTip } from './guided-powers-techniques-l2-modal';
 import { cn } from '@/lib/utils';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { isPathRecommendedPowersTechniquesId } from '@/lib/guided-creator/powers-techniques-l1-candidates';
 import type { PowersTechniquesItemKind } from '@/lib/guided-creator/powers-techniques-step-helpers';
+import type { GuidedPowersPhase } from '@/stores/guided-creator-store';
 import type { PathGuidanceGroup } from '@/types/archetype';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { GuidedChoiceCard } from './guided-choice-card';
@@ -26,8 +26,8 @@ export interface PowersTechniquesDisplayItem {
 }
 
 export interface GuidedPowersTechniquesL1ContentProps {
-  showInnateTrack: boolean;
-  isTechniques: boolean;
+  /** Current inner screen — only that track renders (TASK-756). */
+  phase: GuidedPowersPhase;
   kind: PowersTechniquesItemKind;
   budgetMessage: string | null;
   innateThreshold: number;
@@ -54,8 +54,7 @@ export interface GuidedPowersTechniquesL1ContentProps {
 }
 
 export function GuidedPowersTechniquesL1Content({
-  showInnateTrack,
-  isTechniques,
+  phase,
   kind,
   budgetMessage,
   innateThreshold,
@@ -125,11 +124,11 @@ export function GuidedPowersTechniquesL1Content({
   };
 
   const renderGroupSection = (group: PathGuidanceGroup) => {
-    const ids = (isTechniques ? group.techniques : group.powers) ?? [];
+    const ids = (kind === 'techniques' ? group.techniques : group.powers) ?? [];
     if (ids.length === 0) return null;
     return (
       <section key={group.id}>
-        <GuidedSectionTitle as={showInnateTrack ? 'h4' : 'h3'}>{group.title}</GuidedSectionTitle>
+        <GuidedSectionTitle as="h3">{group.title}</GuidedSectionTitle>
         {group.why ? (
           <p className="mt-1 font-nunito text-sm text-text-secondary">{group.why}</p>
         ) : null}
@@ -146,48 +145,40 @@ export function GuidedPowersTechniquesL1Content({
     );
   };
 
-  return (
-    <>
-      {showInnateTrack ? (
-        <section className="space-y-3">
-          <GuidedSectionTitle titleAddon={<InnatePowersHelpTip />}>
-            {ptCopy.innateHeading}
-          </GuidedSectionTitle>
-          <p className="font-nunito text-sm text-text-secondary">{ptCopy.innateIntro}</p>
-          <p className="font-nunito text-xs text-text-secondary dark:text-text-secondary">
-            {ptCopy.innateThresholdHint(innateThreshold)}
-          </p>
-          {innateDisplayIds.length === 0 ? (
-            <EmptyState title={ptCopy.innateEmpty} />
-          ) : (
-            <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
-              {innateDisplayIds.map((id) =>
-                renderItemCard(id, {
-                  selected: isSelectedId(id, selectedInnateIds),
-                  unavailable: isInnateUnavailable(id),
-                  onToggle: () => toggleInnateId(id),
-                  pathRecommended:
-                    innatePromotedIds.length > 0 &&
-                    isPathRecommendedPowersTechniquesId(
-                      id,
-                      innateRecommendedIds,
-                      resolveCanonicalId
-                    ),
-                })
-              )}
-            </div>
-          )}
-          <GuidedLayerNav expandLabel={ptCopy.innateSeeMore} onExpand={onExpandInnate} />
-        </section>
-      ) : null}
-
+  if (phase === 'innate') {
+    return (
       <section className="space-y-3">
-        {showInnateTrack ? (
-          <GuidedSectionTitle>
-            {isTechniques ? ptCopy.techniquesHeading : ptCopy.powersHeading}
-          </GuidedSectionTitle>
-        ) : null}
+        <p className="font-nunito text-sm text-text-secondary">{ptCopy.innateIntro}</p>
+        <p className="font-nunito text-xs text-text-secondary">
+          {ptCopy.innateThresholdHint(innateThreshold)}
+        </p>
+        {innateDisplayIds.length === 0 ? (
+          <EmptyState title={ptCopy.innateEmpty} />
+        ) : (
+          <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
+            {innateDisplayIds.map((id) =>
+              renderItemCard(id, {
+                selected: isSelectedId(id, selectedInnateIds),
+                unavailable: isInnateUnavailable(id),
+                onToggle: () => toggleInnateId(id),
+                pathRecommended:
+                  innatePromotedIds.length > 0 &&
+                  isPathRecommendedPowersTechniquesId(
+                    id,
+                    innateRecommendedIds,
+                    resolveCanonicalId
+                  ),
+              })
+            )}
+          </div>
+        )}
+        <GuidedLayerNav expandLabel={ptCopy.innateSeeMore} onExpand={onExpandInnate} />
+      </section>
+    );
+  }
 
+  return (
+    <section className="space-y-3">
         {allOptionIds.length === 0 && groups.length === 0 && libraryItemsCount === 0 ? (
           <EmptyState
             title={ptCopy.emptyTitle(kind)}
@@ -199,7 +190,7 @@ export function GuidedPowersTechniquesL1Content({
             {groups.map(renderGroupSection)}
             {promotedIds.length > 0 ? (
               <section>
-                <GuidedSectionTitle as={showInnateTrack ? 'h4' : 'h3'}>
+                <GuidedSectionTitle as="h3">
                   {ptCopy.otherPicksHeading(kind)}
                 </GuidedSectionTitle>
                 <p className="mt-1 font-nunito text-sm text-text-secondary">
@@ -241,7 +232,6 @@ export function GuidedPowersTechniquesL1Content({
         )}
 
         <GuidedLayerNav expandLabel={ptCopy.seeMore} onExpand={onExpandRegular} />
-      </section>
-    </>
+    </section>
   );
 }
