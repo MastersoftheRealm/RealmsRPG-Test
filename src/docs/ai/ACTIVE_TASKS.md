@@ -8,13 +8,13 @@ Do **not** read the done archive at session start.
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-760, TASK-733, TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-759, TASK-758, TASK-760, TASK-733, TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 11 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 8 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **TASK-733 done** (sheet innate InfoTippys). **TASK-760 done** (ability tiles). **Next: TASK-756** (split innate → powers → techniques screens) **before** TASK-751–753; **TASK-757** (Power path See weapons); **TASK-758–759** (feat GLR: drop REQ LEVEL + State Feats `(i)` — before TASK-753). Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — after 756/758/759 so path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
+**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **TASK-733 done** (sheet innate InfoTippys). **TASK-760 done** (ability tiles). **TASK-758–759 done** (feat GLR: no creator REQ LEVEL + shared State Feats `(i)`). **Next: TASK-756** (split innate → powers → techniques screens) **before** TASK-751–753; **TASK-757** (Power path See weapons). Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — after 756 so path-filter wiring lands on the new screens. TASK-718 / 719 last. Wave 3 still waits for the owner.
 
 ---
 
@@ -118,84 +118,6 @@ Do **not** read the done archive at session start.
     After TASK-754; can ship with the TASK-756 creator pass. GuidedLayerNav is the
     See-more hatch — this is a second, optional catalog entry, not Continue-primary
     (TASK-695).
-
----
-
-- id: TASK-758
-  title: Hide REQ. LEVEL on character-creator feat GLR
-  created_at: 2026-08-14
-  created_by: owner
-  priority: medium
-  status: not-started
-  related_tasks:
-    - TASK-753
-    - TASK-759
-  related_files:
-    - src/lib/guided-creator/feats-l2.ts
-    - src/lib/guided-creator/feats-l2.test.ts
-    - src/lib/codex/feat-list.ts
-    - src/lib/glr/required-facts-registry.ts
-    - src/docs/ai/ADR/0009-glr-required-facts-registry.md
-    - src/components/guided-creator/steps/archetype-feats-step.tsx
-    - src/components/guided-creator/steps/character-feat-step.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/BUILD_VALIDATION.md
-  description: |
-    Creator feat L2/L3 reuse Codex `FEAT_SELECTABLE_HEADER_COLUMNS`, which includes
-    REQ. LEVEL. At character create the hero is always level 1 and unmet `lvl_req`
-    feats are already hidden, so the column is noise. Codex / Admin / sheet keep it.
-  acceptance_criteria:
-    - Guided archetype-feat and character-feat L2 USM + L3 inline catalogs have no
-      REQ. LEVEL / `lvl_req` header or cell. Eligibility filter unchanged (`lvl_req`
-      > 1 still hidden). Codex/Admin/sheet feat lists still show REQ. LEVEL.
-    - ADR-0009: `guided-feats-l3` drops `FACT.reqLevel` as a required column (do not
-      leave CI failing). Do not change Codex feat surfaces' required facts.
-    - `feats-l2.test.ts` no longer expects `lvl_req` in creator columns. FEATURE_INDEX.
-      DEV-V-013 T012 + DEV-V-050 T001 feat list. Typecheck/lint.
-  notes: |
-    Before TASK-753 — that task must compose creator feat headers without putting
-    REQ. LEVEL back. Prefer a creator header/column helper wrapping feat-list, not a
-    Codex fork and not a new shared file.
-
----
-
-- id: TASK-759
-  title: State Feats filter InfoTippy on creator GLR
-  created_at: 2026-08-14
-  created_by: owner
-  priority: medium
-  status: not-started
-  related_tasks:
-    - TASK-758
-    - TASK-753
-    - TASK-725
-  related_files:
-    - src/components/guided-creator/guided-feats-filter-fields.tsx
-    - src/lib/codex/feat-restriction-notice.ts
-    - src/lib/codex/feat-restriction-notice.test.ts
-    - public/tooltip-text.tsx
-    - src/components/shared/filters/select-filter.tsx
-    - src/app/(main)/codex/CodexFeatsTab.tsx
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/ai/BUILD_VALIDATION.md
-  description: |
-    Creator feat GLR State Feats dropdown has no (i). Owner wants the existing state
-    feat teaching copy (Quick Action / Enter State / 1-minute / multiple states —
-    `getFeatRestrictionNotice`) shared on that filter. SelectFilter already has
-    `labelAccessory`.
-  acceptance_criteria:
-    - GuidedFeatsFilterFields State Feats label has InfoTippy (`tone` default
-      link-blue; TASK-725 hit-area). Copy is the shared state-feat sentence from
-      `feat-restriction-notice` (export a constant or helper; do not paste a second
-      string into tooltip-text).
-    - Codex Feats State Feats SelectFilter gets the same accessory (unification).
-      Admin may share it if it is the same control.
-    - L1/L2 feat cards keep using `getFeatRestrictionNotice` — one SoT. FEATURE_INDEX
-      + tooltip hub note. DEV-V-013 T012 / T070. Typecheck/lint. Desktop + ~360px.
-  notes: |
-    Before TASK-753 (`GuidedFeatsFilterFields` + ArchetypePathFilter). Do not create
-    a new shared/ui file. GAME_RULES has no State feat section — do not invent extra
-    rules copy.
 
 ---
 

@@ -371,7 +371,6 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
     surfaceId: 'guided-feats-l3',
     entityType: 'feat',
     requiredFacts: [
-      FACT.reqLevel,
       FACT.category,
       { id: 'abilityRequirement', placement: 'column', columnKeys: col('ability') },
       FACT.uses,

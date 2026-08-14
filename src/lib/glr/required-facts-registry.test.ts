@@ -23,6 +23,7 @@ import {
   GUIDED_POWERS_L2_HEADER_COLUMNS,
   GUIDED_TECHNIQUES_L2_HEADER_COLUMNS,
 } from '@/lib/guided-creator/powers-techniques-l2';
+import { FEATS_L2_HEADER_COLUMNS } from '@/lib/guided-creator/feats-l2';
 import {
   OFFICIAL_POWER_HEADER_COLUMNS,
 } from '@/lib/library/official-power-list';
@@ -156,7 +157,7 @@ describe('GLR required-facts registry — surface column configs (TASK-629)', ()
     expect(errors.some((e) => e.includes('abilityRequirement'))).toBe(true);
   });
 
-  it('guided powers/techniques/feats L3 headers satisfy registry (TASK-709)', () => {
+  it('guided powers/techniques/feats L3 headers satisfy registry (TASK-709 / TASK-758)', () => {
     assertSurfaceColumnConfig(
       'guided-powers-l3',
       headerKeys(GUIDED_POWERS_L2_HEADER_COLUMNS)
@@ -165,7 +166,7 @@ describe('GLR required-facts registry — surface column configs (TASK-629)', ()
       'guided-techniques-l3',
       headerKeys(GUIDED_TECHNIQUES_L2_HEADER_COLUMNS)
     );
-    assertSurfaceColumnConfig('guided-feats-l3', headerKeys(CODEX_FEAT_HEADER_COLUMNS));
+    assertSurfaceColumnConfig('guided-feats-l3', headerKeys(FEATS_L2_HEADER_COLUMNS));
   });
 
   it('guided equipment L3 headers satisfy registry (TASK-688)', () => {

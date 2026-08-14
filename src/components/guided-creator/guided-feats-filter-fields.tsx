@@ -8,7 +8,9 @@
 
 'use client';
 
+import { InfoTippy } from '@/components/shared';
 import { ChipSelect, SelectFilter } from '@/components/shared/filters';
+import { STATE_FEAT_RESTRICTION_NOTICE } from '@/lib/codex/feat-restriction-notice';
 import type { StateFeatFilterMode } from '@/lib/guided-creator/feats-l2';
 
 export interface GuidedFeatsFilterFieldsProps {
@@ -40,6 +42,12 @@ export function GuidedFeatsFilterFields({
       />
       <SelectFilter
         label="State Feats"
+        labelAccessory={
+          <InfoTippy
+            content={STATE_FEAT_RESTRICTION_NOTICE}
+            label="State Feats filter help"
+          />
+        }
         value={stateFeatMode}
         options={[
           { value: 'all', label: 'All Feats' },

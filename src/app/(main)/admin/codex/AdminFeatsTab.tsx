@@ -13,6 +13,7 @@ import { CodexFeatRow } from '@/components/codex';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
+  InfoTippy,
 } from '@/components/shared';
 import { Button, IconButton, useToast } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
@@ -29,6 +30,7 @@ import {
   filterFeats,
   type FeatListFilters,
 } from '@/lib/codex/feat-list';
+import { STATE_FEAT_RESTRICTION_NOTICE } from '@/lib/codex/feat-restriction-notice';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import {
@@ -311,6 +313,12 @@ export function AdminFeatsTab() {
               />
               <SelectFilter
                 label="State Feats"
+                labelAccessory={
+                  <InfoTippy
+                    content={STATE_FEAT_RESTRICTION_NOTICE}
+                    label="State Feats filter help"
+                  />
+                }
                 value={filters.stateFeatMode}
                 options={[
                   { value: 'only', label: 'Only state feats' },

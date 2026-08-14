@@ -35,6 +35,7 @@ import {
   filterFeats,
   type FeatListFilters,
 } from '@/lib/codex/feat-list';
+import { STATE_FEAT_RESTRICTION_NOTICE } from '@/lib/codex/feat-restriction-notice';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
 import {
@@ -240,6 +241,12 @@ export function CodexFeatsTab({
 
               <SelectFilter
                 label="State Feats"
+                labelAccessory={
+                  <InfoTippy
+                    content={STATE_FEAT_RESTRICTION_NOTICE}
+                    label="State Feats filter help"
+                  />
+                }
                 value={filters.stateFeatMode}
                 options={[
                   { value: 'all', label: 'All Feats' },
