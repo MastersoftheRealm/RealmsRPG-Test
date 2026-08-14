@@ -1,12 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyCharacterDirtyPatch,
+  characterLockToken,
   characterTimestampsMatch,
   isStaleCharacterWrite,
   mergeRemotePreservingDirty,
   pickDirtyCharacterFields,
   stripCharacterPatchMeta,
 } from './dirty-patch';
+
+describe('characterLockToken', () => {
+  it('keeps non-empty strings and ISO-stringifies Dates', () => {
+    expect(characterLockToken('2026-07-01T12:00:00.000Z')).toBe('2026-07-01T12:00:00.000Z');
+    expect(characterLockToken(new Date('2026-07-01T12:00:00.000Z'))).toBe('2026-07-01T12:00:00.000Z');
+    expect(characterLockToken(null)).toBeUndefined();
+    expect(characterLockToken('')).toBeUndefined();
+  });
+});
 
 describe('characterTimestampsMatch', () => {
   it('matches identical strings and equivalent instants', () => {

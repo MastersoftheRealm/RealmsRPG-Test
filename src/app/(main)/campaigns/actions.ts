@@ -245,6 +245,7 @@ export async function joinCampaignAction(data: {
       return { success: false, error: 'Failed to join campaign' };
     }
 
+    const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
     const now = new Date().toISOString();
     const merged = { ...charData, visibility, updatedAt: now };
     const listCols = getCharacterListColumns(merged);
@@ -324,6 +325,7 @@ export async function addCharacterToCampaignAction(data: {
     );
     await supabase.from('campaigns').update({ characters }).eq('id', data.campaignId);
 
+    const { visibility, visibilityUpdated } = visibilityForCampaignMembership(charData.visibility);
     const now = new Date().toISOString();
     const merged = { ...charData, visibility, updatedAt: now };
     const listCols = getCharacterListColumns(merged);

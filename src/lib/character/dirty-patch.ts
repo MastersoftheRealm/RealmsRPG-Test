@@ -3,6 +3,15 @@
  * Leaf module: no UI, store, or API imports.
  */
 
+export function characterLockToken(
+  value: string | Date | null | undefined
+): string | undefined {
+  if (value == null) return undefined;
+  if (typeof value === 'string' && value.trim()) return value;
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
+  return undefined;
+}
+
 export const CHARACTER_PATCH_META_KEYS = [
   'id',
   'userId',

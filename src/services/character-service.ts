@@ -7,6 +7,7 @@
 import type { Character, CharacterSummary } from '@/types';
 import type { UserCreature, UserItem, UserPower, UserTechnique } from '@/hooks/use-user-library';
 import { apiFetch, apiFetchOrNull, isConflictError } from '@/lib/api-client';
+import { characterLockToken } from '@/lib/character/dirty-patch';
 
 const API_BASE = '/api/characters';
 
@@ -64,14 +65,14 @@ export async function getCharacter(characterId: string): Promise<GetCharacterRes
 export async function saveCharacter(
   characterId: string,
   data: Partial<Character>,
-  options: { updatedAt?: string | null } = {}
+  options: { updatedAt?: string | Date | null } = {}
 ): Promise<{ ok: true; updatedAt?: string }> {
   if (!characterId?.trim()) {
     throw new Error('Invalid character ID');
   }
 
   const body: Record<string, unknown> = { ...data };
-  const lock = options.updatedAt ?? (typeof data.updatedAt === 'string' ? data.updatedAt : undefined);
+  const lock = characterLockToken(options.updatedAt) ?? characterLockToken(data.updatedAt);
   if (lock) body.updatedAt = lock;
   else delete body.updatedAt;
 
@@ -91,10 +92,10 @@ export async function saveCharacterWithConflictRetry(
   characterId: string,
   dirty: Partial<Character>,
   options: {
-    updatedAt?: string | null;
+    updatedAt?: string | Date | null;
     mergeOnConflict: (remote: Character) => {
       dirty: Partial<Character>;
-      updatedAt?: string | null;
+      updatedAt?: string | Date | null;
     };
   }
 ): Promise<{ updatedAt?: string }> {
@@ -106,7 +107,7 @@ export async function saveCharacterWithConflictRetry(
     if (!remote) throw err;
     const next = options.mergeOnConflict(remote);
     if (Object.keys(next.dirty).length === 0) {
-      return { updatedAt: remote.updatedAt ?? undefined };
+      return { updatedAt: characterLockToken(remote.updatedAt) };
     }
     return await saveCharacter(characterId, next.dirty, { updatedAt: next.updatedAt });
   }
