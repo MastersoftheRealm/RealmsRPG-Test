@@ -23,6 +23,7 @@ import {
   findLevel1LegalityViolations,
   shouldCheckLevel1Legality,
 } from '@/lib/game/character-legality';
+import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { Character, CharacterSummary } from '@/types';
 
 /** Postgres unique-violation — the idempotency index rejecting a concurrent retry. */
@@ -31,9 +32,7 @@ const UNIQUE_VIOLATION = '23505';
 const FEAT_REQUIREMENT_COLUMNS =
   'id, name, lvl_req, ability_req, abil_req_val, skill_req, skill_req_val, mart_abil_req, speed_req, feat_lvl, base_feat_id';
 /** Live column is `base_skill` (TEXT). App types still use `base_skill_id` after mapping. */
-export const SKILL_REQUIREMENT_COLUMNS = 'id, name, base_skill, ability';
-export const CHARACTER_CREATE_FAILED_MESSAGE =
-  'Could not create your character. Please try again.';
+const SKILL_REQUIREMENT_COLUMNS = 'id, name, base_skill, ability';
 
 type SupabaseLike = Awaited<ReturnType<typeof createClient>>;
 
@@ -281,6 +280,11 @@ export async function POST(request: NextRequest) {
     });
     return jsonForInsertResult(supabase, user.uid, clientRequestId, inserted);
   } catch (err) {
-    return apiErrorResponse(CHARACTER_CREATE_FAILED_MESSAGE, 500, 'POST /api/characters', err);
+    return apiErrorResponse(
+      GUIDED_CREATOR_COPY.steps.reveal.saveFailed,
+      500,
+      'POST /api/characters',
+      err
+    );
   }
 }

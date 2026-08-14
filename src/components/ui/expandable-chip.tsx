@@ -369,7 +369,7 @@ function ChipHeaderContent({
       {costSuffix !== undefined &&
         costSuffix !== '' &&
         !(typeof costSuffix === 'number' && costSuffix <= 0) && (
-        <span className="text-xs text-text-muted dark:text-text-secondary shrink-0">
+        <span className="text-xs text-text-muted shrink-0">
           ({costSuffix})
         </span>
       )}

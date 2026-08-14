@@ -39,7 +39,8 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
   };
 });
 
-import { GET, POST, CHARACTER_CREATE_FAILED_MESSAGE, SKILL_REQUIREMENT_COLUMNS } from './route';
+import { GET, POST } from './route';
+import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
 import { getRolePolicyForUser } from '@/lib/role-policy';
@@ -56,6 +57,7 @@ const mockFetchArchetypeNameMap = vi.mocked(fetchArchetypeNameMap);
 const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
 
 const TEST_USER = { uid: 'user-123', email: 'hero@example.com' };
+const CREATE_FAILED = GUIDED_CREATOR_COPY.steps.reveal.saveFailed;
 
 type MockSupabaseConfig = {
   characters?: unknown[];
@@ -555,7 +557,7 @@ describe('POST /api/characters', () => {
 
       expect(response.status).toBe(500);
       const body = await readJson<Record<string, unknown>>(response);
-      expect(body).toEqual({ error: CHARACTER_CREATE_FAILED_MESSAGE });
+      expect(body).toEqual({ error: CREATE_FAILED });
       expect(JSON.stringify(body)).not.toMatch(/fk violation|23503/);
       expect(spy).toHaveBeenCalled();
       spy.mockRestore();
@@ -564,9 +566,6 @@ describe('POST /api/characters', () => {
 
   describe('feat-requirement catalog columns (TASK-754)', () => {
     it('selects live codex_skills.base_skill, not the app-layer base_skill_id', async () => {
-      expect(SKILL_REQUIREMENT_COLUMNS).toContain('base_skill');
-      expect(SKILL_REQUIREMENT_COLUMNS).not.toContain('base_skill_id');
-
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       const supabase = createMockSupabase();
       mockCreateClient.mockResolvedValue(supabase as never);
@@ -574,7 +573,8 @@ describe('POST /api/characters', () => {
       const response = await POST(makePostRequest(legalLevel1Payload()));
 
       expect(response.status).toBe(200);
-      expect(supabase.skillSelectColumns).toBe(SKILL_REQUIREMENT_COLUMNS);
+      expect(supabase.skillSelectColumns).toBe('id, name, base_skill, ability');
+      expect(supabase.skillSelectColumns).not.toContain('base_skill_id');
     });
 
     it('returns a generic 500 when the skill catalog query fails, without Postgres fields', async () => {
@@ -594,7 +594,7 @@ describe('POST /api/characters', () => {
 
       expect(response.status).toBe(500);
       const body = await readJson<Record<string, unknown>>(response);
-      expect(body).toEqual({ error: CHARACTER_CREATE_FAILED_MESSAGE });
+      expect(body).toEqual({ error: CREATE_FAILED });
       expect(JSON.stringify(body)).not.toMatch(/42703|base_skill_id|does not exist|Perhaps you meant/);
       expect(spy).toHaveBeenCalled();
       spy.mockRestore();
