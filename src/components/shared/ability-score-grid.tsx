@@ -198,11 +198,11 @@ export function AbilityScoreGrid({
   return (
     <div
       className={cn(
-        // Extra top padding clears straddling path pills above the tile edge.
+        // Only the pill's outer half needs grid clearance; each tile reserves its inner half below.
         'grid',
         isCompact
           ? 'gap-2 pt-2'
-          : 'gap-2 pt-3 sm:gap-3 sm:pt-4 md:gap-4',
+          : 'gap-2 pt-2 sm:gap-3 md:gap-4',
         // Display: 2-col phone (full names, less elongated), 3-col tablet, 6-col desktop.
         // Edit: wider cells so 44px steppers fit.
         // Compact + filtered: denser auto columns for overview subsets (Path More details).
@@ -241,8 +241,9 @@ export function AbilityScoreGrid({
                   : isCompact
                     ? 'flex-col items-center justify-center px-1 py-1 sm:px-1.5 sm:py-1.5'
                     : 'flex-col items-center justify-center px-1.5 py-1.5 sm:px-2 sm:py-2',
-                // After py-* so twMerge keeps clear-space under the straddling pill (incl. sm:py-2).
-                highlight && (isCompact ? 'pt-2.5 sm:pt-2.5' : 'pt-3 sm:pt-3')
+                // Reserve the pill's inner half on every tile so highlighted content stays aligned.
+                // Keep after py-* so twMerge preserves the top clearance (including sm:py-2).
+                isCompact ? 'pt-2.5 sm:pt-2.5' : 'pt-3 sm:pt-3'
               )}
             >
               {/* Name is WordHelpTip (focusable); score carries ability context — no tile aria-label. */}
@@ -250,7 +251,7 @@ export function AbilityScoreGrid({
                 content={getAbilityHelp(ability)}
                 label={`About ${info.name}`}
                 className={cn(
-                  'font-bold uppercase text-text-muted dark:text-text-secondary',
+                  'font-bold uppercase text-text-muted',
                   isEdit
                     ? 'text-xs tracking-wide sm:text-[11px] sm:tracking-wider'
                     : // Full-width label; keep WordHelpTip default 44px touch target (MOBILE_UX).

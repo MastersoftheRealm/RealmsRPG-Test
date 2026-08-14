@@ -1,3 +1,50 @@
+- id: TASK-760
+  title: AbilityScoreGrid tile spacing and Primary/Secondary pill alignment
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-544
+    - TASK-545
+    - TASK-566
+  related_files:
+    - src/components/shared/ability-score-grid.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T034
+      - DEV-V-013-T035
+      - DEV-V-013-T036
+  developer_test_plan: |
+    Suite DEV-V-013 T034 / T035 / T036 — see BUILD_VALIDATION.md
+  description: |
+    Guided Abilities tiles had too much space above, too little below, and
+    Primary/Secondary (or Power/Martial) pills shifted highlighted content down
+    relative to neighboring tiles.
+  acceptance_criteria:
+    - Display and customize/edit grids have uniform tile height and padding; pills
+      sit on the top edge without dropping highlighted content. Hybrid Power/Martial
+      pills stay single-line and clear of the ability name.
+    - One AbilityScoreGrid implementation covers guided display, customize/edit, and
+      summary call sites; no per-step fork or new shared file.
+    - FEATURE_INDEX and DEV-V-013 T034 / T035 / T036 document the shared behavior;
+      typecheck and lint pass.
+  completed_work: |
+    Deleted highlight-only top padding and reserved the same pill clearance on every
+    default and compact tile. Reduced grid-level top clearance to the pill's outer
+    half, keeping display and edit content aligned while the absolute pill remains
+    straddled on the tile edge. Existing truncate, title, and aria-label behavior is
+    unchanged; guided display, customize, and summaries inherit the shared fix.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa
+    (DEV-V-013 T034/T035/T036; desktop six-column and ~360px two-column visual QA).
 - id: TASK-733
   title: Sheet LibraryPowersPanel — Innate Energy / Innate Powers InfoTippys
   created_at: 2026-08-13
@@ -38,7 +85,6 @@
     without creating a second header or shared file. InfoTippy supplies accessible names.
   notes: |
     Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-009 T041).
-
 - id: TASK-755
   title: Energy abbreviation is EN, never EP
   created_at: 2026-08-14

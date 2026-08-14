@@ -2,6 +2,8 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-08-14 | agent | TASK-760 — AbilityScoreGrid uniform pill clearance | files: ability-score-grid, FEATURE_INDEX, BUILD_VALIDATION DEV-V-013 T034/T035/T036, DEVELOPER_TASK_QUEUE, ACTIVE→archive, AI_CHANGELOG | Summary: **Deleted** extra highlight-only `pt-*` that shifted Primary/Secondary and Power/Martial tiles below their neighbors. **Wired** a uniform reserved pill row on every default/compact display and edit tile, with reduced grid top clearance for the pill's outer straddle. verification_status pending-qa.
+
 - 2026-08-14 | agent | TASK-733 — sheet innate rules help | files: library-powers-panel, entity-library-powers-techniques, section-header, FEATURE_INDEX, BUILD_VALIDATION DEV-V-009 T041, DEVELOPER_TASK_QUEUE, ACTIVE→archive, AI_CHANGELOG | Summary: **Deleted** the stale sentence that treated the total Innate Energy pool as a per-power cost cap. **Wired** the global `innateEnergyHelp` and `innatePowersHelp` InfoTippys into the sheet summary and shared list heading slot. verification_status pending-qa (DEV-V-009 T041).
 
 - 2026-08-14 | agent | TASK-754 TASK-755 cleanup — drop test-only route exports; one create-failure string | files: api/characters/route(+test), expandable-chip, FEATURE_INDEX, AI_CHANGELOG | Summary: **Deleted** exported `SKILL_REQUIREMENT_COLUMNS` / `CHARACTER_CREATE_FAILED_MESSAGE`. **Wired** POST 500 copy onto `GUIDED_CREATOR_COPY.steps.reveal.saveFailed`. **Deleted** dead `dark:text-text-secondary` on ExpandableChip costSuffix.
