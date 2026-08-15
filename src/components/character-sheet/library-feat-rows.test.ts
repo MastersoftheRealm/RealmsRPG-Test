@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { mapFeatRows, mapTraitRows, type FeatRowContext } from './library-feat-rows';
+import {
+  customizationDraftDiffers,
+  mapFeatRows,
+  mapTraitRows,
+  traitRowId,
+  type FeatRowContext,
+} from './library-feat-rows';
 
 const ctx: FeatRowContext = {
   showEditControls: false,
@@ -114,5 +120,30 @@ describe('mapFeatRows / mapTraitRows — play vs edit customization (TASK-783)',
     expect(row.descriptionAfter).toBe('Ask about the mural.');
     expect(row.supplementalExpandedContent).toBeUndefined();
     expect(row.name).toBe('Always Asking');
+  });
+});
+
+describe('feat/trait Customize draft (TASK-802)', () => {
+  it('treats empty committed as empty string so spaces are kept until blur', () => {
+    expect(customizationDraftDiffers('Flame', 'Flame')).toBe(false);
+    expect(customizationDraftDiffers('Flame ', 'Flame')).toBe(true);
+    expect(customizationDraftDiffers('', undefined)).toBe(false);
+    expect(customizationDraftDiffers('A', undefined)).toBe(true);
+  });
+
+  it('uses a stable traitKey-based row id so name-sort cannot swap Customize fields', () => {
+    const rows = mapTraitRows(
+      [
+        { name: 'Zebra Trait', traitKey: 'trait-z', category: 'ancestry' },
+        { name: 'Apple Trait', traitKey: 'trait-a', category: 'ancestry' },
+      ],
+      ctx,
+    );
+
+    expect(rows.map((row) => row.id)).toEqual([
+      traitRowId('ancestry', 'trait-z'),
+      traitRowId('ancestry', 'trait-a'),
+    ]);
+    expect(rows[0].id).not.toBe('ancestry-0');
   });
 });

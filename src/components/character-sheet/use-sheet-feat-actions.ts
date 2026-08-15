@@ -309,7 +309,6 @@ export function useSheetFeatActions({
       listType: 'archetype' | 'character',
       updates: Partial<{ customName?: string; note?: string }>,
     ) => {
-      if (!character) return;
       setCharacter((prev) => {
         if (!prev) return null;
         if (listType === 'archetype') {
@@ -324,12 +323,11 @@ export function useSheetFeatActions({
         };
       });
     },
-    [character, setCharacter],
+    [setCharacter],
   );
 
   const handleTraitCustomizationChange = useCallback(
     (traitKey: string, updates: Partial<{ customName?: string; note?: string }>) => {
-      if (!character) return;
       setCharacter((prev) => {
         if (!prev) return null;
         const existing = { ...(prev.traitCustomizations || {}) };
@@ -351,7 +349,7 @@ export function useSheetFeatActions({
         };
       });
     },
-    [character, setCharacter],
+    [setCharacter],
   );
 
   const handleTraitUsesChange = useCallback(

@@ -4,7 +4,7 @@
  * Maps character sheet feats/traits to FeatsTraitsListSection row shapes.
  */
 
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { DecrementButton, IncrementButton, type ColumnValue } from '@/components/shared';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import type { EntityFeatRow } from '@/components/shared/entity-library-sections';
@@ -51,14 +51,26 @@ function buildDisplayNameContent(codexName: string, customName?: string): ReactN
   );
 }
 
+/** True when the in-progress Customize draft differs from the last committed value. */
+export function customizationDraftDiffers(draft: string, committed: string | undefined): boolean {
+  return draft !== (committed ?? '');
+}
+
+/** Stable GLR id so name-sort cannot swap Customize fields between trait rows. */
+export function traitRowId(category: string | undefined, traitKey: string): string {
+  return `${category ?? 'trait'}-${traitKey}`;
+}
+
 /** Edit-only Customize fields. Play view uses GridListRow `descriptionAfter` for the note. */
 function FeatTraitCustomizationBlock({
+  fieldId,
   codexName,
   customName,
   note,
   onCustomNameChange,
   onNoteChange,
 }: {
+  fieldId: string;
   codexName: string;
   customName?: string;
   note?: string;
@@ -66,6 +78,64 @@ function FeatTraitCustomizationBlock({
   onNoteChange?: (value: string) => void;
 }) {
   const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
+  const [draftName, setDraftName] = useState(customName ?? '');
+  const [draftNote, setDraftNote] = useState(note ?? '');
+  const draftNameRef = useRef(draftName);
+  const draftNoteRef = useRef(draftNote);
+  const customNameRef = useRef(customName);
+  const noteRef = useRef(note);
+  const onCustomNameChangeRef = useRef(onCustomNameChange);
+  const onNoteChangeRef = useRef(onNoteChange);
+  const nameFocusedRef = useRef(false);
+  const noteFocusedRef = useRef(false);
+
+  useEffect(() => {
+    draftNameRef.current = draftName;
+    draftNoteRef.current = draftNote;
+    customNameRef.current = customName;
+    noteRef.current = note;
+    onCustomNameChangeRef.current = onCustomNameChange;
+    onNoteChangeRef.current = onNoteChange;
+  });
+
+  useEffect(() => {
+    if (!nameFocusedRef.current) setDraftName(customName ?? '');
+  }, [customName]);
+  useEffect(() => {
+    if (!noteFocusedRef.current) setDraftNote(note ?? '');
+  }, [note]);
+
+  const flushName = () => {
+    if (onCustomNameChange && customizationDraftDiffers(draftName, customName)) {
+      onCustomNameChange(draftName);
+    }
+  };
+  const flushNote = () => {
+    if (onNoteChange && customizationDraftDiffers(draftNote, note)) {
+      onNoteChange(draftNote);
+    }
+  };
+
+  useEffect(
+    () => () => {
+      if (
+        nameFocusedRef.current &&
+        onCustomNameChangeRef.current &&
+        customizationDraftDiffers(draftNameRef.current, customNameRef.current)
+      ) {
+        onCustomNameChangeRef.current(draftNameRef.current);
+      }
+      if (
+        noteFocusedRef.current &&
+        onNoteChangeRef.current &&
+        customizationDraftDiffers(draftNoteRef.current, noteRef.current)
+      ) {
+        onNoteChangeRef.current(draftNoteRef.current);
+      }
+    },
+    [],
+  );
+
   if (!onCustomNameChange && !onNoteChange) return null;
 
   return (
@@ -90,18 +160,42 @@ function FeatTraitCustomizationBlock({
         <>
           {onCustomNameChange && (
             <Input
+              id={`${fieldId}-custom-name`}
               label="Custom name"
-              value={customName ?? ''}
-              onChange={(e) => onCustomNameChange(e.target.value)}
+              value={draftName}
+              onChange={(e) => {
+                const value = e.target.value;
+                draftNameRef.current = value;
+                setDraftName(value);
+              }}
+              onFocus={() => {
+                nameFocusedRef.current = true;
+              }}
+              onBlur={() => {
+                nameFocusedRef.current = false;
+                flushName();
+              }}
               placeholder={codexName}
               helperText="Optional flavor name. Shown in italics; codex name stays unchanged."
             />
           )}
           {onNoteChange && (
             <Textarea
+              id={`${fieldId}-player-note`}
               label="Player note"
-              value={note ?? ''}
-              onChange={(e) => onNoteChange(e.target.value)}
+              value={draftNote}
+              onChange={(e) => {
+                const value = e.target.value;
+                draftNoteRef.current = value;
+                setDraftNote(value);
+              }}
+              onFocus={() => {
+                noteFocusedRef.current = true;
+              }}
+              onBlur={() => {
+                noteFocusedRef.current = false;
+                flushNote();
+              }}
               placeholder="Record choices, reminders, or flavor (e.g. chosen power)…"
               className="min-h-[72px]"
             />
@@ -219,6 +313,7 @@ function traitKindDetailSection(category: string | undefined) {
 }
 
 function buildCustomizationExtras(
+  fieldId: string,
   showEditControls: boolean,
   codexName: string,
   customName: string | undefined,
@@ -234,6 +329,8 @@ function buildCustomizationExtras(
     descriptionAfter: !showEditControls && noteTrimmed ? noteTrimmed : undefined,
     supplementalExpandedContent: showEditControls ? (
       <FeatTraitCustomizationBlock
+        key={fieldId}
+        fieldId={fieldId}
         codexName={codexName}
         customName={customName}
         note={note}
@@ -245,7 +342,7 @@ function buildCustomizationExtras(
 }
 
 export function mapTraitRows(traits: TraitRowInput[], ctx: FeatRowContext): EntityFeatRow[] {
-  return traits.map((trait, index) => {
+  return traits.map((trait) => {
     const codexName = trait.codexName ?? trait.name;
     const uses =
       (trait.maxUses ?? 0) > 0
@@ -268,7 +365,9 @@ export function mapTraitRows(traits: TraitRowInput[], ctx: FeatRowContext): Enti
     const kindSection = traitKindDetailSection(trait.category);
 
     const traitKey = trait.traitKey ?? trait.name;
+    const rowId = traitRowId(trait.category, traitKey);
     const customizationExtras = buildCustomizationExtras(
+      rowId,
       ctx.showEditControls,
       codexName,
       trait.customName,
@@ -284,7 +383,7 @@ export function mapTraitRows(traits: TraitRowInput[], ctx: FeatRowContext): Enti
     );
 
     return {
-      id: `${trait.category ?? 'trait'}-${index}`,
+      id: rowId,
       name: trait.customName?.trim() || codexName,
       description: trait.description,
       gridColumns: FEAT_GRID,
@@ -329,6 +428,7 @@ export function mapFeatRows(
     );
 
     const customizationExtras = buildCustomizationExtras(
+      `feat-${featId}`,
       ctx.showEditControls,
       codexName,
       feat.customName,

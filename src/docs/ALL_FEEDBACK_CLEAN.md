@@ -1,6 +1,13 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-15 (Sheet Skills: edit/temp mode hard to see)
+Last updated: 2026-08-15 (Sheet Feats: Customize caret jumps while typing)
+
+**Raw Feedback Log — 2026-08-15 (Sheet Feats: Customize caret jumps while typing)**
+- Context: Character sheet Library → Feats → Edit → expand a feat/trait → Customize
+- Priority: High (breaks mid-field typing)
+- Feedback (verbatim summary): when I customize a feat it constantly refreshes where the cursor/typing thingy is to the far left/right and it messes up your typing mid input.
+- Misinterpretation / code note: Edit Customize bound Custom name / Player note directly to character state. Each keystroke remapped the list (display `name` = custom name, default sort by name) and used index-based trait row ids, so the focused input remounted or moved and the caret jumped to the start or end.
+- Disposition: **TASK-802** — local draft until blur/unmount; stable `traitRowId`; customization handlers no longer depend on the whole `character` object.
 
 **Raw Feedback Log — 2026-08-15 (Sheet Skills: edit/temp mode hidden by thin column)**
 - Context: Character sheet Skills panel — desktop `lg+` narrow column; Edit and Temp Modifier

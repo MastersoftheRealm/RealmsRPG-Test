@@ -1,3 +1,39 @@
+- id: TASK-802
+  title: Sheet feat Customize caret stays while typing
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/library-feat-rows.tsx
+    - src/components/character-sheet/library-feat-rows.test.ts
+    - src/components/character-sheet/use-sheet-feat-actions.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T055
+  developer_test_plan: |
+    Suite DEV-V-009 T055 — see BUILD_VALIDATION.md
+  description: |
+    Edit-mode feat/trait Customize fields updated character state on every
+    keystroke. The list remapped and re-sorted by the live custom name, and
+    trait rows used index-based ids, so the focused input remounted or moved
+    and the caret jumped to the start or end mid-type.
+  acceptance_criteria:
+    - Custom name and Player note keep a local draft until blur or unmount.
+    - Trait GLR ids are stable (`traitRowId`), not list index.
+    - Customization change handlers do not recreate from the whole character.
+    - Typecheck, lint, targeted tests. User-facing: pending-qa.
+  notes: |
+    Owner 2026-08-15 chat. Do not reopen TASK-783 play-view note layout.
+
 - id: TASK-801
   title: Rebaseline privacy tablet Linux snapshots; skip test-only Vercel builds
   created_at: 2026-08-15
