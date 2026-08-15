@@ -1,6 +1,13 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-15 (Sheet Skills: edit/temp mode hard to see)
+Last updated: 2026-08-15 (Continue Without Saving on character create)
+
+**Raw Feedback Log — 2026-08-15 (Character create: Continue Without Saving does nothing)**
+- Context: Character creation (Guided Your Hero / Legacy Finalize) while signed out
+- Priority: High (guest cannot dismiss the save gate)
+- Feedback (verbatim summary): continue without saving button isn't working on character creation
+- Misinterpretation / code note: The button called `onClose`, but Modal unmounted on the same click. That tap then hit the sticky **Create character** footer (and on Legacy the still-open review modal), which reopened **Login Required to Save**. Looked like the button did nothing.
+- Disposition: **TASK-802 done** pending-qa — Modal close click-capture + deferred focus restore; login actions in `footer`; Legacy closes the review modal when showing/dismissing login. DEV-V-051 T011 + DEV-V-001 T019.
 
 **Raw Feedback Log — 2026-08-15 (Sheet Skills: edit/temp mode hidden by thin column)**
 - Context: Character sheet Skills panel — desktop `lg+` narrow column; Edit and Temp Modifier

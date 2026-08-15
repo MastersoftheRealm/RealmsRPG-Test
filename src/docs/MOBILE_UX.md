@@ -43,7 +43,7 @@ Audit: `ValueStepper`, `IconButton`, `EditSectionToggle`, sheet action toolbar, 
 - **List-first browse chrome (TASK-721):** Codex, Library (Official + My), and Admin Codex/Images GLR filter pages use the same Search + Filters row via `ListSearchToolbar` composing FilterSection compact. Create/sync (`searchTrailing`) sits after Filters, not in the Filters slot. USM/L3 are unchanged.
 - **Add-modal header help (TASK-574):** Prefer **no** `description` under the title, or a **single short sentence**. Do not use multi-sentence “click row / Add Selected” instructions — the list + sticky footer already teach the grammar.
 - **Leave with selection (TASK-574):** `UnifiedSelectionModal` prompts **Add selected?** (or **Load selected?**) when Cancel / X / backdrop / Escape would discard unconfirmed picks. **Add Selected** confirms; **Don't add** discards; closing the prompt keeps browsing.
-- **Which modals:** Add/load/settings/level-up/recovery, unified selection, add feat/skill/library item, confirm-action and delete-confirm when content is tall, login prompt. Small confirmations can stay centered without full-screen.
+- **Which modals:** Add/load/settings/level-up/recovery, unified selection, add feat/skill/library item, confirm-action and delete-confirm when content is tall, login prompt (`LoginPromptModal` actions live in `footer` so **Continue Without Saving** stays pinned). Small confirmations can stay centered without full-screen.
 - **Crafting:** Item selection happens within `/crafting` session flows (`/crafting` + `/crafting/[id]`), not a standalone `/crafting/new` page. DeleteConfirmModal for session delete uses fullScreenOnMobile. Touch targets ≥44px for roll inputs, steppers, and buttons on crafting session pages.
 
 ---

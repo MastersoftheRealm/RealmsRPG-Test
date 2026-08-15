@@ -67,7 +67,7 @@ Moved (TASK-718): DEV-V-005, DEV-V-010, DEV-V-011, DEV-V-014, DEV-V-015, DEV-V-0
 
 ## DEV-V-001 — Advanced character creator step guards
 
-**Related tasks:** TASK-356, TASK-717  
+**Related tasks:** TASK-356, TASK-717, TASK-802  
 **Chooser vs Advanced:** `/characters/new` is the Guided / Custom / Legacy chooser (DEV-V-013-T001 / T075). Numbered steps (**1. Archetype** … **9. Finalize**), **Forge Your Own**, and **Choose a Path** live at `/characters/new/advanced` (chooser **Legacy**). Do not treat the chooser as step 1 Archetype.  
 **Start URL:** `/characters/new/advanced`  
 **Needs:** Logged-in test account  
@@ -490,6 +490,32 @@ Reach Advanced via **Characters** → **Add Character** → **Legacy**, or open 
 - Save succeeds.
 - Sheet **currency** is **0** (not negative). Equipment on the character is the overspent kit.
 - Repeat at ~360px: save still succeeds; sheet currency is 0.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-001-T019 — Continue Without Saving dismisses login on Finalize (TASK-802)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-001 |
+| **Section** | 9. Finalize |
+| **Related task** | TASK-802 |
+| **Where** | `/characters/new/advanced` → **9. Finalize** |
+| **Needs** | Logged out (incognito); a complete legal level-1 build |
+
+**Steps**
+1. Finish a legal Legacy build while signed out.
+2. On **9. Finalize**, press **Create Character** (or **Review & Create** then **Create Character**).
+3. On **Login Required to Save**, press **Continue Without Saving**.
+4. Press **Create Character** again to confirm the prompt can reopen, then **Continue Without Saving** once more.
+
+**Expected**
+- The login prompt closes and stays closed. The review modal is also gone. The draft is still on Finalize (name, portrait, Health/Energy unchanged).
+- Nothing is created. No navigation to a character sheet.
+- A second Create opens the same login prompt again (guest still cannot save).
+- Desktop + ~360px (Continue sits in the sticky modal footer on the phone).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6977,9 +7003,9 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 
 ---
 
-## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754)
+## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754 / TASK-802)
 
-Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`, `character-save.test.ts` (create-error copy). These tests are the parts only a browser can show.
+Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy, plus TASK-802 guest **Continue Without Saving**. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`, `character-save.test.ts` (create-error copy), `modal-close-click-capture.test.ts`. These tests are the parts only a browser can show.
 
 #### DEV-V-051-T001 — Guided creator entry does not wait on the session
 
@@ -7187,6 +7213,30 @@ Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy. Autom
 - A 500 (if observed) is “Could not create… try again” without My Characters / duplicate.
 - My Characters / duplicate copy appears only when the request may have succeeded (network drop).
 - Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-051-T011 — Continue Without Saving dismisses guest login (TASK-802)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-051 |
+| **Related task** | TASK-802 |
+| **Where** | `/characters/new/guided` → **10. Your Hero** |
+| **Needs** | Logged out (incognito); a complete guided draft (all chapters satisfied, Health/Energy remaining 0, named) |
+
+**Steps**
+1. Complete the funnel while logged out.
+2. On **Your Hero**, press **Create character**.
+3. On **Login Required to Save**, press **Continue Without Saving**.
+4. Confirm you are still on **Your Hero** with the same name and draft.
+5. Press **Create character** again, then **Continue Without Saving** once more. Repeat at ~360px.
+
+**Expected**
+- The login prompt closes and stays closed (it does not flash and reopen).
+- Nothing is created. The local draft is intact. No navigation.
+- A second Create opens the same prompt (guest still cannot save).
+- On a phone, **Continue Without Saving** is in the sticky modal footer and still dismisses.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

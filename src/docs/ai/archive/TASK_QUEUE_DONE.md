@@ -1,3 +1,47 @@
+- id: TASK-802
+  title: Continue Without Saving dismisses guest login on character create
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/ui/modal.tsx
+    - src/lib/ui/modal-close-click-capture.ts
+    - src/lib/ui/modal-close-click-capture.test.ts
+    - src/components/shared/login-prompt-modal.tsx
+    - src/components/guided-creator/steps/reveal-step.tsx
+    - src/components/character-creator/steps/finalize-step.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-051
+    tests:
+      - DEV-V-051-T011
+      - DEV-V-001-T019
+  developer_test_plan: |
+    Suite DEV-V-051 T011 + DEV-V-001 T019 — see BUILD_VALIDATION.md
+  description: |
+    Guest Create on Guided Your Hero / Legacy Finalize opened LoginPromptModal,
+    but Continue Without Saving looked broken: the dialog unmounted on click and
+    the same tap hit Create underneath (sticky step footer, or the review modal),
+    which immediately reopened the prompt.
+  acceptance_criteria:
+    - Continue Without Saving closes the login prompt and it stays closed.
+    - Local draft remains; nothing is created; guest still cannot save.
+    - Legacy review modal is not left stacked over Finalize after dismiss.
+    - Login prompt actions live in Modal footer (sticky on mobile).
+    - Typecheck, lint, targeted vitest. User-facing: pending-qa.
+  notes: |
+    Owner 2026-08-15 chat: "continue without saving button isn't working on
+    character creation".
+
 - id: TASK-801
   title: Rebaseline privacy tablet Linux snapshots; skip test-only Vercel builds
   created_at: 2026-08-15

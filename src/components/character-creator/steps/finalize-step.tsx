@@ -156,7 +156,8 @@ export function FinalizeStep() {
 
   const handleSave = async () => {
     if (!user) {
-      // Show login prompt modal instead of error
+      // Close review first so Continue Without Saving is not stacked over Create.
+      setShowValidation(false);
       setShowLoginPrompt(true);
       return;
     }
@@ -426,7 +427,7 @@ export function FinalizeStep() {
         primaryAction={
           <Button
             onClick={handleValidateAndSave}
-            disabled={saving}
+            disabled={saving || showLoginPrompt}
             isLoading={saving}
             variant={validationIssues.some((i) => i.severity === 'error') ? 'secondary' : 'primary'}
             className={cn(
@@ -456,7 +457,10 @@ export function FinalizeStep() {
       {/* Login Prompt Modal */}
       <LoginPromptModal
         isOpen={showLoginPrompt}
-        onClose={() => setShowLoginPrompt(false)}
+        onClose={() => {
+          setShowLoginPrompt(false);
+          setShowValidation(false);
+        }}
         returnPath={creatorReturnPath}
         contentType="character"
       />
