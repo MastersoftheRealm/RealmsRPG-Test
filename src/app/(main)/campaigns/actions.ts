@@ -10,6 +10,7 @@
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { requireAuth } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
+import { reportError } from '@/lib/observability';
 import { getCharacterListColumns } from '@/lib/character-list-columns';
 import {
   normalizeInviteCodeInput,
@@ -90,23 +91,38 @@ export async function createCampaignAction(data: { name: string; description?: s
 
     await ensureUserProfile(supabase, user.uid);
 
-    const { data: campaign, error } = await supabase
-      .from('campaigns')
-      .insert({
-        name,
-        description: data.description?.trim() || '',
-        owner_id: user.uid,
-        owner_username: ownerUsername || user.name || 'Realm Master',
-        invite_code: inviteCode,
-        characters: [],
-      })
-      .select('id')
-      .single();
+    // Skip RETURNING (SELECT RLS cannot see the in-flight row); membership SoT is campaign_members.
+    const campaignId = crypto.randomUUID();
+    const now = new Date().toISOString();
+    const { error } = await supabase.from('campaigns').insert({
+      id: campaignId,
+      name,
+      description: data.description?.trim() || '',
+      owner_id: user.uid,
+      owner_username: ownerUsername || user.name || 'Realm Master',
+      invite_code: inviteCode,
+      characters: [],
+      created_at: now,
+      updated_at: now,
+    });
     if (error) throw error;
 
-    return { success: true, campaignId: campaign.id, inviteCode };
+    const { error: memberErr } = await supabase
+      .from('campaign_members')
+      .upsert(
+        { campaign_id: campaignId, user_id: user.uid },
+        { onConflict: 'campaign_id,user_id' },
+      );
+    if (memberErr) {
+      reportError(memberErr, {
+        scope: 'createCampaignAction campaign_members',
+        extra: { campaignId },
+      });
+    }
+
+    return { success: true, campaignId, inviteCode };
   } catch (error) {
-    console.error('Create campaign error:', error);
+    reportError(error, { scope: 'createCampaignAction' });
     return { success: false, error: 'Failed to create campaign' };
   }
 }

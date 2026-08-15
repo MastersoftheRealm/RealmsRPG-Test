@@ -6663,9 +6663,9 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 
 ---
 
-## DEV-V-042 — Campaigns RLS SELECT consolidation (TASK-650)
+## DEV-V-042 — Campaigns RLS SELECT consolidation (TASK-650 / TASK-802)
 
-Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Automated SQL parity + RLS access: `node scripts/verify-task-650.mjs`.
+Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Automated SQL parity + RLS access: `node scripts/verify-task-650.mjs`. TASK-802 keeps a single SELECT policy and adds an `owner_id` short-circuit so create/`INSERT … RETURNING` works.
 
 #### DEV-V-042-T001 — Automated advisor + RLS access (DB)
 
@@ -6702,6 +6702,29 @@ Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Au
 
 **Expected**
 - Owner and member read access unchanged after policy drop; non-participant blocked; join-by-invite unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-042-T003 — Create campaign (signed-in owner)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-042 |
+| **Related task** | TASK-802 |
+| **Where** | `/campaigns` → Create tab |
+| **Needs** | Signed-in account under the campaign quota |
+
+**Steps**
+1. Sign in and open `/campaigns`.
+2. Open the **Create** tab. Enter a name of at least 2 characters (optional description).
+3. Submit. Confirm the success state shows an 8-character invite code (no “Failed to create campaign”).
+4. Click **View Campaign** — detail loads for the new campaign; invite code matches.
+5. Return to **My Campaigns** — the new campaign is in the list.
+6. Optional: DevTools console should not show a Sentry `ingest.us.sentry.io` Content-Security-Policy refusal.
+
+**Expected**
+- Campaign is created; invite code is shown; detail and list include the new campaign.
+- Browser console may still show Grammarly / Iterable / Blackboard extension noise (ignore).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7556,7 +7579,7 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 | DEV-V-046 | Library power/technique categories + filters (TASK-673 / TASK-676 / TASK-731 / TASK-725 / TASK-746) | — | Automated (category/filter/innate/formulas tests) + manual DEV-V-046 T001–T008 |
 | DEV-V-044 | Power Creator AoE applyDuration persistence (TASK-672) | — | Automated (library-columnar + power-calc tests) + manual DEV-V-044-T001 |
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649 / TASK-735) | — | Manual DEV-V-041 T001–T004 + `node scripts/verify-task-649.mjs` |
-| DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |
+| DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650 / TASK-802) | — | `node scripts/verify-task-650.mjs` + DEV-V-042-T002/T003 browser |
 | DEV-V-043 | Wave 5 page facade splits (TASK-666 / TASK-762) | — | Manual — see suite above |
 | DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`, `character-save` create-error copy) + manual DEV-V-051 T001–T010 |
 | DEV-V-052 | Archetype Path list filter (TASK-751 / TASK-752 / TASK-753) | — | Automated (`path-recommendation-index`, `feat-list`, `skill-list`, `equipment-list`) + manual DEV-V-052 T001–T006 |
