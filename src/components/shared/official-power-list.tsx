@@ -10,6 +10,7 @@ import { Wand2 } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
 import { PowerTechniqueFilters } from '@/components/shared/filters';
 import { useGameRules } from '@/hooks/use-game-rules';
+import { usePathListFilter } from '@/hooks';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryPower } from '@/types/library';
@@ -29,6 +30,12 @@ import {
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
+import {
+  POWER_LIST_PATH_KINDS,
+  libraryRowPathIds,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
@@ -81,6 +88,13 @@ export function OfficialPowerList({
     useState<PowerTechniqueCharacterContext | null>(null);
   const [characterFilterId, setCharacterFilterId] = useState('');
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({ entities: items, kind: POWER_LIST_PATH_KINDS });
 
   const categoryOptions = useMemo(
     () => collectCategoryOptionsFromItems(items, partsDb, { includeDamageCategory: true }),
@@ -97,8 +111,8 @@ export function OfficialPowerList({
       rows: OfficialPowerRow[],
       search: string,
       sortItems: (items: OfficialPowerRow[]) => OfficialPowerRow[]
-    ) => filterOfficialPowerRows(rows, search, sortItems, advancedFilters, characterContext),
-    [advancedFilters, characterContext]
+    ) =>       filterOfficialPowerRows(rows, search, sortItems, advancedFilters, characterContext, pathRecommendedIds),
+    [advancedFilters, characterContext, pathRecommendedIds]
   );
 
   return (
@@ -121,6 +135,11 @@ export function OfficialPowerList({
           innateThresholdOptions={innateThresholdOptions}
           onCharacterContextChange={setCharacterContext}
           onCharacterIdChange={setCharacterFilterId}
+          pathFilter={{
+            options: pathIndex.options,
+            selectedPathIds,
+            onChange: setSelectedPathIds,
+          }}
         />
       }
       filterActiveCount={
@@ -128,7 +147,12 @@ export function OfficialPowerList({
           advancedFilters,
           'power',
           Boolean(characterContext)
-        ) + (characterFilterId ? 1 : 0)
+        ) + (characterFilterId ? 1 : 0) + (pathFilterActive ? 1 : 0)
+      }
+      getNameChipLabels={(p) =>
+        pathFilterActive
+          ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(p), selectedPathIds)
+          : undefined
       }
       getColumns={(p) => officialPowerRowColumns(p)}
       getDetailSections={(p) => {
@@ -144,7 +168,9 @@ export function OfficialPowerList({
       emptyIcon={emptyIcon}
       emptyTitle={emptyTitle}
       emptyMessage={emptyMessage}
-      searchEmptyMessage={searchEmptyMessage}
+      searchEmptyMessage={
+        pathFilterActive ? pathFilterEmptyTitle('powers') : searchEmptyMessage
+      }
       variant={variant}
       readOnly={readOnly}
       onAddRequest={onAddRequest}

@@ -389,6 +389,8 @@ export function SkillsStep() {
           recommendedSkillIds={browseRecommendedSkillIds}
           maxSelections={maxAddSkillSelections}
           selectionLimitMessage={stepCopy.browseOverLimit(maxAddSkillSelections)}
+          autoSelectPathType={deepCatalogOnly ? null : draft.archetypeType}
+          optionsDefaultExpanded={!deepCatalogOnly}
           deeperLayerLabel={
             deepCatalogOnly ? stepCopy.browseAllSubSkills : undefined
           }

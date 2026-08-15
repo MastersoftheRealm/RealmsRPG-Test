@@ -10,6 +10,7 @@ import { Shield, Shirt, Sword } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
 import { ArmamentFilters } from '@/components/shared/filters';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
+import { usePathListFilter } from '@/hooks';
 import type { ItemProperty } from '@/hooks/codex-types';
 import type { LibraryItem } from '@/types/library';
 import { ARMAMENT_LABELS_BY_KIND } from '@/lib/library/armament-library-labels';
@@ -29,6 +30,11 @@ import {
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import {
+  libraryRowPathIds,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 
 export type { OfficialItemRow, ArmamentLibraryKind };
 
@@ -87,14 +93,33 @@ export function OfficialItemList({
     useState<ArmamentCharacterContext | null>(null);
   const [characterFilterId, setCharacterFilterId] = useState('');
   const addToCharacter = useAddToCharacterFromLibrary(armamentKind, characterFilterId);
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({
+    entities: items,
+    kind: 'armaments',
+    enabled: variant === 'library',
+  });
 
   const filterRows = useCallback(
     (
       rows: OfficialItemRow[],
       search: string,
       sortItems: (items: OfficialItemRow[]) => OfficialItemRow[]
-    ) => filterOfficialItemRows(rows, search, sortItems, advancedFilters, characterContext),
-    [advancedFilters, characterContext]
+    ) =>
+      filterOfficialItemRows(
+        rows,
+        search,
+        sortItems,
+        advancedFilters,
+        characterContext,
+        variant === 'library' ? pathRecommendedIds : null
+      ),
+    [advancedFilters, characterContext, pathRecommendedIds, variant]
   );
 
   return (
@@ -115,12 +140,26 @@ export function OfficialItemList({
               onChange={setAdvancedFilters}
               onCharacterContextChange={setCharacterContext}
               onCharacterIdChange={setCharacterFilterId}
+              pathFilter={{
+                options: pathIndex.options,
+                selectedPathIds,
+                onChange: setSelectedPathIds,
+              }}
             />
           ) : undefined
         }
         filterActiveCount={
           variant === 'library'
-            ? countActiveArmamentFilters(advancedFilters, Boolean(characterContext))
+            ? countActiveArmamentFilters(advancedFilters, Boolean(characterContext)) +
+              (pathFilterActive ? 1 : 0)
+            : undefined
+        }
+        getNameChipLabels={
+          variant === 'library'
+            ? (row) =>
+                pathFilterActive
+                  ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(row), selectedPathIds)
+                  : undefined
             : undefined
         }
         getColumns={(row) => armamentRowColumns(row, armamentKind)}
@@ -139,7 +178,11 @@ export function OfficialItemList({
         emptyIcon={emptyIcon ?? ARMAMENT_ICONS[armamentKind]}
         emptyTitle={emptyTitle ?? labels.emptyTitle}
         emptyMessage={emptyMessage ?? labels.realmsEmptyMessage}
-        searchEmptyMessage={searchEmptyMessage ?? labels.searchEmptyTitle}
+        searchEmptyMessage={
+          pathFilterActive
+            ? pathFilterEmptyTitle(labels.entityPlural)
+            : (searchEmptyMessage ?? labels.searchEmptyTitle)
+        }
         variant={variant}
         readOnly={readOnly}
         onAddRequest={onAddRequest}

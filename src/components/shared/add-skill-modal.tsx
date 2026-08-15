@@ -5,16 +5,23 @@
 
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useId, useMemo, useState, type ReactNode } from 'react';
 import { Button } from '@/components/ui';
 import { guidedNavProgressClassName } from '@/components/shared/guided-choice/guided-nav-button-styles';
-import { useCodexSkills, type Skill } from '@/hooks';
+import { useCodexSkills, usePathListFilter, type Skill } from '@/hooks';
 import { Alert, DescriptorChip } from '@/components/ui';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import { ArchetypePathFilter } from '@/components/shared/filters';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import { ABILITY_ABBR, ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
+import {
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+  rowMatchesPathRecommendedIds,
+} from '@/lib/game/path-recommendation-index';
+import type { ArchetypeCategory } from '@/types/archetype';
 
 import type { GridListBadgeColor } from '@/lib/chip/grid-list-chip-utils';
 
@@ -44,6 +51,10 @@ export interface AddSkillModalProps {
   onDeeperLayer?: () => void;
   deeperLayerDisabled?: boolean;
   deeperLayerDisabledTitle?: string;
+  /** Path-flow See more: auto-select every player-visible path of this type. */
+  autoSelectPathType?: ArchetypeCategory | null;
+  /** Guided path See more opens with Filters expanded. */
+  optionsDefaultExpanded?: boolean;
 }
 
 /** Parse skill.ability (comma-separated) into list of abbreviated ability codes (STR, AGI, ...). */
@@ -80,7 +91,8 @@ function buildAbilityDisplay(abilityString?: string): {
 
 function skillToSelectableItem(
   skill: Skill & { ability?: string },
-  skillBadgesById?: Record<string, AddSkillModalSkillBadge[]>
+  skillBadgesById?: Record<string, AddSkillModalSkillBadge[]>,
+  pathChipLabels?: string[]
 ): SelectableItem {
   const extraSections = getSkillExtraDescriptionDetailSections(skill);
   const { detailChips, columnValue } = buildAbilityDisplay(skill.ability);
@@ -92,7 +104,8 @@ function skillToSelectableItem(
     detailSections.push(...extraSections);
   }
   const skillId = String(skill.id);
-  const badges = skillBadgesById?.[skillId];
+  const pathBadges = pathChipLabels?.map((label) => ({ label, color: 'blue' as const }));
+  const badges = pathBadges ?? skillBadgesById?.[skillId];
   return {
     id: skillId,
     name: skill.name ?? '',
@@ -100,6 +113,7 @@ function skillToSelectableItem(
     columns: [{ key: 'ability', value: columnValue, align: 'center' as const }],
     detailSections: detailSections.length > 0 ? detailSections : undefined,
     badges: badges?.map((b) => ({ label: b.label, color: b.color })),
+    showBadgesInName: Boolean(pathBadges?.length),
     data: skill,
   };
 }
@@ -117,13 +131,30 @@ export function AddSkillModal({
   onDeeperLayer,
   deeperLayerDisabled = false,
   deeperLayerDisabledTitle,
+  autoSelectPathType,
+  optionsDefaultExpanded = false,
 }: AddSkillModalProps) {
   const { data: allSkills = [], isLoading: loading, error: queryError } = useCodexSkills();
   const [abilityFilter, setAbilityFilter] = useState('');
+  const abilityFilterId = useId();
 
   const skills = useMemo(() => {
     return allSkills.filter((s: Skill) => s.base_skill_id === undefined);
   }, [allSkills]);
+
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({
+    entities: skills,
+    kind: 'skills',
+    enabled: isOpen,
+    autoSelectType: autoSelectPathType,
+    autoSelectWhen: isOpen,
+  });
 
   const items = useMemo((): SelectableItem[] => {
     const existingLower = existingSkillNames.map(n => n.toLowerCase());
@@ -137,6 +168,7 @@ export function AddSkillModal({
           const skillAbilities = skill.ability?.split(',').map(a => a.trim().toLowerCase()) || [];
           if (!skillAbilities.includes(abilityFilter.toLowerCase())) return false;
         }
+        if (!rowMatchesPathRecommendedIds(skill.id, pathRecommendedIds)) return false;
         return true;
       })
       .map((s: Skill) => ({ ...s, ability: s.ability || '' }));
@@ -152,8 +184,26 @@ export function AddSkillModal({
       });
     });
 
-    return filtered.map((s) => skillToSelectableItem(s, skillBadgesById));
-  }, [skills, existingSkillNames, abilityFilter, skillBadgesById, recommendedSkillIds]);
+    return filtered.map((s) =>
+      skillToSelectableItem(
+        s,
+        pathFilterActive ? undefined : skillBadgesById,
+        pathFilterActive
+          ? pathChipLabelsForEntity(pathIndex, s.id, selectedPathIds)
+          : undefined
+      )
+    );
+  }, [
+    skills,
+    existingSkillNames,
+    abilityFilter,
+    skillBadgesById,
+    recommendedSkillIds,
+    pathFilterActive,
+    pathIndex,
+    selectedPathIds,
+    pathRecommendedIds,
+  ]);
 
   const error = queryError ? `Failed to load Skills: ${queryError.message}` : null;
 
@@ -166,19 +216,28 @@ export function AddSkillModal({
       : undefined);
 
   const filterContent = (
-    <div className="flex gap-3 items-center">
-      <label className="text-sm font-medium text-text-secondary">Filter by Ability:</label>
-      <select
-        value={abilityFilter}
-        onChange={(e) => setAbilityFilter(e.target.value)}
-        className="min-h-11 px-3 py-2 text-sm rounded-lg border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
-        aria-label="Filter by ability"
-      >
-        <option value="">All Abilities</option>
-        {ABILITY_FILTER_OPTIONS.map(opt => (
-          <option key={opt.value} value={opt.value}>{opt.label}</option>
-        ))}
-      </select>
+    <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="filter-group min-w-0">
+        <label htmlFor={abilityFilterId} className="mb-1 block text-sm font-medium text-text-secondary">
+          Filter by Ability
+        </label>
+        <select
+          id={abilityFilterId}
+          value={abilityFilter}
+          onChange={(e) => setAbilityFilter(e.target.value)}
+          className="min-h-11 w-full px-3 py-2 text-sm rounded-md border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
+        >
+          <option value="">All Abilities</option>
+          {ABILITY_FILTER_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+      <ArchetypePathFilter
+        options={pathIndex.options}
+        selectedPathIds={selectedPathIds}
+        onChange={setSelectedPathIds}
+      />
     </div>
   );
 
@@ -222,11 +281,15 @@ export function AddSkillModal({
         ]}
         gridColumns="1fr auto"
         itemLabel="Skill"
-        emptyMessage={error ?? 'No Skills available to add'}
+        emptyMessage={
+          error ??
+          (pathFilterActive ? pathFilterEmptyTitle('skills') : 'No Skills available to add')
+        }
         searchPlaceholder="Search Skills by name or description..."
         filterContent={filterContent}
         showFilters={true}
-        optionsActiveCount={abilityFilter ? 1 : 0}
+        optionsDefaultExpanded={optionsDefaultExpanded}
+        optionsActiveCount={(abilityFilter ? 1 : 0) + (pathFilterActive ? 1 : 0)}
         optionsSummary={abilityFilter ? `Ability: ${abilityFilter}` : undefined}
         size="xl"
       />

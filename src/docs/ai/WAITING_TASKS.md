@@ -98,29 +98,6 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
 
 ---
 
-- id: TASK-408
-  title: Power creator InfoTippy — tooltip draft to tooltip-text.tsx
-  priority: medium
-  status: blocked
-  created_at: 2026-07-01
-  created_by: owner
-  description: |
-    Migrate owner draft copy from POWER_CREATOR_TOOLTIPS_DRAFT.md into public/tooltip-text.tsx and wire InfoTippy on advanced power creator sections (Description, Action Type, Reaction, Weapon, Area, Duration, Parts, Mechanics, Damage, Energy, Innate, TP, Load, Reset). Phase 1b / prerequisite for guided power creator.
-  related_files:
-    - src/docs/human/POWER_CREATOR_TOOLTIPS_DRAFT.md
-    - public/tooltip-text.tsx
-    - src/app/(main)/power-creator/page.tsx
-    - src/docs/REALMS_PRODUCT_OVERVIEW.md
-  acceptance_criteria:
-    - All draft field tooltips exist in tooltip-text.tsx (owner-editable strings).
-    - InfoTippy on each major advanced power-creator section header or label.
-    - Guided L1 placeholder exports added for Power character, Powered-Martial, innate intent, category (strings only; wiring in TASK-411).
-    - npm run build and lint pass.
-  notes: |
-    **Blocked until TASK-414 done** (2026-07-01 owner: no creator L1 work until exact guided spec locked). Optional early win: advanced (L3) tooltips only — unblocks if owner explicitly requests before TASK-414.
-
----
-
 - id: TASK-409
   title: Standalone creator Phase 1b — CreatorPageShell + power/item god-file split (TASK-380/381)
   priority: medium
@@ -145,6 +122,8 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
     **Blocked until TASK-414 done** (2026-07-01 owner gate).
     2026-07-17: Engineering AC largely met via TASK-380 + TASK-381 (power/item shells +
     DEV-V-024). Keep blocked only for the TASK-414 product gate before guided power work.
+    2026-08-14: Owner deferred power-creator layers (TASK-410–414) awhile longer. TASK-408
+    advanced tooltips shipped independently.
 
 ---
 
@@ -170,6 +149,7 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
   notes: |
     Mirror characters/new chooser pattern. Owner feedback required on labels (Guided/Advanced placeholders).
     **Blocked until TASK-414 done.**
+    2026-08-14: Owner — defer power-creator layer work awhile longer. Do not implement.
 
 ---
 
@@ -194,8 +174,9 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
     - InfoTippy on archetype, innate, and category decisions.
     - Owner review checkpoint before TASK-412.
   notes: |
-    Depends on TASK-408 (tooltips) and TASK-410 (shell). Iterative owner feedback expected.
+    Depends on TASK-408 (tooltips — done 2026-08-14) and TASK-410 (shell). Iterative owner feedback expected.
     **Blocked until TASK-414 done** — implement only from locked spec, not §5.11 draft.
+    2026-08-14: Owner — defer power-creator layer work awhile longer. Do not implement.
 
 ---
 
@@ -222,6 +203,7 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
   notes: |
     Templates from existing official_powers table (31 rows); no new DB table for MVP. Owner curates template set.
     **Blocked until TASK-414 done.**
+    2026-08-14: Owner — defer power-creator layer work awhile longer. Do not implement.
 
 ---
 
@@ -244,6 +226,7 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
   notes: |
     Blocked until TASK-410. Item guided follow-up task after TASK-412 validates power pattern.
     **Blocked until TASK-414 done** (do not change landing CTA until guided entry exists).
+    2026-08-14: Owner — defer power-creator layer work awhile longer. Do not implement.
 
 ---
 
@@ -255,7 +238,7 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
   created_at: 2026-07-01
   created_by: owner
   description: |
-    Owner completes POWER_CREATOR_LAYER1_SPEC.md with exact step order, screen copy, template list, character/innate rules, and L1/L2/L3 boundaries. No agent implementation of guided power creator (TASK-408–413) until this task is marked done with owner approval.
+    Owner completes POWER_CREATOR_LAYER1_SPEC.md with exact step order, screen copy, template list, character/innate rules, and L1/L2/L3 boundaries. No agent implementation of guided power creator (TASK-410–413) until this task is marked done with owner approval.
   related_files:
     - src/docs/human/POWER_CREATOR_LAYER1_SPEC.md
     - src/docs/human/POWER_CREATOR_TOOLTIPS_DRAFT.md
@@ -271,4 +254,5 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
   notes: |
     Human-owned design task. Agents may help draft or facilitate review but must not implement TASK-410+ until done.
     2026-07-01: Owner — no perfect L1 vision yet; spec must be exact before build.
+    2026-08-14: Owner — defer this and TASK-410–413 awhile longer. TASK-408 advanced tooltips shipped without waiting on this spec.
 

@@ -6,9 +6,9 @@ import {
   ErrorDisplay as ErrorState,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
-import { ChipSelect, SelectFilter } from '@/components/shared/filters';
+import { ChipSelect, SelectFilter, ArchetypePathFilter } from '@/components/shared/filters';
 import { CodexSkillRow } from '@/components/codex';
-import { useCodexSkills, type Skill } from '@/hooks';
+import { useCodexSkills, usePathListFilter, type Skill } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import {
   SKILL_GRID_COLUMNS,
@@ -23,6 +23,7 @@ import {
 /** Skills are governed by abilities only (not defenses). */
 const ABILITY_OPTIONS_SKILLS = ABILITIES_AND_DEFENSES.slice(0, 6);
 import { useSort } from '@/hooks/use-sort';
+import { pathChipLabelsForEntity, pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc } from './actions';
 import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
@@ -78,6 +79,13 @@ export function AdminSkillsTab() {
   }, [skills]);
 
   const skillIdToName = useMemo(() => buildSkillIdToName(skills), [skills]);
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({ entities: skills, kind: 'skills' });
 
   const filterOptions = useMemo(
     () => buildSkillFilterOptions(skills, skillIdToName),
@@ -86,10 +94,10 @@ export function AdminSkillsTab() {
 
   const filteredSkills = useMemo(() => {
     if (!skills) return [];
-    const filtered = filterSkills(skills, filters, skillIdToName);
+    const filtered = filterSkills(skills, filters, skillIdToName, null, pathRecommendedIds);
     if (filters.baseSkill) return sortSkillsForBaseFilter(filtered, filters.baseSkill);
     return sortItems<Skill>(filtered);
-  }, [skills, filters, sortItems, skillIdToName]);
+  }, [skills, filters, sortItems, skillIdToName, pathRecommendedIds]);
 
   const openAdd = () => {
     setEditing(null);
@@ -267,7 +275,7 @@ export function AdminSkillsTab() {
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search names, descriptions..."
         filters={
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               <ChipSelect
                 label="Ability"
                 placeholder="Choose ability"
@@ -305,6 +313,11 @@ export function AdminSkillsTab() {
                 }
                 placeholder="All skills"
               />
+              <ArchetypePathFilter
+                options={pathIndex.options}
+                selectedPathIds={selectedPathIds}
+                onChange={setSelectedPathIds}
+              />
           </div>
         }
         headerColumns={SKILL_HEADER_COLUMNS}
@@ -314,7 +327,7 @@ export function AdminSkillsTab() {
         onSort={handleSort}
         isLoading={isLoading}
         isEmpty={filteredSkills.length === 0}
-        emptyTitle="No skills found"
+        emptyTitle={pathFilterActive ? pathFilterEmptyTitle('skills') : 'No skills found'}
         emptyMessage="No skills match your filters."
         emptyAction={{ label: 'Add Skill', onClick: openAdd }}
       >
@@ -324,6 +337,11 @@ export function AdminSkillsTab() {
             skill={s}
             skillIdToName={skillIdToName}
             variant="admin"
+            nameChipLabels={
+              pathFilterActive
+                ? pathChipLabelsForEntity(pathIndex, s.id, selectedPathIds)
+                : undefined
+            }
             rightSlot={
               <div className="flex items-center gap-1 pr-2">
                 {pendingDeleteId === s.id ? (

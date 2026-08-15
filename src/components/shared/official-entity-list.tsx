@@ -55,6 +55,11 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   getColumns?: (row: TRow) => ColumnValue[];
   /** Optional row badges (e.g. Enhanced on admin enhanced items). */
   getBadges?: (row: TRow) => ComponentProps<typeof GridListRow>['badges'];
+  /**
+   * Name-adjacent chips while a list filter is active (Archetype Path, TASK-752).
+   * Combined with `getBadges` and shown in the name slot when present.
+   */
+  getNameChipLabels?: (row: TRow) => string[] | undefined;
   /** Optional expanded chips (parts/properties). Prefer getDetailSections for Parts/Properties tips. */
   getChips?: (row: TRow) => ChipData[] | undefined;
   chipsLabel?: string;
@@ -116,6 +121,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   headerColumns,
   getColumns,
   getBadges,
+  getNameChipLabels,
   getChips,
   chipsLabel,
   getDetailSections,
@@ -215,6 +221,9 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
             const detailSections = getDetailSections?.(row);
             const chips = detailSections ? undefined : getChips?.(row);
             const totalCost = getTotalCost?.(row);
+            const nameLabels = getNameChipLabels?.(row) ?? [];
+            const nameBadges = nameLabels.map((label) => ({ label }));
+            const badges = [...nameBadges, ...(getBadges?.(row) ?? [])];
             return (
               <GridListRow
                 key={row.id}
@@ -229,7 +238,8 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
                 detailSections={detailSections}
                 totalCost={totalCost}
                 costLabel={costLabel}
-                badges={getBadges?.(row)}
+                badges={badges.length > 0 ? badges : undefined}
+                showBadgesInName={nameBadges.length > 0}
                 rightSlot={
                   canAdd() || canAddToCharacter() ? (
                     <LibraryRowActionSlot>

@@ -5,9 +5,14 @@
 import type { AbilityRequirement } from '@/components/shared/filters';
 import type { ChipData, ColumnValue } from '@/components/shared/grid-list-row';
 import type { Feat } from '@/hooks';
-import { buildFeatLevelChips } from '@/lib/leveled-feats';
+import { buildFeatLevelChips, getFeatFamilyId } from '@/lib/leveled-feats';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
+import {
+  pathNamesForEntity,
+  rowMatchesPathRecommendedIds,
+  type PathRecommendationIndex,
+} from '@/lib/game/path-recommendation-index';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { descriptorChipData, tagDescriptorChip } from '@/lib/chip/chip-data-helpers';
@@ -102,6 +107,58 @@ export interface FilterFeatsOptions {
   showUnqualified?: boolean;
   skills?: CodexSkillForFeat[];
   allFeats?: Feat[];
+  /**
+   * Archetype Path filter (ADR-0014): normalized ids the selected paths recommend, from
+   * `pathRecommendedEntityIds`. `null` / omitted = no path filter. A feat matches when the path
+   * recommends the row itself or its feat-family base, so higher ranks stay with their family.
+   */
+  pathRecommendedIds?: ReadonlySet<string> | null;
+}
+
+type FeatPathRow = Pick<Feat, 'id'> & { base_feat_id?: string | number | null };
+
+function featPathFamilyId(feat: FeatPathRow): string {
+  return feat.base_feat_id ? String(feat.base_feat_id) : String(feat.id);
+}
+
+/** Path filter match: the row itself or its feat-family base (higher ranks stay). */
+export function featMatchesPathRecommendedIds(
+  feat: FeatPathRow,
+  pathRecommendedIds: ReadonlySet<string> | null | undefined
+): boolean {
+  if (!pathRecommendedIds) return true;
+  return (
+    rowMatchesPathRecommendedIds(feat.id, pathRecommendedIds) ||
+    rowMatchesPathRecommendedIds(featPathFamilyId(feat), pathRecommendedIds)
+  );
+}
+
+/** Families that have at least one path-recommended rank — keep sibling ranks listed. */
+export function featFamilyIdsMatchingPath(
+  feats: readonly FeatPathRow[],
+  pathRecommendedIds: ReadonlySet<string> | null | undefined
+): Set<string> | null {
+  if (!pathRecommendedIds) return null;
+  const families = new Set<string>();
+  for (const feat of feats) {
+    if (featMatchesPathRecommendedIds(feat, pathRecommendedIds)) {
+      families.add(featPathFamilyId(feat));
+    }
+  }
+  return families;
+}
+
+/** Selected paths that recommend this feat (or its family base) — row chips while filtering. */
+export function featPathChipNames(
+  index: PathRecommendationIndex,
+  feat: Feat,
+  selectedPathIds: readonly string[]
+): string[] {
+  const names = [
+    ...pathNamesForEntity(index, feat.id, selectedPathIds),
+    ...pathNamesForEntity(index, getFeatFamilyId(feat), selectedPathIds),
+  ];
+  return Array.from(new Set(names));
 }
 
 export function buildFeatFilterOptions(feats: Feat[] | undefined): FeatFilterOptions {
@@ -131,9 +188,11 @@ export function buildFeatFilterOptions(feats: Feat[] | undefined): FeatFilterOpt
 }
 
 export function filterFeats(feats: Feat[], filters: FeatListFilters, options?: FilterFeatsOptions): Feat[] {
-  const { character, showUnqualified, skills, allFeats } = options ?? {};
+  const { character, showUnqualified, skills, allFeats, pathRecommendedIds } = options ?? {};
 
   return feats.filter((f) => {
+    if (!featMatchesPathRecommendedIds(f, pathRecommendedIds)) return false;
+
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       const matchesSearch =

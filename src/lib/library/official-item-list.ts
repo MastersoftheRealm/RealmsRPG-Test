@@ -35,6 +35,7 @@ import {
   type ArmamentFilterState,
 } from '@/lib/library/armament-filters';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
+import { libraryRowPathIds, rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
 
 export type { ArmamentLibraryKind };
 
@@ -265,6 +266,8 @@ export function armamentRowColumns(row: OfficialItemRow, kind: ArmamentLibraryKi
 
 export function filterOfficialItemRows<
   T extends {
+    id?: string | number;
+    raw?: { id?: string | number | null; docId?: string | number | null };
     name?: string;
     description?: string;
     currency?: number | null;
@@ -278,9 +281,13 @@ export function filterOfficialItemRows<
   search: string,
   sortItems: (items: T[]) => T[],
   filters?: ArmamentFilterState,
-  characterContext?: ArmamentCharacterContext | null
+  characterContext?: ArmamentCharacterContext | null,
+  pathRecommendedIds?: ReadonlySet<string> | null
 ): T[] {
   let result = rows;
+  if (pathRecommendedIds) {
+    result = result.filter((x) => rowMatchesPathRecommendedIds(libraryRowPathIds(x), pathRecommendedIds));
+  }
   if (search) {
     const s = search.toLowerCase();
     result = result.filter(

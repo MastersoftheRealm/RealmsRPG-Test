@@ -7,6 +7,8 @@ import {
   filterSkills,
   type SkillListFilters,
 } from './skill-list';
+import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import { buildPathRecommendationIndex, pathRecommendedEntityIds } from '@/lib/game/path-recommendation-index';
 
 function skill(
   partial: Pick<Skill, 'id' | 'name'> & Partial<Skill>
@@ -123,5 +125,58 @@ describe('filterSkills character scope', () => {
       knownIds
     );
     expect(filtered.map((s) => s.name)).toEqual(['Climbing']);
+  });
+});
+
+describe('filterSkills — Archetype Path filter (TASK-752)', () => {
+  const skillIdToName = buildSkillIdToName(allSkills);
+  const index = buildPathRecommendationIndex({
+    paths: [
+      {
+        id: 'p-monk',
+        name: 'Monk',
+        type: 'martial',
+        path_data: parseArchetypePathData({ level1: { skills: ['10'] } }),
+      },
+      {
+        id: 'p-bard',
+        name: 'Bard',
+        type: 'power',
+        path_data: parseArchetypePathData({ level1: { skills: ['20'] } }),
+      },
+    ],
+    entities: allSkills,
+    kind: 'skills',
+  });
+
+  it('keeps only skills the selected paths recommend and unions them', () => {
+    const monk = filterSkills(
+      allSkills,
+      emptyFilters,
+      skillIdToName,
+      null,
+      pathRecommendedEntityIds(index, ['p-monk'])
+    );
+    expect(monk.map((s) => s.id)).toEqual(['10']);
+    const both = filterSkills(
+      allSkills,
+      emptyFilters,
+      skillIdToName,
+      null,
+      pathRecommendedEntityIds(index, ['p-monk', 'p-bard'])
+    );
+    expect(both.map((s) => s.id).sort()).toEqual(['10', '20']);
+  });
+
+  it('composes with ability filters and leaves the list untouched with no path filter', () => {
+    const capped = filterSkills(
+      allSkills,
+      { ...emptyFilters, abilities: ['strength'] },
+      skillIdToName,
+      null,
+      pathRecommendedEntityIds(index, ['p-monk', 'p-bard'])
+    );
+    expect(capped.map((s) => s.id)).toEqual(['10']);
+    expect(filterSkills(allSkills, emptyFilters, skillIdToName, null, null)).toHaveLength(5);
   });
 });

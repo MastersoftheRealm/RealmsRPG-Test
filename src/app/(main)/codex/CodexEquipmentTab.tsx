@@ -15,7 +15,7 @@ import {
 } from '@/components/shared';
 import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
-import { useEquipment, useItemProperties } from '@/hooks';
+import { useEquipment, useItemProperties, usePathListFilter } from '@/hooks';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import {
   buildCodexEquipmentColumns,
@@ -33,18 +33,28 @@ import {
   type ArmamentFilterState,
 } from '@/lib/library/armament-filters';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
+import {
+  EQUIPMENT_LIST_PATH_KINDS,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 
 function EquipmentCard({
   item,
   propertiesDb = [],
+  nameChipLabels,
 }: {
   item: CodexEquipmentItem;
   propertiesDb?: Parameters<typeof buildCodexEquipmentDetailSections>[1];
+  nameChipLabels?: string[];
 }) {
   const detailSections = useMemo(
     () => buildCodexEquipmentDetailSections(item, propertiesDb),
     [item, propertiesDb]
   );
+  const nameChips = nameChipLabels?.length
+    ? nameChipLabels.map((label) => ({ label }))
+    : undefined;
 
   return (
     <GridListRow
@@ -55,6 +65,8 @@ function EquipmentCard({
       gridColumns={EQUIPMENT_GRID_COLUMNS}
       columns={buildCodexEquipmentColumns(item)}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
+      badges={nameChips}
+      showBadgesInName={Boolean(nameChips)}
     />
   );
 }
@@ -71,6 +83,17 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
   });
   const [armamentFilters, setArmamentFilters] = useState<ArmamentFilterState>(EMPTY_ARMAMENT_FILTERS);
   const [characterContext, setCharacterContext] = useState<ArmamentCharacterContext | null>(null);
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({
+    entities: equipment,
+    kind: EQUIPMENT_LIST_PATH_KINDS,
+    enabled: loadPublicCodex,
+  });
 
   const filterOptions = useMemo(
     () => collectCodexEquipmentFilterOptions(equipment),
@@ -84,10 +107,11 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
         equipment,
         listFilters,
         armamentFilters,
-        characterContext
+        characterContext,
+        pathRecommendedIds
       )
     );
-  }, [equipment, listFilters, armamentFilters, characterContext, sortItems]);
+  }, [equipment, listFilters, armamentFilters, characterContext, sortItems, pathRecommendedIds]);
 
   if (codexMode === 'my') {
     return (
@@ -112,6 +136,11 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
           onChange={setArmamentFilters}
           onCharacterContextChange={setCharacterContext}
           showEquipmentExtras
+          pathFilter={{
+            options: pathIndex.options,
+            selectedPathIds,
+            onChange: setSelectedPathIds,
+          }}
         >
           <SelectFilter
             label="Category"
@@ -129,10 +158,10 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
           />
         </ArmamentFilters>
       }
-      filterActiveCount={countActiveArmamentFilters(
-        armamentFilters,
-        Boolean(characterContext)
-      )}
+      filterActiveCount={
+        countActiveArmamentFilters(armamentFilters, Boolean(characterContext)) +
+        (pathFilterActive ? 1 : 0)
+      }
       headerColumns={CODEX_EQUIPMENT_HEADER_COLUMNS}
       gridColumns={EQUIPMENT_GRID_COLUMNS}
       sortState={sortState}
@@ -140,10 +169,19 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
       hasThumbnailColumn
       isLoading={isLoading}
       isEmpty={filteredEquipment.length === 0}
-      emptyTitle="No equipment found."
+      emptyTitle={pathFilterActive ? pathFilterEmptyTitle('equipment') : 'No equipment found.'}
     >
       {filteredEquipment.map((item) => (
-        <EquipmentCard key={item.id} item={item} propertiesDb={propertiesDb} />
+        <EquipmentCard
+          key={item.id}
+          item={item}
+          propertiesDb={propertiesDb}
+          nameChipLabels={
+            pathFilterActive
+              ? pathChipLabelsForEntity(pathIndex, item.id, selectedPathIds)
+              : undefined
+          }
+        />
       ))}
     </CodexBrowseListShell>
   );

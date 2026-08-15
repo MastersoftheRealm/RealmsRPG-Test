@@ -40,6 +40,7 @@ import {
 } from './power-creator-bootstrap';
 import { PowerCreatorEditor } from './power-creator-editor';
 import { usePowerCreatorWorkspace } from './use-power-creator-workspace';
+import { PowerCreatorHelp } from './power-creator-help';
 
 function PowerCreatorContent() {
   const { user } = useAuthStore();
@@ -139,6 +140,10 @@ function PowerCreatorWorkspace({
       onSave={ws.save.handleSave}
       onLoad={load.openLoadModal}
       onReset={ws.handleReset}
+      toolbarHelp={{
+        load: <PowerCreatorHelp topic="load" />,
+        reset: <PowerCreatorHelp topic="reset" />,
+      }}
       saving={ws.save.saving}
       saveDisabled={!ws.name.trim()}
       loading={{
@@ -182,9 +187,27 @@ function PowerCreatorWorkspace({
         <CreatorSummaryPanel
           title="Power Summary"
           costStats={[
-            { label: 'Energy Cost', value: ws.costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
-            { label: 'Training Points', value: ws.costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+            {
+              label: 'Energy Cost',
+              value: ws.costs.totalEnergy,
+              icon: <Zap className="w-6 h-6" />,
+              color: 'energy',
+              help: <PowerCreatorHelp topic="energy" tone="current" />,
+            },
+            {
+              label: 'Training Points',
+              value: ws.costs.totalTP,
+              icon: <Target className="w-6 h-6" />,
+              color: 'tp',
+              help: <PowerCreatorHelp topic="tp" tone="current" />,
+            },
           ]}
+          costHelp={
+            <div className="flex items-center gap-1.5 text-sm text-text-secondary">
+              <span>Innate Power</span>
+              <PowerCreatorHelp topic="innate" />
+            </div>
+          }
           statRows={[
             { label: 'Action', value: ws.actionTypeDisplay },
             { label: 'Attack', value: ws.attackModeLabel },

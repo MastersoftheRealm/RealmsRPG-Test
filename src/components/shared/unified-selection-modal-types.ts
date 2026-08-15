@@ -21,6 +21,8 @@ export interface SelectableItem {
   costLabel?: string;
   /** Badges to display */
   badges?: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
+  /** Put badges on the name row (path chips while filtering) instead of the expanded slot. */
+  showBadgesInName?: boolean;
   /** Whether this item is disabled (e.g., doesn't meet requirements) */
   disabled?: boolean;
   /** Warning message if disabled or has requirements */
@@ -126,6 +128,8 @@ export interface UnifiedSelectionModalProps {
   optionsSummary?: ReactNode;
   /** Filters toggle label (default "Filters"). */
   optionsLabel?: string;
+  /** When the modal opens, start with Filters expanded (guided See more — TASK-753). */
+  optionsDefaultExpanded?: boolean;
 
   // Quantity support (for equipment)
   showQuantity?: boolean;

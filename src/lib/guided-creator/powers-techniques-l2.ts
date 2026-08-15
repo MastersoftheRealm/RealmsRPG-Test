@@ -5,7 +5,7 @@
  *
  * Row columns/expand match Official Library GLR (`buildOfficialPowerRows` /
  * `buildOfficialTechniqueRows`) — TASK-709. Guided-only: innate / max-EN
- * orchestration + Path badges + TP totalCost.
+ * orchestration + TP totalCost. Path-name chips come from `applyLivePathFilter`.
  */
 
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
@@ -36,10 +36,19 @@ import {
   isGuidedL2EnergyAllowed,
   type GuidedL1MaxEnergyInput,
 } from '@/lib/guided-creator/powers-techniques-energy-filter';
-import { normalizeId } from '@/lib/utils';
 import { TRAINING_POINTS_COST_LABEL } from '@/lib/detail-option/compact-facts';
+import type { PathRecommendationKind } from '@/lib/game/archetype-path';
 
 export type PowersTechniquesL2Mode = 'regular' | 'innate';
+
+/** Live path-filter bag for this L2/L3 screen (innate uses `innatePowers`, not the powers union). */
+export function pathRecommendationKindForL2(
+  kind: PowersTechniquesKind,
+  mode: PowersTechniquesL2Mode
+): PathRecommendationKind {
+  if (mode === 'innate') return 'innatePowers';
+  return kind === 'techniques' ? 'techniques' : 'powers';
+}
 
 function toSelectableHeaders(
   headers: ReadonlyArray<{ key: string; label: string; align?: 'left' | 'center' | 'right' }>
@@ -71,15 +80,6 @@ export function powersTechniquesL2Grid(kind: PowersTechniquesKind) {
 
 function itemId(item: LibraryPower | LibraryTechnique): string {
   return String(item.id ?? item.docId ?? item.name ?? '').trim();
-}
-
-function pathRecommendedSet(ids: string[]): Set<string> {
-  const set = new Set<string>();
-  for (const id of ids) {
-    const key = normalizeId(id);
-    if (key) set.add(key);
-  }
-  return set;
 }
 
 function toBudgetKind(kind: PowersTechniquesKind) {
@@ -116,8 +116,6 @@ export function buildPowersTechniquesL2Items(opts: {
   items: Array<LibraryPower | LibraryTechnique>;
   powerPartsDb: PowerPart[];
   techniquePartsDb: TechniquePart[];
-  /** Path L1 ids (for Path badge). */
-  pathRecommendedIds: string[];
   energyInput: GuidedL1MaxEnergyInput;
   /** Innate mode: max Energy per pick (Innate Threshold). */
   innateThreshold?: number;
@@ -128,12 +126,10 @@ export function buildPowersTechniquesL2Items(opts: {
     items,
     powerPartsDb,
     techniquePartsDb,
-    pathRecommendedIds,
     energyInput,
     innateThreshold = 0,
   } = opts;
 
-  const pathSet = pathRecommendedSet(pathRecommendedIds);
   const maxEnergy =
     mode === 'regular' ? calculateGuidedL1TheoreticalMaxEnergy(energyInput) : null;
   const budgetKind = toBudgetKind(kind);
@@ -148,8 +144,6 @@ export function buildPowersTechniquesL2Items(opts: {
       const energy = numericEnergy(row.energy);
       if (!energyAllowed(energy, mode, maxEnergy, innateThreshold)) continue;
 
-      const isPath =
-        pathSet.has(normalizeId(id)) || pathSet.has(normalizeId(String(row.name ?? '')));
       const section = partsProficienciesSection(row.parts, 'technique');
 
       rows.push({
@@ -161,7 +155,6 @@ export function buildPowersTechniquesL2Items(opts: {
         thumbnail: resolveListRowThumbnail('technique', row.raw, row.name),
         totalCost: row.tp,
         costLabel: TRAINING_POINTS_COST_LABEL,
-        badges: isPath ? [{ label: 'Path', color: 'blue' }] : undefined,
         data: { kind, energy, tpCost: row.tp },
         powerTechniqueFilter: buildPowerTechniqueFilterableRow(
           budgetKind,
@@ -179,8 +172,6 @@ export function buildPowersTechniquesL2Items(opts: {
       const energy = numericEnergy(row.energy);
       if (!energyAllowed(energy, mode, maxEnergy, innateThreshold)) continue;
 
-      const isPath =
-        pathSet.has(normalizeId(id)) || pathSet.has(normalizeId(String(row.name ?? '')));
       const section = partsProficienciesSection(row.parts, 'power');
 
       rows.push({
@@ -192,7 +183,6 @@ export function buildPowersTechniquesL2Items(opts: {
         thumbnail: resolveListRowThumbnail('power', row.raw, row.name),
         totalCost: row.tp,
         costLabel: TRAINING_POINTS_COST_LABEL,
-        badges: isPath ? [{ label: 'Path', color: 'blue' }] : undefined,
         data: { kind, energy, tpCost: row.tp },
         powerTechniqueFilter: buildPowerTechniqueFilterableRow(
           budgetKind,

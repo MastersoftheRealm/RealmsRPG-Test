@@ -15,6 +15,7 @@ import { ChipSelect } from './chip-select';
 import { SelectFilter } from './select-filter';
 import { CharacterFilter } from './character-filter';
 import { FilterInput } from './filter-native-select';
+import { ArchetypePathFilter, type ArchetypePathFilterProps } from './archetype-path-filter';
 import {
   POWER_TECHNIQUE_ACTION_FILTER_OPTIONS,
   REACTION_FILTER_OPTIONS,
@@ -55,6 +56,8 @@ export interface PowerTechniqueFiltersProps {
   showCharacterFilter?: boolean;
   /** Persist character pick (default true). USM/L3 pass false. */
   persistCharacter?: boolean;
+  /** Archetype Path filter — last in the grid (TASK-752 / TASK-753). */
+  pathFilter?: Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'> | null;
 }
 
 export function PowerTechniqueFilters({
@@ -68,6 +71,7 @@ export function PowerTechniqueFilters({
   className,
   persistCharacter = true,
   showCharacterFilter = true,
+  pathFilter,
 }: PowerTechniqueFiltersProps) {
   const energyMaxId = useId();
   const tpMaxId = useId();
@@ -314,6 +318,14 @@ export function PowerTechniqueFilters({
               </span>
             </div>
           </div>
+        ) : null}
+
+        {pathFilter ? (
+          <ArchetypePathFilter
+            options={pathFilter.options}
+            selectedPathIds={pathFilter.selectedPathIds}
+            onChange={pathFilter.onChange}
+          />
         ) : null}
       </div>
     </>

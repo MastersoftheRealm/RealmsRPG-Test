@@ -5,7 +5,7 @@
 // DESIGN_INTENT: Sheet AddFeatModal is add-only (excludes owned ids, full Character). Guided
 // needs replace-in-place selection (initialSelectedIds, maxSelections, Recommended badges,
 // draft CharacterForFeatRequirement) — peer of GuidedPowersTechniquesL2Modal / equipment L2,
-// not a sheet AddFeatModal fork.
+// not a sheet AddFeatModal fork. Both compose ArchetypePathFilter (TASK-753).
 
 'use client';
 
@@ -14,8 +14,9 @@ import {
   UnifiedSelectionModal,
   type SelectableItem,
 } from '@/components/shared';
-import { useCodexSkills, type Feat } from '@/hooks';
+import { usePathListFilter, useCodexSkills, type Feat } from '@/hooks';
 import type { CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
+import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 import {
   buildGuidedFeatsL2FilterOptions,
   buildGuidedFeatsL2Items,
@@ -25,6 +26,7 @@ import {
   selectedIdsFromFeatL2Items,
   type StateFeatFilterMode,
 } from '@/lib/guided-creator/feats-l2';
+import type { ArchetypeCategory } from '@/types/archetype';
 import { GuidedFeatsFilterFields } from './guided-feats-filter-fields';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 
@@ -40,6 +42,8 @@ export interface GuidedFeatsL2ModalProps {
   requirementCharacter: CharacterForFeatRequirement;
   onClose: () => void;
   onConfirm: (selectedIds: string[]) => void;
+  /** Same-type auto-select for path flow. Omit on custom / no-path. */
+  autoSelectPathType?: ArchetypeCategory | null;
 }
 
 export function GuidedFeatsL2Modal({
@@ -52,10 +56,22 @@ export function GuidedFeatsL2Modal({
   requirementCharacter,
   onClose,
   onConfirm,
+  autoSelectPathType,
 }: GuidedFeatsL2ModalProps) {
   const { data: codexSkills = [] } = useCodexSkills();
   const [categories, setCategories] = useState<string[]>([]);
   const [stateFeatMode, setStateFeatMode] = useState<StateFeatFilterMode>('all');
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathFilterActive,
+  } = usePathListFilter({
+    entities: feats,
+    kind: 'feats',
+    autoSelectType: autoSelectPathType,
+    autoSelectWhen: isOpen,
+  });
 
   const { categories: categoryOptions } = useMemo(
     () => buildGuidedFeatsL2FilterOptions(feats, featType),
@@ -74,6 +90,8 @@ export function GuidedFeatsL2Modal({
         categories,
         stateFeatMode,
         recommendedBadgeLabel: l2Copy.recommendedBadge,
+        pathIndex,
+        selectedPathIds,
       }),
     [
       featType,
@@ -84,6 +102,8 @@ export function GuidedFeatsL2Modal({
       codexSkills,
       categories,
       stateFeatMode,
+      pathIndex,
+      selectedPathIds,
     ]
   );
 
@@ -117,9 +137,15 @@ export function GuidedFeatsL2Modal({
       onRemoveCategory={(v) => setCategories((prev) => prev.filter((c) => c !== v))}
       stateFeatMode={stateFeatMode}
       onStateFeatModeChange={setStateFeatMode}
+      pathFilter={{
+        options: pathIndex.options,
+        selectedPathIds,
+        onChange: setSelectedPathIds,
+      }}
     />
   );
-  const activeFilterCount = categories.length + (stateFeatMode !== 'all' ? 1 : 0);
+  const activeFilterCount =
+    categories.length + (stateFeatMode !== 'all' ? 1 : 0) + (pathFilterActive ? 1 : 0);
 
   return (
     <UnifiedSelectionModal
@@ -135,11 +161,14 @@ export function GuidedFeatsL2Modal({
       columns={FEATS_L2_HEADER_COLUMNS}
       gridColumns={FEATS_L2_GRID}
       itemLabel="feat"
-      emptyMessage={l2Copy.emptyMessage}
+      emptyMessage={
+        pathFilterActive ? pathFilterEmptyTitle('feats') : l2Copy.emptyMessage
+      }
       searchPlaceholder={l2Copy.searchPlaceholder}
       searchFields={FEATS_L2_SEARCH_FIELDS}
       filterContent={filterContent}
       showFilters
+      optionsDefaultExpanded
       optionsActiveCount={activeFilterCount}
       hideDisabled={false}
       size="xl"

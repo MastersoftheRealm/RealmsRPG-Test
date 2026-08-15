@@ -17,6 +17,7 @@ import { AREA_TYPES, DURATION_TYPES, DURATION_VALUES } from '@/lib/game/creator-
 import type { RangeConfig } from './power-creator-types';
 import type { PowerAreaPartInfo } from './power-creator-editor-config';
 import type { PowerSectionCosts } from './power-creator-cost-derivation';
+import { PowerCreatorHelp } from './power-creator-help';
 
 type PowerCreatorEditorPowerConfigProps = {
   range: RangeConfig;
@@ -67,6 +68,7 @@ export function PowerCreatorEditorPowerConfig({
       <CollapsibleSection
         title="Area of Effect"
         collapsedSummary={area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)}
+        titleAddon={<PowerCreatorHelp topic="area" />}
         rightSlot={<SectionCostBadge en={sectionCosts.area.energyRaw} tp={sectionCosts.area.totalTP} />}
       >
         <div className="flex flex-wrap items-center gap-4 mb-4">
@@ -119,6 +121,7 @@ export function PowerCreatorEditorPowerConfig({
       <CollapsibleSection
         title="Duration"
         collapsedSummary={durationSummary}
+        titleAddon={<PowerCreatorHelp topic="duration" />}
         rightSlot={<SectionCostBadge en={sectionCosts.duration.energyRaw} tp={sectionCosts.duration.totalTP} />}
       >
         <div className="flex flex-wrap items-center gap-4 mb-4">

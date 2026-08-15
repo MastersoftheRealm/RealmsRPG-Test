@@ -16,6 +16,7 @@ export function CodexFeatRow({
   name = feat.name,
   variant = 'codex',
   rightSlot,
+  nameChipLabels,
 }: {
   feat: Feat;
   skillIdToName: Map<string, string>;
@@ -23,8 +24,16 @@ export function CodexFeatRow({
   name?: string;
   variant?: 'codex' | 'admin';
   rightSlot?: ReactNode;
+  /**
+   * Labels shown beside the name while a list filter needs them — the archetype paths that
+   * recommend this feat (ADR-0014). Empty / omitted renders nothing.
+   */
+  nameChipLabels?: string[];
 }) {
   const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels);
+  const nameChips = nameChipLabels?.length
+    ? nameChipLabels.map((label) => ({ label }))
+    : undefined;
 
   return (
     <GridListRow
@@ -34,6 +43,8 @@ export function CodexFeatRow({
       gridColumns={FEAT_GRID_COLUMNS}
       columns={buildFeatGridColumns(feat, variant)}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
+      badges={nameChips}
+      showBadgesInName={Boolean(nameChips)}
       rightSlot={rightSlot}
     />
   );

@@ -16,6 +16,7 @@ import {
 import { ArmamentFilters } from '@/components/shared/filters';
 import { useSort } from '@/hooks/use-sort';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
+import { usePathListFilter } from '@/hooks';
 import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
 import type { DisplayItem } from '@/types';
@@ -47,6 +48,11 @@ import {
 import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import {
+  libraryRowPathIds,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 
 const LABELS_BY_KIND: Record<ArmamentLibraryKind, LibraryEntityTabLabels> = {
   weapon: WEAPON_LIBRARY_LABELS,
@@ -86,6 +92,13 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
   const [characterFilterId, setCharacterFilterId] = useState('');
   const addToCharacter = useAddToCharacterFromLibrary(armamentKind, characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({ entities: items, kind: 'armaments' });
 
   const cardData = useMemo(
     () => buildOfficialItemRows(items, propertiesDb, armamentKind),
@@ -120,8 +133,15 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
 
   const filteredData = useMemo(
     () =>
-      filterOfficialItemRows(cardData, search, sortItems, advancedFilters, characterContext),
-    [cardData, search, sortItems, advancedFilters, characterContext]
+      filterOfficialItemRows(
+        cardData,
+        search,
+        sortItems,
+        advancedFilters,
+        characterContext,
+        pathRecommendedIds
+      ),
+    [cardData, search, sortItems, advancedFilters, characterContext, pathRecommendedIds]
   );
 
   return (
@@ -161,18 +181,34 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
             onChange={setAdvancedFilters}
             onCharacterContextChange={setCharacterContext}
             onCharacterIdChange={setCharacterFilterId}
+            pathFilter={{
+              options: pathIndex.options,
+              selectedPathIds,
+              onChange: setSelectedPathIds,
+            }}
           />
         }
-        filterActiveCount={countActiveArmamentFilters(
-          advancedFilters,
-          Boolean(characterContext)
-        )}
+        filterActiveCount={
+          countActiveArmamentFilters(advancedFilters, Boolean(characterContext)) +
+          (pathFilterActive ? 1 : 0)
+        }
+        filterEmptyTitle={
+          pathFilterActive ? pathFilterEmptyTitle(labels.entityPlural) : undefined
+        }
       >
         {filteredData.map((item) => {
           const syncResult = getItemSyncResult(item.raw, propertiesDb);
           const family =
             armamentKind === 'armor' ? 'armor' : armamentKind === 'shield' ? 'shield' : 'weapon';
           const propertySection = propertiesProficienciesSection(item.parts, family);
+          const nameLabels = pathFilterActive
+            ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(item), selectedPathIds)
+            : undefined;
+          const nameBadges = nameLabels?.map((label) => ({ label })) ?? [];
+          const driftBadges = syncResult.hasDrift
+            ? [{ label: 'Needs sync' as const, color: 'amber' as const }]
+            : [];
+          const badges = [...nameBadges, ...driftBadges];
           return (
             <GridListRow
               key={item.id}
@@ -186,7 +222,8 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
               detailSections={propertySection ? [propertySection] : undefined}
               totalCost={item.tp}
               costLabel="TP"
-              badges={syncResult.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
+              badges={badges.length > 0 ? badges : undefined}
+              showBadgesInName={nameBadges.length > 0}
               warningMessage={syncResult.issues[0]?.message}
               rightSlot={
                 addToCharacter.active && !addToCharacter.isOnCharacter(item.raw) ? (

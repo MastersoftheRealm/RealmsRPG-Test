@@ -17,12 +17,21 @@ import { innateEnergyHelp, innatePowersHelp } from '../../../public/tooltip-text
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { Abilities, AbilityName } from '@/types';
+import { ArchetypePathFilter } from '@/components/shared/filters';
+import { usePathListFilter } from '@/hooks';
+import {
+  applyLivePathFilter,
+  pathFilterEmptyTitle,
+  selectableItemPathIds,
+} from '@/lib/game/path-recommendation-index';
+import type { ArchetypeCategory } from '@/types/archetype';
 import {
   buildPowersTechniquesL2Items,
   computeL2PowersTechniquesTpSpent,
   powersTechniquesL2Grid,
   powersTechniquesL2Headers,
   selectedIdsFromL2Items,
+  pathRecommendationKindForL2,
   type PowersTechniquesL2Mode,
 } from '@/lib/guided-creator/powers-techniques-l2';
 import type { PowersTechniquesKind } from '@/lib/guided-creator/power-technique-display';
@@ -42,7 +51,6 @@ export interface GuidedPowersTechniquesL2ModalProps {
   items: Array<LibraryPower | LibraryTechnique>;
   powerPartsDb: PowerPart[];
   techniquePartsDb: TechniquePart[];
-  pathRecommendedIds: string[];
   initialSelectedIds: string[];
   /**
    * Shared TP already spent outside this modal's selection
@@ -59,6 +67,8 @@ export interface GuidedPowersTechniquesL2ModalProps {
   onConfirm: (selectedIds: string[]) => void;
   /** SourceFilter — always-visible `scopeExtra` (same as L3), not collapsed Filters. */
   scopeExtra?: ReactNode;
+  /** Same-type auto-select on path See more. Omit on custom / no-path. */
+  autoSelectPathType?: ArchetypeCategory | null;
 }
 
 function energySpentOf(selected: SelectableItem[]): number {
@@ -108,7 +118,6 @@ export function GuidedPowersTechniquesL2Modal({
   items,
   powerPartsDb,
   techniquePartsDb,
-  pathRecommendedIds,
   initialSelectedIds,
   loadoutTpSpent,
   tpLimit,
@@ -119,10 +128,23 @@ export function GuidedPowersTechniquesL2Modal({
   onClose,
   onConfirm,
   scopeExtra,
+  autoSelectPathType,
 }: GuidedPowersTechniquesL2ModalProps) {
   const [error, setError] = useState<string | null>(null);
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds: pathMatchIds,
+    pathFilterActive,
+  } = usePathListFilter({
+    entities: items,
+    kind: pathRecommendationKindForL2(kind, mode),
+    autoSelectType: autoSelectPathType,
+    autoSelectWhen: isOpen,
+  });
 
-  const selectable = useMemo(
+  const catalogItems = useMemo(
     () =>
       buildPowersTechniquesL2Items({
         kind,
@@ -130,7 +152,6 @@ export function GuidedPowersTechniquesL2Modal({
         items,
         powerPartsDb,
         techniquePartsDb,
-        pathRecommendedIds,
         energyInput: { archetypeAbility, abilities, level: 1 },
         innateThreshold,
       }),
@@ -140,7 +161,6 @@ export function GuidedPowersTechniquesL2Modal({
       items,
       powerPartsDb,
       techniquePartsDb,
-      pathRecommendedIds,
       archetypeAbility,
       abilities,
       innateThreshold,
@@ -150,6 +170,18 @@ export function GuidedPowersTechniquesL2Modal({
   const initialSet = useMemo(
     () => new Set(initialSelectedIds.map(String)),
     [initialSelectedIds]
+  );
+
+  const selectable = useMemo(
+    () =>
+      applyLivePathFilter(catalogItems, {
+        pathMatchIds,
+        pathIndex,
+        selectedPathIds,
+        keepIds: initialSet,
+        idsForItem: selectableItemPathIds,
+      }),
+    [catalogItems, pathMatchIds, pathIndex, selectedPathIds, initialSet]
   );
 
   const title =
@@ -266,9 +298,25 @@ export function GuidedPowersTechniquesL2Modal({
       columns={powersTechniquesL2Headers(kind)}
       gridColumns={powersTechniquesL2Grid(kind)}
       itemLabel={mode === 'innate' ? 'innate power' : kind === 'techniques' ? 'technique' : 'power'}
-      emptyMessage={l2Copy.emptyMessage(kind, mode)}
+      emptyMessage={
+        pathFilterActive
+          ? pathFilterEmptyTitle(mode === 'innate' ? 'innate powers' : kind)
+          : l2Copy.emptyMessage(kind, mode)
+      }
       searchPlaceholder={l2Copy.searchPlaceholder(kind)}
       scopeExtra={scopeExtra}
+      filterContent={
+        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <ArchetypePathFilter
+            options={pathIndex.options}
+            selectedPathIds={selectedPathIds}
+            onChange={setSelectedPathIds}
+          />
+        </div>
+      }
+      showFilters
+      optionsDefaultExpanded
+      optionsActiveCount={pathFilterActive ? 1 : 0}
       footerExtra={footerExtra}
       confirmDisabled={confirmDisabled}
       nextSelectedIds={mode === 'innate' ? nextInnateSelectedIds : undefined}

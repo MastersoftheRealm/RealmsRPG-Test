@@ -7,6 +7,11 @@ import {
   filterCodexEquipment,
 } from './equipment-list';
 import { EMPTY_ARMAMENT_FILTERS } from '@/lib/library/armament-filters';
+import { parseArchetypePathData } from '@/lib/game/archetype-path';
+import {
+  buildPathRecommendationIndex,
+  pathRecommendedEntityIds,
+} from '@/lib/game/path-recommendation-index';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import type { CodexEquipmentItem } from '@/types/codex';
 
@@ -84,5 +89,35 @@ describe('codex equipment-list', () => {
       ctx
     );
     expect(filtered.map((r) => r.id)).toEqual(['a']);
+  });
+
+  it('keeps only equipment the selected paths recommend (armaments + gear bags)', () => {
+    const items = [
+      item({ id: 'sword', name: 'Sword', category: 'Weapon', currency: 10, rarity: 'Common' }),
+      item({ id: 'torch', name: 'Torch', category: 'Adventuring', currency: 2, rarity: 'Common' }),
+      item({ id: 'hat', name: 'Hat', category: 'Adventuring', currency: 4, rarity: 'Common' }),
+    ];
+    const index = buildPathRecommendationIndex({
+      paths: [
+        {
+          id: 'p-gear',
+          name: 'Gear',
+          type: 'martial',
+          path_data: parseArchetypePathData({
+            level1: { armaments: ['sword:1'], equipment: ['torch'] },
+          }),
+        },
+      ],
+      entities: items,
+      kind: ['armaments', 'equipment'],
+    });
+    const filtered = filterCodexEquipment(
+      items,
+      { search: '', categoryFilter: '', rarityFilter: '' },
+      EMPTY_ARMAMENT_FILTERS,
+      null,
+      pathRecommendedEntityIds(index, ['p-gear'])
+    );
+    expect(filtered.map((r) => r.id).sort()).toEqual(['sword', 'torch']);
   });
 });

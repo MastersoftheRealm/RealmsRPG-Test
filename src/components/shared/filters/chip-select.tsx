@@ -7,20 +7,29 @@
 
 'use client';
 
-import { useId, useMemo } from 'react';
+import { useId, useMemo, type ReactNode } from 'react';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FilterNativeSelect } from './filter-native-select';
 import { dedupeSelectOptions, FILTER_LABEL_ROW_CLASS } from './filter-utils';
 
+export interface ChipSelectOption {
+  value: string;
+  label: string;
+  /** Optional `<optgroup>` label — set on every option to group a long list (e.g. path types). */
+  group?: string;
+}
+
 interface ChipSelectProps {
   label: string;
   placeholder?: string;
-  options: { value: string; label: string }[];
+  options: ChipSelectOption[];
   selectedValues: string[];
   onSelect: (value: string) => void;
   /** Required when selectedValues is non-empty (chip remove buttons). Omit for pick-only. */
   onRemove?: (value: string) => void;
+  /** Optional control beside the label (e.g. InfoTippy). */
+  labelAccessory?: ReactNode;
   className?: string;
 }
 
@@ -31,11 +40,29 @@ export function ChipSelect({
   selectedValues,
   onSelect,
   onRemove,
+  labelAccessory,
   className = '',
 }: ChipSelectProps) {
   const id = useId();
   const uniqueOptions = useMemo(() => dedupeSelectOptions(options), [options]);
-  const availableOptions = uniqueOptions.filter(opt => !selectedValues.includes(opt.value));
+  const { ungroupedOptions, groupedOptions } = useMemo(() => {
+    const available = uniqueOptions.filter((opt) => !selectedValues.includes(opt.value));
+    const groups = new Map<string, ChipSelectOption[]>();
+    const ungrouped: ChipSelectOption[] = [];
+    for (const option of available) {
+      if (!option.group) {
+        ungrouped.push(option);
+        continue;
+      }
+      const bucket = groups.get(option.group);
+      if (bucket) bucket.push(option);
+      else groups.set(option.group, [option]);
+    }
+    return {
+      ungroupedOptions: ungrouped,
+      groupedOptions: Array.from(groups, ([groupLabel, groupOptions]) => ({ groupLabel, groupOptions })),
+    };
+  }, [uniqueOptions, selectedValues]);
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -51,13 +78,23 @@ export function ChipSelect({
         <label htmlFor={id} className="text-sm font-medium leading-5 text-text-secondary">
           {label}
         </label>
+        {labelAccessory}
       </div>
       <FilterNativeSelect id={id} onChange={handleChange} defaultValue="">
         <option value="">{placeholder}</option>
-        {availableOptions.map((opt) => (
+        {ungroupedOptions.map((opt) => (
           <option key={opt.value} value={opt.value}>
             {opt.label}
           </option>
+        ))}
+        {groupedOptions.map(({ groupLabel, groupOptions }) => (
+          <optgroup key={groupLabel} label={groupLabel}>
+            {groupOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </optgroup>
         ))}
       </FilterNativeSelect>
       {selectedValues.length > 0 && (

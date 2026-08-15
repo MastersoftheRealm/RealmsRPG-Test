@@ -5,7 +5,7 @@
 export type SelectOption = { value: string; label: string };
 
 /** Keep the first option for each value — avoids duplicate `<option>` rows. */
-export function dedupeSelectOptions(options: SelectOption[]): SelectOption[] {
+export function dedupeSelectOptions<T extends SelectOption>(options: T[]): T[] {
   const seen = new Set<string>();
   return options.filter((opt) => {
     if (seen.has(opt.value)) return false;

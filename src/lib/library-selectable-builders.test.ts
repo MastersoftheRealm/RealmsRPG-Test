@@ -288,7 +288,6 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       items: catalog,
       powerPartsDb: partsDb,
       techniquePartsDb: [],
-      pathRecommendedIds: [],
       energyInput: { archetypeAbility: 'intelligence', abilities: { intelligence: 4 }, level: 1 },
     });
 
@@ -390,7 +389,6 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       items: [technique],
       powerPartsDb: [],
       techniquePartsDb: partsDb,
-      pathRecommendedIds: [],
       energyInput: { archetypeAbility: 'strength', abilities: { strength: 2 }, level: 1 },
     });
 

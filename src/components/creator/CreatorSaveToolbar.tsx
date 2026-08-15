@@ -6,6 +6,7 @@
  * Private/Public toggle (admin), Load, Reset, Save. Used by CreatorPageShell.
  */
 
+import type { ReactNode } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
@@ -26,6 +27,10 @@ export interface CreatorSaveToolbarProps {
    */
   requireAuthToLoad?: boolean;
   className?: string;
+  /** Optional InfoTippy beside Load */
+  loadHelp?: ReactNode;
+  /** Optional InfoTippy beside Reset */
+  resetHelp?: ReactNode;
 }
 
 export function CreatorSaveToolbar({
@@ -39,6 +44,8 @@ export function CreatorSaveToolbar({
   showPublicPrivate = false,
   user,
   requireAuthToLoad = true,
+  loadHelp,
+  resetHelp,
 }: CreatorSaveToolbarProps) {
   const loadNeedsLogin = requireAuthToLoad && !user;
   const loadLabel = loadNeedsLogin ? 'Log in to load from library' : 'Load from library';
@@ -56,13 +63,19 @@ export function CreatorSaveToolbar({
           aria-label="Save to my library or Realms Library"
         />
       )}
-      <Button variant="secondary" onClick={onLoad} title={loadLabel} aria-label={loadLabel}>
-        <FolderOpen className="w-5 h-5" />
-        Load
-      </Button>
-      <Button variant="secondary" onClick={onReset} aria-label="Reset creator form">
-        Reset
-      </Button>
+      <span className="inline-flex items-center gap-1">
+        <Button variant="secondary" onClick={onLoad} title={loadLabel} aria-label={loadLabel}>
+          <FolderOpen className="w-5 h-5" />
+          Load
+        </Button>
+        {loadHelp}
+      </span>
+      <span className="inline-flex items-center gap-1">
+        <Button variant="secondary" onClick={onReset} aria-label="Reset creator form">
+          Reset
+        </Button>
+        {resetHelp}
+      </span>
       <Button
         onClick={onSave}
         disabled={saving || saveDisabled}

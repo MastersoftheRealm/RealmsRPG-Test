@@ -6,6 +6,13 @@ import {
   LoadoutBudgetBar,
   type SelectableItem,
 } from '@/components/shared';
+import { ArchetypePathFilter } from '@/components/shared/filters';
+import { usePathListFilter } from '@/hooks';
+import {
+  applyLivePathFilter,
+  pathFilterEmptyTitle,
+  selectableItemPathIds,
+} from '@/lib/game/path-recommendation-index';
 import type { GuidedDraft, GuidedEquipmentPhase } from '@/stores/guided-creator-store';
 import type { EligibleEquipmentRow } from '@/lib/guided-creator/equipment-eligibility';
 import {
@@ -13,6 +20,7 @@ import {
   computeL2CurrencySpent,
   computeL2TpSpent,
   initialSelectedIdsForPhase,
+  pathRecommendationKindForEquipmentPhase,
 } from '@/lib/guided-creator/guided-equipment-l2';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import {
@@ -54,6 +62,31 @@ export function GuidedEquipmentL2Modal({
   const initialSelectedIds = useMemo(
     () => initialSelectedIdsForPhase(phase, draft),
     [phase, draft]
+  );
+
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds: pathMatchIds,
+    pathFilterActive,
+  } = usePathListFilter({
+    entities: items,
+    kind: pathRecommendationKindForEquipmentPhase(phase),
+    autoSelectType: draft.archetypeType,
+    autoSelectWhen: isOpen,
+  });
+
+  const visibleItems = useMemo(
+    () =>
+      applyLivePathFilter(items, {
+        pathMatchIds,
+        pathIndex,
+        selectedPathIds,
+        keepIds: initialSelectedIds,
+        idsForItem: selectableItemPathIds,
+      }),
+    [items, pathMatchIds, pathIndex, selectedPathIds, initialSelectedIds]
   );
 
   const initialQuantities = useMemo(() => {
@@ -140,7 +173,7 @@ export function GuidedEquipmentL2Modal({
       }}
       title={title}
       description={description}
-      items={items}
+      items={visibleItems}
       onConfirm={handleConfirm}
       initialSelectedIds={initialSelectedIds}
       maxSelections={phase === 'armor' ? 1 : undefined}
@@ -149,9 +182,25 @@ export function GuidedEquipmentL2Modal({
       columns={headerColumns}
       gridColumns={gridColumns}
       itemLabel={phase === 'gear' ? 'item' : phase}
-      emptyMessage={l2Copy.emptyMessage(phase)}
+      emptyMessage={
+        pathFilterActive
+          ? pathFilterEmptyTitle(phase === 'weapon' ? 'weapons' : phase === 'armor' ? 'armor' : 'gear')
+          : l2Copy.emptyMessage(phase)
+      }
       searchPlaceholder={l2Copy.searchPlaceholder(phase)}
       scopeExtra={scopeExtra}
+      filterContent={
+        <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <ArchetypePathFilter
+            options={pathIndex.options}
+            selectedPathIds={selectedPathIds}
+            onChange={setSelectedPathIds}
+          />
+        </div>
+      }
+      showFilters
+      optionsDefaultExpanded
+      optionsActiveCount={pathFilterActive ? 1 : 0}
       footerExtra={footerExtra}
       confirmDisabled={confirmDisabled}
       size="xl"

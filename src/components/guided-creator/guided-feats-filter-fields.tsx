@@ -1,15 +1,21 @@
 /**
  * Guided feats filter fields — mirrors the Codex Feats browse tab's non-requirement
- * filters (Category, State Feats) so the guided L2 modal and L3 inline catalog share
- * identical filter chrome (TASK-684). Character/level/ability requirement filters and
- * the Archetype/Character Feat Type filter are intentionally omitted — eligibility is
- * automatic per row here, and each guided step already scopes to one feat type.
+ * filters (Category, State Feats, Archetype Path last) so the guided L2 modal and L3
+ * inline catalog share identical filter chrome (TASK-684 / TASK-753). Character/level/
+ * ability requirement filters and the Archetype/Character Feat Type filter are
+ * intentionally omitted — eligibility is automatic per row here, and each guided step
+ * already scopes to one feat type.
  */
 
 'use client';
 
 import { InfoTippy } from '@/components/shared';
-import { ChipSelect, SelectFilter } from '@/components/shared/filters';
+import {
+  ArchetypePathFilter,
+  ChipSelect,
+  SelectFilter,
+  type ArchetypePathFilterProps,
+} from '@/components/shared/filters';
 import { STATE_FEAT_RESTRICTION_NOTICE } from '@/lib/codex/feat-restriction-notice';
 import type { StateFeatFilterMode } from '@/lib/guided-creator/feats-l2';
 
@@ -20,6 +26,7 @@ export interface GuidedFeatsFilterFieldsProps {
   onRemoveCategory: (value: string) => void;
   stateFeatMode: StateFeatFilterMode;
   onStateFeatModeChange: (value: StateFeatFilterMode) => void;
+  pathFilter?: Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'> | null;
 }
 
 export function GuidedFeatsFilterFields({
@@ -29,9 +36,10 @@ export function GuidedFeatsFilterFields({
   onRemoveCategory,
   stateFeatMode,
   onStateFeatModeChange,
+  pathFilter,
 }: GuidedFeatsFilterFieldsProps) {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <ChipSelect
         label="Category"
         placeholder="Choose category"
@@ -57,6 +65,13 @@ export function GuidedFeatsFilterFields({
         onChange={(v) => onStateFeatModeChange(v as StateFeatFilterMode)}
         placeholder={null}
       />
+      {pathFilter ? (
+        <ArchetypePathFilter
+          options={pathFilter.options}
+          selectedPathIds={pathFilter.selectedPathIds}
+          onChange={pathFilter.onChange}
+        />
+      ) : null}
     </div>
   );
 }

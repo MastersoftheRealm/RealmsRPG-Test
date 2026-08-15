@@ -9,6 +9,7 @@
 
 import { useState, useMemo, useCallback, useId } from 'react';
 import {
+  ArchetypePathFilter,
   ChipSelect,
   SelectFilter,
   CharacterFilter,
@@ -21,7 +22,7 @@ import {
 } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
-import { useCodexSkills, useCharacter, type Skill } from '@/hooks';
+import { useCodexSkills, useCharacter, usePathListFilter, type Skill } from '@/hooks';
 import { cn } from '@/lib/utils';
 import {
   SKILL_GRID_COLUMNS,
@@ -38,6 +39,7 @@ import {
   readInitialLibraryCharacterFilterId,
   writePersistedLibraryCharacterFilterId,
 } from '@/lib/library/character-filter-persistence';
+import { pathChipLabelsForEntity, pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 
 const SKILL_CHARACTER_FILTER_HELP =
   'Filter this list by a character you own. Optionally keep only skills they know, skills they do not know, or sub-skills for a base skill they have.';
@@ -75,6 +77,18 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
   const character = characterResult?.character ?? undefined;
   const hasCharacter = Boolean(characterFilterId && character);
 
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({
+    entities: skills,
+    kind: 'skills',
+    enabled: loadPublicCodex,
+  });
+
   const skillIdToName = useMemo(() => buildSkillIdToName(skills), [skills]);
 
   const characterKnownIds = useMemo(() => {
@@ -89,10 +103,10 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
 
   const filteredSkills = useMemo(() => {
     if (!skills) return [];
-    const filtered = filterSkills(skills, filters, skillIdToName, characterKnownIds);
+    const filtered = filterSkills(skills, filters, skillIdToName, characterKnownIds, pathRecommendedIds);
     if (filters.baseSkill) return sortSkillsForBaseFilter(filtered, filters.baseSkill);
     return sortItems<Skill>(filtered);
-  }, [skills, filters, sortItems, skillIdToName, characterKnownIds]);
+  }, [skills, filters, sortItems, skillIdToName, characterKnownIds, pathRecommendedIds]);
 
   if (codexMode === 'my') {
     return <CodexMyCodexEmpty />;
@@ -114,7 +128,7 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
             helpContent={SKILL_CHARACTER_FILTER_HELP}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             <ChipSelect
               label="Ability"
               placeholder="Choose ability"
@@ -192,6 +206,12 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
                 </div>
               </>
             ) : null}
+
+            <ArchetypePathFilter
+              options={pathIndex.options}
+              selectedPathIds={selectedPathIds}
+              onChange={setSelectedPathIds}
+            />
           </div>
         </>
       }
@@ -201,10 +221,21 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
       onSort={handleSort}
       isLoading={isLoading}
       isEmpty={filteredSkills.length === 0}
-      emptyTitle="No skills match your filters."
+      emptyTitle={
+        pathFilterActive ? pathFilterEmptyTitle('skills') : 'No skills match your filters.'
+      }
     >
       {filteredSkills.map((skill: Skill) => (
-        <CodexSkillRow key={skill.id} skill={skill} skillIdToName={skillIdToName} />
+        <CodexSkillRow
+          key={skill.id}
+          skill={skill}
+          skillIdToName={skillIdToName}
+          nameChipLabels={
+            pathFilterActive
+              ? pathChipLabelsForEntity(pathIndex, skill.id, selectedPathIds)
+              : undefined
+          }
+        />
       ))}
     </CodexBrowseListShell>
   );

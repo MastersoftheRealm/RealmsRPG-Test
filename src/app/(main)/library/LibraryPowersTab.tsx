@@ -16,6 +16,7 @@ import { PowerTechniqueFilters } from '@/components/shared/filters';
 import { useSort } from '@/hooks/use-sort';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
+import { usePathListFilter } from '@/hooks';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { useUserPowers, usePowerParts, useDuplicatePower } from '@/hooks';
 import type { DisplayItem } from '@/types';
@@ -34,6 +35,12 @@ import {
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
+import {
+  POWER_LIST_PATH_KINDS,
+  libraryRowPathIds,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 import {
   LibrarySyncRowAction,
   UserLibraryEntityTabShell,
@@ -64,6 +71,13 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   const [characterFilterId, setCharacterFilterId] = useState('');
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({ entities: powers, kind: POWER_LIST_PATH_KINDS });
 
   const cardData = useMemo(() => {
     return buildOfficialPowerRows(powers, partsDb).map((row) => {
@@ -112,8 +126,8 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
 
   const filteredData = useMemo(
     () =>
-      filterOfficialPowerRows(cardData, search, sortItems, advancedFilters, characterContext),
-    [cardData, search, advancedFilters, characterContext, sortItems]
+      filterOfficialPowerRows(cardData, search, sortItems, advancedFilters, characterContext, pathRecommendedIds),
+    [cardData, search, advancedFilters, characterContext, sortItems, pathRecommendedIds]
   );
 
   return (
@@ -156,6 +170,11 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
           innateThresholdOptions={innateThresholdOptions}
           onCharacterContextChange={setCharacterContext}
           onCharacterIdChange={setCharacterFilterId}
+          pathFilter={{
+            options: pathIndex.options,
+            selectedPathIds,
+            onChange: setSelectedPathIds,
+          }}
         />
       }
       filterActiveCount={
@@ -163,11 +182,18 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
           advancedFilters,
           'power',
           Boolean(characterContext)
-        ) + (characterFilterId ? 1 : 0)
+        ) + (characterFilterId ? 1 : 0) + (pathFilterActive ? 1 : 0)
       }
+      filterEmptyTitle={pathFilterActive ? pathFilterEmptyTitle('powers') : undefined}
     >
       {filteredData.map((power) => {
         const partsSection = partsProficienciesSection(power.parts, 'power');
+        const nameLabels = pathFilterActive
+          ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(power), selectedPathIds)
+          : undefined;
+        const nameBadges = nameLabels?.map((label) => ({ label })) ?? [];
+        const driftBadges = power.hasDrift ? [{ label: 'Needs sync' as const, color: 'amber' as const }] : [];
+        const badges = [...nameBadges, ...driftBadges];
         return (
           <GridListRow
             key={power.id}
@@ -189,7 +215,8 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
             detailSections={partsSection ? [partsSection] : undefined}
             totalCost={power.tp}
             costLabel="TP"
-            badges={power.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
+            badges={badges.length > 0 ? badges : undefined}
+            showBadgesInName={nameBadges.length > 0}
             warningMessage={power.syncIssues[0]?.message}
             rightSlot={
               addToCharacter.active && !addToCharacter.isOnCharacter(power.raw) ? (

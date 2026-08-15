@@ -3,15 +3,17 @@
  * ============================
  * Read-only character sheet view for Realm Masters viewing their campaign players.
  * Reuses sheet derived assemble + CharacterSheetBody (TASK-597) — no parallel enrich/stats glue.
+ * Document SoT is `useCampaignCharacterView` / `campaignKeys.characterView` (TASK-761):
+ * the campaign route enforces roster + RM authorization, so this view does not read
+ * `characterKeys.detail` / `/api/characters/[id]`.
  */
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { ChevronLeft } from 'lucide-react';
-import { apiFetch } from '@/lib/api-client';
 import { ProtectedRoute } from '@/components/layout';
 import { LoadingState, Alert, PageContainer } from '@/components/ui';
 import {
@@ -42,10 +44,10 @@ import {
   useCodexSkills,
   useCodexArchetypes,
   useOfficialLibrary,
+  useCampaignCharacterView,
 } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
-import type { Character, CharacterLibraryTabId, Item } from '@/types';
-import type { LibraryForView } from '@/services/character-service';
+import type { CharacterLibraryTabId, Item } from '@/types';
 
 const READONLY_LIBRARY_HANDLERS = buildReadOnlyLibraryHandlers();
 
@@ -64,11 +66,16 @@ function CampaignCharacterViewContent() {
   const userId = params.userId as string;
   const characterId = params.characterId as string;
 
-  const [character, setCharacter] = useState<Character | null>(null);
-  const [libraryForView, setLibraryForView] = useState<LibraryForView | undefined>(undefined);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [libraryActiveTab, setLibraryActiveTab] = useState<CharacterLibraryTabId>('feats');
+
+  const {
+    data: viewData,
+    isPending: loading,
+    error: loadError,
+  } = useCampaignCharacterView(campaignId, userId, characterId);
+  const character = viewData?.character ?? null;
+  const libraryForView = viewData?.libraryForView;
+  const error = loadError ? loadError.message || 'Failed to load character' : null;
 
   // Owner's library for enrichment when viewing another user's character; fallback for codex-only refs
   const { data: userPowers = [] } = useUserPowers();
@@ -95,28 +102,6 @@ function CampaignCharacterViewContent() {
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: featsDb = [] } = useCodexFeats();
   const { data: codexArchetypes = [] } = useCodexArchetypes();
-
-  useEffect(() => {
-    async function fetchCharacter() {
-      try {
-        setLoading(true);
-        setError(null);
-        const data = await apiFetch<
-          Character & {
-            libraryForView?: LibraryForView;
-          }
-        >(`/api/campaigns/${campaignId}/characters/${userId}/${characterId}`);
-        const { libraryForView: lib, ...charData } = data;
-        setCharacter(charData);
-        setLibraryForView(lib);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load character');
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchCharacter();
-  }, [campaignId, userId, characterId]);
 
   const {
     enrichedData,
@@ -271,7 +256,7 @@ function CampaignCharacterViewContent() {
               <ChevronLeft className="w-4 h-4" />
               Back to Campaign
             </Link>
-            <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
+            <p className="text-sm text-text-muted mb-4">
               View-only (Realm Master view)
             </p>
 

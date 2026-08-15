@@ -84,6 +84,7 @@ export function UnifiedSelectionModalList({
                   totalCost={item.totalCost}
                   costLabel={item.costLabel}
                   badges={item.badges}
+                  showBadgesInName={item.showBadgesInName}
                   gridColumns={gridColumns}
                   // Quantity-first: stepper on the far right replaces the + selection toggle
                   // (TASK-685). Selection + is external chrome (not an inline grid track) so

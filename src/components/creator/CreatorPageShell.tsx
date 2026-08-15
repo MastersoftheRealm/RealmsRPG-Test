@@ -99,6 +99,11 @@ export type CreatorPageShellProps = {
   sidebar: ReactNode;
   children: ReactNode;
   extraModals?: ReactNode;
+  /** Optional InfoTippy beside toolbar Load / Reset (power creator). */
+  toolbarHelp?: {
+    load?: ReactNode;
+    reset?: ReactNode;
+  };
 };
 
 export function CreatorPageShell({
@@ -125,6 +130,7 @@ export function CreatorPageShell({
   sidebar,
   children,
   extraModals,
+  toolbarHelp,
 }: CreatorPageShellProps) {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [loginReason, setLoginReason] = useState<LoginPromptReason>('save');
@@ -197,6 +203,8 @@ export function CreatorPageShell({
           showPublicPrivate={showPublicPrivate}
           user={user}
           requireAuthToLoad={requireAuthToLoad}
+          loadHelp={toolbarHelp?.load}
+          resetHelp={toolbarHelp?.reset}
         />
       }
       sidebar={sidebarNode}

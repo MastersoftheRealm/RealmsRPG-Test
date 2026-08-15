@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useCallback, useId } from 'react';
 import {
+  ArchetypePathFilter,
   ChipSelect,
   AbilityRequirementFilter,
   TagFilter,
@@ -16,7 +17,13 @@ import {
   InfoTippy,
 } from '@/components/shared';
 import { Button, IconButton, useToast } from '@/components/ui';
-import { useCodexFeats, useCodexSkills, type Feat, type Skill } from '@/hooks';
+import {
+  useCodexFeats,
+  useCodexSkills,
+  usePathListFilter,
+  type Feat,
+  type Skill,
+} from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc } from './actions';
@@ -27,9 +34,11 @@ import {
   ADMIN_FEAT_HEADER_COLUMNS,
   FEAT_GRID_COLUMNS,
   buildFeatFilterOptions,
+  featPathChipNames,
   filterFeats,
   type FeatListFilters,
 } from '@/lib/codex/feat-list';
+import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 import { STATE_FEAT_RESTRICTION_NOTICE } from '@/lib/codex/feat-restriction-notice';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
@@ -75,11 +84,19 @@ export function AdminFeatsTab() {
 
   const filterOptions = useMemo(() => buildFeatFilterOptions(feats), [feats]);
 
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({ entities: feats, kind: 'feats' });
+
   const filteredFeats = useMemo(() => {
     if (!feats) return [];
-    const filtered = filterFeats(feats, filters);
+    const filtered = filterFeats(feats, filters, { pathRecommendedIds });
     return sortItems<Feat>(filtered);
-  }, [feats, filters, sortItems]);
+  }, [feats, filters, sortItems, pathRecommendedIds]);
 
   const groupedFeats = useMemo(() => groupFeatFamilies(filteredFeats), [filteredFeats]);
 
@@ -327,6 +344,11 @@ export function AdminFeatsTab() {
                 onChange={(v) => setFilters((f) => ({ ...f, stateFeatMode: (v || '') as '' | 'only' | 'hide' }))}
                 placeholder="All states"
               />
+              <ArchetypePathFilter
+                options={pathIndex.options}
+                selectedPathIds={selectedPathIds}
+                onChange={setSelectedPathIds}
+              />
           </div>
         }
         headerColumns={ADMIN_FEAT_HEADER_COLUMNS}
@@ -336,7 +358,11 @@ export function AdminFeatsTab() {
         rowChrome={{ rightSlot: true }}
         isLoading={isLoading}
         isEmpty={groupedFeats.length === 0}
-        emptyTitle="No feats match your filters"
+        emptyTitle={
+          pathFilterActive
+            ? pathFilterEmptyTitle('feats')
+            : 'No feats match your filters'
+        }
         emptyMessage="Add one to get started."
         emptyAction={{ label: 'Add Feat', onClick: openAdd }}
       >
@@ -348,6 +374,11 @@ export function AdminFeatsTab() {
             skillIdToName={skillIdToName}
             familyLevels={familyLevels}
             variant="admin"
+            nameChipLabels={
+              pathFilterActive
+                ? featPathChipNames(pathIndex, feat, selectedPathIds)
+                : undefined
+            }
             rightSlot={
               <div className="flex items-center gap-1 pr-2">
                 {pendingDeleteId === feat.id ? (

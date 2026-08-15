@@ -6,7 +6,8 @@
  * across the application (Library, Character Sheet modals, etc.)
  *
  * Available filters:
- * - ChipSelect: Multi-select dropdown with chip display
+ * - ChipSelect: Multi-select dropdown with chip display (optional per-option `group` → optgroup)
+ * - ArchetypePathFilter: Union filter by archetype path recommendations (ADR-0014)
  * - AbilityRequirementFilter: Filter by ability score requirements
  * - TagFilter: Multi-select tag filter with Any/All mode
  * - SelectFilter: Simple single-select dropdown
@@ -18,6 +19,10 @@
  */
 
 export { ChipSelect } from './chip-select';
+export {
+  ArchetypePathFilter,
+  type ArchetypePathFilterProps,
+} from './archetype-path-filter';
 export { AbilityRequirementFilter, type AbilityRequirement } from './ability-requirement-filter';
 export { TagFilter } from './tag-filter';
 export { SelectFilter } from './select-filter';

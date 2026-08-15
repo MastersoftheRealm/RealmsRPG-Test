@@ -7,10 +7,11 @@
 
 import { useMemo, useState } from 'react';
 import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
-import { PowerTechniqueFilters } from '@/components/shared/filters';
+import { ArchetypePathFilter, PowerTechniqueFilters } from '@/components/shared/filters';
 import { sourceFilterSummary } from '@/components/shared/filters/source-filter';
-import { useAddLibraryItemData, type AddLibraryItemType } from '@/hooks/use-add-library-item-data';
+import { useAddLibraryItemData, type AddLibraryItemType, type PowerSelectionMode } from '@/hooks/use-add-library-item-data';
 import { useGameRules } from '@/hooks/use-game-rules';
+import { usePathListFilter } from '@/hooks';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 import {
   applyPowerTechniqueFilters,
@@ -22,6 +23,14 @@ import type { PowerTechniqueCharacterContext } from '@/lib/library/power-techniq
 import { collectCategoryFilterOptions } from '@/lib/library/power-technique-categories';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 import type { ReactNode } from 'react';
+import {
+  applyLivePathFilter,
+  EQUIPMENT_LIST_PATH_KINDS,
+  pathFilterEmptyTitle,
+  POWER_LIST_PATH_KINDS,
+  selectableItemPathIds,
+  type PathRecommendationKindInput,
+} from '@/lib/game/path-recommendation-index';
 import {
   AddLibraryItemHeaderExtra,
   AddLibraryItemScopeExtra,
@@ -35,6 +44,26 @@ import {
   getModalGridColumns,
   getSearchPlaceholder,
 } from './add-library-item/modal-config';
+
+function pathKindForAddLibraryItem(
+  itemType: AddLibraryItemType,
+  powerSelectionMode: PowerSelectionMode
+): PathRecommendationKindInput | null {
+  if (itemType === 'power' && powerSelectionMode === 'empowered') return null;
+  if (itemType === 'power') return POWER_LIST_PATH_KINDS;
+  if (itemType === 'technique') return 'techniques';
+  if (itemType === 'equipment') return EQUIPMENT_LIST_PATH_KINDS;
+  return 'armaments';
+}
+
+function pathEmptyPlural(itemType: AddLibraryItemType): string {
+  if (itemType === 'power') return 'powers';
+  if (itemType === 'technique') return 'techniques';
+  if (itemType === 'weapon') return 'weapons';
+  if (itemType === 'armor') return 'armor';
+  if (itemType === 'shield') return 'shields';
+  return 'equipment';
+}
 
 interface AddLibraryItemModalProps {
   isOpen: boolean;
@@ -77,6 +106,39 @@ export function AddLibraryItemModal({
   const showPtFilters =
     (itemType === 'power' && powerSelectionMode === 'powers') || itemType === 'technique';
   const ptKind = itemType === 'technique' ? 'technique' : 'power';
+  const pathKind = pathKindForAddLibraryItem(itemType, powerSelectionMode);
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds: pathMatchIds,
+    pathFilterActive,
+  } = usePathListFilter({
+    entities: items,
+    kind: pathKind ?? 'powers',
+    enabled: isOpen && pathKind != null,
+  });
+
+  const pathVisibleItems = useMemo(
+    () =>
+      pathKind
+        ? applyLivePathFilter(items, {
+            pathMatchIds,
+            pathIndex,
+            selectedPathIds,
+            idsForItem: selectableItemPathIds,
+          })
+        : items,
+    [pathKind, items, pathMatchIds, pathIndex, selectedPathIds]
+  );
+
+  const pathFilterProps = pathKind
+    ? {
+        options: pathIndex.options,
+        selectedPathIds,
+        onChange: setSelectedPathIds,
+      }
+    : null;
 
   const categoryOptions = useMemo(
     () =>
@@ -153,7 +215,16 @@ export function AddLibraryItemModal({
       innateThresholdOptions={innateThresholdOptions}
       onCharacterContextChange={setCharacterContext}
       persistCharacter={false}
+      pathFilter={pathFilterProps}
     />
+  ) : pathFilterProps ? (
+    <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <ArchetypePathFilter
+        options={pathFilterProps.options}
+        selectedPathIds={pathFilterProps.selectedPathIds}
+        onChange={pathFilterProps.onChange}
+      />
+    </div>
   ) : undefined;
 
   const columns =
@@ -163,7 +234,8 @@ export function AddLibraryItemModal({
 
   // Mode tabs are always visible; summary/badge cover Filters-only state (source + P/T).
   const optionsSummary = sourceFilterSummary(source);
-  const optionsActiveCount = (source !== 'all' ? 1 : 0) + ptActiveCount;
+  const optionsActiveCount =
+    (source !== 'all' ? 1 : 0) + ptActiveCount + (pathFilterActive ? 1 : 0);
 
   return (
     <UnifiedSelectionModal
@@ -176,16 +248,17 @@ export function AddLibraryItemModal({
       scopeExtra={scopeExtra}
       headerExtra={headerExtraContent}
       filterContent={filterContent}
+      showFilters={Boolean(filterContent)}
       optionsSummary={optionsSummary}
       optionsActiveCount={optionsActiveCount}
-      items={items}
+      items={pathVisibleItems}
       isLoading={isLoading}
       onConfirm={handleConfirm}
       displayFilter={combinedDisplayFilter}
       columns={columns}
       gridColumns={getModalGridColumns(itemType)}
       itemLabel={itemType}
-      emptyMessage={emptyTitle}
+      emptyMessage={pathFilterActive ? pathFilterEmptyTitle(pathEmptyPlural(itemType)) : emptyTitle}
       emptySubMessage={emptyDesc}
       searchPlaceholder={getSearchPlaceholder(itemType, powerSelectionMode)}
       showQuantity={itemType === 'equipment'}

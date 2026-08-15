@@ -22,7 +22,7 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 |---|---|---|
 | **0 — foundation** | `done` | Backups, schema baseline, codex data-loss determination. |
 | **1 — stop the bleeding** | `done` (code + DB + ops) | GitHub required checks + Actions public Supabase secrets + `E2E_OPTIONAL=1` + orphan profile delete. **2026-08-13 Vercel:** Upstash Redis + Sentry DSN live on production/preview; `NEXT_PUBLIC_SITE_URL` on production; production rebuilt. Still owner: HIBP, E2E test user, optional “require PR”. |
-| **2 — correctness** | `done` (code; pending-qa) | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**; TASK-744 styleguide Linux baselines **done**; TASK-741 dirty-key PATCH **done**; TASK-742 acked rules leftovers **done**; TASK-739 Advanced currency clamp **done**; TASK-746 library add lock **done**; TASK-747 realtime non-resource merge **done**; TASK-749 PATCH currency floor **done**; TASK-750 sheet Query SoT **done**. Remaining Wave 2 coding: none. |
+| **2 — correctness** | `done` (code; pending-qa) | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**; TASK-744 styleguide Linux baselines **done**; TASK-741 dirty-key PATCH **done**; TASK-742 acked rules leftovers **done**; TASK-739 Advanced currency clamp **done**; TASK-746 library add lock **done**; TASK-747 realtime non-resource merge **done**; TASK-749 PATCH currency floor **done**; TASK-750 sheet Query SoT **done**; TASK-761 campaign RM view Query load **done** (report 06 P1-1 sibling). Remaining Wave 2 coding: none. |
 | **3 — structure** | `queued` | Wave 2 P0 TASK-741 (dirty-key PATCH) is green in code. Cheap Prettier/`text-muted` mega-diffs still wait for owner to start Wave 3. |
 
 ### Commits on `master` (audit program, oldest → newest)
@@ -54,7 +54,7 @@ Later `master` commits (`6adf344f`, `21ffcd18`, …) are unrelated product work 
 ### Uncommitted / follow-up coding
 
 Plan refresh + GAME_RULES / SIZES seed / admin editor prose may still be uncommitted.
-Wave 2 coding: TASK-740, TASK-738, TASK-744, TASK-741, TASK-742, TASK-739, TASK-746, TASK-747, TASK-749, and TASK-750 done. Next agent work is product leftovers (TASK-733) / owner-priority creator tasks, not a new Wave 2 P0.
+Wave 2 coding: TASK-740, TASK-738, TASK-744, TASK-741, TASK-742, TASK-739, TASK-746, TASK-747, TASK-749, TASK-750, and TASK-761 done. Next agent work is TASK-762 (combat `?scope=encounter` Query leftover — Architect, pause once) / TASK-719 last, not a new Wave 2 P0. Report 07 P2-5 RM-view enrichment waterfall stays Wave 3.
 
 ---
 
@@ -161,7 +161,7 @@ Wave 2 coding: TASK-740, TASK-738, TASK-744, TASK-741, TASK-742, TASK-739, TASK-
 
 ## Wave 2 — correctness (`done` — code; pending-qa)
 
-P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`ebe2c3ce`, `a0fe048d`). Resume from the checklists and ACTIVE_TASKS — do not restart from the audit reports blindly. Wave 2 coding pass is complete (through TASK-750).
+P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`ebe2c3ce`, `a0fe048d`). Resume from the checklists and ACTIVE_TASKS — do not restart from the audit reports blindly. Wave 2 coding pass is complete (through TASK-761).
 
 ### Rules engine + sheet formula unification (reports 05, 09) — `partial`
 
@@ -244,6 +244,7 @@ P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`eb
 |---|---|---|
 | Dirty-key PATCH + `updatedAt` precondition; autosave refs/retry/timeout; per-user rate key | `done` | Autosave callback-refs + retry + pagehide (`useAutoSave`). PATCH per-user `buildRateLimitKey`. Dirty-key PATCH + `updatedAt` 409 + user-scoped character query keys: TASK-741 / ADR-0013. Library add-to-character lock + 409 re-apply: TASK-746. Sheet realtime non-resource merge: TASK-747. |
 | Two disconnected character write paths (`useState`+effect vs unused TanStack Query) | `done` | **TASK-750.** Sheet reads `useCharacter`; `setCharacter` is `setQueryData` on `characterKeys.detail`. Autosave still uses `saveCharacterWithConflictRetry` + cache stamp. `useSaveCharacter` merges into the detail cache and invalidates lists only. |
+| Campaign RM view `useState` + uncancelled `apiFetch` (report 06 P1-1 sibling) | `done` | **TASK-761.** Read is `useCampaignCharacterView` / `campaignKeys.characterView` → campaign route (roster + RM auth). Did **not** reuse `useCharacter` / `/api/characters/[id]`. Cancellation comes from deleting the effect. Combat `?scope=encounter` batch fetches: **TASK-762**. |
 | Query cache not cleared on sign-in; keys not user-scoped | `done` | `queryClient.clear()` on SIGNED_IN / SIGNED_OUT / USER_UPDATED; `useCampaignsFull` gated on user. Character query keys include viewer uid (TASK-741). |
 | Align GET with visibility **column** | `done` | `resolveCharacterVisibility` on GET `[id]` + list. |
 
@@ -260,6 +261,7 @@ Not started. **Do not start** until Wave 2 P0 TASK-741 (dirty-key PATCH) is gree
 | Split `shared/` into `ui / patterns / feature` | report 04 | Architect |
 | Generated Supabase types; delete hand duplicates / 6 mismatches | report 12 | |
 | SEO: sitemap, robots, metadataBase, OG, `generateMetadata`; server-render `/rules` + codex detail | report 07 | |
+| Campaign RM view + Library tab fetch waterfall (14 client queries / counts-for-tabs) | report 07 P2-5 | Do not start until owner opens Wave 3. Not TASK-761 (that was the load race). |
 | `text-muted` codemod (335 sites, zero render change) | report 04 | Token already fixed |
 | `font-nunito` inert — register `--font-nunito` in `@theme` | report 04 | |
 | `noUncheckedIndexedAccess` burn-down (163 errors) | report 11 / 12 | Tooling ready |
@@ -318,11 +320,11 @@ parallel.
 
 ## Suggested next agent sessions (ordered)
 
-Wave 2 coding pass is complete (through TASK-750):
+Wave 2 coding pass is complete (through TASK-761):
 
-1. **TASK-756** (sequential innate → powers → techniques), then TASK-757–760. TASK-733 can run in parallel. TASK-761 is a 750 leftover — low.
-2. **TASK-751–753** — Archetype Path Filtering (filed 2026-08-14). Low priority; start after TASK-733 **and** TASK-756/758/759 so path-filter wiring lands on the new screens/columns. Does **not** wait for Wave 3 — the shared filter should exist before the Codex/Library duplication collapse so that pass does not fork it.
-3. **Wave 3** — start only when the owner opens that pass (avoid Prettier/`text-muted` mega-diffs colliding with remaining product leftovers).
+1. **TASK-762** — combat `?scope=encounter` batch fetches onto Query (report 06 P1-1 leftover after TASK-761). Architect — pause once. Low.
+2. **TASK-719** last (duplicate archive IDs). TASK-718 done (BUILD_VALIDATION archive).
+3. **Wave 3** — start only when the owner opens that pass (avoid Prettier/`text-muted` mega-diffs colliding with remaining product leftovers). Includes report 07 P2-5 RM-view enrichment waterfall.
 
 ---
 

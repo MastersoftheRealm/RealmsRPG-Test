@@ -15,7 +15,7 @@ Step-by-step manual checks for QA after a build or PR. **One behavior = one test
 | **DEV-V-###** | Validation **suite** (category) | DEV-V-001 — Advanced character creator step guards |
 | **DEV-V-###-T###** | Single test inside a suite | DEV-V-001-T001 |
 
-- Suite number = next free `DEV-V-###` in this file.
+- Suite number = next free `DEV-V-###` in this file **or** the archive (do not reuse archived IDs).
 - Test number = next `T###` within that suite (reset per suite).
 - Link every suite to one or more `TASK-###` IDs.
 
@@ -52,8 +52,16 @@ Step-by-step manual checks for QA after a build or PR. **One behavior = one test
 2. **Context** — Always include how to reach the screen (nav + URL).
 3. **Labels** — Use visible tab/button text from the app, not internal step ids.
 4. **Prerequisites** — State login, role, and any setup (e.g. “complete steps 1–3 first”).
-5. **Stale tests** — When behavior changes, update the test or mark **Superseded** with date + replacement ID.
+5. **Stale tests** — When behavior changes, update the test or mark **Superseded** with date + replacement ID. See **Archive** below for moving whole suites.
 6. **Partial work** — Add tests only for `completed_work`; note `remaining_work` tests as *Planned* in the suite header.
+
+---
+
+## Archive
+
+Verified, CI-only, or long-superseded suites **not** cited by [Pending owner QA](DEVELOPER_TASK_QUEUE.md#pending-owner-qa-implementation-done) live in [`archive/BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md). Do not delete tests — move them. Suites still linked from Pending owner QA stay in this file.
+
+Moved (TASK-718): DEV-V-005, DEV-V-010, DEV-V-011, DEV-V-014, DEV-V-015, DEV-V-022, DEV-V-031.
 
 ---
 
@@ -1102,7 +1110,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1674,209 +1682,47 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 ---
 
+#### DEV-V-009-T046 — Campaign RM character view loads via React Query (TASK-761)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-761 |
+| **Where** | `/campaigns/[id]/view/[userId]/[characterId]` (Realm Master account) |
+| **Needs** | Campaign you own with another player's non-private character on the roster; a second character on the roster helps step 3 |
+| **CI** | Partial — `use-campaigns.cache.test.ts` (campaign + viewer scoped key; `libraryForView` split off the character payload) |
+
+**Steps**
+1. As the Realm Master, open the campaign, click a player character, and confirm the read-only sheet renders (header stats, Library tabs, roll log) with the loading spinner appearing only once.
+2. Switch the Library tab (e.g. Feats → Powers), navigate **Back to Campaign**, then reopen the same character. The sheet renders from cache with no spinner flash; the Library tab resets to the default (local UI state).
+3. Open a second roster character, then return to the first — each shows its own sheet, never the other's data.
+4. Sign out and sign in as a **player** in that campaign, then hit the same view URL directly. Expect the "Only the Realm Master can view player character sheets" error card (no cached sheet from the RM session).
+5. Open a roster character whose visibility is **private** (or a bad `characterId`) and confirm the error card plus the Back to Campaign link.
+
+**Expected**
+- View load is `useCampaignCharacterView` / `campaignKeys.characterView` against the campaign route — no `useState` + `apiFetch` effect and no read of `/api/characters/[id]`.
+- RM authorization, roster membership, private-visibility blocks and `libraryForView` enrichment behave exactly as before.
+- Cached sheets are scoped per campaign, per viewer and per character; a viewer change never shows another account's cached sheet.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-005 — RLS policy consolidation (TASK-352, TASK-327)
 
-Manual QA after `sql/supabase-rls-consolidate-permissive-2026-06.sql`. **Needs:** two accounts (campaign owner + member), one campaign-visible character.
-
-#### DEV-V-005-T001 — Campaign join and member read
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-005 — RLS / DB migrations |
-| **Task** | TASK-352 |
-| **Where** | `/campaigns` · invite link or code |
-| **Steps** | 1. As member, join campaign via invite. 2. Confirm campaign appears in list. 3. Open campaign detail; confirm rolls and roster load. |
-| **Expected** | Join succeeds; member can read campaign row via consolidated SELECT backed by `campaign_members` (single source of truth). |
-| **Report** | DEV-V-005-T001: PASS / FAIL / SKIP — |
-
-#### DEV-V-005-T002 — Campaign-shared character cross-read
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-005 |
-| **Task** | TASK-352 |
-| **Where** | `/campaigns/[id]/view/[userId]/[characterId]` or sheet link from campaign roster |
-| **Steps** | 1. Add character to campaign with visibility **campaign**. 2. As another campaign member, open that character sheet. |
-| **Expected** | Sheet loads (not 404); consolidated `characters_select_authenticated` allows read when on roster. |
-| **Report** | DEV-V-005-T002: PASS / FAIL / SKIP — |
-
-#### DEV-V-005-T003 — Admin role policies still editable
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-005 |
-| **Task** | TASK-352 |
-| **Where** | `/admin/roles` · **Needs:** admin account |
-| **Steps** | 1. Open admin roles page. 2. Change a quota for a non-admin role. 3. Save and reload page. |
-| **Expected** | Read works for all authenticated; admin INSERT/UPDATE/DELETE policies allow save without RLS error. |
-| **Report** | DEV-V-005-T003: PASS / FAIL / SKIP — |
+Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-005--rls-policy-consolidation-task-352-task-327).
 
 ---
 
 ## DEV-V-010 — Feat/trait custom name + note (TASK-377)
 
-Player rename + note on character sheet feats/traits. **Needs:** logged-in account with one character that has at least one feat and one species/ancestry trait. For T004 also a campaign with that character shared (visibility **campaign**) and a second member account.
-
-#### DEV-V-010-T001 — Rename a feat (italic, codex name preserved)
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-010 — Feat/trait custom name + note |
-| **Task** | TASK-377 |
-| **Where** | `/characters/[id]` → Edit → Library → Feats |
-| **Steps** | 1. Enter edit mode. 2. Expand a feat; click **Customize**. 3. Type a **Custom name** with spaces (e.g. `My Honed Strike`). 4. Save/reload. |
-| **Expected** | Feat row title shows the custom name in *italics*; codex name still visible via hover/title; spaces are preserved in the input while typing. |
-| **Report** | DEV-V-010-T001: PASS / FAIL / SKIP — |
-
-#### DEV-V-010-T002 — Add a feat note (expanded-only, persists)
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-010 |
-| **Task** | TASK-377 |
-| **Where** | `/characters/[id]` → Edit → Library → Feats |
-| **Steps** | 1. Expand a feat; click **Customize**. 2. Enter a **Player note** (multi-word). 3. Save/reload; collapse and re-expand the row. |
-| **Expected** | Note shows only in the expanded row; the Customize block is collapsed by default; note text persists after reload. |
-| **Report** | DEV-V-010-T002: PASS / FAIL / SKIP — |
-
-#### DEV-V-010-T003 — Trait customization + feat level-swap preserves data
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-010 |
-| **Task** | TASK-377 |
-| **Where** | `/characters/[id]` → Edit → Library → Feats/Traits |
-| **Steps** | 1. Rename a species/ancestry trait and add a note via **Customize**; save/reload. 2. On a multi-level feat with a custom name + note, change its level with the stepper; save/reload. |
-| **Expected** | Trait custom name (italic) + note persist via `traitCustomizations`; after the feat level-swap the custom name and note remain attached to the feat. |
-| **Report** | DEV-V-010-T003: PASS / FAIL / SKIP — |
-
-#### DEV-V-010-T004 — Read-only campaign view shows customizations
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-010 |
-| **Task** | TASK-377 |
-| **Where** | `/campaigns/[id]/view/[userId]/[characterId]` |
-| **Steps** | 1. Share the customized character to a campaign. 2. As another campaign member, open the character view. 3. Expand customized feats/traits. |
-| **Expected** | Custom names show in italics and notes appear in expanded rows; no edit controls (read-only); button reads **View customization**. |
-| **Report** | DEV-V-010-T004: PASS / FAIL / SKIP — |
+Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-010--feattrait-custom-name--note-task-377).
 
 ---
 
 ## DEV-V-011 — UI verification safety net (TASK-383)
 
-These verify the automated design-system net itself. They are **command-line** checks (no app clicking) — run from the repo root. A production build must exist (`npm run build`) or a dev/prod server must be running for the Playwright checks.
-
-#### DEV-V-011-T001 — Token contrast gate
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-011 — UI verification safety net |
-| **Related task** | TASK-383 |
-| **Where** | Terminal, repo root |
-| **Needs** | Node installed |
-
-**Steps**
-1. Run `npm run verify:contrast`.
-
-**Expected**
-- Exits 0 with `Contrast check passed.` and "0 ... no new regressions".
-- Editing a semantic token in `src/app/globals.css` to a low-contrast value and re-running makes it exit non-zero listing the failing pair.
-
-**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
-
-#### DEV-V-011-T002 — Raw-color ESLint guardrail
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-011 — UI verification safety net |
-| **Related task** | TASK-383 |
-| **Where** | Terminal, repo root |
-| **Needs** | — |
-
-**Steps**
-1. Run `npm run lint` (expect 0 errors).
-2. Temporarily add `className="bg-blue-500"` to a non-exempt component (not under `(auth)/` or `components/ui/`) and re-run `npm run lint`.
-
-**Expected**
-- Step 1: 0 errors and 0 warnings (`npm run lint` uses `--max-warnings 0` — TASK-656).
-- Step 2: a `realms/no-raw-color` **error** on that line. Revert the edit.
-
-**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
-
-#### DEV-V-011-T003 — Styleguide gallery renders in both themes
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-011 — UI verification safety net |
-| **Related task** | TASK-383 |
-| **Where** | `/dev/styleguide` |
-| **Needs** | Dev/prod server running |
-
-**Steps**
-1. Open `/dev/styleguide`.
-2. Click **Toggle theme** to switch light/dark.
-
-**Expected**
-- Every section renders (surfaces, text, borders, ramps, status, category, game tokens, buttons, forms, chips, alerts, cards, tabs, loading/empty, tooltip, modal).
-- Both themes look intentional; no raw-white panels floating on the dark background.
-
-**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
-
-#### DEV-V-011-T004 — Visual + a11y Playwright suite
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-011 — UI verification safety net |
-| **Related task** | TASK-383 |
-| **Where** | Terminal, repo root |
-| **Needs** | `npm run build` done (Playwright auto-starts `npm run start`); matching-OS baselines committed |
-
-**Steps**
-1. Run `npx playwright test` (or `npm run verify:visual` and `npm run verify:a11y`).
-
-**Expected**
-- All tests pass against committed baselines for the current OS.
-- After an intentional UI change, the run fails with a diff; `npm run verify:visual:update` re-baselines and a re-run passes.
-
-**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
-
-#### DEV-V-011-T005 — Authenticated visual baselines (TASK-385)
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-011 — UI verification safety net |
-| **Related task** | TASK-385 |
-| **Where** | Terminal, repo root |
-| **Needs** | `E2E_TEST_EMAIL` + `E2E_TEST_PASSWORD`; run `npm run e2e:provision` once per environment |
-
-**Steps**
-1. Set E2E env vars (see `.env.example`).
-2. Run `npm run verify:auth-visual`.
-
-**Expected**
-- 11 tests pass (1 setup + 10 screenshots: my-account, characters, campaigns, character-sheet, campaign-detail × light/dark).
-- Without secrets, suite skips gracefully.
-
-**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
-
-#### DEV-V-011-T006 — Authenticated a11y ratchet (TASK-385)
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-011 — UI verification safety net |
-| **Related task** | TASK-385 |
-| **Where** | Terminal, repo root |
-| **Needs** | Same E2E credentials as T005 |
-
-**Steps**
-1. Run `npm run verify:auth-a11y`.
-
-**Expected**
-- No **new** violations vs `tests/visual/auth-a11y-baseline.json`.
-- Pre-existing allowances on character sheet / my-account are documented in the baseline file.
-
-**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-011--ui-verification-safety-net-task-383).
 
 ---
 
@@ -1967,9 +1813,9 @@ Verifies play-together after first save, optional sheet tour, level-up milestone
 
 ---
 
-## DEV-V-012 — Landing page rebuild (TASK-387)
+## DEV-V-012 — Landing page rebuild (TASK-387, TASK-763)
 
-Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Section 4). One dominant primary CTA, AIDA scroll story, removed onboarding tour / welcome link-farm / Codex-Library CTAs.
+Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Section 4). One dominant primary CTA, AIDA scroll story, removed onboarding tour / welcome link-farm / Codex-Library CTAs. TASK-763: guest CTA is **Create Character**; how-it-works steps are create / find a table / start playing (no system jargon).
 
 #### DEV-V-012-T001 — Guest hero: single primary CTA
 
@@ -1984,7 +1830,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. Open `/` while signed out.
 
 **Expected**
-- Hero shows headline, subline, and one prominent **Start Playing** button → `/characters/new`.
+- Hero shows headline, subline, and one prominent **Create Character** button → `/characters/new`.
 - A low-weight text link **New to TTRPGs? See how Realms works** sits below the button (not a second button).
 - No "Take a quick tour", no welcome banner, no Browse Codex / Browse Library buttons anywhere on the page.
 
@@ -2003,7 +1849,8 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 1. On `/`, click **New to TTRPGs? See how Realms works**.
 
 **Expected**
-- Page scrolls to the **Start playing in three steps** section (3 numbered steps) with offset (heading not hidden under header).
+- Page scrolls to the **Start Playing in Three Steps** section (3 numbered steps) with offset (heading not hidden under header).
+- Steps are **Create a character**, **Find a table** (Discord is a link to the invite), and **Start playing**. No Archetype Path / Species / Feats jargon in the step titles or bodies.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2022,7 +1869,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Expected**
 - Hero shows **Welcome back, adventurer.** with **Continue your adventure** → `/characters` and **Create another character** → `/characters/new`.
-- Signing in on an account with **0** characters instead shows the guest **Start Playing** hero.
+- Signing in on an account with **0** characters instead shows the guest **Create Character** hero.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -2098,6 +1945,29 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-012-T008 — How-it-works steps are create / find a table / play (TASK-763)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-012 — Landing page rebuild |
+| **Related task** | TASK-763 |
+| **Where** | `/` (signed out) |
+| **Needs** | Logged out (or incognito) |
+
+**Steps**
+1. Open `/` while signed out.
+2. Scroll to **Start Playing in Three Steps**.
+3. Click **Discord** in step 2.
+4. Confirm the mid-page repeat CTA matches the hero (**Create Character** → `/characters/new`).
+
+**Expected**
+- Step titles: **Create a character**, **Find a table**, **Start playing**.
+- Step 1 does not mention Archetype Path or other creator jargon; it says the creator walks you through making a hero.
+- Step 2 **Discord** opens the invite (`DISCORD_URL`) in a new tab. Closing **Join the Discord** CTA still present.
+- Hero and how-it-works primary buttons both say **Create Character**, not Start Playing.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-013 — Guided Simple character creator (TASK-394–403+)
@@ -2116,7 +1986,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Needs** | — |
 
 **Steps**
-1. From home, click **Start Playing** or **Create another character** (or open `/characters/new` directly).
+1. From home, click **Create Character** or **Create another character** (or open `/characters/new` directly).
 
 **Expected**
 - Guided vs Custom cards appear with landing-style hero (gradient, dice decor).
@@ -2363,7 +2233,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-013 — Guided Simple character creator |
-| **Related task** | TASK-429, TASK-565, TASK-758, TASK-759 |
+| **Related task** | TASK-429, TASK-565, TASK-758, TASK-759, **TASK-753** |
 | **Where** | Guided creator → Archetype Feats, then Character Feat |
 | **Needs** | Path + species + abilities + skills complete |
 
@@ -2374,12 +2244,15 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 4. Re-open See more Feats; deselect / replace; confirm L1 cards and counter stay in sync after confirm. Cancel leaves prior picks unchanged.
 5. On Character Feat, repeat with **See more Character Feats** → **Add Character Feat** modal; confirm single-select replace works.
 6. In both feat modals, confirm there is no **REQ. LEVEL** header/cell; feats requiring level >1 remain hidden. Open the **State Feats (i)** and confirm it explains Quick Action → Enter State, 1-minute duration, and activating multiple state feats together.
+7. Confirm **Filters** is expanded on open and **Archetype Path** is last in the panel, pre-selected to every player-visible path of this draft’s archetype type (Martial path → all Martial paths, not Power). Matching rows show path-name chips, not a duplicate Recommended badge. Family rank chips on a legal L1 feat remain.
+8. Clear the Archetype Path filter (or deselect all paths) — the list widens to feats the L1 cards did not show (still hiding `lvl_req` >1). Re-selecting paths narrows it again.
 
 **Expected**
 - GuidedLayerNav opens an add modal (same grammar as Browse all Skills / See more options on Loadout & Powers) — does **not** dump all feats as in-step cards.
 - L2 defaults to feats you qualify for; optional "Show Feats I don't qualify for".
 - Creator feat columns omit Req. Level only; Codex/Admin feat lists still show it. State Feats help uses the same sentence as state-feat card notices and remains link-blue/readable at ~360px.
 - Modal uses `fullScreenOnMobile`; Add Selected / Cancel are sticky (≥44px targets).
+- Path flow See more auto-filters to same-type path recommendations (union); clearing the path filter is L3 in the same modal. L1 cards stay the path’s curated set.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -4018,51 +3891,13 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 ## DEV-V-014 — Codex payload + roll timestamp (TASK-378)
 
-Automated via `npm test` (`src/lib/codex-payload.test.ts`, `src/lib/roll-timestamp.test.ts`).
-
-#### DEV-V-014-T001 — CodexPayload keys match GET /api/codex
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-014 |
-| **Automated** | `npm test` — codex-payload.test.ts |
-
-**Expected** — `CODEX_PAYLOAD_KEYS` matches every key on `CodexPayload`; all `useCodex*` selectors compile against typed slices.
-
-#### DEV-V-014-T002 — Roll timestamp legacy + ISO compat
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-014 |
-| **Automated** | `npm test` — roll-timestamp.test.ts |
-
-**Expected** — `normalizeRollTimestamp` / `formatRollTimestamp` handle ISO strings, `{ seconds }` legacy objects, and Date instances; invalid strings format as `-`.
+Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-014--codex-payload--roll-timestamp-task-378).
 
 ---
 
 ## DEV-V-015 — Library API typing (TASK-420)
 
-Automated via `npm test` (`src/lib/library-types.test.ts`).
-
-#### DEV-V-015-T001 — Library item types cover all collection keys
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-015 |
-| **Automated** | `npm test` — library-types.test.ts |
-
-**Expected** — `LIBRARY_ITEM_TYPES` lists all six library kinds; `LibraryItemByType` maps each kind to a typed interface with required id/docId/name fields.
-
-#### DEV-V-015-T002 — Official library smoke (manual)
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-015 |
-| **Manual** | Library → Realms Library tabs |
-
-**Expected** — Powers/Techniques/Armaments load with grid rows; Creatures tab shows expandable `CreatureStatBlock` rows (parity with My Library); "Add to library" confirm succeeds for a logged-in user.
-
-**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-015--library-api-typing-task-420).
 
 ---
 
@@ -4330,7 +4165,7 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Task** | TASK-691 |
 | **Where** | `/characters/new/guided` → Powers or Techniques (L2 modal + L3 inline) |
 | **Needs** | Signed-in; custom Power draft preferred |
-| **Steps** | 1. Open Powers L3 (Full Customize) or L2 See more. 2. Confirm **L2/L3 columns match Official Library** (powers: Category / Energy / Action / Duration / Range / Area / Damage; techniques: Category / Energy / TP / Action / Attack / Damage). TP still shows as row totalCost. 3. Confirm Path badges, TP budget gates, and theoretical max-EN / innate threshold filtering still apply. 4. Expand a row — Parts & Proficiencies (not duplicate Action/Energy chips). 5. Spot-check Martial techniques Energy still kind-correct (DEV-V-050-T002). L1 cards may still show compact Action/Energy/TP facts. |
+| **Steps** | 1. Open Powers L3 (Full Customize) or L2 See more. 2. Confirm **L2/L3 columns match Official Library** (powers: Category / Energy / Action / Duration / Range / Area / Damage; techniques: Category / Energy / TP / Action / Attack / Damage). TP still shows as row totalCost. 3. Confirm path-name chips only while Archetype Path is filtering (no static Path badge), TP budget gates, and theoretical max-EN / innate threshold filtering still apply. 4. Expand a row — Parts & Proficiencies (not duplicate Action/Energy chips). 5. Spot-check Martial techniques Energy still kind-correct (DEV-V-050-T002). L1 cards may still show compact Action/Energy/TP facts. |
 | **Expected** | L2/L3 shaped by Official list builders; L1 cards may still use `buildPowerTechniqueBudgetDisplay`; guided orchestration preserved (TASK-709). |
 | **Report** | DEV-V-016-T018: PASS / FAIL / SKIP — |
 
@@ -4544,7 +4379,7 @@ Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and s
 Verifies shared auth/load/save chrome on standalone creators after `CreatorPageShell` rollout.
 T001–T007 focus on chrome parity (domain cost math out of scope). **T008** covers power/item
 workspace-hook extraction parity after TASK-381 Phase 3 and TASK-616 co-located splits (cost-derivation + part/property modules; facades unchanged). **T009–T010** cover creature editor
-islands (Phase 4) and workspace hook (Phase 5).
+islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded headers without an empty summary line (TASK-764) and power creator InfoTippy (TASK-408).
 
 #### DEV-V-018-T001 — Power creator chrome
 
@@ -4761,6 +4596,67 @@ islands (Phase 4) and workspace hook (Phase 5).
 
 **Expected**
 - Skill labels resolve via `findByNormalizedId`; unmatched ids do not appear as raw UUIDs.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T012 — Expanded creator section headers drop empty summary line (TASK-764)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-764 |
+| **Where** | `/power-creator` (spot-check `/technique-creator` or `/item-creator`) |
+| **Needs** | None |
+
+**Steps**
+1. Open Power Creator. Confirm collapsible sections start **collapsed** with a one-line summary under the title (title size matches other creator section titles — not `text-sm`).
+2. Expand Attack, Action Type, and Damage. Confirm the expanded header is still the same title size/padding, with **no empty second line** under the title, and content starts immediately below.
+3. Collapse again — summary line returns. Spot-check Technique or Item creator the same way.
+
+**Expected**
+- Expanded `CollapsibleSection` headers keep original `p-4` + `font-bold` / `h2` `text-title` chrome; they do **not** shrink titles to `text-sm`.
+- When expanded with no `subtitle`, the reserved empty summary slot is gone (`min-h-[1.25rem]` / `&nbsp;` not shown).
+- Collapsed summaries remain readable. Desktop Enable/Remove stay 44px; title row is not shrunk.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T013 — Power creator Attack selector is not titled twice (TASK-764)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-764 |
+| **Where** | `/power-creator` |
+| **Needs** | None |
+
+**Steps**
+1. Expand **Attack**.
+2. Confirm the section header says Attack and the dropdown has no second visible “Attack” label above it.
+3. Confirm the dropdown is still named for assistive tech (`aria-label="Attack"`).
+
+**Expected**
+- One visible Attack title (the collapsible header). Inner select has no redundant field label.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T014 — Power creator InfoTippys from owner draft (TASK-408)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 |
+| **Related task** | TASK-408 |
+| **Where** | `/power-creator` |
+| **Needs** | None |
+
+**Steps**
+1. Confirm an `(i)` sits beside Description, Action Type, Reaction, Attack, Area of Effect, Duration, Power Parts, Power Mechanics, and Damage.
+2. Confirm Energy Cost and Training Points boxes in the summary have `(i)`; Innate Power has an `(i)` under those boxes; Load and Reset in the toolbar each have an `(i)`.
+3. Hover/focus/touch-hold Description, Attack, Energy, Innate, and Load — copy matches the owner draft (fireball example; weapon-as-part-of-the-action; rounded-up Energy; L1 threshold 8/6; load from library).
+4. Repeat one tip at ~360px (touch-hold). Confirm the `(i)` does not stretch the section title row.
+
+**Expected**
+- All listed advanced fields have accessible InfoTippy copy from `tooltip-text.tsx`.
+- Guided L1 placeholder strings exist in `tooltip-text.tsx` but are **not** wired on this page.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5062,11 +4958,11 @@ Spot-checks Realms terminology and em-dash hygiene on high-traffic surfaces afte
 **Steps**
 1. Open `/` and read the hero headline + subline.
 2. Confirm copy matches `LANDING_COPY` in `landing-copy.ts` (no em dash `—` in visible hero text).
-3. Confirm How it Works step 1 names **Archetype Path** (not Class).
+3. Confirm How it Works steps are **Create a character**, **Find a table**, **Start playing** (no Archetype Path / Species / Feats jargon).
 
 **Expected**
 - No em dashes in visible hero/how-it-works copy.
-- Game terms use Realms vocabulary.
+- Landing how-it-works uses visitor language; system terms belong in the creator, not these three steps.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5222,64 +5118,7 @@ Click-open / click-close without moving the pointer. Expandable chips grow into 
 
 ## DEV-V-022 — Characters list page (TASK-469)
 
-Portrait cards match square crop; no search or ListHeader chrome; Add Character matches card geometry.
-
-#### DEV-V-022-T001 — Portrait cards are square and not over-dense
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-022 |
-| **Related task** | TASK-469 |
-| **Where** | `/characters` |
-| **Needs** | Signed-in user with at least one character that has a portrait |
-
-**Steps**
-1. Go to **Characters**.
-2. Confirm each character card portrait area is **square** (1:1), matching how portraits are cropped on upload (not a tall 3:4 crop that cuts the sides).
-3. On a wide desktop viewport, confirm the grid uses at most **3** columns (not 4 packed cards).
-
-**Expected**
-- Portrait display matches crop aspect; faces/art are not horizontally shortened by a tall frame + dense columns.
-
-**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
-
-#### DEV-V-022-T002 — No search or ListHeader on characters list
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-022 |
-| **Related task** | TASK-469 |
-| **Where** | `/characters` |
-| **Needs** | Signed-in user with at least one character |
-
-**Steps**
-1. Go to **Characters** with characters present.
-2. Confirm there is **no** search field and **no** NAME / LEVEL / UPDATED list header bar.
-3. Confirm character cards still open the sheet; Add Character, duplicate, and delete still work.
-
-**Expected**
-- Page is title + card grid only (plus empty state when none); list-row search/sort chrome is gone.
-
-**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
-
-#### DEV-V-022-T003 — Add Character card matches portrait + footer geometry
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-022 |
-| **Related task** | TASK-469 |
-| **Where** | `/characters` |
-| **Needs** | Signed-in user with at least one character |
-
-**Steps**
-1. Go to **Characters** with characters present.
-2. Compare **Add Character** to a character card in the same row.
-3. Confirm Add Character has a square top slot (icon area) plus a footer band under it, and matches the row height of neighboring character cards (not a short square-only tile).
-
-**Expected**
-- Add Character shares the same portrait-slot + info-footer structure so the grid reads as one composition.
-
-**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-022--characters-list-page-task-469).
 
 ---
 
@@ -5748,17 +5587,7 @@ Smoke suite for combat/skill encounter view splits. Routes and AddCombatantModal
 
 ## DEV-V-031 — API route smoke (TASK-613)
 
-Co-located vitest contract smoke for high-traffic API routes. First slice: `/api/characters` GET/POST auth, validation, happy path, and quota errors.
-
-#### DEV-V-031-T001 — Characters API route smoke
-
-| Field | Value |
-|-------|-------|
-| **Suite** | DEV-V-031 — API route smoke |
-| **Related task** | TASK-613 |
-| **Automated** | `npm run test:api` — `src/app/api/characters/route.test.ts` |
-
-**Expected** — 8 vitest cases pass: GET 401/200/500; POST 401/415/400/200/403.
+Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-031--api-route-smoke-task-613).
 
 ---
 
@@ -6351,6 +6180,7 @@ Owner feedback: reduce initial visual load — creator `CollapsibleSection` bloc
 **Expected**
 - No creator section auto-expands on first paint unless user expands it.
 - Summaries remain readable when collapsed.
+- When expanded, the header stays a compact title row (no empty second line).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6458,17 +6288,17 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-050 — Guided creator L3 inline catalog lists |
-| **Related task** | TASK-684 / TASK-685 / TASK-688 / **TASK-699** / **TASK-702** / **TASK-710** / **TASK-709** / **TASK-703** / **TASK-705** / **TASK-706** / **TASK-727** / **TASK-724** / **TASK-758** / **TASK-759** |
+| **Related task** | TASK-684 / TASK-685 / TASK-688 / **TASK-699** / **TASK-702** / **TASK-710** / **TASK-709** / **TASK-703** / **TASK-705** / **TASK-706** / **TASK-727** / **TASK-724** / **TASK-758** / **TASK-759** / **TASK-753** |
 | **Where** | `/characters/new/guided` — start a **custom** (no path) character |
 | **Needs** | Signed-in; a draft with no `archetypePathId` (Full Customize) |
 
 **Steps**
-1. Archetype Feats step: confirm the full eligible Feats list renders inline (no modal); creator columns compose Codex facts but intentionally omit **Req. Level** (Category / Ability / Uses / Recovery); Category (multi-select) and State Feats filters work; the State Feats **(i)** explains Quick Action → Enter State, 1-minute duration, and activating multiple state feats together; search covers name/tags/keywords/category; picking a Feat adds a removable card above the list; **unmet-requirement Feats are hidden** (including `lvl_req` >1, not shown disabled). Selecting then becoming unmet still shows the selected row so it can be removed.
+1. Archetype Feats step: confirm the full eligible Feats list renders inline (no modal); creator columns compose Codex facts but intentionally omit **Req. Level** (Category / Ability / Uses / Recovery); Category (multi-select), State Feats, and **Archetype Path** (last, not auto-selected) filters work; the State Feats **(i)** explains Quick Action → Enter State, 1-minute duration, and activating multiple state feats together; search covers name/tags/keywords/category; picking a Feat adds a removable card above the list; **unmet-requirement Feats are hidden** (including `lvl_req` >1, not shown disabled). Selecting then becoming unmet still shows the selected row so it can be removed. Selecting paths narrows to the union; clearing them returns the full eligible catalog.
 2. Character Feat step: same as step 1, single-select (max 1); selecting a new Feat swaps the previous one.
-3. Loadout — Weapon phase: **always present** for Martial / Power / Powered-Martial custom drafts; inline list shows eligible weapons/shields within armament proficiency; **columns match Codex/Library** (Name, Rarity, Currency, TP, Range, Damage); Range is **Melee** (never `0`) or `8 spaces` / `16 spaces` from properties (TASK-701 / **TASK-716**); **SourceFilter** All / Realms / My scopes the catalog (Custom defaults All); **Create Armament** hatch opens `/item-creator` in a new tab; Currency + Training Points budget bar updates live; selecting a two-handed weapon with a shield already selected shows the hand-slot error and does not apply.
+3. Loadout — Weapon phase: **always present** for Martial / Power / Powered-Martial custom drafts; inline list shows eligible weapons/shields within armament proficiency; **columns match Codex/Library** (Name, Rarity, Currency, TP, Range, Damage); Range is **Melee** (never `0`) or `8 spaces` / `16 spaces` from properties (TASK-701 / **TASK-716**); **SourceFilter** All / Realms / My scopes the catalog (Custom defaults All); **Archetype Path** last (not auto-selected); **Create Armament** hatch opens `/item-creator` in a new tab; Currency + Training Points budget bar updates live; selecting a two-handed weapon with a shield already selected shows the hand-slot error and does not apply.
 4. Loadout — Armor phase: present for Martial and Powered-Martial with **Codex armor columns** (Rarity, Currency, TP, Damage Red., Agility Red., Abl. Req., Crit +); **skipped for Power only**; single-slot swap on select; TP budget shared with weapons. Same SourceFilter + Create Armament hatch.
 5. Loadout — Gear phase: **quantity stepper on the far right replaces the + add button** (no dual chrome; slot wide enough that ± controls are not clipped); **Name / Category / Rarity / Currency** columns (TASK-724 — Category is Adventuring/Tools/… taxonomy, not “Equipment”); incrementing from 0 adds; editing qty in the catalog row or the selected panel works; Currency budget enforced. **TASK-702 / TASK-710 chrome:** ListHeader bar spans full width through the qty track; column titles align with row cells; row hover highlight extends through the stepper **including the ± buttons** (no `bg-surface` / `bg-surface-alt` island); expand a selectable (+) feat/weapon row — description is fully readable (no + blackout overlay) and expanded surface-alt continues into the + / qty column (no empty band below the control).
-6. Powers/Techniques (Power or Powered-Martial path-less draft): sequential **innate → powers** screens (Powered-Martial then **techniques**). No **Show** Innate+Powers filter. Each screen has **one** Filters panel (PowerTechniqueFilters compact, no sheet Character filter) + SourceFilter; **columns match Official Library**; regular/technique lists filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP-blocked rows still hidden (selected kept); **energy-over-cap innate rows stay visible on the innate screen** (TASK-727 — see T003). Expand = Parts & Proficiencies (not duplicate budget chips). **TASK-706:** on the innate screen, Innate Energy and Training Points sit in one `LoadoutBudgetBar` row and match Skills / Ability Points PointStatus size (not a smaller sibling pill). L2 innate modal footer same.
+6. Powers/Techniques (Power or Powered-Martial path-less draft): sequential **innate → powers** screens (Powered-Martial then **techniques**). No **Show** Innate+Powers filter. Each screen has **one** Filters panel (PowerTechniqueFilters compact, no sheet Character filter, **Archetype Path** last and not auto-selected) + SourceFilter; **columns match Official Library**; regular/technique lists filtered by **theoretical L1 max Energy**; innate list by Innate Threshold; TP-blocked rows still hidden (selected kept); **energy-over-cap innate rows stay visible on the innate screen** (TASK-727 — see T003). Expand = Parts & Proficiencies (not duplicate budget chips). **TASK-706:** on the innate screen, Innate Energy and Training Points sit in one `LoadoutBudgetBar` row and match Skills / Ability Points PointStatus size (not a smaller sibling pill). L2 innate modal footer same.
 7. For all six: verify at ~360px width — search/filter toolbar and selected-panel rows stay usable, touch targets ≥44px; **Selected** panel has even horizontal cushion from the card border (title, column header, and GLR rows inset — not flush to the frame) and balanced top/bottom padding under the last row (TASK-700). Selected rows keep warning/chips when present.
 8. Sanity check a **path-based** (L1) character still shows curated cards + "See more options" opening the existing L2 modal (no regression). Path L2 SourceFilter defaults to Realms Library. Path with empty weapon pool may still omit weapon (path behavior unchanged).
 9. **Descriptor chips (TASK-699):** Expand a Library or Codex GLR row — descriptor metadata chips and expandable part/cost chips share the same inline size (readable `text-sm`, not undersized `text-xs`). Filter toolbar pills remain the smaller `sm` role. Optional: `/dev/styleguide` → Entity row parity row matches GLR expanded chips. **Library vs L3 spot-check (TASK-709):** same power/weapon/feat in Official/Codex vs creator L3 matches columns/expand modulo ADR-0012 allowlist.
@@ -6641,42 +6471,6 @@ Saving a power must persist Area **Apply duration** and Duration modifiers (Focu
 
 ---
 
-## Planned suites (split from legacy DEV-T)
-
-| Suite | Topic | Legacy | Status |
-|-------|-------|--------|--------|
-| DEV-V-002 | Campaign & rolls security | DEV-T-002 | Planned |
-| DEV-V-003 | Admin role change safety | DEV-T-003 | Planned |
-| DEV-V-004 | Storage & account security | DEV-T-004 | Planned |
-| DEV-V-005 | RLS / DB migrations | DEV-T-005 | Planned |
-| DEV-V-006 | Resources PDF | DEV-T-006 | Planned |
-| DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
-| DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
-| DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
-| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541, TASK-712) | — | Manual — see suite above (T001–T019) |
-| DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
-| DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
-| DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
-| DEV-V-020 | Sitewide copy compliance (TASK-439) | — | Manual — see suite above |
-| DEV-V-022 | Characters list page (TASK-469) | — | Manual — see suite above |
-| DEV-V-023 | Admin Realms Image Library (TASK-493) | — | Manual — see suite above |
-| DEV-V-024 | Client error handling (TASK-479, TASK-540) | — | Automated (`npm test`) + manual smoke |
-| DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
-| DEV-V-026 | Realms Image Library wiring (TASK-496–499, TASK-531–533) | — | Manual — see suite above |
-| DEV-V-027 | Admin Official Enhanced list shell (TASK-575) | — | Manual — see suite above |
-| DEV-V-030 | Encounter play facades (TASK-608) | — | Manual — see suite above |
-| DEV-V-031 | API route smoke (TASK-613) | — | Automated (`npm run test:api`) |
-| DEV-V-032 | Realms Library creature stat blocks (TASK-620) | — | Manual — see suite above |
-| DEV-V-033 | Library armaments split (TASK-621, TASK-628) | — | Manual — see suite above |
-| DEV-V-034 | GLR chrome + Parts chip grammar (TASK-622, TASK-630) | — | Manual — see suite above |
-| DEV-V-035 | Realms Library redundant source badge (session) | — | Manual — see suite above |
-| DEV-V-036 | Power Creator multi-elemental damage EN (TASK-623) | — | Manual — see suite above |
-| DEV-V-037 | Official power part chip dedupe (session cleanup) | — | Manual — see suite above |
-| DEV-V-038 | Empowered technique nested power part chips (TASK-626) | — | Manual — see suite above |
-| DEV-V-039 | Codex feat Tags section (session) | — | Automated (`feat-list.test.ts`) + manual smoke |
-| DEV-V-040 | Creature level fraction display (session) | — | Manual — see suite above |
-| DEV-V-045 | Codex character filter UX (session) | — | Manual — see suite above |
-| DEV-V-048 | Library search toolbar + Enhanced Items tab (session) | — | Manual — see suite above |
 
 ## DEV-V-041 — Supabase least-privilege Phase 2 (TASK-649)
 
@@ -7112,6 +6906,142 @@ Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy. Autom
 
 ---
 
+## DEV-V-052 — Archetype Path list filter (TASK-751 / TASK-752)
+
+Filters browse lists by what an archetype path recommends, read live from `path_data` (ADR-0014). Automated cover: `path-recommendation-index.test.ts` (union, id/name resolve, `remove_*` excluded, hidden paths omitted, admin edit on rebuild, multi-kind bags, live list filter), `feat-list.test.ts`, `skill-list.test.ts`, and `equipment-list.test.ts`. These steps are the parts only a browser can show.
+
+#### DEV-V-052-T001 — Codex Feats filter by path, with chips and live admin edits
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-052 — TASK-751 |
+| **Related task** | TASK-751 |
+| **Where** | `/codex` → **Feats**; `/admin/codex` → **Feats** and **Archetypes** |
+| **Needs** | Two seeded paths that recommend different feats (e.g. a Martial and a Power path); admin access for the edit step |
+
+**Steps**
+1. Open `/codex` → **Feats**, expand **Filters**, and find **Archetype Path** as the **last** control (bottom-right of the grid), with its `(i)` help. Confirm the dropdown groups options under **Power Paths / Powered-Martial Paths / Martial Paths** and lists no admin-only path.
+2. Select one path. Note the row count, then select a second path.
+3. Read the name row of a few matching feats.
+4. With paths still selected, set **Max Required Level** to `1`, then pick a **Category**, then clear both.
+5. Remove both path chips (the `x` on each).
+6. Select a path that recommends nothing (or combine filters until nothing matches) and read the empty state.
+7. Admin: open `/admin/codex` → **Archetypes**, add a feat to one path's level-1 recommendations, save, then return to `/codex` → **Feats** with that path selected. Also check `/admin/codex` → **Feats** has the same filter.
+
+**Expected**
+- Selecting one path shows only feats that path recommends; adding the second path **grows** the list (union — not an intersection).
+- Matching rows show a small chip with each **selected** path name that recommends that feat, beside the name. No chips appear when no path is selected, and a path you did not select never appears as a chip.
+- Level/category filters still apply on top of the path filter (a feat recommended at path level 5 is not hidden for that reason, but `lvl_req` above the max still drops out). Higher ranks of a recommended feat family stay listed.
+- Clearing the path chips restores the unfiltered list.
+- Empty state reads "No feats the selected archetype paths recommend match your filters." — not a blank list.
+- The newly recommended feat appears for that path with no page reload beyond returning to the tab (no second dataset to reseed).
+- Desktop + ~360px: the filter is full-width on mobile and the name chips do not squeeze the feat name.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-052-T002 — Codex Skills filter by path
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-052 — TASK-752 |
+| **Related task** | TASK-752 |
+| **Where** | `/codex` → **Skills**; `/admin/codex` → **Skills** |
+| **Needs** | A path that recommends at least one skill |
+
+**Steps**
+1. Open `/codex` → **Skills**, expand **Filters**, and find **Archetype Path** as the last control (bottom-right of the grid), with its `(i)` help.
+2. Select one path, then a second path. Read name-row chips. Clear the path chips.
+3. Combine the path filter with Ability / Base Skill until the list is empty.
+
+**Expected**
+- The control is last in the filter grid, not first. Multi-select is a union. Matching rows chip only the selected paths that recommend them; chips vanish when the filter is cleared.
+- Empty copy reads "No skills the selected archetype paths recommend match your filters."
+- Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-052-T003 — Library Powers filter by path (including innate bag)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-052 — TASK-752 |
+| **Related task** | TASK-752 |
+| **Where** | `/library` → **Powers** (Realms Library and My Library) |
+| **Needs** | A path with a recommended power and/or innate power |
+
+**Steps**
+1. Expand **Filters** and confirm **Archetype Path** is the last control.
+2. Select a path that recommends a regular power; confirm that power is listed.
+3. Select a path that recommends an innate power (not also in the regular powers bag); confirm that innate still appears on this powers list.
+4. Turn on **Innate Eligible** while a path is selected; other filters still apply. Read empty copy if nothing matches.
+
+**Expected**
+- Same shared `ArchetypePathFilter` as Codex Feats. Innate recommendations use the `innatePowers` bag (they still show on the powers list). Name chips only while filtering. Empty copy names the path filter.
+- Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-052-T004 — Library Techniques filter by path
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-052 — TASK-752 |
+| **Related task** | TASK-752 |
+| **Where** | `/library` → **Techniques** (standard, not Empowered) |
+| **Needs** | A path that recommends at least one technique |
+
+**Steps**
+1. Expand **Filters** and confirm **Archetype Path** is last.
+2. Select one path, then a second; confirm union + name chips; clear the filter.
+3. Confirm Empowered Techniques has no path filter.
+
+**Expected**
+- Standard techniques filter by the `techniques` bag. Empty copy names the path filter. Empowered tab is unchanged.
+- Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-052-T005 — Codex Equipment + Library weapons/armor/shields filter by path
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-052 — TASK-752 |
+| **Related task** | TASK-752 |
+| **Where** | `/codex` → **Equipment**; `/library` → **Weapons** (and Armor / Shields if seeded) |
+| **Needs** | A path that recommends a weapon (`armaments`) and/or gear (`equipment`) |
+
+**Steps**
+1. Codex Equipment: expand **Filters**; **Archetype Path** is last (after Category / Rarity / currency). Select a path that recommends a weapon and a torch/kit; both kinds of rows appear. Read name chips.
+2. Library Weapons: same control last in `ArmamentFilters`; selecting that path keeps the recommended weapon and hides unrelated weapons.
+3. Force an empty path match and read the empty copy.
+
+**Expected**
+- Codex mixed list unions `armaments` + `equipment` bags. Library weapons/armor/shields use `armaments` only. Chips only while filtering. Empty copy names the path filter.
+- Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-052-T006 — Creator L2 / L3 and sheet add-X filter by path
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-052 — TASK-753 |
+| **Related task** | TASK-753 |
+| **Where** | Guided See more on Feats, Powers/Techniques, Loadout; custom inline catalogs; sheet Add Feat / Add Skill / Add Power (not Empowered) |
+| **Needs** | A Martial path character and a custom (no-path) draft; sheet with library add |
+
+**Steps**
+1. Path character: Archetype Feats **See more** — Filters expanded; **Archetype Path** last and auto-selected to every player-visible Martial path (not Power). Path-name chips, not Recommended. Clear paths — list widens. Repeat on Powers **See more options** and Loadout **See more options**.
+2. Custom / no-path: feat, loadout, and powers inline catalogs show **Archetype Path** last with **no** auto-select. Selecting paths narrows; clearing returns the eligible catalog.
+3. Sheet: Add Feat / Add Skill / Add Power — same last control. Add Feat keeps family rank chips when only one rank is recommended. Empowered add has no path filter.
+
+**Expected**
+- Same shared `ArchetypePathFilter` and live `path_data` index as Codex. Union multi-select. Chips only while filtering. Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -7119,24 +7049,24 @@ Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy. Autom
 | DEV-V-002 | Campaign & rolls security | DEV-T-002 | Planned |
 | DEV-V-003 | Admin role change safety | DEV-T-003 | Planned |
 | DEV-V-004 | Storage & account security | DEV-T-004 | Planned |
-| DEV-V-005 | RLS / DB migrations | DEV-T-005 | Planned |
+| DEV-V-005 | RLS / DB migrations | DEV-T-005 | Archived — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-005--rls-policy-consolidation-task-352-task-327) |
 | DEV-V-006 | Resources PDF | DEV-T-006 | Planned |
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
-| DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Automated (`npm test`) |
-| DEV-V-015 | Library API typing (TASK-420) | — | Automated (`npm test`) + manual smoke |
+| DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Archived (CI) — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-014--codex-payload--roll-timestamp-task-378) |
+| DEV-V-015 | Library API typing (TASK-420) | — | Archived (CI) — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-015--library-api-typing-task-420) |
 | DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541, TASK-712) | — | Manual — see suite above (T001–T019) |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 | DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
 | DEV-V-020 | Sitewide copy compliance (TASK-439) | — | Manual — see suite above |
-| DEV-V-022 | Characters list page (TASK-469) | — | Manual — see suite above |
+| DEV-V-022 | Characters list page (TASK-469) | — | Archived — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-022--characters-list-page-task-469) |
 | DEV-V-023 | Admin Realms Image Library (TASK-493) | — | Manual — see suite above |
 | DEV-V-024 | Client error handling (TASK-479, TASK-540) | — | Automated (`npm test`) + manual smoke |
 | DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
 | DEV-V-026 | Realms Image Library wiring (TASK-496–499, TASK-531–533) | — | Manual — see suite above |
 | DEV-V-027 | Admin Official Enhanced list shell (TASK-575) | — | Manual — see suite above |
 | DEV-V-030 | Encounter play facades (TASK-608) | — | Manual — see suite above |
-| DEV-V-031 | API route smoke (TASK-613) | — | Automated (`npm run test:api`) |
+| DEV-V-031 | API route smoke (TASK-613) | — | Archived (CI) — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-031--api-route-smoke-task-613) |
 | DEV-V-032 | Realms Library creature stat blocks (TASK-620) | — | Manual — see suite above |
 | DEV-V-033 | Library armaments split (TASK-621, TASK-628) | — | Manual — see suite above |
 | DEV-V-034 | GLR chrome + Parts chip grammar (TASK-622, TASK-630) | — | Manual — see suite above |
@@ -7154,5 +7084,6 @@ Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy. Autom
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |
 | DEV-V-043 | Wave 5 page facade splits (TASK-666) | — | Manual — see suite above |
 | DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`, `character-save` create-error copy) + manual DEV-V-051 T001–T010 |
+| DEV-V-052 | Archetype Path list filter (TASK-751 / TASK-752 / TASK-753) | — | Automated (`path-recommendation-index`, `feat-list`, `skill-list`, `equipment-list`) + manual DEV-V-052 T001–T006 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

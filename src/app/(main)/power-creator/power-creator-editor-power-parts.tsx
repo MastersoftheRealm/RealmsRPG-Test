@@ -11,6 +11,7 @@ import { CollapsibleSection, PowerPartCard } from '@/components/creator';
 import { Button } from '@/components/ui';
 import type { SelectedPart, AdvancedPart } from './power-creator-types';
 import type { PowerSectionCosts } from './power-creator-cost-derivation';
+import { PowerCreatorHelp } from './power-creator-help';
 
 type PowerCreatorEditorPowerPartsProps = {
   selectedParts: SelectedPart[];
@@ -48,6 +49,7 @@ export function PowerCreatorEditorPowerParts({
       <CollapsibleSection
         title={`Power Parts (${selectedParts.length})`}
         collapsedSummary={powerPartsSummary}
+        titleAddon={<PowerCreatorHelp topic="parts" />}
         rightSlot={
           <>
             <SectionCostBadge en={sectionCosts.powerParts.energyRaw} tp={sectionCosts.powerParts.totalTP} />
@@ -82,6 +84,7 @@ export function PowerCreatorEditorPowerParts({
       <CollapsibleSection
         title={`Power Mechanics (${selectedAdvancedParts.length})`}
         collapsedSummary={powerMechanicsSummary}
+        titleAddon={<PowerCreatorHelp topic="mechanics" />}
         rightSlot={
           <>
             <SectionCostBadge en={sectionCosts.powerMechanics.energyRaw} tp={sectionCosts.powerMechanics.totalTP} />

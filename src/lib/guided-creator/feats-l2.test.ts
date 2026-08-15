@@ -162,6 +162,91 @@ describe('buildGuidedFeatsL2Items', () => {
     });
     expect(hideState.map((i) => i.id)).toEqual(['b']);
   });
+
+  it('path-filters to the selected-path union and shows path chips instead of Recommended', () => {
+    const feats = [
+      feat({ id: 'a', name: 'Alpha', char_feat: false }),
+      feat({ id: 'b', name: 'Bravo', char_feat: false }),
+      feat({ id: 'c', name: 'Charlie', char_feat: false }),
+    ];
+    const pathIndex = {
+      options: [{ id: 'p-monk', name: 'Monk', type: 'martial' as const }],
+      entityIdsByPathId: new Map([['p-monk', new Set(['a'])]]),
+    };
+    const items = buildGuidedFeatsL2Items({
+      featType: 'archetype',
+      feats,
+      recommendedIds: ['c'],
+      requirementCharacter: character,
+      codexSkills: [],
+      pathIndex,
+      selectedPathIds: ['p-monk'],
+    });
+    expect(items.map((i) => i.id)).toEqual(['a']);
+    expect(items[0]?.badges?.map((b) => b.label)).toEqual(['Monk']);
+    expect(items[0]?.showBadgesInName).toBe(true);
+  });
+
+  it('keeps legal family ranks when only one rank is path-recommended', () => {
+    const feats = [
+      feat({ id: 'a', name: 'Strike', char_feat: false, feat_lvl: 1 }),
+      feat({
+        id: 'a2',
+        name: 'Strike',
+        char_feat: false,
+        feat_lvl: 2,
+        base_feat_id: 'a',
+      }),
+      feat({ id: 'b', name: 'Other', char_feat: false }),
+    ];
+    const pathIndex = {
+      options: [{ id: 'p-monk', name: 'Monk', type: 'martial' as const }],
+      entityIdsByPathId: new Map([['p-monk', new Set(['a'])]]),
+    };
+    const items = buildGuidedFeatsL2Items({
+      featType: 'archetype',
+      feats,
+      recommendedIds: [],
+      requirementCharacter: character,
+      codexSkills: [],
+      pathIndex,
+      selectedPathIds: ['p-monk'],
+    });
+    expect(items.map((i) => i.id)).toEqual(['a']);
+    const featLevels = items[0]?.detailSections?.find((section) => section.label === 'Feat Levels');
+    expect(featLevels?.chips).toHaveLength(1);
+  });
+
+  it('clears the path filter back to the full eligible catalog', () => {
+    const feats = [
+      feat({ id: 'a', name: 'Alpha', char_feat: false }),
+      feat({ id: 'b', name: 'Bravo', char_feat: false }),
+    ];
+    const pathIndex = {
+      options: [{ id: 'p-monk', name: 'Monk', type: 'martial' as const }],
+      entityIdsByPathId: new Map([['p-monk', new Set(['a'])]]),
+    };
+    const filtered = buildGuidedFeatsL2Items({
+      featType: 'archetype',
+      feats,
+      recommendedIds: [],
+      requirementCharacter: character,
+      codexSkills: [],
+      pathIndex,
+      selectedPathIds: ['p-monk'],
+    });
+    const cleared = buildGuidedFeatsL2Items({
+      featType: 'archetype',
+      feats,
+      recommendedIds: [],
+      requirementCharacter: character,
+      codexSkills: [],
+      pathIndex,
+      selectedPathIds: [],
+    });
+    expect(filtered.map((i) => i.id)).toEqual(['a']);
+    expect(cleared.map((i) => i.id).sort()).toEqual(['a', 'b']);
+  });
 });
 
 describe('selectedIdsFromFeatL2Items', () => {
