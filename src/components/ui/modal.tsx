@@ -60,6 +60,8 @@ const sizeClasses = {
 };
 
 const MOBILE_BREAKPOINT_PX = 768;
+/** Invisible overlay linger after close so dismiss cannot hit Create/Save underneath. */
+const CLOSE_CLICK_CAPTURE_MS = 200;
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -108,8 +110,11 @@ export function Modal({
   const mounted = useIsClient();
   const [animating, setAnimating] = React.useState(false);
   const [isMobileViewport, setIsMobileViewport] = React.useState(false);
+  const [captureCloseClicks, setCaptureCloseClicks] = React.useState(false);
+  const [wasOpen, setWasOpen] = React.useState(false);
   const dialogRef = React.useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = React.useRef<HTMLElement | null>(null);
+  const restoreFocusTimerRef = React.useRef<number | null>(null);
   const onCloseRef = React.useRef(onClose);
   const dialogId = React.useId();
   const titleId = `${dialogId}-title`;
@@ -120,6 +125,16 @@ export function Modal({
     setAnimating(true);
   } else if (!isOpen && animating) {
     setAnimating(false);
+  }
+
+  // Same render-time pattern as `animating`: start the click sink on the close
+  // paint so the dismiss tap cannot hit Create/Save underneath.
+  if (isOpen) {
+    if (!wasOpen) setWasOpen(true);
+    if (captureCloseClicks) setCaptureCloseClicks(false);
+  } else if (wasOpen && !captureCloseClicks) {
+    setWasOpen(false);
+    setCaptureCloseClicks(true);
   }
 
   React.useEffect(() => {
@@ -161,8 +176,14 @@ export function Modal({
 
   // Focus management: remember the trigger, move focus into the dialog on open,
   // and restore focus to the trigger on close/unmount (a11y — TASK-332).
+  // Defer restore past the current keyup/click so Enter on dismiss cannot
+  // activate the Create/Save trigger that just re-gained focus.
   React.useEffect(() => {
     if (!mounted || !isOpen) return;
+    if (restoreFocusTimerRef.current != null) {
+      window.clearTimeout(restoreFocusTimerRef.current);
+      restoreFocusTimerRef.current = null;
+    }
     previouslyFocusedRef.current = (document.activeElement as HTMLElement | null) ?? null;
     const node = dialogRef.current;
     if (node) {
@@ -170,11 +191,34 @@ export function Modal({
       (firstFocusable ?? node).focus();
     }
     return () => {
-      previouslyFocusedRef.current?.focus?.();
+      const el = previouslyFocusedRef.current;
+      restoreFocusTimerRef.current = window.setTimeout(() => {
+        el?.focus?.();
+        restoreFocusTimerRef.current = null;
+      }, 0);
     };
   }, [mounted, isOpen]);
 
-  if (!mounted || !isOpen) return null;
+  React.useEffect(() => {
+    if (!captureCloseClicks) return;
+    const id = window.setTimeout(() => {
+      setCaptureCloseClicks(false);
+    }, CLOSE_CLICK_CAPTURE_MS);
+    return () => window.clearTimeout(id);
+  }, [captureCloseClicks]);
+
+  if (!mounted) return null;
+  if (!isOpen && captureCloseClicks) {
+    return createPortal(
+      <div
+        className="fixed inset-0 z-overlay"
+        aria-hidden="true"
+        data-testid="modal-close-click-capture"
+      />,
+      document.body,
+    );
+  }
+  if (!isOpen) return null;
 
   // Keep keyboard focus inside the dialog while it is open.
   const handleFocusTrap = (e: React.KeyboardEvent<HTMLDivElement>) => {
