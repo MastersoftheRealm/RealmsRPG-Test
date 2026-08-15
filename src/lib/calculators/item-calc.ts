@@ -410,16 +410,19 @@ export function deriveAgilityReductionFromProperties(properties: ItemPropertyPay
   return 1 + (arProp.op_1_lvl || 0);
 }
 
+function isCriticalRangePlus1Property(p: ItemPropertyPayload): boolean {
+  if (p.id === PROPERTY_IDS.CRITICAL_RANGE_PLUS_1) return true;
+  const name = (p.name ?? '').trim().toLowerCase();
+  return name === 'critical range +1' || name === 'critical range increase';
+}
+
 /**
- * Derive Critical Range +1 levels from properties (1 + op_1_lvl per stack).
+ * Derive Critical Range +1 levels from properties (1 + op_1_lvl per matching property).
  */
 export function deriveCriticalRangeIncreaseFromProperties(
   properties: ItemPropertyPayload[],
 ): number {
-  const critProp = (properties || []).find((p) => {
-    if (p.id === PROPERTY_IDS.CRITICAL_RANGE_PLUS_1) return true;
-    return p.name === 'Critical Range +1';
-  });
+  const critProp = (properties || []).find(isCriticalRangePlus1Property);
   if (!critProp) return 0;
   return 1 + (critProp.op_1_lvl || 0);
 }

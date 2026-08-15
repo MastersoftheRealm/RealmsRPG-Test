@@ -37,7 +37,12 @@ import {
 import { useGameRules } from '@/hooks/use-game-rules';
 import { sheetCatalogFromEnrichment } from '@/lib/character-view-enrichment';
 import { cleanForSave } from '@/lib/data-enrichment';
-import { mergeRemotePreservingDirty, pickDirtyCharacterFields } from '@/lib/character/dirty-patch';
+import {
+  characterLockToken,
+  mergeRemotePreservingDirty,
+  pickDirtyCharacterFields,
+} from '@/lib/character/dirty-patch';
+import { rememberCharacterLockToken } from '@/lib/character/save-lock';
 import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
 import {
   getArchetypeCodexLookupId,
@@ -90,6 +95,7 @@ export function useCharacterSheetPageData(id: string) {
       if (savedSnapshotIdRef.current === id) return;
       savedSnapshotIdRef.current = id;
       savedCleanRef.current = cleanForSave(character) as Record<string, unknown>;
+      rememberCharacterLockToken(id, character.updatedAt);
       return;
     }
     if (savedSnapshotIdRef.current !== id) {
@@ -233,6 +239,7 @@ export function useCharacterSheetPageData(id: string) {
           const data = payload.new?.data;
           if (!data) return;
           const charId = payload.new.id;
+          rememberCharacterLockToken(charId, payload.new.updated_at);
           const suppressResources = shouldSuppressRemoteResourceMerge(charId);
           setCharacter((prev) => {
             if (!prev || prev.id !== charId) return prev;
@@ -307,7 +314,7 @@ export function useCharacterSheetPageData(id: string) {
       }
       const mergedCleanRef: { current: Record<string, unknown> | null } = { current: null };
       const result = await saveCharacterWithConflictRetry(id, dirty as Partial<Character>, {
-        updatedAt: typeof data.updatedAt === 'string' ? data.updatedAt : undefined,
+        updatedAt: characterLockToken(data.updatedAt),
         mergeOnConflict: (remote) => {
           const remoteClean = cleanForSave(remote) as Record<string, unknown>;
           const mergedClean = mergeRemotePreservingDirty(remoteClean, cleaned, Object.keys(dirty));

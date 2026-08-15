@@ -1,3 +1,826 @@
+- id: TASK-800
+  title: Sheet Skills spend/temp visible without side-scroll
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/skill-row.tsx
+    - src/components/character-sheet/skills-section.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DESIGN_INTENT.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T054
+      - DEV-V-009-T024
+      - DEV-V-009-T032
+      - DEV-V-009-T034
+  developer_test_plan: |
+    Suite DEV-V-009 T054 (+ T024 / T032 / T034) - see BUILD_VALIDATION.md
+  description: |
+    The narrow desktop Skills column hid spend/temp steppers behind a fifth
+    Value/Temp column and TableScroll, so users had to scroll sideways to
+    see they were in edit or Temp mode. Put steppers in the Bonus cell,
+    name the open state on the heading, and add a Temp strip like Abilities.
+  acceptance_criteria:
+    - Sheet Skills spend/temp uses SkillRow editControlsPlacement=inline (no fifth column).
+    - Open section shows Editing or Temp next to the Skills heading (aria-live).
+    - Temp open shows a surface-secondary strip matching Abilities copy.
+    - Calculated bonus remains visible as a caption under the stepper.
+    - Creator/allocation SkillRow tables still use the Value column.
+    - No forced table min-w-[28rem] on the sheet Skills table.
+    - Typecheck, lint. User-facing: pending-qa.
+  notes: |
+    Owner 2026-08-15 chat. Do not reuse WAITING TASK-794-799 (Wave 3C Architect leftovers).
+    Do not widen lg:grid-cols-[1fr_1fr_2fr] when the section opens.
+- id: TASK-793
+  title: Crafting / My Account titles + crawlable Rules intro
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/crafting/layout.tsx
+    - src/app/(main)/my-account/layout.tsx
+    - src/app/(main)/rules/page.tsx
+    - src/lib/constants/copy/rules-copy.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  build_validation: |
+    suite: DEV-V-053
+    tests:
+      - DEV-V-053-T006
+  developer_test_plan: |
+    Suite DEV-V-053 T006 - see BUILD_VALIDATION.md
+  description: |
+    Aug audit leftovers: /crafting and /my-account had no layout titles;
+    /rules was iframe-only for crawlers. Not a full MDX rulebook.
+  acceptance_criteria:
+    - /crafting document title includes Crafting.
+    - /my-account document title includes My Account and is noindex.
+    - /rules has crawlable seoDescription prose above the Google Doc iframe.
+    - Typecheck, lint. User-facing: pending-qa.
+  notes: |
+    Wave 3C. Full /rules MDX + Codex detail generateMetadata is WAITING TASK-796.
+
+- id: TASK-792
+  title: ValueStepper + ListHeader internal dedup
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/components/shared/value-stepper.tsx
+    - src/components/shared/list-header.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    Report 04 C4/C5: ValueStepper plus/minus trees and ListHeader mobile
+    sort menus were copy-pasted. Collapse to one glyph button and one menu.
+  acceptance_criteria:
+    - One StepperGlyphButton used by ValueStepper and Decrement/IncrementButton.
+    - One MobileSortMenu for all ListHeader layout branches.
+    - Active-sort chevron uses text-primary-link-fg.
+    - Pointer-capture and hold-repeat behavior unchanged.
+    - Typecheck, lint. No visual product change expected.
+  notes: |
+    Wave 3C. Remaining OfficialEntityList / confirm-modal clusters are WAITING TASK-799.
+
+- id: TASK-791
+  title: Extract starting currency + appearance-age from Legacy
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/lib/game/constants.ts
+    - src/lib/character/appearance-age.ts
+    - src/components/character-creator/steps/finalize/identity-fields.tsx
+    - src/stores/character-creator-store.ts
+    - src/stores/guided-creator-store.ts
+    - src/lib/guided-creator/path-selection-draft.ts
+    - src/lib/guided-creator/equipment-currency.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    Report 02 Step 2: stop Guided from importing CHARACTER_STARTING_CURRENCY
+    through the Legacy store. Move age parse/merge out of finalize.
+  acceptance_criteria:
+    - CHARACTER_STARTING_CURRENCY lives in lib/game/constants.ts.
+    - Legacy store re-exports it for existing callers.
+    - Guided store, path-selection-draft, and equipment-currency import from constants.
+    - Age helpers live in lib/character/appearance-age.ts; finalize re-exports.
+    - Typecheck, targeted tests.
+  notes: |
+    Wave 3C. Shared-component moves (AbilityPickButton etc.) stay WAITING TASK-798.
+
+- id: TASK-790
+  title: Guided Skills defense + governing Ability
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-skills-panel.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/stores/guided-creator-store.ts
+    - src/lib/guided-creator/path-selection-draft.ts
+    - src/lib/guided-creator/build-character.ts
+    - src/lib/guided-creator/build-character.test.ts
+    - src/lib/empty.ts
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/components/shared/skills-allocation-page.tsx
+    - src/components/shared/index.ts
+    - src/lib/game/calculations.ts
+    - src/components/character-creator/steps/skills-step.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T088
+  developer_test_plan: |
+    Suite DEV-V-013 T088 - see BUILD_VALIDATION.md
+  description: |
+    Report 02 Step 0: Guided Skills lacked Defense Bonuses and a governing-Ability
+    picker. Legacy already had both. Persist and save the player's choices.
+  acceptance_criteria:
+    - Guided Skills shows shared DefenseBonusesCard; 2 skill points = +1 defense.
+    - Multi-ability skills get a governing-Ability picker; single-ability stay a chip.
+    - Persist schema v15 defenseVals + skillAbilities; save emits both.
+    - Continue still requires remaining skill points 0.
+    - Typecheck, targeted tests. User-facing: pending-qa.
+  notes: |
+    Wave 3C. Do not delete the Legacy /advanced route.
+
+- id: TASK-789
+  title: Landing RSC + delete chrome-remounting app/page.tsx
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/page.tsx
+    - src/app/(main)/about/page.tsx
+    - src/app/(main)/characters/new/page.tsx
+    - src/components/landing/index.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/human/USER_EXPERIENCE_GOALS.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  build_validation: |
+    suite: DEV-V-012
+    tests:
+      - DEV-V-012-T009
+  developer_test_plan: |
+    Suite DEV-V-012 T009 - see BUILD_VALIDATION.md
+  description: |
+    Report 07 P1-4 / P1-5: src/app/page.tsx imported (main)/layout as a
+    component and remounted Header/Footer on / to other routes. Home now
+    lives in the (main) group as an RSC.
+  acceptance_criteria:
+    - src/app/page.tsx and (main)/home-page.tsx are deleted.
+    - / is (main)/page.tsx (RSC + HeroSection island).
+    - About and /characters/new are server pages; returnTo still works.
+    - OAuth ?code= stays in proxy.ts (no page-level Signing you in spinner).
+    - Typecheck, lint. User-facing: pending-qa.
+  notes: |
+    Wave 3C. Do not reintroduce app/page.tsx wrapping (main)/layout.
+- id: TASK-788
+  title: Sheet header DR and Critical Range only when armor modifies
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/game/calculations.ts
+    - src/lib/game/calculations.test.ts
+    - src/lib/calculators/item-calc.ts
+    - src/lib/calculators/item-calc.test.ts
+    - src/components/character-sheet/library-list-helpers.ts
+    - src/components/character-sheet/library-list-helpers.test.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/shared/quick-armaments-sections.tsx
+    - src/docs/GAME_RULES.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DESIGN_INTENT.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T053
+      - DEV-V-008-T015
+  developer_test_plan: |
+    Suite DEV-V-009 T053 + DEV-V-008 T015 - see BUILD_VALIDATION.md
+  description: |
+    Header Damage Reduction and Critical Range should not appear when the
+    character has no armor, or when equipped armor does not change that stat.
+    Critical Range is Evasion + 10 + the armor Critical Range +1 / Increase
+    property (1 + Option 1 level).
+  acceptance_criteria:
+    - Unarmored: no DR and no Critical Range in the header vitals row.
+    - Equipped armor with 0 DR: no Damage Reduction card.
+    - Equipped armor without Critical Range +1 / Increase: no Critical Range card.
+    - With DR: header DR matches the library armor DR cell.
+    - With Critical Range +1 at op_1_lvl N: header value is Evasion + 10 + (1+N).
+    - Independent visibility (DR can show without crit and vice versa).
+    - Temp mode always shows both DR and Critical Range cards so a temp can be added
+      (unarmored Critical Range = Evasion + 10). Play/edit stay gated.
+    - Shared calculateCriticalRange in lib/game/calculations.ts; no inline 10+agi+10
+      (header, armor rows, and QuickArmorTable).
+    - Typecheck, lint, targeted tests. User-facing: pending-qa.
+  notes: |
+    Owner 2026-08-15 sheet notes. Do not reopen TASK-512/522 except to update T015.
+    Cleanup: Temp mode shows the cards; QuickArmorTable wired to calculateCriticalRange.
+
+- id: TASK-787
+  title: Modal footer inset (Recovery and shared Modal)
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/ui/modal.tsx
+    - src/components/shared/unified-selection-modal-footer.tsx
+    - src/components/guided-creator/guided-entity-detail-modal.tsx
+    - src/components/character-creator/MixedSpeciesModal.tsx
+    - src/components/character-creator/species-modal.tsx
+    - src/components/character-creator/creator-tab-bar.tsx
+    - src/components/character-creator/steps/finalize/validation-modal.tsx
+    - src/components/onboarding/play-together-modal.tsx
+    - src/components/onboarding/sheet-tour-offer-modal.tsx
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T052
+      - DEV-V-009-T039
+  developer_test_plan: |
+    Suite DEV-V-009 T052 (+ T039 footer) - see BUILD_VALIDATION.md
+  description: |
+    Recovery Cancel / Full Recovery hugged the bottom-right of the modal. The
+    same missing footer gutter can appear on any Modal that puts actions in
+    footer without its own padding.
+  acceptance_criteria:
+    - Modal footer slot has default inset matching content/header gutters.
+    - Recovery Cancel and Full Recovery are not flush to the modal chrome.
+    - Callers that already padded their footer rows do not double-pad.
+    - fullScreenOnMobile still pins the footer; safe-area inset preserved.
+    - Typecheck, lint, build. User-facing: pending-qa.
+  notes: |
+    Owner 2026-08-15 sheet notes. Recovery was the reported case; fix is on Modal.
+
+- id: TASK-783
+  title: Sheet customized feats play-view note + italic name clip
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/library-feat-rows.tsx
+    - src/components/character-sheet/library-feat-rows.test.ts
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/grid-list-row-types.ts
+    - src/components/shared/grid-list-row-expanded.tsx
+    - src/components/shared/entity-library-sections-types.ts
+    - src/components/shared/entity-library-sections-rows.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T051
+  developer_test_plan: |
+    Suite DEV-V-009 T051 - see BUILD_VALIDATION.md
+  description: |
+    Customized sheet feats (TASK-377) show an italic custom name that clips on the
+    right (italic overhang into truncate / overflow-hidden). Outside edit mode the
+    expanded row still exposes a View customization button plus a labeled Custom
+    name field and a labeled Note box. Owner: play view should not show the custom
+    name field; the player note should sit in the same description text box as the
+    official description, separated by a clean simple line — no "Note" title, no
+    hide/show customization button.
+  acceptance_criteria:
+    - Italic custom names in the collapsed/header title are not clipped on the
+      right (typical cause: GLR lg:truncate + row overflow-hidden). Prefer local
+      italic overflow (padding on the italic span) over dropping row overflow
+      unless that is the proven clip.
+    - Play view (not edit): no Custom name field; no View/Hide customization
+      button on the expanded feat.
+    - Play view: if a player note exists, it appears below the official
+      description inside the same expanded description surface (the rounded
+      padded description box), separated by a simple line only — no "Note"
+      heading, no second card.
+    - Play view: italic custom name remains the row title; do not repeat it in
+      the description body.
+    - Edit mode keeps Customize with Custom name + player note fields (save path
+      unchanged).
+    - Traits share FeatTraitCustomizationBlock — same play-view layout; do not
+      fork a feats-only copy. Do not revert TASK-779 trait-kind chips.
+    - Prefer an in-box description after-slot on GridListRow expanded over a new
+      shared component. Architect pause only if a new shared/ui file is added.
+    - DEV-V-009 tests (do not reopen archived DEV-V-010). Typecheck, lint, build.
+      User-facing: pending-qa.
+  notes: |
+    Owner 2026-08-15 sheet notes. Follow-up to TASK-377 (do not reopen). Same
+    library-feat-rows as TASK-779.
+    Implemented: GridListRow descriptionAfter in-box slot; play notes use it;
+    italic custom names pe-[0.35em]; FeatTraitCustomizationBlock is edit-only.
+
+- id: TASK-777
+  title: Shared Codex row mappers for /api/codex and view enrichment
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  implemented_by: agent
+  related_tasks:
+    - TASK-773
+    - TASK-775
+  related_files:
+    - src/lib/codex/row-map.ts
+    - src/lib/codex/row-map.test.ts
+    - src/app/api/codex/route.ts
+    - src/app/api/codex/route.test.ts
+    - src/lib/character-view-enrichment-server.ts
+    - src/lib/character-view-enrichment-server.test.ts
+    - src/lib/codex/feat-ability.ts
+    - src/lib/codex/part-type.ts
+    - src/lib/game/character-legality.ts
+    - src/types/codex.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/DATA_HANDLING.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    TASK-773 shipped compact mapFeat/mapSkill/mapSpecies/mapTrait/mapPart/mapProperty/
+    mapEquipment plus local toStrArray/toNum helpers in character-view-enrichment-server.
+    GET /api/codex has a fuller parallel mapper. Extract one lib/codex row-map module so
+    a missed field cannot blank an RM/other-user sheet row while Codex browse shows it.
+  acceptance_criteria:
+    - One mapper module under src/lib/codex/ used by GET /api/codex and
+      getCharacterViewEnrichment. Delete the local map* / toStrArray trio from both
+      call sites (keep route-only fields like version/admin lock in the route).
+    - Reuse normalizeFeatAbilities and mapCodexBaseSkillToId; do not fork them.
+    - Sheet enrichment fields are a superset of what useCharacterSheetDerived reads.
+    - Tests: typecheck, lint, vitest on the mapper + existing enrichment/codex tests,
+      npm run build.
+    - Not user-facing unless a mapping bug is found; then pending-qa + BV note.
+  notes: |
+    Owner asked to file this fork-collapse (773 cleanup). Do not mix with TASK-775
+    collection/virtualize. New file under existing lib/codex/ — not a new shared/ui
+    or API contract. No ADR unless the mapper becomes a second payload shape.
+    Implemented: shared mapCodex* + toStrArray/toNum in lib/codex/row-map.ts.
+    Route attaches updated_at; archetype path join stays in the route.
+    Missing lvl_req stays undefined (not 0) so hard-req vs half-pattern stays distinct.
+
+- id: TASK-779
+  title: Sheet trait type chip expanded-only
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/library-feat-rows.tsx
+    - src/components/character-sheet/library-feat-rows.test.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T050
+  developer_test_plan: |
+    Suite DEV-V-009 T050 - see BUILD_VALIDATION.md
+  description: |
+    Traits in the sheet Feats/Traits list show kind twice when expanded
+    (Characteristic in the collapsed name and again as an expanded DescriptorChip).
+    Owner: type is only needed in the expanded view.
+  acceptance_criteria:
+    - Collapsed trait rows do not show Ancestry / Characteristic / Flaw in the header.
+    - Expanded trait rows show kind once as a DescriptorChip (not ExpandableChip).
+    - Species kind stays omitted (current mapTraitRows skip).
+    - Do not change path-filter showBadgesInName name chips.
+    - Do not globally hide compact GLR badges (state-feat Archetype/Character badges
+      and Codex path chips stay).
+    - Tests: typecheck, lint, npm run build. User-facing: pending-qa + DEV-V-009 note.
+  notes: |
+    TASK-415 leftover. Compact GLR paints badges on the name and, unless
+    showBadgesInName, again in the expanded body. Fix at mapTraitRows (drop header
+    badges; expanded-only DescriptorChip) rather than changing GridListRow defaults.
+    Same file as TASK-783 (play-view feat customization); do not revert this
+    expanded-only kind chip when restyling notes.
+  completed_work: |
+    Dropped trait kind from compact GLR name badges. mapTraitRows now uses
+    metadataDetailSection + descriptorChipData so Ancestry / Characteristic / Flaw
+    appear once as expanded DescriptorChips. Species kind still omitted; state-feat
+    Archetype/Character badges unchanged.
+---
+- id: TASK-786
+  title: Sheet PATCH 409 from same-tab autosave vs resource sync
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_files:
+    - src/lib/character/save-lock.ts
+    - src/lib/character/save-lock.test.ts
+    - src/services/character-service.ts
+    - src/services/character-service.save-lock.test.ts
+    - src/lib/encounter/character-resource-sync.ts
+    - src/lib/encounter/character-resource-sync.test.ts
+    - src/hooks/use-character-resource-sync.ts
+    - src/app/(main)/characters/[id]/use-character-sheet-page-data.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0013-character-dirty-patch.md
+    - src/docs/ai/ADR/README.md
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T049
+  developer_test_plan: |
+    Suite DEV-V-009 T049 - see BUILD_VALIDATION.md
+  description: |
+    Local sheet saves 409 because encounter resource sync PATCHed HP/EN/AP on every
+    character identity change (notes, updatedAt echo) without a lock, stamping
+    updated_at ahead of autosave. Pending resave reused the pre-save token.
+  acceptance_criteria:
+    - Notes-only edits do not schedule a resource PATCH.
+    - Same-id PATCHes are queued; locked callers send the newest in-memory token.
+    - Resource sync still skipLock (HP LWW vs other tabs).
+    - DEV-V-009 T049; pending-qa. Do not reopen ADR-0013 contract.
+  notes: |
+    Other-tab stale lock 409 + retry (T043) is unchanged.
+
+- id: TASK-778
+  title: Compact sheet Skills All/Proficient + Sub-Skills toggle
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/skills-section.tsx
+    - src/lib/character/sheet-skills-display.ts
+    - src/components/shared/segmented-control.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - .cursor/rules/realms-unification.mdc
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T032
+  developer_test_plan: |
+    Suite DEV-V-009 T032 - see BUILD_VALIDATION.md
+  description: |
+    Sheet Skills All vs Proficient used the same bulky SegmentedControl chrome as
+    SourceFilter. Owner wanted a smaller, uninvasive pair of controls: All/Proficient
+    plus a show/hide sub-skills toggle labeled Sub-Skills (not Show sub-skills).
+  acceptance_criteria:
+    - Skills toolbar is visually lighter than SourceFilter; not a FilterSection panel.
+    - All / Proficient still filters via existing SkillProficiencyFilter.
+    - Sub-skills toggle label is Sub-Skills; checked = show, unchecked = hide.
+    - Desktop chrome stays compact (MOBILE_UX: do not inflate sheet filters to 44px
+      on md+). Touch targets remain 44px below md.
+    - Prefer extending SegmentedControl with a compact size, or ChipSelect - do not
+      add a new shared filter component.
+    - Update FEATURE_INDEX + DEV-V-009 T032 copy (Show sub-skills to Sub-Skills).
+    - Tests: typecheck, lint, npm run build. User-facing: pending-qa.
+  completed_work: |
+    Added SegmentedControl size="compact" (text-hugging on md+, 44px below md).
+    Skills section uses compact All/Proficient plus a Sub-Skills checkbox.
+    Filter logic in sheet-skills-display unchanged. No new shared/ui file.
+---
+
+- id: TASK-785
+  title: Batch commit acknowledges all done tasks
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  related_files:
+    - scripts/reconcile_tasks.js
+    - package.json
+    - .cursor/rules/realms-tasks.mdc
+    - .cursor/rules/realms-project.mdc
+    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
+    - src/docs/ai/AI_TASK_QUEUE.md
+    - src/docs/ai/PR_CHECKLIST.md
+    - src/docs/ai/guide/08-workflows-routes-and-progress.md
+    - AGENTS.md
+    - .cursor/commands/audit.md
+    - .cursor/commands/cleanup.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/archive/TASK_QUEUE_DONE.md
+  description: |
+    Owner workflow is implement N tasks, audit/cleanup each, then one commit/push
+    that lists every TASK-###. Do not require a git commit per done task.
+  acceptance_criteria:
+    - Mark-done and /audit do not treat a missing commit as a gap.
+    - Agents do not create a commit per task unless the owner asked.
+    - One landing commit may list many TASK-### (space-separated; ranges do not count).
+    - Local tasks:validate allows uncommitted archive rows; CI still greps HEAD.
+  notes: |
+    CI ai-task-verifier.yml keeps --strict without --allow-uncommitted-done.
+---
+
+- id: TASK-782
+  title: Split sheet edit mode from Temp Modifier mode
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/docs/ai/ADR/0006-temp-modifier-mode.md
+    - src/app/(main)/characters/[id]/use-character-sheet-page-ui.ts
+    - src/app/(main)/characters/[id]/use-character-sheet-page.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/components/character-sheet/sheet-action-toolbar.tsx
+    - src/components/character-sheet/character-sheet-context.tsx
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/sheet-header-resources.tsx
+    - src/components/character-sheet/sheet-large-stat-block.tsx
+    - src/components/character-sheet/sheet-temp-modifier-controls.tsx
+    - src/components/character-sheet/read-only-sheet.ts
+    - src/components/shared/index.ts
+    - src/components/shared/temp-modifier-toggle.tsx
+    - src/lib/character/temp-modifiers.ts
+    - src/lib/character/temp-modifiers.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - scripts/shared-ui-allowlist.json
+    - .cursor/rules/realms-unification.mdc
+    - src/docs/DESIGN_SYSTEM.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T033
+      - DEV-V-009-T034
+      - DEV-V-009-T038
+  developer_test_plan: |
+    Suite DEV-V-009 T033 / T034 / T038 (+ T032 step 4) - see BUILD_VALIDATION.md
+  description: |
+    Temp Modifier chrome lived inside sheet edit mode. Split so Edit and Temp
+    are mutually exclusive at the toolbar (play / edit / temp).
+  acceptance_criteria:
+    - Sheet Edit and Temp Modifier are mutually exclusive (play / edit / temp).
+    - Edit shows spend/edit chrome only; Temp shows temp chrome only.
+    - Play view shows neither chrome; temp tints still display.
+    - Temp reachable without entering edit; campaign view-only has neither.
+    - Level-up opens Edit. Persist shape unchanged. ADR-0006 Amended.
+  completed_work: |
+    Toolbar SlidersHorizontal FAB is exclusive with Edit. Per-section Edit pencil
+    and tinted TempModifierToggle open/close their own steppers. Header/Abilities/
+    Skills temp chrome shows only in Temp mode; spend chrome only in Edit.
+    Read-only campaign context stays both-off.
+---
+
+- id: TASK-784
+  title: Chooser Custom card player-facing copy
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/constants/copy/guided-creator-copy.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-020
+    tests:
+      - DEV-V-020-T002
+      - DEV-V-013-T001
+  developer_test_plan: |
+    Suite DEV-V-020 T002 + DEV-V-013 T001 - see BUILD_VALIDATION.md
+  description: |
+    Custom chooser card used backend speak (Layer 3, cohesive creator, Forge type).
+    Players do not know those terms. Rewrite to player-facing copy about a fully
+    customizable archetype and Loadout built step by step.
+  acceptance_criteria:
+    - Custom card tagline and bullets have no Layer 3, cohesive creator, or Forge jargon.
+    - Copy explains choosing your own archetype type and abilities, then species, Feats, and Loadout.
+    - No em dashes. GAME_RULES capitalization for Feats / Loadout.
+    - DEV-V-020 T002 and DEV-V-013 T001 updated. FEATURE_INDEX chooser row notes player-facing copy.
+  completed_work: |
+    GUIDED_CREATOR_COPY.chooser.modes.custom tagline is "Fully customizable archetype
+    and Loadout, built step by step." Bullets: own type and abilities instead of a
+    path; then species, Feats, and Loadout; full-control audience line kept.
+---
+
+- id: TASK-776
+  title: Campaign character GET vitest (encounter scope + enrichment)
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/app/api/campaigns/[id]/characters/[userId]/[characterId]/route.test.ts
+    - src/app/api/campaigns/[id]/characters/[userId]/[characterId]/route.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    TASK-773 AC is true in the campaign character route (encounter returns HP/EN/AP only;
+    full RM GET adds libraryForView + enrichment), but that route has no auth/IDOR/payload
+    vitest. Character GET already covers owner-omit / other-user-include. Add a focused
+    route test so encounter vs full view cannot drift.
+  acceptance_criteria:
+    - Vitest for GET /api/campaigns/[id]/characters/[userId]/[characterId].
+    - ?scope=encounter JSON has no libraryForView and no enrichment.
+    - Full RM GET includes both; non-RM full GET stays 403; unauthenticated 401.
+    - Do not reopen TASK-761 query keys or TASK-762 combat wiring.
+    - Tests: typecheck, lint, targeted vitest.
+  notes: |
+    Optional later from TASK-773 audit. Pre-existing coverage hole listed in
+    DEVELOPER_TASK_QUEUE (campaigns character view route). Copy the character [id]
+    route.test mock style. Not user-facing; no BUILD_VALIDATION suite.
+---
+
+- id: TASK-781
+  title: Filter by character InfoTippy beside the title
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/shared/filters/character-filter.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/archive/TASK_QUEUE_DONE.md
+  build_validation: |
+    suite: DEV-V-045
+    tests:
+      - DEV-V-045-T004
+  developer_test_plan: |
+    Suite DEV-V-045 T004 - see BUILD_VALIDATION.md
+  description: |
+    Codex/Library Filter by character header parked the (i) at the far right
+    because the expand button was flex-1 and InfoTippy was a trailing sibling.
+    Owner wants the tooltip immediately after the Filter by character title.
+  acceptance_criteria:
+    - InfoTippy sits immediately after the Filter by character title, before the chevron.
+    - Expand/collapse still works from the header; (i) stays usable while collapsed.
+    - Shared CharacterFilter only (Codex Feats/Skills + Library consumers).
+    - DEV-V-045 T004; pending-qa.
+  notes: |
+    Do not reopen TASK-722. Overlay expand control matches CollapsibleSection so the tip is not nested in the button.
+---
+
+- id: TASK-775
+  title: Codex per-collection fetch + CodexBrowseListShell virtualization
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_tasks:
+    - TASK-773
+    - TASK-774
+  related_files:
+    - src/app/api/codex/route.ts
+    - src/app/api/codex/route.test.ts
+    - src/lib/codex/part-type.ts
+    - src/lib/api-client.ts
+    - src/hooks/use-codex.ts
+    - src/hooks/use-codex.keys.test.ts
+    - src/hooks/use-game-rules.ts
+    - src/hooks/use-path-recommendation-index.ts
+    - src/hooks/index.ts
+    - src/types/codex.ts
+    - src/components/shared/codex-browse-list-shell.tsx
+    - package.json
+    - src/docs/ai/ADR/0015-wave-3b-fetch-contracts.md
+    - src/docs/ai/ADR/README.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/DATA_HANDLING.md
+    - src/docs/ARCHITECTURE.md
+  description: |
+    Report 07 P1-3 / P2+: Codex browse downloaded the full /api/codex payload (shared ['codex'] key)
+    and mounted every filtered row. Keep GET /api/codex (full) for admin/creators. Optional
+    ?collection= plus per-hook query keys. Virtualize CodexBrowseListShell — do not rebuild it or
+    fold it into OfficialEntityList (ADR-0005). Path filter (TASK-751–753) stays.
+  acceptance_criteria:
+    - GET /api/codex?collection=<payload key> returns that slice; omitted param still returns full.
+    - useCodex* browse hooks use ['codex', collection]; useCodexFull keeps ['codex'].
+    - CodexBrowseListShell virtualizes row children (@tanstack/react-virtual unless owner prefers page size).
+    - Path filter still works (archetypes slice, not full payload).
+    - Tests: typecheck, lint, hook/route tests, npm run build.
+    - User-facing: BUILD_VALIDATION (Codex browse) + pending-qa.
+  completed_work: |
+    Route: `?collection=` validated against CODEX_PAYLOAD_KEYS (unknown → 400 that does not echo
+    the value); COLLECTION_TABLES drives which tables are queried. Response is the same
+    payload shape with one key — no second shape, no /api/codex/[collection] route.
+    Hooks: codexKeys.all / codexKeys.collection under the same ['codex'] prefix.
+    Browse hooks fetch their own collection; useCodexFull keeps the full payload for the
+    admin spreadsheet only. parts / powerParts / techniqueParts share one ['codex', 'parts']
+    fetch and split through lib/codex/part-type.ts. useGameRules uses ['codex', 'coreRules'].
+    CodexBrowseListShell window-virtualizes row children past 40 rows via
+    @tanstack/react-virtual; grouped/short lists mount as before. ResizeObserver recomputes
+    scrollMargin when Filters expand.
+  notes: |
+    Owner acked the ADR-0015 TASK-775 slice + the @tanstack/react-virtual dependency in chat
+    2026-08-15 ("proceed"). ADR-0015 is now Accepted in full. Does not touch TASK-777
+    (shared row mappers) or ADR-0013 / TASK-761 / TASK-762.
+---
+
 - id: TASK-780
   title: Sheet feat rank control — replace Lvl quantity stepper
   created_at: 2026-08-15

@@ -51,10 +51,10 @@ A task may be `done` only when **all** acceptance criteria are met **and**:
 1. `npm run build` passes (and targeted tests if the area has them). When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) — CI-hard since TASK-655/656.
 2. No new parallel pattern introduced (or Architect ADR + owner ack) — **prefer net remove** when cleaning or consolidating (delete weaker forks / dead code rather than leaving compat layers)
 3. `ACTIVE_TASKS.md` updated (`done` → move block to `archive/TASK_QUEUE_DONE.md`; bump status fields)
-4. Commit subject(s) include this task’s `TASK-###` (CI strict reconcile greps subjects — see `AI_TASK_QUEUE.md` § Evidence / CI)
+4. Do **not** create a git commit per task. Missing commit is not a mark-done or `/audit` blocker. The owner often finishes several tasks (`/audit` → `/cleanup` each), then **one** commit/push whose subject lists every newly `done` `TASK-###` (see `AI_TASK_QUEUE.md` § Evidence / CI).
 5. `AI_CHANGELOG.md` entry appended (cleanup/debt entries **must lead with a deletion or consolidation bullet**; docs-only honesty is not enough)
 6. User-facing work: `BUILD_VALIDATION.md` tests + `developer_test_plan` when required
-7. Before push: `npm run tasks:validate` when tasks/archives/`related_files` changed
+7. Before push: `npm run tasks:validate` when tasks/archives/`related_files` changed. The landing commit subject(s) must list every newly `done` `TASK-###` (space-separated; en-dash ranges do not count).
 
 If any AC remains open → **`partial`** with `completed_work` / `remaining_work` / `follow_up_tasks`. Never mark `done` to “finish later.” Prefer follow-up tasks over audit-after-done rediscovery.
 

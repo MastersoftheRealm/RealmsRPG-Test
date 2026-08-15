@@ -26,6 +26,8 @@ export type EntityRowExtras = {
   uses?: { current: number; max: number };
   hideUsesInName?: boolean;
   nameContent?: ReactNode;
+  /** In-box expanded description after-slot (TASK-783). */
+  descriptionAfter?: ReactNode;
   supplementalExpandedContent?: ReactNode;
   /** Art-capable rows: pair with ListHeader `hasThumbnailColumn`. */
   thumbnail?: ListRowThumbnailProps;

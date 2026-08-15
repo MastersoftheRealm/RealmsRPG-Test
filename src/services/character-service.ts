@@ -9,6 +9,11 @@ import type { UserCreature, UserItem, UserPower, UserTechnique } from '@/hooks/u
 import type { CharacterViewEnrichment } from '@/lib/character-view-enrichment';
 import { apiFetch, apiFetchOrNull, isConflictError } from '@/lib/api-client';
 import { characterLockToken } from '@/lib/character/dirty-patch';
+import {
+  enqueueCharacterSave,
+  rememberCharacterLockToken,
+  resolveCharacterLockToken,
+} from '@/lib/character/save-lock';
 
 const API_BASE = '/api/characters';
 
@@ -51,6 +56,9 @@ export async function getCharacter(characterId: string): Promise<GetCharacterRes
 
   if (data && typeof data === 'object' && 'character' in data) {
     const wrapped = data as GetCharacterResult;
+    if (wrapped.character?.id) {
+      rememberCharacterLockToken(wrapped.character.id, wrapped.character.updatedAt);
+    }
     return {
       character: wrapped.character,
       libraryForView: wrapped.libraryForView,
@@ -58,37 +66,50 @@ export async function getCharacter(characterId: string): Promise<GetCharacterRes
     };
   }
   if (data && typeof data === 'object' && !Array.isArray(data)) {
-    return { character: data as Character };
+    const character = data as Character;
+    if (character.id) rememberCharacterLockToken(character.id, character.updatedAt);
+    return { character };
   }
   return { character: data as Character };
 }
 
 /**
  * Save a character (update). Send a dirty-key subset plus optional `updatedAt`
- * (the token from GET / last PATCH). Stale `updatedAt` → 409; refetch and retry
- * via `saveCharacterWithConflictRetry` (ADR-0013).
+ * (the token from GET / last PATCH, upgraded from the in-memory lock). Stale
+ * `updatedAt` → 409; refetch and retry via `saveCharacterWithConflictRetry`
+ * (ADR-0013). Same-id PATCHes are queued (TASK-786). `skipLock` is for
+ * encounter HP LWW (resource sync).
  */
 export async function saveCharacter(
   characterId: string,
   data: Partial<Character>,
-  options: { updatedAt?: string | Date | null } = {},
+  options: { updatedAt?: string | Date | null; skipLock?: boolean; enqueue?: boolean } = {},
 ): Promise<{ ok: true; updatedAt?: string }> {
   if (!characterId?.trim()) {
     throw new Error('Invalid character ID');
   }
 
-  const body: Record<string, unknown> = { ...data };
-  const lock = characterLockToken(options.updatedAt) ?? characterLockToken(data.updatedAt);
-  if (lock) body.updatedAt = lock;
-  else delete body.updatedAt;
+  const id = characterId.trim();
+  const run = async () => {
+    const body: Record<string, unknown> = { ...data };
+    const lock = options.skipLock
+      ? undefined
+      : resolveCharacterLockToken(id, options.updatedAt ?? data.updatedAt);
+    if (lock) body.updatedAt = lock;
+    else delete body.updatedAt;
 
-  return apiFetch<{ ok: true; updatedAt?: string }>(
-    `${API_BASE}/${encodeURIComponent(characterId.trim())}`,
-    {
-      method: 'PATCH',
-      body: JSON.stringify(body),
-    },
-  );
+    const result = await apiFetch<{ ok: true; updatedAt?: string }>(
+      `${API_BASE}/${encodeURIComponent(id)}`,
+      {
+        method: 'PATCH',
+        body: JSON.stringify(body),
+      },
+    );
+    if (result.updatedAt) rememberCharacterLockToken(id, result.updatedAt);
+    return result;
+  };
+
+  return options.enqueue === false ? run() : enqueueCharacterSave(id, run);
 }
 
 /**
@@ -106,20 +127,29 @@ export async function saveCharacterWithConflictRetry(
     };
   },
 ): Promise<{ updatedAt?: string; applied: Partial<Character> }> {
-  try {
-    const result = await saveCharacter(characterId, dirty, { updatedAt: options.updatedAt });
-    return { updatedAt: result.updatedAt, applied: dirty };
-  } catch (err) {
-    if (!isConflictError(err)) throw err;
-    const { character: remote } = await getCharacter(characterId);
-    if (!remote) throw err;
-    const next = options.mergeOnConflict(remote);
-    if (Object.keys(next.dirty).length === 0) {
-      return { updatedAt: characterLockToken(remote.updatedAt), applied: {} };
+  const id = characterId.trim();
+  return enqueueCharacterSave(id, async () => {
+    try {
+      const result = await saveCharacter(id, dirty, {
+        updatedAt: options.updatedAt,
+        enqueue: false,
+      });
+      return { updatedAt: result.updatedAt, applied: dirty };
+    } catch (err) {
+      if (!isConflictError(err)) throw err;
+      const { character: remote } = await getCharacter(id);
+      if (!remote) throw err;
+      const next = options.mergeOnConflict(remote);
+      if (Object.keys(next.dirty).length === 0) {
+        return { updatedAt: characterLockToken(remote.updatedAt), applied: {} };
+      }
+      const retried = await saveCharacter(id, next.dirty, {
+        updatedAt: next.updatedAt,
+        enqueue: false,
+      });
+      return { updatedAt: retried.updatedAt, applied: next.dirty };
     }
-    const retried = await saveCharacter(characterId, next.dirty, { updatedAt: next.updatedAt });
-    return { updatedAt: retried.updatedAt, applied: next.dirty };
-  }
+  });
 }
 
 /**

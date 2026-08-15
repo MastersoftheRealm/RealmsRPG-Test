@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_ABILITIES } from '@/types';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
+import { DEFAULT_DEFENSE_SKILLS } from '@/types';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import { buildGuidedCharacterPayload } from '@/lib/guided-creator/build-character';
 import { cleanForSave } from '@/lib/data-enrichment';
@@ -33,6 +34,8 @@ function minimalDraft(overrides: Partial<GuidedDraft> = {}): GuidedDraft {
     abilities: { ...DEFAULT_ABILITIES, strength: 2, vitality: 1 },
     abilitiesMode: 'recommended',
     skills: {},
+    defenseVals: { ...DEFAULT_DEFENSE_SKILLS },
+    skillAbilities: {},
     declinedPathSkillIds: [],
     archetypeFeatIds: [],
     characterFeatIds: [],
@@ -409,6 +412,25 @@ describe('buildGuidedCharacterPayload', () => {
   it('clamps negative remaining Currency to 0 on save', () => {
     const payload = buildGuidedCharacterPayload(minimalDraft({ currency: -40 }), {});
     expect(payload.currency).toBe(0);
+  });
+
+  it('persists explicit skill ability choice and allocated defenseVals', () => {
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({
+        abilities: { ...DEFAULT_ABILITIES, agility: 3, intelligence: 0 },
+        skills: { '30': 0 },
+        skillAbilities: { '30': 'intelligence' },
+        defenseVals: { ...DEFAULT_DEFENSE_SKILLS, reflex: 1 },
+      }),
+      {
+        codexSkills: [
+          { id: '30', name: 'Lockpick', ability: 'Agility,Intelligence', category: 'mental' },
+        ],
+      },
+    );
+    const rows = payload.skills as unknown as Array<{ id?: string; ability?: string }>;
+    expect(rows.find((s) => s.id === '30')?.ability).toBe('intelligence');
+    expect(payload.defenseVals).toEqual({ ...DEFAULT_DEFENSE_SKILLS, reflex: 1 });
   });
 
   it('persists the highest linked skill ability so the sheet matches the creator', () => {

@@ -17,7 +17,7 @@ import {
   calculateSkillPointsForEntity,
   calculateTrainingPoints,
 } from '@/lib/game/formulas';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import {
   calculateSimpleSkillPointsSpent,
   resolveSkillAllocationRules,

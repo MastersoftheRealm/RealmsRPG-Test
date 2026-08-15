@@ -81,7 +81,6 @@
     "src/components/shared/realms-image-picker.tsx",
     "src/components/shared/roll-button.tsx",
     "src/components/shared/section-cost-badge.tsx",
-    "src/components/shared/section-dual-mode-toggles.tsx",
     "src/components/shared/section-header.tsx",
     "src/components/shared/segmented-control.tsx",
     "src/components/shared/selection-toggle.tsx",

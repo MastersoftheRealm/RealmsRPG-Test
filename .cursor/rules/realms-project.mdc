@@ -11,4 +11,4 @@ alwaysApply: true
 
 **Agent OS:** `ARCHITECTURE_CONSTITUTION.md` · tasks `ACTIVE_TASKS.md` · SoT map in root `AGENTS.md`.
 
-**Before PR / push to master:** `npm run build` + `npm run tasks:validate` (strict reconcile needs `TASK-###` in commit subjects; `related_files` paths must exist). UI gates: lint/contrast/build + visual/a11y.
+**Before PR / push to master:** `npm run build` + `npm run tasks:validate`. Strict reconcile: the landing commit subject lists every newly done `TASK-###` (one commit may cover many tasks — not one commit per task). `related_files` paths must exist. UI gates: lint/contrast/build + visual/a11y.

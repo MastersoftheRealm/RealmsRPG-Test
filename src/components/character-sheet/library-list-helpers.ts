@@ -8,6 +8,8 @@ import {
   deriveDamageReductionFromProperties,
   type ItemPropertyPayload,
 } from '@/lib/calculators';
+import { calculateCriticalRange } from '@/lib/game/calculations';
+import type { CoreRulesMap } from '@/types/core-rules';
 import {
   characterPartsToPartData,
   itemPropertiesToPartData,
@@ -114,10 +116,11 @@ export function deriveArmorItemCombatStats(item: ItemWithLibrarySource): ArmorIt
   return { damageReduction, criticalRangeIncrease };
 }
 
-const STANDARD_CRIT_OVER_EVASION = 10;
-
 export interface EquippedArmorQuickRef {
   damageReduction: number;
+  /** Stacked Critical Range +1 from equipped armor (0 when armor does not modify crit). */
+  criticalRangeIncrease: number;
+  /** Evasion + over-target + increase. Only show in the header when increase > 0. */
   criticalRange: number;
 }
 
@@ -125,6 +128,7 @@ export interface EquippedArmorQuickRef {
 export function getEquippedArmorQuickRef(
   armor: Item[] | undefined,
   evasion: number,
+  rules?: Partial<CoreRulesMap>,
 ): EquippedArmorQuickRef | null {
   const equipped = (armor ?? []).filter((a) => a?.equipped);
   if (equipped.length === 0) return null;
@@ -139,7 +143,8 @@ export function getEquippedArmorQuickRef(
 
   return {
     damageReduction,
-    criticalRange: evasion + STANDARD_CRIT_OVER_EVASION + criticalRangeIncrease,
+    criticalRangeIncrease,
+    criticalRange: calculateCriticalRange(evasion, criticalRangeIncrease, rules),
   };
 }
 

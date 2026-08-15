@@ -7,4 +7,5 @@ import type { PathGuidanceGroup } from '@/types/archetype';
 
 export const EMPTY_STRING_ARRAY: string[] = [];
 export const EMPTY_NUMBER_RECORD: Record<string, number> = {};
+export const EMPTY_STRING_RECORD: Record<string, string> = {};
 export const EMPTY_GUIDANCE_GROUPS: PathGuidanceGroup[] = [];

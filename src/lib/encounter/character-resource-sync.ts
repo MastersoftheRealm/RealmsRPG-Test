@@ -150,6 +150,25 @@ export function isOwnedLinkedCombatant(
   );
 }
 
+export type ResourceSyncCursor = { characterId: string; signature: string };
+
+/** True when HP/EN/AP changed for the same character (not notes/`updatedAt`). */
+export function nextResourceSyncCursor(
+  prev: ResourceSyncCursor | null,
+  characterId: string,
+  patch: CharacterResourcePatch | null,
+): { schedule: boolean; next: ResourceSyncCursor } {
+  const signature = JSON.stringify(patch);
+  const next = { characterId, signature };
+  if (!prev || prev.characterId !== characterId) {
+    return { schedule: false, next };
+  }
+  if (prev.signature === signature) {
+    return { schedule: false, next: prev };
+  }
+  return { schedule: Boolean(patch), next };
+}
+
 export function scheduleCharacterResourceSync(
   characterId: string,
   patch: CharacterResourcePatch,
@@ -162,7 +181,7 @@ export function scheduleCharacterResourceSync(
     characterId,
     setTimeout(() => {
       pendingTimers.delete(characterId);
-      void saveCharacter(characterId, patch).catch(() => {});
+      void saveCharacter(characterId, patch, { skipLock: true }).catch(() => {});
     }, DEBOUNCE_MS),
   );
 }

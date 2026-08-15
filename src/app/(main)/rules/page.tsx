@@ -12,6 +12,10 @@ export default function RulesPage() {
     <PageContainer size="xl">
       <PageHeader title={RULES_COPY.pageTitle} description={RULES_COPY.pageDescription} />
 
+      <p className="mb-4 font-nunito text-base leading-relaxed text-text-secondary">
+        {RULES_COPY.seoDescription}
+      </p>
+
       <p className="mb-4 text-sm text-text-secondary">
         {RULES_COPY.embedTroublePrefix}{' '}
         <a

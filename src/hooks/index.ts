@@ -99,8 +99,9 @@ export {
   patchCharacterDetailQuery,
 } from './use-characters';
 
-// Codex Data (Supabase via API) — single codex fetch shared by all useCodex* and useGameRules
+// Codex Data (Supabase via API) — per-collection fetches under the ['codex'] key prefix (TASK-775)
 export {
+  codexKeys,
   useCodexFull,
   useCodexFeats,
   useCodexSkills,

@@ -37,7 +37,10 @@ separate `version int` column.
 - Positive: inventory/notes/level in tab A survive HP/resource writes in tab B; stale tabs 409
   instead of silently restoring an old full document.
 - Negative / follow-ups: campaign server actions that write `characters.data` should stamp
-  `updated_at` (they already merge); resource sync still omits `updatedAt` by design (HP LWW).
+  `updated_at` (they already merge); resource sync still omits `updatedAt` by design (HP LWW)
+  via `saveCharacter(..., { skipLock: true })`. Same-tab races (autosave + resource sync +
+  pending resave) are serialized by `lib/character/save-lock.ts` (TASK-786): per-id PATCH
+  queue, in-memory newest `updatedAt`, and resource sync only when HP/EN/AP change.
   Library add-to-character lock/retry is TASK-746 (done). Sheet realtime merge for
   non-resource keys is TASK-747 (done): remote wins for untouched keys; HP/EN/AP still
   use `mergeResourceUpdatesIntoCharacter` and the echo suppress window.

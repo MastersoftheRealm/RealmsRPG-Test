@@ -31,10 +31,7 @@ export { ValueStepper, DecrementButton, IncrementButton } from './value-stepper'
 
 // EditSectionToggle - Blue pencil icon for edit mode sections
 export { EditSectionToggle, getEditState, type EditState } from './edit-section-toggle';
-
-// Temp Modifier dual affordance (ADR-0006 / TASK-585) — pencil + SlidersHorizontal; mutual exclusive modes
 export { TempModifierToggle } from './temp-modifier-toggle';
-export { SectionDualModeToggles, type SectionEditMode } from './section-dual-mode-toggles';
 
 // ============================================================================
 // Modal components
@@ -150,8 +147,8 @@ export { SkillRow } from './skill-row';
 export type { SkillRowProps } from './skill-row';
 
 // SkillsAllocationPage - Shared skill allocation for character/creature creator
-export { SkillsAllocationPage } from './skills-allocation-page';
-export type { SkillsAllocationPageProps } from './skills-allocation-page';
+export { SkillsAllocationPage, DefenseBonusesCard } from './skills-allocation-page';
+export type { SkillsAllocationPageProps, DefenseBonusesCardProps } from './skills-allocation-page';
 
 // Add Skill / Add Sub-Skill modals — shared by character sheet and character creator
 export { AddSkillModal } from './add-skill-modal';

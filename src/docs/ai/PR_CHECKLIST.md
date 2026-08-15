@@ -6,7 +6,7 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 2. **No parallel pattern** — Extended existing shell/hook/API, or ADR/owner ack?
 3. **AC complete** — Every acceptance criterion met? Else `partial` + follow-ups.
 4. **related_files** — Every listed path exists in the repo (real file/dir; no invented module names)? Match the diff? Globs (`*`) ok; directories ok if tracked children exist.
-5. **Commit subjects** — Each `done` task’s `TASK-###` appears in a git commit subject (`git log --grep=TASK-###`)? Ranges like `TASK-530–534` do **not** count — list IDs explicitly. Squash merges that drop subjects need a follow-up reconcile commit.
+5. **Commit subjects (push gate, not session DoD)** — When the owner commits/pushes, the landing subject lists every newly `done` `TASK-###` (`git log --grep=TASK-###`). **One commit may cover many tasks** (preferred). Do not require or create a commit per task. Missing commit during `/audit` / mark-done is **not** a gap. Ranges like `TASK-530–534` do **not** count — list IDs explicitly. Squash merges that drop subjects need a follow-up reconcile commit.
 6. **Build** — `npm run build` green? When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) + targeted tests (TASK-655/656)?
 7. **Tokens** — Semantic / `*-fg`; no raw palette outside exemptions?
 8. **Mobile** — `fullScreenOnMobile` / 44px targets where needed?
@@ -21,7 +21,7 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 17. **Human gates** — New shared/ui file on allowlist + ADR? Store / API contract reviewed?
 18. **Uploads** — No raw `fetch('/api/upload…')` (eslint `realms/no-raw-upload-fetch`)?
 19. **Barrels** — If you changed shared/ui/hooks/services exports, ran `npm run tasks:generate-index`?
-20. **Task CI locally** — Before push to `master` / PR: `npm run tasks:validate` (strict reconcile + related_files + docs/index/allowlist)?
+20. **Task CI locally** — Before push to `master` / PR: `npm run tasks:validate` (strict reconcile + related_files + docs/index/allowlist)? Local reconcile allows done tasks not yet in HEAD (batch commit later); CI does not.
 
 ## Owner commands
 

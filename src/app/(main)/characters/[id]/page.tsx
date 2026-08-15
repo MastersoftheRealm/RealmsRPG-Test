@@ -61,10 +61,12 @@ export default function CharacterSheetPage({ params }: PageParams) {
     setCharacter,
     isEditMode,
     effectiveEditMode,
+    isTempModifierMode,
+    hasUnappliedPoints,
+    hasTempModifiers,
     isOwner,
     isInCampaign,
     campaignContext,
-    hasUnappliedPoints,
     calculatedStats,
     characterForDisplay,
     archetypeProgression,
@@ -84,6 +86,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
     levelUpGuide,
     setLevelUpGuide,
     handleToggleEditMode,
+    handleToggleTempModifierMode,
     handleHealthChange,
     handleEnergyChange,
     handleActionPointsChange,
@@ -103,8 +106,11 @@ export default function CharacterSheetPage({ params }: PageParams) {
         <div className="min-h-screen bg-background pb-8">
           <SheetActionToolbar
             isEditMode={isEditMode}
+            isTempModifierMode={isTempModifierMode}
             hasUnappliedPoints={hasUnappliedPoints}
+            hasTempModifiers={hasTempModifiers}
             onToggleEditMode={handleToggleEditMode}
+            onToggleTempModifierMode={handleToggleTempModifierMode}
             onRecovery={() => setShowRecoveryModal(true)}
             onLevelUp={() => setShowLevelUpModal(true)}
             onSettings={isOwner ? () => setShowSettingsModal(true) : undefined}

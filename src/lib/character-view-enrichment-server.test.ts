@@ -171,4 +171,58 @@ describe('getCharacterViewEnrichment', () => {
     expect(result.officialPowers.map((row) => row.id)).toEqual(['power-1']);
     expect(result.powerParts.map((part) => part.id)).toEqual(['part-1']);
   });
+
+  it('maps referenced catalog rows with the shared Codex mapper (superset of browse fields)', async () => {
+    const publicMock = createMockClient({
+      official_powers: [],
+      official_techniques: [],
+      official_empowered_techniques: [],
+      official_items: [],
+      codex_species: [
+        {
+          id: 'sp-1',
+          name: 'Human',
+          sizes: 'Medium',
+          adulthood_lifespan: '18,80',
+          is_starter: true,
+        },
+      ],
+      codex_feats: [
+        { id: 'feat-1', name: 'Cleave', ability: 'Strength / Agility', tags: 'Combat' },
+      ],
+      codex_skills: [
+        { id: 'skill-1', name: 'Athletics', ability: 'STR', base_skill: '10', ds_calc: 'STR' },
+      ],
+      codex_traits: [],
+      codex_parts: [],
+      codex_properties: [],
+      codex_equipment: [{ id: 'eq-1', name: 'Rope', currency: 5, category: 'adventuring' }],
+    });
+    const ownerMock = createMockClient({
+      user_empowered_techniques: [],
+      user_species: [],
+    });
+    mockCreateServiceRoleClient.mockReturnValue(ownerMock.client as never);
+
+    const result = await getCharacterViewEnrichment(
+      publicMock.client as never,
+      OWNER,
+      {
+        ancestry: { id: 'sp-1', name: 'Human' },
+        feats: [{ id: 'feat-1', name: 'Cleave' }],
+        skills: [{ id: 'skill-1', name: 'Athletics' }],
+        equipment: { items: [{ id: 'eq-1', name: 'Rope' }] },
+      },
+      emptyLibraryForView(),
+    );
+
+    expect(result.feats[0]?.ability).toEqual(['Strength', 'Agility']);
+    expect(result.feats[0]?.tags).toEqual(['Combat']);
+    expect(result.skills[0]?.base_skill_id).toBe(10);
+    expect(result.skills[0]?.ds_calc).toBe('STR');
+    expect(result.species[0]?.adulthood_lifespan).toEqual([18, 80]);
+    expect(result.species[0]?.is_starter).toBe(true);
+    expect(result.equipment[0]?.category).toBe('adventuring');
+    expect(result.equipment[0]?.currency).toBe(5);
+  });
 });

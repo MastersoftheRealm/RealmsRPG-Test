@@ -31,10 +31,10 @@ export const GUIDED_CREATOR_COPY = {
       },
       custom: {
         label: 'Custom',
-        tagline: 'Start with your own archetype, then build chapter by chapter.',
+        tagline: 'Fully customizable archetype and Loadout, built step by step.',
         bullets: [
-          'Opens the cohesive creator on custom archetype (Layer 3)',
-          'Forge type and abilities, then species, feats, and loadout',
+          'Choose your own archetype type and abilities instead of a path',
+          'Then pick species, Feats, and Loadout as you go',
           'Ideal if you already know the system or want full control',
         ],
       },
@@ -288,8 +288,9 @@ export const GUIDED_CREATOR_COPY = {
     skills: {
       title: 'Your Skills',
       description:
-        'Species Skills are free. Spend Skill Points to gain proficiency in other Skills and to raise their value. The counter shows how many you have left.',
+        'Species Skills are free. Spend Skill Points to gain proficiency, raise Skill values, or boost a Defense. The counter shows how many you have left.',
       emptySkills: 'No Skills yet. Use suggestions below or browse the full list.',
+      abilityPickerLabel: (skillName: string) => `Governing Ability for ${skillName}`,
       pointsRemaining: (n: number) =>
         `Spend ${n} more Skill Point${n === 1 ? '' : 's'} to continue.`,
       pointsComplete: 'All Skill Points spent',

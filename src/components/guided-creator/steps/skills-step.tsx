@@ -42,7 +42,7 @@ import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-dee
 import { pruneUnresolvedSkillAllocations } from '@/lib/guided-creator/skill-reconcile';
 import type { Skill } from '@/hooks';
 
-import { EMPTY_NUMBER_RECORD, EMPTY_STRING_ARRAY } from '@/lib/empty';
+import { EMPTY_NUMBER_RECORD, EMPTY_STRING_ARRAY, EMPTY_STRING_RECORD } from '@/lib/empty';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.skills;
 
@@ -112,6 +112,8 @@ export function SkillsStep() {
   );
 
   const allocations = draft.skills ?? EMPTY_NUMBER_RECORD;
+  const defenseVals = draft.defenseVals ?? DEFAULT_DEFENSE_SKILLS;
+  const skillAbilities = draft.skillAbilities ?? EMPTY_STRING_RECORD;
   const abilities = useMemo(() => draft.abilities ?? { ...DEFAULT_ABILITIES }, [draft.abilities]);
   const level = 1;
   const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
@@ -166,10 +168,10 @@ export function SkillsStep() {
         allocationsWithDefaults,
         speciesSkillIds,
         skillMeta,
-        DEFAULT_DEFENSE_SKILLS,
+        defenseVals,
         skillRules,
       ),
-    [allocationsWithDefaults, speciesSkillIds, skillMeta, skillRules],
+    [allocationsWithDefaults, speciesSkillIds, skillMeta, defenseVals, skillRules],
   );
 
   const remainingPoints = totalPoints - spentPoints;
@@ -203,6 +205,20 @@ export function SkillsStep() {
       });
     },
     [draft.declinedPathSkillIds, recommendedSkillIds, updateDraft],
+  );
+
+  const handleDefenseChange = useCallback(
+    (next: typeof defenseVals) => {
+      updateDraft({ defenseVals: next });
+    },
+    [updateDraft],
+  );
+
+  const handleSkillAbilityChange = useCallback(
+    (skillId: string, abilityKey: string) => {
+      updateDraft({ skillAbilities: { ...skillAbilities, [skillId]: abilityKey } });
+    },
+    [skillAbilities, updateDraft],
   );
 
   const selectedSkillIds = useMemo(
@@ -296,9 +312,13 @@ export function SkillsStep() {
   );
 
   const handleContinue = useCallback(() => {
-    updateDraft({ skills: allocationsWithDefaults });
+    updateDraft({
+      skills: allocationsWithDefaults,
+      defenseVals: { ...defenseVals },
+      skillAbilities,
+    });
     nextSubStep();
-  }, [allocationsWithDefaults, updateDraft, nextSubStep]);
+  }, [allocationsWithDefaults, defenseVals, skillAbilities, updateDraft, nextSubStep]);
 
   const canContinue = remainingPoints === 0 && Object.keys(allocationsWithDefaults).length > 0;
 
@@ -329,6 +349,11 @@ export function SkillsStep() {
         totalPoints={totalPoints}
         spentPoints={spentPoints}
         onAllocationsChange={handleAllocationsChange}
+        defenseSkills={defenseVals}
+        onDefenseChange={handleDefenseChange}
+        skillAbilities={skillAbilities}
+        onSkillAbilityChange={handleSkillAbilityChange}
+        level={level}
       />
 
       {skillSuggestions.length > 0 && (

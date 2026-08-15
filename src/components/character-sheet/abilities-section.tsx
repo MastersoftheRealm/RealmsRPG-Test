@@ -7,20 +7,20 @@
  * // DESIGN_INTENT: Dense like sheet-header LargeStatBlock — label glued to value,
  * content-height tiles (no equal-height empty cards). Ability play = RollButton;
  * defense glance = Score, play = smaller bonus RollButton.
- * Dual affordance: pencil = rules spend; SlidersHorizontal = Temp Modifier (ADR-0006).
+ * Sheet Edit = rules spend; sheet Temp Modifier = layered deltas (ADR-0006 / TASK-782).
  */
 
 'use client';
 
 import { useMemo, useState } from 'react';
-import { PointStatus, SectionDualModeToggles, type SectionEditMode } from '@/components/shared';
+import { EditSectionToggle, PointStatus, TempModifierToggle } from '@/components/shared';
 import { Card } from '@/components/ui';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import { calculateAbilityScoreCost } from '@/lib/game/formulas';
 import {
   getDefenseTempModifier,
   getEffectiveAbilities,
-  sectionHasTempModifiers,
+  sectionTempModifierTint,
 } from '@/lib/character/temp-modifiers';
 import type {
   Abilities,
@@ -45,6 +45,7 @@ interface AbilitiesSectionProps {
   martialAbility?: AbilityName;
   powerAbility?: AbilityName;
   isEditMode?: boolean;
+  isTempModifierMode?: boolean;
   totalAbilityPoints?: number;
   spentAbilityPoints?: number;
   totalSkillPoints?: number;
@@ -66,6 +67,7 @@ export function AbilitiesSection({
   martialAbility,
   powerAbility,
   isEditMode = false,
+  isTempModifierMode = false,
   totalAbilityPoints,
   spentAbilityPoints,
   totalSkillPoints,
@@ -75,11 +77,18 @@ export function AbilitiesSection({
   onAbilityChange,
   onDefenseChange,
 }: AbilitiesSectionProps) {
-  const [sectionMode, setSectionMode] = useState<SectionEditMode>('none');
+  const [sectionAdjustOpen, setSectionAdjustOpen] = useState(false);
+  const sheetModeKey = `${isEditMode}:${isTempModifierMode}`;
+  const [prevSheetModeKey, setPrevSheetModeKey] = useState(sheetModeKey);
+  if (sheetModeKey !== prevSheetModeKey) {
+    setPrevSheetModeKey(sheetModeKey);
+    setSectionAdjustOpen(false);
+  }
 
-  const showSpendControls = isEditMode && sectionMode === 'spend';
-  const showTempControls = isEditMode && sectionMode === 'tempModifier';
+  const showSpendControls = isEditMode && sectionAdjustOpen;
+  const showTempControls = isTempModifierMode && sectionAdjustOpen;
   const showEditControls = showSpendControls || showTempControls;
+  const showSectionToggle = isEditMode || isTempModifierMode;
 
   const effectiveAbilities = useMemo(
     () => getEffectiveAbilities(abilities, tempModifiers),
@@ -119,6 +128,7 @@ export function AbilitiesSection({
       : 0;
   const skillPointsRemaining =
     totalSkillPoints !== undefined ? totalSkillPoints - (spentSkillPoints ?? 0) : 0;
+
   const abilityEditState =
     totalAbilityPoints !== undefined || totalSkillPoints !== undefined
       ? abilityRemaining < 0 || skillPointsRemaining < 0
@@ -127,27 +137,42 @@ export function AbilitiesSection({
           ? 'has-points'
           : 'normal'
       : 'normal';
-
-  const hasSectionTemps = sectionHasTempModifiers(tempModifiers, 'abilities');
+  const tempTint = sectionTempModifierTint(tempModifiers, 'abilities');
   const applyToResourceMaxima = tempModifiers?.applyAbilityToResourceMaxima === true;
 
   return (
     <Card className="relative mb-4 p-4 shadow-md md:p-6">
-      {isEditMode && (
+      {showSectionToggle && (
         <div className="absolute top-3 right-3">
-          <SectionDualModeToggles
-            mode={sectionMode}
-            onModeChange={setSectionMode}
-            spendState={abilityEditState}
-            hasTempModifiers={hasSectionTemps}
-            spendTitle={
-              abilityEditState === 'has-points'
-                ? 'Edit — spend ability/defense points'
-                : abilityEditState === 'over-budget'
-                  ? 'Edit — over budget, remove points'
-                  : 'Edit abilities & defenses'
-            }
-          />
+          {isEditMode ? (
+            <EditSectionToggle
+              state={abilityEditState}
+              isActive={sectionAdjustOpen}
+              onClick={() => setSectionAdjustOpen((open) => !open)}
+              title={
+                sectionAdjustOpen
+                  ? 'Close point spending'
+                  : abilityEditState === 'has-points'
+                    ? 'Edit — spend ability/defense points'
+                    : abilityEditState === 'over-budget'
+                      ? 'Edit — over budget, remove points'
+                      : 'Edit abilities & defenses'
+              }
+            />
+          ) : (
+            <TempModifierToggle
+              isActive={sectionAdjustOpen}
+              tint={tempTint}
+              onClick={() => setSectionAdjustOpen((open) => !open)}
+              title={
+                sectionAdjustOpen
+                  ? 'Close Temp Modifier'
+                  : tempTint === 'none'
+                    ? 'Temp Modifier'
+                    : 'Temp Modifier (active adjustments)'
+              }
+            />
+          )}
         </div>
       )}
 

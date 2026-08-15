@@ -2,9 +2,8 @@
  * About Us Page
  * =============
  * Marketing About route — carousel + creator note. Edit prose in about-copy.ts.
+ * Server page; only `AboutCarouselSection` is a client island.
  */
-
-'use client';
 
 import { BookOpen, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';

@@ -135,6 +135,12 @@ export interface GridListRowProps {
   requirements?: ReactNode;
   /** Custom expanded content (replaces default slots) */
   expandedContent?: ReactNode;
+  /**
+   * Extra content inside the expanded description surface, below the official
+   * description and separated by a simple line when both exist (TASK-783).
+   * Use for play-view player notes — not a second card or labeled field.
+   */
+  descriptionAfter?: ReactNode;
   /** Extra content appended after the default expanded body (description, chips, etc.) */
   supplementalExpandedContent?: ReactNode;
 

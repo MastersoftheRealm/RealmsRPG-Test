@@ -17,8 +17,8 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import type { AbilityName, ArchetypeCategory } from '@/types';
-import { DEFAULT_ABILITIES } from '@/types';
+import type { AbilityName, ArchetypeCategory, DefenseSkills } from '@/types';
+import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import type { PathItemRecommendation } from '@/types/archetype';
 import { mergeLoadoutArmaments } from '@/lib/guided-creator/resolve-loadout-items';
 import type { CreatorEntryMode } from '@/lib/guided-creator/creator-entry-mode';
@@ -33,7 +33,7 @@ import {
   canOpenGuidedSubStep,
   isGuidedSubStepSatisfied,
 } from '@/lib/guided-creator/substep-satisfaction';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import { isClientRequestId } from '@/lib/character-save';
 
 const chapterCopy = GUIDED_CREATOR_COPY.chapters;
@@ -159,6 +159,10 @@ export interface GuidedDraft {
   // Chapter 4 — Your Archetype
   /** skillId -> skill value (0 = proficient, +0 bonus) */
   skills: Record<string, number>;
+  /** Skill-point Defense Bonus allocation (2 pts per +1; cap = level). */
+  defenseVals: DefenseSkills;
+  /** Explicit governing Ability per skill id (multi-ability skills). */
+  skillAbilities: Record<string, string>;
   declinedPathSkillIds: string[];
   archetypeFeatIds: string[];
   characterFeatIds: string[];
@@ -232,6 +236,8 @@ function createInitialDraft(): GuidedDraft {
     abilities: { ...DEFAULT_ABILITIES },
     abilitiesMode: null,
     skills: {},
+    defenseVals: { ...DEFAULT_DEFENSE_SKILLS },
+    skillAbilities: {},
     declinedPathSkillIds: [],
     archetypeFeatIds: [],
     characterFeatIds: [],
@@ -290,7 +296,7 @@ interface GuidedCreatorState {
 }
 
 /** Bump when persisted draft shape changes; old versions migrate forward. */
-const GUIDED_STORE_SCHEMA_VERSION = 14;
+const GUIDED_STORE_SCHEMA_VERSION = 15;
 
 export const useGuidedCreatorStore = create<GuidedCreatorState>()(
   persist(
@@ -525,6 +531,17 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
           };
         }
 
+        if (version < 15 && state.draft) {
+          state = {
+            ...state,
+            draft: {
+              ...state.draft,
+              defenseVals: state.draft.defenseVals ?? { ...DEFAULT_DEFENSE_SKILLS },
+              skillAbilities: state.draft.skillAbilities ?? {},
+            },
+          };
+        }
+
         if (version < 3 && state.draft) {
           const legacy = state.draft;
           const skills: Record<string, number> = legacy.skills ?? {};
@@ -584,6 +601,12 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         }
         if (!draft.powersPhase) {
           draft.powersPhase = 'innate';
+        }
+        if (!draft.defenseVals || typeof draft.defenseVals !== 'object') {
+          draft.defenseVals = { ...DEFAULT_DEFENSE_SKILLS };
+        }
+        if (!draft.skillAbilities || typeof draft.skillAbilities !== 'object') {
+          draft.skillAbilities = {};
         }
         if (!Array.isArray(draft.loadoutWeapons)) {
           draft.loadoutWeapons = [];

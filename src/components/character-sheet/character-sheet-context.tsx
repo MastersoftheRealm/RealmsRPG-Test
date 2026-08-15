@@ -45,6 +45,8 @@ export interface CharacterSheetContextValue {
   character: Character;
   setCharacter: React.Dispatch<React.SetStateAction<Character | null>>;
   isEditMode: boolean;
+  /** Sheet-level Temp Modifier mode — mutually exclusive with isEditMode (ADR-0006 / TASK-782). */
+  isTempModifierMode: boolean;
   isOwner: boolean;
 
   /** Derived section data */

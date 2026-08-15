@@ -10,6 +10,7 @@ import { useCallback, useMemo } from 'react';
 import { useCharacterSheetActions, resolveLibraryActiveTab } from '@/components/character-sheet';
 import type { SheetLibraryModel } from '@/components/character-sheet/library-section-props';
 import { buildLevelUpGuideContent } from '@/lib/level-up-guide';
+import { hasAnyTempModifiers } from '@/lib/character/temp-modifiers';
 import { useCharacterSheetPageData } from './use-character-sheet-page-data';
 import { useCharacterSheetPageUi } from './use-character-sheet-page-ui';
 
@@ -25,6 +26,7 @@ export function useCharacterSheetPage(id: string) {
   });
 
   const effectiveEditMode = ui.isEditMode && data.isOwner;
+  const effectiveTempModifierMode = ui.isTempModifierMode && data.isOwner;
 
   if (data.character) {
     const resolvedLibraryTab = resolveLibraryActiveTab(ui.libraryActiveTab, {
@@ -99,7 +101,7 @@ export function useCharacterSheetPage(id: string) {
       applyLevelUp(newLevel);
       const guide = buildLevelUpGuideContent(data.character, previousLevel, newLevel, data.rules);
       if (guide) {
-        if (guide.enterEditMode) ui.setIsEditMode(true);
+        if (guide.enterEditMode) ui.enterEditMode();
         ui.setLevelUpGuide(guide);
       }
     },
@@ -147,6 +149,7 @@ export function useCharacterSheetPage(id: string) {
             character: data.character,
             setCharacter: data.setCharacter,
             isEditMode: effectiveEditMode,
+            isTempModifierMode: effectiveTempModifierMode,
             isOwner: data.isOwner,
             skills: data.skills,
             pointBudgets: data.pointBudgets,
@@ -205,6 +208,7 @@ export function useCharacterSheetPage(id: string) {
       data.character,
       data.setCharacter,
       effectiveEditMode,
+      effectiveTempModifierMode,
       data.isOwner,
       data.skills,
       data.pointBudgets,
@@ -244,10 +248,13 @@ export function useCharacterSheetPage(id: string) {
     setCharacter: data.setCharacter,
     isEditMode: ui.isEditMode,
     effectiveEditMode,
+    isTempModifierMode: ui.isTempModifierMode,
+    effectiveTempModifierMode,
     isOwner: data.isOwner,
     isInCampaign: data.isInCampaign,
     campaignContext: data.campaignContext,
     hasUnappliedPoints: data.hasUnappliedPoints,
+    hasTempModifiers: hasAnyTempModifiers(data.character?.tempModifiers),
     calculatedStats: data.calculatedStats,
     characterForDisplay: data.characterForDisplay,
     archetypeProgression: data.archetypeProgression,
@@ -267,6 +274,7 @@ export function useCharacterSheetPage(id: string) {
     levelUpGuide: ui.levelUpGuide,
     setLevelUpGuide: ui.setLevelUpGuide,
     handleToggleEditMode: ui.handleToggleEditMode,
+    handleToggleTempModifierMode: ui.handleToggleTempModifierMode,
     handleHealthChange,
     handleEnergyChange,
     handleActionPointsChange,

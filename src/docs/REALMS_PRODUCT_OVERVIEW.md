@@ -218,7 +218,7 @@ Landing-page secondary CTAs for "create a custom power" and "create custom weapo
 
 ## Section 4 — Landing Page (full redesign)
 
-**Decision:** Scrap and rebuild [`home-page.tsx`](<../app/(main)/home-page.tsx>) — not incrementally patch the current layout. Target a **modern, marketing-research-aligned TTRPG startup landing page** that follows Realms pillars and the single-primary-CTA discipline.
+**Decision:** Scrap and rebuild [`page.tsx`](<../app/(main)/page.tsx>) — not incrementally patch the current layout. Target a **modern, marketing-research-aligned TTRPG startup landing page** that follows Realms pillars and the single-primary-CTA discipline.
 
 ### What to remove from the current home page
 
@@ -925,7 +925,7 @@ Path data and logic: [`src/types/archetype.ts`](../types/archetype.ts), [`src/li
 
 | Surface | Route / file | UX layer today | Target |
 |---------|--------------|----------------|--------|
-| Home | `home-page.tsx` | Multi-CTA, onboarding tour | Section 4 rebuild |
+| Home | `(main)/page.tsx` | Multi-CTA, onboarding tour | Section 4 rebuild |
 | Character creator (cohesive) | `characters/new/guided` | Mostly L1 + some L2 | One shell; L1/L2/L3 per step (§5.0); Custom chooser → L3 |
 | Character creator (legacy Custom) | `characters/new/advanced` | Layer 3 | Phase out into cohesive L3 |
 | Power creator | `power-creator/page.tsx` (+ future `/guided`) | Layer 3 | L1 guided route + `official_powers` templates (§5.11) |

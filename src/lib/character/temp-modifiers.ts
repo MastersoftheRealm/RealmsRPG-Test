@@ -168,6 +168,46 @@ export function patchTempModifiers(
   });
 }
 
+/** Icon/value tint for a Temp Modifier control (matches value gold/danger). */
+export type TempModifierTint = 'none' | 'positive' | 'negative';
+
+export function tempModifierTintFromDelta(delta?: number | null): TempModifierTint {
+  if (delta == null || delta === 0) return 'none';
+  return delta > 0 ? 'positive' : 'negative';
+}
+
+/** Section icon tint: only-positive → gold, only-negative → danger, mixed → gold. */
+export function sectionTempModifierTint(
+  mods: CharacterTempModifiers | undefined,
+  section: 'header' | 'abilities' | 'skills',
+): TempModifierTint {
+  if (!mods) return 'none';
+  let sawPositive = false;
+  let sawNegative = false;
+  const note = (n: number) => {
+    if (n > 0) sawPositive = true;
+    if (n < 0) sawNegative = true;
+  };
+  if (section === 'header') {
+    for (const key of SCALAR_KEYS) note(getScalarTempModifier(mods, key));
+  } else if (section === 'abilities') {
+    for (const key of ABILITY_KEYS) note(getAbilityTempModifier(mods, key));
+    for (const key of DEFENSE_KEYS) note(getDefenseTempModifier(mods, key));
+  } else if (mods.skills) {
+    for (const delta of Object.values(mods.skills)) {
+      if (typeof delta === 'number' && Number.isFinite(delta)) note(delta);
+    }
+  }
+  if (sawNegative && !sawPositive) return 'negative';
+  if (sawPositive) return 'positive';
+  return 'none';
+}
+
+/** True when any persisted temp delta or resource-maxima flag remains after normalize. */
+export function hasAnyTempModifiers(mods: CharacterTempModifiers | undefined): boolean {
+  return normalizeTempModifiers(mods) !== undefined;
+}
+
 /** True when any ability/defense/skill/scalar temp in the given maps is non-zero. */
 export function sectionHasTempModifiers(
   mods: CharacterTempModifiers | undefined,

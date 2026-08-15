@@ -6,7 +6,7 @@ import {
   AGE_IN_APPEARANCE,
   parseAgeFromAppearance,
   mergeAgeIntoAppearance,
-} from './appearance-age';
+} from '@/lib/character/appearance-age';
 
 export function IdentityFields() {
   const { draft, updateDraft } = useCharacterCreatorStore();

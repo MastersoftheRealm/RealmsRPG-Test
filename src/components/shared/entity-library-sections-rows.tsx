@@ -42,19 +42,10 @@ export function renderInteractiveGridRows(
       name={item.name}
       nameContent={item.nameContent}
       description={item.description}
+      descriptionAfter={item.descriptionAfter}
       thumbnail={item.thumbnail}
       columns={item.columns ?? buildDefaultColumns(item, idx)}
       gridColumns={item.gridColumns ?? defaultGrid}
-      expandedContent={
-        item.requirements ? (
-          <div className="space-y-2">
-            {item.description && (
-              <p className="text-sm whitespace-pre-wrap text-text-secondary">{item.description}</p>
-            )}
-            {item.requirements}
-          </div>
-        ) : undefined
-      }
       chips={item.partsChips ?? item.chips}
       chipsLabel={
         item.chipsLabel ??
@@ -62,7 +53,7 @@ export function renderInteractiveGridRows(
       }
       totalCost={item.totalTp && item.totalTp > 0 ? item.totalTp : undefined}
       costLabel={item.totalTp && item.totalTp > 0 ? TP_COST_LABEL : undefined}
-      requirements={!item.columns ? item.requirements : undefined}
+      requirements={item.requirements}
       innate={item.innate === true}
       hideInnateBadge={item.hideInnateBadge}
       leftSlot={item.leftSlot}

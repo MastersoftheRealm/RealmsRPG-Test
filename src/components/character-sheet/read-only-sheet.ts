@@ -68,6 +68,7 @@ export function buildReadOnlySheetContextValue(input: {
     character: input.character,
     setCharacter: readOnlySetCharacter,
     isEditMode: false,
+    isTempModifierMode: false,
     isOwner: false,
     skills: input.skills,
     pointBudgets: input.pointBudgets,

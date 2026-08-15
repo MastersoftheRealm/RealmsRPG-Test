@@ -10,6 +10,7 @@ import {
   formatSavedActionTypeForDisplay,
   formatListCellLabel,
 } from '@/lib/utils';
+import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculations';
 import { resolveWeaponRangeDisplay, type ItemPropertyPayload } from '@/lib/calculators';
 import {
   InnateToggle,
@@ -505,9 +506,11 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
     const { damageReduction, criticalRangeIncrease } = deriveArmorItemCombatStats(
       item as ItemWithLibrarySource,
     );
-    const agility = ctx.abilities?.agility ?? 0;
+    const evasion = calculateEvasion(ctx.abilities?.agility ?? 0);
     const critThreshold =
-      criticalRangeIncrease > 0 ? 10 + agility + 10 + criticalRangeIncrease : undefined;
+      criticalRangeIncrease > 0
+        ? calculateCriticalRange(evasion, criticalRangeIncrease)
+        : undefined;
 
     const armorMeta = metadataDetailSection(
       buildArmorRequirementMetadataChips({

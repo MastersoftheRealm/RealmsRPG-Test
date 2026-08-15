@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_ABILITIES } from '@/types';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
+import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import { GUIDED_SUBSTEP_ORDER, type GuidedDraft } from '@/stores/guided-creator-store';
 import { buildPathSelectionDraftPatch } from '@/lib/guided-creator/path-selection-draft';
 import { buildGuidedSingleSpeciesDraftPatch } from '@/lib/guided-creator/species-selection-draft';
@@ -34,6 +34,8 @@ function saveableDraft(overrides: Partial<GuidedDraft> = {}): GuidedDraft {
     abilities: { ...DEFAULT_ABILITIES, intelligence: 2 },
     abilitiesMode: 'recommended',
     skills: { '10': 0 },
+    defenseVals: { ...DEFAULT_DEFENSE_SKILLS },
+    skillAbilities: {},
     declinedPathSkillIds: [],
     archetypeFeatIds: ['feat-a'],
     characterFeatIds: ['feat-c'],

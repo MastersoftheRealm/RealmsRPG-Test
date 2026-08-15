@@ -3,7 +3,11 @@
  * Reconcile AI tasks against git history.
  * Sources: ACTIVE_TASKS.md + archive/TASK_QUEUE_DONE*.md
  * --strict fails when a done task has no matching commits (after baseline allowlist).
+ * One commit may list many TASK-### IDs in the subject (owner batch workflow).
  * --strict-since=YYYY-MM-DD only enforces done tasks with completed_at on/after that date.
+ * --allow-uncommitted-done skips done tasks whose archive/ACTIVE block is not in HEAD yet
+ * (local validate during a session). CI must omit this flag so a pushed archive without
+ * TASK-### in the commit subject still fails.
  * Duplicate `- id: TASK-###` in ACTIVE, WAITING, or live TASK_QUEUE_DONE.md always fails
  * (dated snapshot copies are excluded — they reuse IDs by design).
  */
@@ -99,6 +103,27 @@ function nonCanonicalIdTokens(filePath) {
     }
   }
   return bad;
+}
+
+const headFileCache = new Map();
+
+/** True when HEAD already has this `- id:` in the task's source file. */
+function headFileContainsId(sourceRel, id) {
+  const gitPath = String(sourceRel || '').replace(/\\/g, '/');
+  if (!gitPath) return false;
+  if (!headFileCache.has(gitPath)) {
+    try {
+      const content = execSync(`git show HEAD:${gitPath}`, {
+        encoding: 'utf8',
+        cwd: repoRoot,
+        stdio: ['pipe', 'pipe', 'pipe'],
+      });
+      headFileCache.set(gitPath, content);
+    } catch {
+      headFileCache.set(gitPath, '');
+    }
+  }
+  return new RegExp(`^- id:\\s*${id}\\s*$`, 'm').test(headFileCache.get(gitPath) || '');
 }
 
 function gitGrepTask(taskId) {
@@ -208,6 +233,7 @@ if (process.argv.includes('--apply')) {
 }
 
 const strict = process.argv.includes('--strict');
+const allowUncommittedDone = process.argv.includes('--allow-uncommitted-done');
 const sinceArg = process.argv.find((a) => a.startsWith('--strict-since='));
 const sinceDate = sinceArg ? sinceArg.split('=')[1] : null;
 
@@ -226,6 +252,7 @@ const problematic = report.tasks.filter((t) => {
   if (baselineIds.has(t.id)) return false;
   if (sinceDate && t.completed_at && t.completed_at < sinceDate) return false;
   if (sinceDate && !t.completed_at) return false; // legacy done without date: skip under --strict-since
+  if (allowUncommittedDone && !headFileContainsId(t.source, t.id)) return false;
   return true;
 });
 
@@ -233,6 +260,9 @@ if (problematic.length) {
   console.error(
     'Found tasks marked done with no matching commits:',
     problematic.map((p) => p.id).join(', '),
+  );
+  console.error(
+    'List every TASK-### in the landing commit subject (one commit may cover many tasks; en-dash ranges do not count).',
   );
   if (strict) process.exit(2);
 }

@@ -23,7 +23,7 @@ import {
   computeSpentCurrency,
   computeStartingCurrency,
 } from '@/lib/guided-creator/equipment-currency';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { LibraryItem } from '@/types/library';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';

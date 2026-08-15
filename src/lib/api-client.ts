@@ -118,7 +118,7 @@ export async function apiFetchOrNull<T>(url: string, options?: RequestInit): Pro
   return res.json();
 }
 
-import type { CodexPayload } from '@/types/codex';
+import type { CodexPayload, CodexPayloadKey } from '@/types/codex';
 
 /**
  * Fetch full codex data from `/api/codex`.
@@ -128,4 +128,17 @@ import type { CodexPayload } from '@/types/codex';
  */
 export async function fetchCodex(): Promise<CodexPayload> {
   return apiFetch<CodexPayload>('/api/codex', { cache: 'no-store' });
+}
+
+/**
+ * Fetch one codex collection (`?collection=`) — same payload shape, one key (TASK-775).
+ * Browse hooks use this so opening a Codex tab does not download every table.
+ */
+export async function fetchCodexCollection<K extends CodexPayloadKey>(
+  collection: K,
+): Promise<Pick<CodexPayload, K>> {
+  return apiFetch<Pick<CodexPayload, K>>(
+    `/api/codex?collection=${encodeURIComponent(collection)}`,
+    { cache: 'no-store' },
+  );
 }

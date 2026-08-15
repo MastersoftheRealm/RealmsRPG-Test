@@ -22,8 +22,7 @@ import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library
 import { applyStarterEquippedFlags, itemDamageReduction } from '@/lib/game/equipment-equipped';
 import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
 import { clampSavedCurrency, isClientRequestId } from '@/lib/character-save';
-
-export const CHARACTER_STARTING_CURRENCY = 200;
+import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 
 function downstreamDraftReset(): Partial<CharacterDraft> {
   return {

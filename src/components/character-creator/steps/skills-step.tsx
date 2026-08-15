@@ -26,6 +26,7 @@ import { CreatorStepFooter } from '@/components/character-creator/creator-step-f
 import { Button } from '@/components/ui';
 import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
+import { abilityDefenseBonusesFromAbilities } from '@/lib/game/calculations';
 import { EMPTY_NUMBER_RECORD, EMPTY_STRING_ARRAY } from '@/lib/empty';
 
 function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
@@ -291,14 +292,7 @@ export function SkillsStep() {
   };
 
   const abilityDefenseBonuses = useMemo(
-    () => ({
-      might: abilities.strength,
-      fortitude: abilities.vitality,
-      reflex: abilities.agility,
-      discernment: abilities.acuity,
-      mentalFortitude: abilities.intelligence,
-      resolve: abilities.charisma,
-    }),
+    () => abilityDefenseBonusesFromAbilities(abilities),
     [abilities],
   );
 

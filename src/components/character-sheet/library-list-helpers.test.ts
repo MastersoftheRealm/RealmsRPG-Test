@@ -78,8 +78,36 @@ describe('deriveArmorItemCombatStats / getEquippedArmorQuickRef', () => {
     ];
     expect(getEquippedArmorQuickRef(armor, 12)).toEqual({
       damageReduction: 4,
+      criticalRangeIncrease: 0,
       criticalRange: 22, // 12 + 10 + 0
     });
+  });
+
+  it('adds Critical Range +1 as 1 + op_1_lvl onto Evasion + 10', () => {
+    const armor = [
+      {
+        id: 'eq',
+        name: 'Mail',
+        equipped: true,
+        armorValue: 3,
+        properties: [{ id: 22, name: 'Critical Range +1', op_1_lvl: 1 }],
+      } as unknown as Item,
+    ];
+    expect(getEquippedArmorQuickRef(armor, 14)).toEqual({
+      damageReduction: 3,
+      criticalRangeIncrease: 2,
+      criticalRange: 26, // 14 + 10 + (1 + 1)
+    });
+  });
+
+  it('treats Critical Range Increase as the same property as Critical Range +1', () => {
+    const item = {
+      id: 'a3',
+      name: 'Scale',
+      equipped: true,
+      properties: [{ name: 'Critical Range Increase', op_1_lvl: 0 }],
+    } as unknown as Item;
+    expect(deriveArmorItemCombatStats(item).criticalRangeIncrease).toBe(1);
   });
 
   it('returns null when no armor is equipped', () => {

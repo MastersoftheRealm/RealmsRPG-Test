@@ -3,7 +3,7 @@
  * =================================================
  * All combat and derived stat calculations for characters AND creatures.
  * Every formula lives here. No other file should inline health/energy/defense/
- * speed/evasion calculations.
+ * speed/evasion/critical-range calculations.
  *
  * All functions accept an optional `rules` parameter (from useGameRules()).
  * When provided, DB-stored values are used. Otherwise, constants.ts fallbacks apply.
@@ -68,6 +68,13 @@ export function calculateDefenses(
   return { defenseBonuses, defenseScores };
 }
 
+/** Ability-derived Defense Bonus only (no skill-point allocation). */
+export function abilityDefenseBonusesFromAbilities(
+  abilities: Partial<Abilities>,
+): Partial<Record<keyof DefenseSkills, number>> {
+  return calculateDefenses(abilities, {}).defenseBonuses;
+}
+
 // =============================================================================
 // Combat Stats
 // =============================================================================
@@ -101,6 +108,19 @@ export function calculateScoreFromBonus(bonus: number, rules?: Rules): number {
 export function calculateEvasion(agility: number, evasionBase?: number, rules?: Rules): number {
   const base = evasionBase ?? rules?.COMBAT?.baseEvasion ?? COMBAT_DEFAULTS.BASE_EVASION;
   return base + agility;
+}
+
+/**
+ * Critical Range threshold = Evasion + critical-hit over-target (+10) + armor increase.
+ * Armor **Critical Range +1** contributes **1 + Option 1 level** (GAME_RULES Critical Hits).
+ */
+export function calculateCriticalRange(
+  evasion: number,
+  criticalRangeIncrease = 0,
+  rules?: Rules,
+): number {
+  const over = rules?.COMBAT?.criticalHitThreshold ?? COMBAT_DEFAULTS.CRITICAL_RANGE_OVER_TARGET;
+  return evasion + over + criticalRangeIncrease;
 }
 
 /**

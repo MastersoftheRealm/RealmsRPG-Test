@@ -7,15 +7,18 @@ import { TableScroll } from '@/components/ui';
 import { cn, splitDamageDiceAndType } from '@/lib/utils';
 import { isMechanicPropertyName } from '@/lib/detail-option/compact-facts';
 import {
+  deriveCriticalRangeIncreaseFromProperties,
+  deriveDamageReductionFromProperties,
   deriveShieldAmountFromProperties,
   formatWeaponRangeDisplayCompact,
   type ItemPropertyPayload,
 } from '@/lib/calculators/item-calc';
+import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculations';
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
 import { useRollsOptional } from '@/components/rolls';
 
 /** Named props already shown as table columns (not in MECHANIC_PROPERTY_NAMES). */
-const QUICK_ARMAMENT_COLUMN_PROP_NAMES = new Set(['Critical Range +1']);
+const QUICK_ARMAMENT_COLUMN_PROP_NAMES = new Set(['Critical Range +1', 'Critical Range Increase']);
 
 /**
  * QuickWeaponsTable column classes — content-sized metric cols (not large %) so the table
@@ -399,8 +402,7 @@ export function QuickArmorTable({
   const rows = filterEquipped ? items.filter((a) => a.equipped) : items;
   if (rows.length === 0) return null;
 
-  const agility = abilities.agility ?? 0;
-  const baseEvasion = 10 + agility;
+  const evasion = calculateEvasion(abilities.agility ?? 0);
 
   return (
     <div className={cn('mb-4 rounded-lg bg-surface-alt p-3', className)}>
@@ -418,31 +420,31 @@ export function QuickArmorTable({
           <tbody>
             {rows.map((armorItem, idx) => {
               const properties = resolveQuickArmamentProperties(armorItem);
-              const armorWithVal = armorItem as { armorValue?: number; armor?: number };
-              let damageReduction = armorWithVal.armorValue ?? armorWithVal.armor ?? 0;
-              let critRangeBonus = 0;
+              const payload: ItemPropertyPayload[] = [];
               const abilityReqs: string[] = [];
-
-              properties.forEach((prop) => {
-                if (!prop) return;
-                const propName = typeof prop === 'string' ? prop : prop.name || '';
-                const op1Lvl =
-                  typeof prop === 'object' && 'op_1_lvl' in prop
-                    ? Number((prop as { op_1_lvl?: number }).op_1_lvl) || 0
-                    : 0;
-
-                if (propName === 'Damage Reduction' && damageReduction === 0) {
-                  damageReduction = 1 + op1Lvl;
+              for (const prop of properties) {
+                if (!prop) continue;
+                if (typeof prop === 'string') {
+                  payload.push({ name: prop });
+                  continue;
                 }
-                if (propName === 'Critical Range +1') critRangeBonus = 1 + op1Lvl;
+                payload.push({ id: prop.id, name: prop.name, op_1_lvl: prop.op_1_lvl });
+                const propName = prop.name || '';
+                const op1Lvl = Number(prop.op_1_lvl) || 0;
                 if (propName.includes('Strength Requirement'))
                   abilityReqs.push(`STR ${1 + op1Lvl}`);
                 if (propName.includes('Agility Requirement')) abilityReqs.push(`AGI ${1 + op1Lvl}`);
                 if (propName.includes('Vitality Requirement'))
                   abilityReqs.push(`VIT ${1 + op1Lvl}`);
-              });
-
-              const critRange = baseEvasion + 10 + critRangeBonus;
+              }
+              let damageReduction = armorItem.armorValue ?? armorItem.armor ?? 0;
+              if (damageReduction === 0) {
+                damageReduction = deriveDamageReductionFromProperties(payload);
+              }
+              const critRange = calculateCriticalRange(
+                evasion,
+                deriveCriticalRangeIncreaseFromProperties(payload),
+              );
 
               const displayProps = displayNamedProperties(properties);
 

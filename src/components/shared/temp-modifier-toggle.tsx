@@ -3,34 +3,60 @@
 /**
  * Temp Modifier Toggle
  * ====================
- * SlidersHorizontal control for Temp Modifier mode (ADR-0006 / TASK-585).
- * Sibling to EditSectionToggle — use SectionDualModeToggles for the dual pattern.
+ * SlidersHorizontal control to open/close Temp adjust chrome on a section or
+ * header stat (ADR-0006 / TASK-782). Sibling to EditSectionToggle — sheet-level
+ * Edit vs Temp stays exclusive; do not pair them on the same section.
+ * Tint matches the value: none = blue, positive = gold, negative = danger.
  * UI convenience label; not a GAME_RULES term.
- * (Lucide PlusMinus not in current package — SlidersHorizontal is the approved family.)
  */
 
 import { SlidersHorizontal } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import type { TempModifierTint } from '@/lib/character/temp-modifiers';
 
 export interface TempModifierToggleProps {
-  /** Click handler */
   onClick?: () => void;
-  /** Whether Temp Modifier adjust mode is active */
   isActive?: boolean;
-  /** True when this section has any non-zero persisted temp deltas */
-  hasModifiers?: boolean;
-  /** Tooltip / accessible name */
+  /** Signed tint for persisted temps on this control (none = blue). */
+  tint?: TempModifierTint;
   title?: string;
   className?: string;
 }
 
+const TINT_COLORS: Record<
+  TempModifierTint,
+  { icon: string; glow?: string; activeBg: string; activeRing: string; activeGlow?: string }
+> = {
+  none: {
+    icon: 'text-primary-fg hover:text-primary-fg-hover',
+    activeBg: 'bg-primary-subtle-bg',
+    activeRing: 'ring-primary-subtle-border dark:ring-primary-subtle-border',
+  },
+  positive: {
+    icon: 'text-warning-fg hover:opacity-90',
+    glow: 'drop-shadow-[0_0_3px_rgba(245,158,11,0.45)]',
+    activeBg: 'bg-warning-50 dark:bg-warning-900/25',
+    activeRing: 'ring-warning-200 dark:ring-warning-800/50',
+    activeGlow: 'drop-shadow-[0_0_6px_rgba(245,158,11,0.35)]',
+  },
+  negative: {
+    icon: 'text-danger-fg hover:opacity-90',
+    glow: 'drop-shadow-[0_0_3px_rgba(239,68,68,0.5)]',
+    activeBg: 'bg-danger-50 dark:bg-danger-900/25',
+    activeRing: 'ring-danger-200 dark:ring-danger-800/50',
+    activeGlow: 'drop-shadow-[0_0_6px_rgba(239,68,68,0.35)]',
+  },
+};
+
 export function TempModifierToggle({
   onClick,
   isActive = false,
-  hasModifiers = false,
+  tint = 'none',
   title = 'Temp Modifier',
   className,
 }: TempModifierToggleProps) {
+  const colors = TINT_COLORS[tint];
+
   return (
     <button
       type="button"
@@ -39,21 +65,19 @@ export function TempModifierToggle({
         onClick?.();
       }}
       className={cn(
-        // 44px on mobile/touch; icon-hugging on desktop (MOBILE_UX.md)
         'touch-target-md-compact inline-flex items-center justify-center',
         'rounded-md p-1 md:p-0.5',
         'duration-base transition-all ease-standard',
         'max-md:hover:scale-110',
         'focus-visible:ring-2 focus-visible:ring-primary-outline-border/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none',
-        hasModifiers || isActive
-          ? 'text-warning-fg hover:opacity-90'
-          : 'text-primary-fg hover:text-primary-fg-hover',
-        hasModifiers && !isActive && 'drop-shadow-[0_0_3px_rgba(245,158,11,0.45)]',
+        colors.icon,
+        !isActive && colors.glow,
         isActive && [
-          'ring-1 ring-warning-200 dark:ring-warning-800/50',
-          'drop-shadow-[0_0_6px_rgba(245,158,11,0.35)]',
+          'ring-1',
+          colors.activeRing,
+          colors.activeGlow,
           'max-md:scale-110',
-          'max-md:bg-warning-50 dark:max-md:bg-warning-900/25',
+          colors.activeBg,
           'md:bg-transparent',
         ],
         onClick && 'cursor-pointer',

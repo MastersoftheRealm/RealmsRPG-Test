@@ -54,7 +54,7 @@ export function PlayTogetherModal({
       description={copy.description}
       fullScreenOnMobile
       footer={
-        <div className="border-t border-border-light p-4">
+        <div className="border-t border-border-light">
           <Checkbox
             id="play-together-dont-show"
             checked={dontShowAgain}

@@ -22,14 +22,14 @@ alwaysApply: false
 | Encounter / session participant picker (combat, skill, VTT, downtime) | `@/components/shared` → **AddCombatantModal** — intentional non-USM (TASK-571); extend, do not fork or migrate to USM |
 | Mixed-species dual picker (Advanced creator + sheet Edit Species + Guided Ancestry change) | `character-creator/MixedSpeciesModal` — intentional non-USM (TASK-605); dual ordered species picks, not list add-X; do not fork or migrate to USM |
 | Source scope: All / Realms Library / My Library | `@/components/shared` → SourceFilter (built on SegmentedControl) |
-| Two–N option pill toggle (same look as Library / source filter) | `@/components/shared` → SegmentedControl |
+| Two–N option pill toggle (same look as Library / source filter) | `@/components/shared` → SegmentedControl (`size="compact"` for dense sheet toolbars) |
 | Admin Codex / Codex browse list chrome | `@/components/shared` → **CodexBrowseListShell** (ADR-0005); not for Official* grids or Admin Archetypes path rows |
 | Section headers with + | `@/components/shared` → SectionHeader |
 | Roll buttons | `@/components/shared` → RollButton |
 | +/- steppers | `@/components/shared` → **ValueStepper** / Dec/Inc (ADR-0002 chrome); quantities → **QuantitySelector** (wraps ValueStepper). Never hand-roll ± |
 | Point display (spent/total) | `@/components/shared` → PointStatus |
 | Loadout / creator budget chrome (Currency + Training Points + extra trackers) | `@/components/shared` → **LoadoutBudgetBar** (ADR-0008; Guided + Advanced; `leading`/`trailing` for Innate Energy / Energy) |
-| Sheet spend vs Temp Modifier | `@/components/shared` → **SectionDualModeToggles** (+ `TempModifierToggle`); helpers `lib/character/temp-modifiers.ts` (ADR-0006) — do not fork icon pairs |
+| Sheet spend vs Temp Modifier | Sheet toolbar pencil vs `SlidersHorizontal` (exclusive modes). Per-section: `EditSectionToggle` in Edit, `TempModifierToggle` in Temp (ADR-0006 / TASK-782). Helpers `lib/character/temp-modifiers.ts`. Do not nest Temp under Edit or restore dual pairs. |
 | Skill rows | `@/components/shared` → SkillRow |
 | Search | `@/components/ui` → SearchInput |
 | Primary nav tabs (underline, badges) | `@/components/ui` → TabNavigation |

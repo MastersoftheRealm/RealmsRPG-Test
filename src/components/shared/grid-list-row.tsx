@@ -66,6 +66,7 @@ export const GridListRow = memo(function GridListRow({
   showBadgesInName = false,
   requirements,
   expandedContent,
+  descriptionAfter,
   supplementalExpandedContent,
   selectable = false,
   isSelected = false,
@@ -135,6 +136,7 @@ export const GridListRow = memo(function GridListRow({
   const expandedBadges = showBadgesInName ? [] : badges;
   const hasBodyContent =
     !!descTrimmed ||
+    !!descriptionAfter ||
     hasChips ||
     hasDetailSections ||
     expandedBadges.length > 0 ||
@@ -405,6 +407,7 @@ export const GridListRow = memo(function GridListRow({
                 expandedContent={expandedContent}
                 descTrimmed={descTrimmed}
                 description={description}
+                descriptionAfter={descriptionAfter}
                 warningMessage={warningMessage}
                 badges={expandedBadges}
                 gridColumns={gridColumns}

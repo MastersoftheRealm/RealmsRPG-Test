@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { calculateCurrencyCostAndRarity } from './item-calc';
+import {
+  calculateCurrencyCostAndRarity,
+  deriveCriticalRangeIncreaseFromProperties,
+} from './item-calc';
 
 describe('calculateCurrencyCostAndRarity (T10 / M11)', () => {
   it('picks rarity from IP band boundaries', () => {
@@ -20,5 +23,25 @@ describe('calculateCurrencyCostAndRarity (T10 / M11)', () => {
     expect(priced.rarity).toBe('Uncommon');
     expect(priced.currencyCost).toBe(499);
     expect(priced.currencyCost).toBeLessThan(500);
+  });
+});
+
+describe('deriveCriticalRangeIncreaseFromProperties', () => {
+  it('is 1 + op_1_lvl for Critical Range +1', () => {
+    expect(
+      deriveCriticalRangeIncreaseFromProperties([
+        { id: 22, name: 'Critical Range +1', op_1_lvl: 0 },
+      ]),
+    ).toBe(1);
+    expect(
+      deriveCriticalRangeIncreaseFromProperties([{ name: 'Critical Range Increase', op_1_lvl: 2 }]),
+    ).toBe(3);
+  });
+
+  it('returns 0 when the property is absent', () => {
+    expect(deriveCriticalRangeIncreaseFromProperties([])).toBe(0);
+    expect(
+      deriveCriticalRangeIncreaseFromProperties([{ name: 'Agility Reduction', op_1_lvl: 1 }]),
+    ).toBe(0);
   });
 });

@@ -25,6 +25,9 @@ export const PLAYER_CONSTANTS = {
   TP_PER_LEVEL_MULTIPLIER: 2,
 } as const;
 
+/** Level-1 starting Currency (GAME_RULES). Shared by Guided + Legacy creators. */
+export const CHARACTER_STARTING_CURRENCY = 200;
+
 /** Creature/NPC specific constants */
 export const CREATURE_CONSTANTS = {
   BASE_HIT_ENERGY: 26,

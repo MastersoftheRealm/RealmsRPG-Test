@@ -25,6 +25,7 @@ interface GridListRowExpandedBodyProps {
   expandedContent?: ReactNode;
   descTrimmed: string;
   description?: string;
+  descriptionAfter?: ReactNode;
   warningMessage?: string;
   badges: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
   gridColumns?: string;
@@ -55,6 +56,7 @@ export function GridListRowExpandedBody({
   expandedContent,
   descTrimmed,
   description,
+  descriptionAfter,
   warningMessage,
   badges,
   gridColumns,
@@ -94,12 +96,24 @@ export function GridListRowExpandedBody({
         expandedContent
       ) : (
         <>
-          {/* Description - equal margin above/below for consistent item card spacing */}
-          {descTrimmed && (
+          {descTrimmed && !descriptionAfter && (
             <p className="mb-3 rounded-lg bg-surface p-3 text-sm text-text-secondary">
               {description}
             </p>
           )}
+          {descriptionAfter ? (
+            <div className="mb-3 rounded-lg bg-surface p-3 text-sm text-text-secondary">
+              {descTrimmed ? <p>{description}</p> : null}
+              <div
+                className={cn(
+                  'whitespace-pre-wrap',
+                  descTrimmed && 'mt-3 border-t border-border-light pt-3',
+                )}
+              >
+                {descriptionAfter}
+              </div>
+            </div>
+          ) : null}
 
           {/* Warning message */}
           {warningMessage && (

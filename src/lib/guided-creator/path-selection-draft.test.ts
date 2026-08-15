@@ -9,7 +9,7 @@ import {
   buildPathSelectionDraftPatch,
   isGuidedCustomArchetypeComplete,
 } from './path-selection-draft';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import { DEFAULT_ABILITIES, type Archetype } from '@/types';
 
 function path(partial: Partial<Archetype> & { id: string }): Archetype {

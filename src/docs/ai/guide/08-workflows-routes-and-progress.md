@@ -50,5 +50,5 @@ Set `priority`, `status: not-started`, `related_files`, and clear `acceptance_cr
 - `node scripts/extract_feedback.js` — Convert raw feedback → tasks
 - `node scripts/triage_tasks.js` — Infer related_files for tasks (--apply to update)
 - (removed 2026-08) `scripts/session_submit.js` — deleted as dead tooling; run `extract_feedback.js` then `triage_tasks.js` directly
-- `npm run tasks:validate` — Strict reconcile + doc/path/related_files checks (CI)
-- `node scripts/reconcile_tasks.js --strict --strict-since=2026-07-15` — TASK-### ↔ commits (baseline allowlist for legacy); also fails on duplicate `- id:` in ACTIVE / WAITING / live `TASK_QUEUE_DONE.md` (not the dated snapshot)
+- `npm run tasks:validate` — Doc/path/related_files checks + local strict reconcile (`--allow-uncommitted-done`; CI omits that flag)
+- `node scripts/reconcile_tasks.js --strict --strict-since=2026-07-15` — TASK-### in commit subjects (one subject may list many IDs); also fails on duplicate `- id:` in ACTIVE / WAITING / live `TASK_QUEUE_DONE.md` (not the dated snapshot)

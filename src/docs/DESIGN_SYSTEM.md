@@ -562,6 +562,7 @@ Use semantic color tokens for text:
 - Page container: `px-4 sm:px-6 lg:px-8 py-8`
 - Cards: `p-6`
 - Modal content: `p-6`
+- Modal `footer` slot: inset `px-4 py-3 md:px-6 md:py-4` (do not re-pad Cancel/Confirm rows)
 
 ---
 
@@ -650,7 +651,7 @@ These components are used across multiple pages and should be imported rather th
 |-----------|--------|---------|
 | `ErrorBoundary` | `@/components/shared/error-boundary` | Catches rendering errors, shows retry UI |
 | `EditSectionToggle` | `@/components/shared/edit-section-toggle` | Color-coded pencil icon (normal/has-points/over-budget) |
-| `TempModifierToggle` / `SectionDualModeToggles` | `@/components/shared` (ADR-0006) | Pencil + SlidersHorizontal dual mode; Temp Modifier value tint via `tempModifierValueClass` |
+| Sheet Edit / Temp Modifier | `SheetActionToolbar` + `EditSectionToggle` / `TempModifierToggle` (ADR-0006 / TASK-782) | Exclusive sheet modes; per-section/per-stat open-close. Temp icon: none = blue, + = gold, − = danger |
 | `SelectionToggle` | `@/components/shared/selection-toggle` | + → ✓ toggle for adding items in modals |
 | `EquipToggle` | `@/components/shared/equip-toggle` | Equipment equipped/unequipped toggle |
 | `InnateToggle` | `@/components/shared/innate-toggle` | Innate power toggle |

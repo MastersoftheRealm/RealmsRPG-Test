@@ -27,7 +27,8 @@ interface ModalProps {
   description?: string;
   /** Custom mode: full control over header content */
   header?: React.ReactNode;
-  /** Custom mode: footer content (e.g., action buttons, selection count) */
+  /** Custom mode: footer content (e.g., action buttons, selection count).
+   *  Modal applies horizontal/vertical inset — do not add a second `p-4`/`px-6` on the row. */
   footer?: React.ReactNode;
   children: React.ReactNode;
   className?: string;
@@ -326,8 +327,10 @@ export function Modal({
         {footer ? (
           <div
             className={cn(
-              'shrink-0',
-              useFullScreenMobile && 'pb-[env(safe-area-inset-bottom,0px)]',
+              // DESIGN_INTENT: Footer inset matches content `p-6` / header `mx-4` — do not
+              // re-pad Cancel/Confirm rows inside `footer` (double gutter).
+              'shrink-0 px-4 pt-3 pb-3 md:px-6 md:pt-4 md:pb-4',
+              useFullScreenMobile && 'pb-[max(0.75rem,env(safe-area-inset-bottom,0px))]',
             )}
           >
             {footer}

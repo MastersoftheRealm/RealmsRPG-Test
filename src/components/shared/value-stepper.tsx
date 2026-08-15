@@ -145,6 +145,76 @@ const valueDisplayVariants = cva('text-center font-semibold tabular-nums', {
   },
 });
 
+type StepperHold = { start: () => void; stop: () => void };
+
+function StepperGlyphButton({
+  glyph,
+  onActivate,
+  disabled,
+  size,
+  title,
+  enableHoldRepeat,
+  hold,
+  className,
+}: {
+  glyph: string;
+  onActivate: () => void;
+  disabled: boolean;
+  size?: VariantProps<typeof stepperButtonVariants>['size'];
+  title: string;
+  enableHoldRepeat: boolean;
+  hold: StepperHold;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={enableHoldRepeat ? undefined : onActivate}
+      onPointerDown={
+        enableHoldRepeat
+          ? (e) => {
+              if (disabled) return;
+              if (e.pointerType === 'mouse' && e.button !== 0) return;
+              e.currentTarget.setPointerCapture(e.pointerId);
+              hold.start();
+            }
+          : undefined
+      }
+      onPointerUp={
+        enableHoldRepeat
+          ? (e) => {
+              try {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+              } catch {
+                /* not captured */
+              }
+              hold.stop();
+            }
+          : undefined
+      }
+      onPointerCancel={
+        enableHoldRepeat
+          ? (e) => {
+              try {
+                e.currentTarget.releasePointerCapture(e.pointerId);
+              } catch {
+                /* not captured */
+              }
+              hold.stop();
+            }
+          : undefined
+      }
+      onLostPointerCapture={enableHoldRepeat ? () => hold.stop() : undefined}
+      disabled={disabled}
+      title={title}
+      aria-label={title}
+      className={cn(stepperButtonVariants({ size }), className)}
+    >
+      {glyph}
+    </button>
+  );
+}
+
 export interface ValueStepperProps extends VariantProps<typeof stepperButtonVariants> {
   /** Current value */
   value: number;
@@ -258,51 +328,15 @@ export function ValueStepper({
     <div className={containerClasses}>
       {label && <span className={labelClasses}>{label}</span>}
 
-      <button
-        type="button"
-        onClick={enableHoldRepeat ? undefined : handleDecrement}
-        onPointerDown={
-          enableHoldRepeat
-            ? (e) => {
-                if (!canDecrement) return;
-                if (e.pointerType === 'mouse' && e.button !== 0) return;
-                e.currentTarget.setPointerCapture(e.pointerId);
-                decrementHold.start();
-              }
-            : undefined
-        }
-        onPointerUp={
-          enableHoldRepeat
-            ? (e) => {
-                try {
-                  e.currentTarget.releasePointerCapture(e.pointerId);
-                } catch {
-                  /* not captured */
-                }
-                decrementHold.stop();
-              }
-            : undefined
-        }
-        onPointerCancel={
-          enableHoldRepeat
-            ? (e) => {
-                try {
-                  e.currentTarget.releasePointerCapture(e.pointerId);
-                } catch {
-                  /* not captured */
-                }
-                decrementHold.stop();
-              }
-            : undefined
-        }
-        onLostPointerCapture={enableHoldRepeat ? () => decrementHold.stop() : undefined}
+      <StepperGlyphButton
+        glyph="−"
+        onActivate={handleDecrement}
         disabled={!canDecrement}
+        size={size}
         title={decrementTitle}
-        aria-label={decrementTitle}
-        className={stepperButtonVariants({ size })}
-      >
-        −
-      </button>
+        enableHoldRepeat={enableHoldRepeat}
+        hold={decrementHold}
+      />
 
       {!hideValue && (
         <span className={valueDisplayVariants({ size, valueState })} aria-live="polite">
@@ -310,51 +344,15 @@ export function ValueStepper({
         </span>
       )}
 
-      <button
-        type="button"
-        onClick={enableHoldRepeat ? undefined : handleIncrement}
-        onPointerDown={
-          enableHoldRepeat
-            ? (e) => {
-                if (!canIncrement) return;
-                if (e.pointerType === 'mouse' && e.button !== 0) return;
-                e.currentTarget.setPointerCapture(e.pointerId);
-                incrementHold.start();
-              }
-            : undefined
-        }
-        onPointerUp={
-          enableHoldRepeat
-            ? (e) => {
-                try {
-                  e.currentTarget.releasePointerCapture(e.pointerId);
-                } catch {
-                  /* not captured */
-                }
-                incrementHold.stop();
-              }
-            : undefined
-        }
-        onPointerCancel={
-          enableHoldRepeat
-            ? (e) => {
-                try {
-                  e.currentTarget.releasePointerCapture(e.pointerId);
-                } catch {
-                  /* not captured */
-                }
-                incrementHold.stop();
-              }
-            : undefined
-        }
-        onLostPointerCapture={enableHoldRepeat ? () => incrementHold.stop() : undefined}
+      <StepperGlyphButton
+        glyph="+"
+        onActivate={handleIncrement}
         disabled={!canIncrement}
+        size={size}
         title={incrementTitle}
-        aria-label={incrementTitle}
-        className={stepperButtonVariants({ size })}
-      >
-        +
-      </button>
+        enableHoldRepeat={enableHoldRepeat}
+        hold={incrementHold}
+      />
     </div>
   );
 }
@@ -394,51 +392,16 @@ export function DecrementButton({
   const holdRepeat = useHoldRepeat(onClick, enableHoldRepeat && !disabled);
 
   return (
-    <button
-      type="button"
-      onClick={enableHoldRepeat ? undefined : onClick}
-      onPointerDown={
-        enableHoldRepeat
-          ? (e) => {
-              if (disabled) return;
-              if (e.pointerType === 'mouse' && e.button !== 0) return;
-              e.currentTarget.setPointerCapture(e.pointerId);
-              holdRepeat.start();
-            }
-          : undefined
-      }
-      onPointerUp={
-        enableHoldRepeat
-          ? (e) => {
-              try {
-                e.currentTarget.releasePointerCapture(e.pointerId);
-              } catch {
-                /* not captured */
-              }
-              holdRepeat.stop();
-            }
-          : undefined
-      }
-      onPointerCancel={
-        enableHoldRepeat
-          ? (e) => {
-              try {
-                e.currentTarget.releasePointerCapture(e.pointerId);
-              } catch {
-                /* not captured */
-              }
-              holdRepeat.stop();
-            }
-          : undefined
-      }
-      onLostPointerCapture={enableHoldRepeat ? () => holdRepeat.stop() : undefined}
+    <StepperGlyphButton
+      glyph="−"
+      onActivate={onClick}
       disabled={disabled}
+      size={size}
       title={title}
-      aria-label={title}
-      className={cn(stepperButtonVariants({ size }), className)}
-    >
-      −
-    </button>
+      enableHoldRepeat={enableHoldRepeat}
+      hold={holdRepeat}
+      className={className}
+    />
   );
 }
 
@@ -456,50 +419,15 @@ export function IncrementButton({
   const holdRepeat = useHoldRepeat(onClick, enableHoldRepeat && !disabled);
 
   return (
-    <button
-      type="button"
-      onClick={enableHoldRepeat ? undefined : onClick}
-      onPointerDown={
-        enableHoldRepeat
-          ? (e) => {
-              if (disabled) return;
-              if (e.pointerType === 'mouse' && e.button !== 0) return;
-              e.currentTarget.setPointerCapture(e.pointerId);
-              holdRepeat.start();
-            }
-          : undefined
-      }
-      onPointerUp={
-        enableHoldRepeat
-          ? (e) => {
-              try {
-                e.currentTarget.releasePointerCapture(e.pointerId);
-              } catch {
-                /* not captured */
-              }
-              holdRepeat.stop();
-            }
-          : undefined
-      }
-      onPointerCancel={
-        enableHoldRepeat
-          ? (e) => {
-              try {
-                e.currentTarget.releasePointerCapture(e.pointerId);
-              } catch {
-                /* not captured */
-              }
-              holdRepeat.stop();
-            }
-          : undefined
-      }
-      onLostPointerCapture={enableHoldRepeat ? () => holdRepeat.stop() : undefined}
+    <StepperGlyphButton
+      glyph="+"
+      onActivate={onClick}
       disabled={disabled}
+      size={size}
       title={title}
-      aria-label={title}
-      className={cn(stepperButtonVariants({ size }), className)}
-    >
-      +
-    </button>
+      enableHoldRepeat={enableHoldRepeat}
+      hold={holdRepeat}
+      className={className}
+    />
   );
 }

@@ -11,7 +11,7 @@ import {
   type ItemPropertyPayload,
   type ItemPropertyTpRow,
 } from '@/lib/calculators/item-calc';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 
 /** Max unit cost for gear items in guided Layer 2 shop. */
 export const GUIDED_GEAR_L2_MAX_UNIT_COST = 50;

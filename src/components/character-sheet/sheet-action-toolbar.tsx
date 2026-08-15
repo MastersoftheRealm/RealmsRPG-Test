@@ -7,6 +7,7 @@
  *
  * Actions:
  * - Edit/Done toggle (with notification dot for unapplied points)
+ * - Temp Modifier toggle (mutually exclusive with Edit — ADR-0006 / TASK-782)
  * - Recovery modal trigger
  * - Level Up modal trigger
  */
@@ -14,24 +15,31 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Pencil, Check, Heart, ArrowUp, Settings } from 'lucide-react';
+import { Pencil, Check, Heart, ArrowUp, Settings, SlidersHorizontal } from 'lucide-react';
 
 interface SheetActionToolbarProps {
   isEditMode: boolean;
+  isTempModifierMode?: boolean;
   hasUnappliedPoints: boolean;
+  /** Glow on the Temp control when persisted deltas exist (play or inactive). */
+  hasTempModifiers?: boolean;
   onToggleEditMode: () => void;
+  onToggleTempModifierMode?: () => void;
   onRecovery: () => void;
   onLevelUp: () => void;
   /** Open character sheet settings (e.g. visibility). Shown for owners. */
   onSettings?: () => void;
-  /** When false, hide edit/recovery/level-up (view-only mode for non-owners). */
+  /** When false, hide edit/temp/recovery/level-up (view-only mode for non-owners). */
   canEdit?: boolean;
 }
 
 export function SheetActionToolbar({
   isEditMode,
+  isTempModifierMode = false,
   hasUnappliedPoints,
+  hasTempModifiers = false,
   onToggleEditMode,
+  onToggleTempModifierMode,
   onRecovery,
   onLevelUp,
   onSettings,
@@ -63,9 +71,9 @@ export function SheetActionToolbar({
         )}
         title={isEditMode ? 'Done editing' : 'Edit character'}
         aria-label={isEditMode ? 'Done editing' : 'Edit character'}
+        aria-pressed={isEditMode}
       >
         {isEditMode ? <Check className="h-5 w-5" /> : <Pencil className="h-4 w-4" />}
-        {/* Notification dot for unapplied points */}
         {hasUnappliedPoints && !isEditMode && (
           <span
             className="absolute -top-0.5 -right-0.5 h-3 w-3 animate-pulse rounded-full bg-danger-500"
@@ -73,6 +81,35 @@ export function SheetActionToolbar({
           />
         )}
       </button>
+
+      {onToggleTempModifierMode && (
+        <button
+          onClick={onToggleTempModifierMode}
+          className={cn(
+            'duration-base relative h-11 w-11 rounded-full shadow-lg transition-all ease-standard',
+            'flex items-center justify-center',
+            'hover:scale-110 active:scale-95',
+            isTempModifierMode
+              ? 'bg-warning-600 text-text-on-dark hover:bg-warning-700'
+              : 'border border-border-light bg-surface text-text-secondary hover:bg-surface-alt hover:text-text-primary',
+          )}
+          title={isTempModifierMode ? 'Done with Temp Modifier' : 'Temp Modifier'}
+          aria-label={isTempModifierMode ? 'Done with Temp Modifier' : 'Temp Modifier'}
+          aria-pressed={isTempModifierMode}
+        >
+          {isTempModifierMode ? (
+            <Check className="h-5 w-5" />
+          ) : (
+            <SlidersHorizontal className="h-4 w-4" />
+          )}
+          {hasTempModifiers && !isTempModifierMode && (
+            <span
+              className="absolute -top-0.5 -right-0.5 h-3 w-3 rounded-full bg-warning-500"
+              title="Temp Modifiers are active"
+            />
+          )}
+        </button>
+      )}
 
       {/* Recovery */}
       <button

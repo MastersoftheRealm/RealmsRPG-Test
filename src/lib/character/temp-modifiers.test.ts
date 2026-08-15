@@ -3,7 +3,10 @@ import {
   applyTempModifier,
   applyTempModifiersToDisplayStats,
   getEffectiveAbilities,
+  hasAnyTempModifiers,
   normalizeTempModifiers,
+  sectionTempModifierTint,
+  tempModifierTintFromDelta,
   patchTempModifiers,
   sectionHasTempModifiers,
   shouldApplyAbilityTempsToResourceMaxima,
@@ -43,6 +46,29 @@ describe('temp-modifiers (ADR-0006)', () => {
       skills: { stealth: -1 },
     });
     expect(normalizeTempModifiers({ speed: 0 })).toBeUndefined();
+  });
+
+  it('tempModifierTintFromDelta matches value gold/danger', () => {
+    expect(tempModifierTintFromDelta(undefined)).toBe('none');
+    expect(tempModifierTintFromDelta(0)).toBe('none');
+    expect(tempModifierTintFromDelta(2)).toBe('positive');
+    expect(tempModifierTintFromDelta(-1)).toBe('negative');
+  });
+
+  it('sectionTempModifierTint is gold for +, danger for −, gold when mixed', () => {
+    expect(sectionTempModifierTint(undefined, 'header')).toBe('none');
+    expect(sectionTempModifierTint({ speed: 1 }, 'header')).toBe('positive');
+    expect(sectionTempModifierTint({ evasion: -2 }, 'header')).toBe('negative');
+    expect(sectionTempModifierTint({ speed: 1, evasion: -1 }, 'header')).toBe('positive');
+    expect(sectionTempModifierTint({ abilities: { strength: -1 } }, 'abilities')).toBe('negative');
+    expect(sectionTempModifierTint({ skills: { stealth: 2 } }, 'skills')).toBe('positive');
+  });
+
+  it('hasAnyTempModifiers is true only when normalize keeps a key', () => {
+    expect(hasAnyTempModifiers(undefined)).toBe(false);
+    expect(hasAnyTempModifiers({ speed: 0 })).toBe(false);
+    expect(hasAnyTempModifiers({ speed: 1 })).toBe(true);
+    expect(hasAnyTempModifiers({ applyAbilityToResourceMaxima: true })).toBe(true);
   });
 
   it('resource maxima opt-in defaults off', () => {

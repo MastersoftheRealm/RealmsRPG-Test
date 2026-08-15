@@ -737,6 +737,7 @@ When proficient, unarmed prowess uses **Ability + Martial Proficiency** (Attack 
 ### Critical Hits
 
 - **Standard Critical Range:** +10 over Defense/Evasion
+- Armor **Critical Range +1** / Critical Range Increase adds **1 + Option 1 level** to that threshold (e.g. Evasion 12 + 10 + 1 = 23)
 - **Effect:** Double damage dice (2× multiplier)
 - **Coup de Grâce:** Unconscious/asleep target within 1 space = auto hit + critical
 

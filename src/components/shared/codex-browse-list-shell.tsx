@@ -10,7 +10,8 @@
 
 'use client';
 
-import type { ReactNode } from 'react';
+import { Children, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
+import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { SectionHeader } from './section-header';
 import { LoadingState, EmptyState as ListEmptyState } from './list-components';
 import { ListSearchToolbar } from './list-search-toolbar';
@@ -56,6 +57,87 @@ export interface CodexBrowseListShellProps {
   className?: string;
 }
 
+/** Below this row count the list mounts every child, exactly as before. */
+const VIRTUALIZE_ROW_THRESHOLD = 40;
+
+/** Collapsed GridListRow height; `measureElement` corrects each row after mount. */
+const ESTIMATED_ROW_HEIGHT = 56;
+
+function listDocumentOffset(element: HTMLElement): number {
+  return element.getBoundingClientRect().top + window.scrollY;
+}
+
+function VirtualizedRows({
+  rows,
+  layoutRootRef,
+}: {
+  rows: ReactNode[];
+  layoutRootRef: RefObject<HTMLElement | null>;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  useLayoutEffect(() => {
+    const list = containerRef.current;
+    if (!list) return;
+
+    const update = () => setScrollMargin(listDocumentOffset(list));
+    update();
+
+    // Filters live in this shell above the rows. Observing the shell (not just the
+    // list) is what catches expand/collapse — the list moves, it does not resize.
+    const observer = new ResizeObserver(update);
+    observer.observe(list);
+    const layoutRoot = layoutRootRef.current;
+    if (layoutRoot && layoutRoot !== list) observer.observe(layoutRoot);
+
+    window.addEventListener('resize', update);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', update);
+    };
+  }, [layoutRootRef, rows.length]);
+
+  const virtualizer = useWindowVirtualizer({
+    count: rows.length,
+    estimateSize: () => ESTIMATED_ROW_HEIGHT,
+    overscan: 8,
+    scrollMargin,
+  });
+
+  return (
+    <div
+      ref={containerRef}
+      className="relative w-full"
+      style={{ height: virtualizer.getTotalSize() }}
+    >
+      {virtualizer.getVirtualItems().map((item) => (
+        <div
+          key={item.key}
+          data-index={item.index}
+          ref={virtualizer.measureElement}
+          className="absolute top-0 left-0 w-full pb-1"
+          style={{ transform: `translateY(${item.start - scrollMargin}px)` }}
+        >
+          {rows[item.index]}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function CodexBrowseRows({
+  children,
+  layoutRootRef,
+}: {
+  children: ReactNode;
+  layoutRootRef: RefObject<HTMLElement | null>;
+}) {
+  const rows = Children.toArray(children);
+  if (rows.length <= VIRTUALIZE_ROW_THRESHOLD) return <>{children}</>;
+  return <VirtualizedRows rows={rows} layoutRootRef={layoutRootRef} />;
+}
+
 export function CodexBrowseListShell({
   sectionTitle,
   onAdd,
@@ -84,8 +166,9 @@ export function CodexBrowseListShell({
   children,
   className,
 }: CodexBrowseListShellProps) {
+  const layoutRootRef = useRef<HTMLDivElement>(null);
   return (
-    <div className={className}>
+    <div ref={layoutRootRef} className={className}>
       {sectionTitle != null ? (
         <SectionHeader title={sectionTitle} onAdd={onAdd} addLabel={addLabel} size="md" />
       ) : null}
@@ -122,7 +205,7 @@ export function CodexBrowseListShell({
             size={emptySize}
           />
         ) : (
-          children
+          <CodexBrowseRows layoutRootRef={layoutRootRef}>{children}</CodexBrowseRows>
         )}
       </div>
     </div>

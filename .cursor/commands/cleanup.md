@@ -25,6 +25,7 @@ Same as `/audit`: this session’s files + task `related_files` / `related_tasks
 5. **Doc sanity** — After FEATURE_INDEX / table edits, grep for collapsed rows (`||` with no cell between) and broken links to deleted files.
 6. **Re-verify** — Targeted tests and/or `npm run build` if code changed. Never mark `done` early.
 7. **Changelog** — Only if cleanup was meaningful. First bullet of the Summary **must** be a deletion or consolidation (file removed, fork wired to canonical, dead export dropped). Wiring a local mapper into an existing shared helper counts. Do not invent a changelog entry whose only substance is “docs honesty.”
+8. **Do not commit** unless the owner asked to commit or push. Prefer one batch commit for all finished tasks in the session (list every `TASK-###` in that subject).
 
 ## Apply freely (in scope)
 

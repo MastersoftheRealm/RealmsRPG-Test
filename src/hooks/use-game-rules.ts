@@ -14,7 +14,9 @@
 
 import { useQuery } from '@tanstack/react-query';
 import type { CoreRulesMap } from '@/types/core-rules';
-import { fetchCodex } from '@/lib/api-client';
+import type { CodexPayload } from '@/types/codex';
+import { fetchCodexCollection } from '@/lib/api-client';
+import { codexKeys } from './use-codex';
 
 // Import current hardcoded values as fallback defaults
 import {
@@ -384,18 +386,26 @@ function mergeCoreRules(dbRules: Record<string, unknown>): CoreRulesMap {
 }
 
 // =============================================================================
-// Hook — shares codex fetch (queryKey ['codex']) so one request serves rules + other codex hooks
+// Hook — core_rules only (`['codex', 'coreRules']`), not the full codex payload (TASK-775)
 // =============================================================================
+
+const selectCoreRules = (data: Pick<CodexPayload, 'coreRules'>): CoreRulesMap =>
+  mergeCoreRules(data.coreRules ?? {});
 
 export function useGameRules(): {
   rules: CoreRulesMap;
   isLoading: boolean;
   error: Error | null;
 } {
-  const query = useQuery<Awaited<ReturnType<typeof fetchCodex>>, Error, CoreRulesMap, ['codex']>({
-    queryKey: ['codex'],
-    queryFn: fetchCodex,
-    select: (data) => mergeCoreRules(data.coreRules ?? {}),
+  const query = useQuery<
+    Pick<CodexPayload, 'coreRules'>,
+    Error,
+    CoreRulesMap,
+    readonly ['codex', 'coreRules']
+  >({
+    queryKey: codexKeys.collection('coreRules'),
+    queryFn: () => fetchCodexCollection('coreRules'),
+    select: selectCoreRules,
     staleTime: 10 * 60 * 1000, // 10 min — rules change infrequently
     gcTime: 60 * 60 * 1000, // 1 hour cache
     retry: 1,

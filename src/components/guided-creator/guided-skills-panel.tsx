@@ -6,7 +6,7 @@
 
 'use client';
 
-import { useMemo, useCallback, useState } from 'react';
+import { useMemo, useCallback, useId, useState } from 'react';
 import { X, ChevronDown } from 'lucide-react';
 import { cn, formatBonus } from '@/lib/utils';
 import { useCodexSkills, useGameRules, type Skill } from '@/hooks';
@@ -16,16 +16,25 @@ import {
   getHighestLinkedAbilityKey,
   getLinkedAbilityKeys,
 } from '@/lib/game/formulas';
+import { abilityDefenseBonusesFromAbilities } from '@/lib/game/calculations';
 import {
   getSkillValueIncreaseCost,
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
-import { formatGuidedSkillAbilityTag } from '@/lib/guided-creator/curated-skills';
-import { DecrementButton, IncrementButton, InfoTippy, PointStatus } from '@/components/shared';
+import { formatAbilityLabel } from '@/lib/constants/ability-effect-blurbs';
+import { ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
+import {
+  DecrementButton,
+  DefenseBonusesCard,
+  IncrementButton,
+  InfoTippy,
+  PointStatus,
+} from '@/components/shared';
+import { FilterNativeSelect } from '@/components/shared/filters';
 import { DescriptorChip, IconButton, Spinner } from '@/components/ui';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { getGuidedSkillBonusHelp } from '../../../public/tooltip-text';
-import type { Abilities } from '@/types';
+import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
 const panelCopy = GUIDED_CREATOR_COPY.steps.skills;
 
@@ -38,6 +47,11 @@ export interface GuidedSkillsPanelProps {
   totalPoints: number;
   spentPoints: number;
   onAllocationsChange: (allocations: Record<string, number>) => void;
+  defenseSkills: DefenseSkills;
+  onDefenseChange: (defense: DefenseSkills) => void;
+  skillAbilities?: Record<string, string>;
+  onSkillAbilityChange?: (skillId: string, abilityKey: string) => void;
+  level?: number;
   className?: string;
 }
 
@@ -48,6 +62,9 @@ interface GuidedSkillRowItem {
   abilityLabel: string | null;
   abilityValue: number;
   multiAbility: boolean;
+  chosenAbilityKey?: string;
+  linkedAbilityKeys: string[];
+  abilitySkillId: string;
   isSpecies: boolean;
   isPath: boolean;
   isSubSkill: boolean;
@@ -62,14 +79,17 @@ function GuidedSkillRow({
   onDecrease,
   onIncrease,
   onRemove,
+  onAbilityChange,
 }: {
   item: GuidedSkillRowItem;
   pathSourceLabel?: string;
   onDecrease: () => void;
   onIncrease: () => void;
   onRemove?: () => void;
+  onAbilityChange?: (skillId: string, abilityKey: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const abilitySelectId = useId();
   const {
     skill,
     value,
@@ -77,6 +97,9 @@ function GuidedSkillRow({
     abilityLabel,
     abilityValue,
     multiAbility,
+    chosenAbilityKey,
+    linkedAbilityKeys,
+    abilitySkillId,
     isSpecies,
     isPath,
     isSubSkill,
@@ -136,14 +159,34 @@ function GuidedSkillRow({
               )}
             </button>
             {/* DESIGN_INTENT: Ability = primary (guided ability chips); Species = descriptor; path = primary source */}
-            {abilityLabel && (
-              <DescriptorChip
-                variant="primary"
-                size="sm"
-                title={`Contributing Ability: ${abilityLabel}`}
+            {multiAbility && onAbilityChange && linkedAbilityKeys.length > 1 ? (
+              <FilterNativeSelect
+                id={abilitySelectId}
+                value={chosenAbilityKey ?? linkedAbilityKeys[0]}
+                onChange={(e) => onAbilityChange(abilitySkillId, e.target.value)}
+                aria-label={panelCopy.abilityPickerLabel(skillName)}
+                wrapperClassName="w-auto"
+                className="h-11 min-h-11 w-auto min-w-[7.5rem] px-2 pr-9 text-xs md:h-8 md:min-h-8"
               >
-                {abilityLabel}
-              </DescriptorChip>
+                {linkedAbilityKeys.map((key) => {
+                  const opt = ABILITY_FILTER_OPTIONS.find((o) => o.value === key);
+                  return (
+                    <option key={key} value={key}>
+                      {opt?.label ?? formatAbilityLabel(key as AbilityName)}
+                    </option>
+                  );
+                })}
+              </FilterNativeSelect>
+            ) : (
+              abilityLabel && (
+                <DescriptorChip
+                  variant="primary"
+                  size="sm"
+                  title={`Contributing Ability: ${abilityLabel}`}
+                >
+                  {abilityLabel}
+                </DescriptorChip>
+              )
             )}
             {isSubSkill && baseSkillName && (
               <DescriptorChip variant="descriptor" size="sm" title={baseSkillName}>
@@ -242,6 +285,11 @@ export function GuidedSkillsPanel({
   totalPoints,
   spentPoints,
   onAllocationsChange,
+  defenseSkills,
+  onDefenseChange,
+  skillAbilities = {},
+  onSkillAbilityChange,
+  level = 1,
   className,
 }: GuidedSkillsPanelProps) {
   const { data: allSkills = [], isLoading } = useCodexSkills();
@@ -350,10 +398,15 @@ export function GuidedSkillsPanel({
       const isPath = !isSpecies && pathSkillIds.has(skillId);
       const skillForAbility = baseSkill ?? skill;
       const linkedKeys = getLinkedAbilityKeys(skillForAbility.ability);
+      const abilitySkillId = String(skillForAbility.id);
       const chosenAbilityKey =
-        getHighestLinkedAbilityKey(skillForAbility.ability, abilities) ?? linkedKeys[0];
-      const abilityValue = chosenAbilityKey ? (abilities[chosenAbilityKey] ?? 0) : 0;
-      const abilityLabel = formatGuidedSkillAbilityTag(skillForAbility, abilities);
+        skillAbilities[abilitySkillId] ??
+        getHighestLinkedAbilityKey(skillForAbility.ability, abilities) ??
+        linkedKeys[0];
+      const abilityValue = chosenAbilityKey ? (abilities[chosenAbilityKey as AbilityName] ?? 0) : 0;
+      const abilityLabel = chosenAbilityKey
+        ? formatAbilityLabel(chosenAbilityKey as AbilityName)
+        : null;
       const proficient = isSubSkill ? value >= 1 : value >= 0;
       const bonus = isSubSkill
         ? calculateSubSkillBonusWithProficiency(
@@ -390,6 +443,9 @@ export function GuidedSkillsPanel({
         abilityLabel,
         abilityValue,
         multiAbility: linkedKeys.length > 1,
+        chosenAbilityKey,
+        linkedAbilityKeys: linkedKeys as string[],
+        abilitySkillId,
         isSpecies,
         isPath,
         isSubSkill,
@@ -407,6 +463,7 @@ export function GuidedSkillsPanel({
     abilities,
     remainingPoints,
     skillRules,
+    skillAbilities,
   ]);
 
   if (isLoading) {
@@ -445,12 +502,22 @@ export function GuidedSkillsPanel({
                   onDecrease={() => handleAllocate(skillId, -1)}
                   onIncrease={() => handleAllocate(skillId, 1)}
                   onRemove={item.isSpecies ? undefined : () => handleRemove(skillId)}
+                  onAbilityChange={onSkillAbilityChange}
                 />
               );
             })}
           </ul>
         )}
       </div>
+
+      <DefenseBonusesCard
+        defenseSkills={defenseSkills}
+        onDefenseChange={onDefenseChange}
+        level={level}
+        remainingPoints={remainingPoints}
+        abilityDefenseBonuses={abilityDefenseBonusesFromAbilities(abilities)}
+        skillRules={skillRules}
+      />
     </div>
   );
 }

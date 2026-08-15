@@ -70,3 +70,4 @@ Optional args: `/audit TASK-502` = primary task; else infer from this chat + rec
 - Evidence over vibes.
 - If AC or owner feedback is unmet, verdict must not be “ready for done.”
 - “Docs honesty” alone is not a pass on pillar 1 if dead forks remain in scope.
+- **Commits:** PR Checklist item 5 is a **push gate**. Do not flag “no git commit yet” as a gap. One commit may list many `TASK-###`. Do not tell the owner to commit per task.

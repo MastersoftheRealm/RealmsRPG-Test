@@ -13,7 +13,7 @@
  * - Visual indicator for active sort column and direction
  */
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, type RefObject } from 'react';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
@@ -94,6 +94,88 @@ const justifyStyles = {
   center: 'justify-center',
   right: 'justify-end',
 };
+
+function MobileSortMenu({
+  sortableColumns,
+  sortState,
+  currentLabel,
+  currentDir,
+  open,
+  onOpenChange,
+  menuRef,
+  onColumnClick,
+}: {
+  sortableColumns: Array<{ key: string; label: string }>;
+  sortState?: SortState;
+  currentLabel: string;
+  currentDir: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  menuRef: RefObject<HTMLDivElement | null>;
+  onColumnClick: (column: ListColumn) => void;
+}) {
+  return (
+    <div ref={menuRef} className="mb-2 lg:hidden">
+      <button
+        type="button"
+        onClick={() => onOpenChange(!open)}
+        className={cn(
+          'flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left text-sm font-medium',
+          'border-primary-subtle-border bg-primary-subtle-bg',
+          'text-primary-fg',
+          'transition-colors hover:bg-primary-subtle-bg-hover',
+        )}
+        aria-expanded={open}
+        aria-haspopup="listbox"
+        aria-label={`Sort by. Current: ${currentLabel} ${currentDir}. Choose sort order.`}
+      >
+        <span className="flex items-center gap-1.5">
+          <span className="text-primary-link-fg">Sort by</span>
+          <span>{currentLabel}</span>
+          <span className="text-xs text-primary-link-fg">({currentDir})</span>
+        </span>
+        <ChevronsUpDown
+          className={cn('h-4 w-4 shrink-0 transition-transform', open && 'rotate-180')}
+        />
+      </button>
+      {open && (
+        <div
+          className="mt-1 overflow-hidden rounded-lg border border-border-light bg-surface shadow-lg"
+          role="listbox"
+        >
+          {sortableColumns.map((column) => {
+            const isActive = sortState?.col === column.key;
+            return (
+              <button
+                key={column.key}
+                type="button"
+                role="option"
+                aria-selected={isActive}
+                onClick={() => {
+                  onColumnClick(column);
+                  onOpenChange(false);
+                }}
+                className={cn(
+                  'flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm',
+                  'transition-colors hover:bg-surface-alt',
+                  isActive && 'bg-primary-subtle-bg font-medium text-primary-fg',
+                )}
+              >
+                <span>{column.label}</span>
+                {isActive &&
+                  (sortState?.dir === 1 ? (
+                    <ChevronUp className="h-4 w-4 shrink-0 text-primary-link-fg" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 shrink-0 text-primary-link-fg" />
+                  ))}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function ListHeader({
   columns,
@@ -222,9 +304,9 @@ export function ListHeader({
             {column.label.toUpperCase()}
             {isActive &&
               (sortState.dir === 1 ? (
-                <ChevronUp className="h-3 w-3" />
+                <ChevronUp className="h-3 w-3 shrink-0 text-primary-link-fg" />
               ) : (
-                <ChevronDown className="h-3 w-3" />
+                <ChevronDown className="h-3 w-3 shrink-0 text-primary-link-fg" />
               ))}
           </button>
         );
@@ -259,70 +341,17 @@ export function ListHeader({
             aria-hidden
           />
         </div>
-        {/* Mobile: sort-by dropdown (same sort logic) */}
         {hasSortable && (
-          <div ref={mobileSortRef} className="mb-2 lg:hidden">
-            <button
-              type="button"
-              onClick={() => setMobileSortOpen((o) => !o)}
-              className={cn(
-                'flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left text-sm font-medium',
-                'border-primary-subtle-border bg-primary-subtle-bg',
-                'text-primary-fg',
-                'transition-colors hover:bg-primary-subtle-bg-hover',
-              )}
-              aria-expanded={mobileSortOpen}
-              aria-haspopup="listbox"
-              aria-label={`Sort by. Current: ${currentLabel} ${currentDir}. Choose sort order.`}
-            >
-              <span className="flex items-center gap-1.5">
-                <span className="text-primary-link-fg">Sort by</span>
-                <span>{currentLabel}</span>
-                <span className="text-xs text-primary-link-fg">({currentDir})</span>
-              </span>
-              <ChevronsUpDown
-                className={cn(
-                  'h-4 w-4 shrink-0 transition-transform',
-                  mobileSortOpen && 'rotate-180',
-                )}
-              />
-            </button>
-            {mobileSortOpen && (
-              <div
-                className="mt-1 overflow-hidden rounded-lg border border-border-light bg-surface shadow-lg"
-                role="listbox"
-              >
-                {sortableColumns.map((column) => {
-                  const isActive = sortState?.col === column.key;
-                  return (
-                    <button
-                      key={column.key}
-                      type="button"
-                      role="option"
-                      aria-selected={isActive}
-                      onClick={() => {
-                        handleColumnClick(column);
-                        setMobileSortOpen(false);
-                      }}
-                      className={cn(
-                        'flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm',
-                        'transition-colors hover:bg-surface-alt',
-                        isActive && 'bg-primary-subtle-bg font-medium text-primary-fg',
-                      )}
-                    >
-                      <span>{column.label}</span>
-                      {isActive &&
-                        (sortState.dir === 1 ? (
-                          <ChevronUp className="h-4 w-4 text-primary-link-fg" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 text-primary-link-fg" />
-                        ))}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <MobileSortMenu
+            sortableColumns={sortableColumns}
+            sortState={sortState}
+            currentLabel={currentLabel}
+            currentDir={currentDir}
+            open={mobileSortOpen}
+            onOpenChange={setMobileSortOpen}
+            menuRef={mobileSortRef}
+            onColumnClick={handleColumnClick}
+          />
         )}
       </>
     );
@@ -375,9 +404,9 @@ export function ListHeader({
                   {rightSlotLabel!.toUpperCase()}
                   {rightSlotActive &&
                     (sortState!.dir === 1 ? (
-                      <ChevronUp className="h-3 w-3" />
+                      <ChevronUp className="h-3 w-3 shrink-0 text-primary-link-fg" />
                     ) : (
-                      <ChevronDown className="h-3 w-3" />
+                      <ChevronDown className="h-3 w-3 shrink-0 text-primary-link-fg" />
                     ))}
                 </button>
               ) : rightSlotLabel ? (
@@ -408,68 +437,16 @@ export function ListHeader({
           )}
         </div>
         {hasSortable && (
-          <div ref={mobileSortRef} className="mb-2 lg:hidden">
-            <button
-              type="button"
-              onClick={() => setMobileSortOpen((o) => !o)}
-              className={cn(
-                'flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left text-sm font-medium',
-                'border-primary-subtle-border bg-primary-subtle-bg',
-                'text-primary-fg',
-                'transition-colors hover:bg-primary-subtle-bg-hover',
-              )}
-              aria-expanded={mobileSortOpen}
-              aria-haspopup="listbox"
-              aria-label={`Sort by. Current: ${currentLabel} ${currentDir}. Choose sort order.`}
-            >
-              <span className="flex items-center gap-1.5">
-                <span className="text-primary-link-fg">Sort by</span>
-                <span>{currentLabel}</span>
-                <span className="text-xs text-primary-link-fg">({currentDir})</span>
-              </span>
-              <ChevronsUpDown
-                className={cn(
-                  'h-4 w-4 shrink-0 transition-transform',
-                  mobileSortOpen && 'rotate-180',
-                )}
-              />
-            </button>
-            {mobileSortOpen && (
-              <div
-                className="mt-1 overflow-hidden rounded-lg border border-border-light bg-surface shadow-lg"
-                role="listbox"
-              >
-                {sortableColumns.map((column) => {
-                  const isActive = sortState?.col === column.key;
-                  return (
-                    <button
-                      key={column.key}
-                      type="button"
-                      role="option"
-                      aria-selected={isActive}
-                      onClick={() => {
-                        handleColumnClick(column);
-                        setMobileSortOpen(false);
-                      }}
-                      className={cn(
-                        'flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm',
-                        'transition-colors hover:bg-surface-alt',
-                        isActive && 'bg-primary-subtle-bg font-medium text-primary-fg',
-                      )}
-                    >
-                      <span>{column.label}</span>
-                      {isActive &&
-                        (sortState!.dir === 1 ? (
-                          <ChevronUp className="h-4 w-4 shrink-0" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 shrink-0" />
-                        ))}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <MobileSortMenu
+            sortableColumns={sortableColumns}
+            sortState={sortState}
+            currentLabel={currentLabel}
+            currentDir={currentDir}
+            open={mobileSortOpen}
+            onOpenChange={setMobileSortOpen}
+            menuRef={mobileSortRef}
+            onColumnClick={handleColumnClick}
+          />
         )}
       </>
     );
@@ -481,70 +458,17 @@ export function ListHeader({
       <div className={desktopGridOnlyClasses} style={{ gridTemplateColumns: finalGridTemplate }}>
         {headerContent}
       </div>
-      {/* Mobile: sort-by dropdown (same sort logic) */}
       {hasSortable && (
-        <div ref={mobileSortRef} className="mb-2 lg:hidden">
-          <button
-            type="button"
-            onClick={() => setMobileSortOpen((o) => !o)}
-            className={cn(
-              'flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left text-sm font-medium',
-              'border-primary-subtle-border bg-primary-subtle-bg',
-              'text-primary-fg',
-              'transition-colors hover:bg-primary-subtle-bg-hover',
-            )}
-            aria-expanded={mobileSortOpen}
-            aria-haspopup="listbox"
-            aria-label={`Sort by. Current: ${currentLabel} ${currentDir}. Choose sort order.`}
-          >
-            <span className="flex items-center gap-1.5">
-              <span className="text-primary-link-fg">Sort by</span>
-              <span>{currentLabel}</span>
-              <span className="text-xs text-primary-link-fg">({currentDir})</span>
-            </span>
-            <ChevronsUpDown
-              className={cn(
-                'h-4 w-4 shrink-0 transition-transform',
-                mobileSortOpen && 'rotate-180',
-              )}
-            />
-          </button>
-          {mobileSortOpen && (
-            <div
-              className="mt-1 overflow-hidden rounded-lg border border-border-light bg-surface shadow-lg"
-              role="listbox"
-            >
-              {sortableColumns.map((column) => {
-                const isActive = sortState?.col === column.key;
-                return (
-                  <button
-                    key={column.key}
-                    type="button"
-                    role="option"
-                    aria-selected={isActive}
-                    onClick={() => {
-                      handleColumnClick(column);
-                      setMobileSortOpen(false);
-                    }}
-                    className={cn(
-                      'flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm',
-                      'transition-colors hover:bg-surface-alt',
-                      isActive && 'bg-primary-subtle-bg font-medium text-primary-fg',
-                    )}
-                  >
-                    <span>{column.label}</span>
-                    {isActive &&
-                      (sortState.dir === 1 ? (
-                        <ChevronUp className="h-4 w-4 text-primary-link-fg" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-primary-link-fg" />
-                      ))}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        <MobileSortMenu
+          sortableColumns={sortableColumns}
+          sortState={sortState}
+          currentLabel={currentLabel}
+          currentDir={currentDir}
+          open={mobileSortOpen}
+          onOpenChange={setMobileSortOpen}
+          menuRef={mobileSortRef}
+          onColumnClick={handleColumnClick}
+        />
       )}
     </>
   );

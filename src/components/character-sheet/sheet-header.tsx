@@ -16,7 +16,7 @@ import { useMemo } from 'react';
 import { Card } from '@/components/ui';
 import { useGameRules } from '@/hooks';
 import { calculateHealthEnergyPool } from '@/lib/game/formulas';
-import { calculateAllStats } from '@/lib/game/calculations';
+import { calculateAllStats, calculateCriticalRange } from '@/lib/game/calculations';
 import {
   applyTempModifier,
   applyTempModifiersToDisplayStats,
@@ -107,6 +107,7 @@ export function SheetHeader({
   const ctx = useCharacterSheetOptional();
   const character = (ctx?.character ?? characterProp) as Character;
   const isEditMode = ctx?.isEditMode ?? isEditModeProp;
+  const isTempModifierMode = ctx?.isTempModifierMode ?? false;
   const onTempModifiersChange = onTempModifiersChangeProp ?? ctx?.onTempModifiersChange;
   const tempModifiers = character.tempModifiers;
 
@@ -170,19 +171,27 @@ export function SheetHeader({
       : source
         ? [source as Item]
         : [];
-    return getEquippedArmorQuickRef(armorItems, displayStats.evasion);
+    return getEquippedArmorQuickRef(armorItems, displayStats.evasion, rules);
   }, [
     enrichedArmorProp,
     ctx?.enrichedData?.armor,
     character.equipment?.armor,
     character.armor,
     displayStats.evasion,
+    rules,
   ]);
 
   const baseDamageReduction = armorQuickRef?.damageReduction ?? 0;
-  const baseCriticalRange = armorQuickRef?.criticalRange ?? 0;
-  const showCombatArmorStats =
-    Boolean(armorQuickRef) || drTemp !== 0 || critTemp !== 0 || isEditMode;
+  const critIncrease = armorQuickRef?.criticalRangeIncrease ?? 0;
+  const baseCriticalRange = armorQuickRef
+    ? armorQuickRef.criticalRange
+    : calculateCriticalRange(displayStats.evasion, 0, rules);
+  const displayDr = applyTempModifier(baseDamageReduction, drTemp);
+  const displayCrit = applyTempModifier(baseCriticalRange, critTemp);
+  // DESIGN_INTENT: Play/edit hide DR / Critical Range unless armor (or an existing temp)
+  // changes that stat. Temp mode always shows both cards so a temp can be added.
+  const showDamageReduction = isTempModifierMode || baseDamageReduction > 0 || drTemp !== 0;
+  const showCriticalRange = isTempModifierMode || critIncrease > 0 || critTemp !== 0;
 
   return (
     <Card className="mb-4 p-4 shadow-md md:p-6" data-tour-id="sheet-tour-header">
@@ -207,42 +216,42 @@ export function SheetHeader({
             label="Speed"
             value={speedDisplayValue}
             valueSuffix={speedDisplay.suffix}
-            isEditMode={isEditMode}
+            isTempModifierMode={isTempModifierMode}
             tempDelta={speedTemp}
             onTempDeltaChange={onTempModifiersChange ? (d) => setScalarTemp('speed', d) : undefined}
           />
           <LargeStatBlock
             label="Evasion"
             value={displayStats.evasion}
-            isEditMode={isEditMode}
+            isTempModifierMode={isTempModifierMode}
             tempDelta={evasionTemp}
             onTempDeltaChange={
               onTempModifiersChange ? (d) => setScalarTemp('evasion', d) : undefined
             }
           />
-          {showCombatArmorStats && (
-            <>
-              <LargeStatBlock
-                label="Damage Reduction"
-                value={applyTempModifier(baseDamageReduction, drTemp)}
-                valueAriaLabel={`Damage Reduction ${applyTempModifier(baseDamageReduction, drTemp)}`}
-                isEditMode={isEditMode}
-                tempDelta={drTemp}
-                onTempDeltaChange={
-                  onTempModifiersChange ? (d) => setScalarTemp('damageReduction', d) : undefined
-                }
-              />
-              <LargeStatBlock
-                label="Critical Range"
-                value={applyTempModifier(baseCriticalRange, critTemp)}
-                valueAriaLabel={`Critical Range ${applyTempModifier(baseCriticalRange, critTemp)}`}
-                isEditMode={isEditMode}
-                tempDelta={critTemp}
-                onTempDeltaChange={
-                  onTempModifiersChange ? (d) => setScalarTemp('criticalRange', d) : undefined
-                }
-              />
-            </>
+          {showDamageReduction && (
+            <LargeStatBlock
+              label="Damage Reduction"
+              value={displayDr}
+              valueAriaLabel={`Damage Reduction ${displayDr}`}
+              isTempModifierMode={isTempModifierMode}
+              tempDelta={drTemp}
+              onTempDeltaChange={
+                onTempModifiersChange ? (d) => setScalarTemp('damageReduction', d) : undefined
+              }
+            />
+          )}
+          {showCriticalRange && (
+            <LargeStatBlock
+              label="Critical Range"
+              value={displayCrit}
+              valueAriaLabel={`Critical Range ${displayCrit}`}
+              isTempModifierMode={isTempModifierMode}
+              tempDelta={critTemp}
+              onTempDeltaChange={
+                onTempModifiersChange ? (d) => setScalarTemp('criticalRange', d) : undefined
+              }
+            />
           )}
         </div>
 
@@ -263,6 +272,7 @@ export function SheetHeader({
           innateThreshold={innateThreshold}
           innatePools={innatePools}
           isEditMode={isEditMode}
+          isTempModifierMode={isTempModifierMode}
           healthPoints={healthPoints}
           energyPoints={energyPoints}
           totalHEPool={totalHEPool}

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_ABILITIES } from '@/types';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import { GUIDED_SUBSTEP_ORDER, useGuidedCreatorStore } from './guided-creator-store';
 import { buildPathSelectionDraftPatch } from '@/lib/guided-creator/path-selection-draft';
 import { isGuidedDraftSaveable } from '@/lib/guided-creator/substep-satisfaction';

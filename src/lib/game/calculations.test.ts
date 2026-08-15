@@ -2,9 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { Abilities, Character } from '@/types';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import {
+  abilityDefenseBonusesFromAbilities,
   calculateAllStats,
   calculateCreatureSpeed,
+  calculateDefenses,
   calculateEvasion,
+  calculateCriticalRange,
   calculateMaxEnergy,
   calculateMaxEnergyForArchetype,
   calculateSpeed,
@@ -78,6 +81,14 @@ describe('calculateEvasion (D5)', () => {
   it('is base 10 + Agility', () => {
     expect(calculateEvasion(3)).toBe(13);
     expect(calculateEvasion(-1)).toBe(9);
+  });
+});
+
+describe('calculateCriticalRange', () => {
+  it('is Evasion + 10 + armor Critical Range increase (1 + op_1_lvl)', () => {
+    expect(calculateCriticalRange(12)).toBe(22);
+    expect(calculateCriticalRange(12, 1)).toBe(23);
+    expect(calculateCriticalRange(12, 1 + 2)).toBe(25);
   });
 });
 
@@ -160,5 +171,16 @@ describe('calculateAllStats golden characters (T9)', () => {
     expect(stats.defenseScores.might).toBe(14);
     expect(stats.defenseBonuses.reflex).toBe(3);
     expect(stats.defenseScores.reflex).toBe(13);
+  });
+});
+
+describe('abilityDefenseBonusesFromAbilities', () => {
+  it('matches calculateDefenses with zero skill-point allocations', () => {
+    const abilities = { ...DEFAULT_ABILITIES, strength: 2, agility: 1 };
+    const fromHelper = abilityDefenseBonusesFromAbilities(abilities);
+    expect(fromHelper).toEqual(calculateDefenses(abilities, {}).defenseBonuses);
+    expect(fromHelper.might).toBe(2);
+    expect(fromHelper.reflex).toBe(1);
+    expect(fromHelper.fortitude).toBe(0);
   });
 });

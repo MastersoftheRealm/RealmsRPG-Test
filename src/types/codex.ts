@@ -2,7 +2,8 @@
  * Codex API Types
  * ===============
  * Canonical typed payload for `/api/codex` (HYG-01 / TASK-378).
- * Entity shapes match the normalized response from `src/app/api/codex/route.ts`.
+ * Collection entity shapes match `src/lib/codex/row-map.ts` (GET `/api/codex` + view enrichment).
+ * Archetype path join stays in the route.
  */
 
 import type { Archetype, PathGuidanceGroup } from './archetype';
@@ -229,6 +230,14 @@ export const CODEX_PAYLOAD_KEYS = [
 ] as const;
 
 export type CodexPayloadKey = (typeof CODEX_PAYLOAD_KEYS)[number];
+
+/** Collection keys that are lists — `coreRules` is a record, not an array. */
+export type CodexCollectionKey = Exclude<CodexPayloadKey, 'coreRules'>;
+
+/** Validates `?collection=` on GET /api/codex. */
+export function isCodexPayloadKey(value: string): value is CodexPayloadKey {
+  return (CODEX_PAYLOAD_KEYS as readonly string[]).includes(value);
+}
 
 /** Canonical typed payload for `/api/codex`. */
 export interface CodexPayload {

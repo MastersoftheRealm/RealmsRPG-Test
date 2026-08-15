@@ -40,7 +40,7 @@ export function ValidationModal({
 
   // Custom footer for Modal
   const modalFooter = (
-    <div className="flex shrink-0 justify-end gap-3 border-t border-border-light p-4">
+    <div className="flex shrink-0 justify-end gap-3 border-t border-border-light">
       <Button variant="secondary" onClick={onClose} disabled={isSaving}>
         {isValid ? 'Cancel' : 'Go Back & Fix'}
       </Button>

@@ -11,7 +11,9 @@ import type { EntityFeatRow } from '@/components/shared/entity-library-sections'
 import { FEAT_GRID } from '@/components/shared/entity-library-sections';
 import { Input, Textarea } from '@/components/ui';
 import type { FeatTraitCustomization } from '@/types/feats';
-import { truncateText } from '@/lib/utils';
+import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
+import { metadataDetailSection } from '@/lib/chip/list-row-metadata';
+import { capitalize, truncateText } from '@/lib/utils';
 
 const DESCRIPTION_EXTENDED_TRUNCATE = 220;
 
@@ -41,22 +43,22 @@ export function resolveTraitCustomizationKey(
 function buildDisplayNameContent(codexName: string, customName?: string): ReactNode | undefined {
   const trimmed = customName?.trim();
   if (!trimmed) return undefined;
+  // pe absorbs italic overhang so GLR `lg:truncate` / row overflow-hidden does not clip.
   return (
-    <span className="italic" title={`Codex name: ${codexName}`}>
+    <span className="pe-[0.35em] italic" title={`Codex name: ${codexName}`}>
       {trimmed}
     </span>
   );
 }
 
+/** Edit-only Customize fields. Play view uses GridListRow `descriptionAfter` for the note. */
 function FeatTraitCustomizationBlock({
-  showEditControls,
   codexName,
   customName,
   note,
   onCustomNameChange,
   onNoteChange,
 }: {
-  showEditControls: boolean;
   codexName: string;
   customName?: string;
   note?: string;
@@ -64,11 +66,7 @@ function FeatTraitCustomizationBlock({
   onNoteChange?: (value: string) => void;
 }) {
   const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
-  const noteTrimmed = note?.trim();
-  const customNameTrimmed = customName?.trim();
-  const hasSavedCustomization = !!customNameTrimmed || !!noteTrimmed;
-  const canCustomize = showEditControls || hasSavedCustomization;
-  if (!canCustomize) return null;
+  if (!onCustomNameChange && !onNoteChange) return null;
 
   return (
     <div
@@ -85,55 +83,31 @@ function FeatTraitCustomizationBlock({
         className="inline-flex min-h-[44px] items-center rounded-md border border-border-light bg-surface px-3 py-2 text-xs font-medium text-text-secondary hover:bg-surface-alt"
         aria-expanded={isCustomizationOpen}
       >
-        {isCustomizationOpen
-          ? 'Hide customization'
-          : showEditControls
-            ? 'Customize'
-            : 'View customization'}
+        {isCustomizationOpen ? 'Hide customization' : 'Customize'}
       </button>
 
-      {isCustomizationOpen &&
-        (showEditControls ? (
-          <>
-            {onCustomNameChange && (
-              <Input
-                label="Custom name"
-                value={customName ?? ''}
-                onChange={(e) => onCustomNameChange(e.target.value)}
-                placeholder={codexName}
-                helperText="Optional flavor name. Shown in italics; codex name stays unchanged."
-              />
-            )}
-            {onNoteChange && (
-              <Textarea
-                label="Player note"
-                value={note ?? ''}
-                onChange={(e) => onNoteChange(e.target.value)}
-                placeholder="Record choices, reminders, or flavor (e.g. chosen power)…"
-                className="min-h-[72px]"
-              />
-            )}
-          </>
-        ) : (
-          <div className="space-y-2">
-            {customNameTrimmed && (
-              <div>
-                <p className="mb-1 text-xs font-medium text-text-muted">Custom name</p>
-                <p className="rounded-lg border border-border-light bg-surface p-3 text-sm whitespace-pre-wrap text-text-secondary italic">
-                  {customNameTrimmed}
-                </p>
-              </div>
-            )}
-            {noteTrimmed && (
-              <div>
-                <p className="mb-1 text-xs font-medium text-text-muted">Note</p>
-                <p className="rounded-lg border border-border-light bg-surface p-3 text-sm whitespace-pre-wrap text-text-secondary">
-                  {noteTrimmed}
-                </p>
-              </div>
-            )}
-          </div>
-        ))}
+      {isCustomizationOpen && (
+        <>
+          {onCustomNameChange && (
+            <Input
+              label="Custom name"
+              value={customName ?? ''}
+              onChange={(e) => onCustomNameChange(e.target.value)}
+              placeholder={codexName}
+              helperText="Optional flavor name. Shown in italics; codex name stays unchanged."
+            />
+          )}
+          {onNoteChange && (
+            <Textarea
+              label="Player note"
+              value={note ?? ''}
+              onChange={(e) => onNoteChange(e.target.value)}
+              placeholder="Record choices, reminders, or flavor (e.g. chosen power)…"
+              className="min-h-[72px]"
+            />
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -238,6 +212,12 @@ function buildFeatTraitColumns(
   };
 }
 
+/** Expanded-only kind chip. Compact GLR would also paint `badges` on the name. */
+function traitKindDetailSection(category: string | undefined) {
+  if (!category || category === 'species') return undefined;
+  return metadataDetailSection([descriptorChipData(capitalize(category))], 'Type');
+}
+
 function buildCustomizationExtras(
   showEditControls: boolean,
   codexName: string,
@@ -247,20 +227,20 @@ function buildCustomizationExtras(
     onCustomName?: (value: string) => void;
     onNote?: (value: string) => void;
   },
-): Pick<EntityFeatRow, 'nameContent' | 'supplementalExpandedContent'> {
+): Pick<EntityFeatRow, 'nameContent' | 'descriptionAfter' | 'supplementalExpandedContent'> {
+  const noteTrimmed = note?.trim();
   return {
     nameContent: buildDisplayNameContent(codexName, customName),
-    supplementalExpandedContent:
-      showEditControls || note?.trim() ? (
-        <FeatTraitCustomizationBlock
-          showEditControls={showEditControls}
-          codexName={codexName}
-          customName={customName}
-          note={note}
-          onCustomNameChange={showEditControls ? handlers.onCustomName : undefined}
-          onNoteChange={showEditControls ? handlers.onNote : undefined}
-        />
-      ) : undefined,
+    descriptionAfter: !showEditControls && noteTrimmed ? noteTrimmed : undefined,
+    supplementalExpandedContent: showEditControls ? (
+      <FeatTraitCustomizationBlock
+        codexName={codexName}
+        customName={customName}
+        note={note}
+        onCustomNameChange={handlers.onCustomName}
+        onNoteChange={handlers.onNote}
+      />
+    ) : undefined,
   };
 }
 
@@ -285,10 +265,7 @@ export function mapTraitRows(traits: TraitRowInput[], ctx: FeatRowContext): Enti
       trait.recoveryPeriod,
       usesStepper,
     );
-    const categoryLabel =
-      trait.category && trait.category !== 'species'
-        ? trait.category.charAt(0).toUpperCase() + trait.category.slice(1)
-        : undefined;
+    const kindSection = traitKindDetailSection(trait.category);
 
     const traitKey = trait.traitKey ?? trait.name;
     const customizationExtras = buildCustomizationExtras(
@@ -313,7 +290,7 @@ export function mapTraitRows(traits: TraitRowInput[], ctx: FeatRowContext): Enti
       gridColumns: FEAT_GRID,
       columns,
       columnSpans,
-      badges: categoryLabel ? [{ label: categoryLabel, color: 'gray' }] : undefined,
+      detailSections: kindSection ? [kindSection] : undefined,
       uses,
       hideUsesInName: !!(uses && ctx.onTraitUsesChange),
       ...customizationExtras,
@@ -381,8 +358,7 @@ export function mapFeatRows(
         ctx.showEditControls && ctx.onRemoveFeat
           ? () => ctx.onRemoveFeat!(featId, codexName)
           : undefined,
-      nameContent: customizationExtras.nameContent,
-      supplementalExpandedContent: customizationExtras.supplementalExpandedContent,
+      ...customizationExtras,
     };
   });
 }

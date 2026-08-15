@@ -70,6 +70,100 @@ const DEFENSE_LABELS: Record<keyof DefenseSkills, string> = {
   resolve: 'Resolve',
 };
 
+export interface DefenseBonusesCardProps {
+  defenseSkills: DefenseSkills;
+  onDefenseChange: (defense: DefenseSkills) => void;
+  level: number;
+  remainingPoints: number;
+  abilityDefenseBonuses?: Partial<Record<keyof DefenseSkills, number>>;
+  skillRules: ReturnType<typeof resolveSkillAllocationRules>;
+  className?: string;
+}
+
+export function DefenseBonusesCard({
+  defenseSkills,
+  onDefenseChange,
+  level,
+  remainingPoints,
+  abilityDefenseBonuses = {},
+  skillRules,
+  className,
+}: DefenseBonusesCardProps) {
+  const handleDefenseChange = (key: keyof DefenseSkills, delta: number) => {
+    const current = defenseSkills[key] ?? 0;
+    if (delta > 0) {
+      const abilityBonus = abilityDefenseBonuses[key] ?? 0;
+      if (current + abilityBonus >= level) return;
+      if (remainingPoints < skillRules.defenseIncreaseCost) return;
+      onDefenseChange({ ...defenseSkills, [key]: current + 1 });
+    } else if (current > 0) {
+      onDefenseChange({ ...defenseSkills, [key]: current - 1 });
+    }
+  };
+
+  return (
+    <Card className={cn('p-4 shadow-md', className)}>
+      <h2 className="mb-2 text-lg font-semibold tracking-wide text-text-primary uppercase">
+        Defense Bonuses
+      </h2>
+      <p className="mb-4 text-sm text-text-muted">
+        Spend {skillRules.defenseIncreaseCost} Skill points to increase a defense bonus by 1.
+        Defense bonus from Skill points cannot exceed your level.
+      </p>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
+        {DEFENSE_KEYS.map((key) => {
+          const current = defenseSkills[key] ?? 0;
+          const abilityBonus = abilityDefenseBonuses[key] ?? 0;
+          const totalBonus = abilityBonus + current;
+          const canInc = canIncreaseDefense(
+            current,
+            level,
+            abilityBonus,
+            remainingPoints,
+            skillRules,
+          );
+          return (
+            <div
+              key={key}
+              className="flex flex-col rounded-lg border border-border-light bg-surface-alt p-3"
+            >
+              <WordHelpTip
+                content={getDefenseHelp(key)}
+                label={`About ${DEFENSE_LABELS[key]}`}
+                className="mb-1 font-medium text-text-primary normal-case"
+              >
+                {DEFENSE_LABELS[key]}
+              </WordHelpTip>
+              <div className="flex items-center justify-between gap-2">
+                <ValueStepper
+                  value={current}
+                  onChange={(next) => handleDefenseChange(key, next - current)}
+                  min={0}
+                  max={canInc ? Infinity : current}
+                  size="sm"
+                  formatValue={() => formatBonus(totalBonus)}
+                  decrementTitle={`Decrease ${DEFENSE_LABELS[key]}`}
+                  incrementTitle={
+                    canInc
+                      ? `Increase ${DEFENSE_LABELS[key]} (Cost: ${skillRules.defenseIncreaseCost} Skill points)`
+                      : `Increase ${DEFENSE_LABELS[key]} (Max at level ${level})`
+                  }
+                  className="w-full justify-between"
+                />
+              </div>
+              {current > 0 && (
+                <span className="mt-0.5 text-[9px] font-medium text-primary-link-fg">
+                  +{current} ({current * skillRules.defenseIncreaseCost}sp)
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
+}
+
 export interface SkillsAllocationPageProps {
   /** Character or creature */
   entityType: 'character' | 'creature';
@@ -283,22 +377,6 @@ export function SkillsAllocationPage({
     [allocations, onAllocationsChange],
   );
 
-  const handleDefenseChange = useCallback(
-    (key: keyof DefenseSkills, delta: number) => {
-      const current = defenseSkills[key] ?? 0;
-      if (delta > 0) {
-        const abilityBonus = abilityDefenseBonuses[key] ?? 0;
-        const totalBonus = current + abilityBonus;
-        if (totalBonus >= level) return;
-        if (remainingPoints < skillRules.defenseIncreaseCost) return;
-        onDefenseChange({ ...defenseSkills, [key]: current + 1 });
-      } else if (current > 0) {
-        onDefenseChange({ ...defenseSkills, [key]: current - 1 });
-      }
-    },
-    [defenseSkills, level, remainingPoints, abilityDefenseBonuses, onDefenseChange, skillRules],
-  );
-
   const getSkillBonus = useCallback(
     (skill: Skill, value: number, isProficient: boolean, chosenAbilityKey?: string) => {
       return calculateSkillBonusWithProficiency(
@@ -503,67 +581,16 @@ export function SkillsAllocationPage({
         )}
       </Card>
 
-      {/* Defense allocation — hidden for choose-a-path (advanced option) */}
       {!hideDefenseBonuses && (
-        <Card className="mb-8 p-4 shadow-md">
-          <h2 className="mb-2 text-lg font-semibold tracking-wide text-text-primary uppercase">
-            Defense Bonuses
-          </h2>
-          <p className="mb-4 text-sm text-text-muted">
-            Spend {skillRules.defenseIncreaseCost} Skill points to increase a defense bonus by 1.
-            Defense bonus from Skill points cannot exceed your level.
-          </p>
-          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-            {DEFENSE_KEYS.map((key) => {
-              const current = defenseSkills[key] ?? 0;
-              const abilityBonus = abilityDefenseBonuses[key] ?? 0;
-              const totalBonus = abilityBonus + current;
-              const canInc = canIncreaseDefense(
-                current,
-                level,
-                abilityBonus,
-                remainingPoints,
-                skillRules,
-              );
-              return (
-                <div
-                  key={key}
-                  className="flex flex-col rounded-lg border border-border-light bg-surface-alt p-3"
-                >
-                  <WordHelpTip
-                    content={getDefenseHelp(key)}
-                    label={`About ${DEFENSE_LABELS[key]}`}
-                    className="mb-1 font-medium text-text-primary normal-case"
-                  >
-                    {DEFENSE_LABELS[key]}
-                  </WordHelpTip>
-                  <div className="flex items-center justify-between gap-2">
-                    <ValueStepper
-                      value={current}
-                      onChange={(next) => handleDefenseChange(key, next - current)}
-                      min={0}
-                      max={canInc ? Infinity : current}
-                      size="sm"
-                      formatValue={() => formatBonus(totalBonus)}
-                      decrementTitle={`Decrease ${DEFENSE_LABELS[key]}`}
-                      incrementTitle={
-                        canInc
-                          ? `Increase ${DEFENSE_LABELS[key]} (Cost: ${skillRules.defenseIncreaseCost} Skill points)`
-                          : `Increase ${DEFENSE_LABELS[key]} (Max at level ${level})`
-                      }
-                      className="w-full justify-between"
-                    />
-                  </div>
-                  {current > 0 && (
-                    <span className="mt-0.5 text-[9px] font-medium text-primary-link-fg">
-                      +{current} ({current * skillRules.defenseIncreaseCost}sp)
-                    </span>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </Card>
+        <DefenseBonusesCard
+          className="mb-8"
+          defenseSkills={defenseSkills}
+          onDefenseChange={onDefenseChange}
+          level={level}
+          remainingPoints={remainingPoints}
+          abilityDefenseBonuses={abilityDefenseBonuses}
+          skillRules={skillRules}
+        />
       )}
 
       {allSkills.length === 0 && (

@@ -23,7 +23,7 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 | **0 — foundation** | `done` | Backups, schema baseline, codex data-loss determination. |
 | **1 — stop the bleeding** | `done` (code + DB + ops) | GitHub required checks + Actions public Supabase secrets + `E2E_OPTIONAL=1` + orphan profile delete. **2026-08-13 Vercel:** Upstash Redis + Sentry DSN live on production/preview; `NEXT_PUBLIC_SITE_URL` on production; production rebuilt. Still owner: HIBP, E2E test user, optional “require PR”. |
 | **2 — correctness** | `done` (code; pending-qa) | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**; TASK-744 styleguide Linux baselines **done**; TASK-741 dirty-key PATCH **done**; TASK-742 acked rules leftovers **done**; TASK-739 Advanced currency clamp **done**; TASK-746 library add lock **done**; TASK-747 realtime non-resource merge **done**; TASK-749 PATCH currency floor **done**; TASK-750 sheet Query SoT **done**; TASK-761 campaign RM view Query load **done**; TASK-762 combat `?scope=encounter` Query **done**. Remaining Wave 2 coding: none. |
-| **3 — structure** | `partial` (3A done; 3B 773–774 done) | Wave 3A landed (TASK-769–772). **3B** TASK-773 + TASK-774 done (pending-qa); TASK-775 still Proposed. ADR-0015 Accepted for 773/774. **3C** Architect/product still queued. |
+| **3 — structure** | `partial` (3A + 3B + implementable 3C done) | Wave 3A landed (TASK-769–772). **3B** complete: TASK-773–775 done (pending-qa); ADR-0015 Accepted. **3C implementable** TASK-789–793 done (pending-qa / n/a). Architect leftovers TASK-794–799 in WAITING. |
 
 ### Commits on `master` (audit program, oldest → newest)
 
@@ -54,7 +54,7 @@ Later `master` commits (`6adf344f`, `21ffcd18`, …) are unrelated product work 
 ### Uncommitted / follow-up coding
 
 Plan refresh + GAME_RULES / SIZES seed / admin editor prose may still be uncommitted.
-Wave 2 coding: TASK-740, TASK-738, TASK-744, TASK-741, TASK-742, TASK-739, TASK-746, TASK-747, TASK-749, TASK-750, TASK-761, TASK-762, and TASK-719 done. No remaining Wave 2 coding leftovers. Report 07 P2-5 RM-view enrichment waterfall stays Wave 3.
+Wave 2 coding leftovers: none. Report 07 P2-5 RM-view enrichment landed as TASK-773 (Wave 3B). Wave 3C implementable TASK-789–793 is in the working tree (not yet batch-committed). Architect leftovers TASK-794–799 are in WAITING.
 
 ---
 
@@ -154,7 +154,7 @@ Wave 2 coding: TASK-740, TASK-738, TASK-744, TASK-741, TASK-742, TASK-739, TASK-
 | **P1** schema drift detection | `done` | `npm run db:diff` / `db:baseline:update`. |
 | **P1** codex drift scan | `done` | `npm run db:check-codex-drift` — 708 rows, 0 collateral nulls. |
 | **P2** dead scripts / lint / deps / unsound staged typecheck | `done` | — |
-| `noUncheckedIndexedAccess` | `queued` | **163** errors (not ~1523). Tooling: `tsconfig.strictest.json` + `npm run typecheck:strictest`. Wave 3-ish. |
+| `noUncheckedIndexedAccess` | `queued` (WAITING TASK-797) | **163** errors (not ~1523). Tooling: `tsconfig.strictest.json` + `npm run typecheck:strictest`. Do not start without owner ack. |
 | Prettier | `done` | TASK-772: format of src/tests/config; lint-staged runs prettier after eslint. Ignore markdown, SQL dumps, `data/`, lockfile, snapshots. |
 
 ---
@@ -229,7 +229,7 @@ P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`eb
 |---|---|---|
 | **P1-5 leftover** | P1 | **Closed.** Grep 2026-08-13: no parent `role="listbox"` around Guided choice cards. |
 | **P1-6–P1-10** | P1 | **Closed** by TASK-738 (see rows above). Manual QA pending: `DEV-V-051`. |
-| **P2+** | P2 | Catalog double-build, virtualization — Wave 3 / later. |
+| **P2+** | P2 | Catalog double-build still open. Browse-list virtualization closed by TASK-775 (`CodexBrowseListShell`); guided catalogs are not virtualized. |
 | Advanced currency clamp | P1 | **Closed** by TASK-739 — `getCharacter` uses `clampSavedCurrency` (`lib/character-save.ts`); draft may stay signed. PATCH floor when the key is present: TASK-749. |
 
 ### Advanced creator store migrate (report 06 P0) — `done` → TASK-740
@@ -242,7 +242,7 @@ P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`eb
 
 | Finding | Status | Note |
 |---|---|---|
-| Dirty-key PATCH + `updatedAt` precondition; autosave refs/retry/timeout; per-user rate key | `done` | Autosave callback-refs + retry + pagehide (`useAutoSave`). PATCH per-user `buildRateLimitKey`. Dirty-key PATCH + `updatedAt` 409 + user-scoped character query keys: TASK-741 / ADR-0013. Library add-to-character lock + 409 re-apply: TASK-746. Sheet realtime non-resource merge: TASK-747. |
+| Dirty-key PATCH + `updatedAt` precondition; autosave refs/retry/timeout; per-user rate key | `done` | Autosave callback-refs + retry + pagehide (`useAutoSave`). PATCH per-user `buildRateLimitKey`. Dirty-key PATCH + `updatedAt` 409 + user-scoped character query keys: TASK-741 / ADR-0013. Library add-to-character lock + 409 re-apply: TASK-746. Sheet realtime non-resource merge: TASK-747. Same-tab queue + resource-sync only on HP/EN/AP: TASK-786. |
 | Two disconnected character write paths (`useState`+effect vs unused TanStack Query) | `done` | **TASK-750.** Sheet reads `useCharacter`; `setCharacter` is `setQueryData` on `characterKeys.detail`. Autosave still uses `saveCharacterWithConflictRetry` + cache stamp. `useSaveCharacter` merges into the detail cache and invalidates lists only. |
 | Campaign RM view `useState` + uncancelled `apiFetch` (report 06 P1-1 sibling) | `done` | **TASK-761.** Read is `useCampaignCharacterView` / `campaignKeys.characterView` → campaign route (roster + RM auth). Did **not** reuse `useCharacter` / `/api/characters/[id]`. Cancellation comes from deleting the effect. Combat `?scope=encounter` Query: **TASK-762 done**. |
 | Query cache not cleared on sign-in; keys not user-scoped | `done` | `queryClient.clear()` on SIGNED_IN / SIGNED_OUT / USER_UPDATED; `useCampaignsFull` gated on user. Character query keys include viewer uid (TASK-741). |
@@ -265,26 +265,32 @@ No Architect, no API contract. Quiet window: no parallel product work on this tr
 | SEO: `metadataBase`, OG, `robots.ts`, `sitemap.ts`, noindex `/dev` | `done` | TASK-771 | Canonical `realmsrpg.com`; production-only index; admin + auth + styleguide noindex; pending-qa DEV-V-053 |
 | Prettier format + lint-staged | `done` | TASK-772 | Ignore markdown/docs/SQL/`data`/lockfile/snapshots. lint-staged: eslint then prettier |
 
-### Wave 3B — fetch / lists (`partial` — TASK-773–774 done; 775 Proposed)
+### Wave 3B — fetch / lists (`done` — pending-qa) — TASK-773–775
 
 | Area | Source | Task | Notes |
 |---|---|---|---|
 | Campaign RM view / other-user enrichment payload | report 07 P2-5 | TASK-773 | `done` pending-qa. Additive `enrichment` on full RM GET + other-user character GET. Referenced rows only (same P0-1 rule as `libraryForView`). **Not TASK-761 / TASK-762.** `?scope=encounter` unchanged. |
 | Library tab counts + lazy tab rows | report 07 P2-5 | TASK-774 | `done` pending-qa. `GET /api/user/library/counts` + `GET /api/official/counts`; page fetches counts + the active tab only |
-| Codex per-collection fetch + `CodexBrowseListShell` virtualization | report 07 P1-3 / P2+ | TASK-775 | Optional `?collection=` on existing `/api/codex`; virtualize the shell (ADR-0005), do not rebuild. Path filter stays. |
+| Codex per-collection fetch + `CodexBrowseListShell` virtualization | report 07 P1-3 / P2+ | TASK-775 | `done` pending-qa. `?collection=` on the existing route (one payload shape, 400 on unknown); hooks on `['codex', collection]` under the same prefix; `useGameRules` → `coreRules` slice; shell window-virtualizes rows past 40 (ADR-0005 shell kept). Path filter now costs the archetypes slice. |
 
-### Wave 3C — Architect / product (`queued` — separate acks)
+### Wave 3C — implementable (`done`) + Architect leftovers (`WAITING` TASK-794–799)
 
-| Area | Source | Notes |
-|---|---|---|
-| Legacy creator: Guided skills UI (defense + per-skill ability), then extract shared symbols | report 02 | Two deletion blockers still UI. Wave 2 fixed governing-ability *save* (highest linked ability). TASK-748 labeled **Legacy** only. REALMS: phase into L3, do not delete the route this wave |
-| Remaining duplication clusters (not path-filter) | reports 10, 08, 04 | TASK-751–753 collapsed path-filter duplication. Remainder: OfficialEntityList internals, admin, sheet, `value-stepper` / `list-header` copy-paste |
-| Split `shared/` into `ui / patterns / feature` | report 04 | Architect. TASK-751 added more under `shared/filters` — do not mix with Prettier |
-| Generated Supabase types | report 12 | Large typed-client churn |
-| Server-render `/rules` + codex detail `generateMetadata` | report 07 P1-2 / win #8 | Content strategy; not 3A |
-| Landing RSC / chrome remount (delete `src/app/page.tsx`) | report 07 P1-4 / P1-5 | TASK-763 was copy only; `home-page.tsx` still `"use client"` |
-| `noUncheckedIndexedAccess` burn-down (163 errors) | report 11 / 12 | Tooling ready |
-| Process trim (~10k docs, CI gates) | report 11 | TASK-718/719/767 already archived uncited suites + ID hygiene — do not rewrite from scratch |
+Owner 2026-08-15: finish Wave 3 = implement the non-Architect slices. Do **not** delete `/characters/new/advanced` (REALMS: phase into L3).
+
+| Area | Source | Status | Notes |
+|---|---|---|---|
+| Landing RSC / chrome remount (delete `src/app/page.tsx` + `home-page.tsx`) | report 07 P1-4 / P1-5 | `done` TASK-789 pending-qa | `/` is `(main)/page.tsx`. About + chooser are server pages. OAuth `?code=` stays in `proxy.ts`. |
+| Guided skills UI: defense + per-skill governing Ability | report 02 Step 0 | `done` TASK-790 pending-qa | Shared `DefenseBonusesCard`; persist schema v15 `defenseVals` + `skillAbilities`. |
+| Extract currency + appearance-age from Legacy | report 02 Step 2 | `done` TASK-791 n/a | `CHARACTER_STARTING_CURRENCY` in `lib/game/constants.ts`; age helpers in `lib/character/appearance-age.ts`. |
+| `value-stepper` / `list-header` copy-paste | reports 04 C4 / C5 | `done` TASK-792 n/a | One `StepperGlyphButton`; one `MobileSortMenu`. |
+| Crafting / My Account titles + crawlable `/rules` intro | report 07 leftovers | `done` TASK-793 pending-qa | Layout metadata; `RULES_COPY.seoDescription` above iframe. Not a full MDX rulebook. |
+| Legacy extract of shared creator symbols (AbilityPickButton, MixedSpeciesModal, …) | report 02 Steps 1, 3+ | WAITING TASK-798 | Architect + allowlist. Do not delete the Legacy route. |
+| Remaining duplication clusters (OfficialEntityList, confirm/icon-toggle, admin/sheet) | reports 10, 08, 04 | WAITING TASK-799 | Path-filter + stepper/header clusters already collapsed. |
+| Split `shared/` into `ui / patterns / feature` | report 04 | WAITING TASK-794 | Architect ADR. Do not mix with Prettier. |
+| Generated Supabase types | report 12 | WAITING TASK-795 | Large typed-client churn. |
+| Server-render `/rules` MDX + Codex detail `generateMetadata` | report 07 P1-2 / win #8 | WAITING TASK-796 | Content strategy; iframe remains until a rulebook source exists. |
+| `noUncheckedIndexedAccess` burn-down (163 errors) | report 11 / 12 | WAITING TASK-797 | Tooling ready (`tsconfig.strictest.json`). |
+| Process trim (~10k docs, CI gates) | report 11 | `done` | TASK-718/719/767 already archived uncited suites + ID hygiene — do not rewrite from scratch |
 
 ---
 
@@ -338,10 +344,11 @@ parallel.
 
 ## Suggested next agent sessions (ordered)
 
-Wave 3A coding is complete (TASK-769–772). Wave 3B TASK-773 and TASK-774 are done (pending-qa). **Do not code TASK-775 until that ADR-0015 slice is acked**.
+Wave 3A (TASK-769–772), Wave 3B (TASK-773–775), and implementable Wave 3C (TASK-789–793) are coded. 3A/3B/789/790/793 pending owner QA. ADR-0015 is fully Accepted.
 
-1. **Wave 3B remainder** — owner ack, then optional TASK-775.
-2. **Wave 3C** — only with Architect/product acks: `shared/` split, generated types, Guided skills parity, Legacy extract, `/rules` MDX, indexed-access burn-down.
+1. **Owner QA** — DEV-V-012 T009, DEV-V-013 T088, DEV-V-053 T006, plus earlier 3A/3B suites.
+2. **Wave 3 Architect leftovers** — only with a fresh ack: TASK-794–799 in WAITING (`shared/` split, generated types, `/rules` MDX + Codex detail metadata, indexed-access, Legacy shared extract, remaining list/modal clusters).
+3. **Do not** delete `/characters/new/advanced` or reopen ADR-0013 / TASK-761 / TASK-762.
 
 ---
 

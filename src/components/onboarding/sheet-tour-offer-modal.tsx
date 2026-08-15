@@ -39,7 +39,7 @@ export function SheetTourOfferModal({ isOpen, onStart, onDismiss }: SheetTourOff
       description={copy.description}
       fullScreenOnMobile
       footer={
-        <div className="flex flex-col gap-2 border-t border-border-light p-4 sm:flex-row sm:justify-end">
+        <div className="flex flex-col gap-2 border-t border-border-light sm:flex-row sm:justify-end">
           <Button variant="ghost" onClick={handleNever} className="min-h-11">
             {copy.dontShowAgain}
           </Button>

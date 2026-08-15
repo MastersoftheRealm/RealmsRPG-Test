@@ -28,10 +28,8 @@ import { PORTRAIT_SAVE_UPLOAD_FALLBACK, uploadCharacterPortraitFromDataUrl } fro
 import { getErrorMessage } from '@/lib/api-client';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { Button, Alert, Textarea, useToast } from '@/components/ui';
-import {
-  useCharacterCreatorStore,
-  CHARACTER_STARTING_CURRENCY,
-} from '@/stores/character-creator-store';
+import { useCharacterCreatorStore } from '@/stores/character-creator-store';
+import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
 import { getAllValidationIssues } from '@/lib/character-creator-validation';
 import { calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
 import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
@@ -149,11 +147,7 @@ export function FinalizeStep() {
     );
   }, [draft]);
 
-  const startingCurrency = useMemo(() => {
-    const level = draft.level || 1;
-    if (level <= 1) return CHARACTER_STARTING_CURRENCY;
-    return Math.round(CHARACTER_STARTING_CURRENCY * Math.pow(1.45, level - 1));
-  }, [draft.level]);
+  const startingCurrency = useMemo(() => computeStartingCurrency(draft.level || 1), [draft.level]);
   const remainingCurrency = draft.currency ?? startingCurrency;
 
   const handleValidateAndSave = () => {

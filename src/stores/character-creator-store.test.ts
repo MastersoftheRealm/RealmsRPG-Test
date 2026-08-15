@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DEFAULT_ABILITIES } from '@/types';
+import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import {
-  CHARACTER_STARTING_CURRENCY,
   CREATOR_STORE_SCHEMA_VERSION,
   migrateCharacterCreatorPersistedState,
   useCharacterCreatorStore,

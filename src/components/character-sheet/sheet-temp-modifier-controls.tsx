@@ -3,15 +3,18 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { DecrementButton, IncrementButton, TempModifierToggle } from '@/components/shared';
-import { tempModifierValueClass } from '@/lib/character/temp-modifiers';
+import { tempModifierTintFromDelta, tempModifierValueClass } from '@/lib/character/temp-modifiers';
 
-/** Co-located Temp Modifier chrome for sheet header (ADR-0006). Not a shared barrel export. */
+/** Local open/close for a header Temp control. Resets when sheet Temp mode ends. */
 export function useTempModifierActive(
-  isEditMode?: boolean,
+  isTempModifierMode?: boolean,
   onTempDeltaChange?: (delta: number) => void,
 ) {
   const [tempActive, setTempActive] = useState(false);
-  const canTemp = Boolean(isEditMode && onTempDeltaChange);
+  const canTemp = Boolean(isTempModifierMode && onTempDeltaChange);
+  if (!canTemp && tempActive) {
+    setTempActive(false);
+  }
   const showTempControls = canTemp && tempActive;
   return { tempActive, setTempActive, canTemp, showTempControls };
 }
@@ -67,7 +70,7 @@ export function TempModifierInlineLabel({
   ariaLabel,
   titleLabel,
   tempDelta = 0,
-  isEditMode,
+  isTempModifierMode,
   onTempDeltaChange,
   valueClassName,
 }: {
@@ -76,14 +79,15 @@ export function TempModifierInlineLabel({
   /** Used in stepper button titles (e.g. "Terminal"). */
   titleLabel: string;
   tempDelta?: number;
-  isEditMode?: boolean;
+  isTempModifierMode?: boolean;
   onTempDeltaChange?: (delta: number) => void;
   valueClassName?: string;
 }) {
   const { tempActive, setTempActive, canTemp, showTempControls } = useTempModifierActive(
-    isEditMode,
+    isTempModifierMode,
     onTempDeltaChange,
   );
+  const tint = tempModifierTintFromDelta(tempDelta);
 
   return (
     <div className="flex flex-col items-end gap-1">
@@ -101,7 +105,7 @@ export function TempModifierInlineLabel({
         {canTemp && (
           <TempModifierToggle
             isActive={tempActive}
-            hasModifiers={tempDelta !== 0}
+            tint={tint}
             onClick={() => setTempActive((prev) => !prev)}
             title={tempActive ? `Close ${titleLabel} Temp Modifier` : `${titleLabel} Temp Modifier`}
           />

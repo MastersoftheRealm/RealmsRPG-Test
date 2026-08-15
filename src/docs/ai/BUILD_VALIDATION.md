@@ -523,7 +523,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-#### DEV-V-008-T015 — Sheet header armor DR + Critical Range (TASK-512 / TASK-522)
+#### DEV-V-008-T015 — Sheet header armor DR + Critical Range (TASK-512 / TASK-522 / TASK-788)
 
 | Field | Value |
 |-------|-------|
@@ -534,15 +534,16 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 **Steps**
 1. Open a character with **no** equipped armor — confirm **Damage Reduction** and **Critical Range** do not appear in the header vitals row (Speed/Evasion area).
-2. Equip armor with known DR (and optional Critical Range +1 property). Confirm header shows **Damage Reduction** and **Critical Range** next to Speed/Evasion.
-3. Compare header **Damage Reduction** to the equipped armor row’s DR column in Library — they must match (enriched armorValue / properties, not a stale raw field).
-4. Confirm header Critical Range = sheet **Evasion + 10 +** stacked Critical Range +1 from equipped armor (same as library crit column when a bonus exists).
-5. Confirm DR / Critical Range cards match Speed / Evasion card size (padding, value `text-4xl`, `text-text-primary` value color — not a smaller martial-colored variant).
+2. Equip armor that has **no** Damage Reduction and **no** Critical Range +1 property — confirm neither DR nor Critical Range appears (do not show DR 0 or unmodified Evasion+10).
+3. Equip armor with known DR only — confirm **Damage Reduction** appears and matches the Library armor DR column; **Critical Range** stays hidden.
+4. Equip armor with Critical Range +1 (Option 1 level N → increase **1+N**). Confirm header **Critical Range** = sheet **Evasion + 10 +** that increase. DR still follows step 3 if the armor also has DR.
+5. Confirm DR / Critical Range cards (when shown) match Speed / Evasion card size (padding, value `text-4xl`, `text-text-primary` value color — not a smaller martial-colored variant).
 6. Toggle dark mode; confirm labels and values remain readable.
 
 **Expected**
-- Unarmored: no DR / Critical Range blocks.
-- Armored: DR matches library armor row; Critical Range matches shared helper math.
+- Unarmored, or armor that does not change the stat: no DR / Critical Range block for that stat (play/edit). Temp mode always shows both cards — DEV-V-009-T053.
+- Armored with DR: DR matches library armor row.
+- Armored with Critical Range +1: Critical Range = Evasion + 10 + (1 + op_1_lvl).
 - Header vitals cards are visually consistent (size + value color).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
@@ -1110,7 +1111,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773, TASK-778, TASK-779, TASK-782, TASK-783, TASK-786, TASK-787, TASK-788, TASK-800)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1372,15 +1373,15 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Report** | DEV-V-009-T023: PASS / FAIL / SKIP — |
 
 
-#### DEV-V-009-T024 — Skills edit Value stepper + fully visible (TASK-543)
+#### DEV-V-009-T024 — Skills edit Value stepper + fully visible (TASK-543 / TASK-800)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
-| **Task** | TASK-543 |
+| **Task** | TASK-543 (clip); TASK-800 (inline placement) |
 | **Where** | `/characters/[id]` → Skills panel at desktop `lg+` (≥1024px) with edit mode on |
-| **Steps** | 1. Open a character sheet at ≥1024px width (Skills in the left column of the three-panel grid). 2. Enter sheet edit mode and click the Skills pencil so Value steppers appear. 3. Confirm each skill row shows a full `−` value `+` control — the `+` button is not clipped by the card/panel edge. 4. Confirm the remove (X) control remains usable. 5. If the table is wider than the panel, confirm `TableScroll` allows horizontal scroll without hiding the `+` permanently. 6. Optional ~360px: edit Skills; Value steppers remain fully usable via horizontal scroll. |
-| **Expected** | Value column has enough min-width for the compact ValueStepper; `+` is never cut off behind the right edge; table scrolls horizontally when needed instead of crushing the stepper. |
+| **Steps** | 1. Open a character sheet at ≥1024px width (Skills in the left column of the three-panel grid). 2. Enter sheet edit mode and click the Skills pencil so Value steppers appear. 3. Confirm each skill row shows a full `−` value `+` control in the **Value** cell (same column as the bonus caption) — the `+` button is not clipped and does not require scrolling sideways to see. 4. Confirm there is no fifth Value column and no per-row **X**. 5. Optional ~360px: edit Skills; steppers stay in the Value cell (44px targets); no inner-table side-scroll needed to discover edit mode. |
+| **Expected** | Steppers live in the Bonus/Value cell (`editControlsPlacement="inline"`); `+` is never cut off; mode is visible without horizontal scroll. |
 | **Report** | DEV-V-009-T024: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T025 — No duplicate traits / part chips / feat rows (TASK-546)
@@ -1462,28 +1463,28 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Expected** | Parts/Properties default collapsed sitewide via `MetadataDetailSection` + GridListRow; family tips from `tooltip-text`; descriptor sections not collapsed. |
 | **Report** | DEV-V-009-T031: PASS / FAIL / SKIP — |
 
-#### DEV-V-009-T032 — Skills catalog list + filters + − removes (TASK-584)
+#### DEV-V-009-T032 — Skills catalog list + filters + − removes (TASK-584 / TASK-778)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
-| **Task** | TASK-584 |
+| **Task** | TASK-584 / TASK-778 |
 | **Where** | `/characters/[id]` → Skills section (edit mode) |
 | **Needs** | Editable character; Codex skills loaded |
-| **Steps** | 1. Open Skills (play view) — confirm every Codex **base** skill appears (not only previously added). 2. Toggle **Proficient** filter — only proficient rows remain; **All** restores full catalog. 3. Uncheck **Show sub-skills** — sub-skill rows hide; re-check — proficient subs return; unproficient subs only if previously added via Add Sub-Skill. 4. Enter edit → pencil (spend): confirm dual toggles float top-right; Skill Points pill does not ugly-wrap and matches guided inline PointStatus size (`text-base`, TASK-706); no **Add Skill** button; **Sub-Skill** remains. 5. No per-row **X**. On a base skill: **+** gains proficiency (value 0), further **+** raises value; **−** lowers value then clears proficiency (row stays in catalog). 6. Add a sub-skill, gain proficiency, then **−** until proficiency clears, then **−** again — sub-skill leaves the list. 7. Optional ~360px: filters usable; Value stepper still visible (TableScroll). |
+| **Steps** | 1. Open Skills (play view) — confirm every Codex **base** skill appears (not only previously added). 2. Toggle **Proficient** filter — only proficient rows remain; **All** restores full catalog. All/Proficient is compact (lighter than Library SourceFilter; not a Filters panel). 3. Uncheck **Sub-Skills** — sub-skill rows hide; re-check — proficient subs return; unproficient subs only if previously added via Add Sub-Skill. 4. Enter **Edit** (toolbar pencil): top-right **pencil** is present and spend is closed; click it — **Editing** appears next to Skills, Skill Points pill + **Sub-Skill** appear; no Temp sliders; no **Add Skill** button; pill matches guided inline PointStatus size (`text-base`, TASK-706). 5. No per-row **X**. Value steppers sit in the Value cell with the bonus caption under them (not a fifth column). On a base skill: **+** gains proficiency (value 0), further **+** raises value; **−** lowers value then clears proficiency (row stays in catalog). 6. Add a sub-skill, gain proficiency, then **−** until proficiency clears, then **−** again — sub-skill leaves the list. 7. Optional ~360px: filters usable (44px targets); Value stepper visible in the Value cell without side-scroll. Desktop: All/Proficient + Sub-Skills stay text-hugging (not 44px). |
 | **Expected** | Catalog-all base skills; filters as above; − path replaces remove-X; header chrome uncramped; species skills still locked. |
 | **Report** | DEV-V-009-T032: PASS / FAIL / SKIP — |
 
-#### DEV-V-009-T033 — Temp Modifier dual mode + persistence (TASK-585 / TASK-586)
+#### DEV-V-009-T033 — Temp Modifier exclusive mode + persistence (TASK-585 / TASK-586 / TASK-782)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
-| **Task** | TASK-585 (contract); full UI wire TASK-586 |
-| **Where** | `/characters/[id]` → Edit mode → sections with `SectionDualModeToggles` (Abilities, Defenses, Skills) and header Temp-only LargeStatBlocks |
-| **Needs** | Character you can edit and save; after TASK-586 wiring |
-| **Steps** | 1. Enter sheet edit mode. 2. On Abilities/Skills: confirm pencil and SlidersHorizontal sit together (dual affordance); activating one closes the other. Header Speed/Evasion/DR/crit: Temp toggle only (no pencil). Health header top-right: `Terminal: X` with Temp toggle (not a center LargeStatBlock). 3. Set a positive Temp Modifier on a value — value tints warning/gold; roll chip stays untinted. 4. Set a negative Temp Modifier — value tints danger. 5. Refresh / reopen sheet (and optional campaign view) — deltas persist. 6. Abilities: confirm ability temps cascade to dependents but do **not** change max Health/Energy/TP unless the resource-maxima toggle is on. |
-| **Expected** | ADR-0006 contract: persist `tempModifiers`, dual toggles only via shared components, value tint not roll tint, cascade gate default off. |
+| **Task** | TASK-585 (contract); TASK-586 (surfaces); TASK-782 (sheet-level exclusive modes) |
+| **Where** | `/characters/[id]` → toolbar Edit vs Temp Modifier; Abilities, Skills, header LargeStatBlocks |
+| **Needs** | Character you can edit and save |
+| **Steps** | 1. Play view: no spend steppers and no Temp steppers; existing temp tints still show. 2. Tap toolbar **Temp Modifier** — do **not** enter Edit first. Confirm Edit closes if it was open. Header Speed/Evasion/DR/crit + Terminal show a sliders icon each (blue if no delta) — steppers stay closed until that icon is tapped. DR and Critical Range appear in Temp even when armor does not grant them. Abilities/Skills show a top-right sliders icon, not open steppers. No spend pencils. 3. Open Speed sliders, set a positive Temp — value and icon tint gold; roll chip stays untinted. 4. Set a negative Temp — value and icon tint danger. 5. Tap toolbar **Edit** — Temp icons/steppers disappear. Abilities/Skills show a top-right **pencil** (not already in spend); click it to open spend. 6. Refresh / reopen — deltas persist. 7. In Temp mode (section open): ability temps cascade but do **not** change max Health/Energy/TP unless the resource-maxima toggle is on. 8. Campaign / other-user: View only — no Edit and no Temp FAB. |
+| **Expected** | ADR-0006 (Amended): persist `tempModifiers`; play / edit / temp exclusive; value tint not roll tint; cascade gate default off; level-up still opens Edit. |
 | **Report** | DEV-V-009-T033: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T034 — Temp Modifier on v1 sheet surfaces (TASK-586)
@@ -1492,10 +1493,10 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
 | **Task** | TASK-586 |
-| **Where** | `/characters/[id]` → Edit mode → header (Speed/Evasion/DR/crit + Health `Terminal: X`), Abilities (+ defenses), Skills; optional campaign view |
-| **Needs** | Editable character; armor equipped recommended for DR/crit defaults |
-| **Steps** | 1. Enter edit mode. 2. Header: set Temp Modifiers on Speed, Evasion, DR, Critical Range (LargeStatBlock) — values tint; cards show Temp toggle only (no pencil / base edit). Health box top-right: `Terminal: X` — open Temp toggle, adjust ±, confirm value tints and persists (not a center stat card). 3. Abilities: Temp mode adjusts ability/defense deltas; cascade shows on defense scores/skill bonuses; resource-maxima toggle default off (max HP/EN/TP unchanged until toggled on — then Proficiencies TP Limit and max Health/Energy follow effective abilities). 4. Skills: Temp column adjusts skill bonus deltas; spend mode cannot overspend skill points. 5. Refresh + open campaign view — temps persist and tint. 6. Mobile (~360px): Terminal temp controls fit in Health header without clipping. |
-| **Expected** | All v1 surfaces support Temp Modifier with tint + persistence; ability cascade + HP/EN/TP toggle per ADR-0006; pencil spend locks on Abilities/Skills prevent intentional overspend; Speed/Evasion have no permanent-base pencil. |
+| **Where** | `/characters/[id]` → Temp Modifier mode → header (Speed/Evasion/DR/crit + Health `Terminal: X`), Abilities (+ defenses), Skills; optional campaign view |
+| **Needs** | Editable character |
+| **Steps** | 1. Enter **Temp Modifier** from the toolbar (not Edit). 2. Header: Speed, Evasion, **Damage Reduction**, and **Critical Range** each show a sliders icon (even unarmored / armor that does not grant DR or crit). Tap to open that stat only; set values — icons tint; no pencil / base edit. Unarmored Critical Range shows Evasion + 10 (+ temp). Health `Terminal: X` — tap its sliders, adjust ±. Leave Temp: DR/crit hide again unless armor (or a leftover temp) modifies that stat. 3. Abilities: tap the section sliders to open temp steppers + resource-maxima toggle (default off). 4. Leave Temp, enter **Edit**: tap the Skills **pencil** to open spend (not auto-open); cannot overspend; Value steppers in the Value cell (no Temp chrome). Re-enter Temp: tap Skills sliders — **Temp** heading + strip; Temp steppers in the same cell (no fifth column). 5. Refresh + campaign view — temps persist and tint; campaign has no Temp chrome. 6. Mobile (~360px): Terminal temp controls fit; toolbar Temp FAB is 44px. |
+| **Expected** | All v1 surfaces support Temp Modifier with tint + persistence; ability cascade + HP/EN/TP toggle per ADR-0006; Edit spend locks on Abilities/Skills prevent intentional overspend; Speed/Evasion have no permanent-base pencil. |
 | **Report** | DEV-V-009-T034: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T035 — Defense Score hover tip (TASK-587)
@@ -1554,10 +1555,10 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
 | **Task** | TASK-600 |
-| **Where** | `/characters/[id]` → Edit mode → header Speed / Evasion |
+| **Where** | `/characters/[id]` → Temp Modifier mode → header Speed / Evasion |
 | **Needs** | Editable character |
-| **Steps** | 1. Enter sheet edit mode. 2. On Speed and Evasion LargeStatBlocks, confirm only the Temp Modifier (sliders) control appears — no pencil. 3. Toggle Temp on Speed, adjust +/− — value tints; no “Base:” stepper appears. 4. Repeat for Evasion. 5. Confirm Abilities/Skills still show dual pencil+Temp. |
-| **Expected** | Speed/Evasion are Temp-only; rules `speedBase`/`evasionBase` are not editable from the sheet header; dual mode remains on Abilities/Skills. |
+| **Steps** | 1. Enter **Edit** — Speed/Evasion have no pencil and no temp sliders. Abilities/Skills show a top-right pencil; spend is closed until clicked. 2. Enter **Temp Modifier**. Speed/Evasion show a sliders icon (not already-open steppers) — no pencil / “Base:” stepper. 3. Open Speed sliders, adjust +/− — value and icon tint. 4. Repeat for Evasion. 5. Abilities/Skills show a sliders icon only (no spend pencils or dual pairs); tap to open that section. |
+| **Expected** | Speed/Evasion are Temp-only; rules `speedBase`/`evasionBase` are not editable from the sheet header; Edit and Temp never share chrome. |
 | **Report** | DEV-V-009-T038: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T039 — Recovery modal SegmentedControl (TASK-602)
@@ -1568,8 +1569,8 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Task** | TASK-602 |
 | **Where** | `/characters/[id]` → toolbar **Recovery** |
 | **Needs** | Character with HP and/or Energy below max (optional: limited-use feats/traits) |
-| **Steps** | 1. Open **Recovery**. 2. Confirm Full / Partial is a shared `SegmentedControl` (pill track), not hand-rolled bordered buttons. 3. Switch to **Partial Recovery** — duration **2 / 4 / 6 hours** and **Automatic / Manual** are also SegmentedControls; Manual shows the HP/EN slider. 4. Confirm preview shows Health/Energy deltas; Confirm CTA still reads **Full Recovery** or **Recover (Nh)** and sits in the sticky Modal footer (Cancel alongside). 5. Optional ~360px: modal is full-screen; footer stays visible without scrolling; segments remain ≥44px touch targets. |
-| **Expected** | Three choice groups use SegmentedControl; recovery math unchanged; no parallel pill chrome; Cancel/confirm via Modal `footer` + `flexLayout`; preview uses warning semantic surface (`warning-fg` / status panel), not numbered `warning-*` + `dark:` pairs on the choice clusters. |
+| **Steps** | 1. Open **Recovery**. 2. Confirm Full / Partial is a shared `SegmentedControl` (pill track), not hand-rolled bordered buttons. 3. Switch to **Partial Recovery** — duration **2 / 4 / 6 hours** and **Automatic / Manual** are also SegmentedControls; Manual shows the HP/EN slider. 4. Confirm preview shows Health/Energy deltas; Confirm CTA still reads **Full Recovery** or **Recover (Nh)** and sits in the sticky Modal footer (Cancel alongside), with the same inset from the modal edge as the title/content (not flush to the bottom-right corner). 5. Optional ~360px: modal is full-screen; footer stays visible without scrolling; segments remain ≥44px touch targets. |
+| **Expected** | Three choice groups use SegmentedControl; recovery math unchanged; no parallel pill chrome; Cancel/confirm via Modal `footer` + `flexLayout` with inset from the modal edge (not flush to the corner); preview uses warning semantic surface (`warning-fg` / status panel), not numbered `warning-*` + `dark:` pairs on the choice clusters. |
 | **Report** | DEV-V-009-T039: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T040 — Sheet modals + Library from context (TASK-667)
@@ -1720,7 +1721,7 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Steps**
 1. As Realm Master, open a roster player's sheet. Confirm header stats, Library tabs (powers/techniques/feats/species traits), and empowered techniques render — not empty rows for ids the character actually has.
-2. In the Network tab, confirm the full campaign character GET returns `libraryForView` and `enrichment`, and that the page does **not** fire `/api/user/library/*` or `/api/official/*` for the viewer's catalogs. (`/api/codex` may still run once via `useGameRules` until TASK-775.)
+2. In the Network tab, confirm the full campaign character GET returns `libraryForView` and `enrichment`, and that the page does **not** fire `/api/user/library/*` or `/api/official/*` for the viewer's catalogs. (`/api/codex?collection=coreRules` may still run once via `useGameRules` — TASK-775.)
 3. Open **Add to encounter** (or combat add) so `?scope=encounter` runs. Payload stays HP/EN/AP only — no `libraryForView`, no `enrichment`.
 4. Sign in as that player (owner) and open `/characters/[id]`. Confirm Add Power / Add Feat still have full catalogs (owner GET has no `enrichment`).
 5. As a non-owner, open a **public** character URL. Sheet rows resolve; Network shows `enrichment` on GET `/api/characters/[id]` and no viewer-library waterfall.
@@ -1752,6 +1753,143 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 **Expected**
 - Rank change uses the existing family replace (`onFeatLevelChange`); play view has no rank picker.
 - Creature creator Lvl stepper is unchanged (out of scope).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T049 — Sheet autosave does not 409 on same-tab edits (TASK-786)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-786 |
+| **Where** | `/characters/[id]` (edit mode); Network panel |
+| **Needs** | Editable owned character |
+| **CI** | Partial — `save-lock.test.ts`, `character-resource-sync.test.ts`, `character-service.save-lock.test.ts` |
+
+**Steps**
+1. Open the sheet. Change **notes** (or name) and keep typing for a few seconds. Confirm autosave succeeds — Network may show a 409 only if another tab wrote; a same-tab notes edit should be **PATCH 200** (no 409 → GET → retry loop).
+2. Change current **HP** (or EN/AP), then quickly change notes. Both persist after reload. Network: HP may use the fast resource PATCH; notes autosave should still succeed (retry is OK; a toast **Failed to save character** is a fail).
+3. Optional: two tabs still behave as **T043** (different-field edits both survive; a truly stale lock is 409).
+
+**Expected**
+- Editing notes does not fire a resource-only PATCH.
+- Same-tab overlapping saves do not leave the sheet stuck unsaved or toasting on every debounce.
+- Other-tab dirty-key lock (T043) is unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-009-T050 — Sheet trait kind chip expanded-only (TASK-779)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-779 |
+| **Where** | `/characters/[id]` → Library → Feats |
+| **Needs** | Character with at least one Ancestry, Characteristic, or Flaw trait (species trait optional); a state feat if possible |
+| **CI** | Partial — `library-feat-rows.test.ts` |
+
+**Steps**
+1. Play view, Feats list collapsed: Ancestry / Characteristic / Flaw rows show the trait name only — no kind chip beside the name.
+2. Expand one of those rows. Confirm a single **DescriptorChip** for the kind (Ancestry, Characteristic, or Flaw) in the expanded body — not an ExpandableChip (no chevron / no expand-in-place).
+3. If the character has a species trait: collapsed and expanded show **no** Species kind chip.
+4. If a state feat is present: collapsed row still shows the **Archetype** or **Character** badge on the name.
+5. Optional ~360px: kind chip appears only after expand; name stays readable.
+
+**Expected**
+- Kind is expanded-only for traits; compact GLR name badges on state feats are unchanged.
+- Codex / Library path-filter name chips (`showBadgesInName`) are out of scope and unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-009-T051 — Sheet customized feat play-view note + italic name (TASK-783)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-783 |
+| **Where** | `/characters/[id]` → Library → Feats |
+| **Needs** | Character with a feat or trait that has a custom name and a player note (edit the sheet, Customize, save) |
+| **CI** | Partial — `library-feat-rows.test.ts` |
+
+**Steps**
+1. Play view, collapsed: custom name is italic and the right edge of the last letter is not clipped. Official/codex name is not shown as a second title.
+2. Expand the row. Confirm there is **no** View/Hide customization button, **no** Custom name field, and **no** “Note” heading.
+3. Confirm the player note sits **in the same rounded description box** as the official description, below it, separated by a simple line only — not a second card. The custom name is not repeated in the body.
+4. Toggle sheet Edit. Expand the same row. Confirm **Customize** still reveals Custom name + Player note fields; changing them still saves.
+5. Repeat on a trait if one is customized. Optional ~360px: italic name and in-box note still readable.
+
+**Expected**
+- Play view is description + note in one box; italic title only. Edit keeps Customize fields. Trait kind chips (TASK-779) unchanged. Do not use archived DEV-V-010.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-009-T052 — Recovery (and Modal) footer inset (TASK-787)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-787 |
+| **Where** | `/characters/[id]` → toolbar **Recovery**; spot-check Edit Archetype / a USM add modal |
+| **Needs** | Any character |
+| **CI** | None (visual) |
+
+**Steps**
+1. Open **Recovery**. Confirm Cancel and Full Recovery sit inset from the bottom and right edges — similar gutter to the title card and content, not hugging the modal chrome.
+2. Optional ~360px: full-screen Recovery; footer stays visible; inset still present (safe-area on notched phones).
+3. Spot-check Edit Archetype Close/Save and one add-X USM: footers keep a gutter (USM still has its top border; no doubled padding).
+
+**Expected**
+- Modal `footer` owns the inset. Recovery buttons are not flush to the corner. USM/detail modals are not double-padded.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-009-T053 — Header DR / Critical Range only when armor modifies (TASK-788)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-788 |
+| **Where** | `/characters/[id]` header vitals (Speed / Evasion row) |
+| **Needs** | Unarmored character; armor with DR; armor with Critical Range +1 (Option 1 level ≥ 0) |
+| **CI** | Partial — `library-list-helpers.test.ts`, `calculations.test.ts`, `item-calc.test.ts` |
+
+**Steps**
+1. Unarmored: header shows Speed and Evasion only — no Damage Reduction, no Critical Range.
+2. Equip armor with DR and no crit property: Damage Reduction appears and matches the Library armor DR cell; Critical Range stays hidden.
+3. Equip (or switch to) armor with Critical Range +1 at Option 1 level N: Critical Range appears as **Evasion + 10 + (1 + N)**. If that armor has no DR, Damage Reduction is hidden.
+4. Optional Temp mode: **Damage Reduction** and **Critical Range** cards appear even if armor does not grant them (so a temp can be added). Unarmored Critical Range = Evasion + 10. Leave Temp: cards hide again unless armor (or a leftover temp) modifies that stat. Speed/Evasion/Terminal unchanged.
+
+**Expected**
+- Independent visibility per stat in play/edit. Temp mode always shows both DR and Critical Range cards. Crit math is Evasion + 10 + armor increase (1 + op_1_lvl). Same as DEV-V-008-T015.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T054 — Skills spend/temp mode visible without side-scroll (TASK-800)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-800 |
+| **Where** | `/characters/[id]` → Skills panel |
+| **Needs** | Editable character; Codex skills loaded |
+
+**Steps**
+1. Desktop `lg+` (≥1024px): enter **Edit**, click the Skills pencil. Confirm **Editing** next to the Skills heading, Skill Points strip, and Value steppers in the last column (bonus caption under each stepper). No fifth column; no horizontal scroll required to see that the section is open.
+2. Close the pencil. **Editing** and steppers disappear; Bonus + roll return.
+3. Enter **Temp Modifier**, click the Skills sliders. Confirm **Temp** next to the heading, the Temp Modifier strip (same family as Abilities), and Temp steppers in that same last column. Bonus caption still shows and tints.
+4. Optional ~360px: same cues; steppers use 44px targets; no inner-table side-scroll to discover mode.
+
+**Expected**
+- Mode is named on the heading (`aria-live`) and visible in the first screenful of the Skills card.
+- Creator/allocation Skills tables still use a separate Value column.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1860,7 +1998,7 @@ Verifies play-together after first save, optional sheet tour, level-up milestone
 
 ---
 
-## DEV-V-012 — Landing page rebuild (TASK-387, TASK-763)
+## DEV-V-012 — Landing page rebuild (TASK-387, TASK-763, TASK-789)
 
 Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Section 4). One dominant primary CTA, AIDA scroll story, removed onboarding tour / welcome link-farm / Codex-Library CTAs. TASK-763: guest CTA is **Create Character**; how-it-works steps are create / find a table / start playing (no system jargon).
 
@@ -2015,9 +2153,29 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-012-T009 — Home uses (main) chrome without remount (TASK-789)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-012 — Landing page rebuild |
+| **Related task** | TASK-789 |
+| **Where** | `/` → `/codex` → `/` |
+| **Needs** | — |
+
+**Steps**
+1. Open `/`. Confirm the landing H1 and sections render without a “Signing you in…” spinner (OAuth `?code=` is handled by the proxy, not the page).
+2. Open `/about`. Confirm the page title and creator note render; the carousel still changes slides.
+3. Open `/characters/new`. Confirm Guided / Custom / Legacy cards. Add `?returnTo=/campaigns` and click Guided — URL keeps `returnTo`.
+4. From `/`, click **Codex** in the header, then the logo back to `/`. Confirm the header/footer do not visibly remount (no flash of missing chrome).
+
+**Expected**
+- `/` is `(main)/page.tsx` (server page + `HeroSection` island). About and the chooser are server pages. Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
-## DEV-V-013 — Guided Simple character creator (TASK-394–403+)
+## DEV-V-013 — Guided Simple character creator (TASK-394–403+, TASK-790)
 
 **Category:** End-to-end guided creator funnel — entry chooser, chapters, save.  
 **Prerequisite:** Run **DEV-004** (`sql/guided-creator-schema-seed.sql`) so starter species and Berserker loadouts/abilities exist.  
@@ -3913,6 +4071,28 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-013-T088 — Guided Skills defense + governing Ability (TASK-790)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-790 |
+| **Where** | Guided creator → Skills |
+| **Needs** | A path with remaining Skill Points; a multi-ability skill (e.g. Lockpick) if present |
+
+**Steps**
+1. Reach **Your Skills**. Confirm a **Defense Bonuses** grid below the skill list (Might / Fortitude / Reflex / Discernment / Mental Fort. / Resolve).
+2. Spend 2 Skill Points on a Defense (+1). Confirm the Skill Point counter drops by 2 and Continue stays gated until remaining is 0.
+3. If a skill shows more than one governing Ability, change the picker. Confirm the Skill Bonus updates.
+4. Finish the funnel and save. On the sheet, confirm the Defense bonus and the chosen Ability persist.
+5. Desktop + ~360px: Defense steppers and the Ability picker are usable (44px on touch).
+
+**Expected**
+- Guided no longer hard-saves default-zero `defenseVals` or first-listed Ability when the player chose otherwise.
+- Same `DefenseBonusesCard` as Legacy/creature allocation. Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-013-T048 — Sitewide compact facts + Training Points chip labels (TASK-461)
 
 | Field | Value |
@@ -5025,22 +5205,23 @@ Spot-checks Realms terminology and em-dash hygiene on high-traffic surfaces afte
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-020-T002 — Guided chooser Custom bullet has no em dash
+#### DEV-V-020-T002 — Chooser Custom card is player-facing
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-020 |
-| **Related task** | TASK-439 |
+| **Related task** | TASK-439, TASK-784 |
 | **Where** | `/characters/new` |
 | **Needs** | — |
 
 **Steps**
 1. Open `/characters/new`.
-2. On the Custom mode card, read the bullets.
-3. Confirm the first Custom bullet reads "Same rules engine: all steps, all choices" (colon, not em dash).
+2. Read the **Custom** card tagline and bullets.
 
 **Expected**
-- Custom card bullets match `GUIDED_CREATOR_COPY.chooser` without em dashes.
+- Tagline is **Fully customizable archetype and Loadout, built step by step.**
+- Bullets explain choosing your own archetype type and abilities, then species, Feats, and Loadout — no Layer 3, cohesive creator, Forge, or other backend speak.
+- No em dashes in Custom card copy.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7147,7 +7328,7 @@ Filters browse lists by what an archetype path recommends, read live from `path_
 
 ---
 
-## DEV-V-053 — Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771)
+## DEV-V-053 — Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771 / TASK-793)
 
 Public crawl metadata and the muted-token strip. Automated: `src/lib/site-url.test.ts`, `src/app/robots-sitemap.test.ts`.
 
@@ -7247,6 +7428,93 @@ Public crawl metadata and the muted-token strip. Automated: `src/lib/site-url.te
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-053-T006 — Crafting / My Account titles + crawlable Rules intro (TASK-793)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-053 — Wave 3A SEO |
+| **Related task** | TASK-793 |
+| **Where** | `/crafting`, `/my-account`, `/rules` |
+| **Needs** | Signed-in account for `/my-account` |
+
+**Steps**
+1. Open `/crafting` — document title includes **Crafting**.
+2. Open `/my-account` — document title includes **My Account**; view-source is noindex.
+3. Open `/rules` — confirm crawlable intro text (seo description) above the Google Doc iframe; iframe still works.
+
+**Expected**
+- Missing layout titles from the Aug audit are filled. `/rules` has indexable prose plus the embed. Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+## DEV-V-054 — Codex per-collection fetch + virtualized browse rows (TASK-775)
+
+Codex browse fetches only the open tab's collection (`GET /api/codex?collection=`) and window-virtualizes long row lists. Automated cover: `src/app/api/codex/route.test.ts` (slice keys, tables queried, 400 on unknown) and `use-codex.keys.test.ts` (key prefix, parts split). These steps are the parts only a browser can show.
+
+#### DEV-V-054-T001 — Codex tab downloads its own collection
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-054 — Codex per-collection fetch |
+| **Related task** | TASK-775 |
+| **Where** | `/codex` → Feats, then Skills, then Archetypes |
+| **Needs** | Seeded codex data; browser Network tab |
+
+**Steps**
+1. Open `/codex` → **Feats** with Network recording.
+2. Confirm the codex request is `/api/codex?collection=feats` and that no request downloads the full payload.
+3. Switch to **Skills**, then **Archetypes** — each fires its own `?collection=` request once, then stays cached.
+4. Expand **Filters** → **Archetype Path** on Feats and pick a path; confirm filtering works and only adds `?collection=archetypes`.
+
+**Expected**
+- One request per visited collection, no full-codex download on browse. Path filter, search, sort, and character filter behave exactly as before. Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-054-T002 — Long feat list scrolls and expands correctly
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-054 — Virtualized browse rows |
+| **Related task** | TASK-775 |
+| **Where** | `/codex` → Feats (unfiltered, hundreds of rows) |
+| **Needs** | Full codex feat data |
+
+**Steps**
+1. Open `/codex` → **Feats** with no filters and scroll from the first row to the last, then back up.
+2. Confirm rows render as they enter view with no blank gaps, flicker, or jumping scroll position, and that the scrollbar length stays sensible.
+3. Expand a feat mid-list; scroll past it and back. Expand a multi-rank feat and confirm its **Feat Levels** chips still work.
+4. Expand **Filters** (do not apply any) and confirm rows stay aligned under the header — no overlap, gap, or jump. Collapse Filters and confirm the same.
+5. Filter down to a short list (e.g. search a specific feat) and confirm rows render normally.
+6. Repeat the scroll at ~360px width.
+
+**Expected**
+- Long lists scroll smoothly and are noticeably faster to first paint than before. Expanding Filters does not leave rows stuck at the old offset. A row that scrolls out of view and back is collapsed again (expected with virtualization). Short lists behave exactly as before. Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-054-T003 — Admin codex save still refreshes browse
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-054 — Codex per-collection fetch |
+| **Related task** | TASK-775 |
+| **Where** | `/admin/codex` → Feats (or Skills), then `/codex` |
+| **Needs** | Admin account |
+
+**Steps**
+1. In `/admin/codex`, edit a feat name and save.
+2. Confirm the admin list shows the new name, and the codex spreadsheet view still loads every tab.
+3. Open `/codex` → **Feats** and confirm the edited name appears without a hard reload.
+4. Open a character sheet or creator and confirm game rules (health/energy formulas, conditions) still load.
+
+**Expected**
+- `['codex']` invalidation still reaches each collection slice, so admin saves surface on browse. `useGameRules` reads the `coreRules` slice with no missing-rules fallback flash. Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## Planned suites (split from legacy DEV-T)
@@ -7292,6 +7560,7 @@ Public crawl metadata and the muted-token strip. Automated: `src/lib/site-url.te
 | DEV-V-043 | Wave 5 page facade splits (TASK-666 / TASK-762) | — | Manual — see suite above |
 | DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`, `character-save` create-error copy) + manual DEV-V-051 T001–T010 |
 | DEV-V-052 | Archetype Path list filter (TASK-751 / TASK-752 / TASK-753) | — | Automated (`path-recommendation-index`, `feat-list`, `skill-list`, `equipment-list`) + manual DEV-V-052 T001–T006 |
-| DEV-V-053 | Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771) | — | Automated (`site-url`, `robots-sitemap`) + manual DEV-V-053 T001–T005 |
+| DEV-V-053 | Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771 / TASK-793) | — | Automated (`site-url`, `robots-sitemap`) + manual DEV-V-053 T001–T006 |
+| DEV-V-054 | Codex per-collection fetch + virtualized browse rows (TASK-775) | — | Automated (`api/codex/route.test`, `use-codex.keys.test`) + manual DEV-V-054 T001–T003 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

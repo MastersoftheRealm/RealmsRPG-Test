@@ -3,12 +3,10 @@
  * ================================
  * Guided / Custom / Legacy — copy in `src/lib/constants/copy/guided-creator-copy.ts`.
  * Custom → cohesive guided creator Path L3; Legacy → transitional tabbed wizard (`/advanced`).
+ * Server page: `returnTo` comes from `searchParams` (no client `useSearchParams`).
  */
 
-'use client';
-
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { Sparkles, SlidersHorizontal, History, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
@@ -52,9 +50,18 @@ function withReturnTo(href: string, returnTo: string | null): string {
   return `${href}${sep}returnTo=${encodeURIComponent(safe)}`;
 }
 
-export default function NewCharacterChooserPage() {
-  const searchParams = useSearchParams();
-  const returnTo = searchParams.get('returnTo');
+function firstSearchParam(value: string | string[] | undefined): string | null {
+  if (Array.isArray(value)) return value[0] ?? null;
+  return value ?? null;
+}
+
+export default async function NewCharacterChooserPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ returnTo?: string | string[] }>;
+}) {
+  const params = await searchParams;
+  const returnTo = firstSearchParam(params.returnTo);
 
   return (
     <div className="min-h-screen bg-background">

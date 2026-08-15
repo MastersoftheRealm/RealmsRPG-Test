@@ -95,7 +95,7 @@ export function MixedSpeciesModal({
       flexLayout
       contentClassName="p-0"
       footer={
-        <div className="flex shrink-0 justify-end gap-2 border-t border-border-light p-4">
+        <div className="flex shrink-0 justify-end gap-2 border-t border-border-light">
           <Button variant="outline" onClick={onClose} className="min-h-[44px] min-w-[44px]">
             Cancel
           </Button>

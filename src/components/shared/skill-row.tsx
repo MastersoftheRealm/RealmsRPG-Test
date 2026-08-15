@@ -70,6 +70,12 @@ export interface SkillRowProps {
   // ----- Edit Mode -----
   /** Is edit mode active? */
   isEditing?: boolean;
+  /**
+   * Where spend/temp steppers go in the table variant.
+   * `column` (default) = extra Value cell (creator/allocation).
+   * `inline` = stepper + bonus caption in the Bonus cell (narrow sheet Skills panel).
+   */
+  editControlsPlacement?: 'column' | 'inline';
   /** Callback when skill value changes */
   onValueChange?: (delta: number) => void;
   /** Minimum value (usually 0) */
@@ -126,6 +132,7 @@ export const SkillRow = memo(function SkillRow({
   availableAbilities,
   onAbilityChange,
   isEditing = false,
+  editControlsPlacement = 'column',
   onValueChange,
   minValue = 0,
   canIncrease = true,
@@ -152,6 +159,23 @@ export const SkillRow = memo(function SkillRow({
 
   // Render table row variant
   if (variant === 'table') {
+    const bonusTintClass =
+      bonusClassName ||
+      (bonus > 0 ? 'text-success-fg' : bonus < 0 ? 'text-danger-fg' : 'text-text-secondary');
+    const valueStepper = onValueChange ? (
+      <ValueStepper
+        value={value}
+        onChange={(newValue) => onValueChange(newValue - value)}
+        min={proficient ? -Infinity : minValue}
+        max={canIncrease ? undefined : value}
+        size="sm"
+        variant="compact"
+        decrementTitle={`Decrease ${name}`}
+        incrementTitle={`Increase ${name}`}
+        className="inline-flex justify-center"
+      />
+    ) : null;
+
     return (
       <tr
         className={cn(
@@ -237,20 +261,28 @@ export const SkillRow = memo(function SkillRow({
           )}
         </td>
 
-        {/* Bonus / Roll Button — tint value only, never RollButton (ADR-0006) */}
-        <td className="py-2 text-center">
-          {isEditing || !showRollButton ? (
-            <span
-              className={cn(
-                'inline-block min-w-[40px] font-bold',
-                bonusClassName ||
-                  (bonus > 0
-                    ? 'text-success-fg'
-                    : bonus < 0
-                      ? 'text-danger-fg'
-                      : 'text-text-secondary'),
-              )}
-            >
+        {/* Bonus / Roll / inline spend-temp stepper (TASK-800) — tint value only, never RollButton (ADR-0006) */}
+        <td
+          className={cn(
+            'py-2 text-center',
+            isEditing &&
+              editControlsPlacement === 'inline' &&
+              onValueChange &&
+              'min-w-[7.25rem] px-0.5 md:min-w-20',
+          )}
+        >
+          {isEditing && editControlsPlacement === 'inline' && valueStepper ? (
+            <div className="flex flex-col items-center gap-0.5">
+              {valueStepper}
+              <span
+                className={cn('text-xs font-bold tabular-nums', bonusTintClass)}
+                aria-label={`Bonus ${formatBonus(bonus)}`}
+              >
+                {formatBonus(bonus)}
+              </span>
+            </div>
+          ) : isEditing || !showRollButton ? (
+            <span className={cn('inline-block min-w-[40px] font-bold', bonusTintClass)}>
               {formatBonus(bonus)}
             </span>
           ) : (
@@ -258,21 +290,9 @@ export const SkillRow = memo(function SkillRow({
           )}
         </td>
 
-        {/* DESIGN_INTENT: compact + nowrap ValueStepper so + stays in-column on narrow sheet panels (TASK-543) */}
-        {isEditing && onValueChange && (
-          <td className="px-1 py-2 text-center whitespace-nowrap">
-            <ValueStepper
-              value={value}
-              onChange={(newValue) => onValueChange(newValue - value)}
-              min={proficient ? -Infinity : minValue}
-              max={canIncrease ? undefined : value}
-              size="sm"
-              variant="compact"
-              decrementTitle={`Decrease ${name}`}
-              incrementTitle={`Increase ${name}`}
-              className="inline-flex justify-center"
-            />
-          </td>
+        {/* DESIGN_INTENT: creator/allocation keep a Value column; sheet uses inline (TASK-800) */}
+        {isEditing && editControlsPlacement === 'column' && valueStepper && (
+          <td className="px-1 py-2 text-center whitespace-nowrap">{valueStepper}</td>
         )}
 
         {/* Remove button (edit mode) — omit column when onRemove unset (sheet uses − path, TASK-584) */}

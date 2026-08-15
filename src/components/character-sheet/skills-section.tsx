@@ -1,9 +1,10 @@
 /**
  * Skills Section
  * ==============
- * Catalog-all Codex base skills (TASK-584) with proficiency / sub-skill filters.
+ * Catalog-all Codex base skills (TASK-584) with compact All/Proficient + Sub-Skills filters (TASK-778).
  * Sub-skills: proficient always shown; unproficient only when user-added.
  * Spend − clears value → proficiency (and removes sub-skill when applicable); no per-row X.
+ * Spend/temp steppers sit in the Bonus cell (TASK-800) so the narrow lg column does not hide mode.
  */
 
 'use client';
@@ -13,15 +14,15 @@ import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 import { useRollsOptional } from '@/components/rolls';
 import {
-  PointStatus,
+  EditSectionToggle,
   getEditState,
-  SkillRow,
-  SectionDualModeToggles,
+  PointStatus,
   SegmentedControl,
-  type SectionEditMode,
+  SkillRow,
+  TempModifierToggle,
 } from '@/components/shared';
 import { ABILITY_ABBR } from '@/lib/constants/skills';
-import { Button, Card, TableScroll } from '@/components/ui';
+import { Button, Card } from '@/components/ui';
 import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
@@ -36,7 +37,7 @@ import {
   applyTempModifier,
   getEffectiveAbilities,
   getSkillTempModifier,
-  sectionHasTempModifiers,
+  sectionTempModifierTint,
   tempModifierValueClass,
 } from '@/lib/character/temp-modifiers';
 import {
@@ -54,6 +55,7 @@ interface SkillsSectionProps {
   skills: Skill[];
   abilities: Abilities;
   isEditMode?: boolean;
+  isTempModifierMode?: boolean;
   totalSkillPoints?: number;
   /** When provided, used for PointStatus and pencil state (includes defense spending). Enables red pencil when overspent. */
   spentSkillPoints?: number;
@@ -71,6 +73,7 @@ export function SkillsSection({
   skills,
   abilities,
   isEditMode = false,
+  isTempModifierMode = false,
   totalSkillPoints,
   spentSkillPoints: spentSkillPointsProp,
   speciesSkills = [],
@@ -86,12 +89,19 @@ export function SkillsSection({
   const skillRules = resolveSkillAllocationRules(rules);
   const { data: codexSkills = [] } = useCodexSkills();
 
-  const [sectionMode, setSectionMode] = useState<SectionEditMode>('none');
   const [proficiencyFilter, setProficiencyFilter] = useState<SkillProficiencyFilter>('all');
   const [showSubSkills, setShowSubSkills] = useState(true);
-  const showSpendControls = isEditMode && sectionMode === 'spend';
-  const showTempControls = isEditMode && sectionMode === 'tempModifier';
+  const [sectionAdjustOpen, setSectionAdjustOpen] = useState(false);
+  const sheetModeKey = `${isEditMode}:${isTempModifierMode}`;
+  const [prevSheetModeKey, setPrevSheetModeKey] = useState(sheetModeKey);
+  if (sheetModeKey !== prevSheetModeKey) {
+    setPrevSheetModeKey(sheetModeKey);
+    setSectionAdjustOpen(false);
+  }
+  const showSpendControls = isEditMode && sectionAdjustOpen;
+  const showTempControls = isTempModifierMode && sectionAdjustOpen;
   const showEditControls = showSpendControls || showTempControls;
+  const showSectionToggle = isEditMode || isTempModifierMode;
 
   const effectiveAbilities = useMemo(
     () => getEffectiveAbilities(abilities, tempModifiers),
@@ -305,33 +315,61 @@ export function SkillsSection({
 
   const skillEditState =
     totalSkillPoints !== undefined ? getEditState(totalSpent, totalSkillPoints) : 'normal';
-  const hasSectionTemps = sectionHasTempModifiers(tempModifiers, 'skills');
+  const tempTint = sectionTempModifierTint(tempModifiers, 'skills');
 
   return (
     <Card className={cn('relative p-4 shadow-md md:p-6', className)}>
-      {/* DESIGN_INTENT: pencil/Temp float top-right like Abilities (TASK-584); filters below title */}
-      {isEditMode && (
+      {showSectionToggle && (
         <div className="absolute top-3 right-3 z-10">
-          <SectionDualModeToggles
-            mode={sectionMode}
-            onModeChange={setSectionMode}
-            spendState={skillEditState}
-            hasTempModifiers={hasSectionTemps}
-            spendTitle={
-              skillEditState === 'has-points'
-                ? 'Edit — spend skill points'
-                : skillEditState === 'over-budget'
-                  ? 'Edit — over budget, remove skill points'
-                  : 'Edit skills'
-            }
-          />
+          {isEditMode ? (
+            <EditSectionToggle
+              state={skillEditState}
+              isActive={sectionAdjustOpen}
+              onClick={() => setSectionAdjustOpen((open) => !open)}
+              title={
+                sectionAdjustOpen
+                  ? 'Close point spending'
+                  : skillEditState === 'has-points'
+                    ? 'Edit — spend skill points'
+                    : skillEditState === 'over-budget'
+                      ? 'Edit — over budget, remove skill points'
+                      : 'Edit skills'
+              }
+            />
+          ) : (
+            <TempModifierToggle
+              isActive={sectionAdjustOpen}
+              tint={tempTint}
+              onClick={() => setSectionAdjustOpen((open) => !open)}
+              title={
+                sectionAdjustOpen
+                  ? 'Close Temp Modifier'
+                  : tempTint === 'none'
+                    ? 'Temp Modifier'
+                    : 'Temp Modifier (active adjustments)'
+              }
+            />
+          )}
         </div>
       )}
 
-      <div className={cn('mb-4', isEditMode && 'pr-14')}>
-        <h2 className="text-lg font-bold text-text-primary">Skills</h2>
-        <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+      {/* DESIGN_INTENT: pencil or Temp toggle floats top-right; compact filters below title (not SourceFilter chrome) */}
+      <div className={cn('mb-4', showSectionToggle && 'pr-14')}>
+        <div className="flex flex-wrap items-baseline gap-x-2">
+          <h2 className="text-lg font-bold text-text-primary">Skills</h2>
+          {showEditControls && (
+            <span
+              role="status"
+              aria-live="polite"
+              className="text-sm font-medium text-text-secondary"
+            >
+              {showTempControls ? 'Temp' : 'Editing'}
+            </span>
+          )}
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
           <SegmentedControl<SkillProficiencyFilter>
+            size="compact"
             aria-label="Skill proficiency filter"
             value={proficiencyFilter}
             onChange={setProficiencyFilter}
@@ -340,14 +378,18 @@ export function SkillsSection({
               { value: 'proficient', label: 'Proficient' },
             ]}
           />
-          <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-secondary select-none">
+          <label
+            htmlFor="sheet-skills-sub-skills"
+            className="touch-target-md-compact inline-flex cursor-pointer items-center gap-1.5 text-xs text-text-secondary select-none"
+          >
             <input
+              id="sheet-skills-sub-skills"
               type="checkbox"
               checked={showSubSkills}
               onChange={(e) => setShowSubSkills(e.target.checked)}
               className="rounded border-border-light"
             />
-            Show sub-skills
+            Sub-Skills
           </label>
         </div>
       </div>
@@ -374,109 +416,119 @@ export function SkillsSection({
         </div>
       )}
 
-      {/* DESIGN_INTENT: narrow lg Skills column must not crush ValueStepper; edit table min-width + TableScroll (TASK-543) */}
-      <TableScroll>
-        <table className={cn('w-full text-sm', showEditControls && 'min-w-[28rem]')}>
-          <thead>
-            <tr className="border-b-2 border-border-light text-xs tracking-wider text-text-muted uppercase">
-              <th className="w-10 min-w-10 py-2 text-center">Prof</th>
-              <th className="py-2 pl-2 text-left">Skill</th>
-              <th className="w-16 min-w-16 py-2 text-center">Ability</th>
-              <th className="w-20 min-w-20 py-2 text-center">Bonus</th>
-              {showEditControls && (
-                <th className="w-28 min-w-[7rem] py-2 text-center whitespace-nowrap">
-                  {showTempControls ? 'Temp' : 'Value'}
-                </th>
-              )}
-            </tr>
-          </thead>
-          <tbody>
-            {displaySkills.map((skill) => {
-              const isSubSkill = Boolean(skill.baseSkill);
-              const skillTemp = getSkillTempModifier(tempModifiers, skill.id);
-              const baseBonus = getSkillBonus(skill, abilities);
-              const cascadedBonus = getSkillBonus(skill, effectiveAbilities);
-              const bonus = applyTempModifier(cascadedBonus, skillTemp);
-              const tintDelta = bonus - baseBonus;
-              const isFromSpecies = isSpeciesSkill(skill.name, skill.id);
-              const allowDecrease = canDecreaseSkill(skill);
+      {showTempControls && (
+        <div className="mb-4 rounded-lg bg-surface-secondary p-3">
+          <p className="text-center text-xs text-text-secondary">
+            Temp Modifier — layered Bonus/Penalty (does not spend points). Values tint gold or
+            danger.
+          </p>
+        </div>
+      )}
 
-              return (
-                <SkillRow
-                  key={skill.id}
-                  id={skill.id}
-                  name={skill.name}
-                  isSubSkill={isSubSkill}
-                  baseSkillName={skill.baseSkill}
-                  proficient={skill.prof || false}
-                  canToggleProficiency={showSpendControls && !isFromSpecies}
-                  onToggleProficiency={() => handleProfToggle(skill)}
-                  value={showTempControls ? skillTemp : skill.skill_val}
-                  bonus={bonus}
-                  bonusClassName={tempModifierValueClass(tintDelta) || undefined}
-                  ability={skill.ability}
-                  availableAbilities={skill.availableAbilities}
-                  onAbilityChange={
-                    showSpendControls && onSkillChange
-                      ? (newAbility) => {
-                          onSkillChange(skill.id, {
-                            ...skillSeed(skill),
-                            ability: newAbility,
-                            skill_val: skill.skill_val ?? 0,
-                            prof: skill.prof ?? false,
-                          });
-                        }
-                      : undefined
-                  }
-                  isEditing={showEditControls}
-                  onValueChange={(delta) => {
-                    if (showTempControls) {
-                      if (skill.catalogOnly && onSkillChange) {
+      {/* DESIGN_INTENT: sheet spend/temp steppers stay in the Bonus cell (TASK-800); no fifth column / TableScroll */}
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="border-b-2 border-border-light text-xs tracking-wider text-text-muted uppercase">
+            <th className="w-10 min-w-10 py-2 text-center">Prof</th>
+            <th className="py-2 pl-2 text-left">Skill</th>
+            <th className="w-16 min-w-16 py-2 text-center">Ability</th>
+            <th
+              className={cn(
+                'py-2 text-center',
+                showEditControls ? 'min-w-[7.25rem] md:w-20 md:min-w-20' : 'w-20 min-w-20',
+              )}
+            >
+              {showEditControls ? (showTempControls ? 'Temp' : 'Value') : 'Bonus'}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {displaySkills.map((skill) => {
+            const isSubSkill = Boolean(skill.baseSkill);
+            const skillTemp = getSkillTempModifier(tempModifiers, skill.id);
+            const baseBonus = getSkillBonus(skill, abilities);
+            const cascadedBonus = getSkillBonus(skill, effectiveAbilities);
+            const bonus = applyTempModifier(cascadedBonus, skillTemp);
+            const tintDelta = bonus - baseBonus;
+            const isFromSpecies = isSpeciesSkill(skill.name, skill.id);
+            const allowDecrease = canDecreaseSkill(skill);
+
+            return (
+              <SkillRow
+                key={skill.id}
+                id={skill.id}
+                name={skill.name}
+                isSubSkill={isSubSkill}
+                baseSkillName={skill.baseSkill}
+                proficient={skill.prof || false}
+                canToggleProficiency={showSpendControls && !isFromSpecies}
+                onToggleProficiency={() => handleProfToggle(skill)}
+                value={showTempControls ? skillTemp : skill.skill_val}
+                bonus={bonus}
+                bonusClassName={tempModifierValueClass(tintDelta) || undefined}
+                ability={skill.ability}
+                availableAbilities={skill.availableAbilities}
+                onAbilityChange={
+                  showSpendControls && onSkillChange
+                    ? (newAbility) => {
                         onSkillChange(skill.id, {
                           ...skillSeed(skill),
+                          ability: newAbility,
                           skill_val: skill.skill_val ?? 0,
                           prof: skill.prof ?? false,
                         });
                       }
-                      onTempModifiersChange?.({
-                        skills: { [skill.id]: skillTemp + delta },
+                    : undefined
+                }
+                isEditing={showEditControls}
+                editControlsPlacement="inline"
+                onValueChange={(delta) => {
+                  if (showTempControls) {
+                    if (skill.catalogOnly && onSkillChange) {
+                      onSkillChange(skill.id, {
+                        ...skillSeed(skill),
+                        skill_val: skill.skill_val ?? 0,
+                        prof: skill.prof ?? false,
                       });
-                      return;
                     }
-                    if (delta > 0) {
-                      handleSkillIncrease(skill);
-                    } else if (delta < 0) {
-                      handleSkillDecrease(skill);
-                    }
-                  }}
-                  canIncrease={showTempControls ? true : canIncreaseSkill(skill)}
-                  minValue={
-                    showTempControls ? -99 : allowDecrease && !skill.prof && isSubSkill ? -1 : 0
+                    onTempModifiersChange?.({
+                      skills: { [skill.id]: skillTemp + delta },
+                    });
+                    return;
                   }
-                  showRollButton={!showEditControls && rollContext?.canRoll !== false}
-                  onRoll={() =>
-                    rollContext?.rollSkill?.(
-                      skill.name,
-                      bonus,
-                      skill.ability ? ABILITY_ABBR[skill.ability.toLowerCase()] : undefined,
-                    )
+                  if (delta > 0) {
+                    handleSkillIncrease(skill);
+                  } else if (delta < 0) {
+                    handleSkillDecrease(skill);
                   }
-                  isSpeciesSkill={isFromSpecies}
-                  variant="table"
-                />
-              );
-            })}
-          </tbody>
-        </table>
+                }}
+                canIncrease={showTempControls ? true : canIncreaseSkill(skill)}
+                minValue={
+                  showTempControls ? -99 : allowDecrease && !skill.prof && isSubSkill ? -1 : 0
+                }
+                showRollButton={!showEditControls && rollContext?.canRoll !== false}
+                onRoll={() =>
+                  rollContext?.rollSkill?.(
+                    skill.name,
+                    bonus,
+                    skill.ability ? ABILITY_ABBR[skill.ability.toLowerCase()] : undefined,
+                  )
+                }
+                isSpeciesSkill={isFromSpecies}
+                variant="table"
+              />
+            );
+          })}
+        </tbody>
+      </table>
 
-        {displaySkills.length === 0 && (
-          <div className="py-8 text-center text-text-muted">
-            {proficiencyFilter === 'proficient'
-              ? 'No proficient skills to show. Switch filter to All or gain proficiency in spend mode.'
-              : 'No skills available.'}
-          </div>
-        )}
-      </TableScroll>
+      {displaySkills.length === 0 && (
+        <div className="py-8 text-center text-text-muted">
+          {proficiencyFilter === 'proficient'
+            ? 'No proficient skills to show. Switch filter to All or gain proficiency in Edit mode.'
+            : 'No skills available.'}
+        </div>
+      )}
     </Card>
   );
 }

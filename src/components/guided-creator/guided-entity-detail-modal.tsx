@@ -83,7 +83,7 @@ export function GuidedEntityDetailModal({
   };
 
   const defaultFooter = onSelect ? (
-    <div className="flex shrink-0 justify-between gap-2 border-t border-border-light bg-surface px-4 py-3 sm:px-6">
+    <div className="flex shrink-0 justify-between gap-2 border-t border-border-light bg-surface">
       <Button variant="secondary" onClick={onClose} className="min-h-[44px] min-w-[44px]">
         {copy.close}
       </Button>
@@ -97,7 +97,7 @@ export function GuidedEntityDetailModal({
       </Button>
     </div>
   ) : (
-    <div className="flex shrink-0 justify-end gap-2 border-t border-border-light bg-surface px-4 py-3 sm:px-6">
+    <div className="flex shrink-0 justify-end gap-2 border-t border-border-light bg-surface">
       <Button variant="secondary" onClick={onClose} className="min-h-[44px] min-w-[44px]">
         {copy.close}
       </Button>

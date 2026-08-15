@@ -25,6 +25,7 @@ Generated: 2026-08-15
 - CreatureLibraryStatBlockRows
 - CreatureStatBlock
 - DecrementButton
+- DefenseBonusesCard
 - DeleteConfirmModal
 - DescriptorChipWithTip
 - DetailOptionList
@@ -86,7 +87,6 @@ Generated: 2026-08-15
 - RollButton
 - SearchInput
 - SectionCostBadge
-- SectionDualModeToggles
 - SectionHeader
 - SegmentedControl
 - SelectFilter
@@ -110,7 +110,6 @@ Generated: 2026-08-15
 - type CharacterFilterProps
 - type EditState
 - type PowerTechniqueFiltersProps
-- type SectionEditMode
 - type SourceFilterValue
 - UnifiedSelectionModal
 - ValueStepper
@@ -169,6 +168,7 @@ Generated: 2026-08-15
 - campaignKeys
 - characterKeys
 - characterViewerId
+- codexKeys
 - fetchCampaignCharacterForEncounter
 - findTraitByIdOrName
 - getGameRulesFallback

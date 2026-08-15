@@ -39,6 +39,7 @@ export function useCharacterSheetPageUi({
   const pathname = usePathname();
 
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isTempModifierMode, setIsTempModifierMode] = useState(false);
   const [showLevelUpModal, setShowLevelUpModal] = useState(false);
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -62,11 +63,32 @@ export function useCharacterSheetPageUi({
   const [showEditSpeciesModal, setShowEditSpeciesModal] = useState(false);
 
   const handleToggleEditMode = useCallback(async () => {
-    if (isEditMode && hasUnsavedChanges) {
-      await saveNow();
+    if (isEditMode) {
+      if (hasUnsavedChanges) await saveNow();
+      setIsEditMode(false);
+      return;
     }
-    setIsEditMode(!isEditMode);
-  }, [isEditMode, hasUnsavedChanges, saveNow]);
+    if (isTempModifierMode && hasUnsavedChanges) await saveNow();
+    setIsTempModifierMode(false);
+    setIsEditMode(true);
+  }, [isEditMode, isTempModifierMode, hasUnsavedChanges, saveNow]);
+
+  const handleToggleTempModifierMode = useCallback(async () => {
+    if (isTempModifierMode) {
+      if (hasUnsavedChanges) await saveNow();
+      setIsTempModifierMode(false);
+      return;
+    }
+    if (isEditMode && hasUnsavedChanges) await saveNow();
+    setIsEditMode(false);
+    setIsTempModifierMode(true);
+  }, [isEditMode, isTempModifierMode, hasUnsavedChanges, saveNow]);
+
+  /** Level-up spend path — always Edit, never Temp (TASK-782). */
+  const enterEditMode = useCallback(() => {
+    setIsTempModifierMode(false);
+    setIsEditMode(true);
+  }, []);
 
   const urlWantsTourOffer = searchParams.get('offerTour') === '1';
   if (urlWantsTourOffer && shouldOfferSheetTour() && !sheetTourOfferLatched) {
@@ -151,7 +173,8 @@ export function useCharacterSheetPageUi({
 
   return {
     isEditMode,
-    setIsEditMode,
+    isTempModifierMode,
+    enterEditMode,
     showLevelUpModal,
     setShowLevelUpModal,
     showRecoveryModal,
@@ -186,6 +209,7 @@ export function useCharacterSheetPageUi({
     showEditSpeciesModal,
     setShowEditSpeciesModal,
     handleToggleEditMode,
+    handleToggleTempModifierMode,
     handleSettingsConfirmVisibility,
     handleSettingsConfirm,
   };

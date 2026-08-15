@@ -21,6 +21,7 @@ export function SheetHeaderResources({
   innateThreshold = 0,
   innatePools = 0,
   isEditMode,
+  isTempModifierMode,
   healthPoints,
   energyPoints,
   totalHEPool,
@@ -41,6 +42,7 @@ export function SheetHeaderResources({
   innateThreshold?: number;
   innatePools?: number;
   isEditMode: boolean;
+  isTempModifierMode?: boolean;
   healthPoints: number;
   energyPoints: number;
   totalHEPool: number;
@@ -97,7 +99,7 @@ export function SheetHeaderResources({
                 ariaLabel={`Terminal ${terminal}`}
                 titleLabel="Terminal"
                 tempDelta={terminalTempDelta}
-                isEditMode={isEditMode}
+                isTempModifierMode={isTempModifierMode}
                 onTempDeltaChange={onTerminalTempChange}
               />
             }

@@ -18,8 +18,9 @@ import type { ArchetypeCategory, ArchetypePathData } from '@/types/archetype';
 /**
  * Archetype Path recommendation index for a browse list (ADR-0014 / TASK-751).
  *
- * Reads the live path arrays from the shared `['codex']` query — no extra fetch, store, or cached
- * copy, so an admin path save (which already invalidates `['codex']`) applies immediately.
+ * Reads the live path arrays from the `['codex', 'archetypes']` query — no extra fetch, store, or
+ * cached copy, so an admin path save (which invalidates the `['codex']` prefix) applies immediately.
+ * Filtering a list of feats therefore downloads archetypes, not the whole codex (TASK-775).
  */
 export function usePathRecommendationIndex({
   entities,

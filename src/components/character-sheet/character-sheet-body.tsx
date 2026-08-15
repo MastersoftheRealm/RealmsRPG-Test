@@ -18,6 +18,7 @@ function AbilitiesPanel({ className }: { className?: string }) {
   const {
     character,
     isEditMode,
+    isTempModifierMode,
     pointBudgets,
     onAbilityChange,
     onDefenseChange,
@@ -34,6 +35,7 @@ function AbilitiesPanel({ className }: { className?: string }) {
         martialAbility={character.mart_abil}
         powerAbility={character.pow_abil}
         isEditMode={isEditMode}
+        isTempModifierMode={isTempModifierMode}
         totalAbilityPoints={pointBudgets?.totalAbilityPoints}
         spentAbilityPoints={pointBudgets?.spentAbilityPoints}
         totalSkillPoints={pointBudgets?.totalSkillPoints}
@@ -51,6 +53,7 @@ function SkillsPanel({ className }: { className?: string }) {
   const {
     character,
     isEditMode,
+    isTempModifierMode,
     skills,
     pointBudgets,
     characterSpeciesSkills,
@@ -65,6 +68,7 @@ function SkillsPanel({ className }: { className?: string }) {
       skills={skills}
       abilities={character.abilities}
       isEditMode={isEditMode}
+      isTempModifierMode={isTempModifierMode}
       totalSkillPoints={
         pointBudgets?.totalSkillPoints ??
         calculateSkillPointsForEntity(character.level || 1, 'character')

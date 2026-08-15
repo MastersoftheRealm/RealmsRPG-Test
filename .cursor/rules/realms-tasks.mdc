@@ -21,7 +21,7 @@ alwaysApply: true
 - `in-progress` → `done` when implementable AC met (build/tests/docs); else `partial` + `completed_work` / `remaining_work` / `follow_up_tasks`.
 - On archive: set `verification_status` (`pending-qa` if user-facing manual QA not run; see constitution Verification gate).
 - Move `done` blocks from `ACTIVE_TASKS.md` → `archive/TASK_QUEUE_DONE.md`; list `pending-qa` in `DEVELOPER_TASK_QUEUE.md`.
-- Commit subjects must include each `done` `TASK-###` (strict reconcile); `related_files` paths must exist. Before push: `npm run tasks:validate`.
+- Do **not** create a commit per task. Mark `done` in the archive without committing. Before push: one batch commit whose subject lists every newly done `TASK-###` (space-separated; ranges like `TASK-530–534` do not count), then `npm run tasks:validate`. `related_files` paths must exist.
 - Blocked / human-owned → `WAITING_TASKS.md`. Human-only steps → `DEVELOPER_TASK_QUEUE.md`.
 - User-facing: `BUILD_VALIDATION.md` + changelog.
 - New shared/ui file → ADR + update `scripts/shared-ui-allowlist.json` (`npm run tasks:validate-shared-ui`).

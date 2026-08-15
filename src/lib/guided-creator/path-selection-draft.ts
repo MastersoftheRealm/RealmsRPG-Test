@@ -4,10 +4,11 @@
 
 import type { CreatorEntryMode } from '@/lib/guided-creator/creator-entry-mode';
 import { resolvePathAbilityLabels } from '@/lib/game/path-ability-labels';
-import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import {
   DEFAULT_ABILITIES,
+  DEFAULT_DEFENSE_SKILLS,
   type AbilityName,
   type Archetype,
   type ArchetypeCategory,
@@ -24,6 +25,8 @@ export function clearArchetypeDependentDraftFields(): Partial<GuidedDraft> {
     abilities: { ...DEFAULT_ABILITIES },
     abilitiesMode: null,
     skills: {},
+    defenseVals: { ...DEFAULT_DEFENSE_SKILLS },
+    skillAbilities: {},
     declinedPathSkillIds: [],
     archetypeFeatIds: [],
     characterFeatIds: [],

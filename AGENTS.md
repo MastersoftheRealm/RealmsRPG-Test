@@ -57,7 +57,7 @@ Rules under `.cursor/rules/` are terse pointers. If a rule and an authority disa
 
 ## Definition of Done (summary)
 
-Build + targeted tests + all implementable AC met + no new parallel pattern + update `ACTIVE_TASKS` (move `done` to archive with `verification_status`) + changelog. User-facing work: `pending-qa` until owner runs `BUILD_VALIDATION` (see `DEVELOPER_TASK_QUEUE`). Incomplete → `partial` + follow-ups. Never mark `done` early.
+Build + targeted tests + all implementable AC met + no new parallel pattern + update `ACTIVE_TASKS` (move `done` to archive with `verification_status`) + changelog. Do **not** commit per task — the owner batches work, then one commit whose subject lists every newly done `TASK-###`. User-facing work: `pending-qa` until owner runs `BUILD_VALIDATION` (see `DEVELOPER_TASK_QUEUE`). Incomplete → `partial` + follow-ups. Never mark `done` early.
 
 ## Migrations (one policy)
 

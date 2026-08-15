@@ -8,6 +8,154 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
 
 ---
 
+- id: TASK-794
+  title: Split shared/ into ui / patterns / feature
+  created_at: 2026-08-15
+  created_by: agent
+  priority: medium
+  status: not-started
+  assignee: owner
+  related_files:
+    - src/components/shared/index.ts
+    - scripts/shared-ui-allowlist.json
+    - src/docs/ai/ADR/README.md
+  description: |
+    Architect: split `src/components/shared/` into ui / patterns / feature
+    (audit report 04). TASK-751 already added `shared/filters` — do not mix
+    with Prettier or a drive-by import rewrite.
+  acceptance_criteria:
+    - ADR accepted before any folder move.
+    - Allowlist + barrels + FEATURE_INDEX updated in the same change.
+    - No behavior change; import paths migrate with a documented map.
+  notes: |
+    Wave 3C leftover. Do not start without a fresh Architect ack.
+
+---
+
+- id: TASK-795
+  title: Generate and adopt typed Supabase Database client
+  created_at: 2026-08-15
+  created_by: agent
+  priority: medium
+  status: not-started
+  assignee: owner
+  related_files:
+    - src/lib/supabase/client.ts
+    - src/lib/supabase/server.ts
+    - src/docs/SUPABASE_SCHEMA.md
+  description: |
+    Report 12: generate Supabase `Database` types and thread them through
+    the client. Large typed-client churn — not an implementable Wave 3C slice.
+  acceptance_criteria:
+    - Generated types live in-repo and regenerate from a documented command.
+    - Browser + server clients are typed; no silent `any` widening.
+    - Typecheck + targeted API tests pass.
+  notes: |
+    Wave 3C leftover. Do not start without owner ack.
+
+---
+
+- id: TASK-796
+  title: Server-render /rules MDX + Codex detail generateMetadata
+  created_at: 2026-08-15
+  created_by: agent
+  priority: medium
+  status: not-started
+  assignee: owner
+  related_files:
+    - src/app/(main)/rules/page.tsx
+    - src/app/(main)/codex/page.tsx
+    - src/lib/constants/copy/rules-copy.ts
+  description: |
+    Report 07 P1-2 / win #8: replace the Google Doc iframe with a first-party
+    MDX rulebook and add Codex detail routes with `generateMetadata` per slug.
+    TASK-793 only added crawlable intro prose — the iframe remains until a
+    rulebook source exists in-repo.
+  acceptance_criteria:
+    - Owner supplies or approves the rulebook source before the iframe is removed.
+    - `/rules` is SSR/MDX with working in-page nav.
+    - Codex detail URLs have unique titles/descriptions.
+  notes: |
+    Content strategy. Do not invent a rulebook or delete the embed without ack.
+
+---
+
+- id: TASK-797
+  title: noUncheckedIndexedAccess burn-down (~163 errors)
+  created_at: 2026-08-15
+  created_by: agent
+  priority: low
+  status: not-started
+  assignee: owner
+  related_files:
+    - tsconfig.strictest.json
+    - tsconfig.json
+    - package.json
+  description: |
+    Report 11/12: enable `noUncheckedIndexedAccess` after burning down the
+    ~163 errors already visible via `npm run typecheck:strictest`.
+  acceptance_criteria:
+    - `typecheck:strictest` is clean, then the flag moves into the main tsconfig.
+    - No behavior changes; fixes are type-narrowing only.
+  notes: |
+    Wave 3C leftover. Tooling is ready. Do not start without owner ack.
+
+---
+
+- id: TASK-798
+  title: Extract remaining Legacy creator symbols into shared/
+  created_at: 2026-08-15
+  created_by: agent
+  priority: medium
+  status: not-started
+  assignee: owner
+  related_files:
+    - src/components/character-creator/AbilityPickButton.tsx
+    - src/components/character-creator/MixedSpeciesModal.tsx
+    - src/components/character-creator/PathHelpCard.tsx
+    - src/components/character-creator/TraitSection.tsx
+    - src/components/character-creator/creator-portrait-upload.tsx
+    - scripts/shared-ui-allowlist.json
+  description: |
+    Report 02 Steps 1/3+: move AbilityPickButton, MixedSpeciesModal,
+    PathHelpCard, TraitSection, and creator-portrait-upload into `shared/`
+    (allowlist + ADR). Do **not** delete `/characters/new/advanced` — REALMS
+    phases Legacy into L3 later.
+  acceptance_criteria:
+    - Each move is a shared-first addition with allowlist + FEATURE_INDEX.
+    - Legacy and Guided import the shared module; no parallel copies.
+    - The Legacy route still exists.
+  notes: |
+    Wave 3C leftover. Currency + appearance-age already extracted (TASK-791).
+    Guided skills UI parity already landed (TASK-790).
+
+---
+
+- id: TASK-799
+  title: Remaining list/modal duplication clusters
+  created_at: 2026-08-15
+  created_by: agent
+  priority: low
+  status: not-started
+  assignee: owner
+  related_files:
+    - src/components/shared/official-entity-list.tsx
+    - src/components/shared/delete-confirm-modal.tsx
+    - src/components/shared/list-header.tsx
+    - src/components/shared/value-stepper.tsx
+  description: |
+    Reports 10/08/04 leftover clusters after path-filter (TASK-751–753) and
+    stepper/header internal dedup (TASK-792): OfficialEntityList internals,
+    confirm-modal / icon-toggle families, admin and sheet copies.
+  acceptance_criteria:
+    - Inventory the remaining forks against FEATURE_INDEX before any move.
+    - Delete the weaker copy; do not add a third wrapper.
+    - Architect ack if a new shared file is required.
+  notes: |
+    Wave 3C leftover. Do not start without owner ack.
+
+---
+
 - id: TASK-326
   title: Tighten Supabase security advisors (bucket listing + leaked-password protection)
   priority: medium

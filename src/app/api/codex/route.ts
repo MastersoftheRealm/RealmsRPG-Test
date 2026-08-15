@@ -10,13 +10,60 @@ import { isAdmin } from '@/lib/admin';
 import { createClient } from '@/lib/supabase/server';
 import { logApiError } from '@/lib/api-error';
 import { getSession } from '@/lib/supabase/session';
-import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { coerceJsonRecord, parseArchetypePathData } from '@/lib/game/archetype-path';
 import { fetchCoreRules } from '@/lib/core-rules-server';
-import { mapCodexBaseSkillToId } from '@/lib/game/character-legality';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
-import type { CodexPayload } from '@/types/codex';
+import { selectPowerParts, selectTechniqueParts } from '@/lib/codex/part-type';
+import {
+  mapCodexCreatureFeat,
+  mapCodexEquipment,
+  mapCodexFeat,
+  mapCodexPart,
+  mapCodexProperty,
+  mapCodexSkill,
+  mapCodexSpecies,
+  mapCodexTrait,
+  toNum,
+  toStrArray,
+} from '@/lib/codex/row-map';
+import {
+  CODEX_PAYLOAD_KEYS,
+  isCodexPayloadKey,
+  type CodexPayload,
+  type CodexPayloadKey,
+} from '@/types/codex';
 import type { ArchetypeCategory } from '@/types/archetype';
+
+/** Codex tables behind the payload keys — `?collection=` only queries what it returns. */
+const CODEX_TABLES = [
+  'codex_feats',
+  'codex_skills',
+  'codex_species',
+  'codex_traits',
+  'codex_parts',
+  'codex_properties',
+  'codex_equipment',
+  'codex_archetypes',
+  'codex_archetype_levels',
+  'codex_creature_feats',
+] as const;
+
+type CodexTable = (typeof CODEX_TABLES)[number];
+
+const COLLECTION_TABLES: Record<CodexPayloadKey, readonly CodexTable[]> = {
+  feats: ['codex_feats'],
+  skills: ['codex_skills'],
+  species: ['codex_species'],
+  traits: ['codex_traits'],
+  powerParts: ['codex_parts'],
+  techniqueParts: ['codex_parts'],
+  parts: ['codex_parts'],
+  itemProperties: ['codex_properties'],
+  equipment: ['codex_equipment'],
+  archetypes: ['codex_archetypes', 'codex_archetype_levels'],
+  creatureFeats: ['codex_creature_feats'],
+  coreRules: [],
+};
 
 /** Normalize DB archetype type to a known category (defaults to martial when missing/unknown). */
 function toArchetypeCategory(raw: unknown): ArchetypeCategory {
@@ -25,45 +72,41 @@ function toArchetypeCategory(raw: unknown): ArchetypeCategory {
   return 'martial';
 }
 
-function toStrArray(val: unknown): string[] {
-  if (!val) return [];
-  if (Array.isArray(val)) return val.map(String);
-  if (typeof val === 'string')
-    return val
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-  return [];
-}
-
-function toNumArray(val: unknown): number[] {
-  if (!val) return [];
-  if (Array.isArray(val)) return val.map(Number);
-  if (typeof val === 'number') return [val];
-  if (typeof val === 'string')
-    return val
-      .split(',')
-      .map((s) => parseFloat(s.trim()))
-      .filter((n) => !isNaN(n));
-  return [];
-}
-
-function toNum(val: unknown): number | undefined {
-  if (val == null) return undefined;
-  if (typeof val === 'number' && !Number.isNaN(val)) return val;
-  const n = Number(val);
-  return Number.isNaN(n) ? undefined : n;
-}
+/** DB row shape (snake_case from Supabase) */
+type Row = Record<string, unknown>;
 
 /** Row version for the admin optimistic lock; absent on tables without the column. */
 function toVersion(val: unknown): string | undefined {
   return typeof val === 'string' && val ? val : undefined;
 }
 
-/** DB row shape (snake_case from Supabase) */
-type Row = Record<string, unknown>;
+function withRowVersion<T extends object>(mapped: T, r: Row): T & { updated_at?: string } {
+  const updated_at = toVersion(r.updated_at);
+  return updated_at ? { ...mapped, updated_at } : { ...mapped };
+}
 
-async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayload> {
+type TableError = { message?: string; code?: string } | null;
+type TableResult = { data: Row[] | null; error: TableError };
+
+/** Skipped tables resolve empty so the mapping below stays one code path. */
+function selectTable(
+  supabase: SupabaseClient,
+  table: CodexTable,
+  needed: ReadonlySet<CodexTable>,
+): PromiseLike<TableResult> {
+  if (!needed.has(table)) return Promise.resolve({ data: [], error: null });
+  return supabase.from(table).select('*') as unknown as PromiseLike<TableResult>;
+}
+
+async function fetchCodexFromClient(
+  supabase: SupabaseClient,
+  keys: ReadonlySet<CodexPayloadKey>,
+): Promise<Partial<CodexPayload>> {
+  const needed = new Set<CodexTable>();
+  for (const key of keys) {
+    for (const table of COLLECTION_TABLES[key]) needed.add(table);
+  }
+
   const [
     { data: feats, error: eFeats },
     { data: skills, error: eSkills },
@@ -77,17 +120,19 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
     { data: creatureFeats, error: eCreature },
     coreRules,
   ] = await Promise.all([
-    supabase.from('codex_feats').select('*'),
-    supabase.from('codex_skills').select('*'),
-    supabase.from('codex_species').select('*'),
-    supabase.from('codex_traits').select('*'),
-    supabase.from('codex_parts').select('*'),
-    supabase.from('codex_properties').select('*'),
-    supabase.from('codex_equipment').select('*'),
-    supabase.from('codex_archetypes').select('*'),
-    supabase.from('codex_archetype_levels').select('*'),
-    supabase.from('codex_creature_feats').select('*'),
-    fetchCoreRules(supabase),
+    selectTable(supabase, 'codex_feats', needed),
+    selectTable(supabase, 'codex_skills', needed),
+    selectTable(supabase, 'codex_species', needed),
+    selectTable(supabase, 'codex_traits', needed),
+    selectTable(supabase, 'codex_parts', needed),
+    selectTable(supabase, 'codex_properties', needed),
+    selectTable(supabase, 'codex_equipment', needed),
+    selectTable(supabase, 'codex_archetypes', needed),
+    selectTable(supabase, 'codex_archetype_levels', needed),
+    selectTable(supabase, 'codex_creature_feats', needed),
+    keys.has('coreRules')
+      ? fetchCoreRules(supabase)
+      : Promise.resolve({} as Awaited<ReturnType<typeof fetchCoreRules>>),
   ]);
 
   /** If table is missing (e.g. codex_* still in codex schema), treat as empty instead of 500. Run sql/path-c-phase0-consolidate-to-public-part1c.sql to move codex_* to public. */
@@ -96,18 +141,7 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
     return e.code === '42P01' || /does not exist|relation.*not found/i.test(e.message ?? '');
   }
 
-  const tableNames = [
-    'codex_feats',
-    'codex_skills',
-    'codex_species',
-    'codex_traits',
-    'codex_parts',
-    'codex_properties',
-    'codex_equipment',
-    'codex_archetypes',
-    'codex_archetype_levels',
-    'codex_creature_feats',
-  ];
+  const tableNames = CODEX_TABLES;
   const errors = [
     eFeats,
     eSkills,
@@ -150,188 +184,15 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
   const archLevelRows = ((isTableMissing(eArchLevels) ? [] : archetypeLevels) ?? []) as Row[];
   const creatureRows = ((isTableMissing(eCreature) ? [] : creatureFeats) ?? []) as Row[];
 
-  const codexFeats = featRows.map((r) => ({
-    id: r.id,
-    name: r.name ?? '',
-    description: r.description ?? '',
-    category: r.category ?? '',
-    ability: (() => {
-      const arr = normalizeFeatAbilities(r.ability as string | string[] | null | undefined);
-      return arr.length > 0 ? arr : undefined;
-    })(),
-    ability_req: toStrArray(r.ability_req),
-    abil_req_val: toNumArray(r.abil_req_val),
-    tags: toStrArray(r.tags),
-    skill_req: toStrArray(r.skill_req),
-    skill_req_val: toNumArray(r.skill_req_val),
-    lvl_req: toNum(r.lvl_req),
-    uses_per_rec: toNum(r.uses_per_rec),
-    mart_abil_req: toNum(r.mart_abil_req),
-    char_feat: Boolean(r.char_feat),
-    state_feat: Boolean(r.state_feat),
-    rec_period: r.rec_period ?? undefined,
-    req_desc: r.req_desc ?? undefined,
-    feat_cat_req: r.feat_cat_req ?? undefined,
-    pow_abil_req: toNum(r.pow_abil_req),
-    pow_prof_req: toNum(r.pow_prof_req),
-    mart_prof_req: toNum(r.mart_prof_req),
-    speed_req: toNum(r.speed_req),
-    feat_lvl: toNum(r.feat_lvl),
-    base_feat_id:
-      r.base_feat_id != null && r.base_feat_id !== '' ? String(r.base_feat_id) : undefined,
-    updated_at: toVersion(r.updated_at),
-  }));
-
-  const codexSkills = skillRows.map((r) => {
-    const ability = (r.ability ?? '') as string;
-    return {
-      id: r.id,
-      name: r.name ?? '',
-      description: r.description ?? '',
-      ability,
-      base_skill_id: mapCodexBaseSkillToId(r.base_skill),
-      success_desc: r.success_desc ?? undefined,
-      failure_desc: r.failure_desc ?? undefined,
-      ds_calc: r.ds_calc ?? undefined,
-      craft_success_desc: r.craft_success_desc ?? undefined,
-      craft_failure_desc: r.craft_failure_desc ?? undefined,
-      updated_at: toVersion(r.updated_at),
-    };
-  });
-
-  const speciesArr = (primary: unknown, ...fallbacks: unknown[]): string[] => {
-    for (const v of [primary, ...fallbacks]) {
-      const arr = toStrArray(v);
-      if (arr.length > 0) return arr;
-    }
-    return [];
-  };
-
-  const toAdulthoodLifespan = (val: unknown): number[] | undefined => {
-    if (val == null) return undefined;
-    if (typeof val === 'string') {
-      const arr = toNumArray(val);
-      return arr.length ? arr : undefined;
-    }
-    if (Array.isArray(val)) return val.length ? (val as number[]) : undefined;
-    if (typeof val === 'number' && !Number.isNaN(val)) return [val, val];
-    return undefined;
-  };
-
-  const codexSpecies = speciesRows.map((r) => {
-    const sizes: string[] = toStrArray(r.sizes);
-    const aveHeight = r.ave_hgt_cm != null ? toNum(r.ave_hgt_cm) : undefined;
-    const aveWeight = r.ave_wgt_kg != null ? toNum(r.ave_wgt_kg) : undefined;
-    return {
-      id: r.id,
-      name: r.name ?? '',
-      description: r.description ?? '',
-      type: r.type ?? '',
-      size: sizes[0] || 'Medium',
-      sizes,
-      speed: 6,
-      traits: speciesArr(r.species_traits),
-      species_traits: speciesArr(r.species_traits),
-      ancestry_traits: speciesArr(r.ancestry_traits),
-      flaws: speciesArr(r.flaws),
-      characteristics: speciesArr(r.characteristics),
-      skills: speciesArr(r.skills),
-      languages: toStrArray(r.languages),
-      ability_bonuses: undefined,
-      ave_height: aveHeight,
-      ave_weight: aveWeight,
-      adulthood_lifespan: toAdulthoodLifespan(r.adulthood_lifespan),
-      is_starter: r.is_starter === true,
-      image_url: typeof r.image_url === 'string' && r.image_url.trim() ? r.image_url.trim() : null,
-      image_id: typeof r.image_id === 'string' && r.image_id.trim() ? r.image_id.trim() : null,
-      updated_at: toVersion(r.updated_at),
-    };
-  });
-
-  const codexTraits = traitRows.map((r) => ({
-    id: r.id,
-    name: r.name ?? '',
-    description: r.description ?? '',
-    species: [] as string[],
-    uses_per_rec: toNum(r.uses_per_rec),
-    rec_period: r.rec_period ?? undefined,
-    flaw: r.flaw === true,
-    characteristic: r.characteristic === true,
-    option_trait_ids: toStrArray(r.option_trait_ids),
-    updated_at: toVersion(r.updated_at),
-  }));
-
-  const allParts = partRows.map((r) => {
-    const type = ((r.type ?? 'power') as string).toLowerCase() as 'power' | 'technique';
-    return {
-      id: r.id,
-      name: r.name ?? '',
-      description: r.description ?? '',
-      category: r.category ?? '',
-      type,
-      base_en: toNum(r.base_en),
-      base_tp: toNum(r.base_tp),
-      op_1_desc: r.op_1_desc ?? undefined,
-      op_1_en: toNum(r.op_1_en),
-      op_1_tp: toNum(r.op_1_tp),
-      op_2_desc: r.op_2_desc ?? undefined,
-      op_2_en: toNum(r.op_2_en),
-      op_2_tp: toNum(r.op_2_tp),
-      op_3_desc: r.op_3_desc ?? undefined,
-      op_3_en: toNum(r.op_3_en),
-      op_3_tp: toNum(r.op_3_tp),
-      percentage: r.percentage === true,
-      mechanic: r.mechanic === true,
-      duration: r.duration === true,
-      defense: toStrArray(r.defense),
-      updated_at: toVersion(r.updated_at),
-    };
-  });
-
-  const codexPowerParts = allParts.filter((p) => (p.type || 'power').toLowerCase() === 'power');
-  const codexTechniqueParts = allParts.filter(
-    (p) => (p.type || 'technique').toLowerCase() === 'technique',
-  );
-
-  const codexProperties = propRows.map((r) => ({
-    id: r.id,
-    name: r.name ?? '',
-    description: r.description ?? '',
-    type: r.type ?? undefined,
-    tp_cost: 0,
-    gold_cost: 0,
-    base_ip: toNum(r.base_ip),
-    base_tp: toNum(r.base_tp),
-    base_c: toNum(r.base_c),
-    op_1_desc: r.op_1_desc ?? undefined,
-    op_1_ip: toNum(r.op_1_ip),
-    op_1_tp: toNum(r.op_1_tp),
-    op_1_c: toNum(r.op_1_c),
-    mechanic: r.mechanic === true,
-    updated_at: toVersion(r.updated_at),
-  }));
-
-  const codexEquipment = equipRows.map((r) => {
-    const cost = toNum(r.currency) ?? 0;
-    return {
-      id: r.id,
-      name: r.name ?? '',
-      type: 'equipment' as const,
-      subtype: undefined,
-      category: r.category ?? undefined,
-      description: r.description ?? '',
-      damage: undefined,
-      armor_value: undefined,
-      gold_cost: cost,
-      currency: cost,
-      properties: [] as string[],
-      rarity: r.rarity ?? undefined,
-      weight: undefined,
-      image_url: typeof r.image_url === 'string' && r.image_url.trim() ? r.image_url.trim() : null,
-      image_id: typeof r.image_id === 'string' && r.image_id.trim() ? r.image_id.trim() : null,
-      updated_at: toVersion(r.updated_at),
-    };
-  });
+  const codexFeats = featRows.map((r) => withRowVersion(mapCodexFeat(r), r));
+  const codexSkills = skillRows.map((r) => withRowVersion(mapCodexSkill(r), r));
+  const codexSpecies = speciesRows.map((r) => withRowVersion(mapCodexSpecies(r), r));
+  const codexTraits = traitRows.map((r) => withRowVersion(mapCodexTrait(r), r));
+  const allParts = partRows.map((r) => withRowVersion(mapCodexPart(r), r));
+  const codexPowerParts = selectPowerParts(allParts);
+  const codexTechniqueParts = selectTechniqueParts(allParts);
+  const codexProperties = propRows.map((r) => withRowVersion(mapCodexProperty(r), r));
+  const codexEquipment = equipRows.map((r) => withRowVersion(mapCodexEquipment(r), r));
 
   const levelsByArchetype = new Map<string, Row[]>();
   archLevelRows.forEach((levelRow) => {
@@ -451,24 +312,9 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
     };
   });
 
-  const codexCreatureFeats = creatureRows.map((r) => {
-    const pointsVal = toNum(r.feat_points);
-    return {
-      id: r.id,
-      name: r.name ?? '',
-      description: r.description ?? '',
-      points: pointsVal,
-      feat_points: pointsVal,
-      feat_lvl: toNum(r.feat_lvl),
-      lvl_req: toNum(r.lvl_req),
-      mechanic: r.mechanic === true,
-      tiers: undefined,
-      prereqs: [] as string[],
-      updated_at: toVersion(r.updated_at),
-    };
-  });
+  const codexCreatureFeats = creatureRows.map((r) => withRowVersion(mapCodexCreatureFeat(r), r));
 
-  return {
+  const full = {
     feats: codexFeats,
     skills: codexSkills,
     species: codexSpecies,
@@ -482,6 +328,14 @@ async function fetchCodexFromClient(supabase: SupabaseClient): Promise<CodexPayl
     creatureFeats: codexCreatureFeats,
     coreRules,
   } as unknown as CodexPayload;
+
+  if (keys.size === CODEX_PAYLOAD_KEYS.length) return full;
+
+  const slice: Partial<CodexPayload> = {};
+  for (const key of keys) {
+    slice[key] = full[key] as never;
+  }
+  return slice;
 }
 
 /** Codex is admin-editable; long public cache caused stale archetypes/feats after saves. */
@@ -498,12 +352,19 @@ async function canExposeCodexDebug(requested: boolean): Promise<boolean> {
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const debug = url.searchParams.get('debug') === '1';
+  const collection = url.searchParams.get('collection');
+  if (collection !== null && !isCodexPayloadKey(collection)) {
+    return NextResponse.json({ error: 'Unknown codex collection' }, { status: 400 });
+  }
+  const keys: ReadonlySet<CodexPayloadKey> = collection
+    ? new Set([collection])
+    : new Set(CODEX_PAYLOAD_KEYS);
   try {
     // Public reference data: read through the cookie-aware anon client so the
     // "Anyone can read codex*/core_rules" RLS policies apply. The service-role
     // key (RLS bypass) is reserved for authorized admin writes only (SEC-01).
     const supabase = await createClient();
-    const body = await fetchCodexFromClient(supabase);
+    const body = await fetchCodexFromClient(supabase, keys);
     return NextResponse.json(body, { headers: { 'Cache-Control': cacheControl } });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Unknown database error';

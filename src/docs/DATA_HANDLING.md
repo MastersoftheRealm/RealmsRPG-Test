@@ -2,15 +2,15 @@
 
 > **Purpose:** How we fetch, cache, and invalidate codex and library data. For AI agents and engineers.
 
-**Last updated:** Jun 2026
+**Last updated:** Aug 2026
 
 ---
 
 ## Principles
 
-1. **Single source for codex** — One network request for the full codex; all consumers share it via React Query `queryKey: ['codex']` and `select` for slices.
+1. **Single source for codex** — One route (`GET /api/codex`) and one key family (`['codex', …]`). Consumers fetch the collection they read, not the whole catalog (TASK-775).
 2. **Cache aggressively** — Codex and official library change rarely (admin-only). Use long `staleTime`, HTTP `Cache-Control` on APIs, and avoid duplicate fetches.
-3. **Unify, don’t duplicate** — Any new consumer of codex data should use the shared `['codex']` query (or a `useCodex*` hook), not a new endpoint or query key that re-fetches the full payload.
+3. **Unify, don’t duplicate** — Any new consumer of codex data should use a `useCodex*` hook, not a new endpoint or a query key outside the `['codex']` prefix.
 
 ---
 
@@ -19,22 +19,22 @@
 ### API
 
 - **Endpoint:** `GET /api/codex` — returns all codex collections (feats, skills, species, traits, powerParts, techniqueParts, parts, itemProperties, equipment, archetypes, creatureFeats, coreRules).
-- **Cache:** Response uses `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300` (browser 5 min, CDN 10 min).
+- **One collection:** `GET /api/codex?collection=<payload key>` returns the same payload shape with only that key, and only queries that collection's tables (`archetypes` also reads `codex_archetype_levels`). An unknown value is a `400 { error }`. Adding a collection means adding it to `CODEX_PAYLOAD_KEYS` + `COLLECTION_TABLES` — there is no second response shape and no `/api/codex/[collection]` route (ADR-0015).
+- **Row mapping:** `lib/codex/row-map.ts` is the one DB-row → entity mapper for GET `/api/codex` and `getCharacterViewEnrichment` (TASK-777). Route-only `updated_at` stays on the route. Archetype path join stays in the route.
+- **Cache:** `Cache-Control: private, max-age=0, must-revalidate` — codex is admin-editable, so a long public cache served stale feats/archetypes after saves.
 
-### Client: one fetch, many consumers
+### Client: one collection per consumer
 
-- **Query key:** `['codex']` — all codex hooks and `useGameRules` use this key so React Query deduplicates: one request, many subscribers.
-- **Hooks:** `useCodexFeats`, `useCodexSkills`, `useCodexSpecies`, `useCodexTraits`, `useCodexPowerParts`, `useCodexTechniqueParts`, `useCodexParts`, `useCodexItemProperties`, `useCodexEquipment`, `useCodexArchetypes`, `useCodexCreatureFeats`, `useCodexFull` — same `queryKey: ['codex']`, same `queryFn: fetchCodex`, different `select` for each slice.
-- **useGameRules:** Uses `queryKey: ['codex']` and `select` to derive `coreRules` from the codex response (no separate `/api/codex` call).
+- **Query keys:** `codexKeys.all` = `['codex']` (full payload) and `codexKeys.collection(key)` = `['codex', key]`. Slices live under the full-payload prefix, so `invalidateQueries({ queryKey: ['codex'] })` still refreshes every one of them.
+- **Browse hooks:** `useCodexFeats`, `useCodexSkills`, `useCodexSpecies`, `useCodexTraits`, `useCodexParts`, `useCodexPowerParts`, `useCodexTechniqueParts`, `useCodexItemProperties`, `useCodexEquipment`, `useCodexArchetypes`, `useCodexCreatureFeats` — each fetches its own collection via `fetchCodexCollection`. Opening a Codex tab downloads that table only.
+- **Parts:** `useCodexParts` / `useCodexPowerParts` / `useCodexTechniqueParts` share `['codex', 'parts']` (one `codex_parts` read) and split with `selectPowerParts` / `selectTechniqueParts` from `lib/codex/part-type.ts` — the same helpers the route uses.
+- **useCodexFull:** keeps `['codex']` + `fetchCodex` for the admin spreadsheet (the only multi-collection view). Creators and browse tabs use the collection hooks.
+- **useGameRules:** `['codex', 'coreRules']` — it is mounted on most pages, so it must not pull the whole catalog.
 - **Single archetype:** `useCodexArchetypes` and `select` the row by id — do not add a parallel codex fetch.
-
-### Prefetch
-
-- **prefetchFunctions** (e.g. for loaders): All slice helpers (`feats`, `skills`, `species`, …) use a **single shared in-flight fetch** for `/api/codex`. Calling multiple prefetch functions only triggers one request.
 
 ### Invalidation
 
-- When admin edits codex (any tab), invalidate `['codex']` so all codex hooks and game rules refetch.
+- When admin edits codex (any tab), invalidate `['codex']`. Prefix matching covers the full payload and every `['codex', collection]` slice.
 
 ---
 
@@ -65,7 +65,8 @@
 
 | Data           | Query key pattern           | Example                    |
 |----------------|-----------------------------|----------------------------|
-| Full codex     | `['codex']`                 | All codex hooks, useGameRules |
+| Full codex     | `['codex']`                 | `useCodexFull` (admin spreadsheet) |
+| One codex collection | `['codex', collection]` | `useCodexFeats`, `useGameRules` (`coreRules`) |
 | User library   | `['user-powers', userId]`    | useUserPowers              |
 | Official library | `['official-library', type]` | `useOfficialLibrary('powers')` |
 | User library counts | `['user-library-counts', userId]` | `useUserLibraryCounts` |
@@ -76,8 +77,8 @@
 
 ## What to avoid
 
-- **New codex fetches with a different query key** — e.g. a `['core-rules']` or `['gameData', 'archetypes']` that calls `/api/codex` again. Use `['codex']` and `select` instead.
-- **Prefetch that fetches full codex per slice** — Use the shared `prefetchFunctions` (they share one fetch) or `queryClient.prefetchQuery({ queryKey: ['codex'], queryFn: fetchCodex })`.
+- **New codex fetches outside the `['codex']` prefix** — e.g. a `['core-rules']` or `['gameData', 'archetypes']` key that calls `/api/codex` again. Use `codexKeys` + a `useCodex*` hook so admin invalidation still reaches it.
+- **Reaching for `useCodexFull` to read one collection** — that re-downloads every table. Use the collection hook; add a new key to `CODEX_PAYLOAD_KEYS` if the collection does not exist yet.
 - **Read-only GETs without cache headers** — High-volume GETs (codex, official library) should set `Cache-Control` to reduce transfer and load (see `PERFORMANCE_AND_EDGE.md` and `DEPLOYMENT_AND_SECRETS_SUPABASE.md`).
 
 ---

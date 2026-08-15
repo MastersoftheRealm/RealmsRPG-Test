@@ -172,7 +172,7 @@ export function SpeciesModal({ species, traits, isOpen, onSelect, onClose }: Spe
       flexLayout
       contentClassName="p-0"
       footer={
-        <div className="flex shrink-0 justify-between gap-3 border-t border-border-light p-4">
+        <div className="flex shrink-0 justify-between gap-3 border-t border-border-light">
           <Button
             variant="secondary"
             onClick={onClose}

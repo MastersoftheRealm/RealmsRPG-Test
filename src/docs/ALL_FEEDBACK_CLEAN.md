@@ -1,13 +1,62 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-15 (Sheet skills filters; trait type chip once; feat rank UX)
+Last updated: 2026-08-15 (Sheet Skills: edit/temp mode hard to see)
+
+**Raw Feedback Log — 2026-08-15 (Sheet Skills: edit/temp mode hidden by thin column)**
+- Context: Character sheet Skills panel — desktop `lg+` narrow column; Edit and Temp Modifier
+- Priority: Medium (mode discoverability / a11y)
+- Feedback (verbatim summary): When edit mode / temp mod mode for skills, the skills section of the character sheet is too thin, and scrolling side to side to actually see it's in edit mode (by virtue of the skill value edit steppers) is difficult. How can we improve accessibility when edit/temp mode are toggled in the skill section?
+- Misinterpretation / code note: TASK-543 added `min-w-[28rem]` + a fifth Value/Temp column + `TableScroll`, so the only strong “section is open” cue sat off-screen. Abilities already swap chrome in place and have a Temp strip; Skills spend had PointStatus only.
+- Disposition: **TASK-800 done** pending-qa — inline steppers in the Bonus/Value cell; **Editing** / **Temp** heading (`aria-live`); Temp strip parity with Abilities. Creator/allocation keep the Value column. DEV-V-009 T054 (+ T024/T032/T034).
+
+**Raw Feedback Log — 2026-08-15 (Sheet: save fails with PATCH 409)**
+- Context: Character sheet local dev — `PATCH /api/characters/[id]` 409, then GET, then PATCH 200, repeating
+- Priority: High (edits look unsaved / toast)
+- Feedback (verbatim summary): Character sheet keeps failing to save on local dev; Network shows PATCH 409 interleaved with GET 200 and PATCH 200.
+- Misinterpretation / code note: ADR-0013 lock is working. Same-tab race: `useCharacterResourceSync` PATCHed HP/EN/AP on every `character` identity change (notes, `updatedAt` echo) without a lock, stamping `updated_at`; autosave then sent the stale token. Pending resave after a successful PATCH also reused the pre-save token. Other-tab 409 + retry is still correct.
+- Disposition: **TASK-786 done** pending-qa — resource sync only on HP/EN/AP change; per-id PATCH queue + in-memory newest lock token; sheet `onSave` uses `characterLockToken`. DEV-V-009 T049.
+
+**Raw Feedback Log — 2026-08-15 (Sheet: per-section open/close lost after TASK-782)**
+- Context: Character sheet after exclusive Edit vs Temp split
+- Priority: High (lost section grammar)
+- Feedback (verbatim summary): In Temp mode, fields that had a temp-mod button should still use that button — not everything editable at once (same flow as section pencils). Edit mode lost the Abilities/Skills pencil; those sections auto-open spend. Whether editing or temp-modding, each section keeps its symbol (pencil or sliders) to open/close that section. Temp icon: no delta = blue; negative = red; positive = gold (like the value).
+- Misinterpretation / code note: TASK-782 first pass opened all spend/temp chrome when the toolbar mode flipped and deleted `TempModifierToggle`. Sheet-level exclusive modes stay; per-section/per-stat toggles must come back.
+- Disposition: **TASK-782 correction** — restore `EditSectionToggle` in Edit and `TempModifierToggle` in Temp (tinted); do not restore dual pairs. Do not reopen TASK-585/586/600.
+
+**Raw Feedback Log — 2026-08-15 (Process: batch commits, not one commit per task)**
+- Context: Agent OS / task DoD / `tasks:validate` strict reconcile
+- Priority: Medium (agent workflow)
+- Feedback (verbatim summary): Do not require a specific commit for each task done. Need the commit for all tasks/work done to acknowledge it all. Often commit multiple tasks at once rather than each individually — do 6 tasks, audit and cleanup each, then commit/push them all at once.
+- Misinterpretation / code note: CI already greps each `TASK-###` independently, so one subject can list many IDs. Friction was DoD/`/audit` treating a missing per-task commit as a gap, and agents creating a commit after each `done`.
+- Disposition: **TASK-785 done** (n/a) — batch commit is the default; local reconcile `--allow-uncommitted-done`; CI still requires every HEAD-archived ID in some subject.
+
+**Raw Feedback Log — 2026-08-15 (Chooser: Custom card Layer 3 / backend speak)**
+- Context: Character creation chooser at `/characters/new` — Custom mode card
+- Priority: High (first-visit conversion copy)
+- Feedback (verbatim summary): Make the Custom character creation card make more sense for users. They do not know what Layer 3 is. It should say something like “Fully customizable archetype and loadout built step by step,” not mention Layer 3 or other backend speak.
+- Misinterpretation / code note: Copy lives in `GUIDED_CREATOR_COPY.chooser.modes.custom`. First bullet was “Opens the cohesive creator on custom archetype (Layer 3)”; tagline used “chapter by chapter”; second bullet said “Forge type.”
+- Disposition: **TASK-784 done** pending-qa — player-facing tagline + bullets; no Layer 3 / cohesive creator / Forge jargon on the card. DEV-V-020 T002 + DEV-V-013 T001.
+
+**Raw Feedback Log — 2026-08-15 (Character sheet: edit vs temp modes; customized feats)**
+- Context: Character sheet Notes — sheet edit vs Temp Modifier; Feats/Traits customization (italic custom names + expanded note)
+- Priority: High for mode split (accidental permanent vs temp edits); Medium for feat play-view polish
+- Feedback (verbatim summary): (1) Split the edit mode / temp mod modes. While in edit mode no temp mod functionality exists, and vice versa, so users can be confident they aren’t altering the wrong one and so buttons/decision overload doesn’t occur. (2) Customized Feats: italicised titles get slightly cutoff on the right (italic leans into a clip). When not in edit mode don’t display the custom name field. Simply add a second description below the first within the same description text box, separated from the first by a clean simple line — no “note” title or anything else; no hide/show customization button on the expanded feat view (outside of edit mode).
+- Misinterpretation / code note: Temp chrome used to be gated on sheet `isEditMode` (ADR-0006 nested dual pair). **TASK-782 done** pending-qa — play / edit / temp are exclusive at the toolbar. Feat/trait customization: play view used **View customization** plus labeled Custom name / Note boxes; collapsed custom names were italic `nameContent` inside GLR `lg:truncate` (and the row `overflow-hidden`), which clipped the italic overhang.
+- Disposition: **TASK-782 done** pending-qa (sheet-level exclusive Edit vs Temp Modifier; ADR-0006 Amended; do not reopen TASK-585/586/600). **TASK-783 done** pending-qa (italic `pe-[0.35em]`; play note in GLR `descriptionAfter`; Customize fields stay edit-only). Related: TASK-778 done (Skills filters); TASK-779 done (trait kind expanded-only).
+
+**Raw Feedback Log — 2026-08-15 (Codex/Library: Filter by character tooltip far right)**
+- Context: Codex / Library Notes — **Filter by character** collapsible filter header (`CharacterFilter`)
+- Priority: Medium (help chrome)
+- Feedback (verbatim summary): Tooltip on **Filter by character** is at the far right (pushed likely by the hide/expand arrow added next to Filter by character). Want the tooltip actually next to the title **Filter by character** so it is clear what is being tooltipped.
+- Misinterpretation / code note: Header is `[icon] [flex-1 expand button: title + selected + chevron] [InfoTippy]`. `flex-1` on the expand control stretches the button and leaves the (i) as a trailing sibling at the far right of the row.
+- Disposition: **TASK-781 done** pending-qa — InfoTippy immediately after the title; expand overlay covers the rest of the header (CollapsibleSection pattern). Do not reopen TASK-722.
 
 **Raw Feedback Log — 2026-08-15 (Sheet Skills filters; trait type chip; feat rank stepper)**
 - Context: Character sheet Skills toolbar; Feats/Traits list; edit-mode Archetype/Character feat rank
 - Priority: Medium (filters + chip leak now); feat rank blocked on owner pick
 - Feedback (verbatim summary): (1) Skills All vs Proficient uses the bulky source-style SegmentedControl; want a cleaner, smaller, uninvasive filter for All/Proficient plus show/hide sub-skills. Rename **Show sub-skills** → **Sub-Skills**. (2) In the character feat list, traits list their type twice when expanded (e.g. Characteristic in the item header and again as a desc chip); type is only needed in the expanded view. (3) Edit-mode sheet feat list: increasing an existing feat’s level via the Lvl quantity stepper is unclear, especially next to uses-per-recovery ±; brainstorm a clearer control.
 - Misinterpretation / code note: Skills already use `SegmentedControl` (same chrome as `SourceFilter`) + a 44px checkbox labeled “Show sub-skills” (`skills-section.tsx`; TASK-584). Trait kind is `badges` on compact `FeatsTraitsListSection` rows (`mapTraitRows`); compact GLR always paints badges on the name **and** expanded `DescriptorChip`s unless `showBadgesInName` (TASK-415 leak). **Superseded by TASK-780:** sheet feat rank is no longer a collapsed Lvl `ValueStepper`. Rank lives on expanded **Feat Levels** chips (`buildFeatLevelChips` + `GridListChip`; edit uses `ChipData.onSelect`). Creature creator stepper is unchanged.
-- Disposition: **TASK-778** (compact Skills All/Proficient + Sub-Skills toggle). **TASK-779** (trait type DescriptorChip expanded-only). **TASK-780 done** pending-qa — option A (expanded Feat Levels chips; DEV-Q04). Do not reopen TASK-584 / TASK-415 / the 2026-06-26 “add a level stepper” ship.
+- Disposition: **TASK-778 done** pending-qa (compact Skills All/Proficient + Sub-Skills toggle). **TASK-779** (trait type DescriptorChip expanded-only). **TASK-780 done** pending-qa — option A (expanded Feat Levels chips; DEV-Q04). Do not reopen TASK-584 / TASK-415 / the 2026-06-26 “add a level stepper” ship.
 
 **Raw Feedback Log — 2026-08-14 (Creator headers: empty space only, not smaller titles)**
 - Context: Follow-up on TASK-764 shared `CollapsibleSection` after the first compact-header pass
@@ -3047,3 +3096,11 @@ Notes
 - Feedback (verbatim summary): Empowered creator currently favors more expensive energy-wise parts when similar parts exist between power and techniques. Guiding rule: when technique/power parts overlap for a hard-tied UI control (e.g. Add Weapon), use whichever of the two IDs is cheaper Energy. Also for No Attack, add the No Attack mechanic like the technique creator does.
 - Expected: Cheaper-EN pick between overlapping power/technique parts; Weapon Attack uses cheaper of Add Weapon to Power vs Add Weapon to Technique; No Weapon/Attack adds No Attack reduction part.
 - Disposition: Filed **TASK-683**. **Implemented 2026-08-06** — `pickCheaperEnPart` + `deriveEmpoweredAttackMode`; Weapon uses cheaper Add Weapon (live technique 2.5 vs power 4.5); No Attack on No Weapon/Attack; pending-qa **DEV-V-049-T001**.
+
+**Raw Feedback Log — 2026-08-15 (Character sheet Recovery footer + header DR/crit)**
+- Date: 2026-08-15
+- Context: Character sheet — Recovery modal; header Speed/Evasion vitals
+- Priority: High
+- Feedback (verbatim): Recovery modal hugs border of full recovery/cancel buttons in bottom right instead of having a border margin like the rest of the borders/edges of the modal, may be an issue elsewhere. Damage reduction shouldn’t be in the header when character has no armor, or if that armor doesn’t modify the value at all, same for critical range. Also critical range should be calculating as evasion +10 + critical range increase property from armor giving 1 + Op1 level of critical range or something like that I believe.
+- Expected: Modal footer inset matching content/header gutters (sitewide, not Recovery-only). Play/edit: header shows Damage Reduction / Critical Range only when equipped armor (or a leftover temp) changes that stat. **Temp mode always shows both cards** so a temp can be added. Formula: Evasion + 10 + (1 + Option 1 level).
+- Disposition: Filed and implemented **TASK-787** / **TASK-788**. Cleanup: Temp mode shows DR/crit cards; archetype `QuickArmorTable` uses `calculateCriticalRange` (deleted inline `10 + agility + 10`). pending-qa **DEV-V-009-T052 / T053** (+ DEV-V-008-T015).

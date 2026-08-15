@@ -213,7 +213,7 @@ export function CreatorTabBar() {
         showCloseButton={true}
         contentClassName="p-4 overflow-y-auto"
         footer={
-          <div className="flex shrink-0 justify-end gap-3 border-t border-border-light p-4">
+          <div className="flex shrink-0 justify-end gap-3 border-t border-border-light">
             <Button variant="secondary" onClick={() => setPendingStep(null)}>
               Stay & fix
             </Button>

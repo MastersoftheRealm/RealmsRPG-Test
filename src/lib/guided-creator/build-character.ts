@@ -19,6 +19,7 @@ import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
 import type { Species } from '@/hooks';
 import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
+import { mergeAgeIntoAppearance } from '@/lib/character/appearance-age';
 import { clampSavedCurrency } from '@/lib/character-save';
 import { computeStartingCurrency } from '@/lib/guided-creator/equipment-currency';
 import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
@@ -227,6 +228,7 @@ export function buildGuidedCharacterPayload(
     speciesSkillIds,
     codexSkills: ctx.codexSkills ?? [],
     abilities,
+    skillAbilities: draft.skillAbilities,
   });
 
   // Lean save refs — resolve feat names from codex (same pattern as powers/techniques).
@@ -383,13 +385,11 @@ export function buildGuidedCharacterPayload(
     },
     proficiencies,
     ...(libraryTabVisibility && { libraryTabVisibility }),
-    defenseVals: { ...DEFAULT_DEFENSE_SKILLS },
+    defenseVals: { ...(draft.defenseVals ?? DEFAULT_DEFENSE_SKILLS) },
     portrait: draft.portraitUrl ?? undefined,
     height: draft.heightCm ?? undefined,
     weight: draft.weightKg ?? undefined,
-    appearance: [draft.age ? `Age: ${draft.age}` : '', draft.appearanceNotes?.trim() ?? '']
-      .filter(Boolean)
-      .join('\n'),
+    appearance: mergeAgeIntoAppearance(draft.age, draft.appearanceNotes?.trim() ?? ''),
     description: draft.description?.trim() || undefined,
   };
 }

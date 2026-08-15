@@ -3,12 +3,12 @@
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui';
 import { TempModifierToggle } from '@/components/shared';
-import { tempModifierValueClass } from '@/lib/character/temp-modifiers';
+import { tempModifierTintFromDelta, tempModifierValueClass } from '@/lib/character/temp-modifiers';
 import { TempModifierStepperRow, useTempModifierActive } from './sheet-temp-modifier-controls';
 
 /**
  * Large stat block for Speed / Evasion / DR / Critical Range.
- * Edit mode: Temp Modifier only (ADR-0006). No pencil / permanent base edit.
+ * Temp Modifier mode: per-stat sliders toggle (ADR-0006 / TASK-782). No pencil / permanent base edit.
  * `value` is the final display number/string (temps already applied by caller).
  * Terminal threshold lives on the Health resource header — not a quick-reference card.
  */
@@ -17,7 +17,7 @@ export function LargeStatBlock({
   value,
   valueSuffix,
   valueAriaLabel,
-  isEditMode,
+  isTempModifierMode,
   tempDelta = 0,
   onTempDeltaChange,
 }: {
@@ -26,14 +26,15 @@ export function LargeStatBlock({
   valueSuffix?: string;
   /** Optional accessible name for the value (e.g. read-only DR / Critical Range). */
   valueAriaLabel?: string;
-  isEditMode?: boolean;
+  isTempModifierMode?: boolean;
   tempDelta?: number;
   onTempDeltaChange?: (delta: number) => void;
 }) {
   const { tempActive, setTempActive, canTemp, showTempControls } = useTempModifierActive(
-    isEditMode,
+    isTempModifierMode,
     onTempDeltaChange,
   );
+  const tint = tempModifierTintFromDelta(tempDelta);
 
   return (
     <Card className="flex min-w-[100px] flex-col items-center bg-surface-alt p-4 shadow-none">
@@ -44,7 +45,7 @@ export function LargeStatBlock({
         {canTemp && (
           <TempModifierToggle
             isActive={tempActive}
-            hasModifiers={tempDelta !== 0}
+            tint={tint}
             onClick={() => setTempActive((prev) => !prev)}
             title={tempActive ? 'Close Temp Modifier' : 'Temp Modifier'}
           />

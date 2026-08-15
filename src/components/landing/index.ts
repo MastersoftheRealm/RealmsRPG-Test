@@ -1,6 +1,6 @@
 /**
  * Landing page section components (REALMS_PRODUCT_OVERVIEW Section 4).
- * Composed by app/(main)/home-page.tsx.
+ * Composed by app/(main)/page.tsx.
  */
 
 export { HeroSection } from './hero-section';

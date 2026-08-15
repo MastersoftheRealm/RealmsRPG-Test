@@ -142,10 +142,10 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 
 | Area | Files |
 |------|--------|
-| Home and CTAs | `src/app/(main)/home-page.tsx` |
+| Home and CTAs | `src/app/(main)/page.tsx` |
 | Realms Library (guest read-only) | `src/app/(main)/library/page.tsx`, `src/app/(main)/library/LibraryPublicContent.tsx` (former `/browse` redirects here) |
 | Character creator | `src/app/(main)/characters/new/page.tsx`, `src/components/character-creator/steps/*.tsx`, `src/stores/character-creator-store.ts` |
-| Home / landing | `src/app/(main)/home-page.tsx` (post-activation onboarding shipped — TASK-388) |
+| Home / landing | `src/app/(main)/page.tsx` (post-activation onboarding shipped — TASK-388) |
 | Header / footer / Discord | `src/components/layout/header.tsx`, `src/components/layout/footer.tsx` |
 | Library and Codex labels | `src/app/(main)/library/page.tsx`, `src/app/(main)/codex/page.tsx`, `src/components/shared/filters/source-filter.tsx` |
 
