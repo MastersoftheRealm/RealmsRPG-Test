@@ -186,7 +186,7 @@ App code mounts Vercel Web Analytics in the root layout (`src/app/layout.tsx` �
 1. In the Vercel project → **Analytics** → **Enable** Web Analytics (Dashboard-only; see **DEV-006** in `DEVELOPER_TASK_QUEUE.md`).
 2. Deploy (or wait for the next production deploy) so `/_vercel/insights/*` routes are provisioned.
 3. Verify: open the live site, DevTools → Network → look for a same-origin `…/view` (or `/_vercel/insights/view`) request after navigation.
-4. **CSP:** `next.config.ts` allows `https://va.vercel-scripts.com` on `script-src` / `connect-src` for local/dev debug scripts. Production uses same-origin `/_vercel/insights/*` (`'self'`). Do not remove those hosts without re-checking analytics in both environments.
+4. **CSP:** `next.config.ts` allows `https://va.vercel-scripts.com` on `script-src` / `connect-src` for local/dev debug scripts. Production uses same-origin `/_vercel/insights/*` (`'self'`). Sentry browser envelopes need `https://*.sentry.io`, `https://*.ingest.sentry.io`, and `https://*.ingest.us.sentry.io` on `connect-src` (TASK-802; CSP `*` is one label). Do not remove those hosts without re-checking analytics / error reporting in both environments.
 5. Privacy copy: `/privacy` discloses anonymous usage analytics via the host (see `privacy-copy.ts`).
 
 Speed Insights is **not** installed unless separately prioritized (different package + CSP considerations).

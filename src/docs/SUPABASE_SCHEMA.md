@@ -158,7 +158,7 @@ Single document in `data`; list columns for list/filter. Realtime: `public.chara
 
 Membership source of truth: `campaign_members`. Realtime: `public.campaign_rolls`.
 
-**RLS (`campaigns`):** One permissive SELECT policy per role — `campaigns_select_participants` (`private.auth_is_campaign_participant(id)` covers owner + members). Owner write policies: `campaigns_owner_insert`, `campaigns_owner_update`, `campaigns_owner_delete`. Consolidation: `sql/task-650-campaigns-rls-select-consolidation-applied.sql` (dropped redundant `campaigns_owner_select`).
+**RLS (`campaigns`):** One permissive SELECT policy per role — `campaigns_select_participants` (`owner_id = auth.uid()` **or** `private.auth_is_campaign_participant(id)`). The `owner_id` short-circuit is required so `INSERT … RETURNING` can see the in-flight owner row (STABLE helper lookup cannot; TASK-802). Owner write policies: `campaigns_owner_insert`, `campaigns_owner_update`, `campaigns_owner_delete`. Do not restore a second `campaigns_owner_select` policy (TASK-650 / `multiple_permissive_policies`). Replay: `sql/task-802-campaigns-select-owner-short-circuit.sql`.
 
 **Join-by-invite (app behavior):** RLS on `campaigns` allows SELECT only for the owner or existing members, so a new player cannot load a campaign row with the normal user-scoped Supabase client. The app uses **`SUPABASE_SERVICE_ROLE_KEY`** (server-only) in `joinCampaignAction` and in `GET /api/campaigns/invite/[code]` to look up by `invite_code` and update roster/members after the user is authenticated and character ownership is verified.
 
