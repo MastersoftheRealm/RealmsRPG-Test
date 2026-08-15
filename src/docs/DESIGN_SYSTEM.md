@@ -164,7 +164,7 @@ Used for chips, badges, and content type indicators.
 Standard patterns for consistent UX across the app.
 
 ### Modals
-- **Base component:** All modals must use `@/components/ui/modal` (Modal). Pass `isOpen`, `onClose`, and use `title`/`description` (simple) or `header`/`footer` (custom). After close, Modal holds an invisible `z-overlay` sink for 200ms (`MODAL_CLOSE_CLICK_CAPTURE_MS`) so the dismiss click cannot fall through to Create/Save underneath.
+- **Base component:** All modals must use `@/components/ui/modal` (Modal). Pass `isOpen`, `onClose`, and use `title`/`description` (simple) or `header`/`footer` (custom). After close, Modal holds an invisible `z-overlay` sink for 200ms so the dismiss click cannot fall through to Create/Save underneath.
 - **Confirm/delete:** Use `ConfirmActionModal` or `DeleteConfirmModal` from `@/components/shared`; both compose base Modal and accept `isOpen`.
 - **Selection:** Use `UnifiedSelectionModal` for add-feat, add-power, add-technique, etc.
 - **Size guidance:** `sm`–`md` confirms; `lg`–`2xl` typical forms/lists; `full` (`max-w-6xl`) for high-complexity multi-section editors (admin codex add/edit). Large dialogs use `fullScreenOnMobile`.

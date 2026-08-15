@@ -8,7 +8,6 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import type { MouseEvent } from 'react';
 import { LogIn, UserPlus } from 'lucide-react';
 import { Modal } from '@/components/ui/modal';
 import { Button } from '@/components/ui/button';
@@ -49,12 +48,6 @@ export function LoginPromptModal({
     router.push(`/register?redirect=${encodeURIComponent(returnPath)}`);
   };
 
-  const handleContinueWithoutAuth = (event: MouseEvent<HTMLButtonElement>) => {
-    event.preventDefault();
-    event.stopPropagation();
-    onClose();
-  };
-
   const title = reason === 'load' ? 'Login Required to Load' : 'Login Required to Save';
   const defaultMessage =
     reason === 'load'
@@ -92,12 +85,7 @@ export function LoginPromptModal({
             Create Account
           </Button>
 
-          <Button
-            type="button"
-            onClick={handleContinueWithoutAuth}
-            variant="ghost"
-            className="w-full"
-          >
+          <Button type="button" onClick={onClose} variant="ghost" className="w-full">
             {reason === 'load' ? 'Continue Without Loading' : 'Continue Without Saving'}
           </Button>
         </div>

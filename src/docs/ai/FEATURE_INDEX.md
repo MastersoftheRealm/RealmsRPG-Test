@@ -159,7 +159,7 @@
 | Theme switch | `ThemeToggle` |
 | Help tooltips | `InfoTippy` (`tone` API: `info` / `tp` / `current` — TASK-707; layout-neutral hit overlay TASK-725) / `WordHelpTip` + `public/tooltip-text.tsx` — see `guide/04-floating-ui-tooltips.md` |
 
-> UI primitives (Modal, Button, Chip, **DescriptorChip**, **ExpandableChip**, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`. Modal sizes: `full` for high-complexity editors (admin codex add/edit use `full` + `fullScreenOnMobile`; see DESIGN_SYSTEM). After close, Modal holds an invisible `z-overlay` sink (`lib/ui/modal-close-click-capture.ts`, TASK-802) so dismiss cannot click-through to Create/Save.
+> UI primitives (Modal, Button, Chip, **DescriptorChip**, **ExpandableChip**, PageContainer, PageHeader, TabNavigation, SearchInput, **TableScroll**) live in `@/components/ui`. Modal sizes: `full` for high-complexity editors (admin codex add/edit use `full` + `fullScreenOnMobile`; see DESIGN_SYSTEM). After close, Modal holds an invisible `z-overlay` sink for 200ms (TASK-802) so dismiss cannot click-through to Create/Save.
 
 ## Game logic / calculators (`src/lib/`)
 

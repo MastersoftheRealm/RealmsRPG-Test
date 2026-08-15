@@ -9,8 +9,6 @@
   verification_status: pending-qa
   related_files:
     - src/components/ui/modal.tsx
-    - src/lib/ui/modal-close-click-capture.ts
-    - src/lib/ui/modal-close-click-capture.test.ts
     - src/components/shared/login-prompt-modal.tsx
     - src/components/guided-creator/steps/reveal-step.tsx
     - src/components/character-creator/steps/finalize-step.tsx
@@ -20,6 +18,7 @@
     - src/docs/ai/BUILD_VALIDATION.md
     - src/docs/ai/DEVELOPER_TASK_QUEUE.md
     - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
   build_validation: |
     suite: DEV-V-051
     tests:

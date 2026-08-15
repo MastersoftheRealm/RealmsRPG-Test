@@ -7005,7 +7005,7 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 
 ## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754 / TASK-802)
 
-Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy, plus TASK-802 guest **Continue Without Saving**. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`, `character-save.test.ts` (create-error copy), `modal-close-click-capture.test.ts`. These tests are the parts only a browser can show.
+Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy, plus TASK-802 guest **Continue Without Saving**. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`, `character-save.test.ts` (create-error copy). Guest Continue Without Saving is human-only (T011). These tests are the parts only a browser can show.
 
 #### DEV-V-051-T001 — Guided creator entry does not wait on the session
 

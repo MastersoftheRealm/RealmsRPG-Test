@@ -16,10 +16,6 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 import { useIsClient } from '@/hooks/use-is-client';
-import {
-  MODAL_CLOSE_CLICK_CAPTURE_MS,
-  shouldHoldCloseClickCapture,
-} from '@/lib/ui/modal-close-click-capture';
 import { IconButton } from './icon-button';
 
 interface ModalProps {
@@ -64,6 +60,8 @@ const sizeClasses = {
 };
 
 const MOBILE_BREAKPOINT_PX = 768;
+/** Invisible overlay linger after close so dismiss cannot hit Create/Save underneath. */
+const CLOSE_CLICK_CAPTURE_MS = 200;
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -134,7 +132,7 @@ export function Modal({
   if (isOpen) {
     if (!wasOpen) setWasOpen(true);
     if (captureCloseClicks) setCaptureCloseClicks(false);
-  } else if (shouldHoldCloseClickCapture(wasOpen, isOpen) && !captureCloseClicks) {
+  } else if (wasOpen && !captureCloseClicks) {
     setWasOpen(false);
     setCaptureCloseClicks(true);
   }
@@ -205,7 +203,7 @@ export function Modal({
     if (!captureCloseClicks) return;
     const id = window.setTimeout(() => {
       setCaptureCloseClicks(false);
-    }, MODAL_CLOSE_CLICK_CAPTURE_MS);
+    }, CLOSE_CLICK_CAPTURE_MS);
     return () => window.clearTimeout(id);
   }, [captureCloseClicks]);
 
