@@ -58,6 +58,7 @@ export const GridListRow = memo(function GridListRow({
   totalCost,
   costLabel = 'TP',
   badges = [],
+  showBadgesInName = false,
   requirements,
   expandedContent,
   supplementalExpandedContent,
@@ -125,11 +126,13 @@ export const GridListRow = memo(function GridListRow({
         ]
       : [];
   const descTrimmed = typeof description === 'string' ? description.trim() : '';
+  // Name-row badges are their own copy of that metadata — do not repeat them in the body.
+  const expandedBadges = showBadgesInName ? [] : badges;
   const hasBodyContent =
     !!descTrimmed ||
     hasChips ||
     hasDetailSections ||
-    badges.length > 0 ||
+    expandedBadges.length > 0 ||
     !!requirements ||
     !!expandedContent ||
     !!supplementalExpandedContent;
@@ -332,6 +335,7 @@ export const GridListRow = memo(function GridListRow({
             quantityDecrementLabel={quantityDecrementLabel}
             quantityIncrementLabel={quantityIncrementLabel}
             badges={badges}
+            showBadgesInName={showBadgesInName}
             columns={columns}
             columnSpans={columnSpans}
             suppressDescriptionPreview={suppressDescriptionPreview}
@@ -400,7 +404,7 @@ export const GridListRow = memo(function GridListRow({
                 descTrimmed={descTrimmed}
                 description={description}
                 warningMessage={warningMessage}
-                badges={badges}
+                badges={expandedBadges}
                 gridColumns={gridColumns}
                 expandedMobileStatColumns={expandedMobileStatColumns}
                 totalCost={showExpandedTotalCost ? totalCost : undefined}

@@ -8,11 +8,13 @@ import { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { Spinner } from '@/components/ui';
 import { GuidedInlineCatalogList, GuidedLayerNav, LoadoutBudgetBar } from '@/components/shared';
 import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
+import { ArchetypePathFilter } from '@/components/shared/filters';
 import {
   useEquipment,
   useOfficialLibrary,
   useGuidedEquipmentCatalog,
   useGuidedEquipmentL2Catalog,
+  usePathListFilter,
   useUserItems,
 } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
@@ -37,6 +39,7 @@ import { filterPoolToPhase } from '@/lib/guided-creator/equipment-phase-candidat
 import {
   changeGuidedEquipmentL2Quantity,
   initialSelectedIdsForPhase,
+  pathRecommendationKindForEquipmentPhase,
   toggleGuidedEquipmentL2Ref,
 } from '@/lib/guided-creator/guided-equipment-l2';
 import {
@@ -59,6 +62,11 @@ import {
   resolveRefUnitCost,
 } from '@/lib/guided-creator/equipment-currency';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
+import {
+  applyLivePathFilter,
+  pathFilterEmptyTitle,
+  selectableItemPathIds,
+} from '@/lib/game/path-recommendation-index';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.loadout;
 const phaseCopy = stepCopy.phases;
@@ -234,6 +242,36 @@ export function LoadoutStep() {
   const inlineSelectedIds = useMemo(
     () => initialSelectedIdsForPhase(equipmentPhase, draft),
     [equipmentPhase, draft]
+  );
+
+  const {
+    selectedPathIds: inlineSelectedPathIds,
+    setSelectedPathIds: setInlineSelectedPathIds,
+    pathIndex: inlinePathIndex,
+    pathRecommendedIds: inlinePathMatchIds,
+    pathFilterActive: inlinePathFilterActive,
+  } = usePathListFilter({
+    entities: inlineItems,
+    kind: pathRecommendationKindForEquipmentPhase(equipmentPhase),
+    enabled: isInlineCatalog,
+  });
+
+  const pathFilteredInlineItems = useMemo(
+    () =>
+      applyLivePathFilter(inlineItems, {
+        pathMatchIds: inlinePathMatchIds,
+        pathIndex: inlinePathIndex,
+        selectedPathIds: inlineSelectedPathIds,
+        keepIds: inlineSelectedIds,
+        idsForItem: selectableItemPathIds,
+      }),
+    [
+      inlineItems,
+      inlinePathMatchIds,
+      inlinePathIndex,
+      inlineSelectedPathIds,
+      inlineSelectedIds,
+    ]
   );
 
   const inlineQuantities = useMemo(() => {
@@ -484,13 +522,23 @@ export function LoadoutStep() {
           </LoadoutBudgetBar>
 
           <GuidedInlineCatalogList
-            items={inlineItems}
+            items={pathFilteredInlineItems}
             selectedIds={inlineSelectedIds}
             onToggleSelection={equipmentPhase === 'gear' ? undefined : handleInlineToggle}
             columns={l2HeaderColumnsForPhase(equipmentPhase)}
             gridColumns={l2GridColumnsForPhase(equipmentPhase)}
             itemLabel={equipmentPhase === 'gear' ? 'item' : equipmentPhase}
-            emptyMessage={phaseCopy.l2.emptyMessage(equipmentPhase)}
+            emptyMessage={
+              inlinePathFilterActive
+                ? pathFilterEmptyTitle(
+                    equipmentPhase === 'weapon'
+                      ? 'weapons'
+                      : equipmentPhase === 'armor'
+                        ? 'armor'
+                        : 'gear'
+                  )
+                : phaseCopy.l2.emptyMessage(equipmentPhase)
+            }
             searchPlaceholder={phaseCopy.l2.searchPlaceholder(equipmentPhase)}
             showQuantity={equipmentPhase === 'gear'}
             quantities={inlineQuantities}
@@ -502,6 +550,17 @@ export function LoadoutStep() {
             scopeExtra={
               <SourceFilter value={librarySource} onChange={setLibrarySource} />
             }
+            filterContent={
+              <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                <ArchetypePathFilter
+                  options={inlinePathIndex.options}
+                  selectedPathIds={inlineSelectedPathIds}
+                  onChange={setInlineSelectedPathIds}
+                />
+              </div>
+            }
+            showFilters
+            optionsActiveCount={inlinePathFilterActive ? 1 : 0}
           />
 
           {equipmentPhase !== 'gear' ? (

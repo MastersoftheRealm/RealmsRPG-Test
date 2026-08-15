@@ -11,6 +11,7 @@ import { Button, Checkbox } from '@/components/ui';
 import { POWER_DAMAGE_TYPES as DAMAGE_TYPES, DIE_SIZES } from '@/lib/game/creator-constants';
 import type { DamageConfig } from './power-creator-types';
 import type { PowerSectionCosts } from './power-creator-cost-derivation';
+import { PowerCreatorHelp } from './power-creator-help';
 
 type PowerCreatorEditorPowerDamageProps = {
   damages: DamageConfig[];
@@ -29,6 +30,7 @@ export function PowerCreatorEditorPowerDamage({
     <CollapsibleSection
       title="Damage"
       collapsedSummary={damageSummary}
+      titleAddon={<PowerCreatorHelp topic="damage" />}
       rightSlot={<SectionCostBadge en={sectionCosts.damage.energyRaw} tp={sectionCosts.damage.totalTP} />}
     >
       {damages.map((d, index) => (

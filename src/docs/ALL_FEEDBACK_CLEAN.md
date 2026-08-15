@@ -1,6 +1,27 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-14 (Guided creator polish + create 500 + EN abbrev)
+Last updated: 2026-08-14 (Standalone creators: empty expanded-header gap only, Attack label, power tooltips)
+
+**Raw Feedback Log — 2026-08-14 (Creator headers: empty space only, not smaller titles)**
+- Context: Follow-up on TASK-764 shared `CollapsibleSection` after the first compact-header pass
+- Priority: High (chrome size)
+- Feedback (verbatim summary): When shrinking the header section vertically, the intent was the **empty space**, not making section titles/area too small. Revert all but the empty vertical space fixes.
+- Misinterpretation / code note: First pass also shrank titles to `text-sm` and padding to `px-3 py-2`, and dropped Enable/Remove `min-h-[44px]`. Empty gap was the reserved `min-h-[1.25rem]` / `&nbsp;` summary line when expanded with `collapsedSummary` and no `subtitle`.
+- Disposition: Restored original title size/padding/44px actions; kept empty-line-only shrink. Docs (FEATURE_INDEX / DEV-V-018-T012 / archive AC) corrected.
+
+**Raw Feedback Log — 2026-08-14 (Standalone creators: expanded headers, Attack label, power tooltips, defer layers)**
+- Context: Standalone creators (power, technique, item, species, creature, empowered); Power Creator advanced builder; waiting TASK-408 / TASK-410–414
+- Priority: High (chrome + teaching copy now); layers deferred
+- Feedback (verbatim summary): (1) Dropdown header of all creator sections takes too much vertical space when expanded. (2) Power creator Attack section title is repeated on the inner selector — redundant. (3) Implement the power creator tooltips task with the provided tooltips. (4) Do not do the power creator layers task(s); defer those awhile longer.
+- Misinterpretation / code note: Shared `CollapsibleSection` used `p-4` plus a reserved empty summary line when expanded (`collapsedSummary` with no `subtitle`). Attack lives in `power-creator-editor-action-profile.tsx` with a duplicate inner `<label>Attack</label>`. TASK-408 (InfoTippy from POWER_CREATOR_TOOLTIPS_DRAFT) was blocked on TASK-414; owner unblocked advanced (L3) wiring only. TASK-410–414 remain the guided L1/L2 layers program.
+- Disposition: **TASK-764** — drop the reserved empty summary line on expanded `CollapsibleSection` headers (do not shrink titles/padding) + drop the redundant Attack field label. **TASK-408** — migrate draft copy into `tooltip-text.tsx` and wire InfoTippy on the advanced power creator (L1 placeholder strings only). **TASK-410–414** stay waiting/deferred (owner: layers later).
+
+**Raw Feedback Log — 2026-08-14 (Home: three steps + CTA jargon)**
+- Context: Guest home page (`/`) “Start Playing in Three Steps” + hero primary CTA
+- Priority: High (first-visit conversion copy)
+- Feedback (verbatim summary): The three steps should be **Create a character**, **Find a table**, **Start playing**. The hero CTA should not say Start Playing (that is step 3); use **Create Character** or similar. Step 2 should talk about joining the community through Discord. Current steps use terms a new user does not know yet and does not need (Archetype Path, Species, Abilities, Skills, Feats).
+- Misinterpretation / code note: Copy lives in `LANDING_COPY` (`landing-copy.ts`). Hero + mid-page how-it-works repeat both use `hero.primaryCta`. How-it-works was Choose Your Path / Become Your Character / Play with Friends. Discord CTA already exists in the closing community band (`DISCORD_URL`).
+- Disposition: **TASK-763** — rewrite how-it-works steps; rename primary CTA to Create Character; Discord as the find-a-table path; keep heading “Start Playing in Three Steps.”
 
 **Raw Feedback Log — 2026-08-14 (Guided creator: feat GLR, innate/powers split, Power weapons hatch, EN, ability tiles, create 500)**
 - Context: Guided character creator (feat GLRs, loadout, powers/techniques, Abilities, Your Hero) + POST `/api/characters` failing on Finish

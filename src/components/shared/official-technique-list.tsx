@@ -10,6 +10,7 @@ import { Swords } from 'lucide-react';
 import { OfficialEntityList } from '@/components/shared/official-entity-list';
 import { PowerTechniqueFilters } from '@/components/shared/filters';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
+import { usePathListFilter } from '@/hooks';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
 import {
@@ -30,6 +31,11 @@ import type { PowerTechniqueCharacterContext } from '@/lib/library/power-techniq
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import {
+  libraryRowPathIds,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 
 export type { OfficialTechniqueRow };
 
@@ -85,6 +91,17 @@ export function OfficialTechniqueList({
     useState<PowerTechniqueCharacterContext | null>(null);
   const [characterFilterId, setCharacterFilterId] = useState('');
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({
+    entities: items,
+    kind: 'techniques',
+    enabled: !empowered,
+  });
 
   const categoryOptions = useMemo(() => {
     if (empowered) return [];
@@ -97,8 +114,15 @@ export function OfficialTechniqueList({
       search: string,
       sortItems: (items: OfficialTechniqueRow[]) => OfficialTechniqueRow[]
     ) =>
-      filterOfficialTechniqueRows(rows, search, sortItems, advancedFilters, characterContext),
-    [advancedFilters, characterContext]
+      filterOfficialTechniqueRows(
+        rows,
+        search,
+        sortItems,
+        advancedFilters,
+        characterContext,
+        empowered ? null : pathRecommendedIds
+      ),
+    [advancedFilters, characterContext, empowered, pathRecommendedIds]
   );
 
   return (
@@ -121,6 +145,11 @@ export function OfficialTechniqueList({
             categoryOptions={categoryOptions}
             onCharacterContextChange={setCharacterContext}
             onCharacterIdChange={setCharacterFilterId}
+            pathFilter={{
+              options: pathIndex.options,
+              selectedPathIds,
+              onChange: setSelectedPathIds,
+            }}
           />
         )
       }
@@ -131,7 +160,15 @@ export function OfficialTechniqueList({
               advancedFilters,
               'technique',
               Boolean(characterContext)
-            ) + (characterFilterId ? 1 : 0)
+            ) + (characterFilterId ? 1 : 0) + (pathFilterActive ? 1 : 0)
+      }
+      getNameChipLabels={
+        empowered
+          ? undefined
+          : (t) =>
+              pathFilterActive
+                ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(t), selectedPathIds)
+                : undefined
       }
       getColumns={(t) => officialTechniqueRowColumns(t)}
       getDetailSections={(t) => {
@@ -156,8 +193,12 @@ export function OfficialTechniqueList({
       emptyTitle={emptyTitle}
       emptyMessage={emptyMessage}
       searchEmptyMessage={
-        searchEmptyMessage ??
-        (empowered ? 'No empowered techniques match your search.' : 'No techniques match your search.')
+        !empowered && pathFilterActive
+          ? pathFilterEmptyTitle('techniques')
+          : (searchEmptyMessage ??
+            (empowered
+              ? 'No empowered techniques match your search.'
+              : 'No techniques match your search.'))
       }
       variant={variant}
       readOnly={readOnly}

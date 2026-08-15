@@ -1,3 +1,481 @@
+- id: TASK-753
+  title: Archetype Path filter — creator L2 catalogs and add modals
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: low
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-751
+    - TASK-752
+    - TASK-756
+    - TASK-758
+    - TASK-759
+  related_files:
+    - src/lib/game/path-recommendation-index.ts
+    - src/lib/game/path-recommendation-index.test.ts
+    - src/hooks/use-path-recommendation-index.ts
+    - src/lib/guided-creator/feats-l2.ts
+    - src/lib/guided-creator/feats-l2.test.ts
+    - src/components/guided-creator/guided-feats-filter-fields.tsx
+    - src/components/guided-creator/guided-feats-l2-modal.tsx
+    - src/components/guided-creator/steps/archetype-feats-step.tsx
+    - src/components/guided-creator/steps/character-feat-step.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/components/shared/add-skill-modal.tsx
+    - src/components/shared/unified-selection-modal.tsx
+    - src/components/shared/unified-selection-modal-types.ts
+    - src/components/shared/unified-selection-modal-list.tsx
+    - src/components/shared/guided-choice/guided-inline-catalog-list.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0014-archetype-path-recommendation-filter.md
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    Use the TASK-751 collectors as the L2 catalog face inside the existing
+    See-more modal (not a second dataset). L1 stays the path curated cards.
+  acceptance_criteria:
+    - Guided path flow See more opens with FilterSection expanded and same-type
+      player-visible paths selected; clearing the filter shows the full eligible catalog.
+    - Custom / no-path inline catalogs have the control with no auto-select.
+    - GuidedFeatsFilterFields composes ArchetypePathFilter last; path-name chips
+      replace Recommended while filtering; family ranks of a matching feat stay.
+    - AddFeatModal / AddSkillModal compose the same control; no modal-local id lists.
+  completed_work: |
+    usePathListFilter autoSelectType/autoSelectWhen; pathIdsForArchetypeType;
+    buildGuidedFeatsL2Items path family match + chips; GuidedFeatsL2Modal and
+    both feat steps; AddFeatModal / AddSkillModal; USM optionsDefaultExpanded
+    and showBadgesInName. L1 cards unchanged.
+  notes: |
+    Owner lock 2026-08-14. Powered-Martial is its own type. Powers/loadout L2
+    catalogs still use L1 pathRecommendedIds for Path badges only — they did
+    not gain ArchetypePathFilter in this task (not in related_files).
+  evidence: |
+    vitest feats-l2 + path-recommendation-index; typecheck/lint.
+
+- id: TASK-718
+  title: Archive BUILD_VALIDATION suites that cannot stay in the 322KB hot file
+  created_at: 2026-08-13
+  completed_at: 2026-08-14
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  implemented_by: agent
+  related_files:
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/archive/BUILD_VALIDATION_ARCHIVE.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+  description: |
+    BUILD_VALIDATION.md is ~322KB / 45 suites / 320 tests with no archive file. Create
+    archive/BUILD_VALIDATION_ARCHIVE.md and move verified or long-superseded suites out of
+    the hot file. Keep suites still cited by Pending owner QA in the hot file.
+  acceptance_criteria:
+    - archive/BUILD_VALIDATION_ARCHIVE.md exists with a pointer from BUILD_VALIDATION.md.
+    - Hot file shrinks; Pending owner QA linked suites remain in the hot file.
+    - DEVELOPER_TASK_QUEUE build-validation index links still resolve.
+  completed_work: |
+    Created archive/BUILD_VALIDATION_ARCHIVE.md. Moved DEV-V-005, 010, 011, 014,
+    015, 022, 031 (not cited by Pending owner QA). Left heading stubs so DTQ
+    #dev-v- anchors still resolve. Deleted the duplicate mid-file Planned suites
+    table. Hot file ~400KB/7387 lines -> ~379KB/7059 lines.
+  notes: |
+    Filed from 2026-08-13 /global-audit. Do not delete tests — move them.
+    Further shrink waits on owner verifying/waiving Pending owner QA rows;
+    those suites stay in the hot file by AC.
+  evidence: |
+    archive/BUILD_VALIDATION_ARCHIVE.md exists; BUILD_VALIDATION.md Archive
+    pointer; DTQ index Status Archived for the seven suites.
+
+
+- id: TASK-764
+  title: Drop empty expanded CollapsibleSection summary line + redundant Attack label
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-408
+  related_files:
+    - src/components/creator/collapsible-section.tsx
+    - src/app/(main)/power-creator/power-creator-editor-action-profile.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-018
+    tests:
+      - DEV-V-018-T012
+      - DEV-V-018-T013
+  developer_test_plan: |
+    Suite DEV-V-018 T012-T013 - see BUILD_VALIDATION.md
+  description: |
+    Owner feedback: expanded dropdown headers on all standalone creator sections take too much vertical space; power creator Attack section repeats the title on the inner selector.
+  acceptance_criteria:
+    - Expanded CollapsibleSection headers drop the reserved empty summary line only (keep original p-4 / font-bold / h2 text-title chrome). Collapsed summaries still show.
+    - Power creator Attack expanded body has no second visible Attack label; select remains labelled for a11y.
+    - Typecheck/lint. DEV-V-018 T012-T013.
+  notes: |
+    Shared CollapsibleSection used by power, technique, item, species, creature, empowered, and crafting.
+    Owner 2026-08-14 follow-up: first pass also shrank titles to text-sm / px-3 py-2; reverted. Keep empty-line-only.
+
+---
+
+- id: TASK-408
+  title: Power creator InfoTippy - tooltip draft to tooltip-text.tsx
+  created_at: 2026-07-01
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-764
+    - TASK-411
+  related_files:
+    - src/docs/human/POWER_CREATOR_TOOLTIPS_DRAFT.md
+    - public/tooltip-text.tsx
+    - src/app/(main)/power-creator/page.tsx
+    - src/app/(main)/power-creator/power-creator-help.tsx
+    - src/app/(main)/power-creator/power-creator-editor-meta.tsx
+    - src/app/(main)/power-creator/power-creator-editor-action-profile.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-config.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-parts.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-damage.tsx
+    - src/components/creator/CreatorPageShell.tsx
+    - src/components/creator/CreatorSaveToolbar.tsx
+    - src/components/creator/creator-summary-panel.tsx
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-018
+    tests:
+      - DEV-V-018-T014
+  developer_test_plan: |
+    Suite DEV-V-018 T014 - see BUILD_VALIDATION.md
+  description: |
+    Migrate owner draft copy from POWER_CREATOR_TOOLTIPS_DRAFT.md into public/tooltip-text.tsx and wire InfoTippy on advanced power creator sections. Owner 2026-08-14 unblocked advanced (L3) wiring without TASK-414. Guided L1 placeholder strings only.
+  acceptance_criteria:
+    - All draft field tooltips exist in tooltip-text.tsx.
+    - InfoTippy on each major advanced power-creator section header or label (Description, Action Type, Reaction, Attack/Weapon, Area, Duration, Parts, Mechanics, Damage, Energy, Innate, TP, Load, Reset).
+    - Guided L1 placeholder exports added (strings only; wiring in TASK-411).
+    - Typecheck/lint. DEV-V-018 T014.
+  notes: |
+    Owner 2026-08-14: implement tooltips now; defer layers TASK-410-414.
+
+---
+
+- id: TASK-752
+  title: Archetype Path filter — Codex/Library skills, powers, techniques, loadout
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: low
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-751
+    - TASK-753
+  related_files:
+    - src/lib/game/path-recommendation-index.ts
+    - src/lib/game/path-recommendation-index.test.ts
+    - src/hooks/use-path-recommendation-index.ts
+    - src/hooks/index.ts
+    - src/components/shared/filters/archetype-path-filter.tsx
+    - src/components/shared/filters/power-technique-filters.tsx
+    - src/components/shared/filters/armament-filters.tsx
+    - src/lib/codex/skill-list.ts
+    - src/lib/codex/skill-list.test.ts
+    - src/lib/codex/equipment-list.ts
+    - src/lib/codex/equipment-list.test.ts
+    - src/lib/library/official-power-list.ts
+    - src/lib/library/official-technique-list.ts
+    - src/lib/library/official-item-list.ts
+    - src/components/shared/official-entity-list.tsx
+    - src/components/shared/official-power-list.tsx
+    - src/components/shared/official-technique-list.tsx
+    - src/components/shared/official-item-list.tsx
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+    - src/app/(main)/codex/CodexSkillsTab.tsx
+    - src/app/(main)/codex/CodexEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/library/LibraryPowersTab.tsx
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/app/(main)/library/LibraryItemsTab.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-052
+    tests:
+      - DEV-V-052-T002
+      - DEV-V-052-T003
+      - DEV-V-052-T004
+      - DEV-V-052-T005
+  developer_test_plan: |
+    Suite DEV-V-052 T002-T005 — see BUILD_VALIDATION.md
+  description: |
+    After TASK-751 ships the shared index + ArchetypePathFilter, drop the same
+    control into other global browse lists: Codex skills, Codex/Library
+    powers and techniques, Codex/Library weapons/armor/gear. Same union
+    default, same chips-only-while-filtering rule, same player-visible
+    path options. No per-tab copy of match logic.
+  acceptance_criteria:
+    - Each listed browse surface uses ArchetypePathFilter + the TASK-751
+      index. No new filter component and no duplicated invert helpers.
+    - Desc chips for selected recommending paths only while the filter is
+      active.
+    - Empty-state copy when the path filter yields zero rows. Typecheck/lint.
+      FEATURE_INDEX. DEV-V-052 T002-T005.
+  completed_work: |
+    Same live index on skills, powers+innatePowers, techniques, Codex mixed
+    equipment (armaments+equipment), and Library armaments. Path control is
+    last in every Codex/Library filter grid including Feats. Optional
+    pathFilter on PowerTechniqueFilters / ArmamentFilters so Codex and Library
+    share one panel body.
+  notes: |
+    Innate powers stay on the innatePowers bag but still appear on the powers
+    list (no separate innate browse tab). Empowered techniques skipped.
+    Creator L2 / add-X auto-select is TASK-753.
+  evidence: |
+    path-recommendation-index + skill-list + equipment-list tests.
+
+
+- id: TASK-763
+  title: Landing how-it-works copy: create / find a table / play
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: high
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_files:
+    - src/lib/constants/copy/landing-copy.ts
+    - src/components/landing/how-it-works-section.tsx
+    - src/docs/REALMS_PRODUCT_OVERVIEW.md
+    - src/docs/human/USER_EXPERIENCE_GOALS.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+  build_validation: |
+    suite: DEV-V-012
+    tests:
+      - DEV-V-012-T001
+      - DEV-V-012-T002
+      - DEV-V-012-T003
+      - DEV-V-012-T008
+      - DEV-V-020-T001
+  developer_test_plan: |
+    Suite DEV-V-012 T001/T002/T003/T008 + DEV-V-020 T001 — see BUILD_VALIDATION.md
+  description: |
+    Guest home used "Start Playing" as the hero CTA and how-it-works steps that
+    named Archetype Path, Species, Abilities, Skills, and Feats. New visitors do
+    not know those terms yet. Rewrite the three steps to Create a character,
+    Find a table (Discord), and Start playing, and rename the primary CTA to
+    Create Character so it matches the first action.
+  acceptance_criteria:
+    - Guest hero + how-it-works repeat CTA say Create Character → `/characters/new`.
+    - How-it-works titles are Create a character, Find a table, Start playing.
+    - Step 2 mentions joining the community through Discord and links DISCORD_URL.
+    - No Archetype Path / Species / Abilities / Skills / Feats jargon in those steps.
+    - BUILD_VALIDATION DEV-V-012 T001–T003/T008 and DEV-V-020 T001 updated.
+    - Typecheck/lint. FEATURE_INDEX. Product overview Section 4 CTA table matches.
+  completed_work: |
+    LANDING_COPY.hero.primaryCta is Create Character. howItWorks.steps all use
+    one `body` field (Create a character / Find a table / Start playing). Step 2
+    also has href + linkLabel so HowItWorksSection wraps Discord onto DISCORD_URL
+    without a second primary button. REALMS Section 4 plus Phase 0 / H.1 /
+    explorer open-decision say Create Character. UX goals, FEATURE_INDEX home
+    row, DEV-V-012 T008, and DEV-V-020 T001 match.
+  notes: |
+    Returning-user hero (Continue your adventure / Create another character) unchanged.
+    Closing community Join the Discord band unchanged. Visual home/about baselines
+    need refresh (win32 local; linux from CI if they drift).
+  evidence: |
+    Copy SoT landing-copy.ts; how-it-works-section.tsx inline Discord link.
+
+- id: TASK-751
+  title: Archetype Path filter — ADR, live path collectors, shared control, Codex Feats
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: owner
+  priority: low
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-752
+    - TASK-753
+    - TASK-423
+  related_files:
+    - src/docs/ai/ADR/0014-archetype-path-recommendation-filter.md
+    - src/docs/ai/ADR/README.md
+    - src/lib/game/archetype-path.ts
+    - src/lib/game/path-recommendation-index.ts
+    - src/lib/game/path-recommendation-index.test.ts
+    - src/hooks/use-path-recommendation-index.ts
+    - src/hooks/index.ts
+    - src/lib/codex/feat-list.ts
+    - src/lib/codex/feat-list.test.ts
+    - src/components/shared/filters/archetype-path-filter.tsx
+    - src/components/shared/filters/chip-select.tsx
+    - src/components/shared/filters/filter-utils.ts
+    - src/components/shared/filters/index.ts
+    - src/components/shared/grid-list-row.tsx
+    - src/components/shared/grid-list-row-collapsed.tsx
+    - src/components/shared/grid-list-row-types.ts
+    - src/components/codex/codex-feat-row.tsx
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - scripts/shared-ui-allowlist.json
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-052
+    tests:
+      - DEV-V-052-T001
+  developer_test_plan: |
+    Suite DEV-V-052 T001 - see BUILD_VALIDATION.md
+  description: |
+    First slice of sitewide Archetype Path list filtering. Canonical recommendations
+    already live on each path (`path_data` level 1, later levels, guidance groups).
+    The filter reads those lists live when the user selects path(s) — union the
+    recommended feat ids, then apply existing list filters (`filterFeats`) — with no
+    second recommendation table, `feats.paths[]` column, or cached copy that can
+    drift when an admin edits a path. Codex Feats (+ Admin Feats) only in this task.
+  acceptance_criteria:
+    - ADR-0014 accepted; SoT is the existing path recommendation arrays; shared
+      `lib/game` collectors used by every consumer; memoized from `['codex']`.
+    - Match = ChipSelect multi-select union; no TagFilter any/all toggle.
+    - Collectors union all path-authoring levels; `remove_*` excluded;
+      player-visible paths only; refs resolve by id then name; path-authoring
+      level does not hide a feat and other filters stay independent.
+    - Shared `ArchetypePathFilter` composing ChipSelect (grouped by path type),
+      allowlist + FEATURE_INDEX, InfoTippy on the label.
+    - Codex Feats filters to the union with path-specific empty copy.
+    - Path chips beside the name only while at least one path is selected, via the
+      shared name-row chip slot (no Codex nameContent fork).
+    - `filterFeats` takes the recommended-id set so Admin Feats reuses it.
+    - Vitest for union / admin edit / id+name resolve / remove_* / hidden paths /
+      lvl_req. Typecheck, lint, build. FEATURE_INDEX + changelog + DEV-V-052 T001.
+  completed_work: |
+    `collectPathRecommendedIds(pathData, kind)` in `lib/game/archetype-path.ts` unions
+    one kind across level 1, every later `levels[]` entry, and level-1 guidance groups;
+    `remove*` lists are excluded and `id:qty` refs collapse to the id (reuses
+    `parseIdQuantityStrings`). `lib/game/path-recommendation-index.ts` resolves those
+    refs against the live entity rows (`indexByNormalizedIds` id/`docId`, then display
+    name) into `{ options, entityIdsByPathId }` with `pathRecommendedEntityIds` (union)
+    and `pathNamesForEntity` (chips). `usePathRecommendationIndex` memoizes it from
+    `useCodexArchetypes` (`['codex']`) over `listPlayerVisiblePaths`, so the admin path
+    save that already invalidates that query is the only refresh needed — no junction
+    table, denormalized column, seed CSV, or store.
+    Shared `ArchetypePathFilter` composes `ChipSelect`, which gained an optional
+    per-option `group` (`<optgroup>` for Power / Powered-Martial / Martial Paths) and
+    `labelAccessory` (InfoTippy) rather than a second multi-select; `dedupeSelectOptions`
+    is now generic so grouped options survive dedupe.
+    `filterFeats` takes `pathRecommendedIds` (a normalized id set, `null` = no filter)
+    and matches the row or its feat-family base so higher ranks stay with their family;
+    `featPathChipNames` names the selected paths for a row. Codex Feats and Admin Feats
+    both mount the control in their existing FilterSection slot and share that one
+    pipeline, with path-aware empty copy.
+    `GridListRow` gained `showBadgesInName` so non-compact browse rows can render badges
+    beside the name (previously compact-only); those badges are dropped from the expanded
+    body so the fact is not shown twice, and `CodexFeatRow` takes `nameChipLabels`.
+    Vitest: `path-recommendation-index.test.ts` (all-levels/guidance union, qty collapse,
+    union of two paths, id + name resolve, unresolvable refs, unseeded paths still listed,
+    admin-shaped edit on rebuild, chips only for selected paths, hidden paths omitted) and
+    `feat-list.test.ts` (path filter + family ranks, union, no-filter, composes with
+    `lvl_req` / category, chip names). Typecheck, lint (`--max-warnings 0`), build green.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-052 T001).
+    Owner acked the architect pause (new shared filter + ADR-0014) before implement.
+    Exact-id + family-base matching, not path-authoring level: a path that recommends
+    only a rank-2 feat matches that rank. Codex archetype rows keep `badges` in the
+    expanded body (no `showBadgesInName`) so that list is unchanged.
+    TASK-752 (other entity families) and TASK-753 (creator L2 / add modals) must reuse
+    these collectors, the hook, and `ArchetypePathFilter` — no second match rule.
+
+- id: TASK-761
+  title: Campaign RM view character load is a Query (not useState + apiFetch)
+  created_at: 2026-08-14
+  completed_at: 2026-08-14
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-750
+  related_files:
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/services/campaign-service.ts
+    - src/hooks/use-campaigns.ts
+    - src/hooks/use-campaigns.cache.test.ts
+    - src/hooks/index.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
+    - src/docs/ARCHITECTURE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T046
+  developer_test_plan: |
+    Suite DEV-V-009 T046 - see BUILD_VALIDATION.md
+  description: |
+    Report 06 P1-1 sibling left after TASK-750. The owned sheet reads useCharacter,
+    but the campaign Realm Master view still held the character in useState and
+    loaded it with an uncancelled apiFetch to
+    `/api/campaigns/[campaignId]/characters/[userId]/[characterId]`.
+  acceptance_criteria:
+    - RM view read is a React Query hook (campaign-scoped key or a documented
+      variant of characterKeys). No parallel useState + apiFetch load effect.
+    - Do not call getCharacter / useCharacter against `/api/characters/[id]`
+      for this page unless that GET is proven equivalent to the campaign route
+      (visibility, libraryForView, RM authorization).
+    - Local UI state (library tab) stays useState. Typecheck/lint pass.
+      FEATURE_INDEX. DEV-V-009 or DEV-V-041 one test.
+  completed_work: |
+    `getCampaignCharacterForView` in campaign-service calls the campaign route and
+    returns the shared `GetCharacterResult` shape (splits `libraryForView` off the
+    character payload). `useCampaignCharacterView` +
+    `campaignKeys.characterView(campaignId, viewerId, ownerId, characterId)` nest
+    under `campaignKeys.detail` and reuse `characterViewerId` so a cached RM sheet
+    cannot survive a viewer change; the query waits on auth like `useCharacter`.
+    The view page dropped its character / libraryForView / loading / error state and
+    the load effect (cancellation comes for free); `libraryActiveTab` stays local
+    useState. Vitest `use-campaigns.cache.test.ts` covers campaign + viewer key
+    separation, the anon viewer segment, the route URL, and the libraryForView split.
+    Kept the campaign route as SoT: it enforces roster membership, RM-only access and
+    private-visibility blocks that `/api/characters/[id]` does not.
+  notes: |
+    Archived from ACTIVE 2026-08-14. verification_status pending-qa (DEV-V-009 T046).
+    Owner acked the architect pause (new campaign-scoped query key) before implement.
+    The `?scope=encounter` fetches of the same route (combat linked-character sync,
+    AddCombatantModal) are batch loops for minimal data and were left alone.
 - id: TASK-757
   title: Power path equipment screen — See weapons hatch
   created_at: 2026-08-14

@@ -45,7 +45,9 @@ export {
   useCampaigns,
   useCampaignsFull,
   useCampaign,
+  useCampaignCharacterView,
   useInvalidateCampaigns,
+  campaignKeys,
 } from './use-campaigns';
 export { useCampaignRolls } from './use-campaign-rolls';
 
@@ -110,6 +112,8 @@ export {
   useCodexArchetypes,
 } from './use-codex';
 export { useGameRules, getGameRulesFallback } from './use-game-rules';
+// Archetype Path recommendation index for list filters (ADR-0014)
+export { usePathRecommendationIndex, usePathListFilter } from './use-path-recommendation-index';
 
 // Codex utilities (trait/skill resolution) — use use-codex types
 export {

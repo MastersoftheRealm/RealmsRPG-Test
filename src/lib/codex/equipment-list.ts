@@ -22,6 +22,7 @@ import {
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import type { CodexEquipmentItem } from '@/types/codex';
 import { formatListCellLabel } from '@/lib/utils';
+import { rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
 
 export const EQUIPMENT_GRID_COLUMNS = '1.5fr 1.1fr 0.7fr 0.85fr';
 
@@ -99,10 +100,12 @@ export function filterCodexEquipment<T extends CodexEquipmentItem>(
   items: T[],
   listFilters: CodexEquipmentListFilters,
   armamentFilters: ArmamentFilterState,
-  characterContext: ArmamentCharacterContext | null
+  characterContext: ArmamentCharacterContext | null,
+  pathRecommendedIds?: ReadonlySet<string> | null
 ): Array<T & { currency: number; category: string; rarity: string }> {
   const q = listFilters.search.trim().toLowerCase();
   const narrowed = items.filter((item) => {
+    if (!rowMatchesPathRecommendedIds(item.id, pathRecommendedIds)) return false;
     if (
       q &&
       !item.name.toLowerCase().includes(q) &&

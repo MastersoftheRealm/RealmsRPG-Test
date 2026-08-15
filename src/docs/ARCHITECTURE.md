@@ -113,7 +113,7 @@ Codex reference data comes from Supabase via `/api/codex`. Hooks like `useCodexP
 ## Common Patterns
 
 1. **List views with costs:** Load library + Codex parts, then enrich before rendering. Do not block render on `!partsDb.length` — show data as soon as library loads; costs update when parts are available.
-2. **Character sheet:** Uses `useCharacter` (shared `characterKeys.detail` cache — TASK-750), `useUserPowers` / `useUserItems` / …, Codex hooks. Enrichment happens in `library-section.tsx` and similar components.
+2. **Character sheet:** Uses `useCharacter` (shared `characterKeys.detail` cache — TASK-750), `useUserPowers` / `useUserItems` / …, Codex hooks. Enrichment happens in `library-section.tsx` and similar components. Campaign RM view uses `useCampaignCharacterView` / `campaignKeys.characterView` against the campaign route (TASK-761) — not `characterKeys.detail`, which does not enforce roster + RM auth.
 3. **Creators:** Use Codex hooks for part/property options. Save to Supabase via `useUser*` mutations.
 
 ---

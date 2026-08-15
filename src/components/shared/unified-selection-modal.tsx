@@ -64,6 +64,7 @@ export function UnifiedSelectionModal({
   optionsActiveCount = 0,
   optionsSummary,
   optionsLabel = 'Filters',
+  optionsDefaultExpanded = false,
   showQuantity = false,
   initialQuantities = {},
   footerExtra,
@@ -111,7 +112,7 @@ export function UnifiedSelectionModal({
       setQuantities({});
     }
     setSearchQuery('');
-    setOptionsExpanded(false);
+    setOptionsExpanded(optionsDefaultExpanded);
     setLeaveConfirmOpen(false);
     setWasOpen(true);
   } else if (!isOpen && wasOpen) {

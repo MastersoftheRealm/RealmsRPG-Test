@@ -226,6 +226,7 @@ export function GuidedInlineCatalogList({
                     totalCost={item.totalCost}
                     costLabel={item.costLabel}
                     badges={item.badges}
+                    showBadgesInName={item.showBadgesInName}
                     warningMessage={item.warningMessage}
                     chips={item.chips}
                     rightSlot={

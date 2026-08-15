@@ -96,7 +96,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 | Navbar Library / Codex | ✅ Wired | `placement="bottom"` |
 | Campaigns hub | ✅ Wired | |
 | Character sheet | ◐ Partial | Ability + defense name tips via `WordHelpTip` (TASK-547); defense Score values via `defenseScoreHelp` (TASK-587); Inventory Armament Proficiency via `armamentProficiencyHelp` (TASK-581); broader first-exposure tour still planned per `REALMS_PRODUCT_OVERVIEW.md` § 11 |
-| Standalone creators (power, technique, item, …) | ⬜ Planned | When Layer 1 UX lands |
+| Standalone creators (power, technique, item, …) | ◐ Partial | **Power creator advanced** InfoTippy wired (TASK-408). Technique/item/species/creature still planned. Guided power L1 deferred (TASK-410–414). |
 | Encounters, crafting, Codex/Library browse | ⬜ Planned | Scoped section help only where dense |
 
 ## How to add contextual help (agent checklist)

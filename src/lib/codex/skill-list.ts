@@ -5,6 +5,7 @@
 import type { Skill } from '@/hooks';
 import type { Character } from '@/types';
 import { normalizeId } from '@/lib/utils';
+import { rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
 
 /** Data columns only — admin action chrome uses CodexBrowseListShell `rowChrome`. */
 export const SKILL_GRID_COLUMNS = '1.5fr 1fr 1fr';
@@ -117,11 +118,13 @@ export function filterSkills(
   skills: Skill[],
   filters: SkillListFilters,
   skillIdToName: Map<string, string>,
-  characterKnownIds?: Set<string> | null
+  characterKnownIds?: Set<string> | null,
+  pathRecommendedIds?: ReadonlySet<string> | null
 ): Skill[] {
   const knownMode = filters.knownMode ?? 'all';
 
   return skills.filter((s) => {
+    if (!rowMatchesPathRecommendedIds(s.id, pathRecommendedIds)) return false;
     if (filters.search) {
       const searchLower = filters.search.toLowerCase();
       if (

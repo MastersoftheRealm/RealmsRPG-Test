@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui';
 import { ACTION_OPTIONS } from '@/lib/game/creator-constants';
 import { ATTACK_MODE_SELECT_OPTIONS, attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
 import type { PowerSectionCosts } from './power-creator-cost-derivation';
+import { PowerCreatorHelp } from './power-creator-help';
 
 type PowerCreatorEditorActionProfileProps = {
   actionType: string;
@@ -37,9 +38,10 @@ export function PowerCreatorEditorActionProfile({
       <CollapsibleSection
         title="Action Type"
         collapsedSummary={actionTypeDisplay}
+        titleAddon={<PowerCreatorHelp topic="actionType" />}
         rightSlot={<SectionCostBadge en={sectionCosts.action.energyRaw} tp={sectionCosts.action.totalTP} />}
       >
-        <div className="flex flex-wrap gap-4">
+        <div className="flex flex-wrap items-center gap-4">
           <select
             aria-label="Action type"
             value={actionType}
@@ -52,37 +54,35 @@ export function PowerCreatorEditorActionProfile({
               </option>
             ))}
           </select>
-          <Checkbox
-            checked={isReaction}
-            onChange={(e) => onIsReactionChange(e.target.checked)}
-            label="Reaction"
-          />
+          <div className="flex items-center gap-1.5">
+            <Checkbox
+              checked={isReaction}
+              onChange={(e) => onIsReactionChange(e.target.checked)}
+              label="Reaction"
+            />
+            <PowerCreatorHelp topic="reaction" />
+          </div>
         </div>
       </CollapsibleSection>
 
       <CollapsibleSection
         title="Attack"
         collapsedSummary={attackModeColumnLabel(attackMode)}
+        titleAddon={<PowerCreatorHelp topic="attack" />}
         rightSlot={<SectionCostBadge en={sectionCosts.weapon.energyRaw} tp={sectionCosts.weapon.totalTP} />}
       >
-        <div>
-          <label htmlFor="power-attack-mode" className="block text-sm font-medium text-text-secondary mb-1">
-            Attack
-          </label>
-          <select
-            id="power-attack-mode"
-            value={attackMode}
-            onChange={(e) => onAttackModeChange(e.target.value as AttackMode)}
-            className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
-            aria-label="Power attack mode"
-          >
-            {ATTACK_MODE_SELECT_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <select
+          value={attackMode}
+          onChange={(e) => onAttackModeChange(e.target.value as AttackMode)}
+          className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+          aria-label="Attack"
+        >
+          {ATTACK_MODE_SELECT_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
         <p className="mt-2 text-sm text-text-secondary">
           Weapon Attack adds the Add Weapon to Power mechanic (flat cost). No Weapon/Attack and Unarmed Attack add
           nothing.

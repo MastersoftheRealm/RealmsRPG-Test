@@ -569,3 +569,178 @@ export function getGuidedAutoAllocateHelp(options?: {
     </div>
   );
 }
+
+// ---------------------------------------------------------------------------
+// Power Creator (advanced / L3) — owner draft in POWER_CREATOR_TOOLTIPS_DRAFT.md
+// (TASK-408). Guided L1 placeholders are strings only; wiring is TASK-411.
+// ---------------------------------------------------------------------------
+
+export const powerCreatorDescriptionHelp = (
+  <div>
+    <div>
+      Describe the mechanics of how your Power works, along with its flavor.
+    </div>
+    <div>
+      Example: &quot;Hurl a massive fireball. As a Basic Action, make a Power Attack against Reflex of
+      all creatures within a 2-space radius of a point within 6 spaces of range, dealing 2d6 Fire
+      damage on a success.&quot;
+    </div>
+  </div>
+);
+
+export const powerCreatorActionTypeHelp = (
+  <div>
+    <div>
+      This determines how much AP you must spend to use this Power. The less AP it takes to use, the
+      more expensive the Power is.
+    </div>
+    <div>
+      Outside of combat you cannot have an action longer than a Basic Action (2 AP). Innate Powers
+      must be Basic Actions or Reactions.
+    </div>
+  </div>
+);
+
+export const powerCreatorReactionHelp =
+  'Decide if this Power can be used as a reaction to some triggering event, such as being hit by an attack. Reaction Powers cost more.';
+
+export const powerCreatorAttackHelp = (
+  <div>
+    <div>
+      If you add a weapon to your Power, you may choose to make a Weapon Attack using that weapon as
+      part of the same action to use the Power.
+    </div>
+    <div>
+      You may also choose to have the Power affect that weapon and its attacks for the duration of
+      the Power.
+    </div>
+  </div>
+);
+
+export const powerCreatorAreaHelp = (
+  <div>
+    <div>
+      By default, a Power only affects one target or one space for its duration. Add an area of
+      effect that applies to all Power parts and mechanics. Area-of-effect parts that would normally
+      target Evasion target Reflex instead. Each creature in the area is a target of the Power — on
+      your side or not — unless an area mechanic specifies otherwise.
+    </div>
+    <div>
+      If you want the Power to last for a duration in an area, or on the targets who were initially
+      affected, toggle <strong>Apply duration</strong>. Effects on targets initially affected apply
+      at the start of those targets&apos; next turn after this. If the effect applies to an area,
+      when a target first moves into the area or ends their turn there, they must re-make a defense
+      roll against the original targeted defense(s) or be affected again.
+    </div>
+  </div>
+);
+
+export const powerCreatorDurationHelp = (
+  <div>
+    <div>
+      Normally a Power has either an instantaneous or single-round effect that ends at the start of
+      your next turn. You can increase the duration by picking an amount and unit of time (such as
+      10 minutes).
+    </div>
+    <div>
+      Only Parts and Mechanics with <strong>Apply duration</strong> toggled are considered to last
+      for the Power&apos;s duration. Work with a friend or RM if duration is confusing for your
+      table.
+    </div>
+  </div>
+);
+
+export const powerCreatorPartsHelp =
+  'These are the payload of your Power — what the Power does. There are limitless options and you can combine them in many ways, but the best Powers often have only one to three parts.';
+
+export const powerCreatorMechanicsHelp = (
+  <div>
+    <div>
+      Power Mechanics are the <em>how</em> behind what a Power does.
+    </div>
+    <div>
+      If your Power&apos;s Energy cost is too high, use mechanics in the <strong>Restriction</strong>{' '}
+      category, which offer reduced cost with stipulations. Try other mechanics to customize
+      further.
+    </div>
+  </div>
+);
+
+export const powerCreatorDamageHelp = (
+  <div>
+    <div>
+      Choose a damage type, number of dice, and die size. Often using more dice of lower values is
+      more expensive (for example, 2d6 over 1d12).
+    </div>
+    <div>
+      This damage is dealt when the Power is used, not again each turn with duration, unless
+      duration is in an area of effect instead of on a target. You can add multiple damage types.
+    </div>
+  </div>
+);
+
+export const powerCreatorEnergyHelp = (
+  <div>
+    <div>
+      This is the cost of your Power — a rounded-up value from all Energy contributions of your
+      Power Parts and Mechanics.
+    </div>
+    <div>
+      See <strong>Advanced calculations</strong> below for each contribution.
+    </div>
+  </div>
+);
+
+export const powerCreatorInnateHelp = (
+  <div>
+    <div>
+      A Power can be <strong>Innate</strong> if its Energy is at or below your{' '}
+      <strong>Innate Threshold</strong> for your level and archetype (see character sheet). At level
+      1: <strong>8</strong> for Power characters, <strong>6</strong> for Powered-Martial. Threshold
+      increases by +1 every 3 levels starting at level 4.
+    </div>
+    <div>
+      Innate Powers are usable without spending Energy from your pool (subject to innate pool
+      limits).
+    </div>
+    <div>
+      To qualify as an Innate Power it must be a <strong>Basic Action</strong> or{' '}
+      <strong>Reaction</strong>, and cannot include Healing or Energy-gaining parts.
+    </div>
+  </div>
+);
+
+export const powerCreatorTrainingPointsHelp = (
+  <div>
+    <div>
+      The sum of Training Point costs for each Part added to this Power.
+    </div>
+    <div>
+      You may already have proficiency with some or all parts, so this total may not equal what you
+      must spend to add the Power to your character.
+    </div>
+  </div>
+);
+
+export const powerCreatorLoadHelp =
+  'Load any Power from your library or the Realms Library.';
+
+export const powerCreatorResetHelp =
+  'Remove all current parts, mechanics, and settings — start with a clean slate.';
+
+/** Guided L1 placeholders — strings only; do not wire until TASK-411. */
+export const guidedPowerCreatorPowerCharacterHelp =
+  'A full Power archetype. Higher Innate Threshold at level 1 (8) and Power proficiency — not martial training.';
+
+export const guidedPowerCreatorPoweredMartialHelp =
+  'A split martial and power track. Lower Innate Threshold at level 1 (6) than a full Power character.';
+
+export const guidedPowerCreatorAudienceHelp =
+  'Selecting a character enables Innate Threshold filtering and Training Point context for this Power.';
+
+export const guidedPowerCreatorInnateIntentHelp =
+  'Innate Powers are usable without spending Energy when they qualify: Basic Action or Reaction, Energy at or below your Innate Threshold, and no Healing or Energy-gaining parts.';
+
+export const guidedPowerCreatorCategoryHelp =
+  'Maps to part categories such as Offense, Defense, Utility, and Control. Pick one primary category for this Power.';
+

@@ -102,4 +102,5 @@ jobs:
           path: |
             playwright-report/
             .shell-creators-audit/
+            test-results/**/*-actual.png
           retention-days: 14

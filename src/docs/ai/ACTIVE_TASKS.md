@@ -4,75 +4,17 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-762
+**Next task ID:** TASK-765
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
-**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-757, TASK-756, TASK-759, TASK-758, TASK-760, TASK-733, TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
+**Pending owner QA:** [DEVELOPER_TASK_QUEUE.md](DEVELOPER_TASK_QUEUE.md) → Pending owner QA (recent: TASK-753, TASK-764, TASK-408, TASK-752, TASK-763, TASK-761, TASK-757, TASK-756, TASK-759, TASK-758, TASK-760, TASK-733, TASK-755, TASK-754, TASK-750, TASK-747, TASK-746, TASK-739, TASK-741, TASK-734, TASK-735, TASK-736, TASK-737, TASK-714, TASK-732, TASK-716, TASK-726…)
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 6 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 2 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Owner 2026-08-14 creator feedback is **TASK-754–760**. **TASK-754 done** (create 500). **TASK-755 done** (Energy **EN**, never EP). **TASK-733 done** (sheet innate InfoTippys). **TASK-760 done** (ability tiles). **TASK-758–759 done** (feat GLR: no creator REQ LEVEL + shared State Feats `(i)`). **TASK-756 done** (sequential innate → powers → techniques screens). **TASK-757 done** (Power gear See weapons). **Next:** TASK-761 (low) or TASK-751–753. Wave 2 sheet Query SoT (**TASK-750**) is done. **TASK-761** (campaign RM view Query load) is a 750 leftover — low. **TASK-751–753** stay **low** — path-filter wiring lands on the new screens/columns. TASK-718 / 719 last. Wave 3 still waits for the owner.
-
----
-
-- id: TASK-761
-  title: Campaign RM view character load is a Query (not useState + apiFetch)
-  created_at: 2026-08-14
-  created_by: agent
-  priority: low
-  status: not-started
-  related_tasks:
-    - TASK-750
-  related_files:
-    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
-    - src/hooks/use-characters.ts
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    Report 06 P1-1 sibling left after TASK-750. The owned sheet now reads
-    useCharacter. The campaign Realm Master view still holds the character in
-    useState and loads with an uncancelled apiFetch to
-    `/api/campaigns/[campaignId]/characters/[userId]/[characterId]` (not
-    getCharacter / `/api/characters/[id]` — that route is the wrong SoT for a
-    campaign-scoped view).
-  acceptance_criteria:
-    - RM view read is a React Query hook (campaign-scoped key or a documented
-      variant of characterKeys). No parallel useState + apiFetch load effect.
-    - Do not call getCharacter / useCharacter against `/api/characters/[id]`
-      for this page unless that GET is proven equivalent to the campaign route
-      (visibility, libraryForView, RM authorization).
-    - Local UI state (library tab) stays useState. Typecheck/lint pass.
-      FEATURE_INDEX. DEV-V-009 or DEV-V-041 one test.
-  notes: |
-    Filed from TASK-750 /cleanup. Architect — new query key or campaign-view
-    hook; pause once before implementing. Do not redo TASK-750 sheet SoT.
-    Cancellation (P1-1) comes for free when the effect is deleted.
-
----
-
----
-
-- id: TASK-718
-  title: Archive BUILD_VALIDATION suites that cannot stay in the 322KB hot file
-  created_at: 2026-08-13
-  created_by: agent
-  priority: low
-  status: not-started
-  related_files:
-    - src/docs/ai/BUILD_VALIDATION.md
-    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
-  description: |
-    BUILD_VALIDATION.md is ~322KB / 45 suites / 320 tests with no archive file. Create
-    archive/BUILD_VALIDATION_ARCHIVE.md and move verified or long-superseded suites out of
-    the hot file. Keep suites still cited by Pending owner QA in the hot file.
-  acceptance_criteria:
-    - archive/BUILD_VALIDATION_ARCHIVE.md exists with a pointer from BUILD_VALIDATION.md.
-    - Hot file shrinks; Pending owner QA linked suites remain in the hot file.
-    - DEVELOPER_TASK_QUEUE build-validation index links still resolve.
-  notes: |
-    Filed from 2026-08-13 /global-audit. Do not delete tests — move them.
+**Hot notes:** Owner 2026-08-14 **TASK-764 + TASK-408 done** (creator section headers drop empty expanded summary line — titles/padding restored; power creator Attack label + InfoTippys). Power creator **layers TASK-410–414 stay deferred**. Owner 2026-08-14 **TASK-763 done** (home how-it-works). **TASK-751–753 done** (ADR-0014 path filter on Feats + Codex/Library + creator L2/add-X). **TASK-718 done** (BUILD_VALIDATION archive for uncited suites). **Next:** TASK-762 (combat `?scope=encounter` Query — Architect, pause once). TASK-719 last. Wave 3 still waits for the owner (includes report 07 P2-5 RM-view enrichment waterfall).
 
 ---
 
@@ -104,215 +46,40 @@ Do **not** read the done archive at session start.
 
 ---
 
-- id: TASK-751
-  title: Archetype Path filter — ADR, live path collectors, shared control, Codex Feats
+- id: TASK-762
+  title: Combat linked-character ?scope=encounter fetches are a Query
   created_at: 2026-08-14
-  created_by: owner
+  created_by: agent
   priority: low
   status: not-started
   related_tasks:
-    - TASK-752
-    - TASK-753
-    - TASK-423
+    - TASK-761
+    - TASK-750
   related_files:
-    - src/docs/ai/ADR/0000-template.md
-    - src/docs/ai/ADR/README.md
-    - src/docs/ai/ADR/0010-lib-layer-dependency-direction.md
-    - src/lib/game/archetype-path.ts
-    - src/lib/game/archetype-path-helpers.test.ts
-    - src/lib/game/archetype-edit.ts
-    - src/types/archetype.ts
-    - src/lib/utils/normalize-id.ts
-    - src/lib/codex/feat-list.ts
-    - src/lib/codex/feat-list.test.ts
-    - src/lib/chip/chip-data-helpers.ts
-    - src/components/shared/filters/chip-select.tsx
-    - src/components/shared/filters/tag-filter.tsx
-    - src/components/shared/filters/index.ts
-    - src/components/shared/grid-list-row-collapsed.tsx
-    - src/components/shared/grid-list-row-types.ts
-    - src/components/codex/codex-feat-row.tsx
-    - src/app/(main)/codex/CodexFeatsTab.tsx
-    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
-    - scripts/shared-ui-allowlist.json
-    - src/docs/ai/FEATURE_INDEX.md
-    - src/docs/REALMS_PRODUCT_OVERVIEW.md
-    - src/docs/MOBILE_UX.md
-  description: |
-    First slice of sitewide Archetype Path list filtering. Canonical
-    recommendations already live on each path (`path_data` level 1, later
-    levels, guidance groups). The filter must **read those lists live** when
-    the user selects path(s) — union the recommended feat ids, then apply
-    existing list filters (`filterFeats`). Do not create a second
-    recommendation table, `feats.paths[]` column, or cached copy that can
-    drift when an admin edits a path. Wire Codex Feats only in this task.
-    While the path filter is active, matching rows get DescriptorChips for
-    the selected path names. Creator/USM L2 wiring is TASK-753.
-  acceptance_criteria:
-    - ADR-0014 accepted (`src/docs/ai/ADR/` + README): SoT is existing path
-      recommendation arrays. `lib/game` exposes shared collectors (e.g.
-      `collectPathRecommendedIds(path, kind)`) that L1 cards and this filter
-      both use — extend `unionFeatIdsFromGuidanceGroups` / parse helpers;
-      ADR-0010 (no library/guided-creator imports). Memoize from
-      `useCodexArchetypes` / `['codex']` only; admin path save already
-      invalidates that query so edits apply with no extra write. Forbidden:
-      junction table, denormalized paths on feat rows, zustand/localStorage
-      recommendation cache, a seed CSV just for this filter.
-    - Match = ChipSelect multi-select **union** (Monk + Berserker → feats
-      recommended by either). Do not add a TagFilter any/all toggle.
-    - Collectors union **all path-authoring levels** (L1 + later `levels[]` +
-      feat guidance groups). `remove_*` is not a recommendation. Player-visible
-      paths only (`listPlayerVisiblePaths`). Resolve refs by id then name
-      (`indexByNormalizedIds`). Path-authoring level does **not** hide a feat;
-      `lvl_req` / character / category filters stay independent and still apply.
-    - Shared `ArchetypePathFilter` under `src/components/shared/filters/`
-      composing ChipSelect (optgroups for Power / Martial / Powered-Martial
-      if needed — do not fork a second multi-select). Allowlist + FEATURE_INDEX.
-      InfoTippy on the label.
-    - Codex Feats: selecting paths shows only feats those paths recommend;
-      empty copy when none match; composes existing feat filters.
-    - Path DescriptorChips (`category: 'archetype'`, path display name) appear
-      on matching rows **only while ≥1 path is selected**, next to the name.
-      GridListRow.badges are compact-only today — extend the shared name-row
-      chip slot for non-compact Codex browse; do not Codex-fork nameContent.
-      Chips = selected paths that recommend that feat.
-    - `filterFeats` takes the recommended-id set from the collectors so
-      AdminFeatsTab can reuse the helper (wire Admin in this PR if it is the
-      same FilterSection slot; no second feat-filter pipeline).
-    - Vitest: union of two paths; admin-shaped path_data change is visible
-      without a second store; id+name resolve; remove_* excluded; hidden paths
-      omitted; lvl_req filter still drops high-req feats. Typecheck/lint.
-      FEATURE_INDEX + changelog. DEV-V-052 T001 (Codex Feats) + DTQ index.
-  notes: |
-    Architect — new shared filter + ADR. Pause once before coding; do not pause
-    again after owner “proceed.” Owner lock 2026-08-14: live read of path
-    lists (no duplicate dataset); ChipSelect union; all recommendation
-    levels; chips only while filtering; player-visible only.
-    Do not start until TASK-733 **and** creator TASK-754–759 (esp. 756/758/759)
-    are done unless the owner re-prioritizes.
-    Does **not** wait for Wave 3.
-    TASK-423 incomplete seeds can make some paths look empty — still list
-    them. Creature feats out of scope. Do not change guided L1 / See more
-    in this task.
-
----
-
----
-
-- id: TASK-752
-  title: Archetype Path filter — Codex/Library skills, powers, techniques, loadout
-  created_at: 2026-08-14
-  created_by: owner
-  priority: low
-  status: not-started
-  related_tasks:
-    - TASK-751
-    - TASK-753
-  related_files:
-    - src/lib/codex/skill-list.ts
-    - src/app/(main)/codex/CodexSkillsTab.tsx
-    - src/lib/codex/equipment-list.ts
-    - src/app/(main)/codex/CodexEquipmentTab.tsx
-    - src/lib/library/power-technique-filters.ts
-    - src/lib/library/armament-filters.ts
-    - src/components/shared/filters/power-technique-filters.tsx
-    - src/components/shared/filters/armament-filters.tsx
+    - src/app/(main)/encounters/[id]/_components/combat/use-combat-linked-character-sync.ts
+    - src/app/(main)/encounters/[id]/_components/combat/use-combat-roster-actions.ts
+    - src/components/shared/add-combatant-modal.tsx
+    - src/hooks/use-campaigns.ts
+    - src/services/campaign-service.ts
     - src/docs/ai/FEATURE_INDEX.md
   description: |
-    After TASK-751 ships the shared index + ArchetypePathFilter, drop the same
-    control into other global browse lists: Codex skills, Codex/Library
-    powers and techniques, Codex/Library weapons/armor/gear. Same union
-    default, same “chips only while filtering” rule, same player-visible
-    path options. No per-tab copy of match logic.
+    Report 06 P1-1 leftover after TASK-761. The RM sheet load is Query; combat still
+    batch-fetches `?scope=encounter` (minimal HP/EN/AP payload) with uncancelled
+    Promise.all + apiFetchOrNull in use-combat-linked-character-sync, plus the same
+    URL in roster-actions and AddCombatantModal. That route is not the RM view GET
+    (no libraryForView; members allowed; private visibility skipped).
   acceptance_criteria:
-    - Each listed browse surface uses `ArchetypePathFilter` + the TASK-751
-      index (kind: skills / powers / innatePowers / techniques / armaments /
-      equipment). No new filter component and no duplicated invert helpers.
-    - Desc chips for selected recommending paths only while the filter is
-      active; no new required-fact column (ADR-0009 unchanged unless a surface
-      already lacks a name-adjacent chip slot — then extend GridListRow, not
-      a local fork).
-    - Empty-state copy when the path filter yields zero rows. Typecheck/lint.
-      FEATURE_INDEX. DEV-V-052 T002–T00n (one test per entity family).
+    - Linked-character resource sync reads through React Query (campaign + encounter
+      scoped key, or a documented variant). No parallel uncancelled useEffect fetch
+      for that payload. Query cancel/unmount covers in-flight requests.
+    - Do not reuse useCampaignCharacterView / the full RM-view GET for this payload.
+    - AddCombatantModal and roster-actions use the same fetcher (no third copy of the
+      URL string). Existing 90s visibility-gated poll and realtime merge stay.
+    - Typecheck/lint. FEATURE_INDEX. One DEV-V test (combat linked HP sync).
   notes: |
-    Blocked in practice on TASK-751 (status stays not-started until 751 is
-    done — do not mark `blocked`). Innate powers use the innatePowers bag,
-    not the regular powers bag. Official Library lists share
-    PowerTechniqueFilters / ArmamentFilters — add the path control there so
-    Codex and Library stay one panel body. Skip creature feats / traits /
-    species / parts / properties.
-
----
-
----
-
-- id: TASK-753
-  title: Archetype Path filter — creator L2 catalogs and add modals
-  created_at: 2026-08-14
-  created_by: owner
-  priority: low
-  status: not-started
-  related_tasks:
-    - TASK-751
-    - TASK-752
-    - TASK-756
-    - TASK-758
-    - TASK-759
-  related_files:
-    - src/components/guided-creator/guided-feats-filter-fields.tsx
-    - src/lib/guided-creator/feats-l2.ts
-    - src/components/guided-creator/guided-feats-l2-modal.tsx
-    - src/components/guided-creator/steps/archetype-feats-step.tsx
-    - src/components/guided-creator/steps/character-feat-step.tsx
-    - src/components/shared/guided-choice/guided-inline-catalog-list.tsx
-    - src/docs/ai/ADR/0012-guided-inline-catalog-list.md
-    - src/components/character-sheet/add-feat-modal.tsx
-    - src/components/shared/add-skill-modal.tsx
-    - src/docs/REALMS_PRODUCT_OVERVIEW.md
-    - src/docs/ai/FEATURE_INDEX.md
-  description: |
-    Use the TASK-751 collectors as the L2 catalog face inside the existing
-    See-more modal (not a second dataset). L1 stays the path’s curated cards.
-    See more opens the same USM as today, with Filters **expanded**, and the
-    Archetype Path filter **pre-selected to every player-visible path of the
-    same archetype type** as the draft (Power path → all Power paths; Martial
-    → all Martial; Powered-Martial → all Powered-Martial). Union of those
-    paths’ recommended feats. User can deselect paths or clear the filter
-    (that is L3 in the same modal — do not invent a fourth hatch). Custom /
-    no-path inline catalogs get the same control with no auto-select.
-    Sheet/creator add modals reuse filterContent so Codex / creator / add-X
-    do not drift.
-  acceptance_criteria:
-    - Guided path flow: L1 cards unchanged. See more → modal as today;
-      FilterSection open; ArchetypePathFilter selected = all
-      `listPlayerVisiblePaths` with `type === draftPath.type`; still
-      un-selectable / clearable to the full eligible catalog.
-    - L1 creator eligibility: hide feats whose **required level** (`lvl_req`)
-      is above 1 (existing unmet hide). Do **not** hide higher **feat family
-      ranks** (expandable level 2/3/4 chips on a feat that is legal at L1).
-      Path-authoring level (recommended at path level 5 vs 1) does not extra-
-      hide a feat; `lvl_req` does.
-    - Custom / no-path (`prefersDeepCatalogEntry`): path filter available,
-      no auto-select; selecting paths is L2, clearing is L3.
-    - `GuidedFeatsFilterFields` composes `ArchetypePathFilter`;
-      `buildGuidedFeatsL2Items` uses `collectPathRecommendedIds` (same as
-      Codex). While the path filter is on, show path-name chips not a
-      duplicate “Recommended” badge.
-    - AddFeatModal / AddSkillModal / other USM add-X that list the same
-      catalogs get the same filterContent — no modal-local id lists.
-    - REALMS §3 / §5 feat L2 rows: same-type auto-filter, unapply = full
-      list. DEV-V-013 + DEV-V-050: L1 cards unchanged; See more opens with
-      same-type paths selected and filters expanded; clearing paths shows
-      feats the L1 cards did not; `lvl_req` > 1 hidden; family ranks remain.
-      Typecheck/lint. FEATURE_INDEX.
-  notes: |
-    Owner lock 2026-08-14. Do after TASK-751 (752 may land in parallel) and
-    after TASK-756 / TASK-758 / TASK-759 (creator screens + feat GLR chrome).
-    Do not reintroduce a REQ. LEVEL column (TASK-758) or drop the State Feats
-    filter InfoTippy (TASK-759). Powered-Martial is its own type (do not also
-    auto-select pure Power and pure Martial unless the owner says so later).
-    Character-feat step: same same-type default unless playtesting says
-    character feats should start unfiltered. Do not fork GuidedFeatsFilterFields
-    into a Codex copy.
+    Filed from TASK-761 /cleanup. Architect — new query key for encounter-scoped
+    character resources; pause once before implementing. Low; after TASK-751–753
+    unless the owner re-prioritizes. Wave 3 report 07 P2-5 (RM view 14 enrichment
+    queries) is a different finding — do not fold it in.
 
 ---

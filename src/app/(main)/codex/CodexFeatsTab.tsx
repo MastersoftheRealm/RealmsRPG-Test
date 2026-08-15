@@ -8,6 +8,7 @@
 
 import { useState, useMemo, useCallback, useId } from 'react';
 import {
+  ArchetypePathFilter,
   ChipSelect,
   AbilityRequirementFilter,
   TagFilter,
@@ -25,16 +26,25 @@ import {
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { Button } from '@/components/ui';
-import { useCodexFeats, useCodexSkills, useCharacter, type Feat, type Skill } from '@/hooks';
+import {
+  useCodexFeats,
+  useCodexSkills,
+  useCharacter,
+  usePathListFilter,
+  type Feat,
+  type Skill,
+} from '@/hooks';
 import { cn } from '@/lib/utils';
 import { groupFeatFamilies } from '@/lib/leveled-feats';
 import {
   CODEX_FEAT_HEADER_COLUMNS,
   FEAT_GRID_COLUMNS,
   buildFeatFilterOptions,
+  featPathChipNames,
   filterFeats,
   type FeatListFilters,
 } from '@/lib/codex/feat-list';
+import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 import { STATE_FEAT_RESTRICTION_NOTICE } from '@/lib/codex/feat-restriction-notice';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import type { CodexSkillForFeat } from '@/lib/game/formulas';
@@ -103,6 +113,18 @@ export function CodexFeatsTab({
 
   const skillIdToName = useMemo(() => buildSkillIdToName(skills as Skill[]), [skills]);
 
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({
+    entities: feats,
+    kind: 'feats',
+    enabled: loadPublicCodex,
+  });
+
   const filteredFeats = useMemo(() => {
     if (!feats) return [];
     const filtered = filterFeats(feats, filters, {
@@ -110,9 +132,10 @@ export function CodexFeatsTab({
       showUnqualified,
       skills: skills as CodexSkillForFeat[],
       allFeats: feats,
+      pathRecommendedIds,
     });
     return sortItems<Feat>(filtered);
-  }, [feats, filters, sortItems, activeCharacter, showUnqualified, skills]);
+  }, [feats, filters, sortItems, activeCharacter, showUnqualified, skills, pathRecommendedIds]);
 
   const featFamilies = useMemo(() => groupFeatFamilies(filteredFeats), [filteredFeats]);
 
@@ -256,6 +279,12 @@ export function CodexFeatsTab({
                 onChange={(v) => setFilters(f => ({ ...f, stateFeatMode: v as 'all' | 'only' | 'hide' }))}
                 placeholder={null}
               />
+
+              <ArchetypePathFilter
+                options={pathIndex.options}
+                selectedPathIds={selectedPathIds}
+                onChange={setSelectedPathIds}
+              />
             </div>
           </>
         }
@@ -265,7 +294,11 @@ export function CodexFeatsTab({
         onSort={handleSort}
         isLoading={isLoading}
         isEmpty={featFamilies.length === 0}
-        emptyTitle="No feats match your filters."
+        emptyTitle={
+          pathFilterActive
+            ? pathFilterEmptyTitle('feats')
+            : 'No feats match your filters.'
+        }
       >
         {featFamilies.map(({ main, levels }) => (
           <CodexFeatRow
@@ -273,6 +306,11 @@ export function CodexFeatsTab({
             feat={main}
             skillIdToName={skillIdToName}
             familyLevels={levels}
+            nameChipLabels={
+              pathFilterActive
+                ? featPathChipNames(pathIndex, main, selectedPathIds)
+                : undefined
+            }
           />
         ))}
       </CodexBrowseListShell>

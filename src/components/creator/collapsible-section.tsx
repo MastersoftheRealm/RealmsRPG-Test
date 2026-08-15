@@ -5,6 +5,8 @@
  * Expand control is a dedicated <button> (full-header hit target via overlay).
  * titleAddon / rightSlot / Remove sit above it with pointer-events (no nested interactives).
  * Header stays put on expand (stable expand toggle — content opens below).
+ * When expanded, do not reserve an empty summary line (TASK-764) — title size/padding
+ * stay the same as collapsed.
  */
 
 'use client';
@@ -61,10 +63,10 @@ export function CollapsibleSection({
 }: CollapsibleSectionProps) {
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const HeadingTag = `h${headingLevel}` as ElementType;
-  const showMetaLine = Boolean(subtitle || collapsedSummary);
-  const metaText = isExpanded
-    ? subtitle?.trim() || ''
-    : (collapsedSummary?.trim() || subtitle?.trim() || '');
+  const subtitleText = subtitle?.trim() ?? '';
+  const collapsedText = collapsedSummary?.trim() ?? '';
+  const metaText = isExpanded ? subtitleText : collapsedText || subtitleText;
+  const showMetaLine = Boolean(metaText);
   const hasTrailingActions = Boolean(rightSlot || optional);
 
   if (optional && !enabled) {
@@ -78,7 +80,7 @@ export function CollapsibleSection({
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {icon && (
-              <span className="text-2xl text-text-muted dark:text-text-secondary" aria-hidden>
+              <span className="text-2xl text-text-muted" aria-hidden>
                 {icon}
               </span>
             )}
@@ -86,9 +88,9 @@ export function CollapsibleSection({
               <HeadingTag className="font-bold text-text-secondary dark:text-text-primary">
                 {title}
               </HeadingTag>
-              {subtitle && (
-                <p className="text-sm text-text-muted dark:text-text-secondary">{subtitle}</p>
-              )}
+              {subtitleText ? (
+                <p className="text-sm text-text-muted">{subtitleText}</p>
+              ) : null}
             </div>
           </div>
           <Button
@@ -135,18 +137,15 @@ export function CollapsibleSection({
                 </span>
               )}
               {itemCount !== undefined && itemCount > 0 && (
-                <span className="text-xs text-text-muted dark:text-text-secondary">({itemCount})</span>
+                <span className="text-xs text-text-muted">({itemCount})</span>
               )}
             </div>
-            {/* Fixed one-line meta slot — swaps collapsed summary / subtitle without shifting chevron. */}
             {showMetaLine ? (
-              <p className="text-sm text-text-muted dark:text-text-secondary mt-0.5 min-h-[1.25rem] truncate">
-                {metaText || '\u00a0'}
-              </p>
+              <p className="text-sm text-text-muted mt-0.5 truncate">{metaText}</p>
             ) : null}
           </div>
           <span
-            className="flex-shrink-0 text-text-muted dark:text-text-secondary"
+            className="flex-shrink-0 text-text-muted"
             aria-hidden
           >
             {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
@@ -164,7 +163,7 @@ export function CollapsibleSection({
                   variant="ghost"
                   size="sm"
                   onClick={() => onEnabledChange?.(false)}
-                  className="min-h-[44px] text-danger-fg hover:bg-danger-light dark:hover:bg-danger-900/20"
+                  className="min-h-[44px] text-danger-fg hover:bg-danger-light"
                 >
                   Remove
                 </Button>

@@ -44,6 +44,8 @@ type UserLibraryEntityTabShellBaseProps = {
   filters?: ReactNode;
   /** Active-filter badge on the collapsed Filters toggle. */
   filterActiveCount?: number;
+  /** Overrides `searchEmptyTitle` when the current filter set yields zero rows. */
+  filterEmptyTitle?: string;
 };
 
 type UserLibraryEntityTabShellSyncProps = UserLibraryEntityTabShellBaseProps & {
@@ -107,6 +109,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
     afterList,
     filters,
     filterActiveCount,
+    filterEmptyTitle,
   } = props;
   const syncEnabled = isSyncMode(props);
 
@@ -175,7 +178,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
         {isLoading ? (
           <LoadingState />
         ) : filteredCount === 0 ? (
-          <ListEmptyState title={labels.searchEmptyTitle} size="sm" />
+          <ListEmptyState title={filterEmptyTitle ?? labels.searchEmptyTitle} size="sm" />
         ) : (
           children
         )}

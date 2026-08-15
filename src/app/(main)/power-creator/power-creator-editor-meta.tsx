@@ -7,6 +7,7 @@
 import Link from 'next/link';
 import { RealmsImageField } from '@/components/shared';
 import { Card, Input, Textarea } from '@/components/ui';
+import { PowerCreatorHelp } from './power-creator-help';
 
 type PowerCreatorEditorMetaProps = {
   isAdmin: boolean;
@@ -44,8 +45,11 @@ export function PowerCreatorEditorMeta({
           </Link>
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Power Name *</label>
+          <label htmlFor="power-creator-name" className="block text-sm font-medium text-text-secondary mb-1">
+            Power Name *
+          </label>
           <Input
+            id="power-creator-name"
             type="text"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
@@ -53,8 +57,14 @@ export function PowerCreatorEditorMeta({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+          <div className="mb-1 flex items-center gap-1.5">
+            <label htmlFor="power-creator-description" className="text-sm font-medium text-text-secondary">
+              Description
+            </label>
+            <PowerCreatorHelp topic="description" />
+          </div>
           <Textarea
+            id="power-creator-description"
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
             placeholder="Describe what your power does..."

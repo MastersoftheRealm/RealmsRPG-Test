@@ -5,8 +5,10 @@
  */
 
 import type { Campaign, CampaignSummary } from '@/types/campaign';
+import type { Character } from '@/types';
 import { apiFetch, apiFetchOrNull } from '@/lib/api-client';
 import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
+import type { GetCharacterResult, LibraryForView } from '@/services/character-service';
 
 const API_BASE = '/api/campaigns';
 
@@ -29,6 +31,25 @@ export async function getMyCampaigns(): Promise<CampaignSummary[]> {
  */
 export async function getCampaign(campaignId: string): Promise<Campaign | null> {
   return apiFetchOrNull<Campaign>(`${API_BASE}/${encodeURIComponent(campaignId)}`);
+}
+
+/**
+ * Get a roster character for the read-only Realm Master view.
+ * Campaign-scoped route — roster membership, RM authorization and the character's
+ * `visibility` are enforced there, so this is not interchangeable with
+ * `getCharacter` / `/api/characters/[id]`.
+ */
+export async function getCampaignCharacterForView(
+  campaignId: string,
+  userId: string,
+  characterId: string
+): Promise<GetCharacterResult> {
+  const data = await apiFetch<Character & { libraryForView?: LibraryForView }>(
+    `${API_BASE}/${encodeURIComponent(campaignId)}/characters/${encodeURIComponent(userId)}/${encodeURIComponent(characterId)}`,
+    { cache: 'no-store' }
+  );
+  const { libraryForView, ...character } = data;
+  return { character, libraryForView };
 }
 
 /**

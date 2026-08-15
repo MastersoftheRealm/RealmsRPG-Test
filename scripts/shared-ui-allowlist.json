@@ -30,6 +30,7 @@
     "src/components/shared/error-boundary.tsx",
     "src/components/shared/expandable-image.tsx",
     "src/components/shared/filters/ability-requirement-filter.tsx",
+    "src/components/shared/filters/archetype-path-filter.tsx",
     "src/components/shared/filters/armament-filters.tsx",
     "src/components/shared/filters/character-filter.tsx",
     "src/components/shared/filters/chip-select.tsx",

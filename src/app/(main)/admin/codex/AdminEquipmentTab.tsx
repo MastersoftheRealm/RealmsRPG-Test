@@ -8,8 +8,8 @@ import {
   RealmsImageField,
 } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
-import { SelectFilter } from '@/components/shared/filters';
-import { useEquipment } from '@/hooks';
+import { SelectFilter, ArchetypePathFilter } from '@/components/shared/filters';
+import { useEquipment, usePathListFilter } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc } from './actions';
@@ -27,6 +27,11 @@ import {
 } from '@/lib/codex/equipment-list';
 import type { CodexEquipmentItem } from '@/types/codex';
 import { EMPTY_ARMAMENT_FILTERS } from '@/lib/library/armament-filters';
+import {
+  EQUIPMENT_LIST_PATH_KINDS,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 
 const COPY_NAME_SUFFIX = ' copy';
 
@@ -62,6 +67,13 @@ export function AdminEquipmentTab() {
     () => collectCodexEquipmentFilterOptions(equipment),
     [equipment]
   );
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({ entities: equipment, kind: EQUIPMENT_LIST_PATH_KINDS });
 
   const filteredEquipment = useMemo(() => {
     if (!equipment) return [];
@@ -70,10 +82,11 @@ export function AdminEquipmentTab() {
         equipment,
         filters,
         EMPTY_ARMAMENT_FILTERS,
-        null
+        null,
+        pathRecommendedIds
       )
     );
-  }, [equipment, filters, sortItems]);
+  }, [equipment, filters, sortItems, pathRecommendedIds]);
 
   const openAdd = () => {
     setEditing(null);
@@ -195,7 +208,7 @@ export function AdminEquipmentTab() {
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search equipment..."
         filters={
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               <SelectFilter
                 label="Category"
                 value={filters.categoryFilter}
@@ -210,6 +223,11 @@ export function AdminEquipmentTab() {
                 onChange={(v) => setFilters(f => ({ ...f, rarityFilter: v }))}
                 placeholder="All Rarities"
               />
+              <ArchetypePathFilter
+                options={pathIndex.options}
+                selectedPathIds={selectedPathIds}
+                onChange={setSelectedPathIds}
+              />
           </div>
         }
         headerColumns={CODEX_EQUIPMENT_HEADER_COLUMNS}
@@ -220,12 +238,17 @@ export function AdminEquipmentTab() {
         rowChrome={{ rightSlot: true }}
         isLoading={isLoading}
         isEmpty={filteredEquipment.length === 0}
-        emptyTitle="No equipment found"
+        emptyTitle={pathFilterActive ? pathFilterEmptyTitle('equipment') : 'No equipment found'}
         emptyMessage="No equipment matches your filters."
         emptyAction={{ label: 'Add Equipment', onClick: openAdd }}
       >
         {filteredEquipment.map((e) => {
               const detailSections = buildCodexEquipmentDetailSections(e);
+              const nameChips = pathFilterActive
+                ? pathChipLabelsForEntity(pathIndex, e.id, selectedPathIds)?.map((label) => ({
+                    label,
+                  }))
+                : undefined;
               return (
               <GridListRow
                 key={e.id}
@@ -236,6 +259,8 @@ export function AdminEquipmentTab() {
                 gridColumns={EQUIPMENT_GRID_COLUMNS}
                 columns={buildCodexEquipmentColumns(e)}
                 detailSections={detailSections.length > 0 ? detailSections : undefined}
+                badges={nameChips}
+                showBadgesInName={Boolean(nameChips)}
                 rightSlot={
                   <div className="flex items-center gap-1 pr-2">
                     {pendingDeleteId === e.id ? (

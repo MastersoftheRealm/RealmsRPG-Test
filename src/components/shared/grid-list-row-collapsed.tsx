@@ -91,6 +91,8 @@ interface GridListRowCollapsedProps {
   quantityDecrementLabel?: string;
   quantityIncrementLabel?: string;
   badges: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
+  /** Non-compact rows opt in via `showBadgesInName` (compact rows always show them). */
+  showBadgesInName: boolean;
   columns: ColumnValue[];
   columnSpans?: (number | undefined)[];
   suppressDescriptionPreview: boolean;
@@ -136,6 +138,7 @@ export function GridListRowCollapsed({
   quantityDecrementLabel,
   quantityIncrementLabel,
   badges,
+  showBadgesInName,
   columns,
   columnSpans,
   suppressDescriptionPreview,
@@ -243,11 +246,13 @@ export function GridListRowCollapsed({
               <QuantityBadge quantity={quantity} className="flex-shrink-0" />
             )
           )}
-          {/* Inline badges for compact view. Hidden when the name column is narrow so the
-              name keeps room; reappear at ≥13rem column width. Full tag stays in expanded view. */}
-          {compact && badges.length > 0 && (
-            <span className="ml-2 hidden @[13rem]:inline-flex gap-1">
-              {badges.slice(0, 2).map((badge, i) => (
+          {/* Inline badges for compact view (and non-compact rows that opt in via
+              showBadgesInName). Hidden when the name column is narrow so the name keeps room;
+              reappear at ≥13rem column width. Compact rows cap at 2 — the rest stays in the
+              expanded view; opted-in rows show the full set because it is their only copy. */}
+          {(compact || showBadgesInName) && badges.length > 0 && (
+            <span className="ml-2 hidden @[13rem]:inline-flex flex-wrap gap-1">
+              {(showBadgesInName ? badges : badges.slice(0, 2)).map((badge, i) => (
                 <DescriptorChip
                   key={i}
                   variant={descriptorChipVariantForBadgeColor(badge.color)}

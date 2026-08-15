@@ -111,6 +111,12 @@ export interface GridListRowProps {
   costLabel?: string;
   /** Custom badges/tags to show */
   badges?: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
+  /**
+   * Render `badges` beside the name instead of in the expanded body (compact rows always do).
+   * For state a browse row must show while a filter is active — e.g. the archetype paths that
+   * recommend this feat (ADR-0014). Keeps the metadata in one place, not both.
+   */
+  showBadgesInName?: boolean;
   /** Requirements or additional info */
   requirements?: ReactNode;
   /** Custom expanded content (replaces default slots) */

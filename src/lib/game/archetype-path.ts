@@ -7,6 +7,7 @@ import type {
   PathLoadout,
 } from '@/types/archetype';
 import type { AbilityName } from '@/types/abilities';
+import { normalizeId } from '@/lib/utils/normalize-id';
 
 export type { PathGuidanceAudience };
 
@@ -420,4 +421,75 @@ export function pathLevel1HasNonPickerContent(
 /** Admin-only paths: saved in codex but hidden from player path pickers. */
 export function pathHiddenFromPlayerPicker(pathData: ArchetypePathData | undefined): boolean {
   return pathLevel1HasNonPickerContent(pathData?.level1) && !pathHasPlayerVisibleLevel1(pathData);
+}
+
+/** Entity families a path can recommend (ADR-0014). */
+export type PathRecommendationKind =
+  | 'feats'
+  | 'skills'
+  | 'powers'
+  | 'innatePowers'
+  | 'techniques'
+  | 'armaments'
+  | 'equipment';
+
+/** Kinds that guidance groups can also designate (groups have no skills list). */
+const GUIDANCE_GROUP_RECOMMENDATION_KINDS: PathRecommendationKind[] = [
+  'feats',
+  'powers',
+  'innatePowers',
+  'techniques',
+  'armaments',
+  'equipment',
+];
+
+/** Kinds stored as `id` or `id:qty` refs. */
+const QUANTITY_REF_KINDS: PathRecommendationKind[] = ['armaments', 'equipment'];
+
+function recommendationRefs(
+  source: ArchetypePathRecommendations | PathGuidanceGroup | undefined,
+  kind: PathRecommendationKind
+): string[] {
+  const raw = (source as Record<string, unknown> | undefined)?.[kind];
+  return Array.isArray(raw) ? raw.map(String) : [];
+}
+
+/**
+ * Union of recommended entity refs for one kind across every authored path level — ADR-0014.
+ *
+ * Browse/list filters read this. Guided L1 cards still use `level1.feats` /
+ * `unionFeatIdsFromGuidanceGroups` until TASK-753. `remove*` lists are not recommendations.
+ * Quantity refs (`sword:2`) collapse to the id via `parseIdQuantityStrings`.
+ */
+export function collectPathRecommendedIds(
+  pathData: ArchetypePathData | undefined,
+  kind: PathRecommendationKind
+): string[] {
+  if (!pathData) return [];
+
+  const stripQuantity = QUANTITY_REF_KINDS.includes(kind);
+  const refs: string[] = [];
+  for (const level of [pathData.level1, ...(pathData.levels ?? [])]) {
+    if (!level) continue;
+    refs.push(...recommendationRefs(level, kind));
+  }
+  // Parser only attaches `guidance_groups` on level 1 — do not walk later `levels[]` for them.
+  if (GUIDANCE_GROUP_RECOMMENDATION_KINDS.includes(kind)) {
+    for (const group of pathData.level1?.guidance_groups ?? []) {
+      refs.push(...recommendationRefs(group, kind));
+    }
+  }
+
+  const ids = stripQuantity ? parseIdQuantityStrings(refs).map((entry) => entry.id) : refs;
+
+  const seen = new Set<string>();
+  const unique: string[] = [];
+  for (const id of ids) {
+    const trimmed = id.trim();
+    const key = normalizeId(trimmed);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    unique.push(trimmed);
+  }
+  return unique;
 }

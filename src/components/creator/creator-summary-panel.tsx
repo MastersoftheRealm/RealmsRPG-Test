@@ -41,6 +41,8 @@ export interface CostStat {
   icon?: ReactNode;
   /** Color theme: energy (blue), tp (purple), health (red), currency (amber) */
   color: 'energy' | 'tp' | 'health' | 'currency';
+  /** Optional InfoTippy beside the label */
+  help?: ReactNode;
 }
 
 export interface StatRow {
@@ -91,6 +93,8 @@ export interface CreatorSummaryPanelProps {
   abilitiesChips?: Array<{ abbr: string; value: number }>;
   /** Additional content at the bottom */
   children?: ReactNode;
+  /** Help row under cost stats (e.g. Innate Power tip) */
+  costHelp?: ReactNode;
   /** Additional class names */
   className?: string;
 }
@@ -137,6 +141,7 @@ export function CreatorSummaryPanel({
   lineItems,
   abilitiesChips,
   children,
+  costHelp,
   className,
 }: CreatorSummaryPanelProps) {
   return (
@@ -203,12 +208,17 @@ export function CreatorSummaryPanel({
                 <div className={cn('text-2xl font-bold', colors.text)}>
                   {typeof stat.value === 'number' ? stat.value.toLocaleString() : stat.value}
                 </div>
-                <div className={cn('text-xs', colors.text)}>{stat.label}</div>
+                <div className={cn('text-xs inline-flex items-center justify-center gap-0.5', colors.text)}>
+                  {stat.label}
+                  {stat.help}
+                </div>
               </div>
             );
           })}
         </div>
       )}
+
+      {costHelp ? <div className="mb-4 -mt-2">{costHelp}</div> : null}
 
       {/* Quick Stats (HP, EN, SPD chips) */}
       {quickStats && quickStats.length > 0 && (

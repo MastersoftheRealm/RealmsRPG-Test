@@ -18,6 +18,7 @@ import {
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
+import { libraryRowPathIds, rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
 
 /** Data columns only — edit/delete/add use ListHeader `rowChrome`. */
 export const OFFICIAL_TECHNIQUE_GRID = '1.4fr 1fr 0.7fr 0.7fr 0.9fr 1fr 1fr';
@@ -115,6 +116,8 @@ export function officialTechniqueRowColumns(row: OfficialTechniqueRow): ColumnVa
 
 export function filterOfficialTechniqueRows<
   T extends {
+    id?: string | number;
+    raw?: { id?: string | number | null; docId?: string | number | null };
     name?: string;
     description?: string;
     weapon?: string;
@@ -133,9 +136,13 @@ export function filterOfficialTechniqueRows<
   search: string,
   sortItems: (items: T[]) => T[],
   advanced?: PowerTechniqueFilterState,
-  character?: PowerTechniqueCharacterContext | null
+  character?: PowerTechniqueCharacterContext | null,
+  pathRecommendedIds?: ReadonlySet<string> | null
 ): T[] {
   let result = rows;
+  if (pathRecommendedIds) {
+    result = result.filter((x) => rowMatchesPathRecommendedIds(libraryRowPathIds(x), pathRecommendedIds));
+  }
   if (search) {
     const s = search.toLowerCase();
     result = result.filter(

@@ -1,11 +1,13 @@
 /** Landing page copy — edit text for `/` (REALMS_PRODUCT_OVERVIEW Section 4). */
 
+import { DISCORD_URL } from './shared-copy';
+
 export const LANDING_COPY = {
   hero: {
     headline: 'Become Any Character You Can Imagine',
     subline:
       'Realms is a tabletop RPG built for limitless creativity; from character creation, to your weapons and powers, you design it all.',
-    primaryCta: 'Start Playing',
+    primaryCta: 'Create Character',
     explorer: 'New to TTRPGs? See how Realms works',
     returning: {
       headline: 'Welcome back, adventurer.',
@@ -42,15 +44,17 @@ export const LANDING_COPY = {
     heading: 'Start Playing in Three Steps',
     steps: [
       {
-        title: 'Choose Your Path',
-        body: 'Begin with character creation, and choose an Archetype Path.',
+        title: 'Create a character',
+        body: 'Build your hero in a few minutes. The creator walks you through it, so you do not need to know the rules first.',
       },
       {
-        title: 'Become Your Character',
-        body: 'Pick and customize your Species, Abilities, Skills, Feats, and everything in between!',
+        title: 'Find a table',
+        body: 'Join the community through Discord to find a group and meet other players.',
+        href: DISCORD_URL,
+        linkLabel: 'Discord',
       },
       {
-        title: 'Play with Friends',
+        title: 'Start playing',
         body: 'Bring your character to the table and start your adventure.',
       },
     ],

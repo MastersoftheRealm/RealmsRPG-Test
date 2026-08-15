@@ -20,6 +20,7 @@ import {
 import { CharacterFilter } from './character-filter';
 import { FilterInput } from './filter-native-select';
 import { FILTER_CONTROL_ROW_CLASS, FILTER_LABEL_ROW_CLASS } from './filter-utils';
+import { ArchetypePathFilter, type ArchetypePathFilterProps } from './archetype-path-filter';
 import { cn } from '@/lib/utils';
 
 const ARMAMENT_CHARACTER_FILTER_HELP =
@@ -32,6 +33,18 @@ function parseOptionalNumber(raw: string): number | null {
   if (raw === '') return null;
   const n = Number(raw);
   return Number.isFinite(n) ? n : null;
+}
+
+function PathFilterLast(
+  pathFilter: NonNullable<ArmamentFiltersProps['pathFilter']>
+) {
+  return (
+    <ArchetypePathFilter
+      options={pathFilter.options}
+      selectedPathIds={pathFilter.selectedPathIds}
+      onChange={pathFilter.onChange}
+    />
+  );
 }
 
 export interface ArmamentFiltersProps {
@@ -50,6 +63,8 @@ export interface ArmamentFiltersProps {
   showEquipmentExtras?: boolean;
   /** Extra filter controls (e.g. Category / Rarity selects) in the panel body. */
   children?: ReactNode;
+  /** Archetype Path filter — last in the grid (TASK-752 / TASK-753). */
+  pathFilter?: Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'> | null;
 }
 
 export function ArmamentFilters({
@@ -61,6 +76,7 @@ export function ArmamentFilters({
   persistCharacter = true,
   showEquipmentExtras = false,
   children,
+  pathFilter,
 }: ArmamentFiltersProps) {
   const affordableId = useId();
   const rarityId = useId();
@@ -119,7 +135,7 @@ export function ArmamentFilters({
         }
       >
         {hasCharacter && characterContext ? (
-          <p className="mt-2 text-xs text-text-secondary dark:text-text-secondary">
+          <p className="mt-2 text-xs text-text-secondary">
             {character?.name}:{' '}
             {showEquipmentExtras
               ? `Level ${characterContext.level} · Currency ${characterContext.currency}`
@@ -218,9 +234,17 @@ export function ArmamentFilters({
               placeholder="No max"
             />
           </div>
+          {pathFilter ? <PathFilterLast {...pathFilter} /> : null}
         </div>
       ) : (
-        children
+        <>
+          {children}
+          {pathFilter ? (
+            <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              <PathFilterLast {...pathFilter} />
+            </div>
+          ) : null}
+        </>
       )}
     </>
   );

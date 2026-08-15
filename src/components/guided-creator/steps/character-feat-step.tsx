@@ -8,7 +8,7 @@
 import { useMemo, useState, useCallback } from 'react';
 import { EmptyState, Spinner } from '@/components/ui';
 import { GuidedInlineCatalogList, GuidedLayerNav } from '@/components/shared';
-import { useCodexFeats, useCodexSkills } from '@/hooks';
+import { useCodexFeats, useCodexSkills, usePathListFilter } from '@/hooks';
 import {
   guidedDraftToFeatRequirementCharacter,
   selectableCuratedFeatIds,
@@ -35,6 +35,7 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 import { filterFeatGuidanceGroups } from '@/lib/game/archetype-path';
 import { EMPTY_GUIDANCE_GROUPS, EMPTY_STRING_ARRAY } from '@/lib/empty';
+import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 
 const stepCopy = GUIDED_CREATOR_COPY.steps.characterFeat;
 const l2Copy = GUIDED_CREATOR_COPY.steps.featsL2;
@@ -108,6 +109,12 @@ export function CharacterFeatStep() {
   // (requirements, capped selection) stay identical whether shown in-page or in a modal.
   const [inlineCategories, setInlineCategories] = useState<string[]>([]);
   const [inlineStateFeatMode, setInlineStateFeatMode] = useState<StateFeatFilterMode>('all');
+  const {
+    selectedPathIds: inlineSelectedPathIds,
+    setSelectedPathIds: setInlineSelectedPathIds,
+    pathIndex: inlinePathIndex,
+    pathFilterActive: inlinePathFilterActive,
+  } = usePathListFilter({ entities: feats, kind: 'feats' });
 
   const { categories: inlineCategoryOptions } = useMemo(
     () => buildGuidedFeatsL2FilterOptions(feats, 'character'),
@@ -125,6 +132,8 @@ export function CharacterFeatStep() {
         codexSkills,
         categories: inlineCategories,
         stateFeatMode: inlineStateFeatMode,
+        pathIndex: inlinePathIndex,
+        selectedPathIds: inlineSelectedPathIds,
       }),
     [
       feats,
@@ -133,11 +142,15 @@ export function CharacterFeatStep() {
       codexSkills,
       inlineCategories,
       inlineStateFeatMode,
+      inlinePathIndex,
+      inlineSelectedPathIds,
     ]
   );
 
   const inlineActiveFilterCount =
-    inlineCategories.length + (inlineStateFeatMode !== 'all' ? 1 : 0);
+    inlineCategories.length +
+    (inlineStateFeatMode !== 'all' ? 1 : 0) +
+    (inlinePathFilterActive ? 1 : 0);
 
   const selectedIdSet = useMemo(
     () => new Set(draft.characterFeatIds.map(String)),
@@ -177,7 +190,9 @@ export function CharacterFeatStep() {
           columns={FEATS_L2_HEADER_COLUMNS}
           gridColumns={FEATS_L2_GRID}
           itemLabel="feat"
-          emptyMessage={l2Copy.emptyMessage}
+          emptyMessage={
+            inlinePathFilterActive ? pathFilterEmptyTitle('feats') : l2Copy.emptyMessage
+          }
           searchPlaceholder={l2Copy.searchPlaceholder}
           searchFields={FEATS_L2_SEARCH_FIELDS}
           filterContent={
@@ -190,6 +205,11 @@ export function CharacterFeatStep() {
               }
               stateFeatMode={inlineStateFeatMode}
               onStateFeatModeChange={setInlineStateFeatMode}
+              pathFilter={{
+                options: inlinePathIndex.options,
+                selectedPathIds: inlineSelectedPathIds,
+                onChange: setInlineSelectedPathIds,
+              }}
             />
           }
           showFilters
@@ -249,6 +269,7 @@ export function CharacterFeatStep() {
               initialSelectedIds={draft.characterFeatIds}
               maxSelections={1}
               requirementCharacter={requirementCharacter}
+              autoSelectPathType={draft.archetypeType}
               onClose={() => setBrowseOpen(false)}
               onConfirm={(ids) => updateDraft({ characterFeatIds: ids.slice(0, 1) })}
             />

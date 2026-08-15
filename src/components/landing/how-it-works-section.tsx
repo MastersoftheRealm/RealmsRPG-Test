@@ -1,9 +1,10 @@
 /**
  * How it works
  * ============
- * Desire block (REALMS_PRODUCT_OVERVIEW Section 4): 2-3 steps from path to play.
- * Holds the `#how-it-works` anchor target for the hero explorer link and repeats
- * the single primary CTA once mid-page (the only sanctioned repeat).
+ * Desire block (REALMS_PRODUCT_OVERVIEW Section 4): create a character → find a
+ * table (Discord) → start playing. Holds the `#how-it-works` anchor target for
+ * the hero explorer link and repeats the single primary CTA once mid-page
+ * (the only sanctioned repeat).
  */
 
 import { Sparkles } from 'lucide-react';
@@ -36,7 +37,7 @@ export function HowItWorksSection() {
                 {step.title}
               </h3>
               <p className="font-nunito text-base text-text-secondary leading-relaxed max-w-[34ch]">
-                {step.body}
+                <HowItWorksStepBody step={step} />
               </p>
             </li>
           ))}
@@ -51,4 +52,34 @@ export function HowItWorksSection() {
       </div>
     </section>
   );
+}
+
+function HowItWorksStepBody({
+  step,
+}: {
+  step: (typeof LANDING_COPY.howItWorks.steps)[number];
+}) {
+  const href = 'href' in step ? step.href : undefined;
+  const linkLabel = 'linkLabel' in step ? step.linkLabel : undefined;
+  if (href && linkLabel) {
+    const idx = step.body.indexOf(linkLabel);
+    if (idx >= 0) {
+      return (
+        <>
+          {step.body.slice(0, idx)}
+          <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Join the Discord (opens in a new tab)"
+            className="font-medium text-primary-link-fg hover:text-primary-fg-hover underline-offset-4 hover:underline"
+          >
+            {linkLabel}
+          </a>
+          {step.body.slice(idx + linkLabel.length)}
+        </>
+      );
+    }
+  }
+  return step.body;
 }

@@ -234,24 +234,24 @@ Apply patterns common to high-converting hobby and TTRPG product pages (AIDA flo
 |-------|------|-------------------|
 | **Hero** | Attention + single action | One headline (what Realms is + why unique), one subline, **one primary CTA** |
 | **Uniqueness** | Interest / desire | Concrete differentiators — custom powers, path-guided builds, creative freedom — with **visual proof** (screenshots, species art, power examples), not abstract ad copy |
-| **How it works** | Desire | 2–3 steps: choose a path → become your character → play with friends |
+| **How it works** | Desire | 3 steps in visitor language: create a character → find a table (Discord) → start playing |
 | **Social proof** (optional) | Trust | Short quotes or community signal; TTRPG audiences respond to specificity and peer voice |
 | **Secondary discovery** (below fold) | Interest for customizers | **Create a custom power** → `/power-creator` (Layer 1 entry); **Create weapons & armor** → `/item-creator` (Layer 1 entry) — brief, visual, not equal to hero CTA |
 | **Community** (footer area) | Action for non-ready visitors | **Join Discord** — secondary CTA for users not ready to create yet |
 
 **Marketing principles to follow:**
 
-- **One primary CTA above the fold:** "Start Playing" / "Create Your Character" → `/characters/new` (path-first creator). Repeat once after the uniqueness block; avoid nav-bar-style link farms.
+- **One primary CTA above the fold:** "Create Character" → `/characters/new` (path-first creator). Repeat once after the how-it-works block; avoid nav-bar-style link farms. Do not label that button "Start Playing" — that is the third how-it-works step, not the first click.
 - **Show the product in use** — character art, creator UI, table/play context — so visitors picture themselves playing (not just reading rules).
 - **Mobile-first** — majority of discovery happens on small screens; hero and CTA must work at ~360px without horizontal hunting.
 - **No feature dump on first screen** — defer deep mechanics; link to `/rules` or About for researchers, not from the hero.
-- **Community-aware language** — "Start playing," "Create your character," not enterprise SaaS tone.
+- **Community-aware language** — "Create a character," "Find a table," "Start playing." Do not lead with system terms (Archetype Path, Species, Feats) on the landing steps.
 
 ### CTA hierarchy (final)
 
 | Priority | CTA | Destination | Notes |
 |----------|-----|-------------|-------|
-| **Primary** | Start Playing / Create Your Character | `/characters/new` | Hero + one repeat mid-page |
+| **Primary** | Create Character | `/characters/new` | Hero + one repeat after how-it-works |
 | **Secondary (mid-page, below fold)** | Create a Custom Power | `/power-creator` | Must land in **Layer 1** guided entry when built |
 | **Secondary (mid-page)** | Create Weapons & Armor | `/item-creator` | Same — Layer 1 when built |
 | **Tertiary** | Join Discord | External invite | Footer or closing section; for not-ready-yet visitors |
@@ -260,7 +260,7 @@ Apply patterns common to high-converting hobby and TTRPG product pages (AIDA flo
 ### Success metrics
 
 - New visitor answers "what is Realms and why is it different?" in ~10 seconds **without scrolling**.
-- One obvious button to start playing; no decision paralysis from equal-weight CTAs.
+- One obvious button to create a character; no decision paralysis from equal-weight CTAs.
 - Design tokens and components from [`DESIGN_SYSTEM.md`](./DESIGN_SYSTEM.md) and [`MOBILE_UX.md`](./MOBILE_UX.md) — modern layout, not a break from the system unless the system must evolve to support the vision.
 
 ### Current gap
@@ -517,8 +517,9 @@ Feat selection must be heavily guided.
 | Two phases within the step | Archetype feats first (combat and system impact), then a character feat (identity and expression) |
 | Layer 1 to 2 to 3 | Grouped recommendations, then a filtered ranked list, then the full catalog |
 | Nothing gated in Layer 1 | Every feat remains reachable by expanding |
+| L2 path filter | See more opens Filters expanded with **Archetype Path** pre-selected to every player-visible path of the draft’s archetype type (union). Clearing the filter is L3 in the same modal. Custom / no-path inline catalogs have the control with no auto-select. |
 
-**Current gap:** [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx) uses a Layer 1 filter and auto-apply but has no build-goal groups.
+**Current gap:** [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx) (Legacy) uses a Layer 1 filter and auto-apply but has no build-goal groups. **Guided shipped (TASK-565 / TASK-753):** L1 path cards unchanged; See more on feats, powers/techniques, and loadout opens Filters expanded with **Archetype Path** last (same-type auto-select; live `path_data` collector). Custom/no-path inline catalogs have the control with no auto-select. Sheet Add Feat / Add Skill / Add Library Item use the same control.
 
 ### 5.7 Loadout Selection (weapons, armor, Equipment)
 
@@ -690,7 +691,7 @@ Before large guided UI work:
 |-----|--------|
 | Layer model | L3 only; all sections default expanded |
 | Landing CTAs | [`secondary-discovery-section.tsx`](../components/landing/secondary-discovery-section.tsx) → `/power-creator` L3 |
-| Tooltips | None on standalone creator pages |
+| Tooltips | Power creator advanced sections wired (TASK-408); other standalone creators still none |
 | Templates | No guided entry; official library exists but unused for onboarding |
 | Character context | No innate-threshold or armament-prof filtering by character |
 | File size | Power ~3.4k lines, item ~4.3k lines — blocks safe iteration |
@@ -997,7 +998,7 @@ flowchart LR
 
 | Phase | Scope | Ship criteria |
 |-------|-------|---------------|
-| **Phase 0** | **Landing page rebuild** (Section 4) | Landing matches Section 4 spec; one obvious "Start Playing" path |
+| **Phase 0** | **Landing page rebuild** (Section 4) | Landing matches Section 4 spec; one obvious "Create Character" path |
 | **Phase 1** | **Character creator guided** (Section 5.0) — Simple creator chapters; Advanced coexists | One path completable in guided flow; owner sign-off |
 | **Phase 1b** | **Creator engineering Phase 0** — TASK-380 `CreatorPageShell`, TASK-381 god-file decomposition (power + item first), power-creator `InfoTippy` from tooltip draft | Safe to iterate on guided standalone routes |
 | **Phase 2** | **Power creator guided** (Section 5.11) — **after TASK-414 spec APPROVED**; then TASK-410–412 | New visitor saves a custom power without part jargon |
@@ -1094,7 +1095,7 @@ Everything else stays on current UI until each phase validates the pattern.
 - **Three-layer model (Section 3)** — Clearer articulation of “quick build vs full system” than ad hoc toggles in code today.
 - **Post-activation shift (Section 11)** — Moving guidance after first save aligns with SaaS/TTRPG onboarding research; correctly retires pre-creation `OnboardingTour` (Codex → Library → Creator).
 - **Honest codebase gaps (Appendix B)** — Partial path mode, missing `level1_notes` in creator, finalize as save-not-reveal — matches repo reality.
-- **Landing simplification (Section 4)** — Correct diagnosis of today’s multi-CTA vs single “Start Playing” funnel.
+- **Landing simplification (Section 4)** — Correct diagnosis of today’s multi-CTA vs single “Create Character” funnel.
 
 ---
 
@@ -1105,7 +1106,7 @@ Everything else stays on current UI until each phase validates the pattern.
 | Post-save flow | Play-together prompt on sheet | `finalize-step.tsx` → toast + redirect only | Section 11 entirely aspirational until TASK-388 |
 | Path as default | Path-first from landing | `archetype-step.tsx` fork: Path **or** Forge | New users can still enter full L3 via Forge |
 | Path L1 strictness | Continue when step is complete | Tab bar allows **Continue anyway** | Undermines guided path if not path-gated |
-| Tooltips | `InfoTippy` first-exposure (Section 2.6) | Creator, navbar, campaigns wired (TASK-376 ✅); Floating UI engine (TASK-392 ✅) | Extend to sheet/creators as those surfaces get L1 UX |
+| Tooltips | `InfoTippy` first-exposure (Section 2.6) | Creator, navbar, campaigns wired (TASK-376 ✅); Floating UI engine (TASK-392 ✅); **power creator advanced** (TASK-408 ✅) | Extend to remaining standalone creators; guided power L1 deferred (TASK-410–414) |
 | Campaign CTA | “Start a campaign” post-save | Create (RM) vs join (invite code + character) are different flows | Single CTA oversimplifies player vs RM jobs |
 | Guest → save | Account at value, not at door | Full guest build → `LoginPromptModal` at finalize | **Activation cliff** — not spec’d in Sections 1–5 |
 | Landing secondary CTAs | Power / item creators (Layer 1) | Creators are **Layer 3 today** | Linking from landing before L1 ships = conversion leak |
@@ -1371,7 +1372,7 @@ Single CTA + funnel removal (Codex/Library from hero) is strong **activation** l
 | “Browse content before committing” | Codex/Library nav only | Feels hidden if hero is single-minded |
 | “Build without commitment” | Guest creator (good) | Not advertised on landing if hero-only |
 
-**Open decision:** Second **lightweight entry path** on landing — e.g. **“Explore the system first”** (short primer + optional read-only browse mode), **not** equal weight to Start Playing.
+**Open decision:** Second **lightweight entry path** on landing — e.g. **“Explore the system first”** (short primer + optional read-only browse mode), **not** equal weight to Create Character.
 
 - Must not become a second full funnel (no Codex tour revival)
 - Could be text link or tertiary block below hero — validates explorer conversion without splitting primary CTA

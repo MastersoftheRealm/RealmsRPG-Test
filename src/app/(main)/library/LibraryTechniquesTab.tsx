@@ -16,6 +16,7 @@ import {
 import { PowerTechniqueFilters } from '@/components/shared/filters';
 import { useSort } from '@/hooks/use-sort';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
+import { usePathListFilter } from '@/hooks';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import {
@@ -52,6 +53,11 @@ import {
 import { useLibraryEntitySync } from './hooks/use-library-entity-sync';
 import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confirm';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
+import {
+  libraryRowPathIds,
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 
 const TECHNIQUE_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
 
@@ -88,6 +94,17 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
   const labels = mode === 'empowered' ? EMPOWERED_TECHNIQUE_LIBRARY_LABELS : TECHNIQUE_LIBRARY_LABELS;
   const saveType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
   const duplicateMutation = mode === 'empowered' ? duplicateEmpoweredTechnique : duplicateTechnique;
+  const {
+    selectedPathIds,
+    setSelectedPathIds,
+    pathIndex,
+    pathRecommendedIds,
+    pathFilterActive,
+  } = usePathListFilter({
+    entities: techniques,
+    kind: 'techniques',
+    enabled: mode === 'standard',
+  });
 
   const cardData = useMemo(() => {
     return buildOfficialTechniqueRows(techniques, partsDb, mode).map((row) => {
@@ -138,9 +155,10 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
       search,
       sortItems,
       advanced,
-      mode === 'empowered' ? null : characterContext
+      mode === 'empowered' ? null : characterContext,
+      mode === 'empowered' ? null : pathRecommendedIds
     );
-  }, [cardData, search, sortItems, mode, advancedFilters, characterContext]);
+  }, [cardData, search, sortItems, mode, advancedFilters, characterContext, pathRecommendedIds]);
 
   return (
     <>
@@ -185,6 +203,11 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
             categoryOptions={categoryOptions}
             onCharacterContextChange={setCharacterContext}
             onCharacterIdChange={setCharacterFilterId}
+            pathFilter={{
+              options: pathIndex.options,
+              selectedPathIds,
+              onChange: setSelectedPathIds,
+            }}
           />
         )
       }
@@ -195,7 +218,10 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
               advancedFilters,
               'technique',
               Boolean(characterContext)
-            ) + (characterFilterId ? 1 : 0)
+            ) + (characterFilterId ? 1 : 0) + (pathFilterActive ? 1 : 0)
+      }
+      filterEmptyTitle={
+        mode !== 'empowered' && pathFilterActive ? pathFilterEmptyTitle('techniques') : undefined
       }
     >
       {filteredData.map((tech) => {
@@ -205,6 +231,13 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
                 stripOptionSuffix: true,
               })
             : partsProficienciesSection(tech.parts, 'technique');
+        const nameLabels =
+          mode !== 'empowered' && pathFilterActive
+            ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(tech), selectedPathIds)
+            : undefined;
+        const nameBadges = nameLabels?.map((label) => ({ label })) ?? [];
+        const driftBadges = tech.hasDrift ? [{ label: 'Needs sync' as const, color: 'amber' as const }] : [];
+        const badges = [...nameBadges, ...driftBadges];
         return (
           <GridListRow
             key={tech.id}
@@ -225,7 +258,8 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
             detailSections={partsSection ? [partsSection] : undefined}
             totalCost={typeof tech.tp === 'number' ? tech.tp : parseFloat(String(tech.tp)) || undefined}
             costLabel="TP"
-            badges={tech.hasDrift ? [{ label: 'Needs sync', color: 'amber' }] : []}
+            badges={badges.length > 0 ? badges : undefined}
+            showBadgesInName={nameBadges.length > 0}
             warningMessage={tech.syncIssues[0]?.message}
             rightSlot={
               mode !== 'empowered' &&

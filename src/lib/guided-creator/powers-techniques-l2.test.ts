@@ -63,7 +63,6 @@ describe('buildPowersTechniquesL2Items innate threshold', () => {
       items: catalog,
       powerPartsDb: partsDb,
       techniquePartsDb: [],
-      pathRecommendedIds: [],
       energyInput,
       innateThreshold: 8,
     });
@@ -80,7 +79,6 @@ describe('buildPowersTechniquesL2Items innate threshold', () => {
       items: [catalog[1]!],
       powerPartsDb: partsDb,
       techniquePartsDb: [],
-      pathRecommendedIds: [],
       energyInput,
       innateThreshold: 8,
     });
@@ -95,7 +93,6 @@ describe('buildPowersTechniquesL2Items innate threshold', () => {
       items: [catalog[0]!],
       powerPartsDb: partsDb,
       techniquePartsDb: [],
-      pathRecommendedIds: [],
       energyInput,
       innateThreshold: 8,
     });
@@ -105,7 +102,6 @@ describe('buildPowersTechniquesL2Items innate threshold', () => {
       items: [catalog[0]!],
       powerPartsDb: partsDb,
       techniquePartsDb: [],
-      pathRecommendedIds: [],
       energyInput,
     });
 
@@ -124,7 +120,6 @@ describe('buildPowersTechniquesL2Items innate threshold', () => {
       items: [catalog[0]!],
       powerPartsDb: partsDb,
       techniquePartsDb: [],
-      pathRecommendedIds: [],
       energyInput,
     });
     expect(rows).toHaveLength(1);
@@ -138,6 +133,7 @@ describe('buildPowersTechniquesL2Items innate threshold', () => {
       'damage',
     ]);
     expect(rows[0]?.chips).toBeUndefined();
+    expect(rows[0]?.badges).toBeUndefined();
     expect(rows[0]?.detailSections?.[0]?.label).toMatch(/Parts/i);
     expect(rows[0]?.totalCost).toBe(2);
   });
@@ -151,7 +147,6 @@ describe('computeL2PowersTechniquesTpSpent + combineGuidedTpBudgets', () => {
       items: catalog,
       powerPartsDb: partsDb,
       techniquePartsDb: [],
-      pathRecommendedIds: [],
       energyInput,
       innateThreshold: 8,
     });

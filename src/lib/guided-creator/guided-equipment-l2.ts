@@ -43,6 +43,12 @@ export interface GuidedEquipmentL2ItemData {
   row: EligibleEquipmentRow;
 }
 
+export function pathRecommendationKindForEquipmentPhase(
+  phase: EquipmentPhase
+): 'armaments' | 'equipment' {
+  return phase === 'gear' ? 'equipment' : 'armaments';
+}
+
 function mapCategory(phase: EquipmentPhase): GuidedEquipmentL2ItemData['category'] {
   if (phase === 'armor') return 'armor';
   if (phase === 'gear') return 'equipment';

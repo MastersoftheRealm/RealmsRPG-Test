@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-08-14
+Generated: 2026-08-15
 
 ## `src/components/shared/index.ts`
 
@@ -166,6 +166,7 @@ Generated: 2026-08-14
 ## `src/hooks/index.ts`
 
 - buildGuidedEquipmentEligibilityContext
+- campaignKeys
 - characterKeys
 - characterViewerId
 - findTraitByIdOrName
@@ -208,6 +209,7 @@ Generated: 2026-08-14
 - useAuthStore
 - useAutoSave
 - useCampaign
+- useCampaignCharacterView
 - useCampaignRolls
 - useCampaigns
 - useCampaignsFull
@@ -260,6 +262,8 @@ Generated: 2026-08-14
 - useModalListState
 - useOfficialLibrary
 - useParts
+- usePathListFilter
+- usePathRecommendationIndex
 - usePlaceholderTheme
 - usePortraitFallbackUrl
 - usePowerParts
