@@ -6,6 +6,7 @@ import {
   collectCharacterSkillKeys,
   filterSkills,
   findSkillByIdOrName,
+  parseSkillAbilities,
   type SkillListFilters,
 } from './skill-list';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
@@ -76,6 +77,13 @@ describe('findSkillByIdOrName', () => {
     expect(findSkillByIdOrName(allSkills, '10')?.name).toBe('Athletics');
     expect(findSkillByIdOrName(allSkills, 'athletics')?.id).toBe('10');
     expect(findSkillByIdOrName(allSkills, 'missing')).toBeUndefined();
+  });
+});
+
+describe('parseSkillAbilities', () => {
+  it('splits a comma list and ignores blanks', () => {
+    expect(parseSkillAbilities('Strength, Agility')).toEqual(['strength', 'agility']);
+    expect(parseSkillAbilities(undefined)).toEqual([]);
   });
 });
 

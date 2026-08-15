@@ -2,6 +2,8 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-08-15 | agent | TASK-802 cleanup — drop unused skill-migration exports + duplicate helpers | files: species-skill-migration, sheet-skills-display, skill-list(+test), info-tippy, AI_CHANGELOG | Summary: **Deleted** unused `SkillCatalogEntry`/`SkillEntry` exports, unused `base_skill_id`, the second `parseAbilities`, and the duplicated getCurrent/getNew species-id walkers. **Wired** both callers onto `parseSkillAbilities`; display dedupe uses hydrated names (no second catalog lookup). verification_status pending-qa (unchanged).
+
 - 2026-08-15 | agent | TASK-802 — sheet skill names after species change + hover descriptions | files: species-skill-migration(+test), sheet-skills-display(+test), skill-list(+test), use-edit-species-modal, skills-section, skill-row, info-tippy, FEATURE_INDEX, MOBILE_UX, BUILD_VALIDATION DEV-V-009 T055, DEVELOPER_TASK_QUEUE, ALL_FEEDBACK_CLEAN, ACTIVE→archive, AI_CHANGELOG | Summary: **Stopped** Edit Species from saving new grants as `{ name: id }`. **Wired** Codex name lookup on migrate, display overlay + descriptions, and `WordHelpTip` `compact` on sheet skill names. verification_status pending-qa (DEV-V-009 T055).
 
 - 2026-08-15 | agent | TASK-801 — master CI privacy tablet snapshots + skip test-only Vercel builds | files: privacy-tablet-*-chromium-linux.png, vercel-ignore-build.sh, DEPLOYMENT_AND_SECRETS, ACTIVE→archive, AI_CHANGELOG | Summary: **Replaced** the two Linux privacy tablet visual baselines with CI actuals after TASK-771 shortened `SITE_URL` to `https://realmsrpg.com`. **Extended** `vercel-ignore-build.sh` so `tests/` and Playwright configs skip Hobby production rebuilds. verification_status n/a.

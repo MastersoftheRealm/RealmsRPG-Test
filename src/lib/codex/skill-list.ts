@@ -93,6 +93,15 @@ export function findSkillByIdOrName<T extends { id: string | number; name?: stri
   );
 }
 
+/** Split a Codex `ability` string (`strength` or `strength,agility`) into lowercase keys. */
+export function parseSkillAbilities(abilityString?: string): string[] {
+  if (!abilityString) return [];
+  return abilityString
+    .split(',')
+    .map((a) => a.trim().toLowerCase())
+    .filter(Boolean);
+}
+
 export function buildSkillFilterOptions(
   skills: Skill[] | undefined,
   skillIdToName: Map<string, string>,

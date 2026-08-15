@@ -197,7 +197,7 @@ export interface WordHelpTipProps {
 }
 
 // DESIGN_INTENT: Definition help on the word itself (not an Info icon sibling).
-// 44px touch target; InfoTippy hover/focus/touch-hold; copy from tooltip-text.tsx.
+// Default 44px target (ability tiles); compact uses touch-target-md-compact.
 /** Word-tied contextual help for ability/defense/skill names (sheet + guided creator). */
 export function WordHelpTip({
   content,

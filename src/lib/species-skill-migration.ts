@@ -5,19 +5,18 @@
  */
 
 import type { Character, CharacterAncestry } from '@/types';
-import { findSkillByIdOrName } from '@/lib/codex/skill-list';
+import { findSkillByIdOrName, parseSkillAbilities } from '@/lib/codex/skill-list';
 import { normalizeId } from '@/lib/utils';
 
 type SpeciesLike = { id: string; name?: string; skills?: (string | number)[] };
 
-export type SkillCatalogEntry = {
+type SkillCatalogEntry = {
   id: string | number;
   name?: string;
   ability?: string;
-  base_skill_id?: number | string | null;
 };
 
-export type SkillEntry = {
+type SkillEntry = {
   id: string;
   name?: string;
   skill_val?: number;
@@ -28,9 +27,10 @@ export type SkillEntry = {
   [key: string]: unknown;
 };
 
-/** Get current species skill IDs (2 for single or mixed) */
-function getCurrentSpeciesSkillIds(character: Character, allSpecies: SpeciesLike[]): string[] {
-  const ancestry = character.ancestry;
+function getSpeciesSkillIds(
+  ancestry: CharacterAncestry | undefined,
+  allSpecies: SpeciesLike[],
+): string[] {
   if (!ancestry) return [];
   if (ancestry.mixed && ancestry.speciesIds?.length === 2) {
     if (ancestry.selectedSpeciesSkillIds?.length === 2) return ancestry.selectedSpeciesSkillIds;
@@ -41,39 +41,11 @@ function getCurrentSpeciesSkillIds(character: Character, allSpecies: SpeciesLike
     (b?.skills || []).forEach((id: string | number) => set.add(String(id)));
     return Array.from(set);
   }
-  const speciesId = ancestry.id;
-  const speciesName = ancestry.name;
   const species =
-    allSpecies.find((s) => String(s.id) === String(speciesId)) ??
-    (speciesName
+    allSpecies.find((s) => String(s.id) === String(ancestry.id)) ??
+    (ancestry.name
       ? allSpecies.find(
-          (s) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase(),
-        )
-      : null);
-  return (species?.skills || []).map((id: string | number) => String(id));
-}
-
-/** Get new species skill IDs from new ancestry */
-function getNewSpeciesSkillIds(
-  newAncestry: CharacterAncestry,
-  allSpecies: SpeciesLike[],
-): string[] {
-  if (newAncestry.mixed && newAncestry.speciesIds?.length === 2) {
-    if (newAncestry.selectedSpeciesSkillIds?.length === 2)
-      return newAncestry.selectedSpeciesSkillIds;
-    const a = allSpecies.find((s) => String(s.id) === String(newAncestry.speciesIds![0]));
-    const b = allSpecies.find((s) => String(s.id) === String(newAncestry.speciesIds![1]));
-    const set = new Set<string>();
-    (a?.skills || []).forEach((id: string | number) => set.add(String(id)));
-    (b?.skills || []).forEach((id: string | number) => set.add(String(id)));
-    return Array.from(set);
-  }
-  const species =
-    allSpecies.find((s) => String(s.id) === String(newAncestry.id)) ??
-    (newAncestry.name
-      ? allSpecies.find(
-          (s) =>
-            String(s.name ?? '').toLowerCase() === String(newAncestry.name ?? '').toLowerCase(),
+          (s) => String(s.name ?? '').toLowerCase() === String(ancestry.name ?? '').toLowerCase(),
         )
       : null);
   return (species?.skills || []).map((id: string | number) => String(id));
@@ -84,14 +56,6 @@ function matchSkillId(skill: SkillEntry, id: string): boolean {
   return normalizeId(skill.id) === key || normalizeId(skill.name) === key;
 }
 
-function parseAbilities(abilityString?: string): string[] {
-  if (!abilityString) return [];
-  return abilityString
-    .split(',')
-    .map((a) => a.trim().toLowerCase())
-    .filter(Boolean);
-}
-
 function applyCatalogIdentity(skill: SkillEntry, catalog: SkillCatalogEntry | undefined): void {
   if (!catalog) return;
   const catalogName = String(catalog.name ?? '').trim();
@@ -99,14 +63,14 @@ function applyCatalogIdentity(skill: SkillEntry, catalog: SkillCatalogEntry | un
     skill.name = catalogName;
   }
   if (!skill.ability && catalog.ability) {
-    const abilities = parseAbilities(catalog.ability);
+    const abilities = parseSkillAbilities(catalog.ability);
     if (abilities[0]) skill.ability = abilities[0];
     if (abilities.length > 1) skill.availableAbilities = abilities;
   }
 }
 
 function newSpeciesSkillRow(id: string, catalog: SkillCatalogEntry | undefined): SkillEntry {
-  const abilities = parseAbilities(catalog?.ability);
+  const abilities = parseSkillAbilities(catalog?.ability);
   const name = String(catalog?.name ?? '').trim();
   return {
     id: catalog ? String(catalog.id) : id,
@@ -134,8 +98,8 @@ export function migrateSkillsAfterSpeciesChange(
   allSpecies: SpeciesLike[],
   allSkills: SkillCatalogEntry[] = [],
 ): SkillEntry[] {
-  const oldIds = getCurrentSpeciesSkillIds(character, allSpecies);
-  const newIds = getNewSpeciesSkillIds(newAncestry, allSpecies);
+  const oldIds = getSpeciesSkillIds(character.ancestry, allSpecies);
+  const newIds = getSpeciesSkillIds(newAncestry, allSpecies);
   const oldSet = new Set(oldIds);
   const newSet = new Set(newIds);
 

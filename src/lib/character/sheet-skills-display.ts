@@ -3,7 +3,7 @@
  * Base Codex skills always appear; sub-skills follow proficient / user-added rules.
  */
 
-import { findSkillByIdOrName } from '@/lib/codex/skill-list';
+import { findSkillByIdOrName, parseSkillAbilities } from '@/lib/codex/skill-list';
 import { normalizeId } from '@/lib/utils';
 
 export interface SheetDisplaySkill {
@@ -31,14 +31,6 @@ export interface CodexSkillRef {
 
 export type SkillProficiencyFilter = 'all' | 'proficient';
 
-function parseAbilities(abilityString?: string): string[] {
-  if (!abilityString) return [];
-  return abilityString
-    .split(',')
-    .map((a) => a.trim().toLowerCase())
-    .filter(Boolean);
-}
-
 /** Codex base skill: no parent id (null/undefined). `0` is a special sub-skill “any base” marker. */
 export function isCodexBaseSkill(skill: CodexSkillRef): boolean {
   return skill.base_skill_id == null;
@@ -61,13 +53,13 @@ function hydrateOwnedSkill(
     const parent = findSkillByIdOrName(codexSkills, baseSkill);
     if (parent?.name) baseSkill = parent.name;
   }
-  const abilities = parseAbilities(match?.ability);
+  const abilities = parseSkillAbilities(match?.ability);
   return {
     ...skill,
     name: catalogName || skill.name || String(skill.id),
     ...(baseSkill ? { baseSkill } : {}),
     ...(description ? { description } : {}),
-    ability: skill.ability || abilities[0] || skill.ability,
+    ability: skill.ability || abilities[0],
     availableAbilities:
       skill.availableAbilities && skill.availableAbilities.length > 0
         ? skill.availableAbilities
@@ -78,10 +70,7 @@ function hydrateOwnedSkill(
   };
 }
 
-function ownedDedupeKey(skill: SheetDisplaySkill, codexSkills: CodexSkillRef[]): string {
-  const match =
-    findSkillByIdOrName(codexSkills, skill.id) ?? findSkillByIdOrName(codexSkills, skill.name);
-  if (match) return `id:${normalizeId(match.id)}`;
+function ownedDedupeKey(skill: SheetDisplaySkill): string {
   const nameKey = normalizeId(skill.name);
   if (nameKey) return `name:${nameKey}`;
   return `row:${normalizeId(skill.id)}`;
@@ -93,14 +82,11 @@ function preferOwnedRow(existing: SheetDisplaySkill, next: SheetDisplaySkill): S
   return nextScore > existingScore ? next : existing;
 }
 
-function dedupeOwnedSkills(
-  rows: SheetDisplaySkill[],
-  codexSkills: CodexSkillRef[],
-): SheetDisplaySkill[] {
+function dedupeOwnedSkills(rows: SheetDisplaySkill[]): SheetDisplaySkill[] {
   const byKey = new Map<string, SheetDisplaySkill>();
   const order: string[] = [];
   for (const row of rows) {
-    const key = ownedDedupeKey(row, codexSkills);
+    const key = ownedDedupeKey(row);
     const existing = byKey.get(key);
     if (!existing) {
       byKey.set(key, row);
@@ -134,8 +120,8 @@ export function mergeSheetSkillsWithCatalog(
     }
   }
 
-  const uniqueBases = dedupeOwnedSkills(ownedBases, codexSkills);
-  const uniqueSubs = dedupeOwnedSkills(ownedSubs, codexSkills);
+  const uniqueBases = dedupeOwnedSkills(ownedBases);
+  const uniqueSubs = dedupeOwnedSkills(ownedSubs);
 
   const ownedBaseIds = new Set<string>();
   const ownedBaseNames = new Set<string>();
@@ -151,7 +137,7 @@ export function mergeSheetSkillsWithCatalog(
     const nameKey = parentKey(codex.name);
     if (ownedBaseIds.has(idKey) || (nameKey && ownedBaseNames.has(nameKey))) continue;
 
-    const abilities = parseAbilities(codex.ability);
+    const abilities = parseSkillAbilities(codex.ability);
     const description = codex.description?.trim() || undefined;
     catalogBases.push({
       id: String(codex.id),
