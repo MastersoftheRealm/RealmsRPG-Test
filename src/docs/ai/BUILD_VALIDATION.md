@@ -5973,7 +5973,7 @@ Feats + Skills character filter: shared collapsible `CharacterFilter` (default c
 | **Needs** | Signed-in user with at least one character |
 
 **Steps**
-1. Open Feats; expand **Filters**. Confirm **Filter by character** is in the filters panel (not beside Realms/My Codex toggle) and starts **collapsed**; the (i) tippy is still on the header.
+1. Open Feats; expand **Filters**. Confirm **Filter by character** is in the filters panel (not beside Realms/My Codex toggle) and starts **collapsed**; the (i) tippy sits **immediately after the title** (not at the far right of the row).
 2. Expand Filter by character; select a character — list narrows to qualified feats; **Show unqualified feats** appears on the same row as the select (right side).
 3. Confirm **Max Required Level** and **Ability/Defense Requirement** are disabled with **Set by character** placeholders; max-level label has an InfoTippy (no helper line below).
 4. Toggle **Show unqualified feats** — unqualified feats appear; toggle off — hidden again.
@@ -5984,7 +5984,7 @@ Feats + Skills character filter: shared collapsible `CharacterFilter` (default c
 **Expected**
 - Filter by character on Feats (and Skills); qualification uses character stats; clutter-free filter panel (no qualification banner).
 - Character selection shared across Library and Codex feats/skills tabs via one persistence key.
-- Filter by character subsection is collapsed until expanded; (i) remains usable while collapsed.
+- Filter by character subsection is collapsed until expanded; (i) remains usable while collapsed and sits next to the title.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6025,15 +6025,38 @@ Feats + Skills character filter: shared collapsible `CharacterFilter` (default c
 
 **Steps**
 1. Open Skills; expand **Filters**. Confirm Ability / Base Skill / Skill Type are visible even before picking a character (and if the account has no characters, those filters still show).
-2. Confirm **Filter by character** starts collapsed with the (i) tippy on the header. Expand it and pick a character (same persistence as Feats/Library).
+2. Confirm **Filter by character** starts collapsed with the (i) tippy immediately after the title. Expand it and pick a character (same persistence as Feats/Library).
 3. Confirm **Known** (All / Known / Not known) and **Sub-skills whose base skill I have** appear. Leave Known on All — list still shows other skills.
 4. Set Known → **Known** — only skills on that character remain. **Not known** — those drop out.
 5. Check **Sub-skills whose base skill I have** — list is sub-skills for bases the character has (not unrelated subs).
 6. Clear the character — Known / base-owned controls hide; Ability / Base Skill / Skill Type remain.
-7. Repeat collapse check on Library Powers **Filter by character** (and Feats): starts collapsed; (i) still works.
+7. Repeat collapse check on Library Powers **Filter by character** (and Feats): starts collapsed; (i) still works and sits next to the title.
 
 **Expected**
 - Shared `CharacterFilter` (no Codex-only fork); skills character extras stay simple; other skill filters never depend on having a character.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-045-T004 — Filter by character (i) beside the title (TASK-781)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-045 — Codex character filter UX |
+| **Related task** | TASK-781 |
+| **Where** | `/codex` → Feats → Filters; `/codex` → Skills → Filters; `/library` → Powers → Filters |
+| **Needs** | Signed-in user with at least one character |
+
+**Steps**
+1. Open Codex Feats; expand **Filters**. Do **not** expand Filter by character yet.
+2. Confirm the (i) sits immediately after the **Filter by character** title (after the person icon + title, before the chevron). It must not sit at the far right of the filter row.
+3. Hover/focus the (i) — help copy appears; the subsection stays collapsed.
+4. Click the title or chevron — subsection expands; (i) stays next to the title.
+5. Repeat on Codex Skills and Library Powers.
+
+**Expected**
+- Shared `CharacterFilter` header: title, then (i), then optional selected-name, then chevron. Expand does not push the tip to the trailing edge.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 

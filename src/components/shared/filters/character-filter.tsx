@@ -6,7 +6,9 @@
  * Parent owns value + persistence.
  * Returns null when the user has no characters (after load) so parents need not call useCharacters.
  *
- * Collapsible subsection, collapsed by default (TASK-722). InfoTippy stays on the header.
+ * Collapsible subsection, collapsed by default (TASK-722). InfoTippy sits
+ * immediately after the title so the expand control cannot push it to the
+ * far right of the row (TASK-781).
  */
 
 'use client';
@@ -62,30 +64,42 @@ export function CharacterFilter({
 
   return (
     <div className={cn('filter-group min-w-0', className)}>
-      <div className="mb-1 flex items-center gap-1.5">
-        <UserRound className="h-4 w-4 shrink-0 text-text-muted" aria-hidden="true" />
+      <div className="relative mb-1 flex min-h-[44px] items-center gap-1.5 md:min-h-5">
         <button
           type="button"
           aria-expanded={expanded}
           aria-controls={panelId}
           onClick={() => setExpanded((v) => !v)}
-          className="inline-flex min-h-[44px] min-w-0 flex-1 items-center gap-1.5 text-left md:min-h-0"
-        >
-          <span className="text-sm font-medium text-text-secondary">{label}</span>
-          {!expanded && selectedLabel ? (
-            <span className="truncate text-xs text-text-muted">{selectedLabel}</span>
-          ) : null}
-          <ChevronDown
-            className={cn(
-              'duration-base h-4 w-4 shrink-0 text-text-muted transition-transform ease-standard',
-              expanded && 'rotate-180',
-            )}
-            aria-hidden
-          />
-        </button>
+          className="absolute inset-0 z-0 cursor-pointer rounded-sm"
+          aria-label={expanded ? `Collapse ${label}` : `Expand ${label}`}
+        />
+        <UserRound
+          className="pointer-events-none relative z-10 h-4 w-4 shrink-0 text-text-muted"
+          aria-hidden="true"
+        />
+        <span className="pointer-events-none relative z-10 text-sm font-medium text-text-secondary">
+          {label}
+        </span>
         {helpContent ? (
-          <InfoTippy content={helpContent} label="Character filter help" size="inline" />
+          <InfoTippy
+            content={helpContent}
+            label="Character filter help"
+            size="inline"
+            className="relative z-10"
+          />
         ) : null}
+        {!expanded && selectedLabel ? (
+          <span className="pointer-events-none relative z-10 min-w-0 truncate text-xs text-text-muted">
+            {selectedLabel}
+          </span>
+        ) : null}
+        <ChevronDown
+          className={cn(
+            'duration-base pointer-events-none relative z-10 h-4 w-4 shrink-0 text-text-muted transition-transform ease-standard',
+            expanded && 'rotate-180',
+          )}
+          aria-hidden
+        />
       </div>
       <div id={panelId} hidden={!expanded}>
         <FilterNativeSelect
