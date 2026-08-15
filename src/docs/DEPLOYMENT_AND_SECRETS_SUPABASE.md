@@ -177,7 +177,7 @@ On the free tier, watch **Edge Requests**, **Fast Data Transfer** (CDN → users
 2. After build, visit your Vercel URL (e.g. `realms-rpg-next.vercel.app`) or your custom domain (e.g. **realmsrpg.com**).
 3. Test: sign in, create a character, upload a portrait.
 
-**Ignored builds (docs-only):** `vercel.json` runs `scripts/vercel-ignore-build.sh` so commits that only touch docs/agent/task-queue paths (`src/docs/`, `*.md`, `.cursor/`, `.github/`, `sql/`, seed/codex CSV) **skip** Vercel builds. This avoids Hobby **Deployment rate limited — retry in 24 hours** failures from rapid docs-only merges. App/`src` code changes still deploy. If master shows a red Vercel check with that rate-limit message while GitHub Actions are green, production is usually still on the last successful app deploy — wait for the window or upgrade; do not treat it as an app build break.
+**Ignored builds (docs/test-only):** `vercel.json` runs `scripts/vercel-ignore-build.sh` so commits that only touch docs/agent/task-queue paths (`src/docs/`, `*.md`, `.cursor/`, `.github/`, `sql/`, seed/codex CSV) **or** Playwright tests/snapshots (`tests/`, `playwright.*.config.ts`) **skip** Vercel builds. This avoids Hobby **Deployment rate limited — retry in 24 hours** failures from rapid docs-only or visual-baseline merges. App/`src` code changes still deploy. If master shows a red Vercel check with that rate-limit message while GitHub Actions are green, production is usually still on the last successful app deploy — wait for the window or upgrade; do not treat it as an app build break.
 
 ### Step 3b: Web Analytics (optional but recommended)
 
