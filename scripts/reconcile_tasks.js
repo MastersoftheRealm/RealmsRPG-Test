@@ -4,6 +4,8 @@
  * Sources: ACTIVE_TASKS.md + archive/TASK_QUEUE_DONE*.md
  * --strict fails when a done task has no matching commits (after baseline allowlist).
  * --strict-since=YYYY-MM-DD only enforces done tasks with completed_at on/after that date.
+ * Duplicate `- id: TASK-###` in ACTIVE, WAITING, or live TASK_QUEUE_DONE.md always fails
+ * (dated snapshot copies are excluded — they reuse IDs by design).
  */
 const fs = require('fs');
 const path = require('path');
@@ -47,6 +49,25 @@ function parseTasksFromFile(filePath) {
   });
 }
 
+/** Live queues where a repeated `- id:` is a collision, not a July-15 snapshot copy. */
+function liveIdentityFiles() {
+  return [
+    path.join(aiDir, 'ACTIVE_TASKS.md'),
+    path.join(aiDir, 'WAITING_TASKS.md'),
+    path.join(archiveDir, 'TASK_QUEUE_DONE.md'),
+  ].filter((f) => fs.existsSync(f));
+}
+
+function duplicateIdGroups(tasks) {
+  const byId = new Map();
+  for (const t of tasks) {
+    if (!t.id) continue;
+    if (!byId.has(t.id)) byId.set(t.id, []);
+    byId.get(t.id).push(t);
+  }
+  return Array.from(byId.entries()).filter(([, list]) => list.length > 1);
+}
+
 function gitGrepTask(taskId) {
   try {
     const out = execSync(`git log --all --pretty=format:%H::%s --grep=${taskId}`, { encoding: 'utf8' });
@@ -70,11 +91,26 @@ function gitGrepTask(taskId) {
   }
 }
 
+const identityTasks = liveIdentityFiles().flatMap((file) => parseTasksFromFile(file));
+const identityDupes = duplicateIdGroups(identityTasks);
+if (identityDupes.length) {
+  console.error(
+    'Duplicate TASK-### in ACTIVE_TASKS.md, WAITING_TASKS.md, and/or archive/TASK_QUEUE_DONE.md (not the dated snapshot):'
+  );
+  for (const [id, list] of identityDupes) {
+    console.error(`  ${id}:`);
+    for (const t of list) {
+      console.error(`    ${t.source} — ${t.title || '(no title)'}`);
+    }
+  }
+  process.exit(2);
+}
+
 const byId = new Map();
 for (const file of collectTaskFiles()) {
   for (const t of parseTasksFromFile(file)) {
     if (!t.id) continue;
-    // Prefer ACTIVE_TASKS over archive duplicates
+    // Snapshot copies may reuse IDs; live ACTIVE/WAITING/TASK_QUEUE_DONE.md uniqueness is gated above.
     if (!byId.has(t.id) || String(t.source).includes('ACTIVE_TASKS')) {
       byId.set(t.id, t);
     }

@@ -21165,3 +21165,35 @@ Firebase/RTDB - the project is Supabase-only.
   evidence: |
     Unique `- id: TASK-615` / `TASK-284` in TASK_QUEUE_DONE.md; TASK-765 / TASK-766
     present; DEV-006 and DEV-V-017 cite TASK-765; DEV-V-018 pending-QA facade cites TASK-615.
+
+---
+
+- id: TASK-767
+  title: Fail reconcile on duplicate live archive TASK-### IDs
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  implemented_by: agent
+  related_files:
+    - scripts/reconcile_tasks.js
+    - src/docs/ai/AI_TASK_QUEUE.md
+    - src/docs/ai/guide/08-workflows-routes-and-progress.md
+  description: |
+    TASK-719 follow-up: reconcile silently dropped a second `- id: TASK-###` in the live
+    done archive (Map by id). Fail CI when ACTIVE, WAITING, or live TASK_QUEUE_DONE.md
+    repeats an ID. Dated snapshot copies are excluded.
+  acceptance_criteria:
+    - `npm run tasks:validate` fails if live TASK_QUEUE_DONE.md has two `- id: TASK-615`
+      (or any repeated id). Snapshot TASK_QUEUE_DONE_2026-07-15.md is not that gate.
+    - Distinct work keeps distinct IDs (TASK-719 pattern). Commit subject includes TASK-767.
+  completed_work: |
+    Duplicate-id check runs before git grep. Cross-file ACTIVE/WAITING/live archive.
+    Snapshot filename excluded. Docs in AI_TASK_QUEUE + guide/08.
+  notes: |
+    Filed from TASK-719 /audit optional proposal. Snapshot-vs-live ID copies are expected
+    and stay /global-audit if anyone wants to stop maintaining the July-15 dump as a mirror.
+  evidence: |
+    Current live queues have unique ids; gate would have caught TASK-615 / TASK-284 collisions.
