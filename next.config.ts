@@ -49,7 +49,9 @@ const nextConfig: NextConfig = {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data: https://fonts.gstatic.com",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://*.vercel.live https://va.vercel-scripts.com",
+      // Sentry browser SDK posts envelopes to regional ingest hosts
+      // (e.g. o<id>.ingest.us.sentry.io). CSP `*` matches one label only.
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://vercel.live wss://*.vercel.live https://va.vercel-scripts.com https://*.sentry.io https://*.ingest.sentry.io https://*.ingest.us.sentry.io",
       // Google Doc (Core Rulebook) + Vercel Live feedback iframe (preview toolbar)
       "frame-src 'self' https://docs.google.com https://vercel.live",
     ].join('; ');

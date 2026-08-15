@@ -69,6 +69,19 @@ BEGIN
     RAISE EXCEPTION 'campaigns_select_participants missing or duplicated (count=%)', n;
   END IF;
 
+  -- TASK-802: owner_id must be evaluable on the NEW row (INSERT RETURNING).
+  IF position(
+    'owner_id' in lower(coalesce((
+      SELECT qual
+      FROM pg_policies
+      WHERE schemaname = 'public'
+        AND tablename = 'campaigns'
+        AND policyname = 'campaigns_select_participants'
+    ), ''))
+  ) = 0 THEN
+    RAISE EXCEPTION 'campaigns_select_participants must include owner_id short-circuit for INSERT RETURNING';
+  END IF;
+
   IF (SELECT count(*) FROM pg_policies WHERE schemaname = 'public' AND tablename = 'campaigns') <> 4 THEN
     RAISE EXCEPTION 'expected 4 total campaigns policies, got %',
       (SELECT count(*) FROM pg_policies WHERE schemaname = 'public' AND tablename = 'campaigns');
@@ -135,6 +148,38 @@ BEGIN
     RAISE EXCEPTION 'stranger RLS: expected 0 rows, got %', v_visible;
   END IF;
 
+  PERFORM set_config('role', 'postgres', true);
+END $$;
+
+-- TASK-802: INSERT … RETURNING as the owner must succeed (STABLE helper alone fails).
+DO $$
+DECLARE
+  v_uid text;
+  v_id text := 'task802-insert-returning-smoke';
+  v_got text;
+BEGIN
+  SELECT id INTO v_uid FROM public.user_profiles LIMIT 1;
+  IF v_uid IS NULL THEN
+    RAISE NOTICE 'SKIP INSERT RETURNING smoke: no user_profiles';
+    RETURN;
+  END IF;
+
+  DELETE FROM public.campaign_members WHERE campaign_id = v_id;
+  DELETE FROM public.campaigns WHERE id = v_id;
+
+  PERFORM set_config('role', 'authenticated', true);
+  PERFORM set_config('request.jwt.claim.sub', v_uid, true);
+
+  INSERT INTO public.campaigns (id, owner_id, name, invite_code, characters)
+  VALUES (v_id, v_uid, 'TASK-802 smoke', 'T802SMOK', '[]'::jsonb)
+  RETURNING id INTO v_got;
+
+  IF v_got IS DISTINCT FROM v_id THEN
+    RAISE EXCEPTION 'INSERT RETURNING smoke: expected %, got %', v_id, v_got;
+  END IF;
+
+  DELETE FROM public.campaign_members WHERE campaign_id = v_id;
+  DELETE FROM public.campaigns WHERE id = v_id;
   PERFORM set_config('role', 'postgres', true);
 END $$;
 

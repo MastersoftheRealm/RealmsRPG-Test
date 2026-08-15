@@ -1,3 +1,50 @@
+- id: TASK-802
+  title: Fix campaign create RLS + allow Sentry in CSP
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: critical
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/campaigns/actions.ts
+    - next.config.ts
+    - sql/task-802-campaigns-select-owner-short-circuit.sql
+    - sql/task-650-verify-applied.sql
+    - sql/README.md
+    - sql/schema/0000_baseline_2026-08-13.sql
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  build_validation: |
+    suite: DEV-V-042
+    tests:
+      - DEV-V-042-T003
+      - DEV-V-042-T001
+  developer_test_plan: |
+    Suite DEV-V-042 T003 (create campaign) + T001 verify — see BUILD_VALIDATION.md
+  description: |
+    Signed-in create campaign failed with a generic error. Postgres logged an
+    RLS denial on campaigns INSERT. TASK-650 left only a STABLE participant
+    helper on SELECT, so INSERT … RETURNING could not see the new owner row.
+    Browser Sentry was also blocked by CSP, so the failure never reached
+    monitoring.
+  acceptance_criteria:
+    - createCampaignAction inserts with a client-generated id (no RETURNING).
+    - Owner is upserted into campaign_members after create.
+    - Live SELECT policy is owner_id OR auth_is_campaign_participant (one policy).
+    - CSP connect-src allows Sentry ingest hosts (including ingest.us).
+    - Typecheck, lint. User-facing: pending-qa.
+  notes: |
+    Owner 2026-08-15 console paste + "failed to create a campaign recently".
+    Live apply: sql/task-802-campaigns-select-owner-short-circuit.sql.
+    INSERT RETURNING smoke PASS on RealmsRPG-Test after apply.
+
 - id: TASK-801
   title: Rebaseline privacy tablet Linux snapshots; skip test-only Vercel builds
   created_at: 2026-08-15
