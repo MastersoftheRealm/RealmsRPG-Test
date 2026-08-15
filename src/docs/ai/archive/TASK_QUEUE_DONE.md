@@ -1,3 +1,30 @@
+- id: TASK-801
+  title: Rebaseline privacy tablet Linux snapshots; skip test-only Vercel builds
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: n/a
+  related_files:
+    - tests/visual/screenshots.pw.ts-snapshots/privacy-tablet-light-chromium-linux.png
+    - tests/visual/screenshots.pw.ts-snapshots/privacy-tablet-dark-chromium-linux.png
+    - scripts/vercel-ignore-build.sh
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    Master UI Verify failed on privacy tablet light/dark after TASK-771 changed
+    SITE_URL from realmsroleplaygame.com to realmsrpg.com (24px shorter wrap).
+    Also skip Playwright/test-only commits on Vercel so Hobby deploys are not burned.
+  acceptance_criteria:
+    - Linux privacy tablet visual baselines match CI actuals (768x2291).
+    - vercel-ignore-build.sh skips tests/ and playwright.*.config.ts.
+    - Typecheck/lint unchanged; verification_status n/a (CI snapshots).
+  notes: |
+    Owner 2026-08-15: fix master CI and Vercel production deploy problems.
+    Vercel production for 2dcb2173 already succeeded; GitHub Visual regression was red.
+
 - id: TASK-800
   title: Sheet Skills spend/temp visible without side-scroll
   created_at: 2026-08-15
