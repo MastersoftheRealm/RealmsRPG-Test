@@ -1137,7 +1137,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773, TASK-778, TASK-779, TASK-782, TASK-783, TASK-786, TASK-787, TASK-788, TASK-800, TASK-803)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773, TASK-778, TASK-779, TASK-782, TASK-783, TASK-786, TASK-787, TASK-788, TASK-800, TASK-803, TASK-805)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1937,6 +1937,30 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 **Expected**
 - Species-change never leaves a raw skill id in the Skills list.
 - Skill names with Codex copy use the same word-tied tip pattern as ability names (`WordHelpTip`).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-009-T056 — Sheet feat Customize caret stays while typing (TASK-805)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-805 |
+| **Where** | `/characters/[id]` → Library → Feats → **Edit** → expand a feat or trait → **Customize** |
+| **Needs** | Editable character with at least two feats (or two traits) so Name sort can reorder |
+| **CI** | Partial — `library-feat-rows.test.ts` |
+
+**Steps**
+1. Enter **Edit**. Expand a feat. Open **Customize**.
+2. Click in the middle of **Custom name** (or start typing a new name). Type several characters, including a space in the middle. Confirm the caret stays where you are typing — it does not jump to the start or end of the field after each key.
+3. Repeat in **Player note**. Confirm the same.
+4. Blur the field (click Hide customization or another row). Confirm the italic title / note still save (reload or wait for autosave).
+5. Optional: with two feats sorted by Name, rename one so it would sort above the other. Confirm the list does not reorder until you leave the field, and typing stays usable. Repeat on a trait. Optional ~360px.
+
+**Expected**
+- Caret stays mid-field while typing. Title/note persist after blur. Play-view T051 behavior unchanged.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
