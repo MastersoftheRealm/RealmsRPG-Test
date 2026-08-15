@@ -5,8 +5,17 @@
  */
 
 import type { Character, CharacterAncestry } from '@/types';
+import { findSkillByIdOrName } from '@/lib/codex/skill-list';
+import { normalizeId } from '@/lib/utils';
 
 type SpeciesLike = { id: string; name?: string; skills?: (string | number)[] };
+
+export type SkillCatalogEntry = {
+  id: string | number;
+  name?: string;
+  ability?: string;
+  base_skill_id?: number | string | null;
+};
 
 export type SkillEntry = {
   id: string;
@@ -15,6 +24,7 @@ export type SkillEntry = {
   prof?: boolean;
   baseSkill?: string;
   ability?: string;
+  availableAbilities?: string[];
   [key: string]: unknown;
 };
 
@@ -70,10 +80,42 @@ function getNewSpeciesSkillIds(
 }
 
 function matchSkillId(skill: SkillEntry, id: string): boolean {
-  return (
-    String(skill.id ?? '').toLowerCase() === id.toLowerCase() ||
-    String(skill.name ?? '').toLowerCase() === id.toLowerCase()
-  );
+  const key = normalizeId(id);
+  return normalizeId(skill.id) === key || normalizeId(skill.name) === key;
+}
+
+function parseAbilities(abilityString?: string): string[] {
+  if (!abilityString) return [];
+  return abilityString
+    .split(',')
+    .map((a) => a.trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function applyCatalogIdentity(skill: SkillEntry, catalog: SkillCatalogEntry | undefined): void {
+  if (!catalog) return;
+  const catalogName = String(catalog.name ?? '').trim();
+  if (catalogName && (!skill.name || normalizeId(skill.name) === normalizeId(skill.id))) {
+    skill.name = catalogName;
+  }
+  if (!skill.ability && catalog.ability) {
+    const abilities = parseAbilities(catalog.ability);
+    if (abilities[0]) skill.ability = abilities[0];
+    if (abilities.length > 1) skill.availableAbilities = abilities;
+  }
+}
+
+function newSpeciesSkillRow(id: string, catalog: SkillCatalogEntry | undefined): SkillEntry {
+  const abilities = parseAbilities(catalog?.ability);
+  const name = String(catalog?.name ?? '').trim();
+  return {
+    id: catalog ? String(catalog.id) : id,
+    name: name || id,
+    skill_val: 0,
+    prof: true,
+    ...(abilities[0] ? { ability: abilities[0] } : {}),
+    ...(abilities.length > 0 ? { availableAbilities: abilities } : {}),
+  };
 }
 
 /** Cost to increase skill value from val to val+1 (1 for 0->1,1->2,2->3; 3 for 3->4+) */
@@ -90,6 +132,7 @@ export function migrateSkillsAfterSpeciesChange(
   character: Character,
   newAncestry: CharacterAncestry,
   allSpecies: SpeciesLike[],
+  allSkills: SkillCatalogEntry[] = [],
 ): SkillEntry[] {
   const oldIds = getCurrentSpeciesSkillIds(character, allSpecies);
   const newIds = getNewSpeciesSkillIds(newAncestry, allSpecies);
@@ -99,11 +142,20 @@ export function migrateSkillsAfterSpeciesChange(
   const skills = (character.skills || []) as SkillEntry[];
   const result = skills.map((s) => ({ ...s }));
 
-  const skillById = (id: string) => result.find((s) => matchSkillId(s, id));
+  const catalogFor = (id: string) => findSkillByIdOrName(allSkills, id);
+
+  const skillById = (id: string) => {
+    const byIdOrName = result.find((s) => matchSkillId(s, id));
+    if (byIdOrName) return byIdOrName;
+    const catalog = catalogFor(id);
+    const catalogName = String(catalog?.name ?? '').trim();
+    if (!catalogName) return undefined;
+    return result.find((s) => normalizeId(s.name) === normalizeId(catalogName));
+  };
 
   // Remove 1 point from each old species skill that is not in new
   for (const id of oldIds) {
-    if (newSet.has(id)) continue;
+    if (id === '0' || newSet.has(id)) continue;
     const skill = skillById(id);
     if (!skill) continue;
     const val = skill.skill_val ?? 0;
@@ -117,18 +169,14 @@ export function migrateSkillsAfterSpeciesChange(
 
   // Add 1 point to each new species skill that is not in old
   for (const id of newIds) {
-    if (oldSet.has(id)) continue;
-    let skill = skillById(id);
+    if (id === '0' || oldSet.has(id)) continue;
+    const catalog = catalogFor(id);
+    const skill = skillById(id);
     if (!skill) {
-      result.push({
-        id,
-        name: id,
-        skill_val: 0,
-        prof: true,
-      } as SkillEntry);
-      skill = result[result.length - 1];
+      result.push(newSpeciesSkillRow(id, catalog));
       continue;
     }
+    applyCatalogIdentity(skill, catalog);
     const val = skill.skill_val ?? 0;
     const prof = skill.prof ?? false;
     if (!prof) {
@@ -140,6 +188,13 @@ export function migrateSkillsAfterSpeciesChange(
         skill.skill_val = val + 1;
       }
     }
+  }
+
+  for (const skill of result) {
+    applyCatalogIdentity(
+      skill,
+      catalogFor(String(skill.id)) ?? catalogFor(String(skill.name ?? '')),
+    );
   }
 
   return result;

@@ -1,6 +1,13 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-15 (Sheet Skills: edit/temp mode hard to see)
+Last updated: 2026-08-15 (Sheet Skills: id as name after species change; hover descriptions)
+
+**Raw Feedback Log — 2026-08-15 (Sheet Skills: species-change id + missing hover description)**
+- Context: Character sheet Skills list after Edit Species
+- Priority: High (wrong label on a core play surface)
+- Feedback (verbatim summary): A skill (after changing species in sheet) is only on my skill list as an ID instead of the skill name. Also skills should have hover description (for the skill) in the character sheet.
+- Misinterpretation / code note: `migrateSkillsAfterSpeciesChange` inserted new species grants as `{ id, name: id }`. Sheet merge treated that owned row as the catalog match and showed the raw id. SkillRow rendered the name with no Codex description tip (ability names already use `WordHelpTip`).
+- Disposition: **TASK-802** — resolve Codex name/ability on species-change save; overlay names+descriptions at display time; `WordHelpTip` `compact` on sheet skill names.
 
 **Raw Feedback Log — 2026-08-15 (Sheet Skills: edit/temp mode hidden by thin column)**
 - Context: Character sheet Skills panel — desktop `lg+` narrow column; Edit and Temp Modifier

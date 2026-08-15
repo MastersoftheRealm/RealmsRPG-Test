@@ -3,6 +3,9 @@
  * Base Codex skills always appear; sub-skills follow proficient / user-added rules.
  */
 
+import { findSkillByIdOrName } from '@/lib/codex/skill-list';
+import { normalizeId } from '@/lib/utils';
+
 export interface SheetDisplaySkill {
   id: string;
   name: string;
@@ -12,6 +15,8 @@ export interface SheetDisplaySkill {
   baseSkill?: string;
   ability?: string;
   availableAbilities?: string[];
+  /** Codex description for name hover (not persisted on the character row). */
+  description?: string;
   /** True when row exists only from Codex catalog (not persisted on the character yet). */
   catalogOnly?: boolean;
 }
@@ -20,6 +25,7 @@ export interface CodexSkillRef {
   id: string;
   name?: string;
   ability?: string;
+  description?: string;
   base_skill_id?: number | null;
 }
 
@@ -42,10 +48,75 @@ function parentKey(name: string | undefined): string {
   return String(name ?? '').toLowerCase();
 }
 
+function hydrateOwnedSkill(
+  skill: SheetDisplaySkill,
+  codexSkills: CodexSkillRef[],
+): SheetDisplaySkill {
+  const match =
+    findSkillByIdOrName(codexSkills, skill.id) ?? findSkillByIdOrName(codexSkills, skill.name);
+  const catalogName = String(match?.name ?? '').trim();
+  const description = match?.description?.trim() || undefined;
+  let baseSkill = skill.baseSkill;
+  if (baseSkill) {
+    const parent = findSkillByIdOrName(codexSkills, baseSkill);
+    if (parent?.name) baseSkill = parent.name;
+  }
+  const abilities = parseAbilities(match?.ability);
+  return {
+    ...skill,
+    name: catalogName || skill.name || String(skill.id),
+    ...(baseSkill ? { baseSkill } : {}),
+    ...(description ? { description } : {}),
+    ability: skill.ability || abilities[0] || skill.ability,
+    availableAbilities:
+      skill.availableAbilities && skill.availableAbilities.length > 0
+        ? skill.availableAbilities
+        : abilities.length > 0
+          ? abilities
+          : skill.availableAbilities,
+    catalogOnly: false,
+  };
+}
+
+function ownedDedupeKey(skill: SheetDisplaySkill, codexSkills: CodexSkillRef[]): string {
+  const match =
+    findSkillByIdOrName(codexSkills, skill.id) ?? findSkillByIdOrName(codexSkills, skill.name);
+  if (match) return `id:${normalizeId(match.id)}`;
+  const nameKey = normalizeId(skill.name);
+  if (nameKey) return `name:${nameKey}`;
+  return `row:${normalizeId(skill.id)}`;
+}
+
+function preferOwnedRow(existing: SheetDisplaySkill, next: SheetDisplaySkill): SheetDisplaySkill {
+  const existingScore = (existing.prof ? 1 : 0) + (existing.skill_val ?? 0);
+  const nextScore = (next.prof ? 1 : 0) + (next.skill_val ?? 0);
+  return nextScore > existingScore ? next : existing;
+}
+
+function dedupeOwnedSkills(
+  rows: SheetDisplaySkill[],
+  codexSkills: CodexSkillRef[],
+): SheetDisplaySkill[] {
+  const byKey = new Map<string, SheetDisplaySkill>();
+  const order: string[] = [];
+  for (const row of rows) {
+    const key = ownedDedupeKey(row, codexSkills);
+    const existing = byKey.get(key);
+    if (!existing) {
+      byKey.set(key, row);
+      order.push(key);
+      continue;
+    }
+    byKey.set(key, preferOwnedRow(existing, row));
+  }
+  return order.map((key) => byKey.get(key)!);
+}
+
 /**
  * Merge character skills with every Codex base skill.
  * Character rows win on id/name match; missing bases are catalog-only (unproficient, value 0).
  * Sub-skills come only from the character (proficient always; unproficient only if added).
+ * Owned rows whose `name` is a raw Codex id are relabeled from the catalog (species-change save).
  */
 export function mergeSheetSkillsWithCatalog(
   characterSkills: SheetDisplaySkill[],
@@ -53,18 +124,24 @@ export function mergeSheetSkillsWithCatalog(
 ): SheetDisplaySkill[] {
   const ownedBases: SheetDisplaySkill[] = [];
   const ownedSubs: SheetDisplaySkill[] = [];
-  const ownedBaseIds = new Set<string>();
-  const ownedBaseNames = new Set<string>();
 
   for (const skill of characterSkills) {
-    const row: SheetDisplaySkill = { ...skill, catalogOnly: false };
+    const row = hydrateOwnedSkill(skill, codexSkills);
     if (skill.baseSkill) {
       ownedSubs.push(row);
     } else {
       ownedBases.push(row);
-      ownedBaseIds.add(String(skill.id).toLowerCase());
-      ownedBaseNames.add(parentKey(skill.name));
     }
+  }
+
+  const uniqueBases = dedupeOwnedSkills(ownedBases, codexSkills);
+  const uniqueSubs = dedupeOwnedSkills(ownedSubs, codexSkills);
+
+  const ownedBaseIds = new Set<string>();
+  const ownedBaseNames = new Set<string>();
+  for (const skill of uniqueBases) {
+    ownedBaseIds.add(String(skill.id).toLowerCase());
+    ownedBaseNames.add(parentKey(skill.name));
   }
 
   const catalogBases: SheetDisplaySkill[] = [];
@@ -75,6 +152,7 @@ export function mergeSheetSkillsWithCatalog(
     if (ownedBaseIds.has(idKey) || (nameKey && ownedBaseNames.has(nameKey))) continue;
 
     const abilities = parseAbilities(codex.ability);
+    const description = codex.description?.trim() || undefined;
     catalogBases.push({
       id: String(codex.id),
       name: codex.name ?? String(codex.id),
@@ -82,16 +160,17 @@ export function mergeSheetSkillsWithCatalog(
       prof: false,
       ability: abilities[0] ?? 'strength',
       availableAbilities: abilities.length > 0 ? abilities : ['strength'],
+      ...(description ? { description } : {}),
       catalogOnly: true,
     });
   }
 
-  const bases = [...ownedBases, ...catalogBases].sort((a, b) =>
+  const bases = [...uniqueBases, ...catalogBases].sort((a, b) =>
     String(a.name ?? '').localeCompare(String(b.name ?? '')),
   );
 
   const subsByParent = new Map<string, SheetDisplaySkill[]>();
-  for (const sub of ownedSubs) {
+  for (const sub of uniqueSubs) {
     const key = parentKey(sub.baseSkill);
     const list = subsByParent.get(key) ?? [];
     list.push(sub);
@@ -113,7 +192,7 @@ export function mergeSheetSkillsWithCatalog(
   }
 
   // Orphan sub-skills (parent name not in catalog/owned bases)
-  for (const sub of ownedSubs) {
+  for (const sub of uniqueSubs) {
     if (!placedSubIds.has(String(sub.id).toLowerCase())) {
       ordered.push(sub);
     }

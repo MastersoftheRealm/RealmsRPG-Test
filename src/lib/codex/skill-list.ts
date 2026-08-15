@@ -81,6 +81,18 @@ export function buildSkillIdToName(skills: Skill[] | undefined): Map<string, str
   return new Map(skills.map((s) => [String(s.id), s.name] as [string, string]));
 }
 
+/** Match a Codex/library skill by id or display name (species grants store ids). */
+export function findSkillByIdOrName<T extends { id: string | number; name?: string }>(
+  skills: readonly T[] | undefined,
+  lookup: string | number | null | undefined,
+): T | undefined {
+  const key = normalizeId(lookup);
+  if (!key || !skills?.length) return undefined;
+  return (
+    skills.find((s) => normalizeId(s.id) === key) ?? skills.find((s) => normalizeId(s.name) === key)
+  );
+}
+
 export function buildSkillFilterOptions(
   skills: Skill[] | undefined,
   skillIdToName: Map<string, string>,

@@ -1111,7 +1111,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773, TASK-778, TASK-779, TASK-782, TASK-783, TASK-786, TASK-787, TASK-788, TASK-800)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773, TASK-778, TASK-779, TASK-782, TASK-783, TASK-786, TASK-787, TASK-788, TASK-800, TASK-802)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1890,6 +1890,27 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 **Expected**
 - Mode is named on the heading (`aria-live`) and visible in the first screenful of the Skills card.
 - Creator/allocation Skills tables still use a separate Value column.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T055 — Skills show Codex names + hover description after species change (TASK-802)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-802 |
+| **Where** | `/characters/[id]` → Skills panel; Edit Species |
+| **Needs** | Editable character; Codex skills loaded; a species whose granted skill the character does not already have |
+
+**Steps**
+1. Open the sheet Skills list. Confirm every skill **name** is a human label (not a UUID / raw id). Hover (desktop) or focus/touch-hold (phone) a skill name — the Codex skill description appears. Names without a description stay plain text.
+2. Edit Species: pick a different species (or mixed pair) that grants a skill the character did not have. Save.
+3. Confirm the new species skill appears in Skills as its Codex **name**, proficient, not as an id. Hover still shows that skill’s description.
+4. Optional ~360px: skill names remain tappable (44px); desktop names stay text-hugging (not 44px rows).
+
+**Expected**
+- Species-change never leaves a raw skill id in the Skills list.
+- Skill names with Codex copy use the same word-tied tip pattern as ability names (`WordHelpTip`).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
