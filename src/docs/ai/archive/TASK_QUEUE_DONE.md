@@ -1,3 +1,63 @@
+- id: TASK-762
+  title: Combat linked-character ?scope=encounter fetches are a Query
+  created_at: 2026-08-14
+  completed_at: 2026-08-15
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-761
+    - TASK-750
+  related_files:
+    - src/app/(main)/encounters/[id]/_components/combat/use-combat-linked-character-sync.ts
+    - src/app/(main)/encounters/[id]/_components/combat/use-combat-roster-actions.ts
+    - src/components/shared/add-combatant-modal.tsx
+    - src/hooks/use-campaigns.ts
+    - src/hooks/use-campaigns.cache.test.ts
+    - src/hooks/index.ts
+    - src/services/campaign-service.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+    - src/docs/ARCHITECTURE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    Report 06 P1-1 leftover after TASK-761. The RM sheet load is Query; combat still
+    batch-fetches ?scope=encounter (minimal HP/EN/AP payload) with uncancelled
+    Promise.all + apiFetchOrNull in use-combat-linked-character-sync, plus the same
+    URL in roster-actions and AddCombatantModal. That route is not the RM view GET
+    (no libraryForView; members allowed; private visibility skipped).
+  acceptance_criteria:
+    - Linked-character resource sync reads through React Query (campaign + encounter
+      scoped key, or a documented variant). No parallel uncancelled useEffect fetch
+      for that payload. Query cancel/unmount covers in-flight requests.
+    - Do not reuse useCampaignCharacterView / the full RM-view GET for this payload.
+    - AddCombatantModal and roster-actions use the same fetcher (no third copy of the
+      URL string). Existing 90s visibility-gated poll and realtime merge stay.
+    - Typecheck/lint. FEATURE_INDEX. One DEV-V test (combat linked HP sync).
+  completed_work: |
+    getCampaignCharacterForEncounter + campaignKeys.characterEncounter (viewer-segmented,
+    not encounter-id keyed so add + sync share cache). useCampaignCharacterEncounters
+    observers in combat sync; fetchCampaignCharacterForEncounter for add-all and
+    AddCombatantModal. Visibility 90s poll now refetchQueries; realtime merge unchanged.
+  notes: |
+    Documented variant: key is campaign + character-encounter scope, not encounter id.
+    Wave 3 report 07 P2-5 stays out.
+  evidence: |
+    vitest use-campaigns.cache.test.ts; typecheck/lint.
+  build_validation: |
+    suite: DEV-V-043
+    tests:
+      - DEV-V-043-T008
+  developer_test_plan: |
+    Suite DEV-V-043 T008 — see BUILD_VALIDATION.md
+
+---
+
 - id: TASK-753
   title: Archetype Path filter — creator L2 catalogs and add modals
   created_at: 2026-08-14
@@ -5147,12 +5207,14 @@
       - DEV-V-018-T010
   developer_test_plan: |
     DEV-V-018 T009/T010 creature creator smoke; DEV-V-013 Guided powers/techniques L1 unchanged.
+  notes: |
+    TASK-719 (2026-08-15): colliding Vercel Web Analytics work re-id'd to TASK-765.
 
 ---
 
 ---
 
-- id: TASK-615
+- id: TASK-765
   title: Integrate Vercel Web Analytics (CSP + docs)
   created_at: 2026-07-22
   completed_at: 2026-07-22
@@ -5187,6 +5249,7 @@
   notes: |
     Supersedes incomplete vercel/install-vercel-web-analytics-5wx8k8 (#96) for repo conventions.
     Speed Insights not in scope.
+    Re-id'd from TASK-615 on 2026-08-15 (TASK-719) — ID collided with TASK-610 facade shrink (kept as TASK-615).
 
 ---
 
@@ -9495,6 +9558,7 @@ Firebase/RTDB - the project is Supabase-only.
     DONE 2026-03-04: `isAdmin` migrated to Supabase role query. Admin users list/update now use DB role as source of truth and allow `admin` role updates.
     Admin UI copy/select options updated. Docs updated (ADMIN_SETUP and DEPLOYMENT) to role-based admin grant flow; `.env.example` removed ADMIN_UIDS.
     Build attempt failed in sandbox due external font fetch (`fonts.googleapis.com`) restriction; targeted eslint for changed TS/TSX files passed.
+    TASK-719 (2026-08-15): colliding mixed-species list dedupe re-id'd to TASK-766.
 
 - id: TASK-003
   title: Show weapon damage in Library and wire Edit -> Item Creator
@@ -15835,8 +15899,8 @@ Firebase/RTDB - the project is Supabase-only.
   notes: |
     Done 2026-02-25. sql/supabase-campaign-rolls-list-columns.sql; GET list selects character_id, user_id, type, title; POST insert sets columns. npm run build passes.
 
-- id: TASK-284
-  title: Species steps Ã¢â¬â deduplicate list items (flaws, traits, characteristics) when mixed
+- id: TASK-766
+  title: Species steps — deduplicate list items (flaws, traits, characteristics) when mixed
   priority: high
   status: done
   created_at: 2026-03-07
@@ -15850,6 +15914,7 @@ Firebase/RTDB - the project is Supabase-only.
     - npm run build passes; manual check in character creator species steps.
   notes: |
     Done 2026-03-07. ancestry-step: when building merged lists for mixed species (speciesA + speciesB), deduplicate by trait ID (Set of string IDs) before resolve so shared ancestry traits, flaws, and characteristics appear once. npm run build passes.
+    Re-id'd from TASK-284 on 2026-08-15 (TASK-719) — ID collided with role-based admin (kept as TASK-284).
 
 - id: TASK-285
   title: Species steps Ã¢â¬â sticky Continue button
@@ -21061,3 +21126,42 @@ Firebase/RTDB - the project is Supabase-only.
     local Linux regenerate. Archived from ACTIVE 2026-08-14. verification_status n/a
     (purely automated visual gate).
 
+---
+
+- id: TASK-719
+  title: Disambiguate duplicate archive IDs TASK-615 and TASK-284
+  created_at: 2026-08-13
+  completed_at: 2026-08-15
+  created_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  implemented_by: agent
+  related_files:
+    - src/docs/ai/archive/TASK_QUEUE_DONE.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  description: |
+    Archive has two distinct done blocks each for TASK-615 (facade shrink vs Web Analytics)
+    and TASK-284 (role-based admin vs mixed-species list dedupe). Not copy-paste dupes —
+    ID collisions. Re-id one of each (new TASK-###) and retarget DEVELOPER_TASK_QUEUE /
+    BUILD_VALIDATION citations so reconcile and pending-QA rows are unique.
+  acceptance_criteria:
+    - Each `- id: TASK-615` / `TASK-284` in the done archive refers to one piece of work.
+    - The other block has a new unique TASK-###; DTQ pending-QA and DEV-006/DEV-V-018 links match.
+    - `npm run tasks:validate` strict reconcile still passes for both IDs (commit subjects).
+  completed_work: |
+    Kept TASK-615 = TASK-610 facade shrink; re-id'd Web Analytics to TASK-765.
+    Kept TASK-284 = role-based admin; re-id'd mixed-species list dedupe to TASK-766.
+    Retargeted DEV-006, DEV-V-017 T005, FEATURE_INDEX layout, and pending-QA analytics
+    row to TASK-765; DEV-V-018 T010 + pending-QA facade row stay on TASK-615.
+    Feedback log species-dedupe citations point at TASK-766.
+  notes: |
+    Filed from 2026-08-13 /global-audit. Did not delete either block. New IDs are in
+    this task's commit subject for strict-since (TASK-765 completed_at 2026-07-22).
+  evidence: |
+    Unique `- id: TASK-615` / `TASK-284` in TASK_QUEUE_DONE.md; TASK-765 / TASK-766
+    present; DEV-006 and DEV-V-017 cite TASK-765; DEV-V-018 pending-QA facade cites TASK-615.

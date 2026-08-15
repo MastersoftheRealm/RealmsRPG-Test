@@ -4339,7 +4339,7 @@ Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and s
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-017 — Site copy modules |
-| **Related task** | TASK-390, TASK-615 |
+| **Related task** | TASK-390, TASK-765 |
 | **Where** | `/privacy` |
 | **Needs** | — |
 
@@ -4559,12 +4559,12 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-018-T010 — Creature creator workspace hook (TASK-381 Phase 5; TASK-610 splits)
+#### DEV-V-018-T010 — Creature creator workspace hook (TASK-381 Phase 5; TASK-610 / TASK-615 splits)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-018 |
-| **Related task** | TASK-381 / TASK-610 |
+| **Related task** | TASK-381 / TASK-610 / TASK-615 |
 | **Where** | `/creature-creator` (+ `?edit=<id>` when available) |
 | **Needs** | Signed in; optional saved library creature |
 
@@ -6689,6 +6689,29 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-043-T008 — Combat linked-character HP sync via React Query (TASK-762)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-043 — Wave 5 page facade splits |
+| **Related task** | TASK-762 |
+| **Where** | `/encounters/<id>/combat` (campaign-linked combatants) |
+| **Needs** | Signed-in campaign member; a combat encounter with at least one campaign-character combatant; that character's sheet open in another tab helps |
+| **CI** | Partial — `use-campaigns.cache.test.ts` (`characterEncounter` key distinct from `characterView`; `getCampaignCharacterForEncounter` hits `?scope=encounter`) |
+
+**Steps**
+1. Open the combat encounter. Linked combatant HP/EN/AP match the character sheet (sync on load; spinner is the encounter load, not a separate uncancelled fetch).
+2. In another tab, change that character's current HP on the sheet and save. Return to the combat tab (or wait for realtime). Combat HP updates; the roster is not replaced with a full RM sheet.
+3. Hide the combat tab (~10s) then show it again — resources refetch once without duplicating combatants.
+4. Add Combatant → Campaign Characters (and, if the encounter has a linked campaign, Add all). Added rows show live HP/EN from the same payload. A player member can add (not RM-only).
+
+**Expected**
+- Linked sync is `useCampaignCharacterEncounters` / `campaignKeys.characterEncounter` against `getCampaignCharacterForEncounter` (`?scope=encounter`). No parallel `useEffect` `apiFetch` for that URL.
+- Add Combatant and add-all use `fetchCampaignCharacterForEncounter` (same fetcher; not a third copy of the URL).
+- 90s visibility-gated poll and postgres realtime merge still apply HP/EN/AP. RM view (`useCampaignCharacterView`) is unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754)
@@ -7082,7 +7105,7 @@ Filters browse lists by what an archetype path recommends, read live from `path_
 | DEV-V-044 | Power Creator AoE applyDuration persistence (TASK-672) | — | Automated (library-columnar + power-calc tests) + manual DEV-V-044-T001 |
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649 / TASK-735) | — | Manual DEV-V-041 T001–T004 + `node scripts/verify-task-649.mjs` |
 | DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |
-| DEV-V-043 | Wave 5 page facade splits (TASK-666) | — | Manual — see suite above |
+| DEV-V-043 | Wave 5 page facade splits (TASK-666 / TASK-762) | — | Manual — see suite above |
 | DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`, `character-save` create-error copy) + manual DEV-V-051 T001–T010 |
 | DEV-V-052 | Archetype Path list filter (TASK-751 / TASK-752 / TASK-753) | — | Automated (`path-recommendation-index`, `feat-list`, `skill-list`, `equipment-list`) + manual DEV-V-052 T001–T006 |
 
