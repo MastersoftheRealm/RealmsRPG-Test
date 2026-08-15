@@ -5,7 +5,7 @@
  * ==================
  * Generic reusable confirmation modal for actions that need user verification.
  * Used for: publishing to Realms Library, destructive actions, etc.
- * 
+ *
  * For delete-specific confirmations, see `DeleteConfirmModal`.
  */
 
@@ -71,22 +71,13 @@ export function ConfirmActionModal({
       titleA11y={title}
     >
       <div className="flex flex-col items-center text-center">
-        <div className={cn('w-12 h-12 rounded-full flex items-center justify-center mb-4', iconBg)}>
-          <IconComponent className={cn('w-6 h-6', iconColor)} />
+        <div className={cn('mb-4 flex h-12 w-12 items-center justify-center rounded-full', iconBg)}>
+          <IconComponent className={cn('h-6 w-6', iconColor)} />
         </div>
-        <h2 className="text-lg font-semibold text-text-primary mb-2">
-          {title}
-        </h2>
-        <p className="text-text-muted dark:text-text-secondary mb-6">
-          {description}
-        </p>
-        <div className="flex items-center justify-center gap-3 w-full">
-          <Button
-            variant="secondary"
-            onClick={onClose}
-            disabled={isLoading}
-            className="flex-1"
-          >
+        <h2 className="mb-2 text-lg font-semibold text-text-primary">{title}</h2>
+        <p className="mb-6 text-text-muted">{description}</p>
+        <div className="flex w-full items-center justify-center gap-3">
+          <Button variant="secondary" onClick={onClose} disabled={isLoading} className="flex-1">
             {cancelLabel}
           </Button>
           <Button

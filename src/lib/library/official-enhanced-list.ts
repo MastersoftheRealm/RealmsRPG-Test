@@ -50,7 +50,7 @@ export function buildOfficialEnhancedRows(items: OfficialEnhancedItem[]): Offici
 export function filterOfficialEnhancedRows(
   rows: OfficialEnhancedRow[],
   search: string,
-  sortItems: (items: OfficialEnhancedRow[]) => OfficialEnhancedRow[]
+  sortItems: (items: OfficialEnhancedRow[]) => OfficialEnhancedRow[],
 ): OfficialEnhancedRow[] {
   let list = rows;
   if (search.trim()) {
@@ -59,7 +59,7 @@ export function filterOfficialEnhancedRows(
       (e) =>
         e.name.toLowerCase().includes(s) ||
         e.base.toLowerCase().includes(s) ||
-        e.power.toLowerCase().includes(s)
+        e.power.toLowerCase().includes(s),
     );
   }
   return sortItems(list);

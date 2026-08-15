@@ -41,10 +41,7 @@ export default function EncounterRedirectPage({ params }: PageParams) {
         <Alert variant="danger" title="Encounter not found">
           This encounter may have been deleted or you may not have access.
         </Alert>
-        <Link
-          href="/encounters"
-          className="mt-4 inline-block text-primary-link-fg hover:underline"
-        >
+        <Link href="/encounters" className="mt-4 inline-block text-primary-link-fg hover:underline">
           Back to Encounters
         </Link>
       </PageContainer>

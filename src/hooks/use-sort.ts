@@ -72,10 +72,7 @@ function compareSortValues(aVal: unknown, bVal: unknown, columnKey: string): num
  * Pure function: sort an array by SortState column.
  * Creature levels use numeric quarter-step order; other numbers compare numerically.
  */
-export function sortByColumn<T extends object>(
-  arr: T[],
-  sortState: SortState
-): T[] {
+export function sortByColumn<T extends object>(arr: T[], sortState: SortState): T[] {
   return [...arr].sort((a, b) => {
     const aVal = getRawSortValue(a, sortState.col);
     const bVal = getRawSortValue(b, sortState.col);
@@ -102,7 +99,7 @@ export function useSort(initialCol: string = 'name') {
     <T extends object>(arr: T[]): T[] => {
       return sortByColumn(arr, sortState);
     },
-    [sortState]
+    [sortState],
   );
 
   return { sortState, setSortState, handleSort, sortItems };

@@ -6,17 +6,11 @@
 
 import { Button, Input, Card } from '@/components/ui';
 import { SectionHeader } from '@/components/shared';
-import {
-  useCreateEnhancedItem,
-  useUpdateEnhancedItem,
-} from '@/hooks';
+import { useCreateEnhancedItem, useUpdateEnhancedItem } from '@/hooks';
 import { getEnhancedMarketPrice } from '@/lib/game/crafting-utils';
 import type { CraftingRequirements } from '@/lib/game/crafting-utils';
 import type { CraftingRules } from '@/types/core-rules';
-import type {
-  CraftingSession as CraftingSessionType,
-  CraftingPowerRef,
-} from '@/types/crafting';
+import type { CraftingSession as CraftingSessionType, CraftingPowerRef } from '@/types/crafting';
 import type { RequirementsBreakdown } from './crafting-tool-helpers';
 
 type CraftSubSkill = {
@@ -64,59 +58,53 @@ export function CraftingOutcomeCard({
   return (
     <Card className="p-4 sm:p-6">
       <SectionHeader title="Outcome" size="md" className="mb-3" />
-      <p className="text-text-secondary whitespace-pre-wrap">{outcome.effectText}</p>
+      <p className="whitespace-pre-wrap text-text-secondary">{outcome.effectText}</p>
       {craftSubSkill && (craftSubSkill.craft_success_desc || craftSubSkill.craft_failure_desc) && (
-        <div className="mt-3 pt-3 border-t border-border-light">
-          <p className="text-xs font-medium text-text-muted dark:text-text-secondary uppercase tracking-wide mb-1">
+        <div className="mt-3 border-t border-border-light pt-3">
+          <p className="mb-1 text-xs font-medium tracking-wide text-text-muted uppercase">
             {craftSubSkill.name}: {netDelta >= 0 ? 'Success' : 'Failure'}
           </p>
-          <p className="text-sm text-text-secondary whitespace-pre-wrap">
+          <p className="text-sm whitespace-pre-wrap text-text-secondary">
             {netDelta >= 0
               ? (craftSubSkill.craft_success_desc ?? '')
               : (craftSubSkill.craft_failure_desc ?? '')}
           </p>
         </div>
       )}
-      <ul className="mt-3 text-sm text-text-secondary space-y-1">
+      <ul className="mt-3 space-y-1 text-sm text-text-secondary">
         <li>Materials spent: {Math.ceil(outcome.finalMaterialCost)} currency</li>
         <li>Materials recovered: {Math.ceil(outcome.materialsRetained)} currency</li>
         <li>Item value: {Math.ceil(outcome.itemWorth)} currency</li>
-        {outcome.extraItemCount > 0 && (
-          <li>Extra items: {outcome.extraItemCount}</li>
-        )}
+        {outcome.extraItemCount > 0 && <li>Extra items: {outcome.extraItemCount}</li>}
         {outcome.choiceExtraOrEnhance && (
           <li>Your choice: one extra item at full value, or enhance to 200% value</li>
         )}
       </ul>
       {session.data.isEnhanced && resolvedPowerRef && !session.data.isUpgradePotency && (
-        <div className="mt-4 pt-4 border-t border-border-light">
-          <p className="text-sm text-text-secondary mb-2">Save this enhanced item to My Library.</p>
+        <div className="mt-4 border-t border-border-light pt-4">
+          <p className="mb-2 text-sm text-text-secondary">Save this enhanced item to My Library.</p>
           <Button
             onClick={async () => {
               try {
                 const baseItem = session.data.customBaseItem ?? session.data.item;
                 if (!baseItem || !resolvedPowerRef) return;
                 const name = `${'name' in baseItem ? baseItem.name : 'Item'} (${resolvedPowerRef.name})`;
-                const usesTypeToSave =
-                  session.data.usesType ?? 'full';
+                const usesTypeToSave = session.data.usesType ?? 'full';
                 const usesCountToSave =
-                  usesTypeToSave === 'permanent'
-                    ? undefined
-                    : session.data.usesCount ?? 1;
+                  usesTypeToSave === 'permanent' ? undefined : (session.data.usesCount ?? 1);
                 const materialCost = session.data.materialCost ?? 0;
                 const currencyCost =
                   rulesData && isEnhanced
                     ? getEnhancedMarketPrice(materialCost, rulesData)
                     : materialCost;
                 const rarityToSave =
-                  requirements?.rarity ??
-                  (requirementsBreakdown?.enhancementReq.rarity ??
-                    undefined);
+                  requirements?.rarity ?? requirementsBreakdown?.enhancementReq.rarity ?? undefined;
                 await createEnhanced.mutateAsync({
                   name,
                   baseItem,
                   powerRef: resolvedPowerRef,
-                  potency: typeof session.data.potency === 'number' ? session.data.potency : undefined,
+                  potency:
+                    typeof session.data.potency === 'number' ? session.data.potency : undefined,
                   currencyCost: currencyCost || undefined,
                   rarity: rarityToSave,
                   usesType: usesTypeToSave,
@@ -134,12 +122,17 @@ export function CraftingOutcomeCard({
         </div>
       )}
       {session.data.isUpgradePotency && session.data.upgradePotencyEnhancedItemId && (
-        <div className="mt-4 pt-4 border-t border-border-light">
-          <p className="text-sm text-text-secondary mb-2">
+        <div className="mt-4 border-t border-border-light pt-4">
+          <p className="mb-2 text-sm text-text-secondary">
             Update the enhanced item&apos;s potency in your library.
           </p>
           <div className="flex flex-wrap items-center gap-3">
-            <label htmlFor="upgrade-potency-input" className="block text-sm font-medium text-text-secondary">New potency</label>
+            <label
+              htmlFor="upgrade-potency-input"
+              className="block text-sm font-medium text-text-secondary"
+            >
+              New potency
+            </label>
             <Input
               id="upgrade-potency-input"
               type="number"

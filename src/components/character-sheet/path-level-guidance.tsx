@@ -4,10 +4,7 @@ import { useMemo } from 'react';
 import { MapPin } from 'lucide-react';
 import { useCodexFeats, useCodexSkills, useEquipment, useOfficialLibrary } from '@/hooks';
 import { getPathRecommendationsForLevel } from '@/lib/game/archetype-path';
-import {
-  indexDisplayNamesByNormalizedIds,
-  resolveNormalizedRefList,
-} from '@/lib/utils';
+import { indexDisplayNamesByNormalizedIds, resolveNormalizedRefList } from '@/lib/utils';
 import type { ArchetypePathRecommendations, CharacterArchetype } from '@/types/archetype';
 
 function pathRecommendationsHasContent(rec: ArchetypePathRecommendations | undefined): boolean {
@@ -43,13 +40,13 @@ function GuidanceSection({
       <p
         className={
           variant === 'remove'
-            ? 'text-xs font-semibold uppercase tracking-wide text-danger-fg mb-1'
-            : 'text-xs font-semibold uppercase tracking-wide text-text-secondary mb-1'
+            ? 'mb-1 text-xs font-semibold tracking-wide text-danger-fg uppercase'
+            : 'mb-1 text-xs font-semibold tracking-wide text-text-secondary uppercase'
         }
       >
         {title}
       </p>
-      <ul className="text-sm text-text-primary space-y-0.5 list-disc list-inside">
+      <ul className="list-inside list-disc space-y-0.5 text-sm text-text-primary">
         {items.map((item) => (
           <li key={`${title}-${item}`}>{item}</li>
         ))}
@@ -74,7 +71,7 @@ export function PathRemoveGuidance({
 }: PathRemoveGuidanceProps) {
   const recommendations = useMemo(
     () => getPathRecommendationsForLevel(archetype, targetLevel),
-    [archetype, targetLevel]
+    [archetype, targetLevel],
   );
 
   const { data: feats = [] } = useCodexFeats();
@@ -91,17 +88,25 @@ export function PathRemoveGuidance({
     const techniqueLookup = indexDisplayNamesByNormalizedIds(publicTechniques);
 
     return {
-      removeFeats: resolveNormalizedRefList(recommendations.removeFeats, featLookup.byId, featLookup.byName),
-      removePowers: resolveNormalizedRefList(recommendations.removePowers, powerLookup.byId, powerLookup.byName),
+      removeFeats: resolveNormalizedRefList(
+        recommendations.removeFeats,
+        featLookup.byId,
+        featLookup.byName,
+      ),
+      removePowers: resolveNormalizedRefList(
+        recommendations.removePowers,
+        powerLookup.byId,
+        powerLookup.byName,
+      ),
       removeTechniques: resolveNormalizedRefList(
         recommendations.removeTechniques,
         techniqueLookup.byId,
-        techniqueLookup.byName
+        techniqueLookup.byName,
       ),
       removeArmaments: resolveNormalizedRefList(
         recommendations.removeArmaments,
         equipLookup.byId,
-        equipLookup.byName
+        equipLookup.byName,
       ),
     };
   }, [recommendations, feats, equipment, publicPowers, publicTechniques, publicItems]);
@@ -123,7 +128,7 @@ export function PathRemoveGuidance({
       <p className="text-xs font-medium text-text-secondary">
         Optional guidance. Nothing is removed automatically.
       </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <GuidanceSection title="Feats" items={resolved.removeFeats} variant="remove" />
         <GuidanceSection title="Powers" items={resolved.removePowers} variant="remove" />
         <GuidanceSection title="Techniques" items={resolved.removeTechniques} variant="remove" />
@@ -135,11 +140,11 @@ export function PathRemoveGuidance({
   if (compact) {
     return (
       <div
-        className="rounded-lg border border-danger-200 dark:border-danger-800/50 bg-danger-50/50 dark:bg-danger-900/10 px-4 py-3 space-y-2"
+        className="space-y-2 rounded-lg border border-danger-200 bg-danger-50/50 px-4 py-3 dark:border-danger-800/50 dark:bg-danger-900/10"
         role="region"
         aria-label={`Consider replacing or removing for ${displayName} at level ${targetLevel}`}
       >
-        <p className="text-xs font-semibold uppercase tracking-wide text-danger-fg">
+        <p className="text-xs font-semibold tracking-wide text-danger-fg uppercase">
           Consider replacing or removing
         </p>
         {content}
@@ -148,7 +153,7 @@ export function PathRemoveGuidance({
   }
 
   return (
-    <div className="pt-2 border-t border-border-light space-y-2">
+    <div className="space-y-2 border-t border-border-light pt-2">
       <p className="text-xs font-medium text-text-secondary">Consider replacing or removing</p>
       {content}
     </div>
@@ -164,7 +169,7 @@ export interface PathLevelGuidanceProps {
 export function PathLevelGuidance({ archetype, pathName, targetLevel }: PathLevelGuidanceProps) {
   const recommendations = useMemo(
     () => getPathRecommendationsForLevel(archetype, targetLevel),
-    [archetype, targetLevel]
+    [archetype, targetLevel],
   );
 
   const { data: feats = [] } = useCodexFeats();
@@ -184,26 +189,50 @@ export function PathLevelGuidance({ archetype, pathName, targetLevel }: PathLeve
 
     return {
       feats: resolveNormalizedRefList(recommendations.feats, featLookup.byId, featLookup.byName),
-      skills: resolveNormalizedRefList(recommendations.skills, skillLookup.byId, skillLookup.byName),
-      powers: resolveNormalizedRefList(recommendations.powers, powerLookup.byId, powerLookup.byName),
+      skills: resolveNormalizedRefList(
+        recommendations.skills,
+        skillLookup.byId,
+        skillLookup.byName,
+      ),
+      powers: resolveNormalizedRefList(
+        recommendations.powers,
+        powerLookup.byId,
+        powerLookup.byName,
+      ),
       techniques: resolveNormalizedRefList(
         recommendations.techniques,
         techniqueLookup.byId,
-        techniqueLookup.byName
+        techniqueLookup.byName,
       ),
-      armaments: resolveNormalizedRefList(recommendations.armaments, equipLookup.byId, equipLookup.byName),
-      equipment: resolveNormalizedRefList(recommendations.equipment, equipLookup.byId, equipLookup.byName),
-      removeFeats: resolveNormalizedRefList(recommendations.removeFeats, featLookup.byId, featLookup.byName),
-      removePowers: resolveNormalizedRefList(recommendations.removePowers, powerLookup.byId, powerLookup.byName),
+      armaments: resolveNormalizedRefList(
+        recommendations.armaments,
+        equipLookup.byId,
+        equipLookup.byName,
+      ),
+      equipment: resolveNormalizedRefList(
+        recommendations.equipment,
+        equipLookup.byId,
+        equipLookup.byName,
+      ),
+      removeFeats: resolveNormalizedRefList(
+        recommendations.removeFeats,
+        featLookup.byId,
+        featLookup.byName,
+      ),
+      removePowers: resolveNormalizedRefList(
+        recommendations.removePowers,
+        powerLookup.byId,
+        powerLookup.byName,
+      ),
       removeTechniques: resolveNormalizedRefList(
         recommendations.removeTechniques,
         techniqueLookup.byId,
-        techniqueLookup.byName
+        techniqueLookup.byName,
       ),
       removeArmaments: resolveNormalizedRefList(
         recommendations.removeArmaments,
         equipLookup.byId,
-        equipLookup.byName
+        equipLookup.byName,
       ),
       notes: recommendations.notes?.trim(),
     };
@@ -212,7 +241,7 @@ export function PathLevelGuidance({ archetype, pathName, targetLevel }: PathLeve
   if (!pathRecommendationsHasContent(recommendations) || !resolved) {
     return (
       <div
-        className="rounded-lg border border-border-light bg-surface-alt px-4 py-3 text-sm text-text-muted dark:text-text-secondary"
+        className="rounded-lg border border-border-light bg-surface-alt px-4 py-3 text-sm text-text-muted"
         role="status"
       >
         No path progression entries for level {targetLevel} in the codex.
@@ -224,29 +253,29 @@ export function PathLevelGuidance({ archetype, pathName, targetLevel }: PathLeve
 
   return (
     <div
-      className="rounded-lg border-2 border-primary-subtle-border bg-primary-subtle-bg px-4 py-4 space-y-3"
+      className="space-y-3 rounded-lg border-2 border-primary-subtle-border bg-primary-subtle-bg px-4 py-4"
       role="region"
       aria-label={`Path guidance for ${displayName} at level ${targetLevel}`}
     >
       <div className="flex items-start gap-2">
-        <MapPin className="w-5 h-5 text-primary-fg flex-shrink-0 mt-0.5" aria-hidden />
+        <MapPin className="mt-0.5 h-5 w-5 flex-shrink-0 text-primary-fg" aria-hidden />
         <div>
           <h3 className="text-sm font-semibold text-text-primary">
             {displayName}: Level {targetLevel} guidance
           </h3>
-          <p className="text-xs text-text-secondary mt-0.5">
+          <p className="mt-0.5 text-xs text-text-secondary">
             Suggested picks from your archetype path (optional; add manually on your sheet).
           </p>
         </div>
       </div>
 
       {resolved.notes ? (
-        <p className="text-sm text-text-primary whitespace-pre-wrap border-l-2 border-primary-subtle-border pl-3">
+        <p className="border-l-2 border-primary-subtle-border pl-3 text-sm whitespace-pre-wrap text-text-primary">
           {resolved.notes}
         </p>
       ) : null}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <GuidanceSection title="Recommended Feats" items={resolved.feats} />
         <GuidanceSection title="Recommended Skills" items={resolved.skills} />
         <GuidanceSection title="Recommended Powers" items={resolved.powers} />
@@ -259,11 +288,7 @@ export function PathLevelGuidance({ archetype, pathName, targetLevel }: PathLeve
         resolved.removePowers.length > 0 ||
         resolved.removeTechniques.length > 0 ||
         resolved.removeArmaments.length > 0) && (
-        <PathRemoveGuidance
-          archetype={archetype}
-          targetLevel={targetLevel}
-          pathName={pathName}
-        />
+        <PathRemoveGuidance archetype={archetype} targetLevel={targetLevel} pathName={pathName} />
       )}
     </div>
   );

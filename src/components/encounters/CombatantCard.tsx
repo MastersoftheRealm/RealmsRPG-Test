@@ -57,13 +57,13 @@ export const CombatantCard = memo(function CombatantCard({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       className={cn(
-        'shadow-md p-3 transition-all',
-        isCurrentTurn && 'ring-2 ring-primary-subtle-border shadow-lg',
+        'p-3 shadow-md transition-all',
+        isCurrentTurn && 'shadow-lg ring-2 ring-primary-subtle-border',
         isDead && 'bg-enemy-light opacity-90',
-        isDragOver && 'ring-2 ring-warning-500 bg-warning-light',
+        isDragOver && 'bg-warning-light ring-2 ring-warning-500',
         isDragging && 'opacity-50',
         'border-l-4',
-        getCombatantBorderColor(combatant)
+        getCombatantBorderColor(combatant),
       )}
     >
       <div className="flex items-start gap-3">
@@ -78,7 +78,7 @@ export const CombatantCard = memo(function CombatantCard({
           onDragEnd={onDragEnd}
         />
 
-        <div className="flex-1 min-w-0">
+        <div className="min-w-0 flex-1">
           <CombatantCardHeader
             combatant={combatant}
             isCurrentTurn={isCurrentTurn}
@@ -107,7 +107,7 @@ export const CombatantCard = memo(function CombatantCard({
             onUpdateConditionLevel={onUpdateConditionLevel}
           />
 
-          <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-border-subtle">
+          <div className="flex flex-wrap items-center gap-1.5 border-t border-border-subtle pt-2">
             <CombatantCardResourceQuickActions
               variant={variant}
               isLinkedToCharacter={isLinkedToCharacter}
@@ -120,8 +120,10 @@ export const CombatantCard = memo(function CombatantCard({
             <button
               onClick={() => setShowConditions(!showConditions)}
               className={cn(
-                'px-2 py-0.5 text-xs rounded touch-target-md-compact inline-flex items-center justify-center',
-                showConditions ? 'bg-warning-500 text-text-on-dark' : 'bg-warning-light text-warning-fg hover:opacity-90'
+                'touch-target-md-compact inline-flex items-center justify-center rounded px-2 py-0.5 text-xs',
+                showConditions
+                  ? 'bg-warning-500 text-text-on-dark'
+                  : 'bg-warning-light text-warning-fg hover:opacity-90',
               )}
             >
               {showConditions ? '▲' : '▼'} Conditions
@@ -130,7 +132,7 @@ export const CombatantCard = memo(function CombatantCard({
             <div className="ml-auto flex items-center gap-1">
               <button
                 onClick={onDuplicate}
-                className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-surface touch-target-md-compact inline-flex items-center justify-center"
+                className="touch-target-md-compact inline-flex items-center justify-center rounded bg-surface-alt px-2 py-0.5 text-xs text-text-secondary hover:bg-surface"
                 title="Duplicate this combatant"
                 aria-label={`Duplicate ${combatant.name}`}
               >
@@ -138,7 +140,7 @@ export const CombatantCard = memo(function CombatantCard({
               </button>
               <button
                 onClick={onRemove}
-                className="px-2 py-0.5 text-xs bg-surface-alt text-text-secondary rounded hover:bg-danger-light hover:text-danger-fg touch-target-md-compact inline-flex items-center justify-center"
+                className="touch-target-md-compact inline-flex items-center justify-center rounded bg-surface-alt px-2 py-0.5 text-xs text-text-secondary hover:bg-danger-light hover:text-danger-fg"
                 title="Remove combatant"
                 aria-label={`Remove ${combatant.name}`}
               >
@@ -148,10 +150,7 @@ export const CombatantCard = memo(function CombatantCard({
           </div>
 
           {showConditions && (
-            <CombatantCardConditionsPanel
-              combatant={combatant}
-              onAddCondition={onAddCondition}
-            />
+            <CombatantCardConditionsPanel combatant={combatant} onAddCondition={onAddCondition} />
           )}
         </div>
       </div>

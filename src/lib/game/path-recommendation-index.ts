@@ -12,10 +12,16 @@ import { indexByNormalizedIds, normalizeId } from '@/lib/utils/normalize-id';
 import type { ArchetypeCategory, ArchetypePathData } from '@/types/archetype';
 
 /** One powers browse list covers both bags (there is no separate innate-powers Codex/Library tab). */
-export const POWER_LIST_PATH_KINDS = ['powers', 'innatePowers'] as const satisfies readonly PathRecommendationKind[];
+export const POWER_LIST_PATH_KINDS = [
+  'powers',
+  'innatePowers',
+] as const satisfies readonly PathRecommendationKind[];
 
 /** Codex mixed equipment covers weapons/armor (`armaments`) and gear (`equipment`). */
-export const EQUIPMENT_LIST_PATH_KINDS = ['armaments', 'equipment'] as const satisfies readonly PathRecommendationKind[];
+export const EQUIPMENT_LIST_PATH_KINDS = [
+  'armaments',
+  'equipment',
+] as const satisfies readonly PathRecommendationKind[];
 
 export type PathRecommendationKindInput =
   | PathRecommendationKind
@@ -108,7 +114,7 @@ export function buildPathRecommendationIndex({
 /** Union of the entity ids recommended by the selected paths (empty selection → empty set). */
 export function pathRecommendedEntityIds(
   index: PathRecommendationIndex,
-  selectedPathIds: readonly string[]
+  selectedPathIds: readonly string[],
 ): Set<string> {
   const union = new Set<string>();
   for (const pathId of selectedPathIds) {
@@ -120,7 +126,7 @@ export function pathRecommendedEntityIds(
 }
 
 function entityKeys(
-  entityId: string | number | readonly (string | number | null | undefined)[]
+  entityId: string | number | readonly (string | number | null | undefined)[],
 ): Set<string> {
   const ids = Array.isArray(entityId) ? entityId : [entityId];
   const keys = new Set<string>();
@@ -138,7 +144,7 @@ function entityKeys(
  */
 export function rowMatchesPathRecommendedIds(
   entityId: string | number | readonly (string | number | null | undefined)[],
-  pathRecommendedIds: ReadonlySet<string> | null | undefined
+  pathRecommendedIds: ReadonlySet<string> | null | undefined,
 ): boolean {
   if (!pathRecommendedIds) return true;
   for (const key of entityKeys(entityId)) {
@@ -151,7 +157,7 @@ export function rowMatchesPathRecommendedIds(
 export function pathNamesForEntity(
   index: PathRecommendationIndex,
   entityId: string | number | readonly (string | number | null | undefined)[],
-  selectedPathIds: readonly string[]
+  selectedPathIds: readonly string[],
 ): string[] {
   const keys = entityKeys(entityId);
   if (keys.size === 0 || selectedPathIds.length === 0) return [];
@@ -174,7 +180,7 @@ export function pathNamesForEntity(
 export function pathChipLabelsForEntity(
   index: PathRecommendationIndex,
   entityId: string | number | readonly (string | number | null | undefined)[],
-  selectedPathIds: readonly string[]
+  selectedPathIds: readonly string[],
 ): string[] | undefined {
   if (selectedPathIds.length === 0) return undefined;
   const names = pathNamesForEntity(index, entityId, selectedPathIds);
@@ -188,7 +194,7 @@ export function pathFilterEmptyTitle(entityPlural: string): string {
 /** Player-visible path ids of one archetype type — See more auto-select (TASK-753). */
 export function pathIdsForArchetypeType(
   options: readonly PathFilterOption[],
-  type: ArchetypeCategory
+  type: ArchetypeCategory,
 ): string[] {
   return options.filter((option) => option.type === type).map((option) => option.id);
 }
@@ -232,7 +238,7 @@ export function applyLivePathFilter<T extends PathFilterableRow>(
     selectedPathIds: readonly string[];
     keepIds?: ReadonlySet<string>;
     idsForItem?: (item: T) => Array<string | number | null | undefined>;
-  }
+  },
 ): T[] {
   const { pathMatchIds, pathIndex, selectedPathIds, keepIds } = opts;
   if (!pathMatchIds) return [...items];
@@ -240,8 +246,7 @@ export function applyLivePathFilter<T extends PathFilterableRow>(
   const next: T[] = [];
   for (const item of items) {
     const keys = idsForItem(item);
-    const keep =
-      keepIds?.has(String(item.id)) || rowMatchesPathRecommendedIds(keys, pathMatchIds);
+    const keep = keepIds?.has(String(item.id)) || rowMatchesPathRecommendedIds(keys, pathMatchIds);
     if (!keep) continue;
     const chipLabels = pathChipLabelsForEntity(pathIndex, keys, selectedPathIds);
     next.push({

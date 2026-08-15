@@ -128,7 +128,7 @@ function TechniqueCreatorWorkspace({
 
   return (
     <CreatorPageShell
-      icon={<Swords className="w-8 h-8 text-energy-text" />}
+      icon={<Swords className="h-8 w-8 text-energy-text" />}
       title="Technique Creator"
       description="Design custom martial techniques by combining technique parts. Each part contributes to the total energy cost and training point requirements."
       user={user}
@@ -175,24 +175,35 @@ function TechniqueCreatorWorkspace({
         isLoading: load.isLoading,
         error: load.error,
         title: 'Load Technique from Library',
-        onSelect: (selected) =>
-          ws.handleLoadTechnique(selected.data as TechniqueLibraryRecord),
+        onSelect: (selected) => ws.handleLoadTechnique(selected.data as TechniqueLibraryRecord),
       }}
       sidebar={
         <CreatorSummaryPanel
           title="Technique Summary"
           costStats={[
-            { label: 'Energy Cost', value: ws.costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
-            { label: 'Training Points', value: ws.costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+            {
+              label: 'Energy Cost',
+              value: ws.costs.totalEnergy,
+              icon: <Zap className="h-6 w-6" />,
+              color: 'energy',
+            },
+            {
+              label: 'Training Points',
+              value: ws.costs.totalTP,
+              icon: <Target className="h-6 w-6" />,
+              color: 'tp',
+            },
           ]}
           statRows={[
             { label: 'Action', value: ws.actionTypeDisplay },
             { label: 'Attack', value: ws.attackModeLabel },
             ...(ws.damageDisplay ? [{ label: 'Damage', value: ws.damageDisplay }] : []),
           ]}
-          breakdowns={ws.costs.tpSources.length > 0 ? [
-            { title: 'TP Breakdown', items: ws.costs.tpSources }
-          ] : undefined}
+          breakdowns={
+            ws.costs.tpSources.length > 0
+              ? [{ title: 'TP Breakdown', items: ws.costs.tpSources }]
+              : undefined
+          }
         >
           <AdvancedCalculationsPanel
             rows={ws.advancedCalcRows}

@@ -24,10 +24,7 @@ import {
 import { CreatorPageShell, CreatorSummaryPanel } from '@/components/creator';
 import { SourceFilter, sourceFilterSummary } from '@/components/shared/filters/source-filter';
 import { ConfirmActionModal } from '@/components/shared';
-import {
-  SPECIES_TRAIT_WARNING,
-  TRAIT_LIMITS,
-} from './species-creator-bootstrap';
+import { SPECIES_TRAIT_WARNING, TRAIT_LIMITS } from './species-creator-bootstrap';
 import { SpeciesCreatorEditor, TraitListModal } from './species-creator-editor';
 import { useSpeciesCreatorWorkspace } from './use-species-creator-workspace';
 
@@ -48,7 +45,7 @@ export default function SpeciesCreatorPage() {
 
   return (
     <CreatorPageShell
-      icon={<Users className="w-8 h-8 text-primary-link-fg" />}
+      icon={<Users className="h-8 w-8 text-primary-link-fg" />}
       title="Species Creator"
       description="Create custom species. Add traits (species, ancestry, characteristic, flaw), choose base skills and sizes, and set languages. Load from Realms Codex or My Codex; save to My Codex."
       user={user}
@@ -102,7 +99,10 @@ export default function SpeciesCreatorPage() {
           statRows={ws.summaryStatRows}
           lineItems={[
             { label: 'Sizes', items: ws.form.sizes },
-            { label: 'Skills', items: ws.form.skillIds.map((id) => ws.skillLabel(id)).filter(Boolean) },
+            {
+              label: 'Skills',
+              items: ws.form.skillIds.map((id) => ws.skillLabel(id)).filter(Boolean),
+            },
             { label: 'Languages', items: ws.form.languages },
           ]}
         />

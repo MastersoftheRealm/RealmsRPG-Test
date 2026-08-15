@@ -128,7 +128,7 @@ describe('useGuidedCreatorStore path change blocks Reveal', () => {
         name: 'Other Path',
         type: 'martial',
         mart_abil: 'strength',
-      })
+      }),
     );
 
     const next = useGuidedCreatorStore.getState();

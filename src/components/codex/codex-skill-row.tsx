@@ -31,13 +31,9 @@ export function CodexSkillRow({
   if (skill.description?.trim()) descriptionParts.push(skill.description.trim());
   if (variant === 'codex' && isSubSkill) descriptionParts.push(`Sub-skill of: ${baseSkillName}`);
   const description = descriptionParts.length > 0 ? descriptionParts.join('\n\n') : undefined;
-  const detailSections =
-    variant === 'codex' ? getSkillExtraDescriptionDetailSections(skill) : [];
-  const displayName =
-    variant === 'codex' && isSubSkill ? `↳ ${skill.name}` : skill.name;
-  const nameChips = nameChipLabels?.length
-    ? nameChipLabels.map((label) => ({ label }))
-    : undefined;
+  const detailSections = variant === 'codex' ? getSkillExtraDescriptionDetailSections(skill) : [];
+  const displayName = variant === 'codex' && isSubSkill ? `↳ ${skill.name}` : skill.name;
+  const nameChips = nameChipLabels?.length ? nameChipLabels.map((label) => ({ label })) : undefined;
 
   return (
     <GridListRow

@@ -26,10 +26,17 @@ type Row = {
 function toSummary(row: Row): CraftingSessionSummary {
   const d = (row.data as Record<string, unknown>) ?? {};
   const item = d.item as { name?: string } | null;
-  const currencyCost = (row.currency_cost as number) ?? (d.materialCost as number) ?? (item && (d.item as { marketPrice?: number }).marketPrice) ?? 0;
+  const currencyCost =
+    (row.currency_cost as number) ??
+    (d.materialCost as number) ??
+    (item && (d.item as { marketPrice?: number }).marketPrice) ??
+    0;
   return {
     id: row.id,
-    status: (row.status as CraftingSessionSummary['status']) ?? (d.status as CraftingSessionSummary['status']) ?? 'planned',
+    status:
+      (row.status as CraftingSessionSummary['status']) ??
+      (d.status as CraftingSessionSummary['status']) ??
+      'planned',
     itemName: (row.item_name as string) ?? (item?.name as string) ?? 'No item',
     currencyCost: Number(currencyCost),
     updatedAt: row.updated_at ?? undefined,
@@ -52,7 +59,12 @@ export async function GET() {
       .order('updated_at', { ascending: false });
 
     if (dbError) {
-      return apiErrorResponse('Failed to load crafting sessions', 500, 'GET /api/crafting', dbError);
+      return apiErrorResponse(
+        'Failed to load crafting sessions',
+        500,
+        'GET /api/crafting',
+        dbError,
+      );
     }
 
     const summaries: CraftingSessionSummary[] = (rows ?? []).map((r) => toSummary(r as Row));
@@ -71,10 +83,13 @@ export async function POST(request: NextRequest) {
     }
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('craft-post', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('craft-post', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const validation = await validateJson(request, craftingSessionCreateSchema);
@@ -108,7 +123,12 @@ export async function POST(request: NextRequest) {
     };
     const { error: insertErr } = await supabase.from('crafting_sessions').insert(row);
     if (insertErr) {
-      return apiErrorResponse('Failed to create crafting session', 500, 'POST /api/crafting (insert)', insertErr);
+      return apiErrorResponse(
+        'Failed to create crafting session',
+        500,
+        'POST /api/crafting (insert)',
+        insertErr,
+      );
     }
 
     return NextResponse.json({ id });

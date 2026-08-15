@@ -13,7 +13,7 @@
 import type { CharacterLibraryTabId } from '@/types';
 
 export function defaultLibraryTabVisibilityForArchetype(
-  type?: string | null
+  type?: string | null,
 ): Partial<Record<CharacterLibraryTabId, boolean>> | undefined {
   if (type === 'power') return { techniques: false };
   if (type === 'martial') return { powers: false };

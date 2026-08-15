@@ -27,7 +27,9 @@ const { createClient } = require('@supabase/supabase-js');
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local or .env');
+  console.error(
+    'Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local or .env',
+  );
   process.exit(1);
 }
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -65,7 +67,10 @@ const CODEX_TABLES = [
 ];
 
 function fileNameToTableKey(fileBase) {
-  let normalized = fileBase.replace(/^Codex\s*-\s*/i, '').toLowerCase().replace(/\s+/g, '_');
+  let normalized = fileBase
+    .replace(/^Codex\s*-\s*/i, '')
+    .toLowerCase()
+    .replace(/\s+/g, '_');
   if (normalized.includes('_-_')) normalized = normalized.split('_-_').pop() || normalized;
   if (normalized === 'creature_feats') return 'creature_feats';
   if (normalized === 'creature_feat') return 'creature_feats';
@@ -199,7 +204,9 @@ function loadCsvTables(seedDir) {
 async function fetchLiveCounts(tables) {
   const counts = {};
   for (const table of tables) {
-    const { count, error } = await supabase.from(table).select('id', { count: 'exact', head: true });
+    const { count, error } = await supabase
+      .from(table)
+      .select('id', { count: 'exact', head: true });
     counts[table] = error ? null : (count ?? null);
   }
   return counts;
@@ -218,7 +225,8 @@ function confirm(phrase) {
 
 async function clearTable(tableName) {
   const { data: rows, error: selectError } = await supabase.from(tableName).select('id');
-  if (selectError) throw new Error(`Cannot read ${tableName} before clearing: ${selectError.message}`);
+  if (selectError)
+    throw new Error(`Cannot read ${tableName} before clearing: ${selectError.message}`);
 
   const ids = (rows || []).map((r) => r.id);
   const batch = 200;

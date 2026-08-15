@@ -8,7 +8,11 @@ import { SectionCostBadge } from '@/components/shared';
 import { CollapsibleSection } from '@/components/creator';
 import { Checkbox } from '@/components/ui';
 import { ACTION_OPTIONS } from '@/lib/game/creator-constants';
-import { ATTACK_MODE_SELECT_OPTIONS, attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
+import {
+  ATTACK_MODE_SELECT_OPTIONS,
+  attackModeColumnLabel,
+  type AttackMode,
+} from '@/lib/attack-mode';
 import type { PowerSectionCosts } from './power-creator-cost-derivation';
 import { PowerCreatorHelp } from './power-creator-help';
 
@@ -39,14 +43,16 @@ export function PowerCreatorEditorActionProfile({
         title="Action Type"
         collapsedSummary={actionTypeDisplay}
         titleAddon={<PowerCreatorHelp topic="actionType" />}
-        rightSlot={<SectionCostBadge en={sectionCosts.action.energyRaw} tp={sectionCosts.action.totalTP} />}
+        rightSlot={
+          <SectionCostBadge en={sectionCosts.action.energyRaw} tp={sectionCosts.action.totalTP} />
+        }
       >
         <div className="flex flex-wrap items-center gap-4">
           <select
             aria-label="Action type"
             value={actionType}
             onChange={(e) => onActionTypeChange(e.target.value)}
-            className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+            className="rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
           >
             {ACTION_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -69,12 +75,14 @@ export function PowerCreatorEditorActionProfile({
         title="Attack"
         collapsedSummary={attackModeColumnLabel(attackMode)}
         titleAddon={<PowerCreatorHelp topic="attack" />}
-        rightSlot={<SectionCostBadge en={sectionCosts.weapon.energyRaw} tp={sectionCosts.weapon.totalTP} />}
+        rightSlot={
+          <SectionCostBadge en={sectionCosts.weapon.energyRaw} tp={sectionCosts.weapon.totalTP} />
+        }
       >
         <select
           value={attackMode}
           onChange={(e) => onAttackModeChange(e.target.value as AttackMode)}
-          className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+          className="min-h-[44px] w-full rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
           aria-label="Attack"
         >
           {ATTACK_MODE_SELECT_OPTIONS.map((option) => (
@@ -84,8 +92,8 @@ export function PowerCreatorEditorActionProfile({
           ))}
         </select>
         <p className="mt-2 text-sm text-text-secondary">
-          Weapon Attack adds the Add Weapon to Power mechanic (flat cost). No Weapon/Attack and Unarmed Attack add
-          nothing.
+          Weapon Attack adds the Add Weapon to Power mechanic (flat cost). No Weapon/Attack and
+          Unarmed Attack add nothing.
         </p>
       </CollapsibleSection>
     </>

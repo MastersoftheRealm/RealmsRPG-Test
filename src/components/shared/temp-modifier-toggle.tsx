@@ -41,10 +41,10 @@ export function TempModifierToggle({
       className={cn(
         // 44px on mobile/touch; icon-hugging on desktop (MOBILE_UX.md)
         'touch-target-md-compact inline-flex items-center justify-center',
-        'p-1 md:p-0.5 rounded-md',
-        'transition-all duration-base ease-standard',
+        'rounded-md p-1 md:p-0.5',
+        'duration-base transition-all ease-standard',
         'max-md:hover:scale-110',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+        'focus-visible:ring-2 focus-visible:ring-primary-outline-border/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none',
         hasModifiers || isActive
           ? 'text-warning-fg hover:opacity-90'
           : 'text-primary-fg hover:text-primary-fg-hover',
@@ -58,13 +58,13 @@ export function TempModifierToggle({
         ],
         onClick && 'cursor-pointer',
         !onClick && 'cursor-default',
-        className
+        className,
       )}
       title={title}
       aria-label={title}
       aria-pressed={isActive}
     >
-      <SlidersHorizontal className="w-4 h-4" />
+      <SlidersHorizontal className="h-4 w-4" />
     </button>
   );
 }

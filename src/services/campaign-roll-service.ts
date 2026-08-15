@@ -39,8 +39,7 @@ export async function addCampaignRoll({
  * Get campaign rolls (for polling).
  */
 export async function getCampaignRolls(campaignId: string): Promise<CampaignRollEntry[]> {
-  return apiFetch<CampaignRollEntry[]>(
-    `/api/campaigns/${encodeURIComponent(campaignId)}/rolls`,
-    { credentials: 'same-origin' }
-  );
+  return apiFetch<CampaignRollEntry[]>(`/api/campaigns/${encodeURIComponent(campaignId)}/rolls`, {
+    credentials: 'same-origin',
+  });
 }

@@ -11,18 +11,27 @@ import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createCharacter, saveCharacter } from '@/services/character-service';
 import { formatCharacterCreateFailureMessage, resolveClientRequestId } from '@/lib/character-save';
-import { useAuth, useCodexSkills, useMergedSpecies, useTraits, usePowerParts, useTechniqueParts, useItemProperties, useGameRules } from '@/hooks';
+import {
+  useAuth,
+  useCodexSkills,
+  useMergedSpecies,
+  useTraits,
+  usePowerParts,
+  useTechniqueParts,
+  useItemProperties,
+  useGameRules,
+} from '@/hooks';
 import { cn } from '@/lib/utils';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';
-import {
-  PORTRAIT_SAVE_UPLOAD_FALLBACK,
-  uploadCharacterPortraitFromDataUrl,
-} from '@/lib/portrait';
+import { PORTRAIT_SAVE_UPLOAD_FALLBACK, uploadCharacterPortraitFromDataUrl } from '@/lib/portrait';
 import { getErrorMessage } from '@/lib/api-client';
 import type { Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { Button, Alert, Textarea, useToast } from '@/components/ui';
-import { useCharacterCreatorStore, CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
+import {
+  useCharacterCreatorStore,
+  CHARACTER_STARTING_CURRENCY,
+} from '@/stores/character-creator-store';
 import { getAllValidationIssues } from '@/lib/character-creator-validation';
 import { calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
 import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
@@ -37,7 +46,12 @@ import {
 } from '@/lib/onboarding-preferences';
 import { finalizeSummaryHelp } from '../../../../public/tooltip-text';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies, getTrainingPointLimit } from '@/lib/proficiencies';
+import {
+  buildRequiredProficiencies,
+  calculateProficiencyTP,
+  dedupeHighestProficiencies,
+  getTrainingPointLimit,
+} from '@/lib/proficiencies';
 import { ValidationModal } from './finalize/validation-modal';
 import { HealthEnergyAllocationSection } from './finalize/health-energy-section';
 import { PortraitUpload } from './finalize/portrait-upload';
@@ -57,7 +71,7 @@ export function FinalizeStep() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  
+
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showValidation, setShowValidation] = useState(false);
@@ -73,12 +87,16 @@ export function FinalizeStep() {
   // Validation from shared lib (same messages as tab-bar "things left to do" modal)
   const validationIssues = useMemo(
     () =>
-      getAllValidationIssues(draft, {
-        allSpecies,
-        codexSkills: codexSkills ?? null,
-        allTraits: allTraits ?? null,
-      }, rules),
-    [draft, allSpecies, codexSkills, allTraits, rules]
+      getAllValidationIssues(
+        draft,
+        {
+          allSpecies,
+          codexSkills: codexSkills ?? null,
+          allTraits: allTraits ?? null,
+        },
+        rules,
+      ),
+    [draft, allSpecies, codexSkills, allTraits, rules],
   );
 
   const proficiencyTpSummary = useMemo(() => {
@@ -96,20 +114,27 @@ export function FinalizeStep() {
       techniquePartsDb,
       itemPropertiesDb,
     });
-    const spent = dedupeHighestProficiencies(required).reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
+    const spent = dedupeHighestProficiencies(required).reduce(
+      (sum, p) => sum + calculateProficiencyTP(p),
+      0,
+    );
 
     const abilities = draft.abilities || {};
     const getAbility = (key: string | undefined): number =>
       key ? Number((abilities as Record<string, unknown>)[key] ?? 0) || 0 : 0;
     const highestAbility = Math.max(
       ...Object.values(abilities).filter((v): v is number => typeof v === 'number'),
-      0
+      0,
     );
-    const archetypeAbility = Math.max(getAbility(draft.pow_abil), getAbility(draft.mart_abil), highestAbility);
+    const archetypeAbility = Math.max(
+      getAbility(draft.pow_abil),
+      getAbility(draft.mart_abil),
+      highestAbility,
+    );
     const limit = getTrainingPointLimit(draft.level || 1, archetypeAbility);
     return { spent, limit, remaining: limit - spent };
   }, [draft, powerPartsDb, techniquePartsDb, itemPropertiesDb]);
-  
+
   const maxEnergy = useMemo(() => {
     const abilities = draft.abilities || {};
     const level = draft.level || 1;
@@ -120,7 +145,7 @@ export function FinalizeStep() {
       abilities,
       level,
       powAbil,
-      martAbil
+      martAbil,
     );
   }, [draft]);
 
@@ -130,11 +155,11 @@ export function FinalizeStep() {
     return Math.round(CHARACTER_STARTING_CURRENCY * Math.pow(1.45, level - 1));
   }, [draft.level]);
   const remainingCurrency = draft.currency ?? startingCurrency;
-  
+
   const handleValidateAndSave = () => {
     setShowValidation(true);
   };
-  
+
   const handleSave = async () => {
     if (!user) {
       // Show login prompt modal instead of error
@@ -143,27 +168,31 @@ export function FinalizeStep() {
     }
 
     if (saving) return;
-    
+
     if (!draft.name?.trim()) {
       setError('Please enter a character name');
       return;
     }
-    
+
     try {
       setSaving(true);
       setError(null);
       setShowValidation(false);
-      
+
       const characterData = getCharacter({
         powerPartsDb,
         techniquePartsDb,
         itemPropertiesDb,
         rules,
       });
-      
+
       // Convert skills Record → array before cleanForSave so proficient-only 0 survives
       // (shared with Guided via buildCreatorSkillSaveRows).
-      if (characterData.skills && typeof characterData.skills === 'object' && !Array.isArray(characterData.skills)) {
+      if (
+        characterData.skills &&
+        typeof characterData.skills === 'object' &&
+        !Array.isArray(characterData.skills)
+      ) {
         characterData.skills = buildCreatorSkillSaveRows(
           characterData.skills as Record<string, number>,
           {
@@ -171,14 +200,14 @@ export function FinalizeStep() {
             includeBaseSkillName: true,
             abilities: characterData.abilities,
             skillAbilities: draft.skillAbilities,
-          }
+          },
         ) as unknown as Character['skills'];
       }
 
       // Strip to lean schema (feats, powers, techniques, skills, equipment, etc.) so we don't persist
       // full codex/library data — it's derived on load from codex.
       const leanData = cleanForSave(characterData as unknown as Character);
-      
+
       // Remove any undefined values (PostgreSQL JSONB rejects undefined)
       const sanitizeForJsonb = (val: unknown): unknown => {
         if (val === undefined) return undefined;
@@ -198,8 +227,9 @@ export function FinalizeStep() {
       const sanitizedCharacter = sanitizeForJsonb(leanData) as Partial<Character>;
 
       // If portrait is base64, strip it from initial save (will upload to Storage after)
-      const hasBase64Portrait = sanitizedCharacter.portrait && 
-        typeof sanitizedCharacter.portrait === 'string' && 
+      const hasBase64Portrait =
+        sanitizedCharacter.portrait &&
+        typeof sanitizedCharacter.portrait === 'string' &&
         sanitizedCharacter.portrait.startsWith('data:');
       const base64Portrait = hasBase64Portrait ? sanitizedCharacter.portrait : null;
       if (hasBase64Portrait) {
@@ -215,7 +245,7 @@ export function FinalizeStep() {
           ...sanitizedCharacter,
           userId: user.uid,
         },
-        { clientRequestId }
+        { clientRequestId },
       );
       if (!characterId?.trim()) {
         throw new Error('Character was created but no id was returned');
@@ -234,9 +264,7 @@ export function FinalizeStep() {
       // Navigate first, then clear — see navigateThenResetCreator DESIGN_INTENT.
       const returnTo = searchParams.get('returnTo');
       const safeReturnTo =
-        returnTo && returnTo.startsWith('/')
-          ? sanitizeRedirectPath(returnTo, '')
-          : '';
+        returnTo && returnTo.startsWith('/') ? sanitizeRedirectPath(returnTo, '') : '';
       showToast('Your character is ready!', 'success');
       setSavedCharacterId(characterId);
 
@@ -263,76 +291,77 @@ export function FinalizeStep() {
       setSaving(false);
     }
   };
-  
+
   return (
-    <div className="max-w-2xl mx-auto flex flex-col flex-1 min-h-0">
+    <div className="mx-auto flex min-h-0 max-w-2xl flex-1 flex-col">
       <LoadoutBudgetBar
         className="mb-6"
         currencyTotal={startingCurrency}
         currencySpent={startingCurrency - remainingCurrency}
         tpTotal={proficiencyTpSummary.limit}
         tpSpent={proficiencyTpSummary.spent}
-        trailing={
-          <PointStatus
-            total={maxEnergy}
-            spent={0}
-            label="Energy"
-            variant="inline"
-          />
-        }
+        trailing={<PointStatus total={maxEnergy} spent={0} label="Energy" variant="inline" />}
       />
 
-      <div className="flex items-center gap-1 mb-2">
+      <div className="mb-2 flex items-center gap-1">
         <h2 className="text-2xl font-bold text-text-primary">Meet Your Character</h2>
-        <InfoTippy content={finalizeSummaryHelp} allowHTML label="Finalize checklist help" size="inline" />
+        <InfoTippy
+          content={finalizeSummaryHelp}
+          allowHTML
+          label="Finalize checklist help"
+          size="inline"
+        />
       </div>
-      <p className="text-text-secondary mb-6">
+      <p className="mb-6 text-text-secondary">
         Review your build, add identity details, then create your character.
       </p>
 
       {/* Character reveal hero */}
-      <div className="rounded-xl border border-primary-subtle-border bg-gradient-to-br from-primary-subtle-bg/80 to-surface overflow-hidden mb-6 shadow-sm">
-        <div className="p-5 flex flex-col sm:flex-row gap-5 items-center sm:items-start">
-          <div className="relative w-24 h-24 rounded-xl overflow-hidden bg-image-matte border-2 border-border-light flex items-center justify-center shrink-0">
+      <div className="mb-6 overflow-hidden rounded-xl border border-primary-subtle-border bg-gradient-to-br from-primary-subtle-bg/80 to-surface shadow-sm">
+        <div className="flex flex-col items-center gap-5 p-5 sm:flex-row sm:items-start">
+          <div className="relative flex h-24 w-24 shrink-0 items-center justify-center overflow-hidden rounded-xl border-2 border-border-light bg-image-matte">
             {draft.portrait ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={draft.portrait} alt="" className="w-full h-full object-contain" />
+              <img src={draft.portrait} alt="" className="h-full w-full object-contain" />
             ) : (
-              <span className="text-4xl text-text-muted dark:text-text-secondary" aria-hidden>
+              <span className="text-4xl text-text-muted" aria-hidden>
                 {draft.name?.charAt(0).toUpperCase() || '?'}
               </span>
             )}
           </div>
-          <div className="min-w-0 text-center sm:text-left flex-1">
-            <p className="text-xs font-medium uppercase tracking-wide text-primary-fg mb-1">Level {draft.level || 1}</p>
-            <h3 className="text-2xl font-bold text-text-primary truncate">
+          <div className="min-w-0 flex-1 text-center sm:text-left">
+            <p className="mb-1 text-xs font-medium tracking-wide text-primary-fg uppercase">
+              Level {draft.level || 1}
+            </p>
+            <h3 className="truncate text-2xl font-bold text-text-primary">
               {draft.name?.trim() || 'Unnamed Hero'}
             </h3>
-            <p className="text-text-secondary mt-1">
-              {[draft.archetype?.name, draft.ancestry?.name].filter(Boolean).join(' · ') || 'Complete earlier steps to fill in your build.'}
+            <p className="mt-1 text-text-secondary">
+              {[draft.archetype?.name, draft.ancestry?.name].filter(Boolean).join(' · ') ||
+                'Complete earlier steps to fill in your build.'}
             </p>
           </div>
         </div>
       </div>
-      
+
       <IdentityFields />
-      
+
       {/* Character Portrait (Optional) */}
       <PortraitUpload />
-      
+
       <BuildSummary
         draft={draft}
         proficiencyTpSummary={proficiencyTpSummary}
         powerPartsDb={powerPartsDb}
         techniquePartsDb={techniquePartsDb}
       />
-      
+
       {/* Health & Energy Allocation */}
       <div className="mb-6">
-        <h3 className="font-bold text-text-primary mb-3">Health &amp; Energy</h3>
+        <h3 className="mb-3 font-bold text-text-primary">Health &amp; Energy</h3>
         <HealthEnergyAllocationSection />
       </div>
-      
+
       {/* Description (Optional) */}
       <div className="mb-6">
         <Textarea
@@ -344,7 +373,7 @@ export function FinalizeStep() {
           className="resize-none"
         />
       </div>
-      
+
       {/* Notes (Optional) */}
       <div className="mb-6">
         <Textarea
@@ -356,29 +385,33 @@ export function FinalizeStep() {
           className="resize-none"
         />
       </div>
-      
+
       {/* Error Message */}
       {error && (
         <Alert variant="danger" className="mb-6">
           {error}
         </Alert>
       )}
-      
+
       {/* Validation Summary */}
       {validationIssues.length > 0 && (
-        <div className={cn(
-          'mb-6 p-4 rounded-xl',
-          validationIssues.some(i => i.severity === 'error') 
-            ? cn(statusPanel.danger, 'border')
-            : cn(statusPanel.warning, 'border')
-        )}>
-          <div className="flex items-center gap-2 mb-2">
+        <div
+          className={cn(
+            'mb-6 rounded-xl p-4',
+            validationIssues.some((i) => i.severity === 'error')
+              ? cn(statusPanel.danger, 'border')
+              : cn(statusPanel.warning, 'border'),
+          )}
+        >
+          <div className="mb-2 flex items-center gap-2">
             <span className="text-xl">
-              {validationIssues.some(i => i.severity === 'error') ? '⚠️' : '📋'}
+              {validationIssues.some((i) => i.severity === 'error') ? '⚠️' : '📋'}
             </span>
             <span className="font-medium">
-              {validationIssues.filter(i => i.severity === 'error').length} error{validationIssues.filter(i => i.severity === 'error').length !== 1 ? 's' : ''}, 
-              {' '}{validationIssues.filter(i => i.severity === 'warning').length} warning{validationIssues.filter(i => i.severity === 'warning').length !== 1 ? 's' : ''}
+              {validationIssues.filter((i) => i.severity === 'error').length} error
+              {validationIssues.filter((i) => i.severity === 'error').length !== 1 ? 's' : ''},{' '}
+              {validationIssues.filter((i) => i.severity === 'warning').length} warning
+              {validationIssues.filter((i) => i.severity === 'warning').length !== 1 ? 's' : ''}
             </span>
           </div>
           <p className="text-sm text-text-secondary">
@@ -386,10 +419,11 @@ export function FinalizeStep() {
           </p>
         </div>
       )}
-      
+
       {!user && (
-        <p className="text-sm text-text-muted dark:text-text-secondary text-right mb-2">
-          Create an account to save your character. Your progress is stored locally until you sign in.
+        <p className="mb-2 text-right text-sm text-text-muted">
+          Create an account to save your character. Your progress is stored locally until you sign
+          in.
         </p>
       )}
       <CreatorStepFooter
@@ -405,21 +439,23 @@ export function FinalizeStep() {
               'min-h-11 min-w-11 px-8',
               !saving &&
                 validationIssues.some((i) => i.severity === 'error') &&
-                'bg-warning-600 hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600 text-text-on-dark'
+                'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600',
             )}
           >
             {validationIssues.length > 0 ? '📋 Review & Create' : '✓ Create Character'}
           </Button>
         }
       />
-      
+
       {/* Validation Modal */}
       <ValidationModal
         isOpen={showValidation}
         onClose={() => setShowValidation(false)}
         issues={validationIssues}
         onSave={handleSave}
-        onContinueAnyway={validationIssues.every(i => i.severity !== 'error') ? handleSave : undefined}
+        onContinueAnyway={
+          validationIssues.every((i) => i.severity !== 'error') ? handleSave : undefined
+        }
         isSaving={saving}
       />
 

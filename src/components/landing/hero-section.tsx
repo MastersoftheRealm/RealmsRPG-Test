@@ -39,26 +39,29 @@ export function HeroSection() {
         'relative w-full',
         'flex items-center justify-center overflow-hidden',
         'bg-gradient-to-br from-background via-primary-subtle-bg to-primary-100',
-        'dark:from-primary-900 dark:via-primary-800 dark:to-primary-900'
+        'dark:from-primary-900 dark:via-primary-800 dark:to-primary-900',
       )}
     >
       <LandingGradientBackdrop />
       <LandingDiceDecor variant="hero" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-surface to-transparent dark:from-background" aria-hidden="true" />
+      <div
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-surface to-transparent dark:from-background"
+        aria-hidden="true"
+      />
 
-      <div className="relative z-10 layout-shell-wide w-full px-4 py-10 sm:py-12 md:py-14 flex flex-col items-center text-center gap-4 sm:gap-5">
+      <div className="layout-shell-wide relative z-10 flex w-full flex-col items-center gap-4 px-4 py-10 text-center sm:gap-5 sm:py-12 md:py-14">
         {/*
           Wing + wordmark lockup is visually asymmetric: the wing’s airy left sweep
           reads lighter than the “Realms” text, so bbox center feels right-heavy.
           Nudge left for optical alignment with headline/CTA below.
         */}
-        <div className="relative w-full max-w-[78vw] sm:max-w-[460px] md:max-w-[520px] -translate-x-[5%] sm:-translate-x-[4%] md:-translate-x-[3.5%]">
+        <div className="relative w-full max-w-[78vw] -translate-x-[5%] sm:max-w-[460px] sm:-translate-x-[4%] md:max-w-[520px] md:-translate-x-[3.5%]">
           <Image
             src="/images/LogoFull.png"
             alt="Realms"
             width={560}
             height={187}
-            className="dark:hidden w-full h-auto object-contain pointer-events-none"
+            className="pointer-events-none h-auto w-full object-contain dark:hidden"
             priority
             suppressHydrationWarning
           />
@@ -67,7 +70,7 @@ export function HeroSection() {
             alt="Realms"
             width={560}
             height={187}
-            className="hidden dark:block w-full h-auto object-contain pointer-events-none drop-shadow-lg"
+            className="pointer-events-none hidden h-auto w-full object-contain drop-shadow-lg dark:block"
             priority
             suppressHydrationWarning
           />
@@ -77,9 +80,9 @@ export function HeroSection() {
           <>
             <h1 className={headlineClass}>{copy.returning.headline}</h1>
             <p className={returningSublineClass}>{copy.returning.subline}</p>
-            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
+            <div className="flex w-full flex-col items-center gap-3 sm:w-auto sm:flex-row sm:gap-4">
               <MarketingLinkButton href="/characters" size="xl" className="w-full sm:w-auto">
-                <Sparkles className="w-5 h-5 shrink-0" />
+                <Sparkles className="h-5 w-5 shrink-0" />
                 {copy.returning.primaryCta}
               </MarketingLinkButton>
               <MarketingLinkButton
@@ -89,7 +92,7 @@ export function HeroSection() {
                 className={cn(
                   'w-full sm:w-auto',
                   'border-primary-outline-border text-primary-outline-fg',
-                  'dark:border-text-on-dark/80 dark:text-text-on-dark dark:bg-text-on-dark/10 dark:hover:bg-text-on-dark/20'
+                  'dark:border-text-on-dark/80 dark:bg-text-on-dark/10 dark:text-text-on-dark dark:hover:bg-text-on-dark/20',
                 )}
               >
                 {copy.returning.secondaryCta}
@@ -101,12 +104,12 @@ export function HeroSection() {
             <h1 className={cn(headlineClass, 'max-w-[14ch]')}>{copy.headline}</h1>
             <p className={sublineClass}>{copy.subline}</p>
             <MarketingLinkButton href="/characters/new" size="xl" className="w-full sm:w-auto">
-              <Sparkles className="w-5 h-5 shrink-0" />
+              <Sparkles className="h-5 w-5 shrink-0" />
               {copy.primaryCta}
             </MarketingLinkButton>
             <a href="#how-it-works" className={explorerClass}>
               {copy.explorer}
-              <ChevronDown className="w-4 h-4 transition-transform group-hover:translate-y-0.5" />
+              <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
             </a>
           </>
         )}

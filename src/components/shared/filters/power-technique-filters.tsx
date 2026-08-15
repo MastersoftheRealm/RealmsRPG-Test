@@ -80,7 +80,7 @@ export function PowerTechniqueFilters({
   const { rules } = useGameRules();
 
   const [characterId, setCharacterId] = useState(() =>
-    readInitialLibraryCharacterFilterId(persistCharacter)
+    readInitialLibraryCharacterFilterId(persistCharacter),
   );
 
   const { data: characterResult } = useCharacter(characterId || undefined);
@@ -116,7 +116,7 @@ export function PowerTechniqueFilters({
         syncedCharacterIdRef.current = null;
       }
     },
-    [onChange, persistCharacter]
+    [onChange, persistCharacter],
   );
 
   // Sync Max Energy / innate threshold once per selected character load (not on every edit).
@@ -180,20 +180,19 @@ export function PowerTechniqueFilters({
           options={categoryOptions.map((c) => ({ value: c, label: c }))}
           selectedValues={value.categories}
           onSelect={(v) => set({ categories: [...value.categories, v] })}
-          onRemove={(v) =>
-            set({ categories: value.categories.filter((c) => c !== v) })
-          }
+          onRemove={(v) => set({ categories: value.categories.filter((c) => c !== v) })}
         />
 
         <div className={cn('filter-group min-w-0', energyLockedByCharacter && 'opacity-60')}>
           <div className={FILTER_LABEL_ROW_CLASS}>
-            <label htmlFor={energyMaxId} className="text-sm font-medium leading-5 text-text-secondary">
+            <label
+              htmlFor={energyMaxId}
+              className="text-sm leading-5 font-medium text-text-secondary"
+            >
               Max Energy
             </label>
             {energyLockedByCharacter ? (
-              <span className="text-xs text-text-muted dark:text-text-secondary">
-                {SET_BY_CHARACTER_HINT}
-              </span>
+              <span className="text-xs text-text-muted">{SET_BY_CHARACTER_HINT}</span>
             ) : null}
           </div>
           <FilterInput
@@ -213,7 +212,7 @@ export function PowerTechniqueFilters({
 
         <div className="filter-group min-w-0">
           <div className={FILTER_LABEL_ROW_CLASS}>
-            <label htmlFor={tpMaxId} className="text-sm font-medium leading-5 text-text-secondary">
+            <label htmlFor={tpMaxId} className="text-sm leading-5 font-medium text-text-secondary">
               Max TP
             </label>
           </div>
@@ -237,9 +236,7 @@ export function PowerTechniqueFilters({
           options={POWER_TECHNIQUE_ACTION_FILTER_OPTIONS}
           selectedValues={value.actionTypes}
           onSelect={(v) => set({ actionTypes: [...value.actionTypes, v] })}
-          onRemove={(v) =>
-            set({ actionTypes: value.actionTypes.filter((a) => a !== v) })
-          }
+          onRemove={(v) => set({ actionTypes: value.actionTypes.filter((a) => a !== v) })}
         />
 
         <SelectFilter
@@ -276,7 +273,7 @@ export function PowerTechniqueFilters({
               <div className={FILTER_LABEL_ROW_CLASS}>
                 <label
                   htmlFor={innateEligibleId}
-                  className="text-sm font-medium leading-5 text-text-secondary"
+                  className="text-sm leading-5 font-medium text-text-secondary"
                 >
                   Innate Eligible
                 </label>
@@ -300,7 +297,7 @@ export function PowerTechniqueFilters({
             <div className={FILTER_LABEL_ROW_CLASS}>
               <label
                 htmlFor={affordableTpId}
-                className="text-sm font-medium leading-5 text-text-secondary"
+                className="text-sm leading-5 font-medium text-text-secondary"
               >
                 Available TP
               </label>

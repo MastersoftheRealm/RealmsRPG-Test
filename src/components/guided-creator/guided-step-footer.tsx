@@ -74,18 +74,18 @@ export function GuidedStepFooter({
   return (
     <div
       data-testid="guided-step-footer"
-      className={cn('fixed bottom-0 inset-x-0 z-30 pointer-events-none', className)}
+      className={cn('pointer-events-none fixed inset-x-0 bottom-0 z-30', className)}
     >
       <div
         className={cn(
           'pointer-events-auto border-t border-border-light dark:border-border',
-          'bg-surface/95 backdrop-blur-md shadow-raised'
+          'bg-surface/95 shadow-raised backdrop-blur-md',
         )}
       >
         <div
           className={cn(
             'layout-shell-wide px-4 sm:px-6',
-            hasHint ? 'pt-2.5 pb-3 sm:py-4' : 'py-3 sm:py-4'
+            hasHint ? 'pt-2.5 pb-3 sm:py-4' : 'py-3 sm:py-4',
           )}
         >
           {/*
@@ -97,7 +97,7 @@ export function GuidedStepFooter({
             className={cn(
               'flex flex-col gap-2.5',
               'sm:flex-row sm:items-center sm:gap-4',
-              soloPrimary ? 'sm:justify-end' : 'sm:justify-between'
+              soloPrimary ? 'sm:justify-end' : 'sm:justify-between',
             )}
           >
             {hasHint ? (
@@ -105,8 +105,8 @@ export function GuidedStepFooter({
                 data-testid="guided-step-footer-hint"
                 aria-live="polite"
                 className={cn(
-                  'order-1 text-center text-sm font-nunito text-text-secondary',
-                  'sm:order-2 sm:flex-1'
+                  'order-1 text-center font-nunito text-sm text-text-secondary',
+                  'sm:order-2 sm:flex-1',
                 )}
               >
                 {completionHint}
@@ -118,7 +118,7 @@ export function GuidedStepFooter({
                 'order-2 flex w-full items-center gap-4',
                 soloPrimary ? 'justify-end' : 'justify-between',
                 // Promote Back/Continue into the sm row beside the hint.
-                hasHint && 'sm:contents'
+                hasHint && 'sm:contents',
               )}
             >
               {backButton ? (

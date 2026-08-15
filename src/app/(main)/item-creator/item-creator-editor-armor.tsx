@@ -30,13 +30,10 @@ export function ItemCreatorEditorArmor({
   itemSectionCosts,
 }: ItemCreatorEditorArmorProps) {
   return (
-    <CollapsibleSection
-      title="Armor Configuration"
-      collapsedSummary={armorConfigSummary}
-    >
-      <div className="grid md:grid-cols-3 gap-6">
+    <CollapsibleSection title="Armor Configuration" collapsedSummary={armorConfigSummary}>
+      <div className="grid gap-6 md:grid-cols-3">
         <div>
-          <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="mb-2 flex items-center justify-between gap-2">
             <label className="text-sm font-medium text-text-secondary">Damage Reduction</label>
             <SectionCostBadge
               ip={itemSectionCosts.damageReduction.totalIP}
@@ -44,12 +41,18 @@ export function ItemCreatorEditorArmor({
               currency={itemSectionCosts.damageReduction.totalCurrency}
             />
           </div>
-          <ValueStepper value={damageReduction} onChange={onDamageReductionChange} min={0} max={10} size="lg" />
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Reduces physical damage taken</p>
+          <ValueStepper
+            value={damageReduction}
+            onChange={onDamageReductionChange}
+            min={0}
+            max={10}
+            size="lg"
+          />
+          <p className="mt-1 text-xs text-text-muted">Reduces physical damage taken</p>
         </div>
 
         <div>
-          <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="mb-2 flex items-center justify-between gap-2">
             <label className="text-sm font-medium text-text-secondary">Agility Reduction</label>
             <SectionCostBadge
               ip={itemSectionCosts.agilityReduction.totalIP}
@@ -57,13 +60,21 @@ export function ItemCreatorEditorArmor({
               currency={itemSectionCosts.agilityReduction.totalCurrency}
             />
           </div>
-          <ValueStepper value={agilityReduction} onChange={onAgilityReductionChange} min={0} max={6} size="lg" />
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Reduces Agility for wearing this armor</p>
+          <ValueStepper
+            value={agilityReduction}
+            onChange={onAgilityReductionChange}
+            min={0}
+            max={6}
+            size="lg"
+          />
+          <p className="mt-1 text-xs text-text-muted">Reduces Agility for wearing this armor</p>
         </div>
 
         <div>
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <label className="text-sm font-medium text-text-secondary">Critical Range Increase</label>
+          <div className="mb-2 flex items-center justify-between gap-2">
+            <label className="text-sm font-medium text-text-secondary">
+              Critical Range Increase
+            </label>
             <SectionCostBadge
               ip={itemSectionCosts.criticalRange.totalIP}
               tp={itemSectionCosts.criticalRange.totalTP}
@@ -77,7 +88,7 @@ export function ItemCreatorEditorArmor({
             max={6}
             size="lg"
           />
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-1">Increases critical hit range</p>
+          <p className="mt-1 text-xs text-text-muted">Increases critical hit range</p>
         </div>
       </div>
     </CollapsibleSection>

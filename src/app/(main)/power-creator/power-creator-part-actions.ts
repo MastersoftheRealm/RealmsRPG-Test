@@ -78,7 +78,9 @@ export function usePowerCreatorPartActions({
 
   const updateAdvancedPart = useCallback(
     (index: number, updates: Partial<AdvancedPart>) => {
-      setSelectedAdvancedParts((prev) => prev.map((ap, i) => (i === index ? { ...ap, ...updates } : ap)));
+      setSelectedAdvancedParts((prev) =>
+        prev.map((ap, i) => (i === index ? { ...ap, ...updates } : ap)),
+      );
     },
     [setSelectedAdvancedParts],
   );

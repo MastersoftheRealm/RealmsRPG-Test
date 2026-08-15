@@ -54,7 +54,7 @@ export const MIN_ARCHETYPE_LEVEL = 2;
 
 export function buildArchetypeRow(
   id: string,
-  payload: SaveArchetypeWithPathInput
+  payload: SaveArchetypeWithPathInput,
 ): Record<string, unknown> {
   return {
     id,
@@ -88,7 +88,7 @@ export function buildArchetypeRow(
 
 export function buildArchetypeLevelRows(
   archetypeId: string,
-  levels: ArchetypeLevelPayload[]
+  levels: ArchetypeLevelPayload[],
 ): Record<string, unknown>[] {
   return levels
     .filter((entry) => Number.isFinite(entry.level) && entry.level >= MIN_ARCHETYPE_LEVEL)
@@ -110,6 +110,8 @@ export function buildArchetypeLevelRows(
 }
 
 /** Level rows restored on rollback keep their original primary keys and timestamps. */
-export function restorableLevelRows(snapshot: Record<string, unknown>[]): Record<string, unknown>[] {
+export function restorableLevelRows(
+  snapshot: Record<string, unknown>[],
+): Record<string, unknown>[] {
   return snapshot.map((row) => ({ ...row }));
 }

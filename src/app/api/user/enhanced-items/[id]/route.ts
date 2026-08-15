@@ -11,10 +11,7 @@ import { validateJson, verifyMutationRequest, enhancedItemPatchSchema } from '@/
 import { apiErrorResponse } from '@/lib/api-error';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -22,10 +19,16 @@ export async function PATCH(
     }
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('enhanced-patch', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('enhanced-patch', {
+        userId: user.uid,
+        ip: resolveClientIp(request.headers),
+      }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const validation = await validateJson(request, enhancedItemPatchSchema);
@@ -63,7 +66,7 @@ export async function PATCH(
         'Failed to update enhanced item',
         500,
         'PATCH /api/user/enhanced-items/[id] (update)',
-        updateErr
+        updateErr,
       );
     }
 
@@ -73,14 +76,14 @@ export async function PATCH(
       'Failed to update enhanced item',
       500,
       'PATCH /api/user/enhanced-items/[id]',
-      err
+      err,
     );
   }
 }
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -92,10 +95,16 @@ export async function DELETE(
     if (denied) return denied;
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('enhanced-del', { userId: user.uid, ip: resolveClientIp(_request.headers) })
+      buildRateLimitKey('enhanced-del', {
+        userId: user.uid,
+        ip: resolveClientIp(_request.headers),
+      }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id } = await params;
@@ -111,7 +120,7 @@ export async function DELETE(
         'Failed to delete enhanced item',
         500,
         'DELETE /api/user/enhanced-items/[id]',
-        delErr
+        delErr,
       );
     }
 
@@ -121,7 +130,7 @@ export async function DELETE(
       'Failed to delete enhanced item',
       500,
       'DELETE /api/user/enhanced-items/[id]',
-      err
+      err,
     );
   }
 }

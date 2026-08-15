@@ -47,18 +47,18 @@ export function CodexSpreadsheetToolbar({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-alt/50 px-4 py-3">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1 rounded border border-border-light bg-surface px-2 py-1.5 min-h-[44px] md:min-h-0">
-          <Search className="w-4 h-4 text-text-muted shrink-0" aria-hidden />
+        <div className="flex min-h-[44px] items-center gap-1 rounded border border-border-light bg-surface px-2 py-1.5 md:min-h-0">
+          <Search className="h-4 w-4 shrink-0 text-text-muted" aria-hidden />
           <input
             type="text"
             value={findValue}
             onChange={(e) => onFindValueChange(e.target.value)}
             placeholder="Find..."
-            className="w-40 bg-transparent text-sm outline-none min-h-[32px]"
+            className="min-h-[32px] w-40 bg-transparent text-sm outline-none"
             aria-label="Find in spreadsheet"
           />
         </div>
-        <label className="flex items-center gap-2 text-xs text-text-secondary cursor-pointer select-none min-h-[44px] md:min-h-0 items-center">
+        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-xs text-text-secondary select-none md:min-h-0">
           <input
             type="checkbox"
             checked={findWholeCell}
@@ -71,7 +71,7 @@ export function CodexSpreadsheetToolbar({
         <select
           value={findLimitToColumn}
           onChange={(e) => onFindLimitToColumnChange(e.target.value)}
-          className="rounded border border-border-light bg-surface px-2 py-1.5 text-sm min-h-[44px] md:min-h-[32px]"
+          className="min-h-[44px] rounded border border-border-light bg-surface px-2 py-1.5 text-sm md:min-h-[32px]"
           aria-label="Limit find/replace to column"
         >
           <option value="">All columns</option>
@@ -83,14 +83,14 @@ export function CodexSpreadsheetToolbar({
         </select>
         {replaceMode ? (
           <>
-            <div className="flex items-center gap-1 rounded border border-border-light bg-surface px-2 py-1.5 min-h-[44px] md:min-h-0">
-              <Replace className="w-4 h-4 text-text-muted shrink-0" aria-hidden />
+            <div className="flex min-h-[44px] items-center gap-1 rounded border border-border-light bg-surface px-2 py-1.5 md:min-h-0">
+              <Replace className="h-4 w-4 shrink-0 text-text-muted" aria-hidden />
               <input
                 type="text"
                 value={replaceValue}
                 onChange={(e) => onReplaceValueChange(e.target.value)}
                 placeholder="Replace with..."
-                className="w-40 bg-transparent text-sm outline-none min-h-[32px]"
+                className="min-h-[32px] w-40 bg-transparent text-sm outline-none"
                 aria-label="Replace with"
               />
             </div>
@@ -126,7 +126,7 @@ export function CodexSpreadsheetToolbar({
             onClick={() => onReplaceModeChange(true)}
             className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0"
           >
-            <Replace className="w-4 h-4 mr-1" /> Replace
+            <Replace className="mr-1 h-4 w-4" /> Replace
           </Button>
         )}
         <Button
@@ -144,7 +144,11 @@ export function CodexSpreadsheetToolbar({
         disabled={saving || !hasDirty}
         className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0"
       >
-        {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+        {saving ? (
+          <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+        ) : (
+          <Save className="mr-1 h-4 w-4" />
+        )}
         Save all changes
       </Button>
     </div>

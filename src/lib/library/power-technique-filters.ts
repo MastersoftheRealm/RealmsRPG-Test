@@ -66,7 +66,9 @@ export interface PowerTechniqueFilterableRow {
 
 /** Normalize display/persisted action labels to ACTION_OPTIONS values. */
 export function normalizeActionTypeFilterKey(actionType?: string | null): string {
-  const raw = String(actionType ?? '').trim().toLowerCase();
+  const raw = String(actionType ?? '')
+    .trim()
+    .toLowerCase();
   if (!raw) return '';
   if (raw === 'long3' || /\blong\s*\(?\s*3\b/.test(raw)) return 'long3';
   if (raw === 'long4' || /\blong\s*\(?\s*4\b/.test(raw)) return 'long4';
@@ -91,7 +93,7 @@ function parseTp(value: number | null | undefined): number | null {
 export function countActivePowerTechniqueFilters(
   filters: PowerTechniqueFilterState,
   kind: PowerTechniqueFilterKind,
-  hasCharacter = false
+  hasCharacter = false,
 ): number {
   let count = 0;
   if (filters.categories.length > 0) count += 1;
@@ -107,10 +109,7 @@ export function countActivePowerTechniqueFilters(
   return count;
 }
 
-function rowMatchesCategories(
-  row: PowerTechniqueFilterableRow,
-  selected: string[]
-): boolean {
+function rowMatchesCategories(row: PowerTechniqueFilterableRow, selected: string[]): boolean {
   if (selected.length === 0) return true;
   const rowCats = (row.categories ?? []).map((c) => c.toLowerCase());
   if (rowCats.length === 0) return false;
@@ -119,22 +118,21 @@ function rowMatchesCategories(
 
 function rowMatchesAction(
   row: PowerTechniqueFilterableRow,
-  filters: PowerTechniqueFilterState
+  filters: PowerTechniqueFilterState,
 ): boolean {
   if (filters.reactionMode === 'action' && row.isReaction === true) return false;
   if (filters.reactionMode === 'reaction' && row.isReaction !== true) return false;
 
   if (filters.actionTypes.length === 0) return true;
   const key =
-    normalizeActionTypeFilterKey(row.actionTypeRaw) ||
-    normalizeActionTypeFilterKey(row.action);
+    normalizeActionTypeFilterKey(row.actionTypeRaw) || normalizeActionTypeFilterKey(row.action);
   if (!key) return false;
   return filters.actionTypes.includes(key);
 }
 
 function effectiveEnergyMax(
   filters: PowerTechniqueFilterState,
-  character?: PowerTechniqueCharacterContext | null
+  character?: PowerTechniqueCharacterContext | null,
 ): number | null {
   const manual = filters.energyMax;
   if (!character) return manual;
@@ -144,7 +142,7 @@ function effectiveEnergyMax(
 
 function effectiveInnateThreshold(
   filters: PowerTechniqueFilterState,
-  character?: PowerTechniqueCharacterContext | null
+  character?: PowerTechniqueCharacterContext | null,
 ): number | null {
   if (character && filters.innateEligibleOnly && character.innateThreshold > 0) {
     return character.innateThreshold;
@@ -152,10 +150,7 @@ function effectiveInnateThreshold(
   return filters.innateThreshold;
 }
 
-function rowMatchesEnergy(
-  row: PowerTechniqueFilterableRow,
-  energyMax: number | null
-): boolean {
+function rowMatchesEnergy(row: PowerTechniqueFilterableRow, energyMax: number | null): boolean {
   if (energyMax == null) return true;
   const energy = parseEnergy(row.energy);
   if (energy == null) return false;
@@ -165,7 +160,7 @@ function rowMatchesEnergy(
 function rowMatchesTp(
   row: PowerTechniqueFilterableRow,
   filters: PowerTechniqueFilterState,
-  character?: PowerTechniqueCharacterContext | null
+  character?: PowerTechniqueCharacterContext | null,
 ): boolean {
   const tp = parseTp(row.tp);
   if (filters.tpMax != null) {
@@ -199,7 +194,7 @@ export function applyPowerTechniqueFilters<T extends PowerTechniqueFilterableRow
   rows: T[],
   filters: PowerTechniqueFilterState,
   kind: PowerTechniqueFilterKind,
-  character?: PowerTechniqueCharacterContext | null
+  character?: PowerTechniqueCharacterContext | null,
 ): T[] {
   const energyMax = effectiveEnergyMax(filters, character);
   const innateThreshold = effectiveInnateThreshold(filters, character);
@@ -225,7 +220,7 @@ export function applyPowerTechniqueFilters<T extends PowerTechniqueFilterableRow
  */
 export function withInnateThresholdSelected(
   prev: PowerTechniqueFilterState,
-  thresholdValue: string
+  thresholdValue: string,
 ): PowerTechniqueFilterState {
   if (!thresholdValue) {
     return { ...prev, innateThreshold: null };
@@ -246,7 +241,7 @@ export function withInnateThresholdSelected(
  */
 export function withCharacterContextApplied(
   prev: PowerTechniqueFilterState,
-  character: PowerTechniqueCharacterContext | null
+  character: PowerTechniqueCharacterContext | null,
 ): PowerTechniqueFilterState {
   if (!character) {
     return { ...prev, affordableTpOnly: false };

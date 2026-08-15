@@ -25,20 +25,15 @@ describe('skill-allocation-add', () => {
   });
 
   it('applyAddedSubSkills auto-adds base and sub at value 1', () => {
-    const next = applyAddedSubSkills(
-      {},
-      [{ ...subSkill, autoAddBaseSkill: baseSkill }]
-    );
+    const next = applyAddedSubSkills({}, [{ ...subSkill, autoAddBaseSkill: baseSkill }]);
     expect(next['10']).toBe(0);
     expect(next['11']).toBe(1);
   });
 
   it('buildCharacterSkillsForSubModal lists base skills on character', () => {
-    const rows = buildCharacterSkillsForSubModal(
-      [baseSkill, subSkill],
-      new Set(['10']),
-      { '10': 0 }
-    );
+    const rows = buildCharacterSkillsForSubModal([baseSkill, subSkill], new Set(['10']), {
+      '10': 0,
+    });
     expect(rows).toEqual([{ id: '10', name: 'Athletics', prof: true }]);
   });
 

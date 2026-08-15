@@ -85,7 +85,7 @@ export function GridListRowExpandedBody({
         // collapsed grid). External SelectionToggle is a sibling column — no mr needed
         // (TASK-702). Callers pass selectable={inlineSelectable} from GridListRow.
         selectable && 'mr-10',
-        isRowClickable && 'cursor-pointer'
+        isRowClickable && 'cursor-pointer',
       )}
       onClick={isRowClickable ? handleRowBodyClickWithGuard : undefined}
     >
@@ -96,22 +96,22 @@ export function GridListRowExpandedBody({
         <>
           {/* Description - equal margin above/below for consistent item card spacing */}
           {descTrimmed && (
-            <p className="text-text-secondary text-sm mb-3 p-3 bg-surface rounded-lg">
+            <p className="mb-3 rounded-lg bg-surface p-3 text-sm text-text-secondary">
               {description}
             </p>
           )}
 
           {/* Warning message */}
           {warningMessage && (
-            <p className="text-xs text-warning-fg mb-3 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" />
+            <p className="mb-3 flex items-center gap-1 text-xs text-warning-fg">
+              <AlertCircle className="h-3 w-3" />
               {warningMessage}
             </p>
           )}
 
           {/* Badges */}
           {badges.length > 0 && (
-            <div className="flex flex-wrap gap-2 mb-3">
+            <div className="mb-3 flex flex-wrap gap-2">
               {badges.map((badge, i) => (
                 <DescriptorChip key={i} variant={descriptorChipVariantForBadgeColor(badge.color)}>
                   {badge.label}
@@ -122,16 +122,14 @@ export function GridListRowExpandedBody({
 
           {/* Numeric / stat columns on mobile (description body renders above) */}
           {gridColumns && expandedMobileStatColumns.length > 0 && (
-            <div className="lg:hidden grid grid-cols-2 gap-2 mb-4 text-sm">
+            <div className="mb-4 grid grid-cols-2 gap-2 text-sm lg:hidden">
               {expandedMobileStatColumns.map((col) => (
                 <div key={col.key} className="flex items-center gap-2">
-                  <span className="text-text-muted dark:text-text-secondary">
-                    {columnDisplayLabel(col)}:
-                  </span>
+                  <span className="text-text-muted">{columnDisplayLabel(col)}:</span>
                   <span
                     className={cn(
                       'font-medium text-text-primary',
-                      col.highlight && 'text-primary-link-fg'
+                      col.highlight && 'text-primary-link-fg',
                     )}
                   >
                     {col.value ?? '-'}
@@ -143,7 +141,7 @@ export function GridListRowExpandedBody({
 
           {/* Total Cost */}
           {totalCost !== undefined && totalCost > 0 && (
-            <div className="flex items-center gap-2 mb-4">
+            <div className="mb-4 flex items-center gap-2">
               <DescriptorChip variant="listCost">
                 Total {costLabel}: {formatCostDisplay(totalCost)}
               </DescriptorChip>
@@ -151,11 +149,7 @@ export function GridListRowExpandedBody({
           )}
 
           {/* Requirements - legacy raw content; prefer detailSections for structured display */}
-          {requirements && !hasDetailSections && (
-            <div className="mb-4 text-sm">
-              {requirements}
-            </div>
-          )}
+          {requirements && !hasDetailSections && <div className="mb-4 text-sm">{requirements}</div>}
 
           {/* Detail sections (+ legacy chips normalized above) */}
           {expandedDetailSections.map((section, sectionIdx) => {
@@ -167,11 +161,8 @@ export function GridListRowExpandedBody({
               .reduce((sum, s) => sum + s.chips.length, 0);
             const collapsible = isPartsOrPropertiesProficienciesSection(section);
             const sectionKey = `detail-${sectionIdx}`;
-            const sectionOpen = collapsible
-              ? (openDetailSections[sectionKey] ?? false)
-              : true;
-            const helpKey =
-              section.labelHelpKey ?? helpKeyForPartsOrPropertiesLabel(section.label);
+            const sectionOpen = collapsible ? (openDetailSections[sectionKey] ?? false) : true;
+            const helpKey = section.labelHelpKey ?? helpKeyForPartsOrPropertiesLabel(section.label);
             const helpContent = helpKey ? partsPropertiesHelpContent(helpKey) : null;
             return (
               <div key={sectionIdx} className={cn('space-y-3', sectionIdx > 0 && 'mt-4')}>
@@ -190,7 +181,7 @@ export function GridListRowExpandedBody({
                   />
                 )}
                 {sectionOpen && (
-                  <div data-chip-group className="flex flex-wrap gap-2 items-start">
+                  <div data-chip-group className="flex flex-wrap items-start gap-2">
                     {sectionChips.map((chip, chipIdx) => {
                       const index = sectionOffset + chipIdx;
                       return (
@@ -217,14 +208,17 @@ export function GridListRowExpandedBody({
 
           {/* Action Buttons (Edit, Duplicate, Add to library - Delete is inline X in row) */}
           {showActions && (
-            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-border-light">
+            <div className="mt-4 flex items-center gap-2 border-t border-border-light pt-4">
               {onAddToLibrary && (
                 <Button
                   variant="primary"
                   size="sm"
-                  onClick={(e) => { e.stopPropagation(); onAddToLibrary(); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAddToLibrary();
+                  }}
                 >
-                  <BookPlus className="w-4 h-4" />
+                  <BookPlus className="h-4 w-4" />
                   Add to my library
                 </Button>
               )}
@@ -232,9 +226,12 @@ export function GridListRowExpandedBody({
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={(e) => { e.stopPropagation(); onEdit(); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onEdit();
+                  }}
                 >
-                  <Edit className="w-4 h-4" />
+                  <Edit className="h-4 w-4" />
                   Edit
                 </Button>
               )}
@@ -242,9 +239,12 @@ export function GridListRowExpandedBody({
                 <Button
                   variant="secondary"
                   size="sm"
-                  onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDuplicate();
+                  }}
                 >
-                  <Copy className="w-4 h-4" />
+                  <Copy className="h-4 w-4" />
                   Duplicate
                 </Button>
               )}
@@ -271,8 +271,8 @@ export function GridListRowMobileSummary({
   return (
     <div
       className={cn(
-        'lg:hidden px-4 pb-2 flex flex-wrap gap-2 text-xs text-text-secondary',
-        isRowClickable && 'cursor-pointer'
+        'flex flex-wrap gap-2 px-4 pb-2 text-xs text-text-secondary lg:hidden',
+        isRowClickable && 'cursor-pointer',
       )}
       onClick={isRowClickable ? handleRowBodyClickWithGuard : undefined}
     >
@@ -284,22 +284,20 @@ export function GridListRowMobileSummary({
               className={cn(
                 'w-full min-w-0 text-text-secondary',
                 col.className,
-                col.highlight && 'text-primary-link-fg font-medium'
+                col.highlight && 'font-medium text-primary-link-fg',
               )}
             >
               {col.value}
             </div>
           ) : (
             <span key={col.key} className="flex items-center gap-1">
-              <span className="text-text-muted dark:text-text-secondary">
-                {columnDisplayLabel(col)}:
-              </span>
-              <span className={cn(col.highlight && 'text-primary-link-fg font-medium')}>
+              <span className="text-text-muted">{columnDisplayLabel(col)}:</span>
+              <span className={cn(col.highlight && 'font-medium text-primary-link-fg')}>
                 {col.value}
               </span>
             </span>
           )
-        ) : null
+        ) : null,
       )}
     </div>
   );

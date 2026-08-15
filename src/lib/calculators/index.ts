@@ -5,7 +5,16 @@
  */
 
 // Re-export shared ID constants and utilities
-export { PART_IDS, PROPERTY_IDS, GENERAL_PROPERTY_IDS, GENERAL_PROPERTY_NAMES, findByIdOrName, findByIdOrNameValue, normalizeRef, normalizeRefsArray } from '@/lib/id-constants';
+export {
+  PART_IDS,
+  PROPERTY_IDS,
+  GENERAL_PROPERTY_IDS,
+  GENERAL_PROPERTY_NAMES,
+  findByIdOrName,
+  findByIdOrNameValue,
+  normalizeRef,
+  normalizeRefsArray,
+} from '@/lib/id-constants';
 export type { HasIdAndName } from '@/lib/id-constants';
 
 // Unified Mechanic Builder (shared by Power, Technique, and future Empowered Technique creators)

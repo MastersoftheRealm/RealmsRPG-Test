@@ -77,11 +77,14 @@ describe('codex read/write column parity', () => {
     expect(response.status).toBe(200);
   });
 
-  it.each(WRITE_TARGETS)('$table exposes every writable column through /api/codex', ({ table, columns }) => {
-    const readColumns = columnReads.get(table) ?? new Set<string>();
-    const writeOnly = columns.filter((column) => !readColumns.has(column));
-    expect(writeOnly).toEqual([]);
-  });
+  it.each(WRITE_TARGETS)(
+    '$table exposes every writable column through /api/codex',
+    ({ table, columns }) => {
+      const readColumns = columnReads.get(table) ?? new Set<string>();
+      const writeOnly = columns.filter((column) => !readColumns.has(column));
+      expect(writeOnly).toEqual([]);
+    },
+  );
 
   it('covers every columnar collection', () => {
     const covered = new Set(WRITE_TARGETS.map((target) => target.table));

@@ -71,7 +71,11 @@ export function calculateCreatureCreatorStats(
   const hePool = calculateHealthEnergyPool(level, 'CREATURE', true, rules);
   const proficiency = calculateProficiency(level, true, rules);
   const abilityPoints = calculateAbilityPoints(level, true, rules);
-  const skillPoints = calculateSkillPointsForEntity(Math.max(1, Math.floor(level)), 'creature', rules);
+  const skillPoints = calculateSkillPointsForEntity(
+    Math.max(1, Math.floor(level)),
+    'creature',
+    rules,
+  );
 
   const maxProficiencyPoints = proficiency;
   const proficiencySpent = creature.powerProficiency + creature.martialProficiency;
@@ -122,12 +126,14 @@ export function calculateCreatureCreatorStats(
   const featSpent = manualFeatSpent + mechanicalFeatPoints;
   const trainingSpent =
     creature.powers.reduce(
-      (sum, power) => sum + (typeof power.tp === 'number' && Number.isFinite(power.tp) ? power.tp : 0),
+      (sum, power) =>
+        sum + (typeof power.tp === 'number' && Number.isFinite(power.tp) ? power.tp : 0),
       0,
     ) +
     creature.techniques.reduce(
       (sum, technique) =>
-        sum + (typeof technique.tp === 'number' && Number.isFinite(technique.tp) ? technique.tp : 0),
+        sum +
+        (typeof technique.tp === 'number' && Number.isFinite(technique.tp) ? technique.tp : 0),
       0,
     ) +
     creature.armaments.reduce(
@@ -137,7 +143,10 @@ export function calculateCreatureCreatorStats(
     );
   const currencySpent = creature.armaments.reduce(
     (sum, armament) =>
-      sum + (typeof armament.currency === 'number' && Number.isFinite(armament.currency) ? armament.currency : 0),
+      sum +
+      (typeof armament.currency === 'number' && Number.isFinite(armament.currency)
+        ? armament.currency
+        : 0),
     0,
   );
 
@@ -162,7 +171,7 @@ export function calculateCreatureCreatorStats(
   }, 0);
   const defenseSpent = Object.values(creature.defenses).reduce(
     (sum, val) => sum + val * DEFENSE_INCREASE_COST,
-    0
+    0,
   );
 
   return {

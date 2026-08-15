@@ -11,7 +11,7 @@ import type { GuidedDraft } from '@/stores/guided-creator-store';
 export type CreatorEntryMode = 'guided' | 'custom';
 
 export function prefersDeepCatalogEntry(
-  draft: Pick<GuidedDraft, 'creatorEntryMode' | 'archetypePathId'>
+  draft: Pick<GuidedDraft, 'creatorEntryMode' | 'archetypePathId'>,
 ): boolean {
   return draft.creatorEntryMode === 'custom' && !draft.archetypePathId;
 }
@@ -32,7 +32,7 @@ export function canContinueGuidedAbilitiesStep(args: {
 
 function sameAbilityScores(a: Abilities, b: Abilities): boolean {
   return (Object.keys(DEFAULT_ABILITIES) as Array<keyof Abilities>).every(
-    (key) => (a[key] ?? 0) === (b[key] ?? 0)
+    (key) => (a[key] ?? 0) === (b[key] ?? 0),
   );
 }
 

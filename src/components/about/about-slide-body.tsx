@@ -40,13 +40,7 @@ const ICONS: Record<Exclude<AboutIconKey, 'discord'>, LucideIcon> = {
   zap: Zap,
 };
 
-function InlineRuns({
-  parts,
-  emphasizeLinks,
-}: {
-  parts: AboutInline[];
-  emphasizeLinks?: boolean;
-}) {
+function InlineRuns({ parts, emphasizeLinks }: { parts: AboutInline[]; emphasizeLinks?: boolean }) {
   return (
     <>
       {parts.map((part, i) => {
@@ -60,7 +54,7 @@ function InlineRuns({
         }
         const linkClass = cn(
           'text-primary-link-fg hover:underline',
-          (part.medium || emphasizeLinks) && 'font-medium'
+          (part.medium || emphasizeLinks) && 'font-medium',
         );
         if (emphasizeLinks) {
           return (
@@ -89,13 +83,7 @@ function CtaIcon({ icon, className }: { icon: AboutIconKey; className?: string }
   return <Icon className={className} />;
 }
 
-function CtaRow({
-  ctas,
-  compact,
-}: {
-  ctas: AboutCta[];
-  compact?: boolean;
-}) {
+function CtaRow({ ctas, compact }: { ctas: AboutCta[]; compact?: boolean }) {
   return (
     <div className={cn('flex flex-wrap gap-4', compact ? 'mt-4 gap-3' : 'mt-6')}>
       {ctas.map((cta) => {
@@ -129,13 +117,7 @@ function CtaRow({
   );
 }
 
-export function AboutSlideBodyView({
-  body,
-  compact,
-}: {
-  body: AboutSlideBody;
-  compact?: boolean;
-}) {
+export function AboutSlideBodyView({ body, compact }: { body: AboutSlideBody; compact?: boolean }) {
   const pClass = compact
     ? 'text-base text-text-secondary leading-relaxed mb-4'
     : 'text-lg text-text-secondary leading-relaxed mb-4';
@@ -148,7 +130,11 @@ export function AboutSlideBodyView({
       {body.paragraphs.map((para, i) => (
         <p
           key={i}
-          className={cn(pClass, para.italic && 'italic', i === body.paragraphs.length - 1 && !body.list && !body.ctas && 'mb-0')}
+          className={cn(
+            pClass,
+            para.italic && 'italic',
+            i === body.paragraphs.length - 1 && !body.list && !body.ctas && 'mb-0',
+          )}
         >
           <InlineRuns parts={para.parts} />
         </p>
@@ -160,7 +146,7 @@ export function AboutSlideBodyView({
             return (
               <li key={i} className={cn('flex items-start', itemGap)}>
                 <Icon
-                  className={cn(iconSize, 'text-primary-link-fg flex-shrink-0 mt-0.5')}
+                  className={cn(iconSize, 'mt-0.5 flex-shrink-0 text-primary-link-fg')}
                   aria-hidden
                 />
                 <span>

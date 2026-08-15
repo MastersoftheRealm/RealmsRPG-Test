@@ -84,7 +84,7 @@ describe('create idempotency key (TASK-738)', () => {
     const existing = '11111111-2222-4333-8444-555555555555';
     expect(resolveClientRequestId(existing)).toBe(existing);
     expect(resolveClientRequestId('not-a-uuid')).toMatch(
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i,
     );
   });
 
@@ -108,7 +108,7 @@ describe('formatCharacterCreateFailureMessage (TASK-754)', () => {
   it('keeps the 400 legality message (violation list), without the duplicate hint', () => {
     const err = new ApiError(
       'Character is not a legal level 1 build: Ability points spent (9) exceed the level 1 budget (7).',
-      400
+      400,
     );
     const message = formatCharacterCreateFailureMessage(err, copy);
     expect(message).toContain('Ability points spent');
@@ -128,16 +128,16 @@ describe('formatCharacterCreateFailureMessage (TASK-754)', () => {
   it('keeps player-facing 403 quota copy', () => {
     const err = new ApiError('You have reached the character limit for your role.', 403);
     expect(formatCharacterCreateFailureMessage(err, copy)).toBe(
-      'You have reached the character limit for your role.'
+      'You have reached the character limit for your role.',
     );
   });
 
   it('appends the My Characters hint only when the POST may already have a row', () => {
     expect(formatCharacterCreateFailureMessage(new TypeError('Failed to fetch'), copy)).toBe(
-      `${copy.saveFailed} ${copy.saveRetryHint}`
+      `${copy.saveFailed} ${copy.saveRetryHint}`,
     );
     expect(
-      formatCharacterCreateFailureMessage({ name: 'AbortError', message: 'aborted' }, copy)
+      formatCharacterCreateFailureMessage({ name: 'AbortError', message: 'aborted' }, copy),
     ).toBe(`${copy.saveFailed} ${copy.saveRetryHint}`);
   });
 });

@@ -46,7 +46,10 @@ import {
   powersTechniquesL2Headers,
 } from '@/lib/guided-creator/powers-techniques-l2';
 import { getPowersTechniquesL1Ids } from '@/lib/guided-creator/powers-techniques-l1-candidates';
-import { buildLookup, resolveLibraryItem } from '@/lib/guided-creator/powers-techniques-step-helpers';
+import {
+  buildLookup,
+  resolveLibraryItem,
+} from '@/lib/guided-creator/powers-techniques-step-helpers';
 import { combineGuidedTpBudgets } from '@/lib/guided-creator/loadout-tp';
 import {
   calculateGuidedL1TheoreticalMaxEnergy,
@@ -84,19 +87,13 @@ const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
 type L2ModalKind = 'regular' | 'innate' | null;
 
 export function PowersTechniquesStep() {
-  const {
-    draft,
-    updateDraft,
-    navigationIntent,
-    entryNonce,
-    nextSubStep,
-    prevSubStep,
-  } = useGuidedCreatorStore();
+  const { draft, updateDraft, navigationIntent, entryNonce, nextSubStep, prevSubStep } =
+    useGuidedCreatorStore();
   const { pathData } = useGuidedPathData();
 
   const visibility = useMemo(
     () => resolvePowersPhaseVisibility(draft.archetypeType),
-    [draft.archetypeType]
+    [draft.archetypeType],
   );
   const visiblePhases = useMemo(() => visiblePowersPhases(visibility), [visibility]);
   const powersPhase = visiblePhases.includes(draft.powersPhase)
@@ -111,13 +108,13 @@ export function PowersTechniquesStep() {
 
   const [l2Modal, setL2Modal] = useState<L2ModalKind>(null);
   const [ptFilters, setPtFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS
+    EMPTY_POWER_TECHNIQUE_FILTERS,
   );
   const [ptFiltersExpanded, setPtFiltersExpanded] = useState(false);
 
   const isInlineCatalog = prefersDeepCatalogEntry(draft);
   const [librarySource, setLibrarySource] = useState<SourceFilterValue>(
-    isInlineCatalog ? 'all' : 'public'
+    isInlineCatalog ? 'all' : 'public',
   );
 
   const { data: officialPowers = [], isLoading: powersLoading } = useOfficialLibrary('powers', {
@@ -125,7 +122,7 @@ export function PowersTechniquesStep() {
   });
   const { data: officialTechniques = [], isLoading: techniquesLoading } = useOfficialLibrary(
     'techniques',
-    { enabled: needsTechniques }
+    { enabled: needsTechniques },
   );
   const { data: userPowers = [], isLoading: userPowersLoading } = useUserPowers({
     enabled: needsPowers,
@@ -135,11 +132,7 @@ export function PowersTechniquesStep() {
   });
   const { data: officialItems = [] } = useOfficialLibrary('items');
   const { data: codexEquipment = [] } = useEquipment();
-  const { tpSummary: loadoutTp } = useGuidedEquipmentCatalog(
-    draft,
-    officialItems,
-    codexEquipment
-  );
+  const { tpSummary: loadoutTp } = useGuidedEquipmentCatalog(draft, officialItems, codexEquipment);
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
 
@@ -149,23 +142,16 @@ export function PowersTechniquesStep() {
 
   const powerLibraryItems = useMemo(
     () =>
-      mergeLibraryBySource(
-        librarySource,
-        officialPowers,
-        userPowers,
-        [...draft.powerIds, ...draft.innatePowerIds]
-      ),
-    [librarySource, officialPowers, userPowers, draft.powerIds, draft.innatePowerIds]
+      mergeLibraryBySource(librarySource, officialPowers, userPowers, [
+        ...draft.powerIds,
+        ...draft.innatePowerIds,
+      ]),
+    [librarySource, officialPowers, userPowers, draft.powerIds, draft.innatePowerIds],
   );
   const techniqueLibraryItems = useMemo(
     () =>
-      mergeLibraryBySource(
-        librarySource,
-        officialTechniques,
-        userTechniques,
-        draft.techniqueIds
-      ),
-    [librarySource, officialTechniques, userTechniques, draft.techniqueIds]
+      mergeLibraryBySource(librarySource, officialTechniques, userTechniques, draft.techniqueIds),
+    [librarySource, officialTechniques, userTechniques, draft.techniqueIds],
   );
   const libraryItems = isTechniques ? techniqueLibraryItems : powerLibraryItems;
 
@@ -212,26 +198,24 @@ export function PowersTechniquesStep() {
   const { rules } = useGameRules();
   const ptCategoryOptions = useMemo(
     () =>
-      collectCategoryOptionsFromItems(libraryItems, isTechniques ? techniquePartsDb : powerPartsDb, {
-        includeDamageCategory: !isTechniques,
-      }),
-    [libraryItems, isTechniques, techniquePartsDb, powerPartsDb]
+      collectCategoryOptionsFromItems(
+        libraryItems,
+        isTechniques ? techniquePartsDb : powerPartsDb,
+        {
+          includeDamageCategory: !isTechniques,
+        },
+      ),
+    [libraryItems, isTechniques, techniquePartsDb, powerPartsDb],
   );
-  const innateThresholdOptions = useMemo(
-    () => listInnateThresholdFilterOptions(rules),
-    [rules]
-  );
+  const innateThresholdOptions = useMemo(() => listInnateThresholdFilterOptions(rules), [rules]);
   const ptFilterActiveCount =
-    countActivePowerTechniqueFilters(
-      ptFilters,
-      isTechniques ? 'technique' : 'power',
-      false
-    ) + (inlinePathFilterActive ? 1 : 0);
+    countActivePowerTechniqueFilters(ptFilters, isTechniques ? 'technique' : 'power', false) +
+    (inlinePathFilterActive ? 1 : 0);
 
   const powerLookup = useMemo(() => buildLookup(powerLibraryItems), [powerLibraryItems]);
   const techniqueLookup = useMemo(
     () => buildLookup(techniqueLibraryItems),
-    [techniqueLibraryItems]
+    [techniqueLibraryItems],
   );
   const lookup = isTechniques ? techniqueLookup : powerLookup;
 
@@ -261,9 +245,9 @@ export function PowersTechniquesStep() {
   const groups = useMemo(
     () =>
       pathData?.level1?.guidance_groups?.filter((g) =>
-        isTechniques ? g.techniques?.length : g.powers?.length
+        isTechniques ? g.techniques?.length : g.powers?.length,
       ) ?? [],
-    [pathData, isTechniques]
+    [pathData, isTechniques],
   );
 
   const allOptionIds = useMemo(() => {
@@ -286,18 +270,17 @@ export function PowersTechniquesStep() {
       const canonical = String(raw.id ?? raw.name ?? '').trim();
       return canonical || undefined;
     },
-    [lookup]
+    [lookup],
   );
 
   const { displayIds: l1DisplayIds, promotedIds } = useMemo(
     () => getPowersTechniquesL1Ids(allOptionIds, selectedIds, resolveCanonicalId),
-    [allOptionIds, selectedIds, resolveCanonicalId]
+    [allOptionIds, selectedIds, resolveCanonicalId],
   );
 
   const { displayIds: innateDisplayIds, promotedIds: innatePromotedIds } = useMemo(
-    () =>
-      getPowersTechniquesL1Ids(innateRecommendedIds, selectedInnateIds, resolveCanonicalId),
-    [innateRecommendedIds, selectedInnateIds, resolveCanonicalId]
+    () => getPowersTechniquesL1Ids(innateRecommendedIds, selectedInnateIds, resolveCanonicalId),
+    [innateRecommendedIds, selectedInnateIds, resolveCanonicalId],
   );
 
   const showPathDescriptor = promotedIds.length > 0 && groups.length === 0;
@@ -307,7 +290,7 @@ export function PowersTechniquesStep() {
       const raw = resolveLibraryItem(id, lookup);
       return resolvePowerTechniqueTpCost(kind, raw, powerPartsDb, techniquePartsDb);
     },
-    [lookup, kind, techniquePartsDb, powerPartsDb]
+    [lookup, kind, techniquePartsDb, powerPartsDb],
   );
 
   const resolveEnergy = useCallback(
@@ -315,7 +298,7 @@ export function PowersTechniquesStep() {
       const raw = resolveLibraryItem(id, powerLookup);
       return resolvePowerTechniqueEnergy('powers', raw, powerPartsDb, techniquePartsDb);
     },
-    [powerLookup, powerPartsDb, techniquePartsDb]
+    [powerLookup, powerPartsDb, techniquePartsDb],
   );
 
   const powerTpSpent = useMemo(
@@ -324,18 +307,16 @@ export function PowersTechniquesStep() {
         const raw = resolveLibraryItem(id, powerLookup);
         return sum + resolvePowerTechniqueTpCost('powers', raw, powerPartsDb, techniquePartsDb);
       }, 0),
-    [draft.powerIds, powerLookup, powerPartsDb, techniquePartsDb]
+    [draft.powerIds, powerLookup, powerPartsDb, techniquePartsDb],
   );
 
   const techniqueTpSpent = useMemo(
     () =>
       draft.techniqueIds.reduce((sum, id) => {
         const raw = resolveLibraryItem(id, techniqueLookup);
-        return (
-          sum + resolvePowerTechniqueTpCost('techniques', raw, powerPartsDb, techniquePartsDb)
-        );
+        return sum + resolvePowerTechniqueTpCost('techniques', raw, powerPartsDb, techniquePartsDb);
       }, 0),
-    [draft.techniqueIds, techniqueLookup, powerPartsDb, techniquePartsDb]
+    [draft.techniqueIds, techniqueLookup, powerPartsDb, techniquePartsDb],
   );
 
   const innateTpSpent = useMemo(
@@ -346,19 +327,17 @@ export function PowersTechniquesStep() {
             return sum + resolvePowerTechniqueTpCost('powers', raw, powerPartsDb, techniquePartsDb);
           }, 0)
         : 0,
-    [showInnateTrack, selectedInnateIds, powerLookup, powerPartsDb, techniquePartsDb]
+    [showInnateTrack, selectedInnateIds, powerLookup, powerPartsDb, techniquePartsDb],
   );
 
   const regularTpSpent = isTechniques ? techniqueTpSpent : powerTpSpent;
-  const siblingTpSpent = isTechniques
-    ? powerTpSpent + innateTpSpent
-    : techniqueTpSpent;
+  const siblingTpSpent = isTechniques ? powerTpSpent + innateTpSpent : techniqueTpSpent;
 
   const combatTpSpent = powerTpSpent + techniqueTpSpent + innateTpSpent;
 
   const tpBudget = useMemo(
     () => combineGuidedTpBudgets(loadoutTp, combatTpSpent),
-    [loadoutTp, combatTpSpent]
+    [loadoutTp, combatTpSpent],
   );
 
   const innateEnergySpent = useMemo(
@@ -367,7 +346,7 @@ export function PowersTechniquesStep() {
         const energy = resolveEnergy(id);
         return sum + (energy != null ? energy : 0);
       }, 0),
-    [selectedInnateIds, resolveEnergy]
+    [selectedInnateIds, resolveEnergy],
   );
 
   const innateRemaining = innateEnergyMax - innateEnergySpent;
@@ -406,13 +385,7 @@ export function PowersTechniquesStep() {
   const resolveDisplay = useCallback(
     (id: string) => {
       const raw = resolveLibraryItem(id, lookup);
-      const facts = buildPowerTechniqueCardFacts(
-        kind,
-        raw,
-        id,
-        powerPartsDb,
-        techniquePartsDb
-      );
+      const facts = buildPowerTechniqueCardFacts(kind, raw, id, powerPartsDb, techniquePartsDb);
       return {
         id: String(id),
         name: facts.name,
@@ -422,14 +395,14 @@ export function PowersTechniquesStep() {
         tpCost: facts.tpCost,
       };
     },
-    [lookup, kind, techniquePartsDb, powerPartsDb]
+    [lookup, kind, techniquePartsDb, powerPartsDb],
   );
 
   const innateSoftWarn = isInnatePhase && innateEnergyMax > 0 && innateRemaining !== 0;
 
   const regularUnavailableReason = useCallback(
     (id: string): string | undefined => (isRegularUnavailable(id) ? ptCopy.tpBlocked : undefined),
-    [isRegularUnavailable]
+    [isRegularUnavailable],
   );
 
   const energyInput = useMemo(
@@ -440,12 +413,12 @@ export function PowersTechniquesStep() {
       abilities: draft.abilities,
       level: 1,
     }),
-    [isTechniques, draft.pow_abil, draft.mart_abil, draft.abilities]
+    [isTechniques, draft.pow_abil, draft.mart_abil, draft.abilities],
   );
 
   const theoreticalMaxEnergy = useMemo(
     () => calculateGuidedL1TheoreticalMaxEnergy(energyInput),
-    [energyInput]
+    [energyInput],
   );
 
   const catalogMaxEnergy = theoreticalMaxEnergy ?? GUIDED_L2_ENERGY_FALLBACK_MAX;
@@ -532,7 +505,7 @@ export function PowersTechniquesStep() {
   const inlineSelectedIdSet = useMemo(() => new Set(selectedIds.map(String)), [selectedIds]);
   const inlineSelectedInnateIdSet = useMemo(
     () => new Set(selectedInnateIds.map(String)),
-    [selectedInnateIds]
+    [selectedInnateIds],
   );
 
   const showInnateEnergyBar = isInnatePhase && innateEnergyMax > 0;
@@ -565,7 +538,7 @@ export function PowersTechniquesStep() {
     (ids: string[]) => {
       confirmL2Selection(ids, l2Modal);
     },
-    [confirmL2Selection, l2Modal]
+    [confirmL2Selection, l2Modal],
   );
 
   const handleBack = useCallback(() => {
@@ -587,11 +560,12 @@ export function PowersTechniquesStep() {
   }, [powersPhase, visibility, updateDraft, nextSubStep]);
 
   const nextPhase = nextPowersPhase(powersPhase, visibility);
-  const continueLabel = nextPhase === 'powers'
-    ? ptCopy.continueToPowers
-    : nextPhase === 'techniques'
-      ? ptCopy.continueToTechniques
-      : GUIDED_CREATOR_COPY.steps.skills.continueLabel;
+  const continueLabel =
+    nextPhase === 'powers'
+      ? ptCopy.continueToPowers
+      : nextPhase === 'techniques'
+        ? ptCopy.continueToTechniques
+        : GUIDED_CREATOR_COPY.steps.skills.continueLabel;
 
   const phaseIdx = powersPhaseIndex(powersPhase, visibility);
   const phaseTitle =
@@ -641,12 +615,12 @@ export function PowersTechniquesStep() {
           {budgetBar}
 
           {budgetMessage ? (
-            <p className="font-nunito text-sm text-warning-fg text-center" role="status">
+            <p className="text-center font-nunito text-sm text-warning-fg" role="status">
               {budgetMessage}
             </p>
           ) : null}
 
-          <p className="font-nunito text-sm text-text-secondary text-center">
+          <p className="text-center font-nunito text-sm text-text-secondary">
             {ptCopy.maxEnergyHint(catalogMaxEnergy)}
           </p>
 
@@ -719,7 +693,7 @@ export function PowersTechniquesStep() {
           {budgetBar}
 
           {budgetMessage ? (
-            <p className="font-nunito text-sm text-warning-fg text-center" role="status">
+            <p className="text-center font-nunito text-sm text-warning-fg" role="status">
               {budgetMessage}
             </p>
           ) : null}
@@ -771,9 +745,7 @@ export function PowersTechniquesStep() {
           autoSelectPathType={draft.archetypeType}
           onClose={() => setL2Modal(null)}
           onConfirm={onL2Confirm}
-          scopeExtra={
-            <SourceFilter value={librarySource} onChange={setLibrarySource} />
-          }
+          scopeExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
         />
       ) : null}
     </GuidedStepLayout>

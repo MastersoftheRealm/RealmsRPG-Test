@@ -68,7 +68,7 @@ describe('deriveItemDisplay damage', () => {
   it('formats typed dice+type rows through formatDamageDisplay', () => {
     const display = deriveItemDisplay(
       { name: 'Greatsword', damage: [{ amount: 1, size: 8, type: 'slashing' }] },
-      []
+      [],
     );
     expect(display.damage).toBe('1d8 Slashing');
   });
@@ -81,7 +81,7 @@ describe('deriveItemDisplay damage', () => {
         name: 'Longbow',
         properties: [{ id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 }],
       },
-      []
+      [],
     );
     expect(ranged.range).toBe('16 spaces');
   });

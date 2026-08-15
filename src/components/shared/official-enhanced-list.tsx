@@ -47,7 +47,7 @@ export function OfficialEnhancedList({
   errorMessage = 'Failed to load official enhanced items',
   sectionTitle,
   searchPlaceholder = 'Search by name, base item, or power...',
-  emptyIcon = <Sparkles className="w-8 h-8" />,
+  emptyIcon = <Sparkles className="h-8 w-8" />,
   emptyTitle,
   emptyMessage,
   searchEmptyMessage = 'No enhanced items match your search.',

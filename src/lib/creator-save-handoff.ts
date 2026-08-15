@@ -12,10 +12,7 @@ export function scheduleCreatorReset(resetCreator: () => void): void {
   setTimeout(resetCreator, 0);
 }
 
-export function navigateThenResetCreator(
-  navigate: () => void,
-  resetCreator: () => void
-): void {
+export function navigateThenResetCreator(navigate: () => void, resetCreator: () => void): void {
   navigate();
   scheduleCreatorReset(resetCreator);
 }

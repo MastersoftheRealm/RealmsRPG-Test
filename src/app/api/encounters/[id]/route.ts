@@ -13,10 +13,7 @@ import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import type { Encounter } from '@/types/encounter';
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -65,10 +62,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -76,10 +70,13 @@ export async function PATCH(
     }
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('enc-patch', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('enc-patch', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id } = await params;
@@ -92,7 +89,12 @@ export async function PATCH(
       .maybeSingle();
 
     if (fetchError) {
-      return apiErrorResponse('Failed to update encounter', 500, 'PATCH /api/encounters/[id] (fetch)', fetchError);
+      return apiErrorResponse(
+        'Failed to update encounter',
+        500,
+        'PATCH /api/encounters/[id] (fetch)',
+        fetchError,
+      );
     }
 
     if (!row) {
@@ -119,7 +121,12 @@ export async function PATCH(
       .eq('id', id)
       .eq('user_id', user.uid);
     if (updateErr) {
-      return apiErrorResponse('Failed to update encounter', 500, 'PATCH /api/encounters/[id] (update)', updateErr);
+      return apiErrorResponse(
+        'Failed to update encounter',
+        500,
+        'PATCH /api/encounters/[id] (update)',
+        updateErr,
+      );
     }
 
     return new NextResponse(null, { status: 204 });
@@ -131,7 +138,7 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -143,10 +150,13 @@ export async function DELETE(
     if (denied) return denied;
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('enc-del', { userId: user.uid, ip: resolveClientIp(_request.headers) })
+      buildRateLimitKey('enc-del', { userId: user.uid, ip: resolveClientIp(_request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id } = await params;
@@ -159,7 +169,12 @@ export async function DELETE(
       .maybeSingle();
 
     if (fetchError) {
-      return apiErrorResponse('Failed to delete encounter', 500, 'DELETE /api/encounters/[id] (fetch)', fetchError);
+      return apiErrorResponse(
+        'Failed to delete encounter',
+        500,
+        'DELETE /api/encounters/[id] (fetch)',
+        fetchError,
+      );
     }
 
     if (!row) {
@@ -172,7 +187,12 @@ export async function DELETE(
       .eq('id', id)
       .eq('user_id', user.uid);
     if (delErr) {
-      return apiErrorResponse('Failed to delete encounter', 500, 'DELETE /api/encounters/[id] (delete)', delErr);
+      return apiErrorResponse(
+        'Failed to delete encounter',
+        500,
+        'DELETE /api/encounters/[id] (delete)',
+        delErr,
+      );
     }
 
     return new NextResponse(null, { status: 204 });

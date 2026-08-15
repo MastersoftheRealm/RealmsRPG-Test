@@ -40,10 +40,7 @@ import { averageMixedPhysical } from '@/lib/ancestry/ancestry-selection';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { createCharacter, saveCharacter } from '@/services/character-service';
 import { formatCharacterCreateFailureMessage, resolveClientRequestId } from '@/lib/character-save';
-import {
-  PORTRAIT_SAVE_UPLOAD_FALLBACK,
-  uploadCharacterPortraitFromDataUrl,
-} from '@/lib/portrait';
+import { PORTRAIT_SAVE_UPLOAD_FALLBACK, uploadCharacterPortraitFromDataUrl } from '@/lib/portrait';
 import { getErrorMessage } from '@/lib/api-client';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import type { Character } from '@/types';
@@ -108,7 +105,7 @@ export function RevealStep() {
 
   const speciesContext = useMemo(
     () => resolveGuidedSpeciesContext(draft, allSpecies),
-    [draft, allSpecies]
+    [draft, allSpecies],
   );
   const species = speciesContext.species;
   const mixedPhysical =
@@ -196,10 +193,7 @@ export function RevealStep() {
       if (clientRequestId !== draft.clientRequestId) {
         updateDraft({ clientRequestId });
       }
-      const characterId = await createCharacter(
-        { ...lean, userId: user.uid },
-        { clientRequestId }
-      );
+      const characterId = await createCharacter({ ...lean, userId: user.uid }, { clientRequestId });
       if (!characterId?.trim()) {
         throw new Error('Character was created but no id was returned');
       }
@@ -270,7 +264,7 @@ export function RevealStep() {
           <div className="overflow-hidden rounded-card border border-primary-subtle-border bg-gradient-to-br from-primary-subtle-bg/80 to-surface shadow-sm">
             <div className="flex flex-col items-center gap-5 p-5 sm:flex-row sm:items-start">
               <GuidedPortraitUpload />
-              <div className="min-w-0 w-full flex-1 text-center sm:text-left">
+              <div className="w-full min-w-0 flex-1 text-center sm:text-left">
                 <label htmlFor="guided-char-name" className="sr-only">
                   {stepCopy.nameLabel}
                 </label>

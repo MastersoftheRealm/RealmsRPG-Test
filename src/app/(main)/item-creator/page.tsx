@@ -133,7 +133,7 @@ function ItemCreatorWorkspace({
 
   return (
     <CreatorPageShell
-      icon={<Sword className="w-8 h-8 text-tp-text" />}
+      icon={<Sword className="h-8 w-8 text-tp-text" />}
       title="Armament Creator"
       description="Design custom weapons, armor, and shields by combining item properties. Properties determine the item's rarity and cost."
       user={user}
@@ -180,8 +180,7 @@ function ItemCreatorWorkspace({
         isLoading: load.isLoading,
         error: load.error,
         title: 'Load Armament from Library',
-        onSelect: (selected) =>
-          ws.handleLoadItem(selected.data as ItemLibraryRecord),
+        onSelect: (selected) => ws.handleLoadItem(selected.data as ItemLibraryRecord),
       }}
       sidebar={
         <>
@@ -192,8 +191,18 @@ function ItemCreatorWorkspace({
               variant: rarityChipVariant(ws.rarity),
             }}
             costStats={[
-              { label: 'Currency Cost', value: ws.currencyCost, icon: <Coins className="w-6 h-6" />, color: 'currency' },
-              { label: 'Training Points', value: ws.costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+              {
+                label: 'Currency Cost',
+                value: ws.currencyCost,
+                icon: <Coins className="h-6 w-6" />,
+                color: 'currency',
+              },
+              {
+                label: 'Training Points',
+                value: ws.costs.totalTP,
+                icon: <Target className="h-6 w-6" />,
+                color: 'tp',
+              },
             ]}
             statRows={[
               { label: 'Type', value: ws.armamentType },
@@ -204,30 +213,49 @@ function ItemCreatorWorkspace({
                     { label: 'Range', value: ws.rangeDisplay },
                   ]
                 : []),
-              ...(ws.armamentType === 'Armor' ? [
-                { label: 'Damage Reduction', value: String(ws.damageReduction) },
-                ...(ws.agilityReduction > 0 ? [{ label: 'Agility Reduction', value: `-${ws.agilityReduction}`, valueColor: 'text-danger-700 dark:text-danger-400' }] : []),
-              ] : []),
+              ...(ws.armamentType === 'Armor'
+                ? [
+                    { label: 'Damage Reduction', value: String(ws.damageReduction) },
+                    ...(ws.agilityReduction > 0
+                      ? [
+                          {
+                            label: 'Agility Reduction',
+                            value: `-${ws.agilityReduction}`,
+                            valueColor: 'text-danger-700 dark:text-danger-400',
+                          },
+                        ]
+                      : []),
+                  ]
+                : []),
               ...(ws.armamentType === 'Shield'
                 ? [
                     { label: 'Handedness', value: ws.isTwoHanded ? 'Two-Handed' : 'One-Handed' },
                     { label: 'Shield Block', value: `${ws.shieldDR.amount}d${ws.shieldDR.size}` },
                     ...(ws.hasShieldDamage
-                      ? [{ label: 'Shield Damage', value: `${ws.shieldDamage.amount}d${ws.shieldDamage.size}` }]
+                      ? [
+                          {
+                            label: 'Shield Damage',
+                            value: `${ws.shieldDamage.amount}d${ws.shieldDamage.size}`,
+                          },
+                        ]
                       : []),
                   ]
                 : []),
               ...(ws.damageDisplay ? [{ label: 'Damage', value: ws.damageDisplay }] : []),
             ]}
-            breakdowns={ws.selectedProperties.length > 0 ? [
-              {
-                title: 'Properties',
-                items: ws.selectedProperties.map((sp) => ({
-                  label: sp.property.name,
-                  detail: sp.op_1_lvl > 0 ? `Lvl ${sp.op_1_lvl}` : undefined,
-                })),
-              },
-            ] : undefined}
+            breakdowns={
+              ws.selectedProperties.length > 0
+                ? [
+                    {
+                      title: 'Properties',
+                      items: ws.selectedProperties.map((sp) => ({
+                        label: sp.property.name,
+                        detail: sp.op_1_lvl > 0 ? `Lvl ${sp.op_1_lvl}` : undefined,
+                      })),
+                    },
+                  ]
+                : undefined
+            }
           >
             <AdvancedCalculationsPanel
               rows={ws.advancedCalcRows}

@@ -38,7 +38,7 @@ class FakeQuery implements PromiseLike<QueryResult> {
   constructor(
     private readonly db: FakeSupabase,
     private readonly table: string,
-    private readonly options: FakeSupabaseOptions
+    private readonly options: FakeSupabaseOptions,
   ) {}
 
   select(): this {
@@ -93,7 +93,7 @@ class FakeQuery implements PromiseLike<QueryResult> {
 
   then<TResult1 = QueryResult, TResult2 = never>(
     onfulfilled?: ((value: QueryResult) => TResult1 | PromiseLike<TResult1>) | null,
-    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null
+    onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
   ): PromiseLike<TResult1 | TResult2> {
     return this.run().then(onfulfilled, onrejected);
   }

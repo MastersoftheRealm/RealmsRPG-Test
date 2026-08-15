@@ -1110,7 +1110,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1708,7 +1708,54 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 ---
 
-## DEV-V-005 — RLS policy consolidation (TASK-352, TASK-327)
+#### DEV-V-009-T047 — RM / other-user sheet uses referenced enrichment (TASK-773)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-773 |
+| **Where** | `/campaigns/[id]/view/[userId]/[characterId]` (Realm Master) and `/characters/[id]` as another user (public or shared-campaign visibility) |
+| **Needs** | Campaign you own with another player's non-private character that has library powers/techniques/feats (and ideally an empowered technique). A second account to open the public/campaign sheet. Network tab (or React Query Devtools). |
+| **CI** | Partial — `character-view-enrichment.test.ts`, `character-view-enrichment-server.test.ts`, `src/app/api/characters/[id]/route.test.ts` (owner GET omits enrichment; other-user GET includes it; referenced-id gate) |
+
+**Steps**
+1. As Realm Master, open a roster player's sheet. Confirm header stats, Library tabs (powers/techniques/feats/species traits), and empowered techniques render — not empty rows for ids the character actually has.
+2. In the Network tab, confirm the full campaign character GET returns `libraryForView` and `enrichment`, and that the page does **not** fire `/api/user/library/*` or `/api/official/*` for the viewer's catalogs. (`/api/codex` may still run once via `useGameRules` until TASK-775.)
+3. Open **Add to encounter** (or combat add) so `?scope=encounter` runs. Payload stays HP/EN/AP only — no `libraryForView`, no `enrichment`.
+4. Sign in as that player (owner) and open `/characters/[id]`. Confirm Add Power / Add Feat still have full catalogs (owner GET has no `enrichment`).
+5. As a non-owner, open a **public** character URL. Sheet rows resolve; Network shows `enrichment` on GET `/api/characters/[id]` and no viewer-library waterfall.
+
+**Expected**
+- Read-only views resolve from referenced owner/official/codex rows on the GET (same P0-1 gate as `libraryForView`). The viewer's private library is not downloaded.
+- Owner sheet still uses catalog hooks for add-X.
+- Encounter-scope GET is unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-009-T048 — Sheet feat rank via expanded Feat Levels chips (TASK-780)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-780 |
+| **Where** | `/characters/[id]` → Feats (character with a multi-rank archetype or character feat) |
+| **Needs** | Edit access; a feat family with at least two ranks; one higher rank the character does not yet qualify for if possible |
+
+**Steps**
+1. Play view: expand the feat. Confirm **Feat Levels** chips include the current rank (marked) and other ranks; collapsed row has **no Lvl column** or quantity stepper beside Uses/Recovery.
+2. Enter sheet edit. Expand the same feat. Confirm there is still no collapsed Lvl stepper. Current rank chip is marked (`aria-current`); a qualified other rank is a clickable Feat Levels chip (same `GridListChip` path as play); an unqualified rank is disabled (not ±).
+3. Click a qualified higher or lower rank. Confirm the row swaps to that family rank, feat-point slot count updates, and Uses/Recovery still track uses (not rank).
+4. Optional ~360px: Feat Levels chips wrap; Uses ± still distinct from rank chips.
+
+**Expected**
+- Rank change uses the existing family replace (`onFeatLevelChange`); play view has no rank picker.
+- Creature creator Lvl stepper is unchanged (out of scope).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
 
 Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-005--rls-policy-consolidation-task-352-task-327).
 
@@ -4180,6 +4227,18 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Steps** | 1. Open Select Powers with **All sources** — list includes Realms + My; if the same library id exists in both, only the Realms row appears. 2. Switch **Realms Library** / **My Library** — catalogs scope accordingly. 3. Open Select Inventory, add an armament, reopen the picker — that `docId` is hidden (already selected). 4. Empowered tab: duplicate `docId`s across My + Realms do not appear twice. 5. Guided keep-selected is unchanged (creature picker does not re-show a My-only item after switching to Realms). |
 | **Expected** | Creature pickers use shared `mergeLibraryBySource` (public wins on id). Armament still hides selected ids; empowered still dedupes on `docId`. |
 | **Report** | DEV-V-016-T019: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T020 — Library tab counts + lazy per-tab rows (TASK-774)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-774 |
+| **Where** | `/library` (My Library and Realms Library) |
+| **Needs** | Signed-in user with items in more than one tab; also a guest / signed-out check |
+| **Steps** | 1. Open `/library` signed in (My Library). Confirm tab badges show counts. In Network, first paint should request `/api/user/library/counts` plus **only the active tab’s** list (default Powers → `/api/user/library/powers`), not techniques/items/creatures/enhanced. 2. Switch to Weapons, then Armor — items list may load once and stay cached; counts stay. 3. Delete one power — Powers badge drops without a full reload. 4. Switch to Realms Library — badges come from `/api/official/counts`; first Realms tab loads only that collection. Enhanced Items is hidden. 5. Guest / signed-out: Realms read-only, no My Library toggle, no Add to library. |
+| **Expected** | Badges use the counts endpoints (ADR-0015). Inactive tab row lists do not fetch on first paint. Create/delete updates counts. Enhanced stays My-Library only. |
+| **Report** | DEV-V-016-T020: PASS / FAIL / SKIP — |
 
 ---
 
@@ -7065,6 +7124,108 @@ Filters browse lists by what an archetype path recommends, read live from `path_
 
 ---
 
+## DEV-V-053 — Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771)
+
+Public crawl metadata and the muted-token strip. Automated: `src/lib/site-url.test.ts`, `src/app/robots-sitemap.test.ts`.
+
+#### DEV-V-053-T001 — robots.txt and sitemap.xml
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-053 — Wave 3A SEO |
+| **Related task** | TASK-771 |
+| **Where** | `/robots.txt`, `/sitemap.xml` |
+| **Needs** | Dev server or production |
+
+**Steps**
+1. Open `/robots.txt`.
+2. Open `/sitemap.xml`.
+3. Confirm `/dev/styleguide` is not listed in the sitemap.
+
+**Expected**
+- robots.txt disallows `/dev/`, `/login`, `/register`, `/api/`, `/admin`, `/my-account`, and auth recovery paths, and points at `/sitemap.xml`.
+- sitemap lists `/`, `/about`, `/codex`, `/rules`, `/resources`, `/privacy`, `/terms`, `/library`, `/characters/new` on `https://realmsrpg.com` (or the current `NEXT_PUBLIC_SITE_URL`).
+- Desktop + ~360px N/A.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-053-T002 — Open Graph and metadataBase
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-053 — Wave 3A SEO |
+| **Related task** | TASK-771 |
+| **Where** | `/` view-source or browser Network |
+| **Needs** | — |
+
+**Steps**
+1. View source on `/`.
+2. Confirm `og:title` / `twitter:card` and an `og:image` URL that resolves (opengraph-image).
+3. Confirm relative OG URLs are not used (metadataBase is set).
+
+**Expected**
+- Title RealmsRPG; twitter card `summary_large_image`; og:image is an absolute URL on the canonical origin.
+- `<link rel="canonical">` points at `https://realmsrpg.com/` (or the current `NEXT_PUBLIC_SITE_URL`).
+- Sharing the homepage in Discord/Slack shows a card (after deploy), not a grey box.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-053-T003 — Styleguide and auth are noindex
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-053 — Wave 3A SEO |
+| **Related task** | TASK-771 |
+| **Where** | `/dev/styleguide`, `/login` |
+| **Needs** | — |
+
+**Steps**
+1. View source on `/dev/styleguide` and `/login`.
+2. Confirm a robots noindex meta (or equivalent robots directive).
+
+**Expected**
+- Both routes are noindex; styleguide still loads (visual baselines). `/admin` layout is also noindex. Desktop + ~360px N/A.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-053-T004 — Privacy intro URL is realmsrpg.com
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-053 — Wave 3A SEO |
+| **Related task** | TASK-771 |
+| **Where** | `/privacy` |
+| **Needs** | — |
+
+**Steps**
+1. Open `/privacy`.
+2. Read the intro site URL link.
+
+**Expected**
+- The linked origin is `https://realmsrpg.com` (canonical custom domain), matching `SITE_URL`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-053-T005 — Muted text still reads in dark mode (no pairing)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-053 — Wave 3A hygiene |
+| **Related task** | TASK-770 |
+| **Where** | Character sheet Skills / Library (dark theme) |
+| **Needs** | A saved character |
+
+**Steps**
+1. Open a character sheet, switch to dark theme.
+2. Spot-check muted helper copy (Skills empty/disabled, Library tab chrome).
+
+**Expected**
+- Muted copy is still readable (same grey as before). No missing-color flash. Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -7108,5 +7269,6 @@ Filters browse lists by what an archetype path recommends, read live from `path_
 | DEV-V-043 | Wave 5 page facade splits (TASK-666 / TASK-762) | — | Manual — see suite above |
 | DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`, `character-save` create-error copy) + manual DEV-V-051 T001–T010 |
 | DEV-V-052 | Archetype Path list filter (TASK-751 / TASK-752 / TASK-753) | — | Automated (`path-recommendation-index`, `feat-list`, `skill-list`, `equipment-list`) + manual DEV-V-052 T001–T006 |
+| DEV-V-053 | Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771) | — | Automated (`site-url`, `robots-sitemap`) + manual DEV-V-053 T001–T005 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

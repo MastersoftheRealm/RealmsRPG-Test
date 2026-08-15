@@ -37,7 +37,9 @@ import {
 import { saveArchetypeWithPath } from './actions';
 import { getUnknownSelectionsForLevel } from './admin-archetype-workspace-unknown-selections';
 
-type OptionsByField = Partial<Record<PathSelectionKey | 'armaments' | 'equipment', SelectionOption[]>>;
+type OptionsByField = Partial<
+  Record<PathSelectionKey | 'armaments' | 'equipment', SelectionOption[]>
+>;
 
 type SaveAdminArchetypeArgs = {
   form: AdminArchetypeFormState;
@@ -72,9 +74,13 @@ export async function saveAdminArchetype({
 }: SaveAdminArchetypeArgs): Promise<void> {
   if (!form.name.trim()) return;
 
-  const unknownFromLevel1 = getUnknownSelectionsForLevel(form.level1Path, 'Level 1 ', optionsByField);
+  const unknownFromLevel1 = getUnknownSelectionsForLevel(
+    form.level1Path,
+    'Level 1 ',
+    optionsByField,
+  );
   const unknownFromLevels = form.levelPathRows.flatMap((row) =>
-    getUnknownSelectionsForLevel(row, `Level ${row.level} `, optionsByField)
+    getUnknownSelectionsForLevel(row, `Level ${row.level} `, optionsByField),
   );
   const allUnknowns = [...unknownFromLevel1, ...unknownFromLevels];
   if (allUnknowns.length) {
@@ -82,7 +88,7 @@ export async function saveAdminArchetype({
       'Some archetype path entries no longer match existing Codex/Official Library items. ' +
         'Please fix or remove these before saving: ' +
         allUnknowns.join('; '),
-      'error'
+      'error',
     );
     return;
   }
@@ -103,12 +109,12 @@ export async function saveAdminArchetype({
     });
   const nonFeatGroups = form.guidanceGroups.filter(
     (g) =>
-      !(g.feats?.length) &&
+      !g.feats?.length &&
       ((g.powers?.length ?? 0) > 0 ||
         (g.techniques?.length ?? 0) > 0 ||
         (g.armaments?.length ?? 0) > 0 ||
         (g.equipment?.length ?? 0) > 0 ||
-        (g.innatePowers?.length ?? 0) > 0)
+        (g.innatePowers?.length ?? 0) > 0),
   );
   const guidanceGroupsForSave = mergeFeatGuidanceGroups(nonFeatGroups, featGroupsForSave);
   const syncedFeats = unionFeatIdsFromGuidanceGroups(guidanceGroupsForSave);
@@ -118,7 +124,7 @@ export async function saveAdminArchetype({
       ...form.level1Path,
       feats: syncedFeats.length > 0 ? syncedFeats : form.level1Path.feats,
     },
-    false
+    false,
   );
   if (guidanceGroupsForSave.length > 0) {
     level1Payload.guidance_groups = guidanceGroupsForSave;
@@ -135,11 +141,14 @@ export async function saveAdminArchetype({
     if (levelsPayload.length > 0) structuredPathData.levels = levelsPayload;
   }
 
-  if (structuredPathData && pathHiddenFromPlayerPicker(parseArchetypePathData(structuredPathData))) {
+  if (
+    structuredPathData &&
+    pathHiddenFromPlayerPicker(parseArchetypePathData(structuredPathData))
+  ) {
     showToast(
       'Level 1 has notes, remove lists, or Unarmed Prowess only; no add recommendations. ' +
         'This path will not appear in the character creator picker or public codex path list until you add level 1 feats, skills, powers, innate powers, techniques, armaments, or equipment.',
-      'warning'
+      'warning',
     );
   }
 
@@ -158,14 +167,16 @@ export async function saveAdminArchetype({
       level1Override = override.level1 as Record<string, unknown>;
     if (Array.isArray(override.levels)) {
       levelsOverride = override.levels.filter(
-        (entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null
+        (entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null,
       );
     }
   }
 
   const previewLevel1 =
     level1Override || (structuredPathData?.level1 as Record<string, unknown> | undefined) || {};
-  const previewExistingLevel1 = editing ? parseArchetypePathData(editing.path_data)?.level1 : undefined;
+  const previewExistingLevel1 = editing
+    ? parseArchetypePathData(editing.path_data)?.level1
+    : undefined;
   const previewAbilities =
     recommendedAbilitiesValue ?? previewExistingLevel1?.recommended_abilities;
 
@@ -186,7 +197,7 @@ export async function saveAdminArchetype({
       resolveItemTrainingPoints: createItemTpResolver(
         officialItems,
         codexEquipment,
-        itemProperties
+        itemProperties,
       ),
       trainingPointLimit: trainingPointLimitFromRecommendedAbilities(previewAbilities),
       archetypeType: form.type,
@@ -212,7 +223,7 @@ export async function saveAdminArchetype({
     if (publishWarnings.length > 0) {
       showToast(
         `Layer 1 governance: ${publishWarnings.map((i) => i.message).join(' ')}`,
-        'warning'
+        'warning',
       );
     }
   }

@@ -11,11 +11,22 @@
  * CI: `validate-glr-chrome-spacing.test.ts` · Guide: `guide/02-components-and-lists.md`
  */
 
+/**
+ * Compare Tailwind class strings by token set so Prettier class-order is not a contract.
+ */
+export function classListEquals(actual: string, expected: string): boolean {
+  const tokenize = (value: string) => value.trim().split(/\s+/).filter(Boolean).sort();
+  const left = tokenize(actual);
+  const right = tokenize(expected);
+  if (left.length !== right.length) return false;
+  return left.every((token, index) => token === right[index]);
+}
+
 /** Default row-container class on UserLibraryEntityTabShell and OfficialEntityList. */
 export const DEFAULT_GLR_LIST_CLASSNAME = 'flex flex-col gap-1 mt-2' as const;
 
 /** Default row-container class on UnifiedSelectionModalList. */
-export const DEFAULT_USM_LIST_CLASSNAME = 'flex flex-col gap-1 min-w-0' as const;
+export const DEFAULT_USM_LIST_CLASSNAME = 'flex min-w-0 flex-col gap-1' as const;
 
 /** CodexBrowseListShell hardcodes the same gap on its row container. */
 export const CODEX_BROWSE_LIST_ROW_CLASSNAME = 'mt-2 flex flex-col gap-1' as const;
@@ -113,8 +124,7 @@ export const GLR_LIST_CLASSNAME_CALLER_SOURCES = [
  * Looser vertical gaps between GLR rows (e.g. `space-y-3` overrides from pre-TASK-630).
  * `gap-1` is the norm; do not widen list shells without updating this check.
  */
-export const FORBIDDEN_GLR_LIST_GAP_REGEX =
-  /\bspace-y-(?:2|3|4|5|6|8)\b|\bflex\s+flex-col\s+gap-(?:2|3|4|5|6|8)\b/;
+export const FORBIDDEN_GLR_LIST_GAP_REGEX = /\bspace-y-(?:2|3|4|5|6|8)\b|\bgap-(?:2|3|4|5|6|8)\b/;
 
 /** Leftover inline action column — use ListHeader `rowChrome` instead (TASK-622). */
 export const FORBIDDEN_GLR_GRID_ACTION_TRACK_REGEX = /\b40px\b/;

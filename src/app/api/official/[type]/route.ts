@@ -22,14 +22,18 @@ import {
   type ColumnarLibraryType,
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
-import {
-  allocateCodexNumericId,
-  retireCodexId,
-} from '@/lib/codex/id-allocation';
+import { allocateCodexNumericId, retireCodexId } from '@/lib/codex/id-allocation';
 
 const SPECIES_TABLE = 'codex_species';
 
-const VALID_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures', 'species'] as const;
+const VALID_TYPES = [
+  'powers',
+  'techniques',
+  'empowered-techniques',
+  'items',
+  'creatures',
+  'species',
+] as const;
 type OfficialType = (typeof VALID_TYPES)[number];
 
 const TABLE_MAP: Record<Exclude<OfficialType, 'species'>, string> = {
@@ -85,7 +89,7 @@ function filterSpeciesCodexRow(row: Record<string, unknown>): Record<string, unk
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ type: string }> }
+  { params }: { params: Promise<{ type: string }> },
 ) {
   try {
     const { type } = await params;
@@ -122,7 +126,9 @@ export async function GET(
       return NextResponse.json(items, { headers: { 'Cache-Control': cacheControl } });
     }
 
-    const { data: rows, error } = await supabase.from(TABLE_MAP[type as ColumnarLibraryType]).select('*');
+    const { data: rows, error } = await supabase
+      .from(TABLE_MAP[type as ColumnarLibraryType])
+      .select('*');
 
     if (error) {
       if (error.code === '42P01' || error.message?.includes('does not exist')) {
@@ -151,7 +157,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ type: string }> }
+  { params }: { params: Promise<{ type: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -190,7 +196,12 @@ export async function POST(
           .eq('id', existingId)
           .select('id');
         if (updateError) {
-          return apiErrorResponse('Failed to update item', 500, 'POST /api/official/[type] (species update)', updateError);
+          return apiErrorResponse(
+            'Failed to update item',
+            500,
+            'POST /api/official/[type] (species update)',
+            updateError,
+          );
         }
         if (updatedRows && updatedRows.length > 0) {
           return NextResponse.json({ id: existingId });
@@ -199,12 +210,21 @@ export async function POST(
 
       for (let attempt = 0; attempt < 3; attempt++) {
         const id = await allocateCodexNumericId(supabase, SPECIES_TABLE);
-        const { error: insertError } = await supabase.from(SPECIES_TABLE).insert({ id, ...dbRow }).select('id').single();
+        const { error: insertError } = await supabase
+          .from(SPECIES_TABLE)
+          .insert({ id, ...dbRow })
+          .select('id')
+          .single();
         if (!insertError) {
           return NextResponse.json({ id });
         }
         if (insertError.code !== '23505') {
-          return apiErrorResponse('Failed to save item', 500, 'POST /api/official/[type] (species insert)', insertError);
+          return apiErrorResponse(
+            'Failed to save item',
+            500,
+            'POST /api/official/[type] (species insert)',
+            insertError,
+          );
         }
       }
       return apiErrorResponse('Failed to save item', 500);
@@ -223,7 +243,12 @@ export async function POST(
         .eq('id', existingId)
         .select('id');
       if (updateError) {
-        return apiErrorResponse('Failed to update item', 500, 'POST /api/official/[type] (update)', updateError);
+        return apiErrorResponse(
+          'Failed to update item',
+          500,
+          'POST /api/official/[type] (update)',
+          updateError,
+        );
       }
       if (updatedRows && updatedRows.length > 0) {
         return NextResponse.json({ id: existingId });
@@ -231,14 +256,23 @@ export async function POST(
     }
 
     const id = crypto.randomUUID();
-    const { error: insertError } = await supabase.from(table).insert({
-      id,
-      ...dbRow,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }).select('id').single();
+    const { error: insertError } = await supabase
+      .from(table)
+      .insert({
+        id,
+        ...dbRow,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .select('id')
+      .single();
     if (insertError) {
-      return apiErrorResponse('Failed to save item', 500, 'POST /api/official/[type] (insert)', insertError);
+      return apiErrorResponse(
+        'Failed to save item',
+        500,
+        'POST /api/official/[type] (insert)',
+        insertError,
+      );
     }
     return NextResponse.json({ id });
   } catch (err) {
@@ -249,7 +283,7 @@ export async function POST(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ type: string }> }
+  { params }: { params: Promise<{ type: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -276,9 +310,18 @@ export async function DELETE(
 
     const supabase = createServiceRoleClient();
     const table = type === 'species' ? SPECIES_TABLE : TABLE_MAP[type as ColumnarLibraryType];
-    const { data: deleted, error: deleteError } = await supabase.from(table).delete().eq('id', id).select('id');
+    const { data: deleted, error: deleteError } = await supabase
+      .from(table)
+      .delete()
+      .eq('id', id)
+      .select('id');
     if (deleteError) {
-      return apiErrorResponse('Failed to delete item', 500, 'DELETE /api/official/[type]', deleteError);
+      return apiErrorResponse(
+        'Failed to delete item',
+        500,
+        'DELETE /api/official/[type]',
+        deleteError,
+      );
     }
     if (!deleted || deleted.length === 0) {
       return NextResponse.json({ error: 'Item not found or already deleted' }, { status: 404 });

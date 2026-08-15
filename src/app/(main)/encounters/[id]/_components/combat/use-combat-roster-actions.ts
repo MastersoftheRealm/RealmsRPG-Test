@@ -3,23 +3,18 @@
  * ===============================================================
  */
 
-"use client";
+'use client';
 
-import { useCallback, useState, type DragEvent } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import type {
-  Combatant,
-  CombatantCondition,
-  Encounter,
-  TrackedCombatant,
-} from "@/types/encounter";
-import { CONDITION_OPTIONS } from "@/components/encounters/encounter-constants";
-import { fetchCampaignCharacterForEncounter, useAuth } from "@/hooks";
+import { useCallback, useState, type DragEvent } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import type { Combatant, CombatantCondition, Encounter, TrackedCombatant } from '@/types/encounter';
+import { CONDITION_OPTIONS } from '@/components/encounters/encounter-constants';
+import { fetchCampaignCharacterForEncounter, useAuth } from '@/hooks';
 import {
   isOwnedLinkedCombatant,
   scheduleCharacterResourceSyncFromCombatant,
-} from "@/lib/encounter/character-resource-sync";
-import type { Campaign } from "@/types/campaign";
+} from '@/lib/encounter/character-resource-sync';
+import type { Campaign } from '@/types/campaign';
 import {
   sortCombatantsForTurnOrder,
   remapTurnIndexAfterReorder,
@@ -28,7 +23,7 @@ import {
   buildDuplicateCombatant,
   buildCampaignCharacterCombatant,
   type NewCombatantForm,
-} from "./combat-encounter-helpers";
+} from './combat-encounter-helpers';
 
 type SetEncounter = React.Dispatch<React.SetStateAction<Encounter | null>>;
 
@@ -55,14 +50,11 @@ export function useCombatRosterActions({
     ? campaignsFull.find((c: Campaign) => c.id === encounter.campaignId)
     : undefined;
 
-  const handleDragStart = useCallback(
-    (e: DragEvent<HTMLDivElement>, id: string) => {
-      setDraggedId(id);
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", id);
-    },
-    [],
-  );
+  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+  }, []);
 
   const handleDragEnd = useCallback(() => {
     setDraggedId(null);
@@ -72,7 +64,7 @@ export function useCombatRosterActions({
   const handleDragOver = useCallback(
     (e: DragEvent<HTMLDivElement>, id: string) => {
       e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
+      e.dataTransfer.dropEffect = 'move';
       if (id !== draggedId) setDragOverId(id);
     },
     [draggedId],
@@ -90,10 +82,7 @@ export function useCombatRosterActions({
       }
       setEncounter((prev) => {
         if (!prev) return prev;
-        const oldSorted = sortCombatantsForTurnOrder(
-          prev.combatants,
-          prev.round,
-        );
+        const oldSorted = sortCombatantsForTurnOrder(prev.combatants, prev.round);
         const combatants = [...prev.combatants];
         const draggedIndex = combatants.findIndex((c) => c.id === draggedId);
         const targetIndex = combatants.findIndex((c) => c.id === targetId);
@@ -118,18 +107,14 @@ export function useCombatRosterActions({
     if (!newCombatant.name.trim()) return;
     const newCombatants = buildManualCombatantsFromForm(newCombatant);
     setEncounter((prev) =>
-      prev
-        ? { ...prev, combatants: [...prev.combatants, ...newCombatants] }
-        : prev,
+      prev ? { ...prev, combatants: [...prev.combatants, ...newCombatants] } : prev,
     );
     setNewCombatant(createEmptyNewCombatantForm());
   };
 
   const addCombatantsFromModal = (combatants: TrackedCombatant[]) => {
     setEncounter((prev) =>
-      prev
-        ? { ...prev, combatants: [...prev.combatants, ...combatants] }
-        : prev,
+      prev ? { ...prev, combatants: [...prev.combatants, ...combatants] } : prev,
     );
     setShowAddModal(false);
   };
@@ -159,9 +144,7 @@ export function useCombatRosterActions({
         .filter((r): r is NonNullable<typeof r> => r !== null)
         .map((r) => buildCampaignCharacterCombatant(r.charMeta, r.data));
       setEncounter((prev) =>
-        prev
-          ? { ...prev, combatants: [...prev.combatants, ...combatants] }
-          : prev,
+        prev ? { ...prev, combatants: [...prev.combatants, ...combatants] } : prev,
       );
     } catch {
       // Pre-split parity: silent outer catch (TASK-666 cleanup).
@@ -191,13 +174,9 @@ export function useCombatRosterActions({
       const newLen = newSorted.length;
       let newTurnIndex = prev.currentTurnIndex;
       if (removedIndex >= 0) {
-        if (removedIndex < prev.currentTurnIndex)
-          newTurnIndex = prev.currentTurnIndex - 1;
+        if (removedIndex < prev.currentTurnIndex) newTurnIndex = prev.currentTurnIndex - 1;
         else if (removedIndex === prev.currentTurnIndex)
-          newTurnIndex = Math.min(
-            prev.currentTurnIndex,
-            Math.max(0, newLen - 1),
-          );
+          newTurnIndex = Math.min(prev.currentTurnIndex, Math.max(0, newLen - 1));
       }
       return { ...prev, combatants, currentTurnIndex: newTurnIndex };
     });
@@ -206,17 +185,15 @@ export function useCombatRosterActions({
   const updateCombatant = (id: string, updates: Partial<Combatant>) => {
     setEncounter((prev) => {
       if (!prev) return prev;
-      const combatant = prev.combatants.find((c) => c.id === id) as
-        | TrackedCombatant
-        | undefined;
+      const combatant = prev.combatants.find((c) => c.id === id) as TrackedCombatant | undefined;
       const owned = isOwnedLinkedCombatant(combatant, user?.uid);
-      const isLinked = combatant?.sourceType === "campaign-character";
+      const isLinked = combatant?.sourceType === 'campaign-character';
       const resourceKeys = [
-        "currentHealth",
-        "maxHealth",
-        "currentEnergy",
-        "maxEnergy",
-        "ap",
+        'currentHealth',
+        'maxHealth',
+        'currentEnergy',
+        'maxEnergy',
+        'ap',
       ] as const;
       let applied: Partial<Combatant> = updates;
       if (isLinked && !owned) {
@@ -227,17 +204,11 @@ export function useCombatRosterActions({
         ) as Partial<Combatant>;
       } else if (isLinked && owned) {
         applied = Object.fromEntries(
-          Object.entries(updates).filter(
-            ([k]) => k !== "maxHealth" && k !== "maxEnergy",
-          ),
+          Object.entries(updates).filter(([k]) => k !== 'maxHealth' && k !== 'maxEnergy'),
         ) as Partial<Combatant>;
       }
-      const next = prev.combatants.map((c) =>
-        c.id === id ? { ...c, ...applied } : c,
-      );
-      const updated = next.find((c) => c.id === id) as
-        | TrackedCombatant
-        | undefined;
+      const next = prev.combatants.map((c) => (c.id === id ? { ...c, ...applied } : c));
+      const updated = next.find((c) => c.id === id) as TrackedCombatant | undefined;
       if (owned && updated && resourceKeys.some((k) => k in updates)) {
         scheduleCharacterResourceSyncFromCombatant(updated);
       }
@@ -254,14 +225,10 @@ export function useCombatRosterActions({
         ...prev,
         combatants: prev.combatants.map((c) => {
           if (c.id !== id) return c;
-          if (c.conditions.some((cond) => cond.name === conditionName))
-            return c;
+          if (c.conditions.some((cond) => cond.name === conditionName)) return c;
           return {
             ...c,
-            conditions: [
-              ...c.conditions,
-              { name: conditionName, level: isLeveled ? 1 : 0 },
-            ],
+            conditions: [...c.conditions, { name: conditionName, level: isLeveled ? 1 : 0 }],
           };
         }),
       };
@@ -278,20 +245,14 @@ export function useCombatRosterActions({
             ? c
             : {
                 ...c,
-                conditions: c.conditions.filter(
-                  (cond) => cond.name !== conditionName,
-                ),
+                conditions: c.conditions.filter((cond) => cond.name !== conditionName),
               },
         ),
       };
     });
   };
 
-  const updateConditionLevel = (
-    id: string,
-    conditionName: string,
-    delta: number,
-  ) => {
+  const updateConditionLevel = (id: string, conditionName: string, delta: number) => {
     setEncounter((prev) => {
       if (!prev) return prev;
       return {
@@ -317,17 +278,13 @@ export function useCombatRosterActions({
   const updateAP = (id: string, delta: number) => {
     setEncounter((prev) => {
       if (!prev) return prev;
-      const combatant = prev.combatants.find((c) => c.id === id) as
-        | TrackedCombatant
-        | undefined;
+      const combatant = prev.combatants.find((c) => c.id === id) as TrackedCombatant | undefined;
       const owned = isOwnedLinkedCombatant(combatant, user?.uid);
-      if (combatant?.sourceType === "campaign-character" && !owned) return prev;
+      if (combatant?.sourceType === 'campaign-character' && !owned) return prev;
       const next = prev.combatants.map((c) =>
         c.id === id ? { ...c, ap: Math.max(0, Math.min(10, c.ap + delta)) } : c,
       );
-      const updated = next.find((c) => c.id === id) as
-        | TrackedCombatant
-        | undefined;
+      const updated = next.find((c) => c.id === id) as TrackedCombatant | undefined;
       if (owned && updated) {
         scheduleCharacterResourceSyncFromCombatant(updated);
       }

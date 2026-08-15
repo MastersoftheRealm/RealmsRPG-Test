@@ -10,10 +10,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import {
-  UnifiedSelectionModal,
-  type SelectableItem,
-} from '@/components/shared';
+import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared';
 import { usePathListFilter, useCodexSkills, type Feat } from '@/hooks';
 import type { CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
 import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
@@ -61,12 +58,7 @@ export function GuidedFeatsL2Modal({
   const { data: codexSkills = [] } = useCodexSkills();
   const [categories, setCategories] = useState<string[]>([]);
   const [stateFeatMode, setStateFeatMode] = useState<StateFeatFilterMode>('all');
-  const {
-    selectedPathIds,
-    setSelectedPathIds,
-    pathIndex,
-    pathFilterActive,
-  } = usePathListFilter({
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathFilterActive } = usePathListFilter({
     entities: feats,
     kind: 'feats',
     autoSelectType: autoSelectPathType,
@@ -75,7 +67,7 @@ export function GuidedFeatsL2Modal({
 
   const { categories: categoryOptions } = useMemo(
     () => buildGuidedFeatsL2FilterOptions(feats, featType),
-    [feats, featType]
+    [feats, featType],
   );
 
   const items = useMemo(
@@ -104,20 +96,17 @@ export function GuidedFeatsL2Modal({
       stateFeatMode,
       pathIndex,
       selectedPathIds,
-    ]
+    ],
   );
 
-  const initialSet = useMemo(
-    () => new Set(initialSelectedIds.map(String)),
-    [initialSelectedIds]
-  );
+  const initialSet = useMemo(() => new Set(initialSelectedIds.map(String)), [initialSelectedIds]);
 
   const handleConfirm = useCallback(
     (selected: SelectableItem[]) => {
       // UnifiedSelectionModal closes after onConfirm — do not double-call onClose.
       onConfirm(selectedIdsFromFeatL2Items(selected));
     },
-    [onConfirm]
+    [onConfirm],
   );
 
   const title = featType === 'character' ? l2Copy.characterTitle : l2Copy.archetypeTitle;
@@ -161,9 +150,7 @@ export function GuidedFeatsL2Modal({
       columns={FEATS_L2_HEADER_COLUMNS}
       gridColumns={FEATS_L2_GRID}
       itemLabel="feat"
-      emptyMessage={
-        pathFilterActive ? pathFilterEmptyTitle('feats') : l2Copy.emptyMessage
-      }
+      emptyMessage={pathFilterActive ? pathFilterEmptyTitle('feats') : l2Copy.emptyMessage}
       searchPlaceholder={l2Copy.searchPlaceholder}
       searchFields={FEATS_L2_SEARCH_FIELDS}
       filterContent={filterContent}

@@ -1,11 +1,7 @@
 import type { Item } from '@/types';
 
 /** Build a one-off inventory item (not from library/codex). */
-export function buildCustomEquipmentItem(
-  name: string,
-  description?: string,
-  quantity = 1
-): Item {
+export function buildCustomEquipmentItem(name: string, description?: string, quantity = 1): Item {
   const trimmed = name.trim();
   return {
     id: `custom-${crypto.randomUUID()}`,

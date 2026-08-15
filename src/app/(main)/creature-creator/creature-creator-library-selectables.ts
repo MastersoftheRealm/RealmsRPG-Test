@@ -19,10 +19,7 @@ import { deriveTechniqueDisplay, type TechniqueDocument } from '@/lib/calculator
 import { trainingPointsForItemPropertyRef } from '@/lib/calculators';
 import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/build-empowered-selectable-item';
 import type { ItemProperty, UserPower, UserTechnique, UserItem } from '@/hooks';
-import {
-  mergeLibraryBySource,
-  type LibrarySourceScope,
-} from '@/lib/library/source-scope';
+import { mergeLibraryBySource, type LibrarySourceScope } from '@/lib/library/source-scope';
 import { normalizeRangeDisplay } from '@/lib/utils';
 import type { DisplayItem } from '@/types/items';
 import {
@@ -35,8 +32,12 @@ import type { CreatureState } from './creature-creator-types';
 
 export type CreatureInventoryTab = 'all' | 'weapon' | 'armor' | 'shield' | 'equipment';
 
-export function normalizeCreatureInventoryType(type: string | undefined): Exclude<CreatureInventoryTab, 'all'> {
-  const normalized = String(type ?? '').toLowerCase().trim();
+export function normalizeCreatureInventoryType(
+  type: string | undefined,
+): Exclude<CreatureInventoryTab, 'all'> {
+  const normalized = String(type ?? '')
+    .toLowerCase()
+    .trim();
   if (normalized === 'weapon' || normalized === 'armor' || normalized === 'shield') {
     return normalized;
   }
@@ -168,7 +169,9 @@ export function buildEmpoweredTechniqueSelectableItems(
           energy,
           tp,
           action: actionCol?.value ?? '-',
-          duration: String((powerData.duration as Record<string, unknown> | undefined)?.type ?? '-'),
+          duration: String(
+            (powerData.duration as Record<string, unknown> | undefined)?.type ?? '-',
+          ),
           range: String((powerData.range as Record<string, unknown> | undefined)?.steps ?? '-'),
           area: areaCol?.value ?? '-',
           damage: damageCol?.value ?? '-',
@@ -199,7 +202,12 @@ export function buildTechniqueSelectableItems(
     };
     const display = deriveTechniqueDisplay(doc, techniquePartsDb);
     const partChips = partChipsFromDisplay(display.partChips);
-    const base = displayItemToSelectableItem(displayItem, ['Energy', 'Action', 'Weapon', 'Training Pts']);
+    const base = displayItemToSelectableItem(displayItem, [
+      'Energy',
+      'Action',
+      'Weapon',
+      'Training Pts',
+    ]);
     const detailSections = buildPartsAndMetadataDetailSections({
       damage: display.damageStr !== '-' ? display.damageStr : undefined,
       partChips,
@@ -252,16 +260,24 @@ export function buildArmamentSelectableItems(
     });
     const totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;
     const base = displayItemToSelectableItem(displayItem, ['Type', 'TP', 'Cost']);
-    const source = displayItem.sourceData as {
-      type?: string;
-      damage?: string;
-      range?: string;
-      damageReduction?: number;
-      armorValue?: number;
-    } | undefined;
+    const source = displayItem.sourceData as
+      | {
+          type?: string;
+          damage?: string;
+          range?: string;
+          damageReduction?: number;
+          armorValue?: number;
+        }
+      | undefined;
     const type = String(source?.type ?? '').toLowerCase();
     const propertyFamily =
-      type === 'armor' ? 'armor' : type === 'shield' ? 'shield' : type === 'weapon' ? 'weapon' : 'item';
+      type === 'armor'
+        ? 'armor'
+        : type === 'shield'
+          ? 'shield'
+          : type === 'weapon'
+            ? 'weapon'
+            : 'item';
     const propertySection = propertiesProficienciesSection(propertyChips, propertyFamily);
     const dr = source?.damageReduction ?? source?.armorValue;
     const factChips: ChipData[] = [];
@@ -291,7 +307,9 @@ export function filterCreatureInventorySelectable(
   item: SelectableItem,
 ): boolean {
   if (inventoryTab === 'all') return true;
-  const sourceData = (item.data as DisplayItem | undefined)?.sourceData as { type?: string } | undefined;
+  const sourceData = (item.data as DisplayItem | undefined)?.sourceData as
+    | { type?: string }
+    | undefined;
   return normalizeCreatureInventoryType(sourceData?.type) === inventoryTab;
 }
 

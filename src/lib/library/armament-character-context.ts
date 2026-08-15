@@ -24,7 +24,7 @@ type Rules = Partial<CoreRulesMap>;
  */
 export function deriveArmamentCharacterContext(
   character: Character,
-  rules?: Rules
+  rules?: Rules,
 ): ArmamentCharacterContext {
   const abilities: Abilities = {
     strength: character.abilities?.strength ?? 0,

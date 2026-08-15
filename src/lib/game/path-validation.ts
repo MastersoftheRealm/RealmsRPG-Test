@@ -36,11 +36,14 @@ export interface PathValidationIssue {
 
 export function validatePathDataForPublish(
   pathData: ArchetypePathData | undefined,
-  context?: PathValidationContext
+  context?: PathValidationContext,
 ): PathValidationIssue[] {
   const issues: PathValidationIssue[] = [];
   if (!pathData?.level1) {
-    issues.push({ severity: 'error', message: 'Level 1 recommendations are required for player-visible paths.' });
+    issues.push({
+      severity: 'error',
+      message: 'Level 1 recommendations are required for player-visible paths.',
+    });
     return issues;
   }
 
@@ -93,7 +96,7 @@ export function validatePathDataForPublish(
 /** Level 1 path skills: prefer ≤3 base skills; legacy excess / sub-skills warn only (TASK-515). */
 export function validateLevel1Skills(
   skillIds: string[],
-  context?: PathValidationContext
+  context?: PathValidationContext,
 ): PathValidationIssue[] {
   const issues: PathValidationIssue[] = [];
   const ids = skillIds.map(String).filter(Boolean);
@@ -122,7 +125,7 @@ export function validateLevel1Skills(
 
 function validateInnatePowerRecommendations(
   level1: NonNullable<ArchetypePathData['level1']>,
-  context?: PathValidationContext
+  context?: PathValidationContext,
 ): PathValidationIssue[] {
   const innateIds = level1.innatePowers ?? [];
   if (innateIds.length === 0) return [];
@@ -159,7 +162,7 @@ function validateInnatePowerRecommendations(
 
 function validateLoadoutTrainingPoints(
   level1: NonNullable<ArchetypePathData['level1']>,
-  context?: PathValidationContext
+  context?: PathValidationContext,
 ): PathValidationIssue[] {
   const issues: PathValidationIssue[] = [];
   const loadouts = level1.loadouts ?? [];

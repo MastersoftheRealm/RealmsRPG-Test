@@ -49,28 +49,28 @@ function formatDelta(value: number) {
 }
 
 function calculateLevelGains(
-  currentLevel: number, 
-  newLevel: number, 
+  currentLevel: number,
+  newLevel: number,
   highestAbility: number = 0,
   archetypeType?: ArchetypeCategory,
   rules?: Partial<CoreRulesMap>,
-  archetypeChoices?: Record<number, 'innate' | 'feat'>
+  archetypeChoices?: Record<number, 'innate' | 'feat'>,
 ): ProgressionDelta {
   const currentHE = calculateHealthEnergyPool(currentLevel, 'PLAYER', false, rules);
   const newHE = calculateHealthEnergyPool(newLevel, 'PLAYER', false, rules);
-  
+
   const currentAP = calculateAbilityPoints(currentLevel, false, rules);
   const newAP = calculateAbilityPoints(newLevel, false, rules);
-  
+
   const currentSP = calculateSkillPointsForEntity(currentLevel, 'character', rules);
   const newSP = calculateSkillPointsForEntity(newLevel, 'character', rules);
-  
+
   const currentTP = calculateTrainingPoints(currentLevel, highestAbility, rules);
   const newTP = calculateTrainingPoints(newLevel, highestAbility, rules);
-  
+
   const currentProf = calculateProficiency(currentLevel, false, rules);
   const newProf = calculateProficiency(newLevel, false, rules);
-  
+
   return {
     healthEnergy: newHE - currentHE,
     abilityPoints: newAP - currentAP,
@@ -96,16 +96,16 @@ export function LevelUpModal({
   const maxLevel = 20; // Max level cap
   // Fresh target per open — parent remounts when showLevelUpModal becomes true.
   const [targetLevel, setTargetLevel] = useState(() =>
-    Math.min(maxLevel, Math.max(1, currentLevel + 1))
+    Math.min(maxLevel, Math.max(1, currentLevel + 1)),
   );
 
   const minLevel = 1;
   const isLevelChange = targetLevel !== currentLevel;
   const isLevelDown = targetLevel < currentLevel;
-  
+
   // Highest of power + martial archetype ability scores (matches TP formula / sheet)
   const highestAbility = useMemo(() => getArchetypeAbilityScore(character), [character]);
-  
+
   // Calculate level gains
   const gains = useMemo(() => {
     const archType = (character.archetype?.type || 'power') as ArchetypeCategory;
@@ -115,40 +115,40 @@ export function LevelUpModal({
       highestAbility,
       archType,
       rules,
-      character.archetypeChoices
+      character.archetypeChoices,
     );
   }, [currentLevel, targetLevel, highestAbility, character, rules]);
-  
+
   // Get milestone info
   const getMilestones = () => {
     const milestones = [];
-    
+
     // Check for ability point milestone (every 3 levels starting at 3)
     if (gains.abilityPoints > 0) {
       milestones.push(`+${gains.abilityPoints} Ability Point${gains.abilityPoints > 1 ? 's' : ''}`);
     }
-    
+
     // Check for proficiency milestone (every 5 levels)
     if (gains.proficiency > 0) {
       milestones.push(`+${gains.proficiency} Proficiency`);
     }
-    
+
     return milestones;
   };
-  
+
   const handleConfirm = () => {
     if (!isLevelChange) return;
     onConfirm(targetLevel);
     onClose();
   };
-  
+
   const milestones = getMilestones();
 
   const pathCharacter = displayCharacter ?? character;
   const showPathGuidance =
     !isLevelDown &&
     isLevelChange &&
-    (pathCharacter.archetypePathId?.trim()) &&
+    pathCharacter.archetypePathId?.trim() &&
     pathCharacter.archetype;
 
   return (
@@ -156,7 +156,7 @@ export function LevelUpModal({
       <div className="space-y-6">
         {/* Level Selector */}
         <div className="text-center">
-          <p className="text-text-secondary mb-2">
+          <p className="mb-2 text-text-secondary">
             {character.name} • Level {currentLevel}
           </p>
           <div className="flex items-center justify-center gap-4">
@@ -178,47 +178,47 @@ export function LevelUpModal({
             />
           </div>
         </div>
-        
+
         {/* Milestones */}
         {milestones.length > 0 && !isLevelDown && (
-          <div className="bg-tp-light dark:bg-warning-900/30 border border-tp-border dark:border-warning-800/50 rounded-lg p-4">
-            <div className="flex items-center gap-2 text-tp-text font-medium mb-2">
-              <Star className="w-5 h-5" />
+          <div className="rounded-lg border border-tp-border bg-tp-light p-4 dark:border-warning-800/50 dark:bg-warning-900/30">
+            <div className="mb-2 flex items-center gap-2 font-medium text-tp-text">
+              <Star className="h-5 w-5" />
               Milestone Bonuses!
             </div>
-            <ul className="text-sm text-tp-text/90 space-y-1">
+            <ul className="space-y-1 text-sm text-tp-text/90">
               {milestones.map((m, i) => (
                 <li key={i} className="flex items-center gap-2">
-                  <Check className="w-4 h-4" />
+                  <Check className="h-4 w-4" />
                   {m}
                 </li>
               ))}
             </ul>
           </div>
         )}
-        
+
         {/* Gains Grid */}
         <div className="grid grid-cols-2 gap-3">
           <GainCard
-            icon={<Heart className="w-5 h-5 text-danger-fg" />}
+            icon={<Heart className="h-5 w-5 text-danger-fg" />}
             label="Health & Energy"
             value={formatDelta(gains.healthEnergy)}
             description="Pool points"
           />
           <GainCard
-            icon={<Sword className="w-5 h-5 text-warning-500" />}
+            icon={<Sword className="h-5 w-5 text-warning-500" />}
             label="Training Points"
             value={formatDelta(gains.trainingPoints)}
             description="For powers/techniques"
           />
           <GainCard
-            icon={<Shield className="w-5 h-5 text-primary-fg" />}
+            icon={<Shield className="h-5 w-5 text-primary-fg" />}
             label="Skill Points"
             value={formatDelta(gains.skillPoints)}
             description="For skills"
           />
           <GainCard
-            icon={<Star className="w-5 h-5 text-power-fg" />}
+            icon={<Star className="h-5 w-5 text-power-fg" />}
             label="Feats"
             value={formatDelta(gains.archetypeFeats)}
             description="Archetype & Character"
@@ -232,22 +232,14 @@ export function LevelUpModal({
             targetLevel={targetLevel}
           />
         )}
-        
+
         {/* Confirm Button */}
         <div className="flex gap-3">
-          <Button
-            variant="secondary"
-            className="flex-1"
-            onClick={onClose}
-          >
+          <Button variant="secondary" className="flex-1" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            className="flex-1"
-            onClick={handleConfirm}
-            disabled={!isLevelChange}
-          >
-            {isLevelDown ? <ArrowDown className="w-5 h-5" /> : <ArrowUp className="w-5 h-5" />}
+          <Button className="flex-1" onClick={handleConfirm} disabled={!isLevelChange}>
+            {isLevelDown ? <ArrowDown className="h-5 w-5" /> : <ArrowUp className="h-5 w-5" />}
             Set Level to {targetLevel}
           </Button>
         </div>
@@ -265,8 +257,8 @@ interface GainCardProps {
 
 function GainCard({ icon, label, value, description }: GainCardProps) {
   return (
-    <div className="bg-surface-alt rounded-lg p-3 border border-border-light">
-      <div className="flex items-center gap-2 mb-1">
+    <div className="rounded-lg border border-border-light bg-surface-alt p-3">
+      <div className="mb-1 flex items-center gap-2">
         {icon}
         <span className="text-sm font-medium text-text-secondary">{label}</span>
       </div>

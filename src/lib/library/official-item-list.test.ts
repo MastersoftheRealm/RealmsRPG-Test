@@ -10,7 +10,9 @@ import type { LibraryItem } from '@/types/library';
 
 const propertiesDb: never[] = [];
 
-function item(partial: Partial<LibraryItem> & Pick<LibraryItem, 'id' | 'name' | 'type'>): LibraryItem {
+function item(
+  partial: Partial<LibraryItem> & Pick<LibraryItem, 'id' | 'name' | 'type'>,
+): LibraryItem {
   return {
     docId: partial.id,
     properties: [],
@@ -102,12 +104,6 @@ describe('official-item-list armament kinds', () => {
     const row = rows[0]!;
     expect(row.block).not.toBe('-');
     const cols = armamentRowColumns(row, 'shield');
-    expect(cols.map((c) => c.key)).toEqual([
-      'rarity',
-      'currency',
-      'tp',
-      'block',
-      'damage',
-    ]);
+    expect(cols.map((c) => c.key)).toEqual(['rarity', 'currency', 'tp', 'block', 'damage']);
   });
 });

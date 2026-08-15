@@ -44,7 +44,7 @@ export interface GuidedEquipmentL2ItemData {
 }
 
 export function pathRecommendationKindForEquipmentPhase(
-  phase: EquipmentPhase
+  phase: EquipmentPhase,
 ): 'armaments' | 'equipment' {
   return phase === 'gear' ? 'equipment' : 'armaments';
 }
@@ -61,10 +61,7 @@ function asLibraryItemType(type: string | undefined): LibraryItem['type'] {
   return 'weapon';
 }
 
-function refTp(
-  ref: PathItemRecommendation,
-  catalog: Map<string, EligibleEquipmentRow>
-): number {
+function refTp(ref: PathItemRecommendation, catalog: Map<string, EligibleEquipmentRow>): number {
   const row = catalog.get(normalizeId(ref.id));
   return (row?.trainingPoints ?? 0) * Math.max(1, ref.quantity);
 }
@@ -72,7 +69,7 @@ function refTp(
 function itemDescription(
   rowId: string,
   officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
+  codexEquipment: CodexEquipmentItem[],
 ): string | undefined {
   const lib = libraryRowForRef(rowId, officialItems, codexEquipment);
   if (!lib || !('description' in lib)) return undefined;
@@ -85,14 +82,7 @@ function rarityDisplay(row: EligibleEquipmentRow): string {
 }
 
 /** Phase type labels — not taxonomy (Adventuring, Tools, …). */
-const PHASE_IMPLIED_CATEGORY = new Set([
-  'weapon',
-  'armor',
-  'shield',
-  'equipment',
-  'item',
-  'gear',
-]);
+const PHASE_IMPLIED_CATEGORY = new Set(['weapon', 'armor', 'shield', 'equipment', 'item', 'gear']);
 
 /**
  * Gear Category cell: Codex taxonomy only. Blank when missing or when the
@@ -100,13 +90,15 @@ const PHASE_IMPLIED_CATEGORY = new Set([
  */
 function taxonomyCategoryColumnValue(
   itemCategory: string | null | undefined,
-  type: string | undefined
+  type: string | undefined,
 ): string {
   const raw = String(itemCategory ?? '').trim();
   if (!raw) return '-';
   const lower = raw.toLowerCase();
   if (PHASE_IMPLIED_CATEGORY.has(lower)) return '-';
-  const typeLower = String(type ?? '').trim().toLowerCase();
+  const typeLower = String(type ?? '')
+    .trim()
+    .toLowerCase();
   if (typeLower && lower === typeLower) return '-';
   return formatListCellLabel(raw);
 }
@@ -117,7 +109,7 @@ function rangeDisplay(row: EligibleEquipmentRow): string {
 
 function catalogRowAsLibraryItem(
   row: EligibleEquipmentRow,
-  official: LibraryItem | undefined
+  official: LibraryItem | undefined,
 ): LibraryItem {
   if (official) return official;
   return {
@@ -136,17 +128,17 @@ function toOfficialItemRowForGuided(
   unitCost: number,
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
-  itemProperties: ItemPropertyTpRow[] = []
+  itemProperties: ItemPropertyTpRow[] = [],
 ): OfficialItemRow {
   const official = officialItems.find((i) => normalizeId(String(i.id)) === normalizeId(row.id));
   const kind = normalizeArmamentKind(row.type);
   const [built] = buildOfficialItemRows(
     [catalogRowAsLibraryItem(row, official)],
-    itemProperties as ItemProperty[]
+    itemProperties as ItemProperty[],
   );
   const lib = libraryRowForRef(row.id, officialItems, codexEquipment);
   const description =
-    lib && 'description' in lib ? String(lib.description ?? '').trim() : built?.description ?? '';
+    lib && 'description' in lib ? String(lib.description ?? '').trim() : (built?.description ?? '');
   const shieldDamage =
     deriveShieldDamageFromProperties((row.properties ?? []) as ItemPropertyPayload[]) ??
     (typeof (lib as CodexEquipmentItem | undefined)?.damage === 'string'
@@ -178,7 +170,7 @@ function buildL2Columns(
   phase: EquipmentPhase,
   row: EligibleEquipmentRow,
   unitCost: number,
-  officialRow: OfficialItemRow
+  officialRow: OfficialItemRow,
 ): NonNullable<SelectableItem['columns']> {
   if (phase === 'gear') {
     return [
@@ -202,11 +194,8 @@ function buildL2Columns(
   // Weapon phase (weapons + shields)
   const cols = armamentRowColumns(officialRow, 'weapon');
   if (kind === 'shield') {
-    const blockLabel =
-      officialRow.block !== '-' ? `Block ${officialRow.block}` : 'Shield';
-    return cols.map((c) =>
-      c.key === 'damage' ? { ...c, value: blockLabel } : c
-    );
+    const blockLabel = officialRow.block !== '-' ? `Block ${officialRow.block}` : 'Shield';
+    return cols.map((c) => (c.key === 'damage' ? { ...c, value: blockLabel } : c));
   }
   return cols;
 }
@@ -217,7 +206,7 @@ export function buildGuidedEquipmentL2Items(
   ctx: EquipmentEligibilityContext,
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
-  itemProperties: ItemPropertyTpRow[] = []
+  itemProperties: ItemPropertyTpRow[] = [],
 ): SelectableItem[] {
   const phaseRows = rowsForEquipmentPhase(catalog, phase);
   const eligible = filterEligibleEquipment(phaseRows, ctx);
@@ -236,7 +225,7 @@ export function buildGuidedEquipmentL2Items(
       unitCost,
       officialItems,
       codexEquipment,
-      itemProperties
+      itemProperties,
     );
     const kind = normalizeArmamentKind(row.type);
     const family =
@@ -271,7 +260,7 @@ export function buildGuidedEquipmentL2Items(
 /** Current draft refs for a phase — shared by modal Confirm and inline immediate apply (TASK-684). */
 export function currentRefsForPhase(
   phase: EquipmentPhase,
-  draft: GuidedDraft
+  draft: GuidedDraft,
 ): PathItemRecommendation[] {
   return phase === 'weapon'
     ? draft.loadoutWeapons
@@ -280,10 +269,7 @@ export function currentRefsForPhase(
       : draft.equipment;
 }
 
-export function initialSelectedIdsForPhase(
-  phase: EquipmentPhase,
-  draft: GuidedDraft
-): Set<string> {
+export function initialSelectedIdsForPhase(phase: EquipmentPhase, draft: GuidedDraft): Set<string> {
   return new Set(currentRefsForPhase(phase, draft).map((r) => String(r.id)));
 }
 
@@ -297,7 +283,7 @@ function selectedToRefs(selected: SelectableItem[]): PathItemRecommendation[] {
 
 function refCurrency(
   ref: PathItemRecommendation,
-  catalog: Map<string, EligibleEquipmentRow>
+  catalog: Map<string, EligibleEquipmentRow>,
 ): number {
   const row = catalog.get(normalizeId(ref.id));
   return resolveCatalogRowUnitCost(row) * Math.max(1, ref.quantity);
@@ -305,14 +291,14 @@ function refCurrency(
 
 function computeRefsTpSpent(
   refs: PathItemRecommendation[],
-  catalog: Map<string, EligibleEquipmentRow>
+  catalog: Map<string, EligibleEquipmentRow>,
 ): number {
   return refs.reduce((sum, ref) => sum + refTp(ref, catalog), 0);
 }
 
 function computeRefsGearSpend(
   refs: PathItemRecommendation[],
-  catalog: Map<string, EligibleEquipmentRow>
+  catalog: Map<string, EligibleEquipmentRow>,
 ): number {
   return refs.reduce((sum, ref) => sum + refCurrency(ref, catalog), 0);
 }
@@ -321,7 +307,7 @@ function computeRefsGearSpend(
 export function crossPhaseTpSpent(
   phase: EquipmentPhase,
   draft: GuidedDraft,
-  catalog: Map<string, EligibleEquipmentRow>
+  catalog: Map<string, EligibleEquipmentRow>,
 ): number {
   if (phase === 'weapon') return computeRefsTpSpent(draft.loadoutArmor, catalog);
   if (phase === 'armor') return computeRefsTpSpent(draft.loadoutWeapons, catalog);
@@ -335,7 +321,7 @@ export function crossPhaseTpSpent(
 export function crossPhaseCurrencySpent(
   phase: EquipmentPhase,
   draft: GuidedDraft,
-  catalog: Map<string, EligibleEquipmentRow>
+  catalog: Map<string, EligibleEquipmentRow>,
 ): number {
   if (phase === 'weapon') {
     return (
@@ -359,7 +345,7 @@ export function computeL2TpSpent(
   phase: EquipmentPhase,
   draft: GuidedDraft,
   selected: SelectableItem[],
-  catalog: Map<string, EligibleEquipmentRow>
+  catalog: Map<string, EligibleEquipmentRow>,
 ): number {
   return (
     crossPhaseTpSpent(phase, draft, catalog) + computeRefsTpSpent(selectedToRefs(selected), catalog)
@@ -382,7 +368,7 @@ export function computeL2CurrencySpent(
   phase: EquipmentPhase,
   draft: GuidedDraft,
   selected: SelectableItem[],
-  catalog: Map<string, EligibleEquipmentRow>
+  catalog: Map<string, EligibleEquipmentRow>,
 ): number {
   const selectedSpend = computeL2GearSpend(selected);
   if (phase === 'weapon') {
@@ -430,7 +416,7 @@ export function applyGuidedEquipmentL2Refs(
   refs: PathItemRecommendation[],
   catalog: Map<string, EligibleEquipmentRow>,
   tpLimit: number,
-  currencyBudget: number
+  currencyBudget: number,
 ): ApplyL2Result {
   const currencySpent =
     crossPhaseCurrencySpent(phase, draft, catalog) + computeRefsGearSpend(refs, catalog);
@@ -493,7 +479,7 @@ export function applyGuidedEquipmentL2Selection(
   selected: SelectableItem[],
   catalog: Map<string, EligibleEquipmentRow>,
   tpLimit: number,
-  currencyBudget: number
+  currencyBudget: number,
 ): ApplyL2Result {
   return applyGuidedEquipmentL2Refs(
     phase,
@@ -501,7 +487,7 @@ export function applyGuidedEquipmentL2Selection(
     selectedToRefs(selected),
     catalog,
     tpLimit,
-    currencyBudget
+    currencyBudget,
   );
 }
 
@@ -516,7 +502,7 @@ export function toggleGuidedEquipmentL2Ref(
   id: string,
   catalog: Map<string, EligibleEquipmentRow>,
   tpLimit: number,
-  currencyBudget: number
+  currencyBudget: number,
 ): ApplyL2Result {
   const current = currentRefsForPhase(phase, draft);
   const idNorm = normalizeId(id);
@@ -540,7 +526,7 @@ export function changeGuidedEquipmentL2Quantity(
   delta: number,
   catalog: Map<string, EligibleEquipmentRow>,
   tpLimit: number,
-  currencyBudget: number
+  currencyBudget: number,
 ): ApplyL2Result {
   const current = currentRefsForPhase(phase, draft);
   const idNorm = normalizeId(id);

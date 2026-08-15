@@ -25,10 +25,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label
-            htmlFor={inputId}
-            className="mb-1.5 block text-sm font-medium text-text-primary"
-          >
+          <label htmlFor={inputId} className="mb-1.5 block text-sm font-medium text-text-primary">
             {label}
           </label>
         )}
@@ -38,18 +35,14 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           className={cn(
             'flex h-10 w-full rounded-lg border bg-surface px-4 py-2.5 text-sm',
             'text-text-primary placeholder:text-text-muted',
-            'focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-primary-outline-border',
-            'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface-alt',
-            error
-              ? 'border-danger focus:ring-danger-border'
-              : 'border-border-light',
-            className
+            'focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none',
+            'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:opacity-50',
+            error ? 'border-danger focus:ring-danger-border' : 'border-border-light',
+            className,
           )}
           ref={ref}
           aria-invalid={error ? 'true' : undefined}
-          aria-describedby={
-            error ? errorId : helperText ? helperId : undefined
-          }
+          aria-describedby={error ? errorId : helperText ? helperId : undefined}
           {...props}
         />
         {error && (
@@ -64,7 +57,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Input.displayName = 'Input';

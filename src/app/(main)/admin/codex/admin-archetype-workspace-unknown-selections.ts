@@ -5,7 +5,9 @@
 import type { PathItemRecommendation } from '@/types/archetype';
 import type { PathLevelForm, PathSelectionKey, SelectionOption } from './admin-archetype-path-form';
 
-type OptionsByField = Partial<Record<PathSelectionKey | 'armaments' | 'equipment', SelectionOption[]>>;
+type OptionsByField = Partial<
+  Record<PathSelectionKey | 'armaments' | 'equipment', SelectionOption[]>
+>;
 
 function getSelectedLabels(values: string[], options: SelectionOption[]) {
   return values.map((value) => options.find((option) => option.value === value)?.label ?? value);
@@ -14,7 +16,7 @@ function getSelectedLabels(values: string[], options: SelectionOption[]) {
 export function getUnknownSelectionsForLevel(
   levelForm: PathLevelForm,
   labelPrefix: string,
-  optionsByField: OptionsByField
+  optionsByField: OptionsByField,
 ): string[] {
   const unknowns: string[] = [];
 

@@ -1,6 +1,13 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-14 (Standalone creators: empty expanded-header gap only, Attack label, power tooltips)
+Last updated: 2026-08-15 (Sheet skills filters; trait type chip once; feat rank UX)
+
+**Raw Feedback Log — 2026-08-15 (Sheet Skills filters; trait type chip; feat rank stepper)**
+- Context: Character sheet Skills toolbar; Feats/Traits list; edit-mode Archetype/Character feat rank
+- Priority: Medium (filters + chip leak now); feat rank blocked on owner pick
+- Feedback (verbatim summary): (1) Skills All vs Proficient uses the bulky source-style SegmentedControl; want a cleaner, smaller, uninvasive filter for All/Proficient plus show/hide sub-skills. Rename **Show sub-skills** → **Sub-Skills**. (2) In the character feat list, traits list their type twice when expanded (e.g. Characteristic in the item header and again as a desc chip); type is only needed in the expanded view. (3) Edit-mode sheet feat list: increasing an existing feat’s level via the Lvl quantity stepper is unclear, especially next to uses-per-recovery ±; brainstorm a clearer control.
+- Misinterpretation / code note: Skills already use `SegmentedControl` (same chrome as `SourceFilter`) + a 44px checkbox labeled “Show sub-skills” (`skills-section.tsx`; TASK-584). Trait kind is `badges` on compact `FeatsTraitsListSection` rows (`mapTraitRows`); compact GLR always paints badges on the name **and** expanded `DescriptorChip`s unless `showBadgesInName` (TASK-415 leak). **Superseded by TASK-780:** sheet feat rank is no longer a collapsed Lvl `ValueStepper`. Rank lives on expanded **Feat Levels** chips (`buildFeatLevelChips` + `GridListChip`; edit uses `ChipData.onSelect`). Creature creator stepper is unchanged.
+- Disposition: **TASK-778** (compact Skills All/Proficient + Sub-Skills toggle). **TASK-779** (trait type DescriptorChip expanded-only). **TASK-780 done** pending-qa — option A (expanded Feat Levels chips; DEV-Q04). Do not reopen TASK-584 / TASK-415 / the 2026-06-26 “add a level stepper” ship.
 
 **Raw Feedback Log — 2026-08-14 (Creator headers: empty space only, not smaller titles)**
 - Context: Follow-up on TASK-764 shared `CollapsibleSection` after the first compact-header pass
@@ -1864,7 +1871,7 @@ Notes
 - Priority: Medium
 - Feedback: No way to increase feat level after adding a leveled character/archetype feat; should be easy (step up in feat list).
 - Expected: Level stepper on added library feats; respects requirements and updates feat points.
-- Disposition: Implemented 2026-06-26. LVL column with ValueStepper for multi-level library feats; add-feat merges replace lower levels in same family.
+- Disposition: Implemented 2026-06-26. LVL column with ValueStepper for multi-level library feats; add-feat merges replace lower levels in same family. **2026-08-15 revisit:** sheet Lvl stepper replaced — **TASK-780** option A (expanded Feat Levels chips). Creature creator stepper unchanged.
 
 **Raw Feedback Log ? 2026-06-26 (Feat/trait custom name + player note)**
 - Date: 2026-06-26

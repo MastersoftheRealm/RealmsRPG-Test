@@ -13,7 +13,7 @@ import {
 } from './powers-techniques-l2';
 
 function powerPart(
-  partial: Pick<PowerPart, 'id' | 'name' | 'base_en' | 'base_tp'> & Partial<PowerPart>
+  partial: Pick<PowerPart, 'id' | 'name' | 'base_en' | 'base_tp'> & Partial<PowerPart>,
 ): PowerPart {
   return {
     description: '',
@@ -26,7 +26,7 @@ function power(
   partial: Pick<LibraryPower, 'id' | 'name'> & {
     partId: string;
     partName: string;
-  }
+  },
 ): LibraryPower {
   return {
     id: partial.id,
@@ -160,7 +160,7 @@ describe('computeL2PowersTechniquesTpSpent + combineGuidedTpBudgets', () => {
     const combatOnly = totalSpent - loadoutSpent;
     const combined = combineGuidedTpBudgets(
       { spent: loadoutSpent, limit: 30, remaining: 20 },
-      combatOnly
+      combatOnly,
     );
     expect(combined).toEqual({ spent: 15, limit: 30, remaining: 15 });
   });

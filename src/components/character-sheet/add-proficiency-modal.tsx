@@ -85,7 +85,7 @@ function partToProf(
   kind: 'power_part' | 'technique_part',
   op1: number,
   op2: number,
-  op3: number
+  op3: number,
 ): CharacterProficiency {
   const baseTP = part.base_tp ?? 0;
   const op1TP = part.op_1_tp ?? 0;
@@ -182,7 +182,7 @@ export function AddProficiencyModal({
       }
       return propertyToProf(item.data as PropertyLike, op1Level);
     },
-    [isPart, variant, op1Level, op2Level, op3Level]
+    [isPart, variant, op1Level, op2Level, op3Level],
   );
 
   const handleConfirm = useCallback(
@@ -194,7 +194,7 @@ export function AddProficiencyModal({
       onAdd(prof);
       // UnifiedSelectionModal closes after onConfirm — do not double-call onClose.
     },
-    [buildProf, onAdd]
+    [buildProf, onAdd],
   );
 
   const confirmDisabled = useCallback(
@@ -203,7 +203,7 @@ export function AddProficiencyModal({
       if (!item) return true;
       return calculateProficiencyTP(buildProf(item)) <= 0;
     },
-    [buildProf]
+    [buildProf],
   );
 
   const footerExtra = useCallback(
@@ -212,7 +212,7 @@ export function AddProficiencyModal({
       if (!item) return null;
 
       const totalTp = (
-        <p className="text-xs text-text-muted dark:text-text-secondary">
+        <p className="text-xs text-text-muted">
           Total TP for this proficiency: {calculateProficiencyTP(buildProf(item))}
         </p>
       );
@@ -243,9 +243,7 @@ export function AddProficiencyModal({
                       type="number"
                       min={0}
                       value={lvl}
-                      onChange={(e) =>
-                        setLvl(Math.max(0, Math.floor(Number(e.target.value) || 0)))
-                      }
+                      onChange={(e) => setLvl(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
                       className="min-h-11 w-full rounded border border-border bg-surface px-2 py-1.5 text-sm text-text-primary"
                       aria-label={`Option ${n} level`}
                     />
@@ -278,9 +276,7 @@ export function AddProficiencyModal({
               type="number"
               min={0}
               value={op1Level}
-              onChange={(e) =>
-                setOp1Level(Math.max(0, Math.floor(Number(e.target.value) || 0)))
-              }
+              onChange={(e) => setOp1Level(Math.max(0, Math.floor(Number(e.target.value) || 0)))}
               className="min-h-11 w-full max-w-[120px] rounded border border-border bg-surface px-2 py-1.5 text-sm text-text-primary"
               aria-label="Option level"
             />
@@ -289,7 +285,7 @@ export function AddProficiencyModal({
         </div>
       );
     },
-    [isPart, op1Level, op2Level, op3Level, buildProf]
+    [isPart, op1Level, op2Level, op3Level, buildProf],
   );
 
   return (
@@ -306,9 +302,7 @@ export function AddProficiencyModal({
       itemLabel={isPart ? 'part' : 'property'}
       emptyMessage="No parts or properties found."
       emptySubMessage={
-        items.length === 0
-          ? 'Codex may be empty for this type.'
-          : 'Try a different search.'
+        items.length === 0 ? 'Codex may be empty for this type.' : 'Try a different search.'
       }
       searchPlaceholder="Search by name..."
       searchFields={['name']}

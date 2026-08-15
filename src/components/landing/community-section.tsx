@@ -15,15 +15,13 @@ export function CommunitySection() {
   return (
     <section className="bg-surface-secondary py-14 sm:py-20">
       <div className="layout-shell-wide px-4">
-        <div className="max-w-[52ch] mx-auto text-center flex flex-col items-center gap-4">
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-text-primary">
+        <div className="mx-auto flex max-w-[52ch] flex-col items-center gap-4 text-center">
+          <h2 className="font-display text-2xl font-bold text-text-primary sm:text-3xl">
             {copy.heading}
           </h2>
-          <p className="font-nunito text-base sm:text-lg text-text-secondary">
-            {copy.body}
-          </p>
+          <p className="font-nunito text-base text-text-secondary sm:text-lg">{copy.body}</p>
           <MarketingExternalButton href={DISCORD_URL} variant="outline" size="lg">
-            <DiscordIcon className="w-5 h-5" />
+            <DiscordIcon className="h-5 w-5" />
             {copy.cta}
           </MarketingExternalButton>
         </div>

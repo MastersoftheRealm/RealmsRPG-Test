@@ -24,13 +24,16 @@ export function resolveCharacterVisibility(row: {
 }): CharacterVisibility {
   const fromColumn = asVisibility(row.visibility);
   if (fromColumn) return fromColumn;
-  const blob = row.data && typeof row.data === 'object' ? (row.data as Record<string, unknown>).visibility : undefined;
+  const blob =
+    row.data && typeof row.data === 'object'
+      ? (row.data as Record<string, unknown>).visibility
+      : undefined;
   return asVisibility(blob) ?? 'private';
 }
 
 export function getCharacterListColumns(
   data: Record<string, unknown>,
-  options?: { archetypeNameById?: Map<string, string> }
+  options?: { archetypeNameById?: Map<string, string> },
 ): {
   name: string;
   level: number;
@@ -44,7 +47,7 @@ export function getCharacterListColumns(
       archetypePathId: data.archetypePathId as string | undefined,
       archetype: data.archetype as { id?: string; name?: string; type?: string } | undefined,
     },
-    options?.archetypeNameById
+    options?.archetypeNameById,
   );
   const ancestry = data.ancestry as { name?: string } | undefined;
   return {

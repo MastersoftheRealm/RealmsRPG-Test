@@ -9,7 +9,13 @@
 import { useState, useRef, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useToast } from '@/components/ui';
-import { useCampaign, useCharacters, useInvalidateCampaigns, useAuth, useCampaignRolls } from '@/hooks';
+import {
+  useCampaign,
+  useCharacters,
+  useInvalidateCampaigns,
+  useAuth,
+  useCampaignRolls,
+} from '@/hooks';
 import {
   addCharacterToCampaignAction,
   removeCharacterFromCampaignAction,
@@ -85,7 +91,7 @@ export function useCampaignDetailPage() {
         if (result.visibilityUpdated) {
           showToast(
             'Character visibility was set to Campaign so other players in this campaign can view the sheet.',
-            'success'
+            'success',
           );
         }
       } else {
@@ -195,11 +201,10 @@ export function useCampaignDetailPage() {
   const totalCharacters = campaign?.characters?.length ?? 0;
   const isCampaignFull = totalCharacters >= MAX_CAMPAIGN_CHARACTERS;
   const canAddOwnCharacters =
-    isRealmMaster &&
-    ownerCharacters.length < OWNER_MAX_CHARACTERS &&
-    !isCampaignFull;
+    isRealmMaster && ownerCharacters.length < OWNER_MAX_CHARACTERS && !isCampaignFull;
   const charactersNotInCampaign = characters.filter(
-    (c) => !campaign?.characters?.some((cc) => cc.userId === currentUserId && cc.characterId === c.id)
+    (c) =>
+      !campaign?.characters?.some((cc) => cc.userId === currentUserId && cc.characterId === c.id),
   );
 
   return {

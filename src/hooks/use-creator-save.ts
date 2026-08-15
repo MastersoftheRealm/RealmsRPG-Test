@@ -11,9 +11,14 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/components/ui';
-import { saveToLibrary, saveToOfficialLibrary, findLibraryItemByName, findOfficialLibraryItemByName } from '@/services/library-service';
-
-const OFFICIAL_LIBRARY_KEY = ['official-library'] as const;
+import {
+  saveToLibrary,
+  saveToOfficialLibrary,
+  findLibraryItemByName,
+  findOfficialLibraryItemByName,
+} from '@/services/library-service';
+import { officialLibraryKeys } from '@/hooks/use-official-library';
+import { userLibraryKeys } from '@/hooks/use-user-library';
 
 /** Partial query keys for user library; invalidating these refreshes load-modal lists after save */
 const USER_LIBRARY_QUERY_KEYS: Record<CreatorLibraryType, readonly string[]> = {
@@ -25,7 +30,13 @@ const USER_LIBRARY_QUERY_KEYS: Record<CreatorLibraryType, readonly string[]> = {
   species: ['user-species'],
 };
 
-export type CreatorLibraryType = 'powers' | 'techniques' | 'empowered-techniques' | 'items' | 'creatures' | 'species';
+export type CreatorLibraryType =
+  | 'powers'
+  | 'techniques'
+  | 'empowered-techniques'
+  | 'items'
+  | 'creatures'
+  | 'species';
 
 export interface CreatorSavePayload {
   name: string;
@@ -61,7 +72,9 @@ export interface UseCreatorSaveReturn {
   /** Call when user confirms publish in modal */
   confirmPublish: () => Promise<void>;
   publishConfirmTitle: string;
-  publishConfirmDescription: ((name: string, opts: { existingInPublic: boolean }) => string) | undefined;
+  publishConfirmDescription:
+    | ((name: string, opts: { existingInPublic: boolean }) => string)
+    | undefined;
   /** True when publishing would replace an existing public item with the same name. */
   publishExistingInPublic: boolean;
 }
@@ -83,14 +96,17 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
 
   const queryClient = useQueryClient();
   const { showToast } = useToast();
-  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [saveMessage, setSaveMessage] = useState<{
+    type: 'success' | 'error';
+    text: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!saveMessage) return;
     showToast(
       saveMessage.text,
       saveMessage.type === 'success' ? 'success' : 'error',
-      saveMessage.type === 'error' ? 6000 : undefined
+      saveMessage.type === 'error' ? 6000 : undefined,
     );
   }, [saveMessage, showToast]);
   const [saveTarget, setSaveTarget] = useState<'private' | 'public'>('private');
@@ -112,9 +128,20 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
       setSaveMessage(null);
       try {
         if (target === 'public') {
-          await saveToOfficialLibrary(type, payload, existingPublicId ? { existingId: existingPublicId } : undefined);
+          await saveToOfficialLibrary(
+            type,
+            payload,
+            existingPublicId ? { existingId: existingPublicId } : undefined,
+          );
           // Refetch all matching official-library queries (inactive tabs too) so Library / browse update immediately
-          await queryClient.invalidateQueries({ queryKey: [...OFFICIAL_LIBRARY_KEY], refetchType: 'all' });
+          await queryClient.invalidateQueries({
+            queryKey: officialLibraryKeys.all,
+            refetchType: 'all',
+          });
+          await queryClient.invalidateQueries({
+            queryKey: officialLibraryKeys.counts,
+            refetchType: 'all',
+          });
           if (type === 'species') {
             await queryClient.invalidateQueries({ queryKey: ['codex'], refetchType: 'all' });
           }
@@ -124,6 +151,10 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
           await saveToLibrary(type, payload, existing ? { existingId: existing.id } : undefined);
           await queryClient.invalidateQueries({
             queryKey: [...USER_LIBRARY_QUERY_KEYS[type]],
+            refetchType: 'all',
+          });
+          await queryClient.invalidateQueries({
+            queryKey: userLibraryKeys.countsRoot,
             refetchType: 'all',
           });
           setSaveMessage({ type: 'success', text: successMessage });
@@ -141,13 +172,16 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
         setSaving(false);
       }
     },
-    [type, getPayload, successMessage, publicSuccessMessage, onSaveSuccess, queryClient]
+    [type, getPayload, successMessage, publicSuccessMessage, onSaveSuccess, queryClient],
   );
 
   const handleSave = useCallback(async () => {
     const { name } = getPayload();
     if (!name?.trim()) {
-      setSaveMessage({ type: 'error', text: `Please enter a ${type === 'species' ? 'species' : type.slice(0, -1)} name` });
+      setSaveMessage({
+        type: 'error',
+        text: `Please enter a ${type === 'species' ? 'species' : type.slice(0, -1)} name`,
+      });
       return;
     }
     if (saveTarget === 'public' && requirePublishConfirm) {

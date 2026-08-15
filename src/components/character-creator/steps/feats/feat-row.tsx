@@ -37,8 +37,8 @@ export function FeatRow({
 }: FeatRowProps) {
   const selectedList = isCharacterFeat ? selectedCharacterFeats : selectedArchetypeFeats;
   const maxForType = isCharacterFeat ? maxCharacterFeats : maxArchetypeFeats;
-  
-  const isSelected = selectedList.some(f => f.id === feat.id);
+
+  const isSelected = selectedList.some((f) => f.id === feat.id);
   const requirements = checkRequirements(feat);
   const selectedWeight = selectedList.reduce((sum, selected) => {
     const selectedFeat = featById.get(String(selected.id));
@@ -58,7 +58,7 @@ export function FeatRow({
   }, 0);
   const nextWeight = selectedWeight - replacedWeight + targetLevel;
   const canSelect = (nextWeight <= maxForType || isSelected) && requirements.met;
-  
+
   // Build detail sections (Type, Category, Tags, Requirements) — shared builder. (DUP-10)
   const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels, {
     isCharacterFeat,
@@ -76,7 +76,11 @@ export function FeatRow({
         { key: 'Category', value: formatListCellLabel(feat.category) },
         { key: 'Ability', value: formatAbilityList(feat.ability) },
         { key: 'Recovery', value: formatListCellLabel(feat.rec_period) },
-        { key: 'Uses', value: (feat.uses_per_rec == null || feat.uses_per_rec === 0) ? '-' : String(feat.uses_per_rec) },
+        {
+          key: 'Uses',
+          value:
+            feat.uses_per_rec == null || feat.uses_per_rec === 0 ? '-' : String(feat.uses_per_rec),
+        },
       ]}
       detailSections={detailSections.length > 0 ? detailSections : undefined}
       selectable

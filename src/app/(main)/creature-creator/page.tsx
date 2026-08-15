@@ -10,16 +10,19 @@
 'use client';
 
 import { Suspense } from 'react';
-import { UnifiedSelectionModal, SourceFilter, sourceFilterSummary, SegmentedControl, type SelectableItem } from '@/components/shared';
+import {
+  UnifiedSelectionModal,
+  SourceFilter,
+  sourceFilterSummary,
+  SegmentedControl,
+  type SelectableItem,
+} from '@/components/shared';
 import { LoadingState } from '@/components/ui';
 import { Skull } from 'lucide-react';
 import { RollLog, RollProvider } from '@/components/rolls';
 import { formatListCellLabel } from '@/lib/utils';
 import { formatCreatureLevel } from '@/lib/game';
-import {
-  CreatorSummaryPanel,
-  CreatorPageShell,
-} from '@/components/creator';
+import { CreatorSummaryPanel, CreatorPageShell } from '@/components/creator';
 import type { DisplayItem } from '@/types/items';
 import type { CreatureSkill } from './creature-creator-types';
 import { AddCreatureFeatModal } from './AddCreatureFeatModal';
@@ -105,7 +108,7 @@ function CreatureCreatorContent() {
 
   return (
     <CreatorPageShell
-      icon={<Skull className="w-8 h-8 text-primary-link-fg" />}
+      icon={<Skull className="h-8 w-8 text-primary-link-fg" />}
       title="Creature Creator"
       description="Design custom creatures, monsters, and NPCs. Configure abilities, defenses, skills, and combat options."
       user={user}
@@ -141,7 +144,8 @@ function CreatureCreatorContent() {
           setShowResetConfirm(false);
         },
         title: 'Restart Creature',
-        description: 'Are you sure you want to reset all creature data? This will clear all fields and cannot be undone.',
+        description:
+          'Are you sure you want to reset all creature data? This will clear all fields and cannot be undone.',
         confirmLabel: 'Reset',
       }}
       loadModal={{
@@ -164,22 +168,93 @@ function CreatureCreatorContent() {
       sidebar={
         <CreatorSummaryPanel
           title="Creature Summary"
-          badge={creature.name ? { label: creature.name, className: 'bg-primary-subtle-bg text-primary-fg' } : undefined}
+          badge={
+            creature.name
+              ? { label: creature.name, className: 'bg-primary-subtle-bg text-primary-fg' }
+              : undefined
+          }
           resourceBoxes={[
-            { label: 'Ability Pts', value: `${stats.abilityRemaining}/${stats.abilityPoints}`, variant: stats.abilityRemaining < 0 ? 'danger' : stats.abilityRemaining === 0 ? 'success' : 'info' },
-            { label: 'Skill Pts', value: `${stats.skillRemaining}/${stats.skillPoints}`, variant: stats.skillRemaining < 0 ? 'danger' : stats.skillRemaining === 0 ? 'success' : 'info' },
-            { label: 'Feat Pts', value: `${stats.featRemaining}/${stats.featPoints}`, variant: stats.featRemaining < 0 ? 'danger' : stats.featRemaining === 0 ? 'success' : 'warning' },
-            { label: 'Training Pts', value: `${stats.trainingRemaining}/${stats.trainingPoints}`, variant: stats.trainingRemaining < 0 ? 'danger' : stats.trainingRemaining === 0 ? 'success' : 'warning' },
-            { label: 'Currency', value: `${stats.currencyRemaining}/${stats.currency}`, variant: stats.currencyRemaining < 0 ? 'danger' : stats.currencyRemaining === 0 ? 'success' : 'warning' },
+            {
+              label: 'Ability Pts',
+              value: `${stats.abilityRemaining}/${stats.abilityPoints}`,
+              variant:
+                stats.abilityRemaining < 0
+                  ? 'danger'
+                  : stats.abilityRemaining === 0
+                    ? 'success'
+                    : 'info',
+            },
+            {
+              label: 'Skill Pts',
+              value: `${stats.skillRemaining}/${stats.skillPoints}`,
+              variant:
+                stats.skillRemaining < 0
+                  ? 'danger'
+                  : stats.skillRemaining === 0
+                    ? 'success'
+                    : 'info',
+            },
+            {
+              label: 'Feat Pts',
+              value: `${stats.featRemaining}/${stats.featPoints}`,
+              variant:
+                stats.featRemaining < 0
+                  ? 'danger'
+                  : stats.featRemaining === 0
+                    ? 'success'
+                    : 'warning',
+            },
+            {
+              label: 'Training Pts',
+              value: `${stats.trainingRemaining}/${stats.trainingPoints}`,
+              variant:
+                stats.trainingRemaining < 0
+                  ? 'danger'
+                  : stats.trainingRemaining === 0
+                    ? 'success'
+                    : 'warning',
+            },
+            {
+              label: 'Currency',
+              value: `${stats.currencyRemaining}/${stats.currency}`,
+              variant:
+                stats.currencyRemaining < 0
+                  ? 'danger'
+                  : stats.currencyRemaining === 0
+                    ? 'success'
+                    : 'warning',
+            },
           ]}
           quickStats={[
-            { label: 'Health', value: stats.maxHealth, color: 'bg-health-light text-health border border-border-light' },
-            { label: 'Energy', value: stats.maxEnergy, color: 'bg-energy-light text-energy border border-border-light' },
-            { label: 'SPD', value: stats.speed, color: 'bg-surface-alt border border-border-light' },
-            { label: 'EVA', value: stats.evasion, color: 'bg-surface-alt border border-border-light' },
-            { label: 'PROF', value: `+${stats.proficiency}`, color: 'bg-surface-alt border border-border-light' },
+            {
+              label: 'Health',
+              value: stats.maxHealth,
+              color: 'bg-health-light text-health border border-border-light',
+            },
+            {
+              label: 'Energy',
+              value: stats.maxEnergy,
+              color: 'bg-energy-light text-energy border border-border-light',
+            },
+            {
+              label: 'SPD',
+              value: stats.speed,
+              color: 'bg-surface-alt border border-border-light',
+            },
+            {
+              label: 'EVA',
+              value: stats.evasion,
+              color: 'bg-surface-alt border border-border-light',
+            },
+            {
+              label: 'PROF',
+              value: `+${stats.proficiency}`,
+              color: 'bg-surface-alt border border-border-light',
+            },
           ]}
-          abilitiesChips={(['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const).map((k, i) => {
+          abilitiesChips={(
+            ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const
+          ).map((k, i) => {
             const abbr = ['STR', 'VIT', 'AGI', 'ACU', 'INT', 'CHA'][i];
             const v = creature.abilities[k];
             return { abbr, value: v };
@@ -204,7 +279,10 @@ function CreatureCreatorContent() {
             { label: 'Senses', items: creature.senses },
             { label: 'Movement', items: creature.movementTypes },
             { label: 'Languages', items: creature.languages },
-            { label: 'Inventory Cost', items: [`${stats.currencySpent}c spent / ${stats.currency}c max`] },
+            {
+              label: 'Inventory Cost',
+              items: [`${stats.currencySpent}c spent / ${stats.currency}c max`],
+            },
           ]}
         />
       }
@@ -233,11 +311,17 @@ function CreatureCreatorContent() {
               const powers = items.map(displayItemToCreaturePower);
               setCreature((prev) => ({ ...prev, powers: [...prev.powers, ...powers] }));
             }}
-            items={powerModalTab === 'empowered' ? empoweredTechniqueSelectableItems : powerSelectableItems}
+            items={
+              powerModalTab === 'empowered'
+                ? empoweredTechniqueSelectableItems
+                : powerSelectableItems
+            }
             title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
             maxSelections={10}
             itemLabel={powerModalTab === 'empowered' ? 'empowered technique' : 'power'}
-            searchPlaceholder={powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'}
+            searchPlaceholder={
+              powerModalTab === 'empowered' ? 'Search empowered techniques...' : 'Search powers...'
+            }
             columns={[
               { key: 'name', label: 'Name', sortable: true },
               { key: 'Energy', label: 'Energy', sortable: true },
@@ -319,7 +403,12 @@ function CreatureCreatorContent() {
             maxSelections={10}
             itemLabel="inventory item"
             searchPlaceholder="Search inventory..."
-            columns={[{ key: 'name', label: 'Name', sortable: true }, { key: 'Type', label: 'Type', sortable: true }, { key: 'TP', label: 'TP', sortable: true }, { key: 'Cost', label: 'Cost', sortable: true }]}
+            columns={[
+              { key: 'name', label: 'Name', sortable: true },
+              { key: 'Type', label: 'Type', sortable: true },
+              { key: 'TP', label: 'TP', sortable: true },
+              { key: 'Cost', label: 'Cost', sortable: true },
+            ]}
             gridColumns="1.5fr 0.6fr 0.5fr 0.6fr"
             size="xl"
             className="min-h-0"

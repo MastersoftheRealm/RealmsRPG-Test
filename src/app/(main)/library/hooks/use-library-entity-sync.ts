@@ -67,7 +67,7 @@ export function useLibraryEntitySync<TSource>(options: UseLibraryEntitySyncOptio
         });
       }
     },
-    [sources, getRowId, getRowName, sanitize, saveType, refetch, showToast, entitySingular]
+    [sources, getRowId, getRowName, sanitize, saveType, refetch, showToast, entitySingular],
   );
 
   const handleSyncAll = useCallback(async () => {
@@ -90,7 +90,7 @@ export function useLibraryEntitySync<TSource>(options: UseLibraryEntitySyncOptio
         syncedCount > 0
           ? `Synced ${syncedCount} ${syncedCount === 1 ? entitySingular : entityPlural} with current patch.`
           : `All ${entityPlural} are already in sync.`,
-        'success'
+        'success',
       );
     } catch (e) {
       showToast(getErrorMessage(e, `Failed to sync all ${entityPlural}`), 'error');

@@ -40,9 +40,7 @@ const FORGE_SWITCH_WARNING =
 
 type UiMode = 'path-view' | 'path-picker' | 'forge-edit';
 
-type PendingConfirm =
-  | { type: 'switch-forge' }
-  | { type: 'switch-path'; path: Archetype };
+type PendingConfirm = { type: 'switch-forge' } | { type: 'switch-path'; path: Archetype };
 
 export interface EditArchetypeResult {
   archetype: { id: string; type: ArchetypeCategory };
@@ -164,7 +162,9 @@ export function EditArchetypeModal({
   const pathDescription = display.archetype?.description?.trim();
 
   const confirmTitle =
-    pendingConfirm?.type === 'switch-forge' ? 'Switch to Forge Your Own?' : 'Change archetype path?';
+    pendingConfirm?.type === 'switch-forge'
+      ? 'Switch to Forge Your Own?'
+      : 'Change archetype path?';
   const confirmDescription =
     pendingConfirm?.type === 'switch-forge'
       ? FORGE_SWITCH_WARNING
@@ -220,7 +220,7 @@ export function EditArchetypeModal({
         {uiMode === 'path-view' && (
           <div className="space-y-6">
             <div
-              className="rounded-xl border-2 border-primary-subtle-border bg-primary-subtle-bg p-5 space-y-3"
+              className="space-y-3 rounded-xl border-2 border-primary-subtle-border bg-primary-subtle-bg p-5"
               role="region"
               aria-label={`Archetype path: ${pathName}`}
             >
@@ -243,15 +243,15 @@ export function EditArchetypeModal({
               <p className="text-sm text-text-secondary">
                 Power +{currentPow} · Martial +{currentMart} at level {level}
               </p>
-              <p className="text-xs text-text-muted dark:text-text-secondary">
-                Path abilities and proficiencies are set from the codex. Use the options below only if
-                you want to leave this path or choose a different one.
+              <p className="text-xs text-text-muted">
+                Path abilities and proficiencies are set from the codex. Use the options below only
+                if you want to leave this path or choose a different one.
               </p>
             </div>
 
             <div className="space-y-3">
               <h3 className="text-sm font-medium text-text-primary">Change creation style</h3>
-              <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <Button
                   variant="outline"
                   className="min-h-[44px] flex-1"
@@ -278,7 +278,7 @@ export function EditArchetypeModal({
                 <Spinner />
               </div>
             ) : pathOptions.length === 0 ? (
-              <p className="text-text-secondary text-sm">
+              <p className="text-sm text-text-secondary">
                 No other archetype paths are available in the codex.
               </p>
             ) : (
@@ -288,21 +288,21 @@ export function EditArchetypeModal({
                   if (options.length === 0) return null;
                   return (
                     <section key={group}>
-                      <h4 className="text-xs font-semibold text-text-secondary uppercase tracking-wide mb-2">
+                      <h4 className="mb-2 text-xs font-semibold tracking-wide text-text-secondary uppercase">
                         {pathCategoryGroupLabel(group)}
                       </h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                         {options.map((option) => (
                           <SelectionCard
                             key={option.id}
                             onClick={() => setPendingConfirm({ type: 'switch-path', path: option })}
-                            className="text-left min-h-[44px]"
+                            className="min-h-[44px] text-left"
                           >
-                            <span className="font-semibold text-text-primary block mb-1">
+                            <span className="mb-1 block font-semibold text-text-primary">
                               {option.name}
                             </span>
                             {option.description ? (
-                              <span className="text-sm text-text-secondary whitespace-pre-wrap block">
+                              <span className="block text-sm whitespace-pre-wrap text-text-secondary">
                                 {option.description}
                               </span>
                             ) : null}
@@ -319,47 +319,47 @@ export function EditArchetypeModal({
 
         {uiMode === 'forge-edit' && (
           <div className="space-y-6">
-            <p className="text-sm text-text-muted dark:text-text-secondary">
+            <p className="text-sm text-text-muted">
               Total proficiency at level {level}: {effectiveTotal} (redistributed when you change
               type).
             </p>
 
             <div>
-              <h3 className="text-sm font-medium text-text-primary mb-2">Archetype Type</h3>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {(Object.entries(ARCHETYPE_CATEGORY_INFO) as [ArchetypeCategory, typeof ARCHETYPE_CATEGORY_INFO.power][]).map(
-                  ([type, info]) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => handleTypeSelect(type)}
-                      className={cn(
-                        'p-4 rounded-lg border-2 text-left transition-all min-h-[44px]',
-                        selectedType === type
-                          ? 'border-primary-outline-border bg-primary-subtle-bg'
-                          : 'border-border-light bg-surface hover:border-border',
-                      )}
-                    >
-                      <span className="font-medium text-text-primary">{info.title}</span>
-                      <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
-                        {info.description}
-                      </p>
-                      {selectedType === type && (
-                        <span className="text-xs text-primary-fg mt-2 inline-block">
-                          {type === 'power' && `Power +${powProf}`}
-                          {type === 'martial' && `Martial +${martProf}`}
-                          {type === 'powered-martial' &&
-                            `Martial +${martProf} / Power +${powProf}`}
-                        </span>
-                      )}
-                    </button>
-                  ),
-                )}
+              <h3 className="mb-2 text-sm font-medium text-text-primary">Archetype Type</h3>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                {(
+                  Object.entries(ARCHETYPE_CATEGORY_INFO) as [
+                    ArchetypeCategory,
+                    typeof ARCHETYPE_CATEGORY_INFO.power,
+                  ][]
+                ).map(([type, info]) => (
+                  <button
+                    key={type}
+                    type="button"
+                    onClick={() => handleTypeSelect(type)}
+                    className={cn(
+                      'min-h-[44px] rounded-lg border-2 p-4 text-left transition-all',
+                      selectedType === type
+                        ? 'border-primary-outline-border bg-primary-subtle-bg'
+                        : 'border-border-light bg-surface hover:border-border',
+                    )}
+                  >
+                    <span className="font-medium text-text-primary">{info.title}</span>
+                    <p className="mt-1 text-xs text-text-muted">{info.description}</p>
+                    {selectedType === type && (
+                      <span className="mt-2 inline-block text-xs text-primary-fg">
+                        {type === 'power' && `Power +${powProf}`}
+                        {type === 'martial' && `Martial +${martProf}`}
+                        {type === 'powered-martial' && `Martial +${martProf} / Power +${powProf}`}
+                      </span>
+                    )}
+                  </button>
+                ))}
               </div>
             </div>
 
             <div>
-              <h3 className="text-sm font-medium text-text-primary mb-2">
+              <h3 className="mb-2 text-sm font-medium text-text-primary">
                 {selectedType === 'powered-martial'
                   ? 'Power and Martial Abilities (must be different)'
                   : selectedType === 'power'
@@ -368,9 +368,9 @@ export function EditArchetypeModal({
               </h3>
 
               {selectedType === 'powered-martial' ? (
-                <div className="grid md:grid-cols-2 gap-4">
+                <div className="grid gap-4 md:grid-cols-2">
                   <div>
-                    <h4 className="text-xs font-medium text-power-fg mb-2">Power Ability</h4>
+                    <h4 className="mb-2 text-xs font-medium text-power-fg">Power Ability</h4>
                     <div className="flex flex-wrap gap-2">
                       {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
                         <AbilityPickButton
@@ -386,7 +386,7 @@ export function EditArchetypeModal({
                     </div>
                   </div>
                   <div>
-                    <h4 className="text-xs font-medium text-martial-fg mb-2">Martial Ability</h4>
+                    <h4 className="mb-2 text-xs font-medium text-martial-fg">Martial Ability</h4>
                     <div className="flex flex-wrap gap-2">
                       {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
                         <AbilityPickButton

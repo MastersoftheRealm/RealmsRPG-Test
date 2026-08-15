@@ -18,9 +18,7 @@ export type ArmorDrSource = {
     | Array<string | { id?: number | string; name?: string; op_1_lvl?: number }>;
 };
 
-function propertiesForDr(
-  props: ArmorDrSource['properties'],
-): ItemPropertyPayload[] {
+function propertiesForDr(props: ArmorDrSource['properties']): ItemPropertyPayload[] {
   if (!Array.isArray(props)) return [];
   const payloads: ItemPropertyPayload[] = [];
   for (const p of props) {
@@ -36,11 +34,7 @@ function propertiesForDr(
 
 /** Resolve Damage Reduction for armor (sheet, library, enrichment, guided catalog). */
 export function resolveArmorDamageReduction(source: ArmorDrSource): number {
-  const direct =
-    source.damageReduction ??
-    source.armorValue ??
-    source.armor ??
-    source.armor_value;
+  const direct = source.damageReduction ?? source.armorValue ?? source.armor ?? source.armor_value;
   if (typeof direct === 'number' && !Number.isNaN(direct)) {
     return direct;
   }

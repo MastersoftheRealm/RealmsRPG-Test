@@ -39,7 +39,7 @@ export function MixedSpeciesSkillPicker({
   }, []);
 
   return (
-    <div className={cn('border rounded-xl overflow-hidden border-border-light', className)}>
+    <div className={cn('overflow-hidden rounded-xl border border-border-light', className)}>
       <div className="divide-y divide-border-subtle">
         {options.map((opt) => {
           const isSelected = selectedIds.includes(opt.id);
@@ -63,13 +63,13 @@ export function MixedSpeciesSkillPicker({
                     size="lg"
                   />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <h4 className="font-medium text-text-primary">{opt.name}</h4>
                   {description ? (
                     <>
                       <p
                         className={cn(
-                          'text-sm text-text-secondary mt-1',
+                          'mt-1 text-sm text-text-secondary',
                           isLong && !isExpanded && 'line-clamp-3',
                         )}
                       >
@@ -79,7 +79,7 @@ export function MixedSpeciesSkillPicker({
                         <button
                           type="button"
                           onClick={() => toggleDescription(opt.id)}
-                          className="mt-1 text-sm font-medium text-primary-link-fg hover:text-primary-fg-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-sm"
+                          className="mt-1 rounded-sm text-sm font-medium text-primary-link-fg hover:text-primary-fg-hover focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none"
                           aria-expanded={isExpanded}
                         >
                           {isExpanded ? choiceCardCopy.seeLess : choiceCardCopy.seeMore}

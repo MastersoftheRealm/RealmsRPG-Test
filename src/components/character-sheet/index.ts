@@ -13,9 +13,7 @@ export { LibrarySection } from './library-section';
 export { resolveLibraryActiveTab } from './library-tab-config';
 export { CharacterSheetProvider } from './character-sheet-context';
 export { CharacterSheetBody } from './character-sheet-body';
-export {
-  useCharacterSheetDerived,
-} from './use-character-sheet-derived';
+export { useCharacterSheetDerived } from './use-character-sheet-derived';
 export { useCharacterSheetActions } from './use-character-sheet-actions';
 export { AddLibraryItemModal } from './add-library-item-modal';
 export { AddFeatModal } from './add-feat-modal';

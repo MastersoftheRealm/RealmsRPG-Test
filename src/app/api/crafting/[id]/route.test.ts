@@ -14,7 +14,9 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
   return {
     ...actual,
     standardLimiter: {
-      check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+      check: vi.fn(() =>
+        Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 }),
+      ),
     },
   };
 });

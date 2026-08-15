@@ -36,7 +36,7 @@ describe('resolve-loadout-items', () => {
         currency: 0,
         properties: [],
       },
-    ]
+    ],
   );
 
   const loadout: PathLoadout = {
@@ -104,7 +104,7 @@ describe('resolve-loadout-items', () => {
           damageReduction: 14,
         },
       ],
-      []
+      [],
     );
     expect(loadoutDraftFromSelection(nestedArmorKit, lookupWithArmor)).toEqual({
       loadoutWeapons: [{ id: GREATSword, quantity: 1 }],
@@ -137,7 +137,7 @@ describe('resolve-loadout-items', () => {
           damageReduction: 14,
         },
       ],
-      []
+      [],
     );
     expect(
       rebucketLoadoutByLookup(
@@ -146,8 +146,8 @@ describe('resolve-loadout-items', () => {
           { id: SCALEMAIL, quantity: 1 },
         ],
         [],
-        lookupWithArmor
-      )
+        lookupWithArmor,
+      ),
     ).toEqual({
       loadoutWeapons: [{ id: GREATSword, quantity: 1 }],
       loadoutArmor: [{ id: SCALEMAIL, quantity: 1 }],
@@ -170,7 +170,7 @@ describe('resolve-loadout-items', () => {
           damage: [{ amount: 1, size: 8, type: 'slashing' }],
         },
       ],
-      []
+      [],
     );
     expect(
       pruneUnresolvedLoadoutRefs(
@@ -178,8 +178,8 @@ describe('resolve-loadout-items', () => {
           { id: GREATSword, quantity: 1 },
           { id: 'stale-kit-id', quantity: 1 },
         ],
-        lookup
-      )
+        lookup,
+      ),
     ).toEqual([{ id: GREATSword, quantity: 1 }]);
   });
 
@@ -213,7 +213,7 @@ describe('resolve-loadout-items', () => {
           currency: 0,
           properties: [],
         },
-      ]
+      ],
     );
     const items = resolveLoadoutItems(loadout, lookupWithArmor);
     const groups = groupResolvedItemsByCategory(items);
@@ -234,7 +234,7 @@ describe('resolve-loadout-items', () => {
           properties: [],
         },
       ],
-      []
+      [],
     );
     const items = resolveDraftArmaments(
       {
@@ -242,7 +242,7 @@ describe('resolve-loadout-items', () => {
         loadoutArmor: [],
         armaments: [{ id: 'stale-uuid', quantity: 1 }],
       },
-      lookup
+      lookup,
     );
     expect(items).toHaveLength(1);
     expect(items[0]?.name).toBe('Custom Greatsword');
@@ -255,7 +255,7 @@ describe('resolve-loadout-items', () => {
         loadoutWeapons: [{ id: GREATSword, quantity: 1 }],
         loadoutArmor: [{ id: SCALEMAIL, quantity: 1 }],
         armaments: [{ id: 'stale-uuid', quantity: 1 }],
-      }).map((r) => r.id)
+      }).map((r) => r.id),
     ).toEqual([GREATSword, SCALEMAIL]);
   });
 
@@ -265,7 +265,7 @@ describe('resolve-loadout-items', () => {
         loadoutWeapons: [],
         loadoutArmor: [],
         armaments: [{ id: GREATSword, quantity: 1 }],
-      })
+      }),
     ).toEqual([{ id: GREATSword, quantity: 1 }]);
   });
 });

@@ -3,22 +3,14 @@
  * Leaf module: no UI, store, or API imports.
  */
 
-export function characterLockToken(
-  value: string | Date | null | undefined
-): string | undefined {
+export function characterLockToken(value: string | Date | null | undefined): string | undefined {
   if (value == null) return undefined;
   if (typeof value === 'string' && value.trim()) return value;
   if (value instanceof Date && !Number.isNaN(value.getTime())) return value.toISOString();
   return undefined;
 }
 
-const META_KEY_SET = new Set<string>([
-  'id',
-  'userId',
-  'createdAt',
-  'updatedAt',
-  'lastPlayedAt',
-]);
+const META_KEY_SET = new Set<string>(['id', 'userId', 'createdAt', 'updatedAt', 'lastPlayedAt']);
 
 function isCharacterPatchMetaKey(key: string): boolean {
   return META_KEY_SET.has(key);
@@ -27,7 +19,7 @@ function isCharacterPatchMetaKey(key: string): boolean {
 /** True when both timestamps denote the same instant (string or Date.parse). */
 export function characterTimestampsMatch(
   a: string | null | undefined,
-  b: string | null | undefined
+  b: string | null | undefined,
 ): boolean {
   if (!a || !b) return false;
   if (a === b) return true;
@@ -42,15 +34,13 @@ export function characterTimestampsMatch(
  */
 export function isStaleCharacterWrite(
   expected: string | null | undefined,
-  actual: string | null | undefined
+  actual: string | null | undefined,
 ): boolean {
   if (!expected || !actual) return false;
   return !characterTimestampsMatch(expected, actual);
 }
 
-function stripCharacterPatchMeta(
-  patch: Record<string, unknown>
-): Record<string, unknown> {
+function stripCharacterPatchMeta(patch: Record<string, unknown>): Record<string, unknown> {
   const next: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(patch)) {
     if (isCharacterPatchMetaKey(key)) continue;
@@ -63,7 +53,7 @@ function stripCharacterPatchMeta(
 export function applyCharacterDirtyPatch(
   currentData: Record<string, unknown>,
   patch: Record<string, unknown>,
-  options?: { blobUpdatedAt?: string }
+  options?: { blobUpdatedAt?: string },
 ): Record<string, unknown> {
   const merged = { ...currentData, ...stripCharacterPatchMeta(patch) };
   if (options?.blobUpdatedAt) merged.updatedAt = options.blobUpdatedAt;
@@ -86,13 +76,10 @@ function stableEqual(a: unknown, b: unknown): boolean {
  */
 export function pickDirtyCharacterFields(
   current: Record<string, unknown>,
-  baseline: Record<string, unknown> | null | undefined
+  baseline: Record<string, unknown> | null | undefined,
 ): Record<string, unknown> {
   const dirty: Record<string, unknown> = {};
-  const keys = new Set([
-    ...Object.keys(current),
-    ...Object.keys(baseline ?? {}),
-  ]);
+  const keys = new Set([...Object.keys(current), ...Object.keys(baseline ?? {})]);
   for (const key of keys) {
     if (isCharacterPatchMetaKey(key)) continue;
     const value = current[key];
@@ -108,7 +95,7 @@ export function pickDirtyCharacterFields(
 export function mergeRemotePreservingDirty<T extends Record<string, unknown>>(
   remote: T,
   local: T,
-  dirtyKeys: readonly string[]
+  dirtyKeys: readonly string[],
 ): T {
   const next: Record<string, unknown> = { ...remote };
   for (const key of dirtyKeys) {

@@ -19,7 +19,7 @@ export function resolveGuidedSpeciesContext(
     GuidedDraft,
     'speciesId' | 'speciesName' | 'speciesMixed' | 'mixedSpeciesIds' | 'mixedSpeciesNames'
   >,
-  allSpecies: Species[]
+  allSpecies: Species[],
 ): GuidedSpeciesContext {
   if (draft.speciesMixed && draft.mixedSpeciesIds) {
     const [idA, idB] = draft.mixedSpeciesIds;

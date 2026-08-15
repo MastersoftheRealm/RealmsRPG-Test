@@ -96,11 +96,16 @@ export function RealmsImageField({
           </div>
         ) : (
           <div className="flex h-20 w-20 items-center justify-center rounded-card border border-border-light bg-image-matte">
-            <ImageIcon className="h-8 w-8 text-text-muted dark:text-text-secondary" aria-hidden />
+            <ImageIcon className="h-8 w-8 text-text-muted" aria-hidden />
           </div>
         )}
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" className="min-h-11" onClick={() => setIsPickerOpen(true)}>
+          <Button
+            type="button"
+            variant="outline"
+            className="min-h-11"
+            onClick={() => setIsPickerOpen(true)}
+          >
             {imageId || imageUrl ? 'Change image' : 'Choose image'}
           </Button>
           {(imageId || imageUrl) && (
@@ -144,7 +149,7 @@ export function RealmsImagePicker({
   const canUpload = isAdmin && allowAdminUpload;
   const filterCategories = useMemo(
     () => resolveRealmsImagePickerCategories(categories),
-    [categories]
+    [categories],
   );
 
   const [search, setSearch] = useState('');
@@ -194,7 +199,12 @@ export function RealmsImagePicker({
     setWasOpen(false);
   }
 
-  const { data: images = [], isLoading, error: loadError, refetch } = useQuery({
+  const {
+    data: images = [],
+    isLoading,
+    error: loadError,
+    refetch,
+  } = useQuery({
     queryKey: ['realms-images', 'picker', filterCategories, search],
     queryFn: () =>
       listRealmsImages({
@@ -295,7 +305,12 @@ export function RealmsImagePicker({
               )}
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button variant="outline" onClick={handleClose} disabled={isUploading} className="min-h-11">
+              <Button
+                variant="outline"
+                onClick={handleClose}
+                disabled={isUploading}
+                className="min-h-11"
+              >
                 Cancel
               </Button>
               {!showUploadPanel && (
@@ -309,7 +324,9 @@ export function RealmsImagePicker({
               )}
               {showUploadPanel && canUpload && (
                 <Button
-                  onClick={() => { void handleUploadAndSelect(); }}
+                  onClick={() => {
+                    void handleUploadAndSelect();
+                  }}
                   disabled={isUploading || !uploadName.trim()}
                   isLoading={isUploading}
                   className="min-h-11"
@@ -329,7 +346,9 @@ export function RealmsImagePicker({
               <button
                 type="button"
                 className="underline"
-                onClick={() => { void refetch(); }}
+                onClick={() => {
+                  void refetch();
+                }}
               >
                 Retry
               </button>
@@ -365,14 +384,17 @@ export function RealmsImagePicker({
               <p className="text-sm font-medium text-text-primary">New library image</p>
               <div className="flex flex-wrap items-start gap-4">
                 {uploadPreview && (
-                  <div className="h-20 w-20 min-h-[44px] min-w-[44px] shrink-0 overflow-hidden rounded-card border border-border-light bg-image-matte">
+                  <div className="h-20 min-h-[44px] w-20 min-w-[44px] shrink-0 overflow-hidden rounded-card border border-border-light bg-image-matte">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={uploadPreview} alt="" className="h-full w-full object-contain" />
                   </div>
                 )}
                 <div className="min-w-0 flex-1 space-y-3">
                   <div>
-                    <label htmlFor="realms-picker-upload-name" className="mb-1 block text-sm font-medium text-text-secondary">
+                    <label
+                      htmlFor="realms-picker-upload-name"
+                      className="mb-1 block text-sm font-medium text-text-secondary"
+                    >
                       Name *
                     </label>
                     <Input
@@ -417,10 +439,12 @@ export function RealmsImagePicker({
 
           <div className="min-h-0 flex-1 overflow-y-auto">
             {isLoading ? (
-              <p className="py-8 text-center font-nunito text-sm text-text-secondary">Loading images…</p>
+              <p className="py-8 text-center font-nunito text-sm text-text-secondary">
+                Loading images…
+              </p>
             ) : images.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-12 text-center">
-                <ImageIcon className="h-10 w-10 text-text-muted dark:text-text-secondary" aria-hidden />
+                <ImageIcon className="h-10 w-10 text-text-muted" aria-hidden />
                 <p className="font-nunito text-sm font-medium text-text-primary">No images found</p>
                 <p className="max-w-sm font-nunito text-xs text-text-secondary">
                   {canUpload
@@ -448,11 +472,11 @@ export function RealmsImagePicker({
                           setError(null);
                         }}
                         className={cn(
-                          'group relative flex w-full min-h-[44px] flex-col overflow-hidden rounded-card border bg-surface text-left transition-colors',
-                          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500',
+                          'group relative flex min-h-[44px] w-full flex-col overflow-hidden rounded-card border bg-surface text-left transition-colors',
+                          'focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none',
                           isSelected
                             ? 'border-primary-500 ring-2 ring-primary-500/30'
-                            : 'border-border-light hover:border-primary-outline-border hover:bg-primary-subtle-bg-hover/40'
+                            : 'border-border-light hover:border-primary-outline-border hover:bg-primary-subtle-bg-hover/40',
                         )}
                       >
                         <div className="relative aspect-square w-full bg-image-matte">
@@ -466,7 +490,7 @@ export function RealmsImagePicker({
                           />
                           {isSelected && (
                             <span
-                              className="absolute right-1.5 top-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary-button text-text-on-dark shadow-sm"
+                              className="absolute top-1.5 right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-primary-button text-text-on-dark shadow-sm"
                               aria-hidden
                             >
                               <Check className="h-4 w-4" />

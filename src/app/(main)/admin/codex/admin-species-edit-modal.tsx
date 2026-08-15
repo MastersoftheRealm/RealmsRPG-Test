@@ -149,13 +149,13 @@ export function AdminSpeciesEditModal({
       >
         <div className="space-y-4">
           {copySourceName && (
-            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
+            <p className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-secondary">
               Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>.
               Change the name and details as needed, then save to add the new species.
             </p>
           )}
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Name *</label>
             <Input
               value={form.name}
               onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -163,7 +163,9 @@ export function AdminSpeciesEditModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Description
+            </label>
             <Textarea
               value={form.description}
               onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -183,7 +185,7 @@ export function AdminSpeciesEditModal({
           />
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
+              <label className="mb-1 block text-sm font-medium text-text-secondary">Type</label>
               <Input
                 value={form.type}
                 onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
@@ -191,7 +193,7 @@ export function AdminSpeciesEditModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label className="mb-1 block text-sm font-medium text-text-secondary">
                 All Sizes (comma-separated)
               </label>
               <Input
@@ -203,7 +205,7 @@ export function AdminSpeciesEditModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label className="mb-1 block text-sm font-medium text-text-secondary">
                 Languages (comma-separated)
               </label>
               <Input
@@ -213,7 +215,7 @@ export function AdminSpeciesEditModal({
               />
             </div>
             <div className="flex items-end pb-2">
-              <label className="flex items-center gap-2 min-h-11 cursor-pointer">
+              <label className="flex min-h-11 cursor-pointer items-center gap-2">
                 <input
                   type="checkbox"
                   checked={form.isStarter}
@@ -228,7 +230,7 @@ export function AdminSpeciesEditModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label className="mb-1 block text-sm font-medium text-text-secondary">
                 Average Height (cm)
               </label>
               <Input
@@ -239,7 +241,7 @@ export function AdminSpeciesEditModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label className="mb-1 block text-sm font-medium text-text-secondary">
                 Average Weight (kg)
               </label>
               <Input
@@ -252,7 +254,9 @@ export function AdminSpeciesEditModal({
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Adulthood Age</label>
+              <label className="mb-1 block text-sm font-medium text-text-secondary">
+                Adulthood Age
+              </label>
               <Input
                 type="number"
                 min={0}
@@ -261,7 +265,7 @@ export function AdminSpeciesEditModal({
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">Max Age</label>
+              <label className="mb-1 block text-sm font-medium text-text-secondary">Max Age</label>
               <Input
                 type="number"
                 min={0}
@@ -271,14 +275,18 @@ export function AdminSpeciesEditModal({
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Species Skills</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Species Skills
+            </label>
             <ChipSelect
               label=""
               placeholder="Choose skills"
               options={skillOptions}
               selectedValues={form.skillIds}
               onSelect={(v) => setForm((f) => ({ ...f, skillIds: [...f.skillIds, v] }))}
-              onRemove={(v) => setForm((f) => ({ ...f, skillIds: f.skillIds.filter((id) => id !== v) }))}
+              onRemove={(v) =>
+                setForm((f) => ({ ...f, skillIds: f.skillIds.filter((id) => id !== v) }))
+              }
             />
           </div>
           {(['speciesTraitIds', 'ancestryTraitIds', 'flawIds', 'characteristicIds'] as const).map(
@@ -294,7 +302,7 @@ export function AdminSpeciesEditModal({
               const ids = form[key];
               return (
                 <div key={key}>
-                  <div className="flex items-center justify-between gap-2 mb-1">
+                  <div className="mb-1 flex items-center justify-between gap-2">
                     <label className="block text-sm font-medium text-text-secondary">{label}</label>
                     <Button
                       variant="outline"
@@ -302,13 +310,15 @@ export function AdminSpeciesEditModal({
                       onClick={() => setTraitPickerFor(key)}
                       aria-label={`Add ${label}`}
                     >
-                      <Plus className="w-4 h-4 mr-1 inline" />
+                      <Plus className="mr-1 inline h-4 w-4" />
                       Add
                     </Button>
                   </div>
-                  <div className="border border-border-light rounded-lg overflow-hidden bg-surface-alt min-h-[44px]">
+                  <div className="min-h-[44px] overflow-hidden rounded-lg border border-border-light bg-surface-alt">
                     {ids.length === 0 ? (
-                      <p className="text-sm text-text-muted p-3">None. Click Add to choose traits.</p>
+                      <p className="p-3 text-sm text-text-muted">
+                        None. Click Add to choose traits.
+                      </p>
                     ) : (
                       ids.map((id) => {
                         const t = traitIdToTrait.get(id);
@@ -330,7 +340,7 @@ export function AdminSpeciesEditModal({
                                 label={`Remove ${t?.name ?? id}`}
                                 aria-label={`Remove ${t?.name ?? id}`}
                               >
-                                <X className="w-4 h-4" />
+                                <X className="h-4 w-4" />
                               </IconButton>
                             }
                           />

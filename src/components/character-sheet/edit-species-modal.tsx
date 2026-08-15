@@ -10,10 +10,7 @@
 import { Modal, Button } from '@/components/ui';
 import type { Character } from '@/types';
 import { MixedSpeciesModal } from '@/components/character-creator/MixedSpeciesModal';
-import {
-  useEditSpeciesModal,
-  type EditSpeciesResult,
-} from './use-edit-species-modal';
+import { useEditSpeciesModal, type EditSpeciesResult } from './use-edit-species-modal';
 import { EditSpeciesSpeciesStep } from './edit-species-species-step';
 import { EditSpeciesAncestryStep } from './edit-species-ancestry-step';
 

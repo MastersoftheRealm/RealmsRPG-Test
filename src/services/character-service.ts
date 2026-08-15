@@ -6,6 +6,7 @@
 
 import type { Character, CharacterSummary } from '@/types';
 import type { UserCreature, UserItem, UserPower, UserTechnique } from '@/hooks/use-user-library';
+import type { CharacterViewEnrichment } from '@/lib/character-view-enrichment';
 import { apiFetch, apiFetchOrNull, isConflictError } from '@/lib/api-client';
 import { characterLockToken } from '@/lib/character/dirty-patch';
 
@@ -22,6 +23,7 @@ export interface LibraryForView {
 export interface GetCharacterResult {
   character: Character | null;
   libraryForView?: LibraryForView;
+  enrichment?: CharacterViewEnrichment;
 }
 
 /**
@@ -40,16 +42,20 @@ export async function getCharacter(characterId: string): Promise<GetCharacterRes
     throw new Error('Invalid character ID');
   }
 
-  const data = await apiFetchOrNull<
-    | GetCharacterResult
-    | Character
-  >(`${API_BASE}/${encodeURIComponent(characterId.trim())}`, { cache: 'no-store' });
+  const data = await apiFetchOrNull<GetCharacterResult | Character>(
+    `${API_BASE}/${encodeURIComponent(characterId.trim())}`,
+    { cache: 'no-store' },
+  );
 
   if (data === null) return { character: null };
 
   if (data && typeof data === 'object' && 'character' in data) {
     const wrapped = data as GetCharacterResult;
-    return { character: wrapped.character, libraryForView: wrapped.libraryForView };
+    return {
+      character: wrapped.character,
+      libraryForView: wrapped.libraryForView,
+      enrichment: wrapped.enrichment,
+    };
   }
   if (data && typeof data === 'object' && !Array.isArray(data)) {
     return { character: data as Character };
@@ -65,7 +71,7 @@ export async function getCharacter(characterId: string): Promise<GetCharacterRes
 export async function saveCharacter(
   characterId: string,
   data: Partial<Character>,
-  options: { updatedAt?: string | Date | null } = {}
+  options: { updatedAt?: string | Date | null } = {},
 ): Promise<{ ok: true; updatedAt?: string }> {
   if (!characterId?.trim()) {
     throw new Error('Invalid character ID');
@@ -81,7 +87,7 @@ export async function saveCharacter(
     {
       method: 'PATCH',
       body: JSON.stringify(body),
-    }
+    },
   );
 }
 
@@ -98,7 +104,7 @@ export async function saveCharacterWithConflictRetry(
       dirty: Partial<Character>;
       updatedAt?: string | Date | null;
     };
-  }
+  },
 ): Promise<{ updatedAt?: string; applied: Partial<Character> }> {
   try {
     const result = await saveCharacter(characterId, dirty, { updatedAt: options.updatedAt });
@@ -126,12 +132,12 @@ export async function saveCharacterWithConflictRetry(
  */
 export async function createCharacter(
   data: Partial<Character>,
-  options: { clientRequestId?: string } = {}
+  options: { clientRequestId?: string } = {},
 ): Promise<string> {
   const result = await apiFetch<{ id: string }>(API_BASE, {
     method: 'POST',
     body: JSON.stringify(
-      options.clientRequestId ? { ...data, clientRequestId: options.clientRequestId } : data
+      options.clientRequestId ? { ...data, clientRequestId: options.clientRequestId } : data,
     ),
   });
   return result.id;

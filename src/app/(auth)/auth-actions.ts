@@ -12,7 +12,7 @@ function siteOrigin(): string {
 /** Rate-limited signup confirmation resend (TASK-361). */
 export async function resendConfirmationAction(
   email: string,
-  redirectPath?: string
+  redirectPath?: string,
 ): Promise<{ success: true } | { success: false; error: string }> {
   const normalizedEmail = email.trim().toLowerCase();
   if (!normalizedEmail || !normalizedEmail.includes('@')) {
@@ -22,7 +22,7 @@ export async function resendConfirmationAction(
   const headerList = await headers();
   const ip = resolveClientIp(headerList);
   const { success } = await authActionLimiter.check(
-    buildRateLimitKey('auth-resend', { ip, userId: normalizedEmail })
+    buildRateLimitKey('auth-resend', { ip, userId: normalizedEmail }),
   );
   if (!success) {
     return { success: false, error: 'Too many requests. Please try again later.' };

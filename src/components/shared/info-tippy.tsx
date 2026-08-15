@@ -20,10 +20,7 @@ import { cloneElement, isValidElement, useCallback, useId, useRef, useState } fr
 import type { PointerEvent, ReactElement, ReactNode } from 'react';
 import { Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import {
-  FloatingHelpPanel,
-  useFloatingHelpPopover,
-} from '@/lib/tooltips/floating-help';
+import { FloatingHelpPanel, useFloatingHelpPopover } from '@/lib/tooltips/floating-help';
 import type { TooltipPlacement } from '@/types/tooltips';
 
 const TOUCH_HOLD_MS = 400;
@@ -56,7 +53,7 @@ export interface InfoTippyProps {
 
 function TooltipBody({ content }: { content: ReactNode }) {
   if (typeof content === 'string') {
-    return <span className="block text-sm text-text-secondary whitespace-pre-wrap">{content}</span>;
+    return <span className="block text-sm whitespace-pre-wrap text-text-secondary">{content}</span>;
   }
 
   return (
@@ -92,21 +89,15 @@ export function InfoTippy({
       if (!nextOpen) clearTouchHold();
       setOpen(nextOpen);
     },
-    [clearTouchHold]
+    [clearTouchHold],
   );
 
-  const {
-    refs,
-    floatingStyles,
-    transitionStyles,
-    isMounted,
-    context,
-    arrowRef,
-  } = useFloatingHelpPopover({
-    open,
-    onOpenChange: handleOpenChange,
-    placement,
-  });
+  const { refs, floatingStyles, transitionStyles, isMounted, context, arrowRef } =
+    useFloatingHelpPopover({
+      open,
+      onOpenChange: handleOpenChange,
+      placement,
+    });
 
   const hover = useHover(context, {
     mouseOnly: true,
@@ -145,7 +136,7 @@ export function InfoTippy({
     'inline-flex size-4 shrink-0 items-center justify-center rounded-full hit-area-layout-neutral',
     TONE_CLASS[tone],
     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2',
-    className
+    className,
   );
 
   const trigger = isValidElement(children) ? (
@@ -155,7 +146,7 @@ export function InfoTippy({
       getReferenceProps({
         ref: refs.setReference,
         ...touchHoldProps,
-      })
+      }),
     )
   ) : (
     <button
@@ -165,7 +156,7 @@ export function InfoTippy({
       className={triggerClassName}
       {...referenceProps}
     >
-      <Info className="w-4 h-4" aria-hidden />
+      <Info className="h-4 w-4" aria-hidden />
     </button>
   );
 
@@ -217,11 +208,11 @@ export function WordHelpTip({
         type="button"
         aria-label={label}
         className={cn(
-          'inline-flex items-center justify-center rounded-sm cursor-help',
+          'inline-flex cursor-help items-center justify-center rounded-sm',
           'min-h-[var(--touch-target-min,44px)] min-w-[var(--touch-target-min,44px)] px-1',
-          'bg-transparent border-0 p-0 m-0 font-inherit text-inherit leading-inherit tracking-inherit',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2',
-          className
+          'font-inherit leading-inherit tracking-inherit m-0 border-0 bg-transparent p-0 text-inherit',
+          'focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none',
+          className,
         )}
       >
         {children}

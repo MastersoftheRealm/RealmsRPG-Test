@@ -42,7 +42,7 @@ const PLACEHOLDER_CARD_BY_KIND: Record<ChoiceCardImageKind, { light: string; dar
 
 export function getPlaceholderCardArtPath(
   kind: ChoiceCardImageKind,
-  theme: PlaceholderTheme = 'light'
+  theme: PlaceholderTheme = 'light',
 ): string {
   return PLACEHOLDER_CARD_BY_KIND[kind][theme];
 }

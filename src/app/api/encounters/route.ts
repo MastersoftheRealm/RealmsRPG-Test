@@ -31,8 +31,12 @@ function toSummary(row: Row): EncounterSummary {
     id: row.id,
     name: row.name ?? (d.name as string) ?? 'Unnamed Encounter',
     description: d.description as string | undefined,
-    type: (row.type as EncounterSummary['type']) ?? (d.type as EncounterSummary['type']) ?? 'combat',
-    status: (row.status as EncounterSummary['status']) ?? (d.status as EncounterSummary['status']) ?? 'preparing',
+    type:
+      (row.type as EncounterSummary['type']) ?? (d.type as EncounterSummary['type']) ?? 'combat',
+    status:
+      (row.status as EncounterSummary['status']) ??
+      (d.status as EncounterSummary['status']) ??
+      'preparing',
     combatantCount: combatants.length,
     participantCount: participants.length,
     round: (d.round as number) ?? 0,
@@ -75,10 +79,13 @@ export async function POST(request: NextRequest) {
     }
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('enc-post', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('enc-post', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const validation = await validateJson(request, encounterCreateSchema);
@@ -107,7 +114,12 @@ export async function POST(request: NextRequest) {
     };
     const { error: insertErr } = await supabase.from('encounters').insert(row);
     if (insertErr) {
-      return apiErrorResponse('Failed to create encounter', 500, 'POST /api/encounters (insert)', insertErr);
+      return apiErrorResponse(
+        'Failed to create encounter',
+        500,
+        'POST /api/encounters (insert)',
+        insertErr,
+      );
     }
 
     return NextResponse.json({ id });

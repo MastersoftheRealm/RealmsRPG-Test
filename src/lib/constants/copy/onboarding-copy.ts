@@ -5,8 +5,7 @@
 export const ONBOARDING_COPY = {
   playTogether: {
     title: "You're ready to play!",
-    description:
-      'Your character is saved. See your sheet now, or find a party below.',
+    description: 'Your character is saved. See your sheet now, or find a party below.',
     viewCharacter: 'See my character',
     secondaryHeading: 'Find your party',
     discord: 'Join Discord',
@@ -78,7 +77,8 @@ export const ONBOARDING_COPY = {
     allocateHealthEnergy: 'Health and Energy pools grew — check the header resources.',
     allocateFeats: 'New feat slots — add from the Library feats tab.',
     allocateTraining: 'Training Points grew — add or upgrade powers and techniques in Library.',
-    abilityTip: 'Ability scores power skills, attacks, and defenses. Tips on ability labels explain what each affects.',
+    abilityTip:
+      'Ability scores power skills, attacks, and defenses. Tips on ability labels explain what each affects.',
     editModeOn: 'Edit mode is on so you can allocate now.',
   },
   account: {

@@ -76,7 +76,7 @@ export function useAdminArchetypeSelectionOptions({
         })
         .filter((feat) => feat.value && feat.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [codexFeats]
+    [codexFeats],
   );
 
   const getFeatOptionsForLevel = useCallback(
@@ -97,7 +97,7 @@ export function useAdminArchetypeSelectionOptions({
         })
         .filter((o) => o.value && o.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [codexFeats]
+    [codexFeats],
   );
 
   const featOptionsLevel1 = useMemo(() => getFeatOptionsForLevel(1), [getFeatOptionsForLevel]);
@@ -108,7 +108,7 @@ export function useAdminArchetypeSelectionOptions({
         const feat = codexFeats.find((f) => String(f.id) === opt.value);
         return Boolean(feat?.char_feat);
       }),
-    [featOptionsLevel1, codexFeats]
+    [featOptionsLevel1, codexFeats],
   );
 
   const archetypeFeatOptionsLevel1 = useMemo(
@@ -117,26 +117,32 @@ export function useAdminArchetypeSelectionOptions({
         const feat = codexFeats.find((f) => String(f.id) === opt.value);
         return !feat?.char_feat;
       }),
-    [featOptionsLevel1, codexFeats]
+    [featOptionsLevel1, codexFeats],
   );
 
   const allSkillOptions = useMemo<SelectionOption[]>(
     () =>
       codexSkills
-        .map((skill) => ({ value: String(skill.id ?? ''), label: String(skill.name ?? skill.id ?? '') }))
+        .map((skill) => ({
+          value: String(skill.id ?? ''),
+          label: String(skill.name ?? skill.id ?? ''),
+        }))
         .filter((skill) => skill.value && skill.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [codexSkills]
+    [codexSkills],
   );
 
   const baseSkillOptions = useMemo<SelectionOption[]>(
     () =>
       codexSkills
         .filter((skill) => isCodexBaseSkill(skill))
-        .map((skill) => ({ value: String(skill.id ?? ''), label: String(skill.name ?? skill.id ?? '') }))
+        .map((skill) => ({
+          value: String(skill.id ?? ''),
+          label: String(skill.name ?? skill.id ?? ''),
+        }))
         .filter((skill) => skill.value && skill.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [codexSkills]
+    [codexSkills],
   );
 
   const skillById = useMemo(() => {
@@ -167,7 +173,7 @@ export function useAdminArchetypeSelectionOptions({
           return isCodexSubSkill(skill);
         },
       }),
-    [level1Skills, skillById]
+    [level1Skills, skillById],
   );
 
   const powerOptions = useMemo<SelectionOption[]>(
@@ -179,7 +185,7 @@ export function useAdminArchetypeSelectionOptions({
         }))
         .filter((power) => power.value && power.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [officialPowers]
+    [officialPowers],
   );
 
   const techniqueOptions = useMemo<SelectionOption[]>(
@@ -191,7 +197,7 @@ export function useAdminArchetypeSelectionOptions({
         }))
         .filter((technique) => technique.value && technique.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [officialTechniques]
+    [officialTechniques],
   );
 
   const armamentTypeById = useMemo(() => {
@@ -216,7 +222,7 @@ export function useAdminArchetypeSelectionOptions({
         }))
         .filter((item) => item.value && item.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [officialItems]
+    [officialItems],
   );
 
   const armorArmamentOptions = useMemo<SelectionOption[]>(
@@ -229,7 +235,7 @@ export function useAdminArchetypeSelectionOptions({
         }))
         .filter((item) => item.value && item.label)
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [officialItems]
+    [officialItems],
   );
 
   const armamentOptions = useMemo<SelectionOption[]>(
@@ -241,11 +247,11 @@ export function useAdminArchetypeSelectionOptions({
         .map(
           (id) =>
             weaponShieldArmamentOptions.find((o) => o.value === id) ??
-            armorArmamentOptions.find((o) => o.value === id)
+            armorArmamentOptions.find((o) => o.value === id),
         )
         .filter((item): item is SelectionOption => Boolean(item))
         .sort((a, b) => a.label.localeCompare(b.label)),
-    [weaponShieldArmamentOptions, armorArmamentOptions]
+    [weaponShieldArmamentOptions, armorArmamentOptions],
   );
 
   const equipmentOptions = useMemo<SelectionOption[]>(() => {
@@ -264,8 +270,14 @@ export function useAdminArchetypeSelectionOptions({
       }))
       .filter((item) => item.value && item.label);
 
-    return dedupeStrings([...codex.map((item) => item.value), ...official.map((item) => item.value)])
-      .map((id) => codex.find((item) => item.value === id) ?? official.find((item) => item.value === id))
+    return dedupeStrings([
+      ...codex.map((item) => item.value),
+      ...official.map((item) => item.value),
+    ])
+      .map(
+        (id) =>
+          codex.find((item) => item.value === id) ?? official.find((item) => item.value === id),
+      )
       .filter((item): item is SelectionOption => Boolean(item))
       .sort((a, b) => a.label.localeCompare(b.label));
   }, [codexEquipment, officialItems]);
@@ -284,7 +296,14 @@ export function useAdminArchetypeSelectionOptions({
       removeTechniques: techniqueOptions,
       removeArmaments: armamentOptions,
     }),
-    [featOptions, allSkillOptions, powerOptions, techniqueOptions, armamentOptions, equipmentOptions]
+    [
+      featOptions,
+      allSkillOptions,
+      powerOptions,
+      techniqueOptions,
+      armamentOptions,
+      equipmentOptions,
+    ],
   );
 
   const isSelectionDataLoading =
@@ -293,17 +312,17 @@ export function useAdminArchetypeSelectionOptions({
   const characterFeatGroups = useMemo(
     () =>
       guidanceGroups.filter(
-        (g) => isFeatOrientedGuidanceGroup(g) && resolvePathGuidanceAudience(g) === 'character'
+        (g) => isFeatOrientedGuidanceGroup(g) && resolvePathGuidanceAudience(g) === 'character',
       ),
-    [guidanceGroups]
+    [guidanceGroups],
   );
 
   const archetypeFeatGroups = useMemo(
     () =>
       guidanceGroups.filter(
-        (g) => isFeatOrientedGuidanceGroup(g) && resolvePathGuidanceAudience(g) === 'archetype'
+        (g) => isFeatOrientedGuidanceGroup(g) && resolvePathGuidanceAudience(g) === 'archetype',
       ),
-    [guidanceGroups]
+    [guidanceGroups],
   );
 
   const syncedFeatPreviewLabels = useMemo(() => {
@@ -311,9 +330,7 @@ export function useAdminArchetypeSelectionOptions({
     return ids.map((value) => featOptions.find((option) => option.value === value)?.label ?? value);
   }, [guidanceGroups, featOptions]);
 
-  const filterLevel1WeaponShieldEntries = (
-    armamentEntries: { id: string; quantity: number }[]
-  ) =>
+  const filterLevel1WeaponShieldEntries = (armamentEntries: { id: string; quantity: number }[]) =>
     armamentEntries.filter((entry) => {
       const kind = armamentTypeOf(entry.id, armamentTypeById);
       return kind === 'weapon' || kind === 'shield' || kind === 'unknown';

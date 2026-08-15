@@ -38,20 +38,21 @@ export const characterKeys = {
 /** Apply a sheet `setCharacter` update onto the detail cache entry. */
 export function nextCharacterDetailQueryData(
   prev: GetCharacterResult | undefined,
-  update: SetStateAction<Character | null>
+  update: SetStateAction<Character | null>,
 ): GetCharacterResult {
   const prevChar = prev?.character ?? null;
   const nextChar = typeof update === 'function' ? update(prevChar) : update;
   return {
     character: nextChar,
     libraryForView: prev?.libraryForView,
+    ...(prev?.enrichment ? { enrichment: prev.enrichment } : {}),
   };
 }
 
 /** Shallow-merge saved/dirty keys into a cached character (library-add, lock token). */
 export function mergeCharacterDetailQueryData(
   prev: GetCharacterResult | undefined,
-  patch: Partial<Character>
+  patch: Partial<Character>,
 ): GetCharacterResult | undefined {
   if (!prev?.character) return prev;
   return {
@@ -65,11 +66,10 @@ export function patchCharacterDetailQuery(
   queryClient: QueryClient,
   userId: string,
   characterId: string,
-  update: SetStateAction<Character | null>
+  update: SetStateAction<Character | null>,
 ): void {
-  queryClient.setQueryData<GetCharacterResult>(
-    characterKeys.detail(userId, characterId),
-    (prev) => nextCharacterDetailQueryData(prev, update)
+  queryClient.setQueryData<GetCharacterResult>(characterKeys.detail(userId, characterId), (prev) =>
+    nextCharacterDetailQueryData(prev, update),
   );
 }
 
@@ -155,7 +155,7 @@ export function useSaveCharacter() {
         mergeCharacterDetailQueryData(prev, {
           ...result.applied,
           ...(result.updatedAt ? { updatedAt: result.updatedAt } : {}),
-        })
+        }),
       );
       queryClient.invalidateQueries({ queryKey: characterKeys.lists(userId) });
     },

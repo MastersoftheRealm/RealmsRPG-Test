@@ -6,12 +6,16 @@
 
 'use client';
 
-import { useState, Suspense } from 'react';import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { createClient } from '@/lib/supabase/client';
-import { hasGuestEncountersToMigrate, migrateGuestEncountersOnSignIn } from '@/lib/guest-encounter-migration';
+import {
+  hasGuestEncountersToMigrate,
+  migrateGuestEncountersOnSignIn,
+} from '@/lib/guest-encounter-migration';
 
 import { loginSchema, type LoginFormData } from '@/lib/validation';
 import { getAuthErrorMessage } from '@/lib/auth-errors';
@@ -39,7 +43,8 @@ function LoginContent() {
 
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
-    const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
+    const sessionRedirect =
+      typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
     return sanitizeRedirectPath(urlRedirect || sessionRedirect || '/');
   };
 
@@ -72,7 +77,10 @@ function LoginContent() {
 
     try {
       const supabase = createClient();
-      const { error: err } = await supabase.auth.signInWithPassword({ email: data.email, password: data.password });
+      const { error: err } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
       if (err) throw err;
       if (hasGuestEncountersToMigrate()) {
         await migrateGuestEncountersOnSignIn();
@@ -114,7 +122,9 @@ function LoginContent() {
       const redirectPath = getRedirectPath();
       const { data, error: err } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
+        },
       });
       if (err) throw err;
       if (data?.url) {
@@ -128,10 +138,7 @@ function LoginContent() {
   };
 
   return (
-    <AuthCard
-      title="Welcome Back"
-      subtitle="Sign in to continue your adventure"
-    >
+    <AuthCard title="Welcome Back" subtitle="Sign in to continue your adventure">
       {displayError ? (
         <Alert variant="danger" className="mb-6">
           {displayError}
@@ -157,28 +164,23 @@ function LoginContent() {
         />
 
         <div className="flex items-center justify-between">
-          <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer select-none">
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary select-none">
             <input
               type="checkbox"
-              className="h-4 w-4 rounded border-border-light dark:border-border bg-surface text-primary-fg focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-0 cursor-pointer transition-colors"
+              className="h-4 w-4 cursor-pointer rounded border-border-light bg-surface text-primary-fg transition-colors focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-0 dark:border-border"
               {...register('rememberMe')}
             />
             Remember me
           </label>
           <Link
             href="/forgot-password"
-            className="text-sm text-primary-link-fg hover:text-primary-fg-hover transition-colors"
+            className="text-sm text-primary-link-fg transition-colors hover:text-primary-fg-hover"
           >
             Forgot password?
           </Link>
         </div>
 
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={isLoading}
-          aria-label="Sign in"
-        >
+        <Button type="submit" className="w-full" disabled={isLoading} aria-label="Sign in">
           {isLoading ? 'Signing in...' : 'Sign In'}
         </Button>
       </form>
@@ -202,24 +204,20 @@ function LoginContent() {
       ) : null}
 
       <div className="my-6 flex items-center gap-4">
-        <div className="flex-1 h-px bg-border-light dark:bg-border" />
-        <span className="text-text-secondary text-sm">or</span>
-        <div className="flex-1 h-px bg-border-light dark:bg-border" />
+        <div className="h-px flex-1 bg-border-light dark:bg-border" />
+        <span className="text-sm text-text-secondary">or</span>
+        <div className="h-px flex-1 bg-border-light dark:bg-border" />
       </div>
 
       <div className="space-y-3">
-        <SocialButton
-          provider="google"
-          onClick={handleGoogleSignIn}
-          disabled={isLoading}
-        />
+        <SocialButton provider="google" onClick={handleGoogleSignIn} disabled={isLoading} />
       </div>
 
       <p className="mt-6 text-center text-text-secondary">
         Don&apos;t have an account?{' '}
         <Link
           href="/register"
-          className="text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
+          className="font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
         >
           Create one
         </Link>
@@ -243,4 +241,3 @@ export default function LoginPage() {
     </Suspense>
   );
 }
-

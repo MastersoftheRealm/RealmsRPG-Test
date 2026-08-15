@@ -26,7 +26,7 @@ export interface PrunedSkillAllocations {
  */
 export function pruneUnresolvedSkillAllocations(
   allocations: Record<string, number> | undefined,
-  resolvedSkillIds: SkillIdIndex
+  resolvedSkillIds: SkillIdIndex,
 ): PrunedSkillAllocations {
   const skills: Record<string, number> = {};
   const removedIds: string[] = [];
@@ -45,7 +45,7 @@ export function pruneUnresolvedSkillAllocations(
 /** Ids a step may add as defaults (species / path grants) that the codex cannot resolve. */
 export function filterResolvedSkillIds(
   ids: readonly (string | number)[],
-  resolvedSkillIds: SkillIdIndex
+  resolvedSkillIds: SkillIdIndex,
 ): string[] {
   return ids.map(String).filter((id) => resolvedSkillIds.has(id));
 }

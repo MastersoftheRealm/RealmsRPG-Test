@@ -26,7 +26,14 @@ import {
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 
-const VALID_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures', 'species'] as const;
+const VALID_TYPES = [
+  'powers',
+  'techniques',
+  'empowered-techniques',
+  'items',
+  'creatures',
+  'species',
+] as const;
 type LibraryType = (typeof VALID_TYPES)[number];
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
@@ -40,10 +47,7 @@ const TABLE: Record<ColumnarLibraryType, string> = {
   creatures: 'user_creatures',
 };
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ type: string }> }
-) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ type: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -139,7 +143,7 @@ export async function GET(
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ type: string }> }
+  { params }: { params: Promise<{ type: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -148,10 +152,13 @@ export async function POST(
     }
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('lib-post', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('lib-post', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { type } = await params;
@@ -186,13 +193,16 @@ export async function POST(
               currentCount: count ?? 0,
               maxAllowed: rolePolicy.maxPowers,
             }),
-            { status: 403 }
+            { status: 403 },
           );
         }
       }
 
       if (type === 'techniques' || type === 'empowered-techniques') {
-        const [{ count: techniquesCount, error: techniquesErr }, { count: empoweredCount, error: empoweredErr }] = await Promise.all([
+        const [
+          { count: techniquesCount, error: techniquesErr },
+          { count: empoweredCount, error: empoweredErr },
+        ] = await Promise.all([
           supabase
             .from('user_techniques')
             .select('id', { count: 'exact', head: true })
@@ -213,7 +223,7 @@ export async function POST(
               currentCount: techniqueTotal,
               maxAllowed: rolePolicy.maxTechniques,
             }),
-            { status: 403 }
+            { status: 403 },
           );
         }
       }
@@ -232,7 +242,7 @@ export async function POST(
               currentCount: count ?? 0,
               maxAllowed: rolePolicy.maxArmaments,
             }),
-            { status: 403 }
+            { status: 403 },
           );
         }
       }
@@ -251,7 +261,7 @@ export async function POST(
               currentCount: count ?? 0,
               maxAllowed: rolePolicy.maxCreatures,
             }),
-            { status: 403 }
+            { status: 403 },
           );
         }
       }
@@ -318,7 +328,11 @@ export async function POST(
       const existingRow = existing as Record<string, unknown>;
       const copyItem =
         existingRow.data !== undefined && existingRow.data !== null
-          ? { id: existingRow.id, docId: existingRow.id, ...(existingRow.data as Record<string, unknown>) }
+          ? {
+              id: existingRow.id,
+              docId: existingRow.id,
+              ...(existingRow.data as Record<string, unknown>),
+            }
           : rowToItemSpecies(existingRow);
       const baseName = String((copyItem.name as string) || 'Item').trim();
       const copyData = { ...copyItem, name: `${baseName} (Copy)` };
@@ -327,12 +341,24 @@ export async function POST(
       delete (copyData as Record<string, unknown>)._source;
       const { scalars, payload } = bodyToColumnarSpecies({ ...copyData, updatedAt: now });
       const newId = crypto.randomUUID();
-      const row = toDbRowSpecies({ id: newId, user_id: user.uid, ...scalars, payload, created_at: now, updated_at: now });
+      const row = toDbRowSpecies({
+        id: newId,
+        user_id: user.uid,
+        ...scalars,
+        payload,
+        created_at: now,
+        updated_at: now,
+      });
       const { error: insertErr } = await supabase.from('user_species').insert(row);
       if (insertErr) {
         if (insertErr.message?.includes('column') && existingRow.data !== undefined) {
           const d = (existingRow.data as Record<string, unknown>) ?? {};
-          const newData = { ...d, name: `${(d.name as string) || 'Item'} (Copy)`, createdAt: now, updatedAt: now };
+          const newData = {
+            ...d,
+            name: `${(d.name as string) || 'Item'} (Copy)`,
+            createdAt: now,
+            updatedAt: now,
+          };
           const { data: created, error: legErr } = await supabase
             .from('user_species')
             .insert({ id: newId, user_id: user.uid, data: newData })
@@ -348,7 +374,14 @@ export async function POST(
 
     const { scalars, payload } = bodyToColumnarSpecies({ ...body, updatedAt: now });
     const newId = crypto.randomUUID();
-    const row = toDbRowSpecies({ id: newId, user_id: user.uid, ...scalars, payload, created_at: now, updated_at: now });
+    const row = toDbRowSpecies({
+      id: newId,
+      user_id: user.uid,
+      ...scalars,
+      payload,
+      created_at: now,
+      updated_at: now,
+    });
     const { error: insertErr } = await supabase.from('user_species').insert(row);
     if (insertErr) {
       if (insertErr.message?.includes('column')) {

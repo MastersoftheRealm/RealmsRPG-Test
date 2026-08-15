@@ -33,15 +33,24 @@ function getCurrentSpeciesSkillIds(character: Character, allSpecies: SpeciesLike
   }
   const speciesId = ancestry.id;
   const speciesName = ancestry.name;
-  const species = allSpecies.find((s) => String(s.id) === String(speciesId))
-    ?? (speciesName ? allSpecies.find((s) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase()) : null);
+  const species =
+    allSpecies.find((s) => String(s.id) === String(speciesId)) ??
+    (speciesName
+      ? allSpecies.find(
+          (s) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase(),
+        )
+      : null);
   return (species?.skills || []).map((id: string | number) => String(id));
 }
 
 /** Get new species skill IDs from new ancestry */
-function getNewSpeciesSkillIds(newAncestry: CharacterAncestry, allSpecies: SpeciesLike[]): string[] {
+function getNewSpeciesSkillIds(
+  newAncestry: CharacterAncestry,
+  allSpecies: SpeciesLike[],
+): string[] {
   if (newAncestry.mixed && newAncestry.speciesIds?.length === 2) {
-    if (newAncestry.selectedSpeciesSkillIds?.length === 2) return newAncestry.selectedSpeciesSkillIds;
+    if (newAncestry.selectedSpeciesSkillIds?.length === 2)
+      return newAncestry.selectedSpeciesSkillIds;
     const a = allSpecies.find((s) => String(s.id) === String(newAncestry.speciesIds![0]));
     const b = allSpecies.find((s) => String(s.id) === String(newAncestry.speciesIds![1]));
     const set = new Set<string>();
@@ -49,14 +58,22 @@ function getNewSpeciesSkillIds(newAncestry: CharacterAncestry, allSpecies: Speci
     (b?.skills || []).forEach((id: string | number) => set.add(String(id)));
     return Array.from(set);
   }
-  const species = allSpecies.find((s) => String(s.id) === String(newAncestry.id))
-    ?? (newAncestry.name ? allSpecies.find((s) => String(s.name ?? '').toLowerCase() === String(newAncestry.name ?? '').toLowerCase()) : null);
+  const species =
+    allSpecies.find((s) => String(s.id) === String(newAncestry.id)) ??
+    (newAncestry.name
+      ? allSpecies.find(
+          (s) =>
+            String(s.name ?? '').toLowerCase() === String(newAncestry.name ?? '').toLowerCase(),
+        )
+      : null);
   return (species?.skills || []).map((id: string | number) => String(id));
 }
 
 function matchSkillId(skill: SkillEntry, id: string): boolean {
-  return String(skill.id ?? '').toLowerCase() === id.toLowerCase()
-    || String(skill.name ?? '').toLowerCase() === id.toLowerCase();
+  return (
+    String(skill.id ?? '').toLowerCase() === id.toLowerCase() ||
+    String(skill.name ?? '').toLowerCase() === id.toLowerCase()
+  );
 }
 
 /** Cost to increase skill value from val to val+1 (1 for 0->1,1->2,2->3; 3 for 3->4+) */
@@ -72,7 +89,7 @@ function costForNextValue(currentVal: number): number {
 export function migrateSkillsAfterSpeciesChange(
   character: Character,
   newAncestry: CharacterAncestry,
-  allSpecies: SpeciesLike[]
+  allSpecies: SpeciesLike[],
 ): SkillEntry[] {
   const oldIds = getCurrentSpeciesSkillIds(character, allSpecies);
   const newIds = getNewSpeciesSkillIds(newAncestry, allSpecies);

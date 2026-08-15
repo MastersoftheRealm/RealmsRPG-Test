@@ -29,24 +29,12 @@ import {
 } from '@/components/character-sheet/read-only-sheet';
 import type { SheetLibraryModel } from '@/components/character-sheet/library-section-props';
 import { RollLog, RollProvider } from '@/components/rolls';
-import {
-  useUserPowers,
-  useUserTechniques,
-  useUserEmpoweredTechniques,
-  useUserItems,
-  useTraits,
-  usePowerParts,
-  useTechniqueParts,
-  useItemProperties,
-  useEquipment,
-  useMergedSpecies,
-  useCodexFeats,
-  useCodexSkills,
-  useCodexArchetypes,
-  useOfficialLibrary,
-  useCampaignCharacterView,
-} from '@/hooks';
+import { useCampaignCharacterView } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
+import {
+  emptyCharacterViewEnrichment,
+  sheetCatalogFromEnrichment,
+} from '@/lib/character-view-enrichment';
 import type { CharacterLibraryTabId, Item } from '@/types';
 
 const READONLY_LIBRARY_HANDLERS = buildReadOnlyLibraryHandlers();
@@ -75,33 +63,10 @@ function CampaignCharacterViewContent() {
   } = useCampaignCharacterView(campaignId, userId, characterId);
   const character = viewData?.character ?? null;
   const libraryForView = viewData?.libraryForView;
-  const error = loadError ? loadError.message || 'Failed to load character' : null;
-
-  // Owner's library for enrichment when viewing another user's character; fallback for codex-only refs
-  const { data: userPowers = [] } = useUserPowers();
-  const { data: userTechniques = [] } = useUserTechniques();
-  const { data: userEmpoweredTechniques = [] } = useUserEmpoweredTechniques();
-  const { data: userItems = [] } = useUserItems();
-  const { data: traitsDb = [] } = useTraits();
-  const { data: powerPartsDb = [] } = usePowerParts();
-  const { data: techniquePartsDb = [] } = useTechniqueParts();
-  const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: codexEquipment = [] } = useEquipment();
-  const { data: publicPowersRaw = [] } = useOfficialLibrary('powers');
-  const { data: publicTechniquesRaw = [] } = useOfficialLibrary('techniques');
-  const { data: publicItemsRaw = [] } = useOfficialLibrary('items');
-  const publicLibraries = useMemo(
-    () => ({
-      powers: publicPowersRaw,
-      techniques: publicTechniquesRaw,
-      items: publicItemsRaw,
-    }),
-    [publicPowersRaw, publicTechniquesRaw, publicItemsRaw]
+  const catalog = sheetCatalogFromEnrichment(
+    viewData?.enrichment ?? emptyCharacterViewEnrichment(),
   );
-  const { data: allSpecies = [] } = useMergedSpecies();
-  const { data: codexSkills = [] } = useCodexSkills();
-  const { data: featsDb = [] } = useCodexFeats();
-  const { data: codexArchetypes = [] } = useCodexArchetypes();
+  const error = loadError ? loadError.message || 'Failed to load character' : null;
 
   const {
     enrichedData,
@@ -120,20 +85,7 @@ function CampaignCharacterViewContent() {
   } = useCharacterSheetDerived({
     character,
     libraryForView,
-    userPowers,
-    userTechniques,
-    userEmpoweredTechniques,
-    userItems,
-    codexEquipment,
-    powerPartsDb,
-    techniquePartsDb,
-    itemPropertiesDb,
-    publicLibraries,
-    allSpecies,
-    traitsDb,
-    codexSkills,
-    codexArchetypes,
-    featsDb,
+    ...catalog,
     rules,
   });
 
@@ -153,11 +105,11 @@ function CampaignCharacterViewContent() {
     return {
       archetypeProgression,
       calculatedMaxEnergy: calculatedStats.maxEnergy,
-      powerPartsDb,
-      techniquePartsDb,
-      itemPropertiesDb,
-      traitsDb,
-      featsDb,
+      powerPartsDb: catalog.powerPartsDb,
+      techniquePartsDb: catalog.techniquePartsDb,
+      itemPropertiesDb: catalog.itemPropertiesDb,
+      traitsDb: catalog.traitsDb,
+      featsDb: catalog.featsDb,
       characterSpeciesTraits,
       archetypeFeatsForDisplay,
       characterFeatsForDisplay,
@@ -169,11 +121,11 @@ function CampaignCharacterViewContent() {
     character,
     calculatedStats,
     archetypeProgression,
-    powerPartsDb,
-    techniquePartsDb,
-    itemPropertiesDb,
-    traitsDb,
-    featsDb,
+    catalog.powerPartsDb,
+    catalog.techniquePartsDb,
+    catalog.itemPropertiesDb,
+    catalog.traitsDb,
+    catalog.featsDb,
     characterSpeciesTraits,
     archetypeFeatsForDisplay,
     characterFeatsForDisplay,
@@ -208,12 +160,12 @@ function CampaignCharacterViewContent() {
       characterSpeciesSkills,
       libraryActiveTab,
       calculatedStats,
-    ]
+    ],
   );
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <LoadingState message="Loading character sheet..." size="lg" />
       </div>
     );
@@ -221,8 +173,8 @@ function CampaignCharacterViewContent() {
 
   if (error || !character || !sheetContextValue) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="text-center max-w-md">
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <div className="max-w-md text-center">
           <Alert variant="danger" title="Cannot view character">
             {error || 'Character not found. It may be set to private.'}
           </Alert>
@@ -230,7 +182,7 @@ function CampaignCharacterViewContent() {
             href={`/campaigns/${campaignId}`}
             className="mt-4 inline-flex items-center gap-1 text-primary-link-fg hover:underline"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="h-4 w-4" />
             Back to Campaign
           </Link>
         </div>
@@ -251,14 +203,12 @@ function CampaignCharacterViewContent() {
           <PageContainer size="tool" padded={false} className="pt-4">
             <Link
               href={`/campaigns/${campaignId}`}
-              className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-fg-hover mb-4"
+              className="mb-4 inline-flex items-center gap-1 text-text-secondary hover:text-primary-fg-hover"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="h-4 w-4" />
               Back to Campaign
             </Link>
-            <p className="text-sm text-text-muted mb-4">
-              View-only (Realm Master view)
-            </p>
+            <p className="mb-4 text-sm text-text-muted">View-only (Realm Master view)</p>
 
             {calculatedStats && (
               <>

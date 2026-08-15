@@ -4,7 +4,11 @@ import { ChipSelect } from '@/components/shared';
 import { Button, Input } from '@/components/ui';
 import { dedupeStrings, makeLevelRow } from './admin-archetype-path-form';
 import { SelectedFeatRows } from './admin-archetype-path-rows';
-import { removeFieldConfig, selectionFieldConfig, type AdminArchetypeEditorProps } from './admin-archetype-editor-config';
+import {
+  removeFieldConfig,
+  selectionFieldConfig,
+  type AdminArchetypeEditorProps,
+} from './admin-archetype-editor-config';
 
 export type AdminArchetypeEditorProgressionProps = Pick<
   AdminArchetypeEditorProps,
@@ -29,7 +33,10 @@ export function AdminArchetypeEditorProgression({
             onClick={() =>
               setForm((f) => ({
                 ...f,
-                levelPathRows: [...f.levelPathRows, makeLevelRow(Math.max(2, ...f.levelPathRows.map((row) => row.level)) + 1)],
+                levelPathRows: [
+                  ...f.levelPathRows,
+                  makeLevelRow(Math.max(2, ...f.levelPathRows.map((row) => row.level)) + 1),
+                ],
               }))
             }
           >
@@ -38,7 +45,7 @@ export function AdminArchetypeEditorProgression({
         </div>
 
         {form.levelPathRows.map((row) => (
-          <div key={row.rowId} className="rounded-md border border-border-light p-3 space-y-2">
+          <div key={row.rowId} className="space-y-2 rounded-md border border-border-light p-3">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-2">
                 <label className="text-xs font-medium text-text-secondary">Level</label>
@@ -49,7 +56,9 @@ export function AdminArchetypeEditorProgression({
                     setForm((f) => ({
                       ...f,
                       levelPathRows: f.levelPathRows.map((candidate) =>
-                        candidate.rowId === row.rowId ? { ...candidate, level: Number(e.target.value || 2) } : candidate
+                        candidate.rowId === row.rowId
+                          ? { ...candidate, level: Number(e.target.value || 2) }
+                          : candidate,
                       ),
                     }))
                   }
@@ -62,7 +71,10 @@ export function AdminArchetypeEditorProgression({
                 onClick={() =>
                   setForm((f) => ({
                     ...f,
-                    levelPathRows: f.levelPathRows.length > 1 ? f.levelPathRows.filter((candidate) => candidate.rowId !== row.rowId) : [makeLevelRow(2)],
+                    levelPathRows:
+                      f.levelPathRows.length > 1
+                        ? f.levelPathRows.filter((candidate) => candidate.rowId !== row.rowId)
+                        : [makeLevelRow(2)],
                   }))
                 }
               >
@@ -70,13 +82,12 @@ export function AdminArchetypeEditorProgression({
               </Button>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
               {selectionFieldConfig.map((field) => {
                 const isFeatField = field.key === 'feats';
                 const options =
-                  (isFeatField
-                    ? getFeatOptionsForLevel(row.level)
-                    : optionsByField[field.key]) ?? [];
+                  (isFeatField ? getFeatOptionsForLevel(row.level) : optionsByField[field.key]) ??
+                  [];
                 const selected = row[field.key];
                 if (isFeatField) {
                   return (
@@ -98,12 +109,9 @@ export function AdminArchetypeEditorProgression({
                               candidate.rowId === row.rowId
                                 ? {
                                     ...candidate,
-                                    [field.key]: dedupeStrings([
-                                      ...candidate[field.key],
-                                      value,
-                                    ]),
+                                    [field.key]: dedupeStrings([...candidate[field.key], value]),
                                   }
-                                : candidate
+                                : candidate,
                             ),
                           }))
                         }
@@ -119,10 +127,10 @@ export function AdminArchetypeEditorProgression({
                                 ? {
                                     ...candidate,
                                     [field.key]: candidate[field.key].filter(
-                                      (entry) => entry !== value
+                                      (entry) => entry !== value,
                                     ),
                                   }
-                                : candidate
+                                : candidate,
                             ),
                           }))
                         }
@@ -147,12 +155,9 @@ export function AdminArchetypeEditorProgression({
                           candidate.rowId === row.rowId
                             ? {
                                 ...candidate,
-                                [field.key]: dedupeStrings([
-                                  ...candidate[field.key],
-                                  value,
-                                ]),
+                                [field.key]: dedupeStrings([...candidate[field.key], value]),
                               }
-                            : candidate
+                            : candidate,
                         ),
                       }))
                     }
@@ -164,10 +169,10 @@ export function AdminArchetypeEditorProgression({
                             ? {
                                 ...candidate,
                                 [field.key]: candidate[field.key].filter(
-                                  (entry) => entry !== value
+                                  (entry) => entry !== value,
                                 ),
                               }
-                            : candidate
+                            : candidate,
                         ),
                       }))
                     }
@@ -177,9 +182,8 @@ export function AdminArchetypeEditorProgression({
               {removeFieldConfig.map((field) => {
                 const isFeatField = field.key === 'removeFeats';
                 const options =
-                  (isFeatField
-                    ? getFeatOptionsForLevel(row.level)
-                    : optionsByField[field.key]) ?? [];
+                  (isFeatField ? getFeatOptionsForLevel(row.level) : optionsByField[field.key]) ??
+                  [];
                 const selected = row[field.key];
                 if (isFeatField) {
                   return (
@@ -201,12 +205,9 @@ export function AdminArchetypeEditorProgression({
                               candidate.rowId === row.rowId
                                 ? {
                                     ...candidate,
-                                    [field.key]: dedupeStrings([
-                                      ...candidate[field.key],
-                                      value,
-                                    ]),
+                                    [field.key]: dedupeStrings([...candidate[field.key], value]),
                                   }
-                                : candidate
+                                : candidate,
                             ),
                           }))
                         }
@@ -222,10 +223,10 @@ export function AdminArchetypeEditorProgression({
                                 ? {
                                     ...candidate,
                                     [field.key]: candidate[field.key].filter(
-                                      (entry) => entry !== value
+                                      (entry) => entry !== value,
                                     ),
                                   }
-                                : candidate
+                                : candidate,
                             ),
                           }))
                         }
@@ -250,12 +251,9 @@ export function AdminArchetypeEditorProgression({
                           candidate.rowId === row.rowId
                             ? {
                                 ...candidate,
-                                [field.key]: dedupeStrings([
-                                  ...candidate[field.key],
-                                  value,
-                                ]),
+                                [field.key]: dedupeStrings([...candidate[field.key], value]),
                               }
-                            : candidate
+                            : candidate,
                         ),
                       }))
                     }
@@ -267,10 +265,10 @@ export function AdminArchetypeEditorProgression({
                             ? {
                                 ...candidate,
                                 [field.key]: candidate[field.key].filter(
-                                  (entry) => entry !== value
+                                  (entry) => entry !== value,
                                 ),
                               }
-                            : candidate
+                            : candidate,
                         ),
                       }))
                     }
@@ -280,7 +278,16 @@ export function AdminArchetypeEditorProgression({
             </div>
             <Input
               value={row.notes}
-              onChange={(e) => setForm((f) => ({ ...f, levelPathRows: f.levelPathRows.map((candidate) => candidate.rowId === row.rowId ? { ...candidate, notes: e.target.value } : candidate) }))}
+              onChange={(e) =>
+                setForm((f) => ({
+                  ...f,
+                  levelPathRows: f.levelPathRows.map((candidate) =>
+                    candidate.rowId === row.rowId
+                      ? { ...candidate, notes: e.target.value }
+                      : candidate,
+                  ),
+                }))
+              }
               placeholder="Level notes (optional)"
               aria-label={`Notes for level ${row.level}`}
             />
@@ -291,7 +298,7 @@ export function AdminArchetypeEditorProgression({
       <div>
         <label
           htmlFor="admin-archetype-advanced-path-json"
-          className="block text-sm font-medium text-text-secondary mb-1"
+          className="mb-1 block text-sm font-medium text-text-secondary"
         >
           Advanced Path JSON Override (optional)
         </label>
@@ -300,7 +307,7 @@ export function AdminArchetypeEditorProgression({
           value={form.advancedPathJson}
           onChange={(e) => setForm((f) => ({ ...f, advancedPathJson: e.target.value }))}
           placeholder="Optional: paste full path_data JSON to override builder output."
-          className="w-full min-h-[120px] px-3 py-2 rounded-md border border-border bg-background text-text-primary font-mono text-xs"
+          className="min-h-[120px] w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-xs text-text-primary"
           rows={6}
         />
       </div>

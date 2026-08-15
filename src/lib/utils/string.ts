@@ -104,9 +104,7 @@ export function formatListCellLabel(value: unknown): string {
  * Capitalizes the damage type. Prevents React Error #31 (objects as children).
  * Item-calc `deriveItemDisplay` delegates here — do not add a second join.
  */
-export function formatDamageDisplay(
-  damage: unknown
-): string {
+export function formatDamageDisplay(damage: unknown): string {
   // Already a string — capitalize damage type (e.g. "2d6 slashing" → "2d6 Slashing")
   if (typeof damage === 'string') {
     const trimmed = damage.trim();
@@ -118,10 +116,10 @@ export function formatDamageDisplay(
     }
     return trimmed;
   }
-  
+
   // Null/undefined
   if (damage == null) return '';
-  
+
   // Single damage object: { amount, size, type }
   if (typeof damage === 'object' && !Array.isArray(damage)) {
     const d = damage as Record<string, unknown>;
@@ -136,7 +134,7 @@ export function formatDamageDisplay(
   if (Array.isArray(damage)) {
     const formatted = damage
       .filter((d): d is Record<string, unknown> => d && typeof d === 'object')
-      .map(d => {
+      .map((d) => {
         if (d.amount && d.size) {
           const typeStr = d.type && d.type !== 'none' ? ` ${capitalize(String(d.type))}` : '';
           return `${d.amount}d${d.size}${typeStr}`;

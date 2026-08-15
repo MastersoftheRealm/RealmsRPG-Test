@@ -5,12 +5,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import {
-  useTraits,
-  findTraitByIdOrName,
-  type Species,
-  type Trait,
-} from '@/hooks';
+import { useTraits, findTraitByIdOrName, type Species, type Trait } from '@/hooks';
 import { getChoiceOptionIds, resolveChoiceOptionTraits } from '@/lib/choice-trait';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import {
@@ -19,7 +14,10 @@ import {
   guidedSpeciesDetailFlaws,
   guidedSpeciesDetailSpeciesTraitOptions,
 } from '../../../public/tooltip-text';
-import { GuidedEntityDetailModal, type GuidedEntityDetailSection } from './guided-entity-detail-modal';
+import {
+  GuidedEntityDetailModal,
+  type GuidedEntityDetailSection,
+} from './guided-entity-detail-modal';
 import { GuidedTraitOptionList } from './guided-trait-option-list';
 import { SpeciesRevealPanel } from './species-reveal-panel';
 import { GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
@@ -40,14 +38,9 @@ interface SpeciesChoiceGroup {
 }
 
 /** Resolve trait IDs without inventing “Trait not found” placeholders. */
-function resolveKnownTraits(
-  ids: (string | number)[] | undefined,
-  allTraits: Trait[]
-): Trait[] {
+function resolveKnownTraits(ids: (string | number)[] | undefined, allTraits: Trait[]): Trait[] {
   if (!ids?.length || !allTraits.length) return [];
-  return ids
-    .map((id) => findTraitByIdOrName(allTraits, id))
-    .filter((t): t is Trait => Boolean(t));
+  return ids.map((id) => findTraitByIdOrName(allTraits, id)).filter((t): t is Trait => Boolean(t));
 }
 
 function buildSpeciesChoiceGroups(species: Species, allTraits: Trait[]): SpeciesChoiceGroup[] {
@@ -171,9 +164,7 @@ export function GuidedSpeciesDetailModal({
               readOnlyDetail
               hideChoiceTeaser
             />
-            {catalogsPending ? (
-              <p className={o.bodySecondary}>{detailCopy.loadingTraits}</p>
-            ) : null}
+            {catalogsPending ? <p className={o.bodySecondary}>{detailCopy.loadingTraits}</p> : null}
           </>
         ) : null
       }

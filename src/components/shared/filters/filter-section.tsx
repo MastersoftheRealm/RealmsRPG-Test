@@ -85,11 +85,7 @@ export function FilterSection({
   };
 
   // Compact toolbar: short "Filters" / "Hide Filters". Page: "Show Filters" / "Hide Filters".
-  const toggleLabel = isExpanded
-    ? `Hide ${label}`
-    : isCompact
-      ? label
-      : `Show ${label}`;
+  const toggleLabel = isExpanded ? `Hide ${label}` : isCompact ? label : `Show ${label}`;
 
   const toggleButton = (
     <Button
@@ -99,13 +95,9 @@ export function FilterSection({
       aria-expanded={isExpanded}
       aria-controls={panelId}
       onClick={() => setExpanded(!isExpanded)}
-      className={cn(
-        'shrink-0',
-        isCompact ? 'min-h-11 gap-1.5 px-3' : 'mb-4',
-        toggleClassName
-      )}
+      className={cn('shrink-0', isCompact ? 'min-h-11 gap-1.5 px-3' : 'mb-4', toggleClassName)}
     >
-      <Filter className="w-4 h-4" aria-hidden />
+      <Filter className="h-4 w-4" aria-hidden />
       <span>{toggleLabel}</span>
       {activeCount > 0 && !isExpanded ? (
         <span
@@ -116,7 +108,10 @@ export function FilterSection({
         </span>
       ) : null}
       <ChevronDown
-        className={cn('w-4 h-4 transition-transform duration-base ease-standard', isExpanded && 'rotate-180')}
+        className={cn(
+          'duration-base h-4 w-4 transition-transform ease-standard',
+          isExpanded && 'rotate-180',
+        )}
         aria-hidden
       />
     </Button>
@@ -134,13 +129,9 @@ export function FilterSection({
         toggleButton
       )}
 
-      {isCompact && belowToolbar ? (
-        <div className="mt-2 shrink-0">{belowToolbar}</div>
-      ) : null}
+      {isCompact && belowToolbar ? <div className="mt-2 shrink-0">{belowToolbar}</div> : null}
 
-      {!isExpanded && summary ? (
-        <p className="mt-2 text-xs text-text-muted dark:text-text-secondary">{summary}</p>
-      ) : null}
+      {!isExpanded && summary ? <p className="mt-2 text-xs text-text-muted">{summary}</p> : null}
 
       {/* Keep mounted so aria-controls always resolves when collapsed. */}
       <div
@@ -148,7 +139,7 @@ export function FilterSection({
         hidden={!isExpanded}
         className={cn(
           'rounded-lg border border-border-light bg-surface-alt',
-          isCompact ? 'mt-2 space-y-3 p-3' : 'p-4'
+          isCompact ? 'mt-2 space-y-3 p-3' : 'p-4',
         )}
       >
         {children}

@@ -47,7 +47,9 @@ test.describe('TASK-390 site copy audit', () => {
     await page.goto('/', { waitUntil: 'networkidle' });
 
     for (const label of ['Characters', 'Library', 'Codex', 'About']) {
-      await expect(page.getByRole('navigation').getByRole('link', { name: label }).first()).toBeVisible();
+      await expect(
+        page.getByRole('navigation').getByRole('link', { name: label }).first(),
+      ).toBeVisible();
     }
     await snap(page, '04-header-nav', false);
   });

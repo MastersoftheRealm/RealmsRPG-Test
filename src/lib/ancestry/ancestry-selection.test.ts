@@ -120,7 +120,9 @@ describe('draft builders', () => {
       mixed: false,
       selectedTraits: [],
     });
-    expect(buildMixedSpeciesAncestryDraft({ id: 'sa', name: 'Alpha' }, { id: 'sb', name: 'Beta' })).toMatchObject({
+    expect(
+      buildMixedSpeciesAncestryDraft({ id: 'sa', name: 'Alpha' }, { id: 'sb', name: 'Beta' }),
+    ).toMatchObject({
       id: 'mixed:sa+sb',
       name: 'Alpha / Beta',
       mixed: true,
@@ -139,9 +141,7 @@ describe('gates and toggles', () => {
         speciesTraitChoices: {},
       }),
     ).toBe(false);
-    expect(
-      areSpeciesTraitChoicesComplete([traits[0]], { st1: 'opt1' }),
-    ).toBe(true);
+    expect(areSpeciesTraitChoicesComplete([traits[0]], { st1: 'opt1' })).toBe(true);
     expect(
       canContinueAncestrySingle({
         selectedTraitIds: ['a1'],

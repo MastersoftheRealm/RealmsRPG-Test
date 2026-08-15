@@ -37,13 +37,13 @@ export function LevelUpGuideCard({ content, onClose }: LevelUpGuideCardProps) {
     <div
       className={cn(
         ONBOARDING_FLOATING_CARD_CLASS,
-        'rounded-xl border border-border-light bg-surface shadow-lg p-4'
+        'rounded-xl border border-border-light bg-surface p-4 shadow-lg',
       )}
       role="dialog"
       aria-labelledby="level-up-guide-title"
       aria-describedby="level-up-guide-body"
     >
-      <p className="text-xs text-text-muted dark:text-text-secondary mb-1">
+      <p className="mb-1 text-xs text-text-muted">
         {copy.titleReady.replace('{level}', String(content.newLevel))}
       </p>
       <h2 id="level-up-guide-title" className="text-base font-semibold text-text-primary">
@@ -51,7 +51,7 @@ export function LevelUpGuideCard({ content, onClose }: LevelUpGuideCardProps) {
       </h2>
       <ul
         id="level-up-guide-body"
-        className="mt-2 space-y-1.5 text-sm text-text-secondary list-disc list-inside"
+        className="mt-2 list-inside list-disc space-y-1.5 text-sm text-text-secondary"
       >
         {content.bullets.map((b) => (
           <li key={b}>{b}</li>

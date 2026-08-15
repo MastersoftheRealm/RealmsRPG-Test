@@ -18,7 +18,7 @@ describe('creator-save-handoff', () => {
       },
       () => {
         order.push('reset');
-      }
+      },
     );
     expect(order).toEqual(['nav']);
     vi.runAllTimers();

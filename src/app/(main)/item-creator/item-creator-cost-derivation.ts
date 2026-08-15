@@ -14,7 +14,11 @@ import {
 } from '@/lib/calculators';
 import { PROPERTY_IDS } from '@/lib/id-constants';
 import { formatCost } from '@/lib/game/creator-constants';
-import type { ArmamentType, ItemSelectedProperty as SelectedProperty, ItemDamageConfig as DamageConfig } from './item-creator-bootstrap';
+import type {
+  ArmamentType,
+  ItemSelectedProperty as SelectedProperty,
+  ItemDamageConfig as DamageConfig,
+} from './item-creator-bootstrap';
 import { WEAPON_ABILITY_REQUIREMENTS, ARMOR_ABILITY_REQUIREMENTS } from './item-creator-helpers';
 
 export type ItemSectionCostSlice = {
@@ -99,7 +103,8 @@ export function useItemCreatorCostDerivation({
 
   const abilityReqSummary = useMemo(() => {
     if (!abilityRequirement) return 'None';
-    const reqs = armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS;
+    const reqs =
+      armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS;
     const req = reqs.find((r) => r.id === abilityRequirement.id);
     return req ? `${req.label} ${abilityRequirement.level}` : 'None';
   }, [abilityRequirement, armamentType]);
@@ -114,7 +119,9 @@ export function useItemCreatorCostDerivation({
   const propertiesPayload: ItemPropertyPayload[] = useMemo(() => {
     const rangeId = Number(PROPERTY_IDS.RANGE);
     const baseProps = selectedProperties
-      .filter((sp) => Number(sp.property.id) !== rangeId && sp.property.name?.toLowerCase() !== 'range')
+      .filter(
+        (sp) => Number(sp.property.id) !== rangeId && sp.property.name?.toLowerCase() !== 'range',
+      )
       .map((sp) => ({
         id: Number(sp.property.id),
         name: sp.property.name,
@@ -139,7 +146,8 @@ export function useItemCreatorCostDerivation({
       const validSizes = [4, 6, 8, 10, 12];
       if (validSizes.includes(damage.size)) {
         const weaponDamageProp = itemProperties.find(
-          (p: ItemProperty) => p.name === 'Weapon Damage' || Number(p.id) === PROPERTY_IDS.WEAPON_DAMAGE,
+          (p: ItemProperty) =>
+            p.name === 'Weapon Damage' || Number(p.id) === PROPERTY_IDS.WEAPON_DAMAGE,
         );
         if (weaponDamageProp) {
           const weaponDamageLevel = Math.max(0, (damage.amount * damage.size - 4) / 2);
@@ -191,7 +199,11 @@ export function useItemCreatorCostDerivation({
           (p: ItemProperty) => p.name === 'Agility Reduction' || Number(p.id) === 5,
         );
         if (arProp) {
-          baseProps.push({ id: Number(arProp.id), name: arProp.name, op_1_lvl: agilityReduction - 1 });
+          baseProps.push({
+            id: Number(arProp.id),
+            name: arProp.name,
+            op_1_lvl: agilityReduction - 1,
+          });
         }
       }
 
@@ -201,7 +213,11 @@ export function useItemCreatorCostDerivation({
             p.name === 'Critical Range +1' || Number(p.id) === PROPERTY_IDS.CRITICAL_RANGE_PLUS_1,
         );
         if (critProp) {
-          baseProps.push({ id: Number(critProp.id), name: critProp.name, op_1_lvl: criticalRangeIncrease - 1 });
+          baseProps.push({
+            id: Number(critProp.id),
+            name: critProp.name,
+            op_1_lvl: criticalRangeIncrease - 1,
+          });
         }
       }
     }
@@ -217,7 +233,8 @@ export function useItemCreatorCostDerivation({
       const validSizes = [4, 6, 8, 10, 12];
       if (validSizes.includes(shieldDR.size) && shieldDR.amount >= 1) {
         const shieldAmountProp = itemProperties.find(
-          (p: ItemProperty) => p.name === 'Shield Amount' || Number(p.id) === PROPERTY_IDS.SHIELD_AMOUNT,
+          (p: ItemProperty) =>
+            p.name === 'Shield Amount' || Number(p.id) === PROPERTY_IDS.SHIELD_AMOUNT,
         );
         if (shieldAmountProp) {
           const shieldDRLevel = Math.max(0, (shieldDR.amount * shieldDR.size - 4) / 2);
@@ -231,7 +248,8 @@ export function useItemCreatorCostDerivation({
 
       if (hasShieldDamage && validSizes.includes(shieldDamage.size) && shieldDamage.amount >= 1) {
         const shieldDamageProp = itemProperties.find(
-          (p: ItemProperty) => p.name === 'Shield Damage' || Number(p.id) === PROPERTY_IDS.SHIELD_DAMAGE,
+          (p: ItemProperty) =>
+            p.name === 'Shield Damage' || Number(p.id) === PROPERTY_IDS.SHIELD_DAMAGE,
         );
         if (shieldDamageProp) {
           const shieldDamageLevel = Math.max(0, (shieldDamage.amount * shieldDamage.size - 4) / 2);

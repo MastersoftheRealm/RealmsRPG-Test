@@ -90,7 +90,10 @@ export function CreatureStatBlock({
 
   const highestAbility = useMemo(() => {
     const abilities = creature.abilities ?? {};
-    const entries = REALMS_ABILITY_ORDER.map((k) => ({ key: k, val: getAbilityValue(abilities, k) }));
+    const entries = REALMS_ABILITY_ORDER.map((k) => ({
+      key: k,
+      val: getAbilityValue(abilities, k),
+    }));
     entries.sort((a, b) => b.val - a.val);
     const top = entries[0] ?? { key: 'strength' as const, val: 0 };
     const keyName = top.key;
@@ -100,10 +103,15 @@ export function CreatureStatBlock({
 
   const defensesSentence = (() => {
     const defs = creature.defenses ?? {};
-    const parts = DEFENSES_BY_ABILITY
-      .map((d) => ({ ...d, bonus: typeof defs[d.defenseKey] === 'number' ? (defs[d.defenseKey] as number) : 0 }))
+    const parts = DEFENSES_BY_ABILITY.map((d) => ({
+      ...d,
+      bonus: typeof defs[d.defenseKey] === 'number' ? (defs[d.defenseKey] as number) : 0,
+    }))
       .filter((d) => d.bonus !== 0)
-      .map((d) => `${d.label} ${formatModifier(getAbilityValue(creature.abilities ?? {}, d.ability) + d.bonus)}`);
+      .map(
+        (d) =>
+          `${d.label} ${formatModifier(getAbilityValue(creature.abilities ?? {}, d.ability) + d.bonus)}`,
+      );
     return parts.length ? `Defenses ${parts.join(', ')}` : null;
   })();
 
@@ -113,18 +121,28 @@ export function CreatureStatBlock({
 
   const armaments = useMemo(
     () => (Array.isArray(creature.armaments) ? creature.armaments : []),
-    [creature.armaments]
+    [creature.armaments],
   );
   const weapons = armaments.filter((a) => String(a.type ?? '').toLowerCase() === 'weapon');
   const shields = armaments.filter((a) => String(a.type ?? '').toLowerCase() === 'shield');
   const armor = armaments.filter((a) => String(a.type ?? '').toLowerCase() === 'armor');
-  const equipment = armaments.filter((a) => !['weapon', 'shield', 'armor'].includes(String(a.type ?? '').toLowerCase()));
+  const equipment = armaments.filter(
+    (a) => !['weapon', 'shield', 'armor'].includes(String(a.type ?? '').toLowerCase()),
+  );
 
   const senses = creature.senses ?? [];
   const movement = creature.movementTypes ?? [];
   const hasSensesOrMovement = senses.length > 0 || movement.length > 0;
   const creatureSkills = useMemo(() => {
-    if (!creature.skills) return [] as Array<{ id?: string; name: string; value: number; proficient: boolean; baseSkillId?: string; isSubSkill?: boolean }>;
+    if (!creature.skills)
+      return [] as Array<{
+        id?: string;
+        name: string;
+        value: number;
+        proficient: boolean;
+        baseSkillId?: string;
+        isSubSkill?: boolean;
+      }>;
     if (Array.isArray(creature.skills)) {
       return creature.skills.map((s) => ({ ...s, proficient: s.proficient !== false }));
     }
@@ -147,12 +165,12 @@ export function CreatureStatBlock({
 
   const powersForDisplay = useMemo(
     () => buildPowersForDisplay(creature, userPowers, officialPowers, powerPartsDb),
-    [creature, officialPowers, powerPartsDb, userPowers]
+    [creature, officialPowers, powerPartsDb, userPowers],
   );
 
   const techniquesForDisplay = useMemo(
     () => buildTechniquesForDisplay(creature, userTechniques, officialTechniques, techniquePartsDb),
-    [creature, officialTechniques, techniquePartsDb, userTechniques]
+    [creature, officialTechniques, techniquePartsDb, userTechniques],
   );
 
   const damageReduction = useMemo(() => {
@@ -160,7 +178,9 @@ export function CreatureStatBlock({
       if (typeof item.damageReduction === 'number') return sum + item.damageReduction;
       if (typeof item.armorValue === 'number') return sum + item.armorValue;
       const props = item.properties || [];
-      const dr = props.find((p) => p.id === 17 || String(p.name ?? '').toLowerCase() === 'damage reduction');
+      const dr = props.find(
+        (p) => p.id === 17 || String(p.name ?? '').toLowerCase() === 'damage reduction',
+      );
       return sum + (dr ? 1 + (dr.op_1_lvl ?? 0) : 0);
     }, 0);
   }, [armaments]);
@@ -196,13 +216,13 @@ export function CreatureStatBlock({
 
   const skillRows = useMemo(
     () => buildSkillRows(creature, creatureSkills, skillsDb),
-    [creature, creatureSkills, skillsDb]
+    [creature, creatureSkills, skillsDb],
   );
 
   const listThumbnail = resolveListRowThumbnail(
     'creature',
     { image_url: creature.imageUrl ?? null },
-    creature.name
+    creature.name,
   );
 
   return (

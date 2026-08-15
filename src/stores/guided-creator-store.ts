@@ -424,9 +424,7 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
               loadoutArmor: legacy.loadoutArmor ?? [],
               armaments: legacyArmaments,
               currency:
-                typeof legacy.currency === 'number'
-                  ? legacy.currency
-                  : CHARACTER_STARTING_CURRENCY,
+                typeof legacy.currency === 'number' ? legacy.currency : CHARACTER_STARTING_CURRENCY,
             },
           };
         }
@@ -617,7 +615,6 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
           draft,
         };
       },
-
-    }
-  )
+    },
+  ),
 );

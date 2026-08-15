@@ -6,25 +6,23 @@
  * Facade (TASK-608): state/handlers in `combat/use-combat-encounter-view`; panels under `combat/`.
  */
 
-"use client";
+'use client';
 
-import { AddCombatantModal } from "@/components/shared";
-import { RollLog } from "@/components/rolls";
-import type { Encounter } from "@/types/encounter";
-import { useCombatEncounterView } from "./combat/use-combat-encounter-view";
-import { CombatRoundControls } from "./combat/combat-round-controls";
-import { CombatCombatantList } from "./combat/combat-combatant-list";
-import { CombatAddSidebar } from "./combat/combat-add-sidebar";
-import type { CombatEncounterViewProps } from "./combat/combat-encounter-view-props";
+import { AddCombatantModal } from '@/components/shared';
+import { RollLog } from '@/components/rolls';
+import type { Encounter } from '@/types/encounter';
+import { useCombatEncounterView } from './combat/use-combat-encounter-view';
+import { CombatRoundControls } from './combat/combat-round-controls';
+import { CombatCombatantList } from './combat/combat-combatant-list';
+import { CombatAddSidebar } from './combat/combat-add-sidebar';
+import type { CombatEncounterViewProps } from './combat/combat-encounter-view-props';
 
 export default function CombatEncounterView(props: CombatEncounterViewProps) {
   if (props.encounter === null) return null;
   return <CombatEncounterViewInner {...props} encounter={props.encounter} />;
 }
 
-function CombatEncounterViewInner(
-  props: CombatEncounterViewProps & { encounter: Encounter },
-) {
+function CombatEncounterViewInner(props: CombatEncounterViewProps & { encounter: Encounter }) {
   const model = useCombatEncounterView(props);
   const {
     encounter,
@@ -45,8 +43,8 @@ function CombatEncounterViewInner(
 
   return (
     <>
-      <div className="grid lg:grid-cols-4 gap-6 lg:items-stretch">
-        <div className="lg:col-span-3 flex flex-col gap-4 min-h-0">
+      <div className="grid gap-6 lg:grid-cols-4 lg:items-stretch">
+        <div className="flex min-h-0 flex-col gap-4 lg:col-span-3">
           <CombatRoundControls
             encounter={encounter}
             setEncounter={setEncounter}

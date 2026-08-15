@@ -35,10 +35,14 @@ import {
   useOfficialLibrary,
 } from '@/hooks';
 import { useGameRules } from '@/hooks/use-game-rules';
+import { sheetCatalogFromEnrichment } from '@/lib/character-view-enrichment';
 import { cleanForSave } from '@/lib/data-enrichment';
 import { mergeRemotePreservingDirty, pickDirtyCharacterFields } from '@/lib/character/dirty-patch';
 import { mergeSheetRealtimePayload } from '@/lib/character/realtime-merge';
-import { getArchetypeCodexLookupId, applyPathProficiencyForLevel } from '@/lib/game/archetype-display';
+import {
+  getArchetypeCodexLookupId,
+  applyPathProficiencyForLevel,
+} from '@/lib/game/archetype-display';
 import { useCharacterSheetDerived } from '@/components/character-sheet';
 import { useToast } from '@/components/ui';
 import { createClient } from '@/lib/supabase/client';
@@ -60,6 +64,8 @@ export function useCharacterSheetPageData(id: string) {
 
   const character = characterResult?.character ?? null;
   const libraryForView = characterResult?.libraryForView;
+  const enrichment = characterResult?.enrichment;
+  const loadCatalog = !characterPending && !enrichment;
   const loading = authLoading || characterPending;
   const [actionError, setError] = useState<string | null>(null);
   const loadError = characterQueryError
@@ -76,7 +82,7 @@ export function useCharacterSheetPageData(id: string) {
     (update: SetStateAction<Character | null>) => {
       patchCharacterDetailQuery(queryClient, viewerKey, id, update);
     },
-    [queryClient, viewerKey, id]
+    [queryClient, viewerKey, id],
   );
 
   useEffect(() => {
@@ -92,24 +98,30 @@ export function useCharacterSheetPageData(id: string) {
     }
   }, [character, id]);
 
-  const { data: userPowers = [] } = useUserPowers();
-  const { data: userTechniques = [] } = useUserTechniques();
-  const { data: userEmpoweredTechniques = [] } = useUserEmpoweredTechniques();
-  const { data: userItems = [] } = useUserItems();
-  const { data: traitsDb = [] } = useTraits();
-  const { data: featsDb = [] } = useCodexFeats();
+  const { data: userPowers = [] } = useUserPowers({ enabled: loadCatalog });
+  const { data: userTechniques = [] } = useUserTechniques({ enabled: loadCatalog });
+  const { data: userEmpoweredTechniques = [] } = useUserEmpoweredTechniques({
+    enabled: loadCatalog,
+  });
+  const { data: userItems = [] } = useUserItems({ enabled: loadCatalog });
+  const { data: traitsDb = [] } = useTraits({ enabled: loadCatalog });
+  const { data: featsDb = [] } = useCodexFeats({ enabled: loadCatalog });
 
-  const { data: powerPartsDb = [] } = usePowerParts();
-  const { data: techniquePartsDb = [] } = useTechniqueParts();
-  const { data: itemPropertiesDb = [] } = useItemProperties();
+  const { data: powerPartsDb = [] } = usePowerParts({ enabled: loadCatalog });
+  const { data: techniquePartsDb = [] } = useTechniqueParts({ enabled: loadCatalog });
+  const { data: itemPropertiesDb = [] } = useItemProperties({ enabled: loadCatalog });
 
-  const { data: codexEquipment = [] } = useEquipment();
+  const { data: codexEquipment = [] } = useEquipment({ enabled: loadCatalog });
 
-  const { data: publicPowersRaw = [] } = useOfficialLibrary('powers');
-  const { data: publicTechniquesRaw = [] } = useOfficialLibrary('techniques');
-  const { data: publicEmpoweredTechniquesRaw = [] } = useOfficialLibrary('empowered-techniques');
-  const { data: publicItemsRaw = [] } = useOfficialLibrary('items');
-  const publicLibraries = useMemo(
+  const { data: publicPowersRaw = [] } = useOfficialLibrary('powers', { enabled: loadCatalog });
+  const { data: publicTechniquesRaw = [] } = useOfficialLibrary('techniques', {
+    enabled: loadCatalog,
+  });
+  const { data: publicEmpoweredTechniquesRaw = [] } = useOfficialLibrary('empowered-techniques', {
+    enabled: loadCatalog,
+  });
+  const { data: publicItemsRaw = [] } = useOfficialLibrary('items', { enabled: loadCatalog });
+  const hookPublicLibraries = useMemo(
     () => ({
       powers: publicPowersRaw,
       techniques: [...publicTechniquesRaw, ...publicEmpoweredTechniquesRaw],
@@ -118,9 +130,28 @@ export function useCharacterSheetPageData(id: string) {
     [publicPowersRaw, publicTechniquesRaw, publicEmpoweredTechniquesRaw, publicItemsRaw],
   );
 
-  const { data: allSpecies = [] } = useMergedSpecies();
-  const { data: codexSkills = [] } = useCodexSkills();
-  const { data: codexArchetypes = [] } = useCodexArchetypes();
+  const { data: allSpecies = [] } = useMergedSpecies({ enabled: loadCatalog });
+  const { data: codexSkills = [] } = useCodexSkills({ enabled: loadCatalog });
+  const { data: codexArchetypes = [] } = useCodexArchetypes({ enabled: loadCatalog });
+
+  const catalog = enrichment
+    ? sheetCatalogFromEnrichment(enrichment)
+    : {
+        userPowers,
+        userTechniques,
+        userEmpoweredTechniques,
+        userItems,
+        publicLibraries: hookPublicLibraries,
+        codexEquipment,
+        powerPartsDb,
+        techniquePartsDb,
+        itemPropertiesDb,
+        allSpecies,
+        traitsDb,
+        codexSkills,
+        codexArchetypes,
+        featsDb,
+      };
 
   const { data: campaignsFull = [] } = useCampaignsFull();
   const campaignContext = useMemo(() => {
@@ -165,20 +196,7 @@ export function useCharacterSheetPageData(id: string) {
   } = useCharacterSheetDerived({
     character,
     libraryForView,
-    userPowers,
-    userTechniques,
-    userEmpoweredTechniques,
-    userItems,
-    codexEquipment,
-    powerPartsDb,
-    techniquePartsDb,
-    itemPropertiesDb,
-    publicLibraries,
-    allSpecies,
-    traitsDb,
-    codexSkills,
-    codexArchetypes,
-    featsDb,
+    ...catalog,
     rules,
   });
 
@@ -225,7 +243,7 @@ export function useCharacterSheetPageData(id: string) {
               {
                 suppressResources,
                 updatedAt: payload.new.updated_at,
-              }
+              },
             );
             if (nextBaseline) {
               const baseline = nextBaseline;
@@ -250,7 +268,7 @@ export function useCharacterSheetPageData(id: string) {
 
   const pathProfAppliedKeyRef = useRef<string | null>(null);
   useEffect(() => {
-    if (!character || codexArchetypes.length === 0) return;
+    if (!character || catalog.codexArchetypes.length === 0) return;
     const level = character.level ?? 1;
     if (level < 5) return;
     const applyKey = `${character.id}:${level}:${character.pow_prof ?? 0}:${character.mart_prof ?? 0}`;
@@ -260,7 +278,7 @@ export function useCharacterSheetPageData(id: string) {
       pathProfAppliedKeyRef.current = applyKey;
       return;
     }
-    const pathArch = codexArchetypes.find((a) => a.id === lookupId) as
+    const pathArch = catalog.codexArchetypes.find((a) => a.id === lookupId) as
       | Character['archetype']
       | undefined;
     const profUpdate = applyPathProficiencyForLevel(
@@ -275,7 +293,7 @@ export function useCharacterSheetPageData(id: string) {
     } else {
       pathProfAppliedKeyRef.current = applyKey;
     }
-  }, [character, codexArchetypes, setCharacter]);
+  }, [character, catalog.codexArchetypes, setCharacter]);
 
   const { hasUnsavedChanges, saveNow } = useAutoSave({
     data: character,
@@ -297,9 +315,7 @@ export function useCharacterSheetPageData(id: string) {
           savedCleanRef.current = remoteClean;
           setCharacter((prev) => {
             if (!prev || prev.id !== remote.id) return prev;
-            const kept = Object.fromEntries(
-              Object.keys(dirty).map((key) => [key, cleaned[key]])
-            );
+            const kept = Object.fromEntries(Object.keys(dirty).map((key) => [key, cleaned[key]]));
             return { ...prev, ...remote, ...kept, updatedAt: remote.updatedAt };
           });
           return {
@@ -339,13 +355,13 @@ export function useCharacterSheetPageData(id: string) {
     campaignContext,
     hasUnsavedChanges,
     saveNow,
-    traitsDb,
-    featsDb,
-    powerPartsDb,
-    techniquePartsDb,
-    itemPropertiesDb,
-    codexSkills,
-    codexArchetypes,
+    traitsDb: catalog.traitsDb,
+    featsDb: catalog.featsDb,
+    powerPartsDb: catalog.powerPartsDb,
+    techniquePartsDb: catalog.techniquePartsDb,
+    itemPropertiesDb: catalog.itemPropertiesDb,
+    codexSkills: catalog.codexSkills,
+    codexArchetypes: catalog.codexArchetypes,
     enrichedData,
     characterSpeciesTraits,
     characterSpeciesSkills,

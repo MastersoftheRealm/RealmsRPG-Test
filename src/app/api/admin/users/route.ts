@@ -9,7 +9,12 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { requireAdminSession } from '@/lib/admin';
-import { buildRateLimitKey, resolveClientIp, retryAfterSecondsFromReset, standardLimiter } from '@/lib/rate-limit';
+import {
+  buildRateLimitKey,
+  resolveClientIp,
+  retryAfterSecondsFromReset,
+  standardLimiter,
+} from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -37,7 +42,7 @@ export async function GET(request: NextRequest) {
     if (!rateResult.success) {
       return NextResponse.json(
         { error: 'Too many requests' },
-        { status: 429, headers: { 'Retry-After': retryAfterSecondsFromReset(rateResult.reset) } }
+        { status: 429, headers: { 'Retry-After': retryAfterSecondsFromReset(rateResult.reset) } },
       );
     }
 
@@ -71,7 +76,7 @@ export async function GET(request: NextRequest) {
         email: p.email ?? '',
         displayName: p.display_name ?? '',
         role: p.role,
-      }))
+      })),
     );
   } catch (err) {
     console.error('[API Error] GET /api/admin/users:', err);

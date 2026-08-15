@@ -30,7 +30,7 @@ export function buildRecommendedPathFeats({
     if (workingFeats.some((f) => f.id === feat.id)) return;
 
     const selectedList = workingFeats.filter((f) =>
-      isCharacterFeat ? f.type === 'character' : f.type !== 'character'
+      isCharacterFeat ? f.type === 'character' : f.type !== 'character',
     );
     const maxForType = isCharacterFeat ? maxCharacterFeats : maxArchetypeFeats;
     const requirements = checkRequirements(feat);
@@ -74,8 +74,14 @@ export function buildRecommendedPathFeats({
     addFeatIfPossible(displayFeat, true);
   }
 
-  const prevIds = (currentFeats ?? []).map((f) => String(f.id)).sort().join(',');
-  const nextIds = workingFeats.map((f) => String(f.id)).sort().join(',');
+  const prevIds = (currentFeats ?? [])
+    .map((f) => String(f.id))
+    .sort()
+    .join(',');
+  const nextIds = workingFeats
+    .map((f) => String(f.id))
+    .sort()
+    .join(',');
   if (prevIds === nextIds) return null;
   return workingFeats;
 }

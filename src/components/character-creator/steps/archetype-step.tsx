@@ -25,7 +25,11 @@ import { buildPathAbilityChipLabels } from '@/lib/guided-creator/path-ability-la
 import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy';
 import type { Archetype, ArchetypeCategory, AbilityName } from '@/types';
 import { InfoTippy } from '@/components/shared';
-import { chooseCharacterCreationStyle, martialAbility, powerAbility } from '../../../../public/tooltip-text';
+import {
+  chooseCharacterCreationStyle,
+  martialAbility,
+  powerAbility,
+} from '../../../../public/tooltip-text';
 
 function PathAbilityChips({ path, className }: { path: Archetype; className?: string }) {
   const chips = buildPathAbilityChipLabels(path);
@@ -59,21 +63,25 @@ export function ArchetypeStep() {
     updateDraft,
   } = useCharacterCreatorStore();
   const { data: codexArchetypes = [], isLoading } = useCodexArchetypes();
-  
+
   const [selectedType, setSelectedType] = useState<ArchetypeCategory | null>(
-    draft.archetype?.type || null
+    draft.archetype?.type || null,
   );
   const [selectedAbility, setSelectedAbility] = useState<AbilityName | null>(
-    draft.pow_abil || draft.mart_abil || null
+    draft.pow_abil || draft.mart_abil || null,
   );
   const [selectedMartialAbility, setSelectedMartialAbility] = useState<AbilityName | null>(
-    draft.mart_abil || null
+    draft.mart_abil || null,
   );
-  const [selectedPathId, setSelectedPathId] = useState<string | null>(draft.archetypePathId || null);
+  const [selectedPathId, setSelectedPathId] = useState<string | null>(
+    draft.archetypePathId || null,
+  );
   // Path is the default entry (REALMS_PRODUCT_OVERVIEW.md §5.1); Forge is the
   // always-reachable Layer 3 escape hatch, not a co-equal first choice.
-  const [creationChoice, setCreationChoice] = useState<'forge' | 'path'>(draft.creationMode || 'path');
-  
+  const [creationChoice, setCreationChoice] = useState<'forge' | 'path'>(
+    draft.creationMode || 'path',
+  );
+
   const archetypePathOptions = useMemo(
     () => listPlayerVisiblePaths(codexArchetypes as Archetype[]),
     [codexArchetypes],
@@ -86,7 +94,7 @@ export function ArchetypeStep() {
 
   const selectedPath = useMemo(
     () => archetypePathOptions.find((option) => option.id === selectedPathId),
-    [archetypePathOptions, selectedPathId]
+    [archetypePathOptions, selectedPathId],
   );
 
   const isLocked = completedSteps.includes('archetype');
@@ -115,7 +123,7 @@ export function ArchetypeStep() {
       name: selectedType.charAt(0).toUpperCase() + selectedType.slice(1),
       type: selectedType,
       pow_abil: selectedType !== 'martial' ? selectedAbility : undefined,
-      mart_abil: selectedType !== 'power' ? (selectedMartialAbility || selectedAbility) : undefined,
+      mart_abil: selectedType !== 'power' ? selectedMartialAbility || selectedAbility : undefined,
       ability: selectedAbility,
     };
 
@@ -145,7 +153,7 @@ export function ArchetypeStep() {
       setArchetype(
         selectedType!,
         selectedAbility!,
-        selectedType === 'powered-martial' ? selectedMartialAbility! : undefined
+        selectedType === 'powered-martial' ? selectedMartialAbility! : undefined,
       );
     }
 
@@ -154,13 +162,18 @@ export function ArchetypeStep() {
 
   if (isLocked) {
     return (
-      <div className="max-w-2xl mx-auto flex flex-col flex-1 min-h-0">
-        <h2 className="text-2xl font-bold text-text-primary mb-2">Your Archetype</h2>
-        
-        <div className={cn('border-2 rounded-xl p-6 mb-6', statusPanel.complete)}>
-          <h3 className="text-xl font-bold text-success-fg mb-2">{draft.archetype?.name || ARCHETYPE_CATEGORY_INFO[draft.archetype!.type].title}</h3>
-          <p className="text-success-fg mb-4">{draft.archetype?.description || ARCHETYPE_CATEGORY_INFO[draft.archetype!.type].description}</p>
-          
+      <div className="mx-auto flex min-h-0 max-w-2xl flex-1 flex-col">
+        <h2 className="mb-2 text-2xl font-bold text-text-primary">Your Archetype</h2>
+
+        <div className={cn('mb-6 rounded-xl border-2 p-6', statusPanel.complete)}>
+          <h3 className="mb-2 text-xl font-bold text-success-fg">
+            {draft.archetype?.name || ARCHETYPE_CATEGORY_INFO[draft.archetype!.type].title}
+          </h3>
+          <p className="mb-4 text-success-fg">
+            {draft.archetype?.description ||
+              ARCHETYPE_CATEGORY_INFO[draft.archetype!.type].description}
+          </p>
+
           <div className="flex flex-wrap gap-2">
             {draft.creationMode && (
               <DescriptorChip variant="primary">
@@ -174,12 +187,13 @@ export function ArchetypeStep() {
             )}
             {draft.mart_abil && (
               <DescriptorChip variant="technique">
-                Martial Ability: {draft.mart_abil.charAt(0).toUpperCase() + draft.mart_abil.slice(1)}
+                Martial Ability:{' '}
+                {draft.mart_abil.charAt(0).toUpperCase() + draft.mart_abil.slice(1)}
               </DescriptorChip>
             )}
           </div>
         </div>
-        
+
         <button
           type="button"
           onClick={() => {
@@ -188,7 +202,7 @@ export function ArchetypeStep() {
             setSelectedMartialAbility(null);
             reselectArchetype();
           }}
-          className="text-text-secondary hover:text-text-primary underline mb-6"
+          className="mb-6 text-text-secondary underline hover:text-text-primary"
         >
           Choose a different archetype
         </button>
@@ -199,14 +213,18 @@ export function ArchetypeStep() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col flex-1 min-h-0">
-      <div className="flex items-center gap-1 mb-2">
+    <div className="mx-auto flex min-h-0 max-w-4xl flex-1 flex-col">
+      <div className="mb-2 flex items-center gap-1">
         <h2 className="text-2xl font-bold text-text-primary">
           {creationChoice === 'forge' ? 'Forge Your Own Character' : 'Choose Your Path'}
         </h2>
-          <InfoTippy content={chooseCharacterCreationStyle} label="Path vs Forge help" size="inline" />
+        <InfoTippy
+          content={chooseCharacterCreationStyle}
+          label="Path vs Forge help"
+          size="inline"
+        />
       </div>
-      <p className="text-text-secondary mb-6">
+      <p className="mb-6 text-text-secondary">
         {creationChoice === 'forge'
           ? 'Full control: pick your own Feats, Powers, Techniques, Armaments, Skills, and Equipment.'
           : 'Pick an archetype path and we’ll guide your build with curated recommendations. You can still customize everything later.'}
@@ -215,7 +233,7 @@ export function ArchetypeStep() {
       {creationChoice === 'path' && (
         <div className="mb-8">
           {isLoading ? (
-            <div className="py-8 flex items-center justify-center">
+            <div className="flex items-center justify-center py-8">
               <Spinner size="md" />
             </div>
           ) : (
@@ -225,10 +243,10 @@ export function ArchetypeStep() {
                 if (options.length === 0) return null;
                 return (
                   <section key={group}>
-                    <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide mb-2">
+                    <h3 className="mb-2 text-sm font-semibold tracking-wide text-text-secondary uppercase">
                       {pathCategoryGroupLabel(group)}
                     </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                       {options.map((option) => (
                         <SelectionCard
                           key={option.id}
@@ -239,11 +257,11 @@ export function ArchetypeStep() {
                           }}
                           className="text-left"
                         >
-                          <h4 className="font-semibold text-text-primary mb-1">{option.name}</h4>
+                          <h4 className="mb-1 font-semibold text-text-primary">{option.name}</h4>
                           <p
                             className={cn(
-                              'text-sm text-text-secondary mb-2',
-                              selectedPathId !== option.id && 'line-clamp-2'
+                              'mb-2 text-sm text-text-secondary',
+                              selectedPathId !== option.id && 'line-clamp-2',
                             )}
                           >
                             {option.description || 'No description provided.'}
@@ -263,8 +281,8 @@ export function ArchetypeStep() {
               className="mt-5 rounded-xl border border-primary-subtle-border bg-primary-subtle-bg p-4"
               aria-live="polite"
             >
-              <h4 className="font-semibold text-text-primary mb-2">{selectedPath.name}</h4>
-              <p className="text-sm text-text-secondary whitespace-pre-wrap">
+              <h4 className="mb-2 font-semibold text-text-primary">{selectedPath.name}</h4>
+              <p className="text-sm whitespace-pre-wrap text-text-secondary">
                 {selectedPath.description || 'No description provided.'}
               </p>
               <PathAbilityChips path={selectedPath} className="mt-3" />
@@ -272,11 +290,12 @@ export function ArchetypeStep() {
           )}
 
           {/* Forge — always-reachable Layer 3 escape hatch (never the default). */}
-          <div className="mt-8 rounded-xl border border-border-light bg-surface-alt p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="mt-8 flex flex-col justify-between gap-3 rounded-xl border border-border-light bg-surface-alt p-4 sm:flex-row sm:items-center">
             <div className="min-w-0">
               <h3 className="font-semibold text-text-primary">Want full control?</h3>
               <p className="text-sm text-text-secondary">
-                Forge your own character and pick every Feat, Power, Technique, Armament, Skill, and piece of Equipment yourself.
+                Forge your own character and pick every Feat, Power, Technique, Armament, Skill, and
+                piece of Equipment yourself.
               </p>
             </div>
             <Button
@@ -286,7 +305,7 @@ export function ArchetypeStep() {
                 setCreationMode('forge');
                 setSelectedPathId(null);
               }}
-              className="shrink-0 min-h-11"
+              className="min-h-11 shrink-0"
             >
               Forge your own →
             </Button>
@@ -305,47 +324,49 @@ export function ArchetypeStep() {
               setSelectedAbility(null);
               setSelectedMartialAbility(null);
             }}
-            className="text-text-secondary hover:text-text-primary underline mb-6 min-h-11"
+            className="mb-6 min-h-11 text-text-secondary underline hover:text-text-primary"
           >
             ← Back to guided paths
           </button>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            {(Object.entries(ARCHETYPE_CATEGORY_INFO) as [ArchetypeCategory, typeof ARCHETYPE_CATEGORY_INFO.power][]).map(
-              ([type, info]) => (
-                <button
-                  key={type}
-                  onClick={() => {
-                    setSelectedType(type);
-                    setSelectedAbility(null);
-                    setSelectedMartialAbility(null);
-                  }}
-                  className={cn(
-                    'p-6 rounded-xl border-2 text-left transition-all',
-                    selectedType === type
-                      ? 'border-primary-outline-border bg-primary-subtle-bg shadow-lg'
-                      : 'border-border-light bg-surface hover:border-border hover:shadow'
-                  )}
-                >
-                  <h3 className="text-lg font-bold text-text-primary mb-2">{info.title}</h3>
-                  <p className="text-sm text-text-secondary">{info.description}</p>
-                </button>
-              )
-            )}
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-3">
+            {(
+              Object.entries(ARCHETYPE_CATEGORY_INFO) as [
+                ArchetypeCategory,
+                typeof ARCHETYPE_CATEGORY_INFO.power,
+              ][]
+            ).map(([type, info]) => (
+              <button
+                key={type}
+                onClick={() => {
+                  setSelectedType(type);
+                  setSelectedAbility(null);
+                  setSelectedMartialAbility(null);
+                }}
+                className={cn(
+                  'rounded-xl border-2 p-6 text-left transition-all',
+                  selectedType === type
+                    ? 'border-primary-outline-border bg-primary-subtle-bg shadow-lg'
+                    : 'border-border-light bg-surface hover:border-border hover:shadow',
+                )}
+              >
+                <h3 className="mb-2 text-lg font-bold text-text-primary">{info.title}</h3>
+                <p className="text-sm text-text-secondary">{info.description}</p>
+              </button>
+            ))}
           </div>
-      
+
           {selectedType && (
-            <Card className="bg-surface-alt p-6 mb-6 shadow-none">
-              <h3 className="font-bold text-text-primary mb-4">
-                {selectedType === 'powered-martial' 
+            <Card className="mb-6 bg-surface-alt p-6 shadow-none">
+              <h3 className="mb-4 font-bold text-text-primary">
+                {selectedType === 'powered-martial'
                   ? 'Choose Your Power and Martial Abilities'
-                  : `Choose Your ${selectedType === 'power' ? 'Power' : 'Martial'} Ability`
-                }
+                  : `Choose Your ${selectedType === 'power' ? 'Power' : 'Martial'} Ability`}
               </h3>
-              
+
               {selectedType === 'powered-martial' ? (
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid gap-6 md:grid-cols-2">
                   <div>
-                    <div className="flex items-center gap-1 mb-2">
+                    <div className="mb-2 flex items-center gap-1">
                       <h4 className="text-sm font-medium text-power-fg">Power Ability</h4>
                       <InfoTippy content={powerAbility} label="Power ability help" size="inline" />
                     </div>
@@ -362,11 +383,15 @@ export function ArchetypeStep() {
                       ))}
                     </div>
                   </div>
-                  
+
                   <div>
-                    <div className="flex items-center gap-1 mb-2">
+                    <div className="mb-2 flex items-center gap-1">
                       <h4 className="text-sm font-medium text-martial-fg">Martial Ability</h4>
-                      <InfoTippy content={martialAbility} label="Martial ability help" size="inline" />
+                      <InfoTippy
+                        content={martialAbility}
+                        label="Martial ability help"
+                        size="inline"
+                      />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
@@ -383,7 +408,7 @@ export function ArchetypeStep() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
                   {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
                     <AbilityPickButton
                       key={ability}
@@ -400,7 +425,7 @@ export function ArchetypeStep() {
           )}
         </>
       )}
-      
+
       {/* Confirm Archetype */}
       <CreatorStepFooter
         primaryAction={

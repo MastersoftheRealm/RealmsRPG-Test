@@ -66,7 +66,7 @@ export function collectSheetTraits(input: CollectSheetTraitsInput): SheetTraitRo
     (speciesFromCodex.length > 0
       ? speciesFromCodex
       : (input.vanillaTraits?.speciesTraits ?? [])
-    ).map((n) => traitKey(String(n)))
+    ).map((n) => traitKey(String(n))),
   );
 
   const ancestry = input.ancestry;

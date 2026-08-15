@@ -47,9 +47,9 @@ export function EncounterPageHeader({
     <div className="mb-6">
       <Link
         href="/encounters"
-        className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-fg-hover mb-2 text-sm"
+        className="mb-2 inline-flex items-center gap-1 text-sm text-text-secondary hover:text-primary-fg-hover"
       >
-        <ChevronLeft className="w-4 h-4" aria-hidden />
+        <ChevronLeft className="h-4 w-4" aria-hidden />
         Back to Encounters
       </Link>
       <div className="min-w-0 flex-1">
@@ -77,20 +77,20 @@ export function EncounterPageHeader({
           />
         )}
         {!isEditingName && (
-          <p className="text-xs mt-1 flex items-center gap-1">
+          <p className="mt-1 flex items-center gap-1 text-xs">
             {isSaving ? (
-              <span className="text-warning-fg flex items-center gap-1">
-                <CloudOff className="w-3 h-3" aria-hidden />
+              <span className="flex items-center gap-1 text-warning-fg">
+                <CloudOff className="h-3 w-3" aria-hidden />
                 Saving...
               </span>
             ) : hasUnsavedChanges ? (
-              <span className="text-warning-fg flex items-center gap-1">
-                <CloudOff className="w-3 h-3" aria-hidden />
+              <span className="flex items-center gap-1 text-warning-fg">
+                <CloudOff className="h-3 w-3" aria-hidden />
                 Unsaved changes
               </span>
             ) : (
-              <span className="text-success-fg flex items-center gap-1">
-                <Cloud className="w-3 h-3" aria-hidden />
+              <span className="flex items-center gap-1 text-success-fg">
+                <Cloud className="h-3 w-3" aria-hidden />
                 Saved to cloud
               </span>
             )}

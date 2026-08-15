@@ -10,12 +10,12 @@ import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { isCharacterOnCampaignRoster } from '@/lib/campaign-roster';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
-import { collectCharacterLibraryRefIds, getOwnerLibraryForView } from '@/lib/owner-library-for-view';
+import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
 import type { CharacterVisibility } from '@/types';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ id: string; userId: string; characterId: string }> }
+  { params }: { params: Promise<{ id: string; userId: string; characterId: string }> },
 ) {
   try {
     const { id: campaignId, userId, characterId } = await params;
@@ -59,7 +59,10 @@ export async function GET(
 
     const forEncounter = scope === 'encounter';
     if (!forEncounter && !isRM) {
-      return NextResponse.json({ error: 'Only the Realm Master can view player character sheets' }, { status: 403 });
+      return NextResponse.json(
+        { error: 'Only the Realm Master can view player character sheets' },
+        { status: 403 },
+      );
     }
 
     const { data: charRowUser, error: charErr } = await supabase
@@ -69,7 +72,10 @@ export async function GET(
       .eq('user_id', userId)
       .maybeSingle();
     if (charErr) {
-      console.warn('[campaign character GET] session-scoped fetch failed, trying service role:', charErr);
+      console.warn(
+        '[campaign character GET] session-scoped fetch failed, trying service role:',
+        charErr,
+      );
     }
 
     let charRow = charRowUser;
@@ -95,7 +101,10 @@ export async function GET(
     if (!forEncounter) {
       const visibility = (charData?.visibility as CharacterVisibility) || 'private';
       if (visibility === 'private') {
-        return NextResponse.json({ error: 'This character is set to private and cannot be viewed' }, { status: 403 });
+        return NextResponse.json(
+          { error: 'This character is set to private and cannot be viewed' },
+          { status: 403 },
+        );
       }
     }
 
@@ -109,8 +118,10 @@ export async function GET(
       const { maxHealth, maxEnergy } = computeMaxHealthEnergy(charData as Record<string, unknown>);
       const health = charData?.health as { max?: number; current?: number } | undefined;
       const energy = charData?.energy as { max?: number; current?: number } | undefined;
-      const currentHp = (charData?.currentHealth as number) ?? health?.current ?? health?.max ?? maxHealth;
-      const currentEn = (charData?.currentEnergy as number) ?? energy?.current ?? energy?.max ?? maxEnergy;
+      const currentHp =
+        (charData?.currentHealth as number) ?? health?.current ?? health?.max ?? maxHealth;
+      const currentEn =
+        (charData?.currentEnergy as number) ?? energy?.current ?? energy?.max ?? maxEnergy;
       const actionPoints = (charData?.actionPoints as number) ?? 4;
       const character = {
         name: charData?.name ?? 'Unknown',
@@ -138,13 +149,14 @@ export async function GET(
       updatedAt: charData?.updatedAt ?? charRow.updated_at,
     };
 
-    const libraryForView = await getOwnerLibraryForView(userId, collectCharacterLibraryRefIds(charData));
-    return NextResponse.json({ ...character, libraryForView });
+    const { libraryForView, enrichment } = await getOwnerLibraryAndEnrichmentForView(
+      supabase,
+      userId,
+      charData,
+    );
+    return NextResponse.json({ ...character, libraryForView, enrichment });
   } catch (error) {
     console.error('Campaign character view error:', error);
-    return NextResponse.json(
-      { error: 'Failed to load character' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to load character' }, { status: 500 });
   }
 }

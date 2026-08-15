@@ -8,10 +8,7 @@
 'use client';
 
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import {
-  useCreatorSave,
-  type TechniquePart,
-} from '@/hooks';
+import { useCreatorSave, type TechniquePart } from '@/hooks';
 import {
   calculateTechniqueCosts,
   computeTechniqueActionTypeFromSelection,
@@ -61,7 +58,9 @@ export function useTechniqueCreatorWorkspace({
 }: UseTechniqueCreatorWorkspaceArgs) {
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
-  const [selectedParts, setSelectedParts] = useState<SelectedPart[]>(initialFormState.selectedParts);
+  const [selectedParts, setSelectedParts] = useState<SelectedPart[]>(
+    initialFormState.selectedParts,
+  );
   const [actionType, setActionType] = useState(initialFormState.actionType);
   const [isReaction, setIsReaction] = useState(initialFormState.isReaction);
   const [damage, setDamage] = useState<DamageConfig>(initialFormState.damage);
@@ -82,7 +81,7 @@ export function useTechniqueCreatorWorkspace({
     const cache: TechniqueCreatorCache = {
       name,
       description,
-      selectedParts: selectedParts.map(sp => ({
+      selectedParts: selectedParts.map((sp) => ({
         partId: sp.part.id,
         op_1_lvl: sp.op_1_lvl,
         op_2_lvl: sp.op_2_lvl,
@@ -98,18 +97,30 @@ export function useTechniqueCreatorWorkspace({
       timestamp: Date.now(),
     };
     writeCreatorCache(TECHNIQUE_CREATOR_CACHE_KEY, cache);
-  }, [editTechniqueId, name, description, selectedParts, actionType, isReaction, damage, attackMode, imageId, imageUrl]);
+  }, [
+    editTechniqueId,
+    name,
+    description,
+    selectedParts,
+    actionType,
+    isReaction,
+    damage,
+    attackMode,
+    imageId,
+    imageUrl,
+  ]);
 
   // Build mechanic parts from action type, damage, and attack mode.
   const mechanicParts = useMemo(
-    () => buildMechanicParts({
-      creatorType: 'technique',
-      partsDb: techniqueParts,
-      action: { type: actionType, isReaction },
-      techniqueDamage: { diceAmount: damage.amount, dieSize: damage.size },
-      attackMode,
-    }),
-    [actionType, isReaction, damage.amount, damage.size, attackMode, techniqueParts]
+    () =>
+      buildMechanicParts({
+        creatorType: 'technique',
+        partsDb: techniqueParts,
+        action: { type: actionType, isReaction },
+        techniqueDamage: { diceAmount: damage.amount, dieSize: damage.size },
+        attackMode,
+      }),
+    [actionType, isReaction, damage.amount, damage.size, attackMode, techniqueParts],
   );
 
   // Convert selected parts to payload format for calculator
@@ -125,39 +136,42 @@ export function useTechniqueCreatorWorkspace({
       })),
       ...mechanicParts.map(toTechniquePartPayload),
     ],
-    [selectedParts, mechanicParts]
+    [selectedParts, mechanicParts],
   );
 
   // Calculate costs - using technique parts as the database
   const costs = useMemo(
     () => calculateTechniqueCosts(partsPayload, techniqueParts),
-    [partsPayload, techniqueParts]
+    [partsPayload, techniqueParts],
   );
   const advancedCalcRows = useMemo(
     () => [
       { label: 'Energy (raw)', value: costs.energyRaw.toFixed(2) },
-      { label: 'Energy (final)', value: `ceil(${costs.energyRaw.toFixed(2)}) = ${costs.totalEnergy}` },
+      {
+        label: 'Energy (final)',
+        value: `ceil(${costs.energyRaw.toFixed(2)}) = ${costs.totalEnergy}`,
+      },
       { label: 'Training points (final)', value: String(costs.totalTP) },
     ],
-    [costs.energyRaw, costs.totalEnergy, costs.totalTP]
+    [costs.energyRaw, costs.totalEnergy, costs.totalTP],
   );
 
   // Derived display values
   const actionTypeDisplay = useMemo(
     () => computeTechniqueActionTypeFromSelection(actionType, isReaction),
-    [actionType, isReaction]
+    [actionType, isReaction],
   );
 
   const damageDisplay = useMemo(
     () => formatTechniqueDamage(damage.amount > 0 ? damage : undefined),
-    [damage]
+    [damage],
   );
 
   // Collapsed summaries for collapsible sections
   const attackModeLabel = useMemo(() => attackModeColumnLabel(attackMode), [attackMode]);
   const combatConfigSummary = useMemo(
     () => `${attackModeLabel} • ${actionTypeDisplay}`,
-    [attackModeLabel, actionTypeDisplay]
+    [attackModeLabel, actionTypeDisplay],
   );
   const techniquePartsSummary = useMemo(() => {
     if (selectedParts.length === 0) return 'No parts';
@@ -167,13 +181,13 @@ export function useTechniqueCreatorWorkspace({
   }, [selectedParts]);
   const damageSummary = useMemo(
     () => (damage.amount > 0 ? `+${damage.amount}d${damage.size}` : 'None'),
-    [damage.amount, damage.size]
+    [damage.amount, damage.size],
   );
 
   // Section cost for Additional Damage
   const damageSectionCost = useMemo(() => {
     const damageParts = mechanicParts.filter(
-      (mp) => mp.name === 'Additional Damage' || mp.name === 'Split Damage Dice'
+      (mp) => mp.name === 'Additional Damage' || mp.name === 'Split Damage Dice',
     );
     return calculateTechniqueCosts(damageParts.map(toTechniquePartPayload), techniqueParts);
   }, [mechanicParts, techniqueParts]);
@@ -181,21 +195,24 @@ export function useTechniqueCreatorWorkspace({
   // Section cost for Combat Configuration (weapon + action type + reaction)
   const combatConfigCost = useMemo(() => {
     const combatParts = mechanicParts.filter(
-      (mp) => mp.name !== 'Additional Damage' && mp.name !== 'Split Damage Dice'
+      (mp) => mp.name !== 'Additional Damage' && mp.name !== 'Split Damage Dice',
     );
     return calculateTechniqueCosts(combatParts.map(toTechniquePartPayload), techniqueParts);
   }, [mechanicParts, techniqueParts]);
 
   const weaponCost = useMemo(() => {
     const weaponParts = mechanicParts.filter(
-      (mp) => mp.name === 'Add Weapon to Technique' || mp.name === 'Add Weapon Attack' || mp.name === 'No Attack'
+      (mp) =>
+        mp.name === 'Add Weapon to Technique' ||
+        mp.name === 'Add Weapon Attack' ||
+        mp.name === 'No Attack',
     );
     return calculateTechniqueCosts(weaponParts.map(toTechniquePartPayload), techniqueParts);
   }, [mechanicParts, techniqueParts]);
 
   const actionTypeCost = useMemo(() => {
     const actionParts = mechanicParts.filter(
-      (mp) => mp.name === 'Quick or Free Action' || mp.name === 'Long Action'
+      (mp) => mp.name === 'Quick or Free Action' || mp.name === 'Long Action',
     );
     return calculateTechniqueCosts(actionParts.map(toTechniquePartPayload), techniqueParts);
   }, [mechanicParts, techniqueParts]);
@@ -228,9 +245,7 @@ export function useTechniqueCreatorWorkspace({
   }, []);
 
   const updatePart = useCallback((index: number, updates: Partial<SelectedPart>) => {
-    setSelectedParts((prev) =>
-      prev.map((sp, i) => (i === index ? { ...sp, ...updates } : sp))
-    );
+    setSelectedParts((prev) => prev.map((sp, i) => (i === index ? { ...sp, ...updates } : sp)));
   }, []);
 
   const getPayload = useCallback(() => {
@@ -265,7 +280,18 @@ export function useTechniqueCreatorWorkspace({
         ...(imageUrl ? { imageUrl } : {}),
       },
     };
-  }, [name, description, selectedParts, mechanicParts, damage, attackMode, actionType, isReaction, imageId, imageUrl]);
+  }, [
+    name,
+    description,
+    selectedParts,
+    mechanicParts,
+    damage,
+    attackMode,
+    actionType,
+    isReaction,
+    imageId,
+    imageUrl,
+  ]);
 
   const save = useCreatorSave({
     type: 'techniques',
@@ -317,16 +343,14 @@ export function useTechniqueCreatorWorkspace({
     setImageUrl(next.imageUrl);
   }, []);
 
-  const handleLoadTechnique = useCallback((technique: TechniqueLibraryRecord) => {
-    applyFormState(
-      techniqueLibraryRecordToFormState(
-        technique,
-        techniqueParts,
-      ),
-    );
-    save.setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
-    setTimeout(() => save.setSaveMessage(null), 2000);
-  }, [techniqueParts, applyFormState, save]);
+  const handleLoadTechnique = useCallback(
+    (technique: TechniqueLibraryRecord) => {
+      applyFormState(techniqueLibraryRecordToFormState(technique, techniqueParts));
+      save.setSaveMessage({ type: 'success', text: 'Technique loaded successfully!' });
+      setTimeout(() => save.setSaveMessage(null), 2000);
+    },
+    [techniqueParts, applyFormState, save],
+  );
 
   return {
     name,

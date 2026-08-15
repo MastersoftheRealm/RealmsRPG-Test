@@ -5,15 +5,15 @@
  * Presentation lives in sibling panels.
  */
 
-"use client";
+'use client';
 
-import { useMemo } from "react";
-import type { Encounter } from "@/types/encounter";
-import type { CombatEncounterViewProps } from "./combat-encounter-view-props";
-import { sortCombatantsForTurnOrder } from "./combat-encounter-helpers";
-import { useCombatLinkedCharacterSync } from "./use-combat-linked-character-sync";
-import { useCombatRosterActions } from "./use-combat-roster-actions";
-import { useCombatRoundActions } from "./use-combat-round-actions";
+import { useMemo } from 'react';
+import type { Encounter } from '@/types/encounter';
+import type { CombatEncounterViewProps } from './combat-encounter-view-props';
+import { sortCombatantsForTurnOrder } from './combat-encounter-helpers';
+import { useCombatLinkedCharacterSync } from './use-combat-linked-character-sync';
+import { useCombatRosterActions } from './use-combat-roster-actions';
+import { useCombatRoundActions } from './use-combat-round-actions';
 
 export function useCombatEncounterView({
   encounterId,

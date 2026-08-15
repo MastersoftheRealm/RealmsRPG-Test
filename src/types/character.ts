@@ -88,17 +88,20 @@ export interface CharacterPower {
   image_id?: string | null;
   image_url?: string | null;
   // Parts can be either just names (string[]) or full part data with TP info
-  parts?: Array<string | {
-    id?: string;
-    name?: string;
-    base_tp?: number;
-    op_1_lvl?: number;
-    op_1_tp?: number;
-    op_2_lvl?: number;
-    op_2_tp?: number;
-    op_3_lvl?: number;
-    op_3_tp?: number;
-  }>;
+  parts?: Array<
+    | string
+    | {
+        id?: string;
+        name?: string;
+        base_tp?: number;
+        op_1_lvl?: number;
+        op_1_tp?: number;
+        op_2_lvl?: number;
+        op_2_tp?: number;
+        op_3_lvl?: number;
+        op_3_tp?: number;
+      }
+  >;
 }
 
 /** Technique entry on character */
@@ -117,17 +120,20 @@ export interface CharacterTechnique {
   image_id?: string | null;
   image_url?: string | null;
   // Parts can be either just names (string[]) or full part data with TP info
-  parts?: Array<string | {
-    id?: string;
-    name?: string;
-    base_tp?: number;
-    op_1_lvl?: number;
-    op_1_tp?: number;
-    op_2_lvl?: number;
-    op_2_tp?: number;
-    op_3_lvl?: number;
-    op_3_tp?: number;
-  }>;
+  parts?: Array<
+    | string
+    | {
+        id?: string;
+        name?: string;
+        base_tp?: number;
+        op_1_lvl?: number;
+        op_1_tp?: number;
+        op_2_lvl?: number;
+        op_2_tp?: number;
+        op_3_lvl?: number;
+        op_3_tp?: number;
+      }
+  >;
 }
 
 /** Health/Energy tracking */
@@ -163,7 +169,7 @@ export interface Character {
   userId?: string;
   status?: CharacterStatus;
   portrait?: string;
-  
+
   // Basic info
   level: number;
   experience?: number;
@@ -175,16 +181,16 @@ export interface Character {
     name: string;
     content: string;
   }>;
-  
+
   // Physical attributes
   weight?: number;
   height?: number;
   appearance?: string;
   archetypeDesc?: string;
-  
+
   // Core stats
   abilities: Abilities;
-  
+
   // Archetype
   archetype?: CharacterArchetype;
   /** @deprecated Not persisted. Path characters are identified by `archetypePathId` only. */
@@ -193,32 +199,32 @@ export interface Character {
   archetypePathId?: string;
   pow_abil?: AbilityName;
   mart_abil?: AbilityName;
-  
+
   // Ancestry (lean: { id, name, selectedTraits, selectedFlaw, selectedCharacteristic })
   ancestry?: CharacterAncestry;
   /** @deprecated Use ancestry.name instead. Kept for backward compat with old saves. */
   species?: string;
-  
+
   // Skills — Record (legacy) or lean array rows (sheet / modern saves)
   skills?: CharacterSkills | CharacterSkillRow[];
   /** Canonical defense allocation field — vals represent 2 skill points spent per 1 */
   defenseVals?: DefenseSkills;
   /** @deprecated Use defenseVals instead. Kept for backward compat with old saved data. */
   defenseSkills?: DefenseSkills;
-  
+
   // Feats
   feats?: CharacterFeat[];
   archetypeFeats?: CharacterFeat[];
-  
+
   // Powers and Techniques
   powers?: CharacterPower[];
   techniques?: CharacterTechnique[];
   innateEnergy?: number;
-  
+
   // Equipment
   equipment?: CharacterEquipment;
   currency?: number;
-  
+
   // Resources
   /** @deprecated Use currentHealth instead. ResourcePool kept for backward compat with old saves. */
   health?: ResourcePool;
@@ -232,7 +238,7 @@ export interface Character {
   currentEnergy?: number;
   /** Action points (per round, default 4). Synced with encounter when character is in combat. */
   actionPoints?: number;
-  
+
   // Combat stats — speedBase/evasionBase are user inputs; speed/evasion/armor are derived
   /** @deprecated Derived from calculateAllStats(). Use calculatedStats.speed instead. */
   speed?: number;
@@ -244,10 +250,10 @@ export interface Character {
   evasionBase?: number;
   /** @deprecated Derived from calculateAllStats(). Use calculatedStats.armor instead. */
   armor?: number;
-  
+
   // Conditions
   conditions?: CharacterCondition[];
-  
+
   // Proficiency — mart_prof/pow_prof are canonical
   /** @deprecated Use mart_prof instead. */
   martialProficiency?: number;
@@ -257,27 +263,27 @@ export interface Character {
   mart_prof?: number;
   /** Power proficiency (user choice, set from archetype type) */
   pow_prof?: number;
-  
+
   // Unarmed Prowess - fighting style for unarmed combat
   // Level 0 = not selected, 1 = base (10 TP), 2-5 = upgrades at levels 4,8,12,16,20 (6 TP each)
   unarmedProwess?: number;
-  
+
   // Mixed archetype milestone choices (level -> 'innate' | 'feat')
   archetypeChoices?: Record<number, 'innate' | 'feat'>;
-  
+
   // Trait uses tracking (trait name -> currentUses)
   traitUses?: Record<string, number>;
 
   /** Player custom names/notes for species/ancestry traits (keyed by trait id). */
   traitCustomizations?: Record<string, FeatTraitCustomization>;
-  
+
   /** State uses remaining this recovery (max = archetype proficiency; restored on full recovery) */
   stateUsesCurrent?: number;
-  
+
   // Training points tracking
   trainingPointsSpent?: number;
   proficiencies?: CharacterProficiency[];
-  
+
   // Metadata
   createdAt?: Date | string;
   updatedAt?: Date | string;
@@ -391,7 +397,7 @@ export interface CharacterSaveData {
   pow_prof: number;
   archetypeChoices?: Record<number, 'innate' | 'feat'>; // P-M milestone choices
 
-  // Skills — minimal: just ID → { prof, val } 
+  // Skills — minimal: just ID → { prof, val }
   skills: Record<string, { prof: boolean; val: number; selectedBaseSkillId?: string }>;
   defenseVals: DefenseSkills; // Vals represent 2 skill points spent per 1
 

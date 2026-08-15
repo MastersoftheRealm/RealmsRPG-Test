@@ -4,9 +4,7 @@ import type { Item } from '@/types';
 
 describe('mergeEquipmentIntoInventory (DEV-V-009-T022 / DEV-V-016-T006)', () => {
   it('stacks by id and adds quantities', () => {
-    const existing: Item[] = [
-      { id: 'g1', name: 'Rations', type: 'equipment', quantity: 2 },
-    ];
+    const existing: Item[] = [{ id: 'g1', name: 'Rations', type: 'equipment', quantity: 2 }];
     const next = mergeEquipmentIntoInventory(existing, [
       { id: 'g1', name: 'Rations', type: 'equipment', quantity: 3 },
     ]);
@@ -15,9 +13,7 @@ describe('mergeEquipmentIntoInventory (DEV-V-009-T022 / DEV-V-016-T006)', () => 
   });
 
   it('stacks by case-insensitive name when ids differ', () => {
-    const existing: Item[] = [
-      { id: 'custom-1', name: 'Torch', type: 'equipment', quantity: 1 },
-    ];
+    const existing: Item[] = [{ id: 'custom-1', name: 'Torch', type: 'equipment', quantity: 1 }];
     const next = mergeEquipmentIntoInventory(existing, [
       { id: 'custom-2', name: 'torch', type: 'equipment', quantity: 2 },
     ]);
@@ -26,9 +22,7 @@ describe('mergeEquipmentIntoInventory (DEV-V-009-T022 / DEV-V-016-T006)', () => 
   });
 
   it('appends unmatched custom equipment as a new row', () => {
-    const existing: Item[] = [
-      { id: 'g1', name: 'Rations', type: 'equipment', quantity: 1 },
-    ];
+    const existing: Item[] = [{ id: 'g1', name: 'Rations', type: 'equipment', quantity: 1 }];
     const next = mergeEquipmentIntoInventory(existing, [
       { id: 'c1', name: 'Lucky Coin', type: 'equipment', quantity: 1 },
     ]);

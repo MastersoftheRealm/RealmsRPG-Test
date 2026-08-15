@@ -16,11 +16,7 @@ import {
 import { getErrorMessage } from '@/lib/api-client';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import type { Character, Item } from '@/types';
-import {
-  useCodexItemProperties,
-  useCodexPowerParts,
-  useCodexTechniqueParts,
-} from './use-codex';
+import { useCodexItemProperties, useCodexPowerParts, useCodexTechniqueParts } from './use-codex';
 import { useCharacter, useSaveCharacter } from './use-characters';
 import {
   appendLibraryItemToCharacter,
@@ -44,24 +40,21 @@ function applyLibraryAddToCharacter(
   kind: LibraryToCharacterKind,
   raw: LibraryToCharacterRaw,
   dbs: CodexDbRefs,
-  buildRequiredForCharacter: (c: Character) => ReturnType<typeof buildRequiredProficiencies>
+  buildRequiredForCharacter: (c: Character) => ReturnType<typeof buildRequiredProficiencies>,
 ) {
   const withItem = appendLibraryItemToCharacter(character, kind, raw, dbs);
   return computeAutoProficiencies(
     withItem,
     `Adding ${entityBucketLabel(kind)}`,
-    buildRequiredForCharacter
+    buildRequiredForCharacter,
   );
 }
 
-export function useAddToCharacterFromLibrary(
-  kind: LibraryToCharacterKind,
-  characterId: string
-) {
+export function useAddToCharacterFromLibrary(kind: LibraryToCharacterKind, characterId: string) {
   const { showToast } = useToast();
   const saveCharacter = useSaveCharacter();
   const { data: characterResult, isLoading: characterLoading } = useCharacter(
-    characterId || undefined
+    characterId || undefined,
   );
   const character = characterResult?.character ?? null;
   const { data: powerPartsDb = [] } = useCodexPowerParts();
@@ -83,7 +76,7 @@ export function useAddToCharacterFromLibrary(
         techniquePartsDb,
         itemPropertiesDb,
       }),
-    [powerPartsDb, techniquePartsDb, itemPropertiesDb]
+    [powerPartsDb, techniquePartsDb, itemPropertiesDb],
   );
 
   const isOnCharacter = useCallback(
@@ -91,7 +84,7 @@ export function useAddToCharacterFromLibrary(
       if (!character) return false;
       return characterOwnsLibraryItem(character, kind, libraryItemRowId(raw));
     },
-    [character, kind]
+    [character, kind],
   );
 
   const openAddConfirm = useCallback(
@@ -100,7 +93,7 @@ export function useAddToCharacterFromLibrary(
       if (isOnCharacter(raw)) return;
       setPending({ name, raw });
     },
-    [character, characterId, characterLoading, isOnCharacter]
+    [character, characterId, characterLoading, isOnCharacter],
   );
 
   const handleConfirm = useCallback(() => {
@@ -111,7 +104,7 @@ export function useAddToCharacterFromLibrary(
       kind,
       pending.raw,
       dbs,
-      buildRequiredForCharacter
+      buildRequiredForCharacter,
     );
     saveCharacter.mutate(
       {
@@ -120,7 +113,7 @@ export function useAddToCharacterFromLibrary(
         updatedAt: character.updatedAt,
         mergeOnConflict: (remote) =>
           mergeLibraryAddOnConflict(remote, kind, pending.raw, (c) =>
-            applyLibraryAddToCharacter(c, kind, pending.raw, dbs, buildRequiredForCharacter)
+            applyLibraryAddToCharacter(c, kind, pending.raw, dbs, buildRequiredForCharacter),
           ),
       },
       {
@@ -132,7 +125,7 @@ export function useAddToCharacterFromLibrary(
         onError: (e) => {
           showToast(getErrorMessage(e, 'Failed to add to character'), 'error');
         },
-      }
+      },
     );
   }, [
     pending,
@@ -155,9 +148,7 @@ export function useAddToCharacterFromLibrary(
         onClose={() => setPending(null)}
         onConfirm={handleConfirm}
         title={`Add to ${characterName}'s ${bucket}?`}
-        description={
-          pending ? `Add "${pending.name}" to ${characterName}'s ${bucket}?` : ''
-        }
+        description={pending ? `Add "${pending.name}" to ${characterName}'s ${bucket}?` : ''}
         confirmLabel="Add"
         loadingLabel="Adding..."
         isLoading={saveCharacter.isPending}

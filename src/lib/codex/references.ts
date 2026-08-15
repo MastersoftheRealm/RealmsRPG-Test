@@ -18,14 +18,20 @@ export type ReferenceProbe = {
 
 function named(label: string) {
   return (row: Record<string, unknown>): string => {
-    const name = typeof row.name === 'string' && row.name.trim() ? row.name.trim() : String(row.id ?? '');
+    const name =
+      typeof row.name === 'string' && row.name.trim() ? row.name.trim() : String(row.id ?? '');
     return `${label} "${name}"`;
   };
 }
 
 export const REFERENCE_PROBES: Partial<Record<CodexCollection, ReferenceProbe[]>> = {
   codex_feats: [
-    { table: 'codex_feats', columns: ['base_feat_id'], selectColumns: 'id, name, base_feat_id', describe: named('Feat') },
+    {
+      table: 'codex_feats',
+      columns: ['base_feat_id'],
+      selectColumns: 'id, name, base_feat_id',
+      describe: named('Feat'),
+    },
     {
       table: 'codex_archetypes',
       columns: ['level1_feats', 'level1_remove_feats'],
@@ -36,12 +42,23 @@ export const REFERENCE_PROBES: Partial<Record<CodexCollection, ReferenceProbe[]>
       table: 'codex_archetype_levels',
       columns: ['feats', 'remove_feats'],
       selectColumns: 'id, archetype_id, level, feats, remove_feats',
-      describe: (row) => `Archetype ${String(row.archetype_id ?? '')} level ${String(row.level ?? '')}`,
+      describe: (row) =>
+        `Archetype ${String(row.archetype_id ?? '')} level ${String(row.level ?? '')}`,
     },
   ],
   codex_skills: [
-    { table: 'codex_feats', columns: ['skill_req'], selectColumns: 'id, name, skill_req', describe: named('Feat') },
-    { table: 'codex_species', columns: ['skills'], selectColumns: 'id, name, skills', describe: named('Species') },
+    {
+      table: 'codex_feats',
+      columns: ['skill_req'],
+      selectColumns: 'id, name, skill_req',
+      describe: named('Feat'),
+    },
+    {
+      table: 'codex_species',
+      columns: ['skills'],
+      selectColumns: 'id, name, skills',
+      describe: named('Species'),
+    },
     {
       table: 'codex_archetypes',
       columns: ['level1_skills'],
@@ -52,7 +69,8 @@ export const REFERENCE_PROBES: Partial<Record<CodexCollection, ReferenceProbe[]>
       table: 'codex_archetype_levels',
       columns: ['skills'],
       selectColumns: 'id, archetype_id, level, skills',
-      describe: (row) => `Archetype ${String(row.archetype_id ?? '')} level ${String(row.level ?? '')}`,
+      describe: (row) =>
+        `Archetype ${String(row.archetype_id ?? '')} level ${String(row.level ?? '')}`,
     },
   ],
   codex_traits: [
@@ -80,7 +98,8 @@ export const REFERENCE_PROBES: Partial<Record<CodexCollection, ReferenceProbe[]>
       table: 'codex_archetype_levels',
       columns: ['equipment'],
       selectColumns: 'id, archetype_id, level, equipment',
-      describe: (row) => `Archetype ${String(row.archetype_id ?? '')} level ${String(row.level ?? '')}`,
+      describe: (row) =>
+        `Archetype ${String(row.archetype_id ?? '')} level ${String(row.level ?? '')}`,
     },
   ],
 };
@@ -97,7 +116,7 @@ export function csvIncludesId(value: unknown, id: string): boolean {
 export function findReferencesInRows(
   probe: ReferenceProbe,
   rows: Record<string, unknown>[],
-  id: string
+  id: string,
 ): string[] {
   const found: string[] = [];
   for (const row of rows) {

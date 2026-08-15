@@ -56,7 +56,7 @@ export async function migrateGuestEncountersOnSignIn(): Promise<number> {
 }
 
 function guestEncounterToCreatePayload(
-  guest: Encounter
+  guest: Encounter,
 ): Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'> {
   /* eslint-disable @typescript-eslint/no-unused-vars -- strip server fields for create payload */
   const { id, createdAt, updatedAt, ...rest } = guest;

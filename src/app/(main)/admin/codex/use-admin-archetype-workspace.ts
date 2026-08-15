@@ -48,10 +48,12 @@ export function useAdminArchetypeWorkspace() {
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: codexEquipment = [] } = useCodexEquipment();
   const { data: powerPartsDb = [] } = useCodexPowerParts();
-  const { data: officialPowers = [], isLoading: isLoadingOfficialPowers } = useOfficialLibrary('powers');
+  const { data: officialPowers = [], isLoading: isLoadingOfficialPowers } =
+    useOfficialLibrary('powers');
   const { data: officialTechniques = [], isLoading: isLoadingOfficialTechniques } =
     useOfficialLibrary('techniques');
-  const { data: officialItems = [], isLoading: isLoadingOfficialItems } = useOfficialLibrary('items');
+  const { data: officialItems = [], isLoading: isLoadingOfficialItems } =
+    useOfficialLibrary('items');
   const { data: itemProperties = [] } = useCodexItemProperties();
   const queryClient = useQueryClient();
   const [search, setSearch] = useState('');
@@ -67,7 +69,7 @@ export function useAdminArchetypeWorkspace() {
     (a: ArchetypeItem) =>
       !search ||
       (a.name || '').toLowerCase().includes(search.toLowerCase()) ||
-      (a.description || '').toLowerCase().includes(search.toLowerCase())
+      (a.description || '').toLowerCase().includes(search.toLowerCase()),
   );
 
   const selection = useAdminArchetypeSelectionOptions({
@@ -108,12 +110,12 @@ export function useAdminArchetypeWorkspace() {
 
   const level1WeaponShieldEntries = useMemo(
     () => filterLevel1WeaponShieldEntries(form.level1Path.armamentEntries),
-    [filterLevel1WeaponShieldEntries, form.level1Path.armamentEntries]
+    [filterLevel1WeaponShieldEntries, form.level1Path.armamentEntries],
   );
 
   const level1ArmorEntries = useMemo(
     () => filterLevel1ArmorEntries(form.level1Path.armamentEntries),
-    [filterLevel1ArmorEntries, form.level1Path.armamentEntries]
+    [filterLevel1ArmorEntries, form.level1Path.armamentEntries],
   );
 
   const { updateFeatGuidanceGroup, addFeatGuidanceGroup, removeFeatGuidanceGroup } =

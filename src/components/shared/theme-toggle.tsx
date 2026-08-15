@@ -37,22 +37,22 @@ export function ThemeToggle({ variant = 'dropdown', className }: ThemeToggleProp
   // SegmentedControl is for text (or icon+label) pills with the shared primary fill — see TASK-301 / realms-unification.
   if (variant === 'inline') {
     return (
-      <div className={cn('flex items-center gap-1 p-1 rounded-lg bg-surface-alt', className)}>
+      <div className={cn('flex items-center gap-1 rounded-lg bg-surface-alt p-1', className)}>
         {THEME_OPTIONS.map(({ value, label, icon: Icon }) => (
           <button
             key={value}
             onClick={() => setTheme(value)}
             className={cn(
-              'p-2 rounded-md transition-colors',
+              'rounded-md p-2 transition-colors',
               theme === value
                 ? 'bg-primary-subtle-bg text-primary-subtle-fg'
-                : 'text-text-secondary hover:text-text-primary hover:bg-surface'
+                : 'text-text-secondary hover:bg-surface hover:text-text-primary',
             )}
             title={label}
             aria-label={`${label} theme`}
             aria-pressed={theme === value}
           >
-            <Icon className="w-4 h-4" />
+            <Icon className="h-4 w-4" />
           </button>
         ))}
       </div>
@@ -68,17 +68,15 @@ export function ThemeToggle({ variant = 'dropdown', className }: ThemeToggleProp
           key={value}
           onClick={() => setTheme(value)}
           className={cn(
-            'w-full flex items-center gap-3 px-4 py-2 text-left transition-colors',
+            'flex w-full items-center gap-3 px-4 py-2 text-left transition-colors',
             theme === value
               ? 'bg-primary-subtle-bg text-primary-subtle-fg'
-              : 'text-text-secondary hover:bg-surface-alt'
+              : 'text-text-secondary hover:bg-surface-alt',
           )}
         >
-          <Icon className="w-4 h-4" />
+          <Icon className="h-4 w-4" />
           <span>{label}</span>
-          {theme === value && (
-            <span className="ml-auto text-primary-fg-active">✓</span>
-          )}
+          {theme === value && <span className="ml-auto text-primary-fg-active">✓</span>}
         </button>
       ))}
     </div>

@@ -69,7 +69,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
         c as unknown as Record<string, unknown> as never,
         powerPartsDb as never,
         techniquePartsDb as never,
-        itemPropertiesDb as never
+        itemPropertiesDb as never,
       );
       return {
         ...c,
@@ -83,10 +83,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
     });
   }, [creatures, powerPartsDb, techniquePartsDb, itemPropertiesDb]);
 
-  const driftedIds = useMemo(
-    () => cardData.filter((c) => c.hasDrift).map((c) => c.id),
-    [cardData]
-  );
+  const driftedIds = useMemo(() => cardData.filter((c) => c.hasDrift).map((c) => c.id), [cardData]);
 
   const sync = useLibraryEntitySync({
     saveType: 'creatures',
@@ -99,7 +96,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
         source as unknown as Record<string, unknown> as never,
         powerPartsDb as never,
         techniquePartsDb as never,
-        itemPropertiesDb as never
+        itemPropertiesDb as never,
       ),
     refetch,
     entitySingular: CREATURE_LIBRARY_LABELS.entitySingular,
@@ -114,7 +111,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
 
   const filteredData = useMemo(
     () => filterOfficialCreatureRows(cardData, search, sortItems),
-    [cardData, search, sortItems]
+    [cardData, search, sortItems],
   );
 
   return (
@@ -125,7 +122,7 @@ export function LibraryCreaturesTab({ onDelete }: LibraryCreaturesTabProps) {
         error={error}
         onRetry={() => void refetch()}
         totalCount={cardData.length}
-        emptyIcon={<Users className="w-8 h-8" />}
+        emptyIcon={<Users className="h-8 w-8" />}
         search={search}
         onSearchChange={setSearch}
         sortState={sortState}

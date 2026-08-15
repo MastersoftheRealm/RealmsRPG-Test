@@ -43,10 +43,7 @@ describe('calculateEmpoweredTechniqueCosts (T8 / N2)', () => {
       { id: 2, name: flatTechnique.name },
       { id: 3, name: percentTechnique.name },
     ];
-    const duplicatedTechnique = [
-      ...uniqueTechnique,
-      { id: 3, name: percentTechnique.name },
-    ];
+    const duplicatedTechnique = [...uniqueTechnique, { id: 3, name: percentTechnique.name }];
 
     const unique = calculateEmpoweredTechniqueCosts({
       powerPartsPayload,

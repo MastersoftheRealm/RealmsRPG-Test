@@ -16,11 +16,7 @@ import { useAuthStore } from '@/stores';
 import { useAdmin, useAccountProfile } from '@/hooks';
 import { fileFromCroppedBlob } from '@/lib/crop-image';
 import { areTutorialsEnabled, setTutorialsEnabled } from '@/lib/onboarding-preferences';
-import {
-  hasPasswordProvider,
-  getAuthProviderLabel,
-  type AccountMessage,
-} from './account-helpers';
+import { hasPasswordProvider, getAuthProviderLabel, type AccountMessage } from './account-helpers';
 
 export function useMyAccountPage() {
   const router = useRouter();
@@ -80,7 +76,9 @@ export function useMyAccountPage() {
       patchProfile({ photoURL: `${url}?t=${Date.now()}` });
       // Sync to Supabase Auth so any useAuth() consumer sees the new picture
       const supabase = createClient();
-      const { error: authSyncError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
+      const { error: authSyncError } = await supabase.auth.updateUser({
+        data: { avatar_url: url },
+      });
       if (authSyncError) {
         setPictureMessage({
           type: 'error',
@@ -105,10 +103,12 @@ export function useMyAccountPage() {
     setPictureMessage(null);
     try {
       const supabase = createClient();
-      const { error: profileError } = await supabase.from('user_profiles').upsert(
-        { id: user.uid, photo_url: url, updated_at: new Date().toISOString() },
-        { onConflict: 'id' }
-      );
+      const { error: profileError } = await supabase
+        .from('user_profiles')
+        .upsert(
+          { id: user.uid, photo_url: url, updated_at: new Date().toISOString() },
+          { onConflict: 'id' },
+        );
       if (profileError) throw profileError;
       const { error: authError } = await supabase.auth.updateUser({ data: { avatar_url: url } });
       if (authError) throw authError;

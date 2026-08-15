@@ -33,7 +33,7 @@ describe('campaignKeys.characterView (TASK-761)', () => {
 });
 
 describe('getCampaignCharacterForView', () => {
-  it('reads the campaign route and splits libraryForView off the character', async () => {
+  it('reads the campaign route and splits libraryForView and enrichment off the character', async () => {
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
       status: 200,
@@ -41,6 +41,7 @@ describe('getCampaignCharacterForView', () => {
         id: 'char1',
         name: 'Hero',
         libraryForView: { powers: [], techniques: [], items: [], creatures: [] },
+        enrichment: { feats: [] },
       }),
     });
     vi.stubGlobal('fetch', fetchMock);
@@ -51,6 +52,7 @@ describe('getCampaignCharacterForView', () => {
     expect(result).toEqual({
       character: { id: 'char1', name: 'Hero' },
       libraryForView: { powers: [], techniques: [], items: [], creatures: [] },
+      enrichment: { feats: [] },
     });
   });
 });
@@ -68,7 +70,7 @@ describe('campaignKeys.characterEncounter (TASK-762)', () => {
 
   it('is distinct from the RM character-view key', () => {
     expect(campaignKeys.characterEncounter('camp1', 'rm1', 'player1', 'char1')).not.toEqual(
-      campaignKeys.characterView('camp1', 'rm1', 'player1', 'char1')
+      campaignKeys.characterView('camp1', 'rm1', 'player1', 'char1'),
     );
   });
 
@@ -80,7 +82,9 @@ describe('campaignKeys.characterEncounter (TASK-762)', () => {
 
   it('falls back to the anon viewer segment', () => {
     expect(campaignKeys.characterEncounter('camp1', '', 'player1', 'char1')).toContain('anon');
-    expect(campaignKeys.characterEncounter('camp1', undefined, 'player1', 'char1')).toContain('anon');
+    expect(campaignKeys.characterEncounter('camp1', undefined, 'player1', 'char1')).toContain(
+      'anon',
+    );
   });
 });
 
@@ -96,7 +100,7 @@ describe('getCampaignCharacterForEncounter', () => {
     const result = await getCampaignCharacterForEncounter('camp1', 'player1', 'char1');
 
     expect(fetchMock.mock.calls[0][0]).toBe(
-      '/api/campaigns/camp1/characters/player1/char1?scope=encounter'
+      '/api/campaigns/camp1/characters/player1/char1?scope=encounter',
     );
     expect(fetchMock.mock.calls[0][0]).not.toBe('/api/campaigns/camp1/characters/player1/char1');
     expect(result).toEqual({ currentHealth: 12, health: { current: 12, max: 20 } });

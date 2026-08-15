@@ -172,6 +172,7 @@ Generated: 2026-08-15
 - fetchCampaignCharacterForEncounter
 - findTraitByIdOrName
 - getGameRulesFallback
+- officialLibraryKeys
 - patchCharacterDetailQuery
 - resolveSkillIdsToNames
 - resolveTraitIds
@@ -263,6 +264,7 @@ Generated: 2026-08-15
 - useMergedSpecies
 - useModalListState
 - useOfficialLibrary
+- useOfficialLibraryCounts
 - useParts
 - usePathListFilter
 - usePathRecommendationIndex
@@ -270,6 +272,7 @@ Generated: 2026-08-15
 - usePortraitFallbackUrl
 - usePowerParts
 - useProfile
+- userLibraryKeys
 - userSpeciesToSpecies
 - useSaveCharacter
 - useSaveCraftingSession
@@ -282,6 +285,7 @@ Generated: 2026-08-15
 - useUserCreatures
 - useUserEmpoweredTechniques
 - useUserItems
+- useUserLibraryCounts
 - useUserPowers
 - useUserSpecies
 - useUserTechniques

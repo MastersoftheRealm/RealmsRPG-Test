@@ -89,10 +89,5 @@ export interface QuantityBadgeProps {
 export function QuantityBadge({ quantity, className }: QuantityBadgeProps) {
   if (quantity <= 1) return null;
 
-  return (
-    <span className={cn('text-xs text-text-muted dark:text-text-secondary', className)}>
-      ×{quantity}
-    </span>
-  );
+  return <span className={cn('text-xs text-text-muted', className)}>×{quantity}</span>;
 }
-

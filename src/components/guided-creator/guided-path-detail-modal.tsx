@@ -40,11 +40,11 @@ import {
   guidedPathDetailTechniques,
   guidedPathDetailWeapons,
 } from '../../../public/tooltip-text';
+import { GuidedDetailOptionList, type GuidedDetailOptionItem } from './guided-detail-option-list';
 import {
-  GuidedDetailOptionList,
-  type GuidedDetailOptionItem,
-} from './guided-detail-option-list';
-import { GuidedEntityDetailModal, type GuidedEntityDetailSection } from './guided-entity-detail-modal';
+  GuidedEntityDetailModal,
+  type GuidedEntityDetailSection,
+} from './guided-entity-detail-modal';
 import { GuidedPathDetailOverview } from './guided-path-detail-overview';
 import { GuidedOverviewSection } from './guided-overview-section';
 import { GuidedRestrictionNotice } from './guided-restriction-notice';
@@ -64,7 +64,7 @@ function findFeatByIdOrName(feats: CodexFeat[], ref: string): CodexFeat | undefi
   const key = String(ref).trim().toLowerCase();
   if (!key) return undefined;
   return feats.find(
-    (f) => String(f.id).toLowerCase() === key || String(f.name).toLowerCase() === key
+    (f) => String(f.id).toLowerCase() === key || String(f.name).toLowerCase() === key,
   );
 }
 
@@ -79,7 +79,9 @@ function pathFeatDetailOption(feat: CodexFeat): GuidedDetailOptionItem {
   };
 }
 
-function collectFeatIds(level1: NonNullable<ReturnType<typeof parseArchetypePathData>>['level1']): string[] {
+function collectFeatIds(
+  level1: NonNullable<ReturnType<typeof parseArchetypePathData>>['level1'],
+): string[] {
   if (!level1) return [];
   const ids = new Set<string>();
   level1.feats?.forEach((id) => ids.add(String(id)));
@@ -91,7 +93,7 @@ function collectFeatIds(level1: NonNullable<ReturnType<typeof parseArchetypePath
 
 function collectPowerOrTechniqueIds(
   level1: NonNullable<ReturnType<typeof parseArchetypePathData>>['level1'],
-  kind: 'powers' | 'techniques'
+  kind: 'powers' | 'techniques',
 ): string[] {
   if (!level1) return [];
   const ids = new Set<string>();
@@ -105,7 +107,7 @@ function collectPowerOrTechniqueIds(
 }
 
 function collectEquipmentRefs(
-  level1: NonNullable<ReturnType<typeof parseArchetypePathData>>['level1']
+  level1: NonNullable<ReturnType<typeof parseArchetypePathData>>['level1'],
 ): PathItemRecommendation[] {
   if (!level1) return [];
   const byId = new Map<string, PathItemRecommendation>();
@@ -134,7 +136,7 @@ export function GuidedPathDetailModal({
 }: GuidedPathDetailModalProps) {
   const pathData = useMemo(
     () => (path ? parseArchetypePathData(path.path_data) : undefined),
-    [path]
+    [path],
   );
   const level1 = pathData?.level1;
   const archetypeType = (path?.type || 'power') as Archetype['type'];
@@ -151,33 +153,33 @@ export function GuidedPathDetailModal({
   });
   const { data: officialTechniques = [], isLoading: techniquesLoading } = useOfficialLibrary(
     'techniques',
-    { enabled: showTechniques }
+    { enabled: showTechniques },
   );
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
 
   const catalogsPending = Boolean(
     path &&
-      ((featsLoading && feats.length === 0) ||
-        ((itemsLoading || equipmentLoading) &&
-          officialItems.length === 0 &&
-          codexEquipment.length === 0) ||
-        (propertiesLoading && itemProperties.length === 0) ||
-        (showPowers && powersLoading && officialPowers.length === 0) ||
-        (showTechniques && techniquesLoading && officialTechniques.length === 0))
+    ((featsLoading && feats.length === 0) ||
+      ((itemsLoading || equipmentLoading) &&
+        officialItems.length === 0 &&
+        codexEquipment.length === 0) ||
+      (propertiesLoading && itemProperties.length === 0) ||
+      (showPowers && powersLoading && officialPowers.length === 0) ||
+      (showTechniques && techniquesLoading && officialTechniques.length === 0)),
   );
 
   const mergedItems = useMemo(
     () => mergeLibraryBySource('all', officialItems as LibraryItem[], userItems),
-    [officialItems, userItems]
+    [officialItems, userItems],
   );
   const equipmentMap = useMemo(
     () => buildEquipmentLookup(mergedItems, codexEquipment),
-    [mergedItems, codexEquipment]
+    [mergedItems, codexEquipment],
   );
   const catalog = useMemo(
     () => buildEquipmentCatalogRows(mergedItems, codexEquipment, itemProperties),
-    [mergedItems, codexEquipment, itemProperties]
+    [mergedItems, codexEquipment, itemProperties],
   );
 
   const sections = useMemo((): GuidedEntityDetailSection[] => {
@@ -200,9 +202,7 @@ export function GuidedPathDetailModal({
         children: (
           <div className="space-y-3">
             <p className={o.bodySecondary}>{detailCopy.archetypeFeatsIntro}</p>
-            <GuidedDetailOptionList
-              items={archetypeFeats.map(pathFeatDetailOption)}
-            />
+            <GuidedDetailOptionList items={archetypeFeats.map(pathFeatDetailOption)} />
           </div>
         ),
       });
@@ -217,9 +217,7 @@ export function GuidedPathDetailModal({
         children: (
           <div className="space-y-3">
             <p className={o.bodySecondary}>{detailCopy.characterFeatsIntro}</p>
-            <GuidedDetailOptionList
-              items={characterFeats.map(pathFeatDetailOption)}
-            />
+            <GuidedDetailOptionList items={characterFeats.map(pathFeatDetailOption)} />
           </div>
         ),
       });
@@ -234,8 +232,8 @@ export function GuidedPathDetailModal({
           catalog,
           mergedItems,
           codexEquipment,
-          itemProperties
-        )
+          itemProperties,
+        ),
       )
       .filter((row): row is GuidedDetailOptionItem => Boolean(row));
 
@@ -316,13 +314,7 @@ export function GuidedPathDetailModal({
       const techIds = collectPowerOrTechniqueIds(level1, 'techniques');
       const techItems = techIds
         .map((id) =>
-          resolveCombatDetailOption(
-            id,
-            combatLookup,
-            'technique',
-            powerPartsDb,
-            techniquePartsDb
-          )
+          resolveCombatDetailOption(id, combatLookup, 'technique', powerPartsDb, techniquePartsDb),
         )
         .filter((row): row is GuidedDetailOptionItem => Boolean(row));
       if (techItems.length > 0) {
@@ -345,13 +337,7 @@ export function GuidedPathDetailModal({
       const powerIds = collectPowerOrTechniqueIds(level1, 'powers');
       const powerItems = powerIds
         .map((id) =>
-          resolveCombatDetailOption(
-            id,
-            combatLookup,
-            'power',
-            powerPartsDb,
-            techniquePartsDb
-          )
+          resolveCombatDetailOption(id, combatLookup, 'power', powerPartsDb, techniquePartsDb),
         )
         .filter((row): row is GuidedDetailOptionItem => Boolean(row));
       if (powerItems.length > 0) {
@@ -394,14 +380,10 @@ export function GuidedPathDetailModal({
     <GuidedOverviewSection
       title={detailCopy.pathOptionsTitle}
       hint={
-        sections.length > 0
-          ? detailCopy.pathOptionsIntro
-          : detailCopy.pathOptionsNotesOnlyIntro
+        sections.length > 0 ? detailCopy.pathOptionsIntro : detailCopy.pathOptionsNotesOnlyIntro
       }
     >
-      {pathNotes ? (
-        <p className={`${o.bodySecondary} whitespace-pre-wrap`}>{pathNotes}</p>
-      ) : null}
+      {pathNotes ? <p className={`${o.bodySecondary} whitespace-pre-wrap`}>{pathNotes}</p> : null}
     </GuidedOverviewSection>
   ) : null;
 

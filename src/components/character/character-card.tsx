@@ -60,15 +60,15 @@ export function CharacterCard({
     <div
       className={cn(
         'group relative flex h-full w-full flex-col overflow-hidden rounded-xl bg-surface shadow-md',
-        'transition-all duration-base ease-standard hover:-translate-y-0.5 hover:shadow-lg',
-        isDeleting || isDuplicating ? 'pointer-events-none opacity-50' : ''
+        'duration-base transition-all ease-standard hover:-translate-y-0.5 hover:shadow-lg',
+        isDeleting || isDuplicating ? 'pointer-events-none opacity-50' : '',
       )}
     >
       <Link
         href={`/characters/${character.id}`}
         className={cn(
           'flex min-h-0 flex-1 flex-col',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-outline-border'
+          'focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none focus-visible:ring-inset',
         )}
       >
         {/* Portrait — 1:1 matches ImageUploadModal crop (aspect={1}) */}
@@ -88,7 +88,7 @@ export function CharacterCard({
         </div>
 
         <div className={CARD_FOOTER_CLASS}>
-          <h2 className="truncate text-lg font-bold uppercase text-text-primary">
+          <h2 className="truncate text-lg font-bold text-text-primary uppercase">
             {character.name}
           </h2>
           <div className="mt-1 flex items-center gap-2 text-sm text-text-secondary">
@@ -101,9 +101,7 @@ export function CharacterCard({
             ) : null}
           </div>
           {character.ancestryName ? (
-            <p className="mt-1 truncate text-sm text-text-muted dark:text-text-secondary">
-              {character.ancestryName}
-            </p>
+            <p className="mt-1 truncate text-sm text-text-muted">{character.ancestryName}</p>
           ) : null}
         </div>
       </Link>
@@ -142,28 +140,28 @@ interface AddCharacterCardProps {
 export function AddCharacterCard({ onClick }: AddCharacterCardProps) {
   return (
     // Wrapper so the grid cell stretches; native <button> min-size quirks won't shrink the tile.
-    <div className="h-full w-full min-h-0">
+    <div className="h-full min-h-0 w-full">
       <button
         type="button"
         onClick={onClick}
         className={cn(
           'group flex h-full w-full flex-col overflow-hidden rounded-xl border-2 border-dashed border-border-light',
-          'bg-surface-secondary transition-all duration-base ease-standard',
+          'duration-base bg-surface-secondary transition-all ease-standard',
           'hover:-translate-y-0.5 hover:border-primary-outline-border hover:bg-primary-subtle-bg hover:shadow-md',
           'active:translate-y-0',
-          'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2'
+          'focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none',
         )}
       >
         <div className="relative flex aspect-square shrink-0 items-center justify-center">
           <div className="flex h-16 w-16 items-center justify-center rounded-full bg-surface transition-colors group-hover:bg-primary-subtle-bg-hover">
             <Plus
-              className="h-8 w-8 text-text-muted dark:text-text-secondary group-hover:text-primary-fg-hover"
+              className="h-8 w-8 text-text-muted group-hover:text-primary-fg-hover"
               aria-hidden
             />
           </div>
         </div>
         <div className={cn(CARD_FOOTER_CLASS, 'items-center text-center')}>
-          <span className="font-semibold text-text-muted dark:text-text-secondary group-hover:text-primary-fg-hover">
+          <span className="font-semibold text-text-muted group-hover:text-primary-fg-hover">
             Add Character
           </span>
         </div>

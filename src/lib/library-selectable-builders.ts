@@ -65,7 +65,8 @@ export type EqItem = {
   damage?: unknown;
   armorValue?: number;
   properties?: Array<
-    string | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }
+    | string
+    | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }
   >;
   type?: string;
   image_id?: string | null;
@@ -153,9 +154,7 @@ export function libraryItemToPowerDocument(item: PowerTechniqueBudgetItem): Powe
 }
 
 /** Match `buildOfficialTechniqueRows` / `buildSelectableItem` TechniqueDocument shape (TASK-708). */
-export function libraryItemToTechniqueDocument(
-  item: PowerTechniqueBudgetItem
-): TechniqueDocument {
+export function libraryItemToTechniqueDocument(item: PowerTechniqueBudgetItem): TechniqueDocument {
   const savedParts: NonNullable<TechniqueDocument['parts']> = Array.isArray(item.parts)
     ? (item.parts as NonNullable<TechniqueDocument['parts']>)
     : [];
@@ -178,7 +177,7 @@ export function derivePowerTechniqueBudgetFacts(
   kind: PowerTechniqueBudgetKind,
   item: PowerTechniqueBudgetItem | undefined,
   powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): PowerTechniqueBudgetFacts {
   const name = item?.name ? String(item.name) : '';
   const description = item?.description ? String(item.description) : undefined;
@@ -187,10 +186,7 @@ export function derivePowerTechniqueBudgetFacts(
   }
   try {
     if (kind === 'technique') {
-      const disp = deriveTechniqueDisplay(
-        libraryItemToTechniqueDocument(item),
-        techniquePartsDb
-      );
+      const disp = deriveTechniqueDisplay(libraryItemToTechniqueDocument(item), techniquePartsDb);
       const energy =
         typeof disp.energy === 'number' ? Math.max(0, Math.floor(disp.energy)) : undefined;
       return {
@@ -208,9 +204,7 @@ export function derivePowerTechniqueBudgetFacts(
       energy,
       tp: Math.max(0, Math.round(disp.tp ?? 0)),
       actionType:
-        disp.actionType ||
-        formatSavedActionTypeForDisplay(item.actionType, item.isReaction) ||
-        '—',
+        disp.actionType || formatSavedActionTypeForDisplay(item.actionType, item.isReaction) || '—',
       name: name || String(item.id ?? item.docId ?? ''),
       description,
     };
@@ -220,9 +214,7 @@ export function derivePowerTechniqueBudgetFacts(
 }
 
 /** Guided L2/L3 budget columns: Action Type | Energy | Training Points. */
-export function getPowerTechniqueBudgetColumns(
-  facts: PowerTechniqueBudgetFacts
-): ColumnValue[] {
+export function getPowerTechniqueBudgetColumns(facts: PowerTechniqueBudgetFacts): ColumnValue[] {
   return [
     { key: 'action', value: facts.actionType || '—', align: 'center' },
     {
@@ -257,7 +249,7 @@ export function buildPowerTechniqueBudgetDisplay(
   item: PowerTechniqueBudgetItem | undefined,
   fallbackId: string,
   powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): PowerTechniqueBudgetDisplay {
   const titleChips: ChipData[] = [];
   const detailChips: ChipData[] = [];
@@ -280,12 +272,7 @@ export function buildPowerTechniqueBudgetDisplay(
     };
   }
 
-  const facts = derivePowerTechniqueBudgetFacts(
-    kind,
-    item,
-    powerPartsDb,
-    techniquePartsDb
-  );
+  const facts = derivePowerTechniqueBudgetFacts(kind, item, powerPartsDb, techniquePartsDb);
   const name = facts.name || fallbackId;
   const description = facts.description;
   const tp = facts.tp;
@@ -324,19 +311,14 @@ export function buildPowerTechniqueFilterableRow(
     isReaction?: boolean;
   },
   powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): PowerTechniqueFilterableRow {
-  const facts = derivePowerTechniqueBudgetFacts(
-    kind,
-    item,
-    powerPartsDb,
-    techniquePartsDb
-  );
+  const facts = derivePowerTechniqueBudgetFacts(kind, item, powerPartsDb, techniquePartsDb);
   const parts = Array.isArray(item.parts) ? item.parts : [];
   const partsDb = kind === 'technique' ? techniquePartsDb : powerPartsDb;
   let categories = derivePartCategories(
     parts as Parameters<typeof derivePartCategories>[0],
-    partsDb
+    partsDb,
   );
   if (kind === 'power') {
     categories = withDamageCategory(categories, powerHasDamageCategory(item.damage));
@@ -367,7 +349,7 @@ export function getItemColumns(
   item: UserPower | UserTechnique | UserItem | EqItem,
   itemType: LibraryItemType,
   techniqueDisplay?: TechniqueColumnDisplay,
-  powerDisplay?: PowerColumnDisplay
+  powerDisplay?: PowerColumnDisplay,
 ): ColumnValue[] {
   if (itemType === 'power') {
     if (powerDisplay) {
@@ -412,12 +394,19 @@ export function getItemColumns(
       }),
     );
     return [
-      { key: 'Action', value: formatActionTypeForDisplay(technique.actionType ?? ''), align: 'center' as const },
+      {
+        key: 'Action',
+        value: formatActionTypeForDisplay(technique.actionType ?? ''),
+        align: 'center' as const,
+      },
       { key: 'Attack', value: attackLabel, align: 'center' as const },
       { key: 'Training Pts', value: '-', align: 'center' as const },
     ];
   }
-  if (itemType === 'weapon' || (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'weapon')) {
+  if (
+    itemType === 'weapon' ||
+    (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'weapon')
+  ) {
     const weapon = item as UserItem | EqItem;
     const val = weapon.damage ? formatDamageDisplay(weapon.damage) : null;
     return itemType === 'item' && val
@@ -426,7 +415,10 @@ export function getItemColumns(
         ? [{ key: 'Damage', value: val, highlight: true }]
         : [];
   }
-  if (itemType === 'armor' || (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'armor')) {
+  if (
+    itemType === 'armor' ||
+    (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'armor')
+  ) {
     const armor = item as UserItem | EqItem;
     const val = armor.armorValue != null ? String(armor.armorValue) : null;
     return itemType === 'item' && val
@@ -435,9 +427,16 @@ export function getItemColumns(
         ? [{ key: 'Armor', value: val, highlight: true }]
         : [];
   }
-  if (itemType === 'shield' || (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'shield')) {
+  if (
+    itemType === 'shield' ||
+    (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'shield')
+  ) {
     const shield = item as UserItem | EqItem;
-    const props = (shield.properties || []) as Array<{ id?: number; name?: string; op_1_lvl?: number }>;
+    const props = (shield.properties || []) as Array<{
+      id?: number;
+      name?: string;
+      op_1_lvl?: number;
+    }>;
     const block = deriveShieldAmountFromProperties(props);
     const dmg =
       deriveShieldDamageFromProperties(props) ??
@@ -477,7 +476,7 @@ export function getModalGridColumns(itemType: LibraryItemType): string {
 }
 
 export function getListHeaderColumns(
-  itemType: LibraryItemType
+  itemType: LibraryItemType,
 ): { key: string; label: string; sortable?: boolean; align?: 'left' | 'center' | 'right' }[] {
   const base = [{ key: 'name', label: 'Name', align: 'left' as const }];
   switch (itemType) {
@@ -540,7 +539,7 @@ export interface BuildSelectableItemCodex {
 export function buildSelectableItem(
   item: UserPower | UserTechnique | UserItem | EqItem,
   itemType: LibraryItemType,
-  codex: BuildSelectableItemCodex
+  codex: BuildSelectableItemCodex,
 ): SelectableItem {
   let techniqueDisplay: TechniqueColumnDisplay | undefined;
   let detailSections: SelectableItem['detailSections'];
@@ -550,7 +549,8 @@ export function buildSelectableItem(
 
   const effectiveType: LibraryItemType =
     itemType === 'item'
-      ? ((item as UserItem | EqItem).type?.toLowerCase() as 'weapon' | 'armor' | 'shield') || 'weapon'
+      ? ((item as UserItem | EqItem).type?.toLowerCase() as 'weapon' | 'armor' | 'shield') ||
+        'weapon'
       : itemType;
 
   let powerDisplay: PowerColumnDisplay | undefined;
@@ -617,7 +617,7 @@ export function buildSelectableItem(
           description: base ? `${base}\n\nOption 1: Lv.${lvl}` : `Option 1: Lv.${lvl}`,
           level: lvl,
         };
-      }
+      },
     );
     const propertyFamily =
       effectiveType === 'armor'
@@ -636,7 +636,7 @@ export function buildSelectableItem(
     item,
     itemType === 'item' ? effectiveType : itemType,
     techniqueDisplay,
-    powerDisplay
+    powerDisplay,
   );
   if (itemType === 'item') {
     const typeLabel = formatListCellLabel((item as EqItem).type);
@@ -645,31 +645,26 @@ export function buildSelectableItem(
 
   const name = String(item.name ?? '');
   const imageKind = selectableImageKind(itemType);
-  const thumbnail = imageKind
-    ? resolveListRowThumbnail(imageKind, item, name)
-    : undefined;
+  const thumbnail = imageKind ? resolveListRowThumbnail(imageKind, item, name) : undefined;
 
   const powerTechniqueFilter =
     itemType === 'power'
-      ? buildPowerTechniqueFilterableRow(
-          'power',
-          item as UserPower,
-          powerPartsDb,
-          techniquePartsDb
-        )
+      ? buildPowerTechniqueFilterableRow('power', item as UserPower, powerPartsDb, techniquePartsDb)
       : itemType === 'technique'
         ? buildPowerTechniqueFilterableRow(
             'technique',
             item as UserTechnique,
             powerPartsDb,
-            techniquePartsDb
+            techniquePartsDb,
           )
         : undefined;
 
   return {
     id: String(item.id),
     name,
-    description: String((item as UserPower | UserTechnique | UserItem).description ?? '') || 'No description available.',
+    description:
+      String((item as UserPower | UserTechnique | UserItem).description ?? '') ||
+      'No description available.',
     columns,
     detailSections,
     totalCost,

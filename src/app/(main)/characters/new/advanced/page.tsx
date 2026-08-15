@@ -12,7 +12,11 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 import { useAuth } from '@/hooks';
 import { LoadingState, PageContainer, PageHeader, Card, DescriptorChip } from '@/components/ui';
-import { useCharacterCreatorStore, STEP_ORDER, isCreatorStepSkipped } from '@/stores/character-creator-store';
+import {
+  useCharacterCreatorStore,
+  STEP_ORDER,
+  isCreatorStepSkipped,
+} from '@/stores/character-creator-store';
 import { InfoTippy } from '@/components/shared';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import {
@@ -53,7 +57,7 @@ export default function LegacyCharacterCreatorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <LoadingState message="Loading..." size="lg" />
       </div>
     );
@@ -66,7 +70,7 @@ export default function LegacyCharacterCreatorPage() {
       <PageContainer size="xl">
         <Link
           href="/characters/new"
-          className="inline-flex items-center gap-1.5 min-h-11 mb-3 -mt-1 font-nunito text-sm font-medium text-primary-link-fg hover:text-primary-fg-hover transition-colors"
+          className="-mt-1 mb-3 inline-flex min-h-11 items-center gap-1.5 font-nunito text-sm font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           {changeModeLink}
@@ -76,21 +80,19 @@ export default function LegacyCharacterCreatorPage() {
           title={
             <>
               {wizardCopy.title}
-              <DescriptorChip variant="default" size="sm" className="font-semibold shrink-0">
+              <DescriptorChip variant="default" size="sm" className="shrink-0 font-semibold">
                 {wizardCopy.badge}
               </DescriptorChip>
             </>
           }
           description={wizardCopy.description(stepIndex, totalSteps)}
           className="mb-6"
-          actions={
-            <InfoTippy content={createNewCharacter} label="Character creation overview" />
-          }
+          actions={<InfoTippy content={createNewCharacter} label="Character creation overview" />}
         />
 
         <CreatorTabBar />
 
-        <Card className="shadow-md p-6 md:p-8 flex flex-col min-h-[calc(100dvh-14rem)] pb-24">
+        <Card className="flex min-h-[calc(100dvh-14rem)] flex-col p-6 pb-24 shadow-md md:p-8">
           <StepComponent />
         </Card>
       </PageContainer>

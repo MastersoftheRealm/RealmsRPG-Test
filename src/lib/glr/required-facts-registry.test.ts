@@ -24,12 +24,8 @@ import {
   GUIDED_TECHNIQUES_L2_HEADER_COLUMNS,
 } from '@/lib/guided-creator/powers-techniques-l2';
 import { FEATS_L2_HEADER_COLUMNS } from '@/lib/guided-creator/feats-l2';
-import {
-  OFFICIAL_POWER_HEADER_COLUMNS,
-} from '@/lib/library/official-power-list';
-import {
-  OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
-} from '@/lib/library/official-technique-list';
+import { OFFICIAL_POWER_HEADER_COLUMNS } from '@/lib/library/official-power-list';
+import { OFFICIAL_TECHNIQUE_HEADER_COLUMNS } from '@/lib/library/official-technique-list';
 import { buildSelectableItem, getListHeaderColumns } from '@/lib/library-selectable-builders';
 import {
   assertRowFactCoverage,
@@ -67,10 +63,7 @@ const sheetCtx: LibraryEntityRowContext = {
   } satisfies Abilities,
 };
 
-function headerKeys(
-  headers: ReadonlyArray<{ key: string }>,
-  omit: string[] = ['name']
-): string[] {
+function headerKeys(headers: ReadonlyArray<{ key: string }>, omit: string[] = ['name']): string[] {
   const skip = new Set(omit.map((k) => k.toLowerCase()));
   return headers.filter((h) => !skip.has(h.key.toLowerCase())).map((h) => h.key);
 }
@@ -81,31 +74,28 @@ function columnValueKeys(columns: Array<{ key: string }>): string[] {
 
 describe('GLR required-facts registry — surface column configs (TASK-629)', () => {
   it('library-official-power headers satisfy registry', () => {
-    assertSurfaceColumnConfig(
-      'library-official-power',
-      headerKeys(OFFICIAL_POWER_HEADER_COLUMNS)
-    );
+    assertSurfaceColumnConfig('library-official-power', headerKeys(OFFICIAL_POWER_HEADER_COLUMNS));
   });
 
   it('library-official-technique headers satisfy registry', () => {
     assertSurfaceColumnConfig(
       'library-official-technique',
-      headerKeys(OFFICIAL_TECHNIQUE_HEADER_COLUMNS)
+      headerKeys(OFFICIAL_TECHNIQUE_HEADER_COLUMNS),
     );
   });
 
   it('library-official armament headers satisfy registry', () => {
     assertSurfaceColumnConfig(
       'library-official-weapon',
-      headerKeys(ARMAMENT_LIBRARY_CONFIG.weapon.headers)
+      headerKeys(ARMAMENT_LIBRARY_CONFIG.weapon.headers),
     );
     assertSurfaceColumnConfig(
       'library-official-armor',
-      headerKeys(ARMAMENT_LIBRARY_CONFIG.armor.headers)
+      headerKeys(ARMAMENT_LIBRARY_CONFIG.armor.headers),
     );
     assertSurfaceColumnConfig(
       'library-official-shield',
-      headerKeys(ARMAMENT_LIBRARY_CONFIG.shield.headers)
+      headerKeys(ARMAMENT_LIBRARY_CONFIG.shield.headers),
     );
   });
 
@@ -132,10 +122,7 @@ describe('GLR required-facts registry — surface column configs (TASK-629)', ()
   });
 
   it('add-modal technique columns satisfy registry', () => {
-    assertSurfaceColumnConfig(
-      'add-modal-technique',
-      headerKeys(getListHeaderColumns('technique'))
-    );
+    assertSurfaceColumnConfig('add-modal-technique', headerKeys(getListHeaderColumns('technique')));
   });
 
   it('codex feat headers satisfy registry', () => {
@@ -143,50 +130,32 @@ describe('GLR required-facts registry — surface column configs (TASK-629)', ()
   });
 
   it('codex equipment headers satisfy registry', () => {
-    assertSurfaceColumnConfig(
-      'codex-equipment',
-      headerKeys(CODEX_EQUIPMENT_HEADER_COLUMNS)
-    );
+    assertSurfaceColumnConfig('codex-equipment', headerKeys(CODEX_EQUIPMENT_HEADER_COLUMNS));
   });
 
   it('fails when a required column fact is removed from armor headers', () => {
     const keys = headerKeys(ARMAMENT_LIBRARY_CONFIG.armor.headers).filter(
-      (k) => k !== 'abilityRequirement'
+      (k) => k !== 'abilityRequirement',
     );
     const errors = validateSurfaceColumnConfig('library-official-armor', keys);
     expect(errors.some((e) => e.includes('abilityRequirement'))).toBe(true);
   });
 
   it('guided powers/techniques/feats L3 headers satisfy registry (TASK-709 / TASK-758)', () => {
-    assertSurfaceColumnConfig(
-      'guided-powers-l3',
-      headerKeys(GUIDED_POWERS_L2_HEADER_COLUMNS)
-    );
+    assertSurfaceColumnConfig('guided-powers-l3', headerKeys(GUIDED_POWERS_L2_HEADER_COLUMNS));
     assertSurfaceColumnConfig(
       'guided-techniques-l3',
-      headerKeys(GUIDED_TECHNIQUES_L2_HEADER_COLUMNS)
+      headerKeys(GUIDED_TECHNIQUES_L2_HEADER_COLUMNS),
     );
     assertSurfaceColumnConfig('guided-feats-l3', headerKeys(FEATS_L2_HEADER_COLUMNS));
   });
 
   it('guided equipment L3 headers satisfy registry (TASK-688)', () => {
-    assertSurfaceColumnConfig(
-      'guided-equipment-weapon-l3',
-      headerKeys(WEAPON_L2_HEADER_COLUMNS)
-    );
-    assertSurfaceColumnConfig(
-      'guided-equipment-armor-l3',
-      headerKeys(ARMOR_L2_HEADER_COLUMNS)
-    );
-    assertSurfaceColumnConfig(
-      'guided-equipment-gear-l3',
-      headerKeys(GEAR_L2_HEADER_COLUMNS)
-    );
+    assertSurfaceColumnConfig('guided-equipment-weapon-l3', headerKeys(WEAPON_L2_HEADER_COLUMNS));
+    assertSurfaceColumnConfig('guided-equipment-armor-l3', headerKeys(ARMOR_L2_HEADER_COLUMNS));
+    assertSurfaceColumnConfig('guided-equipment-gear-l3', headerKeys(GEAR_L2_HEADER_COLUMNS));
     // Shields share the weapon-phase header set; Block lives in the Damage cell.
-    assertSurfaceColumnConfig(
-      'guided-equipment-shield-l3',
-      headerKeys(WEAPON_L2_HEADER_COLUMNS)
-    );
+    assertSurfaceColumnConfig('guided-equipment-shield-l3', headerKeys(WEAPON_L2_HEADER_COLUMNS));
   });
 });
 
@@ -229,7 +198,7 @@ describe('GLR required-facts registry — row coverage (TASK-629)', () => {
         parts: [],
       },
       'power',
-      emptyCodex
+      emptyCodex,
     );
     const columnKeys = selectable.columns?.map((c) => c.key) ?? [];
     expect(columnKeys).not.toContain('Range');
@@ -255,14 +224,14 @@ describe('GLR required-facts registry — row coverage (TASK-629)', () => {
           properties: [{ id: 22, name: 'Critical Range +1', op_1_lvl: 0 }],
         } as unknown as Item,
       ],
-      sheetCtx
+      sheetCtx,
     );
     assertRowFactCoverage('character-sheet-armor', {
       columnKeys: columnValueKeys(row.columns ?? []),
       chipLabels: chipLabelsFromDetailSections(row.detailSections),
     });
     expect(chipLabelsFromDetailSections(row.detailSections)).toEqual(
-      expect.arrayContaining(['Strength Requirement 3+', 'Agility Reduction -1'])
+      expect.arrayContaining(['Strength Requirement 3+', 'Agility Reduction -1']),
     );
   });
 

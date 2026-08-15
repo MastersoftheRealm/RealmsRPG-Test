@@ -11,7 +11,7 @@ const QUARTER_FRACTION_CHARS: Record<number, string> = {
 };
 
 const UNICODE_FRACTION_TO_DECIMAL: Record<string, number> = Object.fromEntries(
-  Object.entries(QUARTER_FRACTION_CHARS).map(([decimal, char]) => [char, Number(decimal)])
+  Object.entries(QUARTER_FRACTION_CHARS).map(([decimal, char]) => [char, Number(decimal)]),
 );
 
 const UNICODE_FRACTION_CHAR_LIST = Object.keys(UNICODE_FRACTION_TO_DECIMAL);

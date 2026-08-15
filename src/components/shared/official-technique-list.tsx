@@ -73,7 +73,7 @@ export function OfficialTechniqueList({
   errorMessage,
   sectionTitle,
   searchPlaceholder,
-  emptyIcon = <Swords className="w-8 h-8" />,
+  emptyIcon = <Swords className="h-8 w-8" />,
   emptyTitle,
   emptyMessage,
   searchEmptyMessage,
@@ -85,23 +85,19 @@ export function OfficialTechniqueList({
 }: OfficialTechniqueListProps) {
   const empowered = mode === 'empowered';
   const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS
+    EMPTY_POWER_TECHNIQUE_FILTERS,
   );
-  const [characterContext, setCharacterContext] =
-    useState<PowerTechniqueCharacterContext | null>(null);
+  const [characterContext, setCharacterContext] = useState<PowerTechniqueCharacterContext | null>(
+    null,
+  );
   const [characterFilterId, setCharacterFilterId] = useState('');
   const addToCharacter = useAddToCharacterFromLibrary('technique', characterFilterId);
-  const {
-    selectedPathIds,
-    setSelectedPathIds,
-    pathIndex,
-    pathRecommendedIds,
-    pathFilterActive,
-  } = usePathListFilter({
-    entities: items,
-    kind: 'techniques',
-    enabled: !empowered,
-  });
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({
+      entities: items,
+      kind: 'techniques',
+      enabled: !empowered,
+    });
 
   const categoryOptions = useMemo(() => {
     if (empowered) return [];
@@ -112,7 +108,7 @@ export function OfficialTechniqueList({
     (
       rows: OfficialTechniqueRow[],
       search: string,
-      sortItems: (items: OfficialTechniqueRow[]) => OfficialTechniqueRow[]
+      sortItems: (items: OfficialTechniqueRow[]) => OfficialTechniqueRow[],
     ) =>
       filterOfficialTechniqueRows(
         rows,
@@ -120,103 +116,104 @@ export function OfficialTechniqueList({
         sortItems,
         advancedFilters,
         characterContext,
-        empowered ? null : pathRecommendedIds
+        empowered ? null : pathRecommendedIds,
       ),
-    [advancedFilters, characterContext, empowered, pathRecommendedIds]
+    [advancedFilters, characterContext, empowered, pathRecommendedIds],
   );
 
   return (
     <>
       <OfficialEntityList<OfficialTechniqueRow, LibraryTechnique>
-      items={items}
-      isLoading={isLoading}
-      error={error}
-      onRetry={onRetry}
-      buildRows={(raw) => buildOfficialTechniqueRows(raw, partsDb, mode)}
-      filterRows={filterRows}
-      gridColumns={OFFICIAL_TECHNIQUE_GRID}
-      headerColumns={OFFICIAL_TECHNIQUE_HEADER_COLUMNS}
-      filters={
-        empowered ? undefined : (
-          <PowerTechniqueFilters
-            kind="technique"
-            value={advancedFilters}
-            onChange={setAdvancedFilters}
-            categoryOptions={categoryOptions}
-            onCharacterContextChange={setCharacterContext}
-            onCharacterIdChange={setCharacterFilterId}
-            pathFilter={{
-              options: pathIndex.options,
-              selectedPathIds,
-              onChange: setSelectedPathIds,
-            }}
-          />
-        )
-      }
-      filterActiveCount={
-        empowered
-          ? undefined
-          : countActivePowerTechniqueFilters(
-              advancedFilters,
-              'technique',
-              Boolean(characterContext)
-            ) + (characterFilterId ? 1 : 0) + (pathFilterActive ? 1 : 0)
-      }
-      getNameChipLabels={
-        empowered
-          ? undefined
-          : (t) =>
-              pathFilterActive
-                ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(t), selectedPathIds)
-                : undefined
-      }
-      getColumns={(t) => officialTechniqueRowColumns(t)}
-      getDetailSections={(t) => {
-        const section = empowered
-          ? empoweredTechniquePartsSection(t.raw, powerPartsDb, partsDb, {
-              stripOptionSuffix: true,
-            })
-          : partsProficienciesSection(t.parts, 'technique');
-        return section ? [section] : undefined;
-      }}
-      getTotalCost={(t) => t.tp}
-      costLabel="TP"
-      getThumbnail={(t) => resolveListRowThumbnail('technique', t.raw, t.name)}
-      errorMessage={
-        errorMessage ?? `Failed to load ${empowered ? 'empowered techniques' : 'techniques'}`
-      }
-      sectionTitle={sectionTitle}
-      searchPlaceholder={
-        searchPlaceholder ?? (empowered ? 'Search empowered techniques...' : 'Search techniques...')
-      }
-      emptyIcon={emptyIcon}
-      emptyTitle={emptyTitle}
-      emptyMessage={emptyMessage}
-      searchEmptyMessage={
-        !empowered && pathFilterActive
-          ? pathFilterEmptyTitle('techniques')
-          : (searchEmptyMessage ??
-            (empowered
-              ? 'No empowered techniques match your search.'
-              : 'No techniques match your search.'))
-      }
-      variant={variant}
-      readOnly={readOnly}
-      onAddRequest={onAddRequest}
-      addToCharacter={
-        variant === 'library' &&
-        !empowered &&
-        addToCharacter.active
-          ? {
-              kind: 'technique',
-              onRequest: (row) => addToCharacter.openAddConfirm(row.name, row.raw),
-              isOnCharacter: (row) => addToCharacter.isOnCharacter(row.raw),
-            }
-          : undefined
-      }
-      onEdit={onEdit}
-      onDelete={onDelete}
-    />
+        items={items}
+        isLoading={isLoading}
+        error={error}
+        onRetry={onRetry}
+        buildRows={(raw) => buildOfficialTechniqueRows(raw, partsDb, mode)}
+        filterRows={filterRows}
+        gridColumns={OFFICIAL_TECHNIQUE_GRID}
+        headerColumns={OFFICIAL_TECHNIQUE_HEADER_COLUMNS}
+        filters={
+          empowered ? undefined : (
+            <PowerTechniqueFilters
+              kind="technique"
+              value={advancedFilters}
+              onChange={setAdvancedFilters}
+              categoryOptions={categoryOptions}
+              onCharacterContextChange={setCharacterContext}
+              onCharacterIdChange={setCharacterFilterId}
+              pathFilter={{
+                options: pathIndex.options,
+                selectedPathIds,
+                onChange: setSelectedPathIds,
+              }}
+            />
+          )
+        }
+        filterActiveCount={
+          empowered
+            ? undefined
+            : countActivePowerTechniqueFilters(
+                advancedFilters,
+                'technique',
+                Boolean(characterContext),
+              ) +
+              (characterFilterId ? 1 : 0) +
+              (pathFilterActive ? 1 : 0)
+        }
+        getNameChipLabels={
+          empowered
+            ? undefined
+            : (t) =>
+                pathFilterActive
+                  ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(t), selectedPathIds)
+                  : undefined
+        }
+        getColumns={(t) => officialTechniqueRowColumns(t)}
+        getDetailSections={(t) => {
+          const section = empowered
+            ? empoweredTechniquePartsSection(t.raw, powerPartsDb, partsDb, {
+                stripOptionSuffix: true,
+              })
+            : partsProficienciesSection(t.parts, 'technique');
+          return section ? [section] : undefined;
+        }}
+        getTotalCost={(t) => t.tp}
+        costLabel="TP"
+        getThumbnail={(t) => resolveListRowThumbnail('technique', t.raw, t.name)}
+        errorMessage={
+          errorMessage ?? `Failed to load ${empowered ? 'empowered techniques' : 'techniques'}`
+        }
+        sectionTitle={sectionTitle}
+        searchPlaceholder={
+          searchPlaceholder ??
+          (empowered ? 'Search empowered techniques...' : 'Search techniques...')
+        }
+        emptyIcon={emptyIcon}
+        emptyTitle={emptyTitle}
+        emptyMessage={emptyMessage}
+        searchEmptyMessage={
+          !empowered && pathFilterActive
+            ? pathFilterEmptyTitle('techniques')
+            : (searchEmptyMessage ??
+              (empowered
+                ? 'No empowered techniques match your search.'
+                : 'No techniques match your search.'))
+        }
+        variant={variant}
+        readOnly={readOnly}
+        onAddRequest={onAddRequest}
+        addToCharacter={
+          variant === 'library' && !empowered && addToCharacter.active
+            ? {
+                kind: 'technique',
+                onRequest: (row) => addToCharacter.openAddConfirm(row.name, row.raw),
+                isOnCharacter: (row) => addToCharacter.isOnCharacter(row.raw),
+              }
+            : undefined
+        }
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
       {addToCharacter.confirmModal}
     </>
   );

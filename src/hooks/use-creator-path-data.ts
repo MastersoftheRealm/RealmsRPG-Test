@@ -19,15 +19,15 @@ export function useCreatorPathData(): ArchetypePathData | undefined {
     const fromDraft = parseArchetypePathData(draft.archetype?.path_data);
     const draftHasContent = Boolean(
       fromDraft?.level1 &&
-        (fromDraft.level1.feats?.length ||
-          fromDraft.level1.skills?.length ||
-          fromDraft.level1.powers?.length ||
-          fromDraft.level1.innatePowers?.length ||
-          fromDraft.level1.techniques?.length ||
-          fromDraft.level1.armaments?.length ||
-          fromDraft.level1.equipment?.length ||
-          fromDraft.level1.guidance_groups?.length ||
-          fromDraft.level1.notes?.trim())
+      (fromDraft.level1.feats?.length ||
+        fromDraft.level1.skills?.length ||
+        fromDraft.level1.powers?.length ||
+        fromDraft.level1.innatePowers?.length ||
+        fromDraft.level1.techniques?.length ||
+        fromDraft.level1.armaments?.length ||
+        fromDraft.level1.equipment?.length ||
+        fromDraft.level1.guidance_groups?.length ||
+        fromDraft.level1.notes?.trim()),
     );
     if (draftHasContent || !draft.archetypePathId) return fromDraft;
 
@@ -38,10 +38,5 @@ export function useCreatorPathData(): ArchetypePathData | undefined {
     if (!codexMatch?.path_data) return fromDraft;
 
     return parseArchetypePathData(codexMatch.path_data) ?? fromDraft;
-  }, [
-    draft.archetype?.path_data,
-    draft.archetype?.id,
-    draft.archetypePathId,
-    codexArchetypes,
-  ]);
+  }, [draft.archetype?.path_data, draft.archetype?.id, draft.archetypePathId, codexArchetypes]);
 }

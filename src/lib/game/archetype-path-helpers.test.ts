@@ -13,7 +13,10 @@ import {
 describe('parseOptionalJsonField', () => {
   it('treats empty / whitespace as null (ok)', () => {
     expect(parseOptionalJsonField('', 'Recommended abilities')).toEqual({ ok: true, value: null });
-    expect(parseOptionalJsonField('   ', 'Recommended abilities')).toEqual({ ok: true, value: null });
+    expect(parseOptionalJsonField('   ', 'Recommended abilities')).toEqual({
+      ok: true,
+      value: null,
+    });
   });
 
   it('parses valid JSON object', () => {
@@ -63,7 +66,7 @@ describe('serializeIdQuantityStrings', () => {
       serializeIdQuantityStrings([
         { id: 'sword', quantity: 1 },
         { id: 'torch', quantity: 5 },
-      ])
+      ]),
     ).toEqual(['sword', 'torch:5']);
   });
 
@@ -79,7 +82,7 @@ describe('serializeIdQuantityStrings', () => {
 describe('parseRecommendedAbilities', () => {
   it('keeps only known ability keys with finite values', () => {
     expect(
-      parseRecommendedAbilities({ strength: 3, vitality: '2', bogus: 9, charisma: NaN })
+      parseRecommendedAbilities({ strength: 3, vitality: '2', bogus: 9, charisma: NaN }),
     ).toEqual({ strength: 3, vitality: 2 });
   });
 
@@ -120,7 +123,7 @@ describe('PathGuidanceGroup audience (TASK-514)', () => {
     });
     expect(parsed?.level1?.feats).toEqual(['1']);
     expect(
-      (parsed?.level1 as { recommended_species?: string[] } | undefined)?.recommended_species
+      (parsed?.level1 as { recommended_species?: string[] } | undefined)?.recommended_species,
     ).toBeUndefined();
   });
 });

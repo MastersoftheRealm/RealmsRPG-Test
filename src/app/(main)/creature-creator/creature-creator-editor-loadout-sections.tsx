@@ -5,12 +5,7 @@
 'use client';
 
 import { cn, formatListCellLabel } from '@/lib/utils';
-import {
-  GridListRow,
-  ListHeader,
-  InnateToggle,
-  ValueStepper,
-} from '@/components/shared';
+import { GridListRow, ListHeader, InnateToggle, ValueStepper } from '@/components/shared';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import { Button, IconButton } from '@/components/ui';
 import { X } from 'lucide-react';
@@ -87,9 +82,9 @@ export function CreatureCreatorEditorLoadoutSections({
         points={{ spent: stats.featSpent, total: stats.featPoints }}
       >
         {creature.feats.length === 0 ? (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No feats added</p>
+          <p className="mb-4 text-sm text-text-muted italic">No feats added</p>
         ) : (
-          <div className="border border-border-light rounded-lg overflow-hidden mb-4">
+          <div className="mb-4 overflow-hidden rounded-lg border border-border-light">
             <ListHeader
               columns={[
                 { key: 'name', label: 'NAME' },
@@ -157,7 +152,7 @@ export function CreatureCreatorEditorLoadoutSections({
                         onClick={() => onRemoveFeat(feat.id)}
                         label="Remove feat"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                       </IconButton>
                     }
                     compact
@@ -183,9 +178,9 @@ export function CreatureCreatorEditorLoadoutSections({
         itemCount={creature.powers.length}
       >
         {creature.powers.length === 0 ? (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No powers added</p>
+          <p className="mb-4 text-sm text-text-muted italic">No powers added</p>
         ) : (
-          <div className="border border-border-light rounded-lg overflow-hidden mb-4">
+          <div className="mb-4 overflow-hidden rounded-lg border border-border-light">
             <ListHeader
               columns={[
                 { key: 'name', label: 'NAME', width: '1.4fr' },
@@ -241,7 +236,7 @@ export function CreatureCreatorEditorLoadoutSections({
                         onClick={() => onRemovePower(power.id)}
                         label="Remove power"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                       </IconButton>
                     }
                     compact
@@ -265,9 +260,9 @@ export function CreatureCreatorEditorLoadoutSections({
         itemCount={creature.techniques.length}
       >
         {creature.techniques.length === 0 ? (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No techniques added</p>
+          <p className="mb-4 text-sm text-text-muted italic">No techniques added</p>
         ) : (
-          <div className="border border-border-light rounded-lg overflow-hidden mb-4">
+          <div className="mb-4 overflow-hidden rounded-lg border border-border-light">
             <ListHeader
               columns={[
                 { key: 'name', label: 'Name', width: '1.4fr' },
@@ -308,7 +303,7 @@ export function CreatureCreatorEditorLoadoutSections({
                         onClick={() => onRemoveTechnique(tech.id)}
                         label="Remove technique"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                       </IconButton>
                     }
                     compact
@@ -332,9 +327,9 @@ export function CreatureCreatorEditorLoadoutSections({
         itemCount={creature.armaments.length}
       >
         {creature.armaments.length === 0 ? (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic mb-4">No inventory items added</p>
+          <p className="mb-4 text-sm text-text-muted italic">No inventory items added</p>
         ) : (
-          <div className="flex flex-col gap-3 mb-4">
+          <div className="mb-4 flex flex-col gap-3">
             <div className="rounded-lg border border-border-light bg-surface-alt p-3 text-sm">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <span className="font-medium text-text-secondary dark:text-text-primary">
@@ -349,18 +344,28 @@ export function CreatureCreatorEditorLoadoutSections({
                   {stats.currencyRemaining}c / {stats.currency}c
                 </span>
               </div>
-              <p className="mt-1 text-xs text-text-muted dark:text-text-secondary">
+              <p className="mt-1 text-xs text-text-muted">
                 Spent {stats.currencySpent}c from selected inventory items.
               </p>
             </div>
-            <div className="border border-border-light rounded-lg overflow-hidden">
+            <div className="overflow-hidden rounded-lg border border-border-light">
               <ListHeader
                 columns={[
                   { key: 'name', label: 'NAME' },
                   { key: 'type', label: 'TYPE', width: 'minmax(72px, 0.55fr)', align: 'center' },
                   { key: 'range', label: 'RANGE', width: 'minmax(92px, 7.5rem)', align: 'center' },
-                  { key: 'attack', label: 'ATTACK', width: 'minmax(64px, 4.25rem)', align: 'center' },
-                  { key: 'damage', label: 'DAMAGE', width: 'minmax(92px, 6.75rem)', align: 'center' },
+                  {
+                    key: 'attack',
+                    label: 'ATTACK',
+                    width: 'minmax(64px, 4.25rem)',
+                    align: 'center',
+                  },
+                  {
+                    key: 'damage',
+                    label: 'DAMAGE',
+                    width: 'minmax(92px, 6.75rem)',
+                    align: 'center',
+                  },
                   { key: 'tp', label: 'TP', width: '0.5fr', align: 'center' },
                   { key: 'currency', label: 'COST', width: '0.6fr', align: 'center' },
                 ]}
@@ -393,7 +398,7 @@ export function CreatureCreatorEditorLoadoutSections({
                         onClick={() => onRemoveArmament(armament.id)}
                         label="Remove inventory item"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                       </IconButton>
                     }
                     compact

@@ -13,7 +13,10 @@ import {
   CHARACTER_SHEET_TECHNIQUE_COLUMNS,
   CHARACTER_SHEET_TECHNIQUE_GRID,
 } from './entity-library-sections-columns';
-import { renderInteractiveGridRows, useEntityListSectionCollapse } from './entity-library-sections-rows';
+import {
+  renderInteractiveGridRows,
+  useEntityListSectionCollapse,
+} from './entity-library-sections-rows';
 import type {
   EntityListControls,
   EntityPowerRow,
@@ -51,11 +54,11 @@ export function PowersListSection({
   showTitle?: boolean;
 } & EntityListControls) {
   const hasAny = items.length > 0;
-  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
-    collapsible,
-    items.length,
-    onAdd
-  );
+  const {
+    isContentVisible,
+    onAdd: onAddWrapped,
+    headerCollapseProps,
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
   const cols = includeEnergyColumn ? POWER_COLUMNS_WITH_ENERGY : POWER_COLUMNS;
   const grid = includeEnergyColumn ? POWER_GRID_WITH_ENERGY : POWER_GRID;
   return (
@@ -72,46 +75,48 @@ export function PowersListSection({
       )}
       {isContentVisible && (
         <>
-      {showListHeader && hasAny && (
-        <ListHeader
-          columns={cols}
-          gridColumns={grid}
-          sortState={sortState}
-          onSort={onSort}
-          rowChrome={rowChrome}
-          hasThumbnailColumn
-        />
-      )}
-      {hasAny ? (
-        <div className="space-y-1">
-          {renderInteractiveGridRows(
-            items,
-            grid,
-            (power) => {
-              const row = power as EntityPowerRow;
-              const damageVal =
-                typeof row.damage === 'string' || row.damage == null ? (row.damage ?? '-') : row.damage;
-              return includeEnergyColumn
-                ? [
-                    { key: 'energy', value: row.energyCost ?? '-', align: 'center' as const },
-                    { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
-                    { key: 'damage', value: damageVal, align: 'center' as const },
-                    { key: 'area', value: row.area ?? '-', align: 'center' as const },
-                    { key: 'duration', value: row.duration ?? '-', align: 'center' as const },
-                  ]
-                : [
-                    { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
-                    { key: 'damage', value: damageVal, align: 'center' as const },
-                    { key: 'area', value: row.area ?? '-', align: 'center' as const },
-                    { key: 'duration', value: row.duration ?? '-', align: 'center' as const },
-                  ];
-            },
-            compactRows
+          {showListHeader && hasAny && (
+            <ListHeader
+              columns={cols}
+              gridColumns={grid}
+              sortState={sortState}
+              onSort={onSort}
+              rowChrome={rowChrome}
+              hasThumbnailColumn
+            />
           )}
-        </div>
-      ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
-      )}
+          {hasAny ? (
+            <div className="space-y-1">
+              {renderInteractiveGridRows(
+                items,
+                grid,
+                (power) => {
+                  const row = power as EntityPowerRow;
+                  const damageVal =
+                    typeof row.damage === 'string' || row.damage == null
+                      ? (row.damage ?? '-')
+                      : row.damage;
+                  return includeEnergyColumn
+                    ? [
+                        { key: 'energy', value: row.energyCost ?? '-', align: 'center' as const },
+                        { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
+                        { key: 'damage', value: damageVal, align: 'center' as const },
+                        { key: 'area', value: row.area ?? '-', align: 'center' as const },
+                        { key: 'duration', value: row.duration ?? '-', align: 'center' as const },
+                      ]
+                    : [
+                        { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
+                        { key: 'damage', value: damageVal, align: 'center' as const },
+                        { key: 'area', value: row.area ?? '-', align: 'center' as const },
+                        { key: 'duration', value: row.duration ?? '-', align: 'center' as const },
+                      ];
+                },
+                compactRows,
+              )}
+            </div>
+          ) : (
+            <p className="py-4 text-center text-sm text-text-muted italic">{emptyMessage}</p>
+          )}
         </>
       )}
     </div>
@@ -147,11 +152,11 @@ export function TechniquesListSection({
   includeActionColumn?: boolean;
 } & EntityListControls) {
   const hasAny = items.length > 0;
-  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
-    collapsible,
-    items.length,
-    onAdd
-  );
+  const {
+    isContentVisible,
+    onAdd: onAddWrapped,
+    headerCollapseProps,
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
   const cols = includeActionColumn ? CHARACTER_SHEET_TECHNIQUE_COLUMNS : TECHNIQUE_COLUMNS;
   const grid = includeActionColumn ? CHARACTER_SHEET_TECHNIQUE_GRID : TECHNIQUE_GRID;
   return (
@@ -167,42 +172,42 @@ export function TechniquesListSection({
       )}
       {isContentVisible && (
         <>
-      {showListHeader && hasAny && (
-        <ListHeader
-          columns={cols}
-          gridColumns={grid}
-          sortState={sortState}
-          onSort={onSort}
-          rowChrome={rowChrome}
-          hasThumbnailColumn
-        />
-      )}
-      {hasAny ? (
-        <div className="space-y-1">
-          {renderInteractiveGridRows(
-            items,
-            grid,
-            (tech) => {
-              const row = tech as EntityTechniqueRow;
-              // Character sheet (includeActionColumn): energy is rightSlot only — no Energy column.
-              if (includeActionColumn) {
-                return [
-                  { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
-                  { key: 'weapon', value: row.weaponName ?? '-', align: 'center' as const },
-                ];
-              }
-              return [
-                { key: 'energy', value: row.energyCost ?? '-', align: 'center' as const },
-                { key: 'weapon', value: row.weaponName ?? '-', align: 'center' as const },
-                { key: 'tp', value: row.tp ?? '-', align: 'center' as const },
-              ];
-            },
-            compactRows
+          {showListHeader && hasAny && (
+            <ListHeader
+              columns={cols}
+              gridColumns={grid}
+              sortState={sortState}
+              onSort={onSort}
+              rowChrome={rowChrome}
+              hasThumbnailColumn
+            />
           )}
-        </div>
-      ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
-      )}
+          {hasAny ? (
+            <div className="space-y-1">
+              {renderInteractiveGridRows(
+                items,
+                grid,
+                (tech) => {
+                  const row = tech as EntityTechniqueRow;
+                  // Character sheet (includeActionColumn): energy is rightSlot only — no Energy column.
+                  if (includeActionColumn) {
+                    return [
+                      { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
+                      { key: 'weapon', value: row.weaponName ?? '-', align: 'center' as const },
+                    ];
+                  }
+                  return [
+                    { key: 'energy', value: row.energyCost ?? '-', align: 'center' as const },
+                    { key: 'weapon', value: row.weaponName ?? '-', align: 'center' as const },
+                    { key: 'tp', value: row.tp ?? '-', align: 'center' as const },
+                  ];
+                },
+                compactRows,
+              )}
+            </div>
+          ) : (
+            <p className="py-4 text-center text-sm text-text-muted italic">{emptyMessage}</p>
+          )}
         </>
       )}
     </div>

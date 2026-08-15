@@ -77,13 +77,10 @@ export function ArchetypeFeatsStep() {
   const maxFeats = calculateMaxArchetypeFeats(1, draft.archetypeType ?? undefined);
   const guidanceGroups = pathData?.level1?.guidance_groups;
   const pathFeats = pathData?.level1?.feats;
-  const groups = useMemo(
-    () => {
-      const filtered = filterFeatGuidanceGroups(guidanceGroups, 'archetype');
-      return filtered.length > 0 ? filtered : EMPTY_GUIDANCE_GROUPS;
-    },
-    [guidanceGroups]
-  );
+  const groups = useMemo(() => {
+    const filtered = filterFeatGuidanceGroups(guidanceGroups, 'archetype');
+    return filtered.length > 0 ? filtered : EMPTY_GUIDANCE_GROUPS;
+  }, [guidanceGroups]);
   const fallbackFeatIds = pathFeats ?? EMPTY_STRING_ARRAY;
 
   const featById = useMemo(() => new Map(feats.map((f) => [String(f.id), f])), [feats]);
@@ -95,10 +92,7 @@ export function ArchetypeFeatsStep() {
     return Array.from(ids);
   }, [groups, fallbackFeatIds]);
 
-  const requirementCharacter = useMemo(
-    () => guidedDraftToFeatRequirementCharacter(draft),
-    [draft]
-  );
+  const requirementCharacter = useMemo(() => guidedDraftToFeatRequirementCharacter(draft), [draft]);
 
   const selectFeat = useCallback(
     (id: string) => {
@@ -106,7 +100,7 @@ export function ArchetypeFeatsStep() {
         archetypeFeatIds: applyCappedIdSelection(draft.archetypeFeatIds, id, maxFeats),
       });
     },
-    [draft.archetypeFeatIds, maxFeats, updateDraft]
+    [draft.archetypeFeatIds, maxFeats, updateDraft],
   );
 
   /** Curated cards honour requirements like the catalog does (report 03 P1-10). */
@@ -119,7 +113,7 @@ export function ArchetypeFeatsStep() {
         requirementCharacter,
         codexSkills,
       }),
-    [feats, draft.archetypeFeatIds, requirementCharacter, codexSkills]
+    [feats, draft.archetypeFeatIds, requirementCharacter, codexSkills],
   );
 
   const canContinue = draft.archetypeFeatIds.length === maxFeats;
@@ -137,7 +131,7 @@ export function ArchetypeFeatsStep() {
 
   const { categories: inlineCategoryOptions } = useMemo(
     () => buildGuidedFeatsL2FilterOptions(feats, 'archetype'),
-    [feats]
+    [feats],
   );
 
   const inlineItems = useMemo(
@@ -163,7 +157,7 @@ export function ArchetypeFeatsStep() {
       inlineStateFeatMode,
       inlinePathIndex,
       inlineSelectedPathIds,
-    ]
+    ],
   );
 
   const inlineActiveFilterCount =
@@ -173,7 +167,7 @@ export function ArchetypeFeatsStep() {
 
   const selectedIdSet = useMemo(
     () => new Set(draft.archetypeFeatIds.map(String)),
-    [draft.archetypeFeatIds]
+    [draft.archetypeFeatIds],
   );
 
   const renderFeatCard = (id: string) => {
@@ -212,11 +206,11 @@ export function ArchetypeFeatsStep() {
 
   const visibleGroups = useMemo(
     () => groups.filter((g) => selectableIds(g.feats ?? []).length > 0),
-    [groups, selectableIds]
+    [groups, selectableIds],
   );
   const visibleFallbackIds = useMemo(
     () => selectableIds(fallbackFeatIds),
-    [fallbackFeatIds, selectableIds]
+    [fallbackFeatIds, selectableIds],
   );
   const hasCuratedSource = groups.length > 0 || fallbackFeatIds.length > 0;
   const hasLayer1Options = visibleGroups.length > 0 || visibleFallbackIds.length > 0;
@@ -255,9 +249,7 @@ export function ArchetypeFeatsStep() {
               categories={inlineCategoryOptions}
               selectedCategories={inlineCategories}
               onAddCategory={(v) => setInlineCategories((prev) => [...prev, v])}
-              onRemoveCategory={(v) =>
-                setInlineCategories((prev) => prev.filter((c) => c !== v))
-              }
+              onRemoveCategory={(v) => setInlineCategories((prev) => prev.filter((c) => c !== v))}
               stateFeatMode={inlineStateFeatMode}
               onStateFeatModeChange={setInlineStateFeatMode}
               pathFilter={{

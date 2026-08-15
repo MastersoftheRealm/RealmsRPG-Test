@@ -48,36 +48,37 @@ export function usePowersStepSelectables(args: {
 
   const allPowersRaw = useMemo(
     () => mergeLibraryWithSource(userPowers, publicPowers),
-    [userPowers, publicPowers]
+    [userPowers, publicPowers],
   );
   const allTechniquesRaw = useMemo(
     () => mergeLibraryWithSource(userTechniques, publicTechniques),
-    [userTechniques, publicTechniques]
+    [userTechniques, publicTechniques],
   );
   const allEmpoweredTechniquesRaw = useMemo(
     () => mergeEmpoweredTechniquesWithSource(userEmpoweredTechniques, publicEmpoweredTechniques),
-    [userEmpoweredTechniques, publicEmpoweredTechniques]
+    [userEmpoweredTechniques, publicEmpoweredTechniques],
   );
   const allPowersForLookup = useMemo(
     () => mergeLookupPool(userPowers, publicPowers),
-    [userPowers, publicPowers]
+    [userPowers, publicPowers],
   );
   const allTechniquesForLookup = useMemo(
     () => mergeLookupPool(userTechniques, publicTechniques),
-    [userTechniques, publicTechniques]
+    [userTechniques, publicTechniques],
   );
 
   const selectedPowerIdsSet = useMemo(
     () => new Set(selectedPowers.map((p) => String(p.id))),
-    [selectedPowers]
+    [selectedPowers],
   );
   const powerSelectableOpts = useMemo(
     () => (pathName ? { selectedIds: selectedPowerIdsSet, pathName } : undefined),
-    [pathName, selectedPowerIdsSet]
+    [pathName, selectedPowerIdsSet],
   );
   const allPowerSelectableItems = useMemo(
-    () => powerListToSelectable(allPowersRaw, powerParts, recommendedPowerRefs, powerSelectableOpts),
-    [allPowersRaw, powerParts, recommendedPowerRefs, powerSelectableOpts]
+    () =>
+      powerListToSelectable(allPowersRaw, powerParts, recommendedPowerRefs, powerSelectableOpts),
+    [allPowersRaw, powerParts, recommendedPowerRefs, powerSelectableOpts],
   );
   const allPowersSelectable = useMemo(
     () =>
@@ -85,22 +86,23 @@ export function usePowersStepSelectables(args: {
         dedupeByDocId(allPowersRaw),
         powerParts,
         recommendedPowerRefs,
-        powerSelectableOpts
+        powerSelectableOpts,
       ),
-    [allPowersRaw, powerParts, recommendedPowerRefs, powerSelectableOpts]
+    [allPowersRaw, powerParts, recommendedPowerRefs, powerSelectableOpts],
   );
   const allEmpoweredSelectableItems = useMemo(
-    () => empoweredTechniqueToPowerSelectable(allEmpoweredTechniquesRaw, powerParts, techniqueParts),
-    [allEmpoweredTechniquesRaw, powerParts, techniqueParts]
+    () =>
+      empoweredTechniqueToPowerSelectable(allEmpoweredTechniquesRaw, powerParts, techniqueParts),
+    [allEmpoweredTechniquesRaw, powerParts, techniqueParts],
   );
 
   const selectedTechniqueIdsSet = useMemo(
     () => new Set(selectedTechniques.map((t) => String(t.id))),
-    [selectedTechniques]
+    [selectedTechniques],
   );
   const techniqueSelectableOpts = useMemo(
     () => (pathName ? { selectedIds: selectedTechniqueIdsSet, pathName } : undefined),
-    [pathName, selectedTechniqueIdsSet]
+    [pathName, selectedTechniqueIdsSet],
   );
   const allTechniqueSelectableItems = useMemo(
     () =>
@@ -108,9 +110,9 @@ export function usePowersStepSelectables(args: {
         allTechniquesRaw,
         techniqueParts,
         recommendedTechniqueRefs,
-        techniqueSelectableOpts
+        techniqueSelectableOpts,
       ),
-    [allTechniquesRaw, techniqueParts, recommendedTechniqueRefs, techniqueSelectableOpts]
+    [allTechniquesRaw, techniqueParts, recommendedTechniqueRefs, techniqueSelectableOpts],
   );
   const allTechniquesSelectable = useMemo(
     () =>
@@ -118,9 +120,9 @@ export function usePowersStepSelectables(args: {
         dedupeByDocId(allTechniquesRaw),
         techniqueParts,
         recommendedTechniqueRefs,
-        techniqueSelectableOpts
+        techniqueSelectableOpts,
       ),
-    [allTechniquesRaw, techniqueParts, recommendedTechniqueRefs, techniqueSelectableOpts]
+    [allTechniquesRaw, techniqueParts, recommendedTechniqueRefs, techniqueSelectableOpts],
   );
 
   const selectedPowerItems = useMemo((): SelectableItem[] => {

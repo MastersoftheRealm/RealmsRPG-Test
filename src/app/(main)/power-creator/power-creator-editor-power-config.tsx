@@ -8,11 +8,7 @@ import { cn } from '@/lib/utils';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { CollapsibleSection } from '@/components/creator';
 import { Checkbox } from '@/components/ui';
-import {
-  formatAreaForDisplay,
-  type AreaConfig,
-  type DurationConfig,
-} from '@/lib/calculators';
+import { formatAreaForDisplay, type AreaConfig, type DurationConfig } from '@/lib/calculators';
 import { AREA_TYPES, DURATION_TYPES, DURATION_VALUES } from '@/lib/game/creator-constants';
 import type { RangeConfig } from './power-creator-types';
 import type { PowerAreaPartInfo } from './power-creator-editor-config';
@@ -49,7 +45,9 @@ export function PowerCreatorEditorPowerConfig({
       <CollapsibleSection
         title="Range"
         collapsedSummary={rangeSummary}
-        rightSlot={<SectionCostBadge en={sectionCosts.range.energyRaw} tp={sectionCosts.range.totalTP} />}
+        rightSlot={
+          <SectionCostBadge en={sectionCosts.range.energyRaw} tp={sectionCosts.range.totalTP} />
+        }
       >
         <div className="flex flex-wrap items-center gap-4">
           <ValueStepper
@@ -67,16 +65,22 @@ export function PowerCreatorEditorPowerConfig({
 
       <CollapsibleSection
         title="Area of Effect"
-        collapsedSummary={area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)}
+        collapsedSummary={
+          area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)
+        }
         titleAddon={<PowerCreatorHelp topic="area" />}
-        rightSlot={<SectionCostBadge en={sectionCosts.area.energyRaw} tp={sectionCosts.area.totalTP} />}
+        rightSlot={
+          <SectionCostBadge en={sectionCosts.area.energyRaw} tp={sectionCosts.area.totalTP} />
+        }
       >
-        <div className="flex flex-wrap items-center gap-4 mb-4">
+        <div className="mb-4 flex flex-wrap items-center gap-4">
           <select
             aria-label="Area of effect"
             value={area.type}
-            onChange={(e) => onAreaChange((a) => ({ ...a, type: e.target.value as AreaConfig['type'] }))}
-            className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+            onChange={(e) =>
+              onAreaChange((a) => ({ ...a, type: e.target.value as AreaConfig['type'] }))
+            }
+            className="rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
           >
             {AREA_TYPES.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -104,11 +108,11 @@ export function PowerCreatorEditorPowerConfig({
           </div>
         )}
         {areaPartInfo && (
-          <div className="mt-4 p-4 rounded-lg bg-surface-alt border border-border-light">
-            <p className="text-sm text-text-primary leading-relaxed">{areaPartInfo.description}</p>
+          <div className="mt-4 rounded-lg border border-border-light bg-surface-alt p-4">
+            <p className="text-sm leading-relaxed text-text-primary">{areaPartInfo.description}</p>
             {areaPartInfo.op1Desc && areaPartInfo.op1Level > 0 && (
-              <div className="mt-3 pt-3 border-t border-border-light">
-                <p className="text-sm font-medium text-text-secondary dark:text-text-primary mb-1">
+              <div className="mt-3 border-t border-border-light pt-3">
+                <p className="mb-1 text-sm font-medium text-text-secondary dark:text-text-primary">
                   Option 1 (Level {areaPartInfo.op1Level + 1}):
                 </p>
                 <p className="text-sm text-text-primary">{areaPartInfo.op1Desc}</p>
@@ -122,16 +126,22 @@ export function PowerCreatorEditorPowerConfig({
         title="Duration"
         collapsedSummary={durationSummary}
         titleAddon={<PowerCreatorHelp topic="duration" />}
-        rightSlot={<SectionCostBadge en={sectionCosts.duration.energyRaw} tp={sectionCosts.duration.totalTP} />}
+        rightSlot={
+          <SectionCostBadge
+            en={sectionCosts.duration.energyRaw}
+            tp={sectionCosts.duration.totalTP}
+          />
+        }
       >
-        <div className="flex flex-wrap items-center gap-4 mb-4">
+        <div className="mb-4 flex flex-wrap items-center gap-4">
           <select
             aria-label="Duration type"
             value={duration.type}
             onChange={(e) => {
               const newType = e.target.value as DurationConfig['type'];
               const newValue = DURATION_VALUES[newType]?.[0]?.value || 1;
-              const isShortDuration = newType === 'instant' || (newType === 'rounds' && newValue === 1);
+              const isShortDuration =
+                newType === 'instant' || (newType === 'rounds' && newValue === 1);
               if (isShortDuration) {
                 onDurationChange({
                   type: newType,
@@ -146,7 +156,7 @@ export function PowerCreatorEditorPowerConfig({
                 onDurationChange((d) => ({ ...d, type: newType, value: newValue }));
               }
             }}
-            className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+            className="rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
           >
             {DURATION_TYPES.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -154,42 +164,45 @@ export function PowerCreatorEditorPowerConfig({
               </option>
             ))}
           </select>
-          {duration.type !== 'instant' && duration.type !== 'permanent' && DURATION_VALUES[duration.type] && (
-            <select
-              aria-label="Duration value"
-              value={duration.value}
-              onChange={(e) => {
-                const newValue = parseInt(e.target.value);
-                if (duration.type === 'rounds' && newValue === 1) {
-                  onDurationChange({
-                    type: duration.type,
-                    value: newValue,
-                    applyDuration: duration.applyDuration ?? false,
-                    focus: false,
-                    noHarm: false,
-                    endsOnActivation: false,
-                    sustain: 0,
-                  });
-                } else {
-                  onDurationChange((d) => ({ ...d, value: newValue }));
-                }
-              }}
-              className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
-            >
-              {DURATION_VALUES[duration.type].map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          )}
+          {duration.type !== 'instant' &&
+            duration.type !== 'permanent' &&
+            DURATION_VALUES[duration.type] && (
+              <select
+                aria-label="Duration value"
+                value={duration.value}
+                onChange={(e) => {
+                  const newValue = parseInt(e.target.value);
+                  if (duration.type === 'rounds' && newValue === 1) {
+                    onDurationChange({
+                      type: duration.type,
+                      value: newValue,
+                      applyDuration: duration.applyDuration ?? false,
+                      focus: false,
+                      noHarm: false,
+                      endsOnActivation: false,
+                      sustain: 0,
+                    });
+                  } else {
+                    onDurationChange((d) => ({ ...d, value: newValue }));
+                  }
+                }}
+                className="rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+              >
+                {DURATION_VALUES[duration.type].map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            )}
         </div>
         {(() => {
-          const isShortDuration = duration.type === 'instant' || (duration.type === 'rounds' && duration.value === 1);
+          const isShortDuration =
+            duration.type === 'instant' || (duration.type === 'rounds' && duration.value === 1);
           return (
             <div
               className={cn(
-                'flex flex-wrap items-center gap-4 pt-3 border-t border-border-light',
+                'flex flex-wrap items-center gap-4 border-t border-border-light pt-3',
                 isShortDuration && 'opacity-50',
               )}
             >
@@ -207,7 +220,9 @@ export function PowerCreatorEditorPowerConfig({
               />
               <Checkbox
                 checked={duration.endsOnActivation || false}
-                onChange={(e) => onDurationChange((d) => ({ ...d, endsOnActivation: e.target.checked }))}
+                onChange={(e) =>
+                  onDurationChange((d) => ({ ...d, endsOnActivation: e.target.checked }))
+                }
                 label="Ends on Activation"
                 disabled={isShortDuration}
               />
@@ -216,8 +231,10 @@ export function PowerCreatorEditorPowerConfig({
                 <select
                   aria-label="Sustain cost in action points"
                   value={duration.sustain || 0}
-                  onChange={(e) => onDurationChange((d) => ({ ...d, sustain: parseInt(e.target.value) }))}
-                  className="px-2 py-1 border border-border-light rounded text-sm text-text-primary bg-surface disabled:opacity-50 disabled:cursor-not-allowed"
+                  onChange={(e) =>
+                    onDurationChange((d) => ({ ...d, sustain: parseInt(e.target.value) }))
+                  }
+                  className="rounded border border-border-light bg-surface px-2 py-1 text-sm text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={isShortDuration}
                 >
                   <option value={0}>None</option>
@@ -228,7 +245,7 @@ export function PowerCreatorEditorPowerConfig({
                 </select>
               </div>
               {isShortDuration && (
-                <span className="text-xs text-text-muted dark:text-text-secondary italic">(Requires 2+ rounds)</span>
+                <span className="text-xs text-text-muted italic">(Requires 2+ rounds)</span>
               )}
             </div>
           );

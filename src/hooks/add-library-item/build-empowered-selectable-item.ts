@@ -17,7 +17,7 @@ export type EmpoweredSelectableCodex = {
 
 export function buildEmpoweredPowerSelectableItem(
   item: UserTechnique,
-  codex?: EmpoweredSelectableCodex
+  codex?: EmpoweredSelectableCodex,
 ): SelectableItem {
   const raw = item as unknown as Record<string, unknown>;
   const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
@@ -41,7 +41,9 @@ export function buildEmpoweredPowerSelectableItem(
 
   const rangeSteps = (powerData.range as { steps?: number } | undefined)?.steps;
   const rangeStr =
-    typeof rangeSteps === 'number' && rangeSteps > 0 ? formatPowerRangeFromSteps(rangeSteps) : undefined;
+    typeof rangeSteps === 'number' && rangeSteps > 0
+      ? formatPowerRangeFromSteps(rangeSteps)
+      : undefined;
   // Range omitted from columns → labeled expanded chip (TASK-437)
   const metadataSections = buildEntityMetadataDetailSections({ range: rangeStr });
   const partsSection =

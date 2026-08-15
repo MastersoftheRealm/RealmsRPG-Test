@@ -5,12 +5,7 @@
  */
 
 /** Feat categories */
-export type FeatCategory = 
-  | 'combat'
-  | 'general'
-  | 'skill'
-  | 'heritage'
-  | 'archetype';
+export type FeatCategory = 'combat' | 'general' | 'skill' | 'heritage' | 'archetype';
 
 /** A feat from the database */
 export interface Feat {

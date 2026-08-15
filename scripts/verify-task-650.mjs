@@ -11,8 +11,7 @@ import { execSync } from 'node:child_process';
 const root = process.cwd();
 const env = fs.readFileSync(path.join(root, '.env.local'), 'utf8');
 const rawUrl =
-  env.match(/^DATABASE_URL=(.+)$/m)?.[1]?.trim() ||
-  env.match(/^DIRECT_URL=(.+)$/m)?.[1]?.trim();
+  env.match(/^DATABASE_URL=(.+)$/m)?.[1]?.trim() || env.match(/^DIRECT_URL=(.+)$/m)?.[1]?.trim();
 const cleaned = rawUrl?.replace(/^["']|["']$/g, '');
 if (!cleaned) {
   console.error('DATABASE_URL or DIRECT_URL missing in .env.local');

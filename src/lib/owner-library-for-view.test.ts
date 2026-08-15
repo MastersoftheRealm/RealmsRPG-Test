@@ -4,10 +4,8 @@ vi.mock('@/lib/supabase/server', () => ({
   createServiceRoleClient: vi.fn(),
 }));
 
-import {
-  collectCharacterLibraryRefIds,
-  getOwnerLibraryForView,
-} from './owner-library-for-view';
+import { collectCharacterLibraryRefIds } from './character-view-enrichment';
+import { getOwnerLibraryForView } from './owner-library-for-view';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
@@ -39,7 +37,7 @@ function createMockServiceClient(tables: Record<string, Row[]>, failOn?: string)
               return { data: null, error: { code: 'PGRST301', message: 'JWT expired' } };
             }
             const rows = (tables[table] ?? []).filter(
-              (row) => row.user_id === userId && ids.includes(String(row.id))
+              (row) => row.user_id === userId && ids.includes(String(row.id)),
             );
             return { data: rows, error: null };
           },
@@ -58,7 +56,10 @@ function powerRow(id: string, name: string, userId = OWNER): Row {
 describe('collectCharacterLibraryRefIds', () => {
   it('collects power, technique and equipment ids across stored ref shapes', () => {
     const refIds = collectCharacterLibraryRefIds({
-      powers: [{ id: 'power-1', name: 'Firebolt' }, { id: 42, name: 'Official Power' }],
+      powers: [
+        { id: 'power-1', name: 'Firebolt' },
+        { id: 42, name: 'Official Power' },
+      ],
       techniques: [{ docId: 'technique-1', name: 'Riposte' }],
       equipment: {
         weapons: [{ id: 'item-weapon', name: 'Sword' }],
@@ -175,7 +176,7 @@ describe('getOwnerLibraryForView', () => {
   it('throws when a library query fails instead of reporting an empty library', async () => {
     const { client } = createMockServiceClient(
       { user_powers: [powerRow('power-1', 'Firebolt')] },
-      'user_powers'
+      'user_powers',
     );
     mockCreateServiceRoleClient.mockReturnValue(client as never);
 
@@ -185,7 +186,7 @@ describe('getOwnerLibraryForView', () => {
         techniques: [],
         items: [],
         creatures: [],
-      })
+      }),
     ).rejects.toMatchObject({ code: 'PGRST301' });
   });
 

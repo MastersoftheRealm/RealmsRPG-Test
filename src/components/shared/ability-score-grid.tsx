@@ -23,10 +23,7 @@ export const ABILITY_DISPLAY_ORDER: AbilityName[] = [
 ];
 
 /** Display names for the six abilities. `shortName` kept on the exported shape for callers that want abbr; the grid always shows `name` (TASK-566). */
-export const ABILITY_DISPLAY_INFO: Record<
-  AbilityName,
-  { name: string; shortName: string }
-> = {
+export const ABILITY_DISPLAY_INFO: Record<AbilityName, { name: string; shortName: string }> = {
   strength: { name: 'Strength', shortName: 'STR' },
   vitality: { name: 'Vitality', shortName: 'VIT' },
   agility: { name: 'Agility', shortName: 'AGI' },
@@ -70,7 +67,7 @@ function normalizeAbilityKey(value?: AbilityName | null): string | null {
 export function resolveDistinctSecondaryAbility(
   secondaryAbility?: AbilityName | null,
   powerAbility?: AbilityName | null,
-  martialAbility?: AbilityName | null
+  martialAbility?: AbilityName | null,
 ): AbilityName | undefined {
   if (!secondaryAbility) return undefined;
   const key = normalizeAbilityKey(secondaryAbility);
@@ -91,7 +88,7 @@ function getPathAbilityHighlight(
   ability: AbilityName,
   powerAbility?: AbilityName,
   martialAbility?: AbilityName,
-  secondaryAbility?: AbilityName
+  secondaryAbility?: AbilityName,
 ): PathAbilityRole | null {
   const key = ability.toLowerCase();
   const pow = normalizeAbilityKey(powerAbility);
@@ -154,13 +151,13 @@ function PathAbilityLabel({ role, hybrid }: { role: PathAbilityRole; hybrid: boo
       aria-label={accessible}
       title={accessible}
       className={cn(
-        'pointer-events-none absolute left-1/2 top-0 z-10 max-w-[calc(100%-0.25rem)] -translate-x-1/2 -translate-y-1/2',
-        'truncate whitespace-nowrap rounded-pill border px-1.5 py-0.5 text-center text-[8px] font-semibold uppercase leading-none tracking-wide',
+        'pointer-events-none absolute top-0 left-1/2 z-10 max-w-[calc(100%-0.25rem)] -translate-x-1/2 -translate-y-1/2',
+        'truncate rounded-pill border px-1.5 py-0.5 text-center text-[8px] leading-none font-semibold tracking-wide whitespace-nowrap uppercase',
         'font-nunito shadow-sm sm:px-2 sm:text-[9px]',
         role === 'power' && 'border-power-border bg-power-light text-power-fg',
         role === 'martial' && 'border-martial-border bg-martial-light text-martial-fg',
         role === 'secondary' &&
-          'border-primary-subtle-border bg-primary-subtle-bg text-primary-subtle-fg dark:bg-primary-900/40'
+          'border-primary-subtle-border bg-primary-subtle-bg text-primary-subtle-fg dark:bg-primary-900/40',
       )}
     >
       {pathAbilityVisibleLabel(role, hybrid)}
@@ -200,9 +197,7 @@ export function AbilityScoreGrid({
       className={cn(
         // Only the pill's outer half needs grid clearance; each tile reserves its inner half below.
         'grid',
-        isCompact
-          ? 'gap-2 pt-2'
-          : 'gap-2 pt-2 sm:gap-3 md:gap-4',
+        isCompact ? 'gap-2 pt-2' : 'gap-2 pt-2 sm:gap-3 md:gap-4',
         // Display: 2-col phone (full names, less elongated), 3-col tablet, 6-col desktop.
         // Edit: wider cells so 44px steppers fit.
         // Compact + filtered: denser auto columns for overview subsets (Path More details).
@@ -211,7 +206,7 @@ export function AbilityScoreGrid({
           : isCompact && onlyAbilities?.length
             ? 'grid-cols-2 sm:grid-cols-3 md:grid-cols-4'
             : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
-        className
+        className,
       )}
     >
       {abilityOrder.map((ability) => {
@@ -221,7 +216,7 @@ export function AbilityScoreGrid({
           ability,
           powerAbility,
           martialAbility,
-          secondaryAbility
+          secondaryAbility,
         );
         const canInc = isEdit ? (canIncrease?.(ability) ?? false) : false;
         const canDec = isEdit ? (canDecrease?.(ability) ?? false) : false;
@@ -243,7 +238,7 @@ export function AbilityScoreGrid({
                     : 'flex-col items-center justify-center px-1.5 py-1.5 sm:px-2 sm:py-2',
                 // Reserve the pill's inner half on every tile so highlighted content stays aligned.
                 // Keep after py-* so twMerge preserves the top clearance (including sm:py-2).
-                isCompact ? 'pt-2.5 sm:pt-2.5' : 'pt-3 sm:pt-3'
+                isCompact ? 'pt-2.5 sm:pt-2.5' : 'pt-3 sm:pt-3',
               )}
             >
               {/* Name is WordHelpTip (focusable); score carries ability context — no tile aria-label. */}
@@ -251,7 +246,7 @@ export function AbilityScoreGrid({
                 content={getAbilityHelp(ability)}
                 label={`About ${info.name}`}
                 className={cn(
-                  'font-bold uppercase text-text-muted',
+                  'font-bold text-text-muted uppercase',
                   isEdit
                     ? 'text-xs tracking-wide sm:text-[11px] sm:tracking-wider'
                     : // Full-width label; keep WordHelpTip default 44px touch target (MOBILE_UX).
@@ -259,8 +254,8 @@ export function AbilityScoreGrid({
                         'w-full min-w-0 justify-center px-0.5 text-center leading-tight tracking-wide',
                         isCompact
                           ? 'text-[9px] sm:text-[10px]'
-                          : 'text-[10px] sm:text-[11px] sm:tracking-wider'
-                      )
+                          : 'text-[10px] sm:text-[11px] sm:tracking-wider',
+                      ),
                 )}
               >
                 {info.name}
@@ -269,7 +264,7 @@ export function AbilityScoreGrid({
               <div
                 className={cn(
                   'flex items-center justify-center',
-                  isEdit ? 'min-h-11 shrink-0' : 'mt-0.5'
+                  isEdit ? 'min-h-11 shrink-0' : 'mt-0.5',
                 )}
               >
                 {isEdit ? (
@@ -283,7 +278,7 @@ export function AbilityScoreGrid({
                       <span
                         className={cn(
                           'min-w-[2.75rem] text-center text-2xl font-bold',
-                          abilityValueClass(value)
+                          abilityValueClass(value),
                         )}
                         aria-label={`${info.name} ${formatBonus(value)}`}
                       >
@@ -303,8 +298,8 @@ export function AbilityScoreGrid({
                     {getIncreaseCost ? (
                       <span
                         className={cn(
-                          'h-3.5 text-[10px] font-medium leading-none',
-                          increaseCost > 1 && canInc ? 'text-warning-fg' : 'invisible'
+                          'h-3.5 text-[10px] leading-none font-medium',
+                          increaseCost > 1 && canInc ? 'text-warning-fg' : 'invisible',
                         )}
                       >
                         Next: {increaseCost} Points
@@ -318,7 +313,7 @@ export function AbilityScoreGrid({
                       isCompact
                         ? 'text-lg sm:min-w-[2.5rem] sm:text-xl'
                         : 'text-xl sm:min-w-[2.75rem] sm:text-2xl',
-                      abilityValueClass(value)
+                      abilityValueClass(value),
                     )}
                     aria-label={`${info.name} ${formatBonus(value)}`}
                   >

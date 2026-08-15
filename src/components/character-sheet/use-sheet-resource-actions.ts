@@ -7,7 +7,10 @@
 import { useCallback } from 'react';
 import { saveCharacterWithConflictRetry } from '@/services/character-service';
 import { apiUpload } from '@/lib/api-client';
-import { getArchetypeCodexLookupId, applyPathProficiencyForLevel } from '@/lib/game/archetype-display';
+import {
+  getArchetypeCodexLookupId,
+  applyPathProficiencyForLevel,
+} from '@/lib/game/archetype-display';
 import { calculateProficiency } from '@/lib/game/formulas';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
 import { ACTION_POINT_DEFAULTS } from '@/lib/game/constants';
@@ -16,7 +19,13 @@ import {
   withSyncedResourceFields,
   notifyLocalResourceEdit,
 } from '@/lib/encounter/character-resource-sync';
-import type { AbilityName, Archetype, Character, CharacterFeat, CharacterTempModifiers } from '@/types';
+import type {
+  AbilityName,
+  Archetype,
+  Character,
+  CharacterFeat,
+  CharacterTempModifiers,
+} from '@/types';
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { CodexFeat, Trait } from '@/hooks/codex-types';
 import { patchTempModifiers } from '@/lib/character/temp-modifiers';
@@ -139,11 +148,11 @@ export function useSheetResourceActions({
               dirty: { portrait: url },
               updatedAt: remote.updatedAt,
             }),
-          }
+          },
         );
         if (result.updatedAt) {
           setCharacter((prev) =>
-            prev ? { ...prev, portrait: url, updatedAt: result.updatedAt } : null
+            prev ? { ...prev, portrait: url, updatedAt: result.updatedAt } : null,
           );
         }
       } catch {
@@ -172,11 +181,11 @@ export function useSheetResourceActions({
               dirty: { portrait: url },
               updatedAt: remote.updatedAt,
             }),
-          }
+          },
         );
         if (result.updatedAt) {
           setCharacter((prev) =>
-            prev ? { ...prev, portrait: url, updatedAt: result.updatedAt } : null
+            prev ? { ...prev, portrait: url, updatedAt: result.updatedAt } : null,
           );
         }
       } catch {
@@ -251,7 +260,10 @@ export function useSheetResourceActions({
         const currentHP = prev.currentHealth ?? prev.health?.current ?? oldMax;
         const shouldBump = currentHP >= oldMax;
         const newCurrent = shouldBump ? currentHP + delta : currentHP;
-        return withSyncedResourceFields({ ...prev, healthPoints: newPoints }, { currentHealth: newCurrent });
+        return withSyncedResourceFields(
+          { ...prev, healthPoints: newPoints },
+          { currentHealth: newCurrent },
+        );
       });
     },
     [character, setCharacter, rules],
@@ -272,7 +284,10 @@ export function useSheetResourceActions({
         const currentEN = prev.currentEnergy ?? prev.energy?.current ?? oldMax;
         const shouldBump = currentEN >= oldMax;
         const newCurrent = shouldBump ? currentEN + delta : currentEN;
-        return withSyncedResourceFields({ ...prev, energyPoints: newPoints }, { currentEnergy: newCurrent });
+        return withSyncedResourceFields(
+          { ...prev, energyPoints: newPoints },
+          { currentEnergy: newCurrent },
+        );
       });
     },
     [character, setCharacter, rules],
@@ -290,7 +305,8 @@ export function useSheetResourceActions({
       let dbFeat = featsDb.find((f: CodexFeat) => f.id === String(feat.id));
       if (!dbFeat && feat.name) {
         dbFeat = featsDb.find(
-          (f: CodexFeat) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase(),
+          (f: CodexFeat) =>
+            String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase(),
         );
       }
       return dbFeat as CodexFeat | undefined;
@@ -355,14 +371,17 @@ export function useSheetResourceActions({
     (hpRestored: number, enRestored: number, resetPartialFeats: boolean) => {
       if (!character || !calculatedStats) return;
 
-      const currentHP = character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
-      const currentEN = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
+      const currentHP =
+        character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
+      const currentEN =
+        character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
 
       const getCodexFeat = (feat: CharacterFeat) => {
         let dbFeat = featsDb.find((f: CodexFeat) => f.id === String(feat.id));
         if (!dbFeat && feat.name) {
           dbFeat = featsDb.find(
-            (f: CodexFeat) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase(),
+            (f: CodexFeat) =>
+              String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase(),
           );
         }
         return dbFeat as CodexFeat | undefined;
@@ -433,7 +452,11 @@ export function useSheetResourceActions({
       const pathArch = lookupId
         ? (codexArchetypes.find((a) => a.id === lookupId) as Character['archetype'] | undefined)
         : undefined;
-      const profUpdate = applyPathProficiencyForLevel(character, newLevel, pathArch ?? character.archetype);
+      const profUpdate = applyPathProficiencyForLevel(
+        character,
+        newLevel,
+        pathArch ?? character.archetype,
+      );
 
       setCharacter((prev) => {
         if (!prev) return null;

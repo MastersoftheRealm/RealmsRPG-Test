@@ -5,7 +5,7 @@
  * =============================================
  * Consistent column header row for all list views.
  * Matches Codex/Library patterns with ascending/descending sort functionality.
- * 
+ *
  * Features:
  * - Grid-based layout matching GridListRow columns (desktop)
  * - Mobile: expandable "Sort by" control using same sort logic (no column headers on small screens)
@@ -113,7 +113,7 @@ export function ListHeader({
   const gridTemplate = hasThumbnailColumn
     ? gridTemplateColumnsWithThumbnail(baseGridTemplate)
     : baseGridTemplate;
-  
+
   const useRowChrome = hasListHeaderRowChrome(rowChrome) && !rightSlotWidth;
   const selectionColumnInGrid =
     !rightSlotWidth && hasSelectionColumn && !rowChrome?.externalSelection;
@@ -130,11 +130,10 @@ export function ListHeader({
   };
 
   const sortableColumns = [
-    ...displayColumns.filter((c) => c.sortable !== false && onSort && c.key !== THUMBNAIL_HEADER_COLUMN_KEY),
-    ...(rowChrome?.rightSlot &&
-    rowChrome.rightSlotLabel &&
-    rowChrome.rightSlotSortKey &&
-    onSort
+    ...displayColumns.filter(
+      (c) => c.sortable !== false && onSort && c.key !== THUMBNAIL_HEADER_COLUMN_KEY,
+    ),
+    ...(rowChrome?.rightSlot && rowChrome.rightSlotLabel && rowChrome.rightSlotSortKey && onSort
       ? [
           {
             key: rowChrome.rightSlotSortKey,
@@ -145,7 +144,10 @@ export function ListHeader({
       : []),
   ];
   const hasSortable = sortableColumns.length > 0;
-  const currentCol = sortState && hasSortable ? sortableColumns.find((c) => c.key === sortState.col) : sortableColumns[0];
+  const currentCol =
+    sortState && hasSortable
+      ? sortableColumns.find((c) => c.key === sortState.col)
+      : sortableColumns[0];
   const currentLabel = currentCol?.label ?? sortState?.col ?? 'Name';
   const currentDir = (sortState?.dir ?? 1) === 1 ? 'A→Z' : 'Z→A';
 
@@ -164,10 +166,8 @@ export function ListHeader({
 
   // Use same horizontal padding as GridListRow so column content aligns with headers site-wide
   const rowPaddingX = compact ? 'px-3' : 'px-4';
-  const headerTypography =
-    'text-xs font-semibold text-primary-fg uppercase tracking-wide';
-  const headerBarSurface =
-    'bg-primary-subtle-bg border border-primary-subtle-border rounded-lg';
+  const headerTypography = 'text-xs font-semibold text-primary-fg uppercase tracking-wide';
+  const headerBarSurface = 'bg-primary-subtle-bg border border-primary-subtle-border rounded-lg';
 
   const desktopGridOnlyClasses = cn(
     'hidden lg:grid gap-2 py-2 mb-2',
@@ -175,7 +175,7 @@ export function ListHeader({
     headerTypography,
     !rightSlotWidth && rowPaddingX,
     rightSlotWidth && 'px-3 min-w-0',
-    className
+    className,
   );
 
   const headerContent = (
@@ -186,7 +186,7 @@ export function ListHeader({
         const isActive = sortState?.col === column.key;
         // First data column (name) is left-aligned; thumb spacer + other cols default to center
         const firstDataColumnIndex = displayColumns.findIndex(
-          (c) => c.key !== THUMBNAIL_HEADER_COLUMN_KEY
+          (c) => c.key !== THUMBNAIL_HEADER_COLUMN_KEY,
         );
         const align =
           typeof column.align !== 'undefined'
@@ -194,7 +194,7 @@ export function ListHeader({
             : index === firstDataColumnIndex || column.key === 'name'
               ? 'left'
               : 'center';
-        
+
         if (!isSortable) {
           return (
             <span
@@ -212,23 +212,24 @@ export function ListHeader({
             key={column.key}
             onClick={() => handleColumnClick(column)}
             className={cn(
-              'w-full inline-flex items-center gap-1 transition-colors hover:text-primary-fg-hover',
+              'inline-flex w-full items-center gap-1 transition-colors hover:text-primary-fg-hover',
               column.className,
               justifyStyles[align],
               alignStyles[align],
-              isActive && 'text-primary-fg'
+              isActive && 'text-primary-fg',
             )}
           >
             {column.label.toUpperCase()}
-            {isActive && (
-              sortState.dir === 1 
-                ? <ChevronUp className="w-3 h-3" /> 
-                : <ChevronDown className="w-3 h-3" />
-            )}
+            {isActive &&
+              (sortState.dir === 1 ? (
+                <ChevronUp className="h-3 w-3" />
+              ) : (
+                <ChevronDown className="h-3 w-3" />
+              ))}
           </button>
         );
       })}
-      
+
       {/* Selection column - no text, just space for the toggle buttons */}
       {selectionColumnInGrid && <span className="text-center" />}
     </>
@@ -240,31 +241,35 @@ export function ListHeader({
         {/* Desktop: full-width header bar including qty chrome spacer (TASK-702) */}
         <div
           className={cn(
-            'hidden lg:flex items-stretch w-full mb-2 overflow-hidden',
+            'mb-2 hidden w-full items-stretch overflow-hidden lg:flex',
             headerBarSurface,
             headerTypography,
-            className
+            className,
           )}
         >
           <div
-            className={cn('flex-1 min-w-0 grid gap-2 py-2', 'px-3 min-w-0')}
+            className={cn('grid min-w-0 flex-1 gap-2 py-2', 'min-w-0 px-3')}
             style={{ gridTemplateColumns: gridTemplate }}
           >
             {headerContent}
           </div>
-          <div className="flex-shrink-0 self-stretch" style={{ width: rightSlotWidth }} aria-hidden />
+          <div
+            className="flex-shrink-0 self-stretch"
+            style={{ width: rightSlotWidth }}
+            aria-hidden
+          />
         </div>
         {/* Mobile: sort-by dropdown (same sort logic) */}
         {hasSortable && (
-          <div ref={mobileSortRef} className="lg:hidden mb-2">
+          <div ref={mobileSortRef} className="mb-2 lg:hidden">
             <button
               type="button"
               onClick={() => setMobileSortOpen((o) => !o)}
               className={cn(
-                'flex items-center justify-between w-full gap-2 py-2.5 px-3 rounded-lg border text-left text-sm font-medium',
-                'bg-primary-subtle-bg border-primary-subtle-border',
+                'flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left text-sm font-medium',
+                'border-primary-subtle-border bg-primary-subtle-bg',
                 'text-primary-fg',
-                'hover:bg-primary-subtle-bg-hover transition-colors'
+                'transition-colors hover:bg-primary-subtle-bg-hover',
               )}
               aria-expanded={mobileSortOpen}
               aria-haspopup="listbox"
@@ -273,13 +278,18 @@ export function ListHeader({
               <span className="flex items-center gap-1.5">
                 <span className="text-primary-link-fg">Sort by</span>
                 <span>{currentLabel}</span>
-                <span className="text-primary-link-fg text-xs">({currentDir})</span>
+                <span className="text-xs text-primary-link-fg">({currentDir})</span>
               </span>
-              <ChevronsUpDown className={cn('w-4 h-4 shrink-0 transition-transform', mobileSortOpen && 'rotate-180')} />
+              <ChevronsUpDown
+                className={cn(
+                  'h-4 w-4 shrink-0 transition-transform',
+                  mobileSortOpen && 'rotate-180',
+                )}
+              />
             </button>
             {mobileSortOpen && (
               <div
-                className="mt-1 rounded-lg border border-border-light bg-surface shadow-lg overflow-hidden"
+                className="mt-1 overflow-hidden rounded-lg border border-border-light bg-surface shadow-lg"
                 role="listbox"
               >
                 {sortableColumns.map((column) => {
@@ -295,17 +305,18 @@ export function ListHeader({
                         setMobileSortOpen(false);
                       }}
                       className={cn(
-                        'w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left min-h-[44px]',
-                        'hover:bg-surface-alt transition-colors',
-                        isActive && 'bg-primary-subtle-bg text-primary-fg font-medium'
+                        'flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm',
+                        'transition-colors hover:bg-surface-alt',
+                        isActive && 'bg-primary-subtle-bg font-medium text-primary-fg',
                       )}
                     >
                       <span>{column.label}</span>
-                      {isActive && (
-                        sortState.dir === 1
-                          ? <ChevronUp className="w-4 h-4 text-primary-link-fg" />
-                          : <ChevronDown className="w-4 h-4 text-primary-link-fg" />
-                      )}
+                      {isActive &&
+                        (sortState.dir === 1 ? (
+                          <ChevronUp className="h-4 w-4 text-primary-link-fg" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-primary-link-fg" />
+                        ))}
                     </button>
                   );
                 })}
@@ -327,10 +338,10 @@ export function ListHeader({
       <>
         <div
           className={cn(
-            'hidden lg:flex items-stretch w-full mb-2 overflow-hidden',
+            'mb-2 hidden w-full items-stretch overflow-hidden lg:flex',
             headerBarSurface,
             headerTypography,
-            className
+            className,
           )}
         >
           {rowChrome.leftSlot && (
@@ -341,14 +352,14 @@ export function ListHeader({
             />
           )}
           <div
-            className={cn('flex-1 min-w-0 grid gap-2 py-2', rowPaddingX)}
+            className={cn('grid min-w-0 flex-1 gap-2 py-2', rowPaddingX)}
             style={{ gridTemplateColumns: finalGridTemplate }}
           >
             {headerContent}
           </div>
           {rowChrome.rightSlot && (
             <div
-              className="flex-shrink-0 self-stretch flex items-center justify-center px-0.5"
+              className="flex flex-shrink-0 items-center justify-center self-stretch px-0.5"
               style={{ width: GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH }}
               aria-hidden={!rightSlotLabel || undefined}
             >
@@ -357,16 +368,16 @@ export function ListHeader({
                   type="button"
                   onClick={() => onSort!(rightSlotSortKey!)}
                   className={cn(
-                    'w-full inline-flex items-center justify-center gap-1 transition-colors hover:text-primary-fg-hover',
-                    rightSlotActive && 'text-primary-fg'
+                    'inline-flex w-full items-center justify-center gap-1 transition-colors hover:text-primary-fg-hover',
+                    rightSlotActive && 'text-primary-fg',
                   )}
                 >
                   {rightSlotLabel!.toUpperCase()}
                   {rightSlotActive &&
                     (sortState!.dir === 1 ? (
-                      <ChevronUp className="w-3 h-3" />
+                      <ChevronUp className="h-3 w-3" />
                     ) : (
-                      <ChevronDown className="w-3 h-3" />
+                      <ChevronDown className="h-3 w-3" />
                     ))}
                 </button>
               ) : rightSlotLabel ? (
@@ -397,15 +408,15 @@ export function ListHeader({
           )}
         </div>
         {hasSortable && (
-          <div ref={mobileSortRef} className="lg:hidden mb-2">
+          <div ref={mobileSortRef} className="mb-2 lg:hidden">
             <button
               type="button"
               onClick={() => setMobileSortOpen((o) => !o)}
               className={cn(
-                'flex items-center justify-between w-full gap-2 py-2.5 px-3 rounded-lg border text-left text-sm font-medium',
-                'bg-primary-subtle-bg border-primary-subtle-border',
+                'flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left text-sm font-medium',
+                'border-primary-subtle-border bg-primary-subtle-bg',
                 'text-primary-fg',
-                'hover:bg-primary-subtle-bg-hover transition-colors'
+                'transition-colors hover:bg-primary-subtle-bg-hover',
               )}
               aria-expanded={mobileSortOpen}
               aria-haspopup="listbox"
@@ -414,13 +425,18 @@ export function ListHeader({
               <span className="flex items-center gap-1.5">
                 <span className="text-primary-link-fg">Sort by</span>
                 <span>{currentLabel}</span>
-                <span className="text-primary-link-fg text-xs">({currentDir})</span>
+                <span className="text-xs text-primary-link-fg">({currentDir})</span>
               </span>
-              <ChevronsUpDown className={cn('w-4 h-4 shrink-0 transition-transform', mobileSortOpen && 'rotate-180')} />
+              <ChevronsUpDown
+                className={cn(
+                  'h-4 w-4 shrink-0 transition-transform',
+                  mobileSortOpen && 'rotate-180',
+                )}
+              />
             </button>
             {mobileSortOpen && (
               <div
-                className="mt-1 rounded-lg border border-border-light bg-surface shadow-lg overflow-hidden"
+                className="mt-1 overflow-hidden rounded-lg border border-border-light bg-surface shadow-lg"
                 role="listbox"
               >
                 {sortableColumns.map((column) => {
@@ -436,17 +452,17 @@ export function ListHeader({
                         setMobileSortOpen(false);
                       }}
                       className={cn(
-                        'w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left min-h-[44px]',
-                        'hover:bg-surface-alt transition-colors',
-                        isActive && 'bg-primary-subtle-bg text-primary-fg font-medium'
+                        'flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm',
+                        'transition-colors hover:bg-surface-alt',
+                        isActive && 'bg-primary-subtle-bg font-medium text-primary-fg',
                       )}
                     >
                       <span>{column.label}</span>
                       {isActive &&
                         (sortState!.dir === 1 ? (
-                          <ChevronUp className="w-4 h-4 shrink-0" />
+                          <ChevronUp className="h-4 w-4 shrink-0" />
                         ) : (
-                          <ChevronDown className="w-4 h-4 shrink-0" />
+                          <ChevronDown className="h-4 w-4 shrink-0" />
                         ))}
                     </button>
                   );
@@ -462,23 +478,20 @@ export function ListHeader({
   return (
     <>
       {/* Desktop: grid header */}
-      <div
-        className={desktopGridOnlyClasses}
-        style={{ gridTemplateColumns: finalGridTemplate }}
-      >
+      <div className={desktopGridOnlyClasses} style={{ gridTemplateColumns: finalGridTemplate }}>
         {headerContent}
       </div>
       {/* Mobile: sort-by dropdown (same sort logic) */}
       {hasSortable && (
-        <div ref={mobileSortRef} className="lg:hidden mb-2">
+        <div ref={mobileSortRef} className="mb-2 lg:hidden">
           <button
             type="button"
             onClick={() => setMobileSortOpen((o) => !o)}
             className={cn(
-              'flex items-center justify-between w-full gap-2 py-2.5 px-3 rounded-lg border text-left text-sm font-medium',
-              'bg-primary-subtle-bg border-primary-subtle-border',
+              'flex w-full items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left text-sm font-medium',
+              'border-primary-subtle-border bg-primary-subtle-bg',
               'text-primary-fg',
-              'hover:bg-primary-subtle-bg-hover transition-colors'
+              'transition-colors hover:bg-primary-subtle-bg-hover',
             )}
             aria-expanded={mobileSortOpen}
             aria-haspopup="listbox"
@@ -487,13 +500,18 @@ export function ListHeader({
             <span className="flex items-center gap-1.5">
               <span className="text-primary-link-fg">Sort by</span>
               <span>{currentLabel}</span>
-              <span className="text-primary-link-fg text-xs">({currentDir})</span>
+              <span className="text-xs text-primary-link-fg">({currentDir})</span>
             </span>
-            <ChevronsUpDown className={cn('w-4 h-4 shrink-0 transition-transform', mobileSortOpen && 'rotate-180')} />
+            <ChevronsUpDown
+              className={cn(
+                'h-4 w-4 shrink-0 transition-transform',
+                mobileSortOpen && 'rotate-180',
+              )}
+            />
           </button>
           {mobileSortOpen && (
             <div
-              className="mt-1 rounded-lg border border-border-light bg-surface shadow-lg overflow-hidden"
+              className="mt-1 overflow-hidden rounded-lg border border-border-light bg-surface shadow-lg"
               role="listbox"
             >
               {sortableColumns.map((column) => {
@@ -509,17 +527,18 @@ export function ListHeader({
                       setMobileSortOpen(false);
                     }}
                     className={cn(
-                      'w-full flex items-center justify-between gap-2 px-3 py-2.5 text-sm text-left min-h-[44px]',
-                      'hover:bg-surface-alt transition-colors',
-                      isActive && 'bg-primary-subtle-bg text-primary-fg font-medium'
+                      'flex min-h-[44px] w-full items-center justify-between gap-2 px-3 py-2.5 text-left text-sm',
+                      'transition-colors hover:bg-surface-alt',
+                      isActive && 'bg-primary-subtle-bg font-medium text-primary-fg',
                     )}
                   >
                     <span>{column.label}</span>
-                    {isActive && (
-                      sortState.dir === 1
-                        ? <ChevronUp className="w-4 h-4 text-primary-link-fg" />
-                        : <ChevronDown className="w-4 h-4 text-primary-link-fg" />
-                    )}
+                    {isActive &&
+                      (sortState.dir === 1 ? (
+                        <ChevronUp className="h-4 w-4 text-primary-link-fg" />
+                      ) : (
+                        <ChevronDown className="h-4 w-4 text-primary-link-fg" />
+                      ))}
                   </button>
                 );
               })}
@@ -530,4 +549,3 @@ export function ListHeader({
     </>
   );
 }
-

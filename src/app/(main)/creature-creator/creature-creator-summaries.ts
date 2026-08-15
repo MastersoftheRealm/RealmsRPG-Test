@@ -4,10 +4,7 @@
 
 import type { CreatureState } from './creature-creator-types';
 
-function summarizeNamedItems(
-  items: Array<{ name?: string }>,
-  emptyLabel: string,
-): string {
+function summarizeNamedItems(items: Array<{ name?: string }>, emptyLabel: string): string {
   if (items.length === 0) return emptyLabel;
   const names = items.slice(0, 4).map((item) => item.name || 'Unknown');
   const more = items.length > 4 ? ` +${items.length - 4} more` : '';

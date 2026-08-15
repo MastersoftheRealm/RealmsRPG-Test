@@ -1,4 +1,11 @@
-import type { UserItem, UserPower, UserTechnique, LibraryPower, LibraryTechnique, LibraryItem } from '@/types/library';
+import type {
+  UserItem,
+  UserPower,
+  UserTechnique,
+  LibraryPower,
+  LibraryTechnique,
+  LibraryItem,
+} from '@/types/library';
 import type { EqItem } from './types';
 
 export function normalizePublicPower(p: LibraryPower): UserPower {

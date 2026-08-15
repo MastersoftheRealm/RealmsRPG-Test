@@ -75,7 +75,7 @@ describe('empowered-technique-display', () => {
     const chips = deriveEmpoweredTechniquePartChips(
       empoweredSample,
       [frightenPart],
-      [customTechniquePart]
+      [customTechniquePart],
     );
     expect(chips.length).toBeGreaterThanOrEqual(2);
     expect(chips.some((c) => c.name.includes('Frighten'))).toBe(true);

@@ -31,7 +31,7 @@ console.log(`FEATURE_INDEX path check OK (${listedPaths.size} paths).`);
 const gen = spawnSync(
   process.execPath,
   [path.join(__dirname, 'generate-feature-index-barrels.js'), '--check'],
-  { encoding: 'utf8' }
+  { encoding: 'utf8' },
 );
 if (gen.stdout) process.stdout.write(gen.stdout);
 if (gen.stderr) process.stderr.write(gen.stderr);

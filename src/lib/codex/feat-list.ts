@@ -54,7 +54,7 @@ export interface FeatSelectableColumnOptions {
 
 /** Compose selectable feat headers without forking the Codex column definitions. */
 export function featSelectableHeaderColumns(
-  options: FeatSelectableColumnOptions = {}
+  options: FeatSelectableColumnOptions = {},
 ): typeof FEAT_SELECTABLE_HEADER_COLUMNS {
   return options.omitRequiredLevel
     ? FEAT_SELECTABLE_HEADER_COLUMNS.filter((header) => header.key !== 'lvl_req')
@@ -67,7 +67,7 @@ export function featSelectableHeaderColumns(
  */
 export function featSelectableColumns(
   feat: Feat,
-  options: FeatSelectableColumnOptions = {}
+  options: FeatSelectableColumnOptions = {},
 ): ColumnValue[] {
   const values = buildFeatGridColumns(feat, 'codex');
   const headers = CODEX_FEAT_HEADER_COLUMNS.filter((h) => h.key !== 'name');
@@ -77,9 +77,7 @@ export function featSelectableColumns(
     value: values[i]?.value ?? '-',
     align: 'center' as const,
   }));
-  return options.omitRequiredLevel
-    ? columns.filter((column) => column.key !== 'lvl_req')
-    : columns;
+  return options.omitRequiredLevel ? columns.filter((column) => column.key !== 'lvl_req') : columns;
 }
 
 export interface FeatFilterOptions {
@@ -124,7 +122,7 @@ function featPathFamilyId(feat: FeatPathRow): string {
 /** Path filter match: the row itself or its feat-family base (higher ranks stay). */
 export function featMatchesPathRecommendedIds(
   feat: FeatPathRow,
-  pathRecommendedIds: ReadonlySet<string> | null | undefined
+  pathRecommendedIds: ReadonlySet<string> | null | undefined,
 ): boolean {
   if (!pathRecommendedIds) return true;
   return (
@@ -136,7 +134,7 @@ export function featMatchesPathRecommendedIds(
 /** Families that have at least one path-recommended rank — keep sibling ranks listed. */
 export function featFamilyIdsMatchingPath(
   feats: readonly FeatPathRow[],
-  pathRecommendedIds: ReadonlySet<string> | null | undefined
+  pathRecommendedIds: ReadonlySet<string> | null | undefined,
 ): Set<string> | null {
   if (!pathRecommendedIds) return null;
   const families = new Set<string>();
@@ -152,7 +150,7 @@ export function featFamilyIdsMatchingPath(
 export function featPathChipNames(
   index: PathRecommendationIndex,
   feat: Feat,
-  selectedPathIds: readonly string[]
+  selectedPathIds: readonly string[],
 ): string[] {
   const names = [
     ...pathNamesForEntity(index, feat.id, selectedPathIds),
@@ -187,7 +185,11 @@ export function buildFeatFilterOptions(feats: Feat[] | undefined): FeatFilterOpt
   };
 }
 
-export function filterFeats(feats: Feat[], filters: FeatListFilters, options?: FilterFeatsOptions): Feat[] {
+export function filterFeats(
+  feats: Feat[],
+  filters: FeatListFilters,
+  options?: FilterFeatsOptions,
+): Feat[] {
   const { character, showUnqualified, skills, allFeats, pathRecommendedIds } = options ?? {};
 
   return feats.filter((f) => {
@@ -218,7 +220,8 @@ export function filterFeats(feats: Feat[], filters: FeatListFilters, options?: F
       }
     }
 
-    if (filters.categories.length > 0 && !filters.categories.includes(f.category || '')) return false;
+    if (filters.categories.length > 0 && !filters.categories.includes(f.category || ''))
+      return false;
 
     if (filters.abilities.length > 0) {
       const featAbilities = normalizeFeatAbilities(f.ability);
@@ -252,9 +255,10 @@ export function buildFeatDetailSections(
    * `feat.char_feat`. `hideTypeSection` omits Type chips when the list context
    * already separates archetype vs character feats (no column duplication).
    */
-  opts?: { isCharacterFeat?: boolean; hideTypeSection?: boolean }
+  opts?: { isCharacterFeat?: boolean; hideTypeSection?: boolean },
 ): Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> {
-  const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
+  const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> =
+    [];
 
   const isCharacterFeat = opts?.isCharacterFeat ?? feat.char_feat;
   if (!opts?.hideTypeSection) {
@@ -301,12 +305,10 @@ export function buildFeatDetailSections(
 
 export function buildFeatGridColumns(
   feat: Feat,
-  variant: 'codex' | 'admin'
+  variant: 'codex' | 'admin',
 ): Array<{ key: string; value: string }> {
   const reqLevel =
-    variant === 'admin' && (feat.lvl_req === 0 || feat.lvl_req == null)
-      ? '-'
-      : feat.lvl_req || '-';
+    variant === 'admin' && (feat.lvl_req === 0 || feat.lvl_req == null) ? '-' : feat.lvl_req || '-';
   const uses =
     variant === 'admin' && (feat.uses_per_rec === 0 || feat.uses_per_rec == null)
       ? '-'

@@ -9,7 +9,11 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createClient, createServiceRoleClient } from '@/lib/supabase/server';
-import { detectImageMime, extensionForImageMime, validateImageMagicBytes } from '@/lib/validate-image';
+import {
+  detectImageMime,
+  extensionForImageMime,
+  validateImageMagicBytes,
+} from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 import {
   REALMS_IMAGES_BUCKET,
@@ -34,7 +38,10 @@ const MAX_SIZE = 5 * 1024 * 1024;
 
 function parseCategoryFilter(raw: string | null): RealmsImageCategory[] | null {
   if (!raw?.trim()) return [];
-  const parts = raw.split(',').map((s) => s.trim().toLowerCase()).filter(Boolean);
+  const parts = raw
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
   const out: RealmsImageCategory[] = [];
   for (const p of parts) {
     if (!isRealmsImageCategory(p)) return null;
@@ -64,10 +71,15 @@ export async function GET(request: NextRequest) {
         .select('image_id')
         .in('category', categories);
       if (catError) {
-        return apiErrorResponse('Failed to list images', 500, 'GET /api/images (categories)', catError);
+        return apiErrorResponse(
+          'Failed to list images',
+          500,
+          'GET /api/images (categories)',
+          catError,
+        );
       }
       filteredIds = Array.from(
-        new Set((catRows ?? []).map((r) => String((r as { image_id: string }).image_id)))
+        new Set((catRows ?? []).map((r) => String((r as { image_id: string }).image_id))),
       );
       if (filteredIds.length === 0) {
         return NextResponse.json({ images: [] });
@@ -117,7 +129,10 @@ export async function POST(request: NextRequest) {
   });
   const { success } = await uploadLimiter.check(key);
   if (!success) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    );
   }
 
   try {
@@ -162,7 +177,12 @@ export async function POST(request: NextRequest) {
       .upload(storagePath, file, { upsert: false, contentType });
 
     if (uploadError) {
-      return apiErrorResponse('Upload failed', 500, 'POST /api/images (storage upload)', uploadError);
+      return apiErrorResponse(
+        'Upload failed',
+        500,
+        'POST /api/images (storage upload)',
+        uploadError,
+      );
     }
 
     const {

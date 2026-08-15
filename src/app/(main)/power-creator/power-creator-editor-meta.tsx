@@ -31,21 +31,25 @@ export function PowerCreatorEditorMeta({
   onImageChange,
 }: PowerCreatorEditorMetaProps) {
   return (
-    <Card className="shadow-md p-6">
+    <Card className="p-6 shadow-md">
       <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm text-text-secondary">
-            Building a hybrid? Use the dedicated empowered creator for combined power + technique rules.
+            Building a hybrid? Use the dedicated empowered creator for combined power + technique
+            rules.
           </p>
           <Link
             href="/empowered-technique-creator"
-            className="inline-flex items-center rounded-lg border border-border-light bg-surface-alt px-3 py-2 text-sm font-medium text-text-primary hover:bg-surface min-h-[44px]"
+            className="inline-flex min-h-[44px] items-center rounded-lg border border-border-light bg-surface-alt px-3 py-2 text-sm font-medium text-text-primary hover:bg-surface"
           >
             Open Empowered Creator
           </Link>
         </div>
         <div>
-          <label htmlFor="power-creator-name" className="block text-sm font-medium text-text-secondary mb-1">
+          <label
+            htmlFor="power-creator-name"
+            className="mb-1 block text-sm font-medium text-text-secondary"
+          >
             Power Name *
           </label>
           <Input
@@ -58,7 +62,10 @@ export function PowerCreatorEditorMeta({
         </div>
         <div>
           <div className="mb-1 flex items-center gap-1.5">
-            <label htmlFor="power-creator-description" className="text-sm font-medium text-text-secondary">
+            <label
+              htmlFor="power-creator-description"
+              className="text-sm font-medium text-text-secondary"
+            >
               Description
             </label>
             <PowerCreatorHelp topic="description" />

@@ -20,7 +20,7 @@ export function isPathGuidanceAudience(value: unknown): value is PathGuidanceAud
  * use the title heuristic (TASK-514 / ADR-0004).
  */
 export function resolvePathGuidanceAudience(
-  group: Pick<PathGuidanceGroup, 'title' | 'audience'>
+  group: Pick<PathGuidanceGroup, 'title' | 'audience'>,
 ): PathGuidanceAudience {
   if (isPathGuidanceAudience(group.audience)) return group.audience;
   return group.title.toLowerCase().includes('character') ? 'character' : 'archetype';
@@ -29,17 +29,15 @@ export function resolvePathGuidanceAudience(
 /** Feat-bearing groups for a guided step audience. */
 export function filterFeatGuidanceGroups(
   groups: PathGuidanceGroup[] | undefined,
-  audience: PathGuidanceAudience
+  audience: PathGuidanceAudience,
 ): PathGuidanceGroup[] {
   return (groups ?? []).filter(
-    (g) => (g.feats?.length ?? 0) > 0 && resolvePathGuidanceAudience(g) === audience
+    (g) => (g.feats?.length ?? 0) > 0 && resolvePathGuidanceAudience(g) === audience,
   );
 }
 
 /** Union of feat ids across guidance groups that designate feats. */
-export function unionFeatIdsFromGuidanceGroups(
-  groups: PathGuidanceGroup[] | undefined
-): string[] {
+export function unionFeatIdsFromGuidanceGroups(groups: PathGuidanceGroup[] | undefined): string[] {
   const ids = new Set<string>();
   for (const group of groups ?? []) {
     for (const id of group.feats ?? []) {
@@ -55,16 +53,16 @@ export function unionFeatIdsFromGuidanceGroups(
  */
 export function mergeFeatGuidanceGroups(
   existing: PathGuidanceGroup[] | undefined,
-  featGroups: PathGuidanceGroup[]
+  featGroups: PathGuidanceGroup[],
 ): PathGuidanceGroup[] {
-  const nonFeat = (existing ?? []).filter((g) => !(g.feats?.length));
+  const nonFeat = (existing ?? []).filter((g) => !g.feats?.length);
   return [...featGroups, ...nonFeat];
 }
 
 /** Seed a single archetype feat group when legacy paths only have flat `level1.feats`. */
 export function seedFeatGroupsFromFlatFeats(
   flatFeats: string[],
-  existingGroups?: PathGuidanceGroup[]
+  existingGroups?: PathGuidanceGroup[],
 ): PathGuidanceGroup[] {
   const featGroups = (existingGroups ?? []).filter((g) => (g.feats?.length ?? 0) > 0);
   if (featGroups.length > 0) return existingGroups ?? [];
@@ -79,7 +77,14 @@ export function seedFeatGroupsFromFlatFeats(
   return mergeFeatGuidanceGroups(existingGroups, [seeded]);
 }
 
-const ABILITY_NAMES: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
+const ABILITY_NAMES: AbilityName[] = [
+  'strength',
+  'vitality',
+  'agility',
+  'acuity',
+  'intelligence',
+  'charisma',
+];
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -99,9 +104,7 @@ export function coerceJsonRecord(value: unknown): Record<string, unknown> | unde
   return isRecord(value) ? value : undefined;
 }
 
-export type ParseJsonFieldResult =
-  | { ok: true; value: unknown }
-  | { ok: false; error: string };
+export type ParseJsonFieldResult = { ok: true; value: unknown } | { ok: false; error: string };
 
 /**
  * Safe JSON parse for optional admin fields. Empty/whitespace string → `{ ok: true, value: null }`.
@@ -131,13 +134,15 @@ function toStringArray(value: unknown): string[] {
 
 /** Parse "id" or "id:qty" strings into { id, quantity } (qty default 1). */
 export function parseIdQuantityStrings(arr: string[]): PathItemRecommendation[] {
-  return arr.map((s) => {
-    const colon = s.indexOf(':');
-    if (colon < 0) return { id: s.trim(), quantity: 1 };
-    const id = s.slice(0, colon).trim();
-    const q = parseInt(s.slice(colon + 1).trim(), 10);
-    return { id, quantity: Number.isFinite(q) && q >= 1 ? q : 1 };
-  }).filter((e) => e.id.length > 0);
+  return arr
+    .map((s) => {
+      const colon = s.indexOf(':');
+      if (colon < 0) return { id: s.trim(), quantity: 1 };
+      const id = s.slice(0, colon).trim();
+      const q = parseInt(s.slice(colon + 1).trim(), 10);
+      return { id, quantity: Number.isFinite(q) && q >= 1 ? q : 1 };
+    })
+    .filter((e) => e.id.length > 0);
 }
 
 /** Serialize { id, quantity } entries into "id" or "id:qty" strings (qty>1 keeps the suffix). */
@@ -155,7 +160,7 @@ function parseLevel(value: unknown): number | null {
  * Ignores unknown keys and non-finite values; returns `undefined` when nothing valid remains.
  */
 export function parseRecommendedAbilities(
-  value: unknown
+  value: unknown,
 ): Partial<Record<AbilityName, number>> | undefined {
   if (!isRecord(value)) return undefined;
   const result: Partial<Record<AbilityName, number>> = {};
@@ -189,7 +194,12 @@ function parseLoadouts(value: unknown): PathLoadout[] | undefined {
   const loadouts = value
     .map((entry) => {
       if (!isRecord(entry)) return null;
-      const id = typeof entry.id === 'string' ? entry.id : typeof entry.title === 'string' ? entry.title : null;
+      const id =
+        typeof entry.id === 'string'
+          ? entry.id
+          : typeof entry.title === 'string'
+            ? entry.title
+            : null;
       const title = typeof entry.title === 'string' ? entry.title : id;
       if (!id || !title) return null;
       const loadout: PathLoadout = {
@@ -252,13 +262,16 @@ function parseGuidanceGroups(value: unknown): PathGuidanceGroup[] | undefined {
   const groups = value
     .map((entry) => {
       if (!isRecord(entry)) return null;
-      const id = typeof entry.id === 'string' ? entry.id : typeof entry.title === 'string' ? entry.title : null;
+      const id =
+        typeof entry.id === 'string'
+          ? entry.id
+          : typeof entry.title === 'string'
+            ? entry.title
+            : null;
       const title = typeof entry.title === 'string' ? entry.title : id;
       if (!id || !title) return null;
       const feats = toStringArray(entry.feats);
-      const explicitAudience = isPathGuidanceAudience(entry.audience)
-        ? entry.audience
-        : undefined;
+      const explicitAudience = isPathGuidanceAudience(entry.audience) ? entry.audience : undefined;
       // Backfill audience on feat groups so consumers never need title heuristics.
       const audience =
         explicitAudience ??
@@ -307,42 +320,39 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
         const loadoutsField = parseLevel1LoadoutsField(level1Raw.loadouts);
         const sharedFromRaw = parseIdQuantityObjects(level1Raw.sharedEquipment);
         return {
-        feats: toStringArray(level1Raw.feats),
-        skills: toStringArray(level1Raw.skills),
-        powers: toStringArray(level1Raw.powers),
-        innatePowers: toStringArray(
-          level1Raw.innatePowers ?? level1Raw.innate_powers
-        ),
-        techniques: toStringArray(level1Raw.techniques),
-        armaments: armamentsStr,
-        equipment: equipmentStr,
-        armamentRecommendations: parseIdQuantityStrings(armamentsStr),
-        equipmentRecommendations: parseIdQuantityStrings(equipmentStr),
-        recommendUnarmedProwess: level1Raw.recommendUnarmedProwess === true,
-        armorStep: parseArmorStep(level1Raw.armorStep) ?? loadoutsField.armorStep,
-        sharedEquipment:
-          sharedFromRaw.length > 0 ? sharedFromRaw : loadoutsField.sharedEquipment,
-        removeFeats: toStringArray(level1Raw.removeFeats),
-        removePowers: toStringArray(level1Raw.removePowers),
-        removeTechniques: toStringArray(level1Raw.removeTechniques),
-        removeArmaments: toStringArray(level1Raw.removeArmaments),
-        notes: typeof level1Raw.notes === 'string' ? level1Raw.notes : undefined,
-        guidance_groups: parseGuidanceGroups(level1Raw.guidance_groups),
-        recommended_abilities: parseRecommendedAbilities(level1Raw.recommended_abilities),
-        loadouts: loadoutsField.loadouts,
-        proficiency: isRecord(level1Raw.proficiency)
-          ? {
-              power:
-                level1Raw.proficiency.power != null
-                  ? Number(level1Raw.proficiency.power)
-                  : undefined,
-              martial:
-                level1Raw.proficiency.martial != null
-                  ? Number(level1Raw.proficiency.martial)
-                  : undefined,
-            }
-          : undefined,
-      };
+          feats: toStringArray(level1Raw.feats),
+          skills: toStringArray(level1Raw.skills),
+          powers: toStringArray(level1Raw.powers),
+          innatePowers: toStringArray(level1Raw.innatePowers ?? level1Raw.innate_powers),
+          techniques: toStringArray(level1Raw.techniques),
+          armaments: armamentsStr,
+          equipment: equipmentStr,
+          armamentRecommendations: parseIdQuantityStrings(armamentsStr),
+          equipmentRecommendations: parseIdQuantityStrings(equipmentStr),
+          recommendUnarmedProwess: level1Raw.recommendUnarmedProwess === true,
+          armorStep: parseArmorStep(level1Raw.armorStep) ?? loadoutsField.armorStep,
+          sharedEquipment: sharedFromRaw.length > 0 ? sharedFromRaw : loadoutsField.sharedEquipment,
+          removeFeats: toStringArray(level1Raw.removeFeats),
+          removePowers: toStringArray(level1Raw.removePowers),
+          removeTechniques: toStringArray(level1Raw.removeTechniques),
+          removeArmaments: toStringArray(level1Raw.removeArmaments),
+          notes: typeof level1Raw.notes === 'string' ? level1Raw.notes : undefined,
+          guidance_groups: parseGuidanceGroups(level1Raw.guidance_groups),
+          recommended_abilities: parseRecommendedAbilities(level1Raw.recommended_abilities),
+          loadouts: loadoutsField.loadouts,
+          proficiency: isRecord(level1Raw.proficiency)
+            ? {
+                power:
+                  level1Raw.proficiency.power != null
+                    ? Number(level1Raw.proficiency.power)
+                    : undefined,
+                martial:
+                  level1Raw.proficiency.martial != null
+                    ? Number(level1Raw.proficiency.martial)
+                    : undefined,
+              }
+            : undefined,
+        };
       })()
     : undefined;
 
@@ -375,7 +385,7 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
 
 export function getPathRecommendationsForLevel(
   archetype: { path_data?: ArchetypePathData } | undefined,
-  level: number
+  level: number,
 ): ArchetypePathRecommendations | undefined {
   if (!archetype?.path_data) return undefined;
   if (level <= 1) return archetype.path_data.level1;
@@ -384,17 +394,17 @@ export function getPathRecommendationsForLevel(
 
 /** Level 1 has at least one add recommendation (feat/skill/power/technique/armament/equipment). */
 export function pathLevel1HasAddRecommendations(
-  level1: ArchetypePathRecommendations | undefined
+  level1: ArchetypePathRecommendations | undefined,
 ): boolean {
   if (!level1) return false;
   return Boolean(
     level1.feats?.length ||
-      level1.skills?.length ||
-      level1.powers?.length ||
-      level1.innatePowers?.length ||
-      level1.techniques?.length ||
-      level1.armaments?.length ||
-      level1.equipment?.length
+    level1.skills?.length ||
+    level1.powers?.length ||
+    level1.innatePowers?.length ||
+    level1.techniques?.length ||
+    level1.armaments?.length ||
+    level1.equipment?.length,
   );
 }
 
@@ -405,16 +415,16 @@ export function pathHasPlayerVisibleLevel1(pathData: ArchetypePathData | undefin
 
 /** Level 1 has notes, remove lists, or unarmed prowess but no add recommendations. */
 export function pathLevel1HasNonPickerContent(
-  level1: ArchetypePathRecommendations | undefined
+  level1: ArchetypePathRecommendations | undefined,
 ): boolean {
   if (!level1) return false;
   return Boolean(
     level1.notes?.trim() ||
-      level1.recommendUnarmedProwess ||
-      level1.removeFeats?.length ||
-      level1.removePowers?.length ||
-      level1.removeTechniques?.length ||
-      level1.removeArmaments?.length
+    level1.recommendUnarmedProwess ||
+    level1.removeFeats?.length ||
+    level1.removePowers?.length ||
+    level1.removeTechniques?.length ||
+    level1.removeArmaments?.length,
   );
 }
 
@@ -448,7 +458,7 @@ const QUANTITY_REF_KINDS: PathRecommendationKind[] = ['armaments', 'equipment'];
 
 function recommendationRefs(
   source: ArchetypePathRecommendations | PathGuidanceGroup | undefined,
-  kind: PathRecommendationKind
+  kind: PathRecommendationKind,
 ): string[] {
   const raw = (source as Record<string, unknown> | undefined)?.[kind];
   return Array.isArray(raw) ? raw.map(String) : [];
@@ -463,7 +473,7 @@ function recommendationRefs(
  */
 export function collectPathRecommendedIds(
   pathData: ArchetypePathData | undefined,
-  kind: PathRecommendationKind
+  kind: PathRecommendationKind,
 ): string[] {
   if (!pathData) return [];
 

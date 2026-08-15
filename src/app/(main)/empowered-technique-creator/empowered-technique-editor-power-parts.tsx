@@ -40,14 +40,18 @@ export function EmpoweredTechniqueEditorPowerParts({
       ? `${selectedPowerParts
           .slice(0, 3)
           .map((row) => row.part.name)
-          .join(', ')}${selectedPowerParts.length > 3 ? ` +${selectedPowerParts.length - 3} more` : ''}`
+          .join(
+            ', ',
+          )}${selectedPowerParts.length > 3 ? ` +${selectedPowerParts.length - 3} more` : ''}`
       : 'No parts';
   const powerMechanicsSummary =
     selectedPowerAdvancedParts.length > 0
       ? `${selectedPowerAdvancedParts
           .slice(0, 3)
           .map((row) => row.part.name)
-          .join(', ')}${selectedPowerAdvancedParts.length > 3 ? ` +${selectedPowerAdvancedParts.length - 3} more` : ''}`
+          .join(
+            ', ',
+          )}${selectedPowerAdvancedParts.length > 3 ? ` +${selectedPowerAdvancedParts.length - 3} more` : ''}`
       : 'No mechanics';
 
   return (
@@ -65,18 +69,18 @@ export function EmpoweredTechniqueEditorPowerParts({
               type="button"
               variant="primary"
               size="sm"
-              className="flex items-center gap-1 min-h-[44px]"
+              className="flex min-h-[44px] items-center gap-1"
               onClick={onAddPowerPart}
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               Add Part
             </Button>
           </>
         }
       >
         {selectedPowerParts.length === 0 ? (
-          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-            <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <div className="py-8 text-center text-text-muted">
+            <Info className="mx-auto mb-2 h-12 w-12 opacity-50" />
             <p>No power parts added yet.</p>
           </div>
         ) : (
@@ -110,18 +114,18 @@ export function EmpoweredTechniqueEditorPowerParts({
               type="button"
               variant="primary"
               size="sm"
-              className="flex items-center gap-1 min-h-[44px]"
+              className="flex min-h-[44px] items-center gap-1"
               onClick={onAddPowerMechanicPart}
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               Add Part
             </Button>
           </>
         }
       >
         {selectedPowerAdvancedParts.length === 0 ? (
-          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-            <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <div className="py-8 text-center text-text-muted">
+            <Info className="mx-auto mb-2 h-12 w-12 opacity-50" />
             <p>No additional power mechanics added yet.</p>
           </div>
         ) : (

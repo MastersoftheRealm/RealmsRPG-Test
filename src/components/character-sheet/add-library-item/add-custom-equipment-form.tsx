@@ -27,13 +27,13 @@ export function AddCustomEquipmentForm({ onAdd }: AddCustomEquipmentFormProps) {
   };
 
   return (
-    <div className="rounded-lg border border-border-light bg-surface-alt/60 p-3 space-y-3">
+    <div className="space-y-3 rounded-lg border border-border-light bg-surface-alt/60 p-3">
       <p className="text-xs font-medium text-text-secondary">
         Or add a custom item (not in your library)
       </p>
-      <div className="flex flex-col sm:flex-row flex-wrap gap-3 items-end">
-        <div className="flex-1 min-w-[140px]">
-          <label htmlFor="custom-equipment-name" className="block text-xs text-text-muted mb-1">
+      <div className="flex flex-col flex-wrap items-end gap-3 sm:flex-row">
+        <div className="min-w-[140px] flex-1">
+          <label htmlFor="custom-equipment-name" className="mb-1 block text-xs text-text-muted">
             Name
           </label>
           <Input
@@ -46,8 +46,8 @@ export function AddCustomEquipmentForm({ onAdd }: AddCustomEquipmentFormProps) {
             }}
           />
         </div>
-        <div className="flex-1 min-w-[140px]">
-          <label htmlFor="custom-equipment-desc" className="block text-xs text-text-muted mb-1">
+        <div className="min-w-[140px] flex-1">
+          <label htmlFor="custom-equipment-desc" className="mb-1 block text-xs text-text-muted">
             Notes (optional)
           </label>
           <Input
@@ -58,7 +58,7 @@ export function AddCustomEquipmentForm({ onAdd }: AddCustomEquipmentFormProps) {
           />
         </div>
         <div>
-          <span className="block text-xs text-text-muted mb-1">Qty</span>
+          <span className="mb-1 block text-xs text-text-muted">Qty</span>
           <ValueStepper
             value={quantity}
             onChange={setQuantity}
@@ -70,7 +70,7 @@ export function AddCustomEquipmentForm({ onAdd }: AddCustomEquipmentFormProps) {
           />
         </div>
         <Button type="button" size="sm" onClick={handleAdd} disabled={!canAdd} className="shrink-0">
-          <Plus className="w-4 h-4" />
+          <Plus className="h-4 w-4" />
           Add custom
         </Button>
       </div>

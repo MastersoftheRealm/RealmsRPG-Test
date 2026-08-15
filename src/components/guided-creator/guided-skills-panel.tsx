@@ -21,12 +21,7 @@ import {
   resolveSkillAllocationRules,
 } from '@/lib/game/skill-allocation';
 import { formatGuidedSkillAbilityTag } from '@/lib/guided-creator/curated-skills';
-import {
-  DecrementButton,
-  IncrementButton,
-  InfoTippy,
-  PointStatus,
-} from '@/components/shared';
+import { DecrementButton, IncrementButton, InfoTippy, PointStatus } from '@/components/shared';
 import { DescriptorChip, IconButton, Spinner } from '@/components/ui';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { getGuidedSkillBonusHelp } from '../../../public/tooltip-text';
@@ -90,11 +85,7 @@ function GuidedSkillRow({
     canDecrease,
   } = item;
   const bonusTone =
-    bonus > 0
-      ? 'text-success-fg'
-      : bonus < 0
-        ? 'text-danger-fg'
-        : 'text-text-secondary';
+    bonus > 0 ? 'text-success-fg' : bonus < 0 ? 'text-danger-fg' : 'text-text-secondary';
 
   const hasDescription = Boolean(skill.description);
   const skillName = skill.name ?? 'skill';
@@ -120,8 +111,8 @@ function GuidedSkillRow({
               onClick={() => hasDescription && setExpanded(!expanded)}
               disabled={!hasDescription}
               className={cn(
-                'inline-flex max-w-full items-center gap-1.5 text-left min-h-11 py-0 shrink-0',
-                hasDescription ? 'cursor-pointer' : 'cursor-default'
+                'inline-flex min-h-11 max-w-full shrink-0 items-center gap-1.5 py-0 text-left',
+                hasDescription ? 'cursor-pointer' : 'cursor-default',
               )}
               aria-expanded={hasDescription ? expanded : undefined}
               aria-label={
@@ -131,16 +122,14 @@ function GuidedSkillRow({
               }
             >
               <span className="font-nunito font-semibold text-text-primary">
-                {item.isSubSkill ? (
-                  <span className="pl-1 text-text-secondary">↳ </span>
-                ) : null}
+                {item.isSubSkill ? <span className="pl-1 text-text-secondary">↳ </span> : null}
                 {skill.name}
               </span>
               {hasDescription && (
                 <ChevronDown
                   className={cn(
-                    'h-4 w-4 shrink-0 text-text-muted dark:text-text-secondary transition-transform',
-                    expanded && 'rotate-180'
+                    'h-4 w-4 shrink-0 text-text-muted transition-transform',
+                    expanded && 'rotate-180',
                   )}
                   aria-hidden
                 />
@@ -193,9 +182,9 @@ function GuidedSkillRow({
                 type="button"
                 aria-label={`${formatBonus(bonus)}, how ${skillName} Skill Bonus is calculated`}
                 className={cn(
-                  'min-w-[2.5rem] min-h-11 px-0.5 text-center font-display text-base font-bold tabular-nums rounded-md sm:min-w-[2.75rem] sm:text-lg',
-                  'hover:bg-surface-alt focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2',
-                  bonusTone
+                  'min-h-11 min-w-[2.5rem] rounded-md px-0.5 text-center font-display text-base font-bold tabular-nums sm:min-w-[2.75rem] sm:text-lg',
+                  'hover:bg-surface-alt focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none',
+                  bonusTone,
                 )}
               >
                 {formatBonus(bonus)}
@@ -205,7 +194,7 @@ function GuidedSkillRow({
             <span
               className={cn(
                 'min-w-[2.5rem] text-center font-display text-base font-bold tabular-nums sm:min-w-[2.75rem] sm:text-lg',
-                bonusTone
+                bonusTone,
               )}
             >
               {formatBonus(bonus)}
@@ -223,19 +212,19 @@ function GuidedSkillRow({
               size="sm"
               onClick={onRemove}
               label={`Remove ${skillName}`}
-              className="shrink-0 text-danger-fg hover:bg-danger-light min-h-11 min-w-11"
+              className="min-h-11 min-w-11 shrink-0 text-danger-fg hover:bg-danger-light"
             >
               <X className="h-4 w-4" aria-hidden />
             </IconButton>
           ) : (
-            <span className="shrink-0 w-11" aria-hidden />
+            <span className="w-11 shrink-0" aria-hidden />
           )}
         </div>
       </div>
 
       {expanded && skill.description && (
-        <div className="pb-2.5 pr-2">
-          <p className="font-nunito text-sm text-text-secondary leading-relaxed">
+        <div className="pr-2 pb-2.5">
+          <p className="font-nunito text-sm leading-relaxed text-text-secondary">
             {skill.description}
           </p>
         </div>
@@ -316,7 +305,7 @@ export function GuidedSkillsPanel({
       delete rest[skillId];
       onAllocationsChange(rest);
     },
-    [allocations, speciesSkillIds, onAllocationsChange]
+    [allocations, speciesSkillIds, onAllocationsChange],
   );
 
   const handleAllocate = useCallback(
@@ -340,7 +329,7 @@ export function GuidedSkillsPanel({
         }
       }
     },
-    [allocations, allSkills, remainingPoints, onAllocationsChange, skillRules, handleRemove]
+    [allocations, allSkills, remainingPoints, onAllocationsChange, skillRules, handleRemove],
   );
 
   const rowItems = useMemo((): GuidedSkillRowItem[] => {
@@ -353,8 +342,8 @@ export function GuidedSkillsPanel({
       const baseValue = baseSkill ? (allocations[String(baseSkill.id)] ?? 0) : 0;
       const baseProficient = Boolean(
         baseSkill &&
-          (speciesSkillIds.has(String(baseSkill.id)) ||
-            (allocations[String(baseSkill.id)] ?? -1) >= 0)
+        (speciesSkillIds.has(String(baseSkill.id)) ||
+          (allocations[String(baseSkill.id)] ?? -1) >= 0),
       );
       const value = Math.max(0, allocations[skillId] ?? 0);
       const isSpecies = speciesSkillIds.has(skillId);
@@ -374,14 +363,14 @@ export function GuidedSkillsPanel({
             baseProficient,
             abilities,
             proficient,
-            chosenAbilityKey
+            chosenAbilityKey,
           )
         : calculateSkillBonusWithProficiency(
             skill.ability,
             value,
             abilities,
             true,
-            chosenAbilityKey
+            chosenAbilityKey,
           );
       const canInc = isSubSkill
         ? baseProficient &&
@@ -390,9 +379,9 @@ export function GuidedSkillsPanel({
               ? skillRules.gainProficiencyCost
               : getSkillValueIncreaseCost(value, true, skillRules))
         : remainingPoints >=
-            (value === 0
-              ? skillRules.gainProficiencyCost
-              : getSkillValueIncreaseCost(value, false, skillRules));
+          (value === 0
+            ? skillRules.gainProficiencyCost
+            : getSkillValueIncreaseCost(value, false, skillRules));
 
       return {
         skill,
@@ -455,11 +444,7 @@ export function GuidedSkillsPanel({
                   pathSourceLabel={pathSourceLabel}
                   onDecrease={() => handleAllocate(skillId, -1)}
                   onIncrease={() => handleAllocate(skillId, 1)}
-                  onRemove={
-                    item.isSpecies
-                      ? undefined
-                      : () => handleRemove(skillId)
-                  }
+                  onRemove={item.isSpecies ? undefined : () => handleRemove(skillId)}
                 />
               );
             })}

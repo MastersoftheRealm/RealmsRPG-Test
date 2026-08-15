@@ -11,7 +11,7 @@ describe('shouldApplyGuidedDeepEntryOnArrival', () => {
         navigationIntent: 'forward',
         entryNonce: 3,
         lastAppliedEntryNonce: null,
-      })
+      }),
     ).toBe(true);
 
     expect(
@@ -20,7 +20,7 @@ describe('shouldApplyGuidedDeepEntryOnArrival', () => {
         navigationIntent: 'forward',
         entryNonce: 3,
         lastAppliedEntryNonce: 3,
-      })
+      }),
     ).toBe(false);
   });
 
@@ -31,7 +31,7 @@ describe('shouldApplyGuidedDeepEntryOnArrival', () => {
         navigationIntent: 'forward',
         entryNonce: 1,
         lastAppliedEntryNonce: null,
-      })
+      }),
     ).toBe(false);
 
     expect(
@@ -40,7 +40,7 @@ describe('shouldApplyGuidedDeepEntryOnArrival', () => {
         navigationIntent: 'back',
         entryNonce: 2,
         lastAppliedEntryNonce: null,
-      })
+      }),
     ).toBe(false);
   });
 
@@ -52,7 +52,7 @@ describe('shouldApplyGuidedDeepEntryOnArrival', () => {
         entryNonce: 1,
         lastAppliedEntryNonce: null,
         enabled: false,
-      })
+      }),
     ).toBe(false);
   });
 });

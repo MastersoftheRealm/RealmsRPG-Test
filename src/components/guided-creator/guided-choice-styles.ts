@@ -68,7 +68,7 @@ export const GUIDED_CHOICE_STYLES = {
     'flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-primary-subtle-bg text-primary-fg',
   selectedCheck:
     'flex h-7 w-7 shrink-0 items-center justify-center rounded-pill bg-primary text-text-on-dark',
-  meta: 'font-nunito text-sm text-text-muted dark:text-text-secondary',
+  meta: 'font-nunito text-sm text-text-muted',
 } as const;
 
 /**
@@ -87,8 +87,7 @@ export const GUIDED_OVERVIEW_STYLES = {
   sectionHint: 'mt-1 font-nunito text-sm text-text-secondary',
   body: 'font-nunito text-base text-text-primary leading-relaxed',
   bodySecondary: 'font-nunito text-base text-text-secondary leading-relaxed',
-  statLabel:
-    'font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary',
+  statLabel: 'font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary',
   statValue: 'mt-1 font-nunito text-sm font-semibold text-text-primary capitalize',
   callout: 'rounded-card border border-border-light bg-primary-subtle-bg/40 px-4 py-3',
 } as const;

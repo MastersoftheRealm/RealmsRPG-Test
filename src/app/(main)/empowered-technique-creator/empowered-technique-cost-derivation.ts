@@ -346,15 +346,21 @@ export function useEmpoweredTechniqueCostDerivation({
     const actionParts = powerMechanicParts.filter((part) => actionPartNames.includes(part.name));
     const rangeParts = powerMechanicParts.filter((part) => rangePartNames.includes(part.name));
     const areaParts = powerMechanicParts.filter((part) => areaPartNames.includes(part.name));
-    const durationParts = powerMechanicParts.filter((part) => durationPartNames.includes(part.name));
-    const powerDamageParts = powerMechanicParts.filter((part) => powerDamageNames.includes(part.name));
-    const techniqueDamageParts: TechniquePartPayload[] = techniqueDamageMechanicParts.map((part) => ({
-      id: Number(part.id),
-      name: part.name,
-      op_1_lvl: part.op_1_lvl,
-      op_2_lvl: part.op_2_lvl,
-      op_3_lvl: part.op_3_lvl,
-    }));
+    const durationParts = powerMechanicParts.filter((part) =>
+      durationPartNames.includes(part.name),
+    );
+    const powerDamageParts = powerMechanicParts.filter((part) =>
+      powerDamageNames.includes(part.name),
+    );
+    const techniqueDamageParts: TechniquePartPayload[] = techniqueDamageMechanicParts.map(
+      (part) => ({
+        id: Number(part.id),
+        name: part.name,
+        op_1_lvl: part.op_1_lvl,
+        op_2_lvl: part.op_2_lvl,
+        op_3_lvl: part.op_3_lvl,
+      }),
+    );
 
     let weaponCost: EmpoweredSectionCostSlice = emptySectionCost();
     if (attackModePowerPart) {
@@ -439,7 +445,8 @@ export function useEmpoweredTechniqueCostDerivation({
   }, [powerDamages]);
 
   const techniqueDamageSummary = useMemo(
-    () => (techniqueDamage.amount > 0 ? `+${techniqueDamage.amount}d${techniqueDamage.size}` : 'None'),
+    () =>
+      techniqueDamage.amount > 0 ? `+${techniqueDamage.amount}d${techniqueDamage.size}` : 'None',
     [techniqueDamage.amount, techniqueDamage.size],
   );
 

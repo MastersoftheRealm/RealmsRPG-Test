@@ -17,7 +17,7 @@ describe('getPowersTechniquesL1Ids (TASK-458)', () => {
     const { displayIds, promotedIds } = getPowersTechniquesL1Ids(
       ['path-a', 'path-b'],
       ['path-a', 'catalog-extra'],
-      resolve
+      resolve,
     );
     expect(displayIds).toEqual(['path-a', 'path-b', 'catalog-extra']);
     expect(promotedIds).toEqual(['catalog-extra']);
@@ -27,7 +27,7 @@ describe('getPowersTechniquesL1Ids (TASK-458)', () => {
     const { displayIds, promotedIds } = getPowersTechniquesL1Ids(
       ['path-a'],
       ['PATH-A', 'missing-stale', 'catalog-extra'],
-      resolve
+      resolve,
     );
     expect(displayIds).toEqual(['path-a', 'catalog-extra']);
     expect(promotedIds).toEqual(['catalog-extra']);
@@ -38,7 +38,7 @@ describe('getPowersTechniquesL1Ids (TASK-458)', () => {
     const { displayIds, promotedIds } = getPowersTechniquesL1Ids(
       ['pending-path'],
       ['pending-path', 'also-missing'],
-      emptyResolve
+      emptyResolve,
     );
     expect(displayIds).toEqual(['pending-path']);
     expect(promotedIds).toEqual([]);
@@ -46,15 +46,10 @@ describe('getPowersTechniquesL1Ids (TASK-458)', () => {
 });
 
 describe('isPathRecommendedPowersTechniquesId', () => {
-  const resolve = (id: string) =>
-    id.toLowerCase() === 'firebolt' ? 'firebolt' : undefined;
+  const resolve = (id: string) => (id.toLowerCase() === 'firebolt' ? 'firebolt' : undefined);
 
   it('matches path ids case-insensitively via canonical resolve', () => {
-    expect(
-      isPathRecommendedPowersTechniquesId('Firebolt', ['firebolt'], resolve)
-    ).toBe(true);
-    expect(
-      isPathRecommendedPowersTechniquesId('other', ['firebolt'], resolve)
-    ).toBe(false);
+    expect(isPathRecommendedPowersTechniquesId('Firebolt', ['firebolt'], resolve)).toBe(true);
+    expect(isPathRecommendedPowersTechniquesId('other', ['firebolt'], resolve)).toBe(false);
   });
 });

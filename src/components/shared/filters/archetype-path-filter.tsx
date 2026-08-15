@@ -50,7 +50,7 @@ export function ArchetypePathFilter({
           value: option.id,
           label: option.name,
           group: pathCategoryGroupLabel(type),
-        }))
+        })),
     );
     // Paths whose type is missing/unknown still list, ungrouped.
     const grouped = new Set(byType.map((option) => option.value));

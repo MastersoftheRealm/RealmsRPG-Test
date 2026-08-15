@@ -8,16 +8,10 @@ import { useMemo, useState } from 'react';
 import { SegmentedControl } from '@/components/shared';
 import { Button, DescriptorChip } from '@/components/ui';
 import type { Species } from '@/hooks';
-import {
-  averageMixedPhysical,
-  combineSpeciesSizes,
-} from '@/lib/ancestry/ancestry-selection';
+import { averageMixedPhysical, combineSpeciesSizes } from '@/lib/ancestry/ancestry-selection';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { GuidedChoiceCard } from './guided-choice-card';
-import {
-  GUIDED_CHOICE_GRID_CLASS,
-  GUIDED_CHOICE_GRID_ITEM_CLASS,
-} from './guided-choice-styles';
+import { GUIDED_CHOICE_GRID_CLASS, GUIDED_CHOICE_GRID_ITEM_CLASS } from './guided-choice-styles';
 import { GuidedOverviewSection } from './guided-overview-section';
 import { GuidedSectionTitle } from './guided-section-title';
 import { GuidedSpeciesDetailModal } from './guided-species-detail-modal';
@@ -44,12 +38,9 @@ export function GuidedMixedSpeciesOverview({
   const [detailSpecies, setDetailSpecies] = useState<Species | null>(null);
   const combinedSizes = useMemo(
     () => combineSpeciesSizes(speciesA, speciesB),
-    [speciesA, speciesB]
+    [speciesA, speciesB],
   );
-  const averaged = useMemo(
-    () => averageMixedPhysical(speciesA, speciesB),
-    [speciesA, speciesB]
-  );
+  const averaged = useMemo(() => averageMixedPhysical(speciesA, speciesB), [speciesA, speciesB]);
 
   const sizeOptions = combinedSizes.map((s) => ({ value: s, label: titleCase(s) }));
   const parents = [speciesA, speciesB];

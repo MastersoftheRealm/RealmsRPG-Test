@@ -6,14 +6,14 @@ import type { Skill } from '@/hooks';
 
 export function buildExistingSkillIdSet(
   speciesSkillIds: Set<string>,
-  allocations: Record<string, number>
+  allocations: Record<string, number>,
 ): Set<string> {
   return new Set([...speciesSkillIds, ...Object.keys(allocations)]);
 }
 
 export function buildExistingSkillNames(
   codexSkills: Skill[],
-  existingSkillIds: Set<string>
+  existingSkillIds: Set<string>,
 ): string[] {
   return codexSkills
     .filter((s) => existingSkillIds.has(String(s.id)))
@@ -30,7 +30,7 @@ export interface CharacterSkillForSubModalEntry {
 export function buildCharacterSkillsForSubModal(
   codexSkills: Skill[],
   existingSkillIds: Set<string>,
-  allocations: Record<string, number>
+  allocations: Record<string, number>,
 ): CharacterSkillForSubModalEntry[] {
   return codexSkills
     .filter((s) => s.base_skill_id === undefined && existingSkillIds.has(String(s.id)))
@@ -45,7 +45,7 @@ export function buildCharacterSkillsForSubModal(
 
 export function applyAddedBaseSkills(
   allocations: Record<string, number>,
-  skills: Skill[]
+  skills: Skill[],
 ): Record<string, number> {
   const next = { ...allocations };
   for (const s of skills) {
@@ -62,7 +62,7 @@ export type SubSkillAddPayload = Skill & {
 
 export function applyAddedSubSkills(
   allocations: Record<string, number>,
-  skills: SubSkillAddPayload[]
+  skills: SubSkillAddPayload[],
 ): Record<string, number> {
   const next = { ...allocations };
   for (const s of skills) {

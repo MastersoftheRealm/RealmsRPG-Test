@@ -64,7 +64,7 @@ function abilityTagBadge(label: string): GuidedSkillSuggestionBadge {
 
 function mergeSuggestion(
   existing: GuidedSkillSuggestion,
-  next: Omit<GuidedSkillSuggestion, 'skillId'>
+  next: Omit<GuidedSkillSuggestion, 'skillId'>,
 ): GuidedSkillSuggestion {
   const badgeLabels = new Set(existing.badges.map((b) => b.label));
   const tags = [...existing.tags];
@@ -91,7 +91,7 @@ function mergeSuggestion(
 function abilityMatchEntry(
   skillId: string,
   codexSkills: Skill[],
-  abilities: Abilities
+  abilities: Abilities,
 ): Omit<GuidedSkillSuggestion, 'skillId'> {
   const skill = codexSkills.find((s) => String(s.id) === skillId);
   const label = (skill && formatGuidedSkillAbilityTag(skill, abilities)) ?? 'Skill';
@@ -105,7 +105,7 @@ function abilityMatchEntry(
 }
 
 export function buildGuidedSkillSuggestions(
-  options: BuildGuidedSkillSuggestionsOptions
+  options: BuildGuidedSkillSuggestionsOptions,
 ): BuildGuidedSkillSuggestionsResult {
   const {
     codexSkills,
@@ -145,12 +145,7 @@ export function buildGuidedSkillSuggestions(
       sortRank: 0,
     };
     const prev = byId.get(skillId);
-    byId.set(
-      skillId,
-      prev
-        ? mergeSuggestion({ ...prev, skillId }, entry)
-        : { skillId, ...entry }
-    );
+    byId.set(skillId, prev ? mergeSuggestion({ ...prev, skillId }, entry) : { skillId, ...entry });
   }
 
   const { primary } = resolveGuidedArchetypeAbilities(archetypeType, {
@@ -185,9 +180,7 @@ export function buildGuidedSkillSuggestions(
       const prev = byId.get(skillId);
       byId.set(
         skillId,
-        prev
-          ? mergeSuggestion({ ...prev, skillId }, entry)
-          : { skillId, ...entry }
+        prev ? mergeSuggestion({ ...prev, skillId }, entry) : { skillId, ...entry },
       );
     }
   }
@@ -207,7 +200,7 @@ export function buildGuidedSkillSuggestions(
 
 /** Map for AddSkillModal badge lookup by skill id. */
 export function guidedSuggestionsToBadgeMap(
-  suggestions: GuidedSkillSuggestion[]
+  suggestions: GuidedSkillSuggestion[],
 ): Record<string, GuidedSkillSuggestionBadge[]> {
   const map: Record<string, GuidedSkillSuggestionBadge[]> = {};
   for (const s of suggestions) {

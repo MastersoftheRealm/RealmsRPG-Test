@@ -83,37 +83,27 @@ export function HubListRow({
     >
       <div
         className={cn(
-          'flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0',
-          iconContainerClassName
+          'flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg',
+          iconContainerClassName,
         )}
       >
         {icon}
       </div>
-      <div className="flex-1 min-w-0">
+      <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <h2 className="font-semibold text-text-primary truncate">{title}</h2>
+          <h2 className="truncate font-semibold text-text-primary">{title}</h2>
           {badge != null && badge !== '' && (
-            <DescriptorChip
-              variant={badgeVariant}
-              size="sm"
-              className={badgeClassName}
-            >
+            <DescriptorChip variant={badgeVariant} size="sm" className={badgeClassName}>
               {badge}
             </DescriptorChip>
           )}
         </div>
-        {subtitle != null && (
-          <p className="text-sm text-text-muted dark:text-text-secondary mt-0.5">
-            {subtitle}
-          </p>
-        )}
+        {subtitle != null && <p className="mt-0.5 text-sm text-text-muted">{subtitle}</p>}
         {description != null && (
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-0.5 truncate">
-            {description}
-          </p>
+          <p className="mt-0.5 truncate text-xs text-text-muted">{description}</p>
         )}
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex flex-shrink-0 items-center gap-2">
         {rightSlot ?? (
           <>
             {onDelete && (
@@ -127,16 +117,13 @@ export function HubListRow({
                 label={deleteAriaLabel}
                 // Hover-reveal is desktop-only chrome: coarse pointers never fire
                 // :hover, and a zero-opacity control cannot show a focus ring.
-                className="opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100 text-text-muted dark:text-text-secondary hover:text-danger-fg hover:bg-danger-light min-w-[44px] min-h-[44px]"
+                className="min-h-[44px] min-w-[44px] text-text-muted opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 hover:bg-danger-light hover:text-danger-fg focus-visible:opacity-100 [@media(pointer:coarse)]:opacity-100"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="h-4 w-4" />
               </IconButton>
             )}
             {showChevron && (
-              <ChevronRight
-                className="w-5 h-5 text-text-muted shrink-0"
-                aria-hidden
-              />
+              <ChevronRight className="h-5 w-5 shrink-0 text-text-muted" aria-hidden />
             )}
           </>
         )}

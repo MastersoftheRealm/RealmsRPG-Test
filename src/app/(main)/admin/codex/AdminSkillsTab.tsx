@@ -1,10 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-  CodexBrowseListShell,
-  ErrorDisplay as ErrorState,
-} from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState } from '@/components/shared';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
 import { ChipSelect, SelectFilter, ArchetypePathFilter } from '@/components/shared/filters';
 import { CodexSkillRow } from '@/components/codex';
@@ -23,7 +20,10 @@ import {
 /** Skills are governed by abilities only (not defenses). */
 const ABILITY_OPTIONS_SKILLS = ABILITIES_AND_DEFENSES.slice(0, 6);
 import { useSort } from '@/hooks/use-sort';
-import { pathChipLabelsForEntity, pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
+import {
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc } from './actions';
 import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
@@ -65,31 +65,28 @@ export function AdminSkillsTab() {
   });
 
   const ABILITY_OPTIONS = useMemo(
-    () => ABILITY_OPTIONS_SKILLS.map(a => ({ value: a, label: a })),
+    () => ABILITY_OPTIONS_SKILLS.map((a) => ({ value: a, label: a })),
     [],
   );
 
   const baseSkillOptions = useMemo(() => {
     if (!skills) return [] as { id: string; name: string }[];
     // Base skills are those without a base_skill_id (or with base_skill_id === 0 meaning can be a base for any)
-    const baseSkills = (skills as Skill[]).filter((s) => s.base_skill_id === undefined || s.base_skill_id === 0);
+    const baseSkills = (skills as Skill[]).filter(
+      (s) => s.base_skill_id === undefined || s.base_skill_id === 0,
+    );
     return baseSkills
       .map((s) => ({ id: String(s.id), name: s.name }))
       .sort((a, b) => a.name.localeCompare(b.name));
   }, [skills]);
 
   const skillIdToName = useMemo(() => buildSkillIdToName(skills), [skills]);
-  const {
-    selectedPathIds,
-    setSelectedPathIds,
-    pathIndex,
-    pathRecommendedIds,
-    pathFilterActive,
-  } = usePathListFilter({ entities: skills, kind: 'skills' });
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({ entities: skills, kind: 'skills' });
 
   const filterOptions = useMemo(
     () => buildSkillFilterOptions(skills, skillIdToName),
-    [skills, skillIdToName]
+    [skills, skillIdToName],
   );
 
   const filteredSkills = useMemo(() => {
@@ -130,7 +127,10 @@ export function AdminSkillsTab() {
     }
     const abilityArr =
       typeof s.ability === 'string' && s.ability.length > 0
-        ? s.ability.split(',').map((a: string) => a.trim()).filter(Boolean)
+        ? s.ability
+            .split(',')
+            .map((a: string) => a.trim())
+            .filter(Boolean)
         : [];
     setForm({
       name: (s.name || '').trim() + COPY_NAME_SUFFIX,
@@ -161,7 +161,10 @@ export function AdminSkillsTab() {
     }
     const abilityArr =
       typeof s.ability === 'string' && s.ability.length > 0
-        ? s.ability.split(',').map((a: string) => a.trim()).filter(Boolean)
+        ? s.ability
+            .split(',')
+            .map((a: string) => a.trim())
+            .filter(Boolean)
         : [];
     setForm({
       name: s.name,
@@ -221,7 +224,9 @@ export function AdminSkillsTab() {
     };
 
     const result = editing
-      ? await updateCodexDoc('codex_skills', editing.id, data, { expectedUpdatedAt: editing.updated_at })
+      ? await updateCodexDoc('codex_skills', editing.id, data, {
+          expectedUpdatedAt: editing.updated_at,
+        })
       : await createCodexDoc('codex_skills', undefined, data);
 
     setSaving(false);
@@ -264,7 +269,15 @@ export function AdminSkillsTab() {
     await codexDelete.requestDelete(id);
   };
 
-  if (error) return <ErrorState message="Failed to load skills" onRetry={() => { void refetch(); }} />;
+  if (error)
+    return (
+      <ErrorState
+        message="Failed to load skills"
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
 
   return (
     <div>
@@ -275,49 +288,49 @@ export function AdminSkillsTab() {
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search names, descriptions..."
         filters={
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-              <ChipSelect
-                label="Ability"
-                placeholder="Choose ability"
-                options={filterOptions.abilities.map((a) => ({
-                  value: a,
-                  label:
-                    typeof a === 'string' && a.length > 0
-                      ? a.charAt(0).toUpperCase() + a.slice(1)
-                      : String(a),
-                }))}
-                selectedValues={filters.abilities}
-                onSelect={(v) => setFilters((f) => ({ ...f, abilities: [...f.abilities, v] }))}
-                onRemove={(v) =>
-                  setFilters((f) => ({ ...f, abilities: f.abilities.filter((a) => a !== v) }))
-                }
-              />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            <ChipSelect
+              label="Ability"
+              placeholder="Choose ability"
+              options={filterOptions.abilities.map((a) => ({
+                value: a,
+                label:
+                  typeof a === 'string' && a.length > 0
+                    ? a.charAt(0).toUpperCase() + a.slice(1)
+                    : String(a),
+              }))}
+              selectedValues={filters.abilities}
+              onSelect={(v) => setFilters((f) => ({ ...f, abilities: [...f.abilities, v] }))}
+              onRemove={(v) =>
+                setFilters((f) => ({ ...f, abilities: f.abilities.filter((a) => a !== v) }))
+              }
+            />
 
-              <SelectFilter
-                label="Base Skill"
-                value={filters.baseSkill}
-                options={filterOptions.baseSkills.map((s) => ({ value: s, label: s }))}
-                onChange={(v) => setFilters((f) => ({ ...f, baseSkill: v }))}
-                placeholder="Base skill (any)"
-              />
+            <SelectFilter
+              label="Base Skill"
+              value={filters.baseSkill}
+              options={filterOptions.baseSkills.map((s) => ({ value: s, label: s }))}
+              onChange={(v) => setFilters((f) => ({ ...f, baseSkill: v }))}
+              placeholder="Base skill (any)"
+            />
 
-              <SelectFilter
-                label="Skill Type"
-                value={filters.subSkillMode}
-                options={[
-                  { value: 'only', label: 'Only Sub-Skills' },
-                  { value: 'hide', label: 'Hide Sub-Skills' },
-                ]}
-                onChange={(v) =>
-                  setFilters((f) => ({ ...f, subSkillMode: (v || '') as '' | 'only' | 'hide' }))
-                }
-                placeholder="All skills"
-              />
-              <ArchetypePathFilter
-                options={pathIndex.options}
-                selectedPathIds={selectedPathIds}
-                onChange={setSelectedPathIds}
-              />
+            <SelectFilter
+              label="Skill Type"
+              value={filters.subSkillMode}
+              options={[
+                { value: 'only', label: 'Only Sub-Skills' },
+                { value: 'hide', label: 'Hide Sub-Skills' },
+              ]}
+              onChange={(v) =>
+                setFilters((f) => ({ ...f, subSkillMode: (v || '') as '' | 'only' | 'hide' }))
+              }
+              placeholder="All skills"
+            />
+            <ArchetypePathFilter
+              options={pathIndex.options}
+              selectedPathIds={selectedPathIds}
+              onChange={setSelectedPathIds}
+            />
           </div>
         }
         headerColumns={SKILL_HEADER_COLUMNS}
@@ -346,14 +359,14 @@ export function AdminSkillsTab() {
               <div className="flex items-center gap-1 pr-2">
                 {pendingDeleteId === s.id ? (
                   <div className="flex items-center gap-1 text-xs">
-                    <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">
+                    <span className="font-medium whitespace-nowrap text-danger-700 dark:text-danger-400">
                       Remove?
                     </span>
                     <Button
                       size="sm"
                       variant="danger"
                       onClick={() => handleInlineDelete(s.id)}
-                      className="text-xs px-2 py-0.5 h-6"
+                      className="h-6 px-2 py-0.5 text-xs"
                     >
                       Yes
                     </Button>
@@ -361,7 +374,7 @@ export function AdminSkillsTab() {
                       size="sm"
                       variant="secondary"
                       onClick={() => setPendingDeleteId(null)}
-                      className="text-xs px-2 py-0.5 h-6"
+                      className="h-6 px-2 py-0.5 text-xs"
                     >
                       No
                     </Button>
@@ -375,7 +388,7 @@ export function AdminSkillsTab() {
                       label="Edit"
                       aria-label="Edit"
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Pencil className="h-4 w-4" />
                     </IconButton>
                     <IconButton
                       variant="ghost"
@@ -384,16 +397,16 @@ export function AdminSkillsTab() {
                       label="Duplicate"
                       aria-label="Duplicate"
                     >
-                      <Copy className="w-4 h-4" />
+                      <Copy className="h-4 w-4" />
                     </IconButton>
                     <IconButton
                       variant="ghost"
                       size="sm"
                       onClick={() => setPendingDeleteId(s.id)}
                       label="Delete"
-                      className="text-danger-fg hover:opacity-80 hover:bg-transparent"
+                      className="text-danger-fg hover:bg-transparent hover:opacity-80"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="h-4 w-4" />
                     </IconButton>
                   </>
                 )}
@@ -413,13 +426,23 @@ export function AdminSkillsTab() {
           <div className="flex justify-between">
             <div>
               {editing && (
-                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}>
+                <Button
+                  variant="outline"
+                  onClick={() => handleDelete(editing.id)}
+                  className={
+                    deleteConfirm === editing.id
+                      ? 'border-danger-500 text-danger-700 dark:text-danger-400'
+                      : ''
+                  }
+                >
                   {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
                 </Button>
               )}
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={closeModal}>Cancel</Button>
+              <Button variant="outline" onClick={closeModal}>
+                Cancel
+              </Button>
               <Button onClick={handleSave} disabled={saving || !form.name.trim()}>
                 {saving ? 'Saving...' : 'Save'}
               </Button>
@@ -429,55 +452,112 @@ export function AdminSkillsTab() {
       >
         <div className="space-y-4">
           {copySourceName && (
-            <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
-              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new skill.
+            <p className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-secondary">
+              Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>.
+              Change the name and details as needed, then save to add the new skill.
             </p>
           )}
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
-            <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Skill name" />
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Name *</label>
+            <Input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              placeholder="Skill name"
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-            <Textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Skill description" className="min-h-[120px] resize-y" rows={4} />
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Description
+            </label>
+            <Textarea
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              placeholder="Skill description"
+              className="min-h-[120px] resize-y"
+              rows={4}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Success outcome description</label>
-            <Textarea value={form.success_desc} onChange={(e) => setForm((f) => ({ ...f, success_desc: e.target.value }))} placeholder="What happens on successes (expandable chip)" className="min-h-[100px] resize-y" rows={3} />
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Success outcome description
+            </label>
+            <Textarea
+              value={form.success_desc}
+              onChange={(e) => setForm((f) => ({ ...f, success_desc: e.target.value }))}
+              placeholder="What happens on successes (expandable chip)"
+              className="min-h-[100px] resize-y"
+              rows={3}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Failure outcome description</label>
-            <Textarea value={form.failure_desc} onChange={(e) => setForm((f) => ({ ...f, failure_desc: e.target.value }))} placeholder="What happens on failures (expandable chip)" className="min-h-[100px] resize-y" rows={3} />
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Failure outcome description
+            </label>
+            <Textarea
+              value={form.failure_desc}
+              onChange={(e) => setForm((f) => ({ ...f, failure_desc: e.target.value }))}
+              placeholder="What happens on failures (expandable chip)"
+              className="min-h-[100px] resize-y"
+              rows={3}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Difficulty score (DS) guidance</label>
-            <Textarea value={form.ds_calc} onChange={(e) => setForm((f) => ({ ...f, ds_calc: e.target.value }))} placeholder="RM guidance for DS calculation (expandable chip)" className="min-h-[100px] resize-y" rows={3} />
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Difficulty score (DS) guidance
+            </label>
+            <Textarea
+              value={form.ds_calc}
+              onChange={(e) => setForm((f) => ({ ...f, ds_calc: e.target.value }))}
+              placeholder="RM guidance for DS calculation (expandable chip)"
+              className="min-h-[100px] resize-y"
+              rows={3}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Craft success description (Craft sub-skills)</label>
-            <Textarea value={form.craft_success_desc} onChange={(e) => setForm((f) => ({ ...f, craft_success_desc: e.target.value }))} placeholder="Crafting success results" className="min-h-[100px] resize-y" rows={3} />
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Craft success description (Craft sub-skills)
+            </label>
+            <Textarea
+              value={form.craft_success_desc}
+              onChange={(e) => setForm((f) => ({ ...f, craft_success_desc: e.target.value }))}
+              placeholder="Crafting success results"
+              className="min-h-[100px] resize-y"
+              rows={3}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Craft failure description (Craft sub-skills)</label>
-            <Textarea value={form.craft_failure_desc} onChange={(e) => setForm((f) => ({ ...f, craft_failure_desc: e.target.value }))} placeholder="Crafting failure results" className="min-h-[100px] resize-y" rows={3} />
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Craft failure description (Craft sub-skills)
+            </label>
+            <Textarea
+              value={form.craft_failure_desc}
+              onChange={(e) => setForm((f) => ({ ...f, craft_failure_desc: e.target.value }))}
+              placeholder="Crafting failure results"
+              className="min-h-[100px] resize-y"
+              rows={3}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Ability</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Ability</label>
             <ChipSelect
               label=""
               placeholder="Choose governing ability"
               options={ABILITY_OPTIONS}
               selectedValues={form.abilities}
               onSelect={(v) => setForm((f) => ({ ...f, abilities: [...f.abilities, v] }))}
-              onRemove={(v) => setForm((f) => ({ ...f, abilities: f.abilities.filter((a) => a !== v) }))}
+              onRemove={(v) =>
+                setForm((f) => ({ ...f, abilities: f.abilities.filter((a) => a !== v) }))
+              }
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Base skill (for sub-skills)</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Base skill (for sub-skills)
+            </label>
             <select
               value={form.baseSkillName}
               onChange={(e) => setForm((f) => ({ ...f, baseSkillName: e.target.value }))}
-              className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
               aria-label="Base skill"
             >
               <option value="">None (base skill)</option>

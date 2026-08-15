@@ -12,12 +12,12 @@ export const guidedNavProgressClassName = 'min-h-11 shrink-0';
 export const guidedNavExpandClassName = cn(
   guidedNavProgressClassName,
   'bg-primary-subtle-bg hover:bg-primary-subtle-bg/80',
-  'dark:bg-surface-alt dark:hover:bg-surface'
+  'dark:bg-surface-alt dark:hover:bg-surface',
 );
 
 /** Previous / shallower / Back */
 export const guidedNavPreviousClassName = cn(
   guidedNavProgressClassName,
   'border-primary-outline-border text-primary-outline-fg',
-  'dark:border-border dark:text-text-primary'
+  'dark:border-border dark:text-text-primary',
 );

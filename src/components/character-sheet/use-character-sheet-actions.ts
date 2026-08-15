@@ -18,7 +18,10 @@ import { useMemo } from 'react';
 import type { Archetype, Character, CharacterFeat } from '@/types';
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { CodexFeat, Skill, Trait } from '@/hooks/codex-types';
-import type { CharacterSheetStats, CharacterSheetDerivedHandlers } from './use-character-sheet-derived';
+import type {
+  CharacterSheetStats,
+  CharacterSheetDerivedHandlers,
+} from './use-character-sheet-derived';
 import type { AddModalType, FeatModalType, SkillModalType } from './character-sheet-context';
 import type { LibrarySectionData } from './library-section-props';
 import { useSheetAutoProficiencies } from './use-sheet-auto-proficiencies';

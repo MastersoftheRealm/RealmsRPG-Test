@@ -65,7 +65,7 @@ export function CreatorSaveToolbar({
       )}
       <span className="inline-flex items-center gap-1">
         <Button variant="secondary" onClick={onLoad} title={loadLabel} aria-label={loadLabel}>
-          <FolderOpen className="w-5 h-5" />
+          <FolderOpen className="h-5 w-5" />
           Load
         </Button>
         {loadHelp}

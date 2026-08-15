@@ -5,10 +5,7 @@
 
 import type { Character } from '@/types';
 import type { CoreRulesMap } from '@/types/core-rules';
-import {
-  calculateAllStats,
-  getArchetypeAbilityScore,
-} from '@/lib/game/calculations';
+import { calculateAllStats, getArchetypeAbilityScore } from '@/lib/game/calculations';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import { computeUnarmedProwessTpCost } from '@/lib/creator/advanced-equipment-catalog';
 import {
@@ -33,7 +30,7 @@ type Rules = Partial<CoreRulesMap>;
  */
 export function derivePowerTechniqueCharacterContext(
   character: Character,
-  rules?: Rules
+  rules?: Rules,
 ): PowerTechniqueCharacterContext {
   const stats = calculateAllStats(character, rules);
   const progression = calculateArchetypeProgression(
@@ -41,12 +38,12 @@ export function derivePowerTechniqueCharacterContext(
     character.mart_prof || 0,
     character.pow_prof || 0,
     character.archetypeChoices || {},
-    rules
+    rules,
   );
   const highestAbility = getArchetypeAbilityScore(character);
   const tpTotal = getTrainingPointLimit(character.level || 1, highestAbility, rules);
   const owned = filterZeroCostProficiencies(
-    dedupeHighestProficiencies(character.proficiencies || [])
+    dedupeHighestProficiencies(character.proficiencies || []),
   );
   const proficiencySpent = owned.reduce((sum, p) => sum + calculateProficiencyTP(p), 0);
   const unarmedSpent = computeUnarmedProwessTpCost(character.unarmedProwess || 0);

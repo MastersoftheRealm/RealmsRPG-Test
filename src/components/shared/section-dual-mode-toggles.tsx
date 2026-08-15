@@ -49,11 +49,7 @@ export function SectionDualModeToggles({
         state={spendState}
         isActive={spendActive}
         onClick={() => onModeChange(spendActive ? 'none' : 'spend')}
-        title={
-          spendActive
-            ? 'Close point spending'
-            : spendTitle
-        }
+        title={spendActive ? 'Close point spending' : spendTitle}
       />
       <TempModifierToggle
         isActive={tempActive}

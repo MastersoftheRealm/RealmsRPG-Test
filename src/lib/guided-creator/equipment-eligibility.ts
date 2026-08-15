@@ -55,7 +55,9 @@ export interface EquipmentEligibilityContext {
 }
 
 function normalizeRarity(rarity: string | null | undefined): string {
-  return String(rarity ?? 'common').trim().toLowerCase();
+  return String(rarity ?? 'common')
+    .trim()
+    .toLowerCase();
 }
 
 export function isCommonRarity(rarity: string | null | undefined): boolean {
@@ -69,7 +71,7 @@ export function isCommonRarity(rarity: string | null | undefined): boolean {
  */
 export function resolveArmorStepMode(
   explicit: ArmorStepMode | undefined,
-  archetypeType: ArchetypeCategory | null
+  archetypeType: ArchetypeCategory | null,
 ): ArmorStepMode {
   if (archetypeType === 'power') return 'none';
   if (explicit) return explicit;
@@ -92,13 +94,12 @@ function matchesPhase(row: EligibleEquipmentRow, phase: EquipmentPhase): boolean
 
 export function isEligibleForGuidedEquipmentL2(
   row: EligibleEquipmentRow,
-  ctx: EquipmentEligibilityContext
+  ctx: EquipmentEligibilityContext,
 ): boolean {
   if (!matchesPhase(row, ctx.phase)) return false;
   if (!isCommonRarity(row.rarity)) return false;
 
-  const req =
-    row.abilityRequirement ?? deriveAbilityRequirementFromProperties(row.properties);
+  const req = row.abilityRequirement ?? deriveAbilityRequirementFromProperties(row.properties);
   if (!meetsAbilityRequirement(req, ctx.abilities)) return false;
 
   const armamentMax = getArmamentMax(ctx.archetypeType ?? 'power');
@@ -127,7 +128,7 @@ export function isEligibleForGuidedEquipmentL2(
 
 export function filterEligibleEquipment(
   rows: EligibleEquipmentRow[],
-  ctx: EquipmentEligibilityContext
+  ctx: EquipmentEligibilityContext,
 ): EligibleEquipmentRow[] {
   return rows.filter((row) => isEligibleForGuidedEquipmentL2(row, ctx));
 }
@@ -138,9 +139,7 @@ export interface WeaponHandValidation {
 }
 
 /** Block illegal combos such as two-handed weapon + shield. */
-export function validateWeaponHandSelection(
-  weapons: EligibleEquipmentRow[]
-): WeaponHandValidation {
+export function validateWeaponHandSelection(weapons: EligibleEquipmentRow[]): WeaponHandValidation {
   const shields = weapons.filter((w) => w.type.toLowerCase() === 'shield');
   const twoHanded = weapons.some((w) => hasTwoHandedProperty(w.properties));
   if (twoHanded && shields.length > 0) {
@@ -158,7 +157,7 @@ export function rankWeaponCandidates(
     pathRecommendedIds?: Set<string>;
     martAbil?: AbilityName | null;
     powAbil?: AbilityName | null;
-  }
+  },
 ): EligibleEquipmentRow[] {
   const rec = ctx.pathRecommendedIds ?? new Set<string>();
   return [...rows].sort((a, b) => {
@@ -166,20 +165,10 @@ export function rankWeaponCandidates(
     const bRec = rec.has(normalizeId(b.id)) ? 0 : 1;
     if (aRec !== bRec) return aRec - bRec;
 
-    const aMatch = weaponMatchesArchetypeAbilities(
-      a.properties,
-      ctx.martAbil,
-      ctx.powAbil,
-      a.range
-    )
+    const aMatch = weaponMatchesArchetypeAbilities(a.properties, ctx.martAbil, ctx.powAbil, a.range)
       ? 0
       : 1;
-    const bMatch = weaponMatchesArchetypeAbilities(
-      b.properties,
-      ctx.martAbil,
-      ctx.powAbil,
-      b.range
-    )
+    const bMatch = weaponMatchesArchetypeAbilities(b.properties, ctx.martAbil, ctx.powAbil, b.range)
       ? 0
       : 1;
     if (aMatch !== bMatch) return aMatch - bMatch;
@@ -191,12 +180,11 @@ export function rankWeaponCandidates(
 /** Human-readable block reason for L2 rows that fail eligibility (when shown disabled). */
 export function ineligibilityReason(
   row: EligibleEquipmentRow,
-  ctx: EquipmentEligibilityContext
+  ctx: EquipmentEligibilityContext,
 ): string | undefined {
   if (isEligibleForGuidedEquipmentL2(row, ctx)) return undefined;
 
-  const req =
-    row.abilityRequirement ?? deriveAbilityRequirementFromProperties(row.properties);
+  const req = row.abilityRequirement ?? deriveAbilityRequirementFromProperties(row.properties);
   if (!meetsAbilityRequirement(req, ctx.abilities) && req) {
     return `Requires ${req.name} ${req.level}+`;
   }

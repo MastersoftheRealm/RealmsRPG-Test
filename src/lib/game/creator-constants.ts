@@ -17,7 +17,7 @@ export const ACTION_OPTIONS = [
   { value: 'long4', label: 'Long Action (4 AP)' },
 ] as const;
 
-export type ActionType = typeof ACTION_OPTIONS[number]['value'];
+export type ActionType = (typeof ACTION_OPTIONS)[number]['value'];
 
 // =============================================================================
 // Damage Configuration
@@ -25,7 +25,7 @@ export type ActionType = typeof ACTION_OPTIONS[number]['value'];
 
 /** Die sizes available for damage dice (d4, d6, d8, d10, d12) */
 export const DIE_SIZES = [4, 6, 8, 10, 12] as const;
-export type DieSize = typeof DIE_SIZES[number];
+export type DieSize = (typeof DIE_SIZES)[number];
 
 /**
  * Damage types — NO "physical vs magic" split.
@@ -34,19 +34,10 @@ export type DieSize = typeof DIE_SIZES[number];
  */
 
 /** Technique damage types (physical combat — includes 'none' for non-damaging techniques) */
-export const TECHNIQUE_DAMAGE_TYPES = [
-  'none',
-  'bludgeoning',
-  'piercing',
-  'slashing',
-] as const;
+export const TECHNIQUE_DAMAGE_TYPES = ['none', 'bludgeoning', 'piercing', 'slashing'] as const;
 
 /** Weapon-only damage types (slashing, piercing, bludgeoning) */
-export const WEAPON_DAMAGE_TYPES = [
-  'slashing',
-  'piercing',
-  'bludgeoning',
-] as const;
+export const WEAPON_DAMAGE_TYPES = ['slashing', 'piercing', 'bludgeoning'] as const;
 
 /** Power damage types (includes physical — Bludgeoning, Piercing, Slashing map to Physical Damage part) */
 export const POWER_DAMAGE_TYPES = [
@@ -86,7 +77,7 @@ export const ALL_DAMAGE_TYPES = [
   'slashing',
 ] as const;
 
-export type DamageType = typeof ALL_DAMAGE_TYPES[number];
+export type DamageType = (typeof ALL_DAMAGE_TYPES)[number];
 
 /** Damage types NOT reduced by standard armor */
 export const ARMOR_EXCEPTION_TYPES = ['psychic', 'spiritual', 'sonic'] as const;
@@ -104,7 +95,7 @@ export const AREA_TYPES = [
   { value: 'trail', label: 'Trail' },
 ] as const;
 
-export type AreaType = typeof AREA_TYPES[number]['value'];
+export type AreaType = (typeof AREA_TYPES)[number]['value'];
 
 // =============================================================================
 // Duration
@@ -119,7 +110,7 @@ export const DURATION_TYPES = [
   { value: 'permanent', label: 'Permanent' },
 ] as const;
 
-export type DurationType = typeof DURATION_TYPES[number]['value'];
+export type DurationType = (typeof DURATION_TYPES)[number]['value'];
 
 /** Duration value intervals per type (matching vanilla site) */
 export const DURATION_VALUES: Record<string, { value: number; label: string }[]> = {
@@ -153,24 +144,99 @@ export const DURATION_VALUES: Record<string, { value: number; label: string }[]>
 // =============================================================================
 
 export const CREATURE_TYPES = [
-  'Beast', 'Humanoid', 'Undead', 'Construct', 'Elemental',
-  'Aberration', 'Dragon', 'Fiend', 'Celestial', 'Fey', 'Plant', 'Ooze', 'Other',
+  'Beast',
+  'Humanoid',
+  'Undead',
+  'Construct',
+  'Elemental',
+  'Aberration',
+  'Dragon',
+  'Fiend',
+  'Celestial',
+  'Fey',
+  'Plant',
+  'Ooze',
+  'Other',
 ] as const;
 
-export type CreatureType = typeof CREATURE_TYPES[number];
+export type CreatureType = (typeof CREATURE_TYPES)[number];
 
 export const CREATURE_SIZES = [
-  { value: 'miniscule', label: 'Miniscule', spaces: 0.125, baseCarry: 10, perStrCarry: 5, minCarry: 5, height: 'Under 30 cm' },
-  { value: 'tiny', label: 'Tiny', spaces: 0.25, baseCarry: 25, perStrCarry: 10, minCarry: 10, height: '30–60 cm' },
-  { value: 'small', label: 'Small', spaces: 1, baseCarry: 50, perStrCarry: 25, minCarry: 25, height: '60–120 cm' },
-  { value: 'medium', label: 'Medium', spaces: 1, baseCarry: 100, perStrCarry: 50, minCarry: 50, height: '150–200 cm' },
-  { value: 'large', label: 'Large', spaces: 2, baseCarry: 200, perStrCarry: 100, minCarry: 100, height: '200–300 cm' },
-  { value: 'huge', label: 'Huge', spaces: 4, baseCarry: 400, perStrCarry: 200, minCarry: 200, height: '300–450 cm' },
-  { value: 'humongous', label: 'Humongous', spaces: 9, baseCarry: 800, perStrCarry: 400, minCarry: 400, height: '450–750 cm' },
-  { value: 'gargantuan', label: 'Gargantuan', spaces: 16, baseCarry: 1600, perStrCarry: 800, minCarry: 800, height: '750+ cm' },
+  {
+    value: 'miniscule',
+    label: 'Miniscule',
+    spaces: 0.125,
+    baseCarry: 10,
+    perStrCarry: 5,
+    minCarry: 5,
+    height: 'Under 30 cm',
+  },
+  {
+    value: 'tiny',
+    label: 'Tiny',
+    spaces: 0.25,
+    baseCarry: 25,
+    perStrCarry: 10,
+    minCarry: 10,
+    height: '30–60 cm',
+  },
+  {
+    value: 'small',
+    label: 'Small',
+    spaces: 1,
+    baseCarry: 50,
+    perStrCarry: 25,
+    minCarry: 25,
+    height: '60–120 cm',
+  },
+  {
+    value: 'medium',
+    label: 'Medium',
+    spaces: 1,
+    baseCarry: 100,
+    perStrCarry: 50,
+    minCarry: 50,
+    height: '150–200 cm',
+  },
+  {
+    value: 'large',
+    label: 'Large',
+    spaces: 2,
+    baseCarry: 200,
+    perStrCarry: 100,
+    minCarry: 100,
+    height: '200–300 cm',
+  },
+  {
+    value: 'huge',
+    label: 'Huge',
+    spaces: 4,
+    baseCarry: 400,
+    perStrCarry: 200,
+    minCarry: 200,
+    height: '300–450 cm',
+  },
+  {
+    value: 'humongous',
+    label: 'Humongous',
+    spaces: 9,
+    baseCarry: 800,
+    perStrCarry: 400,
+    minCarry: 400,
+    height: '450–750 cm',
+  },
+  {
+    value: 'gargantuan',
+    label: 'Gargantuan',
+    spaces: 16,
+    baseCarry: 1600,
+    perStrCarry: 800,
+    minCarry: 800,
+    height: '750+ cm',
+  },
 ] as const;
 
-export type CreatureSize = typeof CREATURE_SIZES[number]['value'];
+export type CreatureSize = (typeof CREATURE_SIZES)[number]['value'];
 
 /**
  * Feat-point cost fallbacks for creature mechanical traits when the codex row is
@@ -201,7 +267,7 @@ export const LEVELS_BY_RARITY = [
 export type LevelRarity = (typeof LEVELS_BY_RARITY)[number]['rarity'];
 
 const RARITY_RANK = new Map(
-  LEVELS_BY_RARITY.map((row, index) => [row.rarity.toLowerCase(), index] as const)
+  LEVELS_BY_RARITY.map((row, index) => [row.rarity.toLowerCase(), index] as const),
 );
 
 /** Highest rarity bracket whose minLevel ≤ character level (Common at 1–4, …). */
@@ -216,7 +282,7 @@ export function maxRarityForCharacterLevel(level: number): LevelRarity {
 /** True when the item is at or below `maxRarity`. Missing/unknown rarities stay visible. */
 export function rarityAtOrBelowMax(
   itemRarity: string | null | undefined,
-  maxRarity: string
+  maxRarity: string,
 ): boolean {
   if (!itemRarity?.trim()) return true;
   const itemRank = RARITY_RANK.get(itemRarity.trim().toLowerCase());
@@ -230,27 +296,59 @@ export function rarityAtOrBelowMax(
 // =============================================================================
 
 export const CONDITIONS = [
-  'Bleed', 'Blinded', 'Charmed', 'Dazed', 'Deafened', 'Dying',
-  'Exhausted', 'Exposed', 'Faint', 'Frightened', 'Grappled',
-  'Hidden', 'Immobile', 'Invisible', 'Prone', 'Resilient',
-  'Restrained', 'Slowed', 'Staggered', 'Stunned', 'Susceptible',
-  'Terminal', 'Weakened',
+  'Bleed',
+  'Blinded',
+  'Charmed',
+  'Dazed',
+  'Deafened',
+  'Dying',
+  'Exhausted',
+  'Exposed',
+  'Faint',
+  'Frightened',
+  'Grappled',
+  'Hidden',
+  'Immobile',
+  'Invisible',
+  'Prone',
+  'Resilient',
+  'Restrained',
+  'Slowed',
+  'Staggered',
+  'Stunned',
+  'Susceptible',
+  'Terminal',
+  'Weakened',
 ] as const;
 
-export type Condition = typeof CONDITIONS[number];
+export type Condition = (typeof CONDITIONS)[number];
 
 // =============================================================================
 // Skills
 // =============================================================================
 
 export const SKILLS = [
-  'Acrobatics', 'Animal Handling', 'Arcana', 'Athletics', 'Deception',
-  'History', 'Insight', 'Intimidation', 'Investigation', 'Medicine',
-  'Nature', 'Perception', 'Performance', 'Persuasion', 'Religion',
-  'Sleight of Hand', 'Stealth', 'Survival',
+  'Acrobatics',
+  'Animal Handling',
+  'Arcana',
+  'Athletics',
+  'Deception',
+  'History',
+  'Insight',
+  'Intimidation',
+  'Investigation',
+  'Medicine',
+  'Nature',
+  'Perception',
+  'Performance',
+  'Persuasion',
+  'Religion',
+  'Sleight of Hand',
+  'Stealth',
+  'Survival',
 ] as const;
 
-export type Skill = typeof SKILLS[number];
+export type Skill = (typeof SKILLS)[number];
 
 // =============================================================================
 // LocalStorage Cache Keys

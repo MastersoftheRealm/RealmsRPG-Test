@@ -26,12 +26,12 @@ export function CampaignRollLogSection({
   onRetry: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
-      <h2 className="font-semibold text-text-primary mb-3 flex items-center gap-2">
-        <Dices className="w-5 h-5 text-accent-500" />
+    <div className="mb-6 rounded-xl border border-border-light bg-surface p-6">
+      <h2 className="mb-3 flex items-center gap-2 font-semibold text-text-primary">
+        <Dices className="h-5 w-5 text-accent-500" />
         Campaign Roll Log
       </h2>
-      <p className="text-sm text-text-secondary mb-4">
+      <p className="mb-4 text-sm text-text-secondary">
         Rolls from all characters in this campaign. Updates in real time.
       </p>
       {isError && (
@@ -47,7 +47,7 @@ export function CampaignRollLogSection({
           </Button>
         </Alert>
       )}
-      <div ref={scrollRef} className="max-h-[400px] overflow-y-auto p-2 bg-surface-alt rounded-lg">
+      <div ref={scrollRef} className="max-h-[400px] overflow-y-auto rounded-lg bg-surface-alt p-2">
         {loading && rolls.length === 0 && !isError ? (
           <LoadingState message="Loading campaign rolls…" />
         ) : rolls.length === 0 && !isError ? (
@@ -59,15 +59,13 @@ export function CampaignRollLogSection({
           />
         ) : !isError ? (
           // Oldest at top, newest at bottom (API returns newest-first; reverse to match roll log elsewhere)
-          [...rolls].reverse().map((roll) => (
-            <RollEntryCard
-              key={roll.id}
-              roll={roll}
-              characterName={roll.characterName}
-            />
-          ))
+          [...rolls]
+            .reverse()
+            .map((roll) => (
+              <RollEntryCard key={roll.id} roll={roll} characterName={roll.characterName} />
+            ))
         ) : (
-          <p className="text-center text-text-secondary text-sm py-8">
+          <p className="py-8 text-center text-sm text-text-secondary">
             Fix the error above or tap Retry.
           </p>
         )}

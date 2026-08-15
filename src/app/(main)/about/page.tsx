@@ -45,7 +45,7 @@ export default function AboutPage() {
         className={cn(
           'relative overflow-hidden',
           'bg-gradient-to-br from-background via-primary-subtle-bg to-primary-100',
-          'dark:from-primary-900 dark:via-primary-800 dark:to-primary-900'
+          'dark:from-primary-900 dark:via-primary-800 dark:to-primary-900',
         )}
       >
         <LandingGradientBackdrop />
@@ -54,18 +54,18 @@ export default function AboutPage() {
           className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background to-transparent dark:from-background"
           aria-hidden="true"
         />
-        <div className="relative z-10 layout-shell-wide mx-auto max-w-[var(--container-wide)] px-4 sm:px-6 lg:px-8 py-10 sm:py-12 lg:py-14 text-center lg:text-left">
-          <h1 className="font-display text-3xl sm:text-4xl font-bold text-text-primary dark:text-text-on-dark mb-3">
+        <div className="layout-shell-wide relative z-10 mx-auto max-w-[var(--container-wide)] px-4 py-10 text-center sm:px-6 sm:py-12 lg:px-8 lg:py-14 lg:text-left">
+          <h1 className="mb-3 font-display text-3xl font-bold text-text-primary sm:text-4xl dark:text-text-on-dark">
             {ABOUT_COPY.pageTitle}
           </h1>
-          <p className="font-nunito text-base sm:text-lg text-text-secondary dark:text-text-on-dark/90 max-w-[58ch] mx-auto lg:mx-0">
+          <p className="mx-auto max-w-[58ch] font-nunito text-base text-text-secondary sm:text-lg lg:mx-0 dark:text-text-on-dark/90">
             {ABOUT_COPY.pageDescription}
           </p>
         </div>
       </section>
 
-      <section className="bg-background pb-14 sm:pb-20 pt-8 sm:pt-10 -mt-1">
-        <div className="layout-shell-wide mx-auto max-w-[var(--container-wide)] px-4 sm:px-6 lg:px-8 space-y-14 sm:space-y-16">
+      <section className="-mt-1 bg-background pt-8 pb-14 sm:pt-10 sm:pb-20">
+        <div className="layout-shell-wide mx-auto max-w-[var(--container-wide)] space-y-14 px-4 sm:space-y-16 sm:px-6 lg:px-8">
           <AboutCarouselSection
             slides={CAROUSEL_SLIDES}
             dice={DICE_IMAGES}
@@ -73,18 +73,18 @@ export default function AboutPage() {
           />
 
           <div className="max-w-3xl lg:max-w-none">
-            <h2 className="font-display text-xl sm:text-2xl font-bold text-text-primary mb-4">
+            <h2 className="mb-4 font-display text-xl font-bold text-text-primary sm:text-2xl">
               {ABOUT_COPY.creatorNote.heading}
             </h2>
-            <p className="font-nunito text-lg text-text-muted dark:text-text-secondary italic mb-4">
+            <p className="mb-4 font-nunito text-lg text-text-muted italic">
               {ABOUT_COPY.creatorNote.greeting}
             </p>
-            <p className="font-nunito text-base sm:text-lg text-text-secondary leading-relaxed mb-4">
+            <p className="mb-4 font-nunito text-base leading-relaxed text-text-secondary sm:text-lg">
               {ABOUT_COPY.creatorNote.bodyLead}{' '}
               <strong className="text-text-primary">{ABOUT_COPY.creatorNote.bodyEmphasis}</strong>.{' '}
               {ABOUT_COPY.creatorNote.bodyTail}
             </p>
-            <p className="font-nunito text-lg text-text-muted dark:text-text-secondary italic mb-8">
+            <p className="mb-8 font-nunito text-lg text-text-muted italic">
               {ABOUT_COPY.creatorNote.closing}
               <br />
               <span className="font-semibold text-text-primary not-italic">
@@ -93,17 +93,17 @@ export default function AboutPage() {
               <br />
               {ABOUT_COPY.creatorNote.authorTitle}
             </p>
-            <div className="flex flex-wrap gap-3 justify-center sm:justify-start items-center">
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:justify-start">
               <MarketingLinkButton href="/characters/new">
-                <Sparkles className="w-5 h-5 shrink-0" />
+                <Sparkles className="h-5 w-5 shrink-0" />
                 {LANDING_COPY.hero.primaryCta}
               </MarketingLinkButton>
               <MarketingLinkButton href="/rules" variant="outline">
-                <BookOpen className="w-5 h-5 shrink-0" />
+                <BookOpen className="h-5 w-5 shrink-0" />
                 {ABOUT_COPY.ctas.rules}
               </MarketingLinkButton>
               <MarketingExternalButton href={DISCORD_URL} variant="outline">
-                <DiscordIcon className="w-5 h-5" />
+                <DiscordIcon className="h-5 w-5" />
                 {LANDING_COPY.community.cta}
               </MarketingExternalButton>
             </div>

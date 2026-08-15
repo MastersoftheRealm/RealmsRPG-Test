@@ -61,9 +61,9 @@ const LABELS_BY_KIND: Record<ArmamentLibraryKind, LibraryEntityTabLabels> = {
 };
 
 const ICONS_BY_KIND = {
-  weapon: <Sword className="w-8 h-8" />,
-  armor: <Shirt className="w-8 h-8" />,
-  shield: <Shield className="w-8 h-8" />,
+  weapon: <Sword className="h-8 w-8" />,
+  armor: <Shirt className="h-8 w-8" />,
+  shield: <Shield className="h-8 w-8" />,
 };
 
 const ARMAMENT_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as const;
@@ -80,29 +80,23 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
   const { data: allItems = [], isLoading, error, refetch } = useUserItems();
   const items = useMemo(
     () => filterItemsByArmamentKind(allItems, armamentKind),
-    [allItems, armamentKind]
+    [allItems, armamentKind],
   );
   const { data: propertiesDb = [] } = useItemProperties();
   const duplicateItem = useDuplicateItem();
   const [search, setSearch] = useState('');
   const [advancedFilters, setAdvancedFilters] =
     useState<ArmamentFilterState>(EMPTY_ARMAMENT_FILTERS);
-  const [characterContext, setCharacterContext] =
-    useState<ArmamentCharacterContext | null>(null);
+  const [characterContext, setCharacterContext] = useState<ArmamentCharacterContext | null>(null);
   const [characterFilterId, setCharacterFilterId] = useState('');
   const addToCharacter = useAddToCharacterFromLibrary(armamentKind, characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
-  const {
-    selectedPathIds,
-    setSelectedPathIds,
-    pathIndex,
-    pathRecommendedIds,
-    pathFilterActive,
-  } = usePathListFilter({ entities: items, kind: 'armaments' });
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({ entities: items, kind: 'armaments' });
 
   const cardData = useMemo(
     () => buildOfficialItemRows(items, propertiesDb, armamentKind),
-    [items, propertiesDb, armamentKind]
+    [items, propertiesDb, armamentKind],
   );
 
   const driftedIds = useMemo(
@@ -110,7 +104,7 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
       cardData
         .filter((item) => getItemSyncResult(item.raw, propertiesDb).hasDrift)
         .map((item) => item.id),
-    [cardData, propertiesDb]
+    [cardData, propertiesDb],
   );
 
   const sync = useLibraryEntitySync({
@@ -139,9 +133,9 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
         sortItems,
         advancedFilters,
         characterContext,
-        pathRecommendedIds
+        pathRecommendedIds,
       ),
-    [cardData, search, sortItems, advancedFilters, characterContext, pathRecommendedIds]
+    [cardData, search, sortItems, advancedFilters, characterContext, pathRecommendedIds],
   );
 
   return (
@@ -192,9 +186,7 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
           countActiveArmamentFilters(advancedFilters, Boolean(characterContext)) +
           (pathFilterActive ? 1 : 0)
         }
-        filterEmptyTitle={
-          pathFilterActive ? pathFilterEmptyTitle(labels.entityPlural) : undefined
-        }
+        filterEmptyTitle={pathFilterActive ? pathFilterEmptyTitle(labels.entityPlural) : undefined}
       >
         {filteredData.map((item) => {
           const syncResult = getItemSyncResult(item.raw, propertiesDb);

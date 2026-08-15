@@ -5,7 +5,10 @@ import {
   type LibraryItemType,
 } from '@/lib/library-selectable-builders';
 import type { UserItem, UserPower, UserTechnique } from '../use-user-library';
-import { buildEmpoweredPowerSelectableItem, type EmpoweredSelectableCodex } from './build-empowered-selectable-item';
+import {
+  buildEmpoweredPowerSelectableItem,
+  type EmpoweredSelectableCodex,
+} from './build-empowered-selectable-item';
 import type { AddLibraryItemType, CodexDbRefs, EqItem, PowerSelectionMode } from './types';
 
 function toCodex(dbs: CodexDbRefs): BuildSelectableItemCodex {
@@ -24,7 +27,7 @@ export function buildSelectableItem(
   item: UserPower | UserTechnique | UserItem | EqItem,
   itemType: AddLibraryItemType,
   powerSelectionMode: PowerSelectionMode,
-  dbs: CodexDbRefs
+  dbs: CodexDbRefs,
 ): SelectableItem {
   if (itemType === 'power' && powerSelectionMode === 'empowered') {
     return buildEmpoweredPowerSelectableItem(item as UserTechnique, {

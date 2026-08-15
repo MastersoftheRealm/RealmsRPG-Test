@@ -44,31 +44,33 @@ export function CraftingOptionalRulesSection({
 }: Props) {
   if (isCompleted || (!item && !customBaseItem) || !requirements || !rulesData) return null;
   return (
-    <CollapsibleSection
-      title="Crafting Adjustments"
-      collapsedSummary="Trade time, DS, or cost"
-    >
-      <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
-        Trade time for difficulty (or vice versa), or spend more resources to speed up or simplify crafting.
+    <CollapsibleSection title="Crafting Adjustments" collapsedSummary="Trade time, DS, or cost">
+      <p className="mb-4 text-sm text-text-muted">
+        Trade time for difficulty (or vice versa), or spend more resources to speed up or simplify
+        crafting.
       </p>
       <div className="space-y-5">
         {/* Reduce Time by Increasing Difficulty */}
         {rulesData.optionalReduceTimeByDifficulty && maxReduceTimeByDifficultySteps > 0 && (
           <div>
-            <label htmlFor="opt-rt-ds" className="block text-sm font-medium text-text-primary mb-1">
+            <label htmlFor="opt-rt-ds" className="mb-1 block text-sm font-medium text-text-primary">
               Reduce Time (increase DS)
             </label>
             <select
               id="opt-rt-ds"
               value={mods.reduceTimeByDifficultySteps ?? 0}
-              onChange={(e) => setOptionModifier('reduceTimeByDifficultySteps', Number(e.target.value))}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+              onChange={(e) =>
+                setOptionModifier('reduceTimeByDifficultySteps', Number(e.target.value))
+              }
+              className="min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Reduce time by increasing difficulty"
             >
               <option value={0}>No change</option>
               {Array.from({ length: maxReduceTimeByDifficultySteps }, (_, i) => i + 1).map((n) => {
                 const opt = rulesData.optionalReduceTimeByDifficulty!;
-                const isShort = (requirements.timeUnit === 'days' && requirements.timeValue < 5) || requirements.timeUnit === 'hours';
+                const isShort =
+                  (requirements.timeUnit === 'days' && requirements.timeValue < 5) ||
+                  requirements.timeUnit === 'hours';
                 if (isShort) {
                   return (
                     <option key={n} value={n}>
@@ -78,7 +80,9 @@ export function CraftingOptionalRulesSection({
                 }
                 return (
                   <option key={n} value={n}>
-                    −{n * opt.daysReductionPerStep} days, −{n * opt.successesReductionPerStep} success{n * opt.successesReductionPerStep !== 1 ? 'es' : ''}, +{n * opt.dsIncreasePerStep} DS
+                    −{n * opt.daysReductionPerStep} days, −{n * opt.successesReductionPerStep}{' '}
+                    success{n * opt.successesReductionPerStep !== 1 ? 'es' : ''}, +
+                    {n * opt.dsIncreasePerStep} DS
                   </option>
                 );
               })}
@@ -89,20 +93,25 @@ export function CraftingOptionalRulesSection({
         {/* Reduce Time by Increasing Cost */}
         {rulesData.optionalReduceTimeByCost && maxReduceTimeByCostSteps > 0 && (
           <div>
-            <label htmlFor="opt-rt-cost" className="block text-sm font-medium text-text-primary mb-1">
+            <label
+              htmlFor="opt-rt-cost"
+              className="mb-1 block text-sm font-medium text-text-primary"
+            >
               Reduce Time (increase cost)
             </label>
             <select
               id="opt-rt-cost"
               value={mods.reduceTimeByCostSteps ?? 0}
               onChange={(e) => setOptionModifier('reduceTimeByCostSteps', Number(e.target.value))}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+              className="min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Reduce time by increasing cost"
             >
               <option value={0}>No change</option>
               {Array.from({ length: maxReduceTimeByCostSteps }, (_, i) => i + 1).map((n) => {
                 const opt = rulesData.optionalReduceTimeByCost!;
-                const isShort = (requirements.timeUnit === 'days' && requirements.timeValue < 5) || requirements.timeUnit === 'hours';
+                const isShort =
+                  (requirements.timeUnit === 'days' && requirements.timeValue < 5) ||
+                  requirements.timeUnit === 'hours';
                 if (isShort) {
                   return (
                     <option key={n} value={n}>
@@ -112,7 +121,9 @@ export function CraftingOptionalRulesSection({
                 }
                 return (
                   <option key={n} value={n}>
-                    −{n * opt.daysReductionPerStep} days, −{n * opt.successesReductionPerStep} success{n * opt.successesReductionPerStep !== 1 ? 'es' : ''}, +{n * opt.costIncreasePercentPerStep}% cost
+                    −{n * opt.daysReductionPerStep} days, −{n * opt.successesReductionPerStep}{' '}
+                    success{n * opt.successesReductionPerStep !== 1 ? 'es' : ''}, +
+                    {n * opt.costIncreasePercentPerStep}% cost
                   </option>
                 );
               })}
@@ -123,24 +134,36 @@ export function CraftingOptionalRulesSection({
         {/* Reduce Difficulty by Spending More Time */}
         {rulesData.optionalReduceDifficultyByTime && maxReduceDifficultyByTimeSteps > 0 && (
           <div>
-            <label htmlFor="opt-rd-time" className="block text-sm font-medium text-text-primary mb-1">
+            <label
+              htmlFor="opt-rd-time"
+              className="mb-1 block text-sm font-medium text-text-primary"
+            >
               Reduce DS (spend more time)
             </label>
             <select
               id="opt-rd-time"
-              value={typeof mods.reduceDifficultyByTime === 'number' ? mods.reduceDifficultyByTime : (mods.reduceDifficultyByTime ? 1 : 0)}
+              value={
+                typeof mods.reduceDifficultyByTime === 'number'
+                  ? mods.reduceDifficultyByTime
+                  : mods.reduceDifficultyByTime
+                    ? 1
+                    : 0
+              }
               onChange={(e) => setOptionModifier('reduceDifficultyByTime', Number(e.target.value))}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+              className="min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Reduce difficulty by spending more time"
             >
               <option value={0}>No change</option>
               {Array.from({ length: maxReduceDifficultyByTimeSteps }, (_, i) => i + 1).map((n) => {
                 const opt = rulesData.optionalReduceDifficultyByTime!;
-                const isCommon = requirements.rarity === 'Common' || (isConsumable && ['Common', 'Uncommon', 'Rare'].includes(requirements.rarity));
+                const isCommon =
+                  requirements.rarity === 'Common' ||
+                  (isConsumable && ['Common', 'Uncommon', 'Rare'].includes(requirements.rarity));
                 const extraDays = isCommon ? opt.additionalDaysCommon : opt.additionalDaysOther;
                 return (
                   <option key={n} value={n}>
-                    −{n * opt.dsReduction} DS, +{n * extraDays} days, +{n * opt.successesIncrease} success{n * opt.successesIncrease !== 1 ? 'es' : ''} required
+                    −{n * opt.dsReduction} DS, +{n * extraDays} days, +{n * opt.successesIncrease}{' '}
+                    success{n * opt.successesIncrease !== 1 ? 'es' : ''} required
                   </option>
                 );
               })}
@@ -151,14 +174,19 @@ export function CraftingOptionalRulesSection({
         {/* Reduce Difficulty by Spending More Resources */}
         {rulesData.optionalReduceDifficultyByCost && maxReduceDifficultyByCostSteps > 0 && (
           <div>
-            <label htmlFor="opt-rd-cost" className="block text-sm font-medium text-text-primary mb-1">
+            <label
+              htmlFor="opt-rd-cost"
+              className="mb-1 block text-sm font-medium text-text-primary"
+            >
               Reduce DS (spend more resources)
             </label>
             <select
               id="opt-rd-cost"
               value={mods.reduceDifficultyByCostSteps ?? 0}
-              onChange={(e) => setOptionModifier('reduceDifficultyByCostSteps', Number(e.target.value))}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+              onChange={(e) =>
+                setOptionModifier('reduceDifficultyByCostSteps', Number(e.target.value))
+              }
+              className="min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Reduce difficulty by spending more resources"
             >
               <option value={0}>No change</option>

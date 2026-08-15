@@ -24,12 +24,27 @@ export function HealthEnergyAllocationSection() {
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
 
-  const abilities = draft.abilities || { strength: 0, vitality: 0, agility: 0, acuity: 0, intelligence: 0, charisma: 0 };
+  const abilities = draft.abilities || {
+    strength: 0,
+    vitality: 0,
+    agility: 0,
+    acuity: 0,
+    intelligence: 0,
+    charisma: 0,
+  };
   const level = draft.level || 1;
   const powAbil = draft.pow_abil || draft.archetype?.pow_abil || draft.archetype?.ability;
   const martAbil = draft.mart_abil || draft.archetype?.mart_abil;
 
-  const baseHealth = calculateMaxHealth(0, abilities.vitality || 0, level, powAbil, abilities, rules, martAbil);
+  const baseHealth = calculateMaxHealth(
+    0,
+    abilities.vitality || 0,
+    level,
+    powAbil,
+    abilities,
+    rules,
+    martAbil,
+  );
   const baseEnergy = calculateMaxEnergyForArchetype(0, abilities, level, powAbil, martAbil);
 
   const hePool = calculateHealthEnergyPool(level, 'PLAYER', false, rules);
@@ -37,7 +52,15 @@ export function HealthEnergyAllocationSection() {
   const hpBonus = draft.healthPoints || 0;
   const enBonus = draft.energyPoints || 0;
 
-  const maxHp = calculateMaxHealth(hpBonus, abilities.vitality || 0, level, powAbil, abilities, rules, martAbil);
+  const maxHp = calculateMaxHealth(
+    hpBonus,
+    abilities.vitality || 0,
+    level,
+    powAbil,
+    abilities,
+    rules,
+    martAbil,
+  );
   const maxEnergy = calculateMaxEnergyForArchetype(enBonus, abilities, level, powAbil, martAbil);
 
   const highestPick = useMemo(
@@ -48,7 +71,7 @@ export function HealthEnergyAllocationSection() {
         powerPartsDb,
         techniquePartsDb,
       }),
-    [draft.powers, draft.techniques, powerPartsDb, techniquePartsDb]
+    [draft.powers, draft.techniques, powerPartsDb, techniquePartsDb],
   );
 
   const onAutoAllocate = useCallback(() => {
@@ -63,12 +86,12 @@ export function HealthEnergyAllocationSection() {
   const autoAllocateHelp = getGuidedAutoAllocateHelp(
     highestPick
       ? { name: highestPick.name, energy: highestPick.energy, kind: highestPick.kind }
-      : undefined
+      : undefined,
   );
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
         <p className="text-xs text-text-muted">
           Base Health: {baseHealth} | Base Energy: {baseEnergy}
         </p>
@@ -83,11 +106,7 @@ export function HealthEnergyAllocationSection() {
           >
             Auto-allocate to match highest cost
           </Button>
-          <InfoTippy
-            content={autoAllocateHelp}
-            label="How auto-allocate works"
-            size="inline"
-          />
+          <InfoTippy content={autoAllocateHelp} label="How auto-allocate works" size="inline" />
         </div>
       </div>
       <HealthEnergyAllocator

@@ -62,9 +62,10 @@ export function shouldShowPreviewAbilityChips(args: {
 }
 
 /** Resolve pow/mart archetype abilities from draft with codex path fallbacks. */
-export function resolvePreviewArchetypeAbilities(
-  context: PreviewArchetypeAbilityContext
-): { powAbil: AbilityName | null; martAbil: AbilityName | null } {
+export function resolvePreviewArchetypeAbilities(context: PreviewArchetypeAbilityContext): {
+  powAbil: AbilityName | null;
+  martAbil: AbilityName | null;
+} {
   let powAbil = context.draftPowAbil ?? context.archetypePowAbil ?? null;
   let martAbil = context.draftMartAbil ?? context.archetypeMartAbil ?? null;
 
@@ -82,7 +83,7 @@ export function resolvePreviewArchetypeAbilities(
 function resolvePreviewAbilityHighlight(
   ability: AbilityName,
   powAbil: AbilityName | null,
-  martAbil: AbilityName | null
+  martAbil: AbilityName | null,
 ): PreviewAbilityHighlight {
   if (powAbil && ability === powAbil) return 'power';
   if (martAbil && ability === martAbil) return 'martial';
@@ -103,14 +104,14 @@ export function previewAbilityTileClass(highlight: PreviewAbilityHighlight): str
       'border-power dark:border-power-border bg-power-light/40 dark:bg-power-light/20',
     highlight === 'martial' &&
       'border-martial dark:border-martial-border bg-martial-light/40 dark:bg-martial-light/20',
-    !highlight && 'bg-surface border-border-light dark:border-border'
+    !highlight && 'bg-surface border-border-light dark:border-border',
   );
 }
 
 /** All six abilities in STR→CHA order for strip + panel. */
 export function buildPreviewAbilityChips(
   abilities: Partial<Abilities> | null | undefined,
-  archetypeContext?: PreviewArchetypeAbilityContext
+  archetypeContext?: PreviewArchetypeAbilityContext,
 ): PreviewAbilityChip[] {
   const { powAbil, martAbil } = resolvePreviewArchetypeAbilities(archetypeContext ?? {});
 

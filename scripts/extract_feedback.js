@@ -57,7 +57,9 @@ if (entries.length === 0) {
 }
 
 // Determine next task id
-const existingTaskIds = (queue.match(/id:\s*TASK-(\d+)/g) || []).map(m => parseInt(m.replace(/id:\s*TASK-(\d+)/, '$1'), 10));
+const existingTaskIds = (queue.match(/id:\s*TASK-(\d+)/g) || []).map((m) =>
+  parseInt(m.replace(/id:\s*TASK-(\d+)/, '$1'), 10),
+);
 const maxExisting = existingTaskIds.length ? Math.max(...existingTaskIds) : 0;
 let nextId = maxExisting + 1;
 
@@ -73,21 +75,24 @@ function inferPriority(text) {
 let newTasks = [];
 for (const entry of entries) {
   if (entry.toLowerCase().includes('raw entry template') || entry.trim().length < 20) continue;
-  const firstLines = entry.split('\n').map(l=>l.trim()).filter(Boolean);
-  const summaryLine = firstLines.slice(0,2).join(' ').replace(/"/g, "'").trim();
-  const title = summaryLine.length > 80 ? summaryLine.slice(0,77) + '...' : summaryLine;
+  const firstLines = entry
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+  const summaryLine = firstLines.slice(0, 2).join(' ').replace(/"/g, "'").trim();
+  const title = summaryLine.length > 80 ? summaryLine.slice(0, 77) + '...' : summaryLine;
   const priority = inferPriority(entry);
-  const created_at = new Date().toISOString().slice(0,10);
+  const created_at = new Date().toISOString().slice(0, 10);
 
   // Deduplication: check if title or a short snippet exists in queue
-  const snippet = summaryLine.slice(0,50);
+  const snippet = summaryLine.slice(0, 50);
   const duplicate = queue.includes(snippet) || queue.includes(title);
   if (duplicate) {
     console.log('Skipping duplicate entry:', title);
     continue;
   }
 
-  const taskId = `TASK-${String(nextId).padStart(3,'0')}`;
+  const taskId = `TASK-${String(nextId).padStart(3, '0')}`;
   nextId += 1;
 
   const yaml = `- id: ${taskId}\n  title: ${title}\n  priority: ${priority}\n  status: not-started\n  related_files: []\n  created_at: ${created_at}\n  created_by: owner\n  description: |\n    ${entry.replace(/\n/g, '\n    ').trim()}\n  acceptance_criteria:\n    - Review and triage\n  notes: "auto-extracted from ALL_FEEDBACK_CLEAN.md"\n\n`;
@@ -104,7 +109,9 @@ for (const t of newTasks) console.log(` - ${t.id} | ${t.priority} | ${t.title}`)
 
 const apply = process.argv.includes('--apply');
 if (!apply) {
-  console.log('\nDry-run mode (no files changed). Re-run with --apply to append tasks to AI_TASK_QUEUE.md');
+  console.log(
+    '\nDry-run mode (no files changed). Re-run with --apply to append tasks to AI_TASK_QUEUE.md',
+  );
   process.exit(0);
 }
 

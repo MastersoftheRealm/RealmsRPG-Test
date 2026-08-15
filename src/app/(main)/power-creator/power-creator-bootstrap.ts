@@ -237,7 +237,9 @@ export function powerLibraryRecordToFormState(
       if (
         savedPart.isAdvanced ||
         (matchedPart.mechanic &&
-          ADVANCED_CATEGORIES.includes(matchedPart.category as (typeof ADVANCED_CATEGORIES)[number]))
+          ADVANCED_CATEGORIES.includes(
+            matchedPart.category as (typeof ADVANCED_CATEGORIES)[number],
+          ))
       ) {
         loadedAdvancedParts.push({
           ...partData,
@@ -252,8 +254,12 @@ export function powerLibraryRecordToFormState(
     }
   }
 
-  let damageData: Array<{ amount?: number; size?: number; type?: string; applyDuration?: boolean }> =
-    [];
+  let damageData: Array<{
+    amount?: number;
+    size?: number;
+    type?: string;
+    applyDuration?: boolean;
+  }> = [];
   if (Array.isArray(power.damage)) {
     damageData = power.damage;
   } else if (power.damage && typeof power.damage === 'object') {
@@ -343,14 +349,8 @@ export function bootstrapPowerCreatorFormState(options: {
     if (!powerToEdit) {
       return emptyPowerCreatorFormState();
     }
-    return powerLibraryRecordToFormState(
-      powerToEdit as PowerLibraryRecord,
-      powerParts,
-    );
+    return powerLibraryRecordToFormState(powerToEdit as PowerLibraryRecord, powerParts);
   }
 
-  return (
-    restorePowerCreatorFromCache(powerParts) ??
-    emptyPowerCreatorFormState()
-  );
+  return restorePowerCreatorFromCache(powerParts) ?? emptyPowerCreatorFormState();
 }

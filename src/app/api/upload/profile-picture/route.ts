@@ -32,13 +32,19 @@ export async function POST(request: NextRequest) {
   });
   const { success } = await uploadLimiter.check(key);
   if (!success) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    );
   }
 
   const supabase = await createClient();
   const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
   if (!rolePolicy.canUploadProfilePicture) {
-    return NextResponse.json({ error: 'Your role cannot upload profile pictures.' }, { status: 403 });
+    return NextResponse.json(
+      { error: 'Your role cannot upload profile pictures.' },
+      { status: 403 },
+    );
   }
 
   const formData = await request.formData();
@@ -90,24 +96,33 @@ export async function POST(request: NextRequest) {
       .upload(path, file, { upsert: true, contentType: detectedMime });
 
     if (uploadError) {
-      return apiErrorResponse('Upload failed', 500, 'POST /api/upload/profile-picture', uploadError);
+      return apiErrorResponse(
+        'Upload failed',
+        500,
+        'POST /api/upload/profile-picture',
+        uploadError,
+      );
     }
 
-    const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(BUCKET).getPublicUrl(path);
 
     // Do NOT set created_at here: upsert would clobber the original signup
     // timestamp on every upload (TASK-331). created_at is set on first insert
     // (DB default / ensureUserProfile); we only touch photo_url + updated_at.
-    const { error: profileError } = await supabase.from('user_profiles').upsert(
-      { id: user.uid, photo_url: publicUrl, updated_at: new Date().toISOString() },
-      { onConflict: 'id' }
-    );
+    const { error: profileError } = await supabase
+      .from('user_profiles')
+      .upsert(
+        { id: user.uid, photo_url: publicUrl, updated_at: new Date().toISOString() },
+        { onConflict: 'id' },
+      );
     if (profileError) {
       return apiErrorResponse(
         'Upload failed',
         500,
         'POST /api/upload/profile-picture (profile update)',
-        profileError
+        profileError,
       );
     }
 

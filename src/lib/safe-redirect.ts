@@ -4,10 +4,7 @@ const AUTH_ONLY_PATHS = ['/login', '/register', '/forgot-password', '/forgot-use
  * Sanitize a post-auth redirect path. Allows same-origin relative paths only.
  * Rejects protocol-relative URLs, external URLs, and embedded schemes.
  */
-export function sanitizeRedirectPath(
-  path: string | null | undefined,
-  fallback = '/',
-): string {
+export function sanitizeRedirectPath(path: string | null | undefined, fallback = '/'): string {
   if (path == null || typeof path !== 'string') return fallback;
 
   const trimmed = path.trim();

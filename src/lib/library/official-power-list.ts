@@ -20,7 +20,10 @@ import {
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
-import { libraryRowPathIds, rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
+import {
+  libraryRowPathIds,
+  rowMatchesPathRecommendedIds,
+} from '@/lib/game/path-recommendation-index';
 
 /** Data columns only — edit/delete/add use ListHeader `rowChrome` (not a leftover 40px track). */
 export const OFFICIAL_POWER_GRID = '1.4fr 1fr 0.7fr 0.9fr 0.9fr 0.7fr 0.9fr 0.9fr';
@@ -59,7 +62,7 @@ export interface OfficialPowerRow {
 
 export function buildOfficialPowerRows(
   items: LibraryPower[],
-  partsDb: PowerPart[]
+  partsDb: PowerPart[],
 ): OfficialPowerRow[] {
   return items.map((p) => {
     const doc = libraryItemToPowerDocument(p);
@@ -69,7 +72,7 @@ export function buildOfficialPowerRows(
     const parts = partChipsFromDisplay(display.partChips, { stripOptionSuffix: true });
     const categories = withDamageCategory(
       derivePartCategories(savedParts, partsDb),
-      powerHasDamageCategory(doc.damage)
+      powerHasDamageCategory(doc.damage),
     );
     return {
       id: String(p.id ?? p.docId ?? ''),
@@ -88,9 +91,7 @@ export function buildOfficialPowerRows(
       damage: damageStr,
       tp: display.tp,
       parts,
-      partIds: savedParts
-        .map((part) => (part.id != null ? String(part.id) : ''))
-        .filter(Boolean),
+      partIds: savedParts.map((part) => (part.id != null ? String(part.id) : '')).filter(Boolean),
       partNames: savedParts
         .map((part) => (part.name != null ? String(part.name) : ''))
         .filter(Boolean),
@@ -133,19 +134,27 @@ export function filterOfficialPowerRows<
   sortItems: (items: T[]) => T[],
   advanced?: PowerTechniqueFilterState,
   character?: PowerTechniqueCharacterContext | null,
-  pathRecommendedIds?: ReadonlySet<string> | null
+  pathRecommendedIds?: ReadonlySet<string> | null,
 ): T[] {
   let result = rows;
   if (pathRecommendedIds) {
-    result = result.filter((x) => rowMatchesPathRecommendedIds(libraryRowPathIds(x), pathRecommendedIds));
+    result = result.filter((x) =>
+      rowMatchesPathRecommendedIds(libraryRowPathIds(x), pathRecommendedIds),
+    );
   }
   if (search) {
     const s = search.toLowerCase();
     result = result.filter(
       (x) =>
-        String(x.name ?? '').toLowerCase().includes(s) ||
-        String(x.description ?? '').toLowerCase().includes(s) ||
-        String(x.category ?? '').toLowerCase().includes(s)
+        String(x.name ?? '')
+          .toLowerCase()
+          .includes(s) ||
+        String(x.description ?? '')
+          .toLowerCase()
+          .includes(s) ||
+        String(x.category ?? '')
+          .toLowerCase()
+          .includes(s),
     );
   }
   if (advanced) {

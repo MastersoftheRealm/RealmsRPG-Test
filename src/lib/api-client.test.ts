@@ -44,7 +44,7 @@ describe('apiFetch error body (TASK-754)', () => {
             'Currency cannot be negative — a character cannot start play in debt.',
           ],
         }),
-      })
+      }),
     );
 
     try {

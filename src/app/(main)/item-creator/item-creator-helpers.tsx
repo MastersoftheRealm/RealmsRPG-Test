@@ -17,7 +17,10 @@ import { PROPERTY_IDS } from '@/lib/id-constants';
 import { formatCost } from '@/lib/game/creator-constants';
 import { rarityChipVariant } from '@/lib/chip/rarity-chip-variant';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
-import type { ArmamentType, ItemSelectedProperty as SelectedProperty } from './item-creator-bootstrap';
+import type {
+  ArmamentType,
+  ItemSelectedProperty as SelectedProperty,
+} from './item-creator-bootstrap';
 
 export const ARMAMENT_TYPES: { value: ArmamentType; label: string; icon: typeof Sword }[] = [
   { value: 'Weapon', label: 'Weapon', icon: Sword },
@@ -26,12 +29,28 @@ export const ARMAMENT_TYPES: { value: ArmamentType; label: string; icon: typeof 
 ];
 
 export const WEAPON_ABILITY_REQUIREMENTS = [
-  { id: PROPERTY_IDS.WEAPON_STRENGTH_REQUIREMENT, name: 'Weapon Strength Requirement', label: 'STR' },
+  {
+    id: PROPERTY_IDS.WEAPON_STRENGTH_REQUIREMENT,
+    name: 'Weapon Strength Requirement',
+    label: 'STR',
+  },
   { id: PROPERTY_IDS.WEAPON_AGILITY_REQUIREMENT, name: 'Weapon Agility Requirement', label: 'AGI' },
-  { id: PROPERTY_IDS.WEAPON_VITALITY_REQUIREMENT, name: 'Weapon Vitality Requirement', label: 'VIT' },
+  {
+    id: PROPERTY_IDS.WEAPON_VITALITY_REQUIREMENT,
+    name: 'Weapon Vitality Requirement',
+    label: 'VIT',
+  },
   { id: PROPERTY_IDS.WEAPON_ACUITY_REQUIREMENT, name: 'Weapon Acuity Requirement', label: 'ACU' },
-  { id: PROPERTY_IDS.WEAPON_INTELLIGENCE_REQUIREMENT, name: 'Weapon Intelligence Requirement', label: 'INT' },
-  { id: PROPERTY_IDS.WEAPON_CHARISMA_REQUIREMENT, name: 'Weapon Charisma Requirement', label: 'CHA' },
+  {
+    id: PROPERTY_IDS.WEAPON_INTELLIGENCE_REQUIREMENT,
+    name: 'Weapon Intelligence Requirement',
+    label: 'INT',
+  },
+  {
+    id: PROPERTY_IDS.WEAPON_CHARISMA_REQUIREMENT,
+    name: 'Weapon Charisma Requirement',
+    label: 'CHA',
+  },
 ];
 
 export const ARMOR_ABILITY_REQUIREMENTS = [
@@ -81,7 +100,7 @@ export function PropertyCard({
 
   const propIP =
     ((property.base_ip as number | undefined) || 0) +
-    (((property.op_1_ip as number | undefined) || 0) * selectedProperty.op_1_lvl);
+    ((property.op_1_ip as number | undefined) || 0) * selectedProperty.op_1_lvl;
   const propTP =
     (property.base_tp || property.tp_cost || 0) +
     (property.op_1_tp || 0) * selectedProperty.op_1_lvl;
@@ -89,49 +108,39 @@ export function PropertyCard({
   const hasOption = property.op_1_desc && property.op_1_desc.trim() !== '';
 
   return (
-    <div className="bg-surface rounded-lg border border-border-light shadow-sm overflow-hidden">
-      <div className="bg-surface-alt px-4 py-3 flex items-center justify-between">
+    <div className="overflow-hidden rounded-lg border border-border-light bg-surface shadow-sm">
+      <div className="flex items-center justify-between bg-surface-alt px-4 py-3">
         <button
           type="button"
           onClick={() => setExpanded(!expanded)}
-          className="flex items-center gap-2 flex-1 min-w-0 text-left hover:bg-surface-alt/80 -ml-2 pl-2 py-1 rounded transition-colors"
+          className="-ml-2 flex min-w-0 flex-1 items-center gap-2 rounded py-1 pl-2 text-left transition-colors hover:bg-surface-alt/80"
         >
-          <span className="text-text-muted dark:text-text-secondary">
-            {expanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          <span className="text-text-muted">
+            {expanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </span>
-          <span className="font-medium text-text-primary truncate">{property.name}</span>
-          <span className="flex items-center gap-2 text-sm font-semibold flex-shrink-0">
-            {propIP > 0 && (
-              <span className="text-ip-text">
-                IP: {formatCost(propIP)}
-              </span>
-            )}
-            {propTP > 0 && (
-              <span className="text-tp-text">TP: {formatCost(propTP)}</span>
-            )}
+          <span className="truncate font-medium text-text-primary">{property.name}</span>
+          <span className="flex flex-shrink-0 items-center gap-2 text-sm font-semibold">
+            {propIP > 0 && <span className="text-ip-text">IP: {formatCost(propIP)}</span>}
+            {propTP > 0 && <span className="text-tp-text">TP: {formatCost(propTP)}</span>}
             {(property.base_c || (property.op_1_c && selectedProperty.op_1_lvl > 0)) && (
               <span className="text-currency-text">
-                C: {formatCost((property.base_c || 0) + (property.op_1_c || 0) * selectedProperty.op_1_lvl)}
+                C:{' '}
+                {formatCost(
+                  (property.base_c || 0) + (property.op_1_c || 0) * selectedProperty.op_1_lvl,
+                )}
               </span>
             )}
           </span>
         </button>
-        <IconButton
-          onClick={onRemove}
-          label="Remove property"
-          variant="danger"
-          size="sm"
-        >
-          <X className="w-5 h-5" />
+        <IconButton onClick={onRemove} label="Remove property" variant="danger" size="sm">
+          <X className="h-5 w-5" />
         </IconButton>
       </div>
 
       {expanded && (
-        <div className="px-4 py-4 space-y-4">
+        <div className="space-y-4 px-4 py-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Property
-            </label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Property</label>
             <select
               value={selectableProperties.findIndex((p) => p.id === property.id)}
               onChange={(e) => {
@@ -141,7 +150,7 @@ export function PropertyCard({
                   onUpdate({ property: newProp, op_1_lvl: 0 });
                 }
               }}
-              className="w-full px-3 py-2 border border-border-light rounded-lg text-sm text-text-primary bg-surface"
+              className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-text-primary"
               aria-label="Property"
             >
               {selectableProperties.map((p, idx) => (
@@ -152,11 +161,11 @@ export function PropertyCard({
             </select>
           </div>
 
-          <p className="text-base text-text-primary leading-relaxed">{property.description}</p>
+          <p className="text-base leading-relaxed text-text-primary">{property.description}</p>
 
           {hasOption && (
             <div className={cn('rounded-lg p-3', statusPanel.warning)}>
-              <div className="flex items-center justify-between mb-2">
+              <div className="mb-2 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-semibold text-tp-text">Option</span>
                   {property.op_1_tp && (
@@ -201,31 +210,32 @@ export function RarityReferenceTable({ currentIP }: { currentIP: number }) {
   const currentRarity = getCurrentRarity();
 
   return (
-    <Card className="shadow-md overflow-hidden p-0">
+    <Card className="overflow-hidden p-0 shadow-md">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full px-4 py-3 flex items-center justify-between bg-surface-alt hover:bg-surface-alt/80 transition-colors text-text-primary"
+        className="flex w-full items-center justify-between bg-surface-alt px-4 py-3 text-text-primary transition-colors hover:bg-surface-alt/80"
       >
         <div className="flex items-center gap-2">
-          <Info className="w-4 h-4 text-ip-text" />
+          <Info className="h-4 w-4 text-ip-text" />
           <span className="font-medium text-text-primary">Rarity Reference</span>
         </div>
-        {expanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+        {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
       </button>
 
       {expanded && (
         <div className="p-4">
-          <p className="text-xs text-text-muted dark:text-text-secondary mb-3">
-            IP (Item Power) determines rarity. Currency cost = Base Cost × (1 + 0.125 × C multiplier)
+          <p className="mb-3 text-xs text-text-muted">
+            IP (Item Power) determines rarity. Currency cost = Base Cost × (1 + 0.125 × C
+            multiplier)
           </p>
           <TableScroll>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border-light">
-                  <th className="text-left py-1 font-medium text-text-secondary">Rarity</th>
-                  <th className="text-right py-1 font-medium text-text-secondary">IP Range</th>
-                  <th className="text-right py-1 font-medium text-text-secondary">Base Currency</th>
+                  <th className="py-1 text-left font-medium text-text-secondary">Rarity</th>
+                  <th className="py-1 text-right font-medium text-text-secondary">IP Range</th>
+                  <th className="py-1 text-right font-medium text-text-secondary">Base Currency</th>
                 </tr>
               </thead>
               <tbody>
@@ -245,8 +255,10 @@ export function RarityReferenceTable({ currentIP }: { currentIP: number }) {
                         <span className="ml-1 text-xs text-ip-text">← Current</span>
                       )}
                     </td>
-                    <td className="text-right py-1.5 text-text-secondary">{r.ipRange}</td>
-                    <td className="text-right py-1.5 text-currency-text">{r.baseCost.toLocaleString()}</td>
+                    <td className="py-1.5 text-right text-text-secondary">{r.ipRange}</td>
+                    <td className="py-1.5 text-right text-currency-text">
+                      {r.baseCost.toLocaleString()}
+                    </td>
                   </tr>
                 ))}
               </tbody>

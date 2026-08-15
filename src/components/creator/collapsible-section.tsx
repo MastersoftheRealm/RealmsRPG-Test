@@ -74,11 +74,11 @@ export function CollapsibleSection({
       <div
         className={cn(
           'rounded-xl border-2 border-dashed border-border-light bg-surface-secondary p-6',
-          className
+          className,
         )}
       >
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex min-w-0 items-center gap-3">
             {icon && (
               <span className="text-2xl text-text-muted" aria-hidden>
                 {icon}
@@ -88,9 +88,7 @@ export function CollapsibleSection({
               <HeadingTag className="font-bold text-text-secondary dark:text-text-primary">
                 {title}
               </HeadingTag>
-              {subtitleText ? (
-                <p className="text-sm text-text-muted">{subtitleText}</p>
-              ) : null}
+              {subtitleText ? <p className="text-sm text-text-muted">{subtitleText}</p> : null}
             </div>
           </div>
           <Button
@@ -112,25 +110,25 @@ export function CollapsibleSection({
         <button
           type="button"
           onClick={() => setIsExpanded((prev) => !prev)}
-          className="absolute inset-0 z-0 rounded-lg hover:bg-surface-alt/80 transition-colors"
+          className="absolute inset-0 z-0 rounded-lg transition-colors hover:bg-surface-alt/80"
           aria-expanded={isExpanded}
           aria-label={isExpanded ? `Collapse ${title}` : `Expand ${title}`}
         />
-        <div className="relative z-10 flex items-center gap-2 pointer-events-none">
-          {icon && <span className="text-xl flex-shrink-0">{icon}</span>}
+        <div className="pointer-events-none relative z-10 flex items-center gap-2">
+          {icon && <span className="flex-shrink-0 text-xl">{icon}</span>}
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 flex-wrap">
+            <div className="flex flex-wrap items-center gap-1.5">
               <HeadingTag className="font-bold text-primary-fg">{title}</HeadingTag>
               {titleAddon ? (
-                <span className="inline-flex items-center pointer-events-auto">{titleAddon}</span>
+                <span className="pointer-events-auto inline-flex items-center">{titleAddon}</span>
               ) : null}
               {points && (
                 <span
                   className={cn(
-                    'px-2 py-0.5 text-xs font-medium rounded-full flex-shrink-0',
+                    'flex-shrink-0 rounded-full px-2 py-0.5 text-xs font-medium',
                     points.spent > points.total
                       ? 'bg-danger-light text-danger-fg'
-                      : 'bg-warning-light text-warning-fg'
+                      : 'bg-warning-light text-warning-fg',
                   )}
                 >
                   {points.spent}/{points.total} pts
@@ -141,20 +139,17 @@ export function CollapsibleSection({
               )}
             </div>
             {showMetaLine ? (
-              <p className="text-sm text-text-muted mt-0.5 truncate">{metaText}</p>
+              <p className="mt-0.5 truncate text-sm text-text-muted">{metaText}</p>
             ) : null}
           </div>
-          <span
-            className="flex-shrink-0 text-text-muted"
-            aria-hidden
-          >
-            {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+          <span className="flex-shrink-0 text-text-muted" aria-hidden>
+            {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </span>
           {hasTrailingActions ? (
             <div
               className={cn(
-                'flex items-center gap-2 flex-shrink-0 pointer-events-auto',
-                optional ? 'self-stretch min-h-[44px]' : 'self-center'
+                'pointer-events-auto flex flex-shrink-0 items-center gap-2',
+                optional ? 'min-h-[44px] self-stretch' : 'self-center',
               )}
             >
               {rightSlot}

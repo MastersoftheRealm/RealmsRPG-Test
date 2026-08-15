@@ -10,13 +10,7 @@
 
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/layout';
-import {
-  PageContainer,
-  Button,
-  LoadingState,
-  Alert,
-  Modal,
-} from '@/components/ui';
+import { PageContainer, Button, LoadingState, Alert, Modal } from '@/components/ui';
 import { DeleteConfirmModal } from '@/components/shared';
 import { useCampaignDetailPage } from './_components/use-campaign-detail-page';
 import { CampaignDetailHeader } from './_components/campaign-detail-header';
@@ -100,8 +94,8 @@ function CampaignDetailContent() {
 
       {model.isCampaignFull && (
         <Alert variant="warning" className="mb-4">
-          This campaign has reached the maximum of {model.maxCampaignCharacters} characters. Remove a
-          character to add more.
+          This campaign has reached the maximum of {model.maxCampaignCharacters} characters. Remove
+          a character to add more.
         </Alert>
       )}
 
@@ -150,11 +144,11 @@ function CampaignDetailContent() {
           onClose={() => model.setRemoveConfirm(null)}
           title="Remove Character"
         >
-          <p className="text-text-secondary mb-4">
+          <p className="mb-4 text-text-secondary">
             Remove {model.removeConfirm.characterName} from the campaign? They can rejoin with the
             invite code later.
           </p>
-          <div className="flex gap-3 justify-end">
+          <div className="flex justify-end gap-3">
             <Button variant="ghost" onClick={() => model.setRemoveConfirm(null)}>
               Cancel
             </Button>

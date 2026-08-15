@@ -56,9 +56,15 @@ export function filterOfficialCreatureRows<
     const s = search.toLowerCase();
     result = result.filter(
       (x) =>
-        String(x.name ?? '').toLowerCase().includes(s) ||
-        String(x.type ?? '').toLowerCase().includes(s) ||
-        String(x.description ?? '').toLowerCase().includes(s)
+        String(x.name ?? '')
+          .toLowerCase()
+          .includes(s) ||
+        String(x.type ?? '')
+          .toLowerCase()
+          .includes(s) ||
+        String(x.description ?? '')
+          .toLowerCase()
+          .includes(s),
     );
   }
   return sortItems(result);

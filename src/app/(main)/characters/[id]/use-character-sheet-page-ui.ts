@@ -91,10 +91,12 @@ export function useCharacterSheetPageUi({
             dirty: { visibility: v },
             updatedAt: remote.updatedAt,
           }),
-        }
+        },
       );
       if (result.updatedAt) {
-        setCharacter((prev) => (prev ? { ...prev, visibility: v, updatedAt: result.updatedAt } : null));
+        setCharacter((prev) =>
+          prev ? { ...prev, visibility: v, updatedAt: result.updatedAt } : null,
+        );
       }
       const label = v === 'public' ? 'Public' : v === 'private' ? 'Private' : 'Campaign';
       showToast(`Visibility set to ${label}.`, 'success');
@@ -104,10 +106,7 @@ export function useCharacterSheetPageUi({
   );
 
   const handleSettingsConfirm = useCallback(
-    async (updates: {
-      visibility?: CharacterVisibility;
-      speedDisplayUnit?: SpeedDisplayUnit;
-    }) => {
+    async (updates: { visibility?: CharacterVisibility; speedDisplayUnit?: SpeedDisplayUnit }) => {
       if (!character) return;
       setCharacter((prev) => (prev ? { ...prev, ...updates } : null));
       const result = await saveCharacterWithConflictRetry(id, updates, {
@@ -118,7 +117,9 @@ export function useCharacterSheetPageUi({
         }),
       });
       if (result.updatedAt) {
-        setCharacter((prev) => (prev ? { ...prev, ...updates, updatedAt: result.updatedAt } : null));
+        setCharacter((prev) =>
+          prev ? { ...prev, ...updates, updatedAt: result.updatedAt } : null,
+        );
       }
       if (updates.visibility) {
         const label =

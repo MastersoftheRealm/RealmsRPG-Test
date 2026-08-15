@@ -48,17 +48,17 @@ export function InnateToggle({
       disabled={disabled}
       className={cn(
         // Base styles - ensures minimum 44px touch target even for sm size
-        'min-w-[44px] min-h-[44px] flex items-center justify-center',
+        'flex min-h-[44px] min-w-[44px] items-center justify-center',
         'rounded-lg transition-all',
         // Size-specific styles for the visual icon
         sizeClasses[size],
         // Innate state
         isInnate
-          ? 'text-power-fg hover:text-power-fg hover:bg-power-light active:bg-power-light'
-          : 'text-text-muted hover:text-power-fg hover:bg-power-light active:bg-power-light',
+          ? 'text-power-fg hover:bg-power-light hover:text-power-fg active:bg-power-light'
+          : 'text-text-muted hover:bg-power-light hover:text-power-fg active:bg-power-light',
         // Disabled state
-        disabled && 'opacity-50 cursor-not-allowed hover:bg-transparent',
-        className
+        disabled && 'cursor-not-allowed opacity-50 hover:bg-transparent',
+        className,
       )}
       title={isInnate ? 'Remove from innate' : 'Set as innate'}
       aria-label={isInnate ? 'Remove from innate powers' : 'Mark as innate power'}

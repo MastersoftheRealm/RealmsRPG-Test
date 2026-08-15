@@ -52,17 +52,26 @@ export function PowerCreatorEditorPowerParts({
         titleAddon={<PowerCreatorHelp topic="parts" />}
         rightSlot={
           <>
-            <SectionCostBadge en={sectionCosts.powerParts.energyRaw} tp={sectionCosts.powerParts.totalTP} />
-            <Button type="button" variant="primary" size="sm" className="flex items-center gap-1" onClick={onAddPart}>
-              <Plus className="w-4 h-4" />
+            <SectionCostBadge
+              en={sectionCosts.powerParts.energyRaw}
+              tp={sectionCosts.powerParts.totalTP}
+            />
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              className="flex items-center gap-1"
+              onClick={onAddPart}
+            >
+              <Plus className="h-4 w-4" />
               Add Part
             </Button>
           </>
         }
       >
         {selectedParts.length === 0 ? (
-          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-            <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <div className="py-8 text-center text-text-muted">
+            <Info className="mx-auto mb-2 h-12 w-12 opacity-50" />
             <p>No parts added yet. Click &quot;Add Part&quot; to begin building your power.</p>
           </div>
         ) : (
@@ -87,7 +96,10 @@ export function PowerCreatorEditorPowerParts({
         titleAddon={<PowerCreatorHelp topic="mechanics" />}
         rightSlot={
           <>
-            <SectionCostBadge en={sectionCosts.powerMechanics.energyRaw} tp={sectionCosts.powerMechanics.totalTP} />
+            <SectionCostBadge
+              en={sectionCosts.powerMechanics.energyRaw}
+              tp={sectionCosts.powerMechanics.totalTP}
+            />
             <Button
               type="button"
               variant="primary"
@@ -95,18 +107,18 @@ export function PowerCreatorEditorPowerParts({
               className="flex items-center gap-1"
               onClick={onAddMechanicPart}
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               Add Part
             </Button>
           </>
         }
       >
         {selectedAdvancedParts.length === 0 ? (
-          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-            <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <div className="py-8 text-center text-text-muted">
+            <Info className="mx-auto mb-2 h-12 w-12 opacity-50" />
             <p>
-              No mechanics added yet. Click &quot;Add Part&quot; to add range, area, duration adjustments, and other
-              mechanic parts.
+              No mechanics added yet. Click &quot;Add Part&quot; to add range, area, duration
+              adjustments, and other mechanic parts.
             </p>
           </div>
         ) : (

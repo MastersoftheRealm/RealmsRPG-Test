@@ -40,7 +40,7 @@ export function useAdminCodexDelete(options: {
       const result = await deleteCodexDoc(
         collection,
         id,
-        acknowledgeReferences ? { acknowledgeReferences: true } : undefined
+        acknowledgeReferences ? { acknowledgeReferences: true } : undefined,
       );
       setDeleting(false);
       if (result.success) {
@@ -55,7 +55,7 @@ export function useAdminCodexDelete(options: {
       onError(result.error ?? 'Operation failed');
       return false;
     },
-    [collection, onDeleted, onError]
+    [collection, onDeleted, onError],
   );
 
   return {
@@ -64,7 +64,7 @@ export function useAdminCodexDelete(options: {
     requestDelete: useCallback((id: string) => runDelete(id, false), [runDelete]),
     confirmBlockedDelete: useCallback(
       () => (blocked ? runDelete(blocked.id, true) : Promise.resolve(false)),
-      [blocked, runDelete]
+      [blocked, runDelete],
     ),
     cancelBlockedDelete: useCallback(() => setBlocked(null), []),
   };
@@ -79,7 +79,8 @@ export function AdminCodexDeleteReferenceModal({
 }) {
   const references = state.blocked?.references ?? [];
   const shown = references.slice(0, REFERENCES_SHOWN).join('; ');
-  const extra = references.length > REFERENCES_SHOWN ? ` and ${references.length - REFERENCES_SHOWN} more` : '';
+  const extra =
+    references.length > REFERENCES_SHOWN ? ` and ${references.length - REFERENCES_SHOWN} more` : '';
 
   return (
     <ConfirmActionModal

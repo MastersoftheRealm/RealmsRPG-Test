@@ -16,7 +16,7 @@ export function GuidedFactChipRow({ chips, className }: GuidedFactChipRowProps) 
   return (
     <div
       data-chip-group
-      className={cn('flex flex-wrap gap-2 items-start', className)}
+      className={cn('flex flex-wrap items-start gap-2', className)}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >

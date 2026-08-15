@@ -11,10 +11,21 @@
  * Ported from public/js/character-sheet/calculations.js
  */
 
-import type { Abilities, DefenseBonuses, DefenseSkills, Character, AbilityName, Item } from '@/types';
+import type {
+  Abilities,
+  DefenseBonuses,
+  DefenseSkills,
+  Character,
+  AbilityName,
+  Item,
+} from '@/types';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
-import { resolveDefenseVals, resolveMartProf, resolvePowProf } from '@/lib/character/schema-normalize';
+import {
+  resolveDefenseVals,
+  resolveMartProf,
+  resolvePowProf,
+} from '@/lib/character/schema-normalize';
 import { COMBAT_DEFAULTS, PLAYER_CONSTANTS } from './constants';
 import { unproficientBonus } from './formulas';
 
@@ -30,12 +41,12 @@ type Rules = Partial<CoreRulesMap>;
 export function calculateDefenses(
   abilities: Partial<Abilities>,
   defenseVals: Partial<DefenseSkills>,
-  rules?: Rules
+  rules?: Rules,
 ): { defenseBonuses: DefenseBonuses; defenseScores: Record<string, number> } {
   const a = abilities || {};
   const d = defenseVals || {};
   const baseDefense = rules?.COMBAT?.baseDefense ?? COMBAT_DEFAULTS.BASE_DEFENSE;
-  
+
   const defenseBonuses: DefenseBonuses = {
     might: (a.strength || 0) + (d.might || 0),
     fortitude: (a.vitality || 0) + (d.fortitude || 0),
@@ -44,7 +55,7 @@ export function calculateDefenses(
     mentalFortitude: (a.intelligence || 0) + (d.mentalFortitude || 0),
     resolve: (a.charisma || 0) + (d.resolve || 0),
   };
-  
+
   const defenseScores: Record<string, number> = {
     might: baseDefense + defenseBonuses.might,
     fortitude: baseDefense + defenseBonuses.fortitude,
@@ -53,7 +64,7 @@ export function calculateDefenses(
     mentalFortitude: baseDefense + defenseBonuses.mentalFortitude,
     resolve: baseDefense + defenseBonuses.resolve,
   };
-  
+
   return { defenseBonuses, defenseScores };
 }
 
@@ -102,17 +113,17 @@ export function calculateMaxHealth(
   powAbil: AbilityName | string | undefined,
   abilities: Partial<Abilities>,
   rules?: Rules,
-  martAbil?: AbilityName | string | undefined
+  martAbil?: AbilityName | string | undefined,
 ): number {
   const baseHealth = rules?.PROGRESSION_PLAYER?.baseHealth ?? PLAYER_CONSTANTS.BASE_HEALTH;
   const vitalityIsArchetype =
     powAbil?.toLowerCase() === 'vitality' || martAbil?.toLowerCase() === 'vitality';
-  const abilityMod = vitalityIsArchetype ? (abilities?.strength || 0) : vitality;
-  
+  const abilityMod = vitalityIsArchetype ? abilities?.strength || 0 : vitality;
+
   const raw =
     abilityMod < 0
       ? baseHealth + abilityMod + healthPoints
-      : baseHealth + (abilityMod * level) + healthPoints;
+      : baseHealth + abilityMod * level + healthPoints;
   return Math.max(0, raw);
 }
 
@@ -124,10 +135,10 @@ export function calculateMaxEnergy(
   energyPoints: number,
   archetypeAbility: AbilityName | string | undefined,
   abilities: Partial<Abilities>,
-  level: number
+  level: number,
 ): number {
   const abilityMod = abilities?.[archetypeAbility?.toLowerCase() as keyof Abilities] || 0;
-  return Math.max(0, (abilityMod * level) + energyPoints);
+  return Math.max(0, abilityMod * level + energyPoints);
 }
 
 /**
@@ -138,7 +149,7 @@ export function calculateMaxEnergy(
 export function resolveEnergyArchetypeAbility(
   abilities: Partial<Abilities>,
   powAbil: AbilityName | string | undefined,
-  martAbil: AbilityName | string | undefined
+  martAbil: AbilityName | string | undefined,
 ): AbilityName | string | undefined {
   if (!powAbil) return martAbil;
   if (!martAbil) return powAbil;
@@ -153,13 +164,13 @@ export function calculateMaxEnergyForArchetype(
   abilities: Partial<Abilities>,
   level: number,
   powAbil: AbilityName | string | undefined,
-  martAbil: AbilityName | string | undefined
+  martAbil: AbilityName | string | undefined,
 ): number {
   return calculateMaxEnergy(
     energyPoints,
     resolveEnergyArchetypeAbility(abilities, powAbil, martAbil),
     abilities,
-    level
+    level,
   );
 }
 
@@ -168,20 +179,20 @@ export function calculateMaxEnergyForArchetype(
  */
 export function getArchetypeAbilityScore(charData: Partial<Character>): number {
   if (!charData?.abilities) return 0;
-  
+
   const powAbil = charData.pow_abil || charData.archetype?.pow_abil || charData.archetype?.ability;
   const martAbil = charData.mart_abil || charData.archetype?.mart_abil;
-  
+
   let powVal = 0;
   let martVal = 0;
-  
+
   if (powAbil) {
     powVal = charData.abilities[powAbil.toLowerCase() as keyof Abilities] || 0;
   }
   if (martAbil) {
     martVal = charData.abilities[martAbil.toLowerCase() as keyof Abilities] || 0;
   }
-  
+
   return Math.max(powVal, martVal);
 }
 
@@ -205,15 +216,15 @@ export function calculateBonuses(
   martProf: number,
   powProf: number,
   abilities: Partial<Abilities>,
-  powAbil?: AbilityName | string
+  powAbil?: AbilityName | string,
 ): AttackBonuses {
   const mart = martProf || 0;
   const pow = powProf || 0;
-  
-  const powerAbilityValue = powAbil 
-    ? (abilities?.[powAbil.toLowerCase() as keyof Abilities] || 0) 
-    : (abilities?.charisma || 0);
-  
+
+  const powerAbilityValue = powAbil
+    ? abilities?.[powAbil.toLowerCase() as keyof Abilities] || 0
+    : abilities?.charisma || 0;
+
   return {
     martial: mart,
     power: pow,
@@ -242,14 +253,8 @@ export function calculatePowerAttackBonus(charData: Partial<Character>): number 
   const record = charData as Record<string, unknown>;
   const powProf = resolvePowProf(record) ?? 0;
   const martProf = resolveMartProf(record) ?? 0;
-  const powAbil =
-    charData.pow_abil ?? charData.archetype?.pow_abil ?? charData.archetype?.ability;
-  return calculateBonuses(
-    martProf,
-    powProf,
-    abilities,
-    powAbil
-  ).powerAttack.prof;
+  const powAbil = charData.pow_abil ?? charData.archetype?.pow_abil ?? charData.archetype?.ability;
+  return calculateBonuses(martProf, powProf, abilities, powAbil).powerAttack.prof;
 }
 
 // =============================================================================
@@ -284,8 +289,12 @@ export interface AllDerivedStats {
  */
 export function calculateAllStats(character: Partial<Character>, rules?: Rules): AllDerivedStats {
   const abilities = character.abilities || {
-    strength: 0, vitality: 0, agility: 0,
-    acuity: 0, intelligence: 0, charisma: 0,
+    strength: 0,
+    vitality: 0,
+    agility: 0,
+    acuity: 0,
+    intelligence: 0,
+    charisma: 0,
   };
 
   const defenseVals: DefenseSkills = {
@@ -300,13 +309,14 @@ export function calculateAllStats(character: Partial<Character>, rules?: Rules):
   const speedBase = character.speedBase ?? rules?.COMBAT?.baseSpeed ?? COMBAT_DEFAULTS.BASE_SPEED;
   const speed = calculateSpeed(abilities.agility || 0, speedBase, rules);
 
-  const evasionBase = character.evasionBase ?? rules?.COMBAT?.baseEvasion ?? COMBAT_DEFAULTS.BASE_EVASION;
+  const evasionBase =
+    character.evasionBase ?? rules?.COMBAT?.baseEvasion ?? COMBAT_DEFAULTS.BASE_EVASION;
   const evasion = calculateEvasion(abilities.agility || 0, evasionBase, rules);
 
   // --- Armor ---
   const armorItems = (character.equipment?.armor || []) as Item[];
   const armor = armorItems
-    .filter(item => item.equipped)
+    .filter((item) => item.equipped)
     .reduce((sum, item) => sum + (item.armor || 0), 0);
 
   // --- Health & Energy ---
@@ -325,14 +335,14 @@ export function calculateAllStats(character: Partial<Character>, rules?: Rules):
     powAbil,
     abilities,
     rules,
-    martAbil
+    martAbil,
   );
   const maxEnergy = calculateMaxEnergyForArchetype(
     energyPoints,
     abilities,
     level,
     powAbil,
-    martAbil
+    martAbil,
   );
 
   const terminal = calculateTerminal(maxHealth);
@@ -369,7 +379,9 @@ export function computeMaxHealthEnergy(
   const level = (record.level as number) ?? 1;
   const healthPoints = (record.healthPoints as number) ?? 0;
   const energyPoints = (record.energyPoints as number) ?? 0;
-  const archetype = record.archetype as { type?: string; pow_abil?: string; mart_abil?: string; ability?: string } | undefined;
+  const archetype = record.archetype as
+    | { type?: string; pow_abil?: string; mart_abil?: string; ability?: string }
+    | undefined;
   // Match calculateAllStats: top-level pow_abil / archetype.pow_abil / archetype.ability
   const powAbil = (record.pow_abil as string) || archetype?.pow_abil || archetype?.ability;
   const martAbil = (record.mart_abil as string) || archetype?.mart_abil;
@@ -381,14 +393,14 @@ export function computeMaxHealthEnergy(
     powAbil,
     abilities,
     rules,
-    martAbil
+    martAbil,
   );
   const maxEnergy = calculateMaxEnergyForArchetype(
     energyPoints,
     abilities,
     level,
     powAbil,
-    martAbil
+    martAbil,
   );
 
   return { maxHealth, maxEnergy };

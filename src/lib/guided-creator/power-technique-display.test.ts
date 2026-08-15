@@ -25,7 +25,7 @@ describe('buildPowerTechniqueCardFacts disclosure', () => {
     const facts = buildPowerTechniqueCardFacts('powers', power, 'p1', [], []);
     expect(facts.titleChips.some((c) => /^Training Points\b/.test(c.name))).toBe(true);
     expect(facts.titleChips.some((c) => /Action/i.test(c.name) && !/^Training/.test(c.name))).toBe(
-      false
+      false,
     );
     // Action Type value-only when present
     for (const chip of facts.detailChips) {
@@ -63,7 +63,12 @@ describe('buildPowerTechniqueCardFacts disclosure', () => {
 
     // Empty parts → both kinds may yield undefined/0 energy; the regression is that
     // techniques kind must not throw / must call deriveTechniqueDisplay (not power).
-    const powerEnergy = resolvePowerTechniqueEnergy('powers', tech as unknown as LibraryPower, [], []);
+    const powerEnergy = resolvePowerTechniqueEnergy(
+      'powers',
+      tech as unknown as LibraryPower,
+      [],
+      [],
+    );
     const techEnergy = resolvePowerTechniqueEnergy('techniques', tech, [], []);
     // Same empty-parts input: values may match, but techniques path must resolve cleanly.
     expect(techEnergy === undefined || typeof techEnergy === 'number').toBe(true);

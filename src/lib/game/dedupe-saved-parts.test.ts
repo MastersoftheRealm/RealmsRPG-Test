@@ -50,7 +50,7 @@ describe('dedupeEntityRefs', () => {
         { id: 'p1', name: 'Bolt' },
         { id: 'P1', name: 'Bolt again' },
         { id: 'p2', name: 'Shield' },
-      ])
+      ]),
     ).toEqual([
       { id: 'p1', name: 'Bolt' },
       { id: 'p2', name: 'Shield' },

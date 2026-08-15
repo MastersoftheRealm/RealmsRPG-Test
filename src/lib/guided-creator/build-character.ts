@@ -12,13 +12,7 @@ import {
   inventoryTypeForResolvedItem,
   resolveEquipmentRef,
 } from '@/lib/guided-creator/resolve-loadout-items';
-import type {
-  AbilityName,
-  Character,
-  CharacterPower,
-  CharacterTechnique,
-  Item,
-} from '@/types';
+import type { AbilityName, Character, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { DEFAULT_DEFENSE_SKILLS } from '@/types';
 import { calculateMaxHealth, calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
@@ -32,10 +26,7 @@ import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
 import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
-import {
-  applyStarterEquippedFlags,
-  itemDamageReduction,
-} from '@/lib/game/equipment-equipped';
+import { applyStarterEquippedFlags, itemDamageReduction } from '@/lib/game/equipment-equipped';
 import { findByNormalizedId, normalizeId } from '@/lib/utils';
 import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 
@@ -80,7 +71,7 @@ export interface BuildGuidedCharacterContext {
 /** Resolve draft power ids to CharacterPower shapes with parts/damage for proficiency TP. */
 function resolvePowersForProficiency(
   draft: GuidedDraft,
-  officialPowers: LibraryPower[] = []
+  officialPowers: LibraryPower[] = [],
 ): CharacterPower[] {
   const innatePowerIds = dedupeEntityRefs(draft.innatePowerIds ?? []);
   const innateKeys = new Set(innatePowerIds.map((id) => normalizeId(id)));
@@ -103,7 +94,7 @@ function resolvePowersForProficiency(
 
 function resolveTechniquesForProficiency(
   draft: GuidedDraft,
-  officialTechniques: LibraryTechnique[] = []
+  officialTechniques: LibraryTechnique[] = [],
 ): CharacterTechnique[] {
   return dedupeEntityRefs(draft.techniqueIds ?? []).map((id) => {
     const lib = findByNormalizedId(officialTechniques, id);
@@ -120,7 +111,7 @@ function resolveTechniquesForProficiency(
 function resolveArmamentsForProficiency(
   inventory: Array<{ id: string; name: string; type: string }>,
   officialItems: LibraryItem[] = [],
-  codexEquipment: CodexEquipmentItem[] = []
+  codexEquipment: CodexEquipmentItem[] = [],
 ): { weapons: Item[]; shields: Item[]; armor: Item[] } {
   const toItem = (row: { id: string; name: string }): Item => {
     const official = findByNormalizedId(officialItems, row.id);
@@ -153,7 +144,7 @@ function resolveArmamentsForProficiency(
 
 export function buildGuidedCharacterPayload(
   draft: GuidedDraft,
-  ctx: BuildGuidedCharacterContext
+  ctx: BuildGuidedCharacterContext,
 ): Partial<Character> {
   const level = 1;
   const abilities = draft.abilities;
@@ -171,15 +162,9 @@ export function buildGuidedCharacterPayload(
     powAbil,
     abilities,
     ctx.rules,
-    martAbil
+    martAbil,
   );
-  const maxEnergy = calculateMaxEnergyForArchetype(
-    enAlloc,
-    abilities,
-    level,
-    powAbil,
-    martAbil
-  );
+  const maxEnergy = calculateMaxEnergyForArchetype(enAlloc, abilities, level, powAbil, martAbil);
 
   const mixedPhysical =
     draft.speciesMixed && ctx.speciesA && ctx.speciesB
@@ -271,7 +256,7 @@ export function buildGuidedCharacterPayload(
     (id) => {
       const lib = findByNormalizedId(ctx.officialTechniques, id);
       return { id, name: lib?.name ?? String(id) };
-    }
+    },
   );
 
   const inventory = (() => {
@@ -288,7 +273,8 @@ export function buildGuidedCharacterPayload(
       const official = findByNormalizedId(ctx.officialItems, ref.id);
       const codex = findByNormalizedId(ctx.codexEquipment, ref.id);
       const rawType = String(official?.type ?? codex?.type ?? '').toLowerCase();
-      let type: 'weapon' | 'armor' | 'equipment' | 'shield' = inventoryTypeForResolvedItem(resolved);
+      let type: 'weapon' | 'armor' | 'equipment' | 'shield' =
+        inventoryTypeForResolvedItem(resolved);
       if (rawType === 'shield') type = 'shield';
 
       rows.push({
@@ -328,7 +314,7 @@ export function buildGuidedCharacterPayload(
   const armamentsForProf = resolveArmamentsForProficiency(
     equippedInventory,
     ctx.officialItems,
-    ctx.codexEquipment
+    ctx.codexEquipment,
   );
   const proficiencies = buildRequiredProficiencies({
     powers: powersForProf,
@@ -343,7 +329,7 @@ export function buildGuidedCharacterPayload(
 
   const startingCurrency = computeStartingCurrency(level);
   const savedCurrency = clampSavedCurrency(
-    typeof draft.currency === 'number' ? draft.currency : startingCurrency
+    typeof draft.currency === 'number' ? draft.currency : startingCurrency,
   );
   const { pow_prof, mart_prof } = resolveArchetypeProficiencyStart(type, ctx.archetype);
 
@@ -412,7 +398,7 @@ export function buildGuidedCharacterPayload(
 export function resolveGuidedRecommendedAbilities(
   pathData: ArchetypePathData | undefined,
   primary?: AbilityName | null,
-  secondary?: AbilityName | null
+  secondary?: AbilityName | null,
 ): Record<AbilityName, number> | null {
   const fromPath = pathData?.level1?.recommended_abilities;
   if (fromPath && Object.keys(fromPath).length > 0) {

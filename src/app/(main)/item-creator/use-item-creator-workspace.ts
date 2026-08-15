@@ -48,13 +48,21 @@ export function useItemCreatorWorkspace({
   const [rangeLevel, setRangeLevel] = useState(initialFormState.rangeLevel);
   const [damageReduction, setDamageReduction] = useState(initialFormState.damageReduction);
   const [agilityReduction, setAgilityReduction] = useState(initialFormState.agilityReduction);
-  const [criticalRangeIncrease, setCriticalRangeIncrease] = useState(initialFormState.criticalRangeIncrease);
-  const [shieldDR, setShieldDR] = useState<{ amount: number; size: number }>(initialFormState.shieldDR);
-  const [hasShieldDamage, setHasShieldDamage] = useState(initialFormState.hasShieldDamage);
-  const [shieldDamage, setShieldDamage] = useState<{ amount: number; size: number }>(initialFormState.shieldDamage);
-  const [abilityRequirement, setAbilityRequirement] = useState<{ id: number; name: string; level: number } | null>(
-    initialFormState.abilityRequirement,
+  const [criticalRangeIncrease, setCriticalRangeIncrease] = useState(
+    initialFormState.criticalRangeIncrease,
   );
+  const [shieldDR, setShieldDR] = useState<{ amount: number; size: number }>(
+    initialFormState.shieldDR,
+  );
+  const [hasShieldDamage, setHasShieldDamage] = useState(initialFormState.hasShieldDamage);
+  const [shieldDamage, setShieldDamage] = useState<{ amount: number; size: number }>(
+    initialFormState.shieldDamage,
+  );
+  const [abilityRequirement, setAbilityRequirement] = useState<{
+    id: number;
+    name: string;
+    level: number;
+  } | null>(initialFormState.abilityRequirement);
   const [imageId, setImageId] = useState<string | null>(initialFormState.imageId);
   const [imageUrl, setImageUrl] = useState<string | null>(initialFormState.imageUrl);
 
@@ -186,7 +194,11 @@ export function useItemCreatorWorkspace({
         isTwoHanded,
         rangeLevel,
         abilityRequirement: abilityRequirement
-          ? { id: abilityRequirement.id, name: abilityRequirement.name, level: abilityRequirement.level }
+          ? {
+              id: abilityRequirement.id,
+              name: abilityRequirement.name,
+              level: abilityRequirement.level,
+            }
           : null,
       }),
       ...(armamentType === 'Armor' && {
@@ -194,14 +206,20 @@ export function useItemCreatorWorkspace({
         agilityReduction,
         criticalRangeIncrease,
         abilityRequirement: abilityRequirement
-          ? { id: abilityRequirement.id, name: abilityRequirement.name, level: abilityRequirement.level }
+          ? {
+              id: abilityRequirement.id,
+              name: abilityRequirement.name,
+              level: abilityRequirement.level,
+            }
           : null,
       }),
       ...(armamentType === 'Shield' && {
         isTwoHanded,
         shieldDR: { amount: shieldDR.amount, size: shieldDR.size },
         hasShieldDamage,
-        shieldDamage: hasShieldDamage ? { amount: shieldDamage.amount, size: shieldDamage.size } : null,
+        shieldDamage: hasShieldDamage
+          ? { amount: shieldDamage.amount, size: shieldDamage.size }
+          : null,
       }),
     };
     return { name: name.trim(), data: itemData };

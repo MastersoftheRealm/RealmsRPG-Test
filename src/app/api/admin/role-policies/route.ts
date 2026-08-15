@@ -7,7 +7,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdminSession } from '@/lib/admin';
-import { buildRateLimitKey, resolveClientIp, retryAfterSecondsFromReset, strictLimiter } from '@/lib/rate-limit';
+import {
+  buildRateLimitKey,
+  resolveClientIp,
+  retryAfterSecondsFromReset,
+  strictLimiter,
+} from '@/lib/rate-limit';
 import { adminRolePolicyPatchSchema, validateJson } from '@/lib/api-validation';
 import type { UserRole } from '@/lib/role-limits';
 
@@ -38,7 +43,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('role_policies')
       .select(
-        'role, max_campaigns, max_players_per_campaign, max_characters, max_custom_powers, max_custom_techniques, max_custom_armaments, max_custom_creatures, permissions, updated_at, updated_by'
+        'role, max_campaigns, max_players_per_campaign, max_characters, max_custom_powers, max_custom_techniques, max_custom_armaments, max_custom_creatures, permissions, updated_at, updated_by',
       )
       .order('role');
     if (error) throw error;
@@ -58,12 +63,15 @@ export async function PATCH(request: NextRequest) {
     }
 
     const rateResult = await strictLimiter.check(
-      buildRateLimitKey('admin-role-policies', { userId: auth.userId, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('admin-role-policies', {
+        userId: auth.userId,
+        ip: resolveClientIp(request.headers),
+      }),
     );
     if (!rateResult.success) {
       return NextResponse.json(
         { error: 'Too many requests' },
-        { status: 429, headers: { 'Retry-After': retryAfterSecondsFromReset(rateResult.reset) } }
+        { status: 429, headers: { 'Retry-After': retryAfterSecondsFromReset(rateResult.reset) } },
       );
     }
 
@@ -77,7 +85,7 @@ export async function PATCH(request: NextRequest) {
     const { data: existing, error: existingError } = await supabase
       .from('role_policies')
       .select(
-        'role, max_campaigns, max_players_per_campaign, max_characters, max_custom_powers, max_custom_techniques, max_custom_armaments, max_custom_creatures, permissions'
+        'role, max_campaigns, max_players_per_campaign, max_characters, max_custom_powers, max_custom_techniques, max_custom_armaments, max_custom_creatures, permissions',
       )
       .eq('role', role)
       .maybeSingle();
@@ -110,7 +118,7 @@ export async function PATCH(request: NextRequest) {
       .update(updates)
       .eq('role', role)
       .select(
-        'role, max_campaigns, max_players_per_campaign, max_characters, max_custom_powers, max_custom_techniques, max_custom_armaments, max_custom_creatures, permissions, updated_at, updated_by'
+        'role, max_campaigns, max_players_per_campaign, max_characters, max_custom_powers, max_custom_techniques, max_custom_armaments, max_custom_creatures, permissions, updated_at, updated_by',
       )
       .single();
     if (error) throw error;

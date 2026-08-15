@@ -19,7 +19,7 @@ export type ResolvePowersTechniquesCanonicalId = (id: string) => string | undefi
 export function getPowersTechniquesL1Ids(
   pathOptionIds: string[],
   selectedIds: string[],
-  resolveCanonicalId: ResolvePowersTechniquesCanonicalId
+  resolveCanonicalId: ResolvePowersTechniquesCanonicalId,
 ): { displayIds: string[]; promotedIds: string[] } {
   const byKey = new Map<string, string>();
   const pathKeys = new Set<string>();
@@ -61,7 +61,7 @@ export function getPowersTechniquesL1Ids(
 export function isPathRecommendedPowersTechniquesId(
   id: string,
   pathOptionIds: string[],
-  resolveCanonicalId: ResolvePowersTechniquesCanonicalId
+  resolveCanonicalId: ResolvePowersTechniquesCanonicalId,
 ): boolean {
   const raw = String(id).trim();
   if (!raw) return false;

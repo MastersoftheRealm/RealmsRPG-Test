@@ -141,9 +141,15 @@ export function mergeCachedSpeciesForm(
   }
 
   const skillIdsRaw = (f.skillIds ?? f.skill_ids) as (string | number)[] | undefined;
-  const speciesTraitsRaw = (f.species_traits ?? f.species_trait_ids) as (string | number)[] | undefined;
-  const ancestryTraitsRaw = (f.ancestry_traits ?? f.ancestry_trait_ids) as (string | number)[] | undefined;
-  const characteristicsRaw = (f.characteristics ?? f.characteristic_ids) as (string | number)[] | undefined;
+  const speciesTraitsRaw = (f.species_traits ?? f.species_trait_ids) as
+    | (string | number)[]
+    | undefined;
+  const ancestryTraitsRaw = (f.ancestry_traits ?? f.ancestry_trait_ids) as
+    | (string | number)[]
+    | undefined;
+  const characteristicsRaw = (f.characteristics ?? f.characteristic_ids) as
+    | (string | number)[]
+    | undefined;
   const flawsRaw = (f.flaws ?? f.flaw_ids) as (string | number)[] | undefined;
 
   return {
@@ -162,7 +168,8 @@ export function mergeCachedSpeciesForm(
     ave_weight: coerceNumberOrEmpty(f.ave_weight),
     adulthood_lifespan,
     imageId: typeof (f.imageId ?? f.image_id) === 'string' ? String(f.imageId ?? f.image_id) : null,
-    imageUrl: typeof (f.imageUrl ?? f.image_url) === 'string' ? String(f.imageUrl ?? f.image_url) : null,
+    imageUrl:
+      typeof (f.imageUrl ?? f.image_url) === 'string' ? String(f.imageUrl ?? f.image_url) : null,
   };
 }
 
@@ -172,15 +179,31 @@ export function speciesLibraryRecordToFormState(
   allTraits: Trait[],
   allSkills: Skill[],
 ): SpeciesFormState {
-  const data = 'data' in s && s.data && typeof s.data === 'object' ? (s as { data: Record<string, unknown> }).data : s;
+  const data =
+    'data' in s && s.data && typeof s.data === 'object'
+      ? (s as { data: Record<string, unknown> }).data
+      : s;
   const d = (data || s) as Record<string, unknown>;
-  const species_traits = normalizeTraitIds((d.species_traits || d.species_trait_ids) as (string | number)[], allTraits);
-  const ancestry_traits = normalizeTraitIds((d.ancestry_traits || d.ancestry_trait_ids) as (string | number)[], allTraits);
-  const characteristics = normalizeTraitIds((d.characteristics || d.characteristic_ids) as (string | number)[], allTraits);
+  const species_traits = normalizeTraitIds(
+    (d.species_traits || d.species_trait_ids) as (string | number)[],
+    allTraits,
+  );
+  const ancestry_traits = normalizeTraitIds(
+    (d.ancestry_traits || d.ancestry_trait_ids) as (string | number)[],
+    allTraits,
+  );
+  const characteristics = normalizeTraitIds(
+    (d.characteristics || d.characteristic_ids) as (string | number)[],
+    allTraits,
+  );
   const flaws = normalizeTraitIds((d.flaws || d.flaw_ids) as (string | number)[], allTraits);
   const skillIds = normalizeSkillIds((d.skills || d.skill_ids) as (string | number)[], allSkills);
   let sizes = (d.sizes as string[]) || [];
-  if (typeof d.sizes === 'string') sizes = (d.sizes as string).split(',').map((x) => x.trim()).filter(Boolean);
+  if (typeof d.sizes === 'string')
+    sizes = (d.sizes as string)
+      .split(',')
+      .map((x) => x.trim())
+      .filter(Boolean);
   if (!sizes.length && d.size) sizes = [d.size as string];
   if (!sizes.length) sizes = ['Medium'];
   const languages = Array.isArray(d.languages) ? (d.languages as string[]) : [];
@@ -200,6 +223,7 @@ export function speciesLibraryRecordToFormState(
     ave_weight: d.ave_weight != null ? Number(d.ave_weight) : '',
     adulthood_lifespan: lifespan && lifespan.length >= 2 ? [lifespan[0], lifespan[1]] : ['', ''],
     imageId: typeof (d.imageId ?? d.image_id) === 'string' ? String(d.imageId ?? d.image_id) : null,
-    imageUrl: typeof (d.imageUrl ?? d.image_url) === 'string' ? String(d.imageUrl ?? d.image_url) : null,
+    imageUrl:
+      typeof (d.imageUrl ?? d.image_url) === 'string' ? String(d.imageUrl ?? d.image_url) : null,
   };
 }

@@ -16,9 +16,7 @@ import {
   type Trait,
   type CreatureFeat as CodexCreatureFeatRow,
 } from '@/hooks';
-import {
-  checkFeatRequirements,
-} from '@/lib/game/feat-requirements';
+import { checkFeatRequirements } from '@/lib/game/feat-requirements';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
@@ -32,7 +30,10 @@ import {
 } from './creature-feat-utils';
 import { Alert } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
-import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import {
+  UnifiedSelectionModal,
+  type SelectableItem,
+} from '@/components/shared/unified-selection-modal';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import { MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import {
@@ -74,7 +75,7 @@ function featToSelectableItem(
   disabled: boolean,
   warningMessage: string | undefined,
   skillIdToName: Map<string, string>,
-  featPoints: number
+  featPoints: number,
 ): SelectableItem {
   const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels, {
     isCharacterFeat: feat.char_feat,
@@ -110,7 +111,12 @@ export interface AddCreatureFeatModalProps {
   onAdd: (feats: CreatureFeat[]) => void;
 }
 
-export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCreatureFeatModalProps) {
+export function AddCreatureFeatModal({
+  isOpen,
+  onClose,
+  creature,
+  onAdd,
+}: AddCreatureFeatModalProps) {
   const categorySelectId = useId();
   const abilitySelectId = useId();
   const creatureTabId = useId();
@@ -118,7 +124,11 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
   const speciesTabId = useId();
 
   const { data: creatureFeatsData = [], isLoading: loadingCreatureFeats } = useCreatureFeats();
-  const { data: codexFeats = [], isLoading: loadingCodexFeats, error: queryError } = useCodexFeats();
+  const {
+    data: codexFeats = [],
+    isLoading: loadingCodexFeats,
+    error: queryError,
+  } = useCodexFeats();
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: codexTraits = [], isLoading: loadingTraits } = useTraits();
 
@@ -133,13 +143,10 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
   const creatureLevel = Number(creature.level) || 1;
   const existingFeatIdSet = useMemo(
     () => new Set(creature.feats.map((f) => String(f.id)).filter((id) => id.length > 0)),
-    [creature.feats]
+    [creature.feats],
   );
 
-  const skillIdToName = useMemo(
-    () => buildSkillIdToName(codexSkills),
-    [codexSkills]
-  );
+  const skillIdToName = useMemo(() => buildSkillIdToName(codexSkills), [codexSkills]);
 
   const feats = useMemo((): FeatModal[] => {
     if (!codexFeats || !Array.isArray(codexFeats)) return [];
@@ -153,15 +160,20 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
 
   const featRequirementCharacter = useMemo(
     () => creatureToFeatRequirementCharacter(creature),
-    [creature]
+    [creature],
   );
 
   const checkPlayerFeatRequirements = useCallback(
     (feat: FeatModal): { meets: boolean; warning?: string } => {
-      const { met, reason } = checkFeatRequirements(feat, featRequirementCharacter, codexSkills, feats);
+      const { met, reason } = checkFeatRequirements(
+        feat,
+        featRequirementCharacter,
+        codexSkills,
+        feats,
+      );
       return { meets: met, warning: reason };
     },
-    [featRequirementCharacter, codexSkills, feats]
+    [featRequirementCharacter, codexSkills, feats],
   );
 
   const { categories, abilities } = useMemo(() => {
@@ -172,7 +184,10 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
       cats.add(f.category);
       normalizeFeatAbilities(f.ability).forEach((a) => abils.add(a));
     });
-    return { categories: Array.from(cats).filter(Boolean).sort(), abilities: Array.from(abils).sort() };
+    return {
+      categories: Array.from(cats).filter(Boolean).sort(),
+      abilities: Array.from(abils).sort(),
+    };
   }, [feats]);
 
   const creatureTabItems = useMemo((): SelectableItem[] => {
@@ -186,18 +201,20 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
       const meetsLvl = !(lr != null && lr > 0 && creatureLevel < lr);
       if (!meetsLvl && !showBlocked) return;
 
-      const di = transformCreatureFeatToDisplayItem(feat, existingFeatIdSet, MECHANICAL_CREATURE_FEAT_IDS);
+      const di = transformCreatureFeatToDisplayItem(
+        feat,
+        existingFeatIdSet,
+        MECHANICAL_CREATURE_FEAT_IDS,
+      );
       if (!di) return;
 
       const base = displayItemToSelectableItem(di);
-      const warning = !meetsLvl && lr != null ? `Requires ${formatCreatureLevelLabel(lr)}` : undefined;
+      const warning =
+        !meetsLvl && lr != null ? `Requires ${formatCreatureLevelLabel(lr)}` : undefined;
       items.push({
         ...base,
         id: `ccf:${feat.id}`,
-        columns: [
-          { key: 'Type', value: 'Creature', align: 'center' },
-          ...(base.columns ?? []),
-        ],
+        columns: [{ key: 'Type', value: 'Creature', align: 'center' }, ...(base.columns ?? [])],
         disabled: !meetsLvl && !showBlocked,
         warningMessage: warning,
         data: { tab: 'creature', displayItem: di } as ModalRowData,
@@ -213,7 +230,8 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
       const { meets } = checkPlayerFeatRequirements(feat);
       if (!meets && !showBlocked) return false;
       if (selectedCategory && feat.category !== selectedCategory) return false;
-      if (selectedAbility && !normalizeFeatAbilities(feat.ability).includes(selectedAbility)) return false;
+      if (selectedAbility && !normalizeFeatAbilities(feat.ability).includes(selectedAbility))
+        return false;
       return true;
     });
 
@@ -235,7 +253,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
           !meets && !showBlocked,
           warning,
           skillIdToName,
-          pts
+          pts,
         );
       })
       .filter((item): item is SelectableItem => item !== null);
@@ -259,8 +277,16 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
       if (optIds && optIds.length > 0) return;
 
       const pts = creaturePointsForTrait(trait);
-      const speciesTypeLabel = trait.flaw ? 'Flaw' : trait.characteristic ? 'Characteristic' : 'Trait';
-      const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [];
+      const speciesTypeLabel = trait.flaw
+        ? 'Flaw'
+        : trait.characteristic
+          ? 'Characteristic'
+          : 'Trait';
+      const detailSections: Array<{
+        label: string;
+        chips: ChipData[];
+        hideLabelIfSingle?: boolean;
+      }> = [];
       if (trait.flaw) {
         detailSections.push({
           label: 'Type',
@@ -303,7 +329,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
 
   const allItems = useMemo(
     () => [...creatureTabItems, ...libraryTabItems, ...speciesTabItems],
-    [creatureTabItems, libraryTabItems, speciesTabItems]
+    [creatureTabItems, libraryTabItems, speciesTabItems],
   );
 
   const displayFilter = useCallback(
@@ -311,7 +337,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
       const d = item.data as ModalRowData | undefined;
       return d?.tab === activeTab;
     },
-    [activeTab]
+    [activeTab],
   );
 
   const handleConfirm = useCallback(
@@ -346,7 +372,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
       });
       onAdd(out);
     },
-    [onAdd]
+    [onAdd],
   );
 
   let filterRow: ReactNode = null;
@@ -354,14 +380,14 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
     filterRow = (
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
-          <label htmlFor={categorySelectId} className="text-sm text-text-muted dark:text-text-secondary">
+          <label htmlFor={categorySelectId} className="text-sm text-text-muted">
             Category:
           </label>
           <select
             id={categorySelectId}
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
+            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:ring-2 focus:ring-primary-outline-border focus:outline-none"
           >
             <option value="">All</option>
             {categories.map((cat) => (
@@ -372,14 +398,14 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
           </select>
         </div>
         <div className="flex items-center gap-2">
-          <label htmlFor={abilitySelectId} className="text-sm text-text-muted dark:text-text-secondary">
+          <label htmlFor={abilitySelectId} className="text-sm text-text-muted">
             Ability:
           </label>
           <select
             id={abilitySelectId}
             value={selectedAbility}
             onChange={(e) => setSelectedAbility(e.target.value)}
-            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
+            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:ring-2 focus:ring-primary-outline-border focus:outline-none"
           >
             <option value="">All</option>
             {abilities.map((abil) => (
@@ -389,7 +415,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
             ))}
           </select>
         </div>
-        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
+        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-muted">
           <input
             type="checkbox"
             checked={showStateFeats}
@@ -398,7 +424,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
           />
           Show state feats
         </label>
-        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
+        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-muted">
           <input
             type="checkbox"
             checked={showBlocked}
@@ -412,7 +438,7 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
   } else if (activeTab === 'creature') {
     filterRow = (
       <div className="flex flex-wrap items-center gap-3">
-        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-muted dark:text-text-secondary">
+        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-muted">
           <input
             type="checkbox"
             checked={showBlocked}
@@ -482,7 +508,11 @@ export function AddCreatureFeatModal({ isOpen, onClose, creature, onAdd }: AddCr
             id="creature-feat-panel"
             role="tabpanel"
             aria-labelledby={
-              activeTab === 'creature' ? creatureTabId : activeTab === 'library' ? libraryTabId : speciesTabId
+              activeTab === 'creature'
+                ? creatureTabId
+                : activeTab === 'library'
+                  ? libraryTabId
+                  : speciesTabId
             }
           >
             <SegmentedControl

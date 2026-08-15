@@ -21,7 +21,7 @@ export const readOnlySetCharacter: Dispatch<SetStateAction<Character | null>> = 
 
 /** Library mutators that no-op — safe for view-only CharacterSheetBody. */
 export function buildReadOnlyLibraryHandlers(
-  setCharacter: Dispatch<SetStateAction<Character | null>> = readOnlySetCharacter
+  setCharacter: Dispatch<SetStateAction<Character | null>> = readOnlySetCharacter,
 ): CharacterSheetDerivedHandlers {
   return {
     setCharacter,

@@ -17,11 +17,11 @@ type TutorialsProps = {
 
 export function AccountTutorialsCard({ tutorialsEnabled, onTutorialsChange }: TutorialsProps) {
   return (
-    <Card className="shadow-md p-6">
-      <h2 className="text-lg font-bold text-text-primary mb-2">
+    <Card className="p-6 shadow-md">
+      <h2 className="mb-2 text-lg font-bold text-text-primary">
         {ONBOARDING_COPY.account.tutorialsTitle}
       </h2>
-      <p className="text-sm text-text-secondary mb-4">
+      <p className="mb-4 text-sm text-text-secondary">
         {ONBOARDING_COPY.account.tutorialsDescription}
       </p>
       <Checkbox
@@ -54,17 +54,21 @@ export function AccountUsernameCard({
   onSubmit,
 }: UsernameProps) {
   return (
-    <Card className="shadow-md p-6">
-      <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-        <AtSign className="w-5 h-5 text-text-secondary" />
+    <Card className="p-6 shadow-md">
+      <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-text-primary">
+        <AtSign className="h-5 w-5 text-text-secondary" />
         Change Username
       </h2>
-      <p className="text-sm text-text-secondary mb-4">
-        Usernames can only be changed once per week. Use 3–24 characters (letters, numbers, underscores, hyphens).
+      <p className="mb-4 text-sm text-text-secondary">
+        Usernames can only be changed once per week. Use 3–24 characters (letters, numbers,
+        underscores, hyphens).
       </p>
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label htmlFor="account-new-username" className="block text-sm font-medium text-text-secondary mb-1">
+          <label
+            htmlFor="account-new-username"
+            className="mb-1 block text-sm font-medium text-text-secondary"
+          >
             New Username
           </label>
           <Input
@@ -90,7 +94,9 @@ export function AccountUsernameCard({
 
         <Button
           type="submit"
-          disabled={usernameChanging || !newUsername.trim() || (!isAdmin && newUsername.trim().length < 3)}
+          disabled={
+            usernameChanging || !newUsername.trim() || (!isAdmin && newUsername.trim().length < 3)
+          }
           isLoading={usernameChanging}
         >
           Update Username

@@ -19,29 +19,52 @@ export function ArmamentProficiencyEditor({
       <TableScroll>
         <table className="w-full text-sm">
           <thead>
-            <tr className="text-xs text-text-muted dark:text-text-secondary border-b">
-              <th className="text-center py-1 px-4">Martial Prof</th>
-              <th className="text-center py-1 px-4">Armament Max (TP)</th>
-              <th className="w-8"><span className="sr-only">Actions</span></th>
+            <tr className="border-b text-xs text-text-muted">
+              <th className="px-4 py-1 text-center">Martial Prof</th>
+              <th className="px-4 py-1 text-center">Armament Max (TP)</th>
+              <th className="w-8">
+                <span className="sr-only">Actions</span>
+              </th>
             </tr>
           </thead>
           <tbody>
             {table.map((row, i) => (
               <tr key={i} className="border-b border-border-subtle">
-                <td className="text-center py-1 px-4">
-                  <NumInput value={row.martialProf} onChange={v => { const u = [...table]; u[i] = { ...row, martialProf: v }; set('table', u); }} min={0} />
+                <td className="px-4 py-1 text-center">
+                  <NumInput
+                    value={row.martialProf}
+                    onChange={(v) => {
+                      const u = [...table];
+                      u[i] = { ...row, martialProf: v };
+                      set('table', u);
+                    }}
+                    min={0}
+                  />
                 </td>
-                <td className="text-center py-1 px-4">
-                  <NumInput value={row.armamentMax} onChange={v => { const u = [...table]; u[i] = { ...row, armamentMax: v }; set('table', u); }} min={0} />
+                <td className="px-4 py-1 text-center">
+                  <NumInput
+                    value={row.armamentMax}
+                    onChange={(v) => {
+                      const u = [...table];
+                      u[i] = { ...row, armamentMax: v };
+                      set('table', u);
+                    }}
+                    min={0}
+                  />
                 </td>
-                <td className="py-1 px-1">
+                <td className="px-1 py-1">
                   <button
                     type="button"
-                    onClick={() => set('table', table.filter((_, idx) => idx !== i))}
-                    className="p-1 touch-target-md-compact text-text-muted dark:text-text-secondary hover:text-danger-fg"
+                    onClick={() =>
+                      set(
+                        'table',
+                        table.filter((_, idx) => idx !== i),
+                      )
+                    }
+                    className="touch-target-md-compact p-1 text-text-muted hover:text-danger-fg"
                     aria-label={`Remove armament row ${i + 1}`}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </td>
               </tr>
@@ -52,13 +75,13 @@ export function ArmamentProficiencyEditor({
       <button
         type="button"
         onClick={() => {
-          const nextProf = table.length > 0 ? Math.max(...table.map(r => r.martialProf)) + 1 : 0;
+          const nextProf = table.length > 0 ? Math.max(...table.map((r) => r.martialProf)) + 1 : 0;
           const nextMax = table.length > 0 ? table[table.length - 1].armamentMax + 3 : 3;
           set('table', [...table, { martialProf: nextProf, armamentMax: nextMax }]);
         }}
-        className="mt-2 flex items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover min-h-[44px] md:min-h-0"
+        className="mt-2 flex min-h-[44px] items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover md:min-h-0"
       >
-        <Plus className="w-3.5 h-3.5" /> Add Row
+        <Plus className="h-3.5 w-3.5" /> Add Row
       </button>
     </>
   );

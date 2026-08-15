@@ -76,7 +76,9 @@ export interface BuildPhaseCardStatsInput {
 }
 
 /** Build title / See more / L2 fact chips for GuidedChoiceCard. */
-export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): EquipmentPhaseCardStats {
+export function buildEquipmentPhaseCardStats(
+  input: BuildPhaseCardStatsInput,
+): EquipmentPhaseCardStats {
   const {
     category,
     properties,
@@ -104,8 +106,7 @@ export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): E
   };
 
   if (category === 'weapon') {
-    const req =
-      abilityRequirement ?? deriveAbilityRequirementFromProperties(properties);
+    const req = abilityRequirement ?? deriveAbilityRequirementFromProperties(properties);
     const reqChip = abilityRequirementChip(req);
     if (reqChip) detailChips.push(reqChip);
 
@@ -113,7 +114,7 @@ export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): E
 
     const range = resolveWeaponRangeDisplay(
       storedRange,
-      (properties ?? []) as ItemPropertyPayload[]
+      (properties ?? []) as ItemPropertyPayload[],
     );
     const rangeChip = rangeFactChip(range);
     if (rangeChip) detailChips.push(rangeChip);
@@ -121,8 +122,7 @@ export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): E
     const dmgChip = damageFactChip(damageLine);
     if (dmgChip) detailChips.push(dmgChip);
 
-    const rangeOverride =
-      storedRange == null ? undefined : String(storedRange);
+    const rangeOverride = storedRange == null ? undefined : String(storedRange);
     detailChips.push(weaponAbilityChip(properties, rangeOverride));
     detailChips.push(...named);
 
@@ -144,8 +144,7 @@ export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): E
   }
 
   if (category === 'armor') {
-    const req =
-      abilityRequirement ?? deriveAbilityRequirementFromProperties(properties);
+    const req = abilityRequirement ?? deriveAbilityRequirementFromProperties(properties);
     const reqChip = abilityRequirementChip(req);
     if (reqChip) detailChips.push(reqChip);
 
@@ -187,7 +186,7 @@ export function buildEquipmentPhaseCardStats(input: BuildPhaseCardStatsInput): E
 
 /** Format library damage array for labeled column values (bare XdY Type; chips add "Damage"). */
 export function formatWeaponDamageLine(
-  damage: Array<{ amount?: number | string; size?: number | string; type?: string }> | undefined
+  damage: Array<{ amount?: number | string; size?: number | string; type?: string }> | undefined,
 ): string | undefined {
   if (!damage?.length) return undefined;
   const formatted = formatDamageDisplay(damage[0]);

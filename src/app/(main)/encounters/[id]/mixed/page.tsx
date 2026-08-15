@@ -5,27 +5,22 @@
  * Reuses CombatEncounterView and SkillEncounterView; both states on the same Encounter document.
  */
 
-"use client";
+'use client';
 
-import { useState, use } from "react";
-import Link from "next/link";
-import { cn } from "@/lib/utils";
-import { Swords, Brain } from "lucide-react";
-import { PageContainer, LoadingState, Alert, useToast } from "@/components/ui";
-import { SegmentedControl } from "@/components/shared";
-import {
-  useEncounter,
-  useSaveEncounter,
-  useAutoSave,
-  useCampaignsFull,
-} from "@/hooks";
-import { RollProvider, RollLog } from "@/components/rolls";
-import type { Encounter } from "@/types/encounter";
-import { defaultSkillEncounterState } from "@/types/encounter";
-import CombatEncounterView from "../_components/CombatEncounterView";
-import SkillEncounterView from "../_components/SkillEncounterView";
-import { EncounterPageHeader } from "../_components/EncounterPageHeader";
-type ViewTab = "combat" | "skill";
+import { useState, use } from 'react';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
+import { Swords, Brain } from 'lucide-react';
+import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
+import { SegmentedControl } from '@/components/shared';
+import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
+import { RollProvider, RollLog } from '@/components/rolls';
+import type { Encounter } from '@/types/encounter';
+import { defaultSkillEncounterState } from '@/types/encounter';
+import CombatEncounterView from '../_components/CombatEncounterView';
+import SkillEncounterView from '../_components/SkillEncounterView';
+import { EncounterPageHeader } from '../_components/EncounterPageHeader';
+type ViewTab = 'combat' | 'skill';
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -49,8 +44,7 @@ function prepareMixedEncounter(encounter: Encounter): Encounter {
       participants,
       additionalSuccesses: skill.additionalSuccesses ?? 0,
       additionalFailures: skill.additionalFailures ?? 0,
-      requiredSuccesses:
-        skill.requiredSuccesses ?? Math.max(1, participants.length + 1),
+      requiredSuccesses: skill.requiredSuccesses ?? Math.max(1, participants.length + 1),
       maxFailures: skill.maxFailures ?? 3,
       useInitiative: skill.useInitiative ?? true,
     },
@@ -61,21 +55,15 @@ export default function MixedEncounterPage({ params }: PageParams) {
   return <MixedEncounterContent params={params} />;
 }
 
-function MixedEncounterContent({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+function MixedEncounterContent({ params }: { params: Promise<{ id: string }> }) {
   const { id: encounterId } = use(params);
   const { data: encounterData, isLoading, error } = useEncounter(encounterId);
   const saveMutation = useSaveEncounter();
   const [encounter, setEncounter] = useState<Encounter | null>(null);
-  const [initializedEncounterId, setInitializedEncounterId] = useState<
-    string | null
-  >(null);
-  const [activeView, setActiveView] = useState<ViewTab>("combat");
+  const [initializedEncounterId, setInitializedEncounterId] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<ViewTab>('combat');
   const [isEditingName, setIsEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState("");
+  const [nameInput, setNameInput] = useState('');
   const { data: campaignsFull = [] } = useCampaignsFull();
 
   if (encounterData && initializedEncounterId !== encounterId) {
@@ -97,10 +85,7 @@ function MixedEncounterContent({
     delay: 1500,
     enabled: isInitialized && !!encounter,
     onSaveError: () => {
-      showToast(
-        "Failed to save encounter. Your latest changes may not be stored.",
-        "error",
-      );
+      showToast('Failed to save encounter. Your latest changes may not be stored.', 'error');
     },
   });
 
@@ -118,10 +103,7 @@ function MixedEncounterContent({
         <Alert variant="danger" title="Encounter not found">
           This encounter may have been deleted or you may not have access.
         </Alert>
-        <Link
-          href="/encounters"
-          className="mt-4 inline-block text-primary-link-fg hover:underline"
-        >
+        <Link href="/encounters" className="mt-4 inline-block text-primary-link-fg hover:underline">
           Back to Encounters
         </Link>
       </PageContainer>
@@ -141,13 +123,13 @@ function MixedEncounterContent({
     if (trimmed && trimmed !== encounter.name) {
       setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
     } else {
-      setNameInput(encounter.name || "");
+      setNameInput(encounter.name || '');
     }
     setIsEditingName(false);
   };
 
   const handleCancelEditName = () => {
-    setNameInput(encounter.name || "");
+    setNameInput(encounter.name || '');
     setIsEditingName(false);
   };
 
@@ -162,7 +144,7 @@ function MixedEncounterContent({
           nameInput={nameInput}
           onNameInputChange={setNameInput}
           onStartEditingName={() => {
-            setNameInput(encounter.name || "");
+            setNameInput(encounter.name || '');
             setIsEditingName(true);
           }}
           onCommitName={handleCommitName}
@@ -177,21 +159,21 @@ function MixedEncounterContent({
           equalWidth
           options={[
             {
-              value: "combat",
-              label: "Combat",
-              icon: <Swords className="w-4 h-4" aria-hidden />,
+              value: 'combat',
+              label: 'Combat',
+              icon: <Swords className="h-4 w-4" aria-hidden />,
             },
             {
-              value: "skill",
-              label: "Skill",
-              icon: <Brain className="w-4 h-4" aria-hidden />,
+              value: 'skill',
+              label: 'Skill',
+              icon: <Brain className="h-4 w-4" aria-hidden />,
             },
           ]}
           aria-label="Mixed encounter view"
           className="mb-6 max-w-xs"
         />
 
-        <div className={cn(activeView !== "combat" && "hidden")}>
+        <div className={cn(activeView !== 'combat' && 'hidden')}>
           <CombatEncounterView
             encounterId={encounterId}
             encounter={encounter}
@@ -200,7 +182,7 @@ function MixedEncounterContent({
             showRollLog={false}
           />
         </div>
-        <div className={cn(activeView !== "skill" && "hidden")}>
+        <div className={cn(activeView !== 'skill' && 'hidden')}>
           <SkillEncounterView
             encounterId={encounterId}
             encounter={encounter}

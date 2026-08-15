@@ -34,7 +34,9 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
   return {
     ...actual,
     standardLimiter: {
-      check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+      check: vi.fn(() =>
+        Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 }),
+      ),
     },
   };
 });
@@ -104,15 +106,19 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     insertedRows.push(row);
     return {
       select: vi.fn().mockReturnValue({
-        single: vi.fn().mockResolvedValue(
-          insertError ? { data: null, error: insertError } : { data: { id: insertId }, error: null }
-        ),
+        single: vi
+          .fn()
+          .mockResolvedValue(
+            insertError
+              ? { data: null, error: insertError }
+              : { data: { id: insertId }, error: null },
+          ),
       }),
     };
   });
 
   const replayedId = () =>
-    (insertAttempted ? replayCharacterIdAfterInsert ?? replayCharacterId : replayCharacterId) ??
+    (insertAttempted ? (replayCharacterIdAfterInsert ?? replayCharacterId) : replayCharacterId) ??
     null;
 
   const client = {
@@ -153,7 +159,7 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
             return Promise.resolve(
               codexSkillsError
                 ? { data: null, error: codexSkillsError }
-                : { data: codexSkills, error: null }
+                : { data: codexSkills, error: null },
             );
           }),
         };
@@ -241,7 +247,7 @@ describe('GET /api/characters', () => {
             visibility: 'private',
           },
         ],
-      }) as never
+      }) as never,
     );
 
     const response = await GET();
@@ -265,7 +271,7 @@ describe('GET /api/characters', () => {
   it('returns 500 when the database query fails', async () => {
     mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
     mockCreateClient.mockResolvedValue(
-      createMockSupabase({ charactersError: { message: 'db down' } }) as never
+      createMockSupabase({ charactersError: { message: 'db down' } }) as never,
     );
 
     const response = await GET();
@@ -332,7 +338,7 @@ describe('POST /api/characters', () => {
     mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
 
     const response = await POST(
-      makePostRequest({ name: 'New Hero' }, { origin: 'https://evil.example' })
+      makePostRequest({ name: 'New Hero' }, { origin: 'https://evil.example' }),
     );
 
     expect(response.status).toBe(403);
@@ -352,7 +358,7 @@ describe('POST /api/characters', () => {
   it('creates a character and returns the new id', async () => {
     mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
     mockCreateClient.mockResolvedValue(
-      createMockSupabase({ characterCount: 1, insertId: 'created-char-id' }) as never
+      createMockSupabase({ characterCount: 1, insertId: 'created-char-id' }) as never,
     );
 
     const response = await POST(makePostRequest({ name: 'New Hero', level: 2 }));
@@ -367,7 +373,7 @@ describe('POST /api/characters', () => {
     mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
     mockGetRolePolicyForUser.mockResolvedValue(policy);
     mockCreateClient.mockResolvedValue(
-      createMockSupabase({ characterCount: policy.maxCharacters }) as never
+      createMockSupabase({ characterCount: policy.maxCharacters }) as never,
     );
 
     const response = await POST(makePostRequest({ name: 'One Too Many' }));
@@ -394,8 +400,8 @@ describe('POST /api/characters', () => {
               charisma: 0,
             },
             currency: -25,
-          })
-        )
+          }),
+        ),
       );
 
       expect(response.status).toBe(400);
@@ -422,7 +428,7 @@ describe('POST /api/characters', () => {
     it('creates a legal level-1 build', async () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       mockCreateClient.mockResolvedValue(
-        createMockSupabase({ insertId: 'legal-char-id' }) as never
+        createMockSupabase({ insertId: 'legal-char-id' }) as never,
       );
 
       const response = await POST(makePostRequest(legalLevel1Payload()));
@@ -447,8 +453,8 @@ describe('POST /api/characters', () => {
               intelligence: 0,
               charisma: 0,
             },
-          })
-        )
+          }),
+        ),
       );
 
       expect(response.status).toBe(200);
@@ -460,7 +466,7 @@ describe('POST /api/characters', () => {
         createMockSupabase({
           insertId: 'should-not-insert',
           codexFeats: [{ id: 'c1', name: 'Needs Level 4', lvl_req: 4 }],
-        }) as never
+        }) as never,
       );
 
       const response = await POST(makePostRequest(legalLevel1Payload()));
@@ -479,7 +485,7 @@ describe('POST /api/characters', () => {
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
 
       const response = await POST(
-        makePostRequest({ name: 'New Hero', clientRequestId: 'not-a-uuid' })
+        makePostRequest({ name: 'New Hero', clientRequestId: 'not-a-uuid' }),
       );
 
       expect(response.status).toBe(400);
@@ -505,7 +511,7 @@ describe('POST /api/characters', () => {
         createMockSupabase({
           characterCount: policy.maxCharacters,
           replayCharacterId: 'already-created-id',
-        }) as never
+        }) as never,
       );
 
       const response = await POST(makePostRequest(legalLevel1Payload({ clientRequestId })));
@@ -523,7 +529,7 @@ describe('POST /api/characters', () => {
 
       expect(response.status).toBe(200);
       expect(supabase.insertMock).toHaveBeenCalledWith(
-        expect.objectContaining({ client_request_id: clientRequestId })
+        expect.objectContaining({ client_request_id: clientRequestId }),
       );
       // The key is routing metadata, not character data.
       const savedData = supabase.insertedRows[0].data as Record<string, unknown>;
@@ -537,7 +543,7 @@ describe('POST /api/characters', () => {
         createMockSupabase({
           insertError: { code: '23505' },
           replayCharacterIdAfterInsert: 'race-winner-id',
-        }) as never
+        }) as never,
       );
 
       const response = await POST(makePostRequest(legalLevel1Payload({ clientRequestId })));
@@ -550,7 +556,7 @@ describe('POST /api/characters', () => {
       const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
       mockGetSession.mockResolvedValue({ user: TEST_USER, error: null });
       mockCreateClient.mockResolvedValue(
-        createMockSupabase({ insertError: { code: '23503', message: 'fk violation' } }) as never
+        createMockSupabase({ insertError: { code: '23503', message: 'fk violation' } }) as never,
       );
 
       const response = await POST(makePostRequest(legalLevel1Payload({ clientRequestId })));
@@ -587,7 +593,7 @@ describe('POST /api/characters', () => {
             message: 'column codex_skills.base_skill_id does not exist',
             hint: 'Perhaps you meant to reference the column "codex_skills.base_skill".',
           },
-        }) as never
+        }) as never,
       );
 
       const response = await POST(makePostRequest(legalLevel1Payload()));
@@ -595,7 +601,9 @@ describe('POST /api/characters', () => {
       expect(response.status).toBe(500);
       const body = await readJson<Record<string, unknown>>(response);
       expect(body).toEqual({ error: CREATE_FAILED });
-      expect(JSON.stringify(body)).not.toMatch(/42703|base_skill_id|does not exist|Perhaps you meant/);
+      expect(JSON.stringify(body)).not.toMatch(
+        /42703|base_skill_id|does not exist|Perhaps you meant/,
+      );
       expect(spy).toHaveBeenCalled();
       spy.mockRestore();
     });

@@ -49,15 +49,15 @@ export function CampaignDetailHeader({
       <div className="mb-6">
         <Link
           href="/campaigns"
-          className="inline-flex items-center gap-1 text-text-secondary hover:text-primary-fg-hover mb-4"
+          className="mb-4 inline-flex items-center gap-1 text-text-secondary hover:text-primary-fg-hover"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="h-4 w-4" />
           Back to Campaigns
         </Link>
       </div>
 
       <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 flex-1">
             {isRealmMaster && editingName ? (
               <input
@@ -69,7 +69,7 @@ export function CampaignDetailHeader({
                   if (e.key === 'Enter') onSaveName();
                   if (e.key === 'Escape') onCancelEditName();
                 }}
-                className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-outline-border rounded-lg focus:ring-2 focus:ring-primary-outline-border w-full max-w-md"
+                className="w-full max-w-md rounded-lg border-2 border-primary-outline-border px-2 py-1 text-2xl font-bold text-text-primary focus:ring-2 focus:ring-primary-outline-border md:text-3xl"
                 autoFocus
                 disabled={updateLoading}
               />
@@ -83,12 +83,12 @@ export function CampaignDetailHeader({
                     <button
                       type="button"
                       onClick={onStartEditName}
-                      className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
                       title="Edit campaign name"
                       aria-label="Edit campaign name"
                       disabled={updateLoading}
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Pencil className="h-4 w-4" />
                     </button>
                   ) : undefined
                 }
@@ -104,7 +104,7 @@ export function CampaignDetailHeader({
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') onCancelEditDescription();
                   }}
-                  className="mt-2 w-full max-w-xl px-2 py-1 text-text-primary border-2 border-primary-outline-border rounded-lg focus:ring-2 focus:ring-primary-outline-border min-h-[80px] bg-surface"
+                  className="mt-2 min-h-[80px] w-full max-w-xl rounded-lg border-2 border-primary-outline-border bg-surface px-2 py-1 text-text-primary focus:ring-2 focus:ring-primary-outline-border"
                   placeholder="Brief description of your campaign..."
                   autoFocus
                   disabled={updateLoading}
@@ -112,18 +112,19 @@ export function CampaignDetailHeader({
               </div>
             ) : (
               (campaign.description || isRealmMaster) && (
-                <p className="mt-2 text-text-secondary flex items-center gap-2">
-                  {campaign.description || (isRealmMaster ? 'No description. Click the pencil to add one.' : '')}
+                <p className="mt-2 flex items-center gap-2 text-text-secondary">
+                  {campaign.description ||
+                    (isRealmMaster ? 'No description. Click the pencil to add one.' : '')}
                   {isRealmMaster && !editingName && (
                     <button
                       type="button"
                       onClick={onStartEditDescription}
-                      className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
+                      className="text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
                       title="Edit description"
                       aria-label="Edit description"
                       disabled={updateLoading}
                     >
-                      <Pencil className="w-4 h-4" />
+                      <Pencil className="h-4 w-4" />
                     </button>
                   )}
                 </p>
@@ -131,7 +132,7 @@ export function CampaignDetailHeader({
             )}
           </div>
           {isRealmMaster && (
-            <div className="flex items-center gap-2 flex-shrink-0">
+            <div className="flex flex-shrink-0 items-center gap-2">
               <Button variant="danger" size="sm" onClick={onDeleteClick}>
                 Delete Campaign
               </Button>

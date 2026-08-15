@@ -61,7 +61,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
     const result = applyPowerTechniqueFilters(
       rows,
       { ...EMPTY_POWER_TECHNIQUE_FILTERS, categories: ['Utility', 'Control'] },
-      'power'
+      'power',
     );
     expect(result).toHaveLength(2);
     expect(result.map((r) => r.categories?.[0])).toEqual(['Defense', 'Control']);
@@ -75,7 +75,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
         energyMax: 6,
         reactionMode: 'reaction',
       },
-      'technique'
+      'technique',
     );
     expect(result).toHaveLength(1);
     expect(result[0].isReaction).toBe(true);
@@ -89,7 +89,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
         innateEligibleOnly: true,
         innateThreshold: 8,
       },
-      'power'
+      'power',
     );
     expect(result).toHaveLength(2);
     expect(result.every((r) => (r.partNames ?? []).every((n) => n !== 'Heal'))).toBe(true);
@@ -111,7 +111,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
         innateThreshold: 14,
       },
       'power',
-      characterCtx
+      characterCtx,
     );
     expect(result.every((r) => Number(r.energy) <= 8)).toBe(true);
     expect(result.every((r) => Number(r.energy) <= 6)).toBe(true);
@@ -122,7 +122,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
     const byMax = applyPowerTechniqueFilters(
       rows,
       { ...EMPTY_POWER_TECHNIQUE_FILTERS, tpMax: 3 },
-      'technique'
+      'technique',
     );
     expect(byMax).toHaveLength(1);
     expect(byMax[0].tp).toBe(2);
@@ -131,7 +131,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
       rows,
       { ...EMPTY_POWER_TECHNIQUE_FILTERS, affordableTpOnly: true },
       'technique',
-      characterCtx
+      characterCtx,
     );
     expect(affordable.every((r) => (r.tp ?? 0) <= 3)).toBe(true);
     expect(affordable).toHaveLength(1);

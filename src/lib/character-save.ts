@@ -38,11 +38,20 @@ export function resolveClientRequestId(existing: unknown): string {
 
 function isUncertainCreateOutcome(err: unknown): boolean {
   if (isApiError(err)) return false;
-  if (typeof DOMException !== 'undefined' && err instanceof DOMException && err.name === 'AbortError') {
+  if (
+    typeof DOMException !== 'undefined' &&
+    err instanceof DOMException &&
+    err.name === 'AbortError'
+  ) {
     return true;
   }
   if (err instanceof TypeError) return true;
-  if (err && typeof err === 'object' && 'name' in err && (err as { name: string }).name === 'AbortError') {
+  if (
+    err &&
+    typeof err === 'object' &&
+    'name' in err &&
+    (err as { name: string }).name === 'AbortError'
+  ) {
     return true;
   }
   return /failed to fetch|networkerror|load failed|aborted/i.test(getErrorMessage(err, ''));
@@ -55,7 +64,7 @@ function isUncertainCreateOutcome(err: unknown): boolean {
  */
 export function formatCharacterCreateFailureMessage(
   err: unknown,
-  copy: { saveFailed: string; saveRetryHint: string }
+  copy: { saveFailed: string; saveRetryHint: string },
 ): string {
   if (isApiError(err)) {
     if (err.status === 400) return err.message.trim() || copy.saveFailed;
@@ -82,7 +91,7 @@ export function prepareCharacterForSave(data: Partial<Character>): Record<string
   // Same sparse Temp Modifier contract as cleanForSave (ADR-0006)
   if (cleaned.tempModifiers !== undefined) {
     const normalized = normalizeTempModifiers(
-      cleaned.tempModifiers as CharacterTempModifiers | undefined
+      cleaned.tempModifiers as CharacterTempModifiers | undefined,
     );
     if (normalized) cleaned.tempModifiers = normalized;
     else delete cleaned.tempModifiers;

@@ -29,7 +29,7 @@ export type ItemWithLibrarySource = Item & {
 export function partsToPartData(
   parts?: CharacterPower['parts'] | CharacterTechnique['parts'],
   codexParts: CodexPart[] = [],
-  variant: 'power' | 'technique' = 'power'
+  variant: 'power' | 'technique' = 'power',
 ): PartData[] {
   return characterPartsToPartData(parts, codexParts, variant);
 }
@@ -38,7 +38,7 @@ export const propertiesToPartData = itemPropertiesToPartData;
 
 export function chipDescriptionWithOptionLevels(
   baseDescription: string | undefined,
-  optionLevels: PartData['optionLevels']
+  optionLevels: PartData['optionLevels'],
 ): string | undefined {
   const parts: string[] = [];
   if (baseDescription?.trim()) parts.push(baseDescription.trim());
@@ -124,7 +124,7 @@ export interface EquippedArmorQuickRef {
 /** Aggregated DR and effective Critical Range threshold for equipped armor (null if none equipped). */
 export function getEquippedArmorQuickRef(
   armor: Item[] | undefined,
-  evasion: number
+  evasion: number,
 ): EquippedArmorQuickRef | null {
   const equipped = (armor ?? []).filter((a) => a?.equipped);
   if (equipped.length === 0) return null;
@@ -146,13 +146,13 @@ export function getEquippedArmorQuickRef(
 export function getWeaponAttackBonus(
   weapon: Item,
   abilities?: Abilities,
-  martialProficiency?: number
+  martialProficiency?: number,
 ): { bonus: number; abilityName: string } {
   const props = resolveItemProperties(weapon) ?? weapon.properties ?? [];
   const { bonus, abilityName } = getWeaponAttackBonusFromProperties(
     props as { id?: number; name?: string; op_1_lvl?: number }[],
     abilities,
-    martialProficiency
+    martialProficiency,
   );
   return { bonus, abilityName };
 }

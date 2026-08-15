@@ -25,7 +25,7 @@ export function FilterNativeSelect({
     <div className={cn('relative', wrapperClassName)}>
       <select className={cn(FILTER_NATIVE_SELECT_CLASS, className)} {...props} />
       <ChevronDown
-        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-muted dark:text-text-secondary"
+        className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-text-muted"
         aria-hidden
       />
     </div>
@@ -36,5 +36,5 @@ export function FilterNativeSelect({
 export const FilterInput = forwardRef<HTMLInputElement, InputHTMLAttributes<HTMLInputElement>>(
   function FilterInput({ className, ...props }, ref) {
     return <input ref={ref} className={cn(FILTER_CONTROL_CLASS, className)} {...props} />;
-  }
+  },
 );

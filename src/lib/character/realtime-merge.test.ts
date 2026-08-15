@@ -111,7 +111,7 @@ describe('mergeSheetRealtimePayload (TASK-747)', () => {
 
     const stillDirty = pickDirtyCharacterFields(
       cleanForSave(next) as Record<string, unknown>,
-      nextBaseline
+      nextBaseline,
     );
     expect(stillDirty.notes).toBe('typing');
     expect(stillDirty).not.toHaveProperty('feats');
@@ -124,7 +124,7 @@ describe('mergeSheetRealtimePayload (TASK-747)', () => {
       saved,
       { notes: saved.notes, level: saved.level },
       baseline,
-      { suppressResources: true }
+      { suppressResources: true },
     );
     expect(character).toBe(saved);
     expect(nextBaseline).toBeNull();

@@ -94,7 +94,7 @@ describe('equipment-phase-candidates', () => {
       rankCtx,
       officialItems,
       [],
-      ['w1']
+      ['w1'],
     );
     expect(candidates.map((c) => c.id)).toEqual(['w1']);
   });
@@ -108,7 +108,7 @@ describe('equipment-phase-candidates', () => {
       rankCtx,
       officialItems,
       [],
-      ['W1', 'a1', 'missing']
+      ['W1', 'a1', 'missing'],
     );
     expect(candidates.map((c) => c.id)).toEqual(['w1']);
   });
@@ -122,7 +122,7 @@ describe('equipment-phase-candidates', () => {
       { pathRecommendedIds: new Set(), martAbil: null, powAbil: null },
       officialItems,
       [],
-      ['a1']
+      ['a1'],
     );
     expect(candidates.map((c) => c.id)).toEqual(['a1']);
   });

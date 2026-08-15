@@ -10,14 +10,10 @@ export const ABILITY_EFFECT_BLURBS: Record<AbilityName, string> = {
     'Physical power. Affects Might defense, melee damage, and feats that rely on raw force.',
   vitality:
     'Life and endurance. Affects Fortitude defense, maximum Health, and staying power in combat.',
-  agility:
-    'Speed and reflexes. Affects Reflex defense, Evasion, and finesse-based actions.',
-  acuity:
-    'Perception and precision. Affects Discernment defense and ranged accuracy.',
-  intelligence:
-    'Knowledge and focus. Affects Mental Fortitude defense and analytical skills.',
-  charisma:
-    'Presence and will. Affects Resolve defense, social skills, and leadership.',
+  agility: 'Speed and reflexes. Affects Reflex defense, Evasion, and finesse-based actions.',
+  acuity: 'Perception and precision. Affects Discernment defense and ranged accuracy.',
+  intelligence: 'Knowledge and focus. Affects Mental Fortitude defense and analytical skills.',
+  charisma: 'Presence and will. Affects Resolve defense, social skills, and leadership.',
 };
 
 export function formatAbilityLabel(name: AbilityName): string {

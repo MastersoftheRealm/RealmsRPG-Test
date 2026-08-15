@@ -8,9 +8,7 @@
 'use client';
 
 import { EmpoweredTechniqueEditorActionProfile } from './empowered-technique-editor-action-profile';
-import {
-  type EmpoweredTechniqueCreatorEditorProps,
-} from './empowered-technique-editor-config';
+import { type EmpoweredTechniqueCreatorEditorProps } from './empowered-technique-editor-config';
 import { EmpoweredTechniqueEditorMeta } from './empowered-technique-editor-meta';
 import { EmpoweredTechniqueEditorPowerConfig } from './empowered-technique-editor-power-config';
 import { EmpoweredTechniqueEditorPowerDamage } from './empowered-technique-editor-power-damage';

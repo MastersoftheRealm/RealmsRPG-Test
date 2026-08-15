@@ -1,8 +1,6 @@
 /** Terms of service page copy — edit text for `/terms`. */
 
-export type LegalListItem =
-  | string
-  | { label: string; text: string };
+export type LegalListItem = string | { label: string; text: string };
 
 export type LegalSection = {
   heading: string;

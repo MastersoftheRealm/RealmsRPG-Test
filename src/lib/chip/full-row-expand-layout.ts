@@ -32,9 +32,7 @@ function chipGroupFor(element: HTMLElement): HTMLElement | null {
   return (element.closest('[data-chip-group]') as HTMLElement | null) ?? element.parentElement;
 }
 
-export function captureFullRowExpandLayout(
-  element: HTMLElement
-): FullRowExpandSnapshot | null {
+export function captureFullRowExpandLayout(element: HTMLElement): FullRowExpandSnapshot | null {
   const group = chipGroupFor(element);
   if (!group) return null;
 
@@ -45,8 +43,8 @@ export function captureFullRowExpandLayout(
   const itemsAbove = new Set(
     Array.from(group.children).filter(
       (child): child is HTMLElement =>
-        child instanceof HTMLElement && child.getBoundingClientRect().top < itemTop - 1
-    )
+        child instanceof HTMLElement && child.getBoundingClientRect().top < itemTop - 1,
+    ),
   );
 
   return { group, item, itemsAbove };
@@ -54,7 +52,7 @@ export function captureFullRowExpandLayout(
 
 export function applyFullRowExpandLayout(
   element: HTMLElement,
-  captured?: FullRowExpandSnapshot | null
+  captured?: FullRowExpandSnapshot | null,
 ): () => void {
   const current = captureFullRowExpandLayout(element);
   if (!current) return () => {};
@@ -62,7 +60,7 @@ export function applyFullRowExpandLayout(
   const layout =
     captured?.group === current.group && captured.item === current.item ? captured : current;
   const items = Array.from(layout.group.children).filter(
-    (child): child is HTMLElement => child instanceof HTMLElement
+    (child): child is HTMLElement => child instanceof HTMLElement,
   );
   const snapshots: InlineStyleSnapshot[] = items.map((item) => ({
     element: item,
@@ -83,8 +81,7 @@ export function applyFullRowExpandLayout(
   }
 
   for (const item of items) {
-    item.style.order =
-      item === layout.item ? '1' : layout.itemsAbove.has(item) ? '0' : '2';
+    item.style.order = item === layout.item ? '1' : layout.itemsAbove.has(item) ? '0' : '2';
   }
 
   layout.item.style.width = '100%';

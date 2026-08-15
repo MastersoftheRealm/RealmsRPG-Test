@@ -1,11 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-  CodexBrowseListShell,
-  ErrorDisplay as ErrorState,
-  GridListRow,
-} from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
 import { Button, IconButton, useToast } from '@/components/ui';
 import { SelectFilter } from '@/components/shared/filters';
 import { useItemProperties, type ItemProperty } from '@/hooks';
@@ -86,8 +82,10 @@ export function AdminPropertiesTab() {
       if (col === 'name') return dir * a.name.localeCompare(b.name);
       if (col === 'type') return dir * (a.type || 'general').localeCompare(b.type || 'general');
       if (col === 'ip') return dir * ((a.base_ip ?? 0) - (b.base_ip ?? 0));
-      if (col === 'tp') return dir * ((a.base_tp ?? a.tp_cost ?? 0) - (b.base_tp ?? b.tp_cost ?? 0));
-      if (col === 'cost') return dir * ((a.base_c ?? a.gold_cost ?? 0) - (b.base_c ?? b.gold_cost ?? 0));
+      if (col === 'tp')
+        return dir * ((a.base_tp ?? a.tp_cost ?? 0) - (b.base_tp ?? b.tp_cost ?? 0));
+      if (col === 'cost')
+        return dir * ((a.base_c ?? a.gold_cost ?? 0) - (b.base_c ?? b.gold_cost ?? 0));
       return 0;
     });
   }, [properties, filters, sortState]);
@@ -131,7 +129,9 @@ export function AdminPropertiesTab() {
     const data = propertyFormToSavePayload(form);
 
     const result = editing
-      ? await updateCodexDoc('codex_properties', editing.id, data, { expectedUpdatedAt: editing.updated_at })
+      ? await updateCodexDoc('codex_properties', editing.id, data, {
+          expectedUpdatedAt: editing.updated_at,
+        })
       : await createCodexDoc('codex_properties', undefined, data);
 
     setSaving(false);
@@ -191,7 +191,15 @@ export function AdminPropertiesTab() {
     await codexDelete.requestDelete(id);
   };
 
-  if (error) return <ErrorState message="Failed to load properties" onRetry={() => { void refetch(); }} />;
+  if (error)
+    return (
+      <ErrorState
+        message="Failed to load properties"
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
 
   return (
     <div>
@@ -202,25 +210,25 @@ export function AdminPropertiesTab() {
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search properties..."
         filters={
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              <SelectFilter
-                label="Type"
-                value={filters.typeFilter}
-                options={typeOptions.map((t) => {
-                  const lower = t.toLowerCase();
-                  const label =
-                    lower === 'armor'
-                      ? 'Armor'
-                      : lower === 'shield'
-                        ? 'Shield'
-                        : lower === 'weapon'
-                          ? 'Weapon'
-                          : t;
-                  return { value: label, label };
-                })}
-                onChange={(v) => setFilters((f) => ({ ...f, typeFilter: v }))}
-                placeholder="All Types"
-              />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <SelectFilter
+              label="Type"
+              value={filters.typeFilter}
+              options={typeOptions.map((t) => {
+                const lower = t.toLowerCase();
+                const label =
+                  lower === 'armor'
+                    ? 'Armor'
+                    : lower === 'shield'
+                      ? 'Shield'
+                      : lower === 'weapon'
+                        ? 'Weapon'
+                        : t;
+                return { value: label, label };
+              })}
+              onChange={(v) => setFilters((f) => ({ ...f, typeFilter: v }))}
+              placeholder="All Types"
+            />
           </div>
         }
         headerColumns={[
@@ -299,14 +307,14 @@ export function AdminPropertiesTab() {
                 <div className="flex items-center gap-1 pr-2">
                   {pendingDeleteId === p.id ? (
                     <div className="flex items-center gap-1 text-xs">
-                      <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">
+                      <span className="font-medium whitespace-nowrap text-danger-700 dark:text-danger-400">
                         Remove?
                       </span>
                       <Button
                         size="sm"
                         variant="danger"
                         onClick={() => handleInlineDelete(p.id)}
-                        className="text-xs px-2 py-0.5 h-6"
+                        className="h-6 px-2 py-0.5 text-xs"
                       >
                         Yes
                       </Button>
@@ -314,7 +322,7 @@ export function AdminPropertiesTab() {
                         size="sm"
                         variant="secondary"
                         onClick={() => setPendingDeleteId(null)}
-                        className="text-xs px-2 py-0.5 h-6"
+                        className="h-6 px-2 py-0.5 text-xs"
                       >
                         No
                       </Button>
@@ -328,7 +336,7 @@ export function AdminPropertiesTab() {
                         label="Edit"
                         aria-label="Edit"
                       >
-                        <Pencil className="w-4 h-4" />
+                        <Pencil className="h-4 w-4" />
                       </IconButton>
                       <IconButton
                         variant="ghost"
@@ -337,16 +345,16 @@ export function AdminPropertiesTab() {
                         label="Duplicate"
                         aria-label="Duplicate"
                       >
-                        <Copy className="w-4 h-4" />
+                        <Copy className="h-4 w-4" />
                       </IconButton>
                       <IconButton
                         variant="ghost"
                         size="sm"
                         onClick={() => setPendingDeleteId(p.id)}
                         label="Delete"
-                        className="text-danger-fg hover:opacity-80 hover:bg-transparent"
+                        className="text-danger-fg hover:bg-transparent hover:opacity-80"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                       </IconButton>
                     </>
                   )}

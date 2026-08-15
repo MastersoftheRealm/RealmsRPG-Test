@@ -68,12 +68,14 @@ export function AdminImageDeleteModal({
             <p className="font-medium">This permanently removes the image from the shared bank.</p>
             {hasUsages ? (
               <p className="mt-1 text-text-secondary">
-                {usages.length} {usages.length === 1 ? 'entity uses' : 'entities use'} this image. Deleting
-                clears the image reference everywhere — entities will show placeholder art until a new image is
-                assigned.
+                {usages.length} {usages.length === 1 ? 'entity uses' : 'entities use'} this image.
+                Deleting clears the image reference everywhere — entities will show placeholder art
+                until a new image is assigned.
               </p>
             ) : (
-              <p className="mt-1 text-text-secondary">No entities currently reference this image.</p>
+              <p className="mt-1 text-text-secondary">
+                No entities currently reference this image.
+              </p>
             )}
           </div>
         </div>
@@ -85,10 +87,7 @@ export function AdminImageDeleteModal({
               {usages.map((usage) => (
                 <li key={`${usage.table}-${usage.id}`} className="text-text-primary">
                   <span className="font-medium">{usage.name ?? usage.id}</span>
-                  <span className="text-text-muted dark:text-text-secondary">
-                    {' '}
-                    — {formatEntityKind(usage.entityKind)}
-                  </span>
+                  <span className="text-text-muted"> — {formatEntityKind(usage.entityKind)}</span>
                 </li>
               ))}
             </ul>

@@ -15,7 +15,10 @@ export interface SelectOption {
   disabled?: boolean;
 }
 
-export interface SelectProps extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'children'> {
+export interface SelectProps extends Omit<
+  React.SelectHTMLAttributes<HTMLSelectElement>,
+  'children'
+> {
   label?: string;
   error?: string;
   helperText?: string;
@@ -33,10 +36,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label
-            htmlFor={selectId}
-            className="mb-1.5 block text-sm font-medium text-text-primary"
-          >
+          <label htmlFor={selectId} className="mb-1.5 block text-sm font-medium text-text-primary">
             {label}
           </label>
         )}
@@ -47,17 +47,13 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             className={cn(
               'flex h-10 w-full appearance-none rounded-lg border bg-surface px-4 py-2.5 pr-10 text-sm',
               'text-text-primary',
-              'focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-primary-outline-border',
-              'disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-surface-alt',
-              error
-                ? 'border-danger focus:ring-danger-border'
-                : 'border-border-light',
-              className
+              'focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none',
+              'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:opacity-50',
+              error ? 'border-danger focus:ring-danger-border' : 'border-border-light',
+              className,
             )}
             aria-invalid={error ? 'true' : undefined}
-            aria-describedby={
-              error ? errorId : helperText ? helperId : undefined
-            }
+            aria-describedby={error ? errorId : helperText ? helperId : undefined}
             {...props}
           >
             {placeholder && (
@@ -71,7 +67,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
               </option>
             ))}
           </select>
-          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
+          <ChevronDown className="pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-text-muted" />
         </div>
         {error && (
           <p id={errorId} className="mt-1.5 text-sm text-danger-fg">
@@ -85,7 +81,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
         )}
       </div>
     );
-  }
+  },
 );
 
 Select.displayName = 'Select';

@@ -10,10 +10,7 @@ export const TUTORIAL_MILESTONES_KEY = 'realms_tutorial_milestones';
 
 export type SheetTourStatus = 'pending' | 'completed' | 'dismissed_forever';
 
-export type TutorialMilestoneId =
-  | 'first_level_up'
-  | 'first_ability_point'
-  | 'first_library_slot';
+export type TutorialMilestoneId = 'first_level_up' | 'first_ability_point' | 'first_library_slot';
 
 export type TutorialMilestones = Partial<Record<TutorialMilestoneId, true>>;
 

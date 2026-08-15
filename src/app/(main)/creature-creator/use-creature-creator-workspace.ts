@@ -53,10 +53,7 @@ import {
   initialState,
   CREATURE_CREATOR_CACHE_KEY,
 } from './creature-creator-constants';
-import {
-  allocationsToCreatureSkills,
-  creatureSkillsToAllocations,
-} from './creature-skill-utils';
+import { allocationsToCreatureSkills, creatureSkillsToAllocations } from './creature-skill-utils';
 import { bootstrapCreatureState } from './creature-creator-bootstrap';
 import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
@@ -146,17 +143,25 @@ export function useCreatureCreatorWorkspace() {
 
   const { data: userPowers = [] } = useUserPowers({ enabled: libraryQueriesEnabled });
   const { data: userTechniques = [] } = useUserTechniques({ enabled: libraryQueriesEnabled });
-  const { data: userEmpoweredTechniques = [] } = useUserEmpoweredTechniques({ enabled: libraryQueriesEnabled });
+  const { data: userEmpoweredTechniques = [] } = useUserEmpoweredTechniques({
+    enabled: libraryQueriesEnabled,
+  });
   const { data: userItems = [] } = useUserItems({ enabled: libraryQueriesEnabled });
   const { data: powerPartsDb = [] } = usePowerParts();
   const { data: techniquePartsDb = [] } = useTechniqueParts();
   const { data: itemPropertiesDb = [] } = useItemProperties();
-  const { data: publicPowers = [] } = useOfficialLibrary('powers', { enabled: libraryQueriesEnabled });
-  const { data: publicTechniques = [] } = useOfficialLibrary('techniques', { enabled: libraryQueriesEnabled });
+  const { data: publicPowers = [] } = useOfficialLibrary('powers', {
+    enabled: libraryQueriesEnabled,
+  });
+  const { data: publicTechniques = [] } = useOfficialLibrary('techniques', {
+    enabled: libraryQueriesEnabled,
+  });
   const { data: publicEmpoweredTechniques = [] } = useOfficialLibrary('empowered-techniques', {
     enabled: libraryQueriesEnabled,
   });
-  const { data: publicItems = [] } = useOfficialLibrary('items', { enabled: libraryQueriesEnabled });
+  const { data: publicItems = [] } = useOfficialLibrary('items', {
+    enabled: libraryQueriesEnabled,
+  });
 
   const powerList = useMemo(
     () => mergeLibraryBySource(librarySource, publicPowers, userPowers) as UserPower[],
@@ -167,7 +172,12 @@ export function useCreatureCreatorWorkspace() {
     [userTechniques, publicTechniques, librarySource],
   );
   const empoweredTechniqueList = useMemo(
-    () => buildEmpoweredTechniqueLibraryList(librarySource, userEmpoweredTechniques, publicEmpoweredTechniques),
+    () =>
+      buildEmpoweredTechniqueLibraryList(
+        librarySource,
+        userEmpoweredTechniques,
+        publicEmpoweredTechniques,
+      ),
     [librarySource, userEmpoweredTechniques, publicEmpoweredTechniques],
   );
   const armamentList = useMemo(
@@ -186,7 +196,12 @@ export function useCreatureCreatorWorkspace() {
     [powerList, powerPartsDb],
   );
   const empoweredTechniqueSelectableItems = useMemo(
-    () => buildEmpoweredTechniqueSelectableItems(empoweredTechniqueList, powerPartsDb, techniquePartsDb),
+    () =>
+      buildEmpoweredTechniqueSelectableItems(
+        empoweredTechniqueList,
+        powerPartsDb,
+        techniquePartsDb,
+      ),
     [empoweredTechniqueList, powerPartsDb, techniquePartsDb],
   );
   const techniqueSelectableItems = useMemo(
@@ -285,7 +300,11 @@ export function useCreatureCreatorWorkspace() {
     [codexFeatsData],
   );
 
-  const { sortState: featSort, handleSort: handleFeatSort, sortItems: sortFeatItems } = useSort('name');
+  const {
+    sortState: featSort,
+    handleSort: handleFeatSort,
+    sortItems: sortFeatItems,
+  } = useSort('name');
   const {
     sortState: armamentSort,
     handleSort: handleArmamentSort,
@@ -302,7 +321,14 @@ export function useCreatureCreatorWorkspace() {
         skillsData,
         codexFeatsData as Feat[],
       ),
-    [creature, creatureFeatSourceLookup, codexFeatsById, featLevelsByFamily, skillsData, codexFeatsData],
+    [
+      creature,
+      creatureFeatSourceLookup,
+      codexFeatsById,
+      featLevelsByFamily,
+      skillsData,
+      codexFeatsData,
+    ],
   );
 
   const handleCreatureFeatLevelChange = useCallback(
@@ -323,7 +349,10 @@ export function useCreatureCreatorWorkspace() {
     [codexFeatsById, featLevelsByFamily, creatureFeatSourceLookup, skillsData, codexFeatsData],
   );
 
-  const sortedFeats = useMemo(() => sortFeatItems(featsWithTypeLabel), [featsWithTypeLabel, sortFeatItems]);
+  const sortedFeats = useMemo(
+    () => sortFeatItems(featsWithTypeLabel),
+    [featsWithTypeLabel, sortFeatItems],
+  );
 
   const armamentsWithSortKeys = useMemo(() => enrichArmamentsWithSortKeys(creature), [creature]);
 

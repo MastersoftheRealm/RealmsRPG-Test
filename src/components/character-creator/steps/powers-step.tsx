@@ -60,15 +60,15 @@ export function PowersStep() {
   const { data: allTraits } = useTraits();
   const validationContext = useMemo(
     () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null }),
-    [allSpecies, codexSkills, allTraits]
+    [allSpecies, codexSkills, allTraits],
   );
   const stepIssues = useMemo(
     () => getValidationIssuesForStep('powers', draft, validationContext),
-    [draft, validationContext]
+    [draft, validationContext],
   );
   const completion = useMemo(
     () => getStepCompletion('powers', draft, validationContext),
-    [draft, validationContext]
+    [draft, validationContext],
   );
   const canContinue = stepIssues.length === 0;
   const { data: userTechniques = [], isLoading: techniquesLoading } = useUserTechniques();
@@ -99,42 +99,39 @@ export function PowersStep() {
   const archetypeProgression = useMemo(() => {
     const archType = draft.archetype?.type;
     const martProf =
-      draft.mart_prof ??
-      (archType === 'martial' ? 2 : archType === 'powered-martial' ? 1 : 0);
+      draft.mart_prof ?? (archType === 'martial' ? 2 : archType === 'powered-martial' ? 1 : 0);
     const powProf =
-      draft.pow_prof ??
-      (archType === 'power' ? 2 : archType === 'powered-martial' ? 1 : 0);
+      draft.pow_prof ?? (archType === 'power' ? 2 : archType === 'powered-martial' ? 1 : 0);
     return calculateArchetypeProgression(
       draft.level || 1,
       martProf,
       powProf,
-      draft.archetypeChoices ?? {}
+      draft.archetypeChoices ?? {},
     );
   }, [draft.level, draft.mart_prof, draft.pow_prof, draft.archetype?.type, draft.archetypeChoices]);
   const showInnateControls = archetypeProgression.innateEnergy > 0;
 
   const proficiencyTpSummary = useMemo(
     () => computePowersStepProficiencyTp(draft, powerParts, techniqueParts, itemPropertiesDb),
-    [draft, powerParts, techniqueParts, itemPropertiesDb]
+    [draft, powerParts, techniqueParts, itemPropertiesDb],
   );
 
   const selectedPowerIds = useMemo(
     () => new Set(selectedPowers.map((p) => String(p.id))),
-    [selectedPowers]
+    [selectedPowers],
   );
   const selectedTechniqueIds = useMemo(
     () => new Set(selectedTechniques.map((t) => String(t.id))),
-    [selectedTechniques]
+    [selectedTechniques],
   );
   const pathData = useCreatorPathData();
   const recommendedPowerRefs = useMemo(
     () => new Set((pathData?.level1?.powers || []).map((v: string) => String(v).toLowerCase())),
-    [pathData?.level1?.powers]
+    [pathData?.level1?.powers],
   );
   const recommendedTechniqueRefs = useMemo(
-    () =>
-      new Set((pathData?.level1?.techniques || []).map((v: string) => String(v).toLowerCase())),
-    [pathData?.level1?.techniques]
+    () => new Set((pathData?.level1?.techniques || []).map((v: string) => String(v).toLowerCase())),
+    [pathData?.level1?.techniques],
   );
   const pathName = draft.archetype?.name ?? 'Path';
   const layer = getStepLayer('powers');
@@ -176,7 +173,7 @@ export function PowersStep() {
   const displayFilterFn = useMemo(
     () => (item: SelectableItem) =>
       source === 'all' || (item.data as { _source?: 'my' | 'public' })?._source === source,
-    [source]
+    [source],
   );
 
   const powersModalLoading =
@@ -227,15 +224,15 @@ export function PowersStep() {
 
   const availablePowerIds = useMemo(
     () => new Set(allPowerSelectableItems.filter(displayFilterFn).map((p) => p.id)),
-    [allPowerSelectableItems, displayFilterFn]
+    [allPowerSelectableItems, displayFilterFn],
   );
   const availableEmpoweredIds = useMemo(
     () => new Set(allEmpoweredSelectableItems.filter(displayFilterFn).map((p) => p.id)),
-    [allEmpoweredSelectableItems, displayFilterFn]
+    [allEmpoweredSelectableItems, displayFilterFn],
   );
   const availableTechniqueIds = useMemo(
     () => new Set(allTechniqueSelectableItems.filter(displayFilterFn).map((t) => t.id)),
-    [allTechniqueSelectableItems, displayFilterFn]
+    [allTechniqueSelectableItems, displayFilterFn],
   );
 
   const { emptyMessage: powerModalEmptyMessage, emptySubMessage: powerModalEmptySubMessage } =
@@ -247,7 +244,7 @@ export function PowersStep() {
           source,
           publicPowersError,
         }),
-      [allPowerSelectableItems, displayFilterFn, source, publicPowersError]
+      [allPowerSelectableItems, displayFilterFn, source, publicPowersError],
     );
   const {
     emptyMessage: techniqueModalEmptyMessage,
@@ -260,7 +257,7 @@ export function PowersStep() {
         source,
         publicTechniquesError,
       }),
-    [allTechniqueSelectableItems, displayFilterFn, source, publicTechniquesError]
+    [allTechniqueSelectableItems, displayFilterFn, source, publicTechniquesError],
   );
 
   const handlePowerSelect = useCallback(
@@ -277,7 +274,7 @@ export function PowersStep() {
       });
       setShowPowerModal(false);
     },
-    [draft.powers, availablePowerIds, updateDraft, userPowers, publicPowers, powerParts]
+    [draft.powers, availablePowerIds, updateDraft, userPowers, publicPowers, powerParts],
   );
   const handleEmpoweredPowerSelect = useCallback(
     (selectedItems: SelectableItem[]) => {
@@ -290,7 +287,7 @@ export function PowersStep() {
       });
       setShowPowerModal(false);
     },
-    [draft.powers, availableEmpoweredIds, updateDraft]
+    [draft.powers, availableEmpoweredIds, updateDraft],
   );
   const handleTechniqueSelect = useCallback(
     (selectedItems: SelectableItem[]) => {
@@ -313,18 +310,18 @@ export function PowersStep() {
       userTechniques,
       publicTechniques,
       techniqueParts,
-    ]
+    ],
   );
 
   const togglePowerInnate = useCallback(
     (powerId: string, isInnate: boolean) => {
       updateDraft({
         powers: (draft.powers || []).map((p) =>
-          String(p.id) === powerId ? { ...p, innate: isInnate } : p
+          String(p.id) === powerId ? { ...p, innate: isInnate } : p,
         ) as CharacterPower[],
       });
     },
-    [draft.powers, updateDraft]
+    [draft.powers, updateDraft],
   );
   const removePower = useCallback(
     (powerId: string) => {
@@ -332,7 +329,7 @@ export function PowersStep() {
         powers: selectedPowers.filter((p) => String(p.id) !== powerId),
       });
     },
-    [selectedPowers, updateDraft]
+    [selectedPowers, updateDraft],
   );
   const removeTechnique = useCallback(
     (techniqueId: string) => {
@@ -340,7 +337,7 @@ export function PowersStep() {
         techniques: selectedTechniques.filter((t) => String(t.id) !== techniqueId),
       });
     },
-    [selectedTechniques, updateDraft]
+    [selectedTechniques, updateDraft],
   );
 
   const hasPowersAvailable = allPowersRaw.length > 0 || allEmpoweredTechniquesRaw.length > 0;
@@ -352,7 +349,7 @@ export function PowersStep() {
     !(minimizeTechniques && !showFullCatalog);
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col flex-1 min-h-0">
+    <div className="mx-auto flex min-h-0 max-w-4xl flex-1 flex-col">
       <PowersStepChrome
         pathMode={pathMode}
         layer={layer}

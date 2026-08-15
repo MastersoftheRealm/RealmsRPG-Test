@@ -5,13 +5,13 @@ import { describe, expect, it } from 'vitest';
 const repoRoot = path.resolve(import.meta.dirname, '../../../..');
 const componentSource = readFileSync(
   path.join(repoRoot, 'src/components/shared/guided-choice/guided-inline-catalog-list.tsx'),
-  'utf8'
+  'utf8',
 );
 
 describe('GuidedInlineCatalogList selected panel chrome (TASK-700)', () => {
   it('uses balanced card inset on the shared selected panel wrapper', () => {
     expect(componentSource).toMatch(
-      /const GUIDED_INLINE_CATALOG_SELECTED_PANEL_CHROME\s*=\s*['"][^'"]*px-4[^'"]*pt-3[^'"]*pb-3[^'"]*gap-2[^'"]*['"]/
+      /const GUIDED_INLINE_CATALOG_SELECTED_PANEL_CHROME\s*=\s*['"][^'"]*px-4[^'"]*pt-3[^'"]*pb-3[^'"]*gap-2[^'"]*['"]/,
     );
   });
 

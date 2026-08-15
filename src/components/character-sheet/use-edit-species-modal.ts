@@ -7,7 +7,14 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import type { Character, CharacterAncestry, CharacterSkillRow } from '@/types';
-import { useMergedSpecies, useTraits, useCodexSkills, useUserSpecies, resolveTraitIds, type Species } from '@/hooks';
+import {
+  useMergedSpecies,
+  useTraits,
+  useCodexSkills,
+  useUserSpecies,
+  resolveTraitIds,
+  type Species,
+} from '@/hooks';
 import { migrateSkillsAfterSpeciesChange } from '@/lib/species-skill-migration';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
 import {
@@ -39,7 +46,12 @@ interface UseEditSpeciesModalArgs {
   onClose: () => void;
 }
 
-export function useEditSpeciesModal({ isOpen, character, onSave, onClose }: UseEditSpeciesModalArgs) {
+export function useEditSpeciesModal({
+  isOpen,
+  character,
+  onSave,
+  onClose,
+}: UseEditSpeciesModalArgs) {
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: allTraits } = useTraits();
   const { data: allSkills } = useCodexSkills();
@@ -65,18 +77,27 @@ export function useEditSpeciesModal({ isOpen, character, onSave, onClose }: UseE
 
   const isMixed = draftAncestry?.mixed === true;
   const selectedSpecies = useMemo(() => {
-    if (!draftAncestry?.id || (draftAncestry.mixed === true && draftAncestry.speciesIds?.length === 2)) {
+    if (
+      !draftAncestry?.id ||
+      (draftAncestry.mixed === true && draftAncestry.speciesIds?.length === 2)
+    ) {
       return null;
     }
     return allSpecies.find((s: Species) => String(s.id) === String(draftAncestry.id)) ?? null;
   }, [draftAncestry, allSpecies]);
   const speciesA = useMemo(() => {
     if (draftAncestry?.mixed !== true || !draftAncestry?.speciesIds?.[0]) return null;
-    return allSpecies.find((s: Species) => String(s.id) === String(draftAncestry.speciesIds?.[0])) ?? null;
+    return (
+      allSpecies.find((s: Species) => String(s.id) === String(draftAncestry.speciesIds?.[0])) ??
+      null
+    );
   }, [draftAncestry, allSpecies]);
   const speciesB = useMemo(() => {
     if (draftAncestry?.mixed !== true || !draftAncestry?.speciesIds?.[1]) return null;
-    return allSpecies.find((s: Species) => String(s.id) === String(draftAncestry.speciesIds?.[1])) ?? null;
+    return (
+      allSpecies.find((s: Species) => String(s.id) === String(draftAncestry.speciesIds?.[1])) ??
+      null
+    );
   }, [draftAncestry, allSpecies]);
 
   const { speciesTraits, ancestryTraits, flaws, characteristics } = useMemo(

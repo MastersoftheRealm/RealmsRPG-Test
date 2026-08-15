@@ -11,7 +11,8 @@ export function readRecordImageId(record: unknown): string | null {
   if (typeof direct === 'string' && direct.trim()) return direct.trim();
   const payload = r.payload;
   if (payload && typeof payload === 'object') {
-    const nested = (payload as Record<string, unknown>).image_id ?? (payload as Record<string, unknown>).imageId;
+    const nested =
+      (payload as Record<string, unknown>).image_id ?? (payload as Record<string, unknown>).imageId;
     if (typeof nested === 'string' && nested.trim()) return nested.trim();
   }
   return null;

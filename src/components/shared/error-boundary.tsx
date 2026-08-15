@@ -40,7 +40,11 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error(`[ErrorBoundary${this.props.section ? ` – ${this.props.section}` : ''}]`, error, errorInfo);
+    console.error(
+      `[ErrorBoundary${this.props.section ? ` – ${this.props.section}` : ''}]`,
+      error,
+      errorInfo,
+    );
   }
 
   handleRetry = () => {
@@ -52,23 +56,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
       if (this.props.fallback) return this.props.fallback;
 
       return (
-        <div className="flex flex-col items-center justify-center gap-3 p-8 rounded-lg bg-surface border border-border-light text-center">
-          <AlertCircle className="w-8 h-8 text-danger-fg" />
-          <h3 className="text-lg font-semibold text-text-primary">
-            Something went wrong
-          </h3>
-          <p className="text-sm text-text-muted dark:text-text-secondary max-w-md">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border-light bg-surface p-8 text-center">
+          <AlertCircle className="h-8 w-8 text-danger-fg" />
+          <h3 className="text-lg font-semibold text-text-primary">Something went wrong</h3>
+          <p className="max-w-md text-sm text-text-muted">
             {this.props.section
               ? `An error occurred in the ${this.props.section} section.`
-              : 'An unexpected error occurred.'}
-            {' '}Try refreshing, or contact support if the problem persists.
+              : 'An unexpected error occurred.'}{' '}
+            Try refreshing, or contact support if the problem persists.
           </p>
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={this.handleRetry}
-          >
-            <RefreshCw className="w-4 h-4 mr-1.5" />
+          <Button variant="secondary" size="sm" onClick={this.handleRetry}>
+            <RefreshCw className="mr-1.5 h-4 w-4" />
             Try Again
           </Button>
         </div>
@@ -78,4 +76,3 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     return this.props.children;
   }
 }
-

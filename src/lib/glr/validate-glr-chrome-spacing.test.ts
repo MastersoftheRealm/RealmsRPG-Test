@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_GLR_LIST_CLASSNAME, DEFAULT_USM_LIST_CLASSNAME } from './glr-chrome-spacing-norms';
+import {
+  classListEquals,
+  DEFAULT_GLR_LIST_CLASSNAME,
+  DEFAULT_USM_LIST_CLASSNAME,
+} from './glr-chrome-spacing-norms';
 import {
   assertGlrChromeSpacingSources,
   expectedRowChromeFromRowActions,
@@ -27,6 +31,19 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
     expect(validateGlrListClassName(DEFAULT_GLR_LIST_CLASSNAME, 'test')).toEqual([]);
   });
 
+  it('treats Prettier class-order as the same list contract', () => {
+    expect(classListEquals('flex min-w-0 flex-col gap-1', 'flex flex-col gap-1 min-w-0')).toBe(
+      true,
+    );
+    expect(
+      validateUsmListShellSource(
+        'unified-selection-modal-list.tsx',
+        `<div className="flex flex-col gap-1 min-w-0">{filteredItems.map}
+         const rowChrome = { externalSelection: true };`,
+      ),
+    ).toEqual([]);
+  });
+
   it('rejects space-y-3 list overrides', () => {
     const errors = validateGlrListClassName('flex flex-col space-y-3 mt-2', 'test');
     expect(errors.length).toBeGreaterThan(0);
@@ -42,7 +59,7 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
   it('rejects 40px action tracks in shared grid templates', () => {
     const errors = validateGlrGridColumnSource(
       'bad-grid.ts',
-      `export const OFFICIAL_POWER_GRID = '1fr 1fr 40px';`
+      `export const OFFICIAL_POWER_GRID = '1fr 1fr 40px';`,
     );
     expect(errors.some((e) => e.includes('40px'))).toBe(true);
   });
@@ -111,7 +128,7 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
   it('flags creator embedded lists with 40px action tracks', () => {
     const errors = validateGlrGridColumnSource(
       'creature-creator-editor-loadout-sections.tsx',
-      `const CREATURE_FEAT_LIST_GRID = '1fr 40px';`
+      `const CREATURE_FEAT_LIST_GRID = '1fr 40px';`,
     );
     expect(errors.some((e) => e.includes('40px'))).toBe(true);
   });
@@ -128,7 +145,7 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
   it('rejects non-canonical USM list row container', () => {
     const errors = validateUsmListShellSource(
       'unified-selection-modal-list.tsx',
-      `<div className="space-y-1 min-w-0">{filteredItems.map`
+      `<div className="space-y-1 min-w-0">{filteredItems.map`,
     );
     expect(errors.some((e) => e.includes(DEFAULT_USM_LIST_CLASSNAME))).toBe(true);
   });
@@ -136,17 +153,17 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
   it('flags USM list that still appends an inline selection track', () => {
     const errors = validateUsmListShellSource(
       'unified-selection-modal-list.tsx',
-      `<div className="${DEFAULT_USM_LIST_CLASSNAME}">{filteredItems.map(item => gridColumnsWithInlineSelection(gridColumns)`
+      `<div className="${DEFAULT_USM_LIST_CLASSNAME}">{filteredItems.map(item => gridColumnsWithInlineSelection(gridColumns)`,
     );
-    expect(errors.some((e) => e.includes('externalSelection') || e.includes('inline selection'))).toBe(
-      true
-    );
+    expect(
+      errors.some((e) => e.includes('externalSelection') || e.includes('inline selection')),
+    ).toBe(true);
   });
 
   it('flags quantity chrome missing matching rightSlotWidth on header+row', () => {
     const errors = validateUsmQuantityChromeSource(
       'guided-inline-catalog-list.tsx',
-      `<ListHeader rightSlotWidth={RIGHT_SLOT_WIDTH} /><GridListRow rightSlot={<Qty />} />`
+      `<ListHeader rightSlotWidth={RIGHT_SLOT_WIDTH} /><GridListRow rightSlot={<Qty />} />`,
     );
     expect(errors.some((e) => e.includes('USM_QUANTITY_RIGHT_SLOT_WIDTH'))).toBe(true);
   });
@@ -154,7 +171,7 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
   it('flags GridListRow chrome pinned with items-start / self-start', () => {
     const errors = validateGlrRowLayoutSource(
       'grid-list-row.tsx',
-      `<div className={cn('flex items-start', hoverClass)}>`
+      `<div className={cn('flex items-start', hoverClass)}>`,
     );
     expect(errors.some((e) => e.includes('items-start') || e.includes('items-stretch'))).toBe(true);
   });
@@ -164,8 +181,8 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
       validateGlrRowLayoutSource(
         'grid-list-row.tsx',
         `<div data-glr-row className={cn('grid items-stretch', hoverClass)}>
-           <div className={GRID_LIST_ROW_EXPANDED_BAND_CLASS} />`
-      )
+           <div className={GRID_LIST_ROW_EXPANDED_BAND_CLASS} />`,
+      ),
     ).toEqual([]);
   });
 
@@ -174,8 +191,8 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
       validateUsmQuantityChromeSource(
         'unified-selection-modal-list.tsx',
         `<ListHeader rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined} />
-         <GridListRow rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined} />`
-      )
+         <GridListRow rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined} />`,
+      ),
     ).toEqual([]);
   });
 

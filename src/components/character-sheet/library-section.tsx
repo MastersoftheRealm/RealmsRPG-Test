@@ -224,7 +224,7 @@ export function LibrarySection({
   } = data;
 
   return (
-    <Card className={cn('shadow-md p-4 md:p-6 relative flex flex-col', className)}>
+    <Card className={cn('relative flex flex-col p-4 shadow-md md:p-6', className)}>
       {isEditMode && (
         <div className="absolute top-3 right-3 z-10">
           <EditSectionToggle
@@ -255,7 +255,7 @@ export function LibrarySection({
         className="mb-4"
       />
 
-      <div className="space-y-2 flex-1 min-h-0 overflow-y-auto">
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto">
         {resolvedActiveTab === 'powers' && (
           <LibraryPowersPanel
             innateEnergy={innateEnergy}
@@ -396,7 +396,7 @@ export function LibrarySection({
         )}
 
         {resolvedActiveTab === 'notes' && !abilities && (
-          <p className="text-text-muted dark:text-text-secondary text-sm italic text-center py-4">
+          <p className="py-4 text-center text-sm text-text-muted italic">
             Character abilities not loaded
           </p>
         )}

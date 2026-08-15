@@ -37,7 +37,13 @@ export function AdminFeatEditModal({
   /** When editing a leveled feat family, this contains all feats in that family (sorted). */
   levelFeats: Feat[];
   skills: Skill[];
-  filterOptions: { levels: number[]; abilities: string[]; categories: string[]; tags: string[]; abilReqAbilities: string[] };
+  filterOptions: {
+    levels: number[];
+    abilities: string[];
+    categories: string[];
+    tags: string[];
+    abilReqAbilities: string[];
+  };
   abilityOptions: { value: string; label: string }[];
   saving: boolean;
   canDelete: boolean;
@@ -54,7 +60,7 @@ export function AdminFeatEditModal({
   const [form, setForm] = useState<FeatFormState>(initialForm);
   const [selectedEditId, setSelectedEditId] = useState<string | null>(initialEditId);
   const [draftsById, setDraftsById] = useState<Record<string, FeatFormState>>(() =>
-    initialEditId ? { [initialEditId]: initialForm } : {}
+    initialEditId ? { [initialEditId]: initialForm } : {},
   );
   const [dirtyIds, setDirtyIds] = useState<Set<string>>(new Set());
 
@@ -155,14 +161,18 @@ export function AdminFeatEditModal({
               <Button
                 variant="outline"
                 onClick={onRequestDelete}
-                className={deleteConfirm ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}
+                className={
+                  deleteConfirm ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''
+                }
               >
                 {deleteConfirm ? 'Click again to confirm delete' : 'Delete'}
               </Button>
             )}
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>Cancel</Button>
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
             <Button
               onClick={() => {
                 if (hasLevels) {
@@ -193,16 +203,20 @@ export function AdminFeatEditModal({
       <div className="space-y-4">
         {hasLevels && (
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Editing level</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Editing level
+            </label>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-3">
               <select
                 value={selectedEditId ?? ''}
                 onChange={(e) => handleSelectLevel(e.target.value)}
-                className="w-full sm:w-auto px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary sm:w-auto"
                 aria-label="Select feat level to edit"
               >
                 {levelOptions.map((opt) => (
-                  <option key={opt.id} value={opt.id}>{opt.label}</option>
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
                 ))}
               </select>
               {enableAddLevel && onAddLevel && (
@@ -218,26 +232,30 @@ export function AdminFeatEditModal({
                   }}
                 >
                   <span className="inline-flex items-center gap-1.5">
-                    <Layers className="w-4 h-4" aria-hidden />
+                    <Layers className="h-4 w-4" aria-hidden />
                     Add Level
                   </span>
                 </Button>
               )}
               {dirtyLevelLabels.length > 0 && (
-                <div className="text-xs text-text-muted dark:text-text-secondary">
-                  <span className="font-medium text-text-secondary dark:text-text-secondary">Unsaved:</span> {dirtyLevelLabels.join(', ')}
+                <div className="text-xs text-text-muted">
+                  <span className="font-medium text-text-secondary dark:text-text-secondary">
+                    Unsaved:
+                  </span>{' '}
+                  {dirtyLevelLabels.join(', ')}
                 </div>
               )}
             </div>
-            <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+            <p className="mt-1 text-xs text-text-muted">
               This feat has multiple levels. Select which level you want to edit.
             </p>
           </div>
         )}
         {!hasLevels && enableAddLevel && onAddLevel && (
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between rounded-md border border-border-light bg-surface-alt px-3 py-2">
-            <p className="text-xs text-text-muted dark:text-text-secondary">
-              Save a new row for the next feat tier. Level and character level required are filled from the current feat.
+          <div className="flex flex-col gap-2 rounded-md border border-border-light bg-surface-alt px-3 py-2 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-xs text-text-muted">
+              Save a new row for the next feat tier. Level and character level required are filled
+              from the current feat.
             </p>
             <Button
               type="button"
@@ -251,15 +269,16 @@ export function AdminFeatEditModal({
               }}
             >
               <span className="inline-flex items-center gap-1.5">
-                <Layers className="w-4 h-4" aria-hidden />
+                <Layers className="h-4 w-4" aria-hidden />
                 Add Level
               </span>
             </Button>
           </div>
         )}
         {copySourceName && (
-          <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
-            Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new feat.
+          <p className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-secondary">
+            Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>.
+            Change the name and details as needed, then save to add the new feat.
           </p>
         )}
         <AdminFeatEditModalFields

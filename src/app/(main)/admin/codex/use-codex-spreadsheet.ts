@@ -110,7 +110,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
 
   const minTableWidth = useMemo(
     () => columnWidths.reduce((a, b) => a + b, 0) + 48 + ACTIONS_COL_WIDTH,
-    [columnWidths]
+    [columnWidths],
   );
 
   const sortedRows = useMemo(() => {
@@ -151,7 +151,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
             original: { ...data },
             data,
           };
-        })
+        }),
       );
       setDirty(new Set());
     }
@@ -160,7 +160,9 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
   const updateCell = useCallback((rowKey: string, colKey: string, value: unknown) => {
     if (READONLY_COLUMNS.has(colKey)) return;
     setRows((prev) =>
-      prev.map((row) => (row.key === rowKey ? { ...row, data: { ...row.data, [colKey]: value } } : row))
+      prev.map((row) =>
+        row.key === rowKey ? { ...row, data: { ...row.data, [colKey]: value } } : row,
+      ),
     );
     setDirty((prev) => new Set(prev).add(rowKey));
   }, []);
@@ -172,7 +174,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
         updateCell(rowKey, colKey, parsed);
       }
     },
-    [updateCell]
+    [updateCell],
   );
 
   const copyRow = useCallback(
@@ -180,7 +182,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
       const source = rows.find((row) => row.key === rowKey);
       if (!source) return;
       const existingIds = new Set(
-        rows.map((r) => String(r.data.id ?? '')).filter((id) => id.length > 0)
+        rows.map((r) => String(r.data.id ?? '')).filter((id) => id.length > 0),
       );
       const nameRaw = source.data.name;
       const baseName = typeof nameRaw === 'string' && nameRaw.trim() ? nameRaw.trim() : 'Item';
@@ -202,7 +204,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
       });
       setDirty((prev) => new Set(prev).add(newRow.key));
     },
-    [rows]
+    [rows],
   );
 
   const doFindReplace = useCallback(
@@ -253,7 +255,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
       setDirty(newDirty);
       setReplaceMode(false);
     },
-    [findValue, replaceValue, findWholeCell, findLimitToColumn, searchableColumns, rows, dirty]
+    [findValue, replaceValue, findWholeCell, findLimitToColumn, searchableColumns, rows, dirty],
   );
 
   const validateDirtyRows = useCallback((): { valid: boolean; invalidNames: string[] } => {
@@ -277,7 +279,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
           isNew: !row.originalId,
           changedColumns: changedColumns(row.data, row.original),
         })),
-    [rows, dirty]
+    [rows, dirty],
   );
 
   const saveDirtyRow = useCallback(
@@ -295,7 +297,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
       const result = await updateCodexDoc(collection, row.originalId, data, { expectedUpdatedAt });
       return result.success ? null : `Update ${row.originalId}: ${result.error}`;
     },
-    [collection]
+    [collection],
   );
 
   const clearDirtyKey = useCallback((rowKey: string) => {
@@ -326,7 +328,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
       showToast(
         errors.slice(0, 5).join('; ') +
           (errors.length > 5 ? `; ... and ${errors.length - 5} more` : ''),
-        'error'
+        'error',
       );
       return;
     }
@@ -340,7 +342,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
     if (!valid) {
       showToast(
         `Please add a name for new row(s): ${invalidNames.slice(0, 10).join(', ')}${invalidNames.length > 10 ? ` and ${invalidNames.length - 10} more` : ''}.`,
-        'error'
+        'error',
       );
       return;
     }
@@ -371,7 +373,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
       queryClient.invalidateQueries({ queryKey: ['codex'] });
       await queryClient.refetchQueries({ queryKey: ['codex'] });
     },
-    [collection, rows, queryClient, showToast, saveDirtyRow, clearDirtyKey]
+    [collection, rows, queryClient, showToast, saveDirtyRow, clearDirtyKey],
   );
 
   const addNewRow = useCallback(() => {
@@ -396,7 +398,7 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
       if (colKey === 'name' && idColIndex >= 0) return 48 + columnWidths[idColIndex];
       return undefined;
     },
-    [idColIndex, columnWidths]
+    [idColIndex, columnWidths],
   );
 
   return {

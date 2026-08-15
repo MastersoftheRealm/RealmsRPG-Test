@@ -48,9 +48,9 @@ export function GuidedCreatorPageShell({
         <Link
           href="/characters/new"
           className={cn(
-            'inline-flex items-center gap-1.5 min-h-11 font-nunito text-sm font-medium',
-            'text-primary-link-fg hover:text-primary-fg-hover transition-colors',
-            'mb-4 -mt-1'
+            'inline-flex min-h-11 items-center gap-1.5 font-nunito text-sm font-medium',
+            'text-primary-link-fg transition-colors hover:text-primary-fg-hover',
+            '-mt-1 mb-4',
           )}
         >
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />

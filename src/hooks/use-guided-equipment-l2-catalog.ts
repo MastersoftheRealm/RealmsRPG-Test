@@ -40,7 +40,7 @@ export function useGuidedEquipmentL2Catalog(
   /** Currency spent on weapons/armor (gear PointStatus budget base). */
   armsSpent: number,
   /** Shared base catalog from the step — avoids a second `useGuidedEquipmentCatalog`. */
-  base: GuidedEquipmentCatalogBase
+  base: GuidedEquipmentCatalogBase,
 ) {
   const { catalog, tpSummary, itemProperties } = base;
 
@@ -48,7 +48,7 @@ export function useGuidedEquipmentL2Catalog(
 
   const pathRecommendedIds = useMemo(
     () => pathRecommendedIdSet(pool, phase, officialItems, codexEquipment),
-    [phase, pool, officialItems, codexEquipment]
+    [phase, pool, officialItems, codexEquipment],
   );
 
   /** Gear L2 replaces draft.equipment — ceiling is starting − arms (not − current gear). */
@@ -60,7 +60,7 @@ export function useGuidedEquipmentL2Catalog(
    */
   const crossPhaseTp = useMemo(
     () => crossPhaseTpSpent(phase, draft, catalog),
-    [phase, draft, catalog]
+    [phase, draft, catalog],
   );
 
   const eligibilityCtx = useMemo(
@@ -70,9 +70,9 @@ export function useGuidedEquipmentL2Catalog(
         draft,
         { spent: crossPhaseTp, limit: tpSummary.limit },
         pathRecommendedIds,
-        phase === 'gear' ? gearBudget : undefined
+        phase === 'gear' ? gearBudget : undefined,
       ),
-    [phase, draft, crossPhaseTp, tpSummary.limit, pathRecommendedIds, gearBudget]
+    [phase, draft, crossPhaseTp, tpSummary.limit, pathRecommendedIds, gearBudget],
   );
 
   const items = useMemo(
@@ -83,9 +83,9 @@ export function useGuidedEquipmentL2Catalog(
         eligibilityCtx,
         officialItems,
         codexEquipment,
-        itemProperties
+        itemProperties,
       ),
-    [phase, catalog, eligibilityCtx, officialItems, codexEquipment, itemProperties]
+    [phase, catalog, eligibilityCtx, officialItems, codexEquipment, itemProperties],
   );
 
   return { catalog, tpSummary, itemProperties, eligibilityCtx, items, gearBudget };

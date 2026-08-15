@@ -24,9 +24,7 @@ export function expandableChipShellClass({
     chipVariants({ variant, shape: 'expandable', size: expandableShellChipSize(size) }),
     // ExpandableChip's shared layout promotes this shell (or its local action wrapper)
     // to a full-width flex row while preserving the collapsed row's vertical origin.
-    expanded
-      ? 'min-w-0 max-w-full ring-2 ring-inset ring-primary-outline-border align-top'
-      : '',
-    className
+    expanded ? 'min-w-0 max-w-full ring-2 ring-inset ring-primary-outline-border align-top' : '',
+    className,
   );
 }

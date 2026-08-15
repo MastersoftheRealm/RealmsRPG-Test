@@ -31,7 +31,8 @@ export function SectionCostBadge({ en, tp, ip, currency, className }: SectionCos
   if (en !== undefined && en !== 0) parts.push(`EN: ${en >= 0 ? '+' : ''}${formatBadgeNumber(en)}`);
   if (tp !== undefined && tp !== 0) parts.push(`TP: ${tp >= 0 ? '+' : ''}${formatBadgeNumber(tp)}`);
   if (ip !== undefined && ip !== 0) parts.push(`IP: ${ip >= 0 ? '+' : ''}${formatBadgeNumber(ip)}`);
-  if (currency !== undefined && currency !== 0) parts.push(`C: ${currency >= 0 ? '+' : ''}${formatBadgeNumber(currency)}`);
+  if (currency !== undefined && currency !== 0)
+    parts.push(`C: ${currency >= 0 ? '+' : ''}${formatBadgeNumber(currency)}`);
 
   if (parts.length === 0) return null;
 
@@ -40,7 +41,7 @@ export function SectionCostBadge({ en, tp, ip, currency, className }: SectionCos
       className={cn(
         'inline-flex items-center gap-2 text-xs font-medium',
         'text-text-secondary dark:text-text-primary',
-        className
+        className,
       )}
       aria-label={`Cost contribution: ${parts.join(', ')}`}
     >

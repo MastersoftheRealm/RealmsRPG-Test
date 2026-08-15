@@ -32,8 +32,8 @@ export function SelectedEquipmentList({
   const totalQuantity = selectedItems.reduce((sum, i) => sum + i.quantity, 0);
 
   return (
-    <Card className="bg-surface-alt dark:bg-surface overflow-hidden mb-6 p-0">
-      <h3 className="font-medium text-text-primary px-4 pt-4 pb-2">
+    <Card className="mb-6 overflow-hidden bg-surface-alt p-0 dark:bg-surface">
+      <h3 className="px-4 pt-4 pb-2 font-medium text-text-primary">
         Selected Equipment ({totalQuantity} items)
       </h3>
       <ListHeader
@@ -51,11 +51,7 @@ export function SelectedEquipmentList({
           const fullItem = allEquipment.find((e) => e.id === item.id);
           const typeLabel = item.type.charAt(0).toUpperCase() + item.type.slice(1);
           const costTotal = item.cost * item.quantity;
-          const thumbnail = resolveListRowThumbnail(
-            'equipment',
-            fullItem ?? item,
-            item.name
-          );
+          const thumbnail = resolveListRowThumbnail('equipment', fullItem ?? item, item.name);
           return (
             <GridListRow
               key={item.id}
@@ -83,7 +79,7 @@ export function SelectedEquipmentList({
                   onClick={() => onRemoveItem(item.id)}
                   label={`Remove ${item.name}`}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </IconButton>
               }
               compact

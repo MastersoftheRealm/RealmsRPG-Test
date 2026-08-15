@@ -20,6 +20,7 @@ import type {
   UserEnhancedItem,
 } from '@/types/crafting';
 import { apiFetch } from '@/lib/api-client';
+import { userLibraryKeys } from '@/hooks/use-user-library';
 
 export type EnhancedItemsScope = 'user' | 'official';
 
@@ -57,13 +58,16 @@ async function fetchEnhancedItems(scope: EnhancedItemsScope) {
 
 export function useEnhancedItems(
   scope?: 'user',
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ): UseQueryResult<UserEnhancedItem[], Error>;
 export function useEnhancedItems(
   scope: 'official',
-  options?: { enabled?: boolean }
+  options?: { enabled?: boolean },
 ): UseQueryResult<OfficialEnhancedItem[], Error>;
-export function useEnhancedItems(scope: EnhancedItemsScope = 'user', options?: { enabled?: boolean }) {
+export function useEnhancedItems(
+  scope: EnhancedItemsScope = 'user',
+  options?: { enabled?: boolean },
+) {
   return useQuery({
     queryKey: enhancedItemsKeys.list(scope),
     queryFn: () => fetchEnhancedItems(scope),
@@ -78,6 +82,7 @@ export function useCreateEnhancedItem() {
     mutationFn: (body: UserEnhancedItemCreate) => createEnhancedItem(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('user') });
+      queryClient.invalidateQueries({ queryKey: userLibraryKeys.countsRoot });
     },
   });
 }
@@ -103,6 +108,7 @@ export function useDeleteEnhancedItem() {
     mutationFn: (id: string) => deleteEnhancedItem(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: enhancedItemsKeys.lists('user') });
+      queryClient.invalidateQueries({ queryKey: userLibraryKeys.countsRoot });
     },
   });
 }

@@ -34,10 +34,7 @@ export { EditSectionToggle, getEditState, type EditState } from './edit-section-
 
 // Temp Modifier dual affordance (ADR-0006 / TASK-585) — pencil + SlidersHorizontal; mutual exclusive modes
 export { TempModifierToggle } from './temp-modifier-toggle';
-export {
-  SectionDualModeToggles,
-  type SectionEditMode,
-} from './section-dual-mode-toggles';
+export { SectionDualModeToggles, type SectionEditMode } from './section-dual-mode-toggles';
 
 // ============================================================================
 // Modal components
@@ -84,7 +81,11 @@ export type { HubListRowProps } from './hub-list-row';
 // TabSummarySection - Compact top section for tab summary info
 // Use for: innate energy, currency, armament proficiency, physical attributes, etc.
 export { TabSummarySection, SummaryItem, SummaryRow } from './tab-summary-section';
-export type { TabSummarySectionProps, SummaryItemProps, SummaryRowProps } from './tab-summary-section';
+export type {
+  TabSummarySectionProps,
+  SummaryItemProps,
+  SummaryRowProps,
+} from './tab-summary-section';
 
 // ListHeader - Sortable column headers for list views
 // Use for ALL list headers matching Codex/Library patterns
@@ -120,7 +121,11 @@ export type { OfficialTechniqueListProps, OfficialTechniqueRow } from './officia
 
 // OfficialItemList - shared Realms Library armaments grid
 export { OfficialItemList } from './official-item-list';
-export type { OfficialItemListProps, OfficialItemRow, ArmamentLibraryKind } from './official-item-list';
+export type {
+  OfficialItemListProps,
+  OfficialItemRow,
+  ArmamentLibraryKind,
+} from './official-item-list';
 
 // OfficialEnhancedList - shared Realms Library enhanced items grid (admin)
 export { OfficialEnhancedList } from './official-enhanced-list';
@@ -162,8 +167,8 @@ export {
   LoadingState,
   ErrorDisplay,
 } from './list-components';
-export type { 
-  SearchInputProps, 
+export type {
+  SearchInputProps,
   FilterSectionProps,
   EmptyStateProps,
   ErrorDisplayProps,
@@ -210,7 +215,12 @@ export type {
 } from './entity-library-sections';
 
 // Quick armaments tables (Archetype-style)
-export { QuickWeaponsTable, QuickShieldsTable, QuickArmorTable, QUICK_WEAPON_COL } from './quick-armaments-sections';
+export {
+  QuickWeaponsTable,
+  QuickShieldsTable,
+  QuickArmorTable,
+  QUICK_WEAPON_COL,
+} from './quick-armaments-sections';
 export type { QuickArmamentItem, QuickArmamentAbilities } from './quick-armaments-sections';
 
 // ============================================================================
@@ -229,9 +239,9 @@ export type { EquipToggleProps } from './equip-toggle';
 
 // UnifiedSelectionModal - Catalog / sheet / creator add-X selection (feats, skills, …)
 export { UnifiedSelectionModal } from './unified-selection-modal';
-export type { 
-  UnifiedSelectionModalProps, 
-  SelectableItem, 
+export type {
+  UnifiedSelectionModalProps,
+  SelectableItem,
   ColumnHeader as SelectionColumnHeader,
 } from './unified-selection-modal';
 

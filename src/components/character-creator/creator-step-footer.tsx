@@ -53,17 +53,13 @@ export function CreatorStepFooter({
         <span />
       ) : null}
       {completionHint && (
-        <div className="hidden sm:flex items-center text-sm text-text-secondary self-center mx-auto">
+        <div className="mx-auto hidden items-center self-center text-sm text-text-secondary sm:flex">
           {completionHint}
         </div>
       )}
       {primaryAction ??
         (onContinue ? (
-          <Button
-            onClick={onContinue}
-            disabled={continueDisabled}
-            className="min-h-11 min-w-11"
-          >
+          <Button onClick={onContinue} disabled={continueDisabled} className="min-h-11 min-w-11">
             {continueLabel}
           </Button>
         ) : null)}
@@ -71,25 +67,21 @@ export function CreatorStepFooter({
   );
 
   if (variant === 'inline') {
-    return (
-      <div className={cn('flex justify-between gap-4 w-full', className)}>
-        {actions}
-      </div>
-    );
+    return <div className={cn('flex w-full justify-between gap-4', className)}>{actions}</div>;
   }
 
   return (
     <div
       data-testid="creator-step-footer"
       className={cn(
-        'fixed bottom-0 inset-x-0 z-30 pointer-events-none px-4 sm:px-6 lg:px-8 pb-4 pt-2',
-        className
+        'pointer-events-none fixed inset-x-0 bottom-0 z-30 px-4 pt-2 pb-4 sm:px-6 lg:px-8',
+        className,
       )}
     >
       <div
         className={cn(
-          'mx-auto max-w-[var(--container-wide)] lg:px-24 flex gap-4 pointer-events-auto',
-          soloPrimary ? 'justify-end' : 'justify-between'
+          'pointer-events-auto mx-auto flex max-w-[var(--container-wide)] gap-4 lg:px-24',
+          soloPrimary ? 'justify-end' : 'justify-between',
         )}
       >
         {actions}

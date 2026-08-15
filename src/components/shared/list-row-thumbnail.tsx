@@ -17,7 +17,12 @@ export interface ListRowThumbnailProps {
   className?: string;
 }
 
-export function ListRowThumbnail({ src, alt, isPlaceholder = false, className }: ListRowThumbnailProps) {
+export function ListRowThumbnail({
+  src,
+  alt,
+  isPlaceholder = false,
+  className,
+}: ListRowThumbnailProps) {
   const theme = usePlaceholderTheme();
   const displaySrc = isPlaceholder ? getThemedPlaceholderSrc(src, theme) : src;
 
@@ -29,8 +34,8 @@ export function ListRowThumbnail({ src, alt, isPlaceholder = false, className }:
       stopPropagation
       className={cn(
         'relative flex-shrink-0 rounded-md border border-border-light bg-image-matte',
-        'min-w-[44px] min-h-[44px] w-11 h-11',
-        className
+        'h-11 min-h-[44px] w-11 min-w-[44px]',
+        className,
       )}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}

@@ -42,7 +42,7 @@ export function SpeciesStep() {
 
   const userSpeciesIds = useMemo(
     () => new Set((userSpeciesList ?? []).map((s) => s.id)),
-    [userSpeciesList]
+    [userSpeciesList],
   );
 
   const openAllSpecies = useCallback(() => setShowAll(true), []);
@@ -54,7 +54,10 @@ export function SpeciesStep() {
     onDeepEntry: openAllSpecies,
   });
 
-  const hasStarters = useMemo(() => allSpecies.some((s) => (s as Species).is_starter), [allSpecies]);
+  const hasStarters = useMemo(
+    () => allSpecies.some((s) => (s as Species).is_starter),
+    [allSpecies],
+  );
   const isL2 = showAll || !hasStarters;
 
   const visibleSpecies = useMemo(() => {
@@ -64,22 +67,19 @@ export function SpeciesStep() {
 
   // Lookup against full list so collapsing starters does not dismiss an open non-starter modal.
   const detailSpecies = useMemo(
-    () =>
-      (allSpecies.find((s) => String(s.id) === detailSpeciesId) as Species | undefined) ?? null,
-    [allSpecies, detailSpeciesId]
+    () => (allSpecies.find((s) => String(s.id) === detailSpeciesId) as Species | undefined) ?? null,
+    [allSpecies, detailSpeciesId],
   );
 
   const isMixedSelected = draft.speciesMixed;
 
   const handleSelect = (species: Species) => {
-    updateDraft(
-      buildGuidedSingleSpeciesDraftPatch(draft, species, getSpeciesSizeOptions(species))
-    );
+    updateDraft(buildGuidedSingleSpeciesDraftPatch(draft, species, getSpeciesSizeOptions(species)));
   };
 
   const handleMixedConfirm = (
     speciesA: { id: string; name: string },
-    speciesB: { id: string; name: string }
+    speciesB: { id: string; name: string },
   ) => {
     updateDraft(buildGuidedMixedSpeciesDraftPatch(draft, speciesA, speciesB));
     setShowMixedModal(false);
@@ -129,7 +129,7 @@ export function SpeciesStep() {
                   'border-dashed',
                   isMixedSelected
                     ? 'border-primary ring-2 ring-primary'
-                    : 'border-border hover:border-primary-outline-border'
+                    : 'border-border hover:border-primary-outline-border',
                 )}
                 density="species"
                 icon={<GitMerge className="h-8 w-8 text-primary-link-fg" aria-hidden />}

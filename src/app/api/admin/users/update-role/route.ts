@@ -8,7 +8,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient as createSupabaseAdminClient } from '@supabase/supabase-js';
 import { requireAdminSession } from '@/lib/admin';
 import { adminUpdateRoleSchema, validateJson } from '@/lib/api-validation';
-import { strictLimiter, buildRateLimitKey, resolveClientIp, retryAfterSecondsFromReset } from '@/lib/rate-limit';
+import {
+  strictLimiter,
+  buildRateLimitKey,
+  resolveClientIp,
+  retryAfterSecondsFromReset,
+} from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,12 +35,15 @@ export async function PATCH(request: NextRequest) {
 
     // SEC-05: limit sensitive role mutations per admin/IP.
     const rateResult = await strictLimiter.check(
-      buildRateLimitKey('admin-update-role', { userId: auth.userId, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('admin-update-role', {
+        userId: auth.userId,
+        ip: resolveClientIp(request.headers),
+      }),
     );
     if (!rateResult.success) {
       return NextResponse.json(
         { error: 'Too many requests' },
-        { status: 429, headers: { 'Retry-After': retryAfterSecondsFromReset(rateResult.reset) } }
+        { status: 429, headers: { 'Retry-After': retryAfterSecondsFromReset(rateResult.reset) } },
       );
     }
 
@@ -48,10 +56,10 @@ export async function PATCH(request: NextRequest) {
     const profileQuery = supabase.from('user_profiles').select('id, role').limit(1);
     const { data: profile, error: profileError } = userId
       ? await profileQuery.eq('id', userId).maybeSingle()
-      // eq, not ilike: `_` and `%` are legal username characters but ilike wildcards,
-      // so a pasted name could match a different account and promote it instead.
-      // Usernames are stored canonically lowercased.
-      : await profileQuery.eq('username', (username ?? '').toLowerCase()).maybeSingle();
+      : // eq, not ilike: `_` and `%` are legal username characters but ilike wildcards,
+        // so a pasted name could match a different account and promote it instead.
+        // Usernames are stored canonically lowercased.
+        await profileQuery.eq('username', (username ?? '').toLowerCase()).maybeSingle();
     if (profileError) {
       console.error('[API Error] update-role profile lookup:', profileError);
       return NextResponse.json({ error: 'Failed to look up user' }, { status: 500 });
@@ -82,7 +90,7 @@ export async function PATCH(request: NextRequest) {
       if ((count ?? 0) <= 1) {
         return NextResponse.json(
           { error: 'Cannot remove the last admin. Promote another admin first.' },
-          { status: 409 }
+          { status: 409 },
         );
       }
     }

@@ -12,12 +12,7 @@ export function CreatureLibraryStatBlockRow({
   creature,
   ...rowProps
 }: CreatureLibraryStatBlockRowProps & { creature: LibraryCreature }) {
-  return (
-    <CreatureStatBlock
-      creature={mapLibraryCreatureToStatBlockData(creature)}
-      {...rowProps}
-    />
-  );
+  return <CreatureStatBlock creature={mapLibraryCreatureToStatBlockData(creature)} {...rowProps} />;
 }
 
 export interface CreatureLibraryStatBlockRowsProps {
@@ -40,11 +35,7 @@ export function CreatureLibraryStatBlockRows({
       {creatures.map((creature) => {
         const id = String(creature.id ?? creature.docId ?? creature.name);
         return (
-          <CreatureLibraryStatBlockRow
-            key={id}
-            creature={creature}
-            {...getRowProps?.(creature)}
-          />
+          <CreatureLibraryStatBlockRow key={id} creature={creature} {...getRowProps?.(creature)} />
         );
       })}
     </div>

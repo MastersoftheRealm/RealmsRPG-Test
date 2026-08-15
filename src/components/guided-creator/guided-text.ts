@@ -19,7 +19,7 @@ function worthTruncating(full: string, preview: string): boolean {
 /** Truncate at a word boundary — avoids cutting mid-word or mid-sentence for previews. */
 export function truncateAtWord(
   text?: string | null,
-  maxLen = DEFAULT_PREVIEW_LEN
+  maxLen = DEFAULT_PREVIEW_LEN,
 ): { preview: string; isTruncated: boolean } {
   if (!text) return { preview: '', isTruncated: false };
   const trimmed = text.trim();

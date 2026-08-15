@@ -37,9 +37,7 @@ export const REALMS_IMAGE_CATEGORY_OPTIONS: { value: RealmsImageCategory; label:
 
 export function formatRealmsImageCategoryLabels(categories: RealmsImageCategory[]): string {
   if (categories.length === 0) return '—';
-  return categories
-    .map((c) => c.charAt(0).toUpperCase() + c.slice(1))
-    .join(', ');
+  return categories.map((c) => c.charAt(0).toUpperCase() + c.slice(1)).join(', ');
 }
 
 export interface RealmsImage {
@@ -78,7 +76,7 @@ export type RealmsImagePickerFilter =
 
 /** Normalize picker `categories` prop to API OR-filter array (ADR-0003). */
 export function resolveRealmsImagePickerCategories(
-  filter: RealmsImagePickerFilter
+  filter: RealmsImagePickerFilter,
 ): RealmsImageCategory[] {
   if (filter === 'empowered-technique') return ['power', 'technique'];
   if (filter === 'portrait') return ['species', 'creature'];
@@ -102,7 +100,10 @@ export function parseRealmsImageCategories(raw: unknown): RealmsImageCategory[] 
         return null;
       }
     } else {
-      parts = trimmed.split(/[,|]/).map((s) => s.trim()).filter(Boolean);
+      parts = trimmed
+        .split(/[,|]/)
+        .map((s) => s.trim())
+        .filter(Boolean);
     }
   } else if (Array.isArray(raw)) {
     parts = raw.map((v) => String(v).trim()).filter(Boolean);
@@ -179,7 +180,7 @@ export async function createRealmsImage(input: CreateRealmsImageInput): Promise<
 
 export async function updateRealmsImage(
   id: string,
-  patch: { name?: string; categories?: RealmsImageCategory[] }
+  patch: { name?: string; categories?: RealmsImageCategory[] },
 ): Promise<RealmsImage> {
   return apiFetch<RealmsImage>(`/api/images/${encodeURIComponent(id)}`, {
     method: 'PATCH',
@@ -191,7 +192,7 @@ export async function updateRealmsImage(
 export async function replaceRealmsImageFile(
   id: string,
   file: Blob,
-  fileName?: string
+  fileName?: string,
 ): Promise<RealmsImage> {
   const uploadFile = fileName
     ? new File([file], fileName, {

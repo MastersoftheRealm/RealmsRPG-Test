@@ -3,10 +3,7 @@
  */
 
 import { describe, expect, it } from 'vitest';
-import {
-  GUIDED_SUBSTEP_ORDER,
-  type GuidedSubStep,
-} from '@/stores/guided-creator-store';
+import { GUIDED_SUBSTEP_ORDER, type GuidedSubStep } from '@/stores/guided-creator-store';
 import {
   landsOnFirstInnerScreen,
   nextGuidedSubStep,

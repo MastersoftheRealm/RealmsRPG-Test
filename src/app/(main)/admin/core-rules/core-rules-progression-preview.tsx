@@ -20,38 +20,56 @@ export function ProgressionPreview({ data }: { data: Record<string, unknown> }) 
   const rows = useMemo(() => {
     return Array.from({ length: 10 }, (_, i) => {
       const level = i + 1;
-      const abilityPts = level < abilityInterval ? baseAbility : baseAbility + Math.floor(level / abilityInterval) * abilityPerIncrease;
+      const abilityPts =
+        level < abilityInterval
+          ? baseAbility
+          : baseAbility + Math.floor(level / abilityInterval) * abilityPerIncrease;
       const skillPts = skillsPerLevel * level;
       const pool = basePool + poolPerLevel * (level - 1);
-      const prof = level < profInterval ? baseProf : baseProf + Math.floor(level / profInterval) * profPerIncrease;
-      const tp = baseTP + (tpMult * (level - 1));
+      const prof =
+        level < profInterval
+          ? baseProf
+          : baseProf + Math.floor(level / profInterval) * profPerIncrease;
+      const tp = baseTP + tpMult * (level - 1);
       return { level, abilityPts, skillPts, pool, prof, tp };
     });
-  }, [baseAbility, abilityInterval, abilityPerIncrease, skillsPerLevel, basePool, poolPerLevel, baseProf, profInterval, profPerIncrease, baseTP, tpMult]);
+  }, [
+    baseAbility,
+    abilityInterval,
+    abilityPerIncrease,
+    skillsPerLevel,
+    basePool,
+    poolPerLevel,
+    baseProf,
+    profInterval,
+    profPerIncrease,
+    baseTP,
+    tpMult,
+  ]);
 
   return (
     <TableScroll className="mt-4">
       <SectionTitle>Level 1-10 Preview</SectionTitle>
       <table className="w-full text-xs">
         <thead>
-          <tr className="text-text-muted dark:text-text-secondary border-b">
-            <th className="text-center py-1 px-2">Lvl</th>
-            <th className="text-center py-1 px-2">Ability Pts</th>
-            <th className="text-center py-1 px-2">Skill Pts</th>
-            <th className="text-center py-1 px-2">Health/Energy Pool</th>
-            <th className="text-center py-1 px-2">Prof</th>
-            <th className="text-center py-1 px-2">Training Pts</th>
+          <tr className="border-b text-text-muted">
+            <th className="px-2 py-1 text-center">Lvl</th>
+            <th className="px-2 py-1 text-center">Ability Pts</th>
+            <th className="px-2 py-1 text-center">Skill Pts</th>
+            <th className="px-2 py-1 text-center">Health/Energy Pool</th>
+            <th className="px-2 py-1 text-center">Prof</th>
+            <th className="px-2 py-1 text-center">Training Pts</th>
           </tr>
         </thead>
         <tbody>
-          {rows.map(r => (
+          {rows.map((r) => (
             <tr key={r.level} className="border-b border-border-subtle text-center">
-              <td className="py-1 px-2 font-medium">{r.level}</td>
-              <td className="py-1 px-2">{r.abilityPts}</td>
-              <td className="py-1 px-2">{r.skillPts}</td>
-              <td className="py-1 px-2">{r.pool}</td>
-              <td className="py-1 px-2">{r.prof}</td>
-              <td className="py-1 px-2">{r.tp}</td>
+              <td className="px-2 py-1 font-medium">{r.level}</td>
+              <td className="px-2 py-1">{r.abilityPts}</td>
+              <td className="px-2 py-1">{r.skillPts}</td>
+              <td className="px-2 py-1">{r.pool}</td>
+              <td className="px-2 py-1">{r.prof}</td>
+              <td className="px-2 py-1">{r.tp}</td>
             </tr>
           ))}
         </tbody>

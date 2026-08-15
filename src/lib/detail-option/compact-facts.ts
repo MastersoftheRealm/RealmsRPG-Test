@@ -76,7 +76,7 @@ export function capitalizeSpacesTerm(text: string): string {
  * Example: "Strength Requirement 3+"
  */
 export function formatAbilityRequirementFact(
-  req: AbilityRequirementFact | null | undefined
+  req: AbilityRequirementFact | null | undefined,
 ): string | undefined {
   if (!req?.name?.trim() || req.level == null || Number.isNaN(Number(req.level))) {
     return undefined;
@@ -84,7 +84,10 @@ export function formatAbilityRequirementFact(
   const level = Math.floor(Number(req.level));
   if (level <= 0) return undefined;
   // Strip accidental "Ability Requirement" / "Weapon" / "Armor" prefixes from raw names
-  let ability = req.name.trim().replace(/\s+requirement\s*$/i, '').trim();
+  let ability = req.name
+    .trim()
+    .replace(/\s+requirement\s*$/i, '')
+    .trim();
   ability = ability
     .replace(/^(ability|weapon|armor)\s+/i, '')
     .replace(/^(ability|weapon|armor)\s+/i, '')
@@ -98,14 +101,11 @@ export type HandednessLabel = 'Two-handed' | 'One-handed' | 'Thrown' | 'Ranged';
 /** Bare handedness — "Two-handed", never "Handedness: Two-handed". */
 export function formatHandednessFact(
   properties: WeaponPropertyRef[] | undefined,
-  storedRange?: string | number | null
+  storedRange?: string | number | null,
 ): HandednessLabel {
   if (hasTwoHandedProperty(properties)) return 'Two-handed';
   if (hasThrownProperty(properties)) return 'Thrown';
-  const range = resolveWeaponRangeDisplay(
-    storedRange,
-    (properties ?? []) as ItemPropertyPayload[]
-  );
+  const range = resolveWeaponRangeDisplay(storedRange, (properties ?? []) as ItemPropertyPayload[]);
   if (range.toLowerCase() !== 'melee') return 'Ranged';
   return 'One-handed';
 }
@@ -135,7 +135,7 @@ export function formatDamageFact(damage: unknown): string | undefined {
 
 /** Strength Weapon / Agility Weapon / Acuity Weapon. */
 export function formatWeaponAbilityFact(
-  ability: WeaponAttackAbility | null | undefined
+  ability: WeaponAttackAbility | null | undefined,
 ): string | undefined {
   if (!ability) return undefined;
   return `${weaponAttackAbilityLabel(ability)} Weapon`;
@@ -143,7 +143,7 @@ export function formatWeaponAbilityFact(
 
 export function formatWeaponAbilityFactFromProperties(
   properties: WeaponPropertyRef[] | undefined,
-  rangeOverride?: string | null
+  rangeOverride?: string | null,
 ): string {
   return formatWeaponAbilityFact(getWeaponAttackAbility(properties, rangeOverride))!;
 }
@@ -152,9 +152,7 @@ export function formatWeaponAbilityFactFromProperties(
  * Range chip — omit Melee (handedness / weapon type already imply it).
  * Example: "Range 16 Spaces"
  */
-export function formatRangeFact(
-  range: string | number | null | undefined
-): string | undefined {
+export function formatRangeFact(range: string | number | null | undefined): string | undefined {
   if (isBlank(range)) return undefined;
   const raw = capitalizeSpacesTerm(String(range));
   if (raw.toLowerCase() === 'melee') return undefined;
@@ -163,9 +161,7 @@ export function formatRangeFact(
 }
 
 /** Standalone Spaces value — e.g. "3 Spaces". */
-export function formatSpacesFact(
-  spaces: string | number | null | undefined
-): string | undefined {
+export function formatSpacesFact(spaces: string | number | null | undefined): string | undefined {
   if (isBlank(spaces)) return undefined;
   const raw = String(spaces).trim();
   if (/^\d+$/.test(raw)) {
@@ -181,9 +177,7 @@ export function formatSpacesFact(
  * Prefer {@link formatActionTypeFact} only when a self-describing labeled string is required
  * (metadata chip with no Action Type column).
  */
-export function formatActionTypeValue(
-  actionType: string | null | undefined
-): string | undefined {
+export function formatActionTypeValue(actionType: string | null | undefined): string | undefined {
   if (isBlank(actionType)) return undefined;
   let formatted = formatActionTypeForDisplay(String(actionType));
   if (!formatted || formatted === '-') return undefined;
@@ -205,18 +199,14 @@ export function formatActionTypeValue(
  * (e.g. metadata chips when Action Type is omitted from GridListRow columns).
  * Chip / disclosure label: prefer {@link actionTypeFactChip} / {@link formatActionTypeValue}.
  */
-export function formatActionTypeFact(
-  actionType: string | null | undefined
-): string | undefined {
+export function formatActionTypeFact(actionType: string | null | undefined): string | undefined {
   const value = formatActionTypeValue(actionType);
   if (!value) return undefined;
   return `Action Type ${value}`;
 }
 
 /** Currency N — full word for L1/L2 (GAME_RULES). */
-export function formatCurrencyFact(
-  cost: number | null | undefined
-): string | undefined {
+export function formatCurrencyFact(cost: number | null | undefined): string | undefined {
   if (cost == null || Number.isNaN(Number(cost))) return undefined;
   const n = Math.max(0, Math.floor(Number(cost)));
   return `Currency ${n}`;
@@ -233,9 +223,7 @@ export const TRAINING_POINTS_COST_LABEL = 'Training Points';
 export const TP_COST_LABEL = 'TP';
 
 /** Training Points N — full word for L1/L2 (GAME_RULES). */
-export function formatTrainingPointsFact(
-  points: number | null | undefined
-): string | undefined {
+export function formatTrainingPointsFact(points: number | null | undefined): string | undefined {
   if (points == null || Number.isNaN(Number(points))) return undefined;
   const n = Math.max(0, Math.floor(Number(points)));
   return `Training Points ${n}`;
@@ -245,9 +233,7 @@ export function formatTrainingPointsFact(
  * Armor Agility Reduction — e.g. "Agility Reduction -1".
  * Accepts signed penalty or positive reduction amount from catalog fields.
  */
-export function formatAgilityReductionFact(
-  value: number | null | undefined
-): string | undefined {
+export function formatAgilityReductionFact(value: number | null | undefined): string | undefined {
   if (value == null || Number.isNaN(Number(value))) return undefined;
   const n = Math.floor(Number(value));
   if (n === 0) return undefined;
@@ -255,24 +241,18 @@ export function formatAgilityReductionFact(
   return `Agility Reduction -${amount}`;
 }
 
-export function agilityReductionFactChip(
-  value: number | null | undefined
-): ChipData | null {
+export function agilityReductionFactChip(value: number | null | undefined): ChipData | null {
   return compactFactChip(formatAgilityReductionFact(value));
 }
 
 /** Damage Reduction N — self-describing chip for armor. */
-export function formatDamageReductionFact(
-  value: number | null | undefined
-): string | undefined {
+export function formatDamageReductionFact(value: number | null | undefined): string | undefined {
   if (value == null || Number.isNaN(Number(value))) return undefined;
   const n = Math.floor(Number(value));
   return `Damage Reduction ${n}`;
 }
 
-export function damageReductionFactChip(
-  value: number | null | undefined
-): ChipData | null {
+export function damageReductionFactChip(value: number | null | undefined): ChipData | null {
   return compactFactChip(formatDamageReductionFact(value));
 }
 
@@ -283,14 +263,14 @@ export function compactFactChip(label: string | undefined | null): ChipData | nu
 }
 
 export function abilityRequirementChip(
-  req: AbilityRequirementFact | null | undefined
+  req: AbilityRequirementFact | null | undefined,
 ): ChipData | null {
   return compactFactChip(formatAbilityRequirementFact(req));
 }
 
 export function handednessChip(
   properties: WeaponPropertyRef[] | undefined,
-  storedRange?: string | number | null
+  storedRange?: string | number | null,
 ): ChipData {
   return descriptorChipData(formatHandednessFact(properties, storedRange), 'default');
 }
@@ -301,23 +281,19 @@ export function damageFactChip(damage: unknown): ChipData | null {
 
 export function weaponAbilityChip(
   properties: WeaponPropertyRef[] | undefined,
-  rangeOverride?: string | null
+  rangeOverride?: string | null,
 ): ChipData {
   return descriptorChipData(
     formatWeaponAbilityFactFromProperties(properties, rangeOverride),
-    'default'
+    'default',
   );
 }
 
-export function rangeFactChip(
-  range: string | number | null | undefined
-): ChipData | null {
+export function rangeFactChip(range: string | number | null | undefined): ChipData | null {
   return compactFactChip(formatRangeFact(range));
 }
 
-export function spacesFactChip(
-  spaces: string | number | null | undefined
-): ChipData | null {
+export function spacesFactChip(spaces: string | number | null | undefined): ChipData | null {
   return compactFactChip(formatSpacesFact(spaces));
 }
 
@@ -325,24 +301,18 @@ export function spacesFactChip(
  * Desc-chip for Action Type — value only (“Quick Action”), not “Action Type Quick Action”.
  * Column headers / ListHeader keep the “Action Type” label separately.
  */
-export function actionTypeFactChip(
-  actionType: string | null | undefined
-): ChipData | null {
+export function actionTypeFactChip(actionType: string | null | undefined): ChipData | null {
   return compactFactChip(formatActionTypeValue(actionType));
 }
 
 /** Energy N — compact fact for power/technique cards and catalogs. */
-export function formatEnergyFact(
-  energy: number | null | undefined
-): string | undefined {
+export function formatEnergyFact(energy: number | null | undefined): string | undefined {
   if (energy == null || Number.isNaN(Number(energy))) return undefined;
   const n = Math.max(0, Math.floor(Number(energy)));
   return `Energy ${n}`;
 }
 
-export function energyFactChip(
-  energy: number | null | undefined
-): ChipData | null {
+export function energyFactChip(energy: number | null | undefined): ChipData | null {
   return compactFactChip(formatEnergyFact(energy));
 }
 
@@ -350,9 +320,7 @@ export function currencyFactChip(cost: number | null | undefined): ChipData | nu
   return compactFactChip(formatCurrencyFact(cost));
 }
 
-export function trainingPointsFactChip(
-  points: number | null | undefined
-): ChipData | null {
+export function trainingPointsFactChip(points: number | null | undefined): ChipData | null {
   return compactFactChip(formatTrainingPointsFact(points));
 }
 
@@ -372,17 +340,16 @@ export function isMechanicPropertyName(name: string): boolean {
 export function propertyDescriptorChip(
   name: string,
   description?: string | null,
-  opts?: { cost?: number; costLabel?: string; includeCost?: boolean }
+  opts?: { cost?: number; costLabel?: string; includeCost?: boolean },
 ): ChipData {
   const tip = description?.trim() || undefined;
   const includeCost = opts?.includeCost === true;
-  const cost =
-    includeCost && opts?.cost != null && opts.cost > 0 ? opts.cost : undefined;
+  const cost = includeCost && opts?.cost != null && opts.cost > 0 ? opts.cost : undefined;
   const chip: ChipData = {
     ...descriptorChipData(name.trim(), cost ? 'cost' : 'default'),
     description: tip,
     cost,
-    costLabel: cost ? opts?.costLabel ?? TRAINING_POINTS_COST_LABEL : undefined,
+    costLabel: cost ? (opts?.costLabel ?? TRAINING_POINTS_COST_LABEL) : undefined,
   };
   return chip;
 }
@@ -397,7 +364,7 @@ export function propertyDescriptorChip(
 export function namedPropertyDescriptorChips(
   properties: Array<string | { name?: string; id?: unknown; op_1_lvl?: number }> | undefined,
   itemProperties: ItemPropertyTpRow[] = [],
-  opts?: { includeCost?: boolean }
+  opts?: { includeCost?: boolean },
 ): ChipData[] {
   if (!properties?.length) return [];
   const includeCost = opts?.includeCost === true;
@@ -406,13 +373,11 @@ export function namedPropertyDescriptorChips(
       const propName = typeof prop === 'string' ? prop : String(prop?.name ?? '');
       if (!propName.trim() || isMechanicPropertyName(propName)) return null;
       const dbProp = itemProperties.find(
-        (p) => String(p.name ?? '').toLowerCase() === propName.toLowerCase()
+        (p) => String(p.name ?? '').toLowerCase() === propName.toLowerCase(),
       );
       const displayName = dbProp?.name || propName;
       if (isMechanicPropertyName(displayName)) return null;
-      const tp = includeCost
-        ? trainingPointsForItemPropertyRef(prop, itemProperties)
-        : 0;
+      const tp = includeCost ? trainingPointsForItemPropertyRef(prop, itemProperties) : 0;
       return propertyDescriptorChip(displayName, dbProp?.description, {
         cost: tp > 0 ? tp : undefined,
         costLabel: TRAINING_POINTS_COST_LABEL,

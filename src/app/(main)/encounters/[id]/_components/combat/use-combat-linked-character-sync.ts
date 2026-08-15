@@ -5,20 +5,16 @@
  * Supabase Realtime merges.
  */
 
-"use client";
+'use client';
 
-import { useEffect, useMemo } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import {
-  campaignKeys,
-  useCampaignCharacterEncounters,
-  useGameRules,
-} from "@/hooks";
-import type { Encounter, TrackedCombatant } from "@/types/encounter";
-import type { CampaignCharacterEncounterData } from "@/types/campaign";
-import { createClient } from "@/lib/supabase/client";
-import { computeMaxHealthEnergy } from "@/lib/game/calculations";
-import { readResourcesFromCharacterData } from "@/lib/encounter/character-resource-sync";
+import { useEffect, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { campaignKeys, useCampaignCharacterEncounters, useGameRules } from '@/hooks';
+import type { Encounter, TrackedCombatant } from '@/types/encounter';
+import type { CampaignCharacterEncounterData } from '@/types/campaign';
+import { createClient } from '@/lib/supabase/client';
+import { computeMaxHealthEnergy } from '@/lib/game/calculations';
+import { readResourcesFromCharacterData } from '@/lib/encounter/character-resource-sync';
 
 type SetEncounter = React.Dispatch<React.SetStateAction<Encounter | null>>;
 
@@ -89,9 +85,7 @@ export function useCombatLinkedCharacterSync({
     () =>
       encounter.combatants.filter(
         (c): c is TrackedCombatant =>
-          c.sourceType === "campaign-character" &&
-          !!c.sourceId &&
-          !!c.sourceUserId,
+          c.sourceType === 'campaign-character' && !!c.sourceId && !!c.sourceUserId,
       ),
     [encounter.combatants],
   );
@@ -105,10 +99,7 @@ export function useCombatLinkedCharacterSync({
     [linked],
   );
 
-  const queries = useCampaignCharacterEncounters(
-    encounter.campaignId,
-    targets,
-  );
+  const queries = useCampaignCharacterEncounters(encounter.campaignId, targets);
 
   const resourceSyncStamp = JSON.stringify(
     linked.map((c, i) => ({
@@ -142,7 +133,7 @@ export function useCombatLinkedCharacterSync({
     const key = campaignKeys.characterEncounters(campaignId);
     let intervalId: ReturnType<typeof setInterval> | null = null;
     const refetchLinked = () => {
-      void queryClient.refetchQueries({ queryKey: key, type: "active" });
+      void queryClient.refetchQueries({ queryKey: key, type: 'active' });
     };
     const startPolling = () => {
       if (intervalId) return;
@@ -155,17 +146,17 @@ export function useCombatLinkedCharacterSync({
       }
     };
     const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
+      if (document.visibilityState === 'visible') {
         refetchLinked();
         startPolling();
       } else {
         stopPolling();
       }
     };
-    if (document.visibilityState === "visible") startPolling();
-    document.addEventListener("visibilitychange", onVisibilityChange);
+    if (document.visibilityState === 'visible') startPolling();
+    document.addEventListener('visibilitychange', onVisibilityChange);
     return () => {
-      document.removeEventListener("visibilitychange", onVisibilityChange);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
       stopPolling();
     };
   }, [hasLinkedCombatants, campaignId, queryClient]);
@@ -174,13 +165,10 @@ export function useCombatLinkedCharacterSync({
   // realtime subscription should only restart when the set of linked character ids changes.
   const characterIdsKeyForSync = useMemo(() => {
     return encounter.combatants
-      .filter(
-        (c): c is TrackedCombatant =>
-          c.sourceType === "campaign-character" && !!c.sourceId,
-      )
+      .filter((c): c is TrackedCombatant => c.sourceType === 'campaign-character' && !!c.sourceId)
       .map((c) => c.sourceId as string)
       .filter((id, i, arr) => arr.indexOf(id) === i)
-      .join(",");
+      .join(',');
   }, [encounter.combatants]);
 
   useEffect(() => {
@@ -190,23 +178,26 @@ export function useCombatLinkedCharacterSync({
     const channel = supabase
       .channel(`encounter-characters:${encounterId}`)
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "UPDATE",
-          schema: "public",
-          table: "characters",
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'characters',
           filter,
         },
         (payload: { new: { id: string; data?: unknown } }) => {
           const row = payload.new;
           const charId = row.id;
           const raw = row.data;
-          const data = (
-            typeof raw === "object" && raw !== null ? raw : {}
-          ) as Record<string, unknown>;
+          const data = (typeof raw === 'object' && raw !== null ? raw : {}) as Record<
+            string,
+            unknown
+          >;
           const resources = readResourcesFromCharacterData(data);
-          const { maxHealth: computedMaxHp, maxEnergy: computedMaxEn } =
-            computeMaxHealthEnergy(data, rules);
+          const { maxHealth: computedMaxHp, maxEnergy: computedMaxEn } = computeMaxHealthEnergy(
+            data,
+            rules,
+          );
           const currentHp = resources.currentHealth;
           const currentEn = resources.currentEnergy;
           const ap = resources.actionPoints;

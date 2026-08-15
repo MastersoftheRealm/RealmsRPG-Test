@@ -45,9 +45,7 @@ export {
   type AbilityRequirementFact,
   type HandednessLabel,
 } from './compact-facts';
-export {
-  equipmentRefToDetailOption,
-} from './equipment-builder';
+export { equipmentRefToDetailOption } from './equipment-builder';
 export {
   buildCombatLookup,
   powerToDetailOption,

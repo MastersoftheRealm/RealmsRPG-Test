@@ -23,7 +23,14 @@ import {
 } from '@/lib/library-columnar';
 import { enrichRowsWithBankImageUrls } from '@/lib/entity-image-enrich-server';
 
-const VALID_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures', 'species'] as const;
+const VALID_TYPES = [
+  'powers',
+  'techniques',
+  'empowered-techniques',
+  'items',
+  'creatures',
+  'species',
+] as const;
 type LibraryType = (typeof VALID_TYPES)[number];
 
 const isColumnar = (t: string): t is ColumnarLibraryType =>
@@ -39,7 +46,7 @@ const TABLE: Record<ColumnarLibraryType, string> = {
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: Promise<{ type: string; id: string }> }
+  { params }: { params: Promise<{ type: string; id: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -90,7 +97,7 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: Promise<{ type: string; id: string }> }
+  { params }: { params: Promise<{ type: string; id: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -99,10 +106,13 @@ export async function PATCH(
     }
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('lib-patch', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('lib-patch', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { type, id } = await params;
@@ -195,7 +205,7 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ type: string; id: string }> }
+  { params }: { params: Promise<{ type: string; id: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -207,10 +217,13 @@ export async function DELETE(
     if (denied) return denied;
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('lib-del', { userId: user.uid, ip: resolveClientIp(_request.headers) })
+      buildRateLimitKey('lib-del', { userId: user.uid, ip: resolveClientIp(_request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { type, id } = await params;

@@ -37,7 +37,7 @@ function HomeContent() {
     if (code) {
       const next = sanitizeRedirectPath(searchParams.get('next'));
       router.replace(
-        `/auth/callback?code=${encodeURIComponent(code)}${next !== '/' ? `&next=${encodeURIComponent(next)}` : ''}`
+        `/auth/callback?code=${encodeURIComponent(code)}${next !== '/' ? `&next=${encodeURIComponent(next)}` : ''}`,
       );
     }
   }, [code, searchParams, router]);
@@ -45,7 +45,7 @@ function HomeContent() {
   if (code) {
     return (
       <div className="flex items-center justify-center py-24">
-        <p className="text-text-muted dark:text-text-secondary">Signing you in...</p>
+        <p className="text-text-muted">Signing you in...</p>
       </div>
     );
   }

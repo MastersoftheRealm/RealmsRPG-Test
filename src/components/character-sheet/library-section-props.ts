@@ -190,7 +190,7 @@ export interface LibrarySectionData {
   onFeatLevelChange?: (
     featId: string,
     targetLevel: number,
-    listType: 'archetype' | 'character'
+    listType: 'archetype' | 'character',
   ) => void;
   featRequirementCharacter?: import('@/lib/game/feat-requirements').CharacterForFeatRequirement;
   onTraitUsesChange?: (traitName: string, delta: number) => void;
@@ -202,11 +202,11 @@ export interface LibrarySectionData {
   onFeatCustomizationChange?: (
     featId: string,
     listType: 'archetype' | 'character',
-    updates: Partial<import('@/types/feats').FeatTraitCustomization>
+    updates: Partial<import('@/types/feats').FeatTraitCustomization>,
   ) => void;
   onTraitCustomizationChange?: (
     traitKey: string,
-    updates: Partial<import('@/types/feats').FeatTraitCustomization>
+    updates: Partial<import('@/types/feats').FeatTraitCustomization>,
   ) => void;
   stateFeats?: Array<{
     id?: string | number;

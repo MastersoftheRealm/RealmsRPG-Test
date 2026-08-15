@@ -10,14 +10,14 @@
 import { Plus, Info } from 'lucide-react';
 import type { TechniquePart } from '@/hooks';
 import { ValueStepper, SectionCostBadge, RealmsImageField } from '@/components/shared';
-import {
-  CollapsibleSection,
-  PowerPartCard,
-} from '@/components/creator';
+import { CollapsibleSection, PowerPartCard } from '@/components/creator';
 import { Checkbox, Button, Input, Textarea, Card } from '@/components/ui';
 import { ACTION_OPTIONS, DIE_SIZES } from '@/lib/game/creator-constants';
 import { ATTACK_MODE_SELECT_OPTIONS, type AttackMode } from '@/lib/attack-mode';
-import type { TechniqueSelectedPart as SelectedPart, TechniqueDamageConfig as DamageConfig } from './technique-creator-bootstrap';
+import type {
+  TechniqueSelectedPart as SelectedPart,
+  TechniqueDamageConfig as DamageConfig,
+} from './technique-creator-bootstrap';
 
 type SectionCostSlice = {
   energyRaw: number;
@@ -93,10 +93,10 @@ export function TechniqueCreatorEditor({
 }: TechniqueCreatorEditorProps) {
   return (
     <>
-      <Card className="shadow-md p-6">
+      <Card className="p-6 shadow-md">
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Technique Name *
             </label>
             <Input
@@ -107,7 +107,7 @@ export function TechniqueCreatorEditor({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Description
             </label>
             <Textarea
@@ -134,11 +134,13 @@ export function TechniqueCreatorEditor({
       <CollapsibleSection
         title="Combat Configuration"
         collapsedSummary={combatConfigSummary}
-        rightSlot={<SectionCostBadge en={combatConfigCost.energyRaw} tp={combatConfigCost.totalTP} />}
+        rightSlot={
+          <SectionCostBadge en={combatConfigCost.energyRaw} tp={combatConfigCost.totalTP} />
+        }
       >
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <div className="flex items-center justify-between gap-2 mb-1">
+            <div className="mb-1 flex items-center justify-between gap-2">
               <label
                 htmlFor="technique-attack-mode"
                 className="block text-sm font-medium text-text-secondary"
@@ -151,7 +153,7 @@ export function TechniqueCreatorEditor({
               id="technique-attack-mode"
               value={attackMode}
               onChange={(e) => onAttackModeChange(e.target.value as AttackMode)}
-              className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+              className="min-h-[44px] w-full rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
               aria-label="Attack mode"
             >
               {ATTACK_MODE_SELECT_OPTIONS.map((option) => (
@@ -162,16 +164,14 @@ export function TechniqueCreatorEditor({
             </select>
           </div>
           <div>
-            <div className="flex items-center justify-between gap-2 mb-1">
-              <label className="block text-sm font-medium text-text-secondary">
-                Action Type
-              </label>
+            <div className="mb-1 flex items-center justify-between gap-2">
+              <label className="block text-sm font-medium text-text-secondary">Action Type</label>
               <SectionCostBadge en={actionTypeCost.energyRaw} tp={actionTypeCost.totalTP} />
             </div>
             <select
               value={actionType}
               onChange={(e) => onActionTypeChange(e.target.value)}
-              className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+              className="w-full rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
               aria-label="Action type"
             >
               {ACTION_OPTIONS.map((opt) => (
@@ -204,17 +204,17 @@ export function TechniqueCreatorEditor({
             type="button"
             variant="primary"
             size="sm"
-            className="flex items-center gap-1 min-h-[44px]"
+            className="flex min-h-[44px] items-center gap-1"
             onClick={onAddPart}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
             Add Part
           </Button>
         }
       >
         {selectedParts.length === 0 ? (
-          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-            <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <div className="py-8 text-center text-text-muted">
+            <Info className="mx-auto mb-2 h-12 w-12 opacity-50" />
             <p>No parts added yet. Click &quot;Add Part&quot; to begin building your technique.</p>
           </div>
         ) : (
@@ -237,10 +237,13 @@ export function TechniqueCreatorEditor({
       <CollapsibleSection
         title="Additional Damage"
         collapsedSummary={damageSummary}
-        rightSlot={<SectionCostBadge en={damageSectionCost.energyRaw} tp={damageSectionCost.totalTP} />}
+        rightSlot={
+          <SectionCostBadge en={damageSectionCost.energyRaw} tp={damageSectionCost.totalTP} />
+        }
       >
-        <p className="text-sm text-text-secondary mb-4">
-          Add extra damage dice to your technique. The damage type matches the weapon&apos;s damage type.
+        <p className="mb-4 text-sm text-text-secondary">
+          Add extra damage dice to your technique. The damage type matches the weapon&apos;s damage
+          type.
         </p>
         <div className="flex flex-wrap items-center gap-4">
           <ValueStepper
@@ -251,13 +254,13 @@ export function TechniqueCreatorEditor({
             max={20}
           />
           <div className="flex items-center gap-1">
-            <span className="font-bold text-lg">d</span>
+            <span className="text-lg font-bold">d</span>
             <select
               value={damage.size}
               onChange={(e) =>
                 onDamageChange((d) => ({ ...d, size: parseInt(e.target.value, 10) }))
               }
-              className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+              className="min-h-[44px] rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
               aria-label="Damage die size"
             >
               {DIE_SIZES.map((size) => (

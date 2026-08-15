@@ -27,7 +27,12 @@ import {
   rowMatchesPathRecommendedIds,
   type PathRecommendationIndex,
 } from '@/lib/game/path-recommendation-index';
-import { formatFeatName, getFeatFamilyId, getFeatLevel, groupFeatFamilies } from '@/lib/leveled-feats';
+import {
+  formatFeatName,
+  getFeatFamilyId,
+  getFeatLevel,
+  groupFeatFamilies,
+} from '@/lib/leveled-feats';
 
 /** Codex-backed feat headers, minus Req. Level because creator eligibility already enforces level 1. */
 export const FEATS_L2_HEADER_COLUMNS = featSelectableHeaderColumns({
@@ -46,7 +51,7 @@ export function selectedIdsFromFeatL2Items(selected: SelectableItem[]): string[]
 
 export function buildGuidedFeatsL2FilterOptions(
   feats: Feat[],
-  featType: 'archetype' | 'character'
+  featType: 'archetype' | 'character',
 ): { categories: string[] } {
   const cats = new Set<string>();
   feats.forEach((f) => {
@@ -97,7 +102,7 @@ export function buildGuidedFeatsL2Items(opts: {
   const pathFilterActive = pathMatchSet != null;
 
   const typed = feats.filter((f) =>
-    featType === 'character' ? Boolean(f.char_feat) : !f.char_feat
+    featType === 'character' ? Boolean(f.char_feat) : !f.char_feat,
   );
 
   // Path match is by family: a recommended rank keeps legal sibling ranks (TASK-753).
@@ -126,7 +131,7 @@ export function buildGuidedFeatsL2Items(opts: {
 
   const families = groupFeatFamilies(filtered);
   const typedLevelsByFamily = new Map(
-    groupFeatFamilies(typed).map((family) => [family.familyId, family.levels])
+    groupFeatFamilies(typed).map((family) => [family.familyId, family.levels]),
   );
 
   const items = families
@@ -146,7 +151,7 @@ export function buildGuidedFeatsL2Items(opts: {
         preferred,
         requirementCharacter,
         codexSkills,
-        feats
+        feats,
       );
       const detailSections = buildFeatDetailSections(preferred, skillIdToName, familyLevels, {
         isCharacterFeat: preferred.char_feat,
@@ -163,7 +168,7 @@ export function buildGuidedFeatsL2Items(opts: {
           ? pathChipLabelsForEntity(
               pathIndex,
               familyLevels.map((level) => level.id),
-              selectedPathIds
+              selectedPathIds,
             )
           : undefined;
       const badges = pathChipLabels

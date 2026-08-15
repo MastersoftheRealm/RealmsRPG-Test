@@ -15,7 +15,10 @@
  * Compute successes or failures from a skill roll vs Difficulty Score.
  * Per GAME_RULES: Success = roll >= DS (+1 per 5 over); Failure = roll < DS (+1 per 5 under).
  */
-export function computeSkillRollResult(roll: number, ds: number): { successes: number; failures: number } {
+export function computeSkillRollResult(
+  roll: number,
+  ds: number,
+): { successes: number; failures: number } {
   if (roll >= ds) {
     const successes = 1 + Math.floor((roll - ds) / 5);
     return { successes, failures: 0 };
@@ -28,13 +31,20 @@ export function computeSkillRollResult(roll: number, ds: number): { successes: n
 // Creature abilities — align with creature-stat-block / creator
 // =============================================================================
 
-const PRIMARY_ABILITIES = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const;
+const PRIMARY_ABILITIES = [
+  'strength',
+  'vitality',
+  'agility',
+  'acuity',
+  'intelligence',
+  'charisma',
+] as const;
 type PrimaryAbility = (typeof PRIMARY_ABILITIES)[number];
 
 /** Read one ability from saved creature JSON (canonical + legacy + common shorthands). */
 export function getCreatureAbilityScore(
   abilities: Record<string, number | undefined>,
-  key: PrimaryAbility
+  key: PrimaryAbility,
 ): number {
   const direct = abilities[key];
   if (typeof direct === 'number' && Number.isFinite(direct)) return direct;
@@ -77,7 +87,9 @@ export function getCreatureVitality(abilities: Record<string, number | undefined
 }
 
 /** Highest score among non-vitality primaries (matches creature creator TP baseline). */
-export function getCreatureHighestNonVitality(abilities: Record<string, number | undefined>): number {
+export function getCreatureHighestNonVitality(
+  abilities: Record<string, number | undefined>,
+): number {
   let max = 0;
   for (const k of PRIMARY_ABILITIES) {
     if (k === 'vitality') continue;
@@ -92,7 +104,7 @@ export function getCreatureHighestNonVitality(abilities: Record<string, number |
 export function calculateCreatureMaxHealth(
   level: number,
   abilities: Record<string, number | undefined>,
-  hitPoints: number
+  hitPoints: number,
 ): number {
   const vitality = getCreatureVitality(abilities);
   const vitalityContribution = vitality >= 0 ? vitality * Math.max(1, level) : vitality;
@@ -105,7 +117,7 @@ export function calculateCreatureMaxHealth(
 export function calculateCreatureMaxEnergy(
   level: number,
   abilities: Record<string, number | undefined>,
-  energyPoints: number
+  energyPoints: number,
 ): number {
   const highest = getCreatureHighestNonVitality(abilities);
   return highest * Math.max(1, level) + (energyPoints || 0);

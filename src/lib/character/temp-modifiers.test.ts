@@ -36,7 +36,7 @@ describe('temp-modifiers (ADR-0006)', () => {
         abilities: { strength: 0, vitality: 1 },
         skills: { athletics: 0, stealth: -1 },
         applyAbilityToResourceMaxima: false,
-      })
+      }),
     ).toEqual({
       evasion: 2,
       abilities: { vitality: 1 },
@@ -48,21 +48,23 @@ describe('temp-modifiers (ADR-0006)', () => {
   it('resource maxima opt-in defaults off', () => {
     expect(shouldApplyAbilityTempsToResourceMaxima(undefined)).toBe(false);
     expect(shouldApplyAbilityTempsToResourceMaxima({})).toBe(false);
-    expect(
-      shouldApplyAbilityTempsToResourceMaxima({ applyAbilityToResourceMaxima: true })
-    ).toBe(true);
+    expect(shouldApplyAbilityTempsToResourceMaxima({ applyAbilityToResourceMaxima: true })).toBe(
+      true,
+    );
   });
 
   it('getEffectiveAbilities merges ability temps', () => {
     const base = { ...DEFAULT_ABILITIES, strength: 2, vitality: 1 };
-    expect(
-      getEffectiveAbilities(base, { abilities: { strength: 1, vitality: -1 } })
-    ).toEqual({ ...base, strength: 3, vitality: 0 });
+    expect(getEffectiveAbilities(base, { abilities: { strength: 1, vitality: -1 } })).toEqual({
+      ...base,
+      strength: 3,
+      vitality: 0,
+    });
   });
 
   it('patchTempModifiers merges nested maps and normalizes', () => {
     expect(
-      patchTempModifiers({ speed: 1, abilities: { strength: 2 } }, { abilities: { vitality: 1 } })
+      patchTempModifiers({ speed: 1, abilities: { strength: 2 } }, { abilities: { vitality: 1 } }),
     ).toEqual({ speed: 1, abilities: { strength: 2, vitality: 1 } });
     expect(patchTempModifiers({ speed: 1 }, { speed: 0 })).toBeUndefined();
   });
@@ -85,8 +87,8 @@ describe('temp-modifiers (ADR-0006)', () => {
       applyTempModifiersToDisplayStats(
         base,
         { applyAbilityToResourceMaxima: true },
-        { maxHealth: 24, maxEnergy: 12, terminal: 6 }
-      )
+        { maxHealth: 24, maxEnergy: 12, terminal: 6 },
+      ),
     ).toEqual({
       maxHealth: 24,
       maxEnergy: 12,
@@ -106,7 +108,7 @@ describe('temp-modifiers (ADR-0006)', () => {
       withAbilitiesForResourceMaxima({
         ...character,
         tempModifiers: { ...character.tempModifiers, applyAbilityToResourceMaxima: true },
-      }).abilities.strength
+      }).abilities.strength,
     ).toBe(3);
   });
 });

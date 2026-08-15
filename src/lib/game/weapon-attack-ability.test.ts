@@ -33,9 +33,9 @@ describe('weapon-attack-ability', () => {
   });
 
   it('uses acuity for ranged non-thrown', () => {
-    expect(
-      getWeaponAttackAbility([{ id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 }])
-    ).toBe('acuity');
+    expect(getWeaponAttackAbility([{ id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 }])).toBe(
+      'acuity',
+    );
   });
 
   it('defaults to strength for melee', () => {
@@ -45,9 +45,7 @@ describe('weapon-attack-ability', () => {
   describe('deriveAbilityRequirementFromProperties', () => {
     it('parses ability requirement properties with op_1_lvl offset', () => {
       expect(
-        deriveAbilityRequirementFromProperties([
-          { name: 'Strength Requirement', op_1_lvl: 2 },
-        ])
+        deriveAbilityRequirementFromProperties([{ name: 'Strength Requirement', op_1_lvl: 2 }]),
       ).toEqual({ name: 'Strength', level: 3 });
     });
 
@@ -57,9 +55,10 @@ describe('weapon-attack-ability', () => {
     });
 
     it('accepts string property entries', () => {
-      expect(
-        deriveAbilityRequirementFromProperties(['Agility Requirement'])
-      ).toEqual({ name: 'Agility', level: 1 });
+      expect(deriveAbilityRequirementFromProperties(['Agility Requirement'])).toEqual({
+        name: 'Agility',
+        level: 1,
+      });
     });
   });
 
@@ -85,8 +84,8 @@ describe('weapon-attack-ability', () => {
         getWeaponAttackBonusFromProperties(
           [{ id: PROPERTY_IDS.FINESSE, name: 'Finesse' }],
           abilities,
-          martialProficiency
-        )
+          martialProficiency,
+        ),
       ).toEqual({
         bonus: 7,
         abilityName: 'Agility',
@@ -100,8 +99,8 @@ describe('weapon-attack-ability', () => {
           [{ id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 }],
           abilities,
           martialProficiency,
-          '12 spaces'
-        )
+          '12 spaces',
+        ),
       ).toEqual({
         bonus: 4,
         abilityName: 'Acuity',
@@ -115,7 +114,7 @@ describe('weapon-attack-ability', () => {
         { id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 },
       ];
       expect(
-        getWeaponAttackBonusFromProperties(props, abilities, martialProficiency, '6 spaces')
+        getWeaponAttackBonusFromProperties(props, abilities, martialProficiency, '6 spaces'),
       ).toEqual({
         bonus: 5,
         abilityName: 'Strength',
@@ -125,7 +124,7 @@ describe('weapon-attack-ability', () => {
 
     it('uses range override when properties alone look melee', () => {
       expect(
-        getWeaponAttackBonusFromProperties([], abilities, martialProficiency, '24 spaces')
+        getWeaponAttackBonusFromProperties([], abilities, martialProficiency, '24 spaces'),
       ).toEqual({
         bonus: 4,
         abilityName: 'Acuity',
@@ -136,9 +135,7 @@ describe('weapon-attack-ability', () => {
     it('treats corrupt stored range override as melee', () => {
       expect(getWeaponAttackAbility([], '0')).toBe('strength');
       expect(getWeaponAttackAbility([], '1')).toBe('strength');
-      expect(
-        getWeaponAttackBonusFromProperties([], abilities, martialProficiency, '0')
-      ).toEqual({
+      expect(getWeaponAttackBonusFromProperties([], abilities, martialProficiency, '0')).toEqual({
         bonus: 5,
         abilityName: 'Strength',
         ability: 'strength',

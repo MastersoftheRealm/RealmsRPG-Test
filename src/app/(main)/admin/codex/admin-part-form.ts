@@ -59,7 +59,10 @@ export function formatDecimalPreserve(n: number, maxDecimals = 10): string {
   return s.replace(/\.?0+$/, '') || '0';
 }
 
-export function formatEnergyCost(en: number | undefined, isPercentage: boolean | undefined): string {
+export function formatEnergyCost(
+  en: number | undefined,
+  isPercentage: boolean | undefined,
+): string {
   if (en === undefined || en === 0) return '-';
   if (isPercentage) {
     const percentChange = (en - 1) * 100;
@@ -113,7 +116,9 @@ export function partToFormState(p: Part & { defense?: string[] }): PartFormState
     name: p.name,
     description: p.description || '',
     category: p.category || '',
-    type: ((p.type || 'power').toLowerCase() === 'technique' ? 'technique' : 'power') as 'power' | 'technique',
+    type: ((p.type || 'power').toLowerCase() === 'technique' ? 'technique' : 'power') as
+      | 'power'
+      | 'technique',
     base_en: p.base_en,
     base_tp: p.base_tp,
     mechanic: Boolean(p.mechanic),
@@ -133,7 +138,8 @@ export function partToFormState(p: Part & { defense?: string[] }): PartFormState
 }
 
 export function optionSlotCountFromForm(form: PartFormState): number {
-  return [form.op_1_desc, form.op_2_desc, form.op_3_desc].map((s) => s.trim()).filter(Boolean).length;
+  return [form.op_1_desc, form.op_2_desc, form.op_3_desc].map((s) => s.trim()).filter(Boolean)
+    .length;
 }
 
 export function partFormToSavePayload(form: PartFormState): Record<string, unknown> {

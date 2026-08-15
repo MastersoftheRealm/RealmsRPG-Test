@@ -2,7 +2,7 @@
  * Character Sheet Header
  * ======================
  * Displays character identity, portrait, and vital stats
- * 
+ *
  * Features:
  * - Health colors: green (normal), orange (half health), red (terminal)
  * - Smart value editing: type a value to set, prefix with +/- to modify
@@ -113,8 +113,10 @@ export function SheetHeader({
   const setScalarTemp = (key: TempModifierScalarKey, delta: number) => {
     onTempModifiersChange?.({ [key]: delta });
   };
-  const currentHealth = character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
-  const currentEnergy = character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
+  const currentHealth =
+    character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth;
+  const currentEnergy =
+    character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy;
   const actionPoints = character.actionPoints ?? DEFAULT_ACTION_POINTS;
 
   const totalHEPool = calculateHealthEnergyPool(character.level || 1, 'PLAYER', false, rules);
@@ -152,8 +154,10 @@ export function SheetHeader({
   const terminalTemp = getScalarTempModifier(tempModifiers, 'terminal');
 
   const speedDisplay = formatSpeedForDisplay(displayStats.speed, speedDisplayUnit);
-  const speedDisplayValue = typeof speedDisplay.value === 'number' && speedDisplay.value % 1 !== 0
-    ? speedDisplay.value.toFixed(1) : String(speedDisplay.value);
+  const speedDisplayValue =
+    typeof speedDisplay.value === 'number' && speedDisplay.value % 1 !== 0
+      ? speedDisplay.value.toFixed(1)
+      : String(speedDisplay.value);
 
   const armorQuickRef = useMemo(() => {
     // DESIGN_INTENT: Header DR/Critical Range must use library-enriched armor (same source as
@@ -161,7 +165,11 @@ export function SheetHeader({
     const enriched = enrichedArmorProp ?? ctx?.enrichedData?.armor;
     const raw = character.equipment?.armor ?? character.armor;
     const source = enriched ?? raw;
-    const armorItems: Item[] = Array.isArray(source) ? (source as Item[]) : source ? [source as Item] : [];
+    const armorItems: Item[] = Array.isArray(source)
+      ? (source as Item[])
+      : source
+        ? [source as Item]
+        : [];
     return getEquippedArmorQuickRef(armorItems, displayStats.evasion);
   }, [
     enrichedArmorProp,
@@ -173,11 +181,12 @@ export function SheetHeader({
 
   const baseDamageReduction = armorQuickRef?.damageReduction ?? 0;
   const baseCriticalRange = armorQuickRef?.criticalRange ?? 0;
-  const showCombatArmorStats = Boolean(armorQuickRef) || drTemp !== 0 || critTemp !== 0 || isEditMode;
+  const showCombatArmorStats =
+    Boolean(armorQuickRef) || drTemp !== 0 || critTemp !== 0 || isEditMode;
 
   return (
-    <Card className="shadow-md p-4 md:p-6 mb-4" data-tour-id="sheet-tour-header">
-      <div className="flex flex-col lg:flex-row gap-6">
+    <Card className="mb-4 p-4 shadow-md md:p-6" data-tour-id="sheet-tour-header">
+      <div className="flex flex-col gap-6 lg:flex-row">
         <SheetHeaderIdentity
           character={character}
           isEditMode={isEditMode}
@@ -193,7 +202,7 @@ export function SheetHeader({
         />
 
         {/* Center section with Speed/Evasion - grows to fill available space */}
-        <div className="flex-1 flex flex-wrap items-center justify-center gap-3 md:gap-4">
+        <div className="flex flex-1 flex-wrap items-center justify-center gap-3 md:gap-4">
           <LargeStatBlock
             label="Speed"
             value={speedDisplayValue}
@@ -207,7 +216,9 @@ export function SheetHeader({
             value={displayStats.evasion}
             isEditMode={isEditMode}
             tempDelta={evasionTemp}
-            onTempDeltaChange={onTempModifiersChange ? (d) => setScalarTemp('evasion', d) : undefined}
+            onTempDeltaChange={
+              onTempModifiersChange ? (d) => setScalarTemp('evasion', d) : undefined
+            }
           />
           {showCombatArmorStats && (
             <>

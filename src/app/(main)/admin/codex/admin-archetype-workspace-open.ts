@@ -37,11 +37,13 @@ export const EMPTY_ARCHETYPE_FORM: AdminArchetypeFormState = {
   guidanceGroups: [],
 };
 
-type OptionsByField = Partial<Record<PathSelectionKey | 'armaments' | 'equipment', SelectionOption[]>>;
+type OptionsByField = Partial<
+  Record<PathSelectionKey | 'armaments' | 'equipment', SelectionOption[]>
+>;
 
 function pathRowsFromArchetype(
   a: ArchetypeItem,
-  optionsByField: OptionsByField
+  optionsByField: OptionsByField,
 ): { level1Path: ReturnType<typeof toLevelForm>; levelPathRows: ReturnType<typeof toLevelForm>[] } {
   const parsedPath = coerceJsonRecord(a.path_data);
   const rawLevel1 =
@@ -50,7 +52,9 @@ function pathRowsFromArchetype(
       : {};
   const rawLevels = Array.isArray(parsedPath?.levels) ? (parsedPath?.levels as unknown[]) : [];
   const levelRows = rawLevels
-    .filter((entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null)
+    .filter(
+      (entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null,
+    )
     .map((entry, index) => toLevelForm(entry, index + 2, optionsByField));
   const level1Path = toLevelForm(rawLevel1, 1, optionsByField);
   return {
@@ -61,7 +65,7 @@ function pathRowsFromArchetype(
 
 export function buildArchetypeFormFromItem(
   a: ArchetypeItem,
-  optionsByField: OptionsByField
+  optionsByField: OptionsByField,
 ): AdminArchetypeFormState {
   const equipmentMeta = guidedEquipmentMetaFromPath(a.path_data);
   const { level1Path, levelPathRows } = pathRowsFromArchetype(a, optionsByField);
@@ -87,7 +91,7 @@ export function buildArchetypeFormFromItem(
 
 export function buildDuplicateArchetypeForm(
   a: ArchetypeItem,
-  optionsByField: OptionsByField
+  optionsByField: OptionsByField,
 ): AdminArchetypeFormState {
   const base = buildArchetypeFormFromItem(a, optionsByField);
   return {
@@ -99,7 +103,7 @@ export function buildDuplicateArchetypeForm(
 export function toastLevel1SkillsFromForm(
   form: AdminArchetypeFormState,
   codexSkills: CodexSkill[],
-  showToast: (message: string, variant: 'warning' | 'error' | 'success') => void
+  showToast: (message: string, variant: 'warning' | 'error' | 'success') => void,
 ) {
   toastLevel1SkillWarnings(form.level1Path.skills, codexSkills, showToast);
 }

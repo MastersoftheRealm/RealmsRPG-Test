@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { FILTER_CONTROL_CLASS, FILTER_CONTROL_ROW_CLASS, FILTER_LABEL_ROW_CLASS } from './filter-utils';
+import {
+  FILTER_CONTROL_CLASS,
+  FILTER_CONTROL_ROW_CLASS,
+  FILTER_LABEL_ROW_CLASS,
+} from './filter-utils';
 
 describe('filter control chrome (TASK-725)', () => {
   it('shares h-11 rounded-md field chrome for inputs and selects', () => {

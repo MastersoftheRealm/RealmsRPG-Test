@@ -15,10 +15,7 @@ import {
   namedPropertyDescriptorChips,
 } from '@/lib/detail-option/compact-facts';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
-import {
-  applyArmamentFilters,
-  type ArmamentFilterState,
-} from '@/lib/library/armament-filters';
+import { applyArmamentFilters, type ArmamentFilterState } from '@/lib/library/armament-filters';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import type { CodexEquipmentItem } from '@/types/codex';
 import { formatListCellLabel } from '@/lib/utils';
@@ -56,7 +53,7 @@ export function buildCodexEquipmentColumns(item: CodexEquipmentItem): ColumnValu
 
 export function buildCodexEquipmentDetailSections(
   item: CodexEquipmentItem,
-  propertiesDb: ItemPropertyTpRow[] = []
+  propertiesDb: ItemPropertyTpRow[] = [],
 ): MetadataDetailSection[] {
   const sections: MetadataDetailSection[] = [];
   const propertyChips = namedPropertyDescriptorChips(item.properties, propertiesDb);
@@ -101,16 +98,12 @@ export function filterCodexEquipment<T extends CodexEquipmentItem>(
   listFilters: CodexEquipmentListFilters,
   armamentFilters: ArmamentFilterState,
   characterContext: ArmamentCharacterContext | null,
-  pathRecommendedIds?: ReadonlySet<string> | null
+  pathRecommendedIds?: ReadonlySet<string> | null,
 ): Array<T & { currency: number; category: string; rarity: string }> {
   const q = listFilters.search.trim().toLowerCase();
   const narrowed = items.filter((item) => {
     if (!rowMatchesPathRecommendedIds(item.id, pathRecommendedIds)) return false;
-    if (
-      q &&
-      !item.name.toLowerCase().includes(q) &&
-      !item.description?.toLowerCase().includes(q)
-    ) {
+    if (q && !item.name.toLowerCase().includes(q) && !item.description?.toLowerCase().includes(q)) {
       return false;
     }
     if (listFilters.categoryFilter && item.category !== listFilters.categoryFilter) return false;

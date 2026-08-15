@@ -33,7 +33,7 @@ function clearAncestryDependentDraftFields(): Partial<GuidedDraft> {
 export function buildGuidedSingleSpeciesDraftPatch(
   current: Pick<GuidedDraft, 'speciesId' | 'speciesMixed'>,
   species: GuidedSpeciesPick,
-  sizeOptions: string[]
+  sizeOptions: string[],
 ): Partial<GuidedDraft> {
   const nextId = String(species.id);
   const changed = current.speciesId !== nextId || current.speciesMixed;
@@ -51,7 +51,7 @@ export function buildGuidedSingleSpeciesDraftPatch(
 export function buildGuidedMixedSpeciesDraftPatch(
   current: Pick<GuidedDraft, 'speciesId' | 'speciesMixed' | 'mixedSpeciesIds'>,
   speciesA: GuidedSpeciesPick,
-  speciesB: GuidedSpeciesPick
+  speciesB: GuidedSpeciesPick,
 ): Partial<GuidedDraft> {
   const idA = String(speciesA.id);
   const idB = String(speciesB.id);

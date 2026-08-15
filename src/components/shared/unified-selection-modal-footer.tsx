@@ -33,11 +33,12 @@ export function UnifiedSelectionModalFooter({
     <div className="flex flex-col gap-3 border-t border-border-light bg-surface px-4 py-3 md:px-6">
       {footerExtra?.(selectedItems)}
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <span className="text-sm text-text-muted dark:text-text-secondary">
-          {selectedCount} {itemLabel}{selectedCount !== 1 ? 's' : ''} selected
+        <span className="text-sm text-text-muted">
+          {selectedCount} {itemLabel}
+          {selectedCount !== 1 ? 's' : ''} selected
           {maxSelections !== undefined && maxSelections !== 1 && ` (max ${maxSelections})`}
         </span>
-        <div className="flex gap-2 w-full sm:w-auto [&_button]:min-h-11 [&_button]:flex-1 sm:[&_button]:flex-initial">
+        <div className="flex w-full gap-2 sm:w-auto [&_button]:min-h-11 [&_button]:flex-1 sm:[&_button]:flex-initial">
           <Button variant="secondary" onClick={onRequestClose}>
             Cancel
           </Button>

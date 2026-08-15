@@ -12,11 +12,7 @@ import {
   type CodexCollection,
 } from '@/lib/codex/collections';
 import { toColumnarPayload, toDbPayload } from './codex-column-map';
-import {
-  allocateCodexNumericId,
-  fetchRetiredIds,
-  retireCodexId,
-} from '@/lib/codex/id-allocation';
+import { allocateCodexNumericId, fetchRetiredIds, retireCodexId } from '@/lib/codex/id-allocation';
 import { findReferencesInRows, REFERENCE_PROBES } from '@/lib/codex/references';
 import {
   buildArchetypeLevelRows,
@@ -65,7 +61,7 @@ async function recordCodexChangeBestEffort(input: RecordCodexChangeInput): Promi
 /** Run DB `normalize_feat_tags` on admin feat saves so merges stay canonical. */
 async function applyFeatTagNormalization(
   collection: CodexCollection,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
   if (collection !== 'codex_feats' || !('tags' in data)) return data;
   const input = featTagsToNormalizeInput(parseFeatTagsFromDb(data.tags));
@@ -111,7 +107,7 @@ async function getArchetypeSnapshot(archetypeId: string): Promise<ArchetypeSnaps
 
   return {
     archetype: archetype as Record<string, unknown>,
-    levels: ((levels ?? []) as Record<string, unknown>[]),
+    levels: (levels ?? []) as Record<string, unknown>[],
   };
 }
 
@@ -129,7 +125,7 @@ async function findCodexReferences(collection: CodexCollection, id: string): Pro
       continue;
     }
     const rows = ((data ?? []) as unknown as Record<string, unknown>[]).filter(
-      (row) => !(probe.table === collection && String(row.id ?? '') === id)
+      (row) => !(probe.table === collection && String(row.id ?? '') === id),
     );
     found.push(...findReferencesInRows(probe, rows, id));
   }
@@ -140,7 +136,7 @@ async function findCodexReferences(collection: CodexCollection, id: string): Pro
 export async function createCodexDoc(
   collection: CodexCollection,
   id: string | undefined,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Promise<{ success: boolean; id?: string; error?: string }> {
   try {
     const changedByUserId = await requireAdmin();
@@ -163,9 +159,14 @@ export async function createCodexDoc(
 
     // Small retry loop for rare concurrency collisions.
     for (let attempt = 0; attempt < 3; attempt++) {
-      const { data: existing } = await supabase.from(table).select('id').eq('id', docId).maybeSingle();
+      const { data: existing } = await supabase
+        .from(table)
+        .select('id')
+        .eq('id', docId)
+        .maybeSingle();
       if (!existing && !retiredIds.has(docId)) break;
-      if (!shouldAllocateNumeric) return { success: false, error: `Document ${docId} already exists` };
+      if (!shouldAllocateNumeric)
+        return { success: false, error: `Document ${docId} already exists` };
       docId = await allocateCodexNumericId(supabase, table);
     }
 
@@ -173,7 +174,11 @@ export async function createCodexDoc(
       const normalizedData = await applyFeatTagNormalization(safeCollection, data);
       const payload = toColumnarPayload(safeCollection, normalizedData);
       const dbPayload = toDbPayload(safeCollection, { id: docId, ...payload });
-      const { data: inserted, error } = await supabase.from(table).insert(dbPayload).select('*').single();
+      const { data: inserted, error } = await supabase
+        .from(table)
+        .insert(dbPayload)
+        .select('*')
+        .single();
       if (error) throw new Error(error.message);
       await recordCodexChangeBestEffort({
         entityType: safeCollection,
@@ -184,7 +189,11 @@ export async function createCodexDoc(
         afterData: (inserted as Record<string, unknown> | null) ?? null,
       });
     } else {
-      const { data: inserted, error } = await supabase.from(table).insert({ id: docId, data }).select('*').single();
+      const { data: inserted, error } = await supabase
+        .from(table)
+        .insert({ id: docId, data })
+        .select('*')
+        .single();
       if (error) throw new Error(error.message);
       await recordCodexChangeBestEffort({
         entityType: safeCollection,
@@ -208,7 +217,7 @@ export async function updateCodexDoc(
   collection: CodexCollection,
   id: string,
   data: Record<string, unknown>,
-  options?: { expectedUpdatedAt?: string }
+  options?: { expectedUpdatedAt?: string },
 ): Promise<{ success: boolean; error?: string; conflict?: boolean }> {
   try {
     const changedByUserId = await requireAdmin();
@@ -278,7 +287,7 @@ export async function updateCodexDoc(
 export async function deleteCodexDoc(
   collection: CodexCollection,
   id: string,
-  options?: { acknowledgeReferences?: boolean }
+  options?: { acknowledgeReferences?: boolean },
 ): Promise<{ success: boolean; error?: string; references?: string[] }> {
   try {
     const changedByUserId = await requireAdmin();
@@ -326,7 +335,7 @@ export async function deleteCodexDoc(
 }
 
 export async function saveArchetypeWithPath(
-  payload: SaveArchetypeWithPathInput
+  payload: SaveArchetypeWithPathInput,
 ): Promise<{ success: boolean; error?: string; id?: string }> {
   try {
     const changedByUserId = await requireAdmin();
@@ -341,7 +350,10 @@ export async function saveArchetypeWithPath(
 
     const levelNumbers = cleanLevels.map((row) => Number(row.level));
     if (new Set(levelNumbers).size !== levelNumbers.length) {
-      return { success: false, error: 'Duplicate levels in the progression; each level may appear once.' };
+      return {
+        success: false,
+        error: 'Duplicate levels in the progression; each level may appear once.',
+      };
     }
 
     if (cleanLevels.length === 0 && existingLevels.length > 0) {
@@ -376,7 +388,10 @@ export async function saveArchetypeWithPath(
     revalidatePath('/codex');
     return { success: true, id };
   } catch (e) {
-    return { success: false, error: e instanceof Error ? e.message : 'Failed to save archetype path data' };
+    return {
+      success: false,
+      error: e instanceof Error ? e.message : 'Failed to save archetype path data',
+    };
   }
 }
 
@@ -388,7 +403,7 @@ export async function saveArchetypeWithPath(
 async function replaceArchetypeLevels(
   archetypeId: string,
   incoming: Record<string, unknown>[],
-  snapshot: Record<string, unknown>[]
+  snapshot: Record<string, unknown>[],
 ): Promise<void> {
   const supabase = getSupabaseAdmin();
 
@@ -415,14 +430,14 @@ async function replaceArchetypeLevels(
       restored
         ? `Progression levels were not saved (${reason}). The previous levels were restored.`
         : `Progression levels were not saved (${reason}) and could not be restored. ` +
-          'The previous levels are in codex_change_logs.before_data for this archetype.'
+            'The previous levels are in codex_change_logs.before_data for this archetype.',
     );
   }
 }
 
 async function restoreArchetypeLevels(
   archetypeId: string,
-  snapshot: Record<string, unknown>[]
+  snapshot: Record<string, unknown>[],
 ): Promise<boolean> {
   const supabase = getSupabaseAdmin();
   try {

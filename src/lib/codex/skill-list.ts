@@ -65,7 +65,7 @@ function isSubSkill(skill: Skill): boolean {
 function characterOwnsBaseSkill(
   skill: Skill,
   knownIds: Set<string>,
-  skillIdToName: Map<string, string>
+  skillIdToName: Map<string, string>,
 ): boolean {
   if (!isSubSkill(skill) || skill.base_skill_id === 0) return false;
   const baseId = normalizeId(skill.base_skill_id);
@@ -84,7 +84,7 @@ export function buildSkillIdToName(skills: Skill[] | undefined): Map<string, str
 export function buildSkillFilterOptions(
   skills: Skill[] | undefined,
   skillIdToName: Map<string, string>,
-  options?: { includeCategoryBaseSkills?: boolean }
+  options?: { includeCategoryBaseSkills?: boolean },
 ): SkillFilterOptions {
   if (!skills) return { abilities: [], baseSkills: [] };
 
@@ -119,7 +119,7 @@ export function filterSkills(
   filters: SkillListFilters,
   skillIdToName: Map<string, string>,
   characterKnownIds?: Set<string> | null,
-  pathRecommendedIds?: ReadonlySet<string> | null
+  pathRecommendedIds?: ReadonlySet<string> | null,
 ): Skill[] {
   const knownMode = filters.knownMode ?? 'all';
 

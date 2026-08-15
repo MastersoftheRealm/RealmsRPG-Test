@@ -41,10 +41,7 @@ function rowToCampaign(row: CampaignRow, memberIds: string[], isOwner: boolean):
   };
 }
 
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -52,10 +49,13 @@ export async function GET(
     }
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('campaign-get', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('campaign-get', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id } = await params;
@@ -66,7 +66,9 @@ export async function GET(
     const supabase = await createClient();
     const { data: row, error: rowErr } = await supabase
       .from('campaigns')
-      .select('id, name, description, owner_id, owner_username, invite_code, characters, created_at, updated_at')
+      .select(
+        'id, name, description, owner_id, owner_username, invite_code, characters, created_at, updated_at',
+      )
       .eq('id', id.trim())
       .maybeSingle();
     if (rowErr) throw rowErr;

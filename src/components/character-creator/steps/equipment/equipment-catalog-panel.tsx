@@ -114,10 +114,10 @@ export function EquipmentCatalogPanel({
           <Button
             variant="secondary"
             onClick={onCollapseToPathLoadout}
-            className="inline-flex items-center gap-2 min-h-11"
+            className="inline-flex min-h-11 items-center gap-2"
             aria-label="Back to recommended equipment view"
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="h-4 w-4" />
             Back to path loadout
           </Button>
         </div>
@@ -125,9 +125,21 @@ export function EquipmentCatalogPanel({
 
       <TabNavigation
         tabs={[
-          { id: 'weapon', label: 'Weapons', count: allEquipment.filter((e) => e.type === 'weapon').length },
-          { id: 'armor', label: 'Armor', count: allEquipment.filter((e) => e.type === 'armor').length },
-          { id: 'equipment', label: 'Equipment', count: allEquipment.filter((e) => e.type === 'equipment').length },
+          {
+            id: 'weapon',
+            label: 'Weapons',
+            count: allEquipment.filter((e) => e.type === 'weapon').length,
+          },
+          {
+            id: 'armor',
+            label: 'Armor',
+            count: allEquipment.filter((e) => e.type === 'armor').length,
+          },
+          {
+            id: 'equipment',
+            label: 'Equipment',
+            count: allEquipment.filter((e) => e.type === 'equipment').length,
+          },
           {
             id: 'unarmed',
             label:
@@ -165,19 +177,19 @@ export function EquipmentCatalogPanel({
             </div>
 
             <FilterSection>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <SourceFilter value={sourceFilter} onChange={onSourceFilterChange} />
 
                 <div className="filter-group">
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                  <label className="mb-1 block text-sm font-medium text-text-secondary">
                     Budget
                   </label>
                   <div
                     className={cn(
-                      'px-3 py-2 rounded-lg border text-sm',
+                      'rounded-lg border px-3 py-2 text-sm',
                       remainingCurrency >= 0
-                        ? 'bg-success-50 dark:bg-success-900/30 border-success-200 dark:border-success-600/50 text-success-fg'
-                        : 'bg-danger-50 dark:bg-danger-900/30 border-danger-200 dark:border-danger-600/50 text-danger-fg'
+                        ? 'border-success-200 bg-success-50 text-success-fg dark:border-success-600/50 dark:bg-success-900/30'
+                        : 'border-danger-200 bg-danger-50 text-danger-fg dark:border-danger-600/50 dark:bg-danger-900/30',
                     )}
                   >
                     {remainingCurrency}c remaining of {startingCurrency}c
@@ -186,7 +198,7 @@ export function EquipmentCatalogPanel({
               </div>
             </FilterSection>
 
-            <div className="overflow-hidden bg-surface mb-8">
+            <div className="mb-8 overflow-hidden bg-surface">
               {activeTab === 'weapon' && sortedEquipment.length > 0 && (
                 <ListHeader
                   columns={WEAPON_LIST_COLUMNS}
@@ -217,7 +229,7 @@ export function EquipmentCatalogPanel({
                   hasThumbnailColumn
                 />
               )}
-              <div className="space-y-1 max-h-[400px] overflow-y-auto">
+              <div className="max-h-[400px] space-y-1 overflow-y-auto">
                 {sortedEquipment.length === 0 ? (
                   <EmptyState
                     size="md"
@@ -231,7 +243,7 @@ export function EquipmentCatalogPanel({
                         ? `Create ${activeTab}s in the Item Creator to add them here.`
                         : undefined
                     }
-                    icon={<AlertCircle className="w-8 h-8 text-text-muted" />}
+                    icon={<AlertCircle className="h-8 w-8 text-text-muted" />}
                     action={
                       activeTab === 'weapon' || activeTab === 'armor'
                         ? {
@@ -250,7 +262,7 @@ export function EquipmentCatalogPanel({
                     const isPathRecommended = isPathRecommendedItem(
                       item,
                       recommendedArmamentRefs,
-                      recommendedEquipmentRefs
+                      recommendedEquipmentRefs,
                     );
 
                     const badges: Array<{
@@ -265,7 +277,7 @@ export function EquipmentCatalogPanel({
                       const propName = typeof prop === 'string' ? prop : prop.name || 'Property';
                       const dbProp = itemProperties?.find(
                         (p) =>
-                          String(p.name ?? '').toLowerCase() === String(propName).toLowerCase()
+                          String(p.name ?? '').toLowerCase() === String(propName).toLowerCase(),
                       );
                       const tp = trainingPointsForItemPropertyRef(prop, itemProperties ?? []);
                       const chip: ChipData = {
@@ -303,9 +315,7 @@ export function EquipmentCatalogPanel({
                       key: 'gold_cost',
                       value: `${cost}c`,
                       highlight: !canAfford,
-                      className: canAfford
-                        ? 'text-tp-text font-bold'
-                        : 'text-danger-fg font-bold',
+                      className: canAfford ? 'text-tp-text font-bold' : 'text-danger-fg font-bold',
                       align: 'right' as const,
                     };
                     const sourceColumn = {
@@ -327,9 +337,7 @@ export function EquipmentCatalogPanel({
                       const rangeLabel = resolveWeaponRangeDisplay(undefined, propPayloads);
                       const rangeFacts = buildEntityMetadataDetailSections({
                         range:
-                          rangeLabel && rangeLabel.toLowerCase() !== 'melee'
-                            ? rangeLabel
-                            : 'Melee',
+                          rangeLabel && rangeLabel.toLowerCase() !== 'melee' ? rangeLabel : 'Melee',
                       });
                       return (
                         <GridListRow

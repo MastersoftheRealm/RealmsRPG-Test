@@ -7,14 +7,16 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-  CodexBrowseListShell,
-  ErrorDisplay as ErrorState,
-  GridListRow,
-} from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
 import type { ColumnValue } from '@/components/shared/grid-list-row';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
-import { useCodexArchetypes, useCodexFeats, useCodexSkills, useEquipment, useOfficialLibrary } from '@/hooks';
+import {
+  useCodexArchetypes,
+  useCodexFeats,
+  useCodexSkills,
+  useEquipment,
+  useOfficialLibrary,
+} from '@/hooks';
 import { parseArchetypePathData, pathHasPlayerVisibleLevel1 } from '@/lib/game/archetype-path';
 import {
   formatListCellLabel,
@@ -51,18 +53,12 @@ type PathLookups = {
   techniques: ReturnType<typeof indexDisplayNamesByNormalizedIds>;
 };
 
-function RecommendationSummary({
-  title,
-  items,
-}: {
-  title: string;
-  items: string[];
-}) {
+function RecommendationSummary({ title, items }: { title: string; items: string[] }) {
   if (items.length === 0) return null;
   return (
     <div>
-      <h4 className="text-sm font-medium text-text-primary mb-1">{title}</h4>
-      <ul className="text-sm text-text-secondary space-y-0.5 list-disc list-inside">
+      <h4 className="mb-1 text-sm font-medium text-text-primary">{title}</h4>
+      <ul className="list-inside list-disc space-y-0.5 text-sm text-text-secondary">
         {items.map((item) => (
           <li key={`${title}-${item}`}>{item}</li>
         ))}
@@ -83,23 +79,35 @@ function PathRecommendationsBlock({
   if (!recommendations) return null;
 
   const resolved = {
-    feats: resolveNormalizedRefList(recommendations.feats, lookups.feats.byId, lookups.feats.byName),
-    skills: resolveNormalizedRefList(recommendations.skills, lookups.skills.byId, lookups.skills.byName),
-    powers: resolveNormalizedRefList(recommendations.powers, lookups.powers.byId, lookups.powers.byName),
+    feats: resolveNormalizedRefList(
+      recommendations.feats,
+      lookups.feats.byId,
+      lookups.feats.byName,
+    ),
+    skills: resolveNormalizedRefList(
+      recommendations.skills,
+      lookups.skills.byId,
+      lookups.skills.byName,
+    ),
+    powers: resolveNormalizedRefList(
+      recommendations.powers,
+      lookups.powers.byId,
+      lookups.powers.byName,
+    ),
     techniques: resolveNormalizedRefList(
       recommendations.techniques,
       lookups.techniques.byId,
-      lookups.techniques.byName
+      lookups.techniques.byName,
     ),
     armaments: resolveNormalizedRefList(
       recommendations.armaments,
       lookups.equipment.byId,
-      lookups.equipment.byName
+      lookups.equipment.byName,
     ),
     equipment: resolveNormalizedRefList(
       recommendations.equipment,
       lookups.equipment.byId,
-      lookups.equipment.byName
+      lookups.equipment.byName,
     ),
   };
 
@@ -109,14 +117,14 @@ function PathRecommendationsBlock({
   if (!hasLists && !notes) return null;
 
   return (
-    <div className="rounded-lg border border-border-light bg-surface-alt p-4 space-y-3">
+    <div className="space-y-3 rounded-lg border border-border-light bg-surface-alt p-4">
       <h3 className="text-base font-semibold text-text-primary">{heading}</h3>
       {notes ? (
-        <p className="text-sm text-text-primary whitespace-pre-wrap border-l-2 border-primary-subtle-border pl-3">
+        <p className="border-l-2 border-primary-subtle-border pl-3 text-sm whitespace-pre-wrap text-text-primary">
           {notes}
         </p>
       ) : null}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <RecommendationSummary title="Feats" items={resolved.feats} />
         <RecommendationSummary title="Skills" items={resolved.skills} />
         <RecommendationSummary title="Powers" items={resolved.powers} />
@@ -128,13 +136,7 @@ function PathRecommendationsBlock({
   );
 }
 
-function ArchetypePathCard({
-  archetype,
-  lookups,
-}: {
-  archetype: Archetype;
-  lookups: PathLookups;
-}) {
+function ArchetypePathCard({ archetype, lookups }: { archetype: Archetype; lookups: PathLookups }) {
   const columns: ColumnValue[] = [
     { key: 'type', value: formatListCellLabel(archetype.type) },
     { key: 'abilities', value: formatAbilityEmphasis(archetype) },
@@ -166,7 +168,7 @@ function ArchetypePathCard({
             <p className="text-text-secondary">{archetype.description}</p>
           ) : null}
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+          <div className="grid grid-cols-2 gap-3 text-sm md:grid-cols-4">
             <div>
               <span className="font-medium text-text-primary">Type: </span>
               <span className="text-text-secondary">{formatListCellLabel(archetype.type)}</span>
@@ -208,7 +210,7 @@ function ArchetypePathCard({
               ))}
             </div>
           ) : (
-            <p className="text-sm text-text-muted dark:text-text-secondary">
+            <p className="text-sm text-text-muted">
               No level 2+ progression entries in the codex for this path.
             </p>
           )}
@@ -225,12 +227,18 @@ interface CodexArchetypesTabProps {
 export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
   const loadPublicCodex = codexMode === 'public';
   const [search, setSearch] = useState('');
-  const { data: archetypes = [], isLoading, error } = useCodexArchetypes({ enabled: loadPublicCodex });
+  const {
+    data: archetypes = [],
+    isLoading,
+    error,
+  } = useCodexArchetypes({ enabled: loadPublicCodex });
   const { data: feats = [] } = useCodexFeats({ enabled: loadPublicCodex });
   const { data: skills = [] } = useCodexSkills({ enabled: loadPublicCodex });
   const { data: equipment = [] } = useEquipment({ enabled: loadPublicCodex });
   const { data: publicPowers = [] } = useOfficialLibrary('powers', { enabled: loadPublicCodex });
-  const { data: publicTechniques = [] } = useOfficialLibrary('techniques', { enabled: loadPublicCodex });
+  const { data: publicTechniques = [] } = useOfficialLibrary('techniques', {
+    enabled: loadPublicCodex,
+  });
   const { data: publicItems = [] } = useOfficialLibrary('items', { enabled: loadPublicCodex });
 
   const lookups = useMemo(
@@ -241,7 +249,7 @@ export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
       powers: indexDisplayNamesByNormalizedIds(publicPowers),
       techniques: indexDisplayNamesByNormalizedIds(publicTechniques),
     }),
-    [feats, skills, equipment, publicPowers, publicTechniques, publicItems]
+    [feats, skills, equipment, publicPowers, publicTechniques, publicItems],
   );
 
   const pathArchetypes = useMemo(
@@ -252,7 +260,7 @@ export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
           path_data: parseArchetypePathData(archetype.path_data),
         }))
         .filter((archetype) => pathHasPlayerVisibleLevel1(archetype.path_data)),
-    [archetypes]
+    [archetypes],
   );
 
   const filtered = useMemo(() => {
@@ -262,7 +270,7 @@ export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
       (archetype) =>
         archetype.name.toLowerCase().includes(query) ||
         (archetype.description ?? '').toLowerCase().includes(query) ||
-        archetype.type.toLowerCase().includes(query)
+        archetype.type.toLowerCase().includes(query),
     );
   }, [pathArchetypes, search]);
 
@@ -270,7 +278,7 @@ export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
   const sorted = useMemo(() => {
     if (sortState.col === 'abilities') {
       return [...filtered].sort(
-        (a, b) => sortState.dir * formatAbilityEmphasis(a).localeCompare(formatAbilityEmphasis(b))
+        (a, b) => sortState.dir * formatAbilityEmphasis(a).localeCompare(formatAbilityEmphasis(b)),
       );
     }
     if (sortState.col === '_desc') {
@@ -279,7 +287,7 @@ export function CodexArchetypesTab({ codexMode }: CodexArchetypesTabProps) {
           sortState.dir *
           String(a.description ?? '').localeCompare(String(b.description ?? ''), undefined, {
             numeric: true,
-          })
+          }),
       );
     }
     return sortByColumn(filtered, sortState);

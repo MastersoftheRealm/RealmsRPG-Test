@@ -7,7 +7,11 @@
 import { useRef } from 'react';
 import { Copy, Save, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
 import { BOOLEAN_COLUMNS, NUMERIC_COLUMNS, READONLY_COLUMNS } from './codex-spreadsheet-config';
-import { cellValueToString, isFiniteNumberString, stringToCellValue } from './codex-spreadsheet-helpers';
+import {
+  cellValueToString,
+  isFiniteNumberString,
+  stringToCellValue,
+} from './codex-spreadsheet-helpers';
 import type { CodexSpreadsheetRow } from './use-codex-spreadsheet';
 
 type CodexSpreadsheetTableProps = {
@@ -60,8 +64,8 @@ export function CodexSpreadsheetTable({
         style={{ minWidth: minTableWidth, tableLayout: 'fixed' }}
       >
         <thead>
-          <tr className="sticky top-0 z-10 bg-surface-alt border-b border-border shadow-sm">
-            <th className="sticky left-0 z-20 w-12 min-w-[48px] max-w-[48px] bg-surface-alt border-r border-border p-1 text-left text-xs font-semibold text-text-secondary">
+          <tr className="sticky top-0 z-10 border-b border-border bg-surface-alt shadow-sm">
+            <th className="sticky left-0 z-20 w-12 max-w-[48px] min-w-[48px] border-r border-border bg-surface-alt p-1 text-left text-xs font-semibold text-text-secondary">
               #
             </th>
             {columns.map((col, colIndex) => {
@@ -79,7 +83,7 @@ export function CodexSpreadsheetTable({
                       onSort(col);
                     }
                   }}
-                  className={`border-r border-border-subtle p-1.5 text-left text-xs font-semibold text-text-secondary whitespace-nowrap cursor-pointer select-none hover:bg-surface-alt/80 focus:outline-none focus:ring-1 focus:ring-inset focus:ring-primary-outline-border ${isSticky ? 'sticky z-20 bg-surface-alt shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)]' : ''}`}
+                  className={`cursor-pointer border-r border-border-subtle p-1.5 text-left text-xs font-semibold whitespace-nowrap text-text-secondary select-none hover:bg-surface-alt/80 focus:ring-1 focus:ring-primary-outline-border focus:outline-none focus:ring-inset ${isSticky ? 'sticky z-20 bg-surface-alt shadow-[2px_0_4px_-2px_rgba(0,0,0,0.1)] dark:shadow-[2px_0_4px_-2px_rgba(0,0,0,0.3)]' : ''}`}
                   style={{
                     width: columnWidths[colIndex],
                     minWidth: columnWidths[colIndex],
@@ -96,15 +100,15 @@ export function CodexSpreadsheetTable({
                     {col}
                     {isSortKey &&
                       (sortDir === 'asc' ? (
-                        <ChevronUp className="w-3.5 h-3.5" />
+                        <ChevronUp className="h-3.5 w-3.5" />
                       ) : (
-                        <ChevronDown className="w-3.5 h-3.5" />
+                        <ChevronDown className="h-3.5 w-3.5" />
                       ))}
                   </span>
                 </th>
               );
             })}
-            <th className="sticky right-0 z-20 w-[7rem] min-w-[7rem] bg-surface-alt border-l border-border p-1 text-center text-xs font-semibold text-text-secondary">
+            <th className="sticky right-0 z-20 w-[7rem] min-w-[7rem] border-l border-border bg-surface-alt p-1 text-center text-xs font-semibold text-text-secondary">
               Actions
             </th>
           </tr>
@@ -117,13 +121,14 @@ export function CodexSpreadsheetTable({
                 key={row.key}
                 className={`border-b border-border-subtle hover:bg-surface-alt/50 ${isDirty ? 'bg-warning-light/50' : ''}`}
               >
-                <td className="sticky left-0 z-10 bg-surface border-r border-border-subtle p-0 text-center text-xs text-text-muted">
+                <td className="sticky left-0 z-10 border-r border-border-subtle bg-surface p-0 text-center text-xs text-text-muted">
                   {displayIndex + 1}
                 </td>
                 {columns.map((colKey, colIndex) => {
                   const value = row.data[colKey];
                   const str = cellValueToString(value);
-                  const isFocused = focusedCell?.rowKey === row.key && focusedCell?.col === colIndex;
+                  const isFocused =
+                    focusedCell?.rowKey === row.key && focusedCell?.col === colIndex;
                   const left = stickyLeftFor(colKey);
                   const isSticky = left !== undefined;
                   const isReadOnly = READONLY_COLUMNS.has(colKey);
@@ -134,8 +139,9 @@ export function CodexSpreadsheetTable({
                     isNumCol &&
                     (value == null ||
                       typeof value === 'number' ||
-                      (typeof value === 'string' && (value.trim() === '' || isFiniteNumberString(value))) ||
-                      typeof value === 'boolean' === false) &&
+                      (typeof value === 'string' &&
+                        (value.trim() === '' || isFiniteNumberString(value))) ||
+                      (typeof value === 'boolean') === false) &&
                     !Array.isArray(value) &&
                     !(typeof value === 'object' && value !== null);
                   const inputClass = `w-full min-w-0 border-0 bg-transparent px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-inset focus:ring-primary-outline-border ${isFocused ? 'ring-1 ring-inset ring-primary-outline-border' : ''}`;
@@ -155,19 +161,19 @@ export function CodexSpreadsheetTable({
                           value={str}
                           readOnly
                           onFocus={() => onFocusCell({ rowKey: row.key, col: colIndex })}
-                          className={`${inputClass} text-text-muted dark:text-text-secondary cursor-default`}
+                          className={`${inputClass} cursor-default text-text-muted`}
                           style={{ boxSizing: 'border-box' }}
                           title="Ids are assigned when the entry is created and cannot be changed"
                           aria-label={`${colKey}, row ${displayIndex + 1} (read only)`}
                         />
                       ) : isBool ? (
-                        <label className="flex items-center justify-center min-h-[44px] md:min-h-[36px] px-2 cursor-pointer">
+                        <label className="flex min-h-[44px] cursor-pointer items-center justify-center px-2 md:min-h-[36px]">
                           <input
                             type="checkbox"
                             checked={value === true}
                             onChange={(e) => onUpdateCell(row.key, colKey, e.target.checked)}
                             onFocus={() => onFocusCell({ rowKey: row.key, col: colIndex })}
-                            className="rounded border-border h-4 w-4"
+                            className="h-4 w-4 rounded border-border"
                             aria-label={`Edit ${colKey}, row ${displayIndex + 1}`}
                           />
                         </label>
@@ -182,7 +188,7 @@ export function CodexSpreadsheetTable({
                           onBlur={(e) => onCellBlur(row.key, colKey, e.target.value, value)}
                           onFocus={() => onFocusCell({ rowKey: row.key, col: colIndex })}
                           rows={2}
-                          className={`${inputClass} resize-y min-h-[3rem] block`}
+                          className={`${inputClass} block min-h-[3rem] resize-y`}
                           style={{ boxSizing: 'border-box' }}
                           aria-label={`Edit ${colKey}, row ${displayIndex + 1}`}
                         />
@@ -231,32 +237,32 @@ export function CodexSpreadsheetTable({
                     </td>
                   );
                 })}
-                <td className="sticky right-0 z-10 bg-surface border-l border-border-subtle p-1 text-center align-middle">
+                <td className="sticky right-0 z-10 border-l border-border-subtle bg-surface p-1 text-center align-middle">
                   <div className="flex items-center justify-center gap-0.5">
                     {isDirty && (
                       <button
                         type="button"
                         onClick={() => onSaveRow(row.key)}
                         disabled={savingRowKey === row.key}
-                        className="min-h-[44px] min-w-[44px] md:min-h-[36px] md:min-w-[36px] p-1.5 rounded text-text-muted hover:bg-surface-alt hover:text-primary-fg-hover transition-colors inline-flex items-center justify-center"
+                        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded p-1.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-primary-fg-hover md:min-h-[36px] md:min-w-[36px]"
                         title="Save this row"
                         aria-label="Save this row"
                       >
                         {savingRowKey === row.key ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
-                          <Save className="w-4 h-4" />
+                          <Save className="h-4 w-4" />
                         )}
                       </button>
                     )}
                     <button
                       type="button"
                       onClick={() => onCopyRow(row.key)}
-                      className="min-h-[44px] min-w-[44px] md:min-h-[36px] md:min-w-[36px] p-1.5 rounded text-text-muted hover:bg-surface-alt hover:text-text-primary transition-colors inline-flex items-center justify-center"
+                      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded p-1.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary md:min-h-[36px] md:min-w-[36px]"
                       title="Copy row below (new ID and name copy)"
                       aria-label="Copy row below (new ID and name copy)"
                     >
-                      <Copy className="w-4 h-4" />
+                      <Copy className="h-4 w-4" />
                     </button>
                   </div>
                 </td>

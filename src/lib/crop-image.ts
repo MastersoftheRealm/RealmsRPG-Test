@@ -38,7 +38,7 @@ function drawBitmapToPngDataUrl(
   source: CanvasImageSource,
   width: number,
   height: number,
-  closeSource?: () => void
+  closeSource?: () => void,
 ): string {
   const canvas = document.createElement('canvas');
   canvas.width = width;
@@ -124,12 +124,9 @@ export async function getCroppedImageBlob(imageSrc: string, pixelCrop: Area): Pr
   ctx.drawImage(image, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
 
   return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('Canvas toBlob failed'));
-      },
-      CROPPED_IMAGE_MIME
-    );
+    canvas.toBlob((blob) => {
+      if (blob) resolve(blob);
+      else reject(new Error('Canvas toBlob failed'));
+    }, CROPPED_IMAGE_MIME);
   });
 }

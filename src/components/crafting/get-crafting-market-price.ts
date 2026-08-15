@@ -43,7 +43,7 @@ export function getCodexEquipmentMarketPrice(e: CodexEquipmentLike): number {
  */
 export function getLibraryItemMarketPrice(
   item: LibraryItemLike,
-  propertiesDb: ItemProperty[]
+  propertiesDb: ItemProperty[],
 ): number {
   const raw = item as unknown as Record<string, unknown>;
   const armamentType = (raw.armamentType as string) || (raw.type as string) || '';
@@ -53,7 +53,9 @@ export function getLibraryItemMarketPrice(
   const doc = {
     name: item.name ?? '',
     description: item.description ?? '',
-    armamentType: (normalizedType === 'Weapon' || normalizedType === 'Shield' || normalizedType === 'Armor'
+    armamentType: (normalizedType === 'Weapon' ||
+    normalizedType === 'Shield' ||
+    normalizedType === 'Armor'
       ? normalizedType
       : 'Weapon') as 'Weapon' | 'Armor' | 'Shield',
     properties: (Array.isArray(item.properties) ? item.properties : []).map((p) => ({
@@ -71,7 +73,9 @@ export function getLibraryItemMarketPrice(
  * Fallback when no propertiesDb: use totalCurrency from calculateItemCosts
  * with empty properties (0). Or for codex-style item with a currency field.
  */
-export function getMarketPriceFallback(item: LibraryItemLike & { currency?: number; gold_cost?: number }): number {
+export function getMarketPriceFallback(
+  item: LibraryItemLike & { currency?: number; gold_cost?: number },
+): number {
   const c = item.currency ?? item.gold_cost ?? 0;
   return Math.max(0, Number(c));
 }

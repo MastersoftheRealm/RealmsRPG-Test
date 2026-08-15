@@ -24,12 +24,7 @@ import {
 } from '@/lib/calculators';
 import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import { attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
-import type {
-  SelectedPart,
-  AdvancedPart,
-  DamageConfig,
-  RangeConfig,
-} from './power-creator-types';
+import type { SelectedPart, AdvancedPart, DamageConfig, RangeConfig } from './power-creator-types';
 
 export type PowerSectionCostSlice = {
   energyRaw: number;
@@ -152,7 +147,10 @@ export function usePowerCreatorCostDerivation({
   const advancedCalcRows = useMemo(
     () => [
       { label: 'Energy (raw)', value: costs.energyRaw.toFixed(2) },
-      { label: 'Energy (final)', value: `ceil(${costs.energyRaw.toFixed(2)}) = ${costs.totalEnergy}` },
+      {
+        label: 'Energy (final)',
+        value: `ceil(${costs.energyRaw.toFixed(2)}) = ${costs.totalEnergy}`,
+      },
       { label: 'Training points (raw)', value: costs.tpRaw.toFixed(2) },
       { label: 'Training points (final)', value: `floor per part → ${costs.totalTP}` },
     ],
@@ -197,7 +195,8 @@ export function usePowerCreatorCostDerivation({
   const powerMechanicsSummary = useMemo(() => {
     if (selectedAdvancedParts.length === 0) return 'No mechanics';
     const names = selectedAdvancedParts.slice(0, 5).map((ap) => ap.part.name);
-    const more = selectedAdvancedParts.length > 5 ? ` +${selectedAdvancedParts.length - 5} more` : '';
+    const more =
+      selectedAdvancedParts.length > 5 ? ` +${selectedAdvancedParts.length - 5} more` : '';
     return `${names.join(', ')}${more}`;
   }, [selectedAdvancedParts]);
 
@@ -243,7 +242,9 @@ export function usePowerCreatorCostDerivation({
       'Duration Ends On Activation',
       'Sustain for Duration',
     ];
-    const durationParts = mechanicParts.filter((mp) => durationNames.includes(mp.name)).map(toPayload);
+    const durationParts = mechanicParts
+      .filter((mp) => durationNames.includes(mp.name))
+      .map(toPayload);
     const damageNames = [
       'Magic Damage',
       'Light Damage',
@@ -279,7 +280,11 @@ export function usePowerCreatorCostDerivation({
       area: calculatePowerSectionContribution(areaParts, powerParts, durationParts),
       duration: calculatePowerCosts(durationParts, powerParts),
       damage: calculatePowerSectionContribution(damageParts, powerParts, durationParts),
-      powerParts: calculatePowerSectionContribution(partsPayloadForSections, powerParts, durationParts),
+      powerParts: calculatePowerSectionContribution(
+        partsPayloadForSections,
+        powerParts,
+        durationParts,
+      ),
       powerMechanics: calculatePowerSectionContribution(mechanicPayload, powerParts, durationParts),
     };
   }, [mechanicParts, powerParts, selectedParts, selectedAdvancedParts, addWeaponToPowerPart]);

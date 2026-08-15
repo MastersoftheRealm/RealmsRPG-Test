@@ -22,9 +22,11 @@ describe('schema-normalize (TASK-663)', () => {
     expect(resolveMartProf({ mart_prof: 3 })).toBe(3);
     expect(resolvePowProf({ powerProficiency: 1 })).toBe(1);
     expect(resolveDefenseVals({ defenseSkills: { might: 1 } })).toEqual({ might: 1 });
-    expect(resolveDefenseVals({ defenseVals: { reflex: 2 }, defenseSkills: { might: 1 } })).toEqual({
-      reflex: 2,
-    });
+    expect(resolveDefenseVals({ defenseVals: { reflex: 2 }, defenseSkills: { might: 1 } })).toEqual(
+      {
+        reflex: 2,
+      },
+    );
   });
 
   it('normalizeCharacterOnLoad promotes legacy fields to canonical keys', () => {

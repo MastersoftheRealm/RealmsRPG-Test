@@ -10,7 +10,11 @@
 import { useId, useMemo, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { FilterNativeSelect } from './filter-native-select';
-import { dedupeSelectOptions, FILTER_LABEL_ROW_CLASS, shouldShowSelectPlaceholder } from './filter-utils';
+import {
+  dedupeSelectOptions,
+  FILTER_LABEL_ROW_CLASS,
+  shouldShowSelectPlaceholder,
+} from './filter-utils';
 
 interface SelectFilterProps {
   label: string;
@@ -49,11 +53,11 @@ export function SelectFilter({
   return (
     <div className={cn('filter-group', disabled && 'opacity-60', className)}>
       <div className={FILTER_LABEL_ROW_CLASS}>
-        <label htmlFor={id} className="text-sm font-medium leading-5 text-text-secondary">
+        <label htmlFor={id} className="text-sm leading-5 font-medium text-text-secondary">
           {label}
         </label>
         {disabled && disabledHint ? (
-          <span className="text-xs text-text-muted dark:text-text-secondary">{disabledHint}</span>
+          <span className="text-xs text-text-muted">{disabledHint}</span>
         ) : null}
         {labelAccessory}
       </div>

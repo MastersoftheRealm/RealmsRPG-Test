@@ -125,7 +125,7 @@ describe('map-library-to-character', () => {
     expect(result.dirty).not.toHaveProperty('notes');
     expect(result.dirty).not.toHaveProperty('powers');
     const weaponIds = (result.dirty.equipment?.weapons as { id: string }[] | undefined)?.map(
-      (w) => w.id
+      (w) => w.id,
     );
     expect(weaponIds).toEqual(['existing-weapon', 'other-tab-weapon', 'new-weapon']);
   });

@@ -28,7 +28,9 @@ function withCodexEnabled(options?: CodexQueryOptions) {
 }
 
 /** Full codex response (all collections). Use for spreadsheet or multi-collection views. */
-export function useCodexFull(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>, Error> {
+export function useCodexFull(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>, Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,
@@ -36,7 +38,9 @@ export function useCodexFull(options?: CodexQueryOptions): UseQueryResult<Awaite
   });
 }
 
-export function useCodexFeats(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['feats'], Error> {
+export function useCodexFeats(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['feats'], Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,
@@ -45,7 +49,9 @@ export function useCodexFeats(options?: CodexQueryOptions): UseQueryResult<Await
   });
 }
 
-export function useCodexSkills(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['skills'], Error> {
+export function useCodexSkills(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['skills'], Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,
@@ -54,7 +60,9 @@ export function useCodexSkills(options?: CodexQueryOptions): UseQueryResult<Awai
   });
 }
 
-export function useCodexSpecies(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['species'], Error> {
+export function useCodexSpecies(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['species'], Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,
@@ -63,7 +71,9 @@ export function useCodexSpecies(options?: CodexQueryOptions): UseQueryResult<Awa
   });
 }
 
-export function useCodexTraits(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['traits'], Error> {
+export function useCodexTraits(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['traits'], Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,
@@ -72,7 +82,9 @@ export function useCodexTraits(options?: CodexQueryOptions): UseQueryResult<Awai
   });
 }
 
-export function useCodexPowerParts(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['powerParts'], Error> {
+export function useCodexPowerParts(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['powerParts'], Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,
@@ -81,7 +93,9 @@ export function useCodexPowerParts(options?: CodexQueryOptions): UseQueryResult<
   });
 }
 
-export function useCodexTechniqueParts(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['techniqueParts'], Error> {
+export function useCodexTechniqueParts(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['techniqueParts'], Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,
@@ -90,7 +104,9 @@ export function useCodexTechniqueParts(options?: CodexQueryOptions): UseQueryRes
   });
 }
 
-export function useCodexParts(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['parts'], Error> {
+export function useCodexParts(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['parts'], Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,
@@ -99,7 +115,9 @@ export function useCodexParts(options?: CodexQueryOptions): UseQueryResult<Await
   });
 }
 
-export function useCodexItemProperties(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['itemProperties'], Error> {
+export function useCodexItemProperties(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['itemProperties'], Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,
@@ -108,7 +126,9 @@ export function useCodexItemProperties(options?: CodexQueryOptions): UseQueryRes
   });
 }
 
-export function useCodexEquipment(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['equipment'], Error> {
+export function useCodexEquipment(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['equipment'], Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,
@@ -117,7 +137,9 @@ export function useCodexEquipment(options?: CodexQueryOptions): UseQueryResult<A
   });
 }
 
-export function useCodexArchetypes(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['archetypes'], Error> {
+export function useCodexArchetypes(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['archetypes'], Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,
@@ -126,7 +148,9 @@ export function useCodexArchetypes(options?: CodexQueryOptions): UseQueryResult<
   });
 }
 
-export function useCodexCreatureFeats(options?: CodexQueryOptions): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['creatureFeats'], Error> {
+export function useCodexCreatureFeats(
+  options?: CodexQueryOptions,
+): UseQueryResult<Awaited<ReturnType<typeof fetchCodex>>['creatureFeats'], Error> {
   return useQuery({
     queryKey: ['codex'],
     queryFn: fetchCodex,

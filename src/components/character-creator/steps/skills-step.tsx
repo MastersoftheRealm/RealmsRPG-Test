@@ -10,7 +10,15 @@
 
 import React, { useMemo, useCallback } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { useMergedSpecies, useCodexSkills, useTraits, useGameRules, useCreatorPathData, type Species, type Skill } from '@/hooks';
+import {
+  useMergedSpecies,
+  useCodexSkills,
+  useTraits,
+  useGameRules,
+  useCreatorPathData,
+  type Species,
+  type Skill,
+} from '@/hooks';
 import { SkillsAllocationPage, InfoTippy, GuidedChoiceShell } from '@/components/shared';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
@@ -26,10 +34,18 @@ function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
     <strong className="text-primary-fg">{children}</strong>
   );
   if (names.length === 1) {
-    return <>The recommended Skill <Bold>{names[0]}</Bold> has been added!</>;
+    return (
+      <>
+        The recommended Skill <Bold>{names[0]}</Bold> has been added!
+      </>
+    );
   }
   if (names.length === 2) {
-    return <>The recommended Skills <Bold>{names[0]}</Bold> and <Bold>{names[1]}</Bold> have been added!</>;
+    return (
+      <>
+        The recommended Skills <Bold>{names[0]}</Bold> and <Bold>{names[1]}</Bold> have been added!
+      </>
+    );
   }
   const last = names[names.length - 1];
   const rest = names.slice(0, -1);
@@ -37,7 +53,10 @@ function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
     <>
       The recommended Skills{' '}
       {rest.map((n, i) => (
-        <React.Fragment key={n}>{i > 0 ? ', ' : ''}<Bold>{n}</Bold></React.Fragment>
+        <React.Fragment key={n}>
+          {i > 0 ? ', ' : ''}
+          <Bold>{n}</Bold>
+        </React.Fragment>
       ))}
       , and <Bold>{last}</Bold> have been added!
     </>
@@ -45,15 +64,8 @@ function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
 }
 
 export function SkillsStep() {
-  const {
-    draft,
-    nextStep,
-    prevStep,
-    updateDraft,
-    getStepLayer,
-    expandLayer,
-    collapseLayer,
-  } = useCharacterCreatorStore();
+  const { draft, nextStep, prevStep, updateDraft, getStepLayer, expandLayer, collapseLayer } =
+    useCharacterCreatorStore();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: allTraits } = useTraits();
@@ -61,15 +73,15 @@ export function SkillsStep() {
 
   const validationContext = useMemo(
     () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null, rules }),
-    [allSpecies, codexSkills, allTraits, rules]
+    [allSpecies, codexSkills, allTraits, rules],
   );
   const stepIssues = useMemo(
     () => getValidationIssuesForStep('skills', draft, validationContext),
-    [draft, validationContext]
+    [draft, validationContext],
   );
   const completion = useMemo(
     () => getStepCompletion('skills', draft, validationContext),
-    [draft, validationContext]
+    [draft, validationContext],
   );
   const layer = getStepLayer('skills');
   const pathMode = draft.creationMode === 'path';
@@ -98,22 +110,27 @@ export function SkillsStep() {
 
     const species = speciesId
       ? allSpecies.find((s: Species) => s.id === speciesId)
-      : allSpecies.find((s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase());
+      : allSpecies.find(
+          (s: Species) =>
+            String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase(),
+        );
 
     return new Set<string>((species?.skills || []).map((id: string | number) => String(id)));
-  }, [draft.ancestry?.id, draft.ancestry?.name, draft.ancestry?.mixed, draft.ancestry?.speciesIds, draft.ancestry?.selectedSpeciesSkillIds, draft.species, allSpecies]);
+  }, [
+    draft.ancestry?.id,
+    draft.ancestry?.name,
+    draft.ancestry?.mixed,
+    draft.ancestry?.speciesIds,
+    draft.ancestry?.selectedSpeciesSkillIds,
+    draft.species,
+    allSpecies,
+  ]);
 
   const allocations = draft.skills ?? EMPTY_NUMBER_RECORD;
   const defenseVals = draft.defenseVals || draft.defenseSkills || DEFAULT_DEFENSE_SKILLS;
-  const abilities = useMemo(
-    () => draft.abilities ?? { ...DEFAULT_ABILITIES },
-    [draft.abilities]
-  );
+  const abilities = useMemo(() => draft.abilities ?? { ...DEFAULT_ABILITIES }, [draft.abilities]);
   const level = draft.level || 1;
-  const skillPointsHelp = useMemo(
-    () => getSkillPointsHelp(level, rules),
-    [level, rules]
-  );
+  const skillPointsHelp = useMemo(() => getSkillPointsHelp(level, rules), [level, rules]);
 
   const mergedSkillAbilities = draft.skillAbilities ?? {};
   const pathData = useCreatorPathData();
@@ -122,7 +139,7 @@ export function SkillsStep() {
 
   const declinedPathSkillIds = useMemo(
     () => new Set((draft.declinedPathSkillIds ?? []).map(String)),
-    [draft.declinedPathSkillIds]
+    [draft.declinedPathSkillIds],
   );
 
   // Species skill id "0" = "Any" (extra skill point); path-recommended skills default to proficient (value 0)
@@ -148,7 +165,7 @@ export function SkillsStep() {
     (skillId: string, abilityKey: string) => {
       updateDraft({ skillAbilities: { ...(draft.skillAbilities ?? {}), [skillId]: abilityKey } });
     },
-    [draft.skillAbilities, updateDraft]
+    [draft.skillAbilities, updateDraft],
   );
 
   const handleAllocationsChange = useCallback(
@@ -177,17 +194,20 @@ export function SkillsStep() {
         updateDraft({ skills: newAllocations });
       }
     },
-    [draft.declinedPathSkillIds, recommendedSkillIds, updateDraft]
+    [draft.declinedPathSkillIds, recommendedSkillIds, updateDraft],
   );
 
   const handleDefenseChange = useCallback(
     (newDefense: typeof defenseVals) => {
       updateDraft({ defenseVals: newDefense });
     },
-    [updateDraft]
+    [updateDraft],
   );
 
-  const pathSkillIds = useMemo(() => new Set(recommendedSkillIds.map((id) => String(id))), [recommendedSkillIds]);
+  const pathSkillIds = useMemo(
+    () => new Set(recommendedSkillIds.map((id) => String(id))),
+    [recommendedSkillIds],
+  );
   const recommendedSkillNames = useMemo(() => {
     return recommendedSkillIds
       .map((id) => (codexSkills as Skill[]).find((s) => String(s.id) === String(id))?.name)
@@ -237,7 +257,7 @@ export function SkillsStep() {
   const pathSkillsAction = useMemo(() => {
     if (draft.creationMode !== 'path' || recommendedSkillIds.length === 0) return null;
     return (
-      <div className="flex flex-wrap items-center gap-3 mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <Button
           type="button"
           variant="outline"
@@ -270,14 +290,17 @@ export function SkillsStep() {
     nextStep();
   };
 
-  const abilityDefenseBonuses = useMemo(() => ({
-    might: abilities.strength,
-    fortitude: abilities.vitality,
-    reflex: abilities.agility,
-    discernment: abilities.acuity,
-    mentalFortitude: abilities.intelligence,
-    resolve: abilities.charisma,
-  }), [abilities]);
+  const abilityDefenseBonuses = useMemo(
+    () => ({
+      might: abilities.strength,
+      fortitude: abilities.vitality,
+      reflex: abilities.agility,
+      discernment: abilities.acuity,
+      mentalFortitude: abilities.intelligence,
+      resolve: abilities.charisma,
+    }),
+    [abilities],
+  );
 
   const skillsPage = (
     <SkillsAllocationPage
@@ -331,7 +354,7 @@ export function SkillsStep() {
   );
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 space-y-4">
+    <div className="flex min-h-0 flex-1 flex-col space-y-4">
       {pathSkillsAction}
       {pathMode ? (
         <>
@@ -351,7 +374,9 @@ export function SkillsStep() {
             completionState={completion}
             onExpandLayer={() => expandLayer('skills')}
             onCollapseLayer={() => collapseLayer('skills')}
-            expandLabel={layer === 1 ? 'See more options (sub-skills & defenses)' : 'See all skills'}
+            expandLabel={
+              layer === 1 ? 'See more options (sub-skills & defenses)' : 'See all skills'
+            }
             canExpand={layer === 1}
           >
             {skillsPage}

@@ -8,21 +8,21 @@ import type { Abilities } from '@/types';
 
 describe('prefersDeepCatalogEntry', () => {
   it('is true for custom chooser without a path pick', () => {
-    expect(
-      prefersDeepCatalogEntry({ creatorEntryMode: 'custom', archetypePathId: null })
-    ).toBe(true);
+    expect(prefersDeepCatalogEntry({ creatorEntryMode: 'custom', archetypePathId: null })).toBe(
+      true,
+    );
   });
 
   it('is false for guided entry', () => {
-    expect(
-      prefersDeepCatalogEntry({ creatorEntryMode: 'guided', archetypePathId: null })
-    ).toBe(false);
+    expect(prefersDeepCatalogEntry({ creatorEntryMode: 'guided', archetypePathId: null })).toBe(
+      false,
+    );
   });
 
   it('is false when custom entry later picks a path', () => {
-    expect(
-      prefersDeepCatalogEntry({ creatorEntryMode: 'custom', archetypePathId: '1' })
-    ).toBe(false);
+    expect(prefersDeepCatalogEntry({ creatorEntryMode: 'custom', archetypePathId: '1' })).toBe(
+      false,
+    );
   });
 });
 
@@ -37,7 +37,7 @@ describe('canContinueGuidedAbilitiesStep', () => {
         showCustomizePanel: false,
         spentPoints: 0,
         totalPoints: total,
-      })
+      }),
     ).toBe(true);
 
     expect(
@@ -47,7 +47,7 @@ describe('canContinueGuidedAbilitiesStep', () => {
         showCustomizePanel: true,
         spentPoints: 0,
         totalPoints: total,
-      })
+      }),
     ).toBe(false);
   });
 
@@ -59,7 +59,7 @@ describe('canContinueGuidedAbilitiesStep', () => {
         showCustomizePanel: true,
         spentPoints: total,
         totalPoints: total,
-      })
+      }),
     ).toBe(true);
 
     expect(
@@ -69,7 +69,7 @@ describe('canContinueGuidedAbilitiesStep', () => {
         showCustomizePanel: true,
         spentPoints: 3,
         totalPoints: total,
-      })
+      }),
     ).toBe(false);
   });
 });
@@ -108,7 +108,7 @@ describe('resolveGuidedRecommendedAbilitiesPatch', () => {
         ...base,
         recommended: fallback,
         pathLoading: true,
-      })
+      }),
     ).toBeNull();
   });
 
@@ -119,7 +119,7 @@ describe('resolveGuidedRecommendedAbilitiesPatch', () => {
         abilitiesMode: 'recommended',
         draftAbilities: fallback,
         recommended: fromPath,
-      })
+      }),
     ).toEqual({ abilities: fromPath, abilitiesMode: 'recommended' });
   });
 
@@ -129,14 +129,12 @@ describe('resolveGuidedRecommendedAbilitiesPatch', () => {
         ...base,
         abilitiesMode: 'recommended',
         draftAbilities: { ...fromPath },
-      })
+      }),
     ).toBeNull();
   });
 
   it('never overwrites a custom point-buy', () => {
-    expect(
-      resolveGuidedRecommendedAbilitiesPatch({ ...base, abilitiesMode: 'custom' })
-    ).toBeNull();
+    expect(resolveGuidedRecommendedAbilitiesPatch({ ...base, abilitiesMode: 'custom' })).toBeNull();
   });
 
   it('writes nothing while the customize panel is open, or with no recommendation', () => {

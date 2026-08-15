@@ -33,7 +33,7 @@ Status and archetype "on-color" text uses dedicated foreground tokens that are *
 
 **Consequence:** the pairing is redundant, not meaningful — the `dark:` half should be dropped, not made to matter.
 
-**Follow-up (not yet done):** 335 occurrences of `text-text-muted dark:text-text-secondary` across 151 files under `src/`. Removing the `dark:` half is a mechanical codemod with **zero rendered change** — schedule it as one standalone commit so the diff stays reviewable, and amend `.cursor/rules/realms-accessibility.mdc`, which currently mandates the pairing ("If using `text-text-muted`, add `dark:text-text-secondary`"). Until the rule is amended, existing pairings may be left alone; do not add new ones.
+**Follow-up (TASK-770, 2026-08-15):** the dead `dark:text-text-secondary` half is stripped next to `text-text-muted`. ESLint `realms/no-muted-dark-secondary-pairing` blocks new pairings. Do not add them back.
 
 ### Standard ladders (semantic scales)
 
@@ -533,8 +533,9 @@ import { Modal } from '@/components/ui';
 ## Typography
 
 ### Fonts
-- **Body text**: Nunito (--font-sans)
-- **Display/headers**: Nova Flat (--font-display)
+- **Body text**: Nunito (`--font-sans` / `font-sans`)
+- **Brand / marketing body**: Nunito (`--font-nunito` / `font-nunito` — same face as next/font `--font-nunito-face`)
+- **Display/headers**: Nova Flat (`--font-display` / `font-display`)
 
 ### Text Colors
 Use semantic color tokens for text:

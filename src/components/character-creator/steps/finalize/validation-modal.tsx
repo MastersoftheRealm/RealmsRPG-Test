@@ -5,30 +5,32 @@ import { cn } from '@/lib/utils';
 import { Button, Modal } from '@/components/ui';
 import type { ValidationIssue } from '@/lib/character-creator-validation';
 
-export function ValidationModal({ 
-  isOpen, 
-  onClose, 
-  issues, 
+export function ValidationModal({
+  isOpen,
+  onClose,
+  issues,
   onContinueAnyway,
   onSave,
   isSaving,
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
+}: {
+  isOpen: boolean;
+  onClose: () => void;
   issues: ValidationIssue[];
   onContinueAnyway?: () => void;
   onSave?: () => void;
   isSaving?: boolean;
 }) {
-  const hasErrors = issues.some(i => i.severity === 'error');
+  const hasErrors = issues.some((i) => i.severity === 'error');
   const isValid = issues.length === 0;
 
   // Custom header for Modal
   const modalHeader = (
-    <div className={cn(
-      'p-4 border-b flex items-center gap-3',
-      isValid ? statusPanel.completeBg : hasErrors ? statusPanel.dangerBg : statusPanel.warningBg
-    )}>
+    <div
+      className={cn(
+        'flex items-center gap-3 border-b p-4',
+        isValid ? statusPanel.completeBg : hasErrors ? statusPanel.dangerBg : statusPanel.warningBg,
+      )}
+    >
       <span className="text-2xl">{isValid ? '✅' : hasErrors ? '⚠️' : '📋'}</span>
       <h2 className="text-xl font-bold text-text-primary">
         {isValid ? 'Character Ready!' : hasErrors ? 'Issues Found' : 'Review Needed'}
@@ -38,21 +40,13 @@ export function ValidationModal({
 
   // Custom footer for Modal
   const modalFooter = (
-    <div className="shrink-0 border-t border-border-light p-4 flex justify-end gap-3">
-      <Button
-        variant="secondary"
-        onClick={onClose}
-        disabled={isSaving}
-      >
+    <div className="flex shrink-0 justify-end gap-3 border-t border-border-light p-4">
+      <Button variant="secondary" onClick={onClose} disabled={isSaving}>
         {isValid ? 'Cancel' : 'Go Back & Fix'}
       </Button>
       {/* Show Save button when valid */}
       {isValid && onSave && (
-        <Button
-          onClick={onSave}
-          disabled={isSaving}
-          isLoading={isSaving}
-        >
+        <Button onClick={onSave} disabled={isSaving} isLoading={isSaving}>
           ✓ Create Character
         </Button>
       )}
@@ -68,7 +62,7 @@ export function ValidationModal({
       )}
     </div>
   );
-  
+
   return (
     <Modal
       isOpen={isOpen}
@@ -82,20 +76,20 @@ export function ValidationModal({
       contentClassName="p-4 overflow-y-auto"
     >
       {isValid ? (
-        <p className="text-text-secondary text-center py-8">
+        <p className="py-8 text-center text-text-secondary">
           Your character is complete and ready for adventure!
         </p>
       ) : (
         <div className="space-y-3">
           {issues.map((issue, idx) => (
-            <div 
-              key={idx} 
+            <div
+              key={idx}
               className={cn(
-                'p-3 rounded-lg flex gap-3',
-                issue.severity === 'error' ? statusPanel.dangerBg : statusPanel.warningBg
+                'flex gap-3 rounded-lg p-3',
+                issue.severity === 'error' ? statusPanel.dangerBg : statusPanel.warningBg,
               )}
             >
-              <span className="text-xl flex-shrink-0">{issue.emoji}</span>
+              <span className="flex-shrink-0 text-xl">{issue.emoji}</span>
               <p className="text-text-secondary">{issue.message}</p>
             </div>
           ))}

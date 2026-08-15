@@ -32,9 +32,9 @@ export function CampaignRosterSection({
 }) {
   return (
     <>
-      <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
-        <h2 className="font-semibold text-text-primary mb-3 flex items-center gap-2">
-          <Crown className="w-5 h-5 text-accent-500" />
+      <div className="mb-6 rounded-xl border border-border-light bg-surface p-6">
+        <h2 className="mb-3 flex items-center gap-2 font-semibold text-text-primary">
+          <Crown className="h-5 w-5 text-accent-500" />
           Realm Master: {ownerUsername || 'Unknown'}
         </h2>
         {ownerCharacters.length > 0 ? (
@@ -52,10 +52,10 @@ export function CampaignRosterSection({
               <button
                 type="button"
                 onClick={onAddClick}
-                className="flex flex-col items-center justify-center w-20 h-24 rounded-lg border-2 border-dashed border-border-light hover:border-primary-outline-border hover:bg-primary-subtle-bg dark:hover:bg-surface transition-colors text-text-muted dark:text-text-secondary"
+                className="flex h-24 w-20 flex-col items-center justify-center rounded-lg border-2 border-dashed border-border-light text-text-muted transition-colors hover:border-primary-outline-border hover:bg-primary-subtle-bg dark:hover:bg-surface"
               >
-                <UserPlus className="w-6 h-6" />
-                <span className="text-xs mt-1">Add</span>
+                <UserPlus className="h-6 w-6" />
+                <span className="mt-1 text-xs">Add</span>
               </button>
             )}
           </div>
@@ -63,19 +63,19 @@ export function CampaignRosterSection({
           <div className="flex items-center gap-4">
             {canAddOwnCharacters ? (
               <Button variant="outline" onClick={onAddClick}>
-                <UserPlus className="w-4 h-4" />
+                <UserPlus className="h-4 w-4" />
                 Add Your Characters
               </Button>
             ) : (
-              <p className="text-text-muted dark:text-text-secondary text-sm">No characters added yet.</p>
+              <p className="text-sm text-text-muted">No characters added yet.</p>
             )}
           </div>
         )}
       </div>
 
       {otherCharacters.length > 0 && (
-        <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
-          <h2 className="font-semibold text-text-primary mb-3">Players</h2>
+        <div className="mb-6 rounded-xl border border-border-light bg-surface p-6">
+          <h2 className="mb-3 font-semibold text-text-primary">Players</h2>
           <div className="flex flex-wrap gap-4">
             {otherCharacters.map((c) => (
               <CharacterChip

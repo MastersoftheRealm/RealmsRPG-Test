@@ -61,7 +61,7 @@ describe('selectableCuratedFeatIds', () => {
         selectedIds: [],
         requirementCharacter,
         codexSkills: [],
-      })
+      }),
     ).toEqual(['1']);
   });
 });

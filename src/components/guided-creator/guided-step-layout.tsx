@@ -51,16 +51,18 @@ export function GuidedStepLayout({
     <div className={cn('flex flex-col', completionHint ? 'pb-32 sm:pb-24' : 'pb-24')}>
       <header className="mb-4">
         <div className="flex items-center gap-1">
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-text-primary">{title}</h2>
+          <h2 className="font-display text-2xl font-bold text-text-primary sm:text-3xl">{title}</h2>
           {titleAddon}
         </div>
         {description && (
-          <p className="mt-2 font-nunito text-base text-text-secondary leading-relaxed">{description}</p>
+          <p className="mt-2 font-nunito text-base leading-relaxed text-text-secondary">
+            {description}
+          </p>
         )}
       </header>
 
       {guidance && (
-        <div className="mb-5 rounded-card border border-border-light dark:border-border bg-primary-subtle-bg/50 px-4 py-3 font-nunito text-sm text-text-secondary">
+        <div className="mb-5 rounded-card border border-border-light bg-primary-subtle-bg/50 px-4 py-3 font-nunito text-sm text-text-secondary dark:border-border">
           {guidance}
         </div>
       )}

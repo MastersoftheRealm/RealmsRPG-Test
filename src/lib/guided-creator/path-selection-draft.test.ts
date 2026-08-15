@@ -165,7 +165,7 @@ describe('Path L1↔L3 layer patches', () => {
     expect(isGuidedCustomArchetypeComplete('power', 'intelligence', null)).toBe(true);
     expect(isGuidedCustomArchetypeComplete('martial', null, 'strength')).toBe(true);
     expect(isGuidedCustomArchetypeComplete('powered-martial', 'intelligence', 'strength')).toBe(
-      true
+      true,
     );
     expect(isGuidedCustomArchetypeComplete('powered-martial', 'strength', 'strength')).toBe(false);
     expect(isGuidedCustomArchetypeComplete('power', null, null)).toBe(false);

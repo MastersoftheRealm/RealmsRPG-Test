@@ -22,7 +22,10 @@ import {
   EQUIPMENT_COLUMNS,
   EQUIPMENT_GRID,
 } from './entity-library-sections-columns';
-import { renderInteractiveGridRows, useEntityListSectionCollapse } from './entity-library-sections-rows';
+import {
+  renderInteractiveGridRows,
+  useEntityListSectionCollapse,
+} from './entity-library-sections-rows';
 import type {
   EntityListControls,
   EntityWeaponRow,
@@ -57,11 +60,11 @@ export function WeaponsListSection({
 } & EntityListControls) {
   const rollContext = useRollsOptional();
   const hasAny = items.length > 0;
-  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
-    collapsible,
-    items.length,
-    onAdd
-  );
+  const {
+    isContentVisible,
+    onAdd: onAddWrapped,
+    headerCollapseProps,
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
   const cols = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_COLUMNS : WEAPON_COLUMNS;
   const grid = layout === 'characterSheet' ? CHARACTER_SHEET_WEAPON_GRID : WEAPON_GRID;
 
@@ -79,72 +82,78 @@ export function WeaponsListSection({
       )}
       {hasAny ? (
         layout === 'characterSheet' ? (
-          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+          <div className="space-y-1">
+            {renderInteractiveGridRows(items, grid, () => [], compactRows)}
+          </div>
         ) : (
-        <div className="space-y-1">
-          {items.map((w, idx) => {
-            const attack = typeof w.attackBonus === 'number' ? w.attackBonus : 0;
-            const { dice, rollStr } = splitDamageDiceAndType(w.damage);
-            const rightSlot =
-              rollContext?.canRoll !== false && rollContext ? (
-                <div className="flex items-center gap-1">
-                  <RollButton
-                    value={attack}
-                    onClick={() =>
-                      rollContext.rollAttack(
-                        rollTitlePrefix ? `${rollTitlePrefix}: ${w.name}` : w.name,
-                        attack
-                      )
-                    }
-                    size="sm"
-                    title={`Roll attack with ${w.name}`}
-                  />
-                  {rollStr !== '-' && (
+          <div className="space-y-1">
+            {items.map((w, idx) => {
+              const attack = typeof w.attackBonus === 'number' ? w.attackBonus : 0;
+              const { dice, rollStr } = splitDamageDiceAndType(w.damage);
+              const rightSlot =
+                rollContext?.canRoll !== false && rollContext ? (
+                  <div className="flex items-center gap-1">
                     <RollButton
-                      value={0}
-                      displayValue={dice}
-                      variant="danger"
+                      value={attack}
                       onClick={() =>
-                        rollContext.rollDamage(
-                          rollStr,
+                        rollContext.rollAttack(
+                          rollTitlePrefix ? `${rollTitlePrefix}: ${w.name}` : w.name,
                           attack,
-                          rollTitlePrefix ? `${rollTitlePrefix}: ${w.name} damage` : `${w.name} damage`
                         )
                       }
                       size="sm"
-                      title={`Roll ${rollStr} damage`}
+                      title={`Roll attack with ${w.name}`}
                     />
-                  )}
-                </div>
-              ) : null;
+                    {rollStr !== '-' && (
+                      <RollButton
+                        value={0}
+                        displayValue={dice}
+                        variant="danger"
+                        onClick={() =>
+                          rollContext.rollDamage(
+                            rollStr,
+                            attack,
+                            rollTitlePrefix
+                              ? `${rollTitlePrefix}: ${w.name} damage`
+                              : `${w.name} damage`,
+                          )
+                        }
+                        size="sm"
+                        title={`Roll ${rollStr} damage`}
+                      />
+                    )}
+                  </div>
+                ) : null;
 
-            return (
-              <GridListRow
-                key={String(w.id ?? `${w.name}-${idx}`)}
-                id={String(w.id ?? idx)}
-                name={w.name}
-                description={w.description}
-                thumbnail={w.thumbnail}
-                columns={w.columns ?? [
-                  { key: 'damage', value: w.damage ?? '-', align: 'center' },
-                  { key: 'range', value: w.range ?? 'Melee', align: 'center' },
-                ]}
-                gridColumns={w.gridColumns ?? grid}
-                chips={w.chips}
-                chipsLabel={w.chips?.length ? 'Properties & Proficiencies' : undefined}
-                rightSlot={w.rightSlot ?? rightSlot}
-                leftSlot={w.leftSlot}
-                onDelete={w.onDelete}
-                badges={w.badges}
-                equipped={w.equipped}
-                compact={compactRows}
-              />
-            );
-          })}
-        </div>
+              return (
+                <GridListRow
+                  key={String(w.id ?? `${w.name}-${idx}`)}
+                  id={String(w.id ?? idx)}
+                  name={w.name}
+                  description={w.description}
+                  thumbnail={w.thumbnail}
+                  columns={
+                    w.columns ?? [
+                      { key: 'damage', value: w.damage ?? '-', align: 'center' },
+                      { key: 'range', value: w.range ?? 'Melee', align: 'center' },
+                    ]
+                  }
+                  gridColumns={w.gridColumns ?? grid}
+                  chips={w.chips}
+                  chipsLabel={w.chips?.length ? 'Properties & Proficiencies' : undefined}
+                  rightSlot={w.rightSlot ?? rightSlot}
+                  leftSlot={w.leftSlot}
+                  onDelete={w.onDelete}
+                  badges={w.badges}
+                  equipped={w.equipped}
+                  compact={compactRows}
+                />
+              );
+            })}
+          </div>
         )
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
+        <p className="py-4 text-center text-sm text-text-muted italic">{emptyMessage}</p>
       )}
     </>
   );
@@ -188,11 +197,11 @@ export function ShieldsListSection({
   layout?: 'creature' | 'characterSheet';
 } & EntityListControls) {
   const hasAny = items.length > 0;
-  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
-    collapsible,
-    items.length,
-    onAdd
-  );
+  const {
+    isContentVisible,
+    onAdd: onAddWrapped,
+    headerCollapseProps,
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
   const cols = layout === 'characterSheet' ? CHARACTER_SHEET_SHIELD_COLUMNS : SHIELD_COLUMNS;
   const grid = layout === 'characterSheet' ? CHARACTER_SHEET_SHIELD_GRID : SHIELD_GRID;
 
@@ -210,7 +219,9 @@ export function ShieldsListSection({
       )}
       {hasAny ? (
         layout === 'characterSheet' ? (
-          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+          <div className="space-y-1">
+            {renderInteractiveGridRows(items, grid, () => [], compactRows)}
+          </div>
         ) : (
           <div className="space-y-1">
             {items.map((s, idx) => {
@@ -238,7 +249,7 @@ export function ShieldsListSection({
           </div>
         )
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
+        <p className="py-4 text-center text-sm text-text-muted italic">{emptyMessage}</p>
       )}
     </>
   );
@@ -282,11 +293,11 @@ export function ArmorListSection({
   layout?: 'creature' | 'characterSheet';
 } & EntityListControls) {
   const hasAny = items.length > 0;
-  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
-    collapsible,
-    items.length,
-    onAdd
-  );
+  const {
+    isContentVisible,
+    onAdd: onAddWrapped,
+    headerCollapseProps,
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
   const grid = ARMOR_GRID;
 
   const listBody = (
@@ -303,7 +314,9 @@ export function ArmorListSection({
       )}
       {hasAny ? (
         layout === 'characterSheet' ? (
-          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+          <div className="space-y-1">
+            {renderInteractiveGridRows(items, grid, () => [], compactRows)}
+          </div>
         ) : (
           <div className="space-y-1">
             {items.map((a, idx) => (
@@ -326,7 +339,7 @@ export function ArmorListSection({
           </div>
         )
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
+        <p className="py-4 text-center text-sm text-text-muted italic">{emptyMessage}</p>
       )}
     </>
   );
@@ -370,11 +383,11 @@ export function EquipmentListSection({
   layout?: 'creature' | 'characterSheet';
 } & EntityListControls) {
   const hasAny = items.length > 0;
-  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
-    collapsible,
-    items.length,
-    onAdd
-  );
+  const {
+    isContentVisible,
+    onAdd: onAddWrapped,
+    headerCollapseProps,
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
   const grid = EQUIPMENT_GRID;
 
   const listBody = (
@@ -391,14 +404,19 @@ export function EquipmentListSection({
       )}
       {hasAny ? (
         layout === 'characterSheet' ? (
-          <div className="space-y-1">{renderInteractiveGridRows(items, grid, () => [], compactRows)}</div>
+          <div className="space-y-1">
+            {renderInteractiveGridRows(items, grid, () => [], compactRows)}
+          </div>
         ) : (
           <div className="space-y-1">
             {items.map((e, idx) => {
               const itemType = formatListCellLabel(e.type);
               const qty = e.quantity ?? 1;
               const qtyCell = (
-                <div className="flex items-center justify-center" onClick={(ev) => ev.stopPropagation()}>
+                <div
+                  className="flex items-center justify-center"
+                  onClick={(ev) => ev.stopPropagation()}
+                >
                   <QuantitySelector quantity={qty} min={0} max={99} size="sm" onChange={() => {}} />
                 </div>
               );
@@ -422,7 +440,7 @@ export function EquipmentListSection({
           </div>
         )
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
+        <p className="py-4 text-center text-sm text-text-muted italic">{emptyMessage}</p>
       )}
     </>
   );
@@ -430,7 +448,13 @@ export function EquipmentListSection({
   return (
     <div>
       {(showTitle || layout !== 'characterSheet') && (
-        <SectionHeader title={title} size="lg" onAdd={onAddWrapped} addLabel={addLabel} {...headerCollapseProps} />
+        <SectionHeader
+          title={title}
+          size="lg"
+          onAdd={onAddWrapped}
+          addLabel={addLabel}
+          {...headerCollapseProps}
+        />
       )}
       {isContentVisible ? listBody : null}
     </div>

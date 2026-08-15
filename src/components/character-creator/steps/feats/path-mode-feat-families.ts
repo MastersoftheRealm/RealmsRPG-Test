@@ -7,19 +7,21 @@ export type FeatFamilyEntry = { displayFeat: Feat; familyLevels: Feat[] };
 export function buildPathModeFeatFamilies(
   feats: Feat[] | undefined,
   recommendedFeatRefs: Set<string>,
-  characterFeats: boolean
+  characterFeats: boolean,
 ): FeatFamilyEntry[] {
   if (!feats || recommendedFeatRefs.size === 0) return [];
   const typed = feats.filter((f: Feat) => (characterFeats ? !!f.char_feat : !f.char_feat));
   const recommended = typed.filter(
     (f: Feat) =>
       recommendedFeatRefs.has(String(f.id).toLowerCase()) ||
-      recommendedFeatRefs.has(String(f.name).toLowerCase())
+      recommendedFeatRefs.has(String(f.name).toLowerCase()),
   );
   const families = groupFeatFamilies(recommended);
   return families
     .map((family) => {
-      const levelsByPriority = family.levels.slice().sort((a, b) => getFeatLevel(b) - getFeatLevel(a));
+      const levelsByPriority = family.levels
+        .slice()
+        .sort((a, b) => getFeatLevel(b) - getFeatLevel(a));
       const displayFeat = levelsByPriority[0];
       if (!displayFeat) return null;
       return { displayFeat, familyLevels: family.levels };

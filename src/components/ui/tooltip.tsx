@@ -19,10 +19,7 @@ import {
   useRole,
 } from '@floating-ui/react';
 import { cn } from '@/lib/utils/cn';
-import {
-  FloatingHelpPanel,
-  useFloatingHelpPopover,
-} from '@/lib/tooltips/floating-help';
+import { FloatingHelpPanel, useFloatingHelpPopover } from '@/lib/tooltips/floating-help';
 import { renderMarkdownLite } from '@/lib/tooltips/markdown-lite';
 import type { TooltipPlacement, TooltipTrigger } from '@/types/tooltips';
 
@@ -114,18 +111,12 @@ function FloatingTooltip({
   const enabledInteractions = useMemo(() => getEnabledInteractions(trigger), [trigger]);
   const isInteractive = typeof content !== 'string';
 
-  const {
-    refs,
-    floatingStyles,
-    transitionStyles,
-    isMounted,
-    context,
-    arrowRef,
-  } = useFloatingHelpPopover({
-    open,
-    onOpenChange: setOpen,
-    placement,
-  });
+  const { refs, floatingStyles, transitionStyles, isMounted, context, arrowRef } =
+    useFloatingHelpPopover({
+      open,
+      onOpenChange: setOpen,
+      placement,
+    });
 
   const hover = useHover(context, {
     enabled: enabledInteractions.hover,

@@ -5,7 +5,7 @@
  */
 
 /** The six core ability scores */
-export type AbilityName = 
+export type AbilityName =
   | 'strength'
   | 'vitality'
   | 'agility'
@@ -13,14 +13,14 @@ export type AbilityName =
   | 'intelligence'
   | 'charisma';
 
-  export const ABILITIES = {
-    strength: 'strength',
-    vitality: 'vitality',
-    agility: 'agility',
-    acuity: 'acuity',
-    intelligence: 'intelligence',
-    charisma: 'charisma'
-}
+export const ABILITIES = {
+  strength: 'strength',
+  vitality: 'vitality',
+  agility: 'agility',
+  acuity: 'acuity',
+  intelligence: 'intelligence',
+  charisma: 'charisma',
+};
 
 /** Ability scores object */
 export interface Abilities {
@@ -44,12 +44,12 @@ export const DEFAULT_ABILITIES: Abilities = {
 
 /** Defense types that map to abilities */
 export type DefenseName =
-  | 'might'       // strength
-  | 'fortitude'   // vitality
-  | 'reflex'      // agility
+  | 'might' // strength
+  | 'fortitude' // vitality
+  | 'reflex' // agility
   | 'discernment' // acuity
   | 'mentalFortitude' // intelligence
-  | 'resolve';    // charisma
+  | 'resolve'; // charisma
 
 /** Defense scores object */
 export interface Defenses {

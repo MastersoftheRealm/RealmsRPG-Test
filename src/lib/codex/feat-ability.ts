@@ -20,9 +20,7 @@ function splitAbilityToken(token: string): string[] {
  * Normalize feat sorting abilities to a flat list of display names.
  * Handles arrays, comma-separated strings, and legacy slash-separated values.
  */
-export function normalizeFeatAbilities(
-  ability: string | string[] | null | undefined
-): string[] {
+export function normalizeFeatAbilities(ability: string | string[] | null | undefined): string[] {
   if (ability == null || ability === '') return [];
   const raw = Array.isArray(ability) ? ability : [String(ability)];
   const out: string[] = [];

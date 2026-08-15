@@ -55,7 +55,7 @@ export function OfficialCreatureList({
   errorMessage = 'Failed to load creatures',
   sectionTitle,
   searchPlaceholder = 'Search creatures...',
-  emptyIcon = <Users className="w-8 h-8" />,
+  emptyIcon = <Users className="h-8 w-8" />,
   emptyTitle,
   emptyMessage,
   searchEmptyMessage = 'No creatures match your search.',

@@ -16,7 +16,7 @@ export function apiErrorResponse(
   clientMessage: string,
   status: number,
   context?: string,
-  err?: unknown
+  err?: unknown,
 ): NextResponse<{ error: string }> {
   if (context !== undefined || err !== undefined) {
     logApiError(context ?? clientMessage, err ?? context);

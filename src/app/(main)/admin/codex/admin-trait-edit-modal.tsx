@@ -91,13 +91,13 @@ export function AdminTraitEditModal({
     >
       <div className="space-y-4">
         {copySourceName && (
-          <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
-            Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change
-            the name and details as needed, then save to add the new trait.
+          <p className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-secondary">
+            Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>.
+            Change the name and details as needed, then save to add the new trait.
           </p>
         )}
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Name *</label>
           <Input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -105,7 +105,7 @@ export function AdminTraitEditModal({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
           <Textarea
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -116,7 +116,7 @@ export function AdminTraitEditModal({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Uses per Recovery
             </label>
             <Input
@@ -128,13 +128,13 @@ export function AdminTraitEditModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Recovery Period
             </label>
             <select
               value={form.rec_period}
               onChange={(e) => setForm((f) => ({ ...f, rec_period: e.target.value }))}
-              className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Recovery period"
             >
               <option value="">None</option>
@@ -162,7 +162,7 @@ export function AdminTraitEditModal({
           </label>
         </div>
         <div>
-          <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="mb-2 flex items-center justify-between gap-2">
             <label className="block text-sm font-medium text-text-secondary">
               Choice trait options
             </label>
@@ -172,11 +172,11 @@ export function AdminTraitEditModal({
               onClick={onOpenCreateTrait}
               aria-label="Create trait and add to options"
             >
-              <Plus className="w-4 h-4 mr-1 inline" />
+              <Plus className="mr-1 inline h-4 w-4" />
               Create trait and add
             </Button>
           </div>
-          <p className="text-xs text-text-muted dark:text-text-secondary mb-2">
+          <p className="mb-2 text-xs text-text-muted">
             When set, this trait becomes a choice trait: the player selects it then picks one option
             from this list. Expand rows to see descriptions.
           </p>
@@ -198,9 +198,9 @@ export function AdminTraitEditModal({
             onSort={handleChoiceSort}
             hasSelectionColumn
           />
-          <div className="max-h-48 overflow-y-auto border border-border rounded-lg mt-1 bg-surface-alt">
+          <div className="mt-1 max-h-48 overflow-y-auto rounded-lg border border-border bg-surface-alt">
             {sortedChoiceTraits.length === 0 ? (
-              <p className="text-sm text-text-muted p-4 text-center">
+              <p className="p-4 text-center text-sm text-text-muted">
                 No other traits to add. Create traits first or adjust search.
               </p>
             ) : (
@@ -278,7 +278,7 @@ export function AdminTraitCreateModal({
     >
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Name *</label>
           <Input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -286,7 +286,7 @@ export function AdminTraitCreateModal({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
           <Textarea
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}

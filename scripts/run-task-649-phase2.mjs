@@ -13,8 +13,7 @@ const root = process.cwd();
 const envPath = path.join(root, '.env.local');
 const env = fs.readFileSync(envPath, 'utf8');
 const rawUrl =
-  env.match(/^DATABASE_URL=(.+)$/m)?.[1]?.trim() ||
-  env.match(/^DIRECT_URL=(.+)$/m)?.[1]?.trim();
+  env.match(/^DATABASE_URL=(.+)$/m)?.[1]?.trim() || env.match(/^DIRECT_URL=(.+)$/m)?.[1]?.trim();
 const url = (() => {
   const cleaned = rawUrl?.replace(/^["']|["']$/g, '');
   if (!cleaned) return cleaned;

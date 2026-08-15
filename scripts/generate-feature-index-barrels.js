@@ -28,7 +28,11 @@ function parseBarrelExports(fileRel) {
   const exportNamed = /export\s*\{([^}]+)\}/g;
   while ((m = exportNamed.exec(text))) {
     for (const part of m[1].split(',')) {
-      const name = part.trim().split(/\s+as\s+/).pop()?.trim();
+      const name = part
+        .trim()
+        .split(/\s+as\s+/)
+        .pop()
+        ?.trim();
       if (name && /^[A-Za-z_]/.test(name)) names.add(name);
     }
   }

@@ -8,7 +8,7 @@ import type { EntityRowExtras } from './entity-library-sections-types';
 export function useEntityListSectionCollapse(
   collapsible: boolean | undefined,
   itemCount: number,
-  onAdd?: () => void
+  onAdd?: () => void,
 ) {
   return useLibrarySectionCollapse(collapsible ?? false, itemCount, onAdd);
 }
@@ -33,7 +33,7 @@ export function renderInteractiveGridRows(
   items: InteractiveRow[],
   defaultGrid: string,
   buildDefaultColumns: (item: InteractiveRow, idx: number) => ColumnValue[],
-  compactRows: boolean
+  compactRows: boolean,
 ) {
   return items.map((item, idx) => (
     <GridListRow
@@ -49,7 +49,7 @@ export function renderInteractiveGridRows(
         item.requirements ? (
           <div className="space-y-2">
             {item.description && (
-              <p className="text-sm text-text-secondary whitespace-pre-wrap">{item.description}</p>
+              <p className="text-sm whitespace-pre-wrap text-text-secondary">{item.description}</p>
             )}
             {item.requirements}
           </div>

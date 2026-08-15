@@ -59,7 +59,7 @@ export function tempModifierValueClass(delta?: number | null): string {
 
 export function getScalarTempModifier(
   mods: CharacterTempModifiers | undefined,
-  key: TempModifierScalarKey
+  key: TempModifierScalarKey,
 ): number {
   const n = mods?.[key];
   return typeof n === 'number' && Number.isFinite(n) ? n : 0;
@@ -67,7 +67,7 @@ export function getScalarTempModifier(
 
 export function getAbilityTempModifier(
   mods: CharacterTempModifiers | undefined,
-  ability: AbilityName
+  ability: AbilityName,
 ): number {
   const n = mods?.abilities?.[ability];
   return typeof n === 'number' && Number.isFinite(n) ? n : 0;
@@ -75,7 +75,7 @@ export function getAbilityTempModifier(
 
 export function getDefenseTempModifier(
   mods: CharacterTempModifiers | undefined,
-  defense: DefenseName
+  defense: DefenseName,
 ): number {
   const n = mods?.defenses?.[defense];
   return typeof n === 'number' && Number.isFinite(n) ? n : 0;
@@ -83,7 +83,7 @@ export function getDefenseTempModifier(
 
 export function getSkillTempModifier(
   mods: CharacterTempModifiers | undefined,
-  skillId: string
+  skillId: string,
 ): number {
   const n = mods?.skills?.[skillId];
   return typeof n === 'number' && Number.isFinite(n) ? n : 0;
@@ -91,7 +91,7 @@ export function getSkillTempModifier(
 
 /** Whether ability temps should adjust max Health / max Energy / TP maxima. */
 export function shouldApplyAbilityTempsToResourceMaxima(
-  mods: CharacterTempModifiers | undefined
+  mods: CharacterTempModifiers | undefined,
 ): boolean {
   return mods?.applyAbilityToResourceMaxima === true;
 }
@@ -119,7 +119,7 @@ export function withAbilitiesForResourceMaxima<
  */
 export function getEffectiveAbilities(
   abilities: Abilities,
-  mods: CharacterTempModifiers | undefined
+  mods: CharacterTempModifiers | undefined,
 ): Abilities {
   if (!mods?.abilities) return abilities;
   return {
@@ -133,7 +133,7 @@ export function getEffectiveAbilities(
 }
 
 function prunePartialRecord<T extends string>(
-  record: Partial<Record<T, number>> | undefined
+  record: Partial<Record<T, number>> | undefined,
 ): Partial<Record<T, number>> | undefined {
   if (!record) return undefined;
   const next: Partial<Record<T, number>> = {};
@@ -151,7 +151,7 @@ function prunePartialRecord<T extends string>(
  */
 export function patchTempModifiers(
   current: CharacterTempModifiers | undefined,
-  patch: CharacterTempModifiers
+  patch: CharacterTempModifiers,
 ): CharacterTempModifiers | undefined {
   return normalizeTempModifiers({
     ...current,
@@ -164,17 +164,14 @@ export function patchTempModifiers(
       patch.defenses !== undefined
         ? { ...current?.defenses, ...patch.defenses }
         : current?.defenses,
-    skills:
-      patch.skills !== undefined
-        ? { ...current?.skills, ...patch.skills }
-        : current?.skills,
+    skills: patch.skills !== undefined ? { ...current?.skills, ...patch.skills } : current?.skills,
   });
 }
 
 /** True when any ability/defense/skill/scalar temp in the given maps is non-zero. */
 export function sectionHasTempModifiers(
   mods: CharacterTempModifiers | undefined,
-  section: 'header' | 'abilities' | 'skills'
+  section: 'header' | 'abilities' | 'skills',
 ): boolean {
   if (!mods) return false;
   if (section === 'header') {
@@ -217,7 +214,7 @@ export function applyTempModifiersToDisplayStats<
 >(
   base: T,
   mods: CharacterTempModifiers | undefined,
-  resourceMaximaOverride?: Pick<T, 'maxHealth' | 'maxEnergy' | 'terminal'>
+  resourceMaximaOverride?: Pick<T, 'maxHealth' | 'maxEnergy' | 'terminal'>,
 ): T {
   const resources =
     resourceMaximaOverride && shouldApplyAbilityTempsToResourceMaxima(mods)
@@ -237,7 +234,7 @@ export function applyTempModifiersToDisplayStats<
  * Returns undefined when nothing remains (caller may delete the field).
  */
 export function normalizeTempModifiers(
-  mods: CharacterTempModifiers | undefined | null
+  mods: CharacterTempModifiers | undefined | null,
 ): CharacterTempModifiers | undefined {
   if (!mods) return undefined;
 

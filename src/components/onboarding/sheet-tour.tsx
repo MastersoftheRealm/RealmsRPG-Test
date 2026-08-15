@@ -48,13 +48,13 @@ export function SheetTour({ active, onComplete }: SheetTourProps) {
     <div
       className={cn(
         ONBOARDING_FLOATING_CARD_CLASS,
-        'rounded-xl border border-border-light bg-surface shadow-lg p-4'
+        'rounded-xl border border-border-light bg-surface p-4 shadow-lg',
       )}
       role="dialog"
       aria-labelledby="sheet-tour-title"
       aria-describedby="sheet-tour-body"
     >
-      <p className="text-xs text-text-muted dark:text-text-secondary mb-1">
+      <p className="mb-1 text-xs text-text-muted">
         Sheet tour · {stepIndex + 1} / {steps.length}
       </p>
       <h2 id="sheet-tour-title" className="text-base font-semibold text-text-primary">
@@ -63,7 +63,7 @@ export function SheetTour({ active, onComplete }: SheetTourProps) {
       <p id="sheet-tour-body" className="mt-1 text-sm text-text-secondary">
         {step.body}
       </p>
-      <div className="mt-4 flex flex-wrap gap-2 justify-between">
+      <div className="mt-4 flex flex-wrap justify-between gap-2">
         <Button variant="ghost" size="sm" onClick={finish} className="min-h-11">
           {copy.skip}
         </Button>

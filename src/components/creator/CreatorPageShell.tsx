@@ -11,10 +11,7 @@
  */
 
 import { useCallback, useState, type ReactNode } from 'react';
-import {
-  LoadingState,
-  type ContainerSize,
-} from '@/components/ui';
+import { LoadingState, type ContainerSize } from '@/components/ui';
 import {
   LoginPromptModal,
   ConfirmActionModal,
@@ -23,10 +20,7 @@ import {
 } from '@/components/shared';
 import { CreatorLayout } from './CreatorLayout';
 import { CreatorSaveToolbar } from './CreatorSaveToolbar';
-import {
-  LoadFromLibraryModal,
-  type LoadFromLibraryModalProps,
-} from './LoadFromLibraryModal';
+import { LoadFromLibraryModal, type LoadFromLibraryModalProps } from './LoadFromLibraryModal';
 
 export type CreatorPageAuthConfig = {
   /** Path returned to after login (e.g. "/power-creator") */
@@ -165,10 +159,7 @@ export function CreatorPageShell({
     body = (
       <>
         <ErrorDisplay
-          message={
-            loading.errorMessage ??
-            `Failed to load: ${loading.error.message}`
-          }
+          message={loading.errorMessage ?? `Failed to load: ${loading.error.message}`}
           onRetry={loading.onRetry}
         />
         {children}
@@ -177,7 +168,7 @@ export function CreatorPageShell({
   }
 
   const sidebarNode = stickySidebar ? (
-    <div className="self-start lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto space-y-6">
+    <div className="space-y-6 self-start lg:sticky lg:top-24 lg:max-h-[calc(100vh-7rem)] lg:overflow-y-auto">
       {sidebar}
     </div>
   ) : (

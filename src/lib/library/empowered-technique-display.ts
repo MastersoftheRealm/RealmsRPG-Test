@@ -4,14 +4,8 @@
  */
 
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
-import {
-  derivePowerDisplay,
-  type PowerDocument,
-} from '@/lib/calculators/power-calc';
-import {
-  deriveTechniqueDisplay,
-  type TechniqueDocument,
-} from '@/lib/calculators/technique-calc';
+import { derivePowerDisplay, type PowerDocument } from '@/lib/calculators/power-calc';
+import { deriveTechniqueDisplay, type TechniqueDocument } from '@/lib/calculators/technique-calc';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
@@ -36,7 +30,7 @@ function collectEmpoweredPowerSavedParts(power: EmpoweredRecord): PowerDocument[
 
 function collectEmpoweredTechniqueSavedParts(
   raw: EmpoweredRecord,
-  technique: EmpoweredRecord
+  technique: EmpoweredRecord,
 ): TechniqueDocument['parts'] {
   const parts: unknown[] = [];
   if (Array.isArray(technique.parts)) parts.push(...technique.parts);
@@ -48,7 +42,7 @@ function collectEmpoweredTechniqueSavedParts(
 
 function resolveEmpoweredTechniqueDamage(
   raw: EmpoweredRecord,
-  technique: EmpoweredRecord
+  technique: EmpoweredRecord,
 ): TechniqueDocument['damage'] {
   const additional = Array.isArray(technique.additionalDamage)
     ? technique.additionalDamage[0]
@@ -76,9 +70,7 @@ export function buildEmpoweredPowerDocument(item: unknown): PowerDocument {
     parts: collectEmpoweredPowerSavedParts(power),
     actionType: String(raw.actionType ?? ''),
     isReaction: raw.isReaction === true,
-    damage: Array.isArray(power.damage)
-      ? (power.damage as PowerDocument['damage'])
-      : undefined,
+    damage: Array.isArray(power.damage) ? (power.damage as PowerDocument['damage']) : undefined,
     range: power.range as PowerDocument['range'],
     area: power.area as PowerDocument['area'],
     duration: (power.duration ?? raw.duration) as PowerDocument['duration'],
@@ -107,12 +99,12 @@ export function deriveEmpoweredTechniquePartChips(
   item: unknown,
   powerPartsDb: PowerPart[],
   techniquePartsDb: TechniquePart[],
-  opts?: { stripOptionSuffix?: boolean }
+  opts?: { stripOptionSuffix?: boolean },
 ): ChipData[] {
   const powerDisplay = derivePowerDisplay(buildEmpoweredPowerDocument(item), powerPartsDb);
   const techniqueDisplay = deriveTechniqueDisplay(
     buildEmpoweredTechniqueDocument(item),
-    techniquePartsDb
+    techniquePartsDb,
   );
   const powerChips = partChipsFromDisplay(powerDisplay.partChips, opts);
   const techniqueChips = partChipsFromDisplay(techniqueDisplay.partChips, opts);
@@ -124,7 +116,7 @@ export function empoweredTechniquePartsSection(
   item: unknown,
   powerPartsDb: PowerPart[],
   techniquePartsDb: TechniquePart[],
-  opts?: { stripOptionSuffix?: boolean }
+  opts?: { stripOptionSuffix?: boolean },
 ): MetadataDetailSection | undefined {
   const chips = deriveEmpoweredTechniquePartChips(item, powerPartsDb, techniquePartsDb, opts);
   return partsProficienciesSection(chips, 'parts');

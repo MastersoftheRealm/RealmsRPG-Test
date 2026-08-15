@@ -11,7 +11,9 @@ import {
 describe('characterLockToken', () => {
   it('keeps non-empty strings and ISO-stringifies Dates', () => {
     expect(characterLockToken('2026-07-01T12:00:00.000Z')).toBe('2026-07-01T12:00:00.000Z');
-    expect(characterLockToken(new Date('2026-07-01T12:00:00.000Z'))).toBe('2026-07-01T12:00:00.000Z');
+    expect(characterLockToken(new Date('2026-07-01T12:00:00.000Z'))).toBe(
+      '2026-07-01T12:00:00.000Z',
+    );
     expect(characterLockToken(null)).toBeUndefined();
     expect(characterLockToken('')).toBeUndefined();
   });
@@ -20,11 +22,11 @@ describe('characterLockToken', () => {
 describe('characterTimestampsMatch', () => {
   it('matches identical strings and equivalent instants', () => {
     expect(characterTimestampsMatch('2026-07-01T12:00:00.000Z', '2026-07-01T12:00:00.000Z')).toBe(
-      true
+      true,
     );
     expect(characterTimestampsMatch('2026-07-01T12:00:00.000Z', '2026-07-01T12:00:00Z')).toBe(true);
     expect(characterTimestampsMatch('2026-07-01T12:00:00.000Z', '2026-07-01T12:00:01.000Z')).toBe(
-      false
+      false,
     );
     expect(characterTimestampsMatch(null, '2026-07-01T12:00:00.000Z')).toBe(false);
   });
@@ -37,12 +39,12 @@ describe('isStaleCharacterWrite', () => {
   });
 
   it('is stale when both tokens exist and differ', () => {
-    expect(
-      isStaleCharacterWrite('2026-07-01T12:00:00.000Z', '2026-07-01T13:00:00.000Z')
-    ).toBe(true);
-    expect(
-      isStaleCharacterWrite('2026-07-01T12:00:00.000Z', '2026-07-01T12:00:00.000Z')
-    ).toBe(false);
+    expect(isStaleCharacterWrite('2026-07-01T12:00:00.000Z', '2026-07-01T13:00:00.000Z')).toBe(
+      true,
+    );
+    expect(isStaleCharacterWrite('2026-07-01T12:00:00.000Z', '2026-07-01T12:00:00.000Z')).toBe(
+      false,
+    );
   });
 });
 
@@ -79,7 +81,7 @@ describe('applyCharacterDirtyPatch / mergeRemotePreservingDirty', () => {
     const merged = applyCharacterDirtyPatch(
       { name: 'Hero', notes: 'keep', level: 2, extra: 1 },
       { notes: 'changed', updatedAt: 'client', id: 'ignored' },
-      { blobUpdatedAt: '2026-08-14T00:00:00.000Z' }
+      { blobUpdatedAt: '2026-08-14T00:00:00.000Z' },
     );
     expect(merged).toEqual({
       name: 'Hero',

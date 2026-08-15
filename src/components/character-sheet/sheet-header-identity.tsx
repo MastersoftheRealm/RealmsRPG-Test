@@ -5,11 +5,7 @@ import Image from 'next/image';
 import { Camera, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
-import {
-  ImageUploadModal,
-  RealmsImagePicker,
-  ExpandableImage,
-} from '@/components/shared';
+import { ImageUploadModal, RealmsImagePicker, ExpandableImage } from '@/components/shared';
 import type { Character } from '@/types';
 import { isPortraitFallbackSrc, withPortraitCacheBust } from '@/lib/portrait';
 import { fileFromCroppedBlob } from '@/lib/crop-image';
@@ -92,7 +88,7 @@ export function SheetHeaderIdentity({
     healthColor === 'green' && 'border-success-400',
     healthColor === 'orange' && 'border-warning-400',
     healthColor === 'red' && 'border-danger-600',
-    canChangePortrait && 'group cursor-pointer'
+    canChangePortrait && 'group cursor-pointer',
   );
   const portraitImage = (
     <>
@@ -103,10 +99,7 @@ export function SheetHeaderIdentity({
         fill
         unoptimized
         priority
-        className={cn(
-          'object-contain transition-opacity',
-          isUploadingPortrait && 'opacity-50'
-        )}
+        className={cn('object-contain transition-opacity', isUploadingPortrait && 'opacity-50')}
         sizes="(max-width: 768px) 112px, 144px"
         onError={(e) => {
           (e.target as HTMLImageElement).src = portraitFallbackUrl;
@@ -140,13 +133,13 @@ export function SheetHeaderIdentity({
   const normalizedPowerAbility = character.pow_abil?.trim().toLowerCase();
   const normalizedMartialAbility = character.mart_abil?.trim().toLowerCase();
   const showPowerAbility = Boolean(character.pow_abil?.trim());
-  const showMartialAbility = Boolean(character.mart_abil)
-    && normalizedMartialAbility !== normalizedPowerAbility;
+  const showMartialAbility =
+    Boolean(character.mart_abil) && normalizedMartialAbility !== normalizedPowerAbility;
 
   return (
     <>
       {/* Left: Portrait and Identity */}
-      <div className="flex gap-4 flex-shrink-0 items-center">
+      <div className="flex flex-shrink-0 items-center gap-4">
         {/* Portrait — ExpandableImage in play view; edit mode click opens upload */}
         {canChangePortrait ? (
           <div
@@ -178,7 +171,7 @@ export function SheetHeaderIdentity({
         )}
 
         {/* Character Identity - Clean unified format */}
-        <div className="flex flex-col justify-center min-w-0">
+        <div className="flex min-w-0 flex-col justify-center">
           {/* Editable Name - Always available with pencil icon */}
           {isEditingName && onNameChange ? (
             <input
@@ -193,35 +186,38 @@ export function SheetHeaderIdentity({
                   setIsEditingName(false);
                 }
               }}
-              className="text-2xl md:text-3xl font-bold text-text-primary px-2 py-1 border-2 border-primary-outline-border rounded-lg focus:ring-2 focus:ring-primary-outline-border"
+              className="rounded-lg border-2 border-primary-outline-border px-2 py-1 text-2xl font-bold text-text-primary focus:ring-2 focus:ring-primary-outline-border md:text-3xl"
               autoFocus
             />
           ) : (
-            <h1 className="text-2xl md:text-3xl font-bold text-text-primary truncate flex items-center gap-2">
+            <h1 className="flex items-center gap-2 truncate text-2xl font-bold text-text-primary md:text-3xl">
               {character.name}
               {onNameChange && isEditMode && (
                 <button
                   onClick={() => setIsEditingName(true)}
-                  className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
+                  className="text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
                   title="Edit name"
                 >
-                  <Pencil className="w-4 h-4" />
+                  <Pencil className="h-4 w-4" />
                 </button>
               )}
             </h1>
           )}
 
           {/* Level and Species - separated */}
-          <p className="text-base text-text-primary flex items-center gap-2">
-            Level {character.level} · <span className="font-medium">{character.ancestry?.name || character.species || 'Unknown'}</span>
+          <p className="flex items-center gap-2 text-base text-text-primary">
+            Level {character.level} ·{' '}
+            <span className="font-medium">
+              {character.ancestry?.name || character.species || 'Unknown'}
+            </span>
             {onEditSpecies && (
               <button
                 onClick={onEditSpecies}
-                className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
+                className="text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
                 title="Edit species and ancestry"
                 aria-label="Edit species and ancestry"
               >
-                <Pencil className="w-4 h-4" />
+                <Pencil className="h-4 w-4" />
               </button>
             )}
           </p>
@@ -249,11 +245,11 @@ export function SheetHeaderIdentity({
               {onEditArchetype && (
                 <button
                   onClick={onEditArchetype}
-                  className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110 min-h-[44px] min-w-[44px] inline-flex items-center justify-center"
+                  className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
                   title="Edit archetype and ability"
                   aria-label="Edit archetype and ability"
                 >
-                  <Pencil className="w-4 h-4" />
+                  <Pencil className="h-4 w-4" />
                 </button>
               )}
             </p>
@@ -261,7 +257,7 @@ export function SheetHeaderIdentity({
           </div>
 
           {/* XP Display - Always editable with pencil icon */}
-          <div className="text-base text-text-primary flex items-center gap-2">
+          <div className="flex items-center gap-2 text-base text-text-primary">
             {isEditingXP && onExperienceChange ? (
               <div className="flex items-center gap-1">
                 <span>XP:</span>
@@ -277,7 +273,7 @@ export function SheetHeaderIdentity({
                       setIsEditingXP(false);
                     }
                   }}
-                  className="w-16 px-1 py-0 text-base border-2 border-primary-outline-border rounded focus:ring-2 focus:ring-primary-outline-border"
+                  className="w-16 rounded border-2 border-primary-outline-border px-1 py-0 text-base focus:ring-2 focus:ring-primary-outline-border"
                   min={0}
                   autoFocus
                   aria-label="Experience points"
@@ -292,17 +288,17 @@ export function SheetHeaderIdentity({
                       setXpInput(String(character.experience ?? 0));
                       setIsEditingXP(true);
                     }}
-                    className="text-primary-fg hover:text-primary-fg-hover transition-colors hover:scale-110"
+                    className="text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
                     title="Edit XP"
                   >
-                    <Pencil className="w-4 h-4" />
+                    <Pencil className="h-4 w-4" />
                   </button>
                 )}
               </>
             )}
             {canLevelUp && (
               <span
-                className="text-success-fg animate-pulse text-sm font-medium"
+                className="animate-pulse text-sm font-medium text-success-fg"
                 title="Ready to level up!"
               >
                 ⬆ Level up!
@@ -326,7 +322,9 @@ export function SheetHeaderIdentity({
         <RealmsImagePicker
           isOpen={showBankPicker}
           onClose={() => setShowBankPicker(false)}
-          onSelect={({ image }) => { void onPortraitUrlChange(image.publicUrl); }}
+          onSelect={({ image }) => {
+            void onPortraitUrlChange(image.publicUrl);
+          }}
           categories="portrait"
           allowAdminUpload={false}
           title="Choose Character Portrait"

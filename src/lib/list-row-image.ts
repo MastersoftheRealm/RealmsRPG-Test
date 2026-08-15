@@ -19,7 +19,7 @@ export type ListRowImageKind = ChoiceCardImageKind;
 export function resolveListRowThumbnail(
   kind: ListRowImageKind,
   record: unknown,
-  name: string
+  name: string,
 ): ListRowThumbnailProps {
   const { src, isPlaceholder } = resolveChoiceCardImage(kind, record);
   return { src, alt: name, isPlaceholder };
@@ -28,12 +28,12 @@ export function resolveListRowThumbnail(
 /** Species rows: codex, official, or user library records. */
 export function resolveSpeciesListRowThumbnail(
   species: { name: string; image_url?: string | null },
-  rawRecord?: unknown
+  rawRecord?: unknown,
 ): ListRowThumbnailProps {
   const record =
     species.image_url != null
       ? { ...((rawRecord as object) ?? {}), image_url: species.image_url }
-      : rawRecord ?? species;
+      : (rawRecord ?? species);
   if (!readRecordImageUrl(record) && species.image_url) {
     return {
       src: species.image_url,

@@ -50,7 +50,9 @@ export function normalizeAttackMode(value: unknown): AttackMode | null {
 type SavedPartLike = { id?: string | number; name?: string };
 
 const nameMatches = (part: SavedPartLike, ...names: string[]): boolean => {
-  const n = String(part.name ?? '').trim().toLowerCase();
+  const n = String(part.name ?? '')
+    .trim()
+    .toLowerCase();
   return names.some((candidate) => n === candidate);
 };
 
@@ -73,7 +75,9 @@ export function deriveTechniqueAttackMode(input: {
 
   const parts = input.parts ?? [];
   if (hasPart(parts, PART_IDS.NO_ATTACK, 'no attack')) return 'none';
-  if (hasPart(parts, PART_IDS.ADD_WEAPON_TO_TECHNIQUE, 'add weapon to technique', 'add weapon attack')) {
+  if (
+    hasPart(parts, PART_IDS.ADD_WEAPON_TO_TECHNIQUE, 'add weapon to technique', 'add weapon attack')
+  ) {
     return 'weapon';
   }
 
@@ -118,7 +122,12 @@ export function deriveEmpoweredAttackMode(input: {
   const parts = input.parts ?? [];
   if (
     hasPart(parts, PART_IDS.ADD_WEAPON_TO_POWER, 'add weapon to power') ||
-    hasPart(parts, PART_IDS.ADD_WEAPON_TO_TECHNIQUE, 'add weapon to technique', 'add weapon attack') ||
+    hasPart(
+      parts,
+      PART_IDS.ADD_WEAPON_TO_TECHNIQUE,
+      'add weapon to technique',
+      'add weapon attack',
+    ) ||
     input.weapon?.name ||
     input.weapon?.id
   ) {

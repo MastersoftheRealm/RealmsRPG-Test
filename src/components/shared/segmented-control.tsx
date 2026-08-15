@@ -54,9 +54,9 @@ export function SegmentedControl<T extends string>({
       className={cn(
         // Track + bordered idle segments so options read as distinct choices before selection.
         // Hug the pills unless equalWidth stretches the group (TASK-720 size pickers).
-        'flex-wrap items-center gap-1 p-1 rounded-lg bg-surface-alt border border-border-light',
+        'flex-wrap items-center gap-1 rounded-lg border border-border-light bg-surface-alt p-1',
         equalWidth ? 'flex w-full' : 'inline-flex w-fit max-w-full',
-        className
+        className,
       )}
     >
       {options.map((opt) => {
@@ -70,7 +70,7 @@ export function SegmentedControl<T extends string>({
         const idleCls =
           'bg-surface text-text-secondary border-border-light hover:text-text-primary hover:border-border';
         const disabledCls =
-          'bg-surface-alt text-text-muted dark:text-text-secondary border-border-light opacity-60 cursor-not-allowed hover:text-text-muted dark:hover:text-text-secondary hover:border-border-light';
+          'bg-surface-alt text-text-muted border-border-light opacity-60 cursor-not-allowed hover:text-text-muted dark:hover:text-text-secondary hover:border-border-light';
         const widthCls = equalWidth ? 'flex-1 min-w-0' : '';
 
         const inner = (
@@ -83,7 +83,7 @@ export function SegmentedControl<T extends string>({
         const classNameBtn = cn(
           baseBtn,
           widthCls,
-          disabled ? disabledCls : selected ? selectedCls : idleCls
+          disabled ? disabledCls : selected ? selectedCls : idleCls,
         );
 
         if (tabs) {

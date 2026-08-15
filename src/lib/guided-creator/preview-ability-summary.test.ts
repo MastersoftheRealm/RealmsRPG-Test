@@ -32,16 +32,19 @@ describe('preview-ability-summary (TASK-686, TASK-694)', () => {
 
   it('gates ability chips until selection or abilities step completion', () => {
     expect(
-      shouldShowPreviewAbilityChips({ abilitiesMode: null, abilitiesStepCompleted: false })
+      shouldShowPreviewAbilityChips({ abilitiesMode: null, abilitiesStepCompleted: false }),
     ).toBe(false);
     expect(
-      shouldShowPreviewAbilityChips({ abilitiesMode: 'recommended', abilitiesStepCompleted: false })
+      shouldShowPreviewAbilityChips({
+        abilitiesMode: 'recommended',
+        abilitiesStepCompleted: false,
+      }),
     ).toBe(true);
     expect(
-      shouldShowPreviewAbilityChips({ abilitiesMode: null, abilitiesStepCompleted: true })
+      shouldShowPreviewAbilityChips({ abilitiesMode: null, abilitiesStepCompleted: true }),
     ).toBe(true);
     expect(
-      shouldShowPreviewAbilityChips({ abilitiesMode: 'custom', abilitiesStepCompleted: false })
+      shouldShowPreviewAbilityChips({ abilitiesMode: 'custom', abilitiesStepCompleted: false }),
     ).toBe(true);
   });
 
@@ -55,7 +58,7 @@ describe('preview-ability-summary (TASK-686, TASK-694)', () => {
         intelligence: 0,
         charisma: 0,
       },
-      { draftPowAbil: 'acuity', draftMartAbil: 'strength' }
+      { draftPowAbil: 'acuity', draftMartAbil: 'strength' },
     );
 
     expect(chips.find((c) => c.ability === 'acuity')).toMatchObject({
@@ -88,7 +91,7 @@ describe('preview-ability-summary (TASK-686, TASK-694)', () => {
       {
         archetypePrimary: 'strength',
         archetypeType: 'martial',
-      }
+      },
     );
     expect(chips.find((c) => c.ability === 'strength')).toMatchObject({
       highlight: 'martial',

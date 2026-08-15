@@ -81,10 +81,7 @@ export function gridTemplateColumnsWithThumbnail(gridColumns: string): string {
 export function prependThumbnailHeaderColumn<
   T extends { key: string; label: string; sortable?: boolean },
 >(columns: T[]): T[] {
-  return [
-    { key: THUMBNAIL_HEADER_COLUMN_KEY, label: '', sortable: false } as T,
-    ...columns,
-  ];
+  return [{ key: THUMBNAIL_HEADER_COLUMN_KEY, label: '', sortable: false } as T, ...columns];
 }
 
 export interface ListHeaderRowChrome {
@@ -216,7 +213,7 @@ export interface MobileCollapsedGridColumnsOptions {
  * class — not inline `style.gridTemplateColumns` (inline beats the media query).
  */
 export function buildMobileCollapsedGridColumns(
-  options: MobileCollapsedGridColumnsOptions
+  options: MobileCollapsedGridColumnsOptions,
 ): string {
   const {
     resolvedGridColumns,

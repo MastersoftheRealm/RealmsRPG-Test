@@ -51,7 +51,7 @@ export function buildLevelUpGuideContent(
   character: Character,
   previousLevel: number,
   newLevel: number,
-  rules?: Partial<CoreRulesMap>
+  rules?: Partial<CoreRulesMap>,
 ): LevelUpGuideContent | null {
   if (!areTutorialsEnabled()) return null;
   if (newLevel <= previousLevel) return null;

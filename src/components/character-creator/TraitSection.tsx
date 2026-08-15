@@ -68,8 +68,10 @@ export function TraitSection({
   const styles = variantStyles[variant];
 
   return (
-    <div className={cn('border rounded-xl overflow-hidden mb-6', styles.border)}>
-      <div className={cn('px-4 py-3 border-b flex items-center gap-2', styles.header, styles.border)}>
+    <div className={cn('mb-6 overflow-hidden rounded-xl border', styles.border)}>
+      <div
+        className={cn('flex items-center gap-2 border-b px-4 py-3', styles.header, styles.border)}
+      >
         {icon}
         <div>
           <h3 className="font-bold text-text-primary">{title}</h3>
@@ -98,9 +100,9 @@ export function TraitSection({
                 )}
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h4 className="font-medium text-text-primary">{trait.name}</h4>
-                    <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
+                    <p className="mt-1 text-sm text-text-secondary">{trait.description}</p>
                     <ChoiceTraitOptionListPicker
                       parentTraitName={trait.name}
                       optionTraits={optionOptions}
@@ -131,10 +133,10 @@ export function TraitSection({
                 )}
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
+                  <div className="min-w-0 flex-1">
                     <h4 className="font-medium text-text-primary">{trait.name}</h4>
-                    <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
-                    <p className="text-xs text-text-muted mt-1">
+                    <p className="mt-1 text-sm text-text-secondary">{trait.description}</p>
+                    <p className="mt-1 text-xs text-text-muted">
                       Choose one variant for this species trait.
                     </p>
                     <ChoiceTraitOptionListPicker
@@ -171,7 +173,7 @@ export function TraitSection({
                 )}
                 <div className="flex-1">
                   <h4 className="font-medium text-text-primary">{trait.name}</h4>
-                  <p className="text-sm text-text-secondary mt-1">{trait.description}</p>
+                  <p className="mt-1 text-sm text-text-secondary">{trait.description}</p>
                 </div>
               </div>
             </div>

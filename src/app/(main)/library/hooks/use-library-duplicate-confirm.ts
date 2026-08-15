@@ -7,17 +7,14 @@ import { getErrorMessage } from '@/lib/api-client';
 export interface UseLibraryDuplicateConfirmOptions {
   duplicateTitle: string;
   isPending: boolean;
-  mutate: (
-    id: string,
-    handlers: { onSuccess: () => void; onError: (e: Error) => void }
-  ) => void;
+  mutate: (id: string, handlers: { onSuccess: () => void; onError: (e: Error) => void }) => void;
 }
 
 export function useLibraryDuplicateConfirm(options: UseLibraryDuplicateConfirmOptions) {
   const { duplicateTitle, isPending, mutate } = options;
   const { showToast } = useToast();
   const [duplicateConfirm, setDuplicateConfirm] = useState<{ id: string; name: string } | null>(
-    null
+    null,
   );
 
   const openDuplicateConfirm = useCallback((id: string, name: string) => {

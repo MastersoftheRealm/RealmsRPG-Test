@@ -22,10 +22,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
     return (
       <div className="space-y-1.5">
         {label && (
-          <label 
-            htmlFor={inputId}
-            className="block text-sm font-medium text-text-primary"
-          >
+          <label htmlFor={inputId} className="block text-sm font-medium text-text-primary">
             {label}
           </label>
         )}
@@ -33,26 +30,22 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           ref={ref}
           id={inputId}
           className={cn(
-            'w-full px-4 py-3 rounded-lg border bg-surface text-text-primary',
+            'w-full rounded-lg border bg-surface px-4 py-3 text-text-primary',
             'placeholder:text-text-muted dark:placeholder:text-text-secondary',
-            'focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:border-transparent',
-            'transition-colors duration-base',
+            'focus:border-transparent focus:ring-2 focus:ring-primary-outline-border focus:outline-none',
+            'duration-base transition-colors',
             error
               ? 'border-danger-border focus:ring-danger-border'
-              : 'border-border-light dark:border-border hover:border-border',
-            className
+              : 'border-border-light hover:border-border dark:border-border',
+            className,
           )}
           {...props}
         />
-        {error && (
-          <p className="text-sm text-danger-700 dark:text-danger-400">{error}</p>
-        )}
-        {helperText && !error && (
-          <p className="text-sm text-text-secondary">{helperText}</p>
-        )}
+        {error && <p className="text-sm text-danger-700 dark:text-danger-400">{error}</p>}
+        {helperText && !error && <p className="text-sm text-text-secondary">{helperText}</p>}
       </div>
     );
-  }
+  },
 );
 
 FormInput.displayName = 'FormInput';

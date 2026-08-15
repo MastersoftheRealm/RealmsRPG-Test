@@ -19,7 +19,7 @@ export function mergeLibraryBySource<T extends { id?: string | number | null }>(
   source: LibrarySourceScope,
   publicItems: T[],
   userItems: T[],
-  selectedIds: string[] = []
+  selectedIds: string[] = [],
 ): T[] {
   const includePublic = source !== 'my';
   const includeUser = source !== 'public';

@@ -15,9 +15,7 @@ const ABILITY_LABELS: Record<WeaponAttackAbility, string> = {
   acuity: 'Acuity',
 };
 
-export type WeaponPropertyRef =
-  | string
-  | { id?: number; name?: string; op_1_lvl?: number };
+export type WeaponPropertyRef = string | { id?: number; name?: string; op_1_lvl?: number };
 
 /** Ability score requirement derived from item property rows (e.g. Strength Requirement). */
 export interface AbilityRequirement {
@@ -30,7 +28,7 @@ export interface AbilityRequirement {
  * Handles older saves or items where requirement was only in the properties list.
  */
 export function deriveAbilityRequirementFromProperties(
-  properties: WeaponPropertyRef[] | undefined
+  properties: WeaponPropertyRef[] | undefined,
 ): AbilityRequirement | undefined {
   for (const p of properties ?? []) {
     const name = typeof p === 'string' ? p : String(p.name ?? '');
@@ -59,7 +57,7 @@ const ABILITY_KEY_MAP: Record<string, keyof Abilities> = {
 /** True when abilities meet (or exceed) the requirement, or when there is no requirement. */
 export function meetsAbilityRequirement(
   req: AbilityRequirement | null | undefined,
-  abilities: Abilities
+  abilities: Abilities,
 ): boolean {
   if (!req) return true;
   const key = ABILITY_KEY_MAP[req.name.toLowerCase()];
@@ -69,7 +67,9 @@ export function meetsAbilityRequirement(
 
 function normalizePropertyName(ref: WeaponPropertyRef): string {
   if (typeof ref === 'string') return ref.trim().toLowerCase();
-  return String(ref.name ?? '').trim().toLowerCase();
+  return String(ref.name ?? '')
+    .trim()
+    .toLowerCase();
 }
 
 function hasPropertyId(ref: WeaponPropertyRef, id: number): boolean {
@@ -83,13 +83,13 @@ function propertyList(properties: WeaponPropertyRef[] | undefined): WeaponProper
 
 export function hasFinesseProperty(properties: WeaponPropertyRef[] | undefined): boolean {
   return propertyList(properties).some(
-    (p) => hasPropertyId(p, PROPERTY_IDS.FINESSE) || normalizePropertyName(p) === 'finesse'
+    (p) => hasPropertyId(p, PROPERTY_IDS.FINESSE) || normalizePropertyName(p) === 'finesse',
   );
 }
 
 export function hasThrownProperty(properties: WeaponPropertyRef[] | undefined): boolean {
   return propertyList(properties).some(
-    (p) => hasPropertyId(p, PROPERTY_IDS.THROWN) || normalizePropertyName(p) === 'thrown'
+    (p) => hasPropertyId(p, PROPERTY_IDS.THROWN) || normalizePropertyName(p) === 'thrown',
   );
 }
 
@@ -98,7 +98,7 @@ export function hasTwoHandedProperty(properties: WeaponPropertyRef[] | undefined
     (p) =>
       hasPropertyId(p, PROPERTY_IDS.TWO_HANDED) ||
       normalizePropertyName(p) === 'two-handed' ||
-      normalizePropertyName(p) === 'two handed'
+      normalizePropertyName(p) === 'two handed',
   );
 }
 
@@ -108,14 +108,14 @@ export function hasTwoHandedProperty(properties: WeaponPropertyRef[] | undefined
  */
 export function getWeaponAttackAbility(
   properties: WeaponPropertyRef[] | undefined,
-  rangeOverride?: string | null
+  rangeOverride?: string | null,
 ): WeaponAttackAbility {
   if (hasFinesseProperty(properties)) return 'agility';
   if (hasThrownProperty(properties)) return 'strength';
 
   const rangeStr = resolveWeaponRangeDisplay(
     rangeOverride,
-    (properties ?? []) as ItemPropertyPayload[]
+    (properties ?? []) as ItemPropertyPayload[],
   );
   if (rangeStr.toLowerCase() !== 'melee') return 'acuity';
 
@@ -130,7 +130,7 @@ export function getWeaponAttackBonusFromProperties(
   properties: WeaponPropertyRef[] | undefined,
   abilities: Abilities | undefined,
   martialProficiency = 0,
-  rangeOverride?: string | null
+  rangeOverride?: string | null,
 ): { bonus: number; abilityName: string; ability: WeaponAttackAbility } {
   const ability = getWeaponAttackAbility(properties, rangeOverride);
   const label = ABILITY_LABELS[ability];
@@ -146,7 +146,7 @@ export function weaponMatchesArchetypeAbilities(
   properties: WeaponPropertyRef[] | undefined,
   martAbil: AbilityName | null | undefined,
   powAbil: AbilityName | null | undefined,
-  rangeOverride?: string | null
+  rangeOverride?: string | null,
 ): boolean {
   const attack = getWeaponAttackAbility(properties, rangeOverride);
   return attack === martAbil || attack === powAbil;

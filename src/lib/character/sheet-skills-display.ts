@@ -49,7 +49,7 @@ function parentKey(name: string | undefined): string {
  */
 export function mergeSheetSkillsWithCatalog(
   characterSkills: SheetDisplaySkill[],
-  codexSkills: CodexSkillRef[]
+  codexSkills: CodexSkillRef[],
 ): SheetDisplaySkill[] {
   const ownedBases: SheetDisplaySkill[] = [];
   const ownedSubs: SheetDisplaySkill[] = [];
@@ -87,7 +87,7 @@ export function mergeSheetSkillsWithCatalog(
   }
 
   const bases = [...ownedBases, ...catalogBases].sort((a, b) =>
-    String(a.name ?? '').localeCompare(String(b.name ?? ''))
+    String(a.name ?? '').localeCompare(String(b.name ?? '')),
   );
 
   const subsByParent = new Map<string, SheetDisplaySkill[]>();
@@ -130,7 +130,7 @@ export function mergeSheetSkillsWithCatalog(
  */
 export function filterSheetSkillsDisplay(
   skills: SheetDisplaySkill[],
-  options: { proficiencyFilter: SkillProficiencyFilter; showSubSkills: boolean }
+  options: { proficiencyFilter: SkillProficiencyFilter; showSubSkills: boolean },
 ): SheetDisplaySkill[] {
   return skills.filter((skill) => {
     const isSub = Boolean(skill.baseSkill);

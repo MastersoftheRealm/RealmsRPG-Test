@@ -127,7 +127,7 @@ export function isCodexSubSkill(skill: Pick<CodexSkill, 'base_skill_id'>): boole
 export function toastLevel1SkillWarnings(
   skillIds: string[],
   skills: CodexSkill[],
-  showToast: (message: string, type: 'warning') => void
+  showToast: (message: string, type: 'warning') => void,
 ): void {
   const byId = new Map(skills.map((s) => [String(s.id), s]));
   const issues = validateLevel1Skills(skillIds, {
@@ -144,7 +144,7 @@ export function toastLevel1SkillWarnings(
 
 export function armamentTypeOf(
   id: string,
-  typeById: Map<string, string>
+  typeById: Map<string, string>,
 ): 'weapon' | 'shield' | 'armor' | 'unknown' {
   const t = typeById.get(id);
   if (t === 'weapon' || t === 'shield' || t === 'armor') return t;
@@ -166,11 +166,11 @@ export function guidedAbilitiesFromPath(pathData: unknown): RecommendedAbilities
 
 /** Build the persisted recommended-abilities object (only non-zero entries); null when none set. */
 export function serializeRecommendedAbilities(
-  abilities: RecommendedAbilities
+  abilities: RecommendedAbilities,
 ): RecommendedAbilities | null {
-  const entries = ABILITY_OPTIONS.map((ability) => [ability, abilities[ability] ?? 0] as const).filter(
-    ([, value]) => value > 0
-  );
+  const entries = ABILITY_OPTIONS.map(
+    (ability) => [ability, abilities[ability] ?? 0] as const,
+  ).filter(([, value]) => value > 0);
   return entries.length > 0 ? (Object.fromEntries(entries) as RecommendedAbilities) : null;
 }
 
@@ -221,7 +221,7 @@ function resolveSelectedValues(values: string[], options: SelectionOption[]): st
     values.map((raw) => {
       const normalized = raw.toLowerCase();
       return byValue.get(normalized) || byLabel.get(normalized) || raw;
-    })
+    }),
   );
 }
 
@@ -261,7 +261,7 @@ export function newFeatGuidanceGroup(audience: PathGuidanceAudience): PathGuidan
 /** Load guidance groups for admin edit; seed from flat feats when groups lack feat lists. */
 export function guidanceGroupsFromPathData(
   pathData: unknown,
-  flatFeats: string[]
+  flatFeats: string[],
 ): PathGuidanceGroup[] {
   const parsed = parseArchetypePathData(pathData);
   const existing = parsed?.level1?.guidance_groups ?? [];
@@ -273,7 +273,7 @@ export function toLevelForm(
   level = 2,
   optionsByKey?: Partial<
     Record<keyof Omit<PathLevelForm, 'rowId' | 'level' | 'notes'>, SelectionOption[]>
-  >
+  >,
 ): PathLevelForm {
   const rawArmaments = Array.isArray(raw.armaments)
     ? (raw.armaments as string[]).map(String)
@@ -291,11 +291,11 @@ export function toLevelForm(
     powers: resolveSelectedValues(toSelectionArray(raw.powers), optionsByKey?.powers ?? []),
     innatePowers: resolveSelectedValues(
       toSelectionArray(raw.innatePowers ?? raw.innate_powers),
-      optionsByKey?.innatePowers ?? optionsByKey?.powers ?? []
+      optionsByKey?.innatePowers ?? optionsByKey?.powers ?? [],
     ),
     techniques: resolveSelectedValues(
       toSelectionArray(raw.techniques),
-      optionsByKey?.techniques ?? []
+      optionsByKey?.techniques ?? [],
     ),
     armaments: armamentEntries.map((e) => e.id),
     equipment: equipmentEntries.map((e) => e.id),
@@ -304,19 +304,19 @@ export function toLevelForm(
     recommendUnarmedProwess: raw.recommendUnarmedProwess === true,
     removeFeats: resolveSelectedValues(
       toSelectionArray(raw.removeFeats),
-      optionsByKey?.removeFeats ?? []
+      optionsByKey?.removeFeats ?? [],
     ),
     removePowers: resolveSelectedValues(
       toSelectionArray(raw.removePowers),
-      optionsByKey?.removePowers ?? []
+      optionsByKey?.removePowers ?? [],
     ),
     removeTechniques: resolveSelectedValues(
       toSelectionArray(raw.removeTechniques),
-      optionsByKey?.removeTechniques ?? []
+      optionsByKey?.removeTechniques ?? [],
     ),
     removeArmaments: resolveSelectedValues(
       toSelectionArray(raw.removeArmaments),
-      optionsByKey?.removeArmaments ?? []
+      optionsByKey?.removeArmaments ?? [],
     ),
     notes: typeof raw.notes === 'string' ? raw.notes : '',
   };
@@ -324,7 +324,7 @@ export function toLevelForm(
 
 export function buildLevelPayload(
   level: PathLevelForm,
-  includeLevel: boolean
+  includeLevel: boolean,
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = {};
   if (includeLevel) payload.level = level.level;

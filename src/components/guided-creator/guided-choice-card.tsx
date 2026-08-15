@@ -128,9 +128,7 @@ type GuidedChoiceCardSelectableProps = GuidedChoiceCardBase & {
   selectAriaLabel?: string;
 };
 
-export type GuidedChoiceCardProps =
-  | GuidedChoiceCardReadOnlyProps
-  | GuidedChoiceCardSelectableProps;
+export type GuidedChoiceCardProps = GuidedChoiceCardReadOnlyProps | GuidedChoiceCardSelectableProps;
 
 type BodyMode =
   | { kind: 'none' }
@@ -140,7 +138,7 @@ type BodyMode =
 function resolveBody(
   description: string | null | undefined,
   tagline: string | undefined,
-  fullDescription: ReactNode | undefined
+  fullDescription: ReactNode | undefined,
 ): BodyMode {
   const desc = description?.trim() ?? '';
   const tag = tagline?.trim() ?? '';
@@ -194,7 +192,7 @@ export function isGuidedChoiceCardSelectKey(e: {
 export function guidedChoiceCardSelectAriaLabel(
   title: string,
   selected: boolean,
-  selectAriaLabel?: string
+  selectAriaLabel?: string,
 ): string {
   const base = selectAriaLabel?.trim() || `Choose ${title}`;
   return selected ? `${base}, selected` : base;
@@ -274,7 +272,8 @@ export function GuidedChoiceCard({
   const hasExpandedExtra = Boolean(expandedExtra);
 
   const layout =
-    imageLayout ?? (imageKind ? defaultImageLayoutForKind(imageKind) : imageUrl ? 'thumb' : 'thumb');
+    imageLayout ??
+    (imageKind ? defaultImageLayoutForKind(imageKind) : imageUrl ? 'thumb' : 'thumb');
   const isFeatured = layout === 'hero';
 
   const theme = usePlaceholderTheme();
@@ -287,19 +286,14 @@ export function GuidedChoiceCard({
 
   const body = useMemo(
     () => resolveBody(description, tagline, fullDescription),
-    [description, tagline, fullDescription]
+    [description, tagline, fullDescription],
   );
 
-  const clampKey =
-    body.kind === 'plain'
-      ? body.text
-      : body.kind === 'rich'
-        ? body.collapsed
-        : '';
+  const clampKey = body.kind === 'plain' ? body.text : body.kind === 'rich' ? body.collapsed : '';
 
   const { ref: bodyRef, overflows: textOverflows } = useClampedOverflow(
     body.kind !== 'none' && !expanded,
-    clampKey
+    clampKey,
   );
 
   /** Card has (or had) an inline expand control — distinct from More details. */
@@ -359,14 +353,11 @@ export function GuidedChoiceCard({
     }
   };
 
-  const resolvedDetailsLabel =
-    detailsLabel ?? GUIDED_CREATOR_COPY.choiceCard.moreDetails;
+  const resolvedDetailsLabel = detailsLabel ?? GUIDED_CREATOR_COPY.choiceCard.moreDetails;
   /** Visible text is the control name; aria-label adds which entity (screen readers). */
   const detailsAriaLabel = `${resolvedDetailsLabel} for ${title}`;
-  const resolvedExpandLabel =
-    expandLabel ?? GUIDED_CREATOR_COPY.choiceCard.seeMore;
-  const resolvedCollapseLabel =
-    collapseLabel ?? GUIDED_CREATOR_COPY.choiceCard.seeLess;
+  const resolvedExpandLabel = expandLabel ?? GUIDED_CREATOR_COPY.choiceCard.seeMore;
+  const resolvedCollapseLabel = collapseLabel ?? GUIDED_CREATOR_COPY.choiceCard.seeLess;
 
   const showMedia = Boolean(resolvedImage || icon);
   const mediaClass = isFeatured && resolvedImage ? s.mediaFeatured : s.media;
@@ -389,14 +380,14 @@ export function GuidedChoiceCard({
         readOnly
           ? 'border-border-light dark:border-border'
           : cn(
-              'cursor-pointer transition-shadow duration-base',
-              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
+              'duration-base cursor-pointer transition-shadow',
+              'focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none',
               selected
-                ? 'border-primary ring-2 ring-primary shadow-raised'
-                : 'border-border-light dark:border-border hover:border-border hover:shadow-card'
+                ? 'border-primary shadow-raised ring-2 ring-primary'
+                : 'border-border-light hover:border-border hover:shadow-card dark:border-border',
             ),
         fullWidth && 'w-full',
-        className
+        className,
       )}
     >
       <div className={cn(s.selectButton, 'h-full')}>
@@ -443,7 +434,7 @@ export function GuidedChoiceCard({
                       s.body,
                       keepBodyFloor && preset.bodyMinHeight,
                       !expanded && preset.bodyClamp,
-                      expanded && 'whitespace-pre-wrap'
+                      expanded && 'whitespace-pre-wrap',
                     )}
                   >
                     {body.kind === 'plain' && body.text}
@@ -451,9 +442,7 @@ export function GuidedChoiceCard({
                       (expanded ? body.expanded : body.collapsed || body.expanded)}
                   </p>
                 ) : null}
-                {expanded && expandedExtra ? (
-                  <div className="mt-2">{expandedExtra}</div>
-                ) : null}
+                {expanded && expandedExtra ? <div className="mt-2">{expandedExtra}</div> : null}
                 {beforeDisclosure ? (
                   <div
                     className="mt-2"
@@ -508,10 +497,7 @@ export function GuidedChoiceCard({
             ) : null}
           </div>
           {readOnly ? null : (
-            <span
-              className={cn(s.selectedCheck, !selected && 'invisible')}
-              aria-hidden={!selected}
-            >
+            <span className={cn(s.selectedCheck, !selected && 'invisible')} aria-hidden={!selected}>
               <Check className="h-4 w-4" aria-hidden="true" />
             </span>
           )}

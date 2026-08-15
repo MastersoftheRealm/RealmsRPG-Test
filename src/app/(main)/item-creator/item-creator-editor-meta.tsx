@@ -38,16 +38,16 @@ export function ItemCreatorEditorMeta({
   onArmamentTypeChange,
 }: ItemCreatorEditorMetaProps) {
   return (
-    <Card className="shadow-md p-6">
+    <Card className="p-6 shadow-md">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Item Name *</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Item Name *</label>
           <input
             type="text"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="Enter item name..."
-            className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500"
+            className="w-full rounded-lg border border-border-light px-4 py-2 focus:border-warning-500 focus:ring-2 focus:ring-warning-500"
           />
         </div>
 
@@ -64,7 +64,7 @@ export function ItemCreatorEditorMeta({
         )}
 
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-2">Item Type</label>
+          <label className="mb-2 block text-sm font-medium text-text-secondary">Item Type</label>
           <div className="grid grid-cols-4 gap-2">
             {ARMAMENT_TYPES.map((type) => (
               <button
@@ -72,13 +72,13 @@ export function ItemCreatorEditorMeta({
                 type="button"
                 onClick={() => onArmamentTypeChange(type.value)}
                 className={cn(
-                  'py-2 px-3 rounded-lg font-medium text-sm transition-colors flex items-center justify-center gap-1 min-h-[44px]',
+                  'flex min-h-[44px] items-center justify-center gap-1 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
                   armamentType === type.value
                     ? 'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600'
-                    : 'bg-surface-alt dark:bg-surface hover:bg-surface text-text-primary',
+                    : 'bg-surface-alt text-text-primary hover:bg-surface dark:bg-surface',
                 )}
               >
-                <type.icon className="w-4 h-4" />
+                <type.icon className="h-4 w-4" />
                 {type.label}
               </button>
             ))}
@@ -86,13 +86,13 @@ export function ItemCreatorEditorMeta({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
           <textarea
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
             placeholder="Describe your item..."
             rows={2}
-            className="w-full px-4 py-2 border border-border-light rounded-lg focus:ring-2 focus:ring-warning-500 focus:border-warning-500"
+            className="w-full rounded-lg border border-border-light px-4 py-2 focus:border-warning-500 focus:ring-2 focus:ring-warning-500"
           />
         </div>
       </div>

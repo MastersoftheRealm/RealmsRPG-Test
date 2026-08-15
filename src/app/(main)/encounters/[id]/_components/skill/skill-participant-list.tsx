@@ -2,19 +2,13 @@
  * Skill encounter participant list (TASK-608)
  */
 
-"use client";
+'use client';
 
-import type { DragEvent } from "react";
-import { Users } from "lucide-react";
-import { Card, CardContent, EmptyState } from "@/components/ui";
-import type {
-  SkillParticipant,
-  SkillParticipantType,
-} from "@/types/encounter";
-import {
-  ParticipantCard,
-  type CodexSkillOption,
-} from "./skill-participant-card";
+import type { DragEvent } from 'react';
+import { Users } from 'lucide-react';
+import { Card, CardContent, EmptyState } from '@/components/ui';
+import type { SkillParticipant, SkillParticipantType } from '@/types/encounter';
+import { ParticipantCard, type CodexSkillOption } from './skill-participant-card';
 
 export interface SkillParticipantListProps {
   sortedParticipants: SkillParticipant[];
@@ -67,7 +61,7 @@ export function SkillParticipantList({
             <EmptyState
               title="No participants yet"
               description="Add characters using the panel on the right."
-              icon={<Users className="w-6 h-6" />}
+              icon={<Users className="h-6 w-6" />}
               size="sm"
               className="py-4"
             />

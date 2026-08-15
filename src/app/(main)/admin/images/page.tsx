@@ -8,12 +8,7 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  ChipSelect,
-  CodexBrowseListShell,
-  GridListRow,
-  ErrorDisplay,
-} from '@/components/shared';
+import { ChipSelect, CodexBrowseListShell, GridListRow, ErrorDisplay } from '@/components/shared';
 import { PageContainer, PageHeader } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import {
@@ -62,7 +57,12 @@ export default function AdminImagesPage() {
   } | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const { data: images = [], isLoading, error, refetch } = useQuery({
+  const {
+    data: images = [],
+    isLoading,
+    error,
+    refetch,
+  } = useQuery({
     queryKey: [...QUERY_KEY, categoryFilters, search],
     queryFn: () =>
       listRealmsImages({
@@ -82,7 +82,7 @@ export default function AdminImagesPage() {
         cmp = formatRealmsImageCategoryLabels(a.categories).localeCompare(
           formatRealmsImageCategoryLabels(b.categories),
           undefined,
-          { numeric: true }
+          { numeric: true },
         );
       } else if (col === 'updated') {
         cmp = a.updatedAt.localeCompare(b.updatedAt);
@@ -144,7 +144,12 @@ export default function AdminImagesPage() {
           title="Realms Image Library"
           description="Manage shared card art for species, creatures, armaments, powers, and techniques. One image can be tagged with multiple categories and referenced by many entities."
         />
-        <ErrorDisplay message="Failed to load images" onRetry={() => { void refetch(); }} />
+        <ErrorDisplay
+          message="Failed to load images"
+          onRetry={() => {
+            void refetch();
+          }}
+        />
       </PageContainer>
     );
   }

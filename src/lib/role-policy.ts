@@ -78,7 +78,7 @@ function rowToPolicy(row: RolePolicyRow): RolePolicy {
 
 export async function getRolePolicyForRole(
   role: UserRole | string | null | undefined,
-  supabaseClient?: SupabaseClientLike
+  supabaseClient?: SupabaseClientLike,
 ): Promise<RolePolicy> {
   const safeRole = isUserRole(role) ? role : DEFAULT_ROLE;
   const fallback = getDefaultRolePolicy(safeRole);
@@ -86,7 +86,7 @@ export async function getRolePolicyForRole(
   const { data } = await supabase
     .from('role_policies')
     .select(
-      'role, max_campaigns, max_players_per_campaign, max_characters, max_custom_powers, max_custom_techniques, max_custom_armaments, max_custom_creatures, permissions'
+      'role, max_campaigns, max_players_per_campaign, max_characters, max_custom_powers, max_custom_techniques, max_custom_armaments, max_custom_creatures, permissions',
     )
     .eq('role', safeRole)
     .maybeSingle();
@@ -97,7 +97,7 @@ export async function getRolePolicyForRole(
 
 export async function getRolePolicyForUser(
   uid: string,
-  supabaseClient?: SupabaseClientLike
+  supabaseClient?: SupabaseClientLike,
 ): Promise<RolePolicy> {
   const supabase = supabaseClient ?? (await createClient());
   const { data: profile } = await supabase

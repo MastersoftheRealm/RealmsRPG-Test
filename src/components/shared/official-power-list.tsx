@@ -70,7 +70,7 @@ export function OfficialPowerList({
   errorMessage = 'Failed to load powers',
   sectionTitle,
   searchPlaceholder = 'Search powers...',
-  emptyIcon = <Wand2 className="w-8 h-8" />,
+  emptyIcon = <Wand2 className="h-8 w-8" />,
   emptyTitle,
   emptyMessage,
   searchEmptyMessage = 'No powers match your search.',
@@ -82,110 +82,107 @@ export function OfficialPowerList({
 }: OfficialPowerListProps) {
   const { rules } = useGameRules();
   const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS
+    EMPTY_POWER_TECHNIQUE_FILTERS,
   );
-  const [characterContext, setCharacterContext] =
-    useState<PowerTechniqueCharacterContext | null>(null);
+  const [characterContext, setCharacterContext] = useState<PowerTechniqueCharacterContext | null>(
+    null,
+  );
   const [characterFilterId, setCharacterFilterId] = useState('');
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
-  const {
-    selectedPathIds,
-    setSelectedPathIds,
-    pathIndex,
-    pathRecommendedIds,
-    pathFilterActive,
-  } = usePathListFilter({ entities: items, kind: POWER_LIST_PATH_KINDS });
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({ entities: items, kind: POWER_LIST_PATH_KINDS });
 
   const categoryOptions = useMemo(
     () => collectCategoryOptionsFromItems(items, partsDb, { includeDamageCategory: true }),
-    [items, partsDb]
+    [items, partsDb],
   );
 
-  const innateThresholdOptions = useMemo(
-    () => listInnateThresholdFilterOptions(rules),
-    [rules]
-  );
+  const innateThresholdOptions = useMemo(() => listInnateThresholdFilterOptions(rules), [rules]);
 
   const filterRows = useCallback(
     (
       rows: OfficialPowerRow[],
       search: string,
-      sortItems: (items: OfficialPowerRow[]) => OfficialPowerRow[]
-    ) =>       filterOfficialPowerRows(rows, search, sortItems, advancedFilters, characterContext, pathRecommendedIds),
-    [advancedFilters, characterContext, pathRecommendedIds]
+      sortItems: (items: OfficialPowerRow[]) => OfficialPowerRow[],
+    ) =>
+      filterOfficialPowerRows(
+        rows,
+        search,
+        sortItems,
+        advancedFilters,
+        characterContext,
+        pathRecommendedIds,
+      ),
+    [advancedFilters, characterContext, pathRecommendedIds],
   );
 
   return (
     <>
       <OfficialEntityList<OfficialPowerRow, LibraryPower>
-      items={items}
-      isLoading={isLoading}
-      error={error}
-      onRetry={onRetry}
-      buildRows={(raw) => buildOfficialPowerRows(raw, partsDb)}
-      filterRows={filterRows}
-      gridColumns={OFFICIAL_POWER_GRID}
-      headerColumns={OFFICIAL_POWER_HEADER_COLUMNS}
-      filters={
-        <PowerTechniqueFilters
-          kind="power"
-          value={advancedFilters}
-          onChange={setAdvancedFilters}
-          categoryOptions={categoryOptions}
-          innateThresholdOptions={innateThresholdOptions}
-          onCharacterContextChange={setCharacterContext}
-          onCharacterIdChange={setCharacterFilterId}
-          pathFilter={{
-            options: pathIndex.options,
-            selectedPathIds,
-            onChange: setSelectedPathIds,
-          }}
-        />
-      }
-      filterActiveCount={
-        countActivePowerTechniqueFilters(
-          advancedFilters,
-          'power',
-          Boolean(characterContext)
-        ) + (characterFilterId ? 1 : 0) + (pathFilterActive ? 1 : 0)
-      }
-      getNameChipLabels={(p) =>
-        pathFilterActive
-          ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(p), selectedPathIds)
-          : undefined
-      }
-      getColumns={(p) => officialPowerRowColumns(p)}
-      getDetailSections={(p) => {
-        const section = partsProficienciesSection(p.parts, 'power');
-        return section ? [section] : undefined;
-      }}
-      getTotalCost={(p) => p.tp}
-      costLabel="TP"
-      getThumbnail={(p) => resolveListRowThumbnail('power', p.raw, p.name)}
-      errorMessage={errorMessage}
-      sectionTitle={sectionTitle}
-      searchPlaceholder={searchPlaceholder}
-      emptyIcon={emptyIcon}
-      emptyTitle={emptyTitle}
-      emptyMessage={emptyMessage}
-      searchEmptyMessage={
-        pathFilterActive ? pathFilterEmptyTitle('powers') : searchEmptyMessage
-      }
-      variant={variant}
-      readOnly={readOnly}
-      onAddRequest={onAddRequest}
-      addToCharacter={
-        variant === 'library' && addToCharacter.active
-          ? {
-              kind: 'power',
-              onRequest: (row) => addToCharacter.openAddConfirm(row.name, row.raw),
-              isOnCharacter: (row) => addToCharacter.isOnCharacter(row.raw),
-            }
-          : undefined
-      }
-      onEdit={onEdit}
-      onDelete={onDelete}
-    />
+        items={items}
+        isLoading={isLoading}
+        error={error}
+        onRetry={onRetry}
+        buildRows={(raw) => buildOfficialPowerRows(raw, partsDb)}
+        filterRows={filterRows}
+        gridColumns={OFFICIAL_POWER_GRID}
+        headerColumns={OFFICIAL_POWER_HEADER_COLUMNS}
+        filters={
+          <PowerTechniqueFilters
+            kind="power"
+            value={advancedFilters}
+            onChange={setAdvancedFilters}
+            categoryOptions={categoryOptions}
+            innateThresholdOptions={innateThresholdOptions}
+            onCharacterContextChange={setCharacterContext}
+            onCharacterIdChange={setCharacterFilterId}
+            pathFilter={{
+              options: pathIndex.options,
+              selectedPathIds,
+              onChange: setSelectedPathIds,
+            }}
+          />
+        }
+        filterActiveCount={
+          countActivePowerTechniqueFilters(advancedFilters, 'power', Boolean(characterContext)) +
+          (characterFilterId ? 1 : 0) +
+          (pathFilterActive ? 1 : 0)
+        }
+        getNameChipLabels={(p) =>
+          pathFilterActive
+            ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(p), selectedPathIds)
+            : undefined
+        }
+        getColumns={(p) => officialPowerRowColumns(p)}
+        getDetailSections={(p) => {
+          const section = partsProficienciesSection(p.parts, 'power');
+          return section ? [section] : undefined;
+        }}
+        getTotalCost={(p) => p.tp}
+        costLabel="TP"
+        getThumbnail={(p) => resolveListRowThumbnail('power', p.raw, p.name)}
+        errorMessage={errorMessage}
+        sectionTitle={sectionTitle}
+        searchPlaceholder={searchPlaceholder}
+        emptyIcon={emptyIcon}
+        emptyTitle={emptyTitle}
+        emptyMessage={emptyMessage}
+        searchEmptyMessage={pathFilterActive ? pathFilterEmptyTitle('powers') : searchEmptyMessage}
+        variant={variant}
+        readOnly={readOnly}
+        onAddRequest={onAddRequest}
+        addToCharacter={
+          variant === 'library' && addToCharacter.active
+            ? {
+                kind: 'power',
+                onRequest: (row) => addToCharacter.openAddConfirm(row.name, row.raw),
+                isOnCharacter: (row) => addToCharacter.isOnCharacter(row.raw),
+              }
+            : undefined
+        }
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
       {addToCharacter.confirmModal}
     </>
   );

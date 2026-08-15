@@ -41,10 +41,10 @@ export function Spinner({
       role="status"
       aria-label={label}
       className={cn(
-        'rounded-full animate-spin',
+        'animate-spin rounded-full',
         sizeClasses[size],
         variantClasses[variant],
-        className
+        className,
       )}
       {...props}
     >
@@ -73,17 +73,11 @@ const paddingClasses = {
   lg: 'py-24',
 };
 
-export function LoadingState({
-  message,
-  size = 'lg',
-  padding = 'md',
-}: LoadingStateProps) {
+export function LoadingState({ message, size = 'lg', padding = 'md' }: LoadingStateProps) {
   return (
     <div className={cn('flex flex-col items-center justify-center', paddingClasses[padding])}>
       <Spinner size={size} />
-      {message && (
-        <p className="mt-4 text-text-muted">{message}</p>
-      )}
+      {message && <p className="mt-4 text-text-muted">{message}</p>}
     </div>
   );
 }

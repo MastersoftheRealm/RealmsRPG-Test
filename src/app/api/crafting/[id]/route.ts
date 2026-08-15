@@ -8,12 +8,21 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { removeUndefined } from '@/lib/utils/object';
-import { validateJson, verifyMutationRequest, craftingSessionUpdateSchema } from '@/lib/api-validation';
+import {
+  validateJson,
+  verifyMutationRequest,
+  craftingSessionUpdateSchema,
+} from '@/lib/api-validation';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import type { CraftingSession, CraftingSessionData } from '@/types/crafting';
 
-function toSession(row: { id: string; data: unknown; created_at: string | null; updated_at: string | null }): CraftingSession {
+function toSession(row: {
+  id: string;
+  data: unknown;
+  created_at: string | null;
+  updated_at: string | null;
+}): CraftingSession {
   const d = (row.data as Record<string, unknown>) ?? {};
   return {
     id: row.id,
@@ -23,10 +32,7 @@ function toSession(row: { id: string; data: unknown; created_at: string | null; 
   };
 }
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -43,7 +49,12 @@ export async function GET(
       .maybeSingle();
 
     if (dbError) {
-      return apiErrorResponse('Failed to load crafting session', 500, 'GET /api/crafting/[id]', dbError);
+      return apiErrorResponse(
+        'Failed to load crafting session',
+        500,
+        'GET /api/crafting/[id]',
+        dbError,
+      );
     }
 
     if (!row) {
@@ -58,10 +69,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -69,10 +77,13 @@ export async function PATCH(
     }
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('craft-patch', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('craft-patch', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id } = await params;
@@ -85,7 +96,12 @@ export async function PATCH(
       .maybeSingle();
 
     if (fetchError) {
-      return apiErrorResponse('Failed to update crafting session', 500, 'PATCH /api/crafting/[id] (fetch)', fetchError);
+      return apiErrorResponse(
+        'Failed to update crafting session',
+        500,
+        'PATCH /api/crafting/[id] (fetch)',
+        fetchError,
+      );
     }
 
     if (!row) {
@@ -120,7 +136,12 @@ export async function PATCH(
       .eq('id', id)
       .eq('user_id', user.uid);
     if (updateErr) {
-      return apiErrorResponse('Failed to update crafting session', 500, 'PATCH /api/crafting/[id] (update)', updateErr);
+      return apiErrorResponse(
+        'Failed to update crafting session',
+        500,
+        'PATCH /api/crafting/[id] (update)',
+        updateErr,
+      );
     }
 
     return new NextResponse(null, { status: 204 });
@@ -132,7 +153,7 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -144,10 +165,13 @@ export async function DELETE(
     if (denied) return denied;
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('craft-del', { userId: user.uid, ip: resolveClientIp(_request.headers) })
+      buildRateLimitKey('craft-del', { userId: user.uid, ip: resolveClientIp(_request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id } = await params;
@@ -160,7 +184,12 @@ export async function DELETE(
       .maybeSingle();
 
     if (fetchError) {
-      return apiErrorResponse('Failed to delete crafting session', 500, 'DELETE /api/crafting/[id] (fetch)', fetchError);
+      return apiErrorResponse(
+        'Failed to delete crafting session',
+        500,
+        'DELETE /api/crafting/[id] (fetch)',
+        fetchError,
+      );
     }
 
     if (!row) {
@@ -173,7 +202,12 @@ export async function DELETE(
       .eq('id', id)
       .eq('user_id', user.uid);
     if (delErr) {
-      return apiErrorResponse('Failed to delete crafting session', 500, 'DELETE /api/crafting/[id] (delete)', delErr);
+      return apiErrorResponse(
+        'Failed to delete crafting session',
+        500,
+        'DELETE /api/crafting/[id] (delete)',
+        delErr,
+      );
     }
 
     return new NextResponse(null, { status: 204 });

@@ -54,7 +54,7 @@ describe('parseCreatureLevelSortValue', () => {
   it('orders quarter-step numeric levels for sort', () => {
     const levels = [1, 0.5, 0.25, 0.75, 2.25];
     const sorted = [...levels].sort(
-      (a, b) => parseCreatureLevelSortValue(a)! - parseCreatureLevelSortValue(b)!
+      (a, b) => parseCreatureLevelSortValue(a)! - parseCreatureLevelSortValue(b)!,
     );
     expect(sorted).toEqual([0.25, 0.5, 0.75, 1, 2.25]);
   });

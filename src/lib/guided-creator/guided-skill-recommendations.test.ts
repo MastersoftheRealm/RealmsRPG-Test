@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { buildGuidedSkillSuggestions, guidedSuggestionsToBadgeMap } from './guided-skill-recommendations';
+import {
+  buildGuidedSkillSuggestions,
+  guidedSuggestionsToBadgeMap,
+} from './guided-skill-recommendations';
 import type { Skill } from '@/hooks';
 import type { Abilities } from '@/types';
 
@@ -21,7 +24,11 @@ describe('buildGuidedSkillSuggestions', () => {
     skill({ id: '9', name: 'Athletics', ability: 'Strength' }),
     skill({ id: '24', name: 'Intimidate', ability: 'Charisma, Strength, Vitality' }),
     skill({ id: '99', name: 'Path Skill', ability: 'Strength' }),
-    skill({ id: '13', name: 'Craft', ability: 'Acuity, Agility, Charisma, Intelligence, Strength, Vitality' }),
+    skill({
+      id: '13',
+      name: 'Craft',
+      ability: 'Acuity, Agility, Charisma, Intelligence, Strength, Vitality',
+    }),
     skill({ id: '30', name: 'Endurance', ability: 'Vitality' }),
     skill({ id: '31', name: 'Fortitude', ability: 'Vitality' }),
     skill({ id: '40', name: 'Acrobatics', ability: 'Agility' }),

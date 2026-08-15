@@ -40,7 +40,7 @@ const copy = GUIDED_CREATOR_COPY.steps.reveal.summary;
 function SummarySectionHeader({ title }: { title: string }) {
   return (
     <div className="mb-3">
-      <p className="font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">
+      <p className="font-nunito text-xs font-medium tracking-wide text-text-secondary uppercase">
         {title}
       </p>
     </div>
@@ -66,7 +66,7 @@ export function GuidedRevealSummary() {
 
   const speciesContext = useMemo(
     () => resolveGuidedSpeciesContext(draft, allSpecies),
-    [draft, allSpecies]
+    [draft, allSpecies],
   );
   const species = speciesContext.species;
 
@@ -80,7 +80,7 @@ export function GuidedRevealSummary() {
       : applySpeciesTraitChoiceSelections(
           species?.species_traits,
           draft.selectedSpeciesTraitChoices,
-          allTraits as TraitWithChoiceOptions[]
+          allTraits as TraitWithChoiceOptions[],
         );
     const ids = [
       ...resolvedSpeciesTraits,
@@ -143,7 +143,7 @@ export function GuidedRevealSummary() {
   const equipmentLookup = useMemo(
     () =>
       buildEquipmentLookup(mergeLibraryBySource('all', officialItems, userItems), codexEquipment),
-    [officialItems, userItems, codexEquipment]
+    [officialItems, userItems, codexEquipment],
   );
 
   const loadoutItems = useMemo((): SummaryChipItem[] => {
@@ -169,11 +169,11 @@ export function GuidedRevealSummary() {
 
   const powerLibrary = useMemo(
     () => mergeLibraryBySource('all', officialPowers, userPowers),
-    [officialPowers, userPowers]
+    [officialPowers, userPowers],
   );
   const techniqueLibrary = useMemo(
     () => mergeLibraryBySource('all', officialTechniques, userTechniques),
-    [officialTechniques, userTechniques]
+    [officialTechniques, userTechniques],
   );
   const powerById = useMemo(() => indexByNormalizedIds(powerLibrary), [powerLibrary]);
   const techniqueById = useMemo(() => indexByNormalizedIds(techniqueLibrary), [techniqueLibrary]);
@@ -222,7 +222,7 @@ export function GuidedRevealSummary() {
   const gridSecondaryAbility = resolveDistinctSecondaryAbility(
     archetype?.secondary_ability,
     gridPowerAbility,
-    gridMartialAbility
+    gridMartialAbility,
   );
 
   const hasPowersOrTechniques = powerChips.length > 0 || techniqueChips.length > 0;

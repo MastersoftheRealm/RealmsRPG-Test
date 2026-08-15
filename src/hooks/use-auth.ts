@@ -11,19 +11,39 @@ import { useQueryClient } from '@tanstack/react-query';
 import { createClient } from '@/lib/supabase/client';
 import { useAuthStore } from '@/stores/auth-store';
 import type { AuthUser } from '@/types/auth';
-import { migrateGuestEncountersOnSignIn, hasGuestEncountersToMigrate } from '@/lib/guest-encounter-migration';
+import {
+  migrateGuestEncountersOnSignIn,
+  hasGuestEncountersToMigrate,
+} from '@/lib/guest-encounter-migration';
 import { logClientError } from '@/lib/api-client';
 import { useIsClient } from './use-is-client';
 
-function toAuthUser(user: { id: string; email?: string; user_metadata?: Record<string, unknown>; app_metadata?: { provider?: string }; identities?: Array<{ provider?: string }> } | null): AuthUser | null {
+function toAuthUser(
+  user: {
+    id: string;
+    email?: string;
+    user_metadata?: Record<string, unknown>;
+    app_metadata?: { provider?: string };
+    identities?: Array<{ provider?: string }>;
+  } | null,
+): AuthUser | null {
   if (!user) return null;
-  const provider = user.app_metadata?.provider ?? user.identities?.[0]?.provider ?? (user.email ? 'email' : undefined);
+  const provider =
+    user.app_metadata?.provider ??
+    user.identities?.[0]?.provider ??
+    (user.email ? 'email' : undefined);
   return {
     id: user.id,
     uid: user.id,
     email: user.email ?? null,
-    displayName: (user.user_metadata?.full_name ?? user.user_metadata?.name ?? user.user_metadata?.display_name) as string | null ?? null,
-    photoURL: (user.user_metadata?.avatar_url ?? user.user_metadata?.picture ?? user.user_metadata?.photo_url) as string | null ?? null,
+    displayName:
+      ((user.user_metadata?.full_name ??
+        user.user_metadata?.name ??
+        user.user_metadata?.display_name) as string | null) ?? null,
+    photoURL:
+      ((user.user_metadata?.avatar_url ??
+        user.user_metadata?.picture ??
+        user.user_metadata?.photo_url) as string | null) ?? null,
     emailVerified: !!user.user_metadata?.email_verified,
     provider,
   };
@@ -50,7 +70,10 @@ export function useAuth() {
     if (!isClient) return;
     mountedRef.current = true;
 
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY) {
+    if (
+      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
+      !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY
+    ) {
       if (mountedRef.current) {
         setUser(null);
         setInitialized(true);
@@ -62,7 +85,9 @@ export function useAuth() {
     const supabase = createClient();
     let listenerFired = false;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       listenerFired = true;
       if (mountedRef.current) {
         setUser(toAuthUser(session?.user ?? null));
@@ -79,17 +104,20 @@ export function useAuth() {
     });
 
     // Ignore getUser if onAuthStateChange already delivered the live session.
-    supabase.auth.getUser().then(({ data: { user: u } }) => {
-      if (mountedRef.current && !listenerFired) {
-        setUser(toAuthUser(u));
-        setInitialized(true);
-      }
-    }).catch(() => {
-      if (mountedRef.current && !listenerFired) {
-        setError('Failed to initialize auth');
-        setInitialized(true);
-      }
-    });
+    supabase.auth
+      .getUser()
+      .then(({ data: { user: u } }) => {
+        if (mountedRef.current && !listenerFired) {
+          setUser(toAuthUser(u));
+          setInitialized(true);
+        }
+      })
+      .catch(() => {
+        if (mountedRef.current && !listenerFired) {
+          setError('Failed to initialize auth');
+          setInitialized(true);
+        }
+      });
 
     return () => {
       mountedRef.current = false;
@@ -116,7 +144,7 @@ export function useAuth() {
         throw err;
       }
     },
-    [setLoading, setError, setUser, clearError]
+    [setLoading, setError, setUser, clearError],
   );
 
   const signUp = useCallback(
@@ -139,7 +167,7 @@ export function useAuth() {
         throw err;
       }
     },
-    [setLoading, setError, setUser, clearError]
+    [setLoading, setError, setUser, clearError],
   );
 
   const signOut = useCallback(async () => {
@@ -174,7 +202,7 @@ export function useAuth() {
         setLoading(false);
       }
     },
-    [setLoading, setError, clearError]
+    [setLoading, setError, clearError],
   );
 
   const updateUserProfile = useCallback(
@@ -192,7 +220,9 @@ export function useAuth() {
           },
         });
         if (err) throw err;
-        const { data: { user: u } } = await supabase.auth.getUser();
+        const {
+          data: { user: u },
+        } = await supabase.auth.getUser();
         setUser(toAuthUser(u));
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to update profile';
@@ -202,7 +232,7 @@ export function useAuth() {
         setLoading(false);
       }
     },
-    [user, setUser, setLoading, setError, clearError]
+    [user, setUser, setLoading, setError, clearError],
   );
 
   return {

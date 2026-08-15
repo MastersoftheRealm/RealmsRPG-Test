@@ -2,17 +2,13 @@
  * Skill encounter configuration + add-participants sidebar (TASK-608)
  */
 
-"use client";
+'use client';
 
-import { Brain, Plus, GripVertical, Swords } from "lucide-react";
-import { Button, Input, Card } from "@/components/ui";
-import { ValueStepper } from "@/components/shared";
-import type {
-  Encounter,
-  SkillEncounterState,
-  TrackedCombatant,
-} from "@/types/encounter";
-import type { Campaign } from "@/types/campaign";
+import { Brain, Plus, GripVertical, Swords } from 'lucide-react';
+import { Button, Input, Card } from '@/components/ui';
+import { ValueStepper } from '@/components/shared';
+import type { Encounter, SkillEncounterState, TrackedCombatant } from '@/types/encounter';
+import type { Campaign } from '@/types/campaign';
 
 export interface SkillSidebarProps {
   encounter: Encounter & { skillEncounter: SkillEncounterState };
@@ -22,7 +18,7 @@ export interface SkillSidebarProps {
   skill: SkillEncounterState;
   requiredSuccesses: number;
   maxFailures: number;
-  encounterOutcome: "success" | "failure" | "in-progress";
+  encounterOutcome: 'success' | 'failure' | 'in-progress';
   useInitiative: boolean;
   isMixedEncounter: boolean;
   combatTurnOrderLength: number;
@@ -70,12 +66,12 @@ export function SkillSidebar({
   return (
     <div className="space-y-6">
       <Card className="p-6">
-        <h2 className="font-bold text-text-primary mb-4 flex items-center gap-2">
-          <Brain className="w-5 h-5 text-info-fg" /> Configuration
+        <h2 className="mb-4 flex items-center gap-2 font-bold text-text-primary">
+          <Brain className="h-5 w-5 text-info-fg" /> Configuration
         </h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Difficulty Score (DS)
             </label>
             <ValueStepper
@@ -89,19 +85,17 @@ export function SkillSidebar({
               size="sm"
               enableHoldRepeat
             />
-            <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+            <p className="mt-1 text-xs text-text-muted">
               Roll ≥ DS = success. Each 5 over/under adds extra success/failure.
             </p>
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Required Successes
             </label>
             <ValueStepper
               value={requiredSuccesses}
-              onChange={(val) =>
-                updateSkill({ requiredSuccesses: Math.max(1, val) })
-              }
+              onChange={(val) => updateSkill({ requiredSuccesses: Math.max(1, val) })}
               min={1}
               max={99}
               size="sm"
@@ -109,14 +103,12 @@ export function SkillSidebar({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Maximum Failures
             </label>
             <ValueStepper
               value={maxFailures}
-              onChange={(val) =>
-                updateSkill({ maxFailures: Math.max(1, val) })
-              }
+              onChange={(val) => updateSkill({ maxFailures: Math.max(1, val) })}
               min={1}
               max={99}
               size="sm"
@@ -126,29 +118,25 @@ export function SkillSidebar({
           <div>
             <label
               htmlFor="encounter-description"
-              className="block text-sm font-medium text-text-secondary mb-1"
+              className="mb-1 block text-sm font-medium text-text-secondary"
             >
               Encounter Description
             </label>
             <textarea
               id="encounter-description"
-              value={encounter.description ?? ""}
+              value={encounter.description ?? ''}
               onChange={(e) =>
-                setEncounter((prev) =>
-                  prev ? { ...prev, description: e.target.value } : prev,
-                )
+                setEncounter((prev) => (prev ? { ...prev, description: e.target.value } : prev))
               }
               placeholder="Rewards, penalties, context, and skill bonus notes..."
-              className="w-full rounded-lg border border-border-light bg-background px-3 py-2 text-sm text-text-primary focus:border-primary-outline-border focus:outline-none min-h-[96px]"
+              className="min-h-[96px] w-full rounded-lg border border-border-light bg-background px-3 py-2 text-sm text-text-primary focus:border-primary-outline-border focus:outline-none"
             />
           </div>
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-2">
             <input
               type="checkbox"
               checked={useInitiative}
-              onChange={(e) =>
-                updateSkill({ useInitiative: e.target.checked })
-              }
+              onChange={(e) => updateSkill({ useInitiative: e.target.checked })}
               className="rounded border-border-light"
               aria-label="Track turns / use initiative"
             />
@@ -163,7 +151,7 @@ export function SkillSidebar({
               onClick={onSortByInitiative}
               aria-label="Sort participants by initiative"
             >
-              <GripVertical className="w-4 h-4" /> Sort Initiative
+              <GripVertical className="h-4 w-4" /> Sort Initiative
             </Button>
           )}
           {isMixedEncounter && useInitiative && combatTurnOrderLength > 0 && (
@@ -174,28 +162,28 @@ export function SkillSidebar({
               aria-label="Sync participant order with combat turn order"
               title="Reorder skill participants to match combat turn order (by name or character)"
             >
-              <Swords className="w-4 h-4" /> Sync with combat order
+              <Swords className="h-4 w-4" /> Sync with combat order
             </Button>
           )}
         </div>
       </Card>
 
       <Card className="p-6">
-        <h2 className="font-bold text-text-primary mb-4">Add Participants</h2>
+        <h2 className="mb-4 font-bold text-text-primary">Add Participants</h2>
         {isMixedEncounter && encounter.combatants.length ? (
           <Button
             variant="secondary"
-            className="w-full mb-4"
+            className="mb-4 w-full"
             onClick={onCopyCombatantsToSkill}
             disabled={notYetAdded === 0}
             aria-label="Copy combat encounter combatants to skill participants (keeps initiative and ally/enemy)"
             title={
               notYetAdded === 0
-                ? "All combatants are already in the skill encounter."
-                : "Add everyone from the combat tab as skill participants, with their initiative and side (ally/enemy) preserved."
+                ? 'All combatants are already in the skill encounter.'
+                : 'Add everyone from the combat tab as skill participants, with their initiative and side (ally/enemy) preserved.'
             }
           >
-            <Swords className="w-4 h-4" /> Copy combatants from combat encounter
+            <Swords className="h-4 w-4" /> Copy combatants from combat encounter
             {notYetAdded > 0 && ` (${notYetAdded})`}
           </Button>
         ) : null}
@@ -208,14 +196,12 @@ export function SkillSidebar({
           </label>
           <select
             id="skill-encounter-campaign"
-            value={encounter.campaignId ?? ""}
+            value={encounter.campaignId ?? ''}
             onChange={(e) => {
               const id = e.target.value || undefined;
-              setEncounter((prev) =>
-                prev ? { ...prev, campaignId: id } : prev,
-              );
+              setEncounter((prev) => (prev ? { ...prev, campaignId: id } : prev));
             }}
-            className="w-full px-3 py-2 rounded-lg border border-border-light bg-background text-text-primary text-sm"
+            className="w-full rounded-lg border border-border-light bg-background px-3 py-2 text-sm text-text-primary"
           >
             <option value="">No campaign</option>
             {campaignsFull.map((c: Campaign) => (
@@ -232,16 +218,12 @@ export function SkillSidebar({
               disabled={addingAllChars}
             >
               {addingAllChars
-                ? "Adding…"
+                ? 'Adding…'
                 : `Add all Characters (${linkedCampaign.characters?.length ?? 0})`}
             </Button>
           )}
         </div>
-        <Button
-          variant="secondary"
-          className="w-full mb-4"
-          onClick={onOpenAddModal}
-        >
+        <Button variant="secondary" className="mb-4 w-full" onClick={onOpenAddModal}>
           From Library / Campaign
         </Button>
         <div className="flex gap-2">
@@ -249,48 +231,43 @@ export function SkillSidebar({
             value={newParticipantName}
             onChange={(e) => setNewParticipantName(e.target.value)}
             placeholder="Character name..."
-            onKeyDown={(e) => e.key === "Enter" && onAddParticipant()}
+            onKeyDown={(e) => e.key === 'Enter' && onAddParticipant()}
           />
           <Button
             onClick={onAddParticipant}
             disabled={!newParticipantName.trim()}
             aria-label="Add participant"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
           </Button>
         </div>
       </Card>
 
       <Card className="p-6">
-        <h2 className="font-bold text-text-primary mb-3">Quick Reference</h2>
-        <div className="space-y-2 text-xs text-text-muted dark:text-text-secondary">
+        <h2 className="mb-3 font-bold text-text-primary">Quick Reference</h2>
+        <div className="space-y-2 text-xs text-text-muted">
           <p>
-            <strong className="text-text-secondary">Required Successes:</strong>{" "}
-            {requiredSuccesses}
+            <strong className="text-text-secondary">Required Successes:</strong> {requiredSuccesses}
           </p>
           <p>
-            <strong className="text-text-secondary">Maximum Failures:</strong>{" "}
-            {maxFailures}
+            <strong className="text-text-secondary">Maximum Failures:</strong> {maxFailures}
           </p>
           <p>
-            <strong className="text-text-secondary">Success:</strong> roll ≥ DS;
-            +1 per 5 over
+            <strong className="text-text-secondary">Success:</strong> roll ≥ DS; +1 per 5 over
           </p>
           <p>
-            <strong className="text-text-secondary">Failure:</strong> roll &lt;
-            DS; +1 per 5 under
+            <strong className="text-text-secondary">Failure:</strong> roll &lt; DS; +1 per 5 under
           </p>
           <p>
-            <strong className="text-text-secondary">Net:</strong> successes −
-            failures
+            <strong className="text-text-secondary">Net:</strong> successes − failures
           </p>
           <p>
-            <strong className="text-text-secondary">Outcome:</strong>{" "}
-            {encounterOutcome === "success"
-              ? "Encounter Overcome"
-              : encounterOutcome === "failure"
-                ? "Encounter Failed"
-                : "In Progress"}
+            <strong className="text-text-secondary">Outcome:</strong>{' '}
+            {encounterOutcome === 'success'
+              ? 'Encounter Overcome'
+              : encounterOutcome === 'failure'
+                ? 'Encounter Failed'
+                : 'In Progress'}
           </p>
         </div>
       </Card>

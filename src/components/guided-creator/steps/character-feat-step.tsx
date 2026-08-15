@@ -60,18 +60,12 @@ export function CharacterFeatStep() {
   });
 
   const guidanceGroups = pathData?.level1?.guidance_groups;
-  const characterFeatGroups = useMemo(
-    () => {
-      const filtered = filterFeatGuidanceGroups(guidanceGroups, 'character');
-      return filtered.length > 0 ? filtered : EMPTY_GUIDANCE_GROUPS;
-    },
-    [guidanceGroups]
-  );
+  const characterFeatGroups = useMemo(() => {
+    const filtered = filterFeatGuidanceGroups(guidanceGroups, 'character');
+    return filtered.length > 0 ? filtered : EMPTY_GUIDANCE_GROUPS;
+  }, [guidanceGroups]);
 
-  const requirementCharacter = useMemo(
-    () => guidedDraftToFeatRequirementCharacter(draft),
-    [draft]
-  );
+  const requirementCharacter = useMemo(() => guidedDraftToFeatRequirementCharacter(draft), [draft]);
 
   /**
    * No auto-pick (report 03 P1-10): the first curated feat used to be written into the
@@ -94,7 +88,7 @@ export function CharacterFeatStep() {
 
   const recommendedIds = useMemo(
     () => options.map((f) => (f ? String(f.id) : '')).filter(Boolean),
-    [options]
+    [options],
   );
 
   const selectFeat = useCallback(
@@ -102,7 +96,7 @@ export function CharacterFeatStep() {
       const isSelected = draft.characterFeatIds[0] === id;
       updateDraft({ characterFeatIds: isSelected ? [] : [id] });
     },
-    [draft.characterFeatIds, updateDraft]
+    [draft.characterFeatIds, updateDraft],
   );
 
   // Inline (L3) catalog — same builders as GuidedFeatsL2Modal so filtering/eligibility
@@ -118,7 +112,7 @@ export function CharacterFeatStep() {
 
   const { categories: inlineCategoryOptions } = useMemo(
     () => buildGuidedFeatsL2FilterOptions(feats, 'character'),
-    [feats]
+    [feats],
   );
 
   const inlineItems = useMemo(
@@ -144,7 +138,7 @@ export function CharacterFeatStep() {
       inlineStateFeatMode,
       inlinePathIndex,
       inlineSelectedPathIds,
-    ]
+    ],
   );
 
   const inlineActiveFilterCount =
@@ -154,7 +148,7 @@ export function CharacterFeatStep() {
 
   const selectedIdSet = useMemo(
     () => new Set(draft.characterFeatIds.map(String)),
-    [draft.characterFeatIds]
+    [draft.characterFeatIds],
   );
 
   const curatedCharacterFeatCount = useMemo(() => {
@@ -172,11 +166,7 @@ export function CharacterFeatStep() {
       title={stepCopy.title}
       description={stepCopy.description}
       canContinue={draft.characterFeatIds.length === 1}
-      completionHint={
-        <span className="font-nunito">
-          {draft.characterFeatIds.length} / 1
-        </span>
-      }
+      completionHint={<span className="font-nunito">{draft.characterFeatIds.length} / 1</span>}
     >
       {isLoading ? (
         <div className="flex justify-center py-12">
@@ -200,9 +190,7 @@ export function CharacterFeatStep() {
               categories={inlineCategoryOptions}
               selectedCategories={inlineCategories}
               onAddCategory={(v) => setInlineCategories((prev) => [...prev, v])}
-              onRemoveCategory={(v) =>
-                setInlineCategories((prev) => prev.filter((c) => c !== v))
-              }
+              onRemoveCategory={(v) => setInlineCategories((prev) => prev.filter((c) => c !== v))}
               stateFeatMode={inlineStateFeatMode}
               onStateFeatModeChange={setInlineStateFeatMode}
               pathFilter={{
@@ -242,14 +230,12 @@ export function CharacterFeatStep() {
                       ) : undefined
                     }
                   />
-                ) : null
+                ) : null,
               )}
             </div>
           ) : (
             <EmptyState
-              title={
-                layer1EmptyBecauseFiltered ? stepCopy.emptyFilteredTitle : stepCopy.emptyTitle
-              }
+              title={layer1EmptyBecauseFiltered ? stepCopy.emptyFilteredTitle : stepCopy.emptyTitle}
               description={
                 layer1EmptyBecauseFiltered
                   ? stepCopy.emptyFilteredDescription

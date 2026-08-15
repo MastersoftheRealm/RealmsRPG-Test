@@ -28,7 +28,7 @@ const berserkerAbilities: Abilities = {
 describe('isTooBroadSkillAbility', () => {
   it('flags all-six-ability skills', () => {
     expect(
-      isTooBroadSkillAbility('Acuity, Agility, Charisma, Intelligence, Strength, Vitality')
+      isTooBroadSkillAbility('Acuity, Agility, Charisma, Intelligence, Strength, Vitality'),
     ).toBe(true);
   });
 
@@ -43,7 +43,10 @@ describe('skillMatchesArchetypeAbility', () => {
 
   it('matches single-ability strength skills', () => {
     expect(
-      skillMatchesArchetypeAbility(skill({ id: '9', name: 'Athletics', ability: 'Strength' }), strength)
+      skillMatchesArchetypeAbility(
+        skill({ id: '9', name: 'Athletics', ability: 'Strength' }),
+        strength,
+      ),
     ).toBe(true);
   });
 
@@ -51,23 +54,30 @@ describe('skillMatchesArchetypeAbility', () => {
     expect(
       skillMatchesArchetypeAbility(
         skill({ id: '24', name: 'Intimidate', ability: 'Charisma, Strength, Vitality' }),
-        strength
-      )
+        strength,
+      ),
     ).toBe(true);
   });
 
   it('rejects all-ability skills even when strength is listed', () => {
     expect(
       skillMatchesArchetypeAbility(
-        skill({ id: '13', name: 'Craft', ability: 'Acuity, Agility, Charisma, Intelligence, Strength, Vitality' }),
-        strength
-      )
+        skill({
+          id: '13',
+          name: 'Craft',
+          ability: 'Acuity, Agility, Charisma, Intelligence, Strength, Vitality',
+        }),
+        strength,
+      ),
     ).toBe(false);
   });
 
   it('rejects skills without the archetype ability', () => {
     expect(
-      skillMatchesArchetypeAbility(skill({ id: '7', name: 'Arcana', ability: 'Intelligence' }), strength)
+      skillMatchesArchetypeAbility(
+        skill({ id: '7', name: 'Arcana', ability: 'Intelligence' }),
+        strength,
+      ),
     ).toBe(false);
   });
 });
@@ -80,7 +90,7 @@ describe('resolveGuidedArchetypeAbilities', () => {
           archetype_ability: 'strength',
           secondary_ability: 'vitality',
         },
-      })
+      }),
     ).toEqual({ primary: 'strength', secondary: 'vitality' });
   });
 });
@@ -100,7 +110,11 @@ describe('curateGuidedSkillIds', () => {
   const codexSkills: Skill[] = [
     skill({ id: '9', name: 'Athletics', ability: 'Strength' }),
     skill({ id: '24', name: 'Intimidate', ability: 'Charisma, Strength, Vitality' }),
-    skill({ id: '13', name: 'Craft', ability: 'Acuity, Agility, Charisma, Intelligence, Strength, Vitality' }),
+    skill({
+      id: '13',
+      name: 'Craft',
+      ability: 'Acuity, Agility, Charisma, Intelligence, Strength, Vitality',
+    }),
     skill({ id: '7', name: 'Arcana', ability: 'Intelligence' }),
     skill({ id: '3', name: 'Act', ability: 'Charisma', base_skill_id: 14 }),
     skill({ id: '30', name: 'Endurance', ability: 'Vitality' }),
@@ -185,7 +199,7 @@ describe('formatGuidedSkillAbilityTag', () => {
   it('returns the highest-scoring governing ability label', () => {
     const label = formatGuidedSkillAbilityTag(
       skill({ id: '24', name: 'Intimidate', ability: 'Charisma, Strength, Vitality' }),
-      berserkerAbilities
+      berserkerAbilities,
     );
     expect(label).toBe('Strength');
   });

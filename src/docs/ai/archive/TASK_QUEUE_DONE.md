@@ -1,3 +1,198 @@
+- id: TASK-780
+  title: Sheet feat rank control — replace Lvl quantity stepper
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_files:
+    - src/components/character-sheet/library-feat-rows.tsx
+    - src/components/character-sheet/feats-tab.tsx
+    - src/components/shared/entity-library-feats.tsx
+    - src/components/shared/entity-library-sections.tsx
+    - src/components/shared/entity-library-sections-columns.ts
+    - src/components/shared/descriptor-chip-with-tip.tsx
+    - src/components/shared/grid-list-chip.tsx
+    - src/components/shared/grid-list-row-types.ts
+    - src/lib/chip/grid-list-chip-utils.ts
+    - src/lib/leveled-feats.ts
+    - src/lib/leveled-feats.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T048
+  developer_test_plan: |
+    Suite DEV-V-009 T048 — see BUILD_VALIDATION.md
+  description: |
+    Edit-mode sheet Archetype/Character feat lists raised feat rank with a collapsed
+    Lvl ValueStepper beside Uses ± and Recovery. Owner picked option A: drop the
+    stepper; promote via expanded Feat Levels chips (current marked, unqualified
+    disabled). Rank swap still uses onFeatLevelChange.
+  acceptance_criteria:
+    - Collapsed Uses/Recovery stay resource tracking, not rank.
+    - Rank change still uses getFeatLevelMeta / onFeatLevelChange.
+    - Play view does not show a rank stepper.
+    - FEATURE_INDEX + DEV-V-009 T048; pending-qa. Creature creator stepper left as-is.
+  notes: |
+    DEV-Q04 resolved: A. Deleted FEAT_COLUMNS_WITH_LEVEL / includeLevelColumn.
+    Cleanup: deleted feat-rank-chips; edit rank is buildFeatLevelChips select -> ChipData.onSelect.
+    Codex buildFeatLevelChips still omits current. Sheet play uses includeCurrent.
+
+- id: TASK-774
+  title: Library tab counts endpoint + lazy per-tab row fetch
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-773
+    - TASK-775
+  related_files:
+    - src/lib/library/library-tab-counts.ts
+    - src/lib/library/library-tab-counts.test.ts
+    - src/lib/library/fetch-library-tab-counts.ts
+    - src/lib/library/fetch-library-tab-counts.test.ts
+    - src/app/api/user/library/counts/route.ts
+    - src/app/api/user/library/counts/route.test.ts
+    - src/app/api/official/counts/route.ts
+    - src/app/api/official/counts/route.test.ts
+    - src/services/library-service.ts
+    - src/hooks/use-user-library.ts
+    - src/hooks/use-official-library.ts
+    - src/hooks/use-enhanced-items.ts
+    - src/hooks/use-creator-save.ts
+    - src/hooks/use-library-counts.keys.test.ts
+    - src/hooks/index.ts
+    - src/app/(main)/library/page.tsx
+    - src/docs/ai/ADR/0015-wave-3b-fetch-contracts.md
+    - src/docs/ai/ADR/README.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/DATA_HANDLING.md
+    - src/docs/SUPABASE_SCHEMA.md
+  description: |
+    Report 07 P2-5: /library loads every My or Realms collection on mount so tab badges can show
+    counts, then renders one tab. Add aggregated counts routes and fetch row data only for the
+    active tab (plus already-visited tabs via React Query cache).
+  acceptance_criteria:
+    - GET /api/user/library/counts (auth) and GET /api/official/counts (public) per ADR-0015.
+    - Tab badges use counts; only the active tab's list hook is enabled on first paint.
+    - Create/delete invalidates counts + that collection.
+    - Guests still browse Realms read-only; Enhanced stays My-Library only.
+    - Tests: typecheck, lint, route/hook tests, npm run build.
+    - User-facing: BUILD_VALIDATION (Library) + pending-qa.
+  completed_work: |
+    Static counts routes win over [type]. Shared fetchLibraryTabCounts + normalizeArmamentKind
+    split. Library page uses useUserLibraryCounts / useOfficialLibraryCounts; tab components
+    still fetch only the mounted collection. Delete/duplicate/add/creator-save/enhanced
+    mutations invalidate counts + that collection.
+  notes: |
+    Owner acked TASK-774 in chat 2026-08-15. ADR-0015 Accepted for 773/774; 775 still Proposed.
+    Weapons/Armor/Shields share the items list query (one fetch, three tabs).
+  evidence: |
+    vitest library-tab-counts, fetch-library-tab-counts, user/official counts routes,
+    use-library-counts.keys; tsc; eslint on touched files; npm run build.
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T020
+  developer_test_plan: |
+    Suite DEV-V-016 T020 — see BUILD_VALIDATION.md
+
+- id: TASK-773
+  title: RM-view / other-user sheet enrichment payload (referenced rows)
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  implemented_by: agent
+  related_tasks:
+    - TASK-761
+    - TASK-762
+    - TASK-774
+    - TASK-775
+    - TASK-776
+    - TASK-777
+  related_files:
+    - src/lib/character-view-enrichment.ts
+    - src/lib/character-view-enrichment.test.ts
+    - src/lib/character-view-enrichment-server.ts
+    - src/lib/character-view-enrichment-server.test.ts
+    - src/lib/owner-library-for-view.ts
+    - src/lib/library-columnar.ts
+    - src/lib/library-columnar.test.ts
+    - src/app/api/campaigns/[id]/characters/[userId]/[characterId]/route.ts
+    - src/app/api/characters/[id]/route.ts
+    - src/app/api/characters/[id]/route.test.ts
+    - src/services/campaign-service.ts
+    - src/services/character-service.ts
+    - src/hooks/use-campaigns.ts
+    - src/hooks/use-campaigns.cache.test.ts
+    - src/hooks/use-characters.ts
+    - src/hooks/use-characters.cache.test.ts
+    - src/hooks/use-user-library.ts
+    - src/components/character-sheet/use-character-sheet-derived.ts
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/app/(main)/characters/[id]/use-character-sheet-page-data.ts
+    - src/docs/ai/ADR/0015-wave-3b-fetch-contracts.md
+    - src/docs/ai/ADR/README.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ARCHITECTURE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/AUDIT_REMEDIATION_2026-08.md
+    - src/docs/ai/AI_CHANGELOG.md
+    - src/docs/DATABASE_CONSISTENCY_CHECKLIST.md
+  description: |
+    Report 07 P2-5: after useCampaignCharacterView the RM page still fires user/official/codex
+    enrichment hooks. libraryForView already covers referenced owner library rows (P0-1). Add an
+    additive `enrichment` sibling with referenced codex + official + empowered rows so the read-only
+    sheet does not download full catalogs or the *viewer's* library. Same helper on other-user
+    GET /api/characters/[id]. Owner sheet keeps the catalog waterfall (add-X). ?scope=encounter
+    unchanged (TASK-762).
+  acceptance_criteria:
+    - Full RM GET and other-user character GET return referenced-only `enrichment` (ADR-0015).
+    - RM view (and other-user sheet) stop the client waterfall; unused viewer library hooks deleted.
+    - ?scope=encounter payload unchanged; no owner-library leak (vitest on the collector).
+    - Owner-owned sheet still uses catalog hooks for add-X.
+    - Tests: typecheck, lint, targeted vitest, npm run build.
+    - User-facing: BUILD_VALIDATION suite (extend DEV-V-009) + pending-qa.
+  completed_work: |
+    collectCharacterViewRefIds + getCharacterViewEnrichment on full RM GET and other-user
+    character GET. RM page and other-user sheet map enrichment via sheetCatalogFromEnrichment;
+    catalog hooks enabled only when enrichment is absent (owner sheet). Collector lives in
+    client-safe character-view-enrichment.ts so the RM page does not import supabase/server.
+  notes: |
+    Owner acked TASK-773 in chat 2026-08-15. ADR-0015 Accepted for 773; 774/775 still Proposed.
+    Empowered techniques are enrichment.empoweredTechniques (not libraryForView). useGameRules
+    still shares ['codex'] until TASK-775. Do not reopen TASK-761 / ADR-0013.
+  evidence: |
+    vitest character-view-enrichment(+server), characters/[id]/route.test.ts,
+    use-campaigns.cache.test.ts, use-characters.cache.test.ts, owner-library-for-view.test.ts;
+    tsc; eslint on touched files; npm run build.
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T047
+  developer_test_plan: |
+    Suite DEV-V-009 T047 — see BUILD_VALIDATION.md
+
+---
+
 - id: TASK-762
   title: Combat linked-character ?scope=encounter fetches are a Query
   created_at: 2026-08-14
@@ -21197,3 +21392,131 @@ Firebase/RTDB - the project is Supabase-only.
     and stay /global-audit if anyone wants to stop maintaining the July-15 dump as a mirror.
   evidence: |
     Current live queues have unique ids; gate would have caught TASK-615 / TASK-284 collisions.
+- id: TASK-769
+  title: Register font-nunito in @theme so the utility is not inert
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/app/globals.css
+    - src/app/layout.tsx
+    - src/docs/DESIGN_SYSTEM.md
+  description: |
+    Wave 3A. next/font already injects a Nunito face variable on <html>, but Tailwind v4
+    never emitted `font-nunito` because `--font-nunito` was missing from `@theme`.
+  acceptance_criteria:
+    - `font-nunito` resolves to the next/font Nunito face (fallback "Nunito").
+    - Did not rewire `--font-sans`.
+    - npm run typecheck + lint pass.
+  completed_work: |
+    next/font variable renamed `--font-nunito-face`; `@theme` `--font-nunito` references it.
+
+---
+
+- id: TASK-770
+  title: Strip dead text-text-muted dark:text-text-secondary pairing
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-053
+    tests:
+      - DEV-V-053-T005
+  developer_test_plan: |
+    Suite DEV-V-053 T005 — see BUILD_VALIDATION.md
+  related_files:
+    - src/docs/DESIGN_SYSTEM.md
+    - src/app/globals.css
+    - src/app
+    - src/components
+    - src/hooks
+    - src/lib
+    - eslint-rules/no-muted-dark-secondary-pairing.mjs
+    - eslint.config.mjs
+  description: |
+    Wave 3A. Strip no-op `dark:text-text-secondary` next to `text-text-muted` only.
+  acceptance_criteria:
+    - No adjacent muted/dark-secondary pairing under src/ (except docs explaining the anti-pattern).
+    - DESIGN_SYSTEM follow-up marked done.
+  completed_work: |
+    318 pairings across 144 files plus 2 interstitial class lists. Comment in globals.css restored.
+
+---
+
+- id: TASK-771
+  title: Add metadataBase, Open Graph, robots.ts, sitemap.ts, noindex /dev
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-053
+    tests:
+      - DEV-V-053-T001
+      - DEV-V-053-T002
+      - DEV-V-053-T003
+      - DEV-V-053-T004
+  developer_test_plan: |
+    Suite DEV-V-053 T001-T004 — see BUILD_VALIDATION.md
+  related_files:
+    - src/app/layout.tsx
+    - src/app/robots.ts
+    - src/app/sitemap.ts
+    - src/app/robots-sitemap.test.ts
+    - src/app/opengraph-image.tsx
+    - src/lib/site-url.ts
+    - src/lib/site-url.test.ts
+    - src/lib/constants/copy/shared-copy.ts
+    - src/lib/constants/copy/privacy-copy.ts
+    - src/app/dev/styleguide/layout.tsx
+    - src/app/(auth)/layout.tsx
+    - src/app/(main)/admin/layout.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Wave 3A SEO. Canonical origin realmsrpg.com. Not /rules MDX or landing RSC.
+  acceptance_criteria:
+    - Root metadata has metadataBase, openGraph, twitter summary_large_image, and an OG image.
+    - /robots.txt and /sitemap.xml exist; styleguide and auth are noindex.
+  completed_work: |
+    SITE_URL aligned to https://realmsrpg.com. robots disallow list + public sitemap. Vitest for site-url and robots/sitemap.
+
+---
+
+- id: TASK-772
+  title: Prettier format commit scope + enable lint-staged
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: n/a
+  related_files:
+    - .prettierrc.json
+    - .prettierignore
+    - package.json
+    - README.md
+    - src/lib/glr/glr-chrome-spacing-norms.ts
+    - src/lib/glr/validate-glr-chrome-spacing.ts
+    - src/lib/glr/validate-glr-chrome-spacing.test.ts
+    - src/docs/ai/guide/01-verification-and-ui-gates.md
+    - src/docs/ai/guide/02-components-and-lists.md
+  description: |
+    Wave 3A. Format TS/JS/CSS/JSON; enable prettier on lint-staged. Skip markdown/SQL/data/lockfile/snapshots.
+  acceptance_criteria:
+    - .prettierignore excludes docs/SQL/lockfile/binaries/snapshots/data.
+    - lint-staged runs prettier on staged JS/TS/CSS/JSON after eslint.
+  completed_work: |
+    Format pass on src/tests/config. lint-staged: eslint then prettier. Ignore also .github and a11y baselines going forward.

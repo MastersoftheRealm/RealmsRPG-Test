@@ -105,7 +105,8 @@ export function LibraryInventoryPanel({
                   const raw = currencyInput.trim();
                   let newValue = currency;
                   if (raw.startsWith('+')) newValue = currency + (parseInt(raw.substring(1)) || 0);
-                  else if (raw.startsWith('-')) newValue = currency - (parseInt(raw.substring(1)) || 0);
+                  else if (raw.startsWith('-'))
+                    newValue = currency - (parseInt(raw.substring(1)) || 0);
                   else newValue = parseInt(raw) || 0;
                   newValue = Math.max(0, newValue);
                   setCurrencyInput(String(newValue));
@@ -116,7 +117,7 @@ export function LibraryInventoryPanel({
               title="Use +5, -10, or a number"
               aria-label="Currency"
             />
-            <span className="text-sm font-medium text-text-muted dark:text-text-secondary">Currency</span>
+            <span className="text-sm font-medium text-text-muted">Currency</span>
           </div>
           {martialProficiency !== undefined && (
             <>

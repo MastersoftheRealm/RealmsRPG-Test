@@ -33,19 +33,21 @@ describe('advanced-powers-selectable merge helpers', () => {
 
   it('mergeLookupPool prefers user row when ids collide', () => {
     const mine = [{ docId: 'p1', name: 'Mine' }];
-    const pub = [{ docId: 'p1', name: 'Public' }, { docId: 'p2', name: 'OnlyPublic' }];
+    const pub = [
+      { docId: 'p1', name: 'Public' },
+      { docId: 'p2', name: 'OnlyPublic' },
+    ];
     expect(mergeLookupPool(mine, pub).map((r) => r.name)).toEqual(['Mine', 'OnlyPublic']);
   });
 
   it('mergeEmpoweredTechniquesWithSource tags and dedupes', () => {
     const merged = mergeEmpoweredTechniquesWithSource(
       [{ id: 'e1', name: 'Mine ET' } as never],
-      [
-        { id: 'e1', name: 'Public ET' } as never,
-        { docId: 'e2', id: 'e2', name: 'Other' } as never,
-      ]
+      [{ id: 'e1', name: 'Public ET' } as never, { docId: 'e2', id: 'e2', name: 'Other' } as never],
     );
-    expect(merged.map((t) => ({ id: String(t.docId ?? t.id), source: t._source, name: t.name }))).toEqual([
+    expect(
+      merged.map((t) => ({ id: String(t.docId ?? t.id), source: t._source, name: t.name })),
+    ).toEqual([
       { id: 'e1', source: 'my', name: 'Mine ET' },
       { id: 'e2', source: 'public', name: 'Other' },
     ]);

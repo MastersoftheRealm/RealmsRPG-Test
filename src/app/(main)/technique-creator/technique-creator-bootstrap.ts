@@ -208,8 +208,5 @@ export function bootstrapTechniqueCreatorFormState(options: {
     );
   }
 
-  return (
-    restoreTechniqueCreatorFromCache(techniqueParts) ??
-    emptyTechniqueCreatorFormState()
-  );
+  return restoreTechniqueCreatorFromCache(techniqueParts) ?? emptyTechniqueCreatorFormState();
 }

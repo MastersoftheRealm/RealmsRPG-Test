@@ -17,10 +17,7 @@ import type {
 } from '@/types/crafting';
 import type { CraftingRules } from '@/types/core-rules';
 import type { RequirementsBreakdown, UsesType } from './crafting-tool-helpers';
-import {
-  resolveMultipleUseIndex,
-  getEffectiveCraftingEnergy,
-} from './crafting-tool-helpers';
+import { resolveMultipleUseIndex, getEffectiveCraftingEnergy } from './crafting-tool-helpers';
 
 type LiveOutcome = {
   finalMaterialCost: number;
@@ -100,19 +97,19 @@ export function CraftingSummarySidebar({
                   label: 'Difficulty Score',
                   value: effectiveDS,
                   color: 'energy',
-                  icon: <Gauge className="w-5 h-5" />,
+                  icon: <Gauge className="h-5 w-5" />,
                 },
                 {
                   label: 'Material Cost',
                   value: `${Math.ceil(requirements.materialCost)} C`,
                   color: 'currency',
-                  icon: <Coins className="w-5 h-5" />,
+                  icon: <Coins className="h-5 w-5" />,
                 },
                 {
                   label: 'Time',
                   value: `${requirements.timeValue} ${requirements.timeUnit}`,
                   color: 'tp',
-                  icon: <Clock className="w-5 h-5" />,
+                  icon: <Clock className="h-5 w-5" />,
                 },
               ]
             : undefined
@@ -140,11 +137,11 @@ export function CraftingSummarySidebar({
                                   rulesData,
                                   usesType,
                                   usesCount,
-                                  session.data.multipleUseTableIndex
+                                  session.data.multipleUseTableIndex,
                                 ),
-                                rulesData
+                                rulesData,
                               )
-                            : resolvedPowerRef.energyCost
+                            : resolvedPowerRef.energyCost,
                         )} EN`,
                       },
                       {
@@ -168,42 +165,51 @@ export function CraftingSummarySidebar({
                 {
                   label: 'Current Value',
                   value: `${Math.ceil(liveOutcome.itemWorth)} C`,
-                  valueColor:
-                    netDelta >= 0
-                      ? 'text-success-fg'
-                      : 'text-danger-fg',
+                  valueColor: netDelta >= 0 ? 'text-success-fg' : 'text-danger-fg',
                 },
               ]
             : []),
         ]}
       >
         {requirementsBreakdown && (
-          <div className="mb-4 pb-4 border-b border-border-light">
-            <h3 className="text-sm font-semibold text-text-primary mb-2">Requirements breakdown</h3>
-            <p className="text-xs text-text-muted dark:text-text-secondary mb-3">
+          <div className="mb-4 border-b border-border-light pb-4">
+            <h3 className="mb-2 text-sm font-semibold text-text-primary">Requirements breakdown</h3>
+            <p className="mb-3 text-xs text-text-muted">
               Cost, time, and successes for each phase. Totals above are combined.
             </p>
             <div className="space-y-3 text-sm">
               <div>
-                <div className="font-medium text-text-secondary dark:text-text-primary mb-1">Base item</div>
+                <div className="mb-1 font-medium text-text-secondary dark:text-text-primary">
+                  Base item
+                </div>
                 <div className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-text-primary">
-                  <span className="font-semibold text-currency-text">{Math.ceil(requirementsBreakdown.baseItemReq.materialCost)} C</span>
+                  <span className="font-semibold text-currency-text">
+                    {Math.ceil(requirementsBreakdown.baseItemReq.materialCost)} C
+                  </span>
                   {' · '}
-                  {requirementsBreakdown.baseItemReq.timeValue} {requirementsBreakdown.baseItemReq.timeUnit}
+                  {requirementsBreakdown.baseItemReq.timeValue}{' '}
+                  {requirementsBreakdown.baseItemReq.timeUnit}
                   {' · '}
-                  {requirementsBreakdown.baseItemReq.requiredSuccesses} success{requirementsBreakdown.baseItemReq.requiredSuccesses !== 1 ? 'es' : ''}
+                  {requirementsBreakdown.baseItemReq.requiredSuccesses} success
+                  {requirementsBreakdown.baseItemReq.requiredSuccesses !== 1 ? 'es' : ''}
                   {' · '}
                   DS {requirementsBreakdown.baseItemReq.difficultyScore}
                 </div>
               </div>
               <div>
-                <div className="font-medium text-text-secondary dark:text-text-primary mb-1">Enhancement</div>
+                <div className="mb-1 font-medium text-text-secondary dark:text-text-primary">
+                  Enhancement
+                </div>
                 <div className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-text-primary">
-                  <span className="font-semibold text-currency-text">{Math.ceil(requirementsBreakdown.enhancementReq.materialCost)} C</span>
+                  <span className="font-semibold text-currency-text">
+                    {Math.ceil(requirementsBreakdown.enhancementReq.materialCost)} C
+                  </span>
                   {' · '}
-                  {requirementsBreakdown.enhancementReq.timeValue} {requirementsBreakdown.enhancementReq.timeUnit}
+                  {requirementsBreakdown.enhancementReq.timeValue}{' '}
+                  {requirementsBreakdown.enhancementReq.timeUnit}
                   {' · '}
-                  {requirementsBreakdown.enhancementReq.requiredSuccesses} success{requirementsBreakdown.enhancementReq.requiredSuccesses !== 1 ? 'es' : ''}
+                  {requirementsBreakdown.enhancementReq.requiredSuccesses} success
+                  {requirementsBreakdown.enhancementReq.requiredSuccesses !== 1 ? 'es' : ''}
                   {' · '}
                   DS {requirementsBreakdown.enhancementReq.difficultyScore}
                 </div>
@@ -215,18 +221,14 @@ export function CraftingSummarySidebar({
           <div className="space-y-2">
             <div className="flex justify-between text-sm">
               <span className="text-text-secondary">Successes (enhancement)</span>
-              <span className="font-medium text-success-fg">
-                {totalEnhSuccesses}
-              </span>
+              <span className="font-medium text-success-fg">{totalEnhSuccesses}</span>
             </div>
             <div className="flex justify-between text-sm">
               <span className="text-text-secondary">Failures (enhancement)</span>
-              <span className="font-medium text-danger-fg">
-                {totalEnhFailures}
-              </span>
+              <span className="font-medium text-danger-fg">{totalEnhFailures}</span>
             </div>
             {isEnhanced && session.data.craftBaseItemAlso && (
-              <div className="space-y-1 text-xs text-text-muted dark:text-text-secondary">
+              <div className="space-y-1 text-xs text-text-muted">
                 <div>
                   Base item: {baseSessionSuccesses} S / {baseSessionFailures} F
                 </div>
@@ -238,35 +240,24 @@ export function CraftingSummarySidebar({
             <div className="flex justify-between text-sm">
               <span className="text-text-secondary">Net</span>
               <span
-                className={cn(
-                  'font-bold',
-                  netDelta >= 0
-                    ? 'text-success-fg'
-                    : 'text-danger-fg'
-                )}
+                className={cn('font-bold', netDelta >= 0 ? 'text-success-fg' : 'text-danger-fg')}
               >
                 {netDelta >= 0 ? `+${netDelta}` : netDelta}
               </span>
             </div>
-            <div className="text-xs text-text-muted dark:text-text-secondary">
-              Required successes: {required}
-            </div>
+            <div className="text-xs text-text-muted">Required successes: {required}</div>
             {liveOutcome && (
-              <div className="mt-2 border-t border-border-light pt-2 space-y-1 text-xs text-text-secondary">
-                <div>
-                  Projected net material cost: {Math.ceil(liveOutcome.finalMaterialCost)} C
-                </div>
+              <div className="mt-2 space-y-1 border-t border-border-light pt-2 text-xs text-text-secondary">
+                <div>Projected net material cost: {Math.ceil(liveOutcome.finalMaterialCost)} C</div>
                 <div>
                   Projected materials recovered: {Math.ceil(liveOutcome.materialsRetained)} C
                 </div>
-                <div>
-                  Projected item value: {Math.ceil(liveOutcome.itemWorth)} C
-                </div>
+                <div>Projected item value: {Math.ceil(liveOutcome.itemWorth)} C</div>
                 {liveOutcome.extraItemCount > 0 && (
                   <div>Projected extra items: {liveOutcome.extraItemCount}</div>
                 )}
                 {liveOutcome.choiceExtraOrEnhance && (
-                  <div className="text-primary-fg font-medium">
+                  <div className="font-medium text-primary-fg">
                     Choice: extra item at 100% or enhance to 200%
                   </div>
                 )}
@@ -285,14 +276,12 @@ export function CraftingSummarySidebar({
             {outcome.extraItemCount > 0 && (
               <div className="flex justify-between">
                 <span className="text-text-secondary">Extra Items (enhancement)</span>
-                <span className="font-medium text-text-primary">
-                  {outcome.extraItemCount}
-                </span>
+                <span className="font-medium text-text-primary">{outcome.extraItemCount}</span>
               </div>
             )}
             {isEnhanced && session.data.craftBaseItemAlso && baseOutcomeForDisplay && (
               <>
-                <div className="mt-3 pt-3 border-t border-border-light flex justify-between">
+                <div className="mt-3 flex justify-between border-t border-border-light pt-3">
                   <span className="text-text-secondary">Base item value</span>
                   <span className="font-medium text-text-primary">
                     {Math.ceil(baseOutcomeForDisplay.itemWorth)} C
@@ -304,19 +293,12 @@ export function CraftingSummarySidebar({
         )}
         {!isCompleted && (item || customBaseItem) && sessionsLength > 0 && (
           <div className="mt-4 flex flex-wrap gap-3">
-            <Button
-              onClick={onComplete}
-              disabled={isSaving}
-            >
+            <Button onClick={onComplete} disabled={isSaving}>
               {isSaving ? 'Completing...' : 'Complete Crafting'}
             </Button>
           </div>
         )}
-        {isSaving && (
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-2 text-center">
-            Saving...
-          </p>
-        )}
+        {isSaving && <p className="mt-2 text-center text-xs text-text-muted">Saving...</p>}
       </CreatorSummaryPanel>
     </div>
   );

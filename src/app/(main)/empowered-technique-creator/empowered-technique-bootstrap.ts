@@ -51,9 +51,29 @@ export interface EmpoweredTechniqueCache {
   range: EmpoweredRangeConfig;
   area: AreaConfig;
   duration: DurationConfig;
-  selectedPowerParts: Array<{ partId: string | number; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; applyDuration: boolean; selectedCategory: string }>;
-  selectedPowerAdvancedParts: Array<{ partId: string | number; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; applyDuration: boolean; selectedCategory: string }>;
-  selectedTechniqueParts: Array<{ partId: string | number; op_1_lvl: number; op_2_lvl: number; op_3_lvl: number; selectedCategory: string }>;
+  selectedPowerParts: Array<{
+    partId: string | number;
+    op_1_lvl: number;
+    op_2_lvl: number;
+    op_3_lvl: number;
+    applyDuration: boolean;
+    selectedCategory: string;
+  }>;
+  selectedPowerAdvancedParts: Array<{
+    partId: string | number;
+    op_1_lvl: number;
+    op_2_lvl: number;
+    op_3_lvl: number;
+    applyDuration: boolean;
+    selectedCategory: string;
+  }>;
+  selectedTechniqueParts: Array<{
+    partId: string | number;
+    op_1_lvl: number;
+    op_2_lvl: number;
+    op_3_lvl: number;
+    selectedCategory: string;
+  }>;
   imageId?: string | null;
   imageUrl?: string | null;
   timestamp: number;
@@ -89,20 +109,59 @@ export type EmpoweredLibraryRecord = {
   imageUrl?: string | null;
   image_url?: string | null;
   power?: {
-    parts?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
-    mechanics?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
-    autoMechanics?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean }>;
+    parts?: Array<{
+      id?: string | number;
+      name?: string;
+      op_1_lvl?: number;
+      op_2_lvl?: number;
+      op_3_lvl?: number;
+      applyDuration?: boolean;
+    }>;
+    mechanics?: Array<{
+      id?: string | number;
+      name?: string;
+      op_1_lvl?: number;
+      op_2_lvl?: number;
+      op_3_lvl?: number;
+      applyDuration?: boolean;
+    }>;
+    autoMechanics?: Array<{
+      id?: string | number;
+      name?: string;
+      op_1_lvl?: number;
+      op_2_lvl?: number;
+      op_3_lvl?: number;
+      applyDuration?: boolean;
+    }>;
     damage?: EmpoweredDamageConfig[];
     range?: EmpoweredRangeConfig;
     area?: AreaConfig;
     duration?: DurationConfig;
     /** @deprecated Legacy persisted weapon reference; read-only for older rows. */
     addWeapon?: { id?: string | number; name?: string } | null;
-    addWeaponPowerPart?: { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number } | null;
+    addWeaponPowerPart?: {
+      id?: string | number;
+      name?: string;
+      op_1_lvl?: number;
+      op_2_lvl?: number;
+      op_3_lvl?: number;
+    } | null;
   };
   technique?: {
-    parts?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
-    autoMechanics?: Array<{ id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
+    parts?: Array<{
+      id?: string | number;
+      name?: string;
+      op_1_lvl?: number;
+      op_2_lvl?: number;
+      op_3_lvl?: number;
+    }>;
+    autoMechanics?: Array<{
+      id?: string | number;
+      name?: string;
+      op_1_lvl?: number;
+      op_2_lvl?: number;
+      op_3_lvl?: number;
+    }>;
     additionalDamage?: Array<{ amount?: number; size?: number }>;
   };
 };
@@ -138,7 +197,16 @@ export function emptyEmpoweredTechniqueFormState(): EmpoweredTechniqueFormState 
 }
 
 function mapPowerRows(
-  rows: Array<{ partId?: string | number; id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; applyDuration?: boolean; selectedCategory?: string }>,
+  rows: Array<{
+    partId?: string | number;
+    id?: string | number;
+    name?: string;
+    op_1_lvl?: number;
+    op_2_lvl?: number;
+    op_3_lvl?: number;
+    applyDuration?: boolean;
+    selectedCategory?: string;
+  }>,
   powerParts: PowerPart[],
   matchByName: boolean,
 ): SelectedPowerPart[] {
@@ -146,8 +214,7 @@ function mapPowerRows(
     .map((row) => {
       const key = row.partId ?? row.id;
       const part = powerParts.find(
-        (dbPart) =>
-          String(dbPart.id) === String(key) || (matchByName && dbPart.name === row.name),
+        (dbPart) => String(dbPart.id) === String(key) || (matchByName && dbPart.name === row.name),
       );
       if (!part) return null;
       return {
@@ -163,7 +230,15 @@ function mapPowerRows(
 }
 
 function mapTechniqueRows(
-  rows: Array<{ partId?: string | number; id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number; selectedCategory?: string }>,
+  rows: Array<{
+    partId?: string | number;
+    id?: string | number;
+    name?: string;
+    op_1_lvl?: number;
+    op_2_lvl?: number;
+    op_3_lvl?: number;
+    selectedCategory?: string;
+  }>,
   techniqueParts: TechniquePart[],
   matchByName: boolean,
 ): SelectedTechniquePart[] {
@@ -171,8 +246,7 @@ function mapTechniqueRows(
     .map((row) => {
       const key = row.partId ?? row.id;
       const part = techniqueParts.find(
-        (dbPart) =>
-          String(dbPart.id) === String(key) || (matchByName && dbPart.name === row.name),
+        (dbPart) => String(dbPart.id) === String(key) || (matchByName && dbPart.name === row.name),
       );
       if (!part) return null;
       return {
@@ -290,11 +364,8 @@ export function bootstrapEmpoweredTechniqueFormState(options: {
       return emptyEmpoweredTechniqueFormState();
     }
     return (
-      empoweredLibraryRecordToFormState(
-        match,
-        powerParts,
-        techniqueParts,
-      ) ?? emptyEmpoweredTechniqueFormState()
+      empoweredLibraryRecordToFormState(match, powerParts, techniqueParts) ??
+      emptyEmpoweredTechniqueFormState()
     );
   }
 

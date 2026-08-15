@@ -16,7 +16,14 @@ function legalBuild() {
       { id: '2', skill_val: 1, prof: true },
       { id: '3', skill_val: 1, prof: true },
     ],
-    defenseVals: { might: 0, fortitude: 0, reflex: 0, discernment: 0, mentalFortitude: 0, resolve: 0 },
+    defenseVals: {
+      might: 0,
+      fortitude: 0,
+      reflex: 0,
+      discernment: 0,
+      mentalFortitude: 0,
+      resolve: 0,
+    },
     archetype: { id: 'a1', type: 'power' },
     archetypeFeats: [{ id: 'f1', name: 'Feat One' }],
     feats: [{ id: 'c1', name: 'Character Feat' }],
@@ -51,13 +58,20 @@ describe('findLevel1LegalityViolations', () => {
     expect(
       findLevel1LegalityViolations({
         ...legalBuild(),
-        abilities: { strength: 1, vitality: 0, agility: 0, acuity: 0, intelligence: 0, charisma: 0 },
+        abilities: {
+          strength: 1,
+          vitality: 0,
+          agility: 0,
+          acuity: 0,
+          intelligence: 0,
+          charisma: 0,
+        },
         skills: [],
         archetypeFeats: [],
         feats: [],
         healthPoints: 0,
         energyPoints: 0,
-      })
+      }),
     ).toEqual([]);
   });
 
@@ -94,17 +108,24 @@ describe('findLevel1LegalityViolations', () => {
     const violations = findLevel1LegalityViolations({
       ...legalBuild(),
       skills: [{ id: '1', skill_val: 1, prof: true }],
-      defenseVals: { might: 2, fortitude: 0, reflex: 0, discernment: 0, mentalFortitude: 0, resolve: 0 },
+      defenseVals: {
+        might: 2,
+        fortitude: 0,
+        reflex: 0,
+        discernment: 0,
+        mentalFortitude: 0,
+        resolve: 0,
+      },
     });
     expect(violations[0]).toMatch(/Skill points spent \(5\)/);
   });
 
   it('reads a skills record as well as saved rows', () => {
     expect(
-      findLevel1LegalityViolations({ ...legalBuild(), skills: { '1': 1, '2': 1, '3': 1 } })
+      findLevel1LegalityViolations({ ...legalBuild(), skills: { '1': 1, '2': 1, '3': 1 } }),
     ).toEqual([]);
     expect(
-      findLevel1LegalityViolations({ ...legalBuild(), skills: { '1': 3, '2': 3 } })[0]
+      findLevel1LegalityViolations({ ...legalBuild(), skills: { '1': 3, '2': 3 } })[0],
     ).toMatch(/Skill points spent \(6\)/);
   });
 
@@ -122,7 +143,7 @@ describe('findLevel1LegalityViolations', () => {
         ...legalBuild(),
         archetype: { id: 'a1', type: 'martial' },
         archetypeFeats: [{ id: 'f1' }, { id: 'f2' }, { id: 'f3' }],
-      })
+      }),
     ).toEqual([]);
   });
 
@@ -149,9 +170,9 @@ describe('findLevel1LegalityViolations', () => {
   });
 
   it('rejects negative Health or Energy allocation', () => {
-    expect(
-      findLevel1LegalityViolations({ ...legalBuild(), healthPoints: -4 })[0]
-    ).toMatch(/cannot be negative/);
+    expect(findLevel1LegalityViolations({ ...legalBuild(), healthPoints: -4 })[0]).toMatch(
+      /cannot be negative/,
+    );
   });
 
   it('reports every violation at once', () => {
@@ -174,13 +195,13 @@ describe('findLevel1LegalityViolations', () => {
     expect(
       findLevel1LegalityViolations(overBudgetByDefaults, {
         PROGRESSION_PLAYER: { baseAbilityPoints: 12 },
-      } as never)
+      } as never),
     ).toEqual([]);
     // A rules edit that lowers it must not retroactively reject a legal build.
     expect(
       findLevel1LegalityViolations(legalBuild(), {
         PROGRESSION_PLAYER: { baseAbilityPoints: 1 },
-      } as never)
+      } as never),
     ).toEqual([]);
   });
 });
@@ -200,9 +221,9 @@ describe('findLevel1LegalityViolations feat requirements', () => {
   });
 
   it('skips requirement checks when the catalog is empty', () => {
-    expect(findLevel1LegalityViolations(legalBuild(), undefined, { feats: [], skills: [] })).toEqual(
-      []
-    );
+    expect(
+      findLevel1LegalityViolations(legalBuild(), undefined, { feats: [], skills: [] }),
+    ).toEqual([]);
   });
 
   it('accepts catalog feats the build qualifies for', () => {
@@ -210,8 +231,8 @@ describe('findLevel1LegalityViolations feat requirements', () => {
       findLevel1LegalityViolations(
         { ...legalBuild(), feats: [{ id: 'f1' }], archetypeFeats: [{ id: 'f1' }] },
         undefined,
-        catalog
-      )
+        catalog,
+      ),
     ).toEqual([]);
   });
 
@@ -228,7 +249,7 @@ describe('findLevel1LegalityViolations feat requirements', () => {
         feats: [{ id: 'f1' }],
       },
       undefined,
-      catalog
+      catalog,
     );
     expect(violations.some((v) => /Needs Strength 3/.test(v) && /strength 3/i.test(v))).toBe(true);
   });
@@ -238,20 +259,20 @@ describe('findLevel1LegalityViolations feat requirements', () => {
       findLevel1LegalityViolations(
         { ...legalBuild(), feats: [{ id: 'custom-1' }], archetypeFeats: [{ id: 'f1' }] },
         undefined,
-        catalog
-      )
+        catalog,
+      ),
     ).toEqual([]);
   });
 
   it('parses TEXT requirement columns from columnar codex rows', () => {
     const fromRows = catalogFromCodexRows(
       [{ id: 'g', name: 'Gated', ability_req: 'strength', abil_req_val: '3' }],
-      []
+      [],
     );
     const violations = findLevel1LegalityViolations(
       { ...legalBuild(), archetypeFeats: [{ id: 'g' }], feats: [] },
       undefined,
-      fromRows
+      fromRows,
     );
     expect(violations.some((v) => /Gated/.test(v) && /strength 3/i.test(v))).toBe(true);
   });
@@ -274,7 +295,7 @@ describe('mapCodexBaseSkillToId / catalogFromCodexRows (TASK-754)', () => {
         { id: '10', name: 'Athletics', base_skill: null, ability: 'strength' },
         { id: '11', name: 'Climb', base_skill: '10', ability: 'strength' },
         { id: '12', name: 'Empty', base_skill: '', ability: 'strength' },
-      ]
+      ],
     );
     expect(catalog.skills).toEqual([
       { id: '10', name: 'Athletics', base_skill_id: undefined, ability: 'strength' },

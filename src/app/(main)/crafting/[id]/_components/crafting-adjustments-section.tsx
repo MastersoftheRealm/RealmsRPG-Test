@@ -36,13 +36,13 @@ export function CraftingAdjustmentsSection({
       title="Adjustments"
       collapsedSummary={`Difficulty Score Bonus ${session.data.dsModifier ?? 0}, bonus S/F`}
     >
-      <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
+      <p className="mb-4 text-sm text-text-muted">
         Adjust the effective Difficulty Score or add bonus successes/failures (finer tools, help,
         environmental Bonuses).
       </p>
       <div className="flex flex-wrap gap-6">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
             Difficulty Score Bonus
           </label>
           <ValueStepper
@@ -56,12 +56,10 @@ export function CraftingAdjustmentsSection({
             decrementTitle="Decrease Difficulty Score Bonus"
             incrementTitle="Increase Difficulty Score Bonus"
           />
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
-            Effective Difficulty Score: {effectiveDS}
-          </p>
+          <p className="mt-1 text-xs text-text-muted">Effective Difficulty Score: {effectiveDS}</p>
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
             Additional successes
           </label>
           <ValueStepper
@@ -75,7 +73,7 @@ export function CraftingAdjustmentsSection({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
             Additional failures
           </label>
           <ValueStepper

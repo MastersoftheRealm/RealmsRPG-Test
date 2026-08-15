@@ -49,8 +49,8 @@ export function PowersStepChrome({
 }: PowersStepChromeProps) {
   return (
     <>
-      <div className="text-center mb-8">
-        <div className="flex items-center justify-center gap-1 mb-2">
+      <div className="mb-8 text-center">
+        <div className="mb-2 flex items-center justify-center gap-1">
           <h2 className="text-2xl font-bold text-text-primary">Powers & Techniques</h2>
           <InfoTippy
             content={powersSelectionHelp}
@@ -59,7 +59,7 @@ export function PowersStepChrome({
             size="inline"
           />
         </div>
-        <p className="text-text-muted dark:text-text-secondary">
+        <p className="text-text-muted">
           Select powers and techniques from your library for your character to know.
         </p>
         <div className="mt-4 flex flex-col items-center justify-center gap-3">
@@ -69,7 +69,7 @@ export function PowersStepChrome({
             className="mb-0"
           />
           {pathMode && (
-            <div className="flex flex-wrap gap-2 justify-center">
+            <div className="flex flex-wrap justify-center gap-2">
               {layer === 1 ? (
                 <Button variant="outline" onClick={onExpandLayer} className="min-h-11">
                   See all powers & techniques
@@ -85,13 +85,13 @@ export function PowersStepChrome({
       </div>
 
       {pathRecommendationsLoading && (
-        <div className="bg-primary-subtle-bg border border-primary-subtle-border rounded-xl p-6 flex items-center gap-4 mb-8">
-          <Spinner className="w-6 h-6 flex-shrink-0 text-primary-link-fg" aria-hidden />
+        <div className="mb-8 flex items-center gap-4 rounded-xl border border-primary-subtle-border bg-primary-subtle-bg p-6">
+          <Spinner className="h-6 w-6 flex-shrink-0 text-primary-link-fg" aria-hidden />
           <div>
-            <p className="text-text-primary font-medium">
+            <p className="font-medium text-text-primary">
               Loading recommended powers and techniques from the library…
             </p>
-            <p className="text-sm text-text-muted dark:text-text-secondary mt-0.5">
+            <p className="mt-0.5 text-sm text-text-muted">
               Your path&apos;s recommendations will appear here in a moment.
             </p>
           </div>
@@ -118,7 +118,7 @@ export function PowersStepChrome({
                   className="mb-4 rounded-xl border border-border-light bg-surface-alt px-4 py-3"
                 >
                   <h3 className="font-semibold text-text-primary">{group.title}</h3>
-                  {group.why && <p className="text-sm text-text-secondary mt-1">{group.why}</p>}
+                  {group.why && <p className="mt-1 text-sm text-text-secondary">{group.why}</p>}
                 </div>
               ))}
           </>
@@ -129,8 +129,8 @@ export function PowersStepChrome({
         isPathMode &&
         !hasPathPowerRecs &&
         !hasPathTechniqueRecs && (
-          <div className="bg-muted/30 border border-border rounded-xl p-6 text-center mb-8">
-            <p className="text-text-muted dark:text-text-secondary">
+          <div className="mb-8 rounded-xl border border-border bg-muted/30 p-6 text-center">
+            <p className="text-text-muted">
               This path doesn&apos;t recommend specific powers or techniques. You can add them from
               your library later if you like.
             </p>
@@ -141,33 +141,33 @@ export function PowersStepChrome({
         !techniquesLoading &&
         !hasContent &&
         !(isPathMode && !hasPathPowerRecs && !hasPathTechniqueRecs) && (
-          <div className="bg-muted/30 border border-border rounded-xl p-8 text-center mb-8">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-              <Wand2 className="w-8 h-8 text-text-muted dark:text-text-secondary" />
+          <div className="mb-8 rounded-xl border border-border bg-muted/30 p-8 text-center">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <Wand2 className="h-8 w-8 text-text-muted" />
             </div>
-            <h3 className="text-lg font-medium text-text-primary mb-2">
+            <h3 className="mb-2 text-lg font-medium text-text-primary">
               No Powers or Techniques Yet
             </h3>
-            <p className="text-text-muted dark:text-text-secondary mb-6 max-w-md mx-auto">
+            <p className="mx-auto mb-6 max-w-md text-text-muted">
               Create powers and techniques in your library first, then come back to add them to your
               character.
             </p>
             <div className="flex items-center justify-center gap-4">
               <Link
                 href="/power-creator"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary-button text-text-on-dark hover:bg-primary-button-hover transition-colors shadow-sm"
+                className="flex items-center gap-2 rounded-lg bg-primary-button px-4 py-2 text-text-on-dark shadow-sm transition-colors hover:bg-primary-button-hover"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="h-4 w-4" />
                 Create Power
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="h-3 w-3" />
               </Link>
               <Link
                 href="/technique-creator"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-foreground hover:bg-muted transition-colors"
+                className="text-foreground flex items-center gap-2 rounded-lg border border-border px-4 py-2 transition-colors hover:bg-muted"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="h-4 w-4" />
                 Create Technique
-                <ExternalLink className="w-3 h-3" />
+                <ExternalLink className="h-3 w-3" />
               </Link>
             </div>
           </div>

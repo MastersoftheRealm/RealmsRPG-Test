@@ -148,11 +148,11 @@ function skillPointsSpentFloor(candidate: Level1LegalityCandidate, rules?: Rules
   if (defenses) {
     const defenseTotal = DEFENSE_KEYS.reduce(
       (sum, key) => sum + Math.max(0, toFiniteNumber(defenses[key]) ?? 0),
-      0
+      0,
     );
     const cost = permissiveMin(
       resolveSkillAllocationRules(rules).defenseIncreaseCost,
-      resolveSkillAllocationRules().defenseIncreaseCost
+      resolveSkillAllocationRules().defenseIncreaseCost,
     );
     spent += defenseTotal * cost;
   }
@@ -167,7 +167,11 @@ function countRefs(value: unknown): number | null {
 function toStrArray(val: unknown): string[] {
   if (!val) return [];
   if (Array.isArray(val)) return val.map(String);
-  if (typeof val === 'string') return val.split(',').map((s) => s.trim()).filter(Boolean);
+  if (typeof val === 'string')
+    return val
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
   return [];
 }
 
@@ -213,7 +217,7 @@ export function mapCodexBaseSkillToId(baseSkill: unknown): number | undefined {
 /** Map columnar `codex_feats` / `codex_skills` rows into the shape `checkFeatRequirements` reads. */
 export function catalogFromCodexRows(
   featRows: unknown[] | null | undefined,
-  skillRows: unknown[] | null | undefined
+  skillRows: unknown[] | null | undefined,
 ): FeatRequirementCatalog {
   const feats: FeatForRequirement[] = [];
   for (const row of featRows ?? []) {
@@ -235,9 +239,7 @@ export function catalogFromCodexRows(
       speed_req: toFiniteNumber(rec.speed_req) ?? undefined,
       feat_lvl: toFiniteNumber(rec.feat_lvl) ?? undefined,
       base_feat_id:
-        rec.base_feat_id != null && rec.base_feat_id !== ''
-          ? String(rec.base_feat_id)
-          : undefined,
+        rec.base_feat_id != null && rec.base_feat_id !== '' ? String(rec.base_feat_id) : undefined,
     });
   }
 
@@ -258,7 +260,7 @@ export function catalogFromCodexRows(
 }
 
 function candidateToFeatRequirementCharacter(
-  candidate: Level1LegalityCandidate
+  candidate: Level1LegalityCandidate,
 ): CharacterForFeatRequirement {
   const archetype = asRecord(candidate.archetype);
   const owned = [...featRefs(candidate.archetypeFeats), ...featRefs(candidate.feats)];
@@ -268,7 +270,9 @@ function candidateToFeatRequirementCharacter(
     abilities: (asRecord(candidate.abilities) ?? {}) as CharacterForFeatRequirement['abilities'],
     skills: candidate.skills as CharacterForFeatRequirement['skills'],
     defenseVals: asRecord(candidate.defenseVals) as CharacterForFeatRequirement['defenseVals'],
-    defenseSkills: asRecord(candidate.defenseSkills) as CharacterForFeatRequirement['defenseSkills'],
+    defenseSkills: asRecord(
+      candidate.defenseSkills,
+    ) as CharacterForFeatRequirement['defenseSkills'],
     mart_abil: martAbil as CharacterForFeatRequirement['mart_abil'],
     speedBase: toFiniteNumber(candidate.speedBase) ?? undefined,
     archetype: archetype
@@ -281,7 +285,7 @@ function candidateToFeatRequirementCharacter(
 
 function findUnmetFeatRequirementViolations(
   candidate: Level1LegalityCandidate,
-  catalog: FeatRequirementCatalog
+  catalog: FeatRequirementCatalog,
 ): string[] {
   if (catalog.feats.length === 0) return [];
 
@@ -301,7 +305,7 @@ function findUnmetFeatRequirementViolations(
       violations.push(
         result.reason
           ? `${label} does not meet its requirements: ${result.reason}.`
-          : `${label} does not meet its requirements.`
+          : `${label} does not meet its requirements.`,
       );
     }
   }
@@ -319,7 +323,7 @@ function findUnmetFeatRequirementViolations(
 export function findLevel1LegalityViolations(
   candidate: Level1LegalityCandidate,
   rules?: Rules,
-  featCatalog?: FeatRequirementCatalog
+  featCatalog?: FeatRequirementCatalog,
 ): string[] {
   const violations: string[] = [];
 
@@ -327,11 +331,11 @@ export function findLevel1LegalityViolations(
   if (abilities) {
     const budget = permissiveMax(
       calculateAbilityPoints(1, false, rules),
-      calculateAbilityPoints(1)
+      calculateAbilityPoints(1),
     );
     const spent = permissiveMin(
       abilityPointsSpent(abilities, rules),
-      abilityPointsSpent(abilities)
+      abilityPointsSpent(abilities),
     );
     if (spent > budget) {
       violations.push(`Ability points spent (${spent}) exceed the level 1 budget (${budget}).`);
@@ -348,22 +352,24 @@ export function findLevel1LegalityViolations(
 
   const skillBudget = permissiveMax(
     getTotalSkillPoints(1, 'character', rules),
-    getTotalSkillPoints(1, 'character')
+    getTotalSkillPoints(1, 'character'),
   );
   const skillSpent = skillPointsSpentFloor(candidate, rules);
   if (skillSpent > skillBudget) {
-    violations.push(`Skill points spent (${skillSpent}) exceed the level 1 budget (${skillBudget}).`);
+    violations.push(
+      `Skill points spent (${skillSpent}) exceed the level 1 budget (${skillBudget}).`,
+    );
   }
 
   const archetypeType = asRecord(candidate.archetype)?.type;
   const maxArchetypeFeats = permissiveMax(
     calculateMaxArchetypeFeats(1, archetypeType as ArchetypeCategory | undefined, rules),
-    calculateMaxArchetypeFeats(1, archetypeType as ArchetypeCategory | undefined)
+    calculateMaxArchetypeFeats(1, archetypeType as ArchetypeCategory | undefined),
   );
   const archetypeFeatCount = countRefs(candidate.archetypeFeats);
   if (archetypeFeatCount !== null && archetypeFeatCount > maxArchetypeFeats) {
     violations.push(
-      `Archetype feats (${archetypeFeatCount}) exceed the level 1 maximum (${maxArchetypeFeats}).`
+      `Archetype feats (${archetypeFeatCount}) exceed the level 1 maximum (${maxArchetypeFeats}).`,
     );
   }
 
@@ -371,7 +377,7 @@ export function findLevel1LegalityViolations(
   const characterFeatCount = countRefs(candidate.feats);
   if (characterFeatCount !== null && characterFeatCount > maxCharacterFeats) {
     violations.push(
-      `Character feats (${characterFeatCount}) exceed the level 1 maximum (${maxCharacterFeats}).`
+      `Character feats (${characterFeatCount}) exceed the level 1 maximum (${maxCharacterFeats}).`,
     );
   }
 
@@ -382,7 +388,7 @@ export function findLevel1LegalityViolations(
 
   const pool = permissiveMax(
     calculateHealthEnergyPool(1, 'PLAYER', false, rules),
-    calculateHealthEnergyPool(1, 'PLAYER')
+    calculateHealthEnergyPool(1, 'PLAYER'),
   );
   const healthPoints = toFiniteNumber(candidate.healthPoints);
   const energyPoints = toFiniteNumber(candidate.energyPoints);
@@ -390,7 +396,7 @@ export function findLevel1LegalityViolations(
     violations.push('Health and Energy allocations cannot be negative.');
   } else if (healthPoints !== null && energyPoints !== null && healthPoints + energyPoints > pool) {
     violations.push(
-      `Health + Energy allocation (${healthPoints + energyPoints}) exceeds the level 1 pool (${pool}).`
+      `Health + Energy allocation (${healthPoints + energyPoints}) exceeds the level 1 pool (${pool}).`,
     );
   }
 

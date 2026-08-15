@@ -8,11 +8,7 @@
 
 import { useState, useMemo } from 'react';
 import { SelectFilter } from '@/components/shared/filters';
-import {
-  CodexBrowseListShell,
-  ErrorDisplay as ErrorState,
-  GridListRow,
-} from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useItemProperties, type ItemProperty } from '@/hooks';
@@ -37,7 +33,8 @@ function PropertyCard({ property }: { property: ItemProperty }) {
   const tp = property.base_tp ?? property.tp_cost ?? 0;
   const cost = property.base_c ?? property.gold_cost ?? 0;
 
-  const optionChips: Array<{ name: string; description?: string; category: 'cost' | 'default' }> = [];
+  const optionChips: Array<{ name: string; description?: string; category: 'cost' | 'default' }> =
+    [];
   if (property.op_1_desc) {
     const parts: string[] = [];
     // Include explicit 0 values so the user can tell the option was saved as 0 (not missing).
@@ -51,8 +48,10 @@ function PropertyCard({ property }: { property: ItemProperty }) {
     });
   }
 
-  const detailSections: Array<{ label: string; chips: Array<{ name: string; description?: string; category: 'cost' | 'default' }> }> =
-    optionChips.length > 0 ? [{ label: 'Options', chips: optionChips }] : [];
+  const detailSections: Array<{
+    label: string;
+    chips: Array<{ name: string; description?: string; category: 'cost' | 'default' }>;
+  }> = optionChips.length > 0 ? [{ label: 'Options', chips: optionChips }] : [];
 
   return (
     <GridListRow
@@ -85,7 +84,12 @@ function PropertyCard({ property }: { property: ItemProperty }) {
 
 export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
   const loadPublicCodex = codexMode === 'public';
-  const { data: properties, isLoading, error, refetch } = useItemProperties({ enabled: loadPublicCodex });
+  const {
+    data: properties,
+    isLoading,
+    error,
+    refetch,
+  } = useItemProperties({ enabled: loadPublicCodex });
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PropertyFilters>({
     search: '',
@@ -103,8 +107,11 @@ export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'publ
     if (!properties) return [];
 
     const filtered = properties.filter((p: ItemProperty) => {
-      if (filters.search && !p.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-        !p.description?.toLowerCase().includes(filters.search.toLowerCase())) {
+      if (
+        filters.search &&
+        !p.name.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !p.description?.toLowerCase().includes(filters.search.toLowerCase())
+      ) {
         return false;
       }
       if (filters.typeFilter && p.type !== filters.typeFilter) return false;
@@ -115,8 +122,10 @@ export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'publ
       if (col === 'name') return dir * a.name.localeCompare(b.name);
       if (col === 'type') return dir * (a.type || 'general').localeCompare(b.type || 'general');
       if (col === 'ip') return dir * ((a.base_ip ?? 0) - (b.base_ip ?? 0));
-      if (col === 'tp') return dir * ((a.base_tp ?? a.tp_cost ?? 0) - (b.base_tp ?? b.tp_cost ?? 0));
-      if (col === 'cost') return dir * ((a.base_c ?? a.gold_cost ?? 0) - (b.base_c ?? b.gold_cost ?? 0));
+      if (col === 'tp')
+        return dir * ((a.base_tp ?? a.tp_cost ?? 0) - (b.base_tp ?? b.tp_cost ?? 0));
+      if (col === 'cost')
+        return dir * ((a.base_c ?? a.gold_cost ?? 0) - (b.base_c ?? b.gold_cost ?? 0));
       return 0;
     });
   }, [properties, filters, sortState]);
@@ -133,12 +142,12 @@ export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'publ
       onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
       searchPlaceholder="Search properties..."
       filters={
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           <SelectFilter
             label="Type"
             value={filters.typeFilter}
-            options={typeOptions.map(t => ({ value: t, label: formatListCellLabel(t) }))}
-            onChange={(v) => setFilters(f => ({ ...f, typeFilter: v }))}
+            options={typeOptions.map((t) => ({ value: t, label: formatListCellLabel(t) }))}
+            onChange={(v) => setFilters((f) => ({ ...f, typeFilter: v }))}
             placeholder="All Types"
           />
         </div>

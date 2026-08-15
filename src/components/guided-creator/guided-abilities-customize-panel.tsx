@@ -45,7 +45,7 @@ export function GuidedAbilitiesCustomizePanel({
         />
       </div>
 
-      <div className="mt-4 rounded-card border border-border-light bg-surface shadow-sm p-4 sm:p-5">
+      <div className="mt-4 rounded-card border border-border-light bg-surface p-4 shadow-sm sm:p-5">
         <AbilityScoreEditor
           abilities={abilities}
           totalPoints={totalPoints}

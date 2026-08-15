@@ -33,12 +33,13 @@ export const campaignKeys = {
    * roster + RM authorization, not on `characterKeys`) and viewer-segmented like
    * `characterKeys.detail` so a cached sheet cannot survive a viewer change.
    */
-  characterViews: (campaignId: string) => [...campaignKeys.detail(campaignId), 'character-view'] as const,
+  characterViews: (campaignId: string) =>
+    [...campaignKeys.detail(campaignId), 'character-view'] as const,
   characterView: (
     campaignId: string,
     viewerId: string | undefined,
     ownerId: string,
-    characterId: string
+    characterId: string,
   ) =>
     [
       ...campaignKeys.characterViews(campaignId),
@@ -57,7 +58,7 @@ export const campaignKeys = {
     campaignId: string,
     viewerId: string | undefined,
     ownerId: string,
-    characterId: string
+    characterId: string,
   ) =>
     [
       ...campaignKeys.characterEncounters(campaignId),
@@ -76,7 +77,7 @@ function campaignCharacterEncounterQueryOptions(
   campaignId: string,
   viewerId: string | undefined,
   ownerId: string,
-  characterId: string
+  characterId: string,
 ) {
   return {
     queryKey: campaignKeys.characterEncounter(campaignId, viewerId, ownerId, characterId),
@@ -89,7 +90,7 @@ function campaignCharacterEncounterQueryOptions(
         if (signal.aborted) throw err;
         logClientError(
           `campaign-character-encounter: fetch failed (${ownerId}/${characterId})`,
-          err
+          err,
         );
         return null;
       }
@@ -105,10 +106,10 @@ export function fetchCampaignCharacterForEncounter(
   campaignId: string,
   viewerId: string | undefined,
   ownerId: string,
-  characterId: string
+  characterId: string,
 ): Promise<CampaignCharacterEncounterData | null> {
   return queryClient.fetchQuery(
-    campaignCharacterEncounterQueryOptions(campaignId, viewerId, ownerId, characterId)
+    campaignCharacterEncounterQueryOptions(campaignId, viewerId, ownerId, characterId),
   );
 }
 
@@ -118,17 +119,12 @@ export function fetchCampaignCharacterForEncounter(
  */
 export function useCampaignCharacterEncounters(
   campaignId: string | undefined,
-  targets: CampaignCharacterEncounterTarget[]
+  targets: CampaignCharacterEncounterTarget[],
 ) {
   const { user, loading: authLoading } = useAuthStore();
   return useQueries({
     queries: targets.map(({ ownerId, characterId }) => ({
-      ...campaignCharacterEncounterQueryOptions(
-        campaignId || '',
-        user?.uid,
-        ownerId,
-        characterId
-      ),
+      ...campaignCharacterEncounterQueryOptions(campaignId || '', user?.uid, ownerId, characterId),
       enabled: !!campaignId && !!ownerId && !!characterId && !authLoading,
     })),
   });
@@ -162,12 +158,12 @@ export function useCampaign(campaignId: string | undefined) {
 
 /**
  * Read-only roster character for the RM view page.
- * Data is `GetCharacterResult` (character + optional `libraryForView`).
+ * Data is `GetCharacterResult` (character + optional `libraryForView` / `enrichment`).
  */
 export function useCampaignCharacterView(
   campaignId: string | undefined,
   ownerId: string | undefined,
-  characterId: string | undefined
+  characterId: string | undefined,
 ) {
   const { user, loading: authLoading } = useAuthStore();
   return useQuery({
@@ -175,7 +171,7 @@ export function useCampaignCharacterView(
       campaignId || '',
       user?.uid,
       ownerId || '',
-      characterId || ''
+      characterId || '',
     ),
     queryFn: () => getCampaignCharacterForView(campaignId!, ownerId!, characterId!),
     enabled: !!campaignId && !!ownerId && !!characterId && !authLoading,

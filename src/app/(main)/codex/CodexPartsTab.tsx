@@ -44,7 +44,7 @@ function PartCard({ part }: { part: Part }) {
   const typeChips: ChipData[] = [
     descriptorChipData(
       part.type === 'power' ? 'Power' : 'Technique',
-      part.type === 'power' ? 'archetype' : 'skill'
+      part.type === 'power' ? 'archetype' : 'skill',
     ),
   ];
   if (part.mechanic) typeChips.push(descriptorChipData('Mechanic', 'default'));
@@ -52,7 +52,10 @@ function PartCard({ part }: { part: Part }) {
 
   const optionChips: ChipData[] = [];
   if (part.op_1_desc) {
-    const enStr = part.op_1_en !== undefined && part.op_1_en !== 0 ? formatEnergyCost(part.op_1_en, part.percentage) : null;
+    const enStr =
+      part.op_1_en !== undefined && part.op_1_en !== 0
+        ? formatEnergyCost(part.op_1_en, part.percentage)
+        : null;
     const tpStr = part.op_1_tp !== undefined && part.op_1_tp !== 0 ? String(part.op_1_tp) : null;
     const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
     optionChips.push({
@@ -62,7 +65,10 @@ function PartCard({ part }: { part: Part }) {
     });
   }
   if (part.op_2_desc) {
-    const enStr = part.op_2_en !== undefined && part.op_2_en !== 0 ? formatEnergyCost(part.op_2_en, part.percentage) : null;
+    const enStr =
+      part.op_2_en !== undefined && part.op_2_en !== 0
+        ? formatEnergyCost(part.op_2_en, part.percentage)
+        : null;
     const tpStr = part.op_2_tp !== undefined && part.op_2_tp !== 0 ? String(part.op_2_tp) : null;
     const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
     optionChips.push({
@@ -72,7 +78,10 @@ function PartCard({ part }: { part: Part }) {
     });
   }
   if (part.op_3_desc) {
-    const enStr = part.op_3_en !== undefined && part.op_3_en !== 0 ? formatEnergyCost(part.op_3_en, part.percentage) : null;
+    const enStr =
+      part.op_3_en !== undefined && part.op_3_en !== 0
+        ? formatEnergyCost(part.op_3_en, part.percentage)
+        : null;
     const tpStr = part.op_3_tp !== undefined && part.op_3_tp !== 0 ? String(part.op_3_tp) : null;
     const costParts = [enStr && `EN: ${enStr}`, tpStr && `TP: ${tpStr}`].filter(Boolean);
     optionChips.push({
@@ -95,7 +104,11 @@ function PartCard({ part }: { part: Part }) {
       gridColumns={PART_GRID_COLUMNS}
       columns={[
         { key: 'Category', value: formatListCellLabel(part.category) },
-        { key: 'Energy', value: formatEnergyCost(part.base_en, part.percentage), className: 'text-energy-text' },
+        {
+          key: 'Energy',
+          value: formatEnergyCost(part.base_en, part.percentage),
+          className: 'text-energy-text',
+        },
         { key: 'TP', value: part.base_tp ? part.base_tp : '-', className: 'text-tp' },
       ]}
       detailSections={detailSections}
@@ -136,8 +149,11 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
     if (!parts) return [];
 
     const filtered = parts.filter((p: Part) => {
-      if (filters.search && !p.name.toLowerCase().includes(filters.search.toLowerCase()) &&
-        !p.description?.toLowerCase().includes(filters.search.toLowerCase())) {
+      if (
+        filters.search &&
+        !p.name.toLowerCase().includes(filters.search.toLowerCase()) &&
+        !p.description?.toLowerCase().includes(filters.search.toLowerCase())
+      ) {
         return false;
       }
       if (filters.categoryFilter && p.category !== filters.categoryFilter) return false;
@@ -173,38 +189,42 @@ export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' |
       onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
       searchPlaceholder="Search parts..."
       filters={
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <SelectFilter
-              label="Category"
-              value={filters.categoryFilter}
-              options={filterOptions.categories.map(c => ({ value: c, label: c }))}
-              onChange={(v) => setFilters(f => ({ ...f, categoryFilter: v }))}
-              placeholder="All Categories"
-            />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <SelectFilter
+            label="Category"
+            value={filters.categoryFilter}
+            options={filterOptions.categories.map((c) => ({ value: c, label: c }))}
+            onChange={(v) => setFilters((f) => ({ ...f, categoryFilter: v }))}
+            placeholder="All Categories"
+          />
 
-            <SelectFilter
-              label="Type"
-              value={filters.typeFilter}
-              options={[
-                { value: 'all', label: 'All' },
-                { value: 'power', label: 'Power' },
-                { value: 'technique', label: 'Technique' },
-              ]}
-              onChange={(v) => setFilters(f => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))}
-              placeholder={null}
-            />
+          <SelectFilter
+            label="Type"
+            value={filters.typeFilter}
+            options={[
+              { value: 'all', label: 'All' },
+              { value: 'power', label: 'Power' },
+              { value: 'technique', label: 'Technique' },
+            ]}
+            onChange={(v) =>
+              setFilters((f) => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))
+            }
+            placeholder={null}
+          />
 
-            <SelectFilter
-              label="Mechanics"
-              value={filters.mechanicMode}
-              options={[
-                { value: 'all', label: 'All Parts' },
-                { value: 'only', label: 'Only Mechanics' },
-                { value: 'hide', label: 'Hide Mechanics' },
-              ]}
-              onChange={(v) => setFilters(f => ({ ...f, mechanicMode: v as 'all' | 'only' | 'hide' }))}
-              placeholder={null}
-            />
+          <SelectFilter
+            label="Mechanics"
+            value={filters.mechanicMode}
+            options={[
+              { value: 'all', label: 'All Parts' },
+              { value: 'only', label: 'Only Mechanics' },
+              { value: 'hide', label: 'Hide Mechanics' },
+            ]}
+            onChange={(v) =>
+              setFilters((f) => ({ ...f, mechanicMode: v as 'all' | 'only' | 'hide' }))
+            }
+            placeholder={null}
+          />
         </div>
       }
       headerColumns={PART_COLUMNS}

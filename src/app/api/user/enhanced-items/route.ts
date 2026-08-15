@@ -51,7 +51,7 @@ export async function GET() {
       'Failed to load enhanced items',
       500,
       'GET /api/user/enhanced-items',
-      err
+      err,
     );
   }
 }
@@ -64,10 +64,16 @@ export async function POST(request: NextRequest) {
     }
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('enhanced-post', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('enhanced-post', {
+        userId: user.uid,
+        ip: resolveClientIp(request.headers),
+      }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const validation = await validateJson(request, enhancedItemCreateSchema);
@@ -104,7 +110,7 @@ export async function POST(request: NextRequest) {
         'Failed to create enhanced item',
         500,
         'POST /api/user/enhanced-items (insert)',
-        insertErr
+        insertErr,
       );
     }
 
@@ -114,7 +120,7 @@ export async function POST(request: NextRequest) {
       'Failed to create enhanced item',
       500,
       'POST /api/user/enhanced-items',
-      err
+      err,
     );
   }
 }

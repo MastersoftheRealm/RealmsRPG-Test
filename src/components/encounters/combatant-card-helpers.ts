@@ -10,9 +10,13 @@ export function getHealthBarColor(current: number, max: number): string {
 
 export function getCombatantBorderColor(combatant: Combatant): string {
   switch (combatant.combatantType) {
-    case 'ally': return 'border-l-ally';
-    case 'enemy': return 'border-l-enemy';
-    case 'companion': return 'border-l-companion';
-    default: return combatant.isAlly ? 'border-l-ally' : 'border-l-enemy';
+    case 'ally':
+      return 'border-l-ally';
+    case 'enemy':
+      return 'border-l-enemy';
+    case 'companion':
+      return 'border-l-companion';
+    default:
+      return combatant.isAlly ? 'border-l-ally' : 'border-l-enemy';
   }
 }

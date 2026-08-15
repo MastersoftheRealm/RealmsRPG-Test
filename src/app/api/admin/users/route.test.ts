@@ -10,7 +10,9 @@ vi.mock('@/lib/rate-limit', () => ({
   resolveClientIp: vi.fn(() => '203.0.113.1'),
   retryAfterSecondsFromReset: vi.fn(() => '60'),
   standardLimiter: {
-    check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+    check: vi.fn(() =>
+      Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 }),
+    ),
   },
 }));
 
@@ -29,7 +31,10 @@ const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
 
 const ADMIN_ID = 'admin-user-123';
 
-function createMockSupabaseAdmin(profiles: unknown[] = [], error: { message: string } | null = null) {
+function createMockSupabaseAdmin(
+  profiles: unknown[] = [],
+  error: { message: string } | null = null,
+) {
   return {
     from: vi.fn(() => ({
       select: vi.fn().mockReturnValue({
@@ -110,7 +115,7 @@ describe('GET /api/admin/users', () => {
           display_name: 'Hero Player',
           role: 'new_player',
         },
-      ]) as never
+      ]) as never,
     );
 
     const response = await GET(makeGetRequest());

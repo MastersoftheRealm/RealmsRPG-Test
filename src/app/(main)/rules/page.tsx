@@ -12,19 +12,19 @@ export default function RulesPage() {
     <PageContainer size="xl">
       <PageHeader title={RULES_COPY.pageTitle} description={RULES_COPY.pageDescription} />
 
-      <p className="text-sm text-text-secondary mb-4">
+      <p className="mb-4 text-sm text-text-secondary">
         {RULES_COPY.embedTroublePrefix}{' '}
         <a
           href={RULES_COPY.viewUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary-link-fg hover:underline font-medium"
+          className="font-medium text-primary-link-fg hover:underline"
         >
           {RULES_COPY.openInNewTab}
         </a>
       </p>
 
-      <Card className="shadow-lg overflow-hidden p-0 border-0">
+      <Card className="overflow-hidden border-0 p-0 shadow-lg">
         <iframe
           src={RULES_COPY.embedUrl}
           className="w-full border-0"

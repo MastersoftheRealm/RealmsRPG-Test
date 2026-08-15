@@ -6,10 +6,7 @@ import { formatDamageDisplay, formatListCellLabel, normalizeRangeDisplay } from 
 import { checkFeatRequirements, getMaxQualifiedFeatLevel } from '@/lib/game/feat-requirements';
 import { buildFeatLevelsByFamily, getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
 import type { Feat, Skill } from '@/hooks';
-import {
-  codexFeatToCreatureFeat,
-  creatureToFeatRequirementCharacter,
-} from './creature-feat-utils';
+import { codexFeatToCreatureFeat, creatureToFeatRequirementCharacter } from './creature-feat-utils';
 import {
   inferCreatureFeatSource,
   labelCreatureFeatSource,
@@ -110,7 +107,12 @@ export function applyCreatureFeatLevelChange(
   if (!targetCodex || String(targetCodex.id) === String(featId)) return prev;
 
   const requirementCharacter = creatureToFeatRequirementCharacter(prev);
-  const { met } = checkFeatRequirements(targetCodex, requirementCharacter, skillsData, codexFeatsData);
+  const { met } = checkFeatRequirements(
+    targetCodex,
+    requirementCharacter,
+    skillsData,
+    codexFeatsData,
+  );
   if (!met) return prev;
 
   const nextFeats = [...prev.feats];

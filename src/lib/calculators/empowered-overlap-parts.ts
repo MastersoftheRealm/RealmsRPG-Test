@@ -36,10 +36,7 @@ export function pickCheaperEnPart(
 }
 
 /** Flat auto-mechanic payload row for either power or technique side. */
-export function toEmpoweredAutoMechanicPart(part: {
-  id: string | number;
-  name: string;
-}): {
+export function toEmpoweredAutoMechanicPart(part: { id: string | number; name: string }): {
   id: string | number;
   name: string;
   op_1_lvl: number;

@@ -8,11 +8,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import {
-  CodexBrowseListShell,
-  ErrorDisplay as ErrorState,
-  GridListRow,
-} from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
 import { formatCreatureLevel } from '@/lib/game';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
@@ -28,7 +24,12 @@ const CREATURE_FEAT_COLUMNS = [
 
 export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
   const loadPublicCodex = codexMode === 'public';
-  const { data: creatureFeats, isLoading, error, refetch } = useCreatureFeats({ enabled: loadPublicCodex });
+  const {
+    data: creatureFeats,
+    isLoading,
+    error,
+    refetch,
+  } = useCreatureFeats({ enabled: loadPublicCodex });
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
 
@@ -39,17 +40,18 @@ export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'p
           (f: CreatureFeat) =>
             !search ||
             f.name.toLowerCase().includes(search.toLowerCase()) ||
-            f.description?.toLowerCase().includes(search.toLowerCase())
-        )
+            f.description?.toLowerCase().includes(search.toLowerCase()),
+        ),
       ),
-    [creatureFeats, search, sortItems]
+    [creatureFeats, search, sortItems],
   );
 
   if (codexMode === 'my') {
     return <CodexMyCodexEmpty />;
   }
 
-  if (error) return <ErrorState message="Failed to load creature feats" onRetry={() => refetch()} />;
+  if (error)
+    return <ErrorState message="Failed to load creature feats" onRetry={() => refetch()} />;
 
   return (
     <CodexBrowseListShell
@@ -66,18 +68,18 @@ export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'p
       emptyMessage="Try adjusting your search."
     >
       {filtered.map((f: CreatureFeat) => (
-              <GridListRow
-                key={f.id}
-                id={f.id}
-                name={f.name}
-                description={f.description || ''}
-                gridColumns={CREATURE_FEAT_GRID_COLUMNS}
-                columns={[
-                  { key: 'Pts', value: String(f.points ?? '-') },
-                  { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
-                  { key: 'Req. Lvl', value: f.lvl_req != null ? formatCreatureLevel(f.lvl_req) : '-' },
-                ]}
-              />
+        <GridListRow
+          key={f.id}
+          id={f.id}
+          name={f.name}
+          description={f.description || ''}
+          gridColumns={CREATURE_FEAT_GRID_COLUMNS}
+          columns={[
+            { key: 'Pts', value: String(f.points ?? '-') },
+            { key: 'Feat Lvl', value: f.feat_lvl != null ? String(f.feat_lvl) : '-' },
+            { key: 'Req. Lvl', value: f.lvl_req != null ? formatCreatureLevel(f.lvl_req) : '-' },
+          ]}
+        />
       ))}
     </CodexBrowseListShell>
   );

@@ -48,16 +48,14 @@ export function AdminArchetypeEditor({
   return (
     <div className="space-y-4">
       <AdminArchetypeEditorMeta form={form} setForm={setForm} copySourceName={copySourceName} />
-      <div className="rounded-lg border border-border-light p-4 space-y-3">
+      <div className="space-y-3 rounded-lg border border-border-light p-4">
         <div>
           <h3 className="text-sm font-semibold text-text-primary">Archetype Path Builder</h3>
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+          <p className="mt-1 text-xs text-text-muted">
             Select existing codex and official library entries. No manual CSV input required.
           </p>
           {isSelectionDataLoading && (
-            <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
-              Loading official library options...
-            </p>
+            <p className="mt-1 text-xs text-text-muted">Loading official library options...</p>
           )}
         </div>
 
@@ -90,7 +88,11 @@ export function AdminArchetypeEditor({
           removeLevel1Armament={removeLevel1Armament}
         />
 
-        <AdminArchetypeEditorGuided form={form} setForm={setForm} equipmentOptions={equipmentOptions} />
+        <AdminArchetypeEditorGuided
+          form={form}
+          setForm={setForm}
+          equipmentOptions={equipmentOptions}
+        />
 
         <AdminArchetypeEditorProgression
           form={form}

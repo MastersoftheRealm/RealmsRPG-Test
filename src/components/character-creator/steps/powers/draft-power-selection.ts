@@ -12,15 +12,12 @@ type SavedPart = {
   applyDuration?: boolean;
 };
 
-function enrichPowerParts(
-  savedParts: SavedPart[],
-  powerParts: PowerPart[] | undefined | null
-) {
+function enrichPowerParts(savedParts: SavedPart[], powerParts: PowerPart[] | undefined | null) {
   return savedParts.map((savedPart) => {
     const codexPart = powerParts?.find(
       (rp) =>
         String(rp.id) === String(savedPart.id) ||
-        rp.name?.toLowerCase() === savedPart.name?.toLowerCase()
+        rp.name?.toLowerCase() === savedPart.name?.toLowerCase(),
     );
     return {
       id: savedPart.id !== undefined ? String(savedPart.id) : undefined,
@@ -38,13 +35,13 @@ function enrichPowerParts(
 
 function enrichTechniqueParts(
   savedParts: SavedPart[],
-  techniqueParts: TechniquePart[] | undefined | null
+  techniqueParts: TechniquePart[] | undefined | null,
 ) {
   return savedParts.map((savedPart) => {
     const codexPart = techniqueParts?.find(
       (rp) =>
         String(rp.id) === String(savedPart.id) ||
-        rp.name?.toLowerCase() === savedPart.name?.toLowerCase()
+        rp.name?.toLowerCase() === savedPart.name?.toLowerCase(),
     );
     return {
       id: savedPart.id !== undefined ? String(savedPart.id) : undefined,

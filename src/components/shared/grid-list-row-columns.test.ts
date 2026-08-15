@@ -3,17 +3,10 @@ import { columnsAlreadyShowTrainingPoints } from './grid-list-row-columns';
 
 describe('columnsAlreadyShowTrainingPoints', () => {
   it('detects TP / Training Points column keys and labels', () => {
+    expect(columnsAlreadyShowTrainingPoints([{ key: 'TP', value: 3 }])).toBe(true);
+    expect(columnsAlreadyShowTrainingPoints([{ key: 'energy', label: 'TP', value: 1 }])).toBe(true);
     expect(
-      columnsAlreadyShowTrainingPoints([{ key: 'TP', value: 3 }])
-    ).toBe(true);
-    expect(
-      columnsAlreadyShowTrainingPoints([{ key: 'energy', label: 'TP', value: 1 }])
-    ).toBe(true);
-    expect(
-      columnsAlreadyShowTrainingPoints(
-        [{ key: 'cost', label: 'Training Points', value: 2 }],
-        'TP'
-      )
+      columnsAlreadyShowTrainingPoints([{ key: 'cost', label: 'Training Points', value: 2 }], 'TP'),
     ).toBe(true);
   });
 
@@ -22,7 +15,7 @@ describe('columnsAlreadyShowTrainingPoints', () => {
       columnsAlreadyShowTrainingPoints([
         { key: 'Energy', value: 4 },
         { key: 'Action', value: 'Basic Action' },
-      ])
+      ]),
     ).toBe(false);
   });
 });

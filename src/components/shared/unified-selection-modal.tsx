@@ -86,10 +86,7 @@ export function UnifiedSelectionModal({
   const [wasOpen, setWasOpen] = useState(false);
   const [openInitialIds, setOpenInitialIds] = useState<Set<string>>(() => new Set());
   const [openInitialQuantities, setOpenInitialQuantities] = useState<Record<string, number>>({});
-  const hasThumbnailColumn = useMemo(
-    () => items.some((item) => Boolean(item.thumbnail)),
-    [items]
-  );
+  const hasThumbnailColumn = useMemo(() => items.some((item) => Boolean(item.thumbnail)), [items]);
   const hasOptions = Boolean(headerExtra) || Boolean(showFilters && filterContent);
 
   if (isOpen && !wasOpen) {
@@ -99,10 +96,7 @@ export function UnifiedSelectionModal({
     if (showQuantity) {
       const next: Record<string, number> = {};
       for (const id of ids) {
-        const seeded =
-          initialQuantities[id] ??
-          initialQuantities[id.toLowerCase()] ??
-          1;
+        const seeded = initialQuantities[id] ?? initialQuantities[id.toLowerCase()] ?? 1;
         next[id] = Math.max(1, Math.floor(Number(seeded)) || 1);
       }
       setOpenInitialQuantities(next);
@@ -124,12 +118,12 @@ export function UnifiedSelectionModal({
     let result = displayFilter ? items.filter(displayFilter) : items;
 
     if (hideDisabled) {
-      result = result.filter(item => !item.disabled);
+      result = result.filter((item) => !item.disabled);
     }
 
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(item => {
+      result = result.filter((item) => {
         for (const field of searchFields) {
           const value = item[field];
           if (typeof value === 'string' && value.toLowerCase().includes(query)) {
@@ -143,57 +137,58 @@ export function UnifiedSelectionModal({
     return sortItems(result);
   }, [items, displayFilter, searchQuery, searchFields, hideDisabled, sortItems]);
 
-  const toggleSelection = useCallback((id: string | number) => {
-    const key = String(id);
-    setSelectedIds(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(key)) {
-        newSet.delete(key);
-        setQuantities(q => {
-          const newQ = { ...q };
-          delete newQ[key];
-          return newQ;
-        });
-      } else if (nextSelectedIds) {
-        const nextSet = new Set(nextSelectedIds([...prev], key));
-        if (showQuantity) {
-          setQuantities(q => {
-            const nextQ: Record<string, number> = {};
-            for (const idKey of nextSet) {
-              nextQ[idKey] = q[idKey] ?? 1;
-            }
-            return nextQ;
+  const toggleSelection = useCallback(
+    (id: string | number) => {
+      const key = String(id);
+      setSelectedIds((prev) => {
+        const newSet = new Set(prev);
+        if (newSet.has(key)) {
+          newSet.delete(key);
+          setQuantities((q) => {
+            const newQ = { ...q };
+            delete newQ[key];
+            return newQ;
           });
+        } else if (nextSelectedIds) {
+          const nextSet = new Set(nextSelectedIds([...prev], key));
+          if (showQuantity) {
+            setQuantities((q) => {
+              const nextQ: Record<string, number> = {};
+              for (const idKey of nextSet) {
+                nextQ[idKey] = q[idKey] ?? 1;
+              }
+              return nextQ;
+            });
+          }
+          return nextSet;
+        } else if (maxSelections === 1) {
+          setQuantities(showQuantity ? { [key]: 1 } : {});
+          return new Set([key]);
+        } else {
+          newSet.add(key);
+          if (showQuantity) {
+            setQuantities((q) => ({ ...q, [key]: 1 }));
+          }
         }
-        return nextSet;
-      } else if (maxSelections === 1) {
-        setQuantities(showQuantity ? { [key]: 1 } : {});
-        return new Set([key]);
-      } else {
-        newSet.add(key);
-        if (showQuantity) {
-          setQuantities(q => ({ ...q, [key]: 1 }));
-        }
-      }
-      return newSet;
-    });
-  }, [showQuantity, maxSelections, nextSelectedIds]);
-
-  const selectedItems = useMemo(
-    () => items.filter(item => selectedIds.has(String(item.id))),
-    [items, selectedIds]
+        return newSet;
+      });
+    },
+    [showQuantity, maxSelections, nextSelectedIds],
   );
 
-  const overSelectionLimit =
-    maxSelections !== undefined && selectedIds.size > maxSelections;
+  const selectedItems = useMemo(
+    () => items.filter((item) => selectedIds.has(String(item.id))),
+    [items, selectedIds],
+  );
+
+  const overSelectionLimit = maxSelections !== undefined && selectedIds.size > maxSelections;
   const showSelectionLimitWarning =
-    maxSelections !== undefined &&
-    (maxSelections === 0 || overSelectionLimit);
+    maxSelections !== undefined && (maxSelections === 0 || overSelectionLimit);
   const limitWarningText = showSelectionLimitWarning
-    ? selectionLimitMessage ??
+    ? (selectionLimitMessage ??
       (maxSelections === 0
         ? 'You cannot add more right now. Free up capacity first, then try again.'
-        : `You've selected more than the limit (max ${maxSelections}). Deselect some to continue.`)
+        : `You've selected more than the limit (max ${maxSelections}). Deselect some to continue.`))
     : undefined;
 
   const handleConfirm = useCallback(() => {
@@ -201,8 +196,9 @@ export function UnifiedSelectionModal({
     if (confirmDisabled?.(selectedItems)) return;
     const selected = selectedItems;
     if (showQuantity) {
-      selected.forEach(item => {
-        (item as SelectableItem & { quantity?: number }).quantity = quantities[String(item.id)] || 1;
+      selected.forEach((item) => {
+        (item as SelectableItem & { quantity?: number }).quantity =
+          quantities[String(item.id)] || 1;
       });
     }
     setLeaveConfirmOpen(false);
@@ -219,9 +215,7 @@ export function UnifiedSelectionModal({
   ]);
 
   const isConfirmDisabled =
-    selectedIds.size === 0 ||
-    overSelectionLimit ||
-    (confirmDisabled?.(selectedItems) ?? false);
+    selectedIds.size === 0 || overSelectionLimit || (confirmDisabled?.(selectedItems) ?? false);
 
   const handleRequestClose = useCallback(() => {
     const hasUnconfirmedSelection = selectionDiffersFromInitial(
@@ -229,7 +223,7 @@ export function UnifiedSelectionModal({
       openInitialIds,
       showQuantity,
       quantities,
-      openInitialQuantities
+      openInitialQuantities,
     );
     if (hasUnconfirmedSelection) {
       setLeaveConfirmOpen(true);
@@ -273,7 +267,7 @@ export function UnifiedSelectionModal({
         return nextSet;
       });
     },
-    [quantities, maxSelections]
+    [quantities, maxSelections],
   );
 
   const isLoadConfirm = /load/i.test(confirmLabel);
@@ -300,7 +294,7 @@ export function UnifiedSelectionModal({
         flexLayout={flexLayout}
         contentClassName={cn(
           'flex flex-col flex-1 min-h-0 gap-2 overflow-hidden px-4 pt-4 pb-0 md:gap-3 md:px-6 md:pt-6 md:pb-0 md:max-h-[70vh]',
-          className
+          className,
         )}
         footer={
           <UnifiedSelectionModalFooter

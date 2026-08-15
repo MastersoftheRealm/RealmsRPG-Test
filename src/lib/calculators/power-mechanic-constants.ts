@@ -15,7 +15,7 @@ export const POWER_ADVANCED_MECHANIC_CATEGORIES = [
 export type PowerAdvancedMechanicCategory = (typeof POWER_ADVANCED_MECHANIC_CATEGORIES)[number];
 
 export const POWER_ADVANCED_MECHANIC_CATEGORY_SET = new Set<string>(
-  POWER_ADVANCED_MECHANIC_CATEGORIES
+  POWER_ADVANCED_MECHANIC_CATEGORIES,
 );
 
 /** Auto-derived mechanic parts rebuilt from action/damage/range/area/duration fields. */

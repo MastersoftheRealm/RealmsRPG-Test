@@ -65,29 +65,22 @@ const EMPTY_PATH_RECOMMENDATIONS: PathItemRecommendation[] = [];
 
 export function EquipmentStep() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
-  const {
-    draft,
-    nextStep,
-    prevStep,
-    updateDraft,
-    getStepLayer,
-    expandLayer,
-    collapseLayer,
-  } = useCharacterCreatorStore();
+  const { draft, nextStep, prevStep, updateDraft, getStepLayer, expandLayer, collapseLayer } =
+    useCharacterCreatorStore();
   const { data: allSpecies = [] } = useMergedSpecies();
   const { data: codexSkills } = useCodexSkills();
   const { data: allTraits } = useTraits();
   const validationContext = useMemo(
     () => ({ allSpecies, codexSkills: codexSkills ?? null, allTraits: allTraits ?? null }),
-    [allSpecies, codexSkills, allTraits]
+    [allSpecies, codexSkills, allTraits],
   );
   const stepIssues = useMemo(
     () => getValidationIssuesForStep('equipment', draft, validationContext),
-    [draft, validationContext]
+    [draft, validationContext],
   );
   const completion = useMemo(
     () => getStepCompletion('equipment', draft, validationContext),
-    [draft, validationContext]
+    [draft, validationContext],
   );
   const { data: userItems, isLoading: userItemsLoading } = useUserItems();
   const { data: codexEquipment, isLoading: codexLoading, error: codexError } = useEquipment();
@@ -111,11 +104,11 @@ export function EquipmentStep() {
     pathData?.level1?.equipmentRecommendations ?? EMPTY_PATH_RECOMMENDATIONS;
   const recommendedArmamentRefs = useMemo(
     () => recommendationIdSet(pathArmamentRecommendations),
-    [pathArmamentRecommendations]
+    [pathArmamentRecommendations],
   );
   const recommendedEquipmentRefs = useMemo(
     () => recommendationIdSet(pathEquipmentRecommendations),
-    [pathEquipmentRecommendations]
+    [pathEquipmentRecommendations],
   );
   const pathRecommendsUnarmedProwess = pathData?.level1?.recommendUnarmedProwess === true;
 
@@ -126,15 +119,15 @@ export function EquipmentStep() {
   const currentUnarmedProwess = draft.unarmedProwess || 0;
   const unarmedProwessTPCost = useMemo(
     () => computeUnarmedProwessTpCost(currentUnarmedProwess),
-    [currentUnarmedProwess]
+    [currentUnarmedProwess],
   );
   const availableUnarmedLevels = useMemo(
     () => availableUnarmedProwessLevels(draft.level || 1),
-    [draft.level]
+    [draft.level],
   );
   const setUnarmedProwessLevel = useCallback(
     (level: number) => updateDraft({ unarmedProwess: level }),
-    [updateDraft]
+    [updateDraft],
   );
 
   const allEquipment = useMemo(
@@ -145,7 +138,7 @@ export function EquipmentStep() {
         publicItems,
         itemProperties,
       }),
-    [userItems, codexEquipment, publicItems, itemProperties]
+    [userItems, codexEquipment, publicItems, itemProperties],
   );
 
   const pathRecommendedItems = useMemo(
@@ -153,9 +146,9 @@ export function EquipmentStep() {
       resolvePathRecommendedEquipment(
         allEquipment,
         pathArmamentRecommendations,
-        pathEquipmentRecommendations
+        pathEquipmentRecommendations,
       ),
-    [allEquipment, pathArmamentRecommendations, pathEquipmentRecommendations]
+    [allEquipment, pathArmamentRecommendations, pathEquipmentRecommendations],
   );
 
   const pathRecommendedForPhase = useMemo(
@@ -165,21 +158,17 @@ export function EquipmentStep() {
         showFullEquipmentList,
         loadoutPhase,
       }),
-    [pathRecommendedItems, pathMode, showFullEquipmentList, loadoutPhase]
+    [pathRecommendedItems, pathMode, showFullEquipmentList, loadoutPhase],
   );
 
-  const startingCurrency = useMemo(
-    () => computeStartingCurrency(draft.level || 1),
-    [draft.level]
-  );
+  const startingCurrency = useMemo(() => computeStartingCurrency(draft.level || 1), [draft.level]);
   const selectedItems = useMemo(
     () => selectedItemsFromInventory(draft.equipment?.inventory),
-    [draft.equipment?.inventory]
+    [draft.equipment?.inventory],
   );
   const spentCurrency = useMemo(
-    () =>
-      computeSpentCurrency(selectedItems.map(({ cost, quantity }) => ({ cost, quantity }))),
-    [selectedItems]
+    () => computeSpentCurrency(selectedItems.map(({ cost, quantity }) => ({ cost, quantity }))),
+    [selectedItems],
   );
   const remainingCurrency = computeRemainingCurrency(startingCurrency, spentCurrency);
 
@@ -197,7 +186,7 @@ export function EquipmentStep() {
         techniquePartsDb,
         itemPropertiesDb: itemProperties,
       }),
-    [draft, powerPartsDb, techniquePartsDb, itemProperties]
+    [draft, powerPartsDb, techniquePartsDb, itemProperties],
   );
 
   const filteredEquipment = useMemo(
@@ -207,30 +196,25 @@ export function EquipmentStep() {
         searchTerm,
         sourceFilter,
       }),
-    [allEquipment, activeTab, searchTerm, sourceFilter]
+    [allEquipment, activeTab, searchTerm, sourceFilter],
   );
   const sortedEquipment = useMemo(
     () => sortByColumn(filteredEquipment, equipmentSort),
-    [filteredEquipment, equipmentSort]
+    [filteredEquipment, equipmentSort],
   );
 
   const addItemWithQuantity = useCallback(
     (item: AdvancedEquipmentItem, qty: number) => {
       const currentInventory: Item[] = draft.equipment?.inventory || [];
-      const next = addAdvancedEquipmentToInventory(
-        currentInventory,
-        item,
-        qty,
-        remainingCurrency
-      );
+      const next = addAdvancedEquipmentToInventory(currentInventory, item, qty, remainingCurrency);
       if (!next) return;
       updateDraft({ equipment: { ...draft.equipment, inventory: next } });
     },
-    [draft.equipment, remainingCurrency, updateDraft]
+    [draft.equipment, remainingCurrency, updateDraft],
   );
   const addItem = useCallback(
     (item: AdvancedEquipmentItem) => addItemWithQuantity(item, 1),
-    [addItemWithQuantity]
+    [addItemWithQuantity],
   );
   const removeItem = useCallback(
     (itemId: string) => {
@@ -239,11 +223,11 @@ export function EquipmentStep() {
       if (next === currentInventory) return;
       updateDraft({ equipment: { ...draft.equipment, inventory: next } });
     },
-    [draft.equipment, updateDraft]
+    [draft.equipment, updateDraft],
   );
   const getItemQuantity = useCallback(
     (itemId: string): number => selectedItems.find((i) => i.id === itemId)?.quantity || 0,
-    [selectedItems]
+    [selectedItems],
   );
   const addAllRecommendedEquipment = useCallback(() => {
     if (pathRecommendedItems.length === 0) return;
@@ -260,7 +244,7 @@ export function EquipmentStep() {
     pathMode && !showFullEquipmentList && pathRecommendedItems.length > 0 && !publicItemsLoading;
   const pathMergeKey = useMemo(
     () => pathRecommendedMergeKey(draft.archetype?.id, pathRecommendedItems),
-    [draft.archetype?.id, pathRecommendedItems]
+    [draft.archetype?.id, pathRecommendedItems],
   );
   const hasMergedPathEquipmentRef = useRef<string | null>(null);
 
@@ -273,7 +257,7 @@ export function EquipmentStep() {
 
   const recommendedInInventory = useMemo(
     () => recommendedItemsInInventory(draft.equipment?.inventory, pathRecommendedItems),
-    [draft.equipment?.inventory, pathRecommendedItems]
+    [draft.equipment?.inventory, pathRecommendedItems],
   );
 
   const canContinue = useMemo(() => {
@@ -299,7 +283,7 @@ export function EquipmentStep() {
 
   if (isLoading) {
     return (
-      <div className="max-w-5xl mx-auto flex items-center justify-center py-12">
+      <div className="mx-auto flex max-w-5xl items-center justify-center py-12">
         <Spinner size="md" />
       </div>
     );
@@ -307,8 +291,8 @@ export function EquipmentStep() {
 
   if (error) {
     return (
-      <div className="max-w-5xl mx-auto text-center py-12">
-        <p className="text-danger-700 dark:text-danger-400 mb-4">Failed to load equipment data.</p>
+      <div className="mx-auto max-w-5xl py-12 text-center">
+        <p className="mb-4 text-danger-700 dark:text-danger-400">Failed to load equipment data.</p>
         <Button variant="secondary" onClick={prevStep}>
           ← Back
         </Button>
@@ -317,7 +301,7 @@ export function EquipmentStep() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto flex flex-col flex-1 min-h-0">
+    <div className="mx-auto flex min-h-0 max-w-5xl flex-1 flex-col">
       <EquipmentStepHeader
         remainingCurrency={remainingCurrency}
         startingCurrency={startingCurrency}

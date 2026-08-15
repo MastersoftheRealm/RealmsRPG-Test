@@ -85,7 +85,7 @@ describe('calculatePowerSectionContribution', () => {
     const section = calculatePowerSectionContribution(
       areaParts,
       [spherePart, durationPart],
-      durationParts
+      durationParts,
     );
 
     expect(isolated.energyRaw).toBe(4);
@@ -164,7 +164,7 @@ describe('derivePowerDisplay', () => {
         ],
         parts: [],
       },
-      [elementalDamagePart]
+      [elementalDamagePart],
     );
 
     expect(display.energy).toBe(12);
@@ -244,7 +244,7 @@ describe('derivePowerDisplay', () => {
           { id: 377, name: 'Duration (Minute)' },
         ],
       },
-      partsDb
+      partsDb,
     );
 
     const chipNames = display.partChips.map((c) => c.text.replace(/\s\| TP:.*/, ''));
@@ -287,7 +287,7 @@ describe('derivePowerDisplay', () => {
         duration: { type: 'minutes', value: 1 },
         parts: [],
       },
-      [spherePart, durationPart]
+      [spherePart, durationPart],
     );
     const withApply = derivePowerDisplay(
       {
@@ -297,7 +297,7 @@ describe('derivePowerDisplay', () => {
         duration: { type: 'minutes', value: 1 },
         parts: [],
       },
-      [spherePart, durationPart]
+      [spherePart, durationPart],
     );
 
     // Sphere base 4 + duration multiplier: without apply → flat only; with apply → flat + dur*flat

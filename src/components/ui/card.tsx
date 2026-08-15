@@ -25,13 +25,12 @@ export const cardVariants = cva('rounded-xl bg-surface text-text-primary', {
 });
 
 export interface CardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof cardVariants> {}
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof cardVariants> {}
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
   ({ className, variant, ...props }, ref) => (
     <div ref={ref} className={cn(cardVariants({ variant }), className)} {...props} />
-  )
+  ),
 );
 Card.displayName = 'Card';
 
@@ -39,12 +38,8 @@ type CardHeaderProps = React.HTMLAttributes<HTMLDivElement>;
 
 const CardHeader = React.forwardRef<HTMLDivElement, CardHeaderProps>(
   ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn('flex flex-col space-y-1.5 p-6', className)}
-      {...props}
-    />
-  )
+    <div ref={ref} className={cn('flex flex-col space-y-1.5 p-6', className)} {...props} />
+  ),
 );
 CardHeader.displayName = 'CardHeader';
 
@@ -54,10 +49,13 @@ const CardTitle = React.forwardRef<HTMLHeadingElement, CardTitleProps>(
   ({ className, ...props }, ref) => (
     <h3
       ref={ref}
-      className={cn('text-xl font-semibold leading-none tracking-tight text-text-primary', className)}
+      className={cn(
+        'text-xl leading-none font-semibold tracking-tight text-text-primary',
+        className,
+      )}
       {...props}
     />
-  )
+  ),
 );
 CardTitle.displayName = 'CardTitle';
 
@@ -65,12 +63,8 @@ type CardDescriptionProps = React.HTMLAttributes<HTMLParagraphElement>;
 
 const CardDescription = React.forwardRef<HTMLParagraphElement, CardDescriptionProps>(
   ({ className, ...props }, ref) => (
-    <p
-      ref={ref}
-      className={cn('text-sm text-text-muted dark:text-text-secondary', className)}
-      {...props}
-    />
-  )
+    <p ref={ref} className={cn('text-sm text-text-muted', className)} {...props} />
+  ),
 );
 CardDescription.displayName = 'CardDescription';
 
@@ -79,7 +73,7 @@ type CardContentProps = React.HTMLAttributes<HTMLDivElement>;
 const CardContent = React.forwardRef<HTMLDivElement, CardContentProps>(
   ({ className, ...props }, ref) => (
     <div ref={ref} className={cn('p-6 pt-0', className)} {...props} />
-  )
+  ),
 );
 CardContent.displayName = 'CardContent';
 
@@ -87,12 +81,8 @@ type CardFooterProps = React.HTMLAttributes<HTMLDivElement>;
 
 const CardFooter = React.forwardRef<HTMLDivElement, CardFooterProps>(
   ({ className, ...props }, ref) => (
-    <div
-      ref={ref}
-      className={cn('flex items-center p-6 pt-0', className)}
-      {...props}
-    />
-  )
+    <div ref={ref} className={cn('flex items-center p-6 pt-0', className)} {...props} />
+  ),
 );
 CardFooter.displayName = 'CardFooter';
 

@@ -32,7 +32,7 @@ export interface GuidedL1MaxEnergyInput {
  * Returns null when archetype ability or abilities are missing (caller uses fallback filter).
  */
 export function calculateGuidedL1TheoreticalMaxEnergy(
-  input: GuidedL1MaxEnergyInput
+  input: GuidedL1MaxEnergyInput,
 ): number | null {
   const ability = input.archetypeAbility;
   const abilities = input.abilities;
@@ -47,7 +47,7 @@ export function calculateGuidedL1TheoreticalMaxEnergy(
  */
 export function isGuidedL2EnergyAllowed(
   energy: number | null | undefined,
-  maxEnergy: number | null
+  maxEnergy: number | null,
 ): boolean {
   if (energy == null || Number.isNaN(Number(energy))) return true;
   const cost = Math.max(0, Math.floor(Number(energy)));

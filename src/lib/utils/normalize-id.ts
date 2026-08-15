@@ -16,7 +16,7 @@ export type NormalizedIdRow = {
 /** True when `refId` matches the row `id` or `docId` after normalizeId. */
 export function rowMatchesNormalizedId(
   row: NormalizedIdRow,
-  refId: string | number | null | undefined
+  refId: string | number | null | undefined,
 ): boolean {
   const key = normalizeId(refId);
   if (!key) return false;
@@ -25,7 +25,7 @@ export function rowMatchesNormalizedId(
 
 export function findByNormalizedId<T extends NormalizedIdRow>(
   list: readonly T[] | undefined,
-  refId: string | number | null | undefined
+  refId: string | number | null | undefined,
 ): T | undefined {
   const key = normalizeId(refId);
   if (!key) return undefined;
@@ -33,7 +33,9 @@ export function findByNormalizedId<T extends NormalizedIdRow>(
 }
 
 /** Index `id` and `docId` (when distinct) so either draft key resolves. */
-export function indexByNormalizedIds<T extends NormalizedIdRow>(items: readonly T[]): Map<string, T> {
+export function indexByNormalizedIds<T extends NormalizedIdRow>(
+  items: readonly T[],
+): Map<string, T> {
   const map = new Map<string, T>();
   for (const item of items) {
     const idKey = normalizeId(item.id);
@@ -47,9 +49,10 @@ export function indexByNormalizedIds<T extends NormalizedIdRow>(items: readonly 
 type NamedNormalizedIdRow = NormalizedIdRow & { name?: string | null };
 
 /** Name maps keyed by normalized id/docId, plus name fallback for path refs. */
-export function indexDisplayNamesByNormalizedIds(
-  items: readonly NamedNormalizedIdRow[]
-): { byId: Map<string, string>; byName: Map<string, string> } {
+export function indexDisplayNamesByNormalizedIds(items: readonly NamedNormalizedIdRow[]): {
+  byId: Map<string, string>;
+  byName: Map<string, string>;
+} {
   const byId = new Map<string, string>();
   const byName = new Map<string, string>();
   for (const [key, item] of indexByNormalizedIds(items)) {
@@ -68,7 +71,7 @@ export function indexDisplayNamesByNormalizedIds(
 export function resolveNormalizedRefLabel(
   ref: string,
   byId: Map<string, string>,
-  byName?: Map<string, string>
+  byName?: Map<string, string>,
 ): string {
   const trimmed = ref.trim();
   const colon = trimmed.indexOf(':');
@@ -85,7 +88,7 @@ export function resolveNormalizedRefLabel(
 export function resolveNormalizedRefList(
   refs: string[] | undefined,
   byId: Map<string, string>,
-  byName?: Map<string, string>
+  byName?: Map<string, string>,
 ): string[] {
   if (!refs?.length) return [];
   return refs.map((ref) => resolveNormalizedRefLabel(ref, byId, byName));

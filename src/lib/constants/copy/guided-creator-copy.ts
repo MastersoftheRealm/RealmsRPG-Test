@@ -174,15 +174,13 @@ export const GUIDED_CREATOR_COPY = {
         },
         recommendedSkillsTitle: 'Recommended Skills',
         pathOptionsTitle: 'Path Options',
-        pathOptionsIntro:
-          'Here are choices this path offers during character creation.',
+        pathOptionsIntro: 'Here are choices this path offers during character creation.',
         pathOptionsNotesOnlyIntro: 'Notes for this path during character creation.',
         archetypeFeatsTitle: 'Archetype Feat Options',
         archetypeFeatsIntro:
           'Combat-focused Feats from this path. You choose among them in Your Archetype.',
         characterFeatsTitle: 'Character Feat Options',
-        characterFeatsIntro:
-          'Character Feats tied to this path. You pick one in Your Archetype.',
+        characterFeatsIntro: 'Character Feats tied to this path. You pick one in Your Archetype.',
         weaponsTitle: 'Weapon Options',
         weaponsIntro:
           'Weapons and shields recommended for this path. Expand a row for Damage, Range, and properties.',
@@ -191,7 +189,8 @@ export const GUIDED_CREATOR_COPY = {
           'This path recommends Unarmed Prowess so you can fight effectively without a weapon.',
         unarmedProwessStats: 'Unarmed',
         armorTitle: 'Armor Options',
-        armorIntro: 'Armor recommended for this path. Expand a row for Damage Reduction and other details.',
+        armorIntro:
+          'Armor recommended for this path. Expand a row for Damage Reduction and other details.',
         gearTitle: 'Equipment',
         gearIntro: 'Equipment recommended for this path.',
         techniquesTitle: 'Technique Options',
@@ -230,8 +229,7 @@ export const GUIDED_CREATOR_COPY = {
     },
     ancestry: {
       skipFlaw: 'No Flaw',
-      skipFlawDescription:
-        'Continue without a Flaw. You will not gain an extra Ancestry Trait.',
+      skipFlawDescription: 'Continue without a Flaw. You will not gain an extra Ancestry Trait.',
       selectSpeciesFirst: 'Choose a species first.',
       emptyOptions: 'No ancestry options are available for this species.',
       nextPick: 'Next pick',
@@ -317,8 +315,7 @@ export const GUIDED_CREATOR_COPY = {
         pathName
           ? `Pick ${count} Archetype Feat${count === 1 ? '' : 's'} for your ${pathName}. Groups suggest styles; you can mix picks across groups.`
           : `Pick ${count} Archetype Feat${count === 1 ? '' : 's'} that shape how you fight.`,
-      groupIntro:
-        'Groups are suggestions, not either/or. Keep picking until you reach your limit.',
+      groupIntro: 'Groups are suggestions, not either/or. Keep picking until you reach your limit.',
       seeMore: 'See more Feats',
       emptyTitle: 'No Feat recommendations',
       emptyDescription:
@@ -329,7 +326,8 @@ export const GUIDED_CREATOR_COPY = {
     },
     characterFeat: {
       title: 'Who you are beyond the fight',
-      description: 'Pick one Character Feat, usually about personality, background, or non-combat flair.',
+      description:
+        'Pick one Character Feat, usually about personality, background, or non-combat flair.',
       seeMore: 'See more Character Feats',
       emptyTitle: 'No Character Feats found',
       emptyDescription:
@@ -350,8 +348,7 @@ export const GUIDED_CREATOR_COPY = {
       searchPlaceholder: 'Search feats by name, tags, keywords, or category…',
       recommendedBadge: 'Recommended',
       emptyMessage: 'No Feats match your filters. Try clearing filters.',
-      overLimit: (max: number) =>
-        `You can select up to ${max} Feats. Deselect some to continue.`,
+      overLimit: (max: number) => `You can select up to ${max} Feats. Deselect some to continue.`,
       overLimitZero: 'No Feat slots left. Deselect a Feat on this step, then try again.',
       /** L3 (no path) — inline catalog in the step body instead of the L2 modal (TASK-684). */
       archetypeSelectedTitle: 'Selected Archetype Feats',
@@ -506,7 +503,8 @@ export const GUIDED_CREATOR_COPY = {
       continueToTechniques: 'Continue to Techniques →',
       innateIntroL3:
         'Pick innate powers that fit your Innate Threshold. Each costs Training Points like other Powers. Filling your Innate Energy pool is recommended but optional.',
-      maxEnergyHint: (max: number) => `Showing Powers/Techniques within your level 1 Energy (${max}).`,
+      maxEnergyHint: (max: number) =>
+        `Showing Powers/Techniques within your level 1 Energy (${max}).`,
       powersHeading: 'Powers',
       techniquesHeading: 'Techniques',
       l2: {
@@ -544,7 +542,8 @@ export const GUIDED_CREATOR_COPY = {
       heightLabel: 'Height (cm, optional)',
       weightLabel: 'Weight (kg, optional)',
       agePlaceholder: (adulthood?: number, lifespan?: number) => {
-        if (adulthood != null && lifespan != null) return `Avg adulthood ${adulthood} · lifespan ${lifespan}`;
+        if (adulthood != null && lifespan != null)
+          return `Avg adulthood ${adulthood} · lifespan ${lifespan}`;
         if (adulthood != null) return `Avg adulthood ${adulthood}`;
         if (lifespan != null) return `Avg lifespan ${lifespan}`;
         return '';

@@ -11,13 +11,15 @@ export function getModalGridColumns(itemType: AddLibraryItemType): string {
 }
 
 export function getListHeaderColumns(
-  itemType: AddLibraryItemType
+  itemType: AddLibraryItemType,
 ): { key: string; label: string; sortable?: boolean }[] {
-  return getSharedListHeaderColumns(itemType as LibraryItemType).map(({ key, label, sortable }) => ({
-    key,
-    label,
-    sortable,
-  }));
+  return getSharedListHeaderColumns(itemType as LibraryItemType).map(
+    ({ key, label, sortable }) => ({
+      key,
+      label,
+      sortable,
+    }),
+  );
 }
 
 export function getAddLibraryItemTitle(itemType: AddLibraryItemType): string {
@@ -39,7 +41,10 @@ export function getAddLibraryItemTitle(itemType: AddLibraryItemType): string {
   }
 }
 
-export function getSearchPlaceholder(itemType: AddLibraryItemType, powerSelectionMode: PowerSelectionMode): string {
+export function getSearchPlaceholder(
+  itemType: AddLibraryItemType,
+  powerSelectionMode: PowerSelectionMode,
+): string {
   if (itemType === 'power' && powerSelectionMode === 'empowered') {
     return 'Search empowered techniques...';
   }

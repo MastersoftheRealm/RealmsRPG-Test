@@ -6,7 +6,7 @@
  * - All text fields are always editable (not just in edit mode)
  * - Support for multiple named notes with add/delete functionality
  * - Weight/height still require edit mode for modification
- * 
+ *
  * Uses unified components: SectionHeader, TabSummarySection
  */
 
@@ -16,7 +16,12 @@ import { useState, useCallback } from 'react';
 import { X, Pencil } from 'lucide-react';
 import { Button, IconButton, Textarea } from '@/components/ui';
 import { useRollsOptional } from '@/components/rolls';
-import { TabSummarySection, SummaryItem, SummaryRow, LibraryCollapsibleSection } from '@/components/shared';
+import {
+  TabSummarySection,
+  SummaryItem,
+  SummaryRow,
+  LibraryCollapsibleSection,
+} from '@/components/shared';
 import { formatSpeedString, type SpeedDisplayUnit } from '@/lib/utils/number';
 import type { Abilities } from '@/types';
 import type { CharacterVisibility } from '@/types';
@@ -77,10 +82,10 @@ function NoteCard({
   };
 
   return (
-    <div className="border border-border-light rounded-lg overflow-hidden">
+    <div className="overflow-hidden rounded-lg border border-border-light">
       {/* Header */}
-      <div 
-        className="flex items-center gap-2 px-3 py-2 bg-surface-alt cursor-pointer"
+      <div
+        className="flex cursor-pointer items-center gap-2 bg-surface-alt px-3 py-2"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {isEditingName ? (
@@ -97,12 +102,12 @@ function NoteCard({
                 setIsEditingName(false);
               }
             }}
-            className="flex-1 px-2 py-0.5 text-sm font-medium border border-primary-subtle-border rounded focus:ring-2 focus:ring-primary-outline-border"
+            className="flex-1 rounded border border-primary-subtle-border px-2 py-0.5 text-sm font-medium focus:ring-2 focus:ring-primary-outline-border"
             autoFocus
           />
         ) : (
           <span
-            className="flex-1 text-sm font-medium text-text-primary cursor-pointer hover:text-primary-fg-hover"
+            className="flex-1 cursor-pointer text-sm font-medium text-text-primary hover:text-primary-fg-hover"
             onClick={(e) => {
               e.stopPropagation();
               setIsEditingName(true);
@@ -110,22 +115,17 @@ function NoteCard({
             title="Click to rename"
           >
             {note.name}
-            <Pencil className="w-3 h-3 inline ml-1 text-text-muted dark:text-text-secondary" />
+            <Pencil className="ml-1 inline h-3 w-3 text-text-muted" />
           </span>
         )}
-        
+
         {isEditMode && onDelete && (
-          <IconButton
-            variant="danger"
-            size="sm"
-            onClick={onDelete}
-            label="Delete note"
-          >
-            <X className="w-4 h-4" />
+          <IconButton variant="danger" size="sm" onClick={onDelete} label="Delete note">
+            <X className="h-4 w-4" />
           </IconButton>
         )}
       </div>
-      
+
       {/* Content - always editable */}
       {isExpanded && (
         <div className="p-3">
@@ -162,7 +162,7 @@ export function NotesTab({
 }: NotesTabProps) {
   const rollContext = useRollsOptional();
   const speedUnit = speedDisplayUnit;
-  
+
   // Local state for editing
   const [weightInput, setWeightInput] = useState(weight.toString());
   const [heightInput, setHeightInput] = useState(height.toString());
@@ -226,16 +226,16 @@ export function NotesTab({
                     value={weightInput}
                     onChange={(e) => setWeightInput(e.target.value)}
                     onBlur={handleWeightBlur}
-                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-outline-border bg-surface"
+                    className="w-16 rounded border border-border-light bg-surface px-2 py-0.5 text-sm focus:ring-2 focus:ring-primary-outline-border"
                     aria-label="Weight in kg"
                   />
-                  <span className="text-sm text-text-muted dark:text-text-secondary">kg</span>
+                  <span className="text-sm text-text-muted">kg</span>
                 </div>
               ) : (
                 <span className="text-sm font-bold text-text-primary">{weight} kg</span>
               )}
             </div>
-            
+
             {/* Height */}
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium text-text-secondary">Height:</span>
@@ -247,24 +247,24 @@ export function NotesTab({
                     value={heightInput}
                     onChange={(e) => setHeightInput(e.target.value)}
                     onBlur={handleHeightBlur}
-                    className="w-16 px-2 py-0.5 text-sm border border-border-light rounded focus:ring-2 focus:ring-primary-outline-border bg-surface"
+                    className="w-16 rounded border border-border-light bg-surface px-2 py-0.5 text-sm focus:ring-2 focus:ring-primary-outline-border"
                     aria-label="Height in cm"
                   />
-                  <span className="text-sm text-text-muted dark:text-text-secondary">cm</span>
+                  <span className="text-sm text-text-muted">cm</span>
                 </div>
               ) : (
                 <span className="text-sm font-bold text-text-primary">{height} cm</span>
               )}
             </div>
           </SummaryRow>
-          
+
           <SummaryRow className="text-xs">
             <SummaryItem label="Jump (H)" value={formatSpeedString(jumpHorizontal, speedUnit)} />
             <SummaryItem label="Jump (V)" value={formatSpeedString(jumpVertical, speedUnit)} />
             <SummaryItem label="Climb" value={formatSpeedString(climbSpeed, speedUnit)} />
             <SummaryItem label="Swim" value={formatSpeedString(swimSpeed, speedUnit)} />
           </SummaryRow>
-          
+
           {/* Fall Damage */}
           <div className="flex items-center gap-2 text-xs">
             <span className="text-text-secondary">Fall Damage:</span>
@@ -273,11 +273,17 @@ export function NotesTab({
               size="sm"
               onClick={handleRollFallDamage}
               disabled={!rollContext || rollContext.canRoll === false}
-              title={rollContext?.canRoll === false ? "Can't roll for another user's character" : rollContext ? 'Click to roll' : 'Roll log not available'}
+              title={
+                rollContext?.canRoll === false
+                  ? "Can't roll for another user's character"
+                  : rollContext
+                    ? 'Click to roll'
+                    : 'Roll log not available'
+              }
             >
               {fallDice}
             </Button>
-            <span className="text-text-muted dark:text-text-secondary">
+            <span className="text-text-muted">
               bludgeoning per 2 spaces fallen ({weightCategory}kg category)
             </span>
           </div>
@@ -293,7 +299,10 @@ export function NotesTab({
         />
       </LibraryCollapsibleSection>
 
-      <LibraryCollapsibleSection title="Archetype Description" itemCount={archetypeDesc.trim() ? 1 : 0}>
+      <LibraryCollapsibleSection
+        title="Archetype Description"
+        itemCount={archetypeDesc.trim() ? 1 : 0}
+      >
         <Textarea
           value={archetypeDesc}
           onChange={(e) => onArchetypeDescChange?.(e.target.value)}
@@ -330,7 +339,7 @@ export function NotesTab({
             ))}
           </div>
         ) : (
-          <p className="text-sm text-text-muted dark:text-text-secondary italic py-4 text-center">
+          <p className="py-4 text-center text-sm text-text-muted italic">
             No custom notes yet. Click + to add one.
           </p>
         )}

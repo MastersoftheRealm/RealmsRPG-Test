@@ -77,7 +77,7 @@ export interface AccountProfile {
 
 function mapAccountProfile(
   result: UserProfileActionResult | undefined,
-  authUser: AuthUser | null
+  authUser: AuthUser | null,
 ): { profile: AccountProfile; loadError: string | null } {
   const fallback: AccountProfile = {
     email: authUser?.email ?? undefined,
@@ -143,29 +143,32 @@ export function useAccountProfile(authUser: AuthUser | null): {
   const patchProfile = (patch: Partial<AccountProfile>) => {
     if (!userId) return;
     const nextPhoto = patch.photoURL?.split('?')[0];
-    queryClient.setQueryData(userProfileQueryKey(userId), (prev: UserProfileActionResult | undefined) => {
-      const existing = prev?.profile;
-      const next: UserProfileActionResult = {
-        profile: {
-          uid: existing?.uid ?? userId,
-          id: existing?.id ?? userId,
-          email: patch.email ?? existing?.email ?? authUser?.email ?? null,
-          displayName: existing?.displayName ?? null,
-          username: patch.username ?? existing?.username ?? null,
-          usernameDisplay: patch.username ?? existing?.usernameDisplay ?? null,
-          photoUrl: nextPhoto ?? existing?.photoUrl ?? authUser?.photoURL ?? null,
-          role: patch.role ?? existing?.role ?? null,
-          rolePolicy: (patch.rolePolicy ?? existing?.rolePolicy ?? null) as NonNullable<
-            UserProfileActionResult['profile']
-          >['rolePolicy'],
-          lastUsernameChange: existing?.lastUsernameChange ?? null,
-          createdAt: patch.createdAt ?? existing?.createdAt ?? null,
-          updatedAt: new Date().toISOString(),
-        },
-        error: null,
-      };
-      return next;
-    });
+    queryClient.setQueryData(
+      userProfileQueryKey(userId),
+      (prev: UserProfileActionResult | undefined) => {
+        const existing = prev?.profile;
+        const next: UserProfileActionResult = {
+          profile: {
+            uid: existing?.uid ?? userId,
+            id: existing?.id ?? userId,
+            email: patch.email ?? existing?.email ?? authUser?.email ?? null,
+            displayName: existing?.displayName ?? null,
+            username: patch.username ?? existing?.username ?? null,
+            usernameDisplay: patch.username ?? existing?.usernameDisplay ?? null,
+            photoUrl: nextPhoto ?? existing?.photoUrl ?? authUser?.photoURL ?? null,
+            role: patch.role ?? existing?.role ?? null,
+            rolePolicy: (patch.rolePolicy ?? existing?.rolePolicy ?? null) as NonNullable<
+              UserProfileActionResult['profile']
+            >['rolePolicy'],
+            lastUsernameChange: existing?.lastUsernameChange ?? null,
+            createdAt: patch.createdAt ?? existing?.createdAt ?? null,
+            updatedAt: new Date().toISOString(),
+          },
+          error: null,
+        };
+        return next;
+      },
+    );
   };
 
   return {

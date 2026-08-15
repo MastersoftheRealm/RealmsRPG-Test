@@ -2,10 +2,10 @@
  * Combat round / encounter chrome controls (TASK-608)
  */
 
-"use client";
+'use client';
 
-import { Button, Card } from "@/components/ui";
-import type { Encounter } from "@/types/encounter";
+import { Button, Card } from '@/components/ui';
+import type { Encounter } from '@/types/encounter';
 
 export interface CombatRoundControlsProps {
   encounter: Encounter;
@@ -31,13 +31,10 @@ export function CombatRoundControls({
   onResetEncounter,
 }: CombatRoundControlsProps) {
   return (
-    <Card className="shadow-md p-4 flex flex-wrap items-center gap-4 flex-shrink-0">
+    <Card className="flex flex-shrink-0 flex-wrap items-center gap-4 p-4 shadow-md">
       {!encounter.isActive ? (
         <>
-          <Button
-            onClick={onStartCombat}
-            disabled={encounter.combatants.length === 0}
-          >
+          <Button onClick={onStartCombat} disabled={encounter.combatants.length === 0}>
             Start Encounter
           </Button>
           <Button onClick={onSortInitiative} title="Sort by initiative and acuity">
@@ -61,12 +58,12 @@ export function CombatRoundControls({
           </Button>
         </>
       )}
-      {!encounter.isActive && encounter.status !== "completed" && (
+      {!encounter.isActive && encounter.status !== 'completed' && (
         <Button variant="secondary" onClick={onMarkCompleted}>
           Mark Complete
         </Button>
       )}
-      <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer">
+      <label className="flex cursor-pointer items-center gap-2 text-sm text-text-secondary">
         <input
           type="checkbox"
           checked={encounter.autoSortInitiative !== false}
@@ -84,9 +81,7 @@ export function CombatRoundControls({
       </Button>
       <Button
         variant="danger"
-        onClick={() =>
-          setEncounter((prev) => (prev ? { ...prev, combatants: [] } : prev))
-        }
+        onClick={() => setEncounter((prev) => (prev ? { ...prev, combatants: [] } : prev))}
       >
         Clear All
       </Button>

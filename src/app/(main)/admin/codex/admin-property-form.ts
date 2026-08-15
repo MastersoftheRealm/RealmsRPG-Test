@@ -105,8 +105,7 @@ export function savedPropertyFromPayload(id: string, data: Record<string, unknow
     base_ip: (data.base_ip as number | undefined) ?? undefined,
     base_tp: (data.base_tp as number | undefined) ?? undefined,
     base_c: (data.base_c as number | undefined) ?? undefined,
-    op_1_desc:
-      data.op_1_desc == null || data.op_1_desc === '' ? undefined : String(data.op_1_desc),
+    op_1_desc: data.op_1_desc == null || data.op_1_desc === '' ? undefined : String(data.op_1_desc),
     op_1_ip: data.op_1_ip == null ? undefined : (data.op_1_ip as number),
     op_1_tp: data.op_1_tp == null ? undefined : (data.op_1_tp as number),
     op_1_c: data.op_1_c == null ? undefined : (data.op_1_c as number),

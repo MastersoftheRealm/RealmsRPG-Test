@@ -70,7 +70,7 @@ function Section({
 }) {
   return (
     <section id={id} className="border-b border-border-light py-8">
-      <h2 className="text-xl font-semibold text-text-primary mb-4 font-display">{title}</h2>
+      <h2 className="mb-4 font-display text-xl font-semibold text-text-primary">{title}</h2>
       <div className="flex flex-col gap-4">{children}</div>
     </section>
   );
@@ -79,7 +79,7 @@ function Section({
 function Row({ label, children }: { label?: string; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
-      {label && <span className="text-xs uppercase tracking-wide text-text-muted">{label}</span>}
+      {label && <span className="text-xs tracking-wide text-text-muted uppercase">{label}</span>}
       <div className="flex flex-wrap items-center gap-3">{children}</div>
     </div>
   );
@@ -92,7 +92,9 @@ function Swatch({ token, label }: { token: string; label?: string }) {
         className="h-14 w-24 rounded-lg border border-border-light"
         style={{ background: `var(${token})` }}
       />
-      <span className="text-[11px] text-text-secondary">{label ?? token.replace('--color-', '')}</span>
+      <span className="text-[11px] text-text-secondary">
+        {label ?? token.replace('--color-', '')}
+      </span>
     </div>
   );
 }
@@ -103,7 +105,9 @@ function TextSwatch({ token, label }: { token: string; label?: string }) {
       <span className="text-base font-semibold" style={{ color: `var(${token})` }}>
         Aa Bb Cc 123
       </span>
-      <span className="text-[11px] text-text-secondary">{label ?? token.replace('--color-', '')}</span>
+      <span className="text-[11px] text-text-secondary">
+        {label ?? token.replace('--color-', '')}
+      </span>
     </div>
   );
 }
@@ -121,14 +125,16 @@ function OnFillTextSwatch({
   return (
     <div className="flex flex-col gap-1">
       <div
-        className="h-14 w-24 rounded-lg border border-border-light flex items-center justify-center"
+        className="flex h-14 w-24 items-center justify-center rounded-lg border border-border-light"
         style={{ background: `var(${fillToken})` }}
       >
         <span className="text-base font-semibold" style={{ color: `var(${token})` }}>
           Aa
         </span>
       </div>
-      <span className="text-[11px] text-text-secondary">{label ?? token.replace('--color-', '')}</span>
+      <span className="text-[11px] text-text-secondary">
+        {label ?? token.replace('--color-', '')}
+      </span>
     </div>
   );
 }
@@ -246,7 +252,7 @@ export default function StyleguidePage() {
         <PageHeader
           title="Design System Styleguide"
           description="Every primitive and token, for visual review in both themes. Data-free and auth-free."
-          className="border-b border-border-light pb-6 mb-8"
+          className="mb-8 border-b border-border-light pb-6"
           actions={
             <Button
               variant="secondary"
@@ -381,7 +387,7 @@ export default function StyleguidePage() {
 
         {/* Form controls */}
         <Section title="Form Controls">
-          <div className="grid gap-4 sm:grid-cols-2 max-w-3xl">
+          <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
             <Input label="Text input" placeholder="Type here" />
             <Input label="With error" placeholder="Invalid" error="This field is required" />
             <Select label="Select" options={SELECT_OPTIONS} placeholder="Choose one" />
@@ -429,13 +435,27 @@ export default function StyleguidePage() {
             <Chip variant="tp">TP domain</Chip>
           </Row>
           <Row label="Rarity (item creator)">
-            <Chip variant="rarityCommon" size="lg">Common</Chip>
-            <Chip variant="rarityUncommon" size="lg">Uncommon</Chip>
-            <Chip variant="rarityRare" size="lg">Rare</Chip>
-            <Chip variant="rarityEpic" size="lg">Epic</Chip>
-            <Chip variant="rarityLegendary" size="lg">Legendary</Chip>
-            <Chip variant="rarityMythic" size="lg">Mythic</Chip>
-            <Chip variant="rarityAscended" size="lg">Ascended</Chip>
+            <Chip variant="rarityCommon" size="lg">
+              Common
+            </Chip>
+            <Chip variant="rarityUncommon" size="lg">
+              Uncommon
+            </Chip>
+            <Chip variant="rarityRare" size="lg">
+              Rare
+            </Chip>
+            <Chip variant="rarityEpic" size="lg">
+              Epic
+            </Chip>
+            <Chip variant="rarityLegendary" size="lg">
+              Legendary
+            </Chip>
+            <Chip variant="rarityMythic" size="lg">
+              Mythic
+            </Chip>
+            <Chip variant="rarityAscended" size="lg">
+              Ascended
+            </Chip>
           </Row>
           <Row label="Sizes">
             <Chip size="sm">Small</Chip>
@@ -452,7 +472,9 @@ export default function StyleguidePage() {
           </Row>
           <Row label="Descriptor vs pill (same text)">
             <DescriptorChip>Fire damage</DescriptorChip>
-            <Chip variant="default" size="descriptor">Fire damage</Chip>
+            <Chip variant="default" size="descriptor">
+              Fire damage
+            </Chip>
           </Row>
           <Row label="Entity row parity (descriptor + expandable + pill)">
             <ChipGroup>
@@ -473,10 +495,11 @@ export default function StyleguidePage() {
         </Section>
 
         <Section title="Expandable Chips">
-          <p className="text-sm text-text-secondary mb-4 max-w-3xl">
-            Rounded-rectangle geometry for expand-in-place parts and properties. An expanded chip keeps
-            its vertical row, moves to the group&apos;s left edge, and takes the full width while the other
-            chips reflow below it. Click open, then click close without moving vertically.
+          <p className="mb-4 max-w-3xl text-sm text-text-secondary">
+            Rounded-rectangle geometry for expand-in-place parts and properties. An expanded chip
+            keeps its vertical row, moves to the group&apos;s left edge, and takes the full width
+            while the other chips reflow below it. Click open, then click close without moving
+            vertically.
           </p>
           <Row label="Collapsed / expanded">
             <ChipGroup className="w-full max-w-3xl" data-testid="styleguide-stable-expand-chips">
@@ -550,11 +573,12 @@ export default function StyleguidePage() {
         </Section>
 
         <Section title="GridListRow · expanded chip unification" id="chip-unification-rows">
-          <p className="text-sm text-text-secondary mb-4 max-w-3xl">
-            Canonical expanded rows for Playwright baselines: codex-style feat metadata (descriptor chips)
-            and character-sheet power library (metadata + expandable parts). Matches TASK-415 Phase E.
+          <p className="mb-4 max-w-3xl text-sm text-text-secondary">
+            Canonical expanded rows for Playwright baselines: codex-style feat metadata (descriptor
+            chips) and character-sheet power library (metadata + expandable parts). Matches TASK-415
+            Phase E.
           </p>
-          <div className="flex flex-col gap-6 max-w-3xl" data-testid="chip-unification-rows">
+          <div className="flex max-w-3xl flex-col gap-6" data-testid="chip-unification-rows">
             <div data-testid="chip-unification-feat-row">
               <GridListRow
                 id="styleguide-feat"
@@ -587,7 +611,7 @@ export default function StyleguidePage() {
                     skill_req_val: [],
                   } satisfies Feat,
                   new Map(),
-                  []
+                  [],
                 )}
               />
             </div>
@@ -654,17 +678,25 @@ export default function StyleguidePage() {
 
         {/* Alerts */}
         <Section title="Alerts">
-          <div className="flex flex-col gap-3 max-w-2xl">
-            <Alert variant="info" title="Information">An informational message.</Alert>
-            <Alert variant="success" title="Success">Your changes were saved.</Alert>
-            <Alert variant="warning" title="Warning">Double-check this value.</Alert>
-            <Alert variant="danger" title="Error">Something went wrong.</Alert>
+          <div className="flex max-w-2xl flex-col gap-3">
+            <Alert variant="info" title="Information">
+              An informational message.
+            </Alert>
+            <Alert variant="success" title="Success">
+              Your changes were saved.
+            </Alert>
+            <Alert variant="warning" title="Warning">
+              Double-check this value.
+            </Alert>
+            <Alert variant="danger" title="Error">
+              Something went wrong.
+            </Alert>
           </div>
         </Section>
 
         {/* Cards */}
         <Section title="Cards">
-          <div className="grid gap-4 sm:grid-cols-2 max-w-3xl">
+          <div className="grid max-w-3xl gap-4 sm:grid-cols-2">
             <Card>
               <CardHeader>
                 <CardTitle>Card title</CardTitle>
@@ -687,7 +719,9 @@ export default function StyleguidePage() {
           </div>
           <Row label="Selection cards">
             <SelectionCard className="max-w-xs text-left">Selectable option</SelectionCard>
-            <SelectionCard selected className="max-w-xs text-left">Selected option</SelectionCard>
+            <SelectionCard selected className="max-w-xs text-left">
+              Selected option
+            </SelectionCard>
           </Row>
         </Section>
 
@@ -755,7 +789,7 @@ export default function StyleguidePage() {
           <Row label="Empty state">
             <div className="w-full max-w-md rounded-xl border border-border-light bg-surface">
               <EmptyState
-                icon={<Inbox className="w-8 h-8" />}
+                icon={<Inbox className="h-8 w-8" />}
                 title="No results found"
                 description="Try adjusting your search or filters."
                 action={{ label: 'Clear filters', onClick: () => {} }}
@@ -778,8 +812,12 @@ export default function StyleguidePage() {
           </Row>
           <Row label="Chips: static / interactive">
             <Chip variant="primary">Static</Chip>
-            <Chip variant="primary" interactive>Interactive</Chip>
-            <Chip variant="success" onRemove={() => {}}>Removable</Chip>
+            <Chip variant="primary" interactive>
+              Interactive
+            </Chip>
+            <Chip variant="success" onRemove={() => {}}>
+              Removable
+            </Chip>
             <DescriptorChip>Descriptor</DescriptorChip>
           </Row>
           <Row label="Tabs: underline (active: {tab})">
@@ -796,7 +834,10 @@ export default function StyleguidePage() {
             </div>
           </Row>
           <Row label="Toast: trigger">
-            <Button variant="secondary" onClick={() => showToast('Example notification', 'success')}>
+            <Button
+              variant="secondary"
+              onClick={() => showToast('Example notification', 'success')}
+            >
               Show toast
             </Button>
           </Row>

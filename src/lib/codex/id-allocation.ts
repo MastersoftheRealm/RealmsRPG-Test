@@ -34,7 +34,7 @@ export function lowestUnusedNumericId(taken: ReadonlySet<number>): string {
 /** Retired ids are advisory: a missing tombstone table must not break admin writes. */
 export async function fetchRetiredIds(
   supabase: SupabaseClient,
-  entityType: string
+  entityType: string,
 ): Promise<Set<string>> {
   const { data, error } = await supabase
     .from(RETIRED_IDS_TABLE)
@@ -58,7 +58,7 @@ export async function fetchRetiredIds(
 export async function allocateCodexNumericId(
   supabase: SupabaseClient,
   table: string,
-  entityType: string = table
+  entityType: string = table,
 ): Promise<string> {
   const { data, error } = await supabase.from(table).select('id');
   if (error) throw new Error(error.message);
@@ -80,7 +80,7 @@ export async function allocateCodexNumericId(
 export async function retireCodexId(
   supabase: SupabaseClient,
   entityType: string,
-  id: string
+  id: string,
 ): Promise<void> {
   try {
     const { error } = await supabase

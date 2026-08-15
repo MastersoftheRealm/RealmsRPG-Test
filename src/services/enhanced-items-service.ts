@@ -14,7 +14,7 @@ export async function getEnhancedItems(): Promise<UserEnhancedItem[]> {
 }
 
 export async function createEnhancedItem(
-  data: Omit<UserEnhancedItem, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<UserEnhancedItem, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<string> {
   const result = await apiFetch<{ id: string }>(API_BASE, {
     method: 'POST',
@@ -31,7 +31,7 @@ export async function deleteEnhancedItem(id: string): Promise<void> {
 
 export async function updateEnhancedItem(
   id: string,
-  patch: { potency?: number; name?: string }
+  patch: { potency?: number; name?: string },
 ): Promise<void> {
   await apiFetch<void>(`${API_BASE}/${encodeURIComponent(id)}`, {
     method: 'PATCH',

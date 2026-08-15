@@ -92,27 +92,35 @@ export function HealthEnergyAllocator({
 
   if (variant === 'inline') {
     return (
-      <div className={cn(
-        'rounded-xl border',
-        isOverspent ? 'border-danger-300 bg-danger-light' :
-        isComplete ? 'border-success-300 bg-success-light' :
-        'border-border-light bg-surface-secondary'
-      )}>
-        <div className={cn(
-          'flex items-center justify-between px-4 py-1.5 border-b',
-          isOverspent ? 'border-danger-300' :
-          isComplete ? 'border-success-300' :
-          'border-border-light'
-        )}>
-          <span className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
+      <div
+        className={cn(
+          'rounded-xl border',
+          isOverspent
+            ? 'border-danger-300 bg-danger-light'
+            : isComplete
+              ? 'border-success-300 bg-success-light'
+              : 'border-border-light bg-surface-secondary',
+        )}
+      >
+        <div
+          className={cn(
+            'flex items-center justify-between border-b px-4 py-1.5',
+            isOverspent
+              ? 'border-danger-300'
+              : isComplete
+                ? 'border-success-300'
+                : 'border-border-light',
+          )}
+        >
+          <span className="text-xs font-semibold tracking-wide text-text-secondary uppercase">
             Health/Energy Allocation
           </span>
           {poolStatus}
         </div>
 
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 px-4 py-3">
-          <div className="flex-1 flex items-center gap-2 min-w-0">
-            <span className="text-lg font-bold text-success-fg min-w-[60px] shrink-0">
+        <div className="flex flex-col items-stretch gap-4 px-4 py-3 sm:flex-row sm:items-center">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="min-w-[60px] shrink-0 text-lg font-bold text-success-fg">
               {maxHp} HP
             </span>
             <ValueStepper
@@ -128,13 +136,13 @@ export function HealthEnergyAllocator({
               decrementTitle={`Remove ${healthLabel} points`}
               incrementTitle={`Add ${healthLabel} points`}
             />
-            <span className="text-xs text-text-muted dark:text-text-secondary whitespace-nowrap shrink-0">pts</span>
+            <span className="shrink-0 text-xs whitespace-nowrap text-text-muted">pts</span>
           </div>
 
-          <div className="hidden sm:block w-px h-10 bg-border-light shrink-0" />
+          <div className="hidden h-10 w-px shrink-0 bg-border-light sm:block" />
 
-          <div className="flex-1 flex items-center gap-2 min-w-0">
-            <span className="text-lg font-bold text-info-fg min-w-[60px] shrink-0">
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            <span className="min-w-[60px] shrink-0 text-lg font-bold text-info-fg">
               {maxEnergy} EN
             </span>
             <ValueStepper
@@ -150,7 +158,7 @@ export function HealthEnergyAllocator({
               decrementTitle={`Remove ${energyLabel} points`}
               incrementTitle={`Add ${energyLabel} points`}
             />
-            <span className="text-xs text-text-muted dark:text-text-secondary whitespace-nowrap shrink-0">pts</span>
+            <span className="shrink-0 text-xs whitespace-nowrap text-text-muted">pts</span>
           </div>
         </div>
       </div>
@@ -158,27 +166,34 @@ export function HealthEnergyAllocator({
   }
 
   return (
-    <div className={cn(
-      'rounded-xl border',
-      isOverspent ? 'border-danger-300 bg-danger-light' :
-      isComplete ? 'border-success-300 bg-success-light' :
-      'border-border-light bg-surface-secondary'
-    )}>
-      <div className={cn(
-        'flex items-center justify-between gap-3 px-4 py-2 border-b',
-        isOverspent ? 'border-danger-300' :
-        isComplete ? 'border-success-300' :
-        'border-border-light'
-      )}>
+    <div
+      className={cn(
+        'rounded-xl border',
+        isOverspent
+          ? 'border-danger-300 bg-danger-light'
+          : isComplete
+            ? 'border-success-300 bg-success-light'
+            : 'border-border-light bg-surface-secondary',
+      )}
+    >
+      <div
+        className={cn(
+          'flex items-center justify-between gap-3 border-b px-4 py-2',
+          isOverspent
+            ? 'border-danger-300'
+            : isComplete
+              ? 'border-success-300'
+              : 'border-border-light',
+        )}
+      >
         <span className="text-sm font-medium text-text-secondary">Health/Energy Allocation</span>
         {poolStatus}
       </div>
 
-      <div className="grid gap-4 p-4 grid-cols-1 sm:grid-cols-2">
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="text-xl font-bold text-success-fg shrink-0 min-w-[4.5rem] md:min-w-[7.5rem]">
-            {maxHp}{' '}
-            <ResourceName full="Health" abbrev="HP" />
+      <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2">
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="min-w-[4.5rem] shrink-0 text-xl font-bold text-success-fg md:min-w-[7.5rem]">
+            {maxHp} <ResourceName full="Health" abbrev="HP" />
           </span>
           <ValueStepper
             value={hpBonus}
@@ -192,13 +207,12 @@ export function HealthEnergyAllocator({
             decrementTitle="Remove Health points"
             incrementTitle="Add Health points"
           />
-          <span className="text-sm text-text-muted dark:text-text-secondary whitespace-nowrap">pts</span>
+          <span className="text-sm whitespace-nowrap text-text-muted">pts</span>
         </div>
 
-        <div className="flex items-center gap-3 min-w-0">
-          <span className="text-xl font-bold text-info-fg shrink-0 min-w-[4.5rem] md:min-w-[7.5rem]">
-            {maxEnergy}{' '}
-            <ResourceName full="Energy" abbrev="EN" />
+        <div className="flex min-w-0 items-center gap-3">
+          <span className="min-w-[4.5rem] shrink-0 text-xl font-bold text-info-fg md:min-w-[7.5rem]">
+            {maxEnergy} <ResourceName full="Energy" abbrev="EN" />
           </span>
           <ValueStepper
             value={energyBonus}
@@ -212,7 +226,7 @@ export function HealthEnergyAllocator({
             decrementTitle="Remove Energy points"
             incrementTitle="Add Energy points"
           />
-          <span className="text-sm text-text-muted dark:text-text-secondary whitespace-nowrap">pts</span>
+          <span className="text-sm whitespace-nowrap text-text-muted">pts</span>
         </div>
       </div>
     </div>

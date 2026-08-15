@@ -13,7 +13,13 @@ import {
 } from '@/lib/attack-mode';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 
-export const COLUMNAR_LIBRARY_TYPES = ['powers', 'techniques', 'empowered-techniques', 'items', 'creatures'] as const;
+export const COLUMNAR_LIBRARY_TYPES = [
+  'powers',
+  'techniques',
+  'empowered-techniques',
+  'items',
+  'creatures',
+] as const;
 export type ColumnarLibraryType = (typeof COLUMNAR_LIBRARY_TYPES)[number];
 
 type PartLike = { id?: string | number; name?: string };
@@ -44,19 +50,41 @@ function collectPayloadParts(payload: Record<string, unknown>): PartLike[] {
 
 export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
   powers: [
-    'name', 'description', 'actionType', 'isReaction', 'innate',
-    'rangeSteps', 'durationType', 'durationValue', 'areaType', 'areaLevel', 'damage',
-    'imageId', 'imageUrl',
+    'name',
+    'description',
+    'actionType',
+    'isReaction',
+    'innate',
+    'rangeSteps',
+    'durationType',
+    'durationValue',
+    'areaType',
+    'areaLevel',
+    'damage',
+    'imageId',
+    'imageUrl',
   ],
   techniques: [
-    'name', 'description', 'actionType',
-    'rangeSteps', 'durationType', 'durationValue', 'damage',
-    'imageId', 'imageUrl',
+    'name',
+    'description',
+    'actionType',
+    'rangeSteps',
+    'durationType',
+    'durationValue',
+    'damage',
+    'imageId',
+    'imageUrl',
   ],
   'empowered-techniques': [
-    'name', 'description', 'actionType',
-    'rangeSteps', 'durationType', 'durationValue', 'damage',
-    'imageId', 'imageUrl',
+    'name',
+    'description',
+    'actionType',
+    'rangeSteps',
+    'durationType',
+    'durationValue',
+    'damage',
+    'imageId',
+    'imageUrl',
   ],
   items: [
     'name',
@@ -79,7 +107,17 @@ export const SCALAR_KEYS: Record<ColumnarLibraryType, string[]> = {
     'imageId',
     'imageUrl',
   ],
-  creatures: ['name', 'description', 'level', 'type', 'size', 'hitPoints', 'energyPoints', 'imageId', 'imageUrl'],
+  creatures: [
+    'name',
+    'description',
+    'level',
+    'type',
+    'size',
+    'hitPoints',
+    'energyPoints',
+    'imageId',
+    'imageUrl',
+  ],
 };
 
 const BODY_TO_CAMEL: Record<string, string> = {
@@ -129,6 +167,15 @@ const CAMEL_TO_SNAKE: Record<string, string> = {
   userId: 'user_id',
 };
 
+/**
+ * Select list for official_* / user_* view fetches: identity, timestamps, payload,
+ * and the columnar scalars `rowToItem` reads. `user_id` is omitted on purpose.
+ */
+export function columnarViewSelect(type: ColumnarLibraryType): string {
+  const scalarColumns = SCALAR_KEYS[type].map((key) => Object.keys(toDbRow({ [key]: null }))[0]);
+  return ['id', 'created_at', 'updated_at', 'payload', ...scalarColumns].join(', ');
+}
+
 /** Convert camelCase object to snake_case for Supabase columnar insert/update. */
 export function toDbRow(obj: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
@@ -155,7 +202,10 @@ function assignImageScalars(base: Record<string, unknown>, row: Record<string, u
   }
 }
 
-function applyImageScalarsFromBody(scalars: Record<string, unknown>, body: Record<string, unknown>): void {
+function applyImageScalarsFromBody(
+  scalars: Record<string, unknown>,
+  body: Record<string, unknown>,
+): void {
   const imageId = body.imageId !== undefined ? body.imageId : body.image_id;
   if (typeof imageId === 'string' && imageId.trim()) {
     scalars.imageId = imageId.trim();
@@ -174,7 +224,7 @@ function applyImageScalarsFromBody(scalars: Record<string, unknown>, body: Recor
 export function rowToItem(
   type: ColumnarLibraryType,
   row: Record<string, unknown>,
-  source?: 'official' | 'user'
+  source?: 'official' | 'user',
 ): Record<string, unknown> {
   const payload = (row.payload as Record<string, unknown>) || {};
   const base: Record<string, unknown> = {};
@@ -203,9 +253,17 @@ export function rowToItem(
     const payArea = payload.area as Record<string, unknown> | undefined;
     if (rangeSteps != null) base.range = { ...payRange, steps: rangeSteps };
     if (durationType != null || durationValue != null)
-      base.duration = { ...payDuration, type: durationType ?? payDuration?.type, value: durationValue ?? payDuration?.value };
+      base.duration = {
+        ...payDuration,
+        type: durationType ?? payDuration?.type,
+        value: durationValue ?? payDuration?.value,
+      };
     if (areaType != null || areaLevel != null)
-      base.area = { ...payArea, type: areaType ?? payArea?.type, level: areaLevel ?? payArea?.level };
+      base.area = {
+        ...payArea,
+        type: areaType ?? payArea?.type,
+        level: areaLevel ?? payArea?.level,
+      };
     if (damageCol != null && Array.isArray(damageCol)) base.damage = damageCol;
     assignImageScalars(base, row);
   }
@@ -257,7 +315,10 @@ export function rowToItem(
     assignIfPresent('isTwoHanded', v(row, 'isTwoHanded', 'is_two_handed'));
     assignIfPresent('abilityRequirement', v(row, 'abilityRequirement', 'ability_requirement'));
     assignIfPresent('agilityReduction', v(row, 'agilityReduction', 'agility_reduction'));
-    assignIfPresent('criticalRangeIncrease', v(row, 'criticalRangeIncrease', 'critical_range_increase'));
+    assignIfPresent(
+      'criticalRangeIncrease',
+      v(row, 'criticalRangeIncrease', 'critical_range_increase'),
+    );
     assignIfPresent('shieldDR', v(row, 'shieldDR', 'shield_dr'));
     assignIfPresent('shieldDamage', v(row, 'shieldDamage', 'shield_damage'));
     assignImageScalars(base, row);
@@ -274,7 +335,10 @@ export function rowToItem(
 
     // costs: keep scalar if it's a non-empty object; otherwise fall back to payload.
     const costsIsNonEmptyObject =
-      costsCol != null && typeof costsCol === 'object' && !Array.isArray(costsCol) && Object.keys(costsCol as Record<string, unknown>).length > 0;
+      costsCol != null &&
+      typeof costsCol === 'object' &&
+      !Array.isArray(costsCol) &&
+      Object.keys(costsCol as Record<string, unknown>).length > 0;
     if (costsIsNonEmptyObject) {
       base.costs = costsCol;
     } else if (payloadCosts !== undefined && payloadCosts !== null) {
@@ -312,7 +376,7 @@ export function rowToItem(
 /** Split request body into scalars (for columns) and payload (JSONB). */
 export function bodyToColumnar(
   type: ColumnarLibraryType,
-  body: Record<string, unknown>
+  body: Record<string, unknown>,
 ): { scalars: Record<string, unknown>; payload: Record<string, unknown> } {
   const scalarKeys = new Set(SCALAR_KEYS[type]);
   const scalars: Record<string, unknown> = {};
@@ -345,15 +409,18 @@ export function bodyToColumnar(
     const range = (body.range ?? (body.power as Record<string, unknown> | undefined)?.range) as
       | Record<string, unknown>
       | undefined;
-    const duration = (body.duration ?? (body.power as Record<string, unknown> | undefined)?.duration) as
+    const duration = (body.duration ??
+      (body.power as Record<string, unknown> | undefined)?.duration) as
       | Record<string, unknown>
       | undefined;
-    const damage = (body.damage ?? (body.power as Record<string, unknown> | undefined)?.damage) as unknown;
+    const damage = (body.damage ??
+      (body.power as Record<string, unknown> | undefined)?.damage) as unknown;
     // Top-level range/duration may be omitted when nested under `power` (empowered).
     // Persist top-level objects when present; nested `power` still goes through the loop.
     if (range && typeof range === 'object') {
       if (range.steps != null) scalars.rangeSteps = range.steps;
-      if (body.range && typeof body.range === 'object') payload.range = { ...(body.range as Record<string, unknown>) };
+      if (body.range && typeof body.range === 'object')
+        payload.range = { ...(body.range as Record<string, unknown>) };
     }
     if (duration && typeof duration === 'object') {
       if (duration.type != null) scalars.durationType = duration.type;
@@ -375,7 +442,8 @@ export function bodyToColumnar(
     if (Array.isArray(body.damage)) scalars.damage = body.damage;
     if (Array.isArray(body.properties)) scalars.properties = body.properties;
     if (body.agilityReduction != null) scalars.agilityReduction = body.agilityReduction;
-    if (body.criticalRangeIncrease != null) scalars.criticalRangeIncrease = body.criticalRangeIncrease;
+    if (body.criticalRangeIncrease != null)
+      scalars.criticalRangeIncrease = body.criticalRangeIncrease;
     if (body.shieldDR != null) scalars.shieldDR = body.shieldDR;
     if (body.shieldDamage != null) scalars.shieldDamage = body.shieldDamage;
   }
@@ -389,7 +457,7 @@ export function bodyToColumnar(
     'image_id',
     'image_url',
     ...(type === 'powers' ? ['range', 'duration', 'area', 'damage'] : []),
-    ...((type === 'techniques' || type === 'empowered-techniques')
+    ...(type === 'techniques' || type === 'empowered-techniques'
       ? [
           'range',
           'duration',
@@ -482,7 +550,11 @@ const SPECIES_ARRAY_KEYS = [
 function toStrArray(val: unknown): string[] {
   if (!val) return [];
   if (Array.isArray(val)) return val.map(String);
-  if (typeof val === 'string') return val.split(',').map((s) => s.trim()).filter(Boolean);
+  if (typeof val === 'string')
+    return val
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
   return [];
 }
 
@@ -490,7 +562,9 @@ function toStrArray(val: unknown): string[] {
  * Legacy user_species rows may still store fields in `data` JSON while image refs live in columns.
  * Prefer columnar image_id / image_url (and bank enrichment) over the blob.
  */
-export function mergeLegacySpeciesRowWithImageColumns(row: Record<string, unknown>): Record<string, unknown> {
+export function mergeLegacySpeciesRowWithImageColumns(
+  row: Record<string, unknown>,
+): Record<string, unknown> {
   const d = (row.data as Record<string, unknown>) ?? {};
   const imageId = row.image_id ?? row.imageId ?? d.image_id ?? d.imageId;
   const imageUrl = row.image_url ?? row.imageUrl ?? d.image_url ?? d.imageUrl;
@@ -566,7 +640,10 @@ export function bodyToColumnarSpecies(body: Record<string, unknown>): {
     // Image refs are columnar only (camel or snake) — never duplicate into payload JSONB.
     if (k === 'imageId' || k === 'imageUrl' || k === 'image_id' || k === 'image_url') continue;
     if (scalarKeys.has(k)) {
-      if (SPECIES_ARRAY_KEYS.includes(k as (typeof SPECIES_ARRAY_KEYS)[number]) && Array.isArray(v)) {
+      if (
+        SPECIES_ARRAY_KEYS.includes(k as (typeof SPECIES_ARRAY_KEYS)[number]) &&
+        Array.isArray(v)
+      ) {
         scalars[k] = (v as unknown[]).map(String).join(',');
       } else if (k === 'adulthood_lifespan' && Array.isArray(v)) {
         scalars[k] = (v as unknown[]).map(String).join(',');

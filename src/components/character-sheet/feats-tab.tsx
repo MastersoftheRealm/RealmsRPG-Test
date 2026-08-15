@@ -15,12 +15,23 @@ import { DecrementButton, IncrementButton } from '@/components/shared';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { useCodexSkills } from '@/hooks';
 import { cn } from '@/lib/utils';
-import { buildFeatLevelChips, getFeatFamilyId, getFeatLevel, formatFeatName } from '@/lib/leveled-feats';
 import {
+  buildFeatLevelChips,
+  getFeatFamilyId,
+  getFeatLevel,
+  formatFeatName,
+} from '@/lib/leveled-feats';
+import {
+  checkFeatRequirements,
   getMaxQualifiedFeatLevel,
   type CharacterForFeatRequirement,
 } from '@/lib/game/feat-requirements';
-import { mapTraitRows, mapFeatRows, resolveTraitCustomizationKey, type FeatRowContext, type FeatLevelMeta } from './library-feat-rows';
+import {
+  mapTraitRows,
+  mapFeatRows,
+  resolveTraitCustomizationKey,
+  type FeatRowContext,
+} from './library-feat-rows';
 import { collectSheetTraits } from '@/lib/character/collect-sheet-traits';
 import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 import type { FeatTraitCustomization } from '@/types/feats';
@@ -98,7 +109,11 @@ interface FeatsTabProps {
   maxArchetypeFeats?: number;
   maxCharacterFeats?: number;
   onFeatUsesChange?: (featId: string, delta: number) => void;
-  onFeatLevelChange?: (featId: string, targetLevel: number, listType: 'archetype' | 'character') => void;
+  onFeatLevelChange?: (
+    featId: string,
+    targetLevel: number,
+    listType: 'archetype' | 'character',
+  ) => void;
   featRequirementCharacter?: CharacterForFeatRequirement;
   onTraitUsesChange?: (traitName: string, delta: number) => void;
   onAddArchetypeFeat?: () => void;
@@ -109,7 +124,7 @@ interface FeatsTabProps {
   onFeatCustomizationChange?: (
     featId: string,
     listType: 'archetype' | 'character',
-    updates: Partial<FeatTraitCustomization>
+    updates: Partial<FeatTraitCustomization>,
   ) => void;
   onTraitCustomizationChange?: (traitKey: string, updates: Partial<FeatTraitCustomization>) => void;
 }
@@ -151,15 +166,15 @@ export function FeatsTab({
       const dbFeat = featsDb.find((f) => String(f.id) === String(feat.id));
       return dbFeat?.feat_lvl != null && dbFeat.feat_lvl > 0 ? dbFeat.feat_lvl : 1;
     },
-    [featsDb]
+    [featsDb],
   );
   const usedArchetypeSlots = useMemo(
     () => archetypeFeats.reduce((sum, feat) => sum + getFeatLevelForCharacter(feat), 0),
-    [archetypeFeats, getFeatLevelForCharacter]
+    [archetypeFeats, getFeatLevelForCharacter],
   );
   const usedCharacterSlots = useMemo(
     () => characterFeats.reduce((sum, feat) => sum + getFeatLevelForCharacter(feat), 0),
-    [characterFeats, getFeatLevelForCharacter]
+    [characterFeats, getFeatLevelForCharacter],
   );
   const archetypeOver = maxArchetypeFeats !== undefined && usedArchetypeSlots > maxArchetypeFeats;
   const characterOver = maxCharacterFeats !== undefined && usedCharacterSlots > maxCharacterFeats;
@@ -175,45 +190,50 @@ export function FeatsTab({
     return map;
   }, [featsDb]);
 
-  const getFeatLevelMeta = useCallback(
-    (featId: string | number): FeatLevelMeta | undefined => {
-      if (!showEditControls || !featRequirementCharacter) return undefined;
-      const feat = featsDb.find((f) => String(f.id) === String(featId));
-      if (!feat) return undefined;
-      const family = featLevelsByFamily.get(getFeatFamilyId(feat)) ?? [];
-      if (family.length <= 1) return undefined;
-      return {
-        currentLevel: getFeatLevel(feat),
-        minLevel: getFeatLevel(family[0]),
-        maxQualified: getMaxQualifiedFeatLevel(
-          featRequirementCharacter,
-          family,
-          codexSkills,
-          featsDb
-        ),
-        featName: feat.name ?? String(featId),
-      };
-    },
-    [showEditControls, featRequirementCharacter, featsDb, featLevelsByFamily, codexSkills]
-  );
-
-  const includeLevelColumn = useMemo(
-    () =>
-      showEditControls &&
-      [...archetypeFeats, ...characterFeats].some((f) => getFeatLevelMeta(f.id ?? f.name) != null),
-    [showEditControls, archetypeFeats, characterFeats, getFeatLevelMeta]
-  );
-
   const getFeatLevelDetailSections = useCallback(
-    (featId: string | number) => {
+    (featId: string | number, listType: 'archetype' | 'character') => {
       const feat = featsDb.find((f) => String(f.id) === String(featId));
       if (!feat) return undefined;
       const family = featLevelsByFamily.get(getFeatFamilyId(feat)) || [];
-      const chips = buildFeatLevelChips(family, feat.id);
+      if (family.length <= 1) return undefined;
+      const canSelect = Boolean(showEditControls && onFeatLevelChange && featRequirementCharacter);
+      const maxQualified = canSelect
+        ? getMaxQualifiedFeatLevel(featRequirementCharacter!, family, codexSkills, featsDb)
+        : 0;
+      const chips = buildFeatLevelChips(family, feat.id, {
+        includeCurrent: true,
+        select: canSelect
+          ? {
+              featName: feat.name ?? String(featId),
+              maxQualified,
+              onSelectLevel: (level) => onFeatLevelChange!(String(featId), level, listType),
+              unmetReasonFor: (candidate) => {
+                const { met, reason } = checkFeatRequirements(
+                  candidate,
+                  featRequirementCharacter!,
+                  codexSkills,
+                  featsDb,
+                );
+                return met ? undefined : reason;
+              },
+            }
+          : undefined,
+      });
       if (chips.length === 0) return undefined;
-      return [{ label: 'Feat Levels', chips }] as Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }>;
+      return [{ label: 'Feat Levels', chips }] as Array<{
+        label: string;
+        chips: ChipData[];
+        hideLabelIfSingle?: boolean;
+      }>;
     },
-    [featsDb, featLevelsByFamily]
+    [
+      featsDb,
+      featLevelsByFamily,
+      showEditControls,
+      onFeatLevelChange,
+      featRequirementCharacter,
+      codexSkills,
+    ],
   );
 
   const [traitSort, setTraitSort] = useState<SortState>({ col: 'name', dir: 1 });
@@ -224,7 +244,7 @@ export function FeatsTab({
   const enrichTrait = useCallback(
     (traitNameOrId: string) => {
       let dbTrait = traitsDb.find(
-        (t) => String(t.name ?? '').toLowerCase() === String(traitNameOrId ?? '').toLowerCase()
+        (t) => String(t.name ?? '').toLowerCase() === String(traitNameOrId ?? '').toLowerCase(),
       );
       if (!dbTrait) {
         dbTrait = traitsDb.find((t) => t.id === traitNameOrId);
@@ -236,14 +256,16 @@ export function FeatsTab({
         recoveryPeriod: dbTrait?.rec_period,
       };
     },
-    [traitsDb]
+    [traitsDb],
   );
 
   const enrichFeat = useCallback(
     (feat: FeatData) => {
       let dbFeat = featsDb.find((f) => f.id === String(feat.id));
       if (!dbFeat) {
-        dbFeat = featsDb.find((f) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
+        dbFeat = featsDb.find(
+          (f) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase(),
+        );
       }
       const featLvl = dbFeat?.feat_lvl;
       // Prefer codex name: guided saves historically stored id as name.
@@ -265,7 +287,7 @@ export function FeatsTab({
         recovery: feat.recovery || dbFeat?.rec_period,
       };
     },
-    [featsDb]
+    [featsDb],
   );
 
   const allTraitsWithCategories = useMemo(
@@ -276,7 +298,7 @@ export function FeatsTab({
         vanillaTraits,
         legacyTraits: traits,
       }),
-    [ancestry, vanillaTraits, speciesTraitsFromCodex, traits]
+    [ancestry, vanillaTraits, speciesTraitsFromCodex, traits],
   );
 
   const processedTraits = useMemo(() => {
@@ -299,11 +321,11 @@ export function FeatsTab({
 
   const processedArchetypeFeats = useMemo(
     () => sortByColumn(dedupeEntityRefs(archetypeFeats).map(enrichFeat), archetypeFeatSort),
-    [archetypeFeats, enrichFeat, archetypeFeatSort]
+    [archetypeFeats, enrichFeat, archetypeFeatSort],
   );
   const processedCharacterFeats = useMemo(
     () => sortByColumn(dedupeEntityRefs(characterFeats).map(enrichFeat), characterFeatSort),
-    [characterFeats, enrichFeat, characterFeatSort]
+    [characterFeats, enrichFeat, characterFeatSort],
   );
   const processedStateFeats = useMemo(
     () =>
@@ -312,9 +334,9 @@ export function FeatsTab({
           ...enrichFeat(f),
           stateType: f.type || 'character',
         })),
-        stateFeatSort
+        stateFeatSort,
       ),
-    [stateFeats, enrichFeat, stateFeatSort]
+    [stateFeats, enrichFeat, stateFeatSort],
   );
 
   const featRowContext = useMemo<FeatRowContext>(
@@ -325,7 +347,6 @@ export function FeatsTab({
       onFeatUsesChange,
       onRemoveFeat,
       getFeatLevelDetailSections,
-      getFeatLevelMeta,
       onFeatCustomizationChange,
       onTraitCustomizationChange,
     }),
@@ -336,42 +357,38 @@ export function FeatsTab({
       onFeatUsesChange,
       onRemoveFeat,
       getFeatLevelDetailSections,
-      getFeatLevelMeta,
       onFeatCustomizationChange,
       onTraitCustomizationChange,
-    ]
+    ],
   );
 
   const archetypeFeatRowContext = useMemo<FeatRowContext>(
     () => ({
       ...featRowContext,
       featListType: 'archetype',
-      onFeatLevelChange: onFeatLevelChange
-        ? (featId, targetLevel) => onFeatLevelChange(featId, targetLevel, 'archetype')
-        : undefined,
     }),
-    [featRowContext, onFeatLevelChange]
+    [featRowContext],
   );
 
   const characterFeatRowContext = useMemo<FeatRowContext>(
     () => ({
       ...featRowContext,
       featListType: 'character',
-      onFeatLevelChange: onFeatLevelChange
-        ? (featId, targetLevel) => onFeatLevelChange(featId, targetLevel, 'character')
-        : undefined,
     }),
-    [featRowContext, onFeatLevelChange]
+    [featRowContext],
   );
 
-  const traitRows = useMemo(() => mapTraitRows(processedTraits, featRowContext), [processedTraits, featRowContext]);
+  const traitRows = useMemo(
+    () => mapTraitRows(processedTraits, featRowContext),
+    [processedTraits, featRowContext],
+  );
   const archetypeFeatRows = useMemo(
     () => mapFeatRows(processedArchetypeFeats, archetypeFeatRowContext),
-    [processedArchetypeFeats, archetypeFeatRowContext]
+    [processedArchetypeFeats, archetypeFeatRowContext],
   );
   const characterFeatRows = useMemo(
     () => mapFeatRows(processedCharacterFeats, characterFeatRowContext),
-    [processedCharacterFeats, characterFeatRowContext]
+    [processedCharacterFeats, characterFeatRowContext],
   );
   const stateFeatRows = useMemo(
     () =>
@@ -380,17 +397,18 @@ export function FeatsTab({
           ...feat,
           listType: stateType === 'archetype' ? ('archetype' as const) : ('character' as const),
         })),
-        featRowContext
+        featRowContext,
       ).map((row, index) => ({
         ...row,
         badges: [
           {
-            label: processedStateFeats[index]?.stateType === 'archetype' ? 'Archetype' : 'Character',
+            label:
+              processedStateFeats[index]?.stateType === 'archetype' ? 'Archetype' : 'Character',
             color: 'blue' as const,
           },
         ],
       })),
-    [processedStateFeats, featRowContext]
+    [processedStateFeats, featRowContext],
   );
 
   const hasTraits = traitRows.length > 0;
@@ -430,10 +448,10 @@ export function FeatsTab({
             onClick={onEnterState}
             disabled={(stateUsesCurrent ?? stateUsesMax) <= 0}
             className={cn(
-              'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+              'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
               (stateUsesCurrent ?? stateUsesMax) > 0
                 ? 'bg-primary-button text-text-on-dark hover:bg-primary-button-hover'
-                : 'bg-surface-alt text-text-muted dark:text-text-secondary cursor-not-allowed'
+                : 'cursor-not-allowed bg-surface-alt text-text-muted',
             )}
           >
             Enter State
@@ -456,16 +474,12 @@ export function FeatsTab({
       <FeatsTraitsListSection
         title="Archetype Feats"
         items={archetypeFeatRows}
-        includeLevelColumn={includeLevelColumn}
         onAdd={showEditControls ? onAddArchetypeFeat : undefined}
         addLabel="Add archetype feat"
         headerRightContent={
           showEditControls && maxArchetypeFeats !== undefined ? (
             <span
-              className={cn(
-                'tabular-nums text-sm font-medium',
-                archetypeOver && 'text-danger-fg'
-              )}
+              className={cn('text-sm font-medium tabular-nums', archetypeOver && 'text-danger-fg')}
             >
               {usedArchetypeSlots}/{maxArchetypeFeats}
             </span>
@@ -486,16 +500,12 @@ export function FeatsTab({
       <FeatsTraitsListSection
         title="Character Feats"
         items={characterFeatRows}
-        includeLevelColumn={includeLevelColumn}
         onAdd={showEditControls ? onAddCharacterFeat : undefined}
         addLabel="Add character feat"
         headerRightContent={
           showEditControls && maxCharacterFeats !== undefined ? (
             <span
-              className={cn(
-                'tabular-nums text-sm font-medium',
-                characterOver && 'text-danger-fg'
-              )}
+              className={cn('text-sm font-medium tabular-nums', characterOver && 'text-danger-fg')}
             >
               {usedCharacterSlots}/{maxCharacterFeats}
             </span>
@@ -528,7 +538,7 @@ export function FeatsTab({
       )}
 
       {!hasTraits && !hasArchetypeFeats && !hasCharacterFeats && !hasStateFeats && (
-        <div className="text-center py-8 text-text-muted dark:text-text-secondary">
+        <div className="py-8 text-center text-text-muted">
           <p className="text-sm italic">No traits or feats to display</p>
         </div>
       )}

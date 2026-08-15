@@ -11,7 +11,10 @@ import * as React from 'react';
 import { Search, X } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
-interface SearchInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'size'> {
+interface SearchInputProps extends Omit<
+  React.InputHTMLAttributes<HTMLInputElement>,
+  'onChange' | 'size'
+> {
   /** Current search value */
   value: string;
   /** Change handler */
@@ -67,7 +70,7 @@ export function SearchInput({
       if (typeof ref === 'function') ref(node);
       else if (ref) ref.current = node;
     },
-    [ref]
+    [ref],
   );
 
   const handleClear = () => {
@@ -78,19 +81,14 @@ export function SearchInput({
   return (
     <div className={cn('search-input-wrapper', sizes.wrapper)}>
       <span className={cn('search-input-icon', sizes.icon)}>
-        {icon || <Search className="w-full h-full" />}
+        {icon || <Search className="h-full w-full" />}
       </span>
       <input
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={cn(
-          'search-input',
-          sizes.input,
-          showClear && value && 'pr-10',
-          className
-        )}
+        className={cn('search-input', sizes.input, showClear && value && 'pr-10', className)}
         {...props}
         ref={setInputRef}
       />
@@ -101,7 +99,7 @@ export function SearchInput({
           className={cn('search-input-clear', sizes.clear)}
           aria-label="Clear search"
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </button>
       )}
     </div>

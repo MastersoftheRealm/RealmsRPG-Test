@@ -25,7 +25,7 @@ function path(
   id: string,
   name: string,
   type: PathRecommendationSourcePath['type'],
-  rawPathData: unknown
+  rawPathData: unknown,
 ): PathRecommendationSourcePath {
   return { id, name, type, path_data: parseArchetypePathData(rawPathData) };
 }
@@ -85,7 +85,9 @@ describe('buildPathRecommendationIndex', () => {
 
   it('resolves refs by id and falls back to display name', () => {
     const byName = buildPathRecommendationIndex({
-      paths: [path('p-name', 'By name', 'martial', { level1: { feats: ['Unarmed Prowess', '10'] } })],
+      paths: [
+        path('p-name', 'By name', 'martial', { level1: { feats: ['Unarmed Prowess', '10'] } }),
+      ],
       entities: FEATS,
       kind: 'feats',
     });
@@ -144,8 +146,8 @@ describe('buildPathRecommendationIndex', () => {
       kind: ['powers', 'innatePowers'],
     });
     expect([...pathRecommendedEntityIds(mixed, ['p-mage'])].sort()).toEqual(['p1', 'p2']);
-    expect(
-      [...pathRecommendedEntityIds(
+    expect([
+      ...pathRecommendedEntityIds(
         buildPathRecommendationIndex({
           paths: [
             path('p-mage', 'Mage', 'power', {
@@ -155,9 +157,9 @@ describe('buildPathRecommendationIndex', () => {
           entities,
           kind: 'powers',
         }),
-        ['p-mage']
-      )]
-    ).toEqual(['p1']);
+        ['p-mage'],
+      ),
+    ]).toEqual(['p1']);
   });
 
   it('unions armaments + equipment kinds on the mixed Codex equipment list', () => {
@@ -204,11 +206,7 @@ describe('buildPathRecommendationIndex', () => {
 
   it('lists player-visible path ids of one archetype type for See more auto-select', () => {
     const mixed = buildPathRecommendationIndex({
-      paths: [
-        monk,
-        berserker,
-        path('p-mage', 'Mage', 'power', { level1: { feats: ['10'] } }),
-      ],
+      paths: [monk, berserker, path('p-mage', 'Mage', 'power', { level1: { feats: ['10'] } })],
       entities: FEATS,
       kind: 'feats',
     });
@@ -242,7 +240,7 @@ describe('buildPathRecommendationIndex', () => {
         pathIndex: index,
         selectedPathIds: ['p-monk'],
         keepIds: new Set(['picked']),
-      }
+      },
     );
     expect(rows.map((r) => r.id)).toEqual(['10', 'picked']);
     expect(rows[0]?.badges).toEqual([{ label: 'Monk' }]);

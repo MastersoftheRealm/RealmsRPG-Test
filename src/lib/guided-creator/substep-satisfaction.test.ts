@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_ABILITIES } from '@/types';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
-import {
-  GUIDED_SUBSTEP_ORDER,
-  type GuidedDraft,
-} from '@/stores/guided-creator-store';
+import { GUIDED_SUBSTEP_ORDER, type GuidedDraft } from '@/stores/guided-creator-store';
 import { buildPathSelectionDraftPatch } from '@/lib/guided-creator/path-selection-draft';
 import { buildGuidedSingleSpeciesDraftPatch } from '@/lib/guided-creator/species-selection-draft';
 import {
@@ -97,7 +94,7 @@ describe('guided sub-step satisfaction', () => {
     const patch = buildGuidedSingleSpeciesDraftPatch(
       { speciesId: before.speciesId, speciesMixed: before.speciesMixed },
       { id: 'sp-2', name: 'Dwarf' },
-      []
+      [],
     );
     const after = { ...before, ...patch };
 

@@ -37,8 +37,7 @@ const SATISFACTION: Record<GuidedSubStep, (draft: GuidedDraft) => boolean> = {
     draft.selectedAncestryTraitIds.filter(Boolean).length >= (draft.selectedFlawId ? 2 : 1) &&
     (!draft.speciesMixed || draft.selectedSpeciesSkillIds.length > 0),
 
-  abilities: (draft) =>
-    draft.abilitiesMode !== null && hasAllocatedAbilityPoints(draft.abilities),
+  abilities: (draft) => draft.abilitiesMode !== null && hasAllocatedAbilityPoints(draft.abilities),
 
   skills: (draft) => Object.keys(draft.skills ?? {}).length > 0,
 
@@ -57,9 +56,7 @@ const SATISFACTION: Record<GuidedSubStep, (draft: GuidedDraft) => boolean> = {
   'powers-techniques': () => true,
 
   reveal: (draft) =>
-    draft.name.trim().length > 0 &&
-    draft.hpAllocated !== null &&
-    draft.energyAllocated !== null,
+    draft.name.trim().length > 0 && draft.hpAllocated !== null && draft.energyAllocated !== null,
 };
 
 export function isGuidedSubStepSatisfied(subStep: GuidedSubStep, draft: GuidedDraft): boolean {
@@ -73,7 +70,7 @@ export function isGuidedSubStepSatisfied(subStep: GuidedSubStep, draft: GuidedDr
 export function canOpenGuidedSubStep(
   subStep: GuidedSubStep,
   order: readonly GuidedSubStep[],
-  draft: GuidedDraft
+  draft: GuidedDraft,
 ): boolean {
   const targetIdx = order.indexOf(subStep);
   if (targetIdx <= 0) return true;
@@ -86,7 +83,7 @@ export function canOpenGuidedSubStep(
  */
 export function isGuidedDraftSaveable(
   order: readonly GuidedSubStep[],
-  draft: GuidedDraft
+  draft: GuidedDraft,
 ): boolean {
   return order.every((step) => isGuidedSubStepSatisfied(step, draft));
 }

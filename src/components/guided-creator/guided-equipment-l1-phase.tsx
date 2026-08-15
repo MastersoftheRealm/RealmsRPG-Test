@@ -44,7 +44,7 @@ const phaseCopy = GUIDED_CREATOR_COPY.steps.loadout.phases;
 function isSelectedInPhase(
   phase: GuidedEquipmentPhase,
   draft: GuidedDraft,
-  itemId: string
+  itemId: string,
 ): boolean {
   const key = normalizeId(itemId);
   if (phase === 'weapon') {
@@ -56,11 +56,7 @@ function isSelectedInPhase(
   return draft.equipment.some((e) => normalizeId(e.id) === key);
 }
 
-function selectedQuantity(
-  phase: GuidedEquipmentPhase,
-  draft: GuidedDraft,
-  itemId: string
-): number {
+function selectedQuantity(phase: GuidedEquipmentPhase, draft: GuidedDraft, itemId: string): number {
   const key = normalizeId(itemId);
   const list =
     phase === 'weapon'
@@ -97,18 +93,18 @@ export function GuidedEquipmentL1Phase({
   const { catalog, itemProperties, rules } = useGuidedEquipmentCatalog(
     draft,
     officialItems,
-    codexEquipment
+    codexEquipment,
   );
   const [handMessage, setHandMessage] = useState<string | null>(null);
 
   const pathRecommendedIds = useMemo(
     () => pathRecommendedIdSet(pool, phase, officialItems, codexEquipment),
-    [pool, phase, officialItems, codexEquipment]
+    [pool, phase, officialItems, codexEquipment],
   );
 
   const recommendedGearRefs = useMemo(
     () => filterPoolToPhase(pool, 'gear', officialItems, codexEquipment),
-    [pool, officialItems, codexEquipment]
+    [pool, officialItems, codexEquipment],
   );
 
   /** L1 ranks by path/attack ability only — full eligibility (ability/TP/currency) stays L2. */
@@ -118,7 +114,7 @@ export function GuidedEquipmentL1Phase({
       martAbil: draft.mart_abil,
       powAbil: draft.pow_abil,
     }),
-    [pathRecommendedIds, draft.mart_abil, draft.pow_abil]
+    [pathRecommendedIds, draft.mart_abil, draft.pow_abil],
   );
 
   const selectedIds = useMemo(() => {
@@ -136,16 +132,16 @@ export function GuidedEquipmentL1Phase({
         rankCtx,
         officialItems,
         codexEquipment,
-        selectedIds
+        selectedIds,
       ),
-    [pool, phase, catalog, rankCtx, officialItems, codexEquipment, selectedIds]
+    [pool, phase, catalog, rankCtx, officialItems, codexEquipment, selectedIds],
   );
 
   const allRecommendedSelected =
     phase === 'gear' &&
     recommendedGearRefs.length > 0 &&
     recommendedGearRefs.every((ref) =>
-      draft.equipment.some((e) => normalizeId(e.id) === normalizeId(ref.id))
+      draft.equipment.some((e) => normalizeId(e.id) === normalizeId(ref.id)),
     );
 
   const toggleSelection = useCallback(
@@ -161,17 +157,10 @@ export function GuidedEquipmentL1Phase({
 
       if (phase !== 'gear') {
         if (
-          wouldExceedLoadoutTp(
-            draft,
-            ref,
-            officialItems,
-            codexEquipment,
-            itemProperties,
-            rules
-          )
+          wouldExceedLoadoutTp(draft, ref, officialItems, codexEquipment, itemProperties, rules)
         ) {
           setHandMessage(
-            phase === 'armor' ? phaseCopy.armorPhase.tpBlocked : phaseCopy.weaponPhase.tpBlocked
+            phase === 'armor' ? phaseCopy.armorPhase.tpBlocked : phaseCopy.weaponPhase.tpBlocked,
           );
           return;
         }
@@ -185,7 +174,7 @@ export function GuidedEquipmentL1Phase({
             ? phaseCopy.armorPhase.currencyBlocked
             : phase === 'weapon'
               ? phaseCopy.weaponPhase.currencyBlocked
-              : phaseCopy.gearPhase.currencyBlocked
+              : phaseCopy.gearPhase.currencyBlocked,
         );
         return;
       }
@@ -228,7 +217,7 @@ export function GuidedEquipmentL1Phase({
       rules,
       catalog,
       currencyRemaining,
-    ]
+    ],
   );
 
   const handleQuantityChange = useCallback(
@@ -243,16 +232,15 @@ export function GuidedEquipmentL1Phase({
             ? phaseCopy.armorPhase.currencyBlocked
             : phase === 'weapon'
               ? phaseCopy.weaponPhase.currencyBlocked
-              : phaseCopy.gearPhase.currencyBlocked
+              : phaseCopy.gearPhase.currencyBlocked,
         );
         return;
       }
-      const category =
-        phase === 'weapon' ? 'weapon' : phase === 'armor' ? 'armor' : 'equipment';
+      const category = phase === 'weapon' ? 'weapon' : phase === 'armor' ? 'armor' : 'equipment';
       const next = setItemQuantityInGuidedDraft(draft, ref.id, qty, category);
       onDraftChange({ ...next });
     },
-    [draft, onDraftChange, phase, catalog, currencyRemaining]
+    [draft, onDraftChange, phase, catalog, currencyRemaining],
   );
 
   const handleAddAllRecommended = useCallback(() => {
@@ -268,10 +256,13 @@ export function GuidedEquipmentL1Phase({
       affordable.push(ref);
       remaining -= line;
     }
-    if (affordable.length === 0 && recommendedGearRefs.some((ref) => {
-      const key = normalizeId(ref.id);
-      return !draft.equipment.some((e) => normalizeId(e.id) === key);
-    })) {
+    if (
+      affordable.length === 0 &&
+      recommendedGearRefs.some((ref) => {
+        const key = normalizeId(ref.id);
+        return !draft.equipment.some((e) => normalizeId(e.id) === key);
+      })
+    ) {
       setHandMessage(phaseCopy.gearPhase.currencyBlocked);
       return;
     }
@@ -287,7 +278,9 @@ export function GuidedEquipmentL1Phase({
     return (
       <div className="space-y-3">
         <div className="rounded-card border border-border-light bg-surface-alt/40 px-4 py-5 dark:border-border">
-          <p className="font-display text-base font-semibold text-text-primary">{copy.emptyTitle}</p>
+          <p className="font-display text-base font-semibold text-text-primary">
+            {copy.emptyTitle}
+          </p>
           <p className="mt-1 font-nunito text-sm text-text-secondary">{copy.emptyDescription}</p>
         </div>
         {phase === 'armor' && armorOptional ? (
@@ -399,7 +392,10 @@ export function GuidedEquipmentL1Phase({
                       onClick={(e) => e.stopPropagation()}
                       onKeyDown={(e) => e.stopPropagation()}
                     >
-                      <span className="font-nunito text-sm text-text-secondary shrink-0" aria-hidden="true">
+                      <span
+                        className="shrink-0 font-nunito text-sm text-text-secondary"
+                        aria-hidden="true"
+                      >
                         Quantity
                       </span>
                       <ValueStepper

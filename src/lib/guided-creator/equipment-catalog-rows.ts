@@ -9,7 +9,10 @@ import {
   type ItemPropertyPayload,
   type ItemPropertyTpRow,
 } from '@/lib/calculators/item-calc';
-import type { EligibleEquipmentRow, EquipmentPhase } from '@/lib/guided-creator/equipment-eligibility';
+import type {
+  EligibleEquipmentRow,
+  EquipmentPhase,
+} from '@/lib/guided-creator/equipment-eligibility';
 import { resolveItemUnitCost } from '@/lib/guided-creator/equipment-currency';
 import { resolveItemTrainingPoints } from '@/lib/guided-creator/loadout-tp';
 import { formatWeaponDamageLine } from '@/lib/guided-creator/equipment-phase-stats';
@@ -28,11 +31,10 @@ function readTaxonomyCategory(item: unknown): string | undefined {
  */
 function rowFromOfficial(
   item: LibraryItem,
-  itemProperties: ItemPropertyTpRow[]
+  itemProperties: ItemPropertyTpRow[],
 ): EligibleEquipmentRow {
   const props = (item.properties ?? []) as ItemPropertyPayload[];
-  const fromProps =
-    itemProperties.length > 0 ? calculateItemCosts(props, itemProperties) : null;
+  const fromProps = itemProperties.length > 0 ? calculateItemCosts(props, itemProperties) : null;
   const totalCurrency = fromProps?.totalCurrency ?? item.costs?.totalCurrency ?? 0;
   const totalIP = fromProps?.totalIP ?? item.costs?.totalIP ?? 0;
   const currencyCost = resolveItemUnitCost({
@@ -64,11 +66,10 @@ function rowFromOfficial(
 
 function rowFromCodex(
   item: CodexEquipmentItem,
-  itemProperties: ItemPropertyTpRow[]
+  itemProperties: ItemPropertyTpRow[],
 ): EligibleEquipmentRow {
   const props = (item.properties ?? []).map((name) => ({ name }));
-  const tp =
-    resolveItemTrainingPoints(String(item.id), [], [item], itemProperties) ?? 0;
+  const tp = resolveItemTrainingPoints(String(item.id), [], [item], itemProperties) ?? 0;
   return {
     id: String(item.id),
     name: item.name,
@@ -87,7 +88,7 @@ function rowFromCodex(
 export function buildEquipmentCatalogRows(
   officialItems: LibraryItem[] = [],
   codexEquipment: CodexEquipmentItem[] = [],
-  itemProperties: ItemPropertyTpRow[] = []
+  itemProperties: ItemPropertyTpRow[] = [],
 ): Map<string, EligibleEquipmentRow> {
   const map = new Map<string, EligibleEquipmentRow>();
   for (const item of codexEquipment) {
@@ -95,8 +96,7 @@ export function buildEquipmentCatalogRows(
   }
   for (const item of officialItems) {
     const officialRow = rowFromOfficial(item, itemProperties);
-    const existing =
-      map.get(normalizeId(item.id)) ?? map.get(normalizeId(item.docId));
+    const existing = map.get(normalizeId(item.id)) ?? map.get(normalizeId(item.docId));
     const merged = {
       ...officialRow,
       itemCategory: officialRow.itemCategory || existing?.itemCategory,
@@ -111,7 +111,7 @@ export function buildEquipmentCatalogRows(
 
 export function catalogRowForRef(
   refId: string,
-  catalog: Map<string, EligibleEquipmentRow>
+  catalog: Map<string, EligibleEquipmentRow>,
 ): EligibleEquipmentRow | undefined {
   return catalog.get(normalizeId(refId));
 }
@@ -119,7 +119,7 @@ export function catalogRowForRef(
 export function weaponDamageLineForRef(
   refId: string,
   officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
+  codexEquipment: CodexEquipmentItem[],
 ): string | undefined {
   const official = findByNormalizedId(officialItems, refId);
   if (official?.damage?.length) return formatWeaponDamageLine(official.damage);
@@ -131,7 +131,7 @@ export function weaponDamageLineForRef(
 export function libraryRowForRef(
   refId: string,
   officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
+  codexEquipment: CodexEquipmentItem[],
 ): LibraryItem | CodexEquipmentItem | undefined {
   return findByNormalizedId(officialItems, refId) ?? findByNormalizedId(codexEquipment, refId);
 }
@@ -139,7 +139,7 @@ export function libraryRowForRef(
 export function armorStatsForRef(
   refId: string,
   officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
+  codexEquipment: CodexEquipmentItem[],
 ): { damageReduction?: number | null; agilityPenalty?: number | null } {
   const official = findByNormalizedId(officialItems, refId);
   if (official) {
@@ -165,7 +165,7 @@ export function armorStatsForRef(
 export function gearShortUseForRef(
   refId: string,
   officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
+  codexEquipment: CodexEquipmentItem[],
 ): string | undefined {
   const row = libraryRowForRef(refId, officialItems, codexEquipment);
   if (!row || !('description' in row)) return undefined;
@@ -176,7 +176,7 @@ export function gearShortUseForRef(
 
 export function rowsForEquipmentPhase(
   catalog: Map<string, EligibleEquipmentRow>,
-  phase: EquipmentPhase
+  phase: EquipmentPhase,
 ): EligibleEquipmentRow[] {
   return [...catalog.values()].filter((row) => {
     const t = row.type.toLowerCase();

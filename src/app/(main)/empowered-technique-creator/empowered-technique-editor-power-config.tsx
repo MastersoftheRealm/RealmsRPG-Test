@@ -39,10 +39,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
   const powerConfigSummary = `${rangeDisplay} • ${area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)} • ${duration.type === 'instant' ? 'Instant' : formatDurationFromTypeAndValue(duration.type, duration.value)}`;
 
   return (
-    <CollapsibleSection
-      title="Power Configuration"
-      collapsedSummary={powerConfigSummary}
-    >
+    <CollapsibleSection title="Power Configuration" collapsedSummary={powerConfigSummary}>
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-4">
           <SectionCostBadge en={sectionCosts.range.energyRaw} tp={sectionCosts.range.totalTP} />
@@ -64,7 +61,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
                 type: event.target.value as AreaConfig['type'],
               }))
             }
-            className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
             aria-label="Empowered technique area type"
           >
             {AREA_TYPES.map((option) => (
@@ -95,15 +92,18 @@ export function EmpoweredTechniqueEditorPowerConfig({
             </>
           )}
         </div>
-        <div className="space-y-3 pt-2 border-t border-border-light">
+        <div className="space-y-3 border-t border-border-light pt-2">
           <div className="flex flex-wrap items-center gap-4">
-            <SectionCostBadge en={sectionCosts.duration.energyRaw} tp={sectionCosts.duration.totalTP} />
+            <SectionCostBadge
+              en={sectionCosts.duration.energyRaw}
+              tp={sectionCosts.duration.totalTP}
+            />
             <select
               value={duration.type}
               onChange={(event) =>
                 onDurationTypeChange(event.target.value as DurationConfig['type'])
               }
-              className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+              className="min-h-[44px] rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
               aria-label="Empowered technique duration type"
             >
               {DURATION_TYPES.map((option) => (
@@ -123,7 +123,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
                       value: Number(event.target.value),
                     }))
                   }
-                  className="px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+                  className="min-h-[44px] rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
                   aria-label="Empowered technique duration value"
                 >
                   {DURATION_VALUES[duration.type].map((option) => (
@@ -174,7 +174,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
                     sustain: Number(event.target.value),
                   }))
                 }
-                className="px-2 py-1 border border-border-light rounded text-sm text-text-primary bg-surface min-h-[44px]"
+                className="min-h-[44px] rounded border border-border-light bg-surface px-2 py-1 text-sm text-text-primary"
                 aria-label="Empowered technique sustain action points"
               >
                 <option value={0}>Sustain: None</option>

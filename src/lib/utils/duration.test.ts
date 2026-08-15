@@ -18,9 +18,9 @@ describe('formatDurationFromTypeAndValue', () => {
 
 describe('formatDurationWithModifiers', () => {
   it('appends Focus and Sustain', () => {
-    expect(
-      formatDurationWithModifiers('minutes', 10, { focus: true, sustain: 2 })
-    ).toBe('10 Minutes (Focus) (Sustain 2)');
+    expect(formatDurationWithModifiers('minutes', 10, { focus: true, sustain: 2 })).toBe(
+      '10 Minutes (Focus) (Sustain 2)',
+    );
   });
 });
 
@@ -35,7 +35,7 @@ describe('formatDurationDisplay', () => {
   it('formats structured objects via the shared layer', () => {
     expect(formatDurationDisplay({ type: 'minutes', value: 10 })).toBe('10 Minutes');
     expect(formatDurationDisplay({ type: 'rounds', value: 1, focus: true })).toBe(
-      '1 Round (Focus)'
+      '1 Round (Focus)',
     );
     expect(formatDurationDisplay({ value: 6, unit: 'hours' })).toBe('6 Hours');
   });

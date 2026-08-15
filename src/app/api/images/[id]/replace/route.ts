@@ -8,15 +8,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/supabase/session';
 import { isAdmin } from '@/lib/admin';
 import { createServiceRoleClient } from '@/lib/supabase/server';
-import { detectImageMime, extensionForImageMime, validateImageMagicBytes } from '@/lib/validate-image';
+import {
+  detectImageMime,
+  extensionForImageMime,
+  validateImageMagicBytes,
+} from '@/lib/validate-image';
 import { buildRateLimitKey, resolveClientIp, uploadLimiter } from '@/lib/rate-limit';
 import { apiErrorResponse, logApiError } from '@/lib/api-error';
 import { verifyMutationRequest } from '@/lib/api-validation';
-import {
-  REALMS_IMAGES_BUCKET,
-  realmsImageStoragePath,
-  withCacheBust,
-} from '@/lib/realms-images';
+import { REALMS_IMAGES_BUCKET, realmsImageStoragePath, withCacheBust } from '@/lib/realms-images';
 import { syncRealmsImageCacheUrls } from '@/lib/realms-image-consumers';
 import { fetchRealmsImageById } from '@/lib/realms-images-server';
 
@@ -44,7 +44,10 @@ export async function POST(request: NextRequest, context: RouteContext) {
   });
   const { success } = await uploadLimiter.check(key);
   if (!success) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    );
   }
 
   try {
@@ -88,7 +91,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
       .upload(nextPath, file, { upsert: true, contentType });
 
     if (uploadError) {
-      return apiErrorResponse('Replace failed', 500, 'POST /api/images/[id]/replace (upload)', uploadError);
+      return apiErrorResponse(
+        'Replace failed',
+        500,
+        'POST /api/images/[id]/replace (upload)',
+        uploadError,
+      );
     }
 
     if (previousPath && previousPath !== nextPath) {
@@ -115,7 +123,12 @@ export async function POST(request: NextRequest, context: RouteContext) {
       .eq('id', id);
 
     if (updateError) {
-      return apiErrorResponse('Replace failed', 500, 'POST /api/images/[id]/replace (update)', updateError);
+      return apiErrorResponse(
+        'Replace failed',
+        500,
+        'POST /api/images/[id]/replace (update)',
+        updateError,
+      );
     }
 
     const synced = await syncRealmsImageCacheUrls(supabase, id, publicUrl);

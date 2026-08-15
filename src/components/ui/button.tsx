@@ -2,7 +2,7 @@
  * Button Component
  * ==================
  * Reusable button with variants using class-variance-authority
- * 
+ *
  * VARIANTS:
  * - primary: Main CTA, solid bg (clean, no gradient)
  * - outline: Secondary CTA, border only (clean outline style)
@@ -26,12 +26,17 @@ const buttonVariants = cva(
     variants: {
       variant: {
         // RECOMMENDED VARIANTS - clean solid/outline preferred over gradients
-        primary: 'bg-primary-button text-text-on-dark hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
-        secondary: 'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-primary-outline-border dark:bg-surface-alt dark:border-border dark:hover:bg-surface',
-        danger: 'bg-danger-button text-text-on-dark hover:bg-danger-700 focus-visible:ring-danger-border',
-        ghost: 'text-text-secondary hover:bg-surface-alt hover:text-text-primary focus-visible:ring-primary-outline-border',
+        primary:
+          'bg-primary-button text-text-on-dark hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
+        secondary:
+          'bg-surface text-text-secondary border border-border-light hover:bg-surface-alt focus-visible:ring-primary-outline-border dark:bg-surface-alt dark:border-border dark:hover:bg-surface',
+        danger:
+          'bg-danger-button text-text-on-dark hover:bg-danger-700 focus-visible:ring-danger-border',
+        ghost:
+          'text-text-secondary hover:bg-surface-alt hover:text-text-primary focus-visible:ring-primary-outline-border',
         link: 'text-primary-link-fg underline-offset-4 hover:underline focus-visible:ring-primary-outline-border',
-        outline: 'border-2 border-primary-outline-border text-primary-outline-fg bg-transparent hover:bg-primary-subtle-bg focus-visible:ring-primary-outline-border',
+        outline:
+          'border-2 border-primary-outline-border text-primary-outline-fg bg-transparent hover:bg-primary-subtle-bg focus-visible:ring-primary-outline-border',
       },
       size: {
         sm: 'h-8 px-3 text-xs',
@@ -45,24 +50,26 @@ const buttonVariants = cva(
       variant: 'primary',
       size: 'md',
     },
-  }
+  },
 );
 
 export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
   isLoading?: boolean;
   asChild?: boolean;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, isLoading, asChild = false, children, disabled, onClick, ...props }, ref) => {
+  (
+    { className, variant, size, isLoading, asChild = false, children, disabled, onClick, ...props },
+    ref,
+  ) => {
     const Comp = asChild ? Slot : 'button';
 
     // IMPORTANT (Next.js RSC): only pass an `onClick` prop when one was provided, so
     // server components that render <Button /> don't fail prerendering.
     const wrappedOnClick = onClick ?? undefined;
-    
+
     return (
       <Comp
         className={cn(buttonVariants({ variant, size, className }))}
@@ -81,7 +88,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
       </Comp>
     );
-  }
+  },
 );
 
 Button.displayName = 'Button';

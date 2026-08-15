@@ -28,15 +28,18 @@ export function AccountEmailCard({
   onSubmit,
 }: EmailProps) {
   return (
-    <Card className="shadow-md p-6">
-      <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-        <Mail className="w-5 h-5 text-text-secondary" />
+    <Card className="p-6 shadow-md">
+      <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-text-primary">
+        <Mail className="h-5 w-5 text-text-secondary" />
         Change Email
       </h2>
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label htmlFor="account-new-email" className="block text-sm font-medium text-text-secondary mb-1">
+          <label
+            htmlFor="account-new-email"
+            className="mb-1 block text-sm font-medium text-text-secondary"
+          >
             New Email Address
           </label>
           <Input
@@ -49,7 +52,10 @@ export function AccountEmailCard({
           />
         </div>
         <div>
-          <label htmlFor="account-email-password" className="block text-sm font-medium text-text-secondary mb-1">
+          <label
+            htmlFor="account-email-password"
+            className="mb-1 block text-sm font-medium text-text-secondary"
+          >
             Current Password
           </label>
           <Input
@@ -106,15 +112,18 @@ export function AccountPasswordCard({
   onSendResetEmail,
 }: PasswordProps) {
   return (
-    <Card className="shadow-md p-6">
-      <h2 className="text-lg font-bold text-text-primary mb-4 flex items-center gap-2">
-        <Lock className="w-5 h-5 text-text-secondary" />
+    <Card className="p-6 shadow-md">
+      <h2 className="mb-4 flex items-center gap-2 text-lg font-bold text-text-primary">
+        <Lock className="h-5 w-5 text-text-secondary" />
         Change Password
       </h2>
 
       <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label htmlFor="account-current-password" className="block text-sm font-medium text-text-secondary mb-1">
+          <label
+            htmlFor="account-current-password"
+            className="mb-1 block text-sm font-medium text-text-secondary"
+          >
             Current Password
           </label>
           <Input
@@ -127,7 +136,10 @@ export function AccountPasswordCard({
           />
         </div>
         <div>
-          <label htmlFor="account-new-password" className="block text-sm font-medium text-text-secondary mb-1">
+          <label
+            htmlFor="account-new-password"
+            className="mb-1 block text-sm font-medium text-text-secondary"
+          >
             New Password
           </label>
           <Input
@@ -141,7 +153,10 @@ export function AccountPasswordCard({
           />
         </div>
         <div>
-          <label htmlFor="account-confirm-password" className="block text-sm font-medium text-text-secondary mb-1">
+          <label
+            htmlFor="account-confirm-password"
+            className="mb-1 block text-sm font-medium text-text-secondary"
+          >
             Confirm New Password
           </label>
           <Input
@@ -184,10 +199,10 @@ type OauthProps = {
 
 export function AccountOauthNoticeCard({ authProviderLabel }: OauthProps) {
   return (
-    <Card className="shadow-md p-6">
-      <p className="text-text-secondary text-sm">
-        You signed in with {authProviderLabel}. Email and password cannot be changed here. To update your
-        email, use your {authProviderLabel} account settings.
+    <Card className="p-6 shadow-md">
+      <p className="text-sm text-text-secondary">
+        You signed in with {authProviderLabel}. Email and password cannot be changed here. To update
+        your email, use your {authProviderLabel} account settings.
       </p>
     </Card>
   );

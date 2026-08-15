@@ -22,7 +22,10 @@ import {
   resolveParentSkillNameForSubSkill,
 } from '@/lib/game/formulas';
 import { getArchetypeCodexLookupId, mergeArchetypeFromCodex } from '@/lib/game/archetype-display';
-import { calculateCharacterSkillPointsSpent, buildSpeciesSkillIdSet } from '@/lib/game/skill-allocation';
+import {
+  calculateCharacterSkillPointsSpent,
+  buildSpeciesSkillIdSet,
+} from '@/lib/game/skill-allocation';
 import { applySpeciesTraitChoiceSelections } from '@/lib/choice-trait';
 import type { CoreRulesMap } from '@/types/core-rules';
 import type { LibraryForView } from '@/services/character-service';
@@ -128,7 +131,7 @@ export function useCharacterSheetDerived({
     if (!character) return null;
     const powers = libraryForView ? libraryForView.powers : userPowers;
     const baseTechniques = libraryForView ? libraryForView.techniques : userTechniques;
-    const techniques = libraryForView ? baseTechniques : [...baseTechniques, ...userEmpoweredTechniques];
+    const techniques = [...baseTechniques, ...userEmpoweredTechniques];
     const items = libraryForView ? libraryForView.items : userItems;
     return enrichCharacterData(
       character,
@@ -138,7 +141,7 @@ export function useCharacterSheetDerived({
       codexEquipment as Parameters<typeof enrichCharacterData>[4],
       powerPartsDb as Parameters<typeof enrichCharacterData>[5],
       techniquePartsDb as Parameters<typeof enrichCharacterData>[6],
-      publicLibraries
+      publicLibraries,
     );
   }, [
     character,
@@ -169,7 +172,8 @@ export function useCharacterSheetDerived({
     let species = allSpecies.find((s: Species) => String(s.id) === String(speciesId));
     if (!species && speciesName) {
       species = allSpecies.find(
-        (s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase()
+        (s: Species) =>
+          String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase(),
       );
     }
     const raw = species?.species_traits || [];
@@ -198,7 +202,8 @@ export function useCharacterSheetDerived({
     let species = allSpecies.find((s: Species) => String(s.id) === String(speciesId));
     if (!species && speciesName) {
       species = allSpecies.find(
-        (s: Species) => String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase()
+        (s: Species) =>
+          String(s.name ?? '').toLowerCase() === String(speciesName ?? '').toLowerCase(),
       );
     }
     return (species?.skills || []) as string[];
@@ -228,7 +233,7 @@ export function useCharacterSheetDerived({
 
     const spentAbilityPoints = Object.values(abilities).reduce(
       (sum, value) => sum + calculateAbilityScoreCost(value || 0, rules),
-      0
+      0,
     );
 
     const totalSkillPoints = calculateSkillPointsForEntity(level, 'character', rules);
@@ -244,14 +249,14 @@ export function useCharacterSheetDerived({
     }>;
     const speciesSkillIdSet = buildSpeciesSkillIdSet(
       characterSpeciesSkills.filter((id) => id !== '0'),
-      skillsList
+      skillsList,
     );
     const defVals = character.defenseVals || character.defenseSkills || DEFAULT_DEFENSE_SKILLS;
     const spentSkillPoints = calculateCharacterSkillPointsSpent(
       skillsList,
       speciesSkillIdSet,
       defVals,
-      rules
+      rules,
     );
 
     return {
@@ -270,7 +275,7 @@ export function useCharacterSheetDerived({
       character.level || 1,
       character.mart_prof || 0,
       character.pow_prof || 0,
-      character.archetypeChoices || {}
+      character.archetypeChoices || {},
     );
   }, [character]);
 
@@ -285,7 +290,7 @@ export function useCharacterSheetDerived({
     const currentAbilities = character.abilities || {};
     const spentAbilityPoints = Object.values(currentAbilities).reduce(
       (sum, val) => sum + calculateAbilityScoreCost(val || 0, rules),
-      0
+      0,
     );
     const abilityPointsRemaining = totalAbilityPoints - spentAbilityPoints;
 
@@ -305,14 +310,15 @@ export function useCharacterSheetDerived({
     }>;
     const speciesSkillIdSet = buildSpeciesSkillIdSet(
       characterSpeciesSkills.filter((id) => id !== '0'),
-      skillsList
+      skillsList,
     );
-    const defValsForSpend = character.defenseVals || character.defenseSkills || DEFAULT_DEFENSE_SKILLS;
+    const defValsForSpend =
+      character.defenseVals || character.defenseSkills || DEFAULT_DEFENSE_SKILLS;
     const spentSkillPoints = calculateCharacterSkillPointsSpent(
       skillsList,
       speciesSkillIdSet,
       defValsForSpend,
-      rules
+      rules,
     );
     const skillPointsRemaining = totalSkillPoints - spentSkillPoints;
 
@@ -321,7 +327,7 @@ export function useCharacterSheetDerived({
       level,
       archetypeType,
       undefined,
-      character.archetypeChoices
+      character.archetypeChoices,
     );
     const characterFeatSlots = calculateMaxCharacterFeats(level);
     const featLevelById = new Map<string, number>();
@@ -356,7 +362,9 @@ export function useCharacterSheetDerived({
     const isStateFeat = (feat: CharacterFeat) => {
       const codex =
         db.find((f) => f.id === String(feat.id)) ??
-        db.find((f) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
+        db.find(
+          (f) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase(),
+        );
       return !!codex?.state_feat;
     };
     const archNonState = arch.filter((f) => !isStateFeat(f));
@@ -389,7 +397,7 @@ export function useCharacterSheetDerived({
       if (rawSkillIds.has(ssLower) || rawSkillNames.has(ssLower)) continue;
       const codexSkill = codexSkills.find(
         (s: CodexSkill) =>
-          String(s.id).toLowerCase() === ssLower || String(s.name ?? '').toLowerCase() === ssLower
+          String(s.id).toLowerCase() === ssLower || String(s.name ?? '').toLowerCase() === ssLower,
       );
       if (codexSkill) {
         const abilities = (codexSkill.ability ?? 'strength')
@@ -413,7 +421,7 @@ export function useCharacterSheetDerived({
       const codexSkill = codexSkills.find(
         (rs: CodexSkill) =>
           String(rs.id) === String(skill.id) ||
-          String(rs.name ?? '').toLowerCase() === String(skill.name ?? '').toLowerCase()
+          String(rs.name ?? '').toLowerCase() === String(skill.name ?? '').toLowerCase(),
       );
 
       const parentName =

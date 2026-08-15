@@ -3,20 +3,20 @@
  * =====================
  * Unified display for point allocation status across the site.
  * Shows spent/remaining points with contextual coloring.
- * 
+ *
  * Used in:
  * - Character Creator (ability points, skill points)
  * - Character Sheet edit mode (ability allocation)
  * - Creature Creator (point allocation)
  * - Ability Editor
- * 
+ *
  * @example
  * // Block display with calculation breakdown
  * <PointStatus total={10} spent={7} showCalculation />
- * 
+ *
  * // Inline compact display
  * <PointStatus total={10} spent={7} variant="inline" label="Points" />
- * 
+ *
  * // Compact pill style
  * <PointStatus total={10} spent={10} variant="compact" />
  */
@@ -102,7 +102,7 @@ export function PointStatus({
   const displayValue = metric === 'spent' ? spent : remaining;
 
   const labelNode = label ? (
-    <span className="inline-flex items-center gap-0.5 mr-1">
+    <span className="mr-1 inline-flex items-center gap-0.5">
       <span>{label}</span>
       {labelAccessory}
       <span aria-hidden="true">:</span>
@@ -116,23 +116,25 @@ export function PointStatus({
         {showCalculation ? (
           <>
             <div className="text-center">
-              <span className="text-xs text-text-secondary block">Total</span>
+              <span className="block text-xs text-text-secondary">Total</span>
               <span className="text-lg font-bold text-text-primary">{total}</span>
             </div>
             <span className="text-2xl text-border-light">−</span>
             <div className="text-center">
-              <span className="text-xs text-text-secondary block">Spent</span>
+              <span className="block text-xs text-text-secondary">Spent</span>
               <span className="text-lg font-bold text-text-primary">{spent}</span>
             </div>
             <span className="text-2xl text-border-light">=</span>
             <div className="text-center">
-              <span className="text-xs text-text-secondary block">Remaining</span>
-              <span className={cn(
-                'text-lg font-bold',
-                status === 'overspent' && 'text-danger-fg',
-                status === 'balanced' && 'text-success-fg',
-                status === 'remaining' && 'text-primary-link-fg'
-              )}>
+              <span className="block text-xs text-text-secondary">Remaining</span>
+              <span
+                className={cn(
+                  'text-lg font-bold',
+                  status === 'overspent' && 'text-danger-fg',
+                  status === 'balanced' && 'text-success-fg',
+                  status === 'remaining' && 'text-primary-link-fg',
+                )}
+              >
                 {remaining}
               </span>
             </div>

@@ -1,9 +1,6 @@
 import type { Character } from '@/types';
 import { computeMaxHealthEnergy } from '@/lib/game/calculations';
-import {
-  dedupeByNormalizedId,
-  dedupeEntityRefs,
-} from '@/lib/game/dedupe-saved-parts';
+import { dedupeByNormalizedId, dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 import { normalizeTempModifiers } from '@/lib/character/temp-modifiers';
 import { normalizeCharacterForSave } from '@/lib/character/schema-normalize';
 
@@ -13,22 +10,44 @@ import { normalizeCharacterForSave } from '@/lib/character/schema-normalize';
  */
 const SAVEABLE_FIELDS = [
   // Identity (species derived from ancestry.id via codex)
-  'name', 'gender', 'portrait', 'xp', 'experience', 'level',
-  'status', 'description',
+  'name',
+  'gender',
+  'portrait',
+  'xp',
+  'experience',
+  'level',
+  'status',
+  'description',
   // Core stats (user-set values only)
-  'abilities', 'defenseVals', 'baseAbilities', 'ancestryAbilities',
-  'healthPoints', 'energyPoints', 'innateEnergy',
-  'currentHealth', 'currentEnergy', 'actionPoints',
-  'speedBase', 'evasionBase',
+  'abilities',
+  'defenseVals',
+  'baseAbilities',
+  'ancestryAbilities',
+  'healthPoints',
+  'energyPoints',
+  'innateEnergy',
+  'currentHealth',
+  'currentEnergy',
+  'actionPoints',
+  'speedBase',
+  'evasionBase',
   // Skills (user selections)
   'skills',
   // Archetype/Build (lean: { id, type } only — name/description derived from codex)
   'archetype',
   'archetypePathId',
   // Proficiency data
-  'mart_prof', 'pow_prof', 'mart_abil', 'pow_abil', 'archetypeChoices',
+  'mart_prof',
+  'pow_prof',
+  'mart_abil',
+  'pow_abil',
+  'archetypeChoices',
   // References (IDs or minimal data — not full objects)
-  'feats', 'archetypeFeats', 'techniques', 'powers', 'traits',
+  'feats',
+  'archetypeFeats',
+  'techniques',
+  'powers',
+  'traits',
   // Trait uses tracking
   'traitUses',
   // Player feat/trait display customizations (customName, note)
@@ -38,11 +57,19 @@ const SAVEABLE_FIELDS = [
   // Unarmed prowess (allocated by player)
   'unarmedProwess',
   // Inventory (names/equipped status only, not full item data)
-  'equipment', 'currency',
+  'equipment',
+  'currency',
   // Notes and misc user data
-  'notes', 'namedNotes', 'backstory', 'appearance', 'archetypeDesc', 'allies', 'organizations',
+  'notes',
+  'namedNotes',
+  'backstory',
+  'appearance',
+  'archetypeDesc',
+  'allies',
+  'organizations',
   // Physical attributes
-  'weight', 'height',
+  'weight',
+  'height',
   // Character visibility (who can view sheet)
   'visibility',
   // Display preferences (speed shown as spaces, feet, or meters)
@@ -60,7 +87,9 @@ const SAVEABLE_FIELDS = [
   // Persisted part/property proficiencies
   'proficiencies',
   // Timestamps
-  'createdAt', 'updatedAt', 'lastPlayedAt',
+  'createdAt',
+  'updatedAt',
+  'lastPlayedAt',
 ] as const;
 
 /**
@@ -70,7 +99,7 @@ const SAVEABLE_FIELDS = [
 function removeUndefinedValues<T>(obj: T): T {
   if (obj === null || obj === undefined) return obj;
   if (Array.isArray(obj)) {
-    return obj.map(item => removeUndefinedValues(item)).filter(item => item !== undefined) as T;
+    return obj.map((item) => removeUndefinedValues(item)).filter((item) => item !== undefined) as T;
   }
   if (typeof obj === 'object') {
     const cleaned: Record<string, unknown> = {};
@@ -101,9 +130,7 @@ export function cleanForSave(data: Character): Partial<Character> {
 
   // Sparse Temp Modifier deltas (ADR-0006 — drop zeros / empty maps)
   if (cleaned.tempModifiers !== undefined) {
-    const normalized = normalizeTempModifiers(
-      cleaned.tempModifiers as Character['tempModifiers']
-    );
+    const normalized = normalizeTempModifiers(cleaned.tempModifiers as Character['tempModifiers']);
     if (normalized) cleaned.tempModifiers = normalized;
     else delete cleaned.tempModifiers;
   }
@@ -124,7 +151,8 @@ export function cleanForSave(data: Character): Partial<Character> {
   const dataEnergy = data.energy as { current?: number; max?: number } | undefined;
   const healthCurrent = (cleaned.currentHealth as number) ?? dataHealth?.current;
   const energyCurrent = (cleaned.currentEnergy as number) ?? dataEnergy?.current;
-  const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } = computeMaxHealthEnergy(data);
+  const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } =
+    computeMaxHealthEnergy(data);
   if (typeof healthCurrent === 'number') {
     cleaned.health = {
       current: healthCurrent,
@@ -148,7 +176,8 @@ export function cleanForSave(data: Character): Partial<Character> {
     if (anc.name) leanAnc.name = anc.name; // Kept for server-side listing
     if (anc.selectedTraits) leanAnc.selectedTraits = anc.selectedTraits;
     if (anc.selectedFlaw !== undefined) leanAnc.selectedFlaw = anc.selectedFlaw;
-    if (anc.selectedCharacteristic !== undefined) leanAnc.selectedCharacteristic = anc.selectedCharacteristic;
+    if (anc.selectedCharacteristic !== undefined)
+      leanAnc.selectedCharacteristic = anc.selectedCharacteristic;
     if (anc.size !== undefined && anc.size !== null && anc.size !== '') leanAnc.size = anc.size;
     if (anc.mixed === true) leanAnc.mixed = true;
     if (Array.isArray(anc.speciesIds) && anc.speciesIds.length >= 2) {
@@ -163,7 +192,8 @@ export function cleanForSave(data: Character): Partial<Character> {
     if (Array.isArray(anc.selectedSpeciesTraits) && anc.selectedSpeciesTraits.length > 0) {
       leanAnc.selectedSpeciesTraits = anc.selectedSpeciesTraits;
     }
-    if (anc.selectedFlawSpeciesId !== undefined) leanAnc.selectedFlawSpeciesId = anc.selectedFlawSpeciesId;
+    if (anc.selectedFlawSpeciesId !== undefined)
+      leanAnc.selectedFlawSpeciesId = anc.selectedFlawSpeciesId;
     if (anc.mixedPhysical && typeof anc.mixedPhysical === 'object') {
       leanAnc.mixedPhysical = anc.mixedPhysical;
     }
@@ -203,22 +233,25 @@ export function cleanForSave(data: Character): Partial<Character> {
       .map(([id, val]) => ({ id, skill_val: val, prof: true }));
   }
   if (Array.isArray(cleaned.skills)) {
-    cleaned.skills = cleaned.skills.map((s: unknown) => {
-      if (typeof s === 'string') return { name: s, skill_val: 0, prof: false };
-      if (s && typeof s === 'object') {
-        const skill = s as Record<string, unknown>;
-        const cleanSkill: Record<string, unknown> = {};
-        if (skill.id) cleanSkill.id = skill.id;
-        if (skill.name) cleanSkill.name = skill.name; // Backward compat lookup key
-        cleanSkill.skill_val = (skill.skill_val as number) ?? 0;
-        cleanSkill.prof = !!(skill.prof);
-        if (skill.selectedBaseSkillId) cleanSkill.selectedBaseSkillId = skill.selectedBaseSkillId;
-        // Persist player's selected ability for skills with multiple options (e.g. Lockpick → Agility or Intelligence)
-        if (skill.ability && typeof skill.ability === 'string') cleanSkill.ability = skill.ability;
-        return cleanSkill;
-      }
-      return null;
-    }).filter(Boolean);
+    cleaned.skills = cleaned.skills
+      .map((s: unknown) => {
+        if (typeof s === 'string') return { name: s, skill_val: 0, prof: false };
+        if (s && typeof s === 'object') {
+          const skill = s as Record<string, unknown>;
+          const cleanSkill: Record<string, unknown> = {};
+          if (skill.id) cleanSkill.id = skill.id;
+          if (skill.name) cleanSkill.name = skill.name; // Backward compat lookup key
+          cleanSkill.skill_val = (skill.skill_val as number) ?? 0;
+          cleanSkill.prof = !!skill.prof;
+          if (skill.selectedBaseSkillId) cleanSkill.selectedBaseSkillId = skill.selectedBaseSkillId;
+          // Persist player's selected ability for skills with multiple options (e.g. Lockpick → Agility or Intelligence)
+          if (skill.ability && typeof skill.ability === 'string')
+            cleanSkill.ability = skill.ability;
+          return cleanSkill;
+        }
+        return null;
+      })
+      .filter(Boolean);
   }
 
   // Clean up feats — save id + name (compat fallback) + currentUses + player customName/note.
@@ -251,7 +284,7 @@ export function cleanForSave(data: Character): Partial<Character> {
       cleaned.feats.map(cleanFeatEntry).filter(Boolean) as Array<{
         id?: string | number;
         name?: string;
-      }>
+      }>,
     );
   }
 
@@ -261,14 +294,16 @@ export function cleanForSave(data: Character): Partial<Character> {
       (cleaned.archetypeFeats as unknown[]).map(cleanFeatEntry).filter(Boolean) as Array<{
         id?: string | number;
         name?: string;
-      }>
+      }>,
     );
   }
 
   // Player trait customizations — keyed by trait id
   if (cleaned.traitCustomizations && typeof cleaned.traitCustomizations === 'object') {
     const cleanedMap: Record<string, { customName?: string; note?: string }> = {};
-    for (const [key, raw] of Object.entries(cleaned.traitCustomizations as Record<string, unknown>)) {
+    for (const [key, raw] of Object.entries(
+      cleaned.traitCustomizations as Record<string, unknown>,
+    )) {
       if (!raw || typeof raw !== 'object') continue;
       const entry = raw as { customName?: string; note?: string };
       const next: { customName?: string; note?: string } = {};
@@ -302,7 +337,7 @@ export function cleanForSave(data: Character): Partial<Character> {
           }
           return null;
         })
-        .filter(Boolean) as Array<{ id?: string | number; name?: string }>
+        .filter(Boolean) as Array<{ id?: string | number; name?: string }>,
     );
   }
 
@@ -322,7 +357,7 @@ export function cleanForSave(data: Character): Partial<Character> {
           }
           return null;
         })
-        .filter(Boolean) as Array<{ id?: string | number; name?: string }>
+        .filter(Boolean) as Array<{ id?: string | number; name?: string }>,
     );
   }
 
@@ -338,7 +373,7 @@ export function cleanForSave(data: Character): Partial<Character> {
           return null;
         })
         .filter(Boolean) as string[],
-      (name) => name
+      (name) => name,
     );
   }
 

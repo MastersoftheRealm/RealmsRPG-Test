@@ -74,42 +74,57 @@ export function useCreatureCreatorWorkspacePersistence({
     setShowResetConfirm(true);
   }, []);
 
-  const onRemoveFeat = useCallback((featId: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      feats: prev.feats.filter((f) => f.id !== featId),
-    }));
-  }, [setCreature]);
+  const onRemoveFeat = useCallback(
+    (featId: string) => {
+      setCreature((prev) => ({
+        ...prev,
+        feats: prev.feats.filter((f) => f.id !== featId),
+      }));
+    },
+    [setCreature],
+  );
 
-  const onTogglePowerInnate = useCallback((powerId: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      powers: prev.powers.map((p) =>
-        p.id === powerId ? { ...p, innate: !(p.innate === true) } : p,
-      ),
-    }));
-  }, [setCreature]);
+  const onTogglePowerInnate = useCallback(
+    (powerId: string) => {
+      setCreature((prev) => ({
+        ...prev,
+        powers: prev.powers.map((p) =>
+          p.id === powerId ? { ...p, innate: !(p.innate === true) } : p,
+        ),
+      }));
+    },
+    [setCreature],
+  );
 
-  const onRemovePower = useCallback((powerId: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      powers: prev.powers.filter((p) => p.id !== powerId),
-    }));
-  }, [setCreature]);
+  const onRemovePower = useCallback(
+    (powerId: string) => {
+      setCreature((prev) => ({
+        ...prev,
+        powers: prev.powers.filter((p) => p.id !== powerId),
+      }));
+    },
+    [setCreature],
+  );
 
-  const onRemoveTechnique = useCallback((techniqueId: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      techniques: prev.techniques.filter((t) => t.id !== techniqueId),
-    }));
-  }, [setCreature]);
+  const onRemoveTechnique = useCallback(
+    (techniqueId: string) => {
+      setCreature((prev) => ({
+        ...prev,
+        techniques: prev.techniques.filter((t) => t.id !== techniqueId),
+      }));
+    },
+    [setCreature],
+  );
 
-  const onRemoveArmament = useCallback((armamentId: string) => {
-    setCreature((prev) => ({
-      ...prev,
-      armaments: prev.armaments.filter((a) => a.id !== armamentId),
-    }));
-  }, [setCreature]);
+  const onRemoveArmament = useCallback(
+    (armamentId: string) => {
+      setCreature((prev) => ({
+        ...prev,
+        armaments: prev.armaments.filter((a) => a.id !== armamentId),
+      }));
+    },
+    [setCreature],
+  );
 
   return {
     save,

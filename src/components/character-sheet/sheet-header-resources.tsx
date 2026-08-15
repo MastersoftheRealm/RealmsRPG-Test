@@ -49,14 +49,16 @@ export function SheetHeaderResources({
 }) {
   return (
     /* Right: Action Points (left, spans vertically) + Health & Energy (right) */
-    <div className="w-full min-w-0 md:min-w-[260px] lg:w-1/3 flex flex-col">
-      <div className="flex flex-col sm:flex-row gap-3 items-stretch">
+    <div className="flex w-full min-w-0 flex-col md:min-w-[260px] lg:w-1/3">
+      <div className="flex flex-col items-stretch gap-3 sm:flex-row">
         {/* Action Points - left column, spans full height of Health+Energy */}
-        <div className={cn(
-          'flex flex-col justify-center p-3 rounded-lg border min-w-[72px]',
-          'bg-surface-alt dark:bg-surface border-border-light dark:border-border'
-        )}>
-          <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary dark:text-text-primary text-center mb-1.5">
+        <div
+          className={cn(
+            'flex min-w-[72px] flex-col justify-center rounded-lg border p-3',
+            'border-border-light bg-surface-alt dark:border-border dark:bg-surface',
+          )}
+        >
+          <span className="mb-1.5 text-center text-xs font-semibold tracking-wide text-text-secondary uppercase dark:text-text-primary">
             Action Points
           </span>
           <div className="flex items-center justify-center">
@@ -81,7 +83,7 @@ export function SheetHeaderResources({
         </div>
 
         {/* Health & Energy stacked — Terminal threshold is health-context metadata, not a header quick-stat */}
-        <div className="flex flex-col gap-2 flex-1 min-w-0">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
           <ResourceInput
             label="Health"
             current={currentHealth}
@@ -106,7 +108,11 @@ export function SheetHeaderResources({
             max={maxEnergy}
             onChange={onEnergyChange}
             colorVariant="energy"
-            subLabel={innateThreshold > 0 ? `Innate: ${innateThreshold}${innatePools > 1 ? ` (${innatePools}×)` : ''}` : undefined}
+            subLabel={
+              innateThreshold > 0
+                ? `Innate: ${innateThreshold}${innatePools > 1 ? ` (${innatePools}×)` : ''}`
+                : undefined
+            }
             showBar
           />
         </div>

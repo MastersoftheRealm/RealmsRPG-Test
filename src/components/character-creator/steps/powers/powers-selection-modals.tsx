@@ -1,7 +1,10 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import {
+  UnifiedSelectionModal,
+  type SelectableItem,
+} from '@/components/shared/unified-selection-modal';
 import {
   PowerTechniqueFilters,
   SegmentedControl,
@@ -84,13 +87,14 @@ export function PowersSelectionModals({
 }: PowersSelectionModalsProps) {
   const { rules } = useGameRules();
   const [powerFilters, setPowerFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS
+    EMPTY_POWER_TECHNIQUE_FILTERS,
   );
   const [techniqueFilters, setTechniqueFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS
+    EMPTY_POWER_TECHNIQUE_FILTERS,
   );
-  const [powerCharacterCtx, setPowerCharacterCtx] =
-    useState<PowerTechniqueCharacterContext | null>(null);
+  const [powerCharacterCtx, setPowerCharacterCtx] = useState<PowerTechniqueCharacterContext | null>(
+    null,
+  );
   const [techniqueCharacterCtx, setTechniqueCharacterCtx] =
     useState<PowerTechniqueCharacterContext | null>(null);
 
@@ -99,38 +103,27 @@ export function PowersSelectionModals({
     () =>
       showPowerPtFilters
         ? collectCategoryFilterOptions(
-            allPowerSelectableItems.map(
-              (item) => item.powerTechniqueFilter?.categories ?? []
-            )
+            allPowerSelectableItems.map((item) => item.powerTechniqueFilter?.categories ?? []),
           )
         : [],
-    [showPowerPtFilters, allPowerSelectableItems]
+    [showPowerPtFilters, allPowerSelectableItems],
   );
   const techniqueCategoryOptions = useMemo(
     () =>
       collectCategoryFilterOptions(
-        allTechniqueSelectableItems.map(
-          (item) => item.powerTechniqueFilter?.categories ?? []
-        )
+        allTechniqueSelectableItems.map((item) => item.powerTechniqueFilter?.categories ?? []),
       ),
-    [allTechniqueSelectableItems]
+    [allTechniqueSelectableItems],
   );
-  const innateThresholdOptions = useMemo(
-    () => listInnateThresholdFilterOptions(rules),
-    [rules]
-  );
+  const innateThresholdOptions = useMemo(() => listInnateThresholdFilterOptions(rules), [rules]);
 
   const powerPtActive = showPowerPtFilters
-    ? countActivePowerTechniqueFilters(
-        powerFilters,
-        'power',
-        Boolean(powerCharacterCtx)
-      )
+    ? countActivePowerTechniqueFilters(powerFilters, 'power', Boolean(powerCharacterCtx))
     : 0;
   const techniquePtActive = countActivePowerTechniqueFilters(
     techniqueFilters,
     'technique',
-    Boolean(techniqueCharacterCtx)
+    Boolean(techniqueCharacterCtx),
   );
 
   const powerDisplayFilter = useMemo(() => {
@@ -140,16 +133,9 @@ export function PowersSelectionModals({
       if (powerPtActive === 0 && !powerCharacterCtx) return true;
       const row = item.powerTechniqueFilter;
       if (!row) return true;
-      return applyPowerTechniqueFilters([row], powerFilters, 'power', powerCharacterCtx).length >
-        0;
+      return applyPowerTechniqueFilters([row], powerFilters, 'power', powerCharacterCtx).length > 0;
     };
-  }, [
-    displayFilterFn,
-    showPowerPtFilters,
-    powerPtActive,
-    powerCharacterCtx,
-    powerFilters,
-  ]);
+  }, [displayFilterFn, showPowerPtFilters, powerPtActive, powerCharacterCtx, powerFilters]);
 
   const techniqueDisplayFilter = useMemo(() => {
     return (item: SelectableItem) => {
@@ -200,7 +186,9 @@ export function PowersSelectionModals({
         optionsSummary={sourceFilterSummary(source)}
         optionsActiveCount={sourceActive + powerPtActive}
         onConfirm={powerModalTab === 'empowered' ? onEmpoweredConfirm : onPowerConfirm}
-        items={powerModalTab === 'empowered' ? allEmpoweredSelectableItems : allPowerSelectableItems}
+        items={
+          powerModalTab === 'empowered' ? allEmpoweredSelectableItems : allPowerSelectableItems
+        }
         displayFilter={powerDisplayFilter}
         title={powerModalTab === 'empowered' ? 'Select Empowered Techniques' : 'Select Powers'}
         initialSelectedIds={selectedPowerIds}

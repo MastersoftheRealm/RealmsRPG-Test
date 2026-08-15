@@ -9,7 +9,7 @@ describe('buildGuidedSingleSpeciesDraftPatch', () => {
     const patch = buildGuidedSingleSpeciesDraftPatch(
       { speciesId: 'human', speciesMixed: false },
       { id: 'human', name: 'Human' },
-      ['medium', 'small']
+      ['medium', 'small'],
     );
 
     expect(patch).toEqual({
@@ -27,7 +27,7 @@ describe('buildGuidedSingleSpeciesDraftPatch', () => {
     const patch = buildGuidedSingleSpeciesDraftPatch(
       { speciesId: 'human', speciesMixed: false },
       { id: 'elf', name: 'Elf' },
-      ['medium']
+      ['medium'],
     );
 
     expect(patch.speciesId).toBe('elf');
@@ -41,7 +41,7 @@ describe('buildGuidedSingleSpeciesDraftPatch', () => {
     const patch = buildGuidedSingleSpeciesDraftPatch(
       { speciesId: 'mixed:a+b', speciesMixed: true },
       { id: 'human', name: 'Human' },
-      ['small', 'medium']
+      ['small', 'medium'],
     );
 
     expect(patch.speciesMixed).toBe(false);
@@ -59,7 +59,7 @@ describe('buildGuidedMixedSpeciesDraftPatch', () => {
         mixedSpeciesIds: ['a', 'b'],
       },
       { id: 'a', name: 'A' },
-      { id: 'b', name: 'B' }
+      { id: 'b', name: 'B' },
     );
 
     expect(patch).toEqual({
@@ -80,7 +80,7 @@ describe('buildGuidedMixedSpeciesDraftPatch', () => {
         mixedSpeciesIds: ['a', 'b'],
       },
       { id: 'a', name: 'A' },
-      { id: 'c', name: 'C' }
+      { id: 'c', name: 'C' },
     );
 
     expect(patch.speciesId).toBe('mixed:a+c');

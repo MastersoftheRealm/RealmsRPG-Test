@@ -89,7 +89,7 @@ export function resolveGuidedArchetypeAbilities(
     archetype?: ArchetypeAbilitySource | null;
     powAbil?: AbilityName | null;
     martAbil?: AbilityName | null;
-  }
+  },
 ): { primary: AbilityName | null; secondary: AbilityName | null } {
   const archetype = options?.archetype;
   const draftPow = options?.powAbil ?? null;
@@ -131,7 +131,7 @@ export function resolveGuidedArchetypeAbilities(
  */
 export function getGuidedAbilityRecommendationTiers(
   abilities: Abilities,
-  primaryAbility?: AbilityName | null
+  primaryAbility?: AbilityName | null,
 ): (keyof Abilities)[][] {
   const tiers: (keyof Abilities)[][] = [];
   const primaryKey = primaryAbility?.toLowerCase() as keyof Abilities | undefined;
@@ -164,7 +164,7 @@ export function getGuidedAbilityRecommendationTiers(
 export function getGuidedPathAbilityKeys(
   archetypeType: ArchetypeCategory | null,
   powAbil?: AbilityName | null,
-  martAbil?: AbilityName | null
+  martAbil?: AbilityName | null,
 ): Set<string> {
   const keys = new Set<string>();
   if (powAbil) keys.add(powAbil.toLowerCase());
@@ -194,10 +194,7 @@ export function formatGuidedAbilityKeysLabel(abilityKeys: Set<string> | string[]
 }
 
 /** Label for which ability a skill will use on the character's sheet. */
-export function formatGuidedSkillAbilityTag(
-  skill: Skill,
-  abilities: Abilities
-): string | null {
+export function formatGuidedSkillAbilityTag(skill: Skill, abilities: Abilities): string | null {
   const key = getHighestLinkedAbilityKey(skill.ability, abilities);
   return key ? formatAbilityLabel(key) : null;
 }
@@ -212,7 +209,7 @@ function collectTierSkillIds(
   codexSkills: Skill[],
   tierKeys: (keyof Abilities)[],
   blocked: Set<string>,
-  exclude: Set<string>
+  exclude: Set<string>,
 ): string[] {
   const keySet = new Set(tierKeys.map((key) => key.toLowerCase()));
   return codexSkills
@@ -231,7 +228,7 @@ function curateFromAbilityPool(
   abilityKeys: Set<string>,
   blocked: Set<string>,
   abilities: Abilities,
-  limit: number
+  limit: number,
 ): Pick<GuidedCuratedSkillsResult, 'skillIds' | 'skillAbilityById'> {
   const skillIds = codexSkills
     .filter((skill) => {
@@ -257,7 +254,7 @@ function curateFromAbilityPool(
 }
 
 export function curateGuidedSkillIds(
-  options: GuidedCuratedSkillsOptions
+  options: GuidedCuratedSkillsOptions,
 ): GuidedCuratedSkillsResult {
   const {
     codexSkills,
@@ -309,8 +306,7 @@ export function curateGuidedSkillIds(
       tierAdded += 1;
 
       const skill = codexSkills.find((s) => String(s.id) === id);
-      const abilityKey =
-        (skill && getHighestLinkedAbilityKey(skill.ability, abilities)) ?? tier[0];
+      const abilityKey = (skill && getHighestLinkedAbilityKey(skill.ability, abilities)) ?? tier[0];
       if (abilityKey) skillAbilityById[id] = abilityKey;
     }
 
@@ -330,4 +326,3 @@ export function curateGuidedSkillIds(
     skillAbilityById,
   };
 }
-

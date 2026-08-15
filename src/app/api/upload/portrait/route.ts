@@ -32,7 +32,10 @@ export async function POST(request: NextRequest) {
   });
   const { success } = await uploadLimiter.check(key);
   if (!success) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+    return NextResponse.json(
+      { error: 'Too many requests' },
+      { status: 429, headers: { 'Retry-After': '60' } },
+    );
   }
 
   const formData = await request.formData();
@@ -76,7 +79,12 @@ export async function POST(request: NextRequest) {
       .eq('user_id', user.uid)
       .maybeSingle();
     if (ownErr) {
-      return apiErrorResponse('Upload failed', 500, 'POST /api/upload/portrait (ownership)', ownErr);
+      return apiErrorResponse(
+        'Upload failed',
+        500,
+        'POST /api/upload/portrait (ownership)',
+        ownErr,
+      );
     }
     if (!ownedChar) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
@@ -108,7 +116,9 @@ export async function POST(request: NextRequest) {
       return apiErrorResponse('Upload failed', 500, 'POST /api/upload/portrait', uploadError);
     }
 
-    const { data: { publicUrl } } = supabase.storage.from(BUCKET).getPublicUrl(path);
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(BUCKET).getPublicUrl(path);
     return NextResponse.json({ url: publicUrl });
   } catch (err) {
     logApiError('POST /api/upload/portrait', err);

@@ -6,7 +6,7 @@
  * Simple pencil icon indicator for editable sections.
  * Matches vanilla site behavior with color-coded states.
  * Subtle active-state styling so it's obvious when a section is being edited.
- * 
+ *
  * States:
  * - normal (blue): Standard editable section
  * - has-points (green): Has remaining points to spend
@@ -35,7 +35,7 @@ const STATE_COLORS: Record<
   EditState,
   { icon: string; glow?: string; activeBg: string; activeRing: string; activeGlow?: string }
 > = {
-  'normal': {
+  normal: {
     icon: 'text-primary-fg hover:text-primary-fg-hover',
     activeBg: 'bg-primary-subtle-bg',
     activeRing: 'ring-primary-subtle-border dark:ring-primary-subtle-border',
@@ -64,7 +64,7 @@ export function EditSectionToggle({
   isActive = false,
 }: EditSectionToggleProps) {
   const colors = STATE_COLORS[state];
-  
+
   return (
     <button
       type="button"
@@ -75,11 +75,11 @@ export function EditSectionToggle({
       className={cn(
         // 44px on mobile/touch; icon-hugging on desktop (MOBILE_UX.md — do not inflate md+ chrome)
         'touch-target-md-compact inline-flex items-center justify-center',
-        'p-1 md:p-0.5 rounded-md',
-        'transition-all duration-base ease-standard',
+        'rounded-md p-1 md:p-0.5',
+        'duration-base transition-all ease-standard',
         // Grow only on touch viewports; desktop stays icon-dense (MOBILE_UX.md)
         'max-md:hover:scale-110',
-        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+        'focus-visible:ring-2 focus-visible:ring-primary-outline-border/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none',
         colors.icon,
         colors.glow,
         isActive && [
@@ -93,13 +93,13 @@ export function EditSectionToggle({
         ],
         onClick && 'cursor-pointer',
         !onClick && 'cursor-default',
-        className
+        className,
       )}
       title={title}
       aria-label={title}
       aria-pressed={isActive}
     >
-      <Pencil className="w-4 h-4" />
+      <Pencil className="h-4 w-4" />
     </button>
   );
 }

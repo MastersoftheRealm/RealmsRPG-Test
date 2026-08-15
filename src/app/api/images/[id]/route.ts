@@ -30,7 +30,7 @@ export async function GET(_request: NextRequest, context: RouteContext) {
     const supabase = await createClient();
     const image = await fetchRealmsImageById(
       supabase as unknown as ReturnType<typeof createServiceRoleClient>,
-      id
+      id,
     );
     if (!image) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
@@ -63,7 +63,11 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     const read = await readJsonBodyWithLimit(request);
     if (!read.success) return read.error;
     const body = read.body as { name?: unknown; categories?: unknown } | null;
-    if (!body || typeof body !== 'object' || (body.name === undefined && body.categories === undefined)) {
+    if (
+      !body ||
+      typeof body !== 'object' ||
+      (body.name === undefined && body.categories === undefined)
+    ) {
       return NextResponse.json({ error: 'name and/or categories required' }, { status: 400 });
     }
 
@@ -93,7 +97,12 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       }
       const result = await replaceImageCategories(supabase, id, categories);
       if (!result.ok) {
-        return apiErrorResponse('Update failed', 500, 'PATCH /api/images/[id] (categories)', result.message);
+        return apiErrorResponse(
+          'Update failed',
+          500,
+          'PATCH /api/images/[id] (categories)',
+          result.message,
+        );
       }
       if (body.name === undefined) {
         await supabase
@@ -144,7 +153,7 @@ export async function DELETE(_request: NextRequest, context: RouteContext) {
         'Failed to clear all image references',
         500,
         'DELETE /api/images/[id] (clear refs)',
-        cleared.errors
+        cleared.errors,
       );
     }
 

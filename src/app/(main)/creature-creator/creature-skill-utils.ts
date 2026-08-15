@@ -7,10 +7,7 @@ import type { Skill } from '@/hooks';
 import { initialState } from './creature-creator-constants';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
 
-function resolveCodexSkill(
-  skill: CreatureSkill,
-  codexSkills: Skill[]
-): Skill | undefined {
+function resolveCodexSkill(skill: CreatureSkill, codexSkills: Skill[]): Skill | undefined {
   if (skill.id != null) {
     const byId = codexSkills.find((s) => String(s.id) === String(skill.id));
     if (byId) return byId;
@@ -21,7 +18,8 @@ function resolveCodexSkill(
 
 function isSubSkillEntry(skill: CreatureSkill, codex?: Skill): boolean {
   if (skill.isSubSkill === true) return true;
-  if (skill.baseSkillId != null && skill.baseSkillId !== '' && Number(skill.baseSkillId) !== 0) return true;
+  if (skill.baseSkillId != null && skill.baseSkillId !== '' && Number(skill.baseSkillId) !== 0)
+    return true;
   if (codex?.base_skill_id != null && Number(codex.base_skill_id) !== 0) return true;
   return false;
 }
@@ -29,7 +27,7 @@ function isSubSkillEntry(skill: CreatureSkill, codex?: Skill): boolean {
 /** Map persisted creature skills to SkillsAllocationPage allocations (skill id → value). */
 export function creatureSkillsToAllocations(
   skills: CreatureSkill[],
-  codexSkills: Skill[]
+  codexSkills: Skill[],
 ): Record<string, number> {
   const allocations: Record<string, number> = {};
   for (const skill of skills) {
@@ -48,7 +46,7 @@ export function creatureSkillsToAllocations(
 /** Map SkillsAllocationPage allocations back to persisted creature skills. */
 export function allocationsToCreatureSkills(
   allocations: Record<string, number>,
-  codexSkills: Skill[]
+  codexSkills: Skill[],
 ): CreatureSkill[] {
   const result: CreatureSkill[] = [];
   for (const [key, value] of Object.entries(allocations)) {
@@ -79,7 +77,8 @@ export function rawRecordToCreatureState(c: Record<string, unknown>): CreatureSt
     size: String(c.size ?? 'medium'),
     description: String(c.description ?? ''),
     imageId: typeof (c.imageId ?? c.image_id) === 'string' ? String(c.imageId ?? c.image_id) : null,
-    imageUrl: typeof (c.imageUrl ?? c.image_url) === 'string' ? String(c.imageUrl ?? c.image_url) : null,
+    imageUrl:
+      typeof (c.imageUrl ?? c.image_url) === 'string' ? String(c.imageUrl ?? c.image_url) : null,
     archetypeType: row.archetypeType ?? 'power',
     abilities: (c.abilities as CreatureState['abilities']) ?? initialState.abilities,
     defenses: (c.defenses as CreatureState['defenses']) ?? initialState.defenses,
@@ -88,7 +87,8 @@ export function rawRecordToCreatureState(c: Record<string, unknown>): CreatureSt
     powerProficiency: Number(c.powerProficiency ?? 0),
     martialProficiency: Number(c.martialProficiency ?? 0),
     enablePowers: (c.enablePowers as boolean) ?? Boolean((c.powers as unknown[])?.length),
-    enableTechniques: (c.enableTechniques as boolean) ?? Boolean((c.techniques as unknown[])?.length),
+    enableTechniques:
+      (c.enableTechniques as boolean) ?? Boolean((c.techniques as unknown[])?.length),
     enableArmaments: (c.enableArmaments as boolean) ?? Boolean((c.armaments as unknown[])?.length),
     resistances: (c.resistances as string[]) ?? [],
     weaknesses: (c.weaknesses as string[]) ?? [],

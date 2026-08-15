@@ -23,7 +23,7 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 | **0 — foundation** | `done` | Backups, schema baseline, codex data-loss determination. |
 | **1 — stop the bleeding** | `done` (code + DB + ops) | GitHub required checks + Actions public Supabase secrets + `E2E_OPTIONAL=1` + orphan profile delete. **2026-08-13 Vercel:** Upstash Redis + Sentry DSN live on production/preview; `NEXT_PUBLIC_SITE_URL` on production; production rebuilt. Still owner: HIBP, E2E test user, optional “require PR”. |
 | **2 — correctness** | `done` (code; pending-qa) | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**; TASK-744 styleguide Linux baselines **done**; TASK-741 dirty-key PATCH **done**; TASK-742 acked rules leftovers **done**; TASK-739 Advanced currency clamp **done**; TASK-746 library add lock **done**; TASK-747 realtime non-resource merge **done**; TASK-749 PATCH currency floor **done**; TASK-750 sheet Query SoT **done**; TASK-761 campaign RM view Query load **done**; TASK-762 combat `?scope=encounter` Query **done**. Remaining Wave 2 coding: none. |
-| **3 — structure** | `queued` | Wave 2 P0 TASK-741 (dirty-key PATCH) is green in code. Cheap Prettier/`text-muted` mega-diffs still wait for owner to start Wave 3. |
+| **3 — structure** | `partial` (3A done; 3B 773–774 done) | Wave 3A landed (TASK-769–772). **3B** TASK-773 + TASK-774 done (pending-qa); TASK-775 still Proposed. ADR-0015 Accepted for 773/774. **3C** Architect/product still queued. |
 
 ### Commits on `master` (audit program, oldest → newest)
 
@@ -113,7 +113,7 @@ Wave 2 coding: TASK-740, TASK-738, TASK-744, TASK-741, TASK-742, TASK-739, TASK-
 | **P1** four `ui/modal.tsx` bugs | `done` | `useId`, ref-counted scroll lock, top-most Escape stack; removed redundant `leaveConfirmOpen`. |
 | **P1** rows had no `aria-expanded`/`aria-controls` | `done` | Companion patch in `grid-list-row.tsx`. |
 | **P1** shared radio name, touch floor, undefined token, React 19 ref merge | `done` | — |
-| **P2** `text-muted` / `text-secondary` convention | `done` (token) / `queued` (codemod) | See Decisions. Codemod is Wave 3. |
+| **P2** `text-muted` / `text-secondary` convention | `done` (token + TASK-770 strip) | See Decisions. |
 | **P2** 13 dead CSS classes, 8 dead cva variants, docs corrected | `done` | — |
 
 ### API security (report 01) — done (`a0b7f9c6`)
@@ -155,7 +155,7 @@ Wave 2 coding: TASK-740, TASK-738, TASK-744, TASK-741, TASK-742, TASK-739, TASK-
 | **P1** codex drift scan | `done` | `npm run db:check-codex-drift` — 708 rows, 0 collateral nulls. |
 | **P2** dead scripts / lint / deps / unsound staged typecheck | `done` | — |
 | `noUncheckedIndexedAccess` | `queued` | **163** errors (not ~1523). Tooling: `tsconfig.strictest.json` + `npm run typecheck:strictest`. Wave 3-ish. |
-| Prettier | `partial` | `.prettierrc.json` added; **not** in lint-staged (1,277 files unformatted). Enable after a dedicated format commit. |
+| Prettier | `done` | TASK-772: format of src/tests/config; lint-staged runs prettier after eslint. Ignore markdown, SQL dumps, `data/`, lockfile, snapshots. |
 
 ---
 
@@ -250,23 +250,41 @@ P0 formula unification and guided funnel P0 / P1-1–P1-5 are **committed** (`eb
 
 ---
 
-## Wave 3 — structure, growth, process (`queued`)
+## Wave 3 — structure, growth, process
 
-Not started. **Do not start** until Wave 2 P0 TASK-741 (dirty-key PATCH) is green. Cheap codemods (Prettier, `text-muted`) create huge diffs that conflict with Wave 2. Carry-overs from Wave 1:
+Owner opened **Wave 3A** 2026-08-15. TASK-741 is green. Product leftovers that blocked mega-diffs are coded (751–753, 748, 761–764, 718/719/767). Power-creator layers TASK-410–414 stay **out**. Do not reopen ADR-0013 / sheet Query SoT.
+
+### Wave 3A — hygiene + SEO (`done` — pending-qa) — TASK-769–772
+
+No Architect, no API contract. Quiet window: no parallel product work on this tree.
+
+| Area | Status | Task | Notes |
+|---|---|---|---|
+| `font-nunito` — register in `@theme` | `done` | TASK-769 | `--font-nunito-face` (next/font) → `--font-nunito` utility |
+| `text-muted` dead `dark:text-text-secondary` strip | `done` | TASK-770 | 318 pairings / 144 files (+ 2 interstitial); eslint `no-muted-dark-secondary-pairing` |
+| SEO: `metadataBase`, OG, `robots.ts`, `sitemap.ts`, noindex `/dev` | `done` | TASK-771 | Canonical `realmsrpg.com`; production-only index; admin + auth + styleguide noindex; pending-qa DEV-V-053 |
+| Prettier format + lint-staged | `done` | TASK-772 | Ignore markdown/docs/SQL/`data`/lockfile/snapshots. lint-staged: eslint then prettier |
+
+### Wave 3B — fetch / lists (`partial` — TASK-773–774 done; 775 Proposed)
+
+| Area | Source | Task | Notes |
+|---|---|---|---|
+| Campaign RM view / other-user enrichment payload | report 07 P2-5 | TASK-773 | `done` pending-qa. Additive `enrichment` on full RM GET + other-user character GET. Referenced rows only (same P0-1 rule as `libraryForView`). **Not TASK-761 / TASK-762.** `?scope=encounter` unchanged. |
+| Library tab counts + lazy tab rows | report 07 P2-5 | TASK-774 | `done` pending-qa. `GET /api/user/library/counts` + `GET /api/official/counts`; page fetches counts + the active tab only |
+| Codex per-collection fetch + `CodexBrowseListShell` virtualization | report 07 P1-3 / P2+ | TASK-775 | Optional `?collection=` on existing `/api/codex`; virtualize the shell (ADR-0005), do not rebuild. Path filter stays. |
+
+### Wave 3C — Architect / product (`queued` — separate acks)
 
 | Area | Source | Notes |
 |---|---|---|
-| Legacy creator retirement: close 2 parity gaps, extract ~940 shared LOC, delete ~10,514 | report 02 | After guided P0s are solid |
-| Duplication collapse: codex/library ~2,785, admin ~1,210, shared UI ~1,131, sheet ~340 LOC | reports 10, 08, 04 | |
-| Split `shared/` into `ui / patterns / feature` | report 04 | Architect |
-| Generated Supabase types; delete hand duplicates / 6 mismatches | report 12 | |
-| SEO: sitemap, robots, metadataBase, OG, `generateMetadata`; server-render `/rules` + codex detail | report 07 | |
-| Campaign RM view + Library tab fetch waterfall (14 client queries / counts-for-tabs) | report 07 P2-5 | Do not start until owner opens Wave 3. Not TASK-761 (that was the load race). |
-| `text-muted` codemod (335 sites, zero render change) | report 04 | Token already fixed |
-| `font-nunito` inert — register `--font-nunito` in `@theme` | report 04 | |
+| Legacy creator: Guided skills UI (defense + per-skill ability), then extract shared symbols | report 02 | Two deletion blockers still UI. Wave 2 fixed governing-ability *save* (highest linked ability). TASK-748 labeled **Legacy** only. REALMS: phase into L3, do not delete the route this wave |
+| Remaining duplication clusters (not path-filter) | reports 10, 08, 04 | TASK-751–753 collapsed path-filter duplication. Remainder: OfficialEntityList internals, admin, sheet, `value-stepper` / `list-header` copy-paste |
+| Split `shared/` into `ui / patterns / feature` | report 04 | Architect. TASK-751 added more under `shared/filters` — do not mix with Prettier |
+| Generated Supabase types | report 12 | Large typed-client churn |
+| Server-render `/rules` + codex detail `generateMetadata` | report 07 P1-2 / win #8 | Content strategy; not 3A |
+| Landing RSC / chrome remount (delete `src/app/page.tsx`) | report 07 P1-4 / P1-5 | TASK-763 was copy only; `home-page.tsx` still `"use client"` |
 | `noUncheckedIndexedAccess` burn-down (163 errors) | report 11 / 12 | Tooling ready |
-| Prettier enablement after format commit | report 11 | |
-| Process trim: ~10k docs lines, CI gate count | report 11 | |
+| Process trim (~10k docs, CI gates) | report 11 | TASK-718/719/767 already archived uncited suites + ID hygiene — do not rewrite from scratch |
 
 ---
 
@@ -275,7 +293,7 @@ Not started. **Do not start** until Wave 2 P0 TASK-741 (dirty-key PATCH) is gree
 **Muted vs secondary text (2026-08-13).** The accessibility rule mandated
 `text-text-muted dark:text-text-secondary`. The two tokens **cannot** meaningfully differ in dark
 mode (muted must clear AA on `--color-surface-alt`). `--color-text-muted` now aliases
-`--color-text-secondary` in dark mode; the rule was corrected; codemod is queued (Wave 3). Owner
+`--color-text-secondary` in dark mode; the rule was corrected; the dead pairing is stripped in Wave 3A (TASK-770). Owner
 accepted.
 
 **Modal `size="3xl"` removed** on zero-usage evidence; `full` is the wide option. `FEATURE_INDEX.md`
@@ -320,9 +338,10 @@ parallel.
 
 ## Suggested next agent sessions (ordered)
 
-Wave 2 coding pass is complete (through TASK-762 / TASK-719):
+Wave 3A coding is complete (TASK-769–772). Wave 3B TASK-773 and TASK-774 are done (pending-qa). **Do not code TASK-775 until that ADR-0015 slice is acked**.
 
-1. **Wave 3** — start only when the owner opens that pass (avoid Prettier/`text-muted` mega-diffs colliding with remaining product leftovers). Includes report 07 P2-5 RM-view enrichment waterfall.
+1. **Wave 3B remainder** — owner ack, then optional TASK-775.
+2. **Wave 3C** — only with Architect/product acks: `shared/` split, generated types, Guided skills parity, Legacy extract, `/rules` MDX, indexed-access burn-down.
 
 ---
 

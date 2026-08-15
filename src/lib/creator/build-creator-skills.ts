@@ -46,7 +46,7 @@ export interface BuildCreatorSkillSaveRowsOptions {
 function resolveSkillAbility(
   skillKey: string,
   codexAbility: string | undefined,
-  options: BuildCreatorSkillSaveRowsOptions
+  options: BuildCreatorSkillSaveRowsOptions,
 ): string | undefined {
   const linkedKeys = getLinkedAbilityKeys(codexAbility);
   if (linkedKeys.length === 0) return undefined;
@@ -64,7 +64,7 @@ function resolveSkillAbility(
 
 function resolveCodexSkill(
   skillKey: string,
-  codexSkills: CreatorSkillCodexEntry[]
+  codexSkills: CreatorSkillCodexEntry[],
 ): CreatorSkillCodexEntry | undefined {
   return (
     codexSkills.find((s) => String(s.id) === skillKey) ??
@@ -78,7 +78,7 @@ function resolveCodexSkill(
  */
 export function buildCreatorSkillSaveRows(
   skills: Record<string, number>,
-  options: BuildCreatorSkillSaveRowsOptions = {}
+  options: BuildCreatorSkillSaveRowsOptions = {},
 ): CreatorSkillSaveRow[] {
   const { speciesSkillIds = [], codexSkills = [], includeBaseSkillName = false } = options;
 
@@ -94,11 +94,14 @@ export function buildCreatorSkillSaveRows(
     const skillData = resolveCodexSkill(skillKey, codexSkills);
     const skillVal = skills[skillKey] ?? 0;
     const ability = resolveSkillAbility(skillKey, skillData?.ability, options);
-    const category =
-      skillData?.category || skillData?.ability?.split(',')[0]?.trim() || 'other';
+    const category = skillData?.category || skillData?.ability?.split(',')[0]?.trim() || 'other';
 
     let baseSkill: string | undefined;
-    if (includeBaseSkillName && skillData?.base_skill_id !== undefined && skillData.base_skill_id !== null) {
+    if (
+      includeBaseSkillName &&
+      skillData?.base_skill_id !== undefined &&
+      skillData.base_skill_id !== null
+    ) {
       const base = codexSkills.find((s) => String(s.id) === String(skillData.base_skill_id));
       if (base?.name) baseSkill = base.name;
     }

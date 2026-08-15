@@ -98,7 +98,7 @@ export function featToFormState(feat: Feat): FeatFormState {
 /** Next feat level = current + 1; base_feat_id points at level-1; lvl_req defaults to newLevel*2. */
 export function computeNextLevelFormState(
   sourceForm: FeatFormState,
-  sourceDbFeatId: string
+  sourceDbFeatId: string,
 ): FeatFormState {
   const curLvl = sourceForm.feat_lvl != null && sourceForm.feat_lvl > 0 ? sourceForm.feat_lvl : 1;
   const newLvl = curLvl + 1;

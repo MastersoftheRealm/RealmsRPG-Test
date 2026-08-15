@@ -22,7 +22,7 @@ export type DescriptorChipSizeProp = 'sm' | 'md' | 'lg' | 'descriptor';
  * `sm` (default) and `descriptor` = entity inline; `md`/`lg` = prominent counters outside chip groups.
  */
 export function resolveDescriptorChipSize(
-  size: DescriptorChipSizeProp | null | undefined
+  size: DescriptorChipSizeProp | null | undefined,
 ): ChipVariantSize {
   if (!size || size === 'sm' || size === 'descriptor') return CHIP_ENTITY_INLINE_SIZE;
   return size;

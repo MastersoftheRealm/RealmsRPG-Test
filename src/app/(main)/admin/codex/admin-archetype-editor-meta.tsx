@@ -9,20 +9,29 @@ export type AdminArchetypeEditorMetaProps = Pick<
   'form' | 'setForm' | 'copySourceName'
 >;
 
-export function AdminArchetypeEditorMeta({ form, setForm, copySourceName }: AdminArchetypeEditorMetaProps) {
+export function AdminArchetypeEditorMeta({
+  form,
+  setForm,
+  copySourceName,
+}: AdminArchetypeEditorMetaProps) {
   return (
     <>
       {copySourceName && (
-        <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
-          Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change the name and details as needed, then save to add the new archetype.
+        <p className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-secondary">
+          Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change
+          the name and details as needed, then save to add the new archetype.
         </p>
       )}
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
-        <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} placeholder="Archetype name" />
+        <label className="mb-1 block text-sm font-medium text-text-secondary">Name *</label>
+        <Input
+          value={form.name}
+          onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+          placeholder="Archetype name"
+        />
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
+        <label className="mb-1 block text-sm font-medium text-text-secondary">Type</label>
         <select
           value={form.type}
           onChange={(e) => {
@@ -31,12 +40,10 @@ export function AdminArchetypeEditorMeta({ form, setForm, copySourceName }: Admi
               ...f,
               type: nextType,
               level1Path:
-                nextType === 'martial'
-                  ? { ...f.level1Path, innatePowers: [] }
-                  : f.level1Path,
+                nextType === 'martial' ? { ...f.level1Path, innatePowers: [] } : f.level1Path,
             }));
           }}
-          className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
           aria-label="Archetype type"
         >
           <option value="power">Power</option>
@@ -44,13 +51,15 @@ export function AdminArchetypeEditorMeta({ form, setForm, copySourceName }: Admi
           <option value="martial">Martial</option>
         </select>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Primary Ability</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Primary Ability
+          </label>
           <select
             value={form.archetypeAbility}
             onChange={(e) => setForm((f) => ({ ...f, archetypeAbility: e.target.value }))}
-            className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
             aria-label="Primary archetype ability"
           >
             <option value="">Not set</option>
@@ -62,11 +71,13 @@ export function AdminArchetypeEditorMeta({ form, setForm, copySourceName }: Admi
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Secondary Ability</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Secondary Ability
+          </label>
           <select
             value={form.secondaryAbility}
             onChange={(e) => setForm((f) => ({ ...f, secondaryAbility: e.target.value }))}
-            className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
             aria-label="Secondary archetype ability"
           >
             <option value="">Not set</option>
@@ -78,43 +89,65 @@ export function AdminArchetypeEditorMeta({ form, setForm, copySourceName }: Admi
           </select>
         </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Power Prof (Lv1)</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Power Prof (Lv1)
+          </label>
           <Input
             type="number"
             value={String(form.powerProfStart)}
-            onChange={(e) => setForm((f) => ({ ...f, powerProfStart: Number(e.target.value || 0) }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, powerProfStart: Number(e.target.value || 0) }))
+            }
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Martial Prof (Lv1)</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Martial Prof (Lv1)
+          </label>
           <Input
             type="number"
             value={String(form.martialProfStart)}
-            onChange={(e) => setForm((f) => ({ ...f, martialProfStart: Number(e.target.value || 0) }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, martialProfStart: Number(e.target.value || 0) }))
+            }
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Power Prof (Lv5)</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Power Prof (Lv5)
+          </label>
           <Input
             type="number"
             value={String(form.powerProfLevel5)}
-            onChange={(e) => setForm((f) => ({ ...f, powerProfLevel5: Number(e.target.value || 0) }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, powerProfLevel5: Number(e.target.value || 0) }))
+            }
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Martial Prof (Lv5)</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Martial Prof (Lv5)
+          </label>
           <Input
             type="number"
             value={String(form.martialProfLevel5)}
-            onChange={(e) => setForm((f) => ({ ...f, martialProfLevel5: Number(e.target.value || 0) }))}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, martialProfLevel5: Number(e.target.value || 0) }))
+            }
           />
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
-        <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))} placeholder="Archetype description" className="w-full min-h-[80px] px-3 py-2 rounded-md border border-border bg-background text-text-primary" rows={3} />
+        <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
+        <textarea
+          value={form.description}
+          onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+          placeholder="Archetype description"
+          className="min-h-[80px] w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
+          rows={3}
+        />
       </div>
     </>
   );

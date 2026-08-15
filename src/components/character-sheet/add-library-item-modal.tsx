@@ -6,10 +6,17 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import {
+  UnifiedSelectionModal,
+  type SelectableItem,
+} from '@/components/shared/unified-selection-modal';
 import { ArchetypePathFilter, PowerTechniqueFilters } from '@/components/shared/filters';
 import { sourceFilterSummary } from '@/components/shared/filters/source-filter';
-import { useAddLibraryItemData, type AddLibraryItemType, type PowerSelectionMode } from '@/hooks/use-add-library-item-data';
+import {
+  useAddLibraryItemData,
+  type AddLibraryItemType,
+  type PowerSelectionMode,
+} from '@/hooks/use-add-library-item-data';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { usePathListFilter } from '@/hooks';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
@@ -47,7 +54,7 @@ import {
 
 function pathKindForAddLibraryItem(
   itemType: AddLibraryItemType,
-  powerSelectionMode: PowerSelectionMode
+  powerSelectionMode: PowerSelectionMode,
 ): PathRecommendationKindInput | null {
   if (itemType === 'power' && powerSelectionMode === 'empowered') return null;
   if (itemType === 'power') return POWER_LIST_PATH_KINDS;
@@ -98,10 +105,11 @@ export function AddLibraryItemModal({
 
   const { rules } = useGameRules();
   const [ptFilters, setPtFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS
+    EMPTY_POWER_TECHNIQUE_FILTERS,
   );
-  const [characterContext, setCharacterContext] =
-    useState<PowerTechniqueCharacterContext | null>(null);
+  const [characterContext, setCharacterContext] = useState<PowerTechniqueCharacterContext | null>(
+    null,
+  );
 
   const showPtFilters =
     (itemType === 'power' && powerSelectionMode === 'powers') || itemType === 'technique';
@@ -129,7 +137,7 @@ export function AddLibraryItemModal({
             idsForItem: selectableItemPathIds,
           })
         : items,
-    [pathKind, items, pathMatchIds, pathIndex, selectedPathIds]
+    [pathKind, items, pathMatchIds, pathIndex, selectedPathIds],
   );
 
   const pathFilterProps = pathKind
@@ -144,15 +152,15 @@ export function AddLibraryItemModal({
     () =>
       showPtFilters
         ? collectCategoryFilterOptions(
-            items.map((item) => item.powerTechniqueFilter?.categories ?? [])
+            items.map((item) => item.powerTechniqueFilter?.categories ?? []),
           )
         : [],
-    [showPtFilters, items]
+    [showPtFilters, items],
   );
 
   const innateThresholdOptions = useMemo(
     () => (ptKind === 'power' ? listInnateThresholdFilterOptions(rules) : []),
-    [ptKind, rules]
+    [ptKind, rules],
   );
 
   const hasCharacter = Boolean(characterContext);

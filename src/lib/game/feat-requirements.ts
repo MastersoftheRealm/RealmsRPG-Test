@@ -77,7 +77,7 @@ function normalizeReqKey(input: string): string {
 }
 
 function isAbilityReqKey(
-  key: string
+  key: string,
 ): key is 'strength' | 'vitality' | 'agility' | 'acuity' | 'intelligence' | 'charisma' {
   return (
     key === 'strength' ||
@@ -89,7 +89,13 @@ function isAbilityReqKey(
   );
 }
 
-type DefenseReqKey = 'might' | 'fortitude' | 'reflex' | 'discernment' | 'mentalFortitude' | 'resolve';
+type DefenseReqKey =
+  | 'might'
+  | 'fortitude'
+  | 'reflex'
+  | 'discernment'
+  | 'mentalFortitude'
+  | 'resolve';
 
 function toDefenseReqKey(key: string): DefenseReqKey | null {
   if (key === 'might') return 'might';
@@ -104,20 +110,20 @@ function toDefenseReqKey(key: string): DefenseReqKey | null {
 /** Id of the previous-level feat required to take this feat. Null if level 1 or no base. */
 export function getPreviousLevelFeatId(
   feat: FeatForRequirement,
-  allFeats: FeatForRequirement[]
+  allFeats: FeatForRequirement[],
 ): string | null {
   const level = getFeatLevel(feat);
   if (level <= 1) return null;
 
   const familyId = getFeatFamilyId(feat);
   const byFamily = allFeats.find(
-    (f) => getFeatFamilyId(f) === familyId && getFeatLevel(f) === level - 1
+    (f) => getFeatFamilyId(f) === familyId && getFeatLevel(f) === level - 1,
   );
   if (byFamily) return String(byFamily.id);
 
   if (feat.base_feat_id) {
     const byBaseId = allFeats.find(
-      (f) => String(f.id) === String(feat.base_feat_id) && getFeatLevel(f) === level - 1
+      (f) => String(f.id) === String(feat.base_feat_id) && getFeatLevel(f) === level - 1,
     );
     if (byBaseId) return String(byBaseId.id);
     // Legacy: level-2 rows stored the level-1 feat id in base_feat_id
@@ -132,7 +138,7 @@ export function getPreviousLevelFeatId(
 
 /** Normalize a character's skills into the shape `getSkillBonusForFeatRequirement` expects. */
 function normalizeSkills(
-  skills: CharacterForFeatRequirement['skills']
+  skills: CharacterForFeatRequirement['skills'],
 ): Record<string, number | { prof?: boolean; val?: number }> {
   if (!skills) return {};
   if (Array.isArray(skills)) {
@@ -164,7 +170,7 @@ export function checkFeatRequirements(
   feat: FeatForRequirement,
   character: CharacterForFeatRequirement,
   skillsDb: CodexSkillForFeat[],
-  allFeats: FeatForRequirement[]
+  allFeats: FeatForRequirement[],
 ): FeatRequirementResult {
   const reasons: string[] = [];
   const abilities = (character.abilities || {}) as Partial<Abilities>;
@@ -217,7 +223,7 @@ export function checkFeatRequirements(
         String(skillId),
         abilities,
         skillsForReq,
-        skillsDb
+        skillsDb,
       );
       if (!proficient) reasons.push(`Requires proficiency in ${skillName}`);
       else if (bonus < requiredBonus)
@@ -242,8 +248,8 @@ export function checkFeatRequirements(
   if (prevLevelId) {
     const ownedFeatIds = new Set(
       [...(character.feats || []), ...(character.archetypeFeats || [])].map((f) =>
-        String(f.id ?? (f as { name?: string }).name)
-      )
+        String(f.id ?? (f as { name?: string }).name),
+      ),
     );
     if (!ownedFeatIds.has(prevLevelId)) {
       const prevFeat = allFeats.find((f) => String(f.id) === prevLevelId);
@@ -261,7 +267,7 @@ export function checkFeatRequirements(
 
 /** Map a saved character to the shape used by feat requirement checks. */
 export function characterToFeatRequirementCharacter(
-  character: import('@/types').Character
+  character: import('@/types').Character,
 ): CharacterForFeatRequirement {
   const skillsRecord: Record<string, number | { prof?: boolean; val?: number }> = {};
   const rawSkills = character.skills as
@@ -297,7 +303,7 @@ export function getMaxQualifiedFeatLevel(
   character: CharacterForFeatRequirement,
   family: FeatForRequirement[],
   codexSkills: CodexSkillForFeat[],
-  allFeats: FeatForRequirement[]
+  allFeats: FeatForRequirement[],
 ): number {
   let max = 1;
   family.forEach((feat) => {

@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_ABILITIES } from '@/types';
-import {
-  characterToFeatRequirementCharacter,
-  checkFeatRequirements,
-} from './feat-requirements';
+import { characterToFeatRequirementCharacter, checkFeatRequirements } from './feat-requirements';
 import type { Character } from '@/types';
 
 const emptyCatalog = { skills: [], feats: [] };
@@ -15,13 +12,13 @@ describe('checkFeatRequirements level gates (M10)', () => {
       feat,
       { level: 2, abilities: DEFAULT_ABILITIES },
       emptyCatalog.skills,
-      emptyCatalog.feats
+      emptyCatalog.feats,
     );
     const at1 = checkFeatRequirements(
       feat,
       { level: 1, abilities: DEFAULT_ABILITIES },
       emptyCatalog.skills,
-      emptyCatalog.feats
+      emptyCatalog.feats,
     );
     expect(at2.met).toBe(true);
     expect(at1.met).toBe(false);
@@ -34,13 +31,13 @@ describe('checkFeatRequirements level gates (M10)', () => {
       feat,
       { level: 9, abilities: DEFAULT_ABILITIES },
       emptyCatalog.skills,
-      emptyCatalog.feats
+      emptyCatalog.feats,
     );
     const ok = checkFeatRequirements(
       feat,
       { level: 10, abilities: DEFAULT_ABILITIES },
       emptyCatalog.skills,
-      emptyCatalog.feats
+      emptyCatalog.feats,
     );
     expect(tooLow.met).toBe(false);
     expect(tooLow.reason).toMatch(/character level 10/i);
@@ -53,7 +50,7 @@ describe('checkFeatRequirements level gates (M10)', () => {
       feat,
       { level: 1, abilities: DEFAULT_ABILITIES },
       emptyCatalog.skills,
-      emptyCatalog.feats
+      emptyCatalog.feats,
     );
     expect(result.met).toBe(true);
   });

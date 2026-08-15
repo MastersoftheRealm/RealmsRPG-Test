@@ -31,7 +31,7 @@ function pushFact(chips: ChipData[], label: string, value: string | number | nul
 }
 
 export function buildCombatLookup(
-  rows: Array<LibraryPower | LibraryTechnique>
+  rows: Array<LibraryPower | LibraryTechnique>,
 ): Map<string, LibraryPower | LibraryTechnique> {
   const map = new Map<string, LibraryPower | LibraryTechnique>();
   for (const item of rows) {
@@ -44,7 +44,7 @@ export function buildCombatLookup(
 export function powerToDetailOption(
   power: LibraryPower,
   powerPartsDb: PowerPart[],
-  idOverride?: string
+  idOverride?: string,
 ): DetailOptionItemModel {
   const chips: ChipData[] = [];
   try {
@@ -54,13 +54,11 @@ export function powerToDetailOption(
         description: String(power.description ?? ''),
         parts: power.parts ?? [],
       } satisfies PowerDocument,
-      powerPartsDb
+      powerPartsDb,
     );
     const tpChip = trainingPointsFactChip(disp.tp);
     if (tpChip) chips.push(tpChip);
-    const energyChip = energyFactChip(
-      typeof disp.energy === 'number' ? disp.energy : undefined
-    );
+    const energyChip = energyFactChip(typeof disp.energy === 'number' ? disp.energy : undefined);
     if (energyChip) chips.push(energyChip);
     const actionChip = actionTypeFactChip(disp.actionType);
     if (actionChip) chips.push(actionChip);
@@ -86,7 +84,7 @@ export function powerToDetailOption(
 export function techniqueToDetailOption(
   technique: LibraryTechnique,
   techniquePartsDb: TechniquePart[],
-  idOverride?: string
+  idOverride?: string,
 ): DetailOptionItemModel {
   const chips: ChipData[] = [];
   try {
@@ -98,13 +96,11 @@ export function techniqueToDetailOption(
         actionType: technique.actionType,
         weapon: technique.weapon?.name ? { name: technique.weapon.name } : undefined,
       } satisfies TechniqueDocument,
-      techniquePartsDb
+      techniquePartsDb,
     );
     const tpChip = trainingPointsFactChip(disp.tp);
     if (tpChip) chips.push(tpChip);
-    const energyChip = energyFactChip(
-      typeof disp.energy === 'number' ? disp.energy : undefined
-    );
+    const energyChip = energyFactChip(typeof disp.energy === 'number' ? disp.energy : undefined);
     if (energyChip) chips.push(energyChip);
     const actionChip = actionTypeFactChip(disp.actionType);
     if (actionChip) chips.push(actionChip);
@@ -114,7 +110,7 @@ export function techniqueToDetailOption(
   } catch (err) {
     logClientError(
       `combat-builder: technique detail chips failed (${technique.name ?? technique.id})`,
-      err
+      err,
     );
   }
   return {
@@ -132,16 +128,12 @@ export function resolveCombatDetailOption(
   lookup: Map<string, LibraryPower | LibraryTechnique>,
   kind: 'power' | 'technique',
   powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): DetailOptionItemModel | null {
   const raw = lookup.get(String(refId).toLowerCase());
   if (!raw) return null;
   if (kind === 'technique') {
-    return techniqueToDetailOption(
-      raw as LibraryTechnique,
-      techniquePartsDb,
-      String(refId)
-    );
+    return techniqueToDetailOption(raw as LibraryTechnique, techniquePartsDb, String(refId));
   }
   return powerToDetailOption(raw as LibraryPower, powerPartsDb, String(refId));
 }

@@ -37,7 +37,7 @@ describe('portrait display helpers', () => {
     const fallback = getFallbackPortraitDataUrl('dark');
     expect(withPortraitCacheBust(fallback, 99)).toBe(fallback);
     expect(withPortraitCacheBust('https://cdn.example/p.jpg', 99)).toBe(
-      'https://cdn.example/p.jpg?t=99'
+      'https://cdn.example/p.jpg?t=99',
     );
   });
 });
@@ -57,7 +57,7 @@ describe('uploadCharacterPortraitFromDataUrl', () => {
 
     const result = await uploadCharacterPortraitFromDataUrl(
       'char-1',
-      'data:image/jpeg;base64,QQ=='
+      'data:image/jpeg;base64,QQ==',
     );
 
     expect(result).toEqual({ url: 'https://cdn.example/portrait.jpg' });
@@ -77,11 +77,11 @@ describe('uploadCharacterPortraitFromDataUrl', () => {
       vi.fn().mockResolvedValue({
         ok: true,
         json: async () => ({}),
-      })
+      }),
     );
 
     await expect(
-      uploadCharacterPortraitFromDataUrl('char-1', 'data:image/jpeg;base64,QQ==')
+      uploadCharacterPortraitFromDataUrl('char-1', 'data:image/jpeg;base64,QQ=='),
     ).rejects.toThrow(PORTRAIT_SAVE_NO_URL);
   });
 
@@ -92,11 +92,11 @@ describe('uploadCharacterPortraitFromDataUrl', () => {
         ok: false,
         statusText: 'Bad Request',
         json: async () => ({ error: 'File too large' }),
-      })
+      }),
     );
 
     await expect(
-      uploadCharacterPortraitFromDataUrl('char-1', 'data:image/jpeg;base64,QQ==')
+      uploadCharacterPortraitFromDataUrl('char-1', 'data:image/jpeg;base64,QQ=='),
     ).rejects.toThrow('File too large');
   });
 
@@ -107,11 +107,11 @@ describe('uploadCharacterPortraitFromDataUrl', () => {
         ok: false,
         statusText: '',
         json: async () => ({}),
-      })
+      }),
     );
 
     await expect(
-      uploadCharacterPortraitFromDataUrl('char-1', 'data:image/jpeg;base64,QQ==')
+      uploadCharacterPortraitFromDataUrl('char-1', 'data:image/jpeg;base64,QQ=='),
     ).rejects.toThrow('Upload failed');
   });
 });

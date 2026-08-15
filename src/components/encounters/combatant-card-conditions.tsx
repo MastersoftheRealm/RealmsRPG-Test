@@ -20,20 +20,26 @@ export function CombatantCardConditionChips({
   if (combatant.conditions.length === 0) return null;
 
   return (
-    <div className="flex flex-wrap gap-1 mb-3">
-      {combatant.conditions.map(cond => {
-        const condDef = CONDITION_OPTIONS.find(c => c.name === cond.name);
-        const isLeveled = condDef?.leveled ?? (cond.level > 0);
+    <div className="mb-3 flex flex-wrap gap-1">
+      {combatant.conditions.map((cond) => {
+        const condDef = CONDITION_OPTIONS.find((c) => c.name === cond.name);
+        const isLeveled = condDef?.leveled ?? cond.level > 0;
         const isCustom = !condDef;
         return (
           <div
             key={cond.name}
             className={cn(
-              'px-2 py-0.5 text-xs rounded-full flex items-center gap-1 select-none',
-              isCustom ? 'bg-info-light text-info-fg' :
-              isLeveled ? 'bg-companion-light text-companion-text' : 'bg-warning-light text-warning-fg'
+              'flex items-center gap-1 rounded-full px-2 py-0.5 text-xs select-none',
+              isCustom
+                ? 'bg-info-light text-info-fg'
+                : isLeveled
+                  ? 'bg-companion-light text-companion-text'
+                  : 'bg-warning-light text-warning-fg',
             )}
-            title={condDef?.description ?? 'Custom condition (leveled). Left-click to increase, right-click to decrease level.'}
+            title={
+              condDef?.description ??
+              'Custom condition (leveled). Left-click to increase, right-click to decrease level.'
+            }
             onContextMenu={(e) => {
               e.preventDefault();
               if (isLeveled) {
@@ -47,13 +53,18 @@ export function CombatantCardConditionChips({
               onClick={() => isLeveled && onUpdateConditionLevel(cond.name, 1)}
               className={cn(isLeveled && 'cursor-pointer hover:underline')}
             >
-              {cond.name}{isLeveled && ` (${cond.level})`}
+              {cond.name}
+              {isLeveled && ` (${cond.level})`}
             </span>
             <button
-              onClick={() => isLeveled ? onUpdateConditionLevel(cond.name, -1) : onRemoveCondition(cond.name)}
-              className="hover:text-danger-fg font-bold touch-target-md-compact inline-flex items-center justify-center"
+              onClick={() =>
+                isLeveled ? onUpdateConditionLevel(cond.name, -1) : onRemoveCondition(cond.name)
+              }
+              className="touch-target-md-compact inline-flex items-center justify-center font-bold hover:text-danger-fg"
               title={isLeveled ? 'Decrease level (removes at 0)' : 'Remove condition'}
-              aria-label={isLeveled ? `Decrease ${cond.name} level` : `Remove ${cond.name} condition`}
+              aria-label={
+                isLeveled ? `Decrease ${cond.name} level` : `Remove ${cond.name} condition`
+              }
             >
               ×
             </button>
@@ -85,29 +96,30 @@ export function CombatantCardConditionsPanel({
 
   const handleAddCustomCondition = () => {
     const name = customCondition.trim();
-    if (name && !combatant.conditions.some(c => c.name === name)) {
+    if (name && !combatant.conditions.some((c) => c.name === name)) {
       onAddCondition(name);
       setCustomCondition('');
     }
   };
 
   return (
-    <div className="mt-3 pt-3 border-t border-border-subtle">
-      <div className="flex items-center gap-2 mb-2">
+    <div className="mt-3 border-t border-border-subtle pt-3">
+      <div className="mb-2 flex items-center gap-2">
         <select
           value={selectedCondition}
           onChange={(e) => setSelectedCondition(e.target.value)}
-          className="flex-1 px-3 py-1 text-sm border border-border-light rounded min-h-[var(--touch-target-min,44px)] md:min-h-0"
+          className="min-h-[var(--touch-target-min,44px)] flex-1 rounded border border-border-light px-3 py-1 text-sm md:min-h-0"
           aria-label="Select condition to add"
         >
           <option value="">Select Condition...</option>
-          {CONDITION_OPTIONS.map(cond => (
+          {CONDITION_OPTIONS.map((cond) => (
             <option
               key={cond.name}
               value={cond.name}
-              disabled={combatant.conditions.some(c => c.name === cond.name)}
+              disabled={combatant.conditions.some((c) => c.name === cond.name)}
             >
-              {cond.name}{cond.leveled ? ' ⬇' : ''}
+              {cond.name}
+              {cond.leveled ? ' ⬇' : ''}
             </option>
           ))}
         </select>
@@ -121,29 +133,30 @@ export function CombatantCardConditionsPanel({
           Add
         </Button>
       </div>
-      <div className="flex items-center gap-2 mb-2">
+      <div className="mb-2 flex items-center gap-2">
         <input
           type="text"
           value={customCondition}
           onChange={(e) => setCustomCondition(e.target.value)}
           placeholder="Custom condition..."
           aria-label="Custom condition name"
-          className="flex-1 px-3 py-1 text-sm border border-border-light rounded min-h-[var(--touch-target-min,44px)] md:min-h-0"
+          className="min-h-[var(--touch-target-min,44px)] flex-1 rounded border border-border-light px-3 py-1 text-sm md:min-h-0"
           onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCondition()}
           maxLength={30}
         />
         <Button
           variant="primary"
           size="sm"
-          className="bg-companion hover:bg-companion-dark"
+          className="hover:bg-companion-dark bg-companion"
           onClick={handleAddCustomCondition}
           disabled={!customCondition.trim()}
         >
           Add Custom
         </Button>
       </div>
-      <p className="text-xs text-text-muted dark:text-text-secondary">
-        Left-click to increase level, right-click or × to decrease/remove. Custom conditions are leveled.
+      <p className="text-xs text-text-muted">
+        Left-click to increase level, right-click or × to decrease/remove. Custom conditions are
+        leveled.
       </p>
     </div>
   );

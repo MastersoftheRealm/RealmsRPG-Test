@@ -17,20 +17,34 @@ export { SearchInput } from './search-input';
 export { PageContainer, type ContainerSize } from './page-container';
 export { PageHeader } from './page-header';
 export { TableScroll } from './table-scroll';
-export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter, cardVariants } from './card';
+export {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+  cardVariants,
+} from './card';
 export { SelectionCard, SelectionCardSurface } from './selection-card';
 
 // Chip/Badge components
-export { Chip, DescriptorChip, chipVariants, type ChipProps, type DescriptorChipSize } from './chip';
-export { ExpandableChip, ChipGroup, type ExpandableChipProps, type ExpandableChipOption } from './expandable-chip';
+export {
+  Chip,
+  DescriptorChip,
+  chipVariants,
+  type ChipProps,
+  type DescriptorChipSize,
+} from './chip';
+export {
+  ExpandableChip,
+  ChipGroup,
+  type ExpandableChipProps,
+  type ExpandableChipOption,
+} from './expandable-chip';
 
 // Navigation components
-export {
-  TabNavigation,
-  TabContentPanel,
-  useTabGroup,
-  type Tab,
-} from './tab-navigation';
+export { TabNavigation, TabContentPanel, useTabGroup, type Tab } from './tab-navigation';
 // Note: tabs.tsx (Tabs, TabsList, TabsTrigger, TabsContent) was removed - use TabNavigation instead
 
 // Feedback components
@@ -45,4 +59,3 @@ export { Spinner, LoadingState } from './spinner';
 
 // Empty states
 export { EmptyState } from './empty-state';
-

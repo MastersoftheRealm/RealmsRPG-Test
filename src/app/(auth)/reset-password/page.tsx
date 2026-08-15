@@ -88,7 +88,7 @@ export default function ResetPasswordPage() {
         </Alert>
         <Link
           href="/forgot-password"
-          className="inline-block w-full text-center text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium min-h-[44px] flex items-center justify-center"
+          className="flex inline-block min-h-[44px] w-full items-center justify-center text-center font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
         >
           Request a new reset link
         </Link>
@@ -128,4 +128,3 @@ export default function ResetPasswordPage() {
     </AuthCard>
   );
 }
-

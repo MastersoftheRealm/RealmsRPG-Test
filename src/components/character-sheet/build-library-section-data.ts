@@ -6,10 +6,7 @@
 import type { CharacterProficiency, Item, Character, CharacterAncestry } from '@/types';
 import type { EnrichedCharacterData } from '@/lib/data-enrichment';
 import { characterToFeatRequirementCharacter } from '@/lib/game/feat-requirements';
-import {
-  calculateMaxArchetypeFeats,
-  calculateMaxCharacterFeats,
-} from '@/lib/game/formulas';
+import { calculateMaxArchetypeFeats, calculateMaxCharacterFeats } from '@/lib/game/formulas';
 import { getArchetypeAbilityScore, calculatePowerAttackBonus } from '@/lib/game/calculations';
 import { withAbilitiesForResourceMaxima } from '@/lib/character/temp-modifiers';
 import type { LibrarySectionData, SheetLibraryModel } from './library-section-props';
@@ -53,10 +50,10 @@ export function buildLibrarySectionData(input: {
   return {
     powers: enrichedData?.powers || character.powers || [],
     techniques: enrichedData?.techniques || character.techniques || [],
-    weapons: (enrichedData?.weapons || (character.equipment?.weapons || [])) as Item[],
-    shields: (enrichedData?.shields || (character.equipment?.shields || [])) as Item[],
-    armor: (enrichedData?.armor || (character.equipment?.armor || [])) as Item[],
-    equipment: (enrichedData?.equipment || (character.equipment?.items || [])) as Item[],
+    weapons: (enrichedData?.weapons || character.equipment?.weapons || []) as Item[],
+    shields: (enrichedData?.shields || character.equipment?.shields || []) as Item[],
+    armor: (enrichedData?.armor || character.equipment?.armor || []) as Item[],
+    equipment: (enrichedData?.equipment || character.equipment?.items || []) as Item[],
     currency: character.currency,
     innateEnergy: archetypeProgression?.innateEnergy || 0,
     innateThreshold: archetypeProgression?.innateThreshold || 0,
@@ -90,13 +87,14 @@ export function buildLibrarySectionData(input: {
     onVisibilityChange: (v) => setCharacter((prev) => (prev ? { ...prev, visibility: v } : null)),
     speedDisplayUnit: character.speedDisplayUnit ?? 'spaces',
     onAppearanceChange: (v) => setCharacter((prev) => (prev ? { ...prev, appearance: v } : null)),
-    onArchetypeDescChange: (v) => setCharacter((prev) => (prev ? { ...prev, archetypeDesc: v } : null)),
+    onArchetypeDescChange: (v) =>
+      setCharacter((prev) => (prev ? { ...prev, archetypeDesc: v } : null)),
     onNotesChange: (v) => setCharacter((prev) => (prev ? { ...prev, notes: v } : null)),
     namedNotes: character.namedNotes,
     onAddNote: () => {
       const newNote = { id: `note_${Date.now()}`, name: 'New Note', content: '' };
       setCharacter((prev) =>
-        prev ? { ...prev, namedNotes: [...(prev.namedNotes || []), newNote] } : null
+        prev ? { ...prev, namedNotes: [...(prev.namedNotes || []), newNote] } : null,
       );
     },
     onUpdateNote: (id, updates) => {
@@ -105,17 +103,17 @@ export function buildLibrarySectionData(input: {
           ? {
               ...prev,
               namedNotes: (prev.namedNotes || []).map((note) =>
-                note.id === id ? { ...note, ...updates } : note
+                note.id === id ? { ...note, ...updates } : note,
               ),
             }
-          : null
+          : null,
       );
     },
     onDeleteNote: (id) => {
       setCharacter((prev) =>
         prev
           ? { ...prev, namedNotes: (prev.namedNotes || []).filter((note) => note.id !== id) }
-          : null
+          : null,
       );
     },
     level: character.level,
@@ -152,7 +150,7 @@ export function buildLibrarySectionData(input: {
       character.level || 1,
       (character.archetype?.type || 'power') as 'power' | 'martial' | 'powered-martial',
       undefined,
-      character.archetypeChoices
+      character.archetypeChoices,
     ),
     maxCharacterFeats: calculateMaxCharacterFeats(character.level || 1),
     onFeatUsesChange: handleFeatUsesChange,

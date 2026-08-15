@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  resolveItemUnitCost,
-  resolveRefUnitCost,
-} from '@/lib/guided-creator/equipment-currency';
+import { resolveItemUnitCost, resolveRefUnitCost } from '@/lib/guided-creator/equipment-currency';
 import { calculateCurrencyCostAndRarity } from '@/lib/calculators/item-calc';
 
 describe('equipment-currency', () => {
@@ -16,7 +13,7 @@ describe('equipment-currency', () => {
     expect(
       resolveItemUnitCost({
         costs: { totalCurrency: 2, totalIP: 2 },
-      })
+      }),
     ).toBe(expected);
     expect(expected).toBeGreaterThan(2);
   });
@@ -26,7 +23,7 @@ describe('equipment-currency', () => {
     const cost = resolveRefUnitCost(
       { id: 'axe-1' },
       [{ id: 'axe-1', costs: { totalCurrency: 1, totalIP: 1 } }],
-      []
+      [],
     );
     expect(cost).toBe(expected);
   });
@@ -35,7 +32,7 @@ describe('equipment-currency', () => {
     const cost = resolveRefUnitCost(
       { id: 'rope' },
       [],
-      [{ id: 'rope', currency: 5, gold_cost: 5 }]
+      [{ id: 'rope', currency: 5, gold_cost: 5 }],
     );
     expect(cost).toBe(5);
   });

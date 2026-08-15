@@ -5,10 +5,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import {
-  CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
-  type SortState,
-} from '@/components/shared';
+import { CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME, type SortState } from '@/components/shared';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { useRollsOptional } from '@/components/rolls';
 import { calculateRemainingInnateEnergy } from '@/lib/game/formulas';
@@ -127,32 +124,31 @@ export function useLibrarySectionRows({
   const [equipmentSort, setEquipmentSort] = useState<SortState>({ col: 'name', dir: 1 });
 
   const sortedInnatePowers = useMemo(
-    () => sortByColumn(powers.filter((p) => p.innate === true), powerSort),
-    [powers, powerSort]
+    () =>
+      sortByColumn(
+        powers.filter((p) => p.innate === true),
+        powerSort,
+      ),
+    [powers, powerSort],
   );
   const sortedRegularPowers = useMemo(
-    () => sortByColumn(powers.filter((p) => p.innate !== true), powerSort),
-    [powers, powerSort]
+    () =>
+      sortByColumn(
+        powers.filter((p) => p.innate !== true),
+        powerSort,
+      ),
+    [powers, powerSort],
   );
   const sortedTechniques = useMemo(
     () => sortByColumn(techniques, techniqueSort),
-    [techniques, techniqueSort]
+    [techniques, techniqueSort],
   );
-  const sortedWeapons = useMemo(
-    () => sortByColumn(weapons, weaponSort),
-    [weapons, weaponSort]
-  );
-  const sortedShields = useMemo(
-    () => sortByColumn(shields, shieldSort),
-    [shields, shieldSort]
-  );
-  const sortedArmor = useMemo(
-    () => sortByColumn(armor, armorSort),
-    [armor, armorSort]
-  );
+  const sortedWeapons = useMemo(() => sortByColumn(weapons, weaponSort), [weapons, weaponSort]);
+  const sortedShields = useMemo(() => sortByColumn(shields, shieldSort), [shields, shieldSort]);
+  const sortedArmor = useMemo(() => sortByColumn(armor, armorSort), [armor, armorSort]);
   const sortedEquipment = useMemo(
     () => sortByColumn(equipment, equipmentSort),
-    [equipment, equipmentSort]
+    [equipment, equipmentSort],
   );
 
   const hasMissingForEntry = useCallback(
@@ -175,7 +171,7 @@ export function useLibrarySectionRows({
       });
       return getMissingRequiredProficiencies(requiredForEntry, proficiencies).length > 0;
     },
-    [powerPartsDb, techniquePartsDb, itemPropertiesDb, proficiencies]
+    [powerPartsDb, techniquePartsDb, itemPropertiesDb, proficiencies],
   );
 
   const entityRowContext = useMemo<LibraryEntityRowContext>(
@@ -228,7 +224,7 @@ export function useLibrarySectionRows({
       onToggleEquipArmor,
       onRemoveEquipment,
       onEquipmentQuantityChange,
-    ]
+    ],
   );
 
   const powerRowChrome = useMemo(
@@ -237,69 +233,69 @@ export function useLibrarySectionRows({
       leftSlot: !!(showLibraryEditControls && onTogglePowerInnate),
       delete: !!(showLibraryEditControls && onRemovePower),
     }),
-    [showLibraryEditControls, onTogglePowerInnate, onRemovePower]
+    [showLibraryEditControls, onTogglePowerInnate, onRemovePower],
   );
 
   const innatePowerRows = useMemo(
     () => mapPowerRows(sortedInnatePowers, entityRowContext),
-    [sortedInnatePowers, entityRowContext]
+    [sortedInnatePowers, entityRowContext],
   );
   const displayedCurrentInnateEnergy = useMemo(
     () =>
       currentInnateEnergy !== undefined
         ? currentInnateEnergy
         : calculateRemainingInnateEnergy(innateEnergy, powers),
-    [currentInnateEnergy, innateEnergy, powers]
+    [currentInnateEnergy, innateEnergy, powers],
   );
   const innateEnergyOverBudget = displayedCurrentInnateEnergy < 0;
   const regularPowerRows = useMemo(
     () => mapPowerRows(sortedRegularPowers, entityRowContext),
-    [sortedRegularPowers, entityRowContext]
+    [sortedRegularPowers, entityRowContext],
   );
   const techniqueRows = useMemo(
     () => mapTechniqueRows(sortedTechniques, entityRowContext),
-    [sortedTechniques, entityRowContext]
+    [sortedTechniques, entityRowContext],
   );
   const weaponRows = useMemo(
     () => mapWeaponRows(sortedWeapons, entityRowContext),
-    [sortedWeapons, entityRowContext]
+    [sortedWeapons, entityRowContext],
   );
   const shieldRows = useMemo(
     () => mapShieldRows(sortedShields, entityRowContext),
-    [sortedShields, entityRowContext]
+    [sortedShields, entityRowContext],
   );
   const armorRows = useMemo(
     () => mapArmorRows(sortedArmor, entityRowContext),
-    [sortedArmor, entityRowContext]
+    [sortedArmor, entityRowContext],
   );
   const equipmentRows = useMemo(
     () => mapEquipmentRows(sortedEquipment, entityRowContext),
-    [sortedEquipment, entityRowContext]
+    [sortedEquipment, entityRowContext],
   );
 
   const handlePowerSort = useCallback(
     (col: string) => setPowerSort(toggleSort(powerSort, col)),
-    [powerSort]
+    [powerSort],
   );
   const handleTechniqueSort = useCallback(
     (col: string) => setTechniqueSort(toggleSort(techniqueSort, col)),
-    [techniqueSort]
+    [techniqueSort],
   );
   const handleWeaponSort = useCallback(
     (col: string) => setWeaponSort(toggleSort(weaponSort, col)),
-    [weaponSort]
+    [weaponSort],
   );
   const handleShieldSort = useCallback(
     (col: string) => setShieldSort(toggleSort(shieldSort, col)),
-    [shieldSort]
+    [shieldSort],
   );
   const handleArmorSort = useCallback(
     (col: string) => setArmorSort(toggleSort(armorSort, col)),
-    [armorSort]
+    [armorSort],
   );
   const handleEquipmentSort = useCallback(
     (col: string) => setEquipmentSort(toggleSort(equipmentSort, col)),
-    [equipmentSort]
+    [equipmentSort],
   );
 
   return {

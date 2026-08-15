@@ -42,7 +42,13 @@ import {
   buildCreatureSelectableItem,
   buildSpeciesSelectableItem,
 } from '@/lib/library/creator-load-selectables';
-import type { UserPower, UserTechnique, UserItem, UserSpecies, UserCreature } from './use-user-library';
+import type {
+  UserPower,
+  UserTechnique,
+  UserItem,
+  UserSpecies,
+  UserCreature,
+} from './use-user-library';
 
 export type LoadModalLibraryType =
   | 'power'
@@ -81,7 +87,7 @@ export interface UseLoadModalLibraryReturn {
 
 export function useLoadModalLibrary(
   type: LoadModalLibraryType,
-  options?: UseLoadModalLibraryOptions
+  options?: UseLoadModalLibraryOptions,
 ): UseLoadModalLibraryReturn {
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [source, setSource] = useState<SourceFilterValue>('all');
@@ -168,7 +174,7 @@ export function useLoadModalLibrary(
       techniquePartsDb,
       itemPropertiesDb,
     }),
-    [powerPartsDb, techniquePartsDb, itemPropertiesDb]
+    [powerPartsDb, techniquePartsDb, itemPropertiesDb],
   );
 
   const { selectableItems, rawItems, isLoading, isPublicError } = useMemo(() => {
@@ -185,11 +191,18 @@ export function useLoadModalLibrary(
         source === 'my' || source === 'all'
           ? (userPowers as (UserPower | UserTechnique | UserItem | EqItem)[])
           : [];
-      const pub = source === 'public' || source === 'all' ? publicPowers.map(normalizePublicPower) : [];
+      const pub =
+        source === 'public' || source === 'all' ? publicPowers.map(normalizePublicPower) : [];
       const raw = [...my, ...pub];
-      const loading = (source !== 'public' && powersLoading) || (source !== 'my' && publicPowersLoading);
+      const loading =
+        (source !== 'public' && powersLoading) || (source !== 'my' && publicPowersLoading);
       const items = raw.map((item) => buildSelectableItem(item, 'power', codex));
-      return { selectableItems: items, rawItems: raw, isLoading: loading, isPublicError: !!publicError };
+      return {
+        selectableItems: items,
+        rawItems: raw,
+        isLoading: loading,
+        isPublicError: !!publicError,
+      };
     }
 
     if (type === 'technique') {
@@ -198,16 +211,24 @@ export function useLoadModalLibrary(
           ? (userTechniques as (UserPower | UserTechnique | UserItem | EqItem)[])
           : [];
       const pub =
-        source === 'public' || source === 'all' ? publicTechniques.map(normalizePublicTechnique) : [];
+        source === 'public' || source === 'all'
+          ? publicTechniques.map(normalizePublicTechnique)
+          : [];
       const raw = [...my, ...pub];
       const loading =
         (source !== 'public' && techniquesLoading) || (source !== 'my' && publicTechniquesLoading);
       const items = raw.map((item) => buildSelectableItem(item, 'technique', codex));
-      return { selectableItems: items, rawItems: raw, isLoading: loading, isPublicError: !!publicError };
+      return {
+        selectableItems: items,
+        rawItems: raw,
+        isLoading: loading,
+        isPublicError: !!publicError,
+      };
     }
 
     if (type === 'empowered-technique') {
-      const my = source === 'my' || source === 'all' ? (userEmpoweredTechniques as UserTechnique[]) : [];
+      const my =
+        source === 'my' || source === 'all' ? (userEmpoweredTechniques as UserTechnique[]) : [];
       const pub =
         source === 'public' || source === 'all'
           ? publicEmpoweredTechniques.map(normalizePublicTechnique)
@@ -220,9 +241,14 @@ export function useLoadModalLibrary(
         buildEmpoweredPowerSelectableItem(item, {
           powerPartsDb: codex.powerPartsDb,
           techniquePartsDb: codex.techniquePartsDb,
-        })
+        }),
       );
-      return { selectableItems: items, rawItems: raw, isLoading: loading, isPublicError: !!publicError };
+      return {
+        selectableItems: items,
+        rawItems: raw,
+        isLoading: loading,
+        isPublicError: !!publicError,
+      };
     }
 
     if (type === 'species') {
@@ -262,20 +288,25 @@ export function useLoadModalLibrary(
     }
 
     if (type === 'creature') {
-      const my =
-        source === 'my' || source === 'all' ? (userCreatures as UserCreature[]) : [];
+      const my = source === 'my' || source === 'all' ? (userCreatures as UserCreature[]) : [];
       const pub = source === 'public' || source === 'all' ? publicCreatures : [];
       const raw = [...my, ...pub];
       const loading =
-        (source !== 'public' && userCreaturesLoading) || (source !== 'my' && publicCreaturesLoading);
+        (source !== 'public' && userCreaturesLoading) ||
+        (source !== 'my' && publicCreaturesLoading);
       const items = raw.map((c) => buildCreatureSelectableItem(c));
-      return { selectableItems: items, rawItems: raw, isLoading: loading, isPublicError: !!publicError };
+      return {
+        selectableItems: items,
+        rawItems: raw,
+        isLoading: loading,
+        isPublicError: !!publicError,
+      };
     }
 
     const my =
       source === 'my' || source === 'all'
         ? (userItems as UserItem[]).filter((i) =>
-            ['weapon', 'armor', 'shield'].includes((i.type || '').toLowerCase())
+            ['weapon', 'armor', 'shield'].includes((i.type || '').toLowerCase()),
           )
         : [];
     const pub =
@@ -285,9 +316,15 @@ export function useLoadModalLibrary(
             .map(normalizePublicItem)
         : [];
     const raw = [...my, ...pub] as (UserPower | UserTechnique | UserItem | EqItem)[];
-    const loading = (source !== 'public' && itemsLoading) || (source !== 'my' && publicItemsLoading);
+    const loading =
+      (source !== 'public' && itemsLoading) || (source !== 'my' && publicItemsLoading);
     const items = raw.map((item) => buildSelectableItem(item, 'item', codex));
-    return { selectableItems: items, rawItems: raw, isLoading: loading, isPublicError: !!publicError };
+    return {
+      selectableItems: items,
+      rawItems: raw,
+      isLoading: loading,
+      isPublicError: !!publicError,
+    };
   }, [
     type,
     source,
@@ -339,9 +376,7 @@ export function useLoadModalLibrary(
               { key: 'level', label: 'Level', sortable: true },
               { key: 'type', label: 'Type', sortable: true },
             ]
-          : getListHeaderColumns(
-              type === 'item' ? 'item' : (type as LibraryItemType)
-            );
+          : getListHeaderColumns(type === 'item' ? 'item' : (type as LibraryItemType));
 
   const gridColumns =
     type === 'empowered-technique'

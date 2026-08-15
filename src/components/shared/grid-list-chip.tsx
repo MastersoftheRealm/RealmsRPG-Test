@@ -1,9 +1,13 @@
 'use client';
 
-import { ExpandableChip } from '@/components/ui';
+import { DescriptorChip, ExpandableChip } from '@/components/ui';
 import { DescriptorChipWithTip } from '@/components/shared/descriptor-chip-with-tip';
+import { InfoTippy } from '@/components/shared/info-tippy';
 import { expandableChipPropsFromChipData } from '@/lib/chip/expandable-chip-props';
-import { isGridListChipExpandable } from '@/lib/chip/grid-list-chip-utils';
+import {
+  descriptorChipVariantForGridList,
+  isGridListChipExpandable,
+} from '@/lib/chip/grid-list-chip-utils';
 import type { ChipData } from './grid-list-row-types';
 
 export interface GridListChipProps {
@@ -18,6 +22,7 @@ export interface GridListChipProps {
 /**
  * GridListRow chip — expandable when the chip has expandable content;
  * otherwise DescriptorChipWithTip (guided L1/metadata facts with InfoTippy).
+ * `ChipData.onSelect` is a control (button + sibling tip — no nested buttons).
  * Character sheet parts/properties should pass `kind: 'expandable'` + `costLabel: 'TP'`.
  */
 export function GridListChip({
@@ -28,6 +33,10 @@ export function GridListChip({
   optionsOpen,
   onOptionsOpenChange,
 }: GridListChipProps) {
+  if (chip.onSelect && !chip.disabled) {
+    return <GridListSelectChip chip={chip} />;
+  }
+
   if (!isGridListChipExpandable(chip)) {
     return <DescriptorChipWithTip chip={chip} />;
   }
@@ -40,5 +49,37 @@ export function GridListChip({
       optionsOpen={optionsOpen}
       onOptionsOpenChange={onOptionsOpenChange}
     />
+  );
+}
+
+function GridListSelectChip({ chip }: { chip: ChipData }) {
+  const variant = descriptorChipVariantForGridList(chip.category ?? 'default');
+  const tip = chip.description?.trim();
+  const showTip = Boolean(tip && tip !== 'No additional details.');
+
+  return (
+    <span className="inline-flex max-w-full items-center gap-0.5">
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          chip.onSelect?.();
+        }}
+        className="touch-target-md-compact inline-flex items-center rounded-md focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
+        aria-label={chip.selectAriaLabel ?? `Select ${chip.name}`}
+      >
+        <DescriptorChip
+          variant={variant}
+          className="cursor-pointer hover:border-border hover:text-text-primary"
+        >
+          {chip.name}
+        </DescriptorChip>
+      </button>
+      {showTip ? (
+        <span className="inline-flex shrink-0" onClick={(e) => e.stopPropagation()}>
+          <InfoTippy content={tip!} label={`${chip.name} details`} size="inline" />
+        </span>
+      ) : null}
+    </span>
   );
 }

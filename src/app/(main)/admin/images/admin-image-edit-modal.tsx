@@ -1,11 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import {
-  ChipSelect,
-  ImageUploadModal,
-  ListRowThumbnail,
-} from '@/components/shared';
+import { ChipSelect, ImageUploadModal, ListRowThumbnail } from '@/components/shared';
 import { Modal, Button, Input, Alert, useToast } from '@/components/ui';
 import {
   REALMS_IMAGE_CATEGORY_OPTIONS,
@@ -192,10 +188,12 @@ export function AdminImageEditModal({
               {!isCreate && (
                 <Button
                   variant="outline"
-                  onClick={() => { void handleDeleteClick(); }}
+                  onClick={() => {
+                    void handleDeleteClick();
+                  }}
                   disabled={saving || replacing || preparingDelete}
                   isLoading={preparingDelete}
-                  className="text-danger-fg border-danger-300 hover:bg-danger-light"
+                  className="border-danger-300 text-danger-fg hover:bg-danger-light"
                 >
                   Delete
                 </Button>
@@ -205,7 +203,11 @@ export function AdminImageEditModal({
               <Button variant="outline" onClick={onClose} disabled={saving || replacing}>
                 Cancel
               </Button>
-              <Button onClick={handleSave} disabled={saving || replacing || !name.trim()} isLoading={saving}>
+              <Button
+                onClick={handleSave}
+                disabled={saving || replacing || !name.trim()}
+                isLoading={saving}
+              >
                 {saving ? 'Saving...' : isCreate ? 'Add image' : 'Save changes'}
               </Button>
             </div>
@@ -217,7 +219,10 @@ export function AdminImageEditModal({
           {deletePrepError && <Alert variant="danger">{deletePrepError}</Alert>}
 
           <div>
-            <label htmlFor="admin-image-name" className="mb-1 block text-sm font-medium text-text-secondary">
+            <label
+              htmlFor="admin-image-name"
+              className="mb-1 block text-sm font-medium text-text-secondary"
+            >
               Name *
             </label>
             <Input
@@ -244,10 +249,10 @@ export function AdminImageEditModal({
                 <ListRowThumbnail
                   src={displayPreview}
                   alt={name.trim() || 'Image preview'}
-                  className="h-24 w-24 min-h-[44px] min-w-[44px]"
+                  className="h-24 min-h-[44px] w-24 min-w-[44px]"
                 />
               ) : (
-                <div className="flex h-24 w-24 min-h-[44px] min-w-[44px] items-center justify-center rounded-md border border-dashed border-border-light bg-surface-alt text-xs text-text-muted dark:text-text-secondary">
+                <div className="flex h-24 min-h-[44px] w-24 min-w-[44px] items-center justify-center rounded-md border border-dashed border-border-light bg-surface-alt text-xs text-text-muted">
                   No image
                 </div>
               )}
@@ -263,8 +268,8 @@ export function AdminImageEditModal({
                 </Button>
                 {!isCreate && usages.length > 0 && (
                   <p className="max-w-xs text-xs text-text-secondary">
-                    Used by {usages.length} {usages.length === 1 ? 'entity' : 'entities'}. Replacing updates
-                    all references.
+                    Used by {usages.length} {usages.length === 1 ? 'entity' : 'entities'}. Replacing
+                    updates all references.
                   </p>
                 )}
                 {!isCreate && usageWarningError && (

@@ -55,11 +55,7 @@ export function useCreateCraftingSession() {
 
 export function useSaveCraftingSession() {
   const queryClient = useQueryClient();
-  return useMutation<
-    void,
-    Error,
-    { id: string; data: Partial<CraftingSessionData> }
-  >({
+  return useMutation<void, Error, { id: string; data: Partial<CraftingSessionData> }>({
     mutationFn: ({ id, data }) => saveCraftingSession(id, data),
     onSuccess: (_, { id }) => {
       queryClient.invalidateQueries({ queryKey: craftingKeys.detail(id) });

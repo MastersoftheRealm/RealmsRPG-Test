@@ -8,11 +8,12 @@ import {
   type SkillListFilters,
 } from './skill-list';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
-import { buildPathRecommendationIndex, pathRecommendedEntityIds } from '@/lib/game/path-recommendation-index';
+import {
+  buildPathRecommendationIndex,
+  pathRecommendedEntityIds,
+} from '@/lib/game/path-recommendation-index';
 
-function skill(
-  partial: Pick<Skill, 'id' | 'name'> & Partial<Skill>
-): Skill {
+function skill(partial: Pick<Skill, 'id' | 'name'> & Partial<Skill>): Skill {
   return {
     description: '',
     ability: '',
@@ -52,9 +53,7 @@ const emptyFilters: SkillListFilters = {
 
 describe('collectCharacterSkillKeys', () => {
   it('collects id and name from lean skill rows', () => {
-    const rows: CharacterSkillRow[] = [
-      { id: '10', name: 'Athletics', skill_val: 0, prof: true },
-    ];
+    const rows: CharacterSkillRow[] = [{ id: '10', name: 'Athletics', skill_val: 0, prof: true }];
     const keys = collectCharacterSkillKeys(rows);
     expect(keys.has('10')).toBe(true);
     expect(keys.has('athletics')).toBe(true);
@@ -82,7 +81,7 @@ describe('filterSkills character scope', () => {
       allSkills,
       { ...emptyFilters, knownMode: 'known', baseSkillOwnedOnly: true },
       skillIdToName,
-      null
+      null,
     );
     expect(filtered).toHaveLength(5);
   });
@@ -92,7 +91,7 @@ describe('filterSkills character scope', () => {
       allSkills,
       { ...emptyFilters, abilities: ['charisma'] },
       skillIdToName,
-      new Set()
+      new Set(),
     );
     expect(filtered.map((s) => s.name)).toEqual(['Persuasion', 'Lying']);
   });
@@ -102,7 +101,7 @@ describe('filterSkills character scope', () => {
       allSkills,
       { ...emptyFilters, knownMode: 'known' },
       skillIdToName,
-      knownIds
+      knownIds,
     );
     expect(filtered.map((s) => s.name)).toEqual(['Athletics']);
   });
@@ -112,7 +111,7 @@ describe('filterSkills character scope', () => {
       allSkills,
       { ...emptyFilters, knownMode: 'not-known' },
       skillIdToName,
-      knownIds
+      knownIds,
     );
     expect(filtered.map((s) => s.name)).toEqual(['Climbing', 'Persuasion', 'Lying', 'Wildcard']);
   });
@@ -122,7 +121,7 @@ describe('filterSkills character scope', () => {
       allSkills,
       { ...emptyFilters, baseSkillOwnedOnly: true },
       skillIdToName,
-      knownIds
+      knownIds,
     );
     expect(filtered.map((s) => s.name)).toEqual(['Climbing']);
   });
@@ -155,7 +154,7 @@ describe('filterSkills — Archetype Path filter (TASK-752)', () => {
       emptyFilters,
       skillIdToName,
       null,
-      pathRecommendedEntityIds(index, ['p-monk'])
+      pathRecommendedEntityIds(index, ['p-monk']),
     );
     expect(monk.map((s) => s.id)).toEqual(['10']);
     const both = filterSkills(
@@ -163,7 +162,7 @@ describe('filterSkills — Archetype Path filter (TASK-752)', () => {
       emptyFilters,
       skillIdToName,
       null,
-      pathRecommendedEntityIds(index, ['p-monk', 'p-bard'])
+      pathRecommendedEntityIds(index, ['p-monk', 'p-bard']),
     );
     expect(both.map((s) => s.id).sort()).toEqual(['10', '20']);
   });
@@ -174,7 +173,7 @@ describe('filterSkills — Archetype Path filter (TASK-752)', () => {
       { ...emptyFilters, abilities: ['strength'] },
       skillIdToName,
       null,
-      pathRecommendedEntityIds(index, ['p-monk', 'p-bard'])
+      pathRecommendedEntityIds(index, ['p-monk', 'p-bard']),
     );
     expect(capped.map((s) => s.id)).toEqual(['10']);
     expect(filterSkills(allSkills, emptyFilters, skillIdToName, null, null)).toHaveLength(5);

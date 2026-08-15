@@ -28,13 +28,9 @@ const poweredMartialLevel10: Partial<Character> = {
 
 describe('resolveEnergyArchetypeAbility (T1 / M3)', () => {
   it('picks the higher of Power and Martial Archetype Abilities', () => {
-    expect(
-      resolveEnergyArchetypeAbility(
-        poweredMartialAbilities,
-        'intelligence',
-        'strength'
-      )
-    ).toBe('strength');
+    expect(resolveEnergyArchetypeAbility(poweredMartialAbilities, 'intelligence', 'strength')).toBe(
+      'strength',
+    );
   });
 
   it('keeps Power when the two scores are equal', () => {
@@ -42,18 +38,18 @@ describe('resolveEnergyArchetypeAbility (T1 / M3)', () => {
       resolveEnergyArchetypeAbility(
         { ...DEFAULT_ABILITIES, intelligence: 2, strength: 2 },
         'intelligence',
-        'strength'
-      )
+        'strength',
+      ),
     ).toBe('intelligence');
   });
 
   it('falls back to the only defined Archetype Ability', () => {
-    expect(
-      resolveEnergyArchetypeAbility(poweredMartialAbilities, 'intelligence', undefined)
-    ).toBe('intelligence');
-    expect(
-      resolveEnergyArchetypeAbility(poweredMartialAbilities, undefined, 'strength')
-    ).toBe('strength');
+    expect(resolveEnergyArchetypeAbility(poweredMartialAbilities, 'intelligence', undefined)).toBe(
+      'intelligence',
+    );
+    expect(resolveEnergyArchetypeAbility(poweredMartialAbilities, undefined, 'strength')).toBe(
+      'strength',
+    );
   });
 });
 
@@ -61,13 +57,7 @@ describe('calculateMaxEnergyForArchetype / calculateAllStats Powered-Martial Ene
   it('uses the higher Archetype Ability (STR 3), not Power-first (INT 1)', () => {
     // ability 3 × level 10 + energyPoints 4
     expect(
-      calculateMaxEnergyForArchetype(
-        4,
-        poweredMartialAbilities,
-        10,
-        'intelligence',
-        'strength'
-      )
+      calculateMaxEnergyForArchetype(4, poweredMartialAbilities, 10, 'intelligence', 'strength'),
     ).toBe(34);
     expect(calculateAllStats(poweredMartialLevel10).maxEnergy).toBe(34);
 

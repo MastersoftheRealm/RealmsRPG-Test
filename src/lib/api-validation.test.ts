@@ -95,15 +95,18 @@ describe('verifyMutationRequest', () => {
   it('rejects text/plain on JSON handlers (CORS-simple content type)', () => {
     const denied = verifyMutationRequest(
       makeRequest({ 'content-type': 'text/plain', origin: 'http://localhost' }),
-      { requireJsonBody: true }
+      { requireJsonBody: true },
     );
     expect(denied?.status).toBe(415);
   });
 
   it('accepts application/json with a charset parameter', () => {
     const denied = verifyMutationRequest(
-      makeRequest({ 'content-type': 'application/json; charset=utf-8', origin: 'http://localhost' }),
-      { requireJsonBody: true }
+      makeRequest({
+        'content-type': 'application/json; charset=utf-8',
+        origin: 'http://localhost',
+      }),
+      { requireJsonBody: true },
     );
     expect(denied).toBeNull();
   });
@@ -118,7 +121,11 @@ describe('readBodyWithLimit', () => {
 
   it('reads a body under the cap', async () => {
     const result = await readBodyWithLimit(
-      makeRequest({ 'content-type': 'application/json', origin: 'http://localhost' }, 'POST', '{"name":"Aria"}')
+      makeRequest(
+        { 'content-type': 'application/json', origin: 'http://localhost' },
+        'POST',
+        '{"name":"Aria"}',
+      ),
     );
     expect(result.success).toBe(true);
     if (result.success) expect(result.text).toBe('{"name":"Aria"}');
@@ -148,9 +155,9 @@ describe('validateJson', () => {
       makeRequest(
         { 'content-type': 'application/json', origin: 'https://evil.example' },
         'POST',
-        '{"name":"Aria"}'
+        '{"name":"Aria"}',
       ),
-      schema
+      schema,
     );
 
     expect(result.success).toBe(false);
@@ -162,9 +169,9 @@ describe('validateJson', () => {
       makeRequest(
         { 'content-type': 'application/json', origin: 'http://localhost' },
         'POST',
-        '{"name":"Aria"}'
+        '{"name":"Aria"}',
       ),
-      schema
+      schema,
     );
 
     expect(result.success).toBe(true);
@@ -176,9 +183,9 @@ describe('validateJson', () => {
       makeRequest(
         { 'content-type': 'application/json', origin: 'http://localhost' },
         'POST',
-        '{"name":""}'
+        '{"name":""}',
       ),
-      schema
+      schema,
     );
 
     expect(result.success).toBe(false);
@@ -190,9 +197,9 @@ describe('validateJson', () => {
       makeRequest(
         { 'content-type': 'application/json', origin: 'http://localhost' },
         'POST',
-        '{not json'
+        '{not json',
       ),
-      schema
+      schema,
     );
 
     expect(result.success).toBe(false);

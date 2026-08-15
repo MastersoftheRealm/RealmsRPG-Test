@@ -10,11 +10,11 @@ import { newFeatGuidanceGroup, type AdminArchetypeFormState } from './admin-arch
 
 export function createFeatGuidanceMutators(
   setForm: Dispatch<SetStateAction<AdminArchetypeFormState>>,
-  showToast: (message: string, variant: 'warning' | 'error' | 'success') => void
+  showToast: (message: string, variant: 'warning' | 'error' | 'success') => void,
 ) {
   const updateFeatGuidanceGroup = (
     groupId: string,
-    patch: Partial<Pick<PathGuidanceGroup, 'title' | 'why' | 'feats'>>
+    patch: Partial<Pick<PathGuidanceGroup, 'title' | 'why' | 'feats'>>,
   ) => {
     setForm((prev) => ({
       ...prev,
@@ -25,7 +25,7 @@ export function createFeatGuidanceMutators(
               ...patch,
               audience: resolvePathGuidanceAudience(g),
             }
-          : g
+          : g,
       ),
     }));
   };
@@ -36,7 +36,7 @@ export function createFeatGuidanceMutators(
       if (current.length >= LAYER1_GOVERNANCE.maxGroupsPerStep) {
         showToast(
           `At most ${LAYER1_GOVERNANCE.maxGroupsPerStep} ${audience} feat groups (Layer 1 governance).`,
-          'warning'
+          'warning',
         );
         return prev;
       }
@@ -58,7 +58,7 @@ export function createFeatGuidanceMutators(
 }
 
 export function createLevel1ArmamentMutators(
-  setForm: Dispatch<SetStateAction<AdminArchetypeFormState>>
+  setForm: Dispatch<SetStateAction<AdminArchetypeFormState>>,
 ) {
   const addLevel1Armament = (value: string) => {
     setForm((prev) => {
@@ -79,7 +79,7 @@ export function createLevel1ArmamentMutators(
       level1Path: {
         ...prev.level1Path,
         armamentEntries: prev.level1Path.armamentEntries.map((e) =>
-          e.id === id ? { ...e, quantity } : e
+          e.id === id ? { ...e, quantity } : e,
         ),
       },
     }));

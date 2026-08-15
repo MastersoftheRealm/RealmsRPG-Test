@@ -89,7 +89,7 @@ function warnMissingDurableBackendOnce(): void {
   warnedMissingDurableBackend = true;
   console.warn(
     '[rate-limit] No durable backend configured (UPSTASH_REDIS_REST_URL/_TOKEN or KV_REST_API_URL/_TOKEN). ' +
-      'Limits are per serverless instance only.'
+      'Limits are per serverless instance only.',
   );
 }
 
@@ -195,7 +195,10 @@ export function rateLimit({ interval, limit, prefix, failClosed = false }: RateL
           console.error(`[rate-limit] Redis check failed (${prefix}), failing closed:`, err);
           return { success: false, remaining: 0, reset: Date.now() + interval };
         }
-        console.error(`[rate-limit] Redis check failed (${prefix}), using in-memory fallback:`, err);
+        console.error(
+          `[rate-limit] Redis check failed (${prefix}), using in-memory fallback:`,
+          err,
+        );
         return memory.check(key);
       }
     },

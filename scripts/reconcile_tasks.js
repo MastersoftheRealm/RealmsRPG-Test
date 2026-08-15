@@ -38,7 +38,10 @@ function collectTaskFiles() {
 
 function parseTasksFromFile(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8');
-  const blocks = raw.split(/\n(?=- id: TASK-)/m).map((s) => s.trim()).filter((s) => s.startsWith('- id: TASK-'));
+  const blocks = raw
+    .split(/\n(?=- id: TASK-)/m)
+    .map((s) => s.trim())
+    .filter((s) => s.startsWith('- id: TASK-'));
   return blocks.map((block) => {
     const idToken = block.match(/^- id:\s*(\S+)/)?.[1] || null;
     const id = idToken && /^TASK-\d+$/.test(idToken) ? idToken : null;
@@ -46,7 +49,15 @@ function parseTasksFromFile(filePath) {
     const status = block.match(/\n\s*status:\s*(.+)/)?.[1]?.trim() || '';
     const completed_at = block.match(/\n\s*completed_at:\s*(.+)/)?.[1]?.trim() || '';
     const related_files = parseRelatedFilesFromBlock(block);
-    return { id, title, status, completed_at, related_files, source: path.relative(repoRoot, filePath), raw: block };
+    return {
+      id,
+      title,
+      status,
+      completed_at,
+      related_files,
+      source: path.relative(repoRoot, filePath),
+      raw: block,
+    };
   });
 }
 
@@ -92,7 +103,9 @@ function nonCanonicalIdTokens(filePath) {
 
 function gitGrepTask(taskId) {
   try {
-    const out = execSync(`git log --all --pretty=format:%H::%s --grep=${taskId}`, { encoding: 'utf8' });
+    const out = execSync(`git log --all --pretty=format:%H::%s --grep=${taskId}`, {
+      encoding: 'utf8',
+    });
     if (!out.trim()) return [];
     return out
       .trim()
@@ -102,7 +115,10 @@ function gitGrepTask(taskId) {
         let files = [];
         try {
           const f = execSync(`git show --pretty= --name-only ${hash}`, { encoding: 'utf8' });
-          files = f.split('\n').map((s) => s.trim()).filter(Boolean);
+          files = f
+            .split('\n')
+            .map((s) => s.trim())
+            .filter(Boolean);
         } catch {
           files = [];
         }
@@ -127,7 +143,7 @@ const identityTasks = identityFiles.flatMap((file) => parseTasksFromFile(file));
 const identityDupes = duplicateIdGroups(identityTasks);
 if (identityDupes.length) {
   console.error(
-    'Duplicate TASK-### in ACTIVE_TASKS.md, WAITING_TASKS.md, and/or archive/TASK_QUEUE_DONE.md (not the dated snapshot):'
+    'Duplicate TASK-### in ACTIVE_TASKS.md, WAITING_TASKS.md, and/or archive/TASK_QUEUE_DONE.md (not the dated snapshot):',
   );
   for (const [id, list] of identityDupes) {
     console.error(`  ${id}:`);
@@ -157,7 +173,7 @@ for (const t of tasks) {
   matches.forEach((m) => m.files.forEach((f) => matchedFiles.add(f)));
   const relatedOverlap = t.related_files.length
     ? t.related_files.filter((r) =>
-        Array.from(matchedFiles).some((mf) => mf.endsWith(r) || mf.includes(r.replace('src/', '')))
+        Array.from(matchedFiles).some((mf) => mf.endsWith(r) || mf.includes(r.replace('src/', ''))),
       )
     : [];
   report.tasks.push({
@@ -186,7 +202,7 @@ if (process.argv.includes('--apply')) {
   fs.appendFileSync(
     changelogPath,
     `${new Date().toISOString().slice(0, 10)} | reconcile-script | Reconcile run\n${summaryLines}\n\n`,
-    'utf8'
+    'utf8',
   );
   console.log('Appended summary to', changelogPath);
 }
@@ -216,7 +232,7 @@ const problematic = report.tasks.filter((t) => {
 if (problematic.length) {
   console.error(
     'Found tasks marked done with no matching commits:',
-    problematic.map((p) => p.id).join(', ')
+    problematic.map((p) => p.id).join(', '),
   );
   if (strict) process.exit(2);
 }

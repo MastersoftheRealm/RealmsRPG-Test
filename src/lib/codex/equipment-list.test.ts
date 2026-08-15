@@ -30,7 +30,7 @@ const ctx: ArmamentCharacterContext = {
 };
 
 function item(
-  partial: Partial<CodexEquipmentItem> & Pick<CodexEquipmentItem, 'id' | 'name'>
+  partial: Partial<CodexEquipmentItem> & Pick<CodexEquipmentItem, 'id' | 'name'>,
 ): CodexEquipmentItem {
   return {
     type: 'equipment',
@@ -53,7 +53,7 @@ describe('codex equipment-list', () => {
 
   it('currency cells are plain numbers without a c suffix or highlight', () => {
     const cols = buildCodexEquipmentColumns(
-      item({ id: '1', name: 'Rope', currency: 12, category: 'Adventuring', rarity: 'Common' })
+      item({ id: '1', name: 'Rope', currency: 12, category: 'Adventuring', rarity: 'Common' }),
     );
     const currencyCol = cols.find((c) => c.key === 'currency');
     expect(currencyCol?.value).toBe(12);
@@ -68,7 +68,7 @@ describe('codex equipment-list', () => {
 
   it('moves damage and DR into expand chips', () => {
     const sections = buildCodexEquipmentDetailSections(
-      item({ id: 'w', name: 'Sword', damage: '1d8 Slashing', armor_value: 2, weight: 3 })
+      item({ id: 'w', name: 'Sword', damage: '1d8 Slashing', armor_value: 2, weight: 3 }),
     );
     const labels = sections.flatMap((s) => s.chips.map((c) => c.name));
     expect(labels.some((n) => /1d8/i.test(n) && /damage/i.test(n))).toBe(true);
@@ -86,7 +86,7 @@ describe('codex equipment-list', () => {
       items,
       { search: 'kit', categoryFilter: 'Tools', rarityFilter: '' },
       { ...EMPTY_ARMAMENT_FILTERS, affordableCurrencyOnly: true },
-      ctx
+      ctx,
     );
     expect(filtered.map((r) => r.id)).toEqual(['a']);
   });
@@ -116,7 +116,7 @@ describe('codex equipment-list', () => {
       { search: '', categoryFilter: '', rarityFilter: '' },
       EMPTY_ARMAMENT_FILTERS,
       null,
-      pathRecommendedEntityIds(index, ['p-gear'])
+      pathRecommendedEntityIds(index, ['p-gear']),
     );
     expect(filtered.map((r) => r.id).sort()).toEqual(['sword', 'torch']);
   });

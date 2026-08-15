@@ -37,7 +37,7 @@ function GuidedEntryBootstrap() {
     if (entry !== 'guided' && entry !== 'custom') return;
     applied.current = true;
     updateDraft(
-      entry === 'custom' ? buildOpenCustomPathEntryPatch() : buildOpenGuidedPathEntryPatch()
+      entry === 'custom' ? buildOpenCustomPathEntryPatch() : buildOpenGuidedPathEntryPatch(),
     );
     router.replace(guidedPathAfterEntryBootstrap(searchParams), { scroll: false });
   }, [searchParams, updateDraft, router]);
@@ -59,7 +59,7 @@ function GuidedCharacterCreatorInner() {
 
   if (!isClient) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="flex min-h-screen items-center justify-center bg-background">
         <LoadingState message="Loading..." size="lg" />
       </div>
     );
@@ -77,7 +77,7 @@ export default function GuidedCharacterCreatorPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex min-h-screen items-center justify-center bg-background">
           <LoadingState message="Loading..." size="lg" />
         </div>
       }

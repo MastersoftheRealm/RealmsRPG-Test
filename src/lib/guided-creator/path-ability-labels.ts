@@ -8,10 +8,7 @@ import {
   formatPathPrimaryAbilityLabel,
   formatPathSecondaryAbilityLabel,
 } from '@/lib/constants/copy/path-ability-copy';
-import {
-  resolvePathAbilityLabels,
-  type PathAbilityChipRole,
-} from '@/lib/game/path-ability-labels';
+import { resolvePathAbilityLabels, type PathAbilityChipRole } from '@/lib/game/path-ability-labels';
 import type { Archetype } from '@/types';
 
 export interface PathAbilityChipLabel {

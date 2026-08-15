@@ -7,11 +7,7 @@
 import { useState, useMemo, useCallback, type ReactNode } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { IconButton } from '@/components/ui';
-import {
-  DEFAULT_TAB_VISIBILITY,
-  LIBRARY_TAB_DEFS,
-  type TabType,
-} from './library-tab-config';
+import { DEFAULT_TAB_VISIBILITY, LIBRARY_TAB_DEFS, type TabType } from './library-tab-config';
 import type { AddModalType } from './character-sheet-context';
 
 type LibraryTabDef = { id: TabType; label: string; onAdd?: () => void };
@@ -53,7 +49,7 @@ export function useLibraryTabNavigation(options: {
         setInternalActiveTab(tab);
       }
     },
-    [activeTabProp, onActiveTabChange]
+    [activeTabProp, onActiveTabChange],
   );
 
   const tabs = useMemo((): LibraryTabDef[] => {
@@ -62,7 +58,9 @@ export function useLibraryTabNavigation(options: {
         return onAddPowerProp ?? (setAddModalType ? () => setAddModalType('power') : undefined);
       }
       if (id === 'techniques') {
-        return onAddTechniqueProp ?? (setAddModalType ? () => setAddModalType('technique') : undefined);
+        return (
+          onAddTechniqueProp ?? (setAddModalType ? () => setAddModalType('technique') : undefined)
+        );
       }
       return undefined;
     };
@@ -74,12 +72,12 @@ export function useLibraryTabNavigation(options: {
 
   const resolvedTabVisibility = useMemo<Record<TabType, boolean>>(
     () => ({ ...DEFAULT_TAB_VISIBILITY, ...(tabVisibility ?? {}) }),
-    [tabVisibility]
+    [tabVisibility],
   );
 
   const visibleTabs = useMemo(
     () => (isEditMode ? tabs : tabs.filter((tab) => resolvedTabVisibility[tab.id] !== false)),
-    [isEditMode, tabs, resolvedTabVisibility]
+    [isEditMode, tabs, resolvedTabVisibility],
   );
 
   const resolvedActiveTab: TabType = visibleTabs.some((tab) => tab.id === activeTab)
@@ -95,7 +93,9 @@ export function useLibraryTabNavigation(options: {
       if (!onTabVisibilityChange) return;
       const current = resolvedTabVisibility[tabId] !== false;
       if (current) {
-        const currentlyVisibleCount = Object.values(resolvedTabVisibility).filter((v) => v !== false).length;
+        const currentlyVisibleCount = Object.values(resolvedTabVisibility).filter(
+          (v) => v !== false,
+        ).length;
         if (currentlyVisibleCount <= 1) return;
       }
       onTabVisibilityChange({
@@ -103,7 +103,7 @@ export function useLibraryTabNavigation(options: {
         [tabId]: !current,
       });
     },
-    [onTabVisibilityChange, resolvedTabVisibility]
+    [onTabVisibilityChange, resolvedTabVisibility],
   );
 
   const navigationTabs = useMemo((): LibraryNavTab[] => {
@@ -125,12 +125,12 @@ export function useLibraryTabNavigation(options: {
                 handleToggleTabVisibility(tab.id);
               }}
               label={`${visibleOutsideEdit ? 'Hide' : 'Show'} ${tab.label} tab when not editing`}
-              className="min-h-[44px] min-w-[44px] shrink-0 -mr-1"
+              className="-mr-1 min-h-[44px] min-w-[44px] shrink-0"
             >
               {visibleOutsideEdit ? (
-                <Eye className="w-4 h-4" />
+                <Eye className="h-4 w-4" />
               ) : (
-                <EyeOff className="w-4 h-4 text-text-muted dark:text-text-secondary" />
+                <EyeOff className="h-4 w-4 text-text-muted" />
               )}
             </IconButton>
           ) : undefined,

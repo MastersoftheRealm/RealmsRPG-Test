@@ -9,6 +9,7 @@ import type { Character } from '@/types';
 import { apiFetch, apiFetchOrNull } from '@/lib/api-client';
 import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
 import type { GetCharacterResult, LibraryForView } from '@/services/character-service';
+import type { CharacterViewEnrichment } from '@/lib/character-view-enrichment';
 
 const API_BASE = '/api/campaigns';
 
@@ -42,14 +43,16 @@ export async function getCampaign(campaignId: string): Promise<Campaign | null> 
 export async function getCampaignCharacterForView(
   campaignId: string,
   userId: string,
-  characterId: string
+  characterId: string,
 ): Promise<GetCharacterResult> {
-  const data = await apiFetch<Character & { libraryForView?: LibraryForView }>(
+  const data = await apiFetch<
+    Character & { libraryForView?: LibraryForView; enrichment?: CharacterViewEnrichment }
+  >(
     `${API_BASE}/${encodeURIComponent(campaignId)}/characters/${encodeURIComponent(userId)}/${encodeURIComponent(characterId)}`,
-    { cache: 'no-store' }
+    { cache: 'no-store' },
   );
-  const { libraryForView, ...character } = data;
-  return { character, libraryForView };
+  const { libraryForView, enrichment, ...character } = data;
+  return { character, libraryForView, enrichment };
 }
 
 /**
@@ -60,21 +63,23 @@ export async function getCampaignCharacterForEncounter(
   campaignId: string,
   userId: string,
   characterId: string,
-  init?: RequestInit
+  init?: RequestInit,
 ): Promise<CampaignCharacterEncounterData | null> {
   return apiFetchOrNull<CampaignCharacterEncounterData>(
     `${API_BASE}/${encodeURIComponent(campaignId)}/characters/${encodeURIComponent(userId)}/${encodeURIComponent(characterId)}?scope=encounter`,
-    { ...init, cache: 'no-store' }
+    { ...init, cache: 'no-store' },
   );
 }
 
 /**
  * Look up a campaign by invite code (for join flow).
  */
-export async function getCampaignByInviteCode(inviteCode: string): Promise<{ id: string; name: string } | null> {
+export async function getCampaignByInviteCode(
+  inviteCode: string,
+): Promise<{ id: string; name: string } | null> {
   const code = normalizeInviteCodeInput(inviteCode);
   if (!isValidInviteCodeFormat(code)) return null;
   return apiFetchOrNull<{ id: string; name: string }>(
-    `${API_BASE}/invite/${encodeURIComponent(code)}`
+    `${API_BASE}/invite/${encodeURIComponent(code)}`,
   );
 }

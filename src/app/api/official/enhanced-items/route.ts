@@ -54,7 +54,7 @@ const enhancedPatchBodySchema = z
 function computeEnhancedPricing(
   powerEnergy: number,
   usesType: 'full' | 'partial' | 'permanent',
-  usesCount?: number
+  usesCount?: number,
 ): { currencyCost: number; rarity: string } | null {
   const rules = getGameRulesFallback().CRAFTING;
   const idx = getMultipleUseIndex(rules, usesType, usesCount);
@@ -71,13 +71,13 @@ function computeEnhancedPricing(
 function getMultipleUseIndex(
   rules: ReturnType<typeof getGameRulesFallback>['CRAFTING'],
   usesType: 'full' | 'partial' | 'permanent',
-  usesCount?: number
+  usesCount?: number,
 ): number {
   const table = rules.multipleUseTable ?? [];
 
   if (usesType === 'permanent') {
     return table.findIndex(
-      (row) => row.partialRecovery === 'permanent' && row.fullRecovery === 'permanent'
+      (row) => row.partialRecovery === 'permanent' && row.fullRecovery === 'permanent',
     );
   }
 
@@ -85,12 +85,12 @@ function getMultipleUseIndex(
 
   if (usesType === 'full') {
     return table.findIndex(
-      (row) => typeof row.fullRecovery === 'number' && row.fullRecovery === usesCount
+      (row) => typeof row.fullRecovery === 'number' && row.fullRecovery === usesCount,
     );
   }
 
   return table.findIndex(
-    (row) => typeof row.partialRecovery === 'number' && row.partialRecovery === usesCount
+    (row) => typeof row.partialRecovery === 'number' && row.partialRecovery === usesCount,
   );
 }
 
@@ -105,7 +105,7 @@ export async function GET() {
     const { data, error } = await supabase
       .from('official_enhanced_items')
       .select(
-        'id, name, description, currency_cost, rarity, base_item_source, base_item_id, base_item_name, base_item_description, power_source, power_id, power_name, uses_type, uses_count, payload, created_at, updated_at'
+        'id, name, description, currency_cost, rarity, base_item_source, base_item_id, base_item_name, base_item_description, power_source, power_id, power_name, uses_type, uses_count, payload, created_at, updated_at',
       )
       .order('updated_at', { ascending: false });
 
@@ -114,7 +114,7 @@ export async function GET() {
         'Failed to load official enhanced items',
         500,
         'GET /api/official/enhanced-items',
-        error
+        error,
       );
     }
 
@@ -124,7 +124,7 @@ export async function GET() {
       'Failed to load official enhanced items',
       500,
       'GET /api/official/enhanced-items',
-      err
+      err,
     );
   }
 }
@@ -144,7 +144,7 @@ export async function POST(req: NextRequest) {
     if (!pricing) {
       return NextResponse.json(
         { error: 'No enhanced crafting row found for this energy' },
-        { status: 400 }
+        { status: 400 },
       );
     }
     const { currencyCost, rarity } = pricing;
@@ -163,7 +163,7 @@ export async function POST(req: NextRequest) {
       power_id: parsed.powerId,
       power_name: parsed.powerName,
       uses_type: parsed.usesType,
-      uses_count: parsed.usesType === 'permanent' ? null : parsed.usesCount ?? 1,
+      uses_count: parsed.usesType === 'permanent' ? null : (parsed.usesCount ?? 1),
       payload: parsed.payload ?? {},
     });
 
@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
         'Failed to create enhanced item',
         500,
         'POST /api/official/enhanced-items (insert)',
-        error
+        error,
       );
     }
 
@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
       'Failed to create enhanced item',
       500,
       'POST /api/official/enhanced-items',
-      err
+      err,
     );
   }
 }
@@ -215,7 +215,7 @@ export async function PATCH(req: NextRequest) {
         'Failed to update enhanced item',
         500,
         'PATCH /api/official/enhanced-items (load)',
-        loadError
+        loadError,
       );
     }
     if (!current) {
@@ -237,7 +237,7 @@ export async function PATCH(req: NextRequest) {
     if (body.powerName !== undefined) updates.power_name = body.powerName;
     if (body.usesType !== undefined) {
       updates.uses_type = body.usesType;
-      updates.uses_count = body.usesType === 'permanent' ? null : body.usesCount ?? null;
+      updates.uses_count = body.usesType === 'permanent' ? null : (body.usesCount ?? null);
     } else if (body.usesCount !== undefined) {
       updates.uses_count = body.usesCount;
     }
@@ -249,30 +249,27 @@ export async function PATCH(req: NextRequest) {
       const usesType = body.usesType ?? (current.uses_type as 'full' | 'partial' | 'permanent');
       const usesCount =
         body.usesType !== undefined
-          ? body.usesCount ?? undefined
-          : (current.uses_count as number | null) ?? undefined;
+          ? (body.usesCount ?? undefined)
+          : ((current.uses_count as number | null) ?? undefined);
       const pricing = computeEnhancedPricing(body.powerEnergy, usesType, usesCount);
       if (!pricing) {
         return NextResponse.json(
           { error: 'No enhanced crafting row found for this energy' },
-          { status: 400 }
+          { status: 400 },
         );
       }
       updates.currency_cost = pricing.currencyCost;
       updates.rarity = pricing.rarity;
     }
 
-    const { error } = await supabase
-      .from('official_enhanced_items')
-      .update(updates)
-      .eq('id', id);
+    const { error } = await supabase.from('official_enhanced_items').update(updates).eq('id', id);
 
     if (error) {
       return apiErrorResponse(
         'Failed to update enhanced item',
         500,
         'PATCH /api/official/enhanced-items (update)',
-        error
+        error,
       );
     }
 
@@ -282,7 +279,7 @@ export async function PATCH(req: NextRequest) {
       'Failed to update enhanced item',
       500,
       'PATCH /api/official/enhanced-items',
-      err
+      err,
     );
   }
 }
@@ -304,17 +301,14 @@ export async function DELETE(req: NextRequest) {
     }
 
     const supabase = await createClient();
-    const { error } = await supabase
-      .from('official_enhanced_items')
-      .delete()
-      .eq('id', id);
+    const { error } = await supabase.from('official_enhanced_items').delete().eq('id', id);
 
     if (error) {
       return apiErrorResponse(
         'Failed to delete enhanced item',
         500,
         'DELETE /api/official/enhanced-items',
-        error
+        error,
       );
     }
 
@@ -324,8 +318,7 @@ export async function DELETE(req: NextRequest) {
       'Failed to delete enhanced item',
       500,
       'DELETE /api/official/enhanced-items',
-      err
+      err,
     );
   }
 }
-

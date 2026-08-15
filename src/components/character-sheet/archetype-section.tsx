@@ -17,27 +17,42 @@ import {
 import { calculateBonuses, calculateScoreFromBonus } from '@/lib/game/calculations';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { useRollsOptional } from '@/components/rolls';
-import { EditSectionToggle, RollButton, SectionHeader, PoweredMartialSlider, DecrementButton, IncrementButton } from '@/components/shared';
+import {
+  EditSectionToggle,
+  RollButton,
+  SectionHeader,
+  PoweredMartialSlider,
+  DecrementButton,
+  IncrementButton,
+} from '@/components/shared';
 import { TableScroll } from '@/components/ui';
 import type { Character, Abilities, Item } from '@/types';
 import type { EnrichedItem } from '@/lib/data-enrichment';
-import { QuickArmorTable, QuickShieldsTable, QuickWeaponsTable, QUICK_WEAPON_COL, type QuickArmamentItem } from '@/components/shared';
+import {
+  QuickArmorTable,
+  QuickShieldsTable,
+  QuickWeaponsTable,
+  QUICK_WEAPON_COL,
+  type QuickArmamentItem,
+} from '@/components/shared';
 import { Card, DescriptorChip } from '@/components/ui';
 import { profPointsDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
 
 function toQuickArmamentItems(items: Array<EnrichedItem | Item>): QuickArmamentItem[] {
   return items.map((item) => {
     const rawProps = 'properties' in item ? item.properties : undefined;
-    const properties = rawProps?.map((prop): QuickArmamentItem['properties'] extends (infer U)[] | undefined ? U : never => {
-      if (typeof prop === 'string') return prop;
-      const op1 =
-        'op_1_lvl' in prop && typeof prop.op_1_lvl === 'number' ? prop.op_1_lvl : undefined;
-      return {
-        id: typeof prop.id === 'number' ? prop.id : undefined,
-        name: prop.name,
-        ...(op1 !== undefined ? { op_1_lvl: op1 } : {}),
-      };
-    });
+    const properties = rawProps?.map(
+      (prop): QuickArmamentItem['properties'] extends (infer U)[] | undefined ? U : never => {
+        if (typeof prop === 'string') return prop;
+        const op1 =
+          'op_1_lvl' in prop && typeof prop.op_1_lvl === 'number' ? prop.op_1_lvl : undefined;
+        return {
+          id: typeof prop.id === 'number' ? prop.id : undefined,
+          name: prop.name,
+          ...(op1 !== undefined ? { op_1_lvl: op1 } : {}),
+        };
+      },
+    );
 
     return {
       id: item.id,
@@ -93,65 +108,83 @@ function AttackBonusesTable({
   };
 
   // Power bonus defaults to Charisma when the path has no Power Ability.
-  const powAbilDisplayName = powerAbility 
+  const powAbilDisplayName = powerAbility
     ? powerAbility.charAt(0).toUpperCase() + powerAbility.slice(1).toLowerCase()
     : 'Charisma';
-  
+
   const powerBonus = bonuses.powerAttack;
 
   return (
-    <div className="bg-surface-alt rounded-lg p-3 mb-4">
+    <div className="mb-4 rounded-lg bg-surface-alt p-3">
       <SectionHeader title="Attack Bonuses" className="mb-2" />
       <TableScroll>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="text-xs text-text-muted dark:text-text-secondary">
-            <th className="text-left py-1"></th>
-            <th className="text-center py-1">Prof.</th>
-            <th className="text-center py-1">Unprof.</th>
-          </tr>
-        </thead>
-        <tbody>
-          {/* Martial rows - always show for unproficient attacks */}
-          {(['strength', 'agility', 'acuity'] as const).map((key) => (
-            <tr key={key}>
-              <td className="py-1 font-medium text-text-secondary capitalize">⚔️ {key}</td>
-              <td className="text-center py-1">
-                {onRollBonus ? (
-                  <RollButton
-                    value={martialBonuses[key].prof}
-                    onClick={() => onRollBonus(`${key.charAt(0).toUpperCase() + key.slice(1)} Attack`, martialBonuses[key].prof)}
-                    size="sm"
-                    title={`Roll ${key} (proficient)`}
-                  />
-                ) : (
-                  <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{martialBonuses[key].prof >= 0 ? '+' : ''}{martialBonuses[key].prof}</span>
-                )}
-              </td>
-              <td className="text-center py-1">
-                {onRollBonus ? (
-                  <RollButton
-                    value={martialBonuses[key].unprof}
-                    variant="unproficient"
-                    onClick={() => onRollBonus(`${key.charAt(0).toUpperCase() + key.slice(1)} Attack`, martialBonuses[key].unprof)}
-                    size="sm"
-                    title={`Roll ${key} (unproficient)`}
-                  />
-                ) : (
-                  <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{martialBonuses[key].unprof >= 0 ? '+' : ''}{martialBonuses[key].unprof}</span>
-                )}
-              </td>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-xs text-text-muted">
+              <th className="py-1 text-left"></th>
+              <th className="py-1 text-center">Prof.</th>
+              <th className="py-1 text-center">Unprof.</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {/* Martial rows - always show for unproficient attacks */}
+            {(['strength', 'agility', 'acuity'] as const).map((key) => (
+              <tr key={key}>
+                <td className="py-1 font-medium text-text-secondary capitalize">⚔️ {key}</td>
+                <td className="py-1 text-center">
+                  {onRollBonus ? (
+                    <RollButton
+                      value={martialBonuses[key].prof}
+                      onClick={() =>
+                        onRollBonus(
+                          `${key.charAt(0).toUpperCase() + key.slice(1)} Attack`,
+                          martialBonuses[key].prof,
+                        )
+                      }
+                      size="sm"
+                      title={`Roll ${key} (proficient)`}
+                    />
+                  ) : (
+                    <span className="text-sm font-medium text-text-muted">
+                      {martialBonuses[key].prof >= 0 ? '+' : ''}
+                      {martialBonuses[key].prof}
+                    </span>
+                  )}
+                </td>
+                <td className="py-1 text-center">
+                  {onRollBonus ? (
+                    <RollButton
+                      value={martialBonuses[key].unprof}
+                      variant="unproficient"
+                      onClick={() =>
+                        onRollBonus(
+                          `${key.charAt(0).toUpperCase() + key.slice(1)} Attack`,
+                          martialBonuses[key].unprof,
+                        )
+                      }
+                      size="sm"
+                      title={`Roll ${key} (unproficient)`}
+                    />
+                  ) : (
+                    <span className="text-sm font-medium text-text-muted">
+                      {martialBonuses[key].unprof >= 0 ? '+' : ''}
+                      {martialBonuses[key].unprof}
+                    </span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </TableScroll>
-      
+
       {/* Power Attack Bonus - separate section, full width, no unprof */}
       {powerProf > 0 && (
-        <div className="mt-3 pt-3 border-t border-border-light">
+        <div className="mt-3 border-t border-border-light pt-3">
           <div className="flex items-center justify-between">
-            <span className="font-medium text-text-secondary">✨ Power Attack ({powAbilDisplayName})</span>
+            <span className="font-medium text-text-secondary">
+              ✨ Power Attack ({powAbilDisplayName})
+            </span>
             {onRollBonus ? (
               <RollButton
                 value={powerBonus.prof}
@@ -160,7 +193,10 @@ function AttackBonusesTable({
                 title={`Roll power attack - ${powAbilDisplayName}`}
               />
             ) : (
-              <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{powerBonus.prof >= 0 ? '+' : ''}{powerBonus.prof}</span>
+              <span className="text-sm font-medium text-text-muted">
+                {powerBonus.prof >= 0 ? '+' : ''}
+                {powerBonus.prof}
+              </span>
             )}
           </div>
         </div>
@@ -172,12 +208,12 @@ function AttackBonusesTable({
 // Unarmed Prowess damage: proficient = Ability + Martial Proficiency + dice (dice only at prowess 2+)
 // Level 1: full Attack Bonus (no dice). Level 2+: dice + Attack Bonus.
 const UNARMED_PROWESS_DAMAGE: { level: number; damage: string | null }[] = [
-  { level: 0, damage: null },     // Unproficient - half ability, no bonus
-  { level: 1, damage: null },     // Prowess I — damage = Attack Bonus (no dice)
-  { level: 2, damage: '1d2' },   // Prowess II (Lv 4)
-  { level: 3, damage: '1d4' },   // Prowess III (Lv 8)
-  { level: 4, damage: '1d6' },   // Prowess IV (Lv 12)
-  { level: 5, damage: '1d8' },   // Prowess V (Lv 16+)
+  { level: 0, damage: null }, // Unproficient - half ability, no bonus
+  { level: 1, damage: null }, // Prowess I — damage = Attack Bonus (no dice)
+  { level: 2, damage: '1d2' }, // Prowess II (Lv 4)
+  { level: 3, damage: '1d4' }, // Prowess III (Lv 8)
+  { level: 4, damage: '1d6' }, // Prowess IV (Lv 12)
+  { level: 5, damage: '1d8' }, // Prowess V (Lv 16+)
 ];
 
 // Weapons Section - displays equipped weapons with attack/damage rolls
@@ -197,29 +233,29 @@ function WeaponsSection({
   enrichedWeapons?: EnrichedItem[];
 }) {
   const abilities = character.abilities || {};
-  
+
   // Use enriched weapons if available, fallback to raw character equipment
-  const weapons = enrichedWeapons || (character.equipment?.weapons || []) as Item[];
-  const equippedWeapons = weapons.filter(w => w.equipped);
-  
+  const weapons = enrichedWeapons || ((character.equipment?.weapons || []) as Item[]);
+  const equippedWeapons = weapons.filter((w) => w.equipped);
+
   // Unarmed prowess uses STR or AGI (whichever is higher)
   const str = abilities.strength ?? 0;
   const agi = abilities.agility ?? 0;
   const unarmedAbility = Math.max(str, agi);
-  
+
   // Attack Bonus: proficient = Ability + Martial Proficiency; unproficient =
   // unproficientBonus (T2 / formulas.test.ts). Do not hand-roll floor() or max(1,…).
   const hasProwess = unarmedProwess > 0;
   const unarmedAttackBonus = hasProwess
     ? unarmedAbility + martialProf
     : unproficientBonus(unarmedAbility);
-  
+
   // Damage equals the Attack Bonus, plus dice from Prowess II upward.
   const prowessData = UNARMED_PROWESS_DAMAGE[unarmedProwess] || UNARMED_PROWESS_DAMAGE[0];
-  const unarmedDamageDisplay = hasProwess 
-    ? (prowessData.damage 
-        ? `${prowessData.damage} + ${unarmedAttackBonus}` 
-        : String(unarmedAttackBonus)) // Prowess I: full Attack Bonus, no dice
+  const unarmedDamageDisplay = hasProwess
+    ? prowessData.damage
+      ? `${prowessData.damage} + ${unarmedAttackBonus}`
+      : String(unarmedAttackBonus) // Prowess I: full Attack Bonus, no dice
     : String(unarmedAttackBonus);
 
   // Same QUICK_WEAPON_COL cells as weapon rows so Name/Range/Attack/Damage stay aligned.
@@ -239,7 +275,10 @@ function WeaponsSection({
             title={`Roll unarmed attack (${hasProwess ? 'proficient' : 'unproficient'})`}
           />
         ) : (
-          <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{unarmedAttackBonus >= 0 ? '+' : ''}{unarmedAttackBonus}</span>
+          <span className="text-sm font-medium text-text-muted">
+            {unarmedAttackBonus >= 0 ? '+' : ''}
+            {unarmedAttackBonus}
+          </span>
         )}
       </td>
       <td className={QUICK_WEAPON_COL.damageTd}>
@@ -251,31 +290,32 @@ function WeaponsSection({
               variant={hasProwess ? 'danger' : 'unproficient'}
               onClick={() => {
                 // Roll expects dice pattern; at prowess 1 damage is Attack Bonus only (no dice)
-                const rollStr = hasProwess && !prowessData.damage
-                  ? `0d4 Bludgeoning`
-                  : `${unarmedDamageDisplay} Bludgeoning`;
+                const rollStr =
+                  hasProwess && !prowessData.damage
+                    ? `0d4 Bludgeoning`
+                    : `${unarmedDamageDisplay} Bludgeoning`;
                 onRollDamage(rollStr, unarmedAttackBonus);
               }}
               size="sm"
               title="Roll unarmed damage"
             />
           ) : (
-            <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{unarmedDamageDisplay}</span>
+            <span className="text-sm font-medium text-text-muted">{unarmedDamageDisplay}</span>
           )}
-          <span className="text-[10px] text-text-muted dark:text-text-secondary">Bludgeoning</span>
+          <span className="text-[10px] text-text-muted">Bludgeoning</span>
         </div>
       </td>
     </tr>
   );
 
   return (
-    <div className="bg-surface-alt rounded-lg p-3 mb-4">
+    <div className="mb-4 rounded-lg bg-surface-alt p-3">
       <QuickWeaponsTable
         items={toQuickArmamentItems(equippedWeapons)}
         abilities={abilities}
         martialProf={martialProf}
         filterEquipped={false}
-        className="bg-transparent p-0 mb-0"
+        className="mb-0 bg-transparent p-0"
         trailingRows={unarmedRow}
       />
     </div>
@@ -295,8 +335,8 @@ function ShieldsSection({
   enrichedShields?: EnrichedItem[];
 }) {
   const abilities = character.abilities || {};
-  const shields = enrichedShields || (character.equipment?.shields || []) as Item[];
-  const equippedShields = shields.filter(s => s.equipped);
+  const shields = enrichedShields || ((character.equipment?.shields || []) as Item[]);
+  const equippedShields = shields.filter((s) => s.equipped);
 
   return (
     <QuickShieldsTable
@@ -317,11 +357,13 @@ function ArmorSection({
   enrichedArmor?: EnrichedItem[];
 }) {
   const abilities = character.abilities || {};
-  
+
   // Use enriched armor if available, fallback to raw character equipment
-  const armor = enrichedArmor || (character.equipment?.armor || character.armor || []) as Item[];
+  const armor = enrichedArmor || ((character.equipment?.armor || character.armor || []) as Item[]);
   const armorArray = Array.isArray(armor) ? armor : [armor].filter(Boolean);
-  const equippedArmor = armorArray.filter((a): a is Item => a !== null && a !== undefined && (a as Item).equipped === true);
+  const equippedArmor = armorArray.filter(
+    (a): a is Item => a !== null && a !== undefined && (a as Item).equipped === true,
+  );
 
   return (
     <QuickArmorTable
@@ -348,7 +390,7 @@ export function ArchetypeSection({
   const powerProf = character.pow_prof ?? character.powerProficiency ?? 0;
   const rollContext = useRollsOptional();
   const { rules } = useGameRules();
-  
+
   // Local state for whether this section is actively being edited
   const [isSectionEditing, setIsSectionEditing] = useState(false);
   // Optional manual max above level-derived total (homebrew); floor is always level-based
@@ -366,15 +408,15 @@ export function ArchetypeSection({
 
   // Derived state: is the section actually editable right now?
   const showEditControls = isEditMode && isSectionEditing;
-  
+
   // Determine archetype type for milestone UI
   const archetypeType = getArchetypeType(martialProf, powerProf);
   const milestoneLevels = getArchetypeMilestoneLevels(level, rules);
   const archetypeChoices = character.archetypeChoices || {};
-  
+
   // Three-state color for proficiency points
   const profPointsVariant = profPointsDescriptorVariant(remainingProfPoints);
-  
+
   // Potency = Bonus + 10 (GAME_RULES "The Score Pattern").
   const powAbilName = character.pow_abil?.toLowerCase() || 'charisma';
   const martAbilName = character.mart_abil?.toLowerCase() || 'strength';
@@ -382,12 +424,12 @@ export function ArchetypeSection({
   const martAbilValue = character.abilities?.[martAbilName as keyof Abilities] ?? 0;
   const powerPotency = calculateScoreFromBonus(powerProf + powAbilValue, rules);
   const martialPotency = calculateScoreFromBonus(martialProf + martAbilValue, rules);
-  
+
   // Handle attack bonus roll
   const handleRollBonus = (name: string, bonus: number) => {
     rollContext?.rollAttack(name, bonus);
   };
-  
+
   // Handle damage roll
   const handleRollDamage = (damageStr: string, bonus: number) => {
     rollContext?.rollDamage?.(damageStr, bonus);
@@ -401,19 +443,19 @@ export function ArchetypeSection({
   };
 
   return (
-    <Card className={cn('shadow-md p-4 md:p-6 relative', className)}>
+    <Card className={cn('relative p-4 shadow-md md:p-6', className)}>
       {/* Edit Mode Indicator - Blue Pencil Icon in top-right */}
       {isEditMode && (
         <div className="absolute top-3 right-3">
-          <EditSectionToggle 
+          <EditSectionToggle
             state={getEditState()}
             isActive={isSectionEditing}
-            onClick={() => setIsSectionEditing(prev => !prev)}
+            onClick={() => setIsSectionEditing((prev) => !prev)}
             title={
               isSectionEditing
                 ? 'Click to close editing'
-                : getEditState() === 'has-points' 
-                  ? 'Click to edit - you have proficiency points to spend' 
+                : getEditState() === 'has-points'
+                  ? 'Click to edit - you have proficiency points to spend'
                   : getEditState() === 'over-budget'
                     ? 'Click to edit - over budget, remove proficiency points'
                     : 'Click to edit archetype'
@@ -421,12 +463,10 @@ export function ArchetypeSection({
           />
         </div>
       )}
-      
+
       {/* Archetype Header - no subtext (Power/Martial implied) */}
       <div className="mb-4">
-        <h2 className="text-lg font-bold text-text-primary">
-          Archetype & Attacks
-        </h2>
+        <h2 className="text-lg font-bold text-text-primary">Archetype & Attacks</h2>
       </div>
 
       {/* Proficiencies - show slider only when editing; simple values otherwise */}
@@ -446,7 +486,7 @@ export function ArchetypeSection({
             />
           </div>
           {/* Proficiency Points Display - steppers change max only; three-state coloring for pencil */}
-          <div className="mb-4 flex justify-center items-center gap-2">
+          <div className="mb-4 flex items-center justify-center gap-2">
             <DecrementButton
               onClick={() => {
                 if (totalProfPoints <= levelBasedMax) return;
@@ -461,64 +501,72 @@ export function ArchetypeSection({
               {remainingProfPoints} / {totalProfPoints} prof. points
             </DescriptorChip>
             <IncrementButton
-              onClick={() =>
-                setMaxProfOverride(Math.min(12, totalProfPoints + 1))
-              }
+              onClick={() => setMaxProfOverride(Math.min(12, totalProfPoints + 1))}
               size="sm"
               title="Increase max prof points above level-based total"
             />
           </div>
         </>
       ) : null}
-      
+
       {/* Archetype stats: one row per type (Power, Martial) — Prof and Potency on same line, same style/size */}
       {(powerProf > 0 || martialProf > 0) && !showEditControls && (
-        <div className="flex gap-3 mb-4">
+        <div className="mb-4 flex gap-3">
           {powerProf > 0 && (
-            <div className={cn(
-              'flex-1 rounded-lg px-3 py-2 flex flex-col gap-0.5 min-w-0',
-              'bg-power-light'
-            )}>
+            <div
+              className={cn(
+                'flex min-w-0 flex-1 flex-col gap-0.5 rounded-lg px-3 py-2',
+                'bg-power-light',
+              )}
+            >
               <span className="text-sm font-medium text-power-fg">Power</span>
-              <span className="text-sm text-power-fg" title="Prof: proficiency bonus · Potency: 10 + Prof + Ability">
+              <span
+                className="text-sm text-power-fg"
+                title="Prof: proficiency bonus · Potency: 10 + Prof + Ability"
+              >
                 Prof +{powerProf} · Potency {powerPotency}
               </span>
             </div>
           )}
           {martialProf > 0 && (
-            <div className={cn(
-              'flex-1 rounded-lg px-3 py-2 flex flex-col gap-0.5 min-w-0',
-              'bg-martial-light'
-            )}>
+            <div
+              className={cn(
+                'flex min-w-0 flex-1 flex-col gap-0.5 rounded-lg px-3 py-2',
+                'bg-martial-light',
+              )}
+            >
               <span className="text-sm font-medium text-martial-fg">Martial</span>
-              <span className="text-sm text-martial-fg" title="Prof: proficiency bonus · Potency: 10 + Prof + Ability">
+              <span
+                className="text-sm text-martial-fg"
+                title="Prof: proficiency bonus · Potency: 10 + Prof + Ability"
+              >
                 Prof +{martialProf} · Potency {martialPotency}
               </span>
             </div>
           )}
         </div>
       )}
-      
+
       {/* Mixed Archetype Milestone Choices — edit mode only */}
       {archetypeType === 'powered-martial' && milestoneLevels.length > 0 && showEditControls && (
-        <div className="mb-4 p-3 bg-gradient-to-r from-warning-light to-power-light border border-warning-border rounded-lg">
+        <div className="mb-4 rounded-lg border border-warning-border bg-gradient-to-r from-warning-light to-power-light p-3">
           <SectionHeader title="Milestone Choices" className="mb-2" />
           <div className="flex flex-wrap gap-2">
             {milestoneLevels.map((milestoneLevel) => {
               const currentChoice = archetypeChoices[milestoneLevel];
               return (
                 <div key={milestoneLevel} className="flex items-center gap-1">
-                  <span className="text-xs text-text-muted dark:text-text-secondary min-w-[32px]">Lv.{milestoneLevel}:</span>
+                  <span className="min-w-[32px] text-xs text-text-muted">Lv.{milestoneLevel}:</span>
                   {onMilestoneChoiceChange ? (
                     <div className="flex gap-1">
                       <button
                         type="button"
                         onClick={() => onMilestoneChoiceChange(milestoneLevel, 'innate')}
                         className={cn(
-                          'px-2 py-0.5 text-xs rounded transition-colors',
+                          'rounded px-2 py-0.5 text-xs transition-colors',
                           currentChoice === 'innate'
                             ? 'bg-power-dark text-text-on-dark'
-                            : 'bg-power-light text-power-fg hover:bg-power-border/30'
+                            : 'bg-power-light text-power-fg hover:bg-power-border/30',
                         )}
                         title="Increase Innate Power: Threshold 6→8 (then +1), and +1 Innate Pool"
                       >
@@ -528,10 +576,10 @@ export function ArchetypeSection({
                         type="button"
                         onClick={() => onMilestoneChoiceChange(milestoneLevel, 'feat')}
                         className={cn(
-                          'px-2 py-0.5 text-xs rounded transition-colors',
+                          'rounded px-2 py-0.5 text-xs transition-colors',
                           currentChoice === 'feat'
                             ? 'bg-martial-dark text-text-on-dark'
-                            : 'bg-martial-light text-martial-fg hover:bg-martial-border/30'
+                            : 'bg-martial-light text-martial-fg hover:bg-martial-border/30',
                         )}
                         title="Gain +1 Bonus Archetype Feat"
                       >
@@ -543,13 +591,13 @@ export function ArchetypeSection({
               );
             })}
           </div>
-          <p className="text-[10px] text-text-muted dark:text-text-secondary mt-2">
+          <p className="mt-2 text-[10px] text-text-muted">
             Mixed archetypes choose at levels 4, 7, 10, etc.: Increase Innate Power (6→8, then +1;
             +1 Pool) OR Additional Feat
           </p>
         </div>
       )}
-      
+
       {/* Unarmed Prowess Display - show if character has unarmed prowess */}
       {/* Attack Bonuses Table */}
       {character.abilities && (

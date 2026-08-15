@@ -25,7 +25,7 @@ export function useGuidedPathData(): {
       return { archetype: undefined, pathData: undefined, isLoading: false };
     }
     const archetype = (codexArchetypes as Archetype[]).find(
-      (a) => String(a.id) === String(archetypePathId)
+      (a) => String(a.id) === String(archetypePathId),
     );
     if (!archetype) {
       return { archetype: undefined, pathData: undefined, isLoading };

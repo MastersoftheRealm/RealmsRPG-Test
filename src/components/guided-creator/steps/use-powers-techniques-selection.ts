@@ -91,9 +91,7 @@ export function usePowersTechniquesSelection({
     (ids: string[], id: string) => {
       const resolved = resolveLibraryItem(id, lookup);
       const key = String(id).toLowerCase();
-      const canonical = resolved
-        ? String(resolved.id ?? resolved.name ?? '').toLowerCase()
-        : key;
+      const canonical = resolved ? String(resolved.id ?? resolved.name ?? '').toLowerCase() : key;
       const nameKey = resolved ? String(resolved.name ?? '').toLowerCase() : '';
       return ids.filter((x) => {
         const sx = String(x).toLowerCase();
@@ -119,9 +117,7 @@ export function usePowersTechniquesSelection({
         didSeedInnate.current = true;
       } else {
         const regularKeys = new Set(selectedIds.map((id) => normalizeId(id)));
-        const innatePool = innateRecommendedIds.filter(
-          (id) => !regularKeys.has(normalizeId(id)),
-        );
+        const innatePool = innateRecommendedIds.filter((id) => !regularKeys.has(normalizeId(id)));
         const seed = pickInnateFillIds(
           innatePool,
           resolveEnergy,
@@ -201,13 +197,7 @@ export function usePowersTechniquesSelection({
     );
     if (nextRegular.length === draft.powerIds.length) return;
     updateDraft({ powerIds: nextRegular });
-  }, [
-    showInnateTrack,
-    draft.innatePowerIds,
-    draft.powerIds,
-    isSelectedId,
-    updateDraft,
-  ]);
+  }, [showInnateTrack, draft.innatePowerIds, draft.powerIds, isSelectedId, updateDraft]);
 
   const toggleRegularId = useCallback(
     (id: string) => {
@@ -220,7 +210,9 @@ export function usePowersTechniquesSelection({
         }
         const addTp = resolveTpCost(key);
         const othersSpent = draft.techniqueIds.reduce((sum, x) => sum + resolveTpCost(x), 0);
-        if (wouldExceedSharedTp(loadoutTpSpent + siblingTpSpent + othersSpent, loadoutTpLimit, addTp)) {
+        if (
+          wouldExceedSharedTp(loadoutTpSpent + siblingTpSpent + othersSpent, loadoutTpLimit, addTp)
+        ) {
           setBudgetMessage(ptCopy.tpBlocked);
           return;
         }
@@ -236,7 +228,9 @@ export function usePowersTechniquesSelection({
       const othersSpent =
         draft.powerIds.reduce((sum, x) => sum + resolveTpCost(x), 0) +
         draft.innatePowerIds.reduce((sum, x) => sum + resolveTpCost(x), 0);
-      if (wouldExceedSharedTp(loadoutTpSpent + siblingTpSpent + othersSpent, loadoutTpLimit, addTp)) {
+      if (
+        wouldExceedSharedTp(loadoutTpSpent + siblingTpSpent + othersSpent, loadoutTpLimit, addTp)
+      ) {
         setBudgetMessage(ptCopy.tpBlocked);
         return;
       }
@@ -311,7 +305,11 @@ export function usePowersTechniquesSelection({
     (id: string) => {
       if (isSelectedId(id, selectedIds)) return false;
       const othersSpent = regularTpSpent + innateTpSpent;
-      return wouldExceedSharedTp(loadoutTpSpent + siblingTpSpent + othersSpent, loadoutTpLimit, resolveTpCost(id));
+      return wouldExceedSharedTp(
+        loadoutTpSpent + siblingTpSpent + othersSpent,
+        loadoutTpLimit,
+        resolveTpCost(id),
+      );
     },
     [
       isSelectedId,

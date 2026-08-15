@@ -36,19 +36,11 @@ export default function CraftingToolPage() {
     );
   }
 
-  const {
-    session,
-    item,
-    customBaseItem,
-    displayName,
-    requirements,
-    effectiveDS,
-    required,
-  } = model;
+  const { session, item, customBaseItem, displayName, requirements, effectiveDS, required } = model;
 
   return (
     <CreatorLayout
-      icon={<Hammer className="w-6 h-6" />}
+      icon={<Hammer className="h-6 w-6" />}
       title={displayName}
       description={
         item || customBaseItem
@@ -58,7 +50,7 @@ export default function CraftingToolPage() {
       actions={
         <Link href="/crafting">
           <Button variant="ghost" size="sm">
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="h-4 w-4" />
             Back to Crafting
           </Button>
         </Link>

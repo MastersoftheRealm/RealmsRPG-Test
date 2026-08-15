@@ -7,11 +7,11 @@
  * Title on left (optional inline collapse chevron beside the name — ListHeader /
  * ExpandableChip style, no circle chrome); optional + button on far right.
  * NO counts, NO backgrounds - just clean text and functionality.
- * 
+ *
  * Based on Equipment tab design (the cleanest current implementation).
- * 
+ *
  * Part of Phase 1 UI Unification: "Learn it once, learn it forever"
- * 
+ *
  * Usage:
  * - Character sheet sections (Powers, Techniques, Weapons, Armor, Equipment, Feats)
  * - Library page sections
@@ -76,8 +76,8 @@ export function SectionHeader({
   onExpandedChange,
 }: SectionHeaderProps) {
   const titleClassName = cn(
-    'font-semibold text-text-muted dark:text-text-secondary uppercase tracking-wide',
-    sizeTextStyles[size]
+    'font-semibold text-text-muted uppercase tracking-wide',
+    sizeTextStyles[size],
   );
   const canCollapse = collapsible && typeof onExpandedChange === 'function';
 
@@ -87,7 +87,7 @@ export function SectionHeader({
         'flex items-center justify-between',
         // Collapsible: modest pb under the title (not full size pad) so stacks stay compact.
         canCollapse ? 'pb-1.5' : sizePadStyles[size],
-        className
+        className,
       )}
     >
       {/* Left: collapse control stays intact; optional help sits beside it, never nested in the button. */}
@@ -99,8 +99,8 @@ export function SectionHeader({
               onClick={() => onExpandedChange(!expanded)}
               className={cn(
                 // Match Button/IconButton: 44px min only on touch; desktop stays compact when collapsed.
-                'inline-flex items-center gap-1.5 text-left hover:text-text-primary transition-colors [@media(pointer:coarse)]:min-h-[44px]',
-                sizeTextStyles[size]
+                'inline-flex items-center gap-1.5 text-left transition-colors hover:text-text-primary [@media(pointer:coarse)]:min-h-[44px]',
+                sizeTextStyles[size],
               )}
               aria-expanded={expanded}
               aria-label={expanded ? `Collapse ${title}` : `Expand ${title}`}
@@ -108,8 +108,8 @@ export function SectionHeader({
               <span>{title}</span>
               <ChevronDown
                 className={cn(
-                  'w-4 h-4 shrink-0 transition-transform duration-base ease-standard',
-                  expanded && 'rotate-180'
+                  'duration-base h-4 w-4 shrink-0 transition-transform ease-standard',
+                  expanded && 'rotate-180',
                 )}
                 aria-hidden
               />
@@ -119,7 +119,9 @@ export function SectionHeader({
           )}
         </h2>
         {titleAddon ? (
-          <span className="inline-flex shrink-0 items-center self-center leading-none">{titleAddon}</span>
+          <span className="inline-flex shrink-0 items-center self-center leading-none">
+            {titleAddon}
+          </span>
         ) : null}
       </div>
 
@@ -133,15 +135,14 @@ export function SectionHeader({
             onClick={onAdd}
             label={addLabel || `Add ${title.toLowerCase()}`}
             className={cn(
-              'text-primary-link-fg hover:text-primary-fg-hover hover:bg-primary-subtle-bg',
-              addButtonClassName
+              'text-primary-link-fg hover:bg-primary-subtle-bg hover:text-primary-fg-hover',
+              addButtonClassName,
             )}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
           </IconButton>
         )}
       </div>
     </div>
   );
 }
-

@@ -12,9 +12,12 @@ import { getSession } from '@/lib/supabase/session';
 import { validateJson, verifyMutationRequest, characterUpdateSchema } from '@/lib/api-validation';
 import { prepareCharacterForSave } from '@/lib/character-save';
 import { applyCharacterDirtyPatch, isStaleCharacterWrite } from '@/lib/character/dirty-patch';
-import { normalizeCharacterForSave, normalizeCharacterOnLoad } from '@/lib/character/schema-normalize';
+import {
+  normalizeCharacterForSave,
+  normalizeCharacterOnLoad,
+} from '@/lib/character/schema-normalize';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
-import { collectCharacterLibraryRefIds, getOwnerLibraryForView } from '@/lib/owner-library-for-view';
+import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
 import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import type { Character } from '@/types';
@@ -41,10 +44,7 @@ function rowToCharacter(row: CharRow): Character {
   } as Character;
 }
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user } = await getSession();
     const { id } = await params;
@@ -72,11 +72,12 @@ export async function GET(
 
     const visibility = resolveCharacterVisibility(charRow);
     if (visibility === 'public') {
-      const libraryForView = await getOwnerLibraryForView(
+      const { libraryForView, enrichment } = await getOwnerLibraryAndEnrichmentForView(
+        supabase,
         charRow.user_id,
-        collectCharacterLibraryRefIds(charRow.data)
+        charRow.data,
       );
-      return NextResponse.json({ character: rowToCharacter(charRow), libraryForView });
+      return NextResponse.json({ character: rowToCharacter(charRow), libraryForView, enrichment });
     }
 
     if (visibility === 'campaign' && user?.uid) {
@@ -85,7 +86,9 @@ export async function GET(
         .select('campaign_id')
         .eq('user_id', user.uid);
       if (memberErr) throw memberErr;
-      const memberCampaignIds = (memberRows ?? []).map((m: { campaign_id: string }) => m.campaign_id);
+      const memberCampaignIds = (memberRows ?? []).map(
+        (m: { campaign_id: string }) => m.campaign_id,
+      );
       const { data: ownedCampaigns, error: ownedErr } = await supabase
         .from('campaigns')
         .select('id')
@@ -101,17 +104,30 @@ export async function GET(
         if (campaignsErr) throw campaignsErr;
         const list = (campaigns ?? []) as { id: string; characters: unknown }[];
         const inCampaign = list.some((c) => {
-          const arr = (c.characters as Array<{ user_id?: string; character_id?: string; userId?: string; characterId?: string }>) ?? [];
+          const arr =
+            (c.characters as Array<{
+              user_id?: string;
+              character_id?: string;
+              userId?: string;
+              characterId?: string;
+            }>) ?? [];
           return arr.some(
-            (cc) => (cc.user_id ?? cc.userId) === charRow.user_id && (cc.character_id ?? cc.characterId) === charRow.id
+            (cc) =>
+              (cc.user_id ?? cc.userId) === charRow.user_id &&
+              (cc.character_id ?? cc.characterId) === charRow.id,
           );
         });
         if (inCampaign) {
-          const libraryForView = await getOwnerLibraryForView(
+          const { libraryForView, enrichment } = await getOwnerLibraryAndEnrichmentForView(
+            supabase,
             charRow.user_id,
-            collectCharacterLibraryRefIds(charRow.data)
+            charRow.data,
           );
-          return NextResponse.json({ character: rowToCharacter(charRow), libraryForView });
+          return NextResponse.json({
+            character: rowToCharacter(charRow),
+            libraryForView,
+            enrichment,
+          });
         }
       }
     }
@@ -123,10 +139,7 @@ export async function GET(
   }
 }
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -134,10 +147,13 @@ export async function PATCH(
     }
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('char-patch', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('char-patch', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id } = await params;
@@ -207,7 +223,7 @@ export async function PATCH(
 
 export async function DELETE(
   _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
     const { user, error } = await getSession();
@@ -219,10 +235,13 @@ export async function DELETE(
     if (denied) return denied;
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('char-del', { userId: user.uid, ip: resolveClientIp(_request.headers) })
+      buildRateLimitKey('char-del', { userId: user.uid, ip: resolveClientIp(_request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id } = await params;
@@ -245,7 +264,9 @@ export async function DELETE(
 
     // Portrait cleanup is best-effort; a storage failure must not block the delete.
     try {
-      const { data: files, error: listErr } = await supabase.storage.from('portraits').list(user.uid);
+      const { data: files, error: listErr } = await supabase.storage
+        .from('portraits')
+        .list(user.uid);
       if (listErr) throw listErr;
       if (files?.length) {
         const toRemove = files

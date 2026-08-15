@@ -4,10 +4,7 @@ import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui';
 import { TempModifierToggle } from '@/components/shared';
 import { tempModifierValueClass } from '@/lib/character/temp-modifiers';
-import {
-  TempModifierStepperRow,
-  useTempModifierActive,
-} from './sheet-temp-modifier-controls';
+import { TempModifierStepperRow, useTempModifierActive } from './sheet-temp-modifier-controls';
 
 /**
  * Large stat block for Speed / Evasion / DR / Critical Range.
@@ -35,13 +32,13 @@ export function LargeStatBlock({
 }) {
   const { tempActive, setTempActive, canTemp, showTempControls } = useTempModifierActive(
     isEditMode,
-    onTempDeltaChange
+    onTempDeltaChange,
   );
 
   return (
-    <Card className="flex flex-col items-center p-4 bg-surface-alt min-w-[100px] shadow-none">
-      <div className="flex items-center gap-1.5 w-full justify-center">
-        <span className="text-sm font-semibold text-text-secondary uppercase tracking-wide text-center">
+    <Card className="flex min-w-[100px] flex-col items-center bg-surface-alt p-4 shadow-none">
+      <div className="flex w-full items-center justify-center gap-1.5">
+        <span className="text-center text-sm font-semibold tracking-wide text-text-secondary uppercase">
           {label}
         </span>
         {canTemp && (
@@ -55,14 +52,14 @@ export function LargeStatBlock({
       </div>
       <span
         className={cn(
-          'text-4xl font-bold mt-1 tabular-nums',
-          tempModifierValueClass(tempDelta) || 'text-text-primary'
+          'mt-1 text-4xl font-bold tabular-nums',
+          tempModifierValueClass(tempDelta) || 'text-text-primary',
         )}
         aria-label={valueAriaLabel}
       >
         {value}
         {valueSuffix ? (
-          <span className="text-xl font-semibold text-text-secondary ml-0.5">{valueSuffix}</span>
+          <span className="ml-0.5 text-xl font-semibold text-text-secondary">{valueSuffix}</span>
         ) : null}
       </span>
 

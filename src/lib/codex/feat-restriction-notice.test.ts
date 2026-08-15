@@ -44,7 +44,7 @@ describe('getFeatRestrictionNotice', () => {
         uses_per_rec: 2,
         rec_period: 'Partial',
       },
-      { omitLimitedUses: true, level: 1 }
+      { omitLimitedUses: true, level: 1 },
     );
     expect(notice).toContain('State feat');
     expect(notice).not.toContain('2 times');
@@ -58,7 +58,7 @@ describe('getFeatRestrictionNotice', () => {
         uses_per_rec: 1,
         rec_period: 'Full',
       },
-      { omitLimitedUses: true }
+      { omitLimitedUses: true },
     );
     expect(notice).toBeNull();
   });

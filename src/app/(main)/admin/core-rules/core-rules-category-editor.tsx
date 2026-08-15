@@ -76,6 +76,6 @@ export function CategoryEditor({
     case 'CRAFTING':
       return <CraftingRulesEditor data={data} set={set} />;
     default:
-      return <p className="text-text-muted dark:text-text-secondary">No editor available for this category.</p>;
+      return <p className="text-text-muted">No editor available for this category.</p>;
   }
 }

@@ -49,7 +49,7 @@ describe('equipment-catalog-rows currency', () => {
           properties: [],
         },
       ],
-      []
+      [],
     );
     expect(catalog.get('rope-1')?.itemCategory).toBe('Adventuring');
   });

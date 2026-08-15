@@ -54,7 +54,10 @@ export async function GET(request: NextRequest) {
     });
     const { success } = await standardLimiter.check(rateKey);
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const userId = user.uid;
@@ -81,7 +84,9 @@ export async function GET(request: NextRequest) {
 
     const { data: campaignRows, error: campaignsErr } = await supabase
       .from('campaigns')
-      .select('id, name, description, owner_id, owner_username, invite_code, characters, created_at, updated_at')
+      .select(
+        'id, name, description, owner_id, owner_username, invite_code, characters, created_at, updated_at',
+      )
       .in('id', allIds)
       .order('updated_at', { ascending: false });
     if (campaignsErr) throw campaignsErr;

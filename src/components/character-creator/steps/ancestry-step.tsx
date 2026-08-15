@@ -22,25 +22,22 @@ import { AncestrySinglePanel } from './ancestry/ancestry-single-panel';
 
 export function AncestryStep() {
   const state = useAncestryStepState();
-  const {
-    draft,
-    isMixed,
-    selectedSpecies,
-    speciesA,
-    speciesB,
-    prevStep,
-    nextStep,
-    setStep,
-  } = state;
+  const { draft, isMixed, selectedSpecies, speciesA, speciesB, prevStep, nextStep, setStep } =
+    state;
 
   if (!draft.ancestry?.id) {
     return (
-      <div className="max-w-2xl mx-auto text-center">
-        <div className="flex items-center justify-center gap-1 mb-2">
+      <div className="mx-auto max-w-2xl text-center">
+        <div className="mb-2 flex items-center justify-center gap-1">
           <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
-          <InfoTippy content={chooseYourAncestryTraits} allowHTML label="Ancestry trait rules" size="inline" />
+          <InfoTippy
+            content={chooseYourAncestryTraits}
+            allowHTML
+            label="Ancestry trait rules"
+            size="inline"
+          />
         </div>
-        <p className="text-text-secondary mb-6">
+        <p className="mb-6 text-text-secondary">
           Customize your character with ancestry traits and an optional flaw.
         </p>
         <Alert variant="warning" className="mb-8">
@@ -56,7 +53,9 @@ export function AncestryStep() {
         <CreatorStepFooter
           onBack={prevStep}
           primaryAction={
-            <Button disabled className="min-h-11 min-w-11">Continue →</Button>
+            <Button disabled className="min-h-11 min-w-11">
+              Continue →
+            </Button>
           }
         />
       </div>
@@ -78,7 +77,7 @@ export function AncestryStep() {
 
   if (!selectedSpecies) {
     return (
-      <div className="max-w-2xl mx-auto text-center">
+      <div className="mx-auto max-w-2xl text-center">
         <Alert variant="warning" className="mb-8">
           Species data could not be loaded. Try changing species.
         </Alert>

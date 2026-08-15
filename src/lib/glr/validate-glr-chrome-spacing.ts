@@ -7,6 +7,7 @@ import {
   CREATOR_EMBEDDED_GLR_SOURCES,
   DEFAULT_GLR_LIST_CLASSNAME,
   DEFAULT_USM_LIST_CLASSNAME,
+  classListEquals,
   FORBIDDEN_GLR_GRID_ACTION_TRACK_REGEX,
   FORBIDDEN_GLR_LIST_GAP_REGEX,
   GLR_GRID_COLUMN_SOURCES,
@@ -27,17 +28,14 @@ export interface RowChromeFlags {
 }
 
 /** Validate a GLR list row-container class string. */
-export function validateGlrListClassName(
-  className: string,
-  context: string
-): string[] {
+export function validateGlrListClassName(className: string, context: string): string[] {
   const errors: string[] = [];
   if (!/\bgap-1\b/.test(className)) {
     errors.push(`${context}: GLR list row container must include gap-1 (got "${className}")`);
   }
   if (/\bspace-y-\d/.test(className)) {
     errors.push(
-      `${context}: use flex flex-col gap-1 for GLR lists — not space-y-* ("${className}")`
+      `${context}: use flex flex-col gap-1 for GLR lists — not space-y-* ("${className}")`,
     );
   }
   if (FORBIDDEN_GLR_LIST_GAP_REGEX.test(className)) {
@@ -47,7 +45,10 @@ export function validateGlrListClassName(
 }
 
 function extractConstObjectBody(source: string, constName: string): string | null {
-  const pattern = new RegExp(`const\\s+${constName}\\s*=\\s*\\{([\\s\\S]*?)\\}\\s*as\\s+const`, 'm');
+  const pattern = new RegExp(
+    `const\\s+${constName}\\s*=\\s*\\{([\\s\\S]*?)\\}\\s*as\\s+const`,
+    'm',
+  );
   const match = source.match(pattern);
   if (match) return match[1];
   const plain = new RegExp(`const\\s+${constName}\\s*=\\s*\\{([\\s\\S]*?)\\}`, 'm');
@@ -93,7 +94,7 @@ export function resolvedRowChromeFlags(source: string): RowChromeFlags {
 /** Parse `rowChrome` on a single ListHeader block (embedded creator lists). */
 export function resolvedRowChromeFlagsInBlock(
   section: string,
-  fullSource?: string
+  fullSource?: string,
 ): RowChromeFlags {
   const flags: RowChromeFlags = {
     edit: false,
@@ -130,7 +131,7 @@ export function expectedRowChromeFromRowActions(source: string): RowChromeFlags 
 function validateRowChromePairing(
   relativePath: string,
   source: string,
-  shellMarker: string
+  shellMarker: string,
 ): string[] {
   const errors: string[] = [];
   if (!source.includes(shellMarker)) return errors;
@@ -170,7 +171,7 @@ function validateEmbeddedListHeaderBlock(
   relativePath: string,
   section: string,
   index: number,
-  fullSource: string
+  fullSource: string,
 ): string[] {
   const errors: string[] = [];
   if (!section.includes('GridListRow')) return errors;
@@ -209,11 +210,10 @@ function validateEmbeddedListHeaderBlock(
 /** GLR row containers wrapping GridListRow maps must use tight gap-1 (not space-y-3 / gap-3). */
 export function validateEmbeddedGlrListRowContainers(
   relativePath: string,
-  source: string
+  source: string,
 ): string[] {
   const errors: string[] = [];
-  const containerPattern =
-    /<div className="([^"]+)"[^>]*>\s*\{[^}]*\.map\([\s\S]*?<GridListRow/g;
+  const containerPattern = /<div className="([^"]+)"[^>]*>\s*\{[^}]*\.map\([\s\S]*?<GridListRow/g;
 
   for (const match of source.matchAll(containerPattern)) {
     errors.push(...validateGlrListClassName(match[1], `${relativePath} GLR row container`));
@@ -223,19 +223,16 @@ export function validateEmbeddedGlrListRowContainers(
 }
 
 /** Shell sources must keep the canonical default list class (no drift to space-y-3). */
-export function validateGlrListShellSource(
-  relativePath: string,
-  source: string
-): string[] {
+export function validateGlrListShellSource(relativePath: string, source: string): string[] {
   const errors: string[] = [];
 
   if (relativePath.endsWith('UserLibraryEntityTabShell.tsx')) {
     const defaultMatch = source.match(/listClassName\s*=\s*['"]([^'"]+)['"]/);
     if (!defaultMatch) {
       errors.push(`${relativePath}: missing listClassName default`);
-    } else if (defaultMatch[1] !== DEFAULT_GLR_LIST_CLASSNAME) {
+    } else if (!classListEquals(defaultMatch[1], DEFAULT_GLR_LIST_CLASSNAME)) {
       errors.push(
-        `${relativePath}: listClassName default must be "${DEFAULT_GLR_LIST_CLASSNAME}" (got "${defaultMatch[1]}")`
+        `${relativePath}: listClassName default must be "${DEFAULT_GLR_LIST_CLASSNAME}" (got "${defaultMatch[1]}")`,
       );
     }
   }
@@ -244,18 +241,17 @@ export function validateGlrListShellSource(
     const defaultMatch = source.match(/listClassName\s*=\s*['"]([^'"]+)['"]/);
     if (!defaultMatch) {
       errors.push(`${relativePath}: missing listClassName default`);
-    } else if (defaultMatch[1] !== DEFAULT_GLR_LIST_CLASSNAME) {
+    } else if (!classListEquals(defaultMatch[1], DEFAULT_GLR_LIST_CLASSNAME)) {
       errors.push(
-        `${relativePath}: listClassName default must be "${DEFAULT_GLR_LIST_CLASSNAME}" (got "${defaultMatch[1]}")`
+        `${relativePath}: listClassName default must be "${DEFAULT_GLR_LIST_CLASSNAME}" (got "${defaultMatch[1]}")`,
       );
     }
   }
 
   if (relativePath.endsWith('codex-browse-list-shell.tsx')) {
-    if (!source.includes(CODEX_BROWSE_LIST_ROW_CLASSNAME)) {
-      errors.push(
-        `${relativePath}: row container must use "${CODEX_BROWSE_LIST_ROW_CLASSNAME}"`
-      );
+    const rowMatch = source.match(/<div className="([^"]+)">\s*\{isLoading/);
+    if (!rowMatch || !classListEquals(rowMatch[1], CODEX_BROWSE_LIST_ROW_CLASSNAME)) {
+      errors.push(`${relativePath}: row container must use "${CODEX_BROWSE_LIST_ROW_CLASSNAME}"`);
     }
   }
 
@@ -263,10 +259,7 @@ export function validateGlrListShellSource(
 }
 
 /** Scan `listClassName={` overrides on GLR shell callers. */
-export function validateGlrListClassNameCaller(
-  relativePath: string,
-  source: string
-): string[] {
+export function validateGlrListClassNameCaller(relativePath: string, source: string): string[] {
   const errors: string[] = [];
   if (!source.includes('listClassName')) return errors;
 
@@ -281,10 +274,7 @@ export function validateGlrListClassNameCaller(
 }
 
 /** Shared Library/Official grid templates must not retain a trailing 40px action track. */
-export function validateGlrGridColumnSource(
-  relativePath: string,
-  source: string
-): string[] {
+export function validateGlrGridColumnSource(relativePath: string, source: string): string[] {
   const errors: string[] = [];
 
   const patterns = [
@@ -297,19 +287,17 @@ export function validateGlrGridColumnSource(
       const template = match[1];
       if (FORBIDDEN_GLR_GRID_ACTION_TRACK_REGEX.test(template)) {
         errors.push(
-          `${relativePath}: grid "${template}" must not include 40px action track — use ListHeader rowChrome`
+          `${relativePath}: grid "${template}" must not include 40px action track — use ListHeader rowChrome`,
         );
       }
     }
   }
 
-  const tabGridConsts = source.matchAll(
-    /const\s+[A-Z0-9_]*GRID[A-Z0-9_]*\s*=\s*['"]([^'"]+)['"]/g
-  );
+  const tabGridConsts = source.matchAll(/const\s+[A-Z0-9_]*GRID[A-Z0-9_]*\s*=\s*['"]([^'"]+)['"]/g);
   for (const match of tabGridConsts) {
     if (FORBIDDEN_GLR_GRID_ACTION_TRACK_REGEX.test(match[1])) {
       errors.push(
-        `${relativePath}: grid "${match[1]}" must not include 40px action track — use ListHeader rowChrome`
+        `${relativePath}: grid "${match[1]}" must not include 40px action track — use ListHeader rowChrome`,
       );
     }
   }
@@ -318,10 +306,7 @@ export function validateGlrGridColumnSource(
 }
 
 /** When shell reserves rowChrome.rightSlot but row content is conditional, rows must pass matching GridListRow rowChrome. */
-export function validateMyLibraryRowChromeOnRows(
-  relativePath: string,
-  source: string
-): string[] {
+export function validateMyLibraryRowChromeOnRows(relativePath: string, source: string): string[] {
   const errors: string[] = [];
   if (!source.includes('UserLibraryEntityTabShell')) return errors;
 
@@ -329,8 +314,7 @@ export function validateMyLibraryRowChromeOnRows(
   if (!shellChrome.rightSlot) return errors;
 
   const hasConditionalRightSlot =
-    /rightSlot:\s*[\w.]+\s*\?/.test(source) ||
-    /rightSlot=\{\s*[\w.]+\s*\?/.test(source);
+    /rightSlot:\s*[\w.]+\s*\?/.test(source) || /rightSlot=\{\s*[\w.]+\s*\?/.test(source);
 
   if (!hasConditionalRightSlot) return errors;
 
@@ -340,7 +324,7 @@ export function validateMyLibraryRowChromeOnRows(
 
   if (!rowPassesRowChrome) {
     errors.push(
-      `${relativePath}: conditional rightSlot requires matching GridListRow/CreatureStatBlock rowChrome when shell reserves rowChrome.rightSlot`
+      `${relativePath}: conditional rightSlot requires matching GridListRow/CreatureStatBlock rowChrome when shell reserves rowChrome.rightSlot`,
     );
   }
 
@@ -348,15 +332,8 @@ export function validateMyLibraryRowChromeOnRows(
 }
 
 /** My Library tabs with row actions must pass matching ListHeader rowChrome. */
-export function validateMyLibraryEntityTabSource(
-  relativePath: string,
-  source: string
-): string[] {
-  const errors = validateRowChromePairing(
-    relativePath,
-    source,
-    'UserLibraryEntityTabShell'
-  );
+export function validateMyLibraryEntityTabSource(relativePath: string, source: string): string[] {
+  const errors = validateRowChromePairing(relativePath, source, 'UserLibraryEntityTabShell');
   errors.push(...validateMyLibraryRowChromeOnRows(relativePath, source));
   errors.push(...validateGlrListClassNameCaller(relativePath, source));
   errors.push(...validateGlrGridColumnSource(relativePath, source));
@@ -364,22 +341,14 @@ export function validateMyLibraryEntityTabSource(
 }
 
 /** Codex/Admin browse lists with row rightSlot need shell rowChrome.rightSlot. */
-export function validateCodexBrowseShellSource(
-  relativePath: string,
-  source: string
-): string[] {
+export function validateCodexBrowseShellSource(relativePath: string, source: string): string[] {
   return validateRowChromePairing(relativePath, source, 'CodexBrowseListShell');
 }
 
 /** UnifiedSelectionModal list shell must keep canonical gap-1 row container. */
-export function validateUsmListShellSource(
-  relativePath: string,
-  source: string
-): string[] {
+export function validateUsmListShellSource(relativePath: string, source: string): string[] {
   const errors: string[] = [];
-  const listContainerMatch = source.match(
-    /<div className="([^"]+)"[^>]*>\s*\{filteredItems\.map/
-  );
+  const listContainerMatch = source.match(/<div className="([^"]+)"[^>]*>\s*\{filteredItems\.map/);
 
   if (!listContainerMatch) {
     errors.push(`${relativePath}: missing USM list row container`);
@@ -387,9 +356,9 @@ export function validateUsmListShellSource(
   }
 
   const className = listContainerMatch[1];
-  if (className !== DEFAULT_USM_LIST_CLASSNAME) {
+  if (!classListEquals(className, DEFAULT_USM_LIST_CLASSNAME)) {
     errors.push(
-      `${relativePath}: USM list row container must be "${DEFAULT_USM_LIST_CLASSNAME}" (got "${className}")`
+      `${relativePath}: USM list row container must be "${DEFAULT_USM_LIST_CLASSNAME}" (got "${className}")`,
     );
   }
 
@@ -398,7 +367,7 @@ export function validateUsmListShellSource(
   // TASK-702: selection + is external chrome, not an appended grid track.
   if (source.includes('gridColumnsWithInlineSelection')) {
     errors.push(
-      `${relativePath}: USM must not append inline selection tracks — use rowChrome.externalSelection`
+      `${relativePath}: USM must not append inline selection tracks — use rowChrome.externalSelection`,
     );
   }
   if (!/externalSelection:\s*true/.test(source)) {
@@ -412,47 +381,41 @@ const USM_QTY_RIGHT_SLOT_WIDTH_EXPR =
   /rightSlotWidth=\{showQuantity \? USM_QUANTITY_RIGHT_SLOT_WIDTH/g;
 
 /** ListHeader + GridListRow quantity chrome must share `USM_QUANTITY_RIGHT_SLOT_WIDTH`. */
-export function validateUsmQuantityChromeSource(
-  relativePath: string,
-  source: string
-): string[] {
+export function validateUsmQuantityChromeSource(relativePath: string, source: string): string[] {
   const errors: string[] = [];
   const matches = source.match(USM_QTY_RIGHT_SLOT_WIDTH_EXPR) ?? [];
   if (matches.length < 2) {
     errors.push(
-      `${relativePath}: ListHeader and GridListRow must both pass rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH} (TASK-702)`
+      `${relativePath}: ListHeader and GridListRow must both pass rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH} (TASK-702)`,
     );
   }
   return errors;
 }
 
 /** GridListRow chrome layout: stretch grid + shared expanded band (TASK-710). */
-export function validateGlrRowLayoutSource(
-  relativePath: string,
-  source: string
-): string[] {
+export function validateGlrRowLayoutSource(relativePath: string, source: string): string[] {
   const errors: string[] = [];
   const file = relativePath.replace(/\\/g, '/');
 
   if (file.endsWith('grid-list-row.tsx')) {
     if (!source.includes('grid items-stretch')) {
       errors.push(
-        `${relativePath}: chrome wrapper must be grid items-stretch so hover/expand fill the action column`
+        `${relativePath}: chrome wrapper must be grid items-stretch so hover/expand fill the action column`,
       );
     }
     if (!source.includes('GRID_LIST_ROW_EXPANDED_BAND_CLASS')) {
       errors.push(
-        `${relativePath}: expanded action-column fill must use GRID_LIST_ROW_EXPANDED_BAND_CLASS`
+        `${relativePath}: expanded action-column fill must use GRID_LIST_ROW_EXPANDED_BAND_CLASS`,
       );
     }
     if (!source.includes('data-glr-row')) {
       errors.push(
-        `${relativePath}: hover wrapper must set data-glr-row so .btn-stepper inherits row surface`
+        `${relativePath}: hover wrapper must set data-glr-row so .btn-stepper inherits row surface`,
       );
     }
     if (/flex items-start/.test(source)) {
       errors.push(
-        `${relativePath}: do not pin chrome with flex items-start (empty band beside expanded body)`
+        `${relativePath}: do not pin chrome with flex items-start (empty band beside expanded body)`,
       );
     }
   }
@@ -460,12 +423,12 @@ export function validateGlrRowLayoutSource(
   if (file.endsWith('grid-list-row-collapsed.tsx')) {
     if (/\bself-start\b/.test(source)) {
       errors.push(
-        `${relativePath}: ExternalChrome must not self-start — header cell stretch centers actions`
+        `${relativePath}: ExternalChrome must not self-start — header cell stretch centers actions`,
       );
     }
     if (!source.includes('GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE')) {
       errors.push(
-        `${relativePath}: GLR action IconButtons must use GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE`
+        `${relativePath}: GLR action IconButtons must use GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE`,
       );
     }
   }
@@ -473,7 +436,7 @@ export function validateGlrRowLayoutSource(
   if (file.endsWith('grid-list-row-expanded.tsx')) {
     if (!source.includes('GRID_LIST_ROW_EXPANDED_BAND_CLASS')) {
       errors.push(
-        `${relativePath}: expanded body must use GRID_LIST_ROW_EXPANDED_BAND_CLASS (same strip as chrome fill)`
+        `${relativePath}: expanded body must use GRID_LIST_ROW_EXPANDED_BAND_CLASS (same strip as chrome fill)`,
       );
     }
   }
@@ -482,10 +445,7 @@ export function validateGlrRowLayoutSource(
 }
 
 /** Creator-embedded GLR lists: rowChrome pairing, no 40px tracks, tight row gaps. */
-export function validateCreatorEmbeddedGlrSource(
-  relativePath: string,
-  source: string
-): string[] {
+export function validateCreatorEmbeddedGlrSource(relativePath: string, source: string): string[] {
   const errors: string[] = [];
   errors.push(...validateGlrGridColumnSource(relativePath, source));
   errors.push(...validateEmbeddedGlrListRowContainers(relativePath, source));
@@ -503,7 +463,7 @@ export interface GlrChromeSpacingScanResult {
 
 /** Scan all registered GLR shell + tab + grid sources. */
 export function scanGlrChromeSpacingSources(
-  readFile: (relativePath: string) => string
+  readFile: (relativePath: string) => string,
 ): GlrChromeSpacingScanResult {
   const errors: string[] = [];
 
@@ -546,9 +506,7 @@ export function scanGlrChromeSpacingSources(
   return { errors };
 }
 
-export function assertGlrChromeSpacingSources(
-  readFile: (relativePath: string) => string
-): void {
+export function assertGlrChromeSpacingSources(readFile: (relativePath: string) => string): void {
   const { errors } = scanGlrChromeSpacingSources(readFile);
   if (errors.length > 0) {
     throw new Error(errors.join('\n'));

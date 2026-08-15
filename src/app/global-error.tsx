@@ -25,8 +25,8 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
       <head>
         <title>RealmsRPG — Error</title>
       </head>
-      <body className="min-h-screen bg-surface text-text-primary font-sans antialiased flex items-center justify-center px-4">
-        <main id="main-content" className="max-w-md text-center space-y-4">
+      <body className="flex min-h-screen items-center justify-center bg-surface px-4 font-sans text-text-primary antialiased">
+        <main id="main-content" className="max-w-md space-y-4 text-center">
           <h1 className="text-xl font-semibold">Something went wrong</h1>
           <p className="text-text-secondary">
             RealmsRPG hit an unexpected error. Please try again or return home.
@@ -35,13 +35,13 @@ export default function GlobalError({ error, reset }: GlobalErrorProps) {
             <button
               type="button"
               onClick={reset}
-              className="min-h-[44px] px-4 py-2 rounded-lg bg-primary-button text-text-on-dark font-semibold hover:bg-primary-button-hover transition-colors"
+              className="min-h-[44px] rounded-lg bg-primary-button px-4 py-2 font-semibold text-text-on-dark transition-colors hover:bg-primary-button-hover"
             >
               Try Again
             </button>
             <Link
               href="/"
-              className="min-h-[44px] inline-flex items-center px-4 py-2 rounded-lg border border-border-light bg-surface-alt text-text-primary font-semibold hover:bg-surface transition-colors"
+              className="inline-flex min-h-[44px] items-center rounded-lg border border-border-light bg-surface-alt px-4 py-2 font-semibold text-text-primary transition-colors hover:bg-surface"
             >
               Home
             </Link>

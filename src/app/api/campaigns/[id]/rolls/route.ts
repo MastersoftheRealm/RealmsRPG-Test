@@ -49,10 +49,7 @@ function toEntry(row: RollRow): CampaignRollEntry {
   };
 }
 
-export async function GET(
-  _request: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -119,10 +116,7 @@ export async function GET(
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { user, error } = await getSession();
     if (error || !user?.uid) {
@@ -132,10 +126,16 @@ export async function POST(
     // SEC-05: rate-limit roll submissions per user/IP (realtime fan-out makes
     // this endpoint abuse-prone).
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('campaign-roll', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('campaign-roll', {
+        userId: user.uid,
+        ip: resolveClientIp(request.headers),
+      }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const { id: campaignId } = await params;
@@ -181,14 +181,19 @@ export async function POST(
     // roll for: their own roster entry, or any roster character if they are the
     // RM (owner). This stops a member spoofing a roll as another player's
     // character. The displayed name is taken from the roster, not the client.
-    const roster = (campaign.characters as Array<{ userId?: string; characterId?: string; characterName?: string }> | null) ?? [];
+    const roster =
+      (campaign.characters as Array<{
+        userId?: string;
+        characterId?: string;
+        characterName?: string;
+      }> | null) ?? [];
     const ownEntry = roster.find((c) => c.userId === user.uid && c.characterId === characterId);
     const ownerEntry = isOwner ? roster.find((c) => c.characterId === characterId) : undefined;
     const rosterEntry = ownEntry ?? ownerEntry;
     if (!rosterEntry) {
       return NextResponse.json(
         { error: 'You can only roll for your own character in this campaign.' },
-        { status: 403 }
+        { status: 403 },
       );
     }
     const resolvedCharacterName = rosterEntry.characterName ?? characterName;

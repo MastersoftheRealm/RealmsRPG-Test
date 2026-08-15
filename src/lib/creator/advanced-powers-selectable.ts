@@ -29,10 +29,7 @@ type PathSelectableOptions = {
 };
 
 /** Tag library rows with source for USM SourceFilter merge-by-source. */
-export function mergeLibraryWithSource<T>(
-  mine: T[],
-  pub: T[]
-): WithSource<T>[] {
+export function mergeLibraryWithSource<T>(mine: T[], pub: T[]): WithSource<T>[] {
   return [
     ...mine.map((item) => ({ ...item, _source: 'my' as const })),
     ...pub.map((item) => ({ ...item, _source: 'public' as const })),
@@ -40,9 +37,9 @@ export function mergeLibraryWithSource<T>(
 }
 
 /** Deduplicate by docId/id (first wins). */
-export function dedupeByDocId<T extends { docId?: string | number | null; id?: string | number | null }>(
-  list: T[]
-): T[] {
+export function dedupeByDocId<
+  T extends { docId?: string | number | null; id?: string | number | null },
+>(list: T[]): T[] {
   const seen = new Set<string>();
   return list.filter((item) => {
     const id = String(item.docId ?? item.id ?? '');
@@ -53,17 +50,16 @@ export function dedupeByDocId<T extends { docId?: string | number | null; id?: s
 }
 
 /** Merged user+public pool for selected-item lookup (persists across tab/source). */
-export function mergeLookupPool<T extends { docId?: string | number | null; id?: string | number | null }>(
-  mine: T[],
-  pub: T[]
-): T[] {
+export function mergeLookupPool<
+  T extends { docId?: string | number | null; id?: string | number | null },
+>(mine: T[], pub: T[]): T[] {
   return dedupeByDocId([...mine, ...pub]);
 }
 
 /** Empowered techniques: merge + dedupe by docId/id. */
 export function mergeEmpoweredTechniquesWithSource(
   mine: UserTechnique[],
-  pub: UserTechnique[]
+  pub: UserTechnique[],
 ): WithSource<UserTechnique>[] {
   return dedupeByDocId(mergeLibraryWithSource(mine, pub));
 }
@@ -72,7 +68,7 @@ export function powerListToSelectable(
   list: WithSource<UserPower>[],
   powerParts: PowerPart[] | undefined | null,
   recommendedPowerRefs: Set<string>,
-  options?: PathSelectableOptions
+  options?: PathSelectableOptions,
 ): SelectableItem[] {
   return list.flatMap((power) => {
     const itemId = String(power.docId ?? power.id ?? '');
@@ -95,10 +91,7 @@ export function powerListToSelectable(
       recommendedPowerRefs.has(itemId.toLowerCase()) ||
       recommendedPowerRefs.has(String(power.name).toLowerCase());
     const showPathBadge =
-      isRecommended &&
-      options?.pathName &&
-      options?.selectedIds &&
-      options.selectedIds.has(itemId);
+      isRecommended && options?.pathName && options?.selectedIds && options.selectedIds.has(itemId);
     // Duration/Area/Range omitted from compact modal columns → labeled expanded chips
     const detailSections = buildPartsAndMetadataDetailSections({
       range: display.range,
@@ -121,13 +114,15 @@ export function powerListToSelectable(
         detailSections: detailSections.length > 0 ? detailSections : undefined,
         totalCost: display.tp > 0 ? display.tp : undefined,
         costLabel: display.tp > 0 ? TRAINING_POINTS_COST_LABEL : undefined,
-        badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
+        badges: showPathBadge
+          ? [{ label: `(${options!.pathName})`, color: 'gray' as const }]
+          : undefined,
         data: power,
         powerTechniqueFilter: buildPowerTechniqueFilterableRow(
           'power',
           power,
           powerParts ?? [],
-          []
+          [],
         ),
       },
     ];
@@ -138,7 +133,7 @@ export function techniqueListToSelectable(
   list: WithSource<UserTechnique>[],
   techniqueParts: TechniquePart[] | undefined | null,
   recommendedTechniqueRefs: Set<string>,
-  options?: PathSelectableOptions
+  options?: PathSelectableOptions,
 ): SelectableItem[] {
   return list.flatMap((tech) => {
     const itemId = String(tech.docId ?? tech.id ?? '');
@@ -159,10 +154,7 @@ export function techniqueListToSelectable(
       recommendedTechniqueRefs.has(itemId.toLowerCase()) ||
       recommendedTechniqueRefs.has(String(tech.name).toLowerCase());
     const showPathBadge =
-      isRecommended &&
-      options?.pathName &&
-      options?.selectedIds &&
-      options.selectedIds.has(itemId);
+      isRecommended && options?.pathName && options?.selectedIds && options.selectedIds.has(itemId);
     const detailSections = buildPartsAndMetadataDetailSections({
       damage: display.damageStr !== '-' ? display.damageStr : undefined,
       partChips,
@@ -182,16 +174,16 @@ export function techniqueListToSelectable(
         detailSections: detailSections.length > 0 ? detailSections : undefined,
         totalCost: typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined,
         costLabel:
-          typeof display.tp === 'number' && display.tp > 0
-            ? TRAINING_POINTS_COST_LABEL
-            : undefined,
-        badges: showPathBadge ? [{ label: `(${options!.pathName})`, color: 'gray' as const }] : undefined,
+          typeof display.tp === 'number' && display.tp > 0 ? TRAINING_POINTS_COST_LABEL : undefined,
+        badges: showPathBadge
+          ? [{ label: `(${options!.pathName})`, color: 'gray' as const }]
+          : undefined,
         data: tech,
         powerTechniqueFilter: buildPowerTechniqueFilterableRow(
           'technique',
           tech,
           [],
-          techniqueParts ?? []
+          techniqueParts ?? [],
         ),
       },
     ];
@@ -202,12 +194,9 @@ export function techniqueListToSelectable(
 export function empoweredTechniqueToPowerSelectable(
   list: WithSource<UserTechnique>[],
   powerPartsDb?: PowerPart[] | null,
-  techniquePartsDb?: TechniquePart[] | null
+  techniquePartsDb?: TechniquePart[] | null,
 ): SelectableItem[] {
-  const codex =
-    powerPartsDb && techniquePartsDb
-      ? { powerPartsDb, techniquePartsDb }
-      : undefined;
+  const codex = powerPartsDb && techniquePartsDb ? { powerPartsDb, techniquePartsDb } : undefined;
   return list.flatMap((technique) => {
     const itemId = String(technique.docId ?? technique.id ?? '');
     if (!itemId) return [];

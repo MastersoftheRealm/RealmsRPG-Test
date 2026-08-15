@@ -10,8 +10,7 @@ import { formatListCellLabel } from '@/lib/utils';
 export const DEFAULT_STATE_DURATION_LABEL = '1 minute';
 
 /** Shared State feat teaching copy for feat notices and list-filter help. */
-export const STATE_FEAT_RESTRICTION_NOTICE =
-  `This is a State feat. Activate it with a Quick Action from your character sheet (Enter State); its effects last ${DEFAULT_STATE_DURATION_LABEL}. If you have multiple state feats, you can activate any or all of them with the same action.`;
+export const STATE_FEAT_RESTRICTION_NOTICE = `This is a State feat. Activate it with a Quick Action from your character sheet (Enter State); its effects last ${DEFAULT_STATE_DURATION_LABEL}. If you have multiple state feats, you can activate any or all of them with the same action.`;
 
 export type FeatRestrictionNoticeOpts = {
   /** Character level — used for default Enter State uses when the feat has no per-feat limit. */
@@ -43,7 +42,7 @@ export function getLimitedUsesNotice(
   entity: LimitedUseEntity,
   usesPerRec: number | null | undefined,
   recPeriod: string | null | undefined,
-  opts?: { forceFullRecovery?: boolean }
+  opts?: { forceFullRecovery?: boolean },
 ): string | null {
   const uses = usesPerRec;
   if (uses == null || uses <= 0) return null;
@@ -57,7 +56,7 @@ export function getLimitedUsesNotice(
  */
 export function getFeatRestrictionNotice(
   feat: Pick<Feat, 'state_feat'> & Partial<Pick<Feat, 'uses_per_rec' | 'rec_period'>>,
-  opts?: FeatRestrictionNoticeOpts
+  opts?: FeatRestrictionNoticeOpts,
 ): string | null {
   const parts: string[] = [];
 
@@ -79,9 +78,7 @@ export function getFeatRestrictionNotice(
   if (feat.state_feat && !hasPerFeatUses && opts?.level != null) {
     const enterStateUses = calculateProficiency(opts.level);
     if (enterStateUses > 0) {
-      parts.push(
-        `You can enter state ${formatUsesCount(enterStateUses)} per Full Recovery.`
-      );
+      parts.push(`You can enter state ${formatUsesCount(enterStateUses)} per Full Recovery.`);
     }
   }
 
@@ -93,7 +90,7 @@ export function getFeatRestrictionNotice(
  * Returns null when no restriction applies.
  */
 export function getTraitRestrictionNotice(
-  trait: Partial<Pick<Trait, 'uses_per_rec' | 'rec_period'>>
+  trait: Partial<Pick<Trait, 'uses_per_rec' | 'rec_period'>>,
 ): string | null {
   return getLimitedUsesNotice('trait', trait.uses_per_rec, trait.rec_period);
 }

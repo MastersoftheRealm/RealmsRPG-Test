@@ -44,11 +44,7 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   /** Build display rows from raw items. */
   buildRows: (items: TItem[]) => TRow[];
   /** Filter + sort built rows by the current search term. */
-  filterRows: (
-    rows: TRow[],
-    search: string,
-    sortItems: (items: TRow[]) => TRow[]
-  ) => TRow[];
+  filterRows: (rows: TRow[], search: string, sortItems: (items: TRow[]) => TRow[]) => TRow[];
   gridColumns: string;
   headerColumns: ComponentProps<typeof ListHeader>['columns'];
   /** Collapsed-row column values for a single row (not used when `renderRow` is set). */
@@ -76,10 +72,7 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   /** Override ListHeader thumbnail column when using custom `renderRow`. */
   hasThumbnailColumn?: boolean;
   /** Custom row renderer (e.g. CreatureStatBlock). Skips GridListRow when set. */
-  renderRow?: (
-    row: TRow,
-    ctx: { canAdd: boolean; onAddRequest?: () => void }
-  ) => ReactNode;
+  renderRow?: (row: TRow, ctx: { canAdd: boolean; onAddRequest?: () => void }) => ReactNode;
   listClassName?: string;
   afterList?: ReactNode;
 
@@ -155,7 +148,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   const cardData = useMemo(() => buildRows(items), [buildRows, items]);
   const filtered = useMemo(
     () => filterRows(cardData, search, sortItems),
-    [filterRows, cardData, search, sortItems]
+    [filterRows, cardData, search, sortItems],
   );
 
   if (error) {
@@ -265,7 +258,9 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
                 }
                 onAddToLibrary={canAdd() ? () => onAddRequest!(row) : undefined}
                 onEdit={variant === 'admin' && onEdit ? () => onEdit(row.id) : undefined}
-                onDelete={variant === 'admin' && onDelete ? () => onDelete(row.id, row.name) : undefined}
+                onDelete={
+                  variant === 'admin' && onDelete ? () => onDelete(row.id, row.name) : undefined
+                }
               />
             );
           })

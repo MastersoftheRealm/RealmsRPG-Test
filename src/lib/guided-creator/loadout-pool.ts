@@ -11,7 +11,7 @@ function refKey(ref: PathItemRecommendation): string {
 }
 
 export function buildPathLoadoutPool(
-  pathData: ArchetypePathData['level1'] | undefined
+  pathData: ArchetypePathData['level1'] | undefined,
 ): PathItemRecommendation[] {
   const seen = new Set<string>();
   const out: PathItemRecommendation[] = [];
@@ -44,7 +44,7 @@ export function isItemSelectedInDraft(
     armaments: PathItemRecommendation[];
     equipment: PathItemRecommendation[];
   },
-  itemId: string
+  itemId: string,
 ): boolean {
   const key = String(itemId).trim().toLowerCase();
   return (
@@ -58,15 +58,13 @@ export function isItemSelectedInDraft(
 export function addItemToGuidedDraft(
   draft: GuidedLoadoutDraftSelection,
   ref: PathItemRecommendation,
-  category: 'weapon' | 'armor' | 'equipment'
+  category: 'weapon' | 'armor' | 'equipment',
 ): GuidedLoadoutDraftSelection {
   const key = String(ref.id).trim().toLowerCase();
   const loadoutWeapons = draft.loadoutWeapons.filter(
-    (a) => String(a.id).trim().toLowerCase() !== key
+    (a) => String(a.id).trim().toLowerCase() !== key,
   );
-  const loadoutArmor = draft.loadoutArmor.filter(
-    (a) => String(a.id).trim().toLowerCase() !== key
-  );
+  const loadoutArmor = draft.loadoutArmor.filter((a) => String(a.id).trim().toLowerCase() !== key);
   const equipment = draft.equipment.filter((e) => String(e.id).trim().toLowerCase() !== key);
 
   if (category === 'equipment') {
@@ -102,21 +100,21 @@ export function setItemQuantityInGuidedDraft(
   draft: GuidedLoadoutDraftSelection,
   itemId: string,
   quantity: number,
-  category: 'weapon' | 'armor' | 'equipment'
+  category: 'weapon' | 'armor' | 'equipment',
 ): GuidedLoadoutDraftSelection {
   const key = String(itemId).trim().toLowerCase();
   const qty = Math.max(1, Math.floor(quantity) || 1);
 
   if (category === 'equipment') {
     const equipment = draft.equipment.map((e) =>
-      String(e.id).trim().toLowerCase() === key ? { ...e, quantity: qty } : e
+      String(e.id).trim().toLowerCase() === key ? { ...e, quantity: qty } : e,
     );
     return { ...draft, equipment };
   }
 
   if (category === 'armor') {
     const loadoutArmor = draft.loadoutArmor.map((a) =>
-      String(a.id).trim().toLowerCase() === key ? { ...a, quantity: qty } : a
+      String(a.id).trim().toLowerCase() === key ? { ...a, quantity: qty } : a,
     );
     return {
       ...draft,
@@ -129,7 +127,7 @@ export function setItemQuantityInGuidedDraft(
   }
 
   const loadoutWeapons = draft.loadoutWeapons.map((w) =>
-    String(w.id).trim().toLowerCase() === key ? { ...w, quantity: qty } : w
+    String(w.id).trim().toLowerCase() === key ? { ...w, quantity: qty } : w,
   );
   return {
     ...draft,
@@ -144,7 +142,7 @@ export function setItemQuantityInGuidedDraft(
 /** Add every recommended gear ref that is not already selected. */
 export function addAllRecommendedEquipment(
   draft: GuidedLoadoutDraftSelection,
-  recommended: PathItemRecommendation[]
+  recommended: PathItemRecommendation[],
 ): GuidedLoadoutDraftSelection {
   let next = draft;
   for (const ref of recommended) {
@@ -157,15 +155,13 @@ export function addAllRecommendedEquipment(
 
 export function removeItemFromGuidedDraft(
   draft: GuidedLoadoutDraftSelection,
-  itemId: string
+  itemId: string,
 ): GuidedLoadoutDraftSelection {
   const key = String(itemId).trim().toLowerCase();
   const loadoutWeapons = draft.loadoutWeapons.filter(
-    (a) => String(a.id).trim().toLowerCase() !== key
+    (a) => String(a.id).trim().toLowerCase() !== key,
   );
-  const loadoutArmor = draft.loadoutArmor.filter(
-    (a) => String(a.id).trim().toLowerCase() !== key
-  );
+  const loadoutArmor = draft.loadoutArmor.filter((a) => String(a.id).trim().toLowerCase() !== key);
   const equipment = draft.equipment.filter((e) => String(e.id).trim().toLowerCase() !== key);
   return {
     loadoutWeapons,

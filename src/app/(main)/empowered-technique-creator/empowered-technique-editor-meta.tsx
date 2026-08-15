@@ -27,9 +27,9 @@ export function EmpoweredTechniqueEditorMeta({
   onImageChange,
 }: EmpoweredTechniqueEditorMetaProps) {
   return (
-    <Card className="shadow-md p-6 space-y-4">
+    <Card className="space-y-4 p-6 shadow-md">
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">
+        <label className="mb-1 block text-sm font-medium text-text-secondary">
           Empowered Technique Name *
         </label>
         <Input
@@ -39,7 +39,7 @@ export function EmpoweredTechniqueEditorMeta({
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+        <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
         <Textarea
           value={description}
           onChange={(event) => onDescriptionChange(event.target.value)}

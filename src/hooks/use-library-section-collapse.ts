@@ -9,7 +9,7 @@ import { useCallback, useState } from 'react';
 export function useLibrarySectionCollapse(
   collapsible: boolean,
   itemCount: number,
-  onAdd?: () => void
+  onAdd?: () => void,
 ) {
   const [expanded, setExpanded] = useState(() => itemCount > 0);
 

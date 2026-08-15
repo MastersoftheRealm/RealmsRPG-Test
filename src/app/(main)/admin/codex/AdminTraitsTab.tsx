@@ -1,11 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import {
-  CodexBrowseListShell,
-  ErrorDisplay as ErrorState,
-  GridListRow,
-} from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
 import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
 import { Button, IconButton, useToast } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
@@ -134,7 +130,9 @@ export function AdminTraitsTab() {
     setSaving(true);
     const data = traitFormToSavePayload(form);
     const result = editing
-      ? await updateCodexDoc('codex_traits', editing.id, data, { expectedUpdatedAt: editing.updated_at })
+      ? await updateCodexDoc('codex_traits', editing.id, data, {
+          expectedUpdatedAt: editing.updated_at,
+        })
       : await createCodexDoc('codex_traits', undefined, data);
 
     setSaving(false);
@@ -177,7 +175,15 @@ export function AdminTraitsTab() {
     await codexDelete.requestDelete(id);
   };
 
-  if (error) return <ErrorState message="Failed to load traits" onRetry={() => { void refetch(); }} />;
+  if (error)
+    return (
+      <ErrorState
+        message="Failed to load traits"
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
 
   return (
     <div>
@@ -224,14 +230,14 @@ export function AdminTraitsTab() {
                 <div className="flex items-center gap-1 pr-2">
                   {pendingDeleteId === t.id ? (
                     <div className="flex items-center gap-1 text-xs">
-                      <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">
+                      <span className="font-medium whitespace-nowrap text-danger-700 dark:text-danger-400">
                         Remove?
                       </span>
                       <Button
                         size="sm"
                         variant="danger"
                         onClick={() => handleInlineDelete(t.id)}
-                        className="text-xs px-2 py-0.5 h-6"
+                        className="h-6 px-2 py-0.5 text-xs"
                       >
                         Yes
                       </Button>
@@ -239,7 +245,7 @@ export function AdminTraitsTab() {
                         size="sm"
                         variant="secondary"
                         onClick={() => setPendingDeleteId(null)}
-                        className="text-xs px-2 py-0.5 h-6"
+                        className="h-6 px-2 py-0.5 text-xs"
                       >
                         No
                       </Button>
@@ -253,7 +259,7 @@ export function AdminTraitsTab() {
                         label="Edit"
                         aria-label="Edit"
                       >
-                        <Pencil className="w-4 h-4" />
+                        <Pencil className="h-4 w-4" />
                       </IconButton>
                       <IconButton
                         variant="ghost"
@@ -262,16 +268,16 @@ export function AdminTraitsTab() {
                         label="Duplicate"
                         aria-label="Duplicate"
                       >
-                        <Copy className="w-4 h-4" />
+                        <Copy className="h-4 w-4" />
                       </IconButton>
                       <IconButton
                         variant="ghost"
                         size="sm"
                         onClick={() => setPendingDeleteId(t.id)}
                         label="Delete"
-                        className="text-danger-fg hover:opacity-80 hover:bg-transparent"
+                        className="text-danger-fg hover:bg-transparent hover:opacity-80"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                       </IconButton>
                     </>
                   )}

@@ -38,7 +38,9 @@ async function tableHasImageIdColumn(supabase: ServiceClient, table: string): Pr
   let result: boolean;
   if (!error) {
     result = true;
-  } else if (/does not exist|Could not find|PGRST204|column .*image_id/i.test(error.message ?? '')) {
+  } else if (
+    /does not exist|Could not find|PGRST204|column .*image_id/i.test(error.message ?? '')
+  ) {
     result = false;
   } else {
     // Unexpected error — treat as absent so delete/usage do not fail hard pre-TASK-494.
@@ -51,7 +53,7 @@ async function tableHasImageIdColumn(supabase: ServiceClient, table: string): Pr
 
 export async function listRealmsImageUsages(
   supabase: ServiceClient,
-  imageId: string
+  imageId: string,
 ): Promise<RealmsImageUsageRef[]> {
   const usages: RealmsImageUsageRef[] = [];
 
@@ -86,7 +88,7 @@ async function updateConsumerRows(
   supabase: ServiceClient,
   table: string,
   imageId: string,
-  patch: Record<string, string | null>
+  patch: Record<string, string | null>,
 ): Promise<{ count: number; error: string | null }> {
   const attempt = async (body: Record<string, string | null>) =>
     supabase.from(table).update(body).eq('image_id', imageId).select('id');
@@ -114,7 +116,7 @@ async function updateConsumerRows(
 /** Clear image_id (+ image_url cache when present) on all consumers. */
 export async function clearRealmsImageRefs(
   supabase: ServiceClient,
-  imageId: string
+  imageId: string,
 ): Promise<{ cleared: number; errors: string[] }> {
   let cleared = 0;
   const errors: string[] = [];
@@ -143,7 +145,7 @@ export async function clearRealmsImageRefs(
 export async function syncRealmsImageCacheUrls(
   supabase: ServiceClient,
   imageId: string,
-  publicUrl: string
+  publicUrl: string,
 ): Promise<{ updated: number; errors: string[] }> {
   let updated = 0;
   const errors: string[] = [];

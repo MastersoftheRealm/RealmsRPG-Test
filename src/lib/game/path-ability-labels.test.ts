@@ -19,8 +19,8 @@ describe('resolvePathAbilityLabels', () => {
           type: 'power',
           archetype_ability: 'intelligence',
           secondary_ability: 'charisma',
-        })
-      )
+        }),
+      ),
     ).toEqual({
       primaryAbilities: ['intelligence'],
       secondaryAbility: 'charisma',
@@ -36,8 +36,8 @@ describe('resolvePathAbilityLabels', () => {
           type: 'power',
           archetype_ability: 'intelligence',
           secondary_ability: 'intelligence',
-        })
-      )
+        }),
+      ),
     ).toEqual({
       primaryAbilities: ['intelligence'],
       secondaryAbility: null,
@@ -53,8 +53,8 @@ describe('resolvePathAbilityLabels', () => {
           type: 'martial',
           mart_abil: 'strength',
           secondary_ability: 'vitality',
-        })
-      )
+        }),
+      ),
     ).toEqual({
       primaryAbilities: ['strength'],
       secondaryAbility: 'vitality',
@@ -70,8 +70,8 @@ describe('resolvePathAbilityLabels', () => {
           type: 'powered-martial',
           pow_abil: 'acuity',
           mart_abil: 'agility',
-        })
-      )
+        }),
+      ),
     ).toEqual({
       primaryAbilities: ['acuity', 'agility'],
       secondaryAbility: null,
@@ -87,8 +87,8 @@ describe('resolvePathAbilityLabels', () => {
           type: 'powered-martial',
           archetype_ability: 'intelligence',
           secondary_ability: 'strength',
-        })
-      )
+        }),
+      ),
     ).toEqual({
       primaryAbilities: ['intelligence', 'strength'],
       secondaryAbility: null,
@@ -105,8 +105,8 @@ describe('resolvePathAbilityLabels', () => {
           pow_abil: 'intelligence',
           mart_abil: 'strength',
           secondary_ability: 'charisma',
-        })
-      )
+        }),
+      ),
     ).toEqual({
       primaryAbilities: ['intelligence', 'strength'],
       secondaryAbility: 'charisma',

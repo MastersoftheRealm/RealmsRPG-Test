@@ -29,7 +29,7 @@ import {
  */
 function existingIdsForAddModal(
   character: Character | null,
-  addModalType: AddModalType
+  addModalType: AddModalType,
 ): Set<string> {
   const ids = new Set<string>();
   if (!character || !addModalType) return ids;
@@ -114,7 +114,7 @@ export function CharacterSheetModals() {
   const traitsDb = libraryModel?.traitsDb ?? [];
   const scopedExistingIds = useMemo(
     () => existingIdsForAddModal(character, addModalType),
-    [character, addModalType]
+    [character, addModalType],
   );
 
   return (
@@ -141,8 +141,12 @@ export function CharacterSheetModals() {
         <AddLibraryItemModal
           isOpen={!!addModalType}
           onClose={() => setAddModalType(null)}
-          itemType={addModalType === 'innate-power' ? 'power' : (addModalType as AddLibraryItemType)}
-          titleOverride={addModalType === 'innate-power' ? 'Add Innate Power from Library' : undefined}
+          itemType={
+            addModalType === 'innate-power' ? 'power' : (addModalType as AddLibraryItemType)
+          }
+          titleOverride={
+            addModalType === 'innate-power' ? 'Add Innate Power from Library' : undefined
+          }
           existingIds={scopedExistingIds}
           onAdd={onModalAdd}
         />
@@ -199,9 +203,13 @@ export function CharacterSheetModals() {
         <RecoveryModal
           isOpen={showRecoveryModal}
           onClose={() => setShowRecoveryModal(false)}
-          currentHealth={character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth}
+          currentHealth={
+            character.currentHealth ?? character.health?.current ?? calculatedStats.maxHealth
+          }
           maxHealth={calculatedStats.maxHealth}
-          currentEnergy={character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy}
+          currentEnergy={
+            character.currentEnergy ?? character.energy?.current ?? calculatedStats.maxEnergy
+          }
           maxEnergy={calculatedStats.maxEnergy}
           feats={
             [

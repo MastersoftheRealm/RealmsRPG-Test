@@ -127,10 +127,7 @@ function fallbackMessage(context: AuthErrorContext): string {
 /**
  * Convert an unknown auth error into stable UI copy for the given context.
  */
-export function getAuthErrorMessage(
-  error: unknown,
-  context: AuthErrorContext = 'login'
-): string {
+export function getAuthErrorMessage(error: unknown, context: AuthErrorContext = 'login'): string {
   const { message: rawMessage, code: rawCode } = readAuthError(error);
   const message = rawMessage.toLowerCase();
   const code = rawCode.toLowerCase();
@@ -144,14 +141,10 @@ export function getAuthErrorMessage(
   }
 
   if (
-    (context === 'update-email' ||
-      context === 'update-password' ||
-      context === 'delete-account') &&
+    (context === 'update-email' || context === 'update-password' || context === 'delete-account') &&
     isIncorrectPasswordError(message, code)
   ) {
-    return context === 'update-password'
-      ? 'Current password is incorrect'
-      : 'Incorrect password';
+    return context === 'update-password' ? 'Current password is incorrect' : 'Incorrect password';
   }
 
   if (isAlreadyExistsError(message, code)) {

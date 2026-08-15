@@ -46,7 +46,7 @@ export const REALMS_IMAGE_SELECT =
 export async function replaceImageCategories(
   supabase: ServiceClient,
   imageId: string,
-  categories: RealmsImageCategory[]
+  categories: RealmsImageCategory[],
 ): Promise<{ ok: true } | { ok: false; message: string }> {
   const { error: delError } = await supabase
     .from('realms_image_categories')
@@ -59,9 +59,9 @@ export async function replaceImageCategories(
 
   if (categories.length === 0) return { ok: true };
 
-  const { error: insError } = await supabase.from('realms_image_categories').insert(
-    categories.map((category) => ({ image_id: imageId, category }))
-  );
+  const { error: insError } = await supabase
+    .from('realms_image_categories')
+    .insert(categories.map((category) => ({ image_id: imageId, category })));
 
   if (insError) {
     return { ok: false, message: insError.message };
@@ -71,7 +71,7 @@ export async function replaceImageCategories(
 
 export async function fetchRealmsImageById(
   supabase: ServiceClient,
-  id: string
+  id: string,
 ): Promise<RealmsImage | null> {
   const { data, error } = await supabase
     .from('realms_images')

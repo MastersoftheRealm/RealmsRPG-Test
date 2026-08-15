@@ -45,14 +45,14 @@ export function PowersSelectedSection({
 
   return (
     <section className="mb-8">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Wand2 className="w-5 h-5 text-primary" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <Wand2 className="h-5 w-5 text-primary" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-text-primary">Powers</h3>
-            <p className="text-sm text-text-muted dark:text-text-secondary">
+            <p className="text-sm text-text-muted">
               {selectedPowers.length} power{selectedPowers.length !== 1 ? 's' : ''} selected
               {showInnateControls && (
                 <>
@@ -65,13 +65,13 @@ export function PowersSelectedSection({
           </div>
         </div>
         <Button onClick={onAddClick} disabled={addDisabled}>
-          <Plus className="w-4 h-4" />
+          <Plus className="h-4 w-4" />
           Add Powers
         </Button>
       </div>
 
       {selectedPowerItems.length > 0 ? (
-        <div className="border border-border-light rounded-lg overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-border-light">
           <ListHeader
             columns={POWER_MODAL_COLUMNS.map(({ key, label }) => ({
               key,
@@ -123,7 +123,7 @@ export function PowersSelectedSection({
                       onClick={() => onRemove(power.id)}
                       label="Remove power"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="h-4 w-4" />
                     </IconButton>
                   }
                   compact
@@ -137,19 +137,19 @@ export function PowersSelectedSection({
           title="No powers selected"
           description='Click "Add Powers" to choose from your library.'
           size="sm"
-          className="py-4 rounded-lg border border-dashed border-border"
+          className="rounded-lg border border-dashed border-border py-4"
         />
       ) : (
         <EmptyState
           title="No powers in your library"
           size="sm"
-          className="py-4 rounded-lg border border-dashed border-border"
+          className="rounded-lg border border-dashed border-border py-4"
           action={
             <Link
               href="/power-creator"
-              className="text-primary hover:underline inline-flex items-center gap-1"
+              className="inline-flex items-center gap-1 text-primary hover:underline"
             >
-              Create one <ExternalLink className="w-3 h-3" />
+              Create one <ExternalLink className="h-3 w-3" />
             </Link>
           }
         />

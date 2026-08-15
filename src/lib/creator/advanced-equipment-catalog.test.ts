@@ -86,7 +86,7 @@ describe('advanced-equipment-catalog currency / unarmed (TASK-596)', () => {
     expect(computeUnarmedProwessTpCost(0)).toBe(0);
     expect(computeUnarmedProwessTpCost(1)).toBe(UNARMED_PROWESS_BASE_TP);
     expect(computeUnarmedProwessTpCost(2)).toBe(
-      UNARMED_PROWESS_BASE_TP + UNARMED_PROWESS_UPGRADE_TP
+      UNARMED_PROWESS_BASE_TP + UNARMED_PROWESS_UPGRADE_TP,
     );
     expect(availableUnarmedProwessLevels(1).map((l) => l.level)).toEqual([1]);
     expect(availableUnarmedProwessLevels(8).map((l) => l.level)).toEqual([1, 2, 3]);
@@ -163,7 +163,7 @@ describe('path recommend + filter', () => {
         { id: 'sword-1', quantity: 1 },
         { id: 'Longsword', quantity: 2 },
       ],
-      [{ id: 'rope-1', quantity: 4 }]
+      [{ id: 'rope-1', quantity: 4 }],
     );
     expect(resolved).toHaveLength(2);
     expect(resolved[0]).toEqual({ item: sword, quantity: 1 });
@@ -181,21 +181,21 @@ describe('path recommend + filter', () => {
         pathMode: true,
         showFullEquipmentList: false,
         loadoutPhase: 'weapon',
-      }).map((r) => r.item.id)
+      }).map((r) => r.item.id),
     ).toEqual(['sword-1']);
     expect(
       filterPathRecommendedForPhase(recommended, {
         pathMode: true,
         showFullEquipmentList: false,
         loadoutPhase: 'armor',
-      }).map((r) => r.item.id)
+      }).map((r) => r.item.id),
     ).toEqual(['armor-1']);
     expect(
       filterPathRecommendedForPhase(recommended, {
         pathMode: true,
         showFullEquipmentList: true,
         loadoutPhase: 'weapon',
-      })
+      }),
     ).toHaveLength(3);
   });
 
@@ -212,26 +212,26 @@ describe('filter + inventory helpers', () => {
   it('filters by tab, source, and search', () => {
     expect(
       filterAdvancedEquipmentCatalog(catalog, { activeTab: 'weapon', sourceFilter: 'all' }).map(
-        (i) => i.id
-      )
+        (i) => i.id,
+      ),
     ).toEqual(['sword-1']);
     expect(
       filterAdvancedEquipmentCatalog(catalog, {
         activeTab: 'equipment',
         sourceFilter: 'public',
-      })
+      }),
     ).toEqual([rope]);
     expect(
       filterAdvancedEquipmentCatalog(catalog, {
         activeTab: 'weapon',
         sourceFilter: 'my',
-      })
+      }),
     ).toEqual([]);
     expect(
       filterAdvancedEquipmentCatalog(catalog, {
         activeTab: 'equipment',
         searchTerm: '50',
-      })
+      }),
     ).toEqual([rope]);
   });
 
@@ -239,7 +239,7 @@ describe('filter + inventory helpers', () => {
     expect(
       selectedItemsFromInventory([
         { id: 'sword-1', name: 'Longsword', type: 'weapon', cost: 40, quantity: 2, properties: [] },
-      ])
+      ]),
     ).toEqual([
       {
         id: 'sword-1',
@@ -270,8 +270,8 @@ describe('filter + inventory helpers', () => {
     expect(
       removeAdvancedEquipmentFromInventory(
         [{ id: 'sword-1', name: 'Longsword', type: 'weapon', cost: 40, quantity: 1 }],
-        'sword-1'
-      )
+        'sword-1',
+      ),
     ).toEqual([]);
 
     const replaced = replaceRecommendedInventory(
@@ -282,7 +282,7 @@ describe('filter + inventory helpers', () => {
       [
         { item: sword, quantity: 1 },
         { item: rope, quantity: 4 },
-      ]
+      ],
     );
     expect(replaced.map((i) => `${i.id}:${i.quantity}`)).toEqual([
       'keep:1',
@@ -297,9 +297,10 @@ describe('filter + inventory helpers', () => {
       { item: rope, quantity: 2 },
     ];
     expect(
-      recommendedItemsInInventory([{ id: 'sword-1', name: 'Longsword', quantity: 1 }], recommended).map(
-        (r) => r.item.id
-      )
+      recommendedItemsInInventory(
+        [{ id: 'sword-1', name: 'Longsword', quantity: 1 }],
+        recommended,
+      ).map((r) => r.item.id),
     ).toEqual(['sword-1']);
     expect(pathRecommendedMergeKey('arch-1', recommended)).toBe('arch-1:sword-1:1|rope-1:2');
   });

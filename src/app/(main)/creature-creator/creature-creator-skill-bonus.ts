@@ -26,7 +26,9 @@ export function getCreatureSkillBonus(
 
   const baseSkillIdRaw =
     skill.baseSkillId ??
-    (codex?.base_skill_id != null && Number(codex.base_skill_id) !== 0 ? codex.base_skill_id : undefined);
+    (codex?.base_skill_id != null && Number(codex.base_skill_id) !== 0
+      ? codex.base_skill_id
+      : undefined);
   const isSubSkill =
     skill.isSubSkill === true ||
     subSkillNames.has(String(skill.name ?? '').toLowerCase()) ||
@@ -54,7 +56,12 @@ export function getCreatureSkillBonus(
       skill.proficient,
     );
   }
-  return calculateSkillBonusWithProficiency(linked, skill.value, creature.abilities, skill.proficient);
+  return calculateSkillBonusWithProficiency(
+    linked,
+    skill.value,
+    creature.abilities,
+    skill.proficient,
+  );
 }
 
 export function buildSkillAbilityMap(skillsData: Skill[]): Map<string, string> {

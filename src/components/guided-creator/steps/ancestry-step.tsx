@@ -8,7 +8,13 @@
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Spinner } from '@/components/ui';
 import { MixedSpeciesModal } from '@/components/character-creator/MixedSpeciesModal';
-import { useMergedSpecies, useTraits, useCodexSkills, useUserSpecies, resolveTraitIds } from '@/hooks';
+import {
+  useMergedSpecies,
+  useTraits,
+  useCodexSkills,
+  useUserSpecies,
+  resolveTraitIds,
+} from '@/hooks';
 import type { Species, Trait } from '@/hooks';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
 import {
@@ -46,7 +52,7 @@ const overviewCopy = stepCopy.speciesOverview;
 function isTaskFilled(
   task: AncestryPickTask,
   draft: GuidedDraft,
-  mixedSkillOptionCount: number
+  mixedSkillOptionCount: number,
 ): boolean {
   switch (task.phase) {
     case 'species-trait-option':
@@ -58,7 +64,7 @@ function isTaskFilled(
     case 'mixed-species-skills':
       return hasRequiredMixedSpeciesSkills(
         mixedSkillOptionCount,
-        draft.selectedSpeciesSkillIds.length
+        draft.selectedSpeciesSkillIds.length,
       );
     case 'ancestry-trait-1':
       return draft.selectedAncestryTraitIds.length >= 1;
@@ -77,7 +83,7 @@ function resolveInitialPhaseIndex(
   tasks: AncestryPickTask[],
   draft: GuidedDraft,
   ancestryAlreadyComplete: boolean,
-  mixedSkillOptionCount: number
+  mixedSkillOptionCount: number,
 ): number {
   if (tasks.length === 0) return 0;
   if (ancestryAlreadyComplete) return tasks.length;
@@ -109,13 +115,13 @@ export function AncestryStep() {
 
   const speciesContext = useMemo(
     () => resolveGuidedSpeciesContext(draft, allSpecies as Species[]),
-    [draft, allSpecies]
+    [draft, allSpecies],
   );
   const { isMixed, species, speciesA, speciesB, displayName, ready } = speciesContext;
 
   const userSpeciesIds = useMemo(
     () => new Set((userSpeciesList ?? []).map((s) => s.id)),
-    [userSpeciesList]
+    [userSpeciesList],
   );
 
   const mixedSkillOptionCount = useMemo(() => {
@@ -231,7 +237,7 @@ export function AncestryStep() {
     if (lastEntryNonce.current === entryNonce && phaseInitialized.current) return;
     lastEntryNonce.current = entryNonce;
     setPhaseIndex(
-      resolveInitialPhaseIndex(tasks, draft, ancestryChapterComplete, mixedSkillOptionCount)
+      resolveInitialPhaseIndex(tasks, draft, ancestryChapterComplete, mixedSkillOptionCount),
     );
     phaseInitialized.current = true;
   }, [
@@ -269,12 +275,12 @@ export function AncestryStep() {
           return false;
       }
     },
-    [currentTask, draft]
+    [currentTask, draft],
   );
 
   const isSkillSelected = useCallback(
     (skillId: string) => draft.selectedSpeciesSkillIds.includes(skillId),
-    [draft.selectedSpeciesSkillIds]
+    [draft.selectedSpeciesSkillIds],
   );
 
   const skipFlawSelected = Boolean(currentTask?.optional && draft.selectedFlawId === '');
@@ -284,12 +290,18 @@ export function AncestryStep() {
     if (currentTask.phase === 'mixed-species-skills') {
       return hasRequiredMixedSpeciesSkills(
         mixedSkillOptionCount,
-        draft.selectedSpeciesSkillIds.length
+        draft.selectedSpeciesSkillIds.length,
       );
     }
     if (skipFlawSelected) return true;
     return currentTask.options.some((t) => isSelected(t, currentTask));
-  }, [currentTask, isSelected, skipFlawSelected, mixedSkillOptionCount, draft.selectedSpeciesSkillIds]);
+  }, [
+    currentTask,
+    isSelected,
+    skipFlawSelected,
+    mixedSkillOptionCount,
+    draft.selectedSpeciesSkillIds,
+  ]);
 
   const handlePick = useCallback(
     (trait: Trait) => {
@@ -349,7 +361,7 @@ export function AncestryStep() {
         }
       }
     },
-    [currentTask, draft, updateDraft, isMixed, speciesA, speciesB]
+    [currentTask, draft, updateDraft, isMixed, speciesA, speciesB],
   );
 
   const handleSkillPick = useCallback(
@@ -357,16 +369,16 @@ export function AncestryStep() {
       updateDraft({
         selectedSpeciesSkillIds: toggleMixedSpeciesSkillSelection(
           draft.selectedSpeciesSkillIds,
-          skillId
+          skillId,
         ),
       });
     },
-    [draft.selectedSpeciesSkillIds, updateDraft]
+    [draft.selectedSpeciesSkillIds, updateDraft],
   );
 
   const allPicksFilled = useMemo(
     () => tasks.every((task) => isTaskFilled(task, draft, mixedSkillOptionCount)),
-    [tasks, draft, mixedSkillOptionCount]
+    [tasks, draft, mixedSkillOptionCount],
   );
 
   const advanceAfterPick = useCallback(() => {
@@ -427,16 +439,7 @@ export function AncestryStep() {
       speciesChoiceParents: speciesTraits.filter((t) => getChoiceOptionIds(t).length > 0),
       speciesTraitChoices: draft.selectedSpeciesTraitChoices,
     });
-  }, [
-    ready,
-    allTraits,
-    isMixed,
-    species,
-    speciesA,
-    speciesB,
-    draft,
-    mixedSkillOptionCount,
-  ]);
+  }, [ready, allTraits, isMixed, species, speciesA, speciesB, draft, mixedSkillOptionCount]);
 
   const handleAncestryBack = () => {
     if (phaseIndex > 0) {
@@ -472,7 +475,7 @@ export function AncestryStep() {
 
   const handleMixedConfirm = (
     nextA: { id: string; name: string },
-    nextB: { id: string; name: string }
+    nextB: { id: string; name: string },
   ) => {
     updateDraft(buildGuidedMixedSpeciesDraftPatch(draft, nextA, nextB));
     setShowMixedModal(false);

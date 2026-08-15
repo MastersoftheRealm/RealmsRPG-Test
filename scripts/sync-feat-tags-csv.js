@@ -56,9 +56,7 @@ async function main() {
   const { data, error } = await supabase.from('codex_feats').select('id,tags');
   if (error) throw error;
 
-  const tagById = new Map(
-    data.map((r) => [String(r.id), (r.tags || '').replace(/,\s*$/, '')])
-  );
+  const tagById = new Map(data.map((r) => [String(r.id), (r.tags || '').replace(/,\s*$/, '')]));
 
   let updated = 0;
   const out = [lines[0]];

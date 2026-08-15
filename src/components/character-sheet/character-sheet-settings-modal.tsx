@@ -43,7 +43,10 @@ export interface CharacterSheetSettingsModalProps {
   speedDisplayUnit?: SpeedDisplayUnit;
   onSpeedDisplayUnitChange?: (value: SpeedDisplayUnit) => void;
   /** Called on Confirm to save both visibility and speed display. If provided, overrides onConfirmVisibility for full save. */
-  onConfirm?: (updates: { visibility?: CharacterVisibility; speedDisplayUnit?: SpeedDisplayUnit }) => void | Promise<void>;
+  onConfirm?: (updates: {
+    visibility?: CharacterVisibility;
+    speedDisplayUnit?: SpeedDisplayUnit;
+  }) => void | Promise<void>;
   /** Restart the post-save sheet tour from step 1 (owner only). */
   onTakeSheetTour?: () => void;
 }
@@ -92,7 +95,8 @@ export function CharacterSheetSettingsModal({
     onClose();
   };
 
-  const canSave = canEdit && (onVisibilityChange != null || onConfirmVisibility != null || onConfirm != null);
+  const canSave =
+    canEdit && (onVisibilityChange != null || onConfirmVisibility != null || onConfirm != null);
   const hasChanged = selectedVisibility !== visibility || selectedSpeedUnit !== speedDisplayUnit;
 
   return (
@@ -107,9 +111,10 @@ export function CharacterSheetSettingsModal({
     >
       <div className="space-y-4">
         <div className="rounded-lg border border-border-light bg-surface-alt p-3">
-          <h3 className="text-sm font-semibold text-text-primary mb-1">Speed display</h3>
-          <p className="text-xs text-text-muted mb-2">
-            Speed is always edited in spaces. Choose how it appears on the sheet: spaces, feet (1 sp = 5 ft), or meters (1 sp = 1.5 m).
+          <h3 className="mb-1 text-sm font-semibold text-text-primary">Speed display</h3>
+          <p className="mb-2 text-xs text-text-muted">
+            Speed is always edited in spaces. Choose how it appears on the sheet: spaces, feet (1 sp
+            = 5 ft), or meters (1 sp = 1.5 m).
           </p>
           {canEdit && onSpeedDisplayUnitChange ? (
             <Select
@@ -120,18 +125,21 @@ export function CharacterSheetSettingsModal({
             />
           ) : (
             <p className="text-sm font-medium text-text-primary">
-              {SPEED_DISPLAY_OPTIONS.find((o) => o.value === speedDisplayUnit)?.label ?? speedDisplayUnit}
+              {SPEED_DISPLAY_OPTIONS.find((o) => o.value === speedDisplayUnit)?.label ??
+                speedDisplayUnit}
             </p>
           )}
         </div>
         <div className="rounded-lg border border-border-light bg-surface-alt p-3">
-          <h3 className="text-sm font-semibold text-text-primary mb-1">Character visibility</h3>
-          <p className="text-xs text-text-muted mb-2">
-            Controls who can view this character sheet. Realm Masters can view campaign members&apos; sheets when set to Campaign or Public.
+          <h3 className="mb-1 text-sm font-semibold text-text-primary">Character visibility</h3>
+          <p className="mb-2 text-xs text-text-muted">
+            Controls who can view this character sheet. Realm Masters can view campaign
+            members&apos; sheets when set to Campaign or Public.
           </p>
           {isInCampaign && (
-            <p className="text-xs text-warning-700 dark:text-warning-400 mb-2">
-              This character is in a campaign. To set visibility to Private, remove them from the campaign first.
+            <p className="mb-2 text-xs text-warning-700 dark:text-warning-400">
+              This character is in a campaign. To set visibility to Private, remove them from the
+              campaign first.
             </p>
           )}
           {canEdit && onVisibilityChange ? (
@@ -149,14 +157,10 @@ export function CharacterSheetSettingsModal({
         </div>
         {onTakeSheetTour && (
           <div className="rounded-lg border border-border-light bg-surface-alt p-3">
-            <h3 className="text-sm font-semibold text-text-primary mb-1">{tourCopy.tourTitle}</h3>
-            <p className="text-xs text-text-muted dark:text-text-secondary mb-3">
-              {tourCopy.tourDescription}
-            </p>
+            <h3 className="mb-1 text-sm font-semibold text-text-primary">{tourCopy.tourTitle}</h3>
+            <p className="mb-3 text-xs text-text-muted">{tourCopy.tourDescription}</p>
             {!tutorialsEnabled && (
-              <p className="text-xs text-text-muted dark:text-text-secondary mb-3">
-                {tourCopy.tourDisabledHint}
-              </p>
+              <p className="mb-3 text-xs text-text-muted">{tourCopy.tourDisabledHint}</p>
             )}
             <Button
               type="button"
@@ -178,9 +182,7 @@ export function CharacterSheetSettingsModal({
             <Button variant="secondary" onClick={onClose}>
               Cancel
             </Button>
-            <Button onClick={handleConfirm}>
-              {hasChanged ? 'Confirm & save' : 'Done'}
-            </Button>
+            <Button onClick={handleConfirm}>{hasChanged ? 'Confirm & save' : 'Done'}</Button>
           </div>
         )}
       </div>

@@ -8,7 +8,7 @@ import { formatListCellLabel } from '@/lib/utils';
 
 export function buildSpeciesSelectableItem(
   record: { id?: string; docId?: string; name?: string; description?: string; type?: string },
-  source: 'my' | 'public'
+  source: 'my' | 'public',
 ): SelectableItem {
   const id = String(record.id ?? record.docId ?? '');
   const name = String(record.name ?? 'Unnamed');
@@ -22,16 +22,14 @@ export function buildSpeciesSelectableItem(
   };
 }
 
-export function buildCreatureSelectableItem(
-  c: {
-    docId?: unknown;
-    id?: unknown;
-    name?: unknown;
-    description?: unknown;
-    level?: number | string | null;
-    type?: unknown;
-  }
-): SelectableItem {
+export function buildCreatureSelectableItem(c: {
+  docId?: unknown;
+  id?: unknown;
+  name?: unknown;
+  description?: unknown;
+  level?: number | string | null;
+  type?: unknown;
+}): SelectableItem {
   const id = String(c.docId ?? c.id ?? '');
   return {
     id,

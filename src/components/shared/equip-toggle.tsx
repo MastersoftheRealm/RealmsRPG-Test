@@ -5,7 +5,7 @@
  * =============================================
  * A visual toggle for equipping/unequipping armor and weapons.
  * Uses a circle icon: unfilled when unequipped, filled when equipped.
- * 
+ *
  * Design: Clean circle indicator that fills to show equipped state
  * Smooth animation between states
  */
@@ -59,21 +59,19 @@ export function EquipToggle({
       aria-label={label || (isEquipped ? 'Unequip' : 'Equip')}
       aria-pressed={isEquipped}
       className={cn(
-        'flex items-center justify-center transition-all duration-base ease-standard',
+        'duration-base flex items-center justify-center transition-all ease-standard',
         // 44px floor on touch only; desktop keeps the compact icon box (MOBILE_UX.md).
-        '[@media(pointer:coarse)]:min-w-[44px] [@media(pointer:coarse)]:min-h-[44px]',
+        '[@media(pointer:coarse)]:min-h-[44px] [@media(pointer:coarse)]:min-w-[44px]',
         SIZE_STYLES[size],
-        isEquipped
-          ? 'text-success-fg'
-          : 'text-text-muted dark:text-text-secondary hover:text-primary-fg-hover',
-        disabled && 'opacity-40 cursor-not-allowed',
-        className
+        isEquipped ? 'text-success-fg' : 'text-text-muted hover:text-primary-fg-hover',
+        disabled && 'cursor-not-allowed opacity-40',
+        className,
       )}
     >
       <span
         className={cn(
-          'transition-all duration-base ease-standard',
-          isEquipped ? 'scale-110' : 'scale-100 hover:scale-110'
+          'duration-base transition-all ease-standard',
+          isEquipped ? 'scale-110' : 'scale-100 hover:scale-110',
         )}
       >
         {isEquipped ? (
@@ -85,4 +83,3 @@ export function EquipToggle({
     </button>
   );
 }
-

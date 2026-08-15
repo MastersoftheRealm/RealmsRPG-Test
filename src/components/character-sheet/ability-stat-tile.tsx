@@ -2,12 +2,7 @@
 
 import { cn, formatBonus } from '@/lib/utils';
 import { useRollsOptional } from '@/components/rolls';
-import {
-  RollButton,
-  DecrementButton,
-  IncrementButton,
-  WordHelpTip,
-} from '@/components/shared';
+import { RollButton, DecrementButton, IncrementButton, WordHelpTip } from '@/components/shared';
 import { canIncreaseAbility, getAbilityIncreaseCost } from '@/lib/game/formulas';
 import { getAbilityHelp } from '../../../public/tooltip-text';
 import {
@@ -83,8 +78,12 @@ export function AbilityStatTile({
       className={cn(
         SHEET_STAT_TILE_CLASS,
         'bg-gradient-to-b from-surface to-surface-alt transition-all',
-        isPower ? 'border-power-border border-2' : isMartial ? 'border-martial-border border-2' : 'border-border-light',
-        !showEditControls && 'hover:shadow-md'
+        isPower
+          ? 'border-2 border-power-border'
+          : isMartial
+            ? 'border-2 border-martial-border'
+            : 'border-border-light',
+        !showEditControls && 'hover:shadow-md',
       )}
     >
       <WordHelpTip
@@ -104,8 +103,8 @@ export function AbilityStatTile({
           />
           <span
             className={cn(
-              'text-xl font-bold min-w-[2.5rem] text-center tabular-nums leading-none',
-              valueTint || 'text-text-secondary'
+              'min-w-[2.5rem] text-center text-xl leading-none font-bold tabular-nums',
+              valueTint || 'text-text-secondary',
             )}
           >
             {formatBonus(baseValue)}
@@ -136,8 +135,8 @@ export function AbilityStatTile({
           />
           <span
             className={cn(
-              'text-xl font-bold min-w-[2.5rem] text-center tabular-nums leading-none',
-              tempModifierValueClass(abilityTemp) || 'text-text-secondary'
+              'min-w-[2.5rem] text-center text-xl leading-none font-bold tabular-nums',
+              tempModifierValueClass(abilityTemp) || 'text-text-secondary',
             )}
           >
             {formatBonus(displayValue)}
@@ -163,8 +162,8 @@ export function AbilityStatTile({
           {abilityTemp !== 0 && (
             <span
               className={cn(
-                'text-[10px] font-medium leading-none',
-                tempModifierValueClass(abilityTemp)
+                'text-[10px] leading-none font-medium',
+                tempModifierValueClass(abilityTemp),
               )}
             >
               Temp {formatBonus(abilityTemp)}
@@ -174,8 +173,8 @@ export function AbilityStatTile({
       ) : (
         <span
           className={cn(
-            'text-xl font-bold tabular-nums leading-none',
-            tempModifierValueClass(abilityTemp) || 'text-text-primary'
+            'text-xl leading-none font-bold tabular-nums',
+            tempModifierValueClass(abilityTemp) || 'text-text-primary',
           )}
         >
           {formatBonus(displayValue)}
@@ -183,12 +182,12 @@ export function AbilityStatTile({
       )}
 
       {showSpendControls && cost > 1 && canIncrease && (
-        <span className="text-[10px] text-warning-fg font-medium leading-none">
+        <span className="text-[10px] leading-none font-medium text-warning-fg">
           Next: {cost} Pts
         </span>
       )}
       {showTempControls && abilityTemp !== 0 && (
-        <span className="text-[10px] text-text-muted dark:text-text-secondary font-medium leading-none">
+        <span className="text-[10px] leading-none font-medium text-text-muted">
           Temp {formatBonus(abilityTemp)}
         </span>
       )}

@@ -93,7 +93,7 @@ export type LibraryEntityRowContext = {
 
 function needsProfBadge(
   ctx: LibraryEntityRowContext,
-  params: Parameters<LibraryEntityRowContext['hasMissingForEntry']>[0]
+  params: Parameters<LibraryEntityRowContext['hasMissingForEntry']>[0],
 ) {
   return ctx.hasMissingForEntry(params)
     ? ([{ label: 'Needs Proficiency', color: 'red' as const }] as EntityPowerRow['badges'])
@@ -110,7 +110,7 @@ function buildEnergyButton(
   canUse: boolean,
   onUse: ((id: string | number, cost: number) => void) | undefined,
   id: string | number,
-  variant: 'primary' | 'success'
+  variant: 'primary' | 'success',
 ): ReactNode {
   if (energyCost <= 0) return null;
 
@@ -140,7 +140,10 @@ function buildEnergyButton(
   );
 }
 
-export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowContext): EntityPowerRow[] {
+export function mapPowerRows(
+  powers: CharacterPower[],
+  ctx: LibraryEntityRowContext,
+): EntityPowerRow[] {
   return powers.map((power, i) => {
     const id = power.id || String(i);
     const isInnate = power.innate === true;
@@ -157,10 +160,7 @@ export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowCont
           variant="danger"
           size="sm"
           onClick={() =>
-            ctx.rollContext!.rollDamage(
-              power.damage as string,
-              ctx.powerAttackBonus ?? 0
-            )
+            ctx.rollContext!.rollDamage(power.damage as string, ctx.powerAttackBonus ?? 0)
           }
           title="Roll damage (includes Power Bonus)"
         />
@@ -215,16 +215,22 @@ export function mapPowerRows(powers: CharacterPower[], ctx: LibraryEntityRowCont
 
 export function mapTechniqueRows(
   techniques: CharacterTechnique[],
-  ctx: LibraryEntityRowContext
+  ctx: LibraryEntityRowContext,
 ): EntityTechniqueRow[] {
   return techniques.map((tech, i) => {
     const id = tech.id || String(i);
     const energyCost = tech.cost ?? 0;
     const canUse = ctx.currentEnergy !== undefined && ctx.currentEnergy >= energyCost;
-    const partChips = partDataToChips(partsToPartData(tech.parts, ctx.techniquePartsDb, 'technique'));
+    const partChips = partDataToChips(
+      partsToPartData(tech.parts, ctx.techniquePartsDb, 'technique'),
+    );
     const techTP = (tech as { tp?: number }).tp;
     const totalTP =
-      typeof techTP === 'number' ? techTP : typeof techTP === 'string' ? parseFloat(techTP) : undefined;
+      typeof techTP === 'number'
+        ? techTP
+        : typeof techTP === 'string'
+          ? parseFloat(techTP)
+          : undefined;
 
     const techIsReaction = (tech as CharacterTechnique & { isReaction?: boolean }).isReaction;
     const actionDisplay = formatSavedActionTypeForDisplay(tech.actionType, techIsReaction);
@@ -271,16 +277,23 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
     const { bonus: attackBonus, abilityName } = getWeaponAttackBonus(
       item,
       ctx.abilities,
-      ctx.martialProficiency
+      ctx.martialProficiency,
     );
     const propertyChips = partDataToChips(
-      propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
+      propertiesToPartData(
+        resolveItemProperties(item as ItemWithLibrarySource),
+        ctx.itemPropertiesDb,
+      ),
     );
     const rangeValue = resolveWeaponRangeDisplay(
       (item as Item & { range?: string }).range,
-      (resolveItemProperties(item as ItemWithLibrarySource) ?? []) as ItemPropertyPayload[]
+      (resolveItemProperties(item as ItemWithLibrarySource) ?? []) as ItemPropertyPayload[],
     );
-    const { dice: damageDice, type: damageType, rollStr: damageRollStr } = splitDamageDiceAndType(item.damage);
+    const {
+      dice: damageDice,
+      type: damageType,
+      rollStr: damageRollStr,
+    } = splitDamageDiceAndType(item.damage);
 
     const attackButton =
       ctx.rollContext?.canRoll !== false && ctx.rollContext ? (
@@ -291,7 +304,7 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
           title={`Roll attack (${abilityName})`}
         />
       ) : (
-        <span className="text-sm font-medium text-text-muted dark:text-text-secondary">
+        <span className="text-sm font-medium text-text-muted">
           {attackBonus >= 0 ? '+' : ''}
           {attackBonus}
         </span>
@@ -309,14 +322,14 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
             title="Roll damage"
           />
           {damageType && (
-            <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">{damageType}</span>
+            <span className="text-[10px] leading-none text-text-muted">{damageType}</span>
           )}
         </div>
       ) : (
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{damageDice}</span>
+          <span className="text-sm font-medium text-text-muted">{damageDice}</span>
           {damageType && (
-            <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">{damageType}</span>
+            <span className="text-[10px] leading-none text-text-muted">{damageType}</span>
           )}
         </div>
       );
@@ -337,16 +350,17 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
       detailSections: propertySection ? [propertySection] : undefined,
       badges: needsProfBadge(ctx, { weapons: [item] }),
       equipped: item.equipped,
-      leftSlot:
-        ctx.onToggleEquipWeapon ? (
-          <EquipToggle
-            isEquipped={item.equipped || false}
-            onToggle={() => ctx.onToggleEquipWeapon!(id)}
-            label={item.equipped ? 'Unequip' : 'Equip'}
-          />
-        ) : undefined,
+      leftSlot: ctx.onToggleEquipWeapon ? (
+        <EquipToggle
+          isEquipped={item.equipped || false}
+          onToggle={() => ctx.onToggleEquipWeapon!(id)}
+          label={item.equipped ? 'Unequip' : 'Equip'}
+        />
+      ) : undefined,
       onDelete:
-        ctx.showLibraryEditControls && ctx.onRemoveWeapon ? () => ctx.onRemoveWeapon!(id) : undefined,
+        ctx.showLibraryEditControls && ctx.onRemoveWeapon
+          ? () => ctx.onRemoveWeapon!(id)
+          : undefined,
     };
   });
 }
@@ -357,10 +371,14 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
     const enriched = item as Item & { shieldAmount?: string; shieldDamage?: string | null };
     const shieldBlock = enriched.shieldAmount ?? '-';
     const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? String(item.damage) : '-');
-    const { bonus: attackBonus } = getWeaponAttackBonus(item, ctx.abilities, ctx.martialProficiency);
+    const { bonus: attackBonus } = getWeaponAttackBonus(
+      item,
+      ctx.abilities,
+      ctx.martialProficiency,
+    );
     const rangeValue = resolveWeaponRangeDisplay(
       (item as Item & { range?: string }).range,
-      (resolveItemProperties(item as ItemWithLibrarySource) ?? []) as ItemPropertyPayload[]
+      (resolveItemProperties(item as ItemWithLibrarySource) ?? []) as ItemPropertyPayload[],
     );
     const {
       dice: shieldDamageDice,
@@ -368,8 +386,11 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
       rollStr: shieldDamageRollStr,
     } = splitDamageDiceAndType(shieldDamageStr !== '-' ? String(shieldDamageStr) : item.damage);
     const propertyChips = partDataToChips(
-      propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
-      );
+      propertiesToPartData(
+        resolveItemProperties(item as ItemWithLibrarySource),
+        ctx.itemPropertiesDb,
+      ),
+    );
 
     const propertySection = propertiesProficienciesSection(propertyChips, 'shield');
 
@@ -401,14 +422,14 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
             title="Roll damage"
           />
           {shieldDamageType && (
-            <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">{shieldDamageType}</span>
+            <span className="text-[10px] leading-none text-text-muted">{shieldDamageType}</span>
           )}
         </div>
       ) : (
         <div className="flex flex-col items-center gap-0.5">
-          <span className="text-sm font-medium text-text-muted dark:text-text-secondary">{shieldDamageDice}</span>
+          <span className="text-sm font-medium text-text-muted">{shieldDamageDice}</span>
           {shieldDamageType && (
-            <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">{shieldDamageType}</span>
+            <span className="text-[10px] leading-none text-text-muted">{shieldDamageType}</span>
           )}
         </div>
       );
@@ -432,7 +453,11 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
                   displayValue={String(shieldBlock)}
                   variant="primary"
                   onClick={() =>
-                    ctx.rollContext!.rollDamage(String(shieldBlock) + ' Bludgeoning', 0, 'Shield block')
+                    ctx.rollContext!.rollDamage(
+                      String(shieldBlock) + ' Bludgeoning',
+                      0,
+                      'Shield block',
+                    )
                   }
                   size="sm"
                   title="Roll shield block amount"
@@ -449,16 +474,17 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
       detailSections: propertySection ? [propertySection] : undefined,
       badges: needsProfBadge(ctx, { shields: [item] }),
       equipped: item.equipped,
-      leftSlot:
-        ctx.onToggleEquipShield ? (
-          <EquipToggle
-            isEquipped={item.equipped || false}
-            onToggle={() => ctx.onToggleEquipShield!(id)}
-            label={item.equipped ? 'Unequip' : 'Equip'}
-          />
-        ) : undefined,
+      leftSlot: ctx.onToggleEquipShield ? (
+        <EquipToggle
+          isEquipped={item.equipped || false}
+          onToggle={() => ctx.onToggleEquipShield!(id)}
+          label={item.equipped ? 'Unequip' : 'Equip'}
+        />
+      ) : undefined,
       onDelete:
-        ctx.showLibraryEditControls && ctx.onRemoveShield ? () => ctx.onRemoveShield!(id) : undefined,
+        ctx.showLibraryEditControls && ctx.onRemoveShield
+          ? () => ctx.onRemoveShield!(id)
+          : undefined,
     };
   });
 }
@@ -467,21 +493,33 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
   return armor.map((item, i) => {
     const id = item.id ?? item.name ?? i;
     const propertyChips = partDataToChips(
-      propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
+      propertiesToPartData(
+        resolveItemProperties(item as ItemWithLibrarySource),
+        ctx.itemPropertiesDb,
+      ),
     );
-    const abilityReq = (item as Item & { abilityRequirement?: { name?: string; level?: number } }).abilityRequirement;
+    const abilityReq = (item as Item & { abilityRequirement?: { name?: string; level?: number } })
+      .abilityRequirement;
     const agilityRed = (item as Item & { agilityReduction?: number }).agilityReduction;
 
-    const { damageReduction, criticalRangeIncrease } = deriveArmorItemCombatStats(item as ItemWithLibrarySource);
+    const { damageReduction, criticalRangeIncrease } = deriveArmorItemCombatStats(
+      item as ItemWithLibrarySource,
+    );
     const agility = ctx.abilities?.agility ?? 0;
     const critThreshold =
       criticalRangeIncrease > 0 ? 10 + agility + 10 + criticalRangeIncrease : undefined;
 
     const armorMeta = metadataDetailSection(
-      buildArmorRequirementMetadataChips({ abilityRequirement: abilityReq, agilityReduction: agilityRed })
+      buildArmorRequirementMetadataChips({
+        abilityRequirement: abilityReq,
+        agilityReduction: agilityRed,
+      }),
     );
     const propertySection = propertiesProficienciesSection(propertyChips, 'armor');
-    const detailSections = mergeDetailSections(armorMeta, propertySection ? [propertySection] : undefined);
+    const detailSections = mergeDetailSections(
+      armorMeta,
+      propertySection ? [propertySection] : undefined,
+    );
 
     return {
       id,
@@ -500,25 +538,30 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
       detailSections: detailSections.length > 0 ? detailSections : undefined,
       badges: needsProfBadge(ctx, { armor: [item] }),
       equipped: item.equipped,
-      leftSlot:
-        ctx.onToggleEquipArmor ? (
-          <EquipToggle
-            isEquipped={item.equipped || false}
-            onToggle={() => ctx.onToggleEquipArmor!(id)}
-            label={item.equipped ? 'Unequip' : 'Equip'}
-          />
-        ) : undefined,
+      leftSlot: ctx.onToggleEquipArmor ? (
+        <EquipToggle
+          isEquipped={item.equipped || false}
+          onToggle={() => ctx.onToggleEquipArmor!(id)}
+          label={item.equipped ? 'Unequip' : 'Equip'}
+        />
+      ) : undefined,
       onDelete:
         ctx.showLibraryEditControls && ctx.onRemoveArmor ? () => ctx.onRemoveArmor!(id) : undefined,
     };
   });
 }
 
-export function mapEquipmentRows(equipment: Item[], ctx: LibraryEntityRowContext): EntityEquipmentRow[] {
+export function mapEquipmentRows(
+  equipment: Item[],
+  ctx: LibraryEntityRowContext,
+): EntityEquipmentRow[] {
   return equipment.map((item, i) => {
     const itemId = item.id ?? item.name ?? i;
     const propertyChips = partDataToChips(
-      propertiesToPartData(resolveItemProperties(item as ItemWithLibrarySource), ctx.itemPropertiesDb)
+      propertiesToPartData(
+        resolveItemProperties(item as ItemWithLibrarySource),
+        ctx.itemPropertiesDb,
+      ),
     );
     const propertySection = propertiesProficienciesSection(propertyChips, 'item');
     const itemType = formatListCellLabel(item.type);
@@ -547,7 +590,10 @@ export function mapEquipmentRows(equipment: Item[], ctx: LibraryEntityRowContext
             : item.rarity === 'rare'
               ? 'blue'
               : 'green';
-      badges.push({ label: item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1), color: rarityColor });
+      badges.push({
+        label: item.rarity.charAt(0).toUpperCase() + item.rarity.slice(1),
+        color: rarityColor,
+      });
     }
     if (item.cost !== undefined && item.cost > 0) {
       badges.push({ label: `Cost ${item.cost}c`, color: 'amber' });

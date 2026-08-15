@@ -13,11 +13,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-  PointStatus,
-  SectionDualModeToggles,
-  type SectionEditMode,
-} from '@/components/shared';
+import { PointStatus, SectionDualModeToggles, type SectionEditMode } from '@/components/shared';
 import { Card } from '@/components/ui';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import { calculateAbilityScoreCost } from '@/lib/game/formulas';
@@ -26,12 +22,14 @@ import {
   getEffectiveAbilities,
   sectionHasTempModifiers,
 } from '@/lib/character/temp-modifiers';
-import type { Abilities, AbilityName, CharacterTempModifiers, DefenseName, DefenseSkills } from '@/types';
-import {
-  ABILITY_INFO,
-  ABILITY_ORDER,
-  ABILITY_CONSTRAINTS,
-} from './abilities-section-model';
+import type {
+  Abilities,
+  AbilityName,
+  CharacterTempModifiers,
+  DefenseName,
+  DefenseSkills,
+} from '@/types';
+import { ABILITY_INFO, ABILITY_ORDER, ABILITY_CONSTRAINTS } from './abilities-section-model';
 import { AbilityStatTile } from './ability-stat-tile';
 import { DefenseStatTile } from './defense-stat-tile';
 
@@ -85,14 +83,14 @@ export function AbilitiesSection({
 
   const effectiveAbilities = useMemo(
     () => getEffectiveAbilities(abilities, tempModifiers),
-    [abilities, tempModifiers]
+    [abilities, tempModifiers],
   );
 
   // Calculate ability points spent (base allocation only — temps are not spend)
   const calculatedSpentAbilityPoints = useMemo(() => {
     return ABILITY_ORDER.reduce(
       (sum, ability) => sum + calculateAbilityScoreCost(abilities[ability] ?? 0),
-      0
+      0,
     );
   }, [abilities]);
 
@@ -115,24 +113,26 @@ export function AbilitiesSection({
   const maxAbility = ABILITY_CONSTRAINTS.getMaxAbility(level);
   const maxDefenseSkill = ABILITY_CONSTRAINTS.getMaxDefenseSkill(level);
 
-  const abilityRemaining = totalAbilityPoints !== undefined
-    ? totalAbilityPoints - (spentAbilityPoints ?? calculatedSpentAbilityPoints)
-    : 0;
-  const skillPointsRemaining = totalSkillPoints !== undefined
-    ? totalSkillPoints - (spentSkillPoints ?? 0)
-    : 0;
+  const abilityRemaining =
+    totalAbilityPoints !== undefined
+      ? totalAbilityPoints - (spentAbilityPoints ?? calculatedSpentAbilityPoints)
+      : 0;
+  const skillPointsRemaining =
+    totalSkillPoints !== undefined ? totalSkillPoints - (spentSkillPoints ?? 0) : 0;
   const abilityEditState =
     totalAbilityPoints !== undefined || totalSkillPoints !== undefined
-      ? (abilityRemaining < 0 || skillPointsRemaining < 0
-          ? 'over-budget'
-          : (abilityRemaining > 0 || skillPointsRemaining > 0 ? 'has-points' : 'normal'))
+      ? abilityRemaining < 0 || skillPointsRemaining < 0
+        ? 'over-budget'
+        : abilityRemaining > 0 || skillPointsRemaining > 0
+          ? 'has-points'
+          : 'normal'
       : 'normal';
 
   const hasSectionTemps = sectionHasTempModifiers(tempModifiers, 'abilities');
   const applyToResourceMaxima = tempModifiers?.applyAbilityToResourceMaxima === true;
 
   return (
-    <Card className="shadow-md p-4 md:p-6 mb-4 relative">
+    <Card className="relative mb-4 p-4 shadow-md md:p-6">
       {isEditMode && (
         <div className="absolute top-3 right-3">
           <SectionDualModeToggles
@@ -152,7 +152,7 @@ export function AbilitiesSection({
       )}
 
       {showSpendControls && (
-        <div className="flex flex-col items-center gap-2 mb-4 p-3 bg-surface-secondary rounded-lg">
+        <div className="mb-4 flex flex-col items-center gap-2 rounded-lg bg-surface-secondary p-3">
           <div className="flex flex-wrap justify-center gap-4">
             {totalAbilityPoints !== undefined && (
               <PointStatus
@@ -171,18 +171,20 @@ export function AbilitiesSection({
               />
             )}
           </div>
-          <div className="text-xs text-text-muted dark:text-text-secondary">
-            Max ability: +{maxAbility} | Defense: {DEFENSE_INCREASE_COST}sp per +1 (max +{maxDefenseSkill})
+          <div className="text-xs text-text-muted">
+            Max ability: +{maxAbility} | Defense: {DEFENSE_INCREASE_COST}sp per +1 (max +
+            {maxDefenseSkill})
           </div>
         </div>
       )}
 
       {showTempControls && (
-        <div className="flex flex-col items-center gap-2 mb-4 p-3 bg-surface-secondary rounded-lg">
-          <p className="text-xs text-text-secondary text-center">
-            Temp Modifier — layered Bonus/Penalty (does not spend points). Values tint gold or danger.
+        <div className="mb-4 flex flex-col items-center gap-2 rounded-lg bg-surface-secondary p-3">
+          <p className="text-center text-xs text-text-secondary">
+            Temp Modifier — layered Bonus/Penalty (does not spend points). Values tint gold or
+            danger.
           </p>
-          <label className="inline-flex items-center gap-2 text-xs text-text-primary cursor-pointer">
+          <label className="inline-flex cursor-pointer items-center gap-2 text-xs text-text-primary">
             <input
               type="checkbox"
               checked={applyToResourceMaxima}
@@ -196,14 +198,17 @@ export function AbilitiesSection({
             />
             <span>Apply ability temps to max Health / Energy / TP</span>
           </label>
-          <p id="ability-temp-resource-maxima-help" className="text-[10px] text-text-muted dark:text-text-secondary text-center">
+          <p
+            id="ability-temp-resource-maxima-help"
+            className="text-center text-[10px] text-text-muted"
+          >
             Default off. When on, ability Temp Modifiers also adjust resource maxima.
           </p>
         </div>
       )}
 
       {/* Abilities — label + roll; equal gap + tile padding (not squashed, not empty) */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 md:gap-3 mb-4">
+      <div className="mb-4 grid grid-cols-3 gap-2.5 sm:grid-cols-6 md:gap-3">
         {ABILITY_ORDER.map((ability) => (
           <AbilityStatTile
             key={ability}
@@ -227,7 +232,7 @@ export function AbilitiesSection({
 
       {/* Defenses — Score glance + roll; same tip/tile rhythm as abilities */}
       <div className="border-t border-border-light pt-4">
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5 md:gap-3">
+        <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-6 md:gap-3">
           {ABILITY_ORDER.map((ability) => (
             <DefenseStatTile
               key={ABILITY_INFO[ability].defenseKey}

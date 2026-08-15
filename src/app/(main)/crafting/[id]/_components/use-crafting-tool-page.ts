@@ -29,10 +29,7 @@ import {
 } from '@/lib/game/crafting-utils';
 import type { CraftingSelectedItem } from '@/components/crafting/CraftingItemSelectModal';
 import type { CraftingSession as CraftingSessionType } from '@/types/crafting';
-import {
-  bootstrapCraftingSession,
-  craftingSessionNeedsRules,
-} from '../../crafting-bootstrap';
+import { bootstrapCraftingSession, craftingSessionNeedsRules } from '../../crafting-bootstrap';
 import {
   type PowerOption,
   type UsesType,
@@ -71,15 +68,12 @@ export function useCraftingToolPage() {
   const [upgradePotencyValue, setUpgradePotencyValue] = useState('');
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const updateData = useCallback(
-    (updates: Partial<CraftingSessionType['data']>) => {
-      setSession((prev) => {
-        if (!prev) return prev;
-        return { ...prev, data: { ...prev.data, ...updates } };
-      });
-    },
-    []
-  );
+  const updateData = useCallback((updates: Partial<CraftingSessionType['data']>) => {
+    setSession((prev) => {
+      if (!prev) return prev;
+      return { ...prev, data: { ...prev.data, ...updates } };
+    });
+  }, []);
 
   const { data: codexSkills = [] } = useCodexSkills();
   const { data: powerPartsDb = [] } = usePowerParts();
@@ -87,9 +81,7 @@ export function useCraftingToolPage() {
   const { data: officialPowers = [] } = useOfficialLibrary('powers');
 
   // Render-time bootstrap (encounter skill page pattern) — no hydrate effect.
-  const canBootstrap =
-    !!sessionData &&
-    (!craftingSessionNeedsRules(sessionData) || !!rulesData);
+  const canBootstrap = !!sessionData && (!craftingSessionNeedsRules(sessionData) || !!rulesData);
   if (canBootstrap && initializedSessionId !== id) {
     setSession(bootstrapCraftingSession(sessionData!, rulesData));
     setInitializedSessionId(id);
@@ -123,28 +115,23 @@ export function useCraftingToolPage() {
   const usesType = (session?.data.usesType ?? 'full') as UsesType;
   const usesCount = session?.data.usesCount ?? 1;
 
-  const craftSubSkills = useMemo(
-    () => filterCraftSubSkills(codexSkills),
-    [codexSkills]
-  );
+  const craftSubSkills = useMemo(() => filterCraftSubSkills(codexSkills), [codexSkills]);
 
   const craftSubSkill = session?.data.item?.subSkillId
-    ? codexSkills.find((s: { id: string }) => String(s.id) === String(session.data.item?.subSkillId))
+    ? codexSkills.find(
+        (s: { id: string }) => String(s.id) === String(session.data.item?.subSkillId),
+      )
     : null;
 
   const powerOptions = useMemo<PowerOption[]>(
     () => buildCraftingPowerOptions(userPowers, officialPowers, powerPartsDb),
-    [userPowers, officialPowers, powerPartsDb]
+    [userPowers, officialPowers, powerPartsDb],
   );
 
   const resolvedPowerRef = useMemo(
     () =>
-      resolveLiveCraftingPowerRef(
-        session?.data.isEnhanced,
-        session?.data.powerRef,
-        powerOptions
-      ),
-    [session?.data.isEnhanced, session?.data.powerRef, powerOptions]
+      resolveLiveCraftingPowerRef(session?.data.isEnhanced, session?.data.powerRef, powerOptions),
+    [session?.data.isEnhanced, session?.data.powerRef, powerOptions],
   );
 
   const requirements = useMemo((): CraftingRequirements | null => {
@@ -238,7 +225,7 @@ export function useCraftingToolPage() {
         craftBaseItemAlso: !!session?.data.craftBaseItemAlso,
         requirementsBreakdown,
       }),
-    [session, effectiveDS, isEnhanced, requirementsBreakdown]
+    [session, effectiveDS, isEnhanced, requirementsBreakdown],
   );
 
   const updateSessionRoll = useCallback(
@@ -256,13 +243,11 @@ export function useCraftingToolPage() {
         requirementsBreakdown,
       });
       const { successes, failures } =
-        roll != null
-          ? computeSkillRollResult(roll, dsForSession)
-          : { successes: 0, failures: 0 };
+        roll != null ? computeSkillRollResult(roll, dsForSession) : { successes: 0, failures: 0 };
       sessions[index] = { label, roll, successes, failures };
       updateData({ sessions });
     },
-    [session, effectiveDS, updateData, isEnhanced, requirementsBreakdown]
+    [session, effectiveDS, updateData, isEnhanced, requirementsBreakdown],
   );
 
   const tallies = useMemo(
@@ -276,7 +261,7 @@ export function useCraftingToolPage() {
         additionalSuccesses: session?.data.additionalSuccesses ?? 0,
         additionalFailures: session?.data.additionalFailures ?? 0,
       }),
-    [displaySessions, requirementsBreakdown, isEnhanced, session]
+    [displaySessions, requirementsBreakdown, isEnhanced, session],
   );
 
   const {
@@ -301,7 +286,7 @@ export function useCraftingToolPage() {
         customBaseItem,
         netDelta,
       }),
-    [rulesData, isEnhanced, item, customBaseItem, netDelta, session?.data.materialCost]
+    [rulesData, isEnhanced, item, customBaseItem, netDelta, session?.data.materialCost],
   );
 
   const baseOutcomeForDisplay = useMemo(
@@ -327,7 +312,7 @@ export function useCraftingToolPage() {
       baseRequired,
       baseSessionSuccesses,
       baseSessionFailures,
-    ]
+    ],
   );
 
   const handleComplete = useCallback(async () => {
@@ -340,7 +325,7 @@ export function useCraftingToolPage() {
       netDelta,
       session.data.materialCost ?? 0,
       baseMarketPrice,
-      rulesData.successesTable
+      rulesData.successesTable,
     );
     const completedData = {
       ...session.data,
@@ -406,13 +391,12 @@ export function useCraftingToolPage() {
     maxReduceDifficultyByCostSteps,
   } = useMemo(
     () => computeOptionalModifierMaxSteps(rulesData, requirements),
-    [rulesData, requirements]
+    [rulesData, requirements],
   );
 
   const sessions = displaySessions;
   const outcome = session?.data.outcome;
-  const displayName =
-    item?.name ?? customBaseItem?.name ?? 'New Crafting Session';
+  const displayName = item?.name ?? customBaseItem?.name ?? 'New Crafting Session';
   const mods = session?.data.optionalModifiers ?? {};
 
   return {

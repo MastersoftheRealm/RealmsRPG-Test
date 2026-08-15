@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { mapPowerRows, mapTechniqueRows, type LibraryEntityRowContext } from './library-entity-rows';
+import {
+  mapPowerRows,
+  mapTechniqueRows,
+  type LibraryEntityRowContext,
+} from './library-entity-rows';
 import type { CharacterPower, CharacterTechnique } from '@/types';
 
 const baseCtx: LibraryEntityRowContext = {

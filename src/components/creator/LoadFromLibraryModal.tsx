@@ -8,7 +8,10 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import {
+  UnifiedSelectionModal,
+  type SelectableItem,
+} from '@/components/shared/unified-selection-modal';
 
 export interface LoadFromLibraryModalProps {
   selectableItems: SelectableItem[];

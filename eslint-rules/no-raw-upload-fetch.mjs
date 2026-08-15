@@ -31,8 +31,7 @@ const rule = {
   meta: {
     type: 'problem',
     docs: {
-      description:
-        'Disallow raw fetch() to /api/upload/*; use apiUpload from @/lib/api-client.',
+      description: 'Disallow raw fetch() to /api/upload/*; use apiUpload from @/lib/api-client.',
     },
     messages: {
       rawUploadFetch:

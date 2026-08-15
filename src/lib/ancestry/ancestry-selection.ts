@@ -49,7 +49,9 @@ export function resolveAncestryTraitBuckets(args: {
 
   if (speciesA && speciesB) {
     const uniqueAncestryIds = Array.from(
-      new Set([...(speciesA.ancestry_traits || []), ...(speciesB.ancestry_traits || [])].map(String)),
+      new Set(
+        [...(speciesA.ancestry_traits || []), ...(speciesB.ancestry_traits || [])].map(String),
+      ),
     );
     const uniqueFlawIds = Array.from(
       new Set([...(speciesA.flaws || []), ...(speciesB.flaws || [])].map(String)),
@@ -197,10 +199,7 @@ export function areSpeciesTraitChoicesComplete(
   });
 }
 
-export function hasRequiredMixedSpeciesSkills(
-  optionCount: number,
-  selectedCount: number,
-): boolean {
+export function hasRequiredMixedSpeciesSkills(optionCount: number, selectedCount: number): boolean {
   if (optionCount <= 2) return selectedCount === optionCount;
   return selectedCount === 2;
 }

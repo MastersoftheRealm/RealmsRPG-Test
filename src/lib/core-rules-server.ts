@@ -17,7 +17,7 @@ import type { CoreRulesMap } from '@/types/core-rules';
 type CoreRulesRow = { id: string | null; data: unknown };
 
 export async function fetchCoreRules(
-  supabase: Pick<SupabaseClient, 'from'>
+  supabase: Pick<SupabaseClient, 'from'>,
 ): Promise<Partial<CoreRulesMap>> {
   const { data, error } = await supabase.from('core_rules').select('id, data');
   if (error || !data) return {};

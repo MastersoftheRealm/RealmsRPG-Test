@@ -49,10 +49,7 @@ export function factChip(label: string): ChipData {
  * Uses/recovery as a self-describing DescriptorChip (TASK-579).
  * Label already states the fact — do not attach expandable restatement copy.
  */
-export function usesFactChips(
-  uses: number,
-  recPeriod: string | undefined
-): ChipData[] {
+export function usesFactChips(uses: number, recPeriod: string | undefined): ChipData[] {
   if (uses <= 0) return [];
   const recovery = formatTraitRecoveryLabel(recPeriod);
   const label = recovery ? `Uses ${uses} / ${recovery}` : `Uses ${uses}`;

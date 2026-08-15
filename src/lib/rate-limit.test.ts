@@ -7,7 +7,7 @@ vi.mock('@upstash/ratelimit', () => ({
     vi.fn(function MockRatelimit() {
       return { limit: mockLimit };
     }),
-    { slidingWindow: vi.fn(() => ({})) }
+    { slidingWindow: vi.fn(() => ({})) },
   ),
 }));
 
@@ -96,7 +96,12 @@ describe('rate-limit', () => {
     const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
     const { rateLimit } = await import('./rate-limit');
-    const limiter = rateLimit({ interval: 60_000, limit: 10, prefix: 'test-closed', failClosed: true });
+    const limiter = rateLimit({
+      interval: 60_000,
+      limit: 10,
+      prefix: 'test-closed',
+      failClosed: true,
+    });
 
     const result = await limiter.check('user-c');
 
@@ -112,14 +117,21 @@ describe('rate-limit', () => {
     const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     const { rateLimit } = await import('./rate-limit');
-    const limiter = rateLimit({ interval: 60_000, limit: 1, prefix: 'test-closed-nobackend', failClosed: true });
+    const limiter = rateLimit({
+      interval: 60_000,
+      limit: 1,
+      prefix: 'test-closed-nobackend',
+      failClosed: true,
+    });
 
     const allowed = await limiter.check('user-d');
     const blocked = await limiter.check('user-d');
 
     expect(allowed.success).toBe(true);
     expect(blocked.success).toBe(false);
-    expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('No durable backend configured'));
+    expect(consoleSpy).toHaveBeenCalledWith(
+      expect.stringContaining('No durable backend configured'),
+    );
 
     consoleSpy.mockRestore();
   });
@@ -142,12 +154,14 @@ describe('rate-limit', () => {
     const { buildRateLimitKey } = await import('./rate-limit');
 
     expect(buildRateLimitKey('char-patch', { userId: 'user-1', ip: '203.0.113.1' })).toBe(
-      'char-patch:uid:user-1'
+      'char-patch:uid:user-1',
     );
     expect(buildRateLimitKey('char-patch', { userId: '  ', ip: '203.0.113.1' })).toBe(
-      'char-patch:ip:203.0.113.1'
+      'char-patch:ip:203.0.113.1',
     );
-    expect(buildRateLimitKey('char-patch', { userId: null, ip: null })).toBe('char-patch:ip:unknown');
+    expect(buildRateLimitKey('char-patch', { userId: null, ip: null })).toBe(
+      'char-patch:ip:unknown',
+    );
   });
 
   it('resolveClientIp prefers x-real-ip and otherwise takes the last forwarded hop', async () => {
@@ -156,12 +170,12 @@ describe('rate-limit', () => {
     expect(resolveClientIp(new Headers({ 'x-real-ip': '198.51.100.9' }))).toBe('198.51.100.9');
     expect(
       resolveClientIp(
-        new Headers({ 'x-real-ip': '198.51.100.9', 'x-forwarded-for': 'spoofed, 203.0.113.7' })
-      )
+        new Headers({ 'x-real-ip': '198.51.100.9', 'x-forwarded-for': 'spoofed, 203.0.113.7' }),
+      ),
     ).toBe('198.51.100.9');
     // A client-prepended hop must not become the limiter key.
     expect(resolveClientIp(new Headers({ 'x-forwarded-for': 'spoofed, 203.0.113.7' }))).toBe(
-      '203.0.113.7'
+      '203.0.113.7',
     );
     expect(resolveClientIp(new Headers())).toBe('unknown');
   });

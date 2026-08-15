@@ -19,7 +19,7 @@ describe('powers-techniques-energy-filter', () => {
         archetypeAbility: 'intelligence',
         abilities: { intelligence: 2 },
         level: 1,
-      })
+      }),
     ).toBe(20);
   });
 
@@ -28,13 +28,13 @@ describe('powers-techniques-energy-filter', () => {
       calculateGuidedL1TheoreticalMaxEnergy({
         archetypeAbility: null,
         abilities: { intelligence: 2 },
-      })
+      }),
     ).toBeNull();
     expect(
       calculateGuidedL1TheoreticalMaxEnergy({
         archetypeAbility: 'acuity',
         abilities: null,
-      })
+      }),
     ).toBeNull();
   });
 

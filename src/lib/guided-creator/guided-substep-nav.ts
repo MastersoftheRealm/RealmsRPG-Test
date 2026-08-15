@@ -17,7 +17,7 @@ export type GuidedNavigationIntent = 'first' | 'forward' | 'back';
  */
 export function nextGuidedSubStep(
   current: GuidedSubStep,
-  order: readonly GuidedSubStep[]
+  order: readonly GuidedSubStep[],
 ): GuidedSubStep | null {
   const idx = order.indexOf(current);
   if (idx < 0 || idx >= order.length - 1) return null;
@@ -27,7 +27,7 @@ export function nextGuidedSubStep(
 /** Footer Back target: immediate previous sub-step, or null at the start. */
 export function prevGuidedSubStep(
   current: GuidedSubStep,
-  order: readonly GuidedSubStep[]
+  order: readonly GuidedSubStep[],
 ): GuidedSubStep | null {
   const idx = order.indexOf(current);
   if (idx <= 0) return null;

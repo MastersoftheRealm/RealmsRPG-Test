@@ -8,26 +8,16 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import {
-  SkillsAllocationPage,
-  InfoTippy,
-  RealmsImageField,
-} from '@/components/shared';
+import { SkillsAllocationPage, InfoTippy, RealmsImageField } from '@/components/shared';
 import { subSkillsHelp } from '../../../../public/tooltip-text';
 import { Input, Select, Textarea, Card } from '@/components/ui';
-import {
-  HealthEnergyAllocator,
-  AbilityScoreEditor,
-  ArchetypeSelector,
-} from '@/components/creator';
+import { HealthEnergyAllocator, AbilityScoreEditor, ArchetypeSelector } from '@/components/creator';
 import type { AbilityName } from '@/types';
 import type { Feat } from '@/hooks';
 import type { SortState } from '@/components/shared/list-header';
 import type { CreatureState } from './creature-creator-types';
 import type { CreatureFeat } from './transformers';
-import {
-  CREATURE_TYPE_OPTIONS,
-} from './creature-creator-constants';
+import { CREATURE_TYPE_OPTIONS } from './creature-creator-constants';
 import { CREATURE_LEVEL_SELECT_OPTIONS } from '@/lib/game';
 import { CREATURE_SIZES } from '@/lib/game/creator-constants';
 import { CreatureCreatorEditorTraitsSection } from './creature-creator-editor-traits-section';
@@ -137,11 +127,11 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
 
   return (
     <>
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4">Basic Information</h2>
+      <Card className="p-6 shadow-md">
+        <h2 className="mb-4 text-lg font-bold text-text-primary">Basic Information</h2>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Name</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Name</label>
             <Input
               type="text"
               value={creature.name}
@@ -150,7 +140,9 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Description
+            </label>
             <Textarea
               value={creature.description}
               onChange={(e) => updateCreature({ description: e.target.value })}
@@ -195,8 +187,8 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
         </div>
       </Card>
 
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4">Archetype</h2>
+      <Card className="p-6 shadow-md">
+        <h2 className="mb-4 text-lg font-bold text-text-primary">Archetype</h2>
         <ArchetypeSelector
           value={creature.archetypeType}
           powerProficiency={creature.powerProficiency}
@@ -212,8 +204,8 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
         />
       </Card>
 
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4">Health & Energy</h2>
+      <Card className="p-6 shadow-md">
+        <h2 className="mb-4 text-lg font-bold text-text-primary">Health & Energy</h2>
         <HealthEnergyAllocator
           hpBonus={creature.hitPoints}
           energyBonus={creature.energyPoints}
@@ -226,8 +218,8 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
         />
       </Card>
 
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4">Abilities</h2>
+      <Card className="p-6 shadow-md">
+        <h2 className="mb-4 text-lg font-bold text-text-primary">Abilities</h2>
         <AbilityScoreEditor
           abilities={creature.abilities}
           totalPoints={stats.abilityPoints}

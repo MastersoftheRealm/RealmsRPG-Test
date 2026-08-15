@@ -80,7 +80,7 @@ export function SkillsStep() {
 
   const speciesContext = useMemo(
     () => resolveGuidedSpeciesContext(draft, allSpecies),
-    [draft, allSpecies]
+    [draft, allSpecies],
   );
 
   const speciesSkillIds = useMemo(() => {
@@ -91,7 +91,7 @@ export function SkillsStep() {
       const options = buildMixedSpeciesSkillOptions(
         speciesContext.speciesA,
         speciesContext.speciesB,
-        codexSkills
+        codexSkills,
       );
       return new Set(options.map((o) => o.id));
     }
@@ -100,7 +100,7 @@ export function SkillsStep() {
 
   const pathSkillIds = useMemo(
     () => new Set((pathData?.level1?.skills ?? []).map(String)),
-    [pathData]
+    [pathData],
   );
 
   const pathLevel1Skills = pathData?.level1?.skills;
@@ -108,14 +108,11 @@ export function SkillsStep() {
 
   const declinedPathSkillIds = useMemo(
     () => new Set(draft.declinedPathSkillIds.map(String)),
-    [draft.declinedPathSkillIds]
+    [draft.declinedPathSkillIds],
   );
 
   const allocations = draft.skills ?? EMPTY_NUMBER_RECORD;
-  const abilities = useMemo(
-    () => draft.abilities ?? { ...DEFAULT_ABILITIES },
-    [draft.abilities]
-  );
+  const abilities = useMemo(() => draft.abilities ?? { ...DEFAULT_ABILITIES }, [draft.abilities]);
   const level = 1;
   const extraSkillPoints = speciesSkillIds.has('0') ? 1 : 0;
   const totalPoints = getTotalSkillPoints(level, 'character') + extraSkillPoints;
@@ -170,15 +167,13 @@ export function SkillsStep() {
         speciesSkillIds,
         skillMeta,
         DEFAULT_DEFENSE_SKILLS,
-        skillRules
+        skillRules,
       ),
-    [allocationsWithDefaults, speciesSkillIds, skillMeta, skillRules]
+    [allocationsWithDefaults, speciesSkillIds, skillMeta, skillRules],
   );
 
   const remainingPoints = totalPoints - spentPoints;
-  const maxAddSkillSelections = Math.floor(
-    remainingPoints / skillRules.gainProficiencyCost
-  );
+  const maxAddSkillSelections = Math.floor(remainingPoints / skillRules.gainProficiencyCost);
   const canBrowseSubSkills = remainingPoints >= 1;
 
   const handleAllocationsChange = useCallback(
@@ -207,27 +202,27 @@ export function SkillsStep() {
           : draft.declinedPathSkillIds,
       });
     },
-    [draft.declinedPathSkillIds, recommendedSkillIds, updateDraft]
+    [draft.declinedPathSkillIds, recommendedSkillIds, updateDraft],
   );
 
   const selectedSkillIds = useMemo(
     () => new Set(Object.keys(allocationsWithDefaults)),
-    [allocationsWithDefaults]
+    [allocationsWithDefaults],
   );
 
   const existingSkillIds = useMemo(
     () => buildExistingSkillIdSet(speciesSkillIds, allocationsWithDefaults),
-    [speciesSkillIds, allocationsWithDefaults]
+    [speciesSkillIds, allocationsWithDefaults],
   );
 
   const existingSkillNames = useMemo(
     () => buildExistingSkillNames(codexSkills, existingSkillIds),
-    [codexSkills, existingSkillIds]
+    [codexSkills, existingSkillIds],
   );
 
   const characterSkillsForSubModal = useMemo(
     () => buildCharacterSkillsForSubModal(codexSkills, existingSkillIds, allocationsWithDefaults),
-    [codexSkills, existingSkillIds, allocationsWithDefaults]
+    [codexSkills, existingSkillIds, allocationsWithDefaults],
   );
 
   const { suggestions: skillSuggestions } = useMemo(
@@ -258,25 +253,23 @@ export function SkillsStep() {
       speciesSkillIds,
       selectedSkillIds,
       remainingPoints,
-    ]
+    ],
   );
 
   const browseSkillBadgesById = useMemo(
     () => guidedSuggestionsToBadgeMap(skillSuggestions),
-    [skillSuggestions]
+    [skillSuggestions],
   );
 
   const browseRecommendedSkillIds = useMemo(
     () => skillSuggestions.map((s) => s.skillId),
-    [skillSuggestions]
+    [skillSuggestions],
   );
 
   const hasPathDeclinedSuggestions = skillSuggestions.some((s) =>
-    s.kinds.includes('path-declined')
+    s.kinds.includes('path-declined'),
   );
-  const hasAbilitySuggestions = skillSuggestions.some((s) =>
-    s.kinds.includes('ability-match')
-  );
+  const hasAbilitySuggestions = skillSuggestions.some((s) => s.kinds.includes('ability-match'));
 
   const addSuggestedSkill = (skillId: string) => {
     if (remainingPoints < skillRules.gainProficiencyCost) return;
@@ -291,7 +284,7 @@ export function SkillsStep() {
       handleAllocationsChange(applyAddedBaseSkills(allocationsWithDefaults, skills));
       setBrowseOpen(false);
     },
-    [allocationsWithDefaults, handleAllocationsChange]
+    [allocationsWithDefaults, handleAllocationsChange],
   );
 
   const handleAddSubSkills = useCallback(
@@ -299,7 +292,7 @@ export function SkillsStep() {
       handleAllocationsChange(applyAddedSubSkills(allocationsWithDefaults, skills));
       setSubBrowseOpen(false);
     },
-    [allocationsWithDefaults, handleAllocationsChange]
+    [allocationsWithDefaults, handleAllocationsChange],
   );
 
   const handleContinue = useCallback(() => {
@@ -391,14 +384,10 @@ export function SkillsStep() {
           selectionLimitMessage={stepCopy.browseOverLimit(maxAddSkillSelections)}
           autoSelectPathType={deepCatalogOnly ? null : draft.archetypeType}
           optionsDefaultExpanded={!deepCatalogOnly}
-          deeperLayerLabel={
-            deepCatalogOnly ? stepCopy.browseAllSubSkills : undefined
-          }
+          deeperLayerLabel={deepCatalogOnly ? stepCopy.browseAllSubSkills : undefined}
           onDeeperLayer={deepCatalogOnly ? openSubBrowse : undefined}
           deeperLayerDisabled={!canBrowseSubSkills}
-          deeperLayerDisabledTitle={
-            !canBrowseSubSkills ? stepCopy.subBrowseDisabled : undefined
-          }
+          deeperLayerDisabledTitle={!canBrowseSubSkills ? stepCopy.subBrowseDisabled : undefined}
         />
       ) : null}
 

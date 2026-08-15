@@ -15,7 +15,7 @@ export function expandableChipPropsFromPartData(
     size?: 'sm' | 'md';
     fullWidthWhenExpanded?: boolean;
     className?: string;
-  }
+  },
 ): ExpandableChipProps {
   const hasTP = (part.tpCost ?? 0) > 0;
   const hasDescription = !!part.description;
@@ -40,7 +40,7 @@ export function expandableChipPropsFromPartData(
 
 export function expandableChipPropsFromChipData(
   chip: ChipData,
-  costLabel: string
+  costLabel: string,
 ): ExpandableChipProps {
   const hasCost = (chip.cost ?? 0) > 0;
   const isExpandable = isGridListChipExpandable(chip);

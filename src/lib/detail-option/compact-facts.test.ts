@@ -33,29 +33,29 @@ import {
 describe('compact-facts formatters', () => {
   it('formats Abilityname Requirement without Ability/Weapon/Armor prefix', () => {
     expect(formatAbilityRequirementFact({ name: 'strength', level: 3 })).toBe(
-      'Strength Requirement 3+'
+      'Strength Requirement 3+',
     );
     expect(formatAbilityRequirementFact({ name: 'Strength Requirement', level: 1 })).toBe(
-      'Strength Requirement 1+'
+      'Strength Requirement 1+',
     );
     expect(formatAbilityRequirementFact({ name: 'Weapon strength requirement', level: 1 })).toBe(
-      'Strength Requirement 1+'
+      'Strength Requirement 1+',
     );
     expect(formatAbilityRequirementFact(null)).toBeUndefined();
     expect(formatAbilityRequirementFact({ name: 'Agility', level: 0 })).toBeUndefined();
     expect(abilityRequirementChip({ name: 'Vitality', level: 2 })?.name).toBe(
-      'Vitality Requirement 2+'
+      'Vitality Requirement 2+',
     );
   });
 
   it('formats bare handedness labels', () => {
     expect(formatHandednessFact([{ id: PROPERTY_IDS.TWO_HANDED, name: 'Two-handed' }])).toBe(
-      'Two-handed'
+      'Two-handed',
     );
     expect(formatHandednessFact([{ id: PROPERTY_IDS.THROWN, name: 'Thrown' }])).toBe('Thrown');
-    expect(
-      formatHandednessFact([{ id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 }])
-    ).toBe('Ranged');
+    expect(formatHandednessFact([{ id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 1 }])).toBe(
+      'Ranged',
+    );
     expect(formatHandednessFact([])).toBe('One-handed');
     expect(formatHandednessFact([], '16 spaces')).toBe('Ranged');
     expect(formatHandednessFact([], '0')).toBe('One-handed');
@@ -63,9 +63,7 @@ describe('compact-facts formatters', () => {
   });
 
   it('formats damage as XdY Type Damage', () => {
-    expect(formatDamageFact({ amount: 2, size: 6, type: 'slashing' })).toBe(
-      '2d6 Slashing Damage'
-    );
+    expect(formatDamageFact({ amount: 2, size: 6, type: 'slashing' })).toBe('2d6 Slashing Damage');
     expect(formatDamageFact('1d4 pierce')).toBe('1d4 Pierce Damage');
     expect(formatDamageFact('2d8 Fire damage')).toBe('2d8 Fire Damage');
     expect(formatDamageFact(null)).toBeUndefined();
@@ -77,12 +75,12 @@ describe('compact-facts formatters', () => {
     expect(formatWeaponAbilityFact('agility')).toBe('Agility Weapon');
     expect(formatWeaponAbilityFact('acuity')).toBe('Acuity Weapon');
     expect(
-      formatWeaponAbilityFactFromProperties([{ id: PROPERTY_IDS.FINESSE, name: 'Finesse' }])
+      formatWeaponAbilityFactFromProperties([{ id: PROPERTY_IDS.FINESSE, name: 'Finesse' }]),
     ).toBe('Agility Weapon');
     expect(
       formatWeaponAbilityFactFromProperties([
         { id: PROPERTY_IDS.RANGE, name: 'Range', op_1_lvl: 0 },
-      ])
+      ]),
     ).toBe('Acuity Weapon');
     expect(formatWeaponAbilityFactFromProperties([])).toBe('Strength Weapon');
   });
@@ -152,7 +150,7 @@ describe('compact-facts formatters', () => {
         { id: 99, name: 'Weapon Damage', description: 'Base damage.' },
         { id: 98, name: 'Armor Base', description: 'Calc only.' },
         { id: 97, name: 'Damage Reduction', description: 'DR prop.' },
-      ]
+      ],
     );
     expect(named).toHaveLength(1);
     expect(named[0].name).toBe('Graze');
@@ -168,7 +166,7 @@ describe('compact-facts formatters', () => {
     const withCost = namedPropertyDescriptorChips(
       ['Graze'],
       [{ id: 1, name: 'Graze', description: 'Tip', op_1_lvl: 2, base_tp: 1, op_1_tp: 1 } as never],
-      { includeCost: true }
+      { includeCost: true },
     );
     expect(withCost[0]?.cost).toBeGreaterThan(0);
   });

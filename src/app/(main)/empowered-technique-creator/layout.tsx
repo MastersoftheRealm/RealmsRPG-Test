@@ -5,6 +5,10 @@ export const metadata: Metadata = {
   description: 'Build empowered techniques by combining power and technique mechanics.',
 };
 
-export default function EmpoweredTechniqueCreatorLayout({ children }: { children: React.ReactNode }) {
+export default function EmpoweredTechniqueCreatorLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return children;
 }

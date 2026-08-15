@@ -13,7 +13,9 @@ vi.mock('@/lib/rate-limit', () => ({
   buildRateLimitKey: vi.fn(() => 'campaigns-get:test'),
   resolveClientIp: vi.fn(() => '203.0.113.1'),
   standardLimiter: {
-    check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+    check: vi.fn(() =>
+      Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 }),
+    ),
   },
 }));
 
@@ -38,7 +40,11 @@ type CampaignRow = {
   updated_at: string | null;
 };
 
-function makeCampaignRow(id: string, ownerId: string, overrides: Partial<CampaignRow> = {}): CampaignRow {
+function makeCampaignRow(
+  id: string,
+  ownerId: string,
+  overrides: Partial<CampaignRow> = {},
+): CampaignRow {
   return {
     id,
     name: 'Test Campaign',
@@ -82,7 +88,7 @@ function createMockSupabase(config: {
             return {
               in: vi.fn().mockResolvedValue({
                 data: Object.entries(membersByCampaign).flatMap(([campaignId, userIds]) =>
-                  userIds.map((user_id) => ({ campaign_id: campaignId, user_id }))
+                  userIds.map((user_id) => ({ campaign_id: campaignId, user_id })),
                 ),
                 error: null,
               }),
@@ -139,7 +145,7 @@ describe('GET /api/campaigns', () => {
   it('returns an empty list when the user has no campaigns', async () => {
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     mockCreateClient.mockResolvedValue(
-      createMockSupabase({ memberCampaignIds: [], ownedCampaignIds: [] }) as never
+      createMockSupabase({ memberCampaignIds: [], ownedCampaignIds: [] }) as never,
     );
 
     const response = await GET(makeGetRequest());
@@ -157,7 +163,7 @@ describe('GET /api/campaigns', () => {
         ownedCampaignIds: ['camp-1'],
         campaigns: [row],
         membersByCampaign: { 'camp-1': [OWNER.uid] },
-      }) as never
+      }) as never,
     );
 
     const response = await GET(makeGetRequest());

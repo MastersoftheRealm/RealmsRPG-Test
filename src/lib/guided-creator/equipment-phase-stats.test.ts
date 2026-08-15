@@ -10,43 +10,26 @@ describe('buildEquipmentPhaseCardStats (TASK-457)', () => {
   it('puts Currency and Training Points in titleChips only for weapons', () => {
     const stats = buildEquipmentPhaseCardStats({
       category: 'weapon',
-      properties: [
-        { name: 'One-handed' },
-        { name: 'Finesse' },
-        { name: 'Graze' },
-      ],
+      properties: [{ name: 'One-handed' }, { name: 'Finesse' }, { name: 'Graze' }],
       damageLine: '1d6 Slashing',
       unitCost: 12,
       trainingPoints: 4,
-      itemProperties: [
-        { name: 'Graze', description: 'Graze on miss', op_1_lvl: 0 } as never,
-      ],
+      itemProperties: [{ name: 'Graze', description: 'Graze on miss', op_1_lvl: 0 } as never],
     });
 
-    expect(stats.titleChips.map((c) => c.name)).toEqual([
-      'Currency 12',
-      'Training Points 4',
-    ]);
+    expect(stats.titleChips.map((c) => c.name)).toEqual(['Currency 12', 'Training Points 4']);
     expect(stats.detailChips.some((c) => /^currency\s/i.test(c.name))).toBe(false);
-    expect(stats.detailChips.some((c) => /^training points\s/i.test(c.name))).toBe(
-      false
-    );
+    expect(stats.detailChips.some((c) => /^training points\s/i.test(c.name))).toBe(false);
   });
 
   it('puts mechanic facts and named properties in detailChips, not titleChips', () => {
     const stats = buildEquipmentPhaseCardStats({
       category: 'weapon',
-      properties: [
-        { name: 'One-handed' },
-        { name: 'Finesse' },
-        { name: 'Graze' },
-      ],
+      properties: [{ name: 'One-handed' }, { name: 'Finesse' }, { name: 'Graze' }],
       damageLine: '1d6 Slashing',
       unitCost: 5,
       trainingPoints: 2,
-      itemProperties: [
-        { name: 'Graze', description: 'Graze on miss', op_1_lvl: 0 } as never,
-      ],
+      itemProperties: [{ name: 'Graze', description: 'Graze on miss', op_1_lvl: 0 } as never],
     });
 
     const detailNames = stats.detailChips.map((c) => c.name);
@@ -81,10 +64,7 @@ describe('buildEquipmentPhaseCardStats (TASK-457)', () => {
       ],
     });
 
-    expect(stats.titleChips.map((c) => c.name)).toEqual([
-      'Currency 20',
-      'Training Points 3',
-    ]);
+    expect(stats.titleChips.map((c) => c.name)).toEqual(['Currency 20', 'Training Points 3']);
     expect(stats.detailChips.map((c) => c.name)).toEqual([
       'Strength Requirement 1+',
       'Damage Reduction 2',
@@ -128,4 +108,3 @@ describe('buildEquipmentPhaseCardStats (TASK-457)', () => {
     expect(corruptNames).not.toContain('0');
   });
 });
-

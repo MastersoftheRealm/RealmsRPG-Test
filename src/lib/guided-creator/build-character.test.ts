@@ -94,10 +94,8 @@ describe('buildGuidedCharacterPayload', () => {
         officialItems,
         officialPowers,
         itemPropertiesDb: [{ id: 10, name: 'Heavy', base_tp: 2, op_1_tp: 0 }],
-        powerPartsDb: [
-          { id: 20, name: 'Damage', base_tp: 1, op_1_tp: 1, op_2_tp: 0, op_3_tp: 0 },
-        ],
-      }
+        powerPartsDb: [{ id: 20, name: 'Damage', base_tp: 1, op_1_tp: 1, op_2_tp: 0, op_3_tp: 0 }],
+      },
     );
 
     expect(payload.status).toBe('complete');
@@ -111,13 +109,17 @@ describe('buildGuidedCharacterPayload', () => {
 
     const totalTp = (payload.proficiencies ?? []).reduce(
       (sum, p) => sum + calculateProficiencyTP(p),
-      0
+      0,
     );
     expect(totalTp).toBeGreaterThan(0);
 
     // Lean power refs keep library names (parts stay off the save shape until cleanForSave).
     expect(payload.powers?.[0]).toMatchObject({ id: 'p1', name: 'Firebolt' });
-    expect(payload.equipment?.weapons?.[0]).toMatchObject({ id: 'w1', name: 'Greataxe', equipped: true });
+    expect(payload.equipment?.weapons?.[0]).toMatchObject({
+      id: 'w1',
+      name: 'Greataxe',
+      equipped: true,
+    });
 
     const lean = cleanForSave(payload as Character);
     expect(lean.proficiencies?.length).toBe(payload.proficiencies?.length);
@@ -142,7 +144,7 @@ describe('buildGuidedCharacterPayload', () => {
             description: 'A custom sword.',
           },
         ],
-      }
+      },
     );
 
     expect(payload.equipment?.weapons?.[0]).toMatchObject({
@@ -166,7 +168,7 @@ describe('buildGuidedCharacterPayload', () => {
             parts: [],
           },
         ],
-      }
+      },
     );
 
     expect(payload.powers?.[0]).toMatchObject({
@@ -176,23 +178,26 @@ describe('buildGuidedCharacterPayload', () => {
   });
 
   it('returns empty proficiencies when loadout has no TP-costing parts/properties', () => {
-    const payload = buildGuidedCharacterPayload(minimalDraft({ loadoutWeapons: [], armaments: [] }), {
-      officialItems: [],
-      officialPowers: [],
-    });
+    const payload = buildGuidedCharacterPayload(
+      minimalDraft({ loadoutWeapons: [], armaments: [] }),
+      {
+        officialItems: [],
+        officialPowers: [],
+      },
+    );
     expect(payload.proficiencies).toEqual([]);
   });
 
   it('hides the opposite Library tab for power-only and martial-only', () => {
     const powerPayload = buildGuidedCharacterPayload(
       minimalDraft({ archetypeType: 'power', pow_abil: 'intelligence', mart_abil: null }),
-      {}
+      {},
     );
     expect(powerPayload.libraryTabVisibility).toEqual({ techniques: false });
 
     const martialPayload = buildGuidedCharacterPayload(
       minimalDraft({ archetypeType: 'martial' }),
-      {}
+      {},
     );
     expect(martialPayload.libraryTabVisibility).toEqual({ powers: false });
 
@@ -202,7 +207,7 @@ describe('buildGuidedCharacterPayload', () => {
         pow_abil: 'intelligence',
         mart_abil: 'strength',
       }),
-      {}
+      {},
     );
     expect(hybridPayload.libraryTabVisibility).toBeUndefined();
 
@@ -219,7 +224,7 @@ describe('buildGuidedCharacterPayload', () => {
         pow_abil: 'intelligence',
         mart_abil: null,
       }),
-      {}
+      {},
     );
     expect(payload.creationMode).toBeUndefined();
     expect(payload.archetypePathId).toBeUndefined();
@@ -236,7 +241,7 @@ describe('buildGuidedCharacterPayload', () => {
         archetypeType: 'martial',
         mart_abil: 'strength',
       }),
-      {}
+      {},
     );
     expect((payload as Record<string, unknown>).creatorEntryMode).toBeUndefined();
     const lean = cleanForSave(payload as Character);
@@ -259,7 +264,7 @@ describe('buildGuidedCharacterPayload', () => {
           species_traits: ['species-trait-a', 'species-trait-b'],
           skills: [],
         } as never,
-      }
+      },
     );
 
     expect(payload.ancestry?.selectedTraits).toEqual(['anc-1', 'anc-2']);
@@ -285,7 +290,7 @@ describe('buildGuidedCharacterPayload', () => {
         species: null,
         speciesA: { id: 'elf', name: 'Elf', ave_height: 170, ave_weight: 70 } as never,
         speciesB: { id: 'dwarf', name: 'Dwarf', ave_height: 130, ave_weight: 60 } as never,
-      }
+      },
     );
 
     expect(payload.ancestry?.mixed).toBe(true);
@@ -318,7 +323,7 @@ describe('buildGuidedCharacterPayload', () => {
           { id: 'feat-b', name: 'Toughness' },
           { id: 'feat-c', name: 'Lucky' },
         ],
-      }
+      },
     );
 
     expect(payload.powers?.map((p) => p.id)).toEqual(['p1', 'p2']);
@@ -339,7 +344,7 @@ describe('buildGuidedCharacterPayload', () => {
           { id: 'feat-b', name: 'Toughness' },
           { id: 'feat-c', name: 'Lucky' },
         ],
-      }
+      },
     );
 
     expect(payload.archetypeFeats).toEqual([
@@ -356,8 +361,22 @@ describe('buildGuidedCharacterPayload', () => {
   it('auto-equips starter gear with a single armor piece by DR', () => {
     const officialItems: LibraryItem[] = [
       { id: 'w1', docId: 'w1', name: 'Sword', type: 'weapon', properties: [] },
-      { id: 'a-light', docId: 'a-light', name: 'Leather', type: 'armor', armorValue: 1, properties: [] },
-      { id: 'a-heavy', docId: 'a-heavy', name: 'Plate', type: 'armor', armorValue: 4, properties: [] },
+      {
+        id: 'a-light',
+        docId: 'a-light',
+        name: 'Leather',
+        type: 'armor',
+        armorValue: 1,
+        properties: [],
+      },
+      {
+        id: 'a-heavy',
+        docId: 'a-heavy',
+        name: 'Plate',
+        type: 'armor',
+        armorValue: 4,
+        properties: [],
+      },
       { id: 's1', docId: 's1', name: 'Buckler', type: 'shield', properties: [] },
     ];
 
@@ -402,7 +421,7 @@ describe('buildGuidedCharacterPayload', () => {
         codexSkills: [
           { id: '30', name: 'Lockpick', ability: 'Agility,Intelligence', category: 'mental' },
         ],
-      }
+      },
     );
     const rows = payload.skills as unknown as Array<{ id?: string; ability?: string }>;
     expect(rows.find((s) => s.id === '30')?.ability).toBe('intelligence');

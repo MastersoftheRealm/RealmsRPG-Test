@@ -5,12 +5,7 @@ import { GridListRow } from '@/components/shared/grid-list-row';
 import { ListHeader } from '@/components/shared/list-header';
 import { SectionHeader } from '@/components/shared/section-header';
 import { useLibrarySectionCollapse } from '@/hooks/use-library-section-collapse';
-import {
-  FEAT_COLUMNS,
-  FEAT_GRID,
-  FEAT_COLUMNS_WITH_LEVEL,
-  FEAT_GRID_WITH_LEVEL,
-} from './entity-library-sections-columns';
+import { FEAT_COLUMNS, FEAT_GRID } from './entity-library-sections-columns';
 import {
   formatRecoveryAbbrev,
   renderInteractiveGridRows,
@@ -39,11 +34,11 @@ export function LibraryCollapsibleSection({
   children: ReactNode;
   className?: string;
 }) {
-  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useLibrarySectionCollapse(
-    true,
-    itemCount,
-    onAdd
-  );
+  const {
+    isContentVisible,
+    onAdd: onAddWrapped,
+    headerCollapseProps,
+  } = useLibrarySectionCollapse(true, itemCount, onAdd);
   return (
     <div className={className}>
       <SectionHeader
@@ -66,7 +61,6 @@ export function FeatsTraitsListSection({
   showListHeader = true,
   compactRows = true,
   showTitle = true,
-  includeLevelColumn = false,
   sortState,
   onSort,
   rowChrome,
@@ -82,27 +76,23 @@ export function FeatsTraitsListSection({
   showListHeader?: boolean;
   compactRows?: boolean;
   showTitle?: boolean;
-  /** Show Lvl column header when editing leveled feats */
-  includeLevelColumn?: boolean;
   headerRightContent?: ReactNode;
   addButtonClassName?: string;
 } & EntityListControls) {
   const hasAny = items.length > 0;
   const useInteractiveRows = items.some((item) => item.columns != null);
-  const featColumns = includeLevelColumn ? FEAT_COLUMNS_WITH_LEVEL : FEAT_COLUMNS;
-  const featGrid = includeLevelColumn ? FEAT_GRID_WITH_LEVEL : FEAT_GRID;
-  const { isContentVisible, onAdd: onAddWrapped, headerCollapseProps } = useEntityListSectionCollapse(
-    collapsible,
-    items.length,
-    onAdd
-  );
+  const {
+    isContentVisible,
+    onAdd: onAddWrapped,
+    headerCollapseProps,
+  } = useEntityListSectionCollapse(collapsible, items.length, onAdd);
 
   const listBody = (
     <>
       {showListHeader && hasAny && (
         <ListHeader
-          columns={useInteractiveRows ? featColumns : FEAT_COLUMNS}
-          gridColumns={useInteractiveRows ? featGrid : FEAT_GRID}
+          columns={FEAT_COLUMNS}
+          gridColumns={FEAT_GRID}
           sortState={sortState}
           onSort={onSort}
           rowChrome={rowChrome}
@@ -111,7 +101,7 @@ export function FeatsTraitsListSection({
       {hasAny ? (
         <div className="space-y-1">
           {useInteractiveRows
-            ? renderInteractiveGridRows(items, featGrid, () => [], compactRows)
+            ? renderInteractiveGridRows(items, FEAT_GRID, () => [], compactRows)
             : items.map((feat, index) => {
                 const uses =
                   (feat.maxUses ?? 0) > 0
@@ -129,7 +119,13 @@ export function FeatsTraitsListSection({
                     gridColumns={FEAT_GRID}
                     columns={
                       noUsesOrRecovery
-                        ? [{ key: 'description', value: truncateText(feat.description, 220), hideOnMobile: true }]
+                        ? [
+                            {
+                              key: 'description',
+                              value: truncateText(feat.description, 220),
+                              hideOnMobile: true,
+                            },
+                          ]
                         : [
                             {
                               key: 'description',
@@ -148,7 +144,7 @@ export function FeatsTraitsListSection({
               })}
         </div>
       ) : (
-        <p className="text-sm text-text-muted dark:text-text-secondary italic text-center py-4">{emptyMessage}</p>
+        <p className="py-4 text-center text-sm text-text-muted italic">{emptyMessage}</p>
       )}
     </>
   );

@@ -13,7 +13,7 @@ export interface PowersPhaseVisibility {
 }
 
 export function resolvePowersPhaseVisibility(
-  archetypeType: ArchetypeCategory | null
+  archetypeType: ArchetypeCategory | null,
 ): PowersPhaseVisibility {
   if (archetypeType === 'martial') {
     return { includeInnate: false, includePowers: false, includeTechniques: true };
@@ -25,9 +25,7 @@ export function resolvePowersPhaseVisibility(
   return { includeInnate: true, includePowers: true, includeTechniques: false };
 }
 
-export function visiblePowersPhases(
-  visibility: PowersPhaseVisibility
-): GuidedPowersPhase[] {
+export function visiblePowersPhases(visibility: PowersPhaseVisibility): GuidedPowersPhase[] {
   const phases: GuidedPowersPhase[] = [];
   if (visibility.includeInnate) phases.push('innate');
   if (visibility.includePowers) phases.push('powers');
@@ -37,7 +35,7 @@ export function visiblePowersPhases(
 
 export function nextPowersPhase(
   current: GuidedPowersPhase,
-  visibility: PowersPhaseVisibility
+  visibility: PowersPhaseVisibility,
 ): GuidedPowersPhase | null {
   const phases = visiblePowersPhases(visibility);
   const idx = phases.indexOf(current);
@@ -47,7 +45,7 @@ export function nextPowersPhase(
 
 export function prevPowersPhase(
   current: GuidedPowersPhase,
-  visibility: PowersPhaseVisibility
+  visibility: PowersPhaseVisibility,
 ): GuidedPowersPhase | null {
   const phases = visiblePowersPhases(visibility);
   const idx = phases.indexOf(current);
@@ -57,7 +55,7 @@ export function prevPowersPhase(
 
 export function isLastPowersPhase(
   current: GuidedPowersPhase,
-  visibility: PowersPhaseVisibility
+  visibility: PowersPhaseVisibility,
 ): boolean {
   const phases = visiblePowersPhases(visibility);
   return phases[phases.length - 1] === current;
@@ -65,7 +63,7 @@ export function isLastPowersPhase(
 
 export function powersPhaseIndex(
   phase: GuidedPowersPhase,
-  visibility: PowersPhaseVisibility
+  visibility: PowersPhaseVisibility,
 ): number {
   return visiblePowersPhases(visibility).indexOf(phase);
 }

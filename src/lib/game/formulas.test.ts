@@ -48,20 +48,17 @@ describe('unproficientBonus', () => {
     [3, 2],
     [4, 2],
     [5, 3],
-  ] as const)(
-    'unarmed unproficient attack/damage for ability %i is %i',
-    (ability, expected) => {
-      expect(unproficientBonus(ability)).toBe(expected);
-    }
-  );
+  ] as const)('unarmed unproficient attack/damage for ability %i is %i', (ability, expected) => {
+    expect(unproficientBonus(ability)).toBe(expected);
+  });
 
   it('calculateSkillBonusWithProficiency uses unproficientBonus when not proficient', () => {
-    expect(
-      calculateSkillBonusWithProficiency('strength', 2, abilities, false)
-    ).toBe(unproficientBonus(-2));
-    expect(
-      calculateSkillBonusWithProficiency('agility', 2, abilities, false)
-    ).toBe(unproficientBonus(3));
+    expect(calculateSkillBonusWithProficiency('strength', 2, abilities, false)).toBe(
+      unproficientBonus(-2),
+    );
+    expect(calculateSkillBonusWithProficiency('agility', 2, abilities, false)).toBe(
+      unproficientBonus(3),
+    );
   });
 });
 
@@ -90,27 +87,31 @@ describe('calculateArchetypeProgression innate thresholds', () => {
 
 describe('allocateHealthEnergyPool', () => {
   it('puts leftover pool into Health after covering the highest Energy cost', () => {
-    expect(
-      allocateHealthEnergyPool({ baseEnergy: 3, pool: 18, highestEnergyCost: 8 })
-    ).toEqual({ hpBonus: 13, energyBonus: 5 });
+    expect(allocateHealthEnergyPool({ baseEnergy: 3, pool: 18, highestEnergyCost: 8 })).toEqual({
+      hpBonus: 13,
+      energyBonus: 5,
+    });
   });
 
   it('spends the whole pool on Health when there is no Energy cost', () => {
-    expect(
-      allocateHealthEnergyPool({ baseEnergy: 4, pool: 18, highestEnergyCost: 0 })
-    ).toEqual({ hpBonus: 18, energyBonus: 0 });
+    expect(allocateHealthEnergyPool({ baseEnergy: 4, pool: 18, highestEnergyCost: 0 })).toEqual({
+      hpBonus: 18,
+      energyBonus: 0,
+    });
   });
 
   it('caps Energy at the pool when the cost exceeds base + pool', () => {
-    expect(
-      allocateHealthEnergyPool({ baseEnergy: 2, pool: 18, highestEnergyCost: 40 })
-    ).toEqual({ hpBonus: 0, energyBonus: 18 });
+    expect(allocateHealthEnergyPool({ baseEnergy: 2, pool: 18, highestEnergyCost: 40 })).toEqual({
+      hpBonus: 0,
+      energyBonus: 18,
+    });
   });
 
   it('needs no Energy bonus when base Energy already covers the cost', () => {
-    expect(
-      allocateHealthEnergyPool({ baseEnergy: 10, pool: 18, highestEnergyCost: 8 })
-    ).toEqual({ hpBonus: 18, energyBonus: 0 });
+    expect(allocateHealthEnergyPool({ baseEnergy: 10, pool: 18, highestEnergyCost: 8 })).toEqual({
+      hpBonus: 18,
+      energyBonus: 0,
+    });
   });
 });
 
@@ -125,7 +126,7 @@ describe('calculateSkillPointsForEntity (T3 / M4)', () => {
       // Historical sheet `2 + level*3 − speciesCount` granted +2 when species
       // lookup failed (speciesCount 0). Engine must not.
       expect(engine).not.toBe(2 + level * 3);
-    }
+    },
   );
 });
 
@@ -136,7 +137,7 @@ describe('pickHighestEnergyCost', () => {
         { name: 'Spark', energy: 4, kind: 'power' },
         { name: 'Bolt', energy: 8, kind: 'power' },
         { name: 'Strike', energy: 8, kind: 'technique' },
-      ])
+      ]),
     ).toEqual({ name: 'Bolt', energy: 8, kind: 'power' });
   });
 
@@ -157,7 +158,7 @@ describe('resolveArchetypeProficiencyStart', () => {
 
   it('prefers path start columns over type defaults', () => {
     expect(
-      resolveArchetypeProficiencyStart('power', { power_prof_start: 3, martial_prof_start: 1 })
+      resolveArchetypeProficiencyStart('power', { power_prof_start: 3, martial_prof_start: 1 }),
     ).toEqual({ pow_prof: 3, mart_prof: 1 });
   });
 });
@@ -181,7 +182,7 @@ describe('parseLevel does not collapse 0 or 0.25 to 1 (T5 / N1)', () => {
     expect(calculateAbilityPoints(0.25, true)).not.toBe(calculateAbilityPoints(1, true));
     expect(calculateProficiency(0.25, true)).not.toBe(calculateProficiency(1, true));
     expect(calculateHealthEnergyPool(0.25, 'CREATURE', true)).not.toBe(
-      calculateHealthEnergyPool(1, 'CREATURE', true)
+      calculateHealthEnergyPool(1, 'CREATURE', true),
     );
     expect(calculateCreatureTrainingPoints(0.25)).not.toBe(calculateCreatureTrainingPoints(1));
     expect(calculateCreatureFeatPoints(0.25)).not.toBe(calculateCreatureFeatPoints(1));
@@ -200,16 +201,16 @@ describe('calculateMaxArchetypeFeats (M9)', () => {
     expect(calculateMaxArchetypeFeats(4, 'powered-martial')).toBe(5);
     expect(calculateMaxArchetypeFeats(4, 'powered-martial', undefined, { 4: 'feat' })).toBe(6);
     expect(calculateMaxArchetypeFeats(4, 'powered-martial', undefined, { 4: 'innate' })).toBe(5);
-    expect(
-      calculateMaxArchetypeFeats(4, 'powered-martial', undefined, { 4: 'feat' })
-    ).toBe(4 + calculateArchetypeProgression(4, 1, 1, { 4: 'feat' }).bonusArchetypeFeats);
+    expect(calculateMaxArchetypeFeats(4, 'powered-martial', undefined, { 4: 'feat' })).toBe(
+      4 + calculateArchetypeProgression(4, 1, 1, { 4: 'feat' }).bonusArchetypeFeats,
+    );
   });
 });
 
 describe('calculateSubSkillBonusWithProficiency (M13)', () => {
   it('uses unproficientBonus when the base skill is unproficient', () => {
-    expect(
-      calculateSubSkillBonusWithProficiency('strength', 2, 0, false, abilities, false)
-    ).toBe(unproficientBonus(-2) + 0);
+    expect(calculateSubSkillBonusWithProficiency('strength', 2, 0, false, abilities, false)).toBe(
+      unproficientBonus(-2) + 0,
+    );
   });
 });

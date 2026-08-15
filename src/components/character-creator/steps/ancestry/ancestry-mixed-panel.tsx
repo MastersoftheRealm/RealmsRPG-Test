@@ -92,20 +92,26 @@ export function AncestryMixedPanel({
   const selectedSize = draft.ancestry?.selectedSize || '';
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col flex-1 min-h-0">
-      <div className="flex items-start justify-between mb-4">
+    <div className="mx-auto flex min-h-0 max-w-4xl flex-1 flex-col">
+      <div className="mb-4 flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-1 mb-2">
+          <div className="mb-2 flex items-center gap-1">
             <h2 className="text-2xl font-bold text-text-primary">Mixed Species: Ancestry</h2>
-            <InfoTippy content={chooseYourAncestryTraits} allowHTML label="Ancestry trait rules" size="inline" />
+            <InfoTippy
+              content={chooseYourAncestryTraits}
+              allowHTML
+              label="Ancestry trait rules"
+              size="inline"
+            />
           </div>
           <p className="text-text-secondary">
-            <strong>{nameA}</strong> + <strong>{nameB}</strong>. Set physical traits and choose one species trait from each, then ancestry and optional flaw.
+            <strong>{nameA}</strong> + <strong>{nameB}</strong>. Set physical traits and choose one
+            species trait from each, then ancestry and optional flaw.
           </p>
         </div>
         <button
           onClick={onChangeSpecies}
-          className="text-sm text-primary-link-fg hover:text-primary-fg-hover underline"
+          className="text-sm text-primary-link-fg underline hover:text-primary-fg-hover"
         >
           Change Species
         </button>
@@ -117,28 +123,36 @@ export function AncestryMixedPanel({
         ancestryPathNotes={ancestryPathNotes}
       />
 
-      <Card className="bg-surface-alt p-4 mb-6 shadow-none">
-        <h3 className="font-semibold text-text-primary mb-3">Physical (averaged)</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-4">
+      <Card className="mb-6 bg-surface-alt p-4 shadow-none">
+        <h3 className="mb-3 font-semibold text-text-primary">Physical (averaged)</h3>
+        <div className="mb-4 grid grid-cols-2 gap-4 text-center md:grid-cols-4">
           <div>
             <span className="block text-xs text-text-muted uppercase">Avg Height</span>
-            <span className="font-bold text-text-primary">{ph?.aveHeight != null ? `${ph.aveHeight} cm` : '-'}</span>
+            <span className="font-bold text-text-primary">
+              {ph?.aveHeight != null ? `${ph.aveHeight} cm` : '-'}
+            </span>
           </div>
           <div>
             <span className="block text-xs text-text-muted uppercase">Avg Weight</span>
-            <span className="font-bold text-text-primary">{ph?.aveWeight != null ? `${ph.aveWeight} kg` : '-'}</span>
+            <span className="font-bold text-text-primary">
+              {ph?.aveWeight != null ? `${ph.aveWeight} kg` : '-'}
+            </span>
           </div>
           <div>
             <span className="block text-xs text-text-muted uppercase">Adulthood</span>
-            <span className="font-bold text-text-primary">{ph?.adulthood != null ? `${ph.adulthood} yr` : '-'}</span>
+            <span className="font-bold text-text-primary">
+              {ph?.adulthood != null ? `${ph.adulthood} yr` : '-'}
+            </span>
           </div>
           <div>
             <span className="block text-xs text-text-muted uppercase">Lifespan (max)</span>
-            <span className="font-bold text-text-primary">{ph?.maxAge != null ? `${ph.maxAge} yr` : '-'}</span>
+            <span className="font-bold text-text-primary">
+              {ph?.maxAge != null ? `${ph.maxAge} yr` : '-'}
+            </span>
           </div>
         </div>
         <div>
-          <span className="block text-xs text-text-muted uppercase mb-1">Size (choose one)</span>
+          <span className="mb-1 block text-xs text-text-muted uppercase">Size (choose one)</span>
           <select
             value={selectedSize}
             onChange={(e) => setMixedSize(e.target.value)}
@@ -147,34 +161,37 @@ export function AncestryMixedPanel({
           >
             <option value="">Select size</option>
             {combinedSizes.map((s) => (
-              <option key={s} value={s}>{s}</option>
+              <option key={s} value={s}>
+                {s}
+              </option>
             ))}
           </select>
         </div>
       </Card>
 
       {mixedSpeciesSkillOptions.length > 0 && (
-        <Card className="bg-surface-alt p-4 mb-6 shadow-none">
-          <h3 className="font-semibold text-text-primary mb-1">Species skills</h3>
-          <p className="text-sm text-text-secondary mb-3">
-            Choose exactly 2 skills from the options below (from both species). You get proficiency in these; all other species skills are not granted.
+        <Card className="mb-6 bg-surface-alt p-4 shadow-none">
+          <h3 className="mb-1 font-semibold text-text-primary">Species skills</h3>
+          <p className="mb-3 text-sm text-text-secondary">
+            Choose exactly 2 skills from the options below (from both species). You get proficiency
+            in these; all other species skills are not granted.
           </p>
           <MixedSpeciesSkillPicker
             options={mixedSpeciesSkillOptions}
             selectedIds={selectedSpeciesSkillIds}
             onToggle={toggleMixedSpeciesSkill}
           />
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-2">
+          <p className="mt-2 text-xs text-text-muted">
             Selected: {selectedSpeciesSkillIds.length} / 2
           </p>
         </Card>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+      <div className="mb-6 grid grid-cols-1 gap-6 md:grid-cols-2">
         <TraitSection
           title={`Species trait from ${nameA}`}
           subtitle="Choose 1"
-          icon={<Heart className="w-5 h-5 text-primary-link-fg" />}
+          icon={<Heart className="h-5 w-5 text-primary-link-fg" />}
           traits={speciesTraitsFromA}
           selectable
           selectedIds={selectedSpeciesTraits?.[0] ? [selectedSpeciesTraits[0]] : []}
@@ -185,7 +202,7 @@ export function AncestryMixedPanel({
         <TraitSection
           title={`Species trait from ${nameB}`}
           subtitle="Choose 1"
-          icon={<Heart className="w-5 h-5 text-primary-link-fg" />}
+          icon={<Heart className="h-5 w-5 text-primary-link-fg" />}
           traits={speciesTraitsFromB}
           selectable
           selectedIds={selectedSpeciesTraits?.[1] ? [selectedSpeciesTraits[1]] : []}
@@ -198,11 +215,17 @@ export function AncestryMixedPanel({
       {ancestryForFirstSlot.length > 0 && (
         <TraitSection
           title="Ancestry trait"
-          subtitle={selectedFlaw ? '1 from either species; 2nd below from the species you took the flaw from' : 'Choose 1 from either species'}
-          icon={<Star className="w-5 h-5 text-warning-700 dark:text-warning-400" />}
+          subtitle={
+            selectedFlaw
+              ? '1 from either species; 2nd below from the species you took the flaw from'
+              : 'Choose 1 from either species'
+          }
+          icon={<Star className="h-5 w-5 text-warning-700 dark:text-warning-400" />}
           traits={ancestryForFirstSlot}
           selectable
-          selectedIds={draft.ancestry?.selectedTraits?.[0] ? [draft.ancestry.selectedTraits[0]] : []}
+          selectedIds={
+            draft.ancestry?.selectedTraits?.[0] ? [draft.ancestry.selectedTraits[0]] : []
+          }
           onToggle={setAncestryBaseMixed}
           variant="ancestry"
           allTraits={allTraits ?? undefined}
@@ -213,7 +236,7 @@ export function AncestryMixedPanel({
         <TraitSection
           title="Characteristic"
           subtitle="Choose 1 (optional)"
-          icon={<Sparkles className="w-5 h-5 text-info-fg dark:text-info-400" />}
+          icon={<Sparkles className="h-5 w-5 text-info-fg dark:text-info-400" />}
           traits={characteristics}
           selectable
           selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}
@@ -225,18 +248,20 @@ export function AncestryMixedPanel({
 
       {(flawsFromA.length > 0 || flawsFromB.length > 0) && (
         <div className="mb-6">
-          <h3 className="font-semibold text-text-primary mb-2 flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 text-danger-700 dark:text-danger-400" />
+          <h3 className="mb-2 flex items-center gap-2 font-semibold text-text-primary">
+            <AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />
             Flaw (optional, grants +1 ancestry trait from the same species)
           </h3>
           {flawsFromA.length > 0 && (
             <TraitSection
               title={`Flaws from ${nameA}`}
               subtitle="Choose up to 1"
-              icon={<AlertTriangle className="w-5 h-5 text-danger-700 dark:text-danger-400" />}
+              icon={<AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />}
               traits={flawsFromA}
               selectable
-              selectedIds={selectedFlaw && selectedFlawSpeciesId === speciesA.id ? [selectedFlaw] : []}
+              selectedIds={
+                selectedFlaw && selectedFlawSpeciesId === speciesA.id ? [selectedFlaw] : []
+              }
               onToggle={(id) => toggleFlawMixed(id, speciesA.id)}
               variant="flaw"
               allTraits={allTraits ?? undefined}
@@ -246,10 +271,12 @@ export function AncestryMixedPanel({
             <TraitSection
               title={`Flaws from ${nameB}`}
               subtitle="Choose up to 1"
-              icon={<AlertTriangle className="w-5 h-5 text-danger-700 dark:text-danger-400" />}
+              icon={<AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />}
               traits={flawsFromB}
               selectable
-              selectedIds={selectedFlaw && selectedFlawSpeciesId === speciesB.id ? [selectedFlaw] : []}
+              selectedIds={
+                selectedFlaw && selectedFlawSpeciesId === speciesB.id ? [selectedFlaw] : []
+              }
               onToggle={(id) => toggleFlawMixed(id, speciesB.id)}
               variant="flaw"
               allTraits={allTraits ?? undefined}
@@ -262,10 +289,12 @@ export function AncestryMixedPanel({
         <TraitSection
           title={`Extra ancestry trait (from ${selectedFlawSpeciesId === speciesA.id ? nameA : nameB} only)`}
           subtitle="Choose 1"
-          icon={<Star className="w-5 h-5 text-warning-700 dark:text-warning-400" />}
+          icon={<Star className="h-5 w-5 text-warning-700 dark:text-warning-400" />}
           traits={ancestryForSecondSlot}
           selectable
-          selectedIds={draft.ancestry?.selectedTraits?.[1] ? [draft.ancestry.selectedTraits[1]] : []}
+          selectedIds={
+            draft.ancestry?.selectedTraits?.[1] ? [draft.ancestry.selectedTraits[1]] : []
+          }
           onToggle={setAncestryExtraMixed}
           variant="ancestry"
           allTraits={allTraits ?? undefined}

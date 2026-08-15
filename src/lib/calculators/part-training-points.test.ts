@@ -7,8 +7,8 @@ describe('computePartTrainingPoints', () => {
     expect(
       computePartTrainingPoints(
         { id: 1, name: 'Test', base_tp: 2, op_1_tp: 1, op_2_tp: 0, op_3_tp: 0 },
-        { op_1_lvl: 2 }
-      )
+        { op_1_lvl: 2 },
+      ),
     ).toBe(4);
   });
 
@@ -24,8 +24,8 @@ describe('computePartTrainingPoints', () => {
           op_3_tp: 0,
         },
         { op_1_lvl: 2 },
-        'technique'
-      )
+        'technique',
+      ),
     ).toBe(3);
   });
 
@@ -41,8 +41,8 @@ describe('computePartTrainingPoints', () => {
           op_3_tp: 0,
         },
         { op_1_lvl: 2 },
-        'power'
-      )
+        'power',
+      ),
     ).toBe(3);
   });
 });

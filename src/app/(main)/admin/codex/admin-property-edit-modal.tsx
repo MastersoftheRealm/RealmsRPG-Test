@@ -75,13 +75,13 @@ export function AdminPropertyEditModal({
     >
       <div className="space-y-4">
         {copySourceName && (
-          <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
-            Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change
-            the name and details as needed, then save to add the new property.
+          <p className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-secondary">
+            Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>.
+            Change the name and details as needed, then save to add the new property.
           </p>
         )}
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Name *</label>
           <Input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -89,7 +89,7 @@ export function AdminPropertyEditModal({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
           <Textarea
             value={form.description}
             onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
@@ -100,11 +100,11 @@ export function AdminPropertyEditModal({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Type</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Type</label>
             <select
               value={form.type}
               onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-              className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Property type"
             >
               {PROPERTY_TYPES.map((type) => (
@@ -114,7 +114,7 @@ export function AdminPropertyEditModal({
               ))}
             </select>
           </div>
-          <label className="flex items-center gap-2 mt-6">
+          <label className="mt-6 flex items-center gap-2">
             <input
               type="checkbox"
               checked={form.mechanic}
@@ -125,7 +125,7 @@ export function AdminPropertyEditModal({
         </div>
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Base IP</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Base IP</label>
             <Input
               type="number"
               min={0}
@@ -140,7 +140,7 @@ export function AdminPropertyEditModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">Base TP</label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Base TP</label>
             <Input
               type="number"
               min={0}
@@ -155,7 +155,7 @@ export function AdminPropertyEditModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Base Cost Multiplier
             </label>
             <Input
@@ -182,7 +182,7 @@ export function AdminPropertyEditModal({
                 onClick={() => setOptionSlotCount(1)}
                 aria-label="Add option"
               >
-                <Plus className="w-4 h-4 mr-1 inline" />
+                <Plus className="mr-1 inline h-4 w-4" />
                 Add option
               </Button>
             )}
@@ -192,7 +192,7 @@ export function AdminPropertyEditModal({
               No option. Click &quot;Add option&quot; if this property has a cost option.
             </p>
           ) : (
-            <div className="rounded-lg border border-border-light bg-surface-alt/50 p-3 space-y-3">
+            <div className="space-y-3 rounded-lg border border-border-light bg-surface-alt/50 p-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-text-secondary">Option</span>
                 <Button
@@ -202,24 +202,24 @@ export function AdminPropertyEditModal({
                   onClick={clearOption}
                   aria-label="Remove option"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label className="mb-1 block text-sm font-medium text-text-secondary">
                   Description
                 </label>
                 <textarea
                   value={form.op_1_desc}
                   onChange={(e) => setForm((f) => ({ ...f, op_1_desc: e.target.value }))}
                   placeholder="What this option does"
-                  className="w-full min-h-[80px] resize-y px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                  className="min-h-[80px] w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-text-primary"
                   rows={3}
                 />
               </div>
-              <div className="grid grid-cols-3 gap-4 max-w-sm">
+              <div className="grid max-w-sm grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                  <label className="mb-1 block text-sm font-medium text-text-secondary">
                     IP (Item Points)
                   </label>
                   <Input
@@ -230,14 +230,15 @@ export function AdminPropertyEditModal({
                     onChange={(e) =>
                       setForm((f) => ({
                         ...f,
-                        op_1_ip: e.target.value === '' ? undefined : parseFloat(e.target.value) || 0,
+                        op_1_ip:
+                          e.target.value === '' ? undefined : parseFloat(e.target.value) || 0,
                       }))
                     }
                     placeholder="-"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                  <label className="mb-1 block text-sm font-medium text-text-secondary">
                     TP (Training Points)
                   </label>
                   <Input
@@ -248,14 +249,15 @@ export function AdminPropertyEditModal({
                     onChange={(e) =>
                       setForm((f) => ({
                         ...f,
-                        op_1_tp: e.target.value === '' ? undefined : parseFloat(e.target.value) || 0,
+                        op_1_tp:
+                          e.target.value === '' ? undefined : parseFloat(e.target.value) || 0,
                       }))
                     }
                     placeholder="-"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                  <label className="mb-1 block text-sm font-medium text-text-secondary">
                     Cost multiplier
                   </label>
                   <Input

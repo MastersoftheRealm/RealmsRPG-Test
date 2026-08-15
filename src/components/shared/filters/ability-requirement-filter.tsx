@@ -45,9 +45,7 @@ export function AbilityRequirementFilter({
   const [selectedAbility, setSelectedAbility] = useState('');
   const [maxValue, setMaxValue] = useState('');
 
-  const availableAbilities = abilities.filter(
-    a => !requirements.some(r => r.ability === a)
-  );
+  const availableAbilities = abilities.filter((a) => !requirements.some((r) => r.ability === a));
 
   const handleAdd = () => {
     if (selectedAbility && maxValue) {
@@ -66,7 +64,10 @@ export function AbilityRequirementFilter({
   return (
     <div className={cn('filter-group', disabled && 'opacity-60', className)}>
       <div className={FILTER_LABEL_ROW_CLASS}>
-        <label htmlFor={abilitySelectId} className="text-sm font-medium leading-5 text-text-secondary">
+        <label
+          htmlFor={abilitySelectId}
+          className="text-sm leading-5 font-medium text-text-secondary"
+        >
           {label}
         </label>
       </div>
@@ -105,12 +106,12 @@ export function AbilityRequirementFilter({
           disabled={disabled || !selectedAbility || !maxValue}
           className="h-11 w-11"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="h-4 w-4" />
         </IconButton>
       </div>
       {requirements.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
-          {requirements.map(req => (
+        <div className="mt-2 flex flex-wrap gap-2">
+          {requirements.map((req) => (
             <Chip
               key={req.ability}
               variant="warning"

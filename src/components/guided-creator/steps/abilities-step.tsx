@@ -39,9 +39,7 @@ export function AbilitiesStep() {
   /** Custom archetype / custom chooser: no codex path → only full point-buy (no L1 recommendations). */
   const customizeOnly = prefersDeepCatalogEntry(draft);
 
-  const [customizing, setCustomizing] = useState(
-    customizeOnly || draft.abilitiesMode === 'custom'
-  );
+  const [customizing, setCustomizing] = useState(customizeOnly || draft.abilitiesMode === 'custom');
   // Reset customize layer when path/mode changes away from custom (render-time adjust; avoids setState-in-effect).
   const abilitiesResetKey = `${customizeOnly}:${draft.abilitiesMode}`;
   const [prevAbilitiesResetKey, setPrevAbilitiesResetKey] = useState(abilitiesResetKey);
@@ -80,17 +78,14 @@ export function AbilitiesStep() {
       resolveDistinctSecondaryAbility(
         archetype?.secondary_ability as AbilityName | undefined,
         powerAbilityProp,
-        martialAbilityProp
+        martialAbilityProp,
       ),
-    [archetype?.secondary_ability, powerAbilityProp, martialAbilityProp]
+    [archetype?.secondary_ability, powerAbilityProp, martialAbilityProp],
   );
 
   const recommended = useMemo(
-    () =>
-      customizeOnly
-        ? null
-        : resolveGuidedRecommendedAbilities(pathData, primary, secondary),
-    [customizeOnly, pathData, primary, secondary]
+    () => (customizeOnly ? null : resolveGuidedRecommendedAbilities(pathData, primary, secondary)),
+    [customizeOnly, pathData, primary, secondary],
   );
 
   const showCustomizePanel = customizeOnly || customizing || !recommended;
@@ -103,8 +98,11 @@ export function AbilitiesStep() {
   const totalPoints = calculateAbilityPoints(1, false, rules);
   const spentPoints = useMemo(
     () =>
-      Object.values(draft.abilities).reduce((sum, val) => sum + calculateAbilityScoreCost(val || 0), 0),
-    [draft.abilities]
+      Object.values(draft.abilities).reduce(
+        (sum, val) => sum + calculateAbilityScoreCost(val || 0),
+        0,
+      ),
+    [draft.abilities],
   );
 
   // Soft default: apply path recommended only when not customizing and mode is not custom.
@@ -155,7 +153,9 @@ export function AbilitiesStep() {
             <GuidedSectionTitle>
               {stepCopy.recommendedHeading(archetype?.name ?? 'your path')}
             </GuidedSectionTitle>
-            <p className="mt-1 font-nunito text-sm text-text-secondary">{stepCopy.recommendedHint}</p>
+            <p className="mt-1 font-nunito text-sm text-text-secondary">
+              {stepCopy.recommendedHint}
+            </p>
             <div className="mt-4">
               <AbilityScoreGrid
                 abilities={displayAbilities}
@@ -166,10 +166,7 @@ export function AbilitiesStep() {
               />
             </div>
           </div>
-          <GuidedLayerNav
-            expandLabel={stepCopy.customize}
-            onExpand={() => setCustomizing(true)}
-          />
+          <GuidedLayerNav expandLabel={stepCopy.customize} onExpand={() => setCustomizing(true)} />
         </>
       )}
 

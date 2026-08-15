@@ -19,8 +19,8 @@ describe('buildPathAbilityChipLabels', () => {
           type: 'power',
           archetype_ability: 'intelligence',
           secondary_ability: 'charisma',
-        })
-      )
+        }),
+      ),
     ).toEqual([
       {
         key: 'primary-intelligence',
@@ -42,8 +42,8 @@ describe('buildPathAbilityChipLabels', () => {
           type: 'powered-martial',
           archetype_ability: 'intelligence',
           secondary_ability: 'strength',
-        })
-      )
+        }),
+      ),
     ).toEqual([
       {
         key: 'primary-intelligence',

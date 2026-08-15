@@ -28,8 +28,6 @@ export {
   CHARACTER_SHEET_SHIELD_GRID,
   FEAT_COLUMNS,
   FEAT_GRID,
-  FEAT_COLUMNS_WITH_LEVEL,
-  FEAT_GRID_WITH_LEVEL,
 } from './entity-library-sections-columns';
 
 export { PowersListSection, TechniquesListSection } from './entity-library-powers-techniques';

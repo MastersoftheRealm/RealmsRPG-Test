@@ -17,19 +17,19 @@ export default function ResourcesPage() {
       <PageHeader title={RESOURCES_COPY.pageTitle} description={RESOURCES_COPY.pageDescription} />
 
       <div className="space-y-8">
-        <Card className="shadow-md p-6">
+        <Card className="p-6 shadow-md">
           <div className="flex items-start gap-4">
-            <div className="p-3 bg-warning-light rounded-lg">
-              <FileText className="w-8 h-8 text-warning-fg" />
+            <div className="rounded-lg bg-warning-light p-3">
+              <FileText className="h-8 w-8 text-warning-fg" />
             </div>
             <div className="flex-1">
-              <h2 className="text-xl font-bold text-text-primary mb-2">
+              <h2 className="mb-2 text-xl font-bold text-text-primary">
                 {RESOURCES_COPY.characterSheet.title}
               </h2>
-              <p className="text-text-secondary mb-4">{RESOURCES_COPY.characterSheet.body}</p>
+              <p className="mb-4 text-text-secondary">{RESOURCES_COPY.characterSheet.body}</p>
               <Button asChild variant="primary">
                 <Link href={RESOURCES_COPY.characterSheet.href} download>
-                  <Download className="w-5 h-5" />
+                  <Download className="h-5 w-5" />
                   {RESOURCES_COPY.characterSheet.downloadLabel}
                 </Link>
               </Button>
@@ -38,7 +38,7 @@ export default function ResourcesPage() {
         </Card>
 
         <Card className="bg-surface-alt p-6">
-          <h2 className="text-xl font-bold text-text-primary mb-4">
+          <h2 className="mb-4 text-xl font-bold text-text-primary">
             {RESOURCES_COPY.comingSoon.heading}
           </h2>
           <ul className="space-y-3">
@@ -46,7 +46,7 @@ export default function ResourcesPage() {
               const Icon = COMING_SOON_ICONS[i] ?? FileText;
               return (
                 <li key={label} className="flex items-center gap-3 text-text-secondary">
-                  <Icon className="w-5 h-5 text-text-muted" />
+                  <Icon className="h-5 w-5 text-text-muted" />
                   {label}
                 </li>
               );

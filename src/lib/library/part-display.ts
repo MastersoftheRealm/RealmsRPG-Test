@@ -4,7 +4,10 @@
  */
 
 import type { PartData } from '@/components/shared';
-import { trainingPointsForItemPropertyRef, type ItemPropertyTpRow } from '@/lib/calculators/item-calc';
+import {
+  trainingPointsForItemPropertyRef,
+  type ItemPropertyTpRow,
+} from '@/lib/calculators/item-calc';
 import {
   computePartTrainingPoints,
   type PartTpVariant,
@@ -54,7 +57,7 @@ export type { PartTpVariant } from '@/lib/calculators/part-training-points';
 
 function buildOptionEntries(
   def: CodexPartRow,
-  levels: Pick<PartPayload, 'op_1_lvl' | 'op_2_lvl' | 'op_3_lvl'>
+  levels: Pick<PartPayload, 'op_1_lvl' | 'op_2_lvl' | 'op_3_lvl'>,
 ): PartData['options'] {
   const opt1 = levels.op_1_lvl ?? 0;
   const opt2 = levels.op_2_lvl ?? 0;
@@ -69,7 +72,7 @@ function buildOptionEntries(
 export function partPayloadToPartData(
   payload: string | PartPayload,
   codexParts: CodexPartRow[],
-  variant: PartTpVariant
+  variant: PartTpVariant,
 ): PartData {
   if (typeof payload === 'string') {
     const codexPart = codexParts.find((p) => p.name?.toLowerCase() === payload.toLowerCase());
@@ -104,16 +107,18 @@ export function partPayloadToPartData(
 export function characterPartsToPartData(
   parts?: CharacterPower['parts'] | CharacterTechnique['parts'],
   codexParts: CodexPartRow[] = [],
-  variant: PartTpVariant = 'power'
+  variant: PartTpVariant = 'power',
 ): PartData[] {
   if (!parts || parts.length === 0) return [];
   const unique = dedupeSavedParts(parts as Array<string | PartPayload>);
-  return unique.map((part) => partPayloadToPartData(part as string | PartPayload, codexParts, variant));
+  return unique.map((part) =>
+    partPayloadToPartData(part as string | PartPayload, codexParts, variant),
+  );
 }
 
 export function itemPropertiesToPartData(
   properties?: Item['properties'],
-  codexProperties: CodexPropertyRow[] = []
+  codexProperties: CodexPropertyRow[] = [],
 ): PartData[] {
   if (!properties || properties.length === 0) return [];
   const db = codexProperties as unknown as ItemPropertyTpRow[];

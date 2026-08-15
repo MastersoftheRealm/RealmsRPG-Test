@@ -8,11 +8,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  useCreatorSave,
-  type PowerPart,
-  type TechniquePart,
-} from '@/hooks';
+import { useCreatorSave, type PowerPart, type TechniquePart } from '@/hooks';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { AreaConfig, DurationConfig } from '@/lib/calculators';
 import { EXCLUDED_PARTS } from '@/app/(main)/power-creator/power-creator-constants';
@@ -239,7 +235,10 @@ export function useEmpoweredTechniqueCreatorWorkspace({
         },
         technique: {
           parts: techniquePartsToSave,
-          additionalDamage: techniqueDamage.amount > 0 ? [{ amount: techniqueDamage.amount, size: techniqueDamage.size }] : [],
+          additionalDamage:
+            techniqueDamage.amount > 0
+              ? [{ amount: techniqueDamage.amount, size: techniqueDamage.size }]
+              : [],
           autoMechanics: dedupeSavedParts([
             ...techniqueDamageMechanicParts,
             ...(attackModeTechniquePart ? [attackModeTechniquePart] : []),
@@ -291,11 +290,7 @@ export function useEmpoweredTechniqueCreatorWorkspace({
 
   const handleLoadEmpoweredTechnique = useCallback(
     (doc: unknown) => {
-      const next = empoweredLibraryRecordToFormState(
-        doc,
-        powerParts,
-        techniqueParts,
-      );
+      const next = empoweredLibraryRecordToFormState(doc, powerParts, techniqueParts);
       if (!next) return;
       applyFormState(next);
       save.setSaveMessage({ type: 'success', text: 'Empowered technique loaded successfully!' });

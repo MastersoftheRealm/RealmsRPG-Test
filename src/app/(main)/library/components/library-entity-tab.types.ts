@@ -28,7 +28,7 @@ const ARMAMENT_SYNC_HINT = 'Properties that no longer exist in the codex may be 
 function armamentTabLabels(
   kind: keyof typeof ARMAMENT_LABELS_BY_KIND,
   createLabel: string,
-  duplicateTitle: string
+  duplicateTitle: string,
 ): LibraryEntityTabLabels {
   const base = ARMAMENT_LABELS_BY_KIND[kind];
   return {
@@ -40,9 +40,17 @@ function armamentTabLabels(
   };
 }
 
-export const WEAPON_LIBRARY_LABELS = armamentTabLabels('weapon', 'Create Weapon', 'Duplicate weapon?');
+export const WEAPON_LIBRARY_LABELS = armamentTabLabels(
+  'weapon',
+  'Create Weapon',
+  'Duplicate weapon?',
+);
 export const ARMOR_LIBRARY_LABELS = armamentTabLabels('armor', 'Create Armor', 'Duplicate armor?');
-export const SHIELD_LIBRARY_LABELS = armamentTabLabels('shield', 'Create Shield', 'Duplicate shield?');
+export const SHIELD_LIBRARY_LABELS = armamentTabLabels(
+  'shield',
+  'Create Shield',
+  'Duplicate shield?',
+);
 
 export const POWER_LIBRARY_LABELS: LibraryEntityTabLabels = {
   entitySingular: 'power',

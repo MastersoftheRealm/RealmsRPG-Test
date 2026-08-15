@@ -15,9 +15,10 @@ export type L2ColumnHeader = {
   sortable: boolean;
 };
 
-function fromArmamentConfig(
-  kind: keyof typeof ARMAMENT_LIBRARY_CONFIG
-): { headers: L2ColumnHeader[]; grid: string } {
+function fromArmamentConfig(kind: keyof typeof ARMAMENT_LIBRARY_CONFIG): {
+  headers: L2ColumnHeader[];
+  grid: string;
+} {
   const cfg = ARMAMENT_LIBRARY_CONFIG[kind];
   return {
     grid: cfg.grid,

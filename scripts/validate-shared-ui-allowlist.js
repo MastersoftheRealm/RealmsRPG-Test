@@ -52,7 +52,7 @@ if (extras.length) {
 
 if (missing.length) {
   console.warn(
-    `Allowlist has ${missing.length} path(s) no longer on disk (run --write after intentional deletes).`
+    `Allowlist has ${missing.length} path(s) no longer on disk (run --write after intentional deletes).`,
   );
 }
 

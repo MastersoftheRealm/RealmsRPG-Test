@@ -61,7 +61,7 @@ export default function NewCharacterChooserPage() {
       <CreatorFunnelHero align="center" title={copy.title} subtitle={copy.subtitle} />
 
       <div className="layout-shell-wide px-4 py-10 sm:py-14">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 max-w-6xl mx-auto">
+        <div className="mx-auto grid max-w-6xl gap-6 md:grid-cols-2 lg:grid-cols-3">
           {MODES.map((mode) => {
             const Icon = mode.icon;
             return (
@@ -69,22 +69,26 @@ export default function NewCharacterChooserPage() {
                 key={mode.id}
                 href={withReturnTo(mode.href, returnTo)}
                 className={cn(
-                  'group flex flex-col gap-4 rounded-card border p-6 sm:p-7 text-left min-h-[16rem]',
-                  'bg-surface-alt/60 border-border-light dark:border-border',
-                  'transition-shadow duration-base hover:shadow-raised',
-                  'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+                  'group flex min-h-[16rem] flex-col gap-4 rounded-card border p-6 text-left sm:p-7',
+                  'border-border-light bg-surface-alt/60 dark:border-border',
+                  'duration-base transition-shadow hover:shadow-raised',
+                  'focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:outline-none',
                 )}
                 aria-label={`${mode.label} character creator: ${mode.tagline}`}
               >
-                <div className="flex items-center gap-3 w-full">
+                <div className="flex w-full items-center gap-3">
                   <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-card bg-primary-subtle-bg text-primary-fg shadow-sm">
                     <Icon className="h-6 w-6" aria-hidden="true" />
                   </span>
-                  <span className="font-display text-xl font-semibold text-text-primary group-hover:text-primary-link-fg transition-colors">
+                  <span className="font-display text-xl font-semibold text-text-primary transition-colors group-hover:text-primary-link-fg">
                     {mode.label}
                   </span>
                   {mode.showFirstTimerBadge && (
-                    <DescriptorChip variant="primary" size="sm" className="ml-auto shrink-0 whitespace-nowrap font-semibold">
+                    <DescriptorChip
+                      variant="primary"
+                      size="sm"
+                      className="ml-auto shrink-0 font-semibold whitespace-nowrap"
+                    >
                       {copy.firstTimerBadge}
                     </DescriptorChip>
                   )}
@@ -92,7 +96,10 @@ export default function NewCharacterChooserPage() {
                 <p className="font-nunito text-sm text-text-secondary">{mode.tagline}</p>
                 <ul className="mt-auto space-y-2">
                   {mode.bullets.map((b) => (
-                    <li key={b} className="flex items-start gap-2 font-nunito text-sm text-text-secondary">
+                    <li
+                      key={b}
+                      className="flex items-start gap-2 font-nunito text-sm text-text-secondary"
+                    >
                       <Check
                         className="mt-0.5 h-4 w-4 shrink-0 text-success-700 dark:text-success-400"
                         aria-hidden="true"

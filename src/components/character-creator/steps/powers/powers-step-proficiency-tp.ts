@@ -19,7 +19,7 @@ export function computePowersStepProficiencyTp(
   },
   powerParts: PowerPart[] | undefined | null,
   techniqueParts: TechniquePart[] | undefined | null,
-  itemPropertiesDb: unknown[]
+  itemPropertiesDb: unknown[],
 ): { spent: number; limit: number; remaining: number } {
   const inventory = draft.equipment?.inventory || [];
   const weapons = inventory.filter((item) => item.type === 'weapon');
@@ -37,19 +37,19 @@ export function computePowersStepProficiencyTp(
   });
   const spent = dedupeHighestProficiencies(required).reduce(
     (sum, p) => sum + calculateProficiencyTP(p),
-    0
+    0,
   );
   const abilities = (draft.abilities || {}) as Record<string, unknown>;
   const getAbility = (key: string | undefined): number =>
     key ? Number(abilities[key] ?? 0) || 0 : 0;
   const highestAbility = Math.max(
     ...Object.values(abilities).filter((v): v is number => typeof v === 'number'),
-    0
+    0,
   );
   const archetypeAbility = Math.max(
     getAbility(draft.pow_abil),
     getAbility(draft.mart_abil),
-    highestAbility
+    highestAbility,
   );
   const limit = getTrainingPointLimit(draft.level || 1, archetypeAbility);
   return { spent, limit, remaining: limit - spent };

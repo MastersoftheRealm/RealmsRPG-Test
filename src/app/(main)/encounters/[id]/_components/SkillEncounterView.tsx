@@ -7,24 +7,23 @@
  * Facade (TASK-608): state/handlers in `skill/use-skill-encounter-view`; panels under `skill/`.
  */
 
-"use client";
+'use client';
 
-import { AddCombatantModal } from "@/components/shared";
-import { RollLog } from "@/components/rolls";
-import type { Encounter, SkillEncounterState } from "@/types/encounter";
-import { useSkillEncounterView } from "./skill/use-skill-encounter-view";
-import { SkillTrackersSection } from "./skill/skill-trackers-section";
-import { SkillParticipantList } from "./skill/skill-participant-list";
-import { SkillSidebar } from "./skill/skill-sidebar";
-import type { SkillEncounterViewProps } from "./skill/skill-encounter-view-props";
+import { AddCombatantModal } from '@/components/shared';
+import { RollLog } from '@/components/rolls';
+import type { Encounter, SkillEncounterState } from '@/types/encounter';
+import { useSkillEncounterView } from './skill/use-skill-encounter-view';
+import { SkillTrackersSection } from './skill/skill-trackers-section';
+import { SkillParticipantList } from './skill/skill-participant-list';
+import { SkillSidebar } from './skill/skill-sidebar';
+import type { SkillEncounterViewProps } from './skill/skill-encounter-view-props';
 
 type EncounterWithSkillEncounter = Encounter & {
   skillEncounter: SkillEncounterState;
 };
 
 export default function SkillEncounterView(props: SkillEncounterViewProps) {
-  if (props.encounter === null || props.encounter.skillEncounter === undefined)
-    return null;
+  if (props.encounter === null || props.encounter.skillEncounter === undefined) return null;
   return (
     <SkillEncounterViewInner
       {...props}
@@ -69,8 +68,8 @@ function SkillEncounterViewInner(
 
   return (
     <>
-      <div className="grid lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-4">
+      <div className="grid gap-6 lg:grid-cols-3">
+        <div className="space-y-4 lg:col-span-2">
           <SkillTrackersSection
             derivedRollSuccesses={derivedRollSuccesses}
             derivedRollFailures={derivedRollFailures}
@@ -82,10 +81,7 @@ function SkillEncounterViewInner(
             sequenceSuccesses={sequenceSuccesses}
             sequenceFailures={sequenceFailures}
             participantCount={skill.participants.length}
-            actedCount={
-              skill.participants.filter((p) => p.hasRolled || p.isHelping)
-                .length
-            }
+            actedCount={skill.participants.filter((p) => p.hasRolled || p.isHelping).length}
             updateSkill={model.updateSkill}
             onResetEncounter={model.resetEncounter}
           />

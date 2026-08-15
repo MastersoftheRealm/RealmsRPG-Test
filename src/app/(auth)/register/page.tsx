@@ -33,7 +33,8 @@ function RegisterContent() {
 
   const getRedirectPath = () => {
     const urlRedirect = searchParams.get('redirect') ?? searchParams.get('returnTo');
-    const sessionRedirect = typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
+    const sessionRedirect =
+      typeof window !== 'undefined' ? sessionStorage.getItem('loginRedirect') : null;
     return sanitizeRedirectPath(urlRedirect || sessionRedirect || '/');
   };
 
@@ -119,7 +120,9 @@ function RegisterContent() {
       const supabase = createClient();
       const { data, error: err } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: { redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}` },
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectPath)}`,
+        },
       });
       if (err) throw err;
       if (data?.url) {
@@ -141,9 +144,9 @@ function RegisterContent() {
           </Alert>
         ) : null}
 
-        <div className="text-center space-y-6">
-          <div className="w-16 h-16 mx-auto rounded-full bg-green-500/10 flex items-center justify-center">
-            <CheckIcon className="w-8 h-8 text-green-400" />
+        <div className="space-y-6 text-center">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
+            <CheckIcon className="h-8 w-8 text-green-400" />
           </div>
 
           <p className="text-text-secondary">
@@ -172,7 +175,7 @@ function RegisterContent() {
 
             <Link
               href={`/login?redirect=${encodeURIComponent(getRedirectPath())}`}
-              className="inline-block text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium"
+              className="inline-block font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
             >
               Back to Sign In
             </Link>
@@ -229,22 +232,22 @@ function RegisterContent() {
           <input
             type="checkbox"
             id="acceptTerms"
-            className="w-4 h-4 rounded border-border-light dark:border-border bg-surface text-primary-fg focus:ring-primary-outline-border"
+            className="h-4 w-4 rounded border-border-light bg-surface text-primary-fg focus:ring-primary-outline-border dark:border-border"
             {...register('acceptTerms')}
           />
           <label htmlFor="acceptTerms" className="text-sm text-text-secondary">
             I agree to the{' '}
             <Link href="/terms" className="text-primary-link-fg hover:text-primary-fg-hover">
               Terms of Service
-            </Link>
-            {' '}and{' '}
+            </Link>{' '}
+            and{' '}
             <Link href="/privacy" className="text-primary-link-fg hover:text-primary-fg-hover">
               Privacy Policy
             </Link>
           </label>
         </div>
         {errors.acceptTerms ? (
-          <p className="text-sm text-red-400 -mt-3">{errors.acceptTerms.message}</p>
+          <p className="-mt-3 text-sm text-red-400">{errors.acceptTerms.message}</p>
         ) : null}
 
         <Button type="submit" className="w-full" disabled={isLoading}>
@@ -253,22 +256,21 @@ function RegisterContent() {
       </form>
 
       <div className="my-6 flex items-center gap-4">
-        <div className="flex-1 h-px bg-border-light dark:bg-border" />
-        <span className="text-text-secondary text-sm">or</span>
-        <div className="flex-1 h-px bg-border-light dark:bg-border" />
+        <div className="h-px flex-1 bg-border-light dark:bg-border" />
+        <span className="text-sm text-text-secondary">or</span>
+        <div className="h-px flex-1 bg-border-light dark:bg-border" />
       </div>
 
       <div className="space-y-3">
-        <SocialButton
-          provider="google"
-          onClick={handleGoogleSignIn}
-          disabled={isLoading}
-        />
+        <SocialButton provider="google" onClick={handleGoogleSignIn} disabled={isLoading} />
       </div>
 
       <p className="mt-6 text-center text-text-secondary">
         Already have an account?{' '}
-        <Link href="/login" className="text-primary-link-fg hover:text-primary-fg-hover transition-colors font-medium">
+        <Link
+          href="/login"
+          className="font-medium text-primary-link-fg transition-colors hover:text-primary-fg-hover"
+        >
           Sign in
         </Link>
       </p>

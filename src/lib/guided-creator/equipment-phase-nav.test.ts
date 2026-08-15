@@ -76,11 +76,7 @@ describe('equipment-phase-nav', () => {
       recommendUnarmed: false,
       fullCatalog: true,
     });
-    expect(visibleEquipmentPhases('required', poweredMartial)).toEqual([
-      'weapon',
-      'armor',
-      'gear',
-    ]);
+    expect(visibleEquipmentPhases('required', poweredMartial)).toEqual(['weapon', 'armor', 'gear']);
   });
 
   it('shows the optional weapons hatch only on a Power path gear screen that skipped weapons', () => {
@@ -90,7 +86,7 @@ describe('equipment-phase-nav', () => {
         includeWeapon: false,
         phase: 'gear',
         fullCatalog: false,
-      })
+      }),
     ).toBe(true);
 
     for (const context of [

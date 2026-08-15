@@ -10,7 +10,14 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup, Button } from '@/components/ui';
+import {
+  PageContainer,
+  PageHeader,
+  TabNavigation,
+  TabContentPanel,
+  useTabGroup,
+  Button,
+} from '@/components/ui';
 import { CodexFeatsTab } from './CodexFeatsTab';
 import { CodexSkillsTab } from './CodexSkillsTab';
 import { CodexSpeciesTab } from './CodexSpeciesTab';
@@ -26,7 +33,16 @@ import { SegmentedControl } from '@/components/shared';
 
 type CodexMode = 'public' | 'my';
 
-type TabId = 'feats' | 'skills' | 'species' | 'archetypes' | 'equipment' | 'properties' | 'parts' | 'traits' | 'creature_feats';
+type TabId =
+  | 'feats'
+  | 'skills'
+  | 'species'
+  | 'archetypes'
+  | 'equipment'
+  | 'properties'
+  | 'parts'
+  | 'traits'
+  | 'creature_feats';
 
 const MAIN_TAB_IDS: TabId[] = ['feats', 'skills', 'species', 'archetypes', 'equipment'];
 const ADVANCED_TAB_IDS: TabId[] = ['parts', 'properties', 'creature_feats', 'traits'];
@@ -55,12 +71,9 @@ export default function CodexPage() {
     .filter(Boolean)
     .map((tab) => ({ id: tab!.id, label: tab!.label, labelMobile: tab!.labelMobile }));
 
-  const onTabChange = useCallback(
-    (tabId: string) => {
-      setActiveTab(tabId as TabId);
-    },
-    []
-  );
+  const onTabChange = useCallback((tabId: string) => {
+    setActiveTab(tabId as TabId);
+  }, []);
 
   const toggleAdvanced = useCallback(() => {
     setShowAdvanced((prev) => {
@@ -76,7 +89,7 @@ export default function CodexPage() {
 
   return (
     <PageContainer size="xl">
-      <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+      <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
         <PageHeader
           title={isPublic ? 'Realms Codex' : 'My Codex'}
           description={
@@ -85,11 +98,10 @@ export default function CodexPage() {
               : 'Your custom species and other codex content appear here. Create species in the Species Creator.'
           }
         />
-        <div className="flex items-center gap-2">
-        </div>
+        <div className="flex items-center gap-2"></div>
       </div>
 
-      <div className="mb-4 flex flex-wrap items-end gap-4 min-w-0">
+      <div className="mb-4 flex min-w-0 flex-wrap items-end gap-4">
         <SegmentedControl
           value={codexMode}
           onChange={setCodexMode}
@@ -102,9 +114,9 @@ export default function CodexPage() {
         />
       </div>
 
-      <div className="min-w-0 mb-6">
-        <div className="flex items-center gap-2 min-w-0">
-          <div className="flex-1 min-w-0">
+      <div className="mb-6 min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="min-w-0 flex-1">
             <TabNavigation
               tabs={tabs}
               activeTab={activeTab}
@@ -119,44 +131,44 @@ export default function CodexPage() {
             size="sm"
             onClick={toggleAdvanced}
             className={cn(
-              'gap-1.5 flex-shrink-0 min-h-[44px]',
-              showAdvanced && 'bg-primary-subtle-bg border-primary-subtle-border'
+              'min-h-[44px] flex-shrink-0 gap-1.5',
+              showAdvanced && 'border-primary-subtle-border bg-primary-subtle-bg',
             )}
             aria-pressed={showAdvanced}
           >
-            {showAdvanced ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             Advanced
           </Button>
         </div>
       </div>
 
       <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
-      {isPublic && (
-        <>
-          {activeTab === 'feats' && <CodexFeatsTab codexMode="public" />}
-          {activeTab === 'skills' && <CodexSkillsTab codexMode="public" />}
-          {activeTab === 'species' && <CodexSpeciesTab codexMode="public" />}
-          {activeTab === 'archetypes' && <CodexArchetypesTab codexMode="public" />}
-          {activeTab === 'equipment' && <CodexEquipmentTab codexMode="public" />}
-          {activeTab === 'properties' && <CodexPropertiesTab codexMode="public" />}
-          {activeTab === 'parts' && <CodexPartsTab codexMode="public" />}
-          {activeTab === 'traits' && <CodexTraitsTab codexMode="public" />}
-          {activeTab === 'creature_feats' && <CodexCreatureFeatsTab codexMode="public" />}
-        </>
-      )}
-      {!isPublic && (
-        <>
-          {activeTab === 'feats' && <CodexFeatsTab codexMode="my" />}
-          {activeTab === 'skills' && <CodexSkillsTab codexMode="my" />}
-          {activeTab === 'species' && <CodexSpeciesTab codexMode="my" />}
-          {activeTab === 'archetypes' && <CodexArchetypesTab codexMode="my" />}
-          {activeTab === 'equipment' && <CodexEquipmentTab codexMode="my" />}
-          {activeTab === 'properties' && <CodexPropertiesTab codexMode="my" />}
-          {activeTab === 'parts' && <CodexPartsTab codexMode="my" />}
-          {activeTab === 'traits' && <CodexTraitsTab codexMode="my" />}
-          {activeTab === 'creature_feats' && <CodexCreatureFeatsTab codexMode="my" />}
-        </>
-      )}
+        {isPublic && (
+          <>
+            {activeTab === 'feats' && <CodexFeatsTab codexMode="public" />}
+            {activeTab === 'skills' && <CodexSkillsTab codexMode="public" />}
+            {activeTab === 'species' && <CodexSpeciesTab codexMode="public" />}
+            {activeTab === 'archetypes' && <CodexArchetypesTab codexMode="public" />}
+            {activeTab === 'equipment' && <CodexEquipmentTab codexMode="public" />}
+            {activeTab === 'properties' && <CodexPropertiesTab codexMode="public" />}
+            {activeTab === 'parts' && <CodexPartsTab codexMode="public" />}
+            {activeTab === 'traits' && <CodexTraitsTab codexMode="public" />}
+            {activeTab === 'creature_feats' && <CodexCreatureFeatsTab codexMode="public" />}
+          </>
+        )}
+        {!isPublic && (
+          <>
+            {activeTab === 'feats' && <CodexFeatsTab codexMode="my" />}
+            {activeTab === 'skills' && <CodexSkillsTab codexMode="my" />}
+            {activeTab === 'species' && <CodexSpeciesTab codexMode="my" />}
+            {activeTab === 'archetypes' && <CodexArchetypesTab codexMode="my" />}
+            {activeTab === 'equipment' && <CodexEquipmentTab codexMode="my" />}
+            {activeTab === 'properties' && <CodexPropertiesTab codexMode="my" />}
+            {activeTab === 'parts' && <CodexPartsTab codexMode="my" />}
+            {activeTab === 'traits' && <CodexTraitsTab codexMode="my" />}
+            {activeTab === 'creature_feats' && <CodexCreatureFeatsTab codexMode="my" />}
+          </>
+        )}
       </TabContentPanel>
     </PageContainer>
   );

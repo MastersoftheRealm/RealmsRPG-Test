@@ -24,7 +24,7 @@ export type UsernameValidationResult = { ok: true } | { ok: false; error: string
 
 export function validateUsername(
   raw: string,
-  options?: { isAdmin?: boolean; allowEmpty?: boolean }
+  options?: { isAdmin?: boolean; allowEmpty?: boolean },
 ): UsernameValidationResult {
   const trimmed = raw.trim();
   const normalized = trimmed.toLowerCase();
@@ -46,7 +46,10 @@ export function validateUsername(
     return { ok: false, error: `Username must be at most ${USERNAME_MAX_LEN} characters` };
   }
   if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
-    return { ok: false, error: 'Username can only contain letters, numbers, underscores, and hyphens' };
+    return {
+      ok: false,
+      error: 'Username can only contain letters, numbers, underscores, and hyphens',
+    };
   }
   const blocked = USERNAME_BLOCKLIST.some((word) => normalized.includes(word));
   if (blocked) {

@@ -13,7 +13,11 @@ import {
   type HasIdAndName,
 } from '@/lib/id-constants';
 import { ITEM_PROPERTY_CONSTANTS } from '@/lib/game/constants';
-import { compactResolvedWeaponRange, formatDamageDisplay, normalizeRangeDisplay } from '@/lib/utils/string';
+import {
+  compactResolvedWeaponRange,
+  formatDamageDisplay,
+  normalizeRangeDisplay,
+} from '@/lib/utils/string';
 import type { ItemProperty } from '@/hooks/codex-types';
 
 // Re-export for convenience
@@ -160,7 +164,9 @@ export function isGeneralProperty(prop: ItemPropertyPayload | ItemProperty): boo
  * Considers both the codex mechanic flag and a known set of mechanic property IDs (so loading
  * still works even if the codex has mechanic: false for e.g. Weapon Damage or Range).
  */
-export function isMechanicProperty(prop: ItemPropertyPayload | ItemProperty | { mechanic?: boolean; id?: number | string }): boolean {
+export function isMechanicProperty(
+  prop: ItemPropertyPayload | ItemProperty | { mechanic?: boolean; id?: number | string },
+): boolean {
   if (!prop || typeof prop !== 'object') return false;
   if ((prop as ItemProperty).mechanic === true) return true;
   const id = (prop as ItemPropertyPayload).id ?? (prop as ItemProperty).id;
@@ -180,7 +186,7 @@ export function isMechanicProperty(prop: ItemPropertyPayload | ItemProperty | { 
  */
 export function filterSavedItemPropertiesForList(
   savedProperties: Array<{ id?: number | string; name?: string; op_1_lvl?: number }>,
-  propertiesDb: ItemProperty[]
+  propertiesDb: ItemProperty[],
 ): Array<{ property: ItemProperty; op_1_lvl: number }> {
   const result: Array<{ property: ItemProperty; op_1_lvl: number }> = [];
   for (const saved of savedProperties || []) {
@@ -209,7 +215,7 @@ export { computeSplits } from './dice-splits';
  */
 export function calculateCurrencyCostAndRarity(
   totalCurrency: number,
-  totalIP: number
+  totalIP: number,
 ): RarityResult {
   const ip = Math.max(0, totalIP);
   const c = Math.max(0, totalCurrency);
@@ -270,7 +276,7 @@ function normalizeItemPropertyRef(ref: unknown): ItemPropertyPayload {
 /** Resolve codex row for a saved property reference (id, name, or string name). Case-insensitive name fallback. */
 export function resolveItemPropertyCodexRow(
   ref: unknown,
-  propertiesData: readonly ItemPropertyTpRow[]
+  propertiesData: readonly ItemPropertyTpRow[],
 ): ItemPropertyTpRow | undefined {
   const payload = normalizeItemPropertyRef(ref);
   const rows = [...propertiesData];
@@ -288,7 +294,7 @@ export function resolveItemPropertyCodexRow(
  */
 export function trainingPointsForItemPropertyRef(
   ref: unknown,
-  propertiesData: readonly ItemPropertyTpRow[]
+  propertiesData: readonly ItemPropertyTpRow[],
 ): number {
   const payload = normalizeItemPropertyRef(ref);
   const data = resolveItemPropertyCodexRow(payload, propertiesData);
@@ -304,7 +310,7 @@ export function trainingPointsForItemPropertyRef(
  */
 export function calculateItemCosts(
   properties: ItemPropertyPayload[],
-  propertiesData: readonly ItemPropertyTpRow[]
+  propertiesData: readonly ItemPropertyTpRow[],
 ): ItemCostResult {
   let totalIP = 0;
   let totalTP = 0;
@@ -353,7 +359,7 @@ export function formatRange(properties: ItemPropertyPayload[]): string {
  */
 export function resolveWeaponRangeDisplay(
   storedRange: string | number | null | undefined,
-  properties?: ItemPropertyPayload[] | null
+  properties?: ItemPropertyPayload[] | null,
 ): string {
   const props = properties ?? [];
   if (props.length > 0) {
@@ -377,7 +383,7 @@ export function resolveWeaponRangeDisplay(
 /** Resolved + compact weapon range for dense cells (TASK-701). */
 export function formatWeaponRangeDisplayCompact(
   storedRange: string | number | null | undefined,
-  properties?: ItemPropertyPayload[] | null
+  properties?: ItemPropertyPayload[] | null,
 ): string {
   return compactResolvedWeaponRange(resolveWeaponRangeDisplay(storedRange, properties));
 }
@@ -407,7 +413,9 @@ export function deriveAgilityReductionFromProperties(properties: ItemPropertyPay
 /**
  * Derive Critical Range +1 levels from properties (1 + op_1_lvl per stack).
  */
-export function deriveCriticalRangeIncreaseFromProperties(properties: ItemPropertyPayload[]): number {
+export function deriveCriticalRangeIncreaseFromProperties(
+  properties: ItemPropertyPayload[],
+): number {
   const critProp = (properties || []).find((p) => {
     if (p.id === PROPERTY_IDS.CRITICAL_RANGE_PLUS_1) return true;
     return p.name === 'Critical Range +1';
@@ -455,7 +463,7 @@ export function deriveShieldDamageFromProperties(properties: ItemPropertyPayload
  */
 export function extractProficiencies(
   properties: ItemPropertyPayload[],
-  propertiesData: ItemProperty[]
+  propertiesData: ItemProperty[],
 ): ProficiencyInfo[] {
   const profs: ProficiencyInfo[] = [];
 
@@ -490,13 +498,13 @@ export function extractProficiencies(
  */
 export function deriveItemDisplay(
   item: ItemDocument,
-  propertiesData: ItemProperty[]
+  propertiesData: ItemProperty[],
 ): ItemDisplayData {
   const properties = item.properties || [];
   const costs = calculateItemCosts(properties, propertiesData);
   const { currencyCost, rarity } = calculateCurrencyCostAndRarity(
     costs.totalCurrency,
-    costs.totalIP
+    costs.totalIP,
   );
   const damageStr = formatDamageDisplay(item.damage);
   const rangeStr = resolveWeaponRangeDisplay(undefined, properties);

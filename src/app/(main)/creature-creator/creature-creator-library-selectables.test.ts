@@ -37,10 +37,14 @@ describe('creature library source merge (TASK-712)', () => {
 
   it('public / my still scope catalogs', () => {
     expect(
-      buildArmamentLibraryList('public', myItems, pubItems, []).map((r) => r.id).sort(),
+      buildArmamentLibraryList('public', myItems, pubItems, [])
+        .map((r) => r.id)
+        .sort(),
     ).toEqual(['a', 'b']);
     expect(
-      buildArmamentLibraryList('my', myItems, pubItems, []).map((r) => r.id).sort(),
+      buildArmamentLibraryList('my', myItems, pubItems, [])
+        .map((r) => r.id)
+        .sort(),
     ).toEqual(['a', 'c']);
   });
 

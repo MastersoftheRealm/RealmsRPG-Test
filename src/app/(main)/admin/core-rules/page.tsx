@@ -11,7 +11,17 @@ import { useState, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
-import { PageContainer, PageHeader, Button, TabNavigation, TabContentPanel, useTabGroup, Alert, LoadingState, Spinner } from '@/components/ui';
+import {
+  PageContainer,
+  PageHeader,
+  Button,
+  TabNavigation,
+  TabContentPanel,
+  useTabGroup,
+  Alert,
+  LoadingState,
+  Spinner,
+} from '@/components/ui';
 import { ConfirmActionModal } from '@/components/shared';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { updateCodexDoc, createCodexDoc } from '../codex/actions';
@@ -26,7 +36,7 @@ import { CategoryEditor } from './core-rules-category-editor';
 async function saveCategory(
   docId: string,
   data: Record<string, unknown>,
-  failureMessage: string
+  failureMessage: string,
 ): Promise<void> {
   const result = await updateCodexDoc('core_rules', docId, data);
   if (result.success) return;
@@ -52,9 +62,9 @@ export default function AdminCoreRulesPage() {
   const [dirty, setDirty] = useState(false);
   const [pendingTab, setPendingTab] = useState<string | null>(null);
 
-  const activeTabDef = TABS.find(t => t.id === activeTab)!;
+  const activeTabDef = TABS.find((t) => t.id === activeTab)!;
   const categoryId = activeTabDef.category;
-  const pendingTabLabel = TABS.find(t => t.id === pendingTab)?.label ?? '';
+  const pendingTabLabel = TABS.find((t) => t.id === pendingTab)?.label ?? '';
 
   // Re-seed editor when category or fetched rules change (render-time — TASK-430)
   const [seededRules, setSeededRules] = useState<CoreRulesMap | null>(null);
@@ -65,7 +75,7 @@ export default function AdminCoreRulesPage() {
     if (categoryId === 'PROGRESSION_PLAYER') {
       const creatureRules = rules.PROGRESSION_CREATURE;
       setCreatureEditData(
-        creatureRules ? { ...(creatureRules as unknown as Record<string, unknown>) } : {}
+        creatureRules ? { ...(creatureRules as unknown as Record<string, unknown>) } : {},
       );
     } else {
       setCreatureEditData({});
@@ -91,16 +101,19 @@ export default function AdminCoreRulesPage() {
 
   // Switching category re-seeds the editor from the fetched rules, so an unguarded tab
   // change silently discards the edits (these are live game rules for every player).
-  const handleTabChange = useCallback((tabId: string) => {
-    setActiveTab((current) => {
-      if (tabId === current) return current;
-      if (dirty) {
-        setPendingTab(tabId);
-        return current;
-      }
-      return tabId;
-    });
-  }, [dirty]);
+  const handleTabChange = useCallback(
+    (tabId: string) => {
+      setActiveTab((current) => {
+        if (tabId === current) return current;
+        if (dirty) {
+          setPendingTab(tabId);
+          return current;
+        }
+        return tabId;
+      });
+    },
+    [dirty],
+  );
 
   const discardAndSwitchTab = useCallback(() => {
     if (!pendingTab) return;
@@ -123,7 +136,7 @@ export default function AdminCoreRulesPage() {
         await saveCategory(
           'PROGRESSION_CREATURE',
           creatureEditData,
-          'Failed to save creature progression'
+          'Failed to save creature progression',
         );
       }
 
@@ -149,9 +162,9 @@ export default function AdminCoreRulesPage() {
 
   return (
     <PageContainer size="xl">
-      <div className="flex items-center gap-3 mb-4">
-        <Link href="/admin" className="text-text-muted dark:text-text-secondary hover:text-text-primary transition-colors">
-          <ChevronLeft className="w-5 h-5" />
+      <div className="mb-4 flex items-center gap-3">
+        <Link href="/admin" className="text-text-muted transition-colors hover:text-text-primary">
+          <ChevronLeft className="h-5 w-5" />
         </Link>
         <PageHeader
           title="Core Rules Editor"
@@ -161,7 +174,7 @@ export default function AdminCoreRulesPage() {
 
       <TabNavigation
         variant="underline"
-        tabs={TABS.map(t => ({ id: t.id, label: t.label }))}
+        tabs={TABS.map((t) => ({ id: t.id, label: t.label }))}
         activeTab={activeTab}
         onTabChange={handleTabChange}
         tabGroupId={tabGroupId}
@@ -179,26 +192,46 @@ export default function AdminCoreRulesPage() {
         onClose={() => setPendingTab(null)}
       />
 
-      <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab} className="mt-4 rounded-lg border border-border bg-surface p-6">
-        {error && <Alert variant="danger" className="mb-4">{error}</Alert>}
-        {success && <Alert variant="success" className="mb-4">{success}</Alert>}
+      <TabContentPanel
+        tabGroupId={tabGroupId}
+        id={sharedPanelId}
+        activeTab={activeTab}
+        className="mt-4 rounded-lg border border-border bg-surface p-6"
+      >
+        {error && (
+          <Alert variant="danger" className="mb-4">
+            {error}
+          </Alert>
+        )}
+        {success && (
+          <Alert variant="success" className="mb-4">
+            {success}
+          </Alert>
+        )}
 
         <CategoryEditor
           category={categoryId}
           data={editData}
           onChange={handleDataChange}
           creatureData={categoryId === 'PROGRESSION_PLAYER' ? creatureEditData : undefined}
-          onCreatureChange={categoryId === 'PROGRESSION_PLAYER' ? handleCreatureDataChange : undefined}
+          onCreatureChange={
+            categoryId === 'PROGRESSION_PLAYER' ? handleCreatureDataChange : undefined
+          }
         />
 
-        <div className="flex items-center gap-3 mt-6 pt-4 border-t border-border">
-          <Button
-            onClick={handleSave}
-            disabled={saving || !dirty}
-          >
-            {saving ? <><Spinner size="sm" /> Saving...</> : 'Save Changes'}
+        <div className="mt-6 flex items-center gap-3 border-t border-border pt-4">
+          <Button onClick={handleSave} disabled={saving || !dirty}>
+            {saving ? (
+              <>
+                <Spinner size="sm" /> Saving...
+              </>
+            ) : (
+              'Save Changes'
+            )}
           </Button>
-          {dirty && <span className="text-xs text-warning-700 dark:text-warning-400">Unsaved changes</span>}
+          {dirty && (
+            <span className="text-xs text-warning-700 dark:text-warning-400">Unsaved changes</span>
+          )}
         </div>
       </TabContentPanel>
     </PageContainer>

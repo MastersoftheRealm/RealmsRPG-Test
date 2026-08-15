@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  combineGuidedTpBudgets,
-  wouldExceedSharedTp,
-} from '@/lib/guided-creator/loadout-tp';
+import { combineGuidedTpBudgets, wouldExceedSharedTp } from '@/lib/guided-creator/loadout-tp';
 
 describe('loadout-tp shared budgets', () => {
   it('combines equipment and combat Training Points against one limit', () => {

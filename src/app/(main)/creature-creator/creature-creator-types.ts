@@ -3,7 +3,12 @@
  */
 
 import type { ArchetypeType } from '@/components/creator';
-import type { CreaturePower, CreatureTechnique, CreatureFeat, CreatureArmament } from './transformers';
+import type {
+  CreaturePower,
+  CreatureTechnique,
+  CreatureFeat,
+  CreatureArmament,
+} from './transformers';
 
 export interface CreatureSkill {
   id?: string;

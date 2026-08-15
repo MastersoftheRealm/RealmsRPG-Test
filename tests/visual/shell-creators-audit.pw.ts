@@ -83,14 +83,16 @@ async function waitForCreatorReady(page: Page, h1: string) {
     timeout: 60_000,
   });
   await expect(
-    page.getByRole('button', { name: /Load from library|Log in to load from library/ })
+    page.getByRole('button', { name: /Load from library|Log in to load from library/ }),
   ).toBeVisible();
   await expect(page.getByRole('button', { name: 'Reset creator form' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Save' })).toBeVisible();
 }
 
 async function assertNoNestedButtonsInExpand(page: Page, collapseTitle: string) {
-  const expand = page.getByRole('button', { name: new RegExp(`^(Collapse|Expand) ${collapseTitle}$`) });
+  const expand = page.getByRole('button', {
+    name: new RegExp(`^(Collapse|Expand) ${collapseTitle}$`),
+  });
   await expect(expand).toBeVisible();
   const nestedButtons = expand.locator('button');
   await expect(nestedButtons).toHaveCount(0);
@@ -135,7 +137,7 @@ test.describe('CreatorPageShell audit (TASK-380/431)', () => {
         await expect(page.getByRole('heading', { name: /Login Required to Load/i })).toBeVisible();
         // Gated creators should advertise login on the Load control when signed out
         await expect(
-          page.getByRole('button', { name: 'Log in to load from library' })
+          page.getByRole('button', { name: 'Log in to load from library' }),
         ).toBeVisible();
         await snap(page, `${creator.slug}-03-load-login-prompt`, false);
         await page.keyboard.press('Escape');
@@ -162,7 +164,9 @@ test.describe('CreatorPageShell audit (TASK-380/431)', () => {
       if (creator.loadRequiresAuth && creator.slug !== 'creature') {
         // Re-open save login if Save happened to be enabled; otherwise open via Load login already covered.
         if (await saveBtn.isEnabled()) {
-          await expect(page.getByRole('heading', { name: /Login Required to Save/i })).toBeVisible();
+          await expect(
+            page.getByRole('heading', { name: /Login Required to Save/i }),
+          ).toBeVisible();
           await snap(page, `${creator.slug}-04-save-login-prompt`, false);
           await page.keyboard.press('Escape');
         }

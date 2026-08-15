@@ -52,7 +52,7 @@ export function GuidedHealthEnergySection() {
     powAbil,
     abilities,
     rules,
-    martAbil
+    martAbil,
   );
   const maxEnergy = calculateMaxEnergyForArchetype(enBonus, abilities, level, powAbil, martAbil);
 
@@ -76,7 +76,7 @@ export function GuidedHealthEnergySection() {
       userTechniques,
       powerPartsDb,
       techniquePartsDb,
-    ]
+    ],
   );
 
   const onAutoAllocate = useCallback(() => {
@@ -91,7 +91,7 @@ export function GuidedHealthEnergySection() {
   const autoAllocateHelp = getGuidedAutoAllocateHelp(
     highestPick
       ? { name: highestPick.name, energy: highestPick.energy, kind: highestPick.kind }
-      : undefined
+      : undefined,
   );
 
   return (
@@ -101,7 +101,7 @@ export function GuidedHealthEnergySection() {
           <GuidedSectionTitle>{copy.title}</GuidedSectionTitle>
           <p className="mt-1 font-nunito text-sm text-text-secondary">{copy.description}</p>
         </div>
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="flex shrink-0 items-center gap-1">
           <Button
             type="button"
             variant="secondary"
@@ -112,11 +112,7 @@ export function GuidedHealthEnergySection() {
           >
             {copy.autoAllocate}
           </Button>
-          <InfoTippy
-            content={autoAllocateHelp}
-            label="How auto-allocate works"
-            size="inline"
-          />
+          <InfoTippy content={autoAllocateHelp} label="How auto-allocate works" size="inline" />
         </div>
       </div>
 
@@ -132,7 +128,9 @@ export function GuidedHealthEnergySection() {
       />
 
       {remaining !== 0 && (
-        <p className="mt-3 font-nunito text-sm text-text-secondary">{copy.allocateHint(remaining)}</p>
+        <p className="mt-3 font-nunito text-sm text-text-secondary">
+          {copy.allocateHint(remaining)}
+        </p>
       )}
     </div>
   );

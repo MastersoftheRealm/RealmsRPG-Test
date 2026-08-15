@@ -83,8 +83,13 @@ export async function createUserProfileAction(data: {
       .maybeSingle();
     if (existingError) throw existingError;
 
-    const existingUsername = ((existing as { username?: string | null } | null)?.username ?? null)?.toString().trim() || null;
-    const existingUsernameDisplay = ((existing as { username_display?: string | null } | null)?.username_display ?? null)?.toString().trim() || null;
+    const existingUsername =
+      ((existing as { username?: string | null } | null)?.username ?? null)?.toString().trim() ||
+      null;
+    const existingUsernameDisplay =
+      ((existing as { username_display?: string | null } | null)?.username_display ?? null)
+        ?.toString()
+        .trim() || null;
 
     const requestedUsername = data.username?.trim() || null;
     if (requestedUsername) {
@@ -97,7 +102,9 @@ export async function createUserProfileAction(data: {
     // Critical: never overwrite a user's chosen username with a generated default.
     // This action can be called from auth callback/confirm routes on subsequent logins.
     const needsUsername = !existingUsername;
-    const chosenUsername = needsUsername ? requestedUsername ?? existingUsernameDisplay : existingUsername;
+    const chosenUsername = needsUsername
+      ? (requestedUsername ?? existingUsernameDisplay)
+      : existingUsername;
 
     for (let attempt = 1; attempt <= MAX_GENERATED_USERNAME_ATTEMPTS; attempt++) {
       const usernameDisplay = chosenUsername ?? generateDefaultUsername();
@@ -113,7 +120,11 @@ export async function createUserProfileAction(data: {
               display_name: data.displayName ?? null,
               updated_at: now,
               ...(needsUsername
-                ? { username: normalized, username_display: usernameDisplay, last_username_change: null }
+                ? {
+                    username: normalized,
+                    username_display: usernameDisplay,
+                    last_username_change: null,
+                  }
                 : {}),
             })
             .eq('id', uid)
@@ -187,7 +198,11 @@ export async function getUserProfileAction() {
     if (!user) return { profile: null, error: null };
 
     const supabase = await createServerClient();
-    const { data: profile } = await supabase.from('user_profiles').select('*').eq('id', user.uid).maybeSingle();
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('*')
+      .eq('id', user.uid)
+      .maybeSingle();
     if (!profile) return { profile: null, error: null };
 
     const rolePolicy = await getRolePolicyForUser(user.uid, supabase);
@@ -226,7 +241,7 @@ export async function getUserProfileAction() {
  * violation to "already taken". This never blocks submission.
  */
 export async function checkUsernameAvailableAction(
-  username: string
+  username: string,
 ): Promise<{ available: boolean | null; error?: string }> {
   try {
     // SEC-07: rate-limited and session-gated so it cannot be used to probe names.
@@ -235,7 +250,9 @@ export async function checkUsernameAvailableAction(
       return { available: null, error: 'Not authenticated' };
     }
     const ip = resolveClientIp(await headers());
-    const { success } = await strictLimiter.check(buildRateLimitKey('username-check', { userId: user.uid, ip }));
+    const { success } = await strictLimiter.check(
+      buildRateLimitKey('username-check', { userId: user.uid, ip }),
+    );
     if (!success) {
       return { available: null, error: 'Too many requests' };
     }
@@ -272,8 +289,11 @@ export async function changeUsernameAction(newUsername: string) {
       .eq('id', user.uid)
       .maybeSingle();
     if (profileError) throw profileError;
-    const currentUsername = ((profile as { username?: string } | null)?.username ?? '').toLowerCase();
-    if (normalized === currentUsername) return { success: false, error: 'New username is the same as your current username' };
+    const currentUsername = (
+      (profile as { username?: string } | null)?.username ?? ''
+    ).toLowerCase();
+    if (normalized === currentUsername)
+      return { success: false, error: 'New username is the same as your current username' };
 
     if (!admin && profile) {
       const lastChange = (profile as { last_username_change?: string }).last_username_change;
@@ -282,7 +302,10 @@ export async function changeUsernameAction(newUsername: string) {
         const daysSince = (Date.now() - t) / (24 * 60 * 60 * 1000);
         if (daysSince < RATE_LIMIT_DAYS) {
           const remaining = Math.ceil(RATE_LIMIT_DAYS - daysSince);
-          return { success: false, error: `You can change your username again in ${remaining} day(s)` };
+          return {
+            success: false,
+            error: `You can change your username again in ${remaining} day(s)`,
+          };
         }
       }
     }
@@ -394,9 +417,9 @@ export async function deleteAccountAction(): Promise<DeleteAccountResult> {
       if (campaignReadError) return failed('campaign roster read', campaignReadError);
       if (!campaign) continue;
 
-      const roster = ((campaign.characters as Array<{ userId?: string; user_id?: string }>) ?? []).filter(
-        (entry) => (entry.userId ?? entry.user_id) !== user.uid
-      );
+      const roster = (
+        (campaign.characters as Array<{ userId?: string; user_id?: string }>) ?? []
+      ).filter((entry) => (entry.userId ?? entry.user_id) !== user.uid);
       const { error: rosterError } = await supabaseAdmin
         .from('campaigns')
         .update({ characters: roster })

@@ -20,10 +20,7 @@ import { getArmamentMax } from '@/lib/game/formulas';
 import { cn } from '@/lib/utils';
 import { DEFAULT_ABILITIES, type Abilities } from '@/types';
 import type { Archetype, ArchetypePathData } from '@/types/archetype';
-import {
-  armamentProficiencyHelp,
-  guidedArchetypeAbilityHelp,
-} from '../../../public/tooltip-text';
+import { armamentProficiencyHelp, guidedArchetypeAbilityHelp } from '../../../public/tooltip-text';
 import { GUIDED_CHOICE_STYLES, GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
 import { GuidedOverviewSection } from './guided-overview-section';
 
@@ -65,7 +62,7 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
       .map((id) => {
         const key = String(id).toLowerCase();
         const skill = allSkills.find(
-          (s) => String(s.id).toLowerCase() === key || String(s.name).toLowerCase() === key
+          (s) => String(s.id).toLowerCase() === key || String(s.name).toLowerCase() === key,
         );
         if (!skill) return null;
         return speciesSkillToSummaryChipItem(String(skill.id), allSkills);

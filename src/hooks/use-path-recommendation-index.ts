@@ -77,7 +77,7 @@ export function usePathListFilter({
       resolvedSelectedPathIds.length > 0
         ? pathRecommendedEntityIds(pathIndex, resolvedSelectedPathIds)
         : null,
-    [pathIndex, resolvedSelectedPathIds]
+    [pathIndex, resolvedSelectedPathIds],
   );
 
   return {

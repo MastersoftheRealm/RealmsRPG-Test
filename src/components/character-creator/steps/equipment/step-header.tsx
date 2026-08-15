@@ -17,9 +17,9 @@ export function EquipmentStepHeader({
   proficiencyTpLimit,
 }: EquipmentStepHeaderProps) {
   return (
-    <div className="flex items-start justify-between mb-6 gap-4">
+    <div className="mb-6 flex items-start justify-between gap-4">
       <div>
-        <div className="flex items-center gap-1 mb-2">
+        <div className="mb-2 flex items-center gap-1">
           <h2 className="text-2xl font-bold text-text-primary">Choose Equipment</h2>
           <InfoTippy
             content={equipmentCurrencyHelp}

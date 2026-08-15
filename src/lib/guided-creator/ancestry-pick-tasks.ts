@@ -103,7 +103,7 @@ export function buildAncestryPickTasks({
       title: 'Pick your bonus ancestry trait',
       description: 'Your flaw grants one additional ancestry trait.',
       options: resolveTraitIds(species.ancestry_traits || [], allTraits).filter(
-        (t) => !firstAncestryId || String(t.id) !== firstAncestryId
+        (t) => !firstAncestryId || String(t.id) !== firstAncestryId,
       ),
     });
   }
@@ -167,9 +167,7 @@ export function buildMixedAncestryPickTasks({
   }
 
   const uniqueCharIds = Array.from(
-    new Set(
-      [...(speciesA.characteristics || []), ...(speciesB.characteristics || [])].map(String)
-    )
+    new Set([...(speciesA.characteristics || []), ...(speciesB.characteristics || [])].map(String)),
   );
   list.push({
     phase: 'characteristic',
@@ -179,9 +177,7 @@ export function buildMixedAncestryPickTasks({
   });
 
   const uniqueAncestryIds = Array.from(
-    new Set(
-      [...(speciesA.ancestry_traits || []), ...(speciesB.ancestry_traits || [])].map(String)
-    )
+    new Set([...(speciesA.ancestry_traits || []), ...(speciesB.ancestry_traits || [])].map(String)),
   );
   list.push({
     phase: 'ancestry-trait-1',
@@ -209,15 +205,14 @@ export function buildMixedAncestryPickTasks({
   });
 
   if (selectedFlawId && selectedFlawSpeciesId) {
-    const flawSpecies =
-      String(speciesA.id) === String(selectedFlawSpeciesId) ? speciesA : speciesB;
+    const flawSpecies = String(speciesA.id) === String(selectedFlawSpeciesId) ? speciesA : speciesB;
     const firstAncestryId = selectedAncestryTraitIds[0];
     list.push({
       phase: 'ancestry-trait-2',
       title: 'Pick your bonus ancestry trait',
       description: `Your flaw grants one additional ancestry trait from ${flawSpecies.name}.`,
       options: resolveTraitIds(flawSpecies.ancestry_traits || [], allTraits).filter(
-        (t) => !firstAncestryId || String(t.id) !== firstAncestryId
+        (t) => !firstAncestryId || String(t.id) !== firstAncestryId,
       ),
     });
   }
@@ -228,7 +223,7 @@ export function buildMixedAncestryPickTasks({
 export function resolveFlawSpeciesIdForMixedPick(
   flawId: string,
   speciesA: Species,
-  speciesB: Species
+  speciesB: Species,
 ): string | null {
   const id = String(flawId);
   if ((speciesA.flaws || []).map(String).includes(id)) return String(speciesA.id);

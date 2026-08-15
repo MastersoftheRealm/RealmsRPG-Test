@@ -119,8 +119,8 @@ export function CreatureStatBlockExpandedContent({
   return (
     <div className="space-y-4">
       {/* Header (character-sheet style, simplified) */}
-      <Card className="shadow-md p-4 md:p-6">
-        <div className="flex flex-col md:flex-row gap-4 items-start md:items-stretch">
+      <Card className="p-4 shadow-md md:p-6">
+        <div className="flex flex-col items-start gap-4 md:flex-row md:items-stretch">
           {creature.imageUrl ? (
             <ExpandableImage
               src={creature.imageUrl}
@@ -134,11 +134,21 @@ export function CreatureStatBlockExpandedContent({
             <div className="h-20 w-20 flex-shrink-0 rounded-lg border border-border-light bg-image-matte" />
           )}
 
-          <div className="flex-1 min-w-0">
-            <h3 className="text-xl font-bold text-text-primary truncate">{creature.name}</h3>
+          <div className="min-w-0 flex-1">
+            <h3 className="truncate text-xl font-bold text-text-primary">{creature.name}</h3>
             <p className="text-sm text-text-secondary">{subline}</p>
             <p className="text-sm font-semibold text-text-primary">
-              <span className={archetype === 'Power' ? 'text-power-fg' : archetype === 'Martial' ? 'text-martial-fg' : archetype === 'Powered-Martial' ? 'text-power-fg' : undefined}>
+              <span
+                className={
+                  archetype === 'Power'
+                    ? 'text-power-fg'
+                    : archetype === 'Martial'
+                      ? 'text-martial-fg'
+                      : archetype === 'Powered-Martial'
+                        ? 'text-power-fg'
+                        : undefined
+                }
+              >
                 {archetype}
               </span>
               : <span className="text-text-primary">{highestAbility.displayName}</span>
@@ -146,23 +156,31 @@ export function CreatureStatBlockExpandedContent({
           </div>
 
           {/* Speed/Evasion/HP/EN to the right - single evenly spaced row on desktop */}
-          <div className="w-full md:flex-1 md:max-w-xl md:ml-4">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <div className="flex flex-col p-3 rounded-lg border bg-surface-alt dark:bg-surface border-border-light dark:border-border min-w-[92px]">
-              <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary dark:text-text-primary">Speed</span>
-              <span className="text-lg font-bold text-text-primary">{speed}</span>
+          <div className="w-full md:ml-4 md:max-w-xl md:flex-1">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="flex min-w-[92px] flex-col rounded-lg border border-border-light bg-surface-alt p-3 dark:border-border dark:bg-surface">
+                <span className="text-xs font-semibold tracking-wide text-text-secondary uppercase dark:text-text-primary">
+                  Speed
+                </span>
+                <span className="text-lg font-bold text-text-primary">{speed}</span>
               </div>
-              <div className="flex flex-col p-3 rounded-lg border bg-surface-alt dark:bg-surface border-border-light dark:border-border min-w-[92px]">
-              <span className="text-xs font-semibold uppercase tracking-wide text-text-secondary dark:text-text-primary">Evasion</span>
-              <span className="text-lg font-bold text-text-primary">{evasion}</span>
+              <div className="flex min-w-[92px] flex-col rounded-lg border border-border-light bg-surface-alt p-3 dark:border-border dark:bg-surface">
+                <span className="text-xs font-semibold tracking-wide text-text-secondary uppercase dark:text-text-primary">
+                  Evasion
+                </span>
+                <span className="text-lg font-bold text-text-primary">{evasion}</span>
               </div>
-              <div className="flex flex-col p-3 rounded-lg border bg-success-50 dark:bg-surface border-success-200 dark:border-success-800/50 min-w-[92px]">
-              <span className="text-xs font-semibold uppercase tracking-wide text-success-fg">Health</span>
-              <span className="text-lg font-bold text-success-fg">{maxHpDisplay}</span>
+              <div className="flex min-w-[92px] flex-col rounded-lg border border-success-200 bg-success-50 p-3 dark:border-success-800/50 dark:bg-surface">
+                <span className="text-xs font-semibold tracking-wide text-success-fg uppercase">
+                  Health
+                </span>
+                <span className="text-lg font-bold text-success-fg">{maxHpDisplay}</span>
               </div>
-              <div className="flex flex-col p-3 rounded-lg border bg-info-50 dark:bg-surface border-info-200 dark:border-info-800/50 min-w-[92px]">
-              <span className="text-xs font-semibold uppercase tracking-wide text-info-fg">Energy</span>
-              <span className="text-lg font-bold text-info-fg">{maxEnDisplay}</span>
+              <div className="flex min-w-[92px] flex-col rounded-lg border border-info-200 bg-info-50 p-3 dark:border-info-800/50 dark:bg-surface">
+                <span className="text-xs font-semibold tracking-wide text-info-fg uppercase">
+                  Energy
+                </span>
+                <span className="text-lg font-bold text-info-fg">{maxEnDisplay}</span>
               </div>
             </div>
           </div>
@@ -170,26 +188,38 @@ export function CreatureStatBlockExpandedContent({
 
         {/* Abilities row (mini boxes with roll buttons) */}
         {creature.abilities && (
-          <div className="mt-4 grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <div className="mt-4 grid grid-cols-3 gap-2 sm:grid-cols-6">
             {REALMS_ABILITY_ORDER.map((k) => {
               const abbr = REALMS_ABILITY_ABBR[k];
               const val = getAbilityValue(creature.abilities!, k);
               const defenseMeta = DEFENSES_BY_ABILITY.find((d) => d.ability === k);
-              const defenseBonus = defenseMeta && creature.defenses && typeof creature.defenses[defenseMeta.defenseKey] === 'number'
-                ? (creature.defenses[defenseMeta.defenseKey] as number)
-                : 0;
+              const defenseBonus =
+                defenseMeta &&
+                creature.defenses &&
+                typeof creature.defenses[defenseMeta.defenseKey] === 'number'
+                  ? (creature.defenses[defenseMeta.defenseKey] as number)
+                  : 0;
               const showDefense = defenseBonus !== 0 && defenseMeta != null;
               const defenseTotal = val + defenseBonus;
               return (
-                <div key={k} className="rounded-lg border border-border-light bg-surface-alt px-2 py-2">
+                <div
+                  key={k}
+                  className="rounded-lg border border-border-light bg-surface-alt px-2 py-2"
+                >
                   <div className={cn('grid gap-1', showDefense ? 'grid-cols-2' : 'grid-cols-1')}>
-                    <div className="text-[11px] font-semibold text-text-secondary text-center">{abbr}</div>
+                    <div className="text-center text-[11px] font-semibold text-text-secondary">
+                      {abbr}
+                    </div>
                     {showDefense && (
-                      <div className="text-[11px] font-semibold text-text-secondary text-center">{defenseMeta!.abbr}</div>
+                      <div className="text-center text-[11px] font-semibold text-text-secondary">
+                        {defenseMeta!.abbr}
+                      </div>
                     )}
                   </div>
                   {rollContext?.canRoll !== false && rollContext ? (
-                    <div className={cn('mt-1 grid gap-1', showDefense ? 'grid-cols-2' : 'grid-cols-1')}>
+                    <div
+                      className={cn('mt-1 grid gap-1', showDefense ? 'grid-cols-2' : 'grid-cols-1')}
+                    >
                       <div className="flex justify-center">
                         <RollButton
                           value={val}
@@ -202,7 +232,12 @@ export function CreatureStatBlockExpandedContent({
                         <div className="flex justify-center">
                           <RollButton
                             value={defenseTotal}
-                            onClick={() => rollContext.rollDefense(`${creature.name}: ${defenseMeta!.abbr}`, defenseTotal)}
+                            onClick={() =>
+                              rollContext.rollDefense(
+                                `${creature.name}: ${defenseMeta!.abbr}`,
+                                defenseTotal,
+                              )
+                            }
                             size="sm"
                             title={`Roll ${defenseMeta!.label}`}
                           />
@@ -210,9 +245,16 @@ export function CreatureStatBlockExpandedContent({
                       )}
                     </div>
                   ) : (
-                    <div className={cn('mt-1 grid gap-1 text-sm font-bold text-text-primary tabular-nums', showDefense ? 'grid-cols-2' : 'grid-cols-1')}>
+                    <div
+                      className={cn(
+                        'mt-1 grid gap-1 text-sm font-bold text-text-primary tabular-nums',
+                        showDefense ? 'grid-cols-2' : 'grid-cols-1',
+                      )}
+                    >
                       <div className="text-center">{formatModifier(val)}</div>
-                      {showDefense && <div className="text-center">{formatModifier(defenseTotal)}</div>}
+                      {showDefense && (
+                        <div className="text-center">{formatModifier(defenseTotal)}</div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -224,9 +266,13 @@ export function CreatureStatBlockExpandedContent({
         {/* Sentence-style lines (kept compact) */}
         <div className="mt-4 space-y-1">
           {summaryLines.map((line) => (
-            <p key={line} className="text-sm text-text-primary">{line}</p>
+            <p key={line} className="text-sm text-text-primary">
+              {line}
+            </p>
           ))}
-          <p className="text-sm text-text-primary"><strong>Damage Reduction</strong> {damageReduction}</p>
+          <p className="text-sm text-text-primary">
+            <strong>Damage Reduction</strong> {damageReduction}
+          </p>
         </div>
       </Card>
 
@@ -238,14 +284,19 @@ export function CreatureStatBlockExpandedContent({
               {senses.length > 0 && (
                 <StatBlockSection title="Senses" defaultExpanded>
                   <ListHeader columns={SIMPLE_LIST_COLUMNS} gridColumns={SIMPLE_LIST_GRID} />
-                  <div className="space-y-1 mt-2">
+                  <div className="mt-2 space-y-1">
                     {senses.map((sense) => (
                       <GridListRow
                         key={`${creature.id}-sense-${sense}`}
                         id={`${creature.id}-sense-${sense}`}
                         name={sense}
                         description={SENSE_DESCRIPTIONS[sense] ?? 'No description available.'}
-                        columns={[{ key: 'description', value: SENSE_DESCRIPTIONS[sense] ?? 'No description available.' }]}
+                        columns={[
+                          {
+                            key: 'description',
+                            value: SENSE_DESCRIPTIONS[sense] ?? 'No description available.',
+                          },
+                        ]}
                         gridColumns={SIMPLE_LIST_GRID}
                         compact
                       />
@@ -257,7 +308,7 @@ export function CreatureStatBlockExpandedContent({
               {movement.length > 0 && (
                 <StatBlockSection title="Movement" defaultExpanded>
                   <ListHeader columns={SIMPLE_LIST_COLUMNS} gridColumns={SIMPLE_LIST_GRID} />
-                  <div className="space-y-1 mt-2">
+                  <div className="mt-2 space-y-1">
                     {movement.map((m) => (
                       <GridListRow
                         key={`${creature.id}-move-${m}`}
@@ -283,54 +334,60 @@ export function CreatureStatBlockExpandedContent({
           {hasSkills && (
             <StatBlockSection title="Skills" defaultExpanded>
               <div className="mt-2 grid grid-cols-1 gap-3 xl:grid-cols-2">
-                {[skillRows.slice(0, Math.ceil(skillRows.length / 2)), skillRows.slice(Math.ceil(skillRows.length / 2))].map(
-                  (columnRows, columnIndex) =>
-                    columnRows.length > 0 ? (
-                      <div key={`${creature.id}-skills-col-${columnIndex}`}>
-                        <ListHeader
-                          columns={[
-                            { key: 'name', label: 'Name', width: '1.2fr' },
-                            { key: 'ability', label: 'Ability', width: '0.7fr', align: 'center' },
-                            { key: 'bonus', label: 'Bonus', width: '0.7fr', align: 'center' },
-                          ]}
-                          gridColumns="1.2fr 0.7fr 0.7fr"
-                        />
-                        <div className="mt-2 space-y-1">
-                          {columnRows.map((row) => (
-                            <GridListRow
-                              key={row.key}
-                              id={row.rowId}
-                              name={row.name}
-                              description={row.description}
-                              gridColumns="1.2fr 0.7fr 0.7fr"
-                              columns={[
-                                { key: 'ability', value: row.abilityAbbr, align: 'center' },
-                                {
-                                  key: 'bonus',
-                                  value:
-                                    rollContext?.canRoll !== false && rollContext ? (
-                                      <div className="flex justify-center">
-                                        <RollButton
-                                          value={row.bonus}
-                                          onClick={() =>
-                                            rollContext.rollSkill(`${creature.name}: ${row.name}`, row.bonus, row.abilityAbbr)
-                                          }
-                                          size="sm"
-                                          title={`Roll ${row.name}`}
-                                        />
-                                      </div>
-                                    ) : (
-                                      formatModifier(row.bonus)
-                                    ),
-                                  align: 'center',
-                                },
-                              ]}
-                              compact
-                            />
-                          ))}
-                        </div>
+                {[
+                  skillRows.slice(0, Math.ceil(skillRows.length / 2)),
+                  skillRows.slice(Math.ceil(skillRows.length / 2)),
+                ].map((columnRows, columnIndex) =>
+                  columnRows.length > 0 ? (
+                    <div key={`${creature.id}-skills-col-${columnIndex}`}>
+                      <ListHeader
+                        columns={[
+                          { key: 'name', label: 'Name', width: '1.2fr' },
+                          { key: 'ability', label: 'Ability', width: '0.7fr', align: 'center' },
+                          { key: 'bonus', label: 'Bonus', width: '0.7fr', align: 'center' },
+                        ]}
+                        gridColumns="1.2fr 0.7fr 0.7fr"
+                      />
+                      <div className="mt-2 space-y-1">
+                        {columnRows.map((row) => (
+                          <GridListRow
+                            key={row.key}
+                            id={row.rowId}
+                            name={row.name}
+                            description={row.description}
+                            gridColumns="1.2fr 0.7fr 0.7fr"
+                            columns={[
+                              { key: 'ability', value: row.abilityAbbr, align: 'center' },
+                              {
+                                key: 'bonus',
+                                value:
+                                  rollContext?.canRoll !== false && rollContext ? (
+                                    <div className="flex justify-center">
+                                      <RollButton
+                                        value={row.bonus}
+                                        onClick={() =>
+                                          rollContext.rollSkill(
+                                            `${creature.name}: ${row.name}`,
+                                            row.bonus,
+                                            row.abilityAbbr,
+                                          )
+                                        }
+                                        size="sm"
+                                        title={`Roll ${row.name}`}
+                                      />
+                                    </div>
+                                  ) : (
+                                    formatModifier(row.bonus)
+                                  ),
+                                align: 'center',
+                              },
+                            ]}
+                            compact
+                          />
+                        ))}
                       </div>
-                    ) : null
+                    </div>
+                  ) : null,
                 )}
               </div>
             </StatBlockSection>
@@ -347,7 +404,7 @@ export function CreatureStatBlockExpandedContent({
                     id: `${creature.id}-feat-${idx}`,
                     name: f.name,
                     description: f.description,
-                  })
+                  }),
                 )}
               />
             </StatBlockSection>
@@ -355,7 +412,6 @@ export function CreatureStatBlockExpandedContent({
         </div>
 
         <div className="space-y-4">
-
           {hasWeapons && (
             <StatBlockSection title="Weapons" defaultExpanded>
               <WeaponsListSection
@@ -372,7 +428,7 @@ export function CreatureStatBlockExpandedContent({
                     resolveArmamentProperties(w),
                     attackAbilities,
                     creature.martialProficiency ?? 0,
-                    normalizeRangeDisplay(w.range) || 'Melee'
+                    normalizeRangeDisplay(w.range) || 'Melee',
                   ).bonus,
                   chips: propertiesToChips(resolveArmamentProperties(w), itemPropertiesDb),
                 }))}
@@ -454,7 +510,7 @@ export function CreatureStatBlockExpandedContent({
                 gridColumns="1fr 0.6fr 4rem"
                 hasThumbnailColumn
               />
-              <div className="space-y-1 mt-2">
+              <div className="mt-2 space-y-1">
                 {equipment.map((e, idx) => (
                   <GridListRow
                     key={`${creature.id}-equipment-${idx}`}
@@ -465,7 +521,11 @@ export function CreatureStatBlockExpandedContent({
                     gridColumns="1fr 0.6fr 4rem"
                     columns={[
                       { key: 'type', value: formatListCellLabel(e.type), align: 'center' },
-                      { key: 'quantity', value: (e as { quantity?: number }).quantity ?? 1, align: 'center' },
+                      {
+                        key: 'quantity',
+                        value: (e as { quantity?: number }).quantity ?? 1,
+                        align: 'center',
+                      },
                     ]}
                     compact
                   />
@@ -480,8 +540,8 @@ export function CreatureStatBlockExpandedContent({
       {creature.description && (
         <div className="mt-4">
           <SectionHeader title="Description" size="sm" />
-          <div className="mt-1 rounded-lg bg-surface p-3 border border-border-light">
-            <p className="text-sm text-text-secondary whitespace-pre-wrap">
+          <div className="mt-1 rounded-lg border border-border-light bg-surface p-3">
+            <p className="text-sm whitespace-pre-wrap text-text-secondary">
               {creature.description}
             </p>
           </div>

@@ -14,7 +14,9 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
   return {
     ...actual,
     standardLimiter: {
-      check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+      check: vi.fn(() =>
+        Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 }),
+      ),
     },
   };
 });
@@ -90,7 +92,8 @@ function createMockSupabase(row: EnhancedRow | null) {
     then: undefined as undefined,
   };
   Object.assign(deleteChain, {
-    then: (resolve: (value: { error: null }) => unknown) => Promise.resolve({ error: null }).then(resolve),
+    then: (resolve: (value: { error: null }) => unknown) =>
+      Promise.resolve({ error: null }).then(resolve),
   });
 
   return {
@@ -212,7 +215,9 @@ describe('DELETE /api/user/enhanced-items/[id]', () => {
     });
 
     expect(response.status).toBe(204);
-    const fromResult = supabase.from('user_enhanced_items') as { _deleteEqCalls: [string, string][] };
+    const fromResult = supabase.from('user_enhanced_items') as {
+      _deleteEqCalls: [string, string][];
+    };
     expect(fromResult._deleteEqCalls).toContainEqual(['user_id', OTHER.uid]);
     expect(fromResult._deleteEqCalls).toContainEqual(['id', 'enh-private']);
   });

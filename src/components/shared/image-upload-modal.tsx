@@ -119,39 +119,47 @@ export function ImageUploadModal({
     onChooseFromLibrary?.();
   }, [onChooseFromLibrary, onClose, resetState]);
 
-  const validateAndLoadFile = useCallback(async (file: File) => {
-    setError(null);
+  const validateAndLoadFile = useCallback(
+    async (file: File) => {
+      setError(null);
 
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      setError(`Invalid file type. Accepted: ${ACCEPTED_EXTENSIONS}`);
-      return;
-    }
-    if (file.size > maxFileSize) {
-      setError(`File too large (${formatFileSize(file.size)}). Maximum: ${formatFileSize(maxFileSize)}`);
-      return;
-    }
+      if (!ACCEPTED_TYPES.includes(file.type)) {
+        setError(`Invalid file type. Accepted: ${ACCEPTED_EXTENSIONS}`);
+        return;
+      }
+      if (file.size > maxFileSize) {
+        setError(
+          `File too large (${formatFileSize(file.size)}). Maximum: ${formatFileSize(maxFileSize)}`,
+        );
+        return;
+      }
 
-    setIsLoadingImage(true);
-    try {
-      const dataUrl = await normalizeImageFileToDataUrl(file);
-      setImageSrc(dataUrl);
-      setCrop({ x: 0, y: 0 });
-      setZoom(1);
-      setCroppedAreaPixels(null);
-      croppedAreaPixelsRef.current = null;
-      clearOutputPreview();
-    } catch {
-      setError('Failed to read image');
-    } finally {
-      setIsLoadingImage(false);
-    }
-  }, [maxFileSize, clearOutputPreview]);
+      setIsLoadingImage(true);
+      try {
+        const dataUrl = await normalizeImageFileToDataUrl(file);
+        setImageSrc(dataUrl);
+        setCrop({ x: 0, y: 0 });
+        setZoom(1);
+        setCroppedAreaPixels(null);
+        croppedAreaPixelsRef.current = null;
+        clearOutputPreview();
+      } catch {
+        setError('Failed to read image');
+      } finally {
+        setIsLoadingImage(false);
+      }
+    },
+    [maxFileSize, clearOutputPreview],
+  );
 
-  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) void validateAndLoadFile(file);
-    if (e.target) e.target.value = '';
-  }, [validateAndLoadFile]);
+  const handleFileSelect = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) void validateAndLoadFile(file);
+      if (e.target) e.target.value = '';
+    },
+    [validateAndLoadFile],
+  );
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -165,14 +173,17 @@ export function ImageUploadModal({
     setIsDragging(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      setIsDragging(false);
 
-    const file = e.dataTransfer.files?.[0];
-    if (file) void validateAndLoadFile(file);
-  }, [validateAndLoadFile]);
+      const file = e.dataTransfer.files?.[0];
+      if (file) void validateAndLoadFile(file);
+    },
+    [validateAndLoadFile],
+  );
 
   const onCropComplete = useCallback((_croppedArea: Area, croppedAreaPx: Area) => {
     croppedAreaPixelsRef.current = croppedAreaPx;
@@ -255,23 +266,29 @@ export function ImageUploadModal({
                 'flex cursor-pointer flex-col items-center justify-center gap-4 rounded-xl border-2 border-dashed p-12 transition-colors',
                 isDragging
                   ? 'border-primary-outline-border bg-primary-subtle-bg'
-                  : 'border-border-light bg-surface-alt hover:border-primary-outline-border hover:bg-primary-subtle-bg-hover/50'
+                  : 'border-border-light bg-surface-alt hover:border-primary-outline-border hover:bg-primary-subtle-bg-hover/50',
               )}
               onClick={() => fileInputRef.current?.click()}
             >
               <div
                 className={cn(
                   'flex h-16 w-16 items-center justify-center rounded-full transition-colors',
-                  isDragging ? 'bg-primary-subtle-bg text-primary-link-fg' : 'bg-surface text-text-muted dark:text-text-secondary'
+                  isDragging
+                    ? 'bg-primary-subtle-bg text-primary-link-fg'
+                    : 'bg-surface text-text-muted',
                 )}
               >
-                {isDragging ? <Upload className="h-8 w-8" aria-hidden /> : <ImageIcon className="h-8 w-8" aria-hidden />}
+                {isDragging ? (
+                  <Upload className="h-8 w-8" aria-hidden />
+                ) : (
+                  <ImageIcon className="h-8 w-8" aria-hidden />
+                )}
               </div>
               <div className="text-center">
                 <p className="text-sm font-medium text-text-primary">
                   {isDragging ? 'Drop image here' : 'Click to upload or drag and drop'}
                 </p>
-                <p className="mt-1 text-xs text-text-muted dark:text-text-secondary">
+                <p className="mt-1 text-xs text-text-muted">
                   {ACCEPTED_EXTENSIONS} &middot; Max {formatFileSize(maxFileSize)}
                 </p>
               </div>
@@ -287,17 +304,30 @@ export function ImageUploadModal({
             {onChooseFromLibrary && (
               <div className="flex flex-col items-center gap-2 text-center">
                 <span className="text-xs text-text-secondary">or</span>
-                <Button type="button" variant="outline" className="min-h-11" onClick={handleChooseFromLibrary}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="min-h-11"
+                  onClick={handleChooseFromLibrary}
+                >
                   Choose from Realms Image Library
                 </Button>
-                <p className="text-xs text-text-secondary">Browse shared species and creature art.</p>
+                <p className="text-xs text-text-secondary">
+                  Browse shared species and creature art.
+                </p>
               </div>
             )}
           </>
         ) : (
           <>
-            <div className="relative w-full h-[400px] bg-image-matte rounded-xl overflow-hidden">
-              <Suspense fallback={<div className="flex items-center justify-center h-full text-text-muted">Loading editor...</div>}>
+            <div className="relative h-[400px] w-full overflow-hidden rounded-xl bg-image-matte">
+              <Suspense
+                fallback={
+                  <div className="flex h-full items-center justify-center text-text-muted">
+                    Loading editor...
+                  </div>
+                }
+              >
                 <Cropper
                   image={imageSrc}
                   crop={crop}
@@ -321,22 +351,18 @@ export function ImageUploadModal({
 
             {outputPreviewUrl && (
               <div className="rounded-xl border border-border-light bg-surface-alt/60 px-4 py-3">
-                <p className="mb-2 font-nunito text-xs font-medium uppercase tracking-wide text-text-secondary">
+                <p className="mb-2 font-nunito text-xs font-medium tracking-wide text-text-secondary uppercase">
                   Output preview
                 </p>
                 <div className="flex items-center gap-4">
                   <div
                     className={cn(
                       'relative shrink-0 overflow-hidden border border-border-light bg-image-matte shadow-sm',
-                      cropShape === 'round' ? 'h-20 w-20 rounded-full' : 'h-20 w-20 rounded-card'
+                      cropShape === 'round' ? 'h-20 w-20 rounded-full' : 'h-20 w-20 rounded-card',
                     )}
                   >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={outputPreviewUrl}
-                      alt=""
-                      className="h-full w-full object-contain"
-                    />
+                    <img src={outputPreviewUrl} alt="" className="h-full w-full object-contain" />
                   </div>
                   <p className="font-nunito text-xs text-text-secondary">
                     This is the exact image that will be saved when you confirm.
@@ -349,10 +375,10 @@ export function ImageUploadModal({
               <button
                 type="button"
                 onClick={() => setZoom((z) => Math.max(1, z - 0.1))}
-                className="p-1.5 rounded-lg hover:bg-surface-alt text-text-muted hover:text-text-primary transition-colors min-h-11 min-w-11 flex items-center justify-center"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-1.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary"
                 aria-label="Zoom out"
               >
-                <ZoomOut className="w-5 h-5" />
+                <ZoomOut className="h-5 w-5" />
               </button>
               <input
                 type="range"
@@ -361,18 +387,18 @@ export function ImageUploadModal({
                 step={0.01}
                 value={zoom}
                 onChange={(e) => setZoom(Number(e.target.value))}
-                className="flex-1 accent-primary-600 h-2 rounded-full"
+                className="h-2 flex-1 rounded-full accent-primary-600"
                 aria-label="Zoom"
               />
               <button
                 type="button"
                 onClick={() => setZoom((z) => Math.min(3, z + 0.1))}
-                className="p-1.5 rounded-lg hover:bg-surface-alt text-text-muted hover:text-text-primary transition-colors min-h-11 min-w-11 flex items-center justify-center"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-1.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary"
                 aria-label="Zoom in"
               >
-                <ZoomIn className="w-5 h-5" />
+                <ZoomIn className="h-5 w-5" />
               </button>
-              <span className="text-xs text-text-muted w-10 text-right">
+              <span className="w-10 text-right text-xs text-text-muted">
                 {Math.round(zoom * 100)}%
               </span>
             </div>

@@ -9,10 +9,7 @@ import {
   type AbilityRequirement,
   type WeaponPropertyRef,
 } from '@/lib/game/weapon-attack-ability';
-import {
-  maxRarityForCharacterLevel,
-  rarityAtOrBelowMax,
-} from '@/lib/game/creator-constants';
+import { maxRarityForCharacterLevel, rarityAtOrBelowMax } from '@/lib/game/creator-constants';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 
 export interface ArmamentFilterState {
@@ -78,7 +75,7 @@ export function applyArmamentFilters<T extends ArmamentFilterableRow>(
   rows: T[],
   filters: ArmamentFilterState,
   characterContext: ArmamentCharacterContext | null,
-  profile: ArmamentFilterProfile = 'armament'
+  profile: ArmamentFilterProfile = 'armament',
 ): T[] {
   return rows.filter((row) => {
     if (!matchesCurrencyRange(row, filters)) return false;
@@ -107,7 +104,7 @@ export function applyArmamentFilters<T extends ArmamentFilterableRow>(
 
 export function countActiveArmamentFilters(
   filters: ArmamentFilterState,
-  hasCharacter: boolean
+  hasCharacter: boolean,
 ): number {
   let n = 0;
   if (hasCharacter) n += 1;

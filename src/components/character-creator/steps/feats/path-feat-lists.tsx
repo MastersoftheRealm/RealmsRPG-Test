@@ -61,15 +61,15 @@ export function PathFeatLists({
       {featGuidanceGroups ? (
         featGuidanceGroups.map(({ group, archetypeEntries }) => (
           <section key={group.id}>
-            <h3 className="text-lg font-semibold text-text-primary mb-1">{group.title}</h3>
-            {group.why && <p className="text-sm text-text-secondary mb-3">{group.why}</p>}
+            <h3 className="mb-1 text-lg font-semibold text-text-primary">{group.title}</h3>
+            {group.why && <p className="mb-3 text-sm text-text-secondary">{group.why}</p>}
             <ListHeader
               columns={FEAT_HEADER_COLUMNS}
               gridColumns={FEAT_GRID_COLUMNS}
               sortState={{ col: filters.sortCol, dir: filters.sortDir }}
               onSort={onSort}
             />
-            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 mt-2">
+            <div className="mt-2 max-h-[400px] space-y-2 overflow-y-auto pr-2">
               {archetypeEntries.map(({ displayFeat, familyLevels }) => (
                 <FeatRow
                   key={displayFeat.id}
@@ -80,17 +80,21 @@ export function PathFeatLists({
                 />
               ))}
               {archetypeEntries.length === 0 && (
-                <EmptyState title="No feats in this group resolved from codex." size="sm" className="bg-surface-alt rounded-lg py-4" />
+                <EmptyState
+                  title="No feats in this group resolved from codex."
+                  size="sm"
+                  className="rounded-lg bg-surface-alt py-4"
+                />
               )}
             </div>
           </section>
         ))
       ) : (
         <section>
-          <h3 className="text-lg font-semibold text-text-primary mb-2">
+          <h3 className="mb-2 text-lg font-semibold text-text-primary">
             {archetypeName ?? 'Path'} Archetype Feats
           </h3>
-          <p className="text-sm text-text-secondary mb-3">
+          <p className="mb-3 text-sm text-text-secondary">
             Choose from the recommended archetype feats for this path.
           </p>
           <ListHeader
@@ -99,7 +103,7 @@ export function PathFeatLists({
             sortState={{ col: filters.sortCol, dir: filters.sortDir }}
             onSort={onSort}
           />
-          <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 mt-2">
+          <div className="mt-2 max-h-[400px] space-y-2 overflow-y-auto pr-2">
             {pathModeArchetypeFeats.map(({ displayFeat, familyLevels }) => (
               <FeatRow
                 key={displayFeat.id}
@@ -113,17 +117,17 @@ export function PathFeatLists({
               <EmptyState
                 title="No recommended archetype feats for this path in codex."
                 size="sm"
-                className="bg-surface-alt rounded-lg py-4"
+                className="rounded-lg bg-surface-alt py-4"
               />
             )}
           </div>
         </section>
       )}
       <section>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">
+        <h3 className="mb-2 text-lg font-semibold text-text-primary">
           {archetypeName ?? 'Path'} Character Feats
         </h3>
-        <p className="text-sm text-text-secondary mb-3">
+        <p className="mb-3 text-sm text-text-secondary">
           Choose from the recommended character feats for this path.
         </p>
         <ListHeader
@@ -132,7 +136,7 @@ export function PathFeatLists({
           sortState={{ col: filters.sortCol, dir: filters.sortDir }}
           onSort={onSort}
         />
-        <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 mt-2">
+        <div className="mt-2 max-h-[400px] space-y-2 overflow-y-auto pr-2">
           {pathModeCharacterFeats.map(({ displayFeat, familyLevels }) => (
             <FeatRow
               key={displayFeat.id}
@@ -146,7 +150,7 @@ export function PathFeatLists({
             <EmptyState
               title="No recommended character feats for this path in codex."
               size="sm"
-              className="bg-surface-alt rounded-lg py-4"
+              className="rounded-lg bg-surface-alt py-4"
             />
           )}
         </div>

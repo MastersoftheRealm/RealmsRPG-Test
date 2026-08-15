@@ -1,11 +1,7 @@
 'use client';
 
 import { useMemo, useState, useCallback, type ReactNode } from 'react';
-import {
-  UnifiedSelectionModal,
-  LoadoutBudgetBar,
-  type SelectableItem,
-} from '@/components/shared';
+import { UnifiedSelectionModal, LoadoutBudgetBar, type SelectableItem } from '@/components/shared';
 import { ArchetypePathFilter } from '@/components/shared/filters';
 import { usePathListFilter } from '@/hooks';
 import {
@@ -23,10 +19,7 @@ import {
   pathRecommendationKindForEquipmentPhase,
 } from '@/lib/guided-creator/guided-equipment-l2';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import {
-  l2GridColumnsForPhase,
-  l2HeaderColumnsForPhase,
-} from './guided-equipment-l2-grid';
+import { l2GridColumnsForPhase, l2HeaderColumnsForPhase } from './guided-equipment-l2-grid';
 
 const l2Copy = GUIDED_CREATOR_COPY.steps.loadout.phases.l2;
 
@@ -61,7 +54,7 @@ export function GuidedEquipmentL2Modal({
 
   const initialSelectedIds = useMemo(
     () => initialSelectedIdsForPhase(phase, draft),
-    [phase, draft]
+    [phase, draft],
   );
 
   const {
@@ -86,7 +79,7 @@ export function GuidedEquipmentL2Modal({
         keepIds: initialSelectedIds,
         idsForItem: selectableItemPathIds,
       }),
-    [items, pathMatchIds, pathIndex, selectedPathIds, initialSelectedIds]
+    [items, pathMatchIds, pathIndex, selectedPathIds, initialSelectedIds],
   );
 
   const initialQuantities = useMemo(() => {
@@ -108,8 +101,7 @@ export function GuidedEquipmentL2Modal({
         ? l2Copy.armorTitle
         : l2Copy.gearTitle;
 
-  const description =
-    phase === 'gear' ? l2Copy.gearDescription : l2Copy.description;
+  const description = phase === 'gear' ? l2Copy.gearDescription : l2Copy.description;
 
   const handleConfirm = useCallback(
     (selected: SelectableItem[]) => {
@@ -119,7 +111,7 @@ export function GuidedEquipmentL2Modal({
         selected,
         catalog,
         tpLimit,
-        currencyStarting
+        currencyStarting,
       );
       if (!result.ok) {
         setError(result.message ?? l2Copy.confirmError);
@@ -128,7 +120,7 @@ export function GuidedEquipmentL2Modal({
       setError(null);
       if (result.partial) onDraftChange(result.partial);
     },
-    [phase, draft, catalog, tpLimit, currencyStarting, onDraftChange]
+    [phase, draft, catalog, tpLimit, currencyStarting, onDraftChange],
   );
 
   const footerExtra = useCallback(
@@ -145,14 +137,14 @@ export function GuidedEquipmentL2Modal({
           trainingPointsLabel={l2Copy.tpLabel}
         >
           {error ? (
-            <p className="font-nunito text-sm text-warning-fg text-center" role="alert">
+            <p className="text-center font-nunito text-sm text-warning-fg" role="alert">
               {error}
             </p>
           ) : null}
         </LoadoutBudgetBar>
       );
     },
-    [phase, draft, catalog, tpLimit, currencyStarting, error]
+    [phase, draft, catalog, tpLimit, currencyStarting, error],
   );
 
   const confirmDisabled = useCallback(
@@ -161,7 +153,7 @@ export function GuidedEquipmentL2Modal({
       if (phase === 'gear') return false;
       return computeL2TpSpent(phase, draft, selected, catalog) > tpLimit;
     },
-    [phase, draft, catalog, tpLimit, currencyStarting]
+    [phase, draft, catalog, tpLimit, currencyStarting],
   );
 
   return (
@@ -184,7 +176,9 @@ export function GuidedEquipmentL2Modal({
       itemLabel={phase === 'gear' ? 'item' : phase}
       emptyMessage={
         pathFilterActive
-          ? pathFilterEmptyTitle(phase === 'weapon' ? 'weapons' : phase === 'armor' ? 'armor' : 'gear')
+          ? pathFilterEmptyTitle(
+              phase === 'weapon' ? 'weapons' : phase === 'armor' ? 'armor' : 'gear',
+            )
           : l2Copy.emptyMessage(phase)
       }
       searchPlaceholder={l2Copy.searchPlaceholder(phase)}

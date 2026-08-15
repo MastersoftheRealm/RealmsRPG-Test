@@ -22,7 +22,7 @@ const ALL_ABILITIES: AbilityName[] = [
 export function buildSuggestedAbilityArray(
   level: number,
   primary?: AbilityName,
-  secondary?: AbilityName
+  secondary?: AbilityName,
 ): Abilities {
   const totalPoints = calculateAbilityPoints(level);
   const next: Abilities = { ...DEFAULT_ABILITIES };

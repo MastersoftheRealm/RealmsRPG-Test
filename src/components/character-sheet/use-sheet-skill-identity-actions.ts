@@ -22,10 +22,7 @@ function getSkillRows(skills: Character['skills'] | undefined): CharacterSkillRo
   return Array.isArray(skills) ? skills : [];
 }
 
-function withSkillRows(
-  prev: Character,
-  nextSkills: CharacterSkillRow[],
-): Character {
+function withSkillRows(prev: Character, nextSkills: CharacterSkillRow[]): Character {
   return { ...prev, skills: nextSkills };
 }
 
@@ -118,7 +115,7 @@ export function useSheetSkillIdentityActions({
         const idx = currentSkills.findIndex((skill) => String(skill.id) === String(skillId));
         if (idx >= 0) {
           const updatedSkills = currentSkills.map((skill, i) =>
-            i === idx ? { ...skill, ...updates } : skill
+            i === idx ? { ...skill, ...updates } : skill,
           );
           return withSkillRows(prev, updatedSkills);
         }
@@ -214,9 +211,7 @@ export function useSheetSkillIdentityActions({
           ],
         };
       }
-      setCharacter((prev) =>
-        prev ? { ...prev, ancestry, skills: updates.skills } : null,
-      );
+      setCharacter((prev) => (prev ? { ...prev, ancestry, skills: updates.skills } : null));
       setShowEditSpeciesModal(false);
     },
     [character, setCharacter, setShowEditSpeciesModal],

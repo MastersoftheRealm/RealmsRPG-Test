@@ -15,12 +15,11 @@ import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
+import { buildMechanicParts, type AreaConfig, type DurationConfig } from './mechanic-builder';
 import {
-  buildMechanicParts,
-  type AreaConfig,
-  type DurationConfig,
-} from './mechanic-builder';
-import { POWER_ADVANCED_MECHANIC_CATEGORY_SET, POWER_AUTO_MECHANIC_PART_NAMES } from './power-mechanic-constants';
+  POWER_ADVANCED_MECHANIC_CATEGORY_SET,
+  POWER_AUTO_MECHANIC_PART_NAMES,
+} from './power-mechanic-constants';
 
 // Re-export for backwards compatibility
 export { PART_IDS, findByIdOrName };
@@ -94,7 +93,7 @@ function getOptionLevel(pl: PowerPartPayload, option: 1 | 2 | 3): number {
  */
 export function calculatePowerCosts(
   partsPayload: PowerPartPayload[] = [],
-  partsDb: PowerPart[] = []
+  partsDb: PowerPart[] = [],
 ): PowerCostResult {
   let flat_normal = 0;
   let flat_duration = 0;
@@ -167,9 +166,7 @@ export function calculatePowerCosts(
 
   // Unified power energy equation
   const totalEnergyRaw =
-    flat_normal * perc_all +
-    (dur_all + 1) * flat_duration * perc_dur -
-    flat_duration * perc_dur;
+    flat_normal * perc_all + (dur_all + 1) * flat_duration * perc_dur - flat_duration * perc_dur;
   // Reduction parts (e.g. No Attack) and negative base_en rows can drive the sum below
   // zero; Energy cannot be negative (GAME_RULES "Energy Below Zero").
   const totalEnergy = Math.max(0, Math.ceil(totalEnergyRaw));
@@ -186,7 +183,7 @@ export function calculatePowerCosts(
 export function calculatePowerSectionContribution(
   sectionParts: PowerPartPayload[] = [],
   partsDb: PowerPart[] = [],
-  durationParts: PowerPartPayload[] = []
+  durationParts: PowerPartPayload[] = [],
 ): Pick<PowerCostResult, 'energyRaw' | 'totalTP'> {
   const sectionOnly = calculatePowerCosts(sectionParts, partsDb);
   const needsDurationContext =
@@ -211,7 +208,7 @@ export function calculatePowerSectionContribution(
  */
 export function computeActionType(
   partsPayload: PowerPartPayload[] = [],
-  partsDb: PowerPart[] = []
+  partsDb: PowerPart[] = [],
 ): string {
   const resolved = partsPayload.map((p) => {
     let partId: number | undefined;
@@ -259,9 +256,7 @@ export function formatPowerRangeFromSteps(steps: number): string {
 /**
  * Derive range string from parts
  */
-export function deriveRange(
-  partsPayload: PowerPartPayload[] = []
-): string {
+export function deriveRange(partsPayload: PowerPartPayload[] = []): string {
   const pr = partsPayload.find((p) => {
     const partId = p.part?.id ?? p.id;
     if (Number(partId) === PART_IDS.POWER_RANGE) return true;
@@ -290,7 +285,7 @@ const AREA_TYPE_TO_PART: Record<string, { id: number; name: string }> = {
 export function getAreaPartForDisplay(
   areaType: string,
   areaLevel: number,
-  partsDb: PowerPart[] = []
+  partsDb: PowerPart[] = [],
 ): { part: PowerPart; description: string; op1Desc?: string; op1Level: number } | null {
   const info = AREA_TYPE_TO_PART[areaType];
   if (!info) return null;
@@ -324,9 +319,7 @@ export function formatAreaForDisplay(areaType: string, areaLevel: number): strin
 /**
  * Derive area string from parts
  */
-export function deriveArea(
-  partsPayload: PowerPartPayload[] = []
-): string {
+export function deriveArea(partsPayload: PowerPartPayload[] = []): string {
   const areaPartIds = [
     PART_IDS.SPHERE_OF_EFFECT,
     PART_IDS.CYLINDER_OF_EFFECT,
@@ -352,9 +345,7 @@ export function deriveArea(
  * Derive duration string from parts (value + unit with proper pluralization).
  * Uses shared formatDurationFromTypeAndValue for consistency with character sheet, library, codex.
  */
-export function deriveDuration(
-  partsPayload: PowerPartPayload[] = []
-): string {
+export function deriveDuration(partsPayload: PowerPartPayload[] = []): string {
   const findPartById = (partId: number, fallbackName: string) =>
     partsPayload.find((p) => {
       const id = p.part?.id ?? p.id;
@@ -362,8 +353,7 @@ export function deriveDuration(
       const name = p.part?.name || p.name;
       return name === fallbackName;
     });
-  const getLvl = (p: PowerPartPayload | undefined) =>
-    p ? getOptionLevel(p, 1) : 0;
+  const getLvl = (p: PowerPartPayload | undefined) => (p ? getOptionLevel(p, 1) : 0);
 
   const permanentPart = findPartById(PART_IDS.DURATION_PERMANENT, 'Duration (Permanent)');
   if (permanentPart) return formatDurationFromTypeAndValue('permanent', 0);
@@ -406,10 +396,7 @@ export function deriveDuration(
 /**
  * Format a single power part as a chip
  */
-export function formatPowerPartChip(
-  def: PowerPart,
-  pl: PowerPartPayload
-): PartChipData {
+export function formatPowerPartChip(def: PowerPart, pl: PowerPartPayload): PartChipData {
   const l1 = pl.op_1_lvl || 0;
   const l2 = pl.op_2_lvl || 0;
   const l3 = pl.op_3_lvl || 0;
@@ -437,10 +424,7 @@ export function formatPowerPartChip(
 
 type SavedPowerPart = NonNullable<PowerDocument['parts']>[number];
 
-function isUserOrAdvancedSavedPart(
-  savedPart: SavedPowerPart,
-  partsDb: PowerPart[]
-): boolean {
+function isUserOrAdvancedSavedPart(savedPart: SavedPowerPart, partsDb: PowerPart[]): boolean {
   const def = findByIdOrName(partsDb, savedPart);
   if (!def) return false;
   const name = savedPart.name ?? def.name;
@@ -452,7 +436,7 @@ function isUserOrAdvancedSavedPart(
 
 function powerDocHasCreatorStyleFields(powerDoc: PowerDocument): boolean {
   const hasDamage = (powerDoc.damage ?? []).some(
-    (d) => d.type && d.type !== 'none' && Number(d.amount) > 0
+    (d) => d.type && d.type !== 'none' && Number(d.amount) > 0,
   );
   return (
     hasDamage ||
@@ -466,7 +450,7 @@ function powerDocHasCreatorStyleFields(powerDoc: PowerDocument): boolean {
 
 function buildPowerPartsPayloadForCost(
   powerDoc: PowerDocument,
-  partsDb: PowerPart[]
+  partsDb: PowerPart[],
 ): PowerPartPayload[] {
   const savedParts = Array.isArray(powerDoc.parts) ? powerDoc.parts : [];
 
@@ -479,7 +463,7 @@ function buildPowerPartsPayloadForCost(
         op_2_lvl: p.op_2_lvl || 0,
         op_3_lvl: p.op_3_lvl || 0,
         applyDuration: p.applyDuration || false,
-      }))
+      })),
     );
   }
 
@@ -607,19 +591,19 @@ export interface PowerDocument {
  */
 export function derivePowerDisplay(
   powerDoc: PowerDocument,
-  partsDb: PowerPart[]
+  partsDb: PowerPart[],
 ): PowerDisplayData {
   const partsPayload: PowerPartPayload[] = buildPowerPartsPayloadForCost(powerDoc, partsDb);
 
   const calc = calculatePowerCosts(partsPayload, partsDb);
-  
+
   // Use directly saved actionType if available, otherwise derive from parts; format for display (e.g. Long (3 AP))
   const derivedAction = computeActionType(partsPayload, partsDb);
   const savedAction = powerDoc.actionType
     ? computeActionTypeFromSelection(powerDoc.actionType, !!powerDoc.isReaction)
     : null;
   const actionType = formatActionTypeForDisplay(savedAction || derivedAction);
-  
+
   // Use directly saved range if available, otherwise derive from parts
   let rangeStr: string;
   if (powerDoc.range && powerDoc.range.steps !== undefined && powerDoc.range.steps > 0) {
@@ -627,7 +611,7 @@ export function derivePowerDisplay(
   } else {
     rangeStr = deriveRange(partsPayload);
   }
-  
+
   // Use directly saved area if available, otherwise derive from parts
   let areaStr: string;
   if (powerDoc.area && powerDoc.area.type && powerDoc.area.type !== 'none') {
@@ -645,7 +629,7 @@ export function derivePowerDisplay(
   } else {
     areaStr = deriveArea(partsPayload);
   }
-  
+
   // Use directly saved duration if available, otherwise derive from parts
   let durationStr: string;
   if (powerDoc.duration && powerDoc.duration.type && powerDoc.duration.type !== 'instant') {
@@ -690,7 +674,7 @@ export function derivePowerDisplay(
  * Format power damage as [amount]d[size] [type]. Supports multiple damage types (e.g. "2d6 slashing, 1d4 fire").
  */
 export function formatPowerDamage(
-  damageArr?: Array<{ amount?: number | string; size?: number | string; type?: string }>
+  damageArr?: Array<{ amount?: number | string; size?: number | string; type?: string }>,
 ): string {
   if (!Array.isArray(damageArr)) return '';
   const parts = damageArr

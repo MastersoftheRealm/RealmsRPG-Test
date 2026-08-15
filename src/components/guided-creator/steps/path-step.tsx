@@ -88,7 +88,7 @@ export function PathStep() {
 
   const detailPath = useMemo(
     () => paths.find((p) => String(p.id) === detailPathId) ?? null,
-    [paths, detailPathId]
+    [paths, detailPathId],
   );
 
   const canContinue = isCustomLayer
@@ -110,7 +110,7 @@ export function PathStep() {
   const applyCustomPatch = (
     type: ArchetypeCategory,
     powAbil: AbilityName | null,
-    martAbil: AbilityName | null
+    martAbil: AbilityName | null,
   ) => {
     updateDraft(
       buildCustomArchetypeDraftPatch({
@@ -118,7 +118,7 @@ export function PathStep() {
         powAbil,
         martAbil,
         previousType: draft.archetypeType,
-      })
+      }),
     );
   };
 
@@ -214,10 +214,7 @@ export function PathStep() {
             </div>
           )}
 
-          <GuidedLayerNav
-            expandLabel={stepCopy.customArchetype}
-            onExpand={handleEnterCustom}
-          />
+          <GuidedLayerNav expandLabel={stepCopy.customArchetype} onExpand={handleEnterCustom} />
 
           <GuidedPathDetailModal
             isOpen={detailPath != null}

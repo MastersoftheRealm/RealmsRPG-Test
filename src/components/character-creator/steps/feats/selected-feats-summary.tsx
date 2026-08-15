@@ -33,36 +33,45 @@ export function SelectedFeatsSummary({
   onRemoveFeat,
 }: SelectedFeatsSummaryProps) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+    <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-2">
       {/* Archetype Feats Selected */}
-      <div className={cn(
-        'p-4 rounded-xl border-2',
-        selectedArchetypeFeats.length === maxArchetypeFeats
-          ? statusPanel.complete
-          : statusPanel.warning
-      )}>
-        <div className="flex items-center justify-between mb-2">
+      <div
+        className={cn(
+          'rounded-xl border-2 p-4',
+          selectedArchetypeFeats.length === maxArchetypeFeats
+            ? statusPanel.complete
+            : statusPanel.warning,
+        )}
+      >
+        <div className="mb-2 flex items-center justify-between">
           <h3 className="font-bold text-text-primary">Archetype Feats</h3>
           <DescriptorChip
             size="md"
             variant={statusBadgeDescriptorVariant(
-              selectedArchetypeFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0) === maxArchetypeFeats
+              selectedArchetypeFeats.reduce(
+                (sum, f) => sum + getFeatLevel(featById.get(String(f.id))),
+                0,
+              ) === maxArchetypeFeats
                 ? 'complete'
-                : 'warning'
+                : 'warning',
             )}
             className="font-bold"
           >
-            {selectedArchetypeFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0)} / {maxArchetypeFeats}
+            {selectedArchetypeFeats.reduce(
+              (sum, f) => sum + getFeatLevel(featById.get(String(f.id))),
+              0,
+            )}{' '}
+            / {maxArchetypeFeats}
           </DescriptorChip>
         </div>
-        <div data-chip-group className="flex flex-wrap gap-2 items-start">
+        <div data-chip-group className="flex flex-wrap items-start gap-2">
           {selectedArchetypeFeats.length === 0 ? (
-            <span className="text-sm text-text-muted dark:text-text-secondary italic">None selected</span>
+            <span className="text-sm text-text-muted italic">None selected</span>
           ) : (
-            selectedArchetypeFeats.map(feat => {
+            selectedArchetypeFeats.map((feat) => {
               const key = `arch-${feat.id}`;
               const isExpanded = expandedSelectedId === key;
-              const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
+              const fullFeat = feats?.find((f) => String(f.id) === String(feat.id));
               const displayName = fullFeat ? formatFeatName(fullFeat) : feat.name;
               return (
                 <SelectedFeatChipRow
@@ -81,34 +90,43 @@ export function SelectedFeatsSummary({
       </div>
 
       {/* Character Feats Selected */}
-      <div className={cn(
-        'p-4 rounded-xl border-2',
-        selectedCharacterFeats.length === maxCharacterFeats
-          ? statusPanel.complete
-          : statusPanel.info
-      )}>
-        <div className="flex items-center justify-between mb-2">
+      <div
+        className={cn(
+          'rounded-xl border-2 p-4',
+          selectedCharacterFeats.length === maxCharacterFeats
+            ? statusPanel.complete
+            : statusPanel.info,
+        )}
+      >
+        <div className="mb-2 flex items-center justify-between">
           <h3 className="font-bold text-text-primary">Character Feats</h3>
           <DescriptorChip
             size="md"
             variant={statusBadgeDescriptorVariant(
-              selectedCharacterFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0) === maxCharacterFeats
+              selectedCharacterFeats.reduce(
+                (sum, f) => sum + getFeatLevel(featById.get(String(f.id))),
+                0,
+              ) === maxCharacterFeats
                 ? 'complete'
-                : 'info'
+                : 'info',
             )}
             className="font-bold"
           >
-            {selectedCharacterFeats.reduce((sum, f) => sum + getFeatLevel(featById.get(String(f.id))), 0)} / {maxCharacterFeats}
+            {selectedCharacterFeats.reduce(
+              (sum, f) => sum + getFeatLevel(featById.get(String(f.id))),
+              0,
+            )}{' '}
+            / {maxCharacterFeats}
           </DescriptorChip>
         </div>
-        <div data-chip-group className="flex flex-wrap gap-2 items-start">
+        <div data-chip-group className="flex flex-wrap items-start gap-2">
           {selectedCharacterFeats.length === 0 ? (
-            <span className="text-sm text-text-muted dark:text-text-secondary italic">None selected</span>
+            <span className="text-sm text-text-muted italic">None selected</span>
           ) : (
-            selectedCharacterFeats.map(feat => {
+            selectedCharacterFeats.map((feat) => {
               const key = `char-${feat.id}`;
               const isExpanded = expandedSelectedId === key;
-              const fullFeat = feats?.find(f => String(f.id) === String(feat.id));
+              const fullFeat = feats?.find((f) => String(f.id) === String(feat.id));
               const displayName = fullFeat ? formatFeatName(fullFeat) : feat.name;
               return (
                 <SelectedFeatChipRow

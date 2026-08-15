@@ -19,15 +19,12 @@ export function GuidedRestrictionNotice({ notice, className }: GuidedRestriction
     <div
       className={cn(
         'flex gap-2 rounded-lg border border-border-light bg-primary-subtle-bg/30 px-3 py-2',
-        className
+        className,
       )}
       onClick={(e) => e.stopPropagation()}
       onKeyDown={(e) => e.stopPropagation()}
     >
-      <Info
-        className="mt-0.5 h-4 w-4 shrink-0 text-primary-fg"
-        aria-hidden="true"
-      />
+      <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary-fg" aria-hidden="true" />
       <p className="font-nunito text-sm leading-snug text-text-secondary">{notice}</p>
     </div>
   );

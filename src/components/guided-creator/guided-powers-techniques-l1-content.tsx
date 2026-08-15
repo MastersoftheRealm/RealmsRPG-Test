@@ -86,7 +86,7 @@ export function GuidedPowersTechniquesL1Content({
       unavailable: boolean;
       onToggle: () => void;
       pathRecommended?: boolean;
-    }
+    },
   ) => {
     const item = resolveDisplay(id);
     return (
@@ -101,16 +101,12 @@ export function GuidedPowersTechniquesL1Content({
               {opts.pathRecommended ? (
                 <DescriptorChip size="sm">{ptCopy.pathRecommendedChip}</DescriptorChip>
               ) : null}
-              {item.titleChips.length > 0 ? (
-                <GuidedFactChipRow chips={item.titleChips} />
-              ) : null}
+              {item.titleChips.length > 0 ? <GuidedFactChipRow chips={item.titleChips} /> : null}
             </span>
           ) : undefined
         }
         expandedExtra={
-          item.detailChips.length > 0 ? (
-            <GuidedFactChipRow chips={item.detailChips} />
-          ) : undefined
+          item.detailChips.length > 0 ? <GuidedFactChipRow chips={item.detailChips} /> : undefined
         }
         selected={opts.selected}
         onSelect={opts.onToggle}
@@ -138,7 +134,7 @@ export function GuidedPowersTechniquesL1Content({
               selected: isSelectedId(String(id), selectedIds),
               unavailable: isRegularUnavailable(String(id)),
               onToggle: () => toggleRegularId(String(id)),
-            })
+            }),
           )}
         </div>
       </section>
@@ -163,12 +159,8 @@ export function GuidedPowersTechniquesL1Content({
                 onToggle: () => toggleInnateId(id),
                 pathRecommended:
                   innatePromotedIds.length > 0 &&
-                  isPathRecommendedPowersTechniquesId(
-                    id,
-                    innateRecommendedIds,
-                    resolveCanonicalId
-                  ),
-              })
+                  isPathRecommendedPowersTechniquesId(id, innateRecommendedIds, resolveCanonicalId),
+              }),
             )}
           </div>
         )}
@@ -179,59 +171,51 @@ export function GuidedPowersTechniquesL1Content({
 
   return (
     <section className="space-y-3">
-        {allOptionIds.length === 0 && groups.length === 0 && libraryItemsCount === 0 ? (
-          <EmptyState
-            title={ptCopy.emptyTitle(kind)}
-            description={ptCopy.emptyDescription(kind)}
-          />
-        ) : groups.length > 0 ? (
-          <div className="space-y-8">
-            <p className="font-nunito text-sm text-text-secondary">{ptCopy.groupIntro(kind)}</p>
-            {groups.map(renderGroupSection)}
-            {promotedIds.length > 0 ? (
-              <section>
-                <GuidedSectionTitle as="h3">
-                  {ptCopy.otherPicksHeading(kind)}
-                </GuidedSectionTitle>
-                <p className="mt-1 font-nunito text-sm text-text-secondary">
-                  {ptCopy.otherPicksHint}
-                </p>
-                <div className={cn(GUIDED_CHOICE_COMPACT_GRID_CLASS, 'mt-3')}>
-                  {promotedIds.map((id) =>
-                    renderItemCard(id, {
-                      selected: isSelectedId(id, selectedIds),
-                      unavailable: isRegularUnavailable(id),
-                      onToggle: () => toggleRegularId(id),
-                    })
-                  )}
-                </div>
-              </section>
-            ) : null}
+      {allOptionIds.length === 0 && groups.length === 0 && libraryItemsCount === 0 ? (
+        <EmptyState title={ptCopy.emptyTitle(kind)} description={ptCopy.emptyDescription(kind)} />
+      ) : groups.length > 0 ? (
+        <div className="space-y-8">
+          <p className="font-nunito text-sm text-text-secondary">{ptCopy.groupIntro(kind)}</p>
+          {groups.map(renderGroupSection)}
+          {promotedIds.length > 0 ? (
+            <section>
+              <GuidedSectionTitle as="h3">{ptCopy.otherPicksHeading(kind)}</GuidedSectionTitle>
+              <p className="mt-1 font-nunito text-sm text-text-secondary">
+                {ptCopy.otherPicksHint}
+              </p>
+              <div className={cn(GUIDED_CHOICE_COMPACT_GRID_CLASS, 'mt-3')}>
+                {promotedIds.map((id) =>
+                  renderItemCard(id, {
+                    selected: isSelectedId(id, selectedIds),
+                    unavailable: isRegularUnavailable(id),
+                    onToggle: () => toggleRegularId(id),
+                  }),
+                )}
+              </div>
+            </section>
+          ) : null}
+        </div>
+      ) : allOptionIds.length > 0 || promotedIds.length > 0 ? (
+        <div className="space-y-4">
+          <p className="font-nunito text-sm text-text-secondary">{ptCopy.groupIntro(kind)}</p>
+          <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
+            {l1DisplayIds.map((id) =>
+              renderItemCard(id, {
+                selected: isSelectedId(id, selectedIds),
+                unavailable: isRegularUnavailable(id),
+                onToggle: () => toggleRegularId(id),
+                pathRecommended:
+                  showPathDescriptor &&
+                  isPathRecommendedPowersTechniquesId(id, allOptionIds, resolveCanonicalId),
+              }),
+            )}
           </div>
-        ) : allOptionIds.length > 0 || promotedIds.length > 0 ? (
-          <div className="space-y-4">
-            <p className="font-nunito text-sm text-text-secondary">{ptCopy.groupIntro(kind)}</p>
-            <div className={GUIDED_CHOICE_COMPACT_GRID_CLASS}>
-              {l1DisplayIds.map((id) =>
-                renderItemCard(id, {
-                  selected: isSelectedId(id, selectedIds),
-                  unavailable: isRegularUnavailable(id),
-                  onToggle: () => toggleRegularId(id),
-                  pathRecommended:
-                    showPathDescriptor &&
-                    isPathRecommendedPowersTechniquesId(id, allOptionIds, resolveCanonicalId),
-                })
-              )}
-            </div>
-          </div>
-        ) : (
-          <EmptyState
-            title={ptCopy.emptyTitle(kind)}
-            description={ptCopy.emptyDescription(kind)}
-          />
-        )}
+        </div>
+      ) : (
+        <EmptyState title={ptCopy.emptyTitle(kind)} description={ptCopy.emptyDescription(kind)} />
+      )}
 
-        <GuidedLayerNav expandLabel={ptCopy.seeMore} onExpand={onExpandRegular} />
+      <GuidedLayerNav expandLabel={ptCopy.seeMore} onExpand={onExpandRegular} />
     </section>
   );
 }

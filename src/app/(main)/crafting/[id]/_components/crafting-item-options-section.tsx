@@ -74,19 +74,19 @@ export function CraftingItemOptionsSection({
       <div className="space-y-4">
         <div className="flex flex-wrap items-center gap-3">
           {item || customBaseItem ? (
-            <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt min-w-[260px]">
+            <div className="flex min-w-[260px] flex-wrap items-center gap-3 rounded-lg border border-border-light bg-surface-alt p-3">
               <div className="flex flex-col">
                 <span className="font-medium text-text-primary">
                   {item?.name ?? customBaseItem?.name}
                 </span>
                 {(item?.marketPrice ?? customBaseItem?.marketPrice) != null && (
-                  <span className="text-sm text-text-muted dark:text-text-secondary">
-                    {(item?.marketPrice ?? customBaseItem?.marketPrice) ?? 0} currency
+                  <span className="text-sm text-text-muted">
+                    {item?.marketPrice ?? customBaseItem?.marketPrice ?? 0} currency
                   </span>
                 )}
               </div>
               {!isCompleted && (
-                <div className="flex flex-wrap gap-2 ml-auto">
+                <div className="ml-auto flex flex-wrap gap-2">
                   <Button
                     variant="secondary"
                     size="sm"
@@ -128,10 +128,7 @@ export function CraftingItemOptionsSection({
           ) : (
             !isCompleted && (
               <div className="flex flex-wrap gap-2">
-                <Button
-                  onClick={() => onOpenItemSelect()}
-                  aria-label="Select item to craft"
-                >
+                <Button onClick={() => onOpenItemSelect()} aria-label="Select item to craft">
                   Select item to craft
                 </Button>
                 <Button
@@ -156,9 +153,10 @@ export function CraftingItemOptionsSection({
 
         {/* Custom item entry (only visible when creating/editing a custom base item) */}
         {!isCompleted && customBaseItem && !item && session.data.isEditingCustomBaseItem && (
-          <div className="mt-3 rounded-lg border border-border-light bg-surface-alt/60 p-3 space-y-3">
+          <div className="mt-3 space-y-3 rounded-lg border border-border-light bg-surface-alt/60 p-3">
             <p className="text-xs font-medium text-text-secondary">
-              Define a custom base item. Rarity and crafting requirements are computed from its cost.
+              Define a custom base item. Rarity and crafting requirements are computed from its
+              cost.
             </p>
             <div className="flex flex-wrap items-center gap-3">
               <Input
@@ -173,14 +171,16 @@ export function CraftingItemOptionsSection({
                     },
                   })
                 }
-                className="min-w-[160px] max-w-xs"
+                className="max-w-xs min-w-[160px]"
                 aria-label="Custom item name"
               />
               <Input
                 type="number"
                 min={0}
                 placeholder="Currency cost"
-                value={Number.isFinite(customBaseItem.marketPrice) ? customBaseItem.marketPrice : ''}
+                value={
+                  Number.isFinite(customBaseItem.marketPrice) ? customBaseItem.marketPrice : ''
+                }
                 onChange={(e) =>
                   updateData({
                     customBaseItem: {
@@ -217,26 +217,19 @@ export function CraftingItemOptionsSection({
 
         {/* Upgrade-from item selection */}
         {!isCompleted && (item || customBaseItem) && (
-          <div className="rounded-lg border border-border-light bg-surface-alt/40 p-3 space-y-2">
+          <div className="space-y-2 rounded-lg border border-border-light bg-surface-alt/40 p-3">
             <p className="text-xs font-medium text-text-secondary">
               Upgrade an existing item into this one (cost/time based on price difference).
             </p>
             {upgradeOriginalItem ? (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-sm text-text-primary font-medium">
-                  From:{' '}
-                  <span className="font-semibold">
-                    {upgradeOriginalItem.name}
-                  </span>
+                <span className="text-sm font-medium text-text-primary">
+                  From: <span className="font-semibold">{upgradeOriginalItem.name}</span>
                 </span>
-                <span className="text-xs text-text-muted dark:text-text-secondary">
+                <span className="text-xs text-text-muted">
                   {upgradeOriginalItem.marketPrice} currency
                 </span>
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => onOpenUpgradeItemSelect()}
-                >
+                <Button variant="secondary" size="sm" onClick={() => onOpenUpgradeItemSelect()}>
                   Change
                 </Button>
                 <Button
@@ -253,11 +246,7 @@ export function CraftingItemOptionsSection({
                 </Button>
               </div>
             ) : (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => onOpenUpgradeItemSelect()}
-              >
+              <Button variant="secondary" size="sm" onClick={() => onOpenUpgradeItemSelect()}>
                 Select original item to upgrade from
               </Button>
             )}
@@ -265,8 +254,8 @@ export function CraftingItemOptionsSection({
         )}
 
         {!isCompleted && (
-          <div className="flex flex-wrap gap-6 items-start">
-            <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+          <div className="flex flex-wrap items-start gap-6">
+            <label className="flex min-h-[44px] cursor-pointer items-center gap-2">
               <input
                 type="checkbox"
                 checked={isConsumable}
@@ -276,15 +265,14 @@ export function CraftingItemOptionsSection({
               <span className="text-text-primary">Consumable</span>
             </label>
             {isConsumable && rulesData && (
-              <p className="text-xs text-text-muted dark:text-text-secondary max-w-xs self-center">
-                Crafting time is reduced to {Math.round(rulesData.consumableTimeMultiplier * 100)}% of normal.
+              <p className="max-w-xs self-center text-xs text-text-muted">
+                Crafting time is reduced to {Math.round(rulesData.consumableTimeMultiplier * 100)}%
+                of normal.
               </p>
             )}
 
             <div>
-              <span className="block text-sm font-medium text-text-secondary mb-1">
-                Quantity
-              </span>
+              <span className="mb-1 block text-sm font-medium text-text-secondary">Quantity</span>
               <ValueStepper
                 value={quantity}
                 onChange={(v) => updateData({ quantity: Math.max(1, v) })}
@@ -294,7 +282,7 @@ export function CraftingItemOptionsSection({
                 decrementTitle="Decrease quantity"
                 incrementTitle="Increase quantity"
               />
-              <p className="text-xs text-text-muted dark:text-text-secondary mt-1 max-w-[200px]">
+              <p className="mt-1 max-w-[200px] text-xs text-text-muted">
                 {quantity === (rulesData?.bulkCraftCount ?? 4)
                   ? `Bulk: pay for ${rulesData?.bulkCraftMaterialCount ?? 3}, receive ${rulesData?.bulkCraftCount ?? 4}.`
                   : `Crafting ${quantity} item${quantity !== 1 ? 's' : ''}.`}
@@ -302,7 +290,7 @@ export function CraftingItemOptionsSection({
             </div>
 
             <div className="space-y-3">
-              <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+              <label className="flex min-h-[44px] cursor-pointer items-center gap-2">
                 <input
                   type="checkbox"
                   checked={isEnhanced}
@@ -313,7 +301,7 @@ export function CraftingItemOptionsSection({
                       const idxFromConfig = findMultipleUseIndexForConfig(
                         rulesData,
                         defaultUsesType,
-                        defaultUsesCount
+                        defaultUsesCount,
                       );
                       updateData({
                         isEnhanced: true,
@@ -339,8 +327,8 @@ export function CraftingItemOptionsSection({
               </label>
 
               {isEnhanced && (
-                <div className="pt-4 border-t border-border-light space-y-3">
-                  <label className="flex items-center gap-2 cursor-pointer min-h-[44px]">
+                <div className="space-y-3 border-t border-border-light pt-4">
+                  <label className="flex min-h-[44px] cursor-pointer items-center gap-2">
                     <input
                       type="checkbox"
                       checked={!!session.data.craftBaseItemAlso}
@@ -349,14 +337,14 @@ export function CraftingItemOptionsSection({
                     />
                     <span className="text-text-primary">Craft base item as well</span>
                   </label>
-                  <p className="text-xs text-text-muted dark:text-text-secondary -mt-1">
-                    Turn this on if you do not already have the base item. Requirements will include both
-                    base crafting and enhancement.
+                  <p className="-mt-1 text-xs text-text-muted">
+                    Turn this on if you do not already have the base item. Requirements will include
+                    both base crafting and enhancement.
                   </p>
                   <div>
                     <label
                       htmlFor="enhanced-power"
-                      className="block text-sm font-medium text-text-secondary mb-1"
+                      className="mb-1 block text-sm font-medium text-text-secondary"
                     >
                       Power to imbue
                     </label>
@@ -378,7 +366,7 @@ export function CraftingItemOptionsSection({
                           updateData({ powerRef: null });
                         }
                       }}
-                      className="w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+                      className="min-h-[44px] w-full max-w-md rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
                     >
                       <option value="">Select a power</option>
                       {powerOptions.map((p) => (
@@ -391,11 +379,11 @@ export function CraftingItemOptionsSection({
                   {/* Energy cost helper is omitted here because the power picker already shows energy in parentheses */}
                   {resolvedPowerRef && rulesData?.multipleUseTable?.length ? (
                     <div className="space-y-2">
-                      <div className="flex flex-wrap gap-3 items-end">
+                      <div className="flex flex-wrap items-end gap-3">
                         <div>
                           <label
                             htmlFor="enhanced-uses-recovery"
-                            className="block text-sm font-medium text-text-secondary mb-1"
+                            className="mb-1 block text-sm font-medium text-text-secondary"
                           >
                             Recovery type
                           </label>
@@ -412,7 +400,7 @@ export function CraftingItemOptionsSection({
                                     rulesData,
                                     'permanent',
                                     undefined,
-                                    session.data.multipleUseTableIndex
+                                    session.data.multipleUseTableIndex,
                                   ),
                                 });
                                 return;
@@ -425,11 +413,11 @@ export function CraftingItemOptionsSection({
                                   rulesData,
                                   nextType,
                                   defaultCount,
-                                  session.data.multipleUseTableIndex
+                                  session.data.multipleUseTableIndex,
                                 ),
                               });
                             }}
-                            className="w-full max-w-xs rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+                            className="min-h-[44px] w-full max-w-xs rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
                           >
                             <option value="full">Full Recovery</option>
                             <option value="partial">Partial Recovery</option>
@@ -440,7 +428,7 @@ export function CraftingItemOptionsSection({
                           <div>
                             <label
                               htmlFor="enhanced-uses-count"
-                              className="block text-sm font-medium text-text-secondary mb-1"
+                              className="mb-1 block text-sm font-medium text-text-secondary"
                             >
                               Uses per {usesType === 'full' ? 'Full' : 'Partial'} Recovery
                             </label>
@@ -455,11 +443,11 @@ export function CraftingItemOptionsSection({
                                     rulesData,
                                     usesType,
                                     nextCount,
-                                    session.data.multipleUseTableIndex
+                                    session.data.multipleUseTableIndex,
                                   ),
                                 });
                               }}
-                              className="w-full max-w-[120px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary min-h-[44px]"
+                              className="min-h-[44px] w-full max-w-[120px] rounded-lg border border-border bg-background px-3 py-2 text-text-primary"
                             >
                               {getUsesCountOptions(rulesData, usesType).map((count) => (
                                 <option key={count} value={count}>
@@ -470,7 +458,7 @@ export function CraftingItemOptionsSection({
                           </div>
                         )}
                       </div>
-                      <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
+                      <p className="mt-1 text-xs text-text-muted">
                         Effective crafting energy:{' '}
                         {!rulesData || !resolvedPowerRef
                           ? `${resolvedPowerRef?.energyCost ?? 0} EN`
@@ -481,10 +469,10 @@ export function CraftingItemOptionsSection({
                                   rulesData,
                                   usesType,
                                   usesCount,
-                                  session.data.multipleUseTableIndex
+                                  session.data.multipleUseTableIndex,
                                 ),
-                                rulesData
-                              )
+                                rulesData,
+                              ),
                             )} EN`}
                       </p>
                     </div>

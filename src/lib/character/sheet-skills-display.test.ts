@@ -24,7 +24,7 @@ describe('mergeSheetSkillsWithCatalog', () => {
   it('adds missing Codex base skills as catalog-only unproficient', () => {
     const merged = mergeSheetSkillsWithCatalog(
       [{ id: '1', name: 'Athletics', skill_val: 2, prof: true, ability: 'strength' }],
-      codex
+      codex,
     );
     const medicine = merged.find((s) => s.name === 'Medicine');
     expect(medicine).toMatchObject({
@@ -55,7 +55,7 @@ describe('mergeSheetSkillsWithCatalog', () => {
           baseSkill: 'Medicine',
         },
       ],
-      codex
+      codex,
     );
     const names = merged.map((s) => s.name);
     expect(names.indexOf('Medicine')).toBeLessThan(names.indexOf('Surgery'));
@@ -75,14 +75,14 @@ describe('filterSheetSkillsDisplay', () => {
   it('filters proficient-only and can hide sub-skills', () => {
     expect(
       filterSheetSkillsDisplay(rows, { proficiencyFilter: 'proficient', showSubSkills: true }).map(
-        (s) => s.name
-      )
+        (s) => s.name,
+      ),
     ).toEqual(['Medicine', 'Surgery']);
 
     expect(
       filterSheetSkillsDisplay(rows, { proficiencyFilter: 'all', showSubSkills: false }).map(
-        (s) => s.name
-      )
+        (s) => s.name,
+      ),
     ).toEqual(['Athletics', 'Medicine']);
   });
 });

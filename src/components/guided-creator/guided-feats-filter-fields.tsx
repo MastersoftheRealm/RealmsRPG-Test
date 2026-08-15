@@ -51,10 +51,7 @@ export function GuidedFeatsFilterFields({
       <SelectFilter
         label="State Feats"
         labelAccessory={
-          <InfoTippy
-            content={STATE_FEAT_RESTRICTION_NOTICE}
-            label="State Feats filter help"
-          />
+          <InfoTippy content={STATE_FEAT_RESTRICTION_NOTICE} label="State Feats filter help" />
         }
         value={stateFeatMode}
         options={[

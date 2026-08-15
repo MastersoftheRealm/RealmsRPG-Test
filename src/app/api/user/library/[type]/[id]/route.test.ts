@@ -14,7 +14,9 @@ vi.mock('@/lib/rate-limit', async (importOriginal) => {
   return {
     ...actual,
     standardLimiter: {
-      check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+      check: vi.fn(() =>
+        Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 }),
+      ),
     },
   };
 });
@@ -155,7 +157,10 @@ describe('GET /api/user/library/[type]/[id]', () => {
     mockGetSession.mockResolvedValue({ user: OTHER, error: null });
     mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
 
-    const response = await GET(makeGetRequest('powers', 'pow-private'), params('powers', 'pow-private'));
+    const response = await GET(
+      makeGetRequest('powers', 'pow-private'),
+      params('powers', 'pow-private'),
+    );
 
     expect(response.status).toBe(404);
     await expect(readJson(response)).resolves.toBeNull();
@@ -166,7 +171,10 @@ describe('GET /api/user/library/[type]/[id]', () => {
     mockGetSession.mockResolvedValue({ user: OWNER, error: null });
     mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
 
-    const response = await GET(makeGetRequest('powers', 'pow-owned'), params('powers', 'pow-owned'));
+    const response = await GET(
+      makeGetRequest('powers', 'pow-owned'),
+      params('powers', 'pow-owned'),
+    );
 
     expect(response.status).toBe(200);
     const body = await readJson<{ id: string; name: string }>(response);
@@ -194,7 +202,7 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
 
     const response = await PATCH(
       makePatchRequest('powers', 'pow-1', { name: 'Updated bolt' }),
-      params('powers', 'pow-1')
+      params('powers', 'pow-1'),
     );
 
     expect(response.status).toBe(401);
@@ -208,7 +216,7 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
 
     const response = await PATCH(
       makePatchRequest('powers', 'pow-private', { name: 'Stolen' }),
-      params('powers', 'pow-private')
+      params('powers', 'pow-private'),
     );
 
     expect(response.status).toBe(404);
@@ -222,7 +230,7 @@ describe('PATCH /api/user/library/[type]/[id]', () => {
 
     const response = await PATCH(
       makePatchRequest('powers', 'pow-owned', { name: 'Updated bolt' }),
-      params('powers', 'pow-owned')
+      params('powers', 'pow-owned'),
     );
 
     expect(response.status).toBe(200);
@@ -256,7 +264,7 @@ describe('DELETE /api/user/library/[type]/[id]', () => {
 
     const response = await DELETE(
       makeDeleteRequest('powers', 'pow-owned', { origin: 'https://evil.example' }),
-      params('powers', 'pow-owned')
+      params('powers', 'pow-owned'),
     );
 
     expect(response.status).toBe(403);
@@ -269,7 +277,7 @@ describe('DELETE /api/user/library/[type]/[id]', () => {
 
     const response = await DELETE(
       makeDeleteRequest('powers', 'pow-private'),
-      params('powers', 'pow-private')
+      params('powers', 'pow-private'),
     );
 
     expect(response.status).toBe(404);
@@ -283,7 +291,7 @@ describe('DELETE /api/user/library/[type]/[id]', () => {
 
     const response = await DELETE(
       makeDeleteRequest('powers', 'pow-owned'),
-      params('powers', 'pow-owned')
+      params('powers', 'pow-owned'),
     );
 
     expect(response.status).toBe(200);

@@ -10,7 +10,10 @@ import { Button } from '@/components/ui';
 import { guidedNavProgressClassName } from '@/components/shared/guided-choice/guided-nav-button-styles';
 import { useCodexSkills, usePathListFilter, type Skill } from '@/hooks';
 import { Alert, DescriptorChip } from '@/components/ui';
-import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import {
+  UnifiedSelectionModal,
+  type SelectableItem,
+} from '@/components/shared/unified-selection-modal';
 import { ArchetypePathFilter } from '@/components/shared/filters';
 import type { ChipData } from '@/components/shared/grid-list-row';
 import { ABILITY_ABBR, ABILITY_FILTER_OPTIONS } from '@/lib/constants/skills';
@@ -92,7 +95,7 @@ function buildAbilityDisplay(abilityString?: string): {
 function skillToSelectableItem(
   skill: Skill & { ability?: string },
   skillBadgesById?: Record<string, AddSkillModalSkillBadge[]>,
-  pathChipLabels?: string[]
+  pathChipLabels?: string[],
 ): SelectableItem {
   const extraSections = getSkillExtraDescriptionDetailSections(skill);
   const { detailChips, columnValue } = buildAbilityDisplay(skill.ability);
@@ -142,30 +145,25 @@ export function AddSkillModal({
     return allSkills.filter((s: Skill) => s.base_skill_id === undefined);
   }, [allSkills]);
 
-  const {
-    selectedPathIds,
-    setSelectedPathIds,
-    pathIndex,
-    pathRecommendedIds,
-    pathFilterActive,
-  } = usePathListFilter({
-    entities: skills,
-    kind: 'skills',
-    enabled: isOpen,
-    autoSelectType: autoSelectPathType,
-    autoSelectWhen: isOpen,
-  });
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({
+      entities: skills,
+      kind: 'skills',
+      enabled: isOpen,
+      autoSelectType: autoSelectPathType,
+      autoSelectWhen: isOpen,
+    });
 
   const items = useMemo((): SelectableItem[] => {
-    const existingLower = existingSkillNames.map(n => n.toLowerCase());
+    const existingLower = existingSkillNames.map((n) => n.toLowerCase());
     const recommendedRank = new Map(
-      (recommendedSkillIds ?? []).map((id, index) => [String(id), index])
+      (recommendedSkillIds ?? []).map((id, index) => [String(id), index]),
     );
     const filtered = skills
       .filter((skill: Skill) => {
         if (existingLower.includes(String(skill.name ?? '').toLowerCase())) return false;
         if (abilityFilter) {
-          const skillAbilities = skill.ability?.split(',').map(a => a.trim().toLowerCase()) || [];
+          const skillAbilities = skill.ability?.split(',').map((a) => a.trim().toLowerCase()) || [];
           if (!skillAbilities.includes(abilityFilter.toLowerCase())) return false;
         }
         if (!rowMatchesPathRecommendedIds(skill.id, pathRecommendedIds)) return false;
@@ -188,10 +186,8 @@ export function AddSkillModal({
       skillToSelectableItem(
         s,
         pathFilterActive ? undefined : skillBadgesById,
-        pathFilterActive
-          ? pathChipLabelsForEntity(pathIndex, s.id, selectedPathIds)
-          : undefined
-      )
+        pathFilterActive ? pathChipLabelsForEntity(pathIndex, s.id, selectedPathIds) : undefined,
+      ),
     );
   }, [
     skills,
@@ -218,18 +214,23 @@ export function AddSkillModal({
   const filterContent = (
     <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
       <div className="filter-group min-w-0">
-        <label htmlFor={abilityFilterId} className="mb-1 block text-sm font-medium text-text-secondary">
+        <label
+          htmlFor={abilityFilterId}
+          className="mb-1 block text-sm font-medium text-text-secondary"
+        >
           Filter by Ability
         </label>
         <select
           id={abilityFilterId}
           value={abilityFilter}
           onChange={(e) => setAbilityFilter(e.target.value)}
-          className="min-h-11 w-full px-3 py-2 text-sm rounded-md border border-border-light bg-surface text-text-primary focus:outline-none focus:ring-2 focus:ring-primary-outline-border"
+          className="min-h-11 w-full rounded-md border border-border-light bg-surface px-3 py-2 text-sm text-text-primary focus:ring-2 focus:ring-primary-outline-border focus:outline-none"
         >
           <option value="">All Abilities</option>
-          {ABILITY_FILTER_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          {ABILITY_FILTER_OPTIONS.map((opt) => (
+            <option key={opt.value} value={opt.value}>
+              {opt.label}
+            </option>
           ))}
         </select>
       </div>
@@ -261,7 +262,7 @@ export function AddSkillModal({
   return (
     <>
       {error && isOpen && (
-        <Alert variant="danger" className="fixed top-4 left-1/2 -translate-x-1/2 z-toast max-w-md">
+        <Alert variant="danger" className="fixed top-4 left-1/2 z-toast max-w-md -translate-x-1/2">
           {error}
         </Alert>
       )}
@@ -271,7 +272,7 @@ export function AddSkillModal({
         title="Add Skills"
         items={items}
         isLoading={loading}
-        onConfirm={(selected) => onAdd(selected.map(i => i.data as Skill))}
+        onConfirm={(selected) => onAdd(selected.map((i) => i.data as Skill))}
         maxSelections={maxSelections}
         selectionLimitMessage={resolvedLimitMessage}
         footerExtra={deeperLayerNav ? () => deeperLayerNav : undefined}

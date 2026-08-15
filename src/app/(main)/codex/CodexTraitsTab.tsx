@@ -8,11 +8,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import {
-  CodexBrowseListShell,
-  ErrorDisplay as ErrorState,
-  GridListRow,
-} from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
@@ -67,24 +63,26 @@ export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' 
       emptyMessage="Try adjusting your search."
     >
       {filtered.map((t: Trait) => {
-              const choiceOptionChips = choiceTraitOptionIdsToChipData(t.option_trait_ids, traitById);
-              return (
-                <GridListRow
-                  key={t.id}
-                  id={t.id}
-                  name={t.name}
-                  description={t.description || ''}
-                  gridColumns={TRAIT_GRID_COLUMNS}
-                  columns={[
-                    { key: 'Uses', value: t.uses_per_rec != null ? String(t.uses_per_rec) : '-' },
-                    { key: 'Recovery', value: t.rec_period || '-' },
-                  ]}
-                  detailSections={
-                    choiceOptionChips.length > 0 ? [{ label: 'Choice options', chips: choiceOptionChips }] : undefined
-                  }
-                />
-              );
-          })}
+        const choiceOptionChips = choiceTraitOptionIdsToChipData(t.option_trait_ids, traitById);
+        return (
+          <GridListRow
+            key={t.id}
+            id={t.id}
+            name={t.name}
+            description={t.description || ''}
+            gridColumns={TRAIT_GRID_COLUMNS}
+            columns={[
+              { key: 'Uses', value: t.uses_per_rec != null ? String(t.uses_per_rec) : '-' },
+              { key: 'Recovery', value: t.rec_period || '-' },
+            ]}
+            detailSections={
+              choiceOptionChips.length > 0
+                ? [{ label: 'Choice options', chips: choiceOptionChips }]
+                : undefined
+            }
+          />
+        );
+      })}
     </CodexBrowseListShell>
   );
 }

@@ -7,7 +7,10 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react';
 import type { ItemProperty } from '@/hooks';
 import { isGeneralProperty, isMechanicProperty } from '@/lib/calculators';
-import type { ArmamentType, ItemSelectedProperty as SelectedProperty } from './item-creator-bootstrap';
+import type {
+  ArmamentType,
+  ItemSelectedProperty as SelectedProperty,
+} from './item-creator-bootstrap';
 
 type UseItemCreatorPropertyActionsArgs = {
   itemProperties: ItemProperty[];
@@ -35,7 +38,8 @@ export function useItemCreatorPropertyActions({
 
     const available =
       selectableProps.find(
-        (p: ItemProperty) => !selectedProperties.some((sp: SelectedProperty) => sp.property.id === p.id),
+        (p: ItemProperty) =>
+          !selectedProperties.some((sp: SelectedProperty) => sp.property.id === p.id),
       ) || selectableProps[0];
 
     setSelectedProperties((prev) => [
@@ -56,7 +60,9 @@ export function useItemCreatorPropertyActions({
 
   const updateProperty = useCallback(
     (index: number, updates: Partial<SelectedProperty>) => {
-      setSelectedProperties((prev) => prev.map((sp, i) => (i === index ? { ...sp, ...updates } : sp)));
+      setSelectedProperties((prev) =>
+        prev.map((sp, i) => (i === index ? { ...sp, ...updates } : sp)),
+      );
     },
     [setSelectedProperties],
   );

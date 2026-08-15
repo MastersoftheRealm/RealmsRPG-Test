@@ -4,21 +4,21 @@
  * Co-located hook for SkillEncounterView — presentation lives in sibling panels.
  */
 
-"use client";
+'use client';
 
-import { useState, useCallback, useMemo, DragEvent } from "react";
-import { useCodexSkills } from "@/hooks";
-import { computeSkillRollResult } from "@/lib/game/encounter-utils";
+import { useState, useCallback, useMemo, DragEvent } from 'react';
+import { useCodexSkills } from '@/hooks';
+import { computeSkillRollResult } from '@/lib/game/encounter-utils';
 import type {
   Encounter,
   SkillParticipant,
   SkillEncounterState,
   TrackedCombatant,
   SkillParticipantType,
-} from "@/types/encounter";
-import type { Campaign } from "@/types/campaign";
-import { generateId, rollInitiative } from "../encounter-view-helpers";
-import type { SkillEncounterViewProps } from "./skill-encounter-view-props";
+} from '@/types/encounter';
+import type { Campaign } from '@/types/campaign';
+import { generateId, rollInitiative } from '../encounter-view-helpers';
+import type { SkillEncounterViewProps } from './skill-encounter-view-props';
 
 type EncounterWithSkillEncounter = Encounter & {
   skillEncounter: SkillEncounterState;
@@ -32,7 +32,7 @@ export function useSkillEncounterView({
   isMixedEncounter = false,
 }: SkillEncounterViewProps & { encounter: EncounterWithSkillEncounter }) {
   const [showAddModal, setShowAddModal] = useState(false);
-  const [newParticipantName, setNewParticipantName] = useState("");
+  const [newParticipantName, setNewParticipantName] = useState('');
   const [addingAllChars, setAddingAllChars] = useState(false);
   const { data: codexSkills = [] } = useCodexSkills();
 
@@ -54,17 +54,14 @@ export function useSkillEncounterView({
   }, [skill.participants]);
   const totalSuccesses = derivedRollSuccesses + additionalSuccesses;
   const totalFailures = derivedRollFailures + additionalFailures;
-  const requiredSuccesses = Math.max(
-    1,
-    skill.requiredSuccesses ?? skill.participants.length + 1,
-  );
+  const requiredSuccesses = Math.max(1, skill.requiredSuccesses ?? skill.participants.length + 1);
   const maxFailures = Math.max(1, skill.maxFailures ?? 3);
-  const encounterOutcome: "success" | "failure" | "in-progress" =
+  const encounterOutcome: 'success' | 'failure' | 'in-progress' =
     totalSuccesses >= requiredSuccesses
-      ? "success"
+      ? 'success'
       : totalFailures >= maxFailures
-        ? "failure"
-        : "in-progress";
+        ? 'failure'
+        : 'in-progress';
 
   const sequenceSuccesses = skill.sequenceSuccesses ?? 0;
   const sequenceFailures = skill.sequenceFailures ?? 0;
@@ -89,14 +86,14 @@ export function useSkillEncounterView({
       id: generateId(),
       name: newParticipantName.trim(),
       hasRolled: false,
-      sourceType: "manual",
+      sourceType: 'manual',
       ...(useInit && {
         initiative: rollInitiative(0),
-        participantType: "ally" as const,
+        participantType: 'ally' as const,
       }),
     };
     updateSkill({ participants: [...skill.participants, participant] });
-    setNewParticipantName("");
+    setNewParticipantName('');
   };
 
   const addParticipantsFromModal = (newParticipants: SkillParticipant[]) => {
@@ -105,7 +102,7 @@ export function useSkillEncounterView({
       ? newParticipants.map((p) => ({
           ...p,
           initiative: p.initiative ?? rollInitiative(0),
-          participantType: p.participantType ?? ("ally" as const),
+          participantType: p.participantType ?? ('ally' as const),
         }))
       : newParticipants;
     updateSkill({ participants: [...skill.participants, ...withInit] });
@@ -122,19 +119,15 @@ export function useSkillEncounterView({
     try {
       const useInit = skill.useInitiative ?? false;
       const participants: SkillParticipant[] = linkedCampaign.characters.map(
-        (c: {
-          userId: string;
-          characterId: string;
-          characterName: string;
-        }) => ({
+        (c: { userId: string; characterId: string; characterName: string }) => ({
           id: generateId(),
           name: c.characterName,
           hasRolled: false,
-          sourceType: "campaign-character" as const,
+          sourceType: 'campaign-character' as const,
           sourceId: c.characterId,
           ...(useInit && {
             initiative: rollInitiative(0),
-            participantType: "ally" as const,
+            participantType: 'ally' as const,
           }),
         }),
       );
@@ -142,13 +135,7 @@ export function useSkillEncounterView({
     } finally {
       setAddingAllChars(false);
     }
-  }, [
-    encounter.campaignId,
-    linkedCampaign,
-    skill.participants,
-    skill.useInitiative,
-    updateSkill,
-  ]);
+  }, [encounter.campaignId, linkedCampaign, skill.participants, skill.useInitiative, updateSkill]);
 
   const addCombatantsAsParticipants = (combatants: TrackedCombatant[]) => {
     const useInit = skill.useInitiative ?? false;
@@ -160,7 +147,7 @@ export function useSkillEncounterView({
       sourceId: c.sourceId,
       ...(useInit && {
         initiative: rollInitiative(c.acuity ?? 0),
-        participantType: c.isAlly ? ("ally" as const) : ("enemy" as const),
+        participantType: c.isAlly ? ('ally' as const) : ('enemy' as const),
       }),
     }));
     updateSkill({ participants: [...skill.participants, ...participants] });
@@ -182,7 +169,7 @@ export function useSkillEncounterView({
       sourceId: c.sourceId,
       sourceUserId: c.sourceUserId,
       initiative: c.initiative,
-      participantType: c.isAlly ? ("ally" as const) : ("enemy" as const),
+      participantType: c.isAlly ? ('ally' as const) : ('enemy' as const),
     }));
     updateSkill({
       useInitiative: skill.useInitiative ?? true,
@@ -205,16 +192,9 @@ export function useSkillEncounterView({
     });
   };
 
-  const updateParticipantRoll = (
-    id: string,
-    rollValue: number,
-    rmBonus?: number,
-  ) => {
+  const updateParticipantRoll = (id: string, rollValue: number, rmBonus?: number) => {
     const effectiveRoll = rollValue + (rmBonus ?? 0);
-    const { successes, failures } = computeSkillRollResult(
-      effectiveRoll,
-      skill.difficultyScore,
-    );
+    const { successes, failures } = computeSkillRollResult(effectiveRoll, skill.difficultyScore);
     const prev = skill.participants.find((p) => p.id === id);
     const prevSuccess = prev?.successCount ?? 0;
     const prevFail = prev?.failureCount ?? 0;
@@ -238,10 +218,7 @@ export function useSkillEncounterView({
     });
   };
 
-  const updateParticipantRmBonus = (
-    id: string,
-    rmBonus: number | undefined,
-  ) => {
+  const updateParticipantRmBonus = (id: string, rmBonus: number | undefined) => {
     const p = skill.participants.find((x) => x.id === id);
     if (!p) return;
     const updatedParticipants = skill.participants.map((x) =>
@@ -249,10 +226,7 @@ export function useSkillEncounterView({
     );
     if (p.hasRolled && p.rollValue != null) {
       const effectiveRoll = p.rollValue + (rmBonus ?? 0);
-      const { successes, failures } = computeSkillRollResult(
-        effectiveRoll,
-        skill.difficultyScore,
-      );
+      const { successes, failures } = computeSkillRollResult(effectiveRoll, skill.difficultyScore);
       const prevSuccess = p.successCount ?? 0;
       const prevFail = p.failureCount ?? 0;
       const deltaSuccess = successes - prevSuccess;
@@ -290,14 +264,8 @@ export function useSkillEncounterView({
         isSuccess: successes > 0,
       };
     });
-    const newSuccesses = updated.reduce(
-      (s, p) => s + (p.isHelping ? 0 : (p.successCount ?? 0)),
-      0,
-    );
-    const newFailures = updated.reduce(
-      (s, p) => s + (p.isHelping ? 0 : (p.failureCount ?? 0)),
-      0,
-    );
+    const newSuccesses = updated.reduce((s, p) => s + (p.isHelping ? 0 : (p.successCount ?? 0)), 0);
+    const newFailures = updated.reduce((s, p) => s + (p.isHelping ? 0 : (p.failureCount ?? 0)), 0);
     updateSkill({
       participants: updated,
       currentSuccesses: newSuccesses,
@@ -313,9 +281,7 @@ export function useSkillEncounterView({
 
   const updateParticipantSkill = (id: string, skillUsed: string) => {
     updateSkill({
-      participants: skill.participants.map((p) =>
-        p.id === id ? { ...p, skillUsed } : p,
-      ),
+      participants: skill.participants.map((p) => (p.id === id ? { ...p, skillUsed } : p)),
     });
   };
 
@@ -330,22 +296,15 @@ export function useSkillEncounterView({
     }
     if (isHelping) {
       updateSkill({
-        participants: skill.participants.map((x) =>
-          x.id === id ? { ...x, isHelping: true } : x,
-        ),
+        participants: skill.participants.map((x) => (x.id === id ? { ...x, isHelping: true } : x)),
         currentSuccesses: Math.max(0, skill.currentSuccesses - dSuccesses),
         currentFailures: Math.max(0, skill.currentFailures - dFailures),
       });
     } else {
       const effectiveRoll = (p.rollValue ?? 0) + (p.rmBonus ?? 0);
-      const { successes, failures } = computeSkillRollResult(
-        effectiveRoll,
-        skill.difficultyScore,
-      );
+      const { successes, failures } = computeSkillRollResult(effectiveRoll, skill.difficultyScore);
       updateSkill({
-        participants: skill.participants.map((x) =>
-          x.id === id ? { ...x, isHelping: false } : x,
-        ),
+        participants: skill.participants.map((x) => (x.id === id ? { ...x, isHelping: false } : x)),
         currentSuccesses: skill.currentSuccesses + successes,
         currentFailures: skill.currentFailures + failures,
       });
@@ -354,8 +313,7 @@ export function useSkillEncounterView({
 
   const clearParticipantRoll = (id: string) => {
     const p = skill.participants.find((x) => x.id === id);
-    const dSuccesses =
-      p?.hasRolled && !p?.isHelping ? (p.successCount ?? 0) : 0;
+    const dSuccesses = p?.hasRolled && !p?.isHelping ? (p.successCount ?? 0) : 0;
     const dFailures = p?.hasRolled && !p?.isHelping ? (p.failureCount ?? 0) : 0;
     const updatedParticipants = skill.participants.map((x) => {
       if (x.id !== id) return x;
@@ -397,14 +355,11 @@ export function useSkillEncounterView({
   const [draggedId, setDraggedId] = useState<string | null>(null);
   const [dragOverId, setDragOverId] = useState<string | null>(null);
 
-  const handleDragStart = useCallback(
-    (e: DragEvent<HTMLDivElement>, id: string) => {
-      setDraggedId(id);
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", id);
-    },
-    [],
-  );
+  const handleDragStart = useCallback((e: DragEvent<HTMLDivElement>, id: string) => {
+    setDraggedId(id);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', id);
+  }, []);
   const handleDragEnd = useCallback(() => {
     setDraggedId(null);
     setDragOverId(null);
@@ -412,7 +367,7 @@ export function useSkillEncounterView({
   const handleDragOver = useCallback(
     (e: DragEvent<HTMLDivElement>, id: string) => {
       e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
+      e.dataTransfer.dropEffect = 'move';
       if (id !== draggedId) setDragOverId(id);
     },
     [draggedId],
@@ -455,19 +410,12 @@ export function useSkillEncounterView({
 
   const updateParticipantInitiative = (id: string, initiative: number) => {
     updateSkill({
-      participants: skill.participants.map((p) =>
-        p.id === id ? { ...p, initiative } : p,
-      ),
+      participants: skill.participants.map((p) => (p.id === id ? { ...p, initiative } : p)),
     });
   };
-  const updateParticipantType = (
-    id: string,
-    participantType: SkillParticipantType,
-  ) => {
+  const updateParticipantType = (id: string, participantType: SkillParticipantType) => {
     updateSkill({
-      participants: skill.participants.map((p) =>
-        p.id === id ? { ...p, participantType } : p,
-      ),
+      participants: skill.participants.map((p) => (p.id === id ? { ...p, participantType } : p)),
     });
   };
   const rollInitiativeForParticipant = (id: string) => {
@@ -488,16 +436,10 @@ export function useSkillEncounterView({
       if (b.initiative !== a.initiative) return b.initiative - a.initiative;
       return (b.acuity ?? 0) - (a.acuity ?? 0);
     };
-    const companions = combatants
-      .filter((c) => c.combatantType === "companion")
-      .sort(sortFn);
-    const nonCompanions = combatants.filter(
-      (c) => c.combatantType !== "companion",
-    );
+    const companions = combatants.filter((c) => c.combatantType === 'companion').sort(sortFn);
+    const nonCompanions = combatants.filter((c) => c.combatantType !== 'companion');
     if (encounter.round === 1) {
-      const notSurprised = nonCompanions
-        .filter((c) => !c.isSurprised)
-        .sort(sortFn);
+      const notSurprised = nonCompanions.filter((c) => !c.isSurprised).sort(sortFn);
       const surprised = nonCompanions.filter((c) => c.isSurprised).sort(sortFn);
       return [...notSurprised, ...surprised, ...companions];
     }

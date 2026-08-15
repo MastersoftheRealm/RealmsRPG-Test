@@ -35,7 +35,7 @@ export function AdminFeatEditModalFields({
   return (
     <>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Name *</label>
+        <label className="mb-1 block text-sm font-medium text-text-secondary">Name *</label>
         <Input
           value={form.name}
           onChange={(e) => setFormField('name', e.target.value)}
@@ -43,7 +43,7 @@ export function AdminFeatEditModalFields({
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Description</label>
+        <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
         <Textarea
           value={form.description}
           onChange={(e) => setFormField('description', e.target.value)}
@@ -53,7 +53,7 @@ export function AdminFeatEditModalFields({
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">
+        <label className="mb-1 block text-sm font-medium text-text-secondary">
           Requirement Description (req_desc)
         </label>
         <Input
@@ -64,7 +64,7 @@ export function AdminFeatEditModalFields({
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Category</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Category</label>
           <select
             value={
               form.category && filterOptions.categories.includes(form.category)
@@ -78,7 +78,7 @@ export function AdminFeatEditModalFields({
               if (v === '__new__') setFormUpdater((f) => ({ ...f, category: f.category || '' }));
               else setFormField('category', v);
             }}
-            className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
             aria-label="Feat category"
           >
             <option value="">None</option>
@@ -99,7 +99,7 @@ export function AdminFeatEditModalFields({
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
             Feat Category Required (feat_cat_req)
           </label>
           <select
@@ -112,10 +112,11 @@ export function AdminFeatEditModalFields({
             }
             onChange={(e) => {
               const v = e.target.value;
-              if (v === '__new__') setFormUpdater((f) => ({ ...f, feat_cat_req: f.feat_cat_req || '' }));
+              if (v === '__new__')
+                setFormUpdater((f) => ({ ...f, feat_cat_req: f.feat_cat_req || '' }));
               else setFormField('feat_cat_req', v);
             }}
-            className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
             aria-label="Feat category required"
           >
             <option value="">None</option>
@@ -136,7 +137,7 @@ export function AdminFeatEditModalFields({
           )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
             Character Level Required (lvl_req)
           </label>
           <Input
@@ -146,14 +147,14 @@ export function AdminFeatEditModalFields({
             onChange={(e) =>
               setFormField(
                 'lvl_req',
-                e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined,
+                e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
               )
             }
             placeholder="No value"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
             Feat Level (feat_lvl)
           </label>
           <Input
@@ -163,7 +164,7 @@ export function AdminFeatEditModalFields({
             onChange={(e) =>
               setFormField(
                 'feat_lvl',
-                e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined,
+                e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
               )
             }
             placeholder="No value"
@@ -172,7 +173,7 @@ export function AdminFeatEditModalFields({
         <div>
           <label
             htmlFor="admin-feat-base-feat-id"
-            className="block text-sm font-medium text-text-secondary mb-1"
+            className="mb-1 block text-sm font-medium text-text-secondary"
           >
             Base feat (level 1)
           </label>
@@ -180,7 +181,7 @@ export function AdminFeatEditModalFields({
             id="admin-feat-base-feat-id"
             value={form.base_feat_id}
             onChange={(e) => setFormField('base_feat_id', e.target.value)}
-            className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
             aria-label="Base feat (level 1) (leave empty for level 1 feats)"
           >
             <option value="">None (this is level 1)</option>
@@ -196,8 +197,9 @@ export function AdminFeatEditModalFields({
                 </option>
               ))}
           </select>
-          <p className="text-xs text-text-muted dark:text-text-secondary mt-1">
-            For level 2+ feats, select the level-1 feat. Same name as base; ids differentiate levels.
+          <p className="mt-1 text-xs text-text-muted">
+            For level 2+ feats, select the level-1 feat. Same name as base; ids differentiate
+            levels.
           </p>
         </div>
       </div>
@@ -208,16 +210,18 @@ export function AdminFeatEditModalFields({
           options={abilityOptions}
           selectedValues={form.ability}
           onSelect={(v) => setFormUpdater((f) => ({ ...f, ability: [...f.ability, v] }))}
-          onRemove={(v) => setFormUpdater((f) => ({ ...f, ability: f.ability.filter((a) => a !== v) }))}
+          onRemove={(v) =>
+            setFormUpdater((f) => ({ ...f, ability: f.ability.filter((a) => a !== v) }))
+          }
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">
+        <label className="mb-1 block text-sm font-medium text-text-secondary">
           Ability Requirements (ability/defense + min value)
         </label>
         <div className="space-y-2">
           {form.ability_req.map((abil, i) => (
-            <div key={i} className="flex gap-2 items-center">
+            <div key={i} className="flex items-center gap-2">
               <select
                 value={abil}
                 onChange={(e) => {
@@ -227,7 +231,7 @@ export function AdminFeatEditModalFields({
                     return { ...f, ability_req: next };
                   });
                 }}
-                className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
+                className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
                 aria-label={`Ability requirement ${i + 1}`}
               >
                 {abil && !(ABILITIES_AND_DEFENSES as readonly string[]).includes(abil) && (
@@ -266,7 +270,7 @@ export function AdminFeatEditModalFields({
                 }}
                 label="Remove"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </IconButton>
             </div>
           ))}
@@ -281,18 +285,18 @@ export function AdminFeatEditModalFields({
               }))
             }
           >
-            <Plus className="w-4 h-4 mr-1 inline" />
+            <Plus className="mr-1 inline h-4 w-4" />
             Add ability requirement
           </Button>
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">
+        <label className="mb-1 block text-sm font-medium text-text-secondary">
           Skill Requirements (skill ID + min bonus)
         </label>
         <div className="space-y-2">
           {form.skill_req.map((skillId, i) => (
-            <div key={i} className="flex gap-2 items-center">
+            <div key={i} className="flex items-center gap-2">
               <select
                 value={skillId}
                 onChange={(e) => {
@@ -302,7 +306,7 @@ export function AdminFeatEditModalFields({
                     return { ...f, skill_req: next };
                   });
                 }}
-                className="flex-1 px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
+                className="flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
                 aria-label={`Skill requirement ${i + 1}`}
               >
                 {skillId && !(skills as Skill[]).some((s) => String(s.id) === String(skillId)) && (
@@ -340,7 +344,7 @@ export function AdminFeatEditModalFields({
                 }}
                 label="Remove"
               >
-                <X className="w-4 h-4" />
+                <X className="h-4 w-4" />
               </IconButton>
             </div>
           ))}
@@ -356,14 +360,16 @@ export function AdminFeatEditModalFields({
               }));
             }}
           >
-            <Plus className="w-4 h-4 mr-1 inline" />
+            <Plus className="mr-1 inline h-4 w-4" />
             Add skill requirement
           </Button>
         </div>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Uses per recovery</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Uses per recovery
+          </label>
           <Input
             type="number"
             min={0}
@@ -371,18 +377,20 @@ export function AdminFeatEditModalFields({
             onChange={(e) =>
               setFormField(
                 'uses_per_rec',
-                e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined,
+                e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
               )
             }
             placeholder="No value"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Recovery Period</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Recovery Period
+          </label>
           <select
             value={form.rec_period}
             onChange={(e) => setFormField('rec_period', e.target.value)}
-            className="w-full px-3 py-2 border border-border rounded-md bg-background text-text-primary text-sm"
+            className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
             aria-label="Recovery period"
           >
             <option value="">None</option>
@@ -391,9 +399,11 @@ export function AdminFeatEditModalFields({
           </select>
         </div>
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Power Ability Req</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Power Ability Req
+          </label>
           <Input
             type="number"
             min={0}
@@ -401,14 +411,16 @@ export function AdminFeatEditModalFields({
             onChange={(e) =>
               setFormField(
                 'pow_abil_req',
-                e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined,
+                e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
               )
             }
             placeholder="No value"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Martial Ability Req</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Martial Ability Req
+          </label>
           <Input
             type="number"
             min={0}
@@ -416,14 +428,16 @@ export function AdminFeatEditModalFields({
             onChange={(e) =>
               setFormField(
                 'mart_abil_req',
-                e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined,
+                e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
               )
             }
             placeholder="No value"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Power Prof Req</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Power Prof Req
+          </label>
           <Input
             type="number"
             min={0}
@@ -431,14 +445,16 @@ export function AdminFeatEditModalFields({
             onChange={(e) =>
               setFormField(
                 'pow_prof_req',
-                e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined,
+                e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
               )
             }
             placeholder="No value"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Martial Prof Req</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
+            Martial Prof Req
+          </label>
           <Input
             type="number"
             min={0}
@@ -446,14 +462,14 @@ export function AdminFeatEditModalFields({
             onChange={(e) =>
               setFormField(
                 'mart_prof_req',
-                e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined,
+                e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
               )
             }
             placeholder="No value"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Speed Req</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Speed Req</label>
           <Input
             type="number"
             min={0}
@@ -461,7 +477,7 @@ export function AdminFeatEditModalFields({
             onChange={(e) =>
               setFormField(
                 'speed_req',
-                e.target.value === '' ? undefined : parseInt(e.target.value, 10) ?? undefined,
+                e.target.value === '' ? undefined : (parseInt(e.target.value, 10) ?? undefined),
               )
             }
             placeholder="No value"
@@ -469,34 +485,37 @@ export function AdminFeatEditModalFields({
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-text-secondary mb-1">Tags</label>
-        <div className="flex flex-wrap gap-1 mb-2">
+        <label className="mb-1 block text-sm font-medium text-text-secondary">Tags</label>
+        <div className="mb-2 flex flex-wrap gap-1">
           {form.tags.map((tag) => (
             <span
               key={tag}
-              className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-alt border border-border-light text-sm"
+              className="inline-flex items-center gap-1 rounded-md border border-border-light bg-surface-alt px-2 py-0.5 text-sm"
             >
               {tag}
               <button
                 type="button"
-                onClick={() => setFormUpdater((f) => ({ ...f, tags: f.tags.filter((t) => t !== tag) }))}
-                className="p-0.5 rounded hover:bg-surface text-text-muted hover:text-text-primary"
+                onClick={() =>
+                  setFormUpdater((f) => ({ ...f, tags: f.tags.filter((t) => t !== tag) }))
+                }
+                className="rounded p-0.5 text-text-muted hover:bg-surface hover:text-text-primary"
                 aria-label={`Remove tag ${tag}`}
               >
-                <X className="w-3.5 h-3.5" />
+                <X className="h-3.5 w-3.5" />
               </button>
             </span>
           ))}
         </div>
-        <div className="flex gap-2 flex-wrap items-center">
+        <div className="flex flex-wrap items-center gap-2">
           <select
             defaultValue=""
             onChange={(e) => {
               const v = e.target.value;
               e.target.value = '';
-              if (v && !form.tags.includes(v)) setFormUpdater((f) => ({ ...f, tags: [...f.tags, v] }));
+              if (v && !form.tags.includes(v))
+                setFormUpdater((f) => ({ ...f, tags: [...f.tags, v] }));
             }}
-            className="px-3 py-2 rounded-md border border-border bg-background text-text-primary text-sm"
+            className="rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary"
             aria-label="Add tag from existing"
           >
             <option value="">Add tag from list...</option>

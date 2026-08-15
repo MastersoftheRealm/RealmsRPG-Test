@@ -21,12 +21,7 @@ export type {
 } from './archetype';
 
 // Ancestry
-export type {
-  SizeCategory,
-  Ancestry,
-  AncestryTrait,
-  CharacterAncestry,
-} from './ancestry';
+export type { SizeCategory, Ancestry, AncestryTrait, CharacterAncestry } from './ancestry';
 
 // Skills
 export type {
@@ -40,12 +35,7 @@ export type {
 export { DEFAULT_DEFENSE_SKILLS } from './skills';
 
 // Feats
-export type {
-  FeatCategory,
-  Feat,
-  CharacterFeat,
-  FeatTraitCustomization,
-} from './feats';
+export type { FeatCategory, Feat, CharacterFeat, FeatTraitCustomization } from './feats';
 
 // Equipment
 export type {
@@ -61,7 +51,12 @@ export type {
 } from './equipment';
 
 // Campaign
-export type { Campaign, CampaignCharacter, CampaignSummary, ArchetypeDisplayName } from './campaign';
+export type {
+  Campaign,
+  CampaignCharacter,
+  CampaignSummary,
+  ArchetypeDisplayName,
+} from './campaign';
 
 // Character
 export type {

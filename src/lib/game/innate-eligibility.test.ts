@@ -64,7 +64,7 @@ describe('innate-eligibility', () => {
         partIds: ['307'],
         partNames: ['Heal'],
       }),
-      8
+      8,
     );
     expect(issues.some((i) => i.message.includes('exceeds Innate Threshold'))).toBe(true);
     expect(issues.some((i) => i.message.includes('Basic or Basic Reaction'))).toBe(true);
@@ -110,18 +110,10 @@ describe('innate-eligibility', () => {
   });
 
   it('isPowerInnateEligible enforces action, parts, and optional threshold', () => {
-    expect(
-      isPowerInnateEligible(
-        snap({ id: '1', energy: 6, actionType: 'basic' }),
-        8
-      )
-    ).toBe(true);
-    expect(
-      isPowerInnateEligible(
-        snap({ id: '1', energy: 10, actionType: 'basic' }),
-        8
-      )
-    ).toBe(false);
+    expect(isPowerInnateEligible(snap({ id: '1', energy: 6, actionType: 'basic' }), 8)).toBe(true);
+    expect(isPowerInnateEligible(snap({ id: '1', energy: 10, actionType: 'basic' }), 8)).toBe(
+      false,
+    );
     expect(
       isPowerInnateEligible(
         snap({
@@ -131,8 +123,8 @@ describe('innate-eligibility', () => {
           partIds: ['307'],
           partNames: ['Heal'],
         }),
-        8
-      )
+        8,
+      ),
     ).toBe(false);
   });
 });

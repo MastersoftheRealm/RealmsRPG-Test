@@ -8,7 +8,7 @@
  * - Codex page (feats, skills, species, equipment, properties, parts)
  * - Character sheet modals (add feat, add power, add technique, add item)
  * - Creator pages (power/technique/item part selection)
- * 
+ *
  * Design principles:
  * - Consistent visual patterns across the entire site
  * - Grid-aligned columns match headers
@@ -43,7 +43,12 @@ import {
 import { GridListRowExpandedBody, GridListRowMobileSummary } from './grid-list-row-expanded';
 import type { GridListRowProps } from './grid-list-row-types';
 
-export type { ChipData, ChipOptionData, ColumnValue, GridListRowProps } from './grid-list-row-types';
+export type {
+  ChipData,
+  ChipOptionData,
+  ColumnValue,
+  GridListRowProps,
+} from './grid-list-row-types';
 
 export const GridListRow = memo(function GridListRow({
   name,
@@ -141,10 +146,7 @@ export const GridListRow = memo(function GridListRow({
     totalCost !== undefined &&
     totalCost > 0 &&
     !columnsAlreadyShowTrainingPoints(columns, costLabel);
-  const hasDetails =
-    hasBodyContent ||
-    showExpandedTotalCost ||
-    showActions;
+  const hasDetails = hasBodyContent || showExpandedTotalCost || showActions;
   const showExpander = hasDetails || !!onDelete;
 
   const handleChipClick = (index: number, e: React.MouseEvent) => {
@@ -162,13 +164,14 @@ export const GridListRow = memo(function GridListRow({
     }
   };
 
-  const isRowClickable = (showExpander || selectable) && !(disabled && (!selectable || !showExpander));
+  const isRowClickable =
+    (showExpander || selectable) && !(disabled && (!selectable || !showExpander));
 
   const handleRowClickWithGuard = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const rowTrigger = target.closest?.('[data-grid-row-trigger]');
     const interactive = target.closest?.(
-      'button, [role="button"], a, input, select, textarea, [data-expand-ignore]'
+      'button, [role="button"], a, input, select, textarea, [data-expand-ignore]',
     );
     if (interactive && interactive !== rowTrigger) return;
     handleRowClick();
@@ -177,7 +180,7 @@ export const GridListRow = memo(function GridListRow({
   const handleRowBodyClickWithGuard = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
     const interactive = target.closest?.(
-      'button, [role="button"], a, input, select, textarea, [data-expand-ignore], [data-chip-group]'
+      'button, [role="button"], a, input, select, textarea, [data-expand-ignore], [data-chip-group]',
     );
     if (interactive) return;
     handleRowClick();
@@ -189,15 +192,13 @@ export const GridListRow = memo(function GridListRow({
     innate && !isSelected && 'border-power-border bg-power-light',
     !isSelected && !innate && 'border-border-light',
     disabled && 'opacity-50',
-    className
+    className,
   );
 
   const useFlex = !gridColumns;
   const useThumbnailColumn = Boolean(thumbnail && gridColumns);
   const resolvedGridColumns =
-    useThumbnailColumn && gridColumns
-      ? gridTemplateColumnsWithThumbnail(gridColumns)
-      : gridColumns;
+    useThumbnailColumn && gridColumns ? gridTemplateColumnsWithThumbnail(gridColumns) : gridColumns;
   const explicitGridTracks = countGridTemplateTracks(resolvedGridColumns);
   const dataTracksUsed =
     (useThumbnailColumn ? 2 : 1) +
@@ -212,8 +213,7 @@ export const GridListRow = memo(function GridListRow({
   // Edit + delete must share the same chrome (all inline or all flex-outside).
   // A single leftover `40px` track used to put delete inside hover and edit outside.
   const editDeleteCount = (onEdit ? 1 : 0) + (onDelete ? 1 : 0);
-  const inlineEditDelete =
-    editDeleteCount > 0 && remainingInlineActionTracks >= editDeleteCount;
+  const inlineEditDelete = editDeleteCount > 0 && remainingInlineActionTracks >= editDeleteCount;
   const inlineDelete = inlineEditDelete && !!onDelete;
   if (inlineDelete) remainingInlineActionTracks -= 1;
   const inlineEdit = inlineEditDelete && !!onEdit;
@@ -232,8 +232,7 @@ export const GridListRow = memo(function GridListRow({
   const hasExternalChrome =
     externalRightSlot || externalEdit || externalDelete || externalSelectable;
 
-  const suppressDescriptionPreview =
-    isExpanded && !!descTrimmed && !expandedContent;
+  const suppressDescriptionPreview = isExpanded && !!descTrimmed && !expandedContent;
   const headerColumns = columnsWithoutDescriptionPreview(columns, suppressDescriptionPreview);
   const allDataColumnsAreDescription =
     columns.length > 0 && columns.every((col) => col.key === 'description');
@@ -246,19 +245,18 @@ export const GridListRow = memo(function GridListRow({
     if (col.hideOnMobile !== false) return sum;
     return sum + (columnSpans?.[idx] ?? 1);
   }, 0);
-  const mobileGridColumns =
-    resolvedGridColumns
-      ? buildMobileCollapsedGridColumns({
-          resolvedGridColumns,
-          hasThumbnailColumn: useThumbnailColumn,
-          dataTracksUsed,
-          mobileVisibleDataTracks,
-        })
-      : undefined;
+  const mobileGridColumns = resolvedGridColumns
+    ? buildMobileCollapsedGridColumns({
+        resolvedGridColumns,
+        hasThumbnailColumn: useThumbnailColumn,
+        dataTracksUsed,
+        mobileVisibleDataTracks,
+      })
+    : undefined;
 
   const mobileSummaryColumns = columnsWithoutDescriptionPreview(
     columnsForMobileSummary(columns),
-    suppressDescriptionPreview
+    suppressDescriptionPreview,
   );
   const expandedMobileStatColumns = columnsForExpandedMobileStats(columns, !!descTrimmed);
 
@@ -295,7 +293,7 @@ export const GridListRow = memo(function GridListRow({
       >
         {showLeftChrome && (
           <div
-            className="flex items-center justify-center min-h-[44px]"
+            className="flex min-h-[44px] items-center justify-center"
             style={{ gridColumn: 1, gridRow: 1 }}
             onClick={(e) => e.stopPropagation()}
             aria-hidden={reserveLeftSlotChrome && !leftSlot ? true : undefined}
@@ -305,7 +303,7 @@ export const GridListRow = memo(function GridListRow({
         )}
 
         <div
-          className="min-w-0 flex items-center min-h-[44px]"
+          className="flex min-h-[44px] min-w-0 items-center"
           style={{ gridColumn: contentCol, gridRow: 1 }}
         >
           <GridListRowCollapsed
@@ -357,7 +355,7 @@ export const GridListRow = memo(function GridListRow({
 
         {hasExternalChrome && (
           <div
-            className="flex items-center justify-center min-h-[44px]"
+            className="flex min-h-[44px] items-center justify-center"
             style={{ gridColumn: chromeCol, gridRow: 1 }}
           >
             <GridListRowExternalChrome
@@ -394,7 +392,11 @@ export const GridListRow = memo(function GridListRow({
                 aria-hidden
               />
             )}
-            <div id={expandedPanelId} className="min-w-0" style={{ gridColumn: contentCol, gridRow: expandedRow }}>
+            <div
+              id={expandedPanelId}
+              className="min-w-0"
+              style={{ gridColumn: contentCol, gridRow: expandedRow }}
+            >
               <GridListRowExpandedBody
                 compact={compact}
                 selectable={inlineSelectable}

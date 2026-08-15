@@ -44,14 +44,14 @@ export type PowersTechniquesL2Mode = 'regular' | 'innate';
 /** Live path-filter bag for this L2/L3 screen (innate uses `innatePowers`, not the powers union). */
 export function pathRecommendationKindForL2(
   kind: PowersTechniquesKind,
-  mode: PowersTechniquesL2Mode
+  mode: PowersTechniquesL2Mode,
 ): PathRecommendationKind {
   if (mode === 'innate') return 'innatePowers';
   return kind === 'techniques' ? 'techniques' : 'powers';
 }
 
 function toSelectableHeaders(
-  headers: ReadonlyArray<{ key: string; label: string; align?: 'left' | 'center' | 'right' }>
+  headers: ReadonlyArray<{ key: string; label: string; align?: 'left' | 'center' | 'right' }>,
 ) {
   return headers.map((h) => ({
     key: h.key,
@@ -64,7 +64,7 @@ function toSelectableHeaders(
 export const GUIDED_POWERS_L2_HEADER_COLUMNS = toSelectableHeaders(OFFICIAL_POWER_HEADER_COLUMNS);
 export const GUIDED_POWERS_L2_GRID = OFFICIAL_POWER_GRID;
 export const GUIDED_TECHNIQUES_L2_HEADER_COLUMNS = toSelectableHeaders(
-  OFFICIAL_TECHNIQUE_HEADER_COLUMNS
+  OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
 );
 export const GUIDED_TECHNIQUES_L2_GRID = OFFICIAL_TECHNIQUE_GRID;
 
@@ -101,7 +101,7 @@ function energyAllowed(
   energy: number | undefined,
   mode: PowersTechniquesL2Mode,
   maxEnergy: number | null,
-  innateThreshold: number
+  innateThreshold: number,
 ): boolean {
   if (mode === 'regular') {
     return isGuidedL2EnergyAllowed(energy, maxEnergy);
@@ -130,8 +130,7 @@ export function buildPowersTechniquesL2Items(opts: {
     innateThreshold = 0,
   } = opts;
 
-  const maxEnergy =
-    mode === 'regular' ? calculateGuidedL1TheoreticalMaxEnergy(energyInput) : null;
+  const maxEnergy = mode === 'regular' ? calculateGuidedL1TheoreticalMaxEnergy(energyInput) : null;
   const budgetKind = toBudgetKind(kind);
 
   const rows: SelectableItem[] = [];
@@ -160,7 +159,7 @@ export function buildPowersTechniquesL2Items(opts: {
           budgetKind,
           row.raw,
           powerPartsDb,
-          techniquePartsDb
+          techniquePartsDb,
         ),
       });
     }
@@ -188,7 +187,7 @@ export function buildPowersTechniquesL2Items(opts: {
           budgetKind,
           row.raw,
           powerPartsDb,
-          techniquePartsDb
+          techniquePartsDb,
         ),
       });
     }
@@ -200,7 +199,7 @@ export function buildPowersTechniquesL2Items(opts: {
 export function filterPowersTechniquesL2ByPtFilters(
   items: SelectableItem[],
   filters: PowerTechniqueFilterState,
-  kind: PowersTechniquesKind
+  kind: PowersTechniquesKind,
 ): SelectableItem[] {
   const filterKind = kind === 'techniques' ? 'technique' : 'power';
   return items.filter((item) => {
@@ -217,7 +216,7 @@ export function selectedIdsFromL2Items(selected: SelectableItem[]): string[] {
 
 export function computeL2PowersTechniquesTpSpent(
   selected: SelectableItem[],
-  loadoutTpSpent: number
+  loadoutTpSpent: number,
 ): number {
   const combat = selected.reduce((sum, row) => {
     const data = row.data as { tpCost?: number } | undefined;

@@ -59,9 +59,7 @@ type CraftSkillFilterable = {
 };
 
 export function filterCraftSubSkills<T extends CraftSkillFilterable>(codexSkills: T[]): T[] {
-  const withCraftDesc = codexSkills.filter(
-    (s) => s.craft_success_desc || s.craft_failure_desc
-  );
+  const withCraftDesc = codexSkills.filter((s) => s.craft_success_desc || s.craft_failure_desc);
   const craftSubs = withCraftDesc.filter((s) => s.base_skill_id === CRAFT_BASE_SKILL_ID);
   return craftSubs.length > 0 ? craftSubs : withCraftDesc;
 }
@@ -69,7 +67,7 @@ export function filterCraftSubSkills<T extends CraftSkillFilterable>(codexSkills
 export function buildCraftingPowerOptions(
   userPowers: PowerEnergySource[],
   officialPowers: PowerEnergySource[],
-  powerPartsDb: PowerPart[]
+  powerPartsDb: PowerPart[],
 ): PowerOption[] {
   const map = new Map<string, PowerOption>();
   const toEnergyCost = (raw: PowerEnergySource) => {
@@ -115,7 +113,7 @@ export function buildCraftingPowerOptions(
 export function resolveLiveCraftingPowerRef(
   isEnhanced: boolean | undefined,
   ref: CraftingPowerRef | null | undefined,
-  powerOptions: PowerOption[]
+  powerOptions: PowerOption[],
 ): CraftingPowerRef | null | undefined {
   if (!isEnhanced || !ref) return ref;
   const latest = powerOptions.find((p) => p.id === ref.id);
@@ -173,19 +171,19 @@ export function buildRequirementsSyncPatch(args: {
     const baseLabels = getCraftingSessionLabels(
       requirementsBreakdown.baseItemReq.timeValue,
       requirementsBreakdown.baseItemReq.timeUnit,
-      requirementsBreakdown.baseItemReq.sessionCount
+      requirementsBreakdown.baseItemReq.sessionCount,
     );
     const enhancementLabels = getCraftingSessionLabels(
       requirementsBreakdown.enhancementReq.timeValue,
       requirementsBreakdown.enhancementReq.timeUnit,
-      requirementsBreakdown.enhancementReq.sessionCount
+      requirementsBreakdown.enhancementReq.sessionCount,
     );
     labels = [...baseLabels, ...enhancementLabels];
   } else {
     labels = getCraftingSessionLabels(
       requirements.timeValue,
       requirements.timeUnit,
-      requirements.sessionCount
+      requirements.sessionCount,
     );
   }
 
@@ -203,13 +201,9 @@ export function buildRequirementsSyncPatch(args: {
       rulesData,
       usesType,
       usesCount,
-      session.data.multipleUseTableIndex
+      session.data.multipleUseTableIndex,
     );
-    const effEnergy = getEffectiveCraftingEnergy(
-      resolvedPowerRef.energyCost,
-      idx,
-      rulesData
-    );
+    const effEnergy = getEffectiveCraftingEnergy(resolvedPowerRef.energyCost, idx, rulesData);
     const req = isConsumable
       ? getConsumableEnhancedRequirements(effEnergy, rulesData)
       : getEnhancedCraftingRequirements(effEnergy, rulesData);
@@ -318,7 +312,7 @@ export function computeCraftingSessionTallies(args: {
         acc.f += s.failures;
         return acc;
       },
-      { s: 0, f: 0 }
+      { s: 0, f: 0 },
     );
     enhSessionSuccesses = totals.s;
     enhSessionFailures = totals.f;
@@ -370,7 +364,7 @@ export function computeLiveCraftingOutcome(args: {
     netDelta,
     materialCost,
     baseMarketPrice,
-    rulesData.successesTable
+    rulesData.successesTable,
   );
 }
 
@@ -408,6 +402,6 @@ export function computeBaseOutcomeForDisplay(args: {
     baseNetDelta,
     baseMaterialCost,
     baseMarketPrice,
-    rulesData.successesTable
+    rulesData.successesTable,
   );
 }

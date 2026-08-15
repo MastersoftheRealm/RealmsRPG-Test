@@ -141,7 +141,7 @@ function EnhancedItemEditModal({
   const [selectedItemId, setSelectedItemId] = useState<string | ''>(initial?.base_item_id ?? '');
   const [selectedPowerId, setSelectedPowerId] = useState<string | ''>(initial?.power_id ?? '');
   const [usesType, setUsesType] = useState<'full' | 'partial' | 'permanent'>(
-    (initial?.uses_type as 'full' | 'partial' | 'permanent' | undefined) ?? 'full'
+    (initial?.uses_type as 'full' | 'partial' | 'permanent' | undefined) ?? 'full',
   );
   const [usesCount, setUsesCount] = useState<number>(initial?.uses_count ?? 1);
 
@@ -183,9 +183,7 @@ function EnhancedItemEditModal({
     >
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Name
-          </label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Name</label>
           <Input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -194,9 +192,7 @@ function EnhancedItemEditModal({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Description
-          </label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
           <Input
             value={description ?? ''}
             onChange={(e) => setDescription(e.target.value)}
@@ -205,8 +201,8 @@ function EnhancedItemEditModal({
           />
         </div>
         <div className="flex flex-wrap gap-4">
-          <div className="flex-1 min-w-[220px]">
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+          <div className="min-w-[220px] flex-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Base item (official)
             </label>
             <Select
@@ -220,8 +216,8 @@ function EnhancedItemEditModal({
               }))}
             />
           </div>
-          <div className="flex-1 min-w-[220px]">
-            <label className="block text-sm font-medium text-text-secondary mb-1">
+          <div className="min-w-[220px] flex-1">
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
               Power (official)
             </label>
             <Select
@@ -236,11 +232,9 @@ function EnhancedItemEditModal({
             />
           </div>
         </div>
-        <div className="flex flex-wrap gap-4 items-end">
+        <div className="flex flex-wrap items-end gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Recovery
-            </label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Recovery</label>
             <Select
               value={usesType}
               onChange={(e) => setUsesType(e.target.value as 'full' | 'partial' | 'permanent')}
@@ -254,7 +248,7 @@ function EnhancedItemEditModal({
           </div>
           {usesType !== 'permanent' && (
             <div>
-              <label className="block text-sm font-medium text-text-secondary mb-1">
+              <label className="mb-1 block text-sm font-medium text-text-secondary">
                 Uses per {usesType === 'full' ? 'Full' : 'Partial'} Recovery
               </label>
               <Input

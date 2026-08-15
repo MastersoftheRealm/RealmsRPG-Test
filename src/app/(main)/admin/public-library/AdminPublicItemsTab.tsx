@@ -9,10 +9,13 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { DeleteConfirmModal, OfficialItemList, SegmentedControl } from '@/components/shared';
 import { useToast } from '@/components/ui';
-import { useOfficialLibrary, useItemProperties } from '@/hooks';
+import { officialLibraryKeys, useOfficialLibrary, useItemProperties } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { apiFetch } from '@/lib/api-client';
-import { ARMAMENT_LABELS_BY_KIND, type ArmamentLibraryKind } from '@/lib/library/armament-library-labels';
+import {
+  ARMAMENT_LABELS_BY_KIND,
+  type ArmamentLibraryKind,
+} from '@/lib/library/armament-library-labels';
 
 const QUERY_KEY = ['official-library', 'items'] as const;
 
@@ -38,6 +41,7 @@ export function AdminPublicItemsTab() {
         method: 'DELETE',
       });
       queryClient.invalidateQueries({ queryKey: QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: officialLibraryKeys.counts });
       await queryClient.refetchQueries({ queryKey: QUERY_KEY });
       setDeleteConfirm(null);
     } catch (e) {
@@ -69,7 +73,9 @@ export function AdminPublicItemsTab() {
         propertiesDb={propertiesDb}
         isLoading={isLoading}
         error={error}
-        onRetry={() => { void refetch(); }}
+        onRetry={() => {
+          void refetch();
+        }}
         errorMessage={`Failed to load official ${labels.entityPlural}`}
         sectionTitle={sectionTitle}
         emptyTitle={`No official ${labels.entityPlural}`}

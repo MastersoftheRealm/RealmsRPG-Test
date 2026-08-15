@@ -43,10 +43,8 @@ export function readResourcesFromCharacterData(data: Record<string, unknown>): {
   const energy = data.energy as { current?: number; max?: number } | undefined;
 
   return {
-    currentHealth:
-      typeof data.currentHealth === 'number' ? data.currentHealth : health?.current,
-    currentEnergy:
-      typeof data.currentEnergy === 'number' ? data.currentEnergy : energy?.current,
+    currentHealth: typeof data.currentHealth === 'number' ? data.currentHealth : health?.current,
+    currentEnergy: typeof data.currentEnergy === 'number' ? data.currentEnergy : energy?.current,
     actionPoints: typeof data.actionPoints === 'number' ? data.actionPoints : undefined,
     healthMax: typeof health?.max === 'number' ? health.max : undefined,
     energyMax: typeof energy?.max === 'number' ? energy.max : undefined,
@@ -56,7 +54,7 @@ export function readResourcesFromCharacterData(data: Record<string, unknown>): {
 /** Apply resource fields from DB/realtime payload onto local character state (consistent nested objects). */
 export function mergeResourceUpdatesIntoCharacter(
   prev: Character,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Character | null {
   const r = readResourcesFromCharacterData(data);
   if (
@@ -72,7 +70,10 @@ export function mergeResourceUpdatesIntoCharacter(
   if (r.currentEnergy !== undefined) updates.currentEnergy = r.currentEnergy;
   if (r.actionPoints !== undefined) updates.actionPoints = r.actionPoints;
 
-  if (r.currentHealth !== undefined && (r.healthMax !== undefined || prev.health?.max !== undefined)) {
+  if (
+    r.currentHealth !== undefined &&
+    (r.healthMax !== undefined || prev.health?.max !== undefined)
+  ) {
     updates.health = {
       ...(prev.health ?? {}),
       current: r.currentHealth,
@@ -82,7 +83,10 @@ export function mergeResourceUpdatesIntoCharacter(
     updates.health = { ...prev.health, max: r.healthMax } as Character['health'];
   }
 
-  if (r.currentEnergy !== undefined && (r.energyMax !== undefined || prev.energy?.max !== undefined)) {
+  if (
+    r.currentEnergy !== undefined &&
+    (r.energyMax !== undefined || prev.energy?.max !== undefined)
+  ) {
     updates.energy = {
       ...(prev.energy ?? {}),
       current: r.currentEnergy,
@@ -97,7 +101,7 @@ export function mergeResourceUpdatesIntoCharacter(
 
 export function withSyncedResourceFields(
   prev: Character,
-  patch: { currentHealth?: number; currentEnergy?: number; actionPoints?: number }
+  patch: { currentHealth?: number; currentEnergy?: number; actionPoints?: number },
 ): Character {
   const next = { ...prev, ...patch };
   if (patch.currentHealth !== undefined) {
@@ -136,7 +140,7 @@ export function buildResourcePatchFromCombatant(combatant: {
 
 export function isOwnedLinkedCombatant(
   combatant: TrackedCombatant | undefined,
-  userId: string | undefined
+  userId: string | undefined,
 ): boolean {
   return (
     !!userId &&
@@ -148,7 +152,7 @@ export function isOwnedLinkedCombatant(
 
 export function scheduleCharacterResourceSync(
   characterId: string,
-  patch: CharacterResourcePatch
+  patch: CharacterResourcePatch,
 ): void {
   notifyLocalResourceEdit(characterId);
   const existing = pendingTimers.get(characterId);
@@ -159,7 +163,7 @@ export function scheduleCharacterResourceSync(
     setTimeout(() => {
       pendingTimers.delete(characterId);
       void saveCharacter(characterId, patch).catch(() => {});
-    }, DEBOUNCE_MS)
+    }, DEBOUNCE_MS),
   );
 }
 
@@ -179,11 +183,7 @@ export function buildResourcePatchFromCharacter(character: {
   const currentEnergy = character.currentEnergy ?? character.energy?.current;
   const actionPoints = character.actionPoints;
 
-  if (
-    currentHealth === undefined &&
-    currentEnergy === undefined &&
-    actionPoints === undefined
-  ) {
+  if (currentHealth === undefined && currentEnergy === undefined && actionPoints === undefined) {
     return null;
   }
 

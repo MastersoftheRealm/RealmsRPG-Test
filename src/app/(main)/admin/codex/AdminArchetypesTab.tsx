@@ -73,47 +73,91 @@ export function AdminArchetypesTab() {
     handleInlineDelete,
   } = useAdminArchetypeWorkspace();
 
-  if (error) return <ErrorState message="Failed to load archetypes" onRetry={() => { void refetch(); }} />;
+  if (error)
+    return (
+      <ErrorState
+        message="Failed to load archetypes"
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
 
   return (
     <div>
       <SectionHeader title="Archetypes" onAdd={openAdd} size="md" />
-      <div className="mb-4 mt-2">
+      <div className="mt-2 mb-4">
         <SearchInput value={search} onChange={setSearch} placeholder="Search archetypes..." />
       </div>
 
       {isLoading ? (
         <LoadingState />
       ) : (
-        <div className="border border-border rounded-lg overflow-hidden bg-surface">
+        <div className="overflow-hidden rounded-lg border border-border bg-surface">
           {filtered.map((a: ArchetypeItem) => (
-            <div key={a.id} className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50">
-              <div className="flex-1 min-w-0">
-                <GridListRow id={a.id} name={a.name || ''} description={(a as { description?: string }).description || ''} columns={[{ key: 'Type', value: formatListCellLabel(a.type) }]} />
+            <div
+              key={a.id}
+              className="flex items-center border-t border-border first:border-t-0 hover:bg-surface-alt/50"
+            >
+              <div className="min-w-0 flex-1">
+                <GridListRow
+                  id={a.id}
+                  name={a.name || ''}
+                  description={(a as { description?: string }).description || ''}
+                  columns={[{ key: 'Type', value: formatListCellLabel(a.type) }]}
+                />
               </div>
               <div className="flex items-center gap-1 pr-2">
                 {pendingDeleteId === a.id ? (
                   <div className="flex items-center gap-1 text-xs">
-                    <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
-                    <Button size="sm" variant="danger" onClick={() => handleInlineDelete(a.id)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
-                    <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
+                    <span className="font-medium whitespace-nowrap text-danger-700 dark:text-danger-400">
+                      Remove?
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => handleInlineDelete(a.id)}
+                      className="h-6 px-2 py-0.5 text-xs"
+                    >
+                      Yes
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setPendingDeleteId(null)}
+                      className="h-6 px-2 py-0.5 text-xs"
+                    >
+                      No
+                    </Button>
                   </div>
                 ) : (
                   <>
-                    <IconButton variant="ghost" size="sm" onClick={() => openEdit(a)} label="Edit" aria-label="Edit">
-                      <Pencil className="w-4 h-4" />
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openEdit(a)}
+                      label="Edit"
+                      aria-label="Edit"
+                    >
+                      <Pencil className="h-4 w-4" />
                     </IconButton>
-                    <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(a)} label="Duplicate" aria-label="Duplicate">
-                      <Copy className="w-4 h-4" />
+                    <IconButton
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => openDuplicate(a)}
+                      label="Duplicate"
+                      aria-label="Duplicate"
+                    >
+                      <Copy className="h-4 w-4" />
                     </IconButton>
                     <IconButton
                       variant="ghost"
                       size="sm"
                       onClick={() => setPendingDeleteId(a.id)}
                       label="Delete"
-                      className="text-danger-fg hover:opacity-80 hover:bg-transparent"
+                      className="text-danger-fg hover:bg-transparent hover:opacity-80"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="h-4 w-4" />
                     </IconButton>
                   </>
                 )}
@@ -121,24 +165,47 @@ export function AdminArchetypesTab() {
             </div>
           ))}
           {filtered.length === 0 && (
-            <EmptyState title="No archetypes found" description="Add one to get started." action={{ label: 'Add Archetype', onClick: openAdd }} size="sm" />
+            <EmptyState
+              title="No archetypes found"
+              description="Add one to get started."
+              action={{ label: 'Add Archetype', onClick: openAdd }}
+              size="sm"
+            />
           )}
         </div>
       )}
 
-      <Modal isOpen={modalOpen} onClose={closeModal} title={editing ? 'Edit Archetype' : 'Add Archetype'} size="full" fullScreenOnMobile
+      <Modal
+        isOpen={modalOpen}
+        onClose={closeModal}
+        title={editing ? 'Edit Archetype' : 'Add Archetype'}
+        size="full"
+        fullScreenOnMobile
         footer={
           <div className="flex justify-between">
             <div>
               {editing && (
-                <Button variant="outline" onClick={() => handleDelete(editing.id)} className={deleteConfirm === editing.id ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''}>
+                <Button
+                  variant="outline"
+                  onClick={() => handleDelete(editing.id)}
+                  className={
+                    deleteConfirm === editing.id
+                      ? 'border-danger-500 text-danger-700 dark:text-danger-400'
+                      : ''
+                  }
+                >
                   {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
                 </Button>
               )}
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={closeModal}>Cancel</Button>
-              <Button onClick={handleSave} disabled={saving || !form.name.trim() || isSelectionDataLoading}>
+              <Button variant="outline" onClick={closeModal}>
+                Cancel
+              </Button>
+              <Button
+                onClick={handleSave}
+                disabled={saving || !form.name.trim() || isSelectionDataLoading}
+              >
                 {saving ? 'Saving...' : 'Save'}
               </Button>
             </div>

@@ -2,7 +2,11 @@
 
 import { Textarea } from '@/components/ui';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { AGE_IN_APPEARANCE, parseAgeFromAppearance, mergeAgeIntoAppearance } from './appearance-age';
+import {
+  AGE_IN_APPEARANCE,
+  parseAgeFromAppearance,
+  mergeAgeIntoAppearance,
+} from './appearance-age';
 
 export function IdentityFields() {
   const { draft, updateDraft } = useCharacterCreatorStore();
@@ -18,10 +22,13 @@ export function IdentityFields() {
   };
 
   return (
-    <div className="mb-6 rounded-xl border border-border-light bg-surface p-5 space-y-4">
+    <div className="mb-6 space-y-4 rounded-xl border border-border-light bg-surface p-5">
       <h3 className="text-lg font-bold text-text-primary">Identity</h3>
       <div>
-        <label htmlFor="character-name" className="block text-sm font-medium text-text-secondary mb-2">
+        <label
+          htmlFor="character-name"
+          className="mb-2 block text-sm font-medium text-text-secondary"
+        >
           Character Name *
         </label>
         <input
@@ -30,12 +37,15 @@ export function IdentityFields() {
           value={draft.name || ''}
           onChange={(e) => updateDraft({ name: e.target.value })}
           placeholder="Enter your character's name"
-          className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
+          className="w-full rounded-xl border border-border-light px-4 py-3 transition-colors focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border"
         />
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <div>
-          <label htmlFor="character-age" className="block text-sm font-medium text-text-secondary mb-2">
+          <label
+            htmlFor="character-age"
+            className="mb-2 block text-sm font-medium text-text-secondary"
+          >
             Age (optional)
           </label>
           <input
@@ -45,11 +55,14 @@ export function IdentityFields() {
             value={displayAge}
             onChange={(e) => handleAgeChange(e.target.value)}
             placeholder="—"
-            className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
+            className="w-full rounded-xl border border-border-light px-4 py-3 transition-colors focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border"
           />
         </div>
         <div>
-          <label htmlFor="character-height" className="block text-sm font-medium text-text-secondary mb-2">
+          <label
+            htmlFor="character-height"
+            className="mb-2 block text-sm font-medium text-text-secondary"
+          >
             Height cm (optional)
           </label>
           <input
@@ -61,11 +74,14 @@ export function IdentityFields() {
               updateDraft({ height: e.target.value ? Number(e.target.value) : undefined })
             }
             placeholder="—"
-            className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
+            className="w-full rounded-xl border border-border-light px-4 py-3 transition-colors focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border"
           />
         </div>
         <div>
-          <label htmlFor="character-weight" className="block text-sm font-medium text-text-secondary mb-2">
+          <label
+            htmlFor="character-weight"
+            className="mb-2 block text-sm font-medium text-text-secondary"
+          >
             Weight kg (optional)
           </label>
           <input
@@ -77,7 +93,7 @@ export function IdentityFields() {
               updateDraft({ weight: e.target.value ? Number(e.target.value) : undefined })
             }
             placeholder="—"
-            className="w-full px-4 py-3 rounded-xl border border-border-light focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border transition-colors"
+            className="w-full rounded-xl border border-border-light px-4 py-3 transition-colors focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border"
           />
         </div>
       </div>

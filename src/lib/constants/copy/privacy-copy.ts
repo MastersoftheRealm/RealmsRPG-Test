@@ -2,9 +2,7 @@
 
 import { SITE_CONTACT_EMAIL, SITE_URL } from './shared-copy';
 
-export type LegalListItem =
-  | string
-  | { label: string; text: string };
+export type LegalListItem = string | { label: string; text: string };
 
 export type LegalSection = {
   heading: string;
@@ -105,9 +103,7 @@ export const PRIVACY_COPY = {
     },
     {
       heading: '8. Contact Us',
-      paragraphs: [
-        'If you have any questions about this Privacy Policy, please contact us at',
-      ],
+      paragraphs: ['If you have any questions about this Privacy Policy, please contact us at'],
       contactEmail: true,
     },
   ] satisfies LegalSection[],

@@ -3,7 +3,7 @@
  * ==============================
  * Shared utility for building mechanic parts from UI selections.
  * Used by Power Creator, Technique Creator, and future Empowered Technique Creator.
- * 
+ *
  * This consolidates common logic while preserving creator-specific calculations.
  */
 
@@ -83,16 +83,16 @@ export interface DurationConfig {
 export interface MechanicBuilderContext {
   creatorType: CreatorType;
   partsDb: PartDbItem[];
-  
+
   // Common to both
   action?: ActionConfig;
-  
+
   // Power-specific
   powerDamage?: PowerDamageConfig[];
   range?: RangeConfig;
   area?: AreaConfig;
   duration?: DurationConfig;
-  
+
   // Technique-specific
   techniqueDamage?: TechniqueDamageConfig;
   /**
@@ -212,7 +212,7 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
     partId: number | string,
     partName: string,
     op1 = 0,
-    applyDuration = false
+    applyDuration = false,
   ): void {
     let def = findByIdOrName(partsDb, { id: partId });
     if (!def) def = findByIdOrName(partsDb, { name: partName });
@@ -259,26 +259,26 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
     // Track total dice for split damage calculation
     let totalDiceAmount = 0;
     let maxDieSize = 0;
-    
+
     for (const dmg of ctx.powerDamage) {
       if (dmg.type === 'none' || dmg.diceAmount <= 0 || dmg.dieSize < 4) continue;
       const partInfo = getPowerDamagePartInfo(dmg.type);
       if (partInfo) {
         const level = calculateDamageOptionLevel(dmg.diceAmount, dmg.dieSize);
         addPart(partInfo.id, partInfo.name, level, dmg.applyDuration);
-        
+
         // Accumulate for split damage
         totalDiceAmount += dmg.diceAmount;
         maxDieSize = Math.max(maxDieSize, dmg.dieSize);
       }
     }
-    
+
     // Power Split Damage Dice - applies when total dice across all damage types > 1
     if (totalDiceAmount > 1 && maxDieSize >= 4) {
       const splits = computeSplits(totalDiceAmount, maxDieSize);
       if (splits > 0) {
         // Apply duration based on first damage entry that has applyDuration
-        const applyDur = ctx.powerDamage.find(d => d.applyDuration)?.applyDuration ?? false;
+        const applyDur = ctx.powerDamage.find((d) => d.applyDuration)?.applyDuration ?? false;
         addPart(PART_IDS.POWER_SPLIT_DAMAGE_DICE, 'Power Split Damage Dice', splits - 1, applyDur);
       }
     }
@@ -305,7 +305,7 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
       PART_IDS.POWER_RANGE,
       'Power Range',
       Math.max(0, ctx.range.steps - 1),
-      ctx.range.applyDuration
+      ctx.range.applyDuration,
     );
   }
 
@@ -320,7 +320,15 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
 
   // ----- Duration (power only) -----
   if (ctx.duration && ctx.duration.type !== 'instant') {
-    const { type, value, applyDuration: durationApplyDuration, focus, noHarm, endsOnActivation, sustain } = ctx.duration;
+    const {
+      type,
+      value,
+      applyDuration: durationApplyDuration,
+      focus,
+      noHarm,
+      endsOnActivation,
+      sustain,
+    } = ctx.duration;
 
     // Duration modifiers
     if (focus) {
@@ -438,31 +446,42 @@ export function buildPowerMechanicParts(ctx: LegacyPowerMechanicContext): Mechan
       isReaction: ctx.reaction,
     },
     powerDamage,
-    range: ctx.range !== undefined ? {
-      steps: ctx.range,
-      applyDuration: ctx.rangeApplyDuration,
-    } : undefined,
-    area: ctx.areaType && ctx.areaType !== 'none' ? {
-      type: ctx.areaType as AreaConfig['type'],
-      level: ctx.areaLevel || 1,
-      applyDuration: ctx.areaApplyDuration,
-    } : undefined,
-    duration: ctx.durationType && ctx.durationType !== 'instant' ? {
-      type: ctx.durationType as DurationConfig['type'],
-      value: ctx.durationValue || 1,
-      applyDuration: ctx.durationApplyDuration,
-      focus: ctx.focus,
-      noHarm: ctx.noHarm,
-      endsOnActivation: ctx.endsOnActivation,
-      sustain: ctx.sustain,
-    } : undefined,
+    range:
+      ctx.range !== undefined
+        ? {
+            steps: ctx.range,
+            applyDuration: ctx.rangeApplyDuration,
+          }
+        : undefined,
+    area:
+      ctx.areaType && ctx.areaType !== 'none'
+        ? {
+            type: ctx.areaType as AreaConfig['type'],
+            level: ctx.areaLevel || 1,
+            applyDuration: ctx.areaApplyDuration,
+          }
+        : undefined,
+    duration:
+      ctx.durationType && ctx.durationType !== 'instant'
+        ? {
+            type: ctx.durationType as DurationConfig['type'],
+            value: ctx.durationValue || 1,
+            applyDuration: ctx.durationApplyDuration,
+            focus: ctx.focus,
+            noHarm: ctx.noHarm,
+            endsOnActivation: ctx.endsOnActivation,
+            sustain: ctx.sustain,
+          }
+        : undefined,
   });
 }
 
 /**
  * Build technique mechanic parts (legacy wrapper)
  */
-export function buildTechniqueMechanicParts(ctx: LegacyTechniqueMechanicContext): MechanicPartResult[] {
+export function buildTechniqueMechanicParts(
+  ctx: LegacyTechniqueMechanicContext,
+): MechanicPartResult[] {
   return buildMechanicParts({
     creatorType: 'technique',
     partsDb: ctx.partsDb || [],
@@ -470,10 +489,13 @@ export function buildTechniqueMechanicParts(ctx: LegacyTechniqueMechanicContext)
       type: ctx.actionTypeSelection || 'basic',
       isReaction: ctx.reaction,
     },
-    techniqueDamage: ctx.diceAmt && ctx.dieSize ? {
-      diceAmount: ctx.diceAmt,
-      dieSize: ctx.dieSize,
-    } : undefined,
+    techniqueDamage:
+      ctx.diceAmt && ctx.dieSize
+        ? {
+            diceAmount: ctx.diceAmt,
+            dieSize: ctx.dieSize,
+          }
+        : undefined,
     attackMode: ctx.attackMode,
   });
 }

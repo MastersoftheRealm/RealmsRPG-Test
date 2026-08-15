@@ -31,7 +31,7 @@ export function CharacterChip({
   const isFallbackPortrait = isPortraitFallbackSrc(portraitSrc);
 
   return (
-    <div className="flex items-center gap-3 p-3 rounded-lg border border-border-light bg-surface-alt min-w-[200px]">
+    <div className="flex min-w-[200px] items-center gap-3 rounded-lg border border-border-light bg-surface-alt p-3">
       <ExpandableImage
         src={portraitSrc}
         alt={`${character.characterName} portrait`}
@@ -50,26 +50,26 @@ export function CharacterChip({
         />
       </ExpandableImage>
       <div className="min-w-0 flex-1">
-        <p className="font-semibold text-text-primary truncate">{character.characterName}</p>
-        <p className="text-sm text-text-muted dark:text-text-secondary">
+        <p className="truncate font-semibold text-text-primary">{character.characterName}</p>
+        <p className="text-sm text-text-muted">
           Lvl {character.level}
           {character.species && ` • ${character.species}`}
           {character.archetype && ` • ${character.archetype}`}
         </p>
         {!isOwner && character.ownerUsername && (
-          <p className="text-xs text-text-muted dark:text-text-secondary">@{character.ownerUsername}</p>
+          <p className="text-xs text-text-muted">@{character.ownerUsername}</p>
         )}
       </div>
-      <div className="flex items-center gap-1 flex-shrink-0">
+      <div className="flex flex-shrink-0 items-center gap-1">
         {onViewSheet && (
           <Link
             href={onViewSheet}
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`View ${character.characterName} sheet`}
-            className="inline-flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg text-text-muted hover:text-text-primary hover:bg-surface-alt transition-colors focus:outline-none focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-2"
+            className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary focus:ring-2 focus:ring-primary-outline-border focus:ring-offset-2 focus:outline-none"
           >
-            <ExternalLink className="w-4 h-4" />
+            <ExternalLink className="h-4 w-4" />
           </Link>
         )}
         {canRemove && (
@@ -80,7 +80,7 @@ export function CharacterChip({
             onClick={onRemove}
             className="min-h-[44px] min-w-[44px]"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="h-4 w-4" />
           </IconButton>
         )}
       </div>

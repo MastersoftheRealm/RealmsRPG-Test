@@ -25,7 +25,7 @@ export interface CodexPartTpDef {
 export function computePartTrainingPointsRaw(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
   levels: { op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number },
-  variant: PartTpVariant = 'power'
+  variant: PartTpVariant = 'power',
 ): number {
   const l1 = levels.op_1_lvl ?? 0;
   const l2 = levels.op_2_lvl ?? 0;
@@ -50,7 +50,7 @@ export function computePartTrainingPointsRaw(
 export function computePartTrainingPoints(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
   levels: { op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number },
-  variant: PartTpVariant = 'power'
+  variant: PartTpVariant = 'power',
 ): number {
   return Math.floor(computePartTrainingPointsRaw(def, levels, variant));
 }

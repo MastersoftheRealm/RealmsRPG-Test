@@ -43,16 +43,24 @@ function EmpoweredTechniqueCreatorContent() {
   const editId = searchParams.get('edit');
   const load = useLoadModalLibrary('empowered-technique');
 
-  const { data: powerParts = [], isLoading: powerPartsLoading, error: powerPartsError, refetch: refetchPowerParts } = usePowerParts();
-  const { data: techniqueParts = [], isLoading: techniquePartsLoading, error: techniquePartsError, refetch: refetchTechniqueParts } = useTechniqueParts();
+  const {
+    data: powerParts = [],
+    isLoading: powerPartsLoading,
+    error: powerPartsError,
+    refetch: refetchPowerParts,
+  } = usePowerParts();
+  const {
+    data: techniqueParts = [],
+    isLoading: techniquePartsLoading,
+    error: techniquePartsError,
+    refetch: refetchTechniqueParts,
+  } = useTechniqueParts();
 
   const sessionKey = editId ?? 'draft';
   // Settle when both parts queries finish (empty/error OK — shell chrome must still
   // render for chrome audits / secret-less CI). In ?edit= mode also wait for library.
   const bootstrapReady =
-    !powerPartsLoading &&
-    !techniquePartsLoading &&
-    (!editId || !load.isLoading);
+    !powerPartsLoading && !techniquePartsLoading && (!editId || !load.isLoading);
 
   // One-time render adjust per sessionKey: compute the initial form state exactly
   // once when data is ready (no hydrate effect, no recompute on later re-renders).
@@ -143,7 +151,7 @@ function EmpoweredTechniqueWorkspace({
 
   return (
     <CreatorPageShell
-      icon={<Wand2 className="w-8 h-8 text-primary-link-fg" />}
+      icon={<Wand2 className="h-8 w-8 text-primary-link-fg" />}
       title="Empowered Technique Creator"
       description="Build an empowered technique by combining power and technique parts in one shared action profile."
       user={user}
@@ -197,8 +205,18 @@ function EmpoweredTechniqueWorkspace({
         <CreatorSummaryPanel
           title="Empowered Technique Summary"
           costStats={[
-            { label: 'Energy Cost', value: ws.costs.totalEnergy, icon: <Zap className="w-6 h-6" />, color: 'energy' },
-            { label: 'Training Points', value: ws.costs.totalTP, icon: <Target className="w-6 h-6" />, color: 'tp' },
+            {
+              label: 'Energy Cost',
+              value: ws.costs.totalEnergy,
+              icon: <Zap className="h-6 w-6" />,
+              color: 'energy',
+            },
+            {
+              label: 'Training Points',
+              value: ws.costs.totalTP,
+              icon: <Target className="h-6 w-6" />,
+              color: 'tp',
+            },
           ]}
           statRows={[
             { label: 'Action', value: ws.actionDisplay },
@@ -207,7 +225,11 @@ function EmpoweredTechniqueWorkspace({
             { label: 'Area', value: ws.areaDisplay },
             { label: 'Duration', value: ws.durationDisplay },
           ]}
-          breakdowns={ws.costs.tpSources.length > 0 ? [{ title: 'TP Breakdown', items: ws.costs.tpSources }] : undefined}
+          breakdowns={
+            ws.costs.tpSources.length > 0
+              ? [{ title: 'TP Breakdown', items: ws.costs.tpSources }]
+              : undefined
+          }
         >
           <AdvancedCalculationsPanel
             rows={ws.advancedCalcRows}
@@ -250,7 +272,9 @@ function EmpoweredTechniqueWorkspace({
         nonMechanicPowerParts={ws.nonMechanicPowerParts}
         onAddPowerPart={ws.addPowerPart}
         onRemovePowerPart={(index) =>
-          ws.setSelectedPowerParts((previous) => previous.filter((_, rowIndex) => rowIndex !== index))
+          ws.setSelectedPowerParts((previous) =>
+            previous.filter((_, rowIndex) => rowIndex !== index),
+          )
         }
         onUpdatePowerPart={ws.updatePowerPart}
         selectedPowerAdvancedParts={ws.selectedPowerAdvancedParts}

@@ -8,7 +8,7 @@ describe('partChipsFromDisplay', () => {
         { text: 'Charm | TP: 2', description: 'Charm a creature', finalTP: 2 },
         { text: 'Duration (Minute)', description: 'Lasts a minute', finalTP: 0 },
       ],
-      { stripOptionSuffix: true }
+      { stripOptionSuffix: true },
     );
     expect(chips[0]).toMatchObject({
       name: 'Charm',
@@ -23,7 +23,7 @@ describe('partChipsFromDisplay', () => {
   it('surfaces option level from Opt suffixes when stripping', () => {
     const chips = partChipsFromDisplay(
       [{ text: 'Power Range (Opt1 2) | TP: 1', description: 'Farther', finalTP: 1 }],
-      { stripOptionSuffix: true }
+      { stripOptionSuffix: true },
     );
     expect(chips[0]).toMatchObject({
       name: 'Power Range',

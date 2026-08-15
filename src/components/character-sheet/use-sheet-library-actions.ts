@@ -191,9 +191,7 @@ export function useSheetLibraryActions({
               equipment: {
                 ...prev.equipment,
                 weapons: ((prev.equipment?.weapons as Item[]) || []).map((w, idx) =>
-                  matchesSheetEquipmentItem(w, itemId, idx)
-                    ? { ...w, equipped: !w.equipped }
-                    : w,
+                  matchesSheetEquipmentItem(w, itemId, idx) ? { ...w, equipped: !w.equipped } : w,
                 ),
               },
             }
@@ -309,9 +307,7 @@ export function useSheetLibraryActions({
               equipment: {
                 ...prev.equipment,
                 shields: ((prev.equipment?.shields as Item[]) || []).map((s, idx) =>
-                  matchesSheetEquipmentItem(s, itemId, idx)
-                    ? { ...s, equipped: !s.equipped }
-                    : s,
+                  matchesSheetEquipmentItem(s, itemId, idx) ? { ...s, equipped: !s.equipped } : s,
                 ),
               },
             }

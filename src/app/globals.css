@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import 'tailwindcss';
 
 /* Use class-based dark mode so next-themes controls it, not OS prefers-color-scheme */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -23,7 +23,7 @@
   --color-primary-700: #053357;
   --color-primary-800: #042845;
   --color-primary-900: #091d2d;
-  
+
   /* Primary semantic aliases */
   --color-primary: #053357;
   --color-primary-dark: #091d2d;
@@ -45,7 +45,7 @@
   --color-accent-700: #8f6a2f;
   --color-accent-800: #6b4f23;
   --color-accent-900: #473517;
-  
+
   /* Accent semantic aliases */
   --color-accent-gold: #c79956;
   --color-accent-light: #fdf0dc;
@@ -79,7 +79,7 @@
   --color-neutral-700: #5a5645;
   --color-neutral-800: #41464a;
   --color-neutral-900: #302e33;
-  
+
   /* Neutral semantic aliases */
   --color-text-primary: #091d2d;
   --color-text-secondary: #41464a;
@@ -117,7 +117,7 @@
   --color-success-700: #055745;
   --color-success-800: #064e3b;
   --color-success-900: #053d2f;
-  
+
   --color-success: #059669;
   --color-success-hover: #055745;
   --color-success-light: #d1fae5;
@@ -134,7 +134,7 @@
   --color-danger-700: #b91c1c;
   --color-danger-800: #991b1b;
   --color-danger-900: #570705;
-  
+
   --color-danger: #dc2626;
   --color-danger-hover: #b91c1c;
   --color-danger-light: #fee2e2;
@@ -151,7 +151,7 @@
   --color-warning-700: #b45309;
   --color-warning-800: #92400e;
   --color-warning-900: #78350f;
-  
+
   --color-warning: #f59e0b;
   --color-warning-hover: #d97706;
   --color-warning-light: #fef3c7;
@@ -167,7 +167,7 @@
   --color-info-700: #1d4ed8;
   --color-info-800: #1e40af;
   --color-info-900: #1e3a8a;
-  
+
   --color-info: #3b82f6;
   --color-info-hover: #2563eb;
   --color-info-light: #dbeafe;
@@ -179,27 +179,27 @@
   --color-category-action: #e7f0ff;
   --color-category-action-text: #0b5ed7;
   --color-category-action-border: #bcd4ff;
-  
+
   --color-category-activation: #e6fffa;
   --color-category-activation-text: #0f766e;
   --color-category-activation-border: #b3f0e7;
-  
+
   --color-category-area: #eafbe7;
   --color-category-area-text: #166534;
   --color-category-area-border: #c7efc1;
-  
+
   --color-category-duration: #f3e8ff;
   --color-category-duration-text: #6b21a8;
   --color-category-duration-border: #e3d0ff;
-  
+
   --color-category-target: #fff4e5;
   --color-category-target-text: #9a3412;
   --color-category-target-border: #ffd8a8;
-  
+
   --color-category-special: #fffbe6;
   --color-category-special-text: #854d0e;
   --color-category-special-border: #ffe58f;
-  
+
   --color-category-restriction: #ffe5e5;
   --color-category-restriction-text: #b91c1c;
   --color-category-restriction-border: #ffb3b3;
@@ -225,42 +225,42 @@
   --color-currency-light: #fef9c3;
   --color-currency-text: #a16207;
   --color-currency-border: #facc15;
-  
+
   /* Power Archetype - Muted Lavender (very low saturation for subtle appearance) */
   --color-power: #a899b8;
   --color-power-light: #f9f8fb;
   --color-power-text: #6d6580;
   --color-power-border: #d9d3e3;
   --color-power-dark: #5e5570;
-  
+
   /* Martial Archetype - Muted Rose (matching low saturation as power) */
   --color-martial: #b89899;
   --color-martial-light: #fbf8f8;
   --color-martial-text: #80656d;
   --color-martial-border: #e3d3d5;
   --color-martial-dark: #705560;
-  
+
   /* Health - Green (intuitive for HP) */
   --color-health: #22c55e;
   --color-health-light: #dcfce7;
   --color-health-text: #166534;
   --color-health-border: #86efac;
-  
+
   /* Energy (Resource) - Blue */
   --color-energy: #2563eb;
   --color-energy-light: #dbeafe;
   --color-energy-text: #1e40af;
   --color-energy-border: #93c5fd;
-  
+
   /* Combatant Types */
   --color-ally: #2563eb;
   --color-ally-light: #dbeafe;
   --color-ally-text: #1e40af;
-  
+
   --color-enemy: #dc2626;
   --color-enemy-light: #fee2e2;
   --color-enemy-text: #991b1b;
-  
+
   --color-companion: #7c3aed;
   --color-companion-light: #ede9fe;
   --color-companion-text: #5b21b6;
@@ -304,11 +304,13 @@
   /* ---------------------------------------------------------------------------
      TYPOGRAPHY
      --------------------------------------------------------------------------- */
-  --font-sans: "Nunito", system-ui, sans-serif;
+  --font-sans: 'Nunito', system-ui, sans-serif;
   /* Self-hosted via next/font (var set on <html> in layout.tsx) — falls back to
      the literal family name then system-ui if the variable is unavailable. */
-  --font-display: var(--font-nova-flat, "Nova Flat"), system-ui, sans-serif;
-  
+  --font-display: var(--font-nova-flat, 'Nova Flat'), system-ui, sans-serif;
+  /* `font-nunito` was inert: next/font set a face var, but @theme never emitted the utility. */
+  --font-nunito: var(--font-nunito-face), 'Nunito', system-ui, sans-serif;
+
   /* ---------------------------------------------------------------------------
      SEMANTIC COMPONENT COLORS (Backwards compatibility)
      --------------------------------------------------------------------------- */
@@ -331,9 +333,9 @@
 
   /* Radius — `rounded-control` (inputs/buttons), `rounded-card` (cards/panels),
      `rounded-pill` (chips/badges). Map to the dominant lg / xl / full usage. */
-  --radius-control: 0.5rem;   /* = rounded-lg  (buttons, inputs, tabs) */
-  --radius-card: 0.75rem;     /* = rounded-xl  (cards, panels, modals) */
-  --radius-pill: 9999px;      /* = rounded-full (chips, pills, avatars) */
+  --radius-control: 0.5rem; /* = rounded-lg  (buttons, inputs, tabs) */
+  --radius-card: 0.75rem; /* = rounded-xl  (cards, panels, modals) */
+  --radius-pill: 9999px; /* = rounded-full (chips, pills, avatars) */
 
   /* Elevation — `shadow-card` (resting surface), `shadow-raised` (hover/lifted),
      `shadow-overlay` (modals/popovers/tooltips). Aligned to the existing scale. */
@@ -364,8 +366,8 @@
   /* Container widths — `max-w-narrow` (forms/legal), `max-w-standard` (most app
      pages = 7xl), `max-w-wide` (marketing = 1440px), `max-w-full-tool`
      (character sheet / campaign view = 1600px). */
-  --container-narrow: 56rem;     /* = max-w-4xl */
-  --container-standard: 80rem;   /* = max-w-7xl */
+  --container-narrow: 56rem; /* = max-w-4xl */
+  --container-standard: 80rem; /* = max-w-7xl */
   --container-wide: 1440px;
   --container-full-tool: 1600px;
 
@@ -406,8 +408,8 @@
     --color-text-secondary: #8b949e;
     /* Deliberately collapsed onto secondary: #8b949e is the dimmest grey that still
        clears AA on --color-surface-alt (4.95:1), so dark mode has no room for a
-       separate, dimmer "muted" step. `text-text-muted dark:text-text-secondary` is
-       therefore a no-op by design — see DESIGN_SYSTEM.md "Muted vs secondary text". */
+       separate, dimmer "muted" step. Pairing `text-text-muted` with
+       `dark:text-text-secondary` is a no-op — see DESIGN_SYSTEM.md. */
     --color-text-muted: var(--color-text-secondary);
     --color-border: #30363d;
     /* Visible on surface-alt (#21262d) — chips, inputs, cards */
@@ -535,35 +537,39 @@
     /* Accent (gold) chip surface — Chip `rarityAscended` variant */
     --color-accent-light: #2a2416;
   }
-  
+
   body {
     background-color: var(--color-surface-secondary);
     color: var(--color-text-primary);
     font-family: var(--font-sans);
     @apply antialiased;
   }
-  
+
   /* Consistent heading styles */
-  h1, h2 {
-    @apply text-title font-semibold;
+  h1,
+  h2 {
+    @apply font-semibold text-title;
     font-family: var(--font-display);
   }
-  
-  h3, h4, h5, h6 {
-    @apply text-title font-semibold;
+
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply font-semibold text-title;
   }
 
   /* ---------------------------------------------------------------------------
      CUSTOM SCROLLBAR - Minimal, non-intrusive design
      Thin by default, expands on hover, overlay style
      --------------------------------------------------------------------------- */
-  
+
   /* Firefox scrollbar styling */
   * {
     scrollbar-width: thin;
     scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
   }
-  
+
   *:hover {
     scrollbar-color: rgba(0, 0, 0, 0.25) transparent;
   }
@@ -581,7 +587,9 @@
   ::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.15);
     border-radius: 9999px;
-    transition: background 0.2s ease, width 0.2s ease;
+    transition:
+      background 0.2s ease,
+      width 0.2s ease;
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -706,67 +714,103 @@
       opacity: 1;
     }
   }
-  
+
   .animate-modal-pop {
     animation: modal-pop var(--duration-base) var(--ease-standard);
   }
-  
+
   /* Fade in animation */
   @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
-  
+
   .animate-fade-in {
     animation: fade-in var(--duration-base) var(--ease-standard);
   }
-  
+
   /* Slide in from right (for toasts) */
   @keyframes slide-in-right {
-    from { transform: translateX(100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
-  
+
   .animate-slide-in-right {
     animation: slide-in-right 0.3s ease;
   }
-  
+
   /* Slide up (for roll log, bottom panels) */
   @keyframes slide-up {
-    from { transform: translateY(100%); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
+    from {
+      transform: translateY(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
   }
-  
+
   .animate-slide-up {
     animation: slide-up 0.3s ease;
   }
-  
+
   /* Pulse animation for notifications */
   @keyframes pulse-dot {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.7; transform: scale(1.1); }
+    0%,
+    100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.7;
+      transform: scale(1.1);
+    }
   }
-  
+
   .animate-pulse-dot {
     animation: pulse-dot 2s infinite;
   }
-  
+
   /* Glow animation for level-up indicator */
   @keyframes glow-green {
-    0%, 100% { box-shadow: 0 0 5px var(--color-success-500), 0 0 10px var(--color-success-500); }
-    50% { box-shadow: 0 0 15px var(--color-success-500), 0 0 20px var(--color-success-500); }
+    0%,
+    100% {
+      box-shadow:
+        0 0 5px var(--color-success-500),
+        0 0 10px var(--color-success-500);
+    }
+    50% {
+      box-shadow:
+        0 0 15px var(--color-success-500),
+        0 0 20px var(--color-success-500);
+    }
   }
-  
+
   .animate-glow-green {
     animation: glow-green 1.5s ease-in-out infinite;
   }
-  
+
   /* Skeleton shimmer */
   @keyframes shimmer {
-    0% { background-position: 200% 0; }
-    100% { background-position: -200% 0; }
+    0% {
+      background-position: 200% 0;
+    }
+    100% {
+      background-position: -200% 0;
+    }
   }
-  
+
   .animate-shimmer {
     background: linear-gradient(
       90deg,
@@ -788,35 +832,28 @@
   .tab-nav {
     @apply border-b border-border-light;
   }
-  
+
   .tab-nav-list {
     @apply flex gap-1 overflow-x-auto;
   }
-  
+
   .tab-nav-trigger {
-    @apply px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap
-           border-transparent text-text-muted hover:text-text-primary hover:bg-surface-alt
-           dark:hover:bg-surface-alt
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2
-           min-h-[var(--touch-target-min,44px)] md:min-h-0;
+    @apply min-h-[var(--touch-target-min,44px)] border-b-2 border-transparent px-4 py-3 text-sm font-medium whitespace-nowrap text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none md:min-h-0 dark:hover:bg-surface-alt;
   }
-  
+
   .tab-nav-trigger-active {
-    @apply border-primary-outline-border text-primary-fg bg-primary-subtle-bg;
+    @apply border-primary-outline-border bg-primary-subtle-bg text-primary-fg;
   }
-  
+
   /* Pill-style tabs (wizard steps, settings) */
   .tab-pill-list {
-    @apply inline-flex items-center p-1 rounded-lg bg-surface-alt gap-1;
+    @apply inline-flex items-center gap-1 rounded-lg bg-surface-alt p-1;
   }
-  
+
   .tab-pill-trigger {
-    @apply px-4 py-2 text-sm font-medium rounded-md transition-colors
-           text-text-muted hover:text-text-primary
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2
-           min-h-[var(--touch-target-min,44px)] md:min-h-0;
+    @apply min-h-[var(--touch-target-min,44px)] rounded-md px-4 py-2 text-sm font-medium text-text-muted transition-colors hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none md:min-h-0;
   }
-  
+
   .tab-pill-trigger-active {
     @apply bg-surface text-text-primary shadow-sm;
   }
@@ -829,12 +866,7 @@
    * DecrementButton / IncrementButton (QuantitySelector wraps ValueStepper).
    */
   .btn-stepper {
-    @apply flex items-center justify-center rounded-lg font-bold
-           bg-surface-alt text-text-secondary
-           hover:bg-surface
-           transition-colors
-           disabled:bg-transparent disabled:text-border-light disabled:cursor-not-allowed
-           dark:disabled:bg-transparent dark:disabled:text-border-light;
+    @apply flex items-center justify-center rounded-lg bg-surface-alt font-bold text-text-secondary transition-colors hover:bg-surface disabled:cursor-not-allowed disabled:bg-transparent disabled:text-border-light dark:disabled:bg-transparent dark:disabled:text-border-light;
     transition-duration: var(--duration-fast);
   }
 
@@ -850,21 +882,17 @@
   .search-input-wrapper {
     @apply relative;
   }
-  
+
   .search-input-icon {
-    @apply absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-muted pointer-events-none;
+    @apply pointer-events-none absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 text-text-muted;
   }
-  
+
   .search-input {
-    @apply w-full pl-10 pr-4 py-2.5 rounded-lg border border-border-light bg-surface
-           text-text-primary placeholder:text-text-muted
-           focus:border-primary-outline-border focus:outline-none focus:ring-2 focus:ring-primary-outline-border;
+    @apply w-full rounded-lg border border-border-light bg-surface py-2.5 pr-4 pl-10 text-text-primary placeholder:text-text-muted focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none;
   }
-  
+
   .search-input-clear {
-    @apply absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-full
-           text-text-muted hover:text-text-primary hover:bg-surface-alt transition-colors
-           focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2;
+    @apply absolute top-1/2 right-3 -translate-y-1/2 rounded-full p-1 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none;
   }
 
   /* ---------------------------------------------------------------------------
@@ -886,24 +914,24 @@
      RANGE SLIDER
      --------------------------------------------------------------------------- */
   .range-slider {
-    @apply w-full h-2 rounded-full appearance-none cursor-pointer;
+    @apply h-2 w-full cursor-pointer appearance-none rounded-full;
   }
-  
+
   .range-slider::-webkit-slider-thumb {
-    @apply appearance-none w-6 h-6 rounded-full bg-white border-2 border-primary-500 shadow-md cursor-pointer;
+    @apply h-6 w-6 cursor-pointer appearance-none rounded-full border-2 border-primary-500 bg-white shadow-md;
     -webkit-appearance: none;
     margin-top: -2px;
   }
-  
+
   .range-slider::-moz-range-thumb {
-    @apply w-6 h-6 rounded-full bg-white border-2 border-primary-500 shadow-md cursor-pointer;
+    @apply h-6 w-6 cursor-pointer rounded-full border-2 border-primary-500 bg-white shadow-md;
     border: none;
   }
-  
+
   .range-slider::-webkit-slider-runnable-track {
     @apply h-2 rounded-full;
   }
-  
+
   .range-slider::-moz-range-track {
     @apply h-2 rounded-full;
   }
@@ -917,7 +945,7 @@
 
   /* Filter group - layout for filter controls (label + inputs) */
   .filter-group {
-    @apply flex min-w-[140px] flex-col gap-1 flex-[1_1_180px];
+    @apply flex min-w-[140px] flex-[1_1_180px] flex-col gap-1;
   }
 
   /* Marketing / chrome shell — matches header, footer, home hero width + gutters */

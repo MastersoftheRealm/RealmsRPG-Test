@@ -9,10 +9,7 @@ import type { EmpoweredTechniqueCreatorEditorProps } from './empowered-technique
 
 export type EmpoweredTechniqueEditorPowerDamageProps = Pick<
   EmpoweredTechniqueCreatorEditorProps,
-  | 'powerDamages'
-  | 'onPowerDamagesChange'
-  | 'powerDamageSummary'
-  | 'sectionCosts'
+  'powerDamages' | 'onPowerDamagesChange' | 'powerDamageSummary' | 'sectionCosts'
 >;
 
 export function EmpoweredTechniqueEditorPowerDamage({
@@ -35,7 +32,7 @@ export function EmpoweredTechniqueEditorPowerDamage({
       {powerDamages.map((damage, index) => (
         <div
           key={index}
-          className="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-surface-alt border border-border-light"
+          className="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-border-light bg-surface-alt p-3"
         >
           {damage.type !== 'none' && damage.amount > 0 && (
             <Checkbox
@@ -64,7 +61,7 @@ export function EmpoweredTechniqueEditorPowerDamage({
             max={20}
           />
           <div className="flex items-center gap-1">
-            <span className="font-bold text-lg">d</span>
+            <span className="text-lg font-bold">d</span>
             <select
               value={damage.size}
               onChange={(event) =>
@@ -74,7 +71,7 @@ export function EmpoweredTechniqueEditorPowerDamage({
                   ),
                 )
               }
-              className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+              className="min-h-[44px] rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
               aria-label={`Power damage die size row ${index + 1}`}
             >
               {DIE_SIZES.map((size) => (
@@ -93,7 +90,7 @@ export function EmpoweredTechniqueEditorPowerDamage({
                 ),
               )
             }
-            className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
             aria-label={`Power damage type row ${index + 1}`}
           >
             {POWER_DAMAGE_TYPES.map((type) => (
@@ -131,7 +128,7 @@ export function EmpoweredTechniqueEditorPowerDamage({
         }
         className="min-h-[44px]"
       >
-        <Plus className="w-4 h-4 mr-1 inline" aria-hidden />
+        <Plus className="mr-1 inline h-4 w-4" aria-hidden />
         Add damage type
       </Button>
     </CollapsibleSection>

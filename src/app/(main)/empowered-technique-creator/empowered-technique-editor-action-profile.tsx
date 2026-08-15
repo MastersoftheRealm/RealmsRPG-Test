@@ -4,7 +4,11 @@ import { SectionCostBadge } from '@/components/shared';
 import { CollapsibleSection } from '@/components/creator';
 import { Checkbox } from '@/components/ui';
 import { ACTION_OPTIONS } from '@/lib/game/creator-constants';
-import { ATTACK_MODE_SELECT_OPTIONS, attackModeColumnLabel, type AttackMode } from '@/lib/attack-mode';
+import {
+  ATTACK_MODE_SELECT_OPTIONS,
+  attackModeColumnLabel,
+  type AttackMode,
+} from '@/lib/attack-mode';
 import type { EmpoweredTechniqueCreatorEditorProps } from './empowered-technique-editor-config';
 
 export type EmpoweredTechniqueEditorActionProfileProps = Pick<
@@ -40,13 +44,13 @@ export function EmpoweredTechniqueEditorActionProfile({
         </>
       }
     >
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid gap-4 md:grid-cols-2">
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">Action Type</label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Action Type</label>
           <select
             value={actionType}
             onChange={(event) => onActionTypeChange(event.target.value)}
-            className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+            className="min-h-[44px] w-full rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
             aria-label="Empowered technique action type"
           >
             {ACTION_OPTIONS.map((option) => (
@@ -59,7 +63,7 @@ export function EmpoweredTechniqueEditorActionProfile({
         <div>
           <label
             htmlFor="empowered-attack-mode"
-            className="block text-sm font-medium text-text-secondary mb-1"
+            className="mb-1 block text-sm font-medium text-text-secondary"
           >
             Attack
           </label>
@@ -67,7 +71,7 @@ export function EmpoweredTechniqueEditorActionProfile({
             id="empowered-attack-mode"
             value={attackMode}
             onChange={(event) => onAttackModeChange(event.target.value as AttackMode)}
-            className="w-full px-4 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+            className="min-h-[44px] w-full rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
             aria-label="Empowered technique attack mode"
           >
             {ATTACK_MODE_SELECT_OPTIONS.map((option) => (

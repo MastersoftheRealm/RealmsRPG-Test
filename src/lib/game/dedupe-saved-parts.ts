@@ -47,7 +47,7 @@ function maxLvl(a: number | null | undefined, b: number | null | undefined): num
  * Preserves first-seen order; merges higher option levels onto the kept entry.
  */
 export function dedupeSavedParts<T extends SavedPartLike | string>(
-  parts: T[] | null | undefined
+  parts: T[] | null | undefined,
 ): T[] {
   if (!parts?.length) return [];
 
@@ -95,7 +95,7 @@ export function dedupeSavedParts<T extends SavedPartLike | string>(
  */
 export function dedupeByNormalizedId<T>(
   items: T[] | null | undefined,
-  getId: (item: T) => string | number | null | undefined
+  getId: (item: T) => string | number | null | undefined,
 ): T[] {
   if (!items?.length) return [];
   const seen = new Set<string>();
@@ -115,7 +115,7 @@ export function dedupeByNormalizedId<T>(
 
 /** Character power / technique / feat refs: string or `{ id?, name? }`. */
 export function dedupeEntityRefs<T extends string | { id?: string | number; name?: string }>(
-  items: T[] | null | undefined
+  items: T[] | null | undefined,
 ): T[] {
   return dedupeByNormalizedId(items ?? [], (item) => {
     if (typeof item === 'string') return item;

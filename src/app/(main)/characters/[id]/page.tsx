@@ -18,11 +18,7 @@ import {
   CharacterSheetBody,
 } from '@/components/character-sheet';
 import { RollLog, RollProvider } from '@/components/rolls';
-import {
-  SheetTourOfferModal,
-  SheetTour,
-  LevelUpGuideCard,
-} from '@/components/onboarding';
+import { SheetTourOfferModal, SheetTour, LevelUpGuideCard } from '@/components/onboarding';
 import { CharacterSheetModals } from './CharacterSheetModals';
 import { useCharacterSheetPage } from './use-character-sheet-page';
 
@@ -36,7 +32,7 @@ export default function CharacterSheetPage({ params }: PageParams) {
 
   if (model.authLoading || model.loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="flex min-h-screen items-center justify-center">
         <LoadingState message="Loading character..." size="lg" />
       </div>
     );
@@ -44,16 +40,16 @@ export default function CharacterSheetPage({ params }: PageParams) {
 
   if (model.error || !model.character) {
     return (
-      <PageContainer size="md" className="min-h-[60vh] flex flex-col items-center justify-center text-center">
+      <PageContainer
+        size="md"
+        className="flex min-h-[60vh] flex-col items-center justify-center text-center"
+      >
         <PageHeader
           title={model.error || 'Character not found'}
           size="sm"
-          className="mb-4 w-full [&_h1]:justify-center [&_button]:mx-auto"
+          className="mb-4 w-full [&_button]:mx-auto [&_h1]:justify-center"
         />
-        <Link
-          href="/characters"
-          className="text-primary-link-fg hover:text-primary-fg-hover"
-        >
+        <Link href="/characters" className="text-primary-link-fg hover:text-primary-fg-hover">
           ← Back to Characters
         </Link>
       </PageContainer>

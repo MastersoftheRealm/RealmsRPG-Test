@@ -8,7 +8,12 @@
 export { useAuth, useAuthStore } from './use-auth';
 export { useAdmin } from './use-admin';
 export { useCreatorSave } from './use-creator-save';
-export type { CreatorLibraryType, CreatorSavePayload, UseCreatorSaveOptions, UseCreatorSaveReturn } from './use-creator-save';
+export type {
+  CreatorLibraryType,
+  CreatorSavePayload,
+  UseCreatorSaveOptions,
+  UseCreatorSaveReturn,
+} from './use-creator-save';
 export { useCreatorPathData } from './use-creator-path-data';
 export {
   buildGuidedEquipmentEligibilityContext,
@@ -30,11 +35,7 @@ export type {
   UseAddLibraryItemDataOptions,
   UseAddLibraryItemDataReturn,
 } from './use-add-library-item-data';
-export {
-  useProfile,
-  useAccountProfile,
-  type AccountProfile,
-} from './use-profile';
+export { useProfile, useAccountProfile, type AccountProfile } from './use-profile';
 export { useIsClient } from './use-is-client';
 export { usePlaceholderTheme } from './use-placeholder-theme';
 export { useEffectivePortrait } from './use-effective-portrait';
@@ -135,7 +136,12 @@ export {
 } from './codex-types';
 
 // Official Library (browse, add to my library)
-export { useOfficialLibrary, useAddOfficialToLibrary } from './use-official-library';
+export {
+  useOfficialLibrary,
+  useOfficialLibraryCounts,
+  useAddOfficialToLibrary,
+  officialLibraryKeys,
+} from './use-official-library';
 
 // User Library (user-specific content)
 export {
@@ -145,6 +151,8 @@ export {
   useUserItems,
   useUserCreatures,
   useUserSpecies,
+  useUserLibraryCounts,
+  userLibraryKeys,
   useMergedSpecies,
   userSpeciesToSpecies,
   useDeletePower,

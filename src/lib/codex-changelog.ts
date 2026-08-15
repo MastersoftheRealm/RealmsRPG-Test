@@ -21,7 +21,10 @@ function areEqual(a: unknown, b: unknown): boolean {
  * Builds a compact top-level diff for quick list display.
  * Full snapshots are still persisted in before_data/after_data.
  */
-export function computeChangedFields(beforeData: JsonLike, afterData: JsonLike): Record<string, unknown>[] {
+export function computeChangedFields(
+  beforeData: JsonLike,
+  afterData: JsonLike,
+): Record<string, unknown>[] {
   const before = beforeData ?? {};
   const after = afterData ?? {};
   const keys = new Set<string>([...Object.keys(before), ...Object.keys(after)]);

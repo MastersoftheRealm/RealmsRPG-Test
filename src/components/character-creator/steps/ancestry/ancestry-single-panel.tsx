@@ -66,73 +66,90 @@ export function AncestrySinglePanel({
   onBack,
   onContinue,
 }: AncestrySinglePanelProps) {
-  const sizesDisplay = Array.isArray(selectedSpecies.sizes) && selectedSpecies.sizes.length > 0
-    ? selectedSpecies.sizes.join(' / ')
-    : selectedSpecies.size || 'Medium';
+  const sizesDisplay =
+    Array.isArray(selectedSpecies.sizes) && selectedSpecies.sizes.length > 0
+      ? selectedSpecies.sizes.join(' / ')
+      : selectedSpecies.size || 'Medium';
 
   return (
-    <div className="max-w-4xl mx-auto flex flex-col flex-1 min-h-0">
-      <div className="flex items-start justify-between mb-4">
+    <div className="mx-auto flex min-h-0 max-w-4xl flex-1 flex-col">
+      <div className="mb-4 flex items-start justify-between">
         <div>
-          <div className="flex items-center gap-1 mb-2">
+          <div className="mb-2 flex items-center gap-1">
             <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
-            <InfoTippy content={chooseYourAncestryTraits} allowHTML label="Ancestry trait rules" size="inline" />
+            <InfoTippy
+              content={chooseYourAncestryTraits}
+              allowHTML
+              label="Ancestry trait rules"
+              size="inline"
+            />
           </div>
           <p className="text-text-secondary">
-            As a <strong>{selectedSpecies.name}</strong>, customize your heritage with traits and abilities.
+            As a <strong>{selectedSpecies.name}</strong>, customize your heritage with traits and
+            abilities.
           </p>
         </div>
         <button
           onClick={onChangeSpecies}
-          className="text-sm text-primary-link-fg hover:text-primary-fg-hover underline"
+          className="text-sm text-primary-link-fg underline hover:text-primary-fg-hover"
         >
           Change Species
         </button>
       </div>
 
-      <Card className="bg-surface-alt p-4 mb-6 shadow-none">
+      <Card className="mb-6 bg-surface-alt p-4 shadow-none">
         {selectedSpecies.description && (
-          <p className="text-text-secondary text-sm mb-4 leading-relaxed">
+          <p className="mb-4 text-sm leading-relaxed text-text-secondary">
             {selectedSpecies.description}
           </p>
         )}
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 text-center">
+        <div className="grid grid-cols-2 gap-4 text-center md:grid-cols-4 lg:grid-cols-6">
           <div>
             <span className="block text-xs text-text-muted uppercase">Size</span>
             <span className="font-bold text-text-primary capitalize">{sizesDisplay}</span>
           </div>
           <div>
             <span className="block text-xs text-text-muted uppercase">Type</span>
-            <span className="font-bold text-text-primary capitalize">{selectedSpecies.type || 'Humanoid'}</span>
+            <span className="font-bold text-text-primary capitalize">
+              {selectedSpecies.type || 'Humanoid'}
+            </span>
           </div>
           <div>
             <span className="block text-xs text-text-muted uppercase">Avg Height</span>
             <span className="font-bold text-text-primary">
-              {selectedSpecies.ave_height != null && Number(selectedSpecies.ave_height) > 0 ? `${selectedSpecies.ave_height} cm` : '-'}
+              {selectedSpecies.ave_height != null && Number(selectedSpecies.ave_height) > 0
+                ? `${selectedSpecies.ave_height} cm`
+                : '-'}
             </span>
           </div>
           <div>
             <span className="block text-xs text-text-muted uppercase">Avg Weight</span>
             <span className="font-bold text-text-primary">
-              {selectedSpecies.ave_weight != null && Number(selectedSpecies.ave_weight) > 0 ? `${selectedSpecies.ave_weight} kg` : '-'}
+              {selectedSpecies.ave_weight != null && Number(selectedSpecies.ave_weight) > 0
+                ? `${selectedSpecies.ave_weight} kg`
+                : '-'}
             </span>
           </div>
           <div>
             <span className="block text-xs text-text-muted uppercase">Adulthood</span>
             <span className="font-bold text-text-primary">
-              {selectedSpecies.adulthood_lifespan?.[0] != null ? `${selectedSpecies.adulthood_lifespan[0]} yr` : '-'}
+              {selectedSpecies.adulthood_lifespan?.[0] != null
+                ? `${selectedSpecies.adulthood_lifespan[0]} yr`
+                : '-'}
             </span>
           </div>
           <div>
             <span className="block text-xs text-text-muted uppercase">Lifespan (max)</span>
             <span className="font-bold text-text-primary">
-              {selectedSpecies.adulthood_lifespan?.[1] != null ? `${selectedSpecies.adulthood_lifespan[1]} yr` : '-'}
+              {selectedSpecies.adulthood_lifespan?.[1] != null
+                ? `${selectedSpecies.adulthood_lifespan[1]} yr`
+                : '-'}
             </span>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-border-light">
+        <div className="mt-4 grid grid-cols-1 gap-4 border-t border-border-light pt-4 md:grid-cols-2">
           {speciesSkillChips.length > 0 && (
             <div>
               <span className="text-xs text-text-muted uppercase">Species Skills:</span>
@@ -144,7 +161,7 @@ export function AncestrySinglePanel({
           {selectedSpecies.languages && selectedSpecies.languages.length > 0 && (
             <div>
               <span className="text-xs text-text-muted uppercase">Languages:</span>
-              <div className="flex flex-wrap gap-1 mt-1">
+              <div className="mt-1 flex flex-wrap gap-1">
                 {selectedSpecies.languages.map((lang: string) => (
                   <DescriptorChip key={lang} variant="primary" size="sm">
                     {lang}
@@ -162,19 +179,21 @@ export function AncestrySinglePanel({
         ancestryPathNotes={ancestryPathNotes}
       />
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className={cn(
-          'p-4 rounded-xl border-2',
-          selectedTraitIds.length === maxAncestryTraits
-            ? statusPanel.complete
-            : statusPanel.warning
-        )}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-bold text-text-primary text-sm">Ancestry Traits</span>
+      <div className="mb-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div
+          className={cn(
+            'rounded-xl border-2 p-4',
+            selectedTraitIds.length === maxAncestryTraits
+              ? statusPanel.complete
+              : statusPanel.warning,
+          )}
+        >
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-sm font-bold text-text-primary">Ancestry Traits</span>
             <DescriptorChip
               size="sm"
               variant={statusBadgeDescriptorVariant(
-                selectedTraitIds.length === maxAncestryTraits ? 'complete' : 'warning'
+                selectedTraitIds.length === maxAncestryTraits ? 'complete' : 'warning',
               )}
               className="font-bold"
             >
@@ -186,14 +205,14 @@ export function AncestrySinglePanel({
           </p>
         </div>
 
-        <div className={cn(
-          'p-4 rounded-xl border-2',
-          selectedCharacteristic
-            ? statusPanel.complete
-            : statusPanel.info
-        )}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-bold text-text-primary text-sm">Characteristic</span>
+        <div
+          className={cn(
+            'rounded-xl border-2 p-4',
+            selectedCharacteristic ? statusPanel.complete : statusPanel.info,
+          )}
+        >
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-sm font-bold text-text-primary">Characteristic</span>
             <DescriptorChip
               size="sm"
               variant={statusBadgeDescriptorVariant(selectedCharacteristic ? 'complete' : 'info')}
@@ -205,14 +224,14 @@ export function AncestrySinglePanel({
           <p className="text-xs text-text-secondary">Optional bonus trait</p>
         </div>
 
-        <div className={cn(
-          'p-4 rounded-xl border-2',
-          selectedFlaw
-            ? statusPanel.danger
-            : statusPanel.neutral
-        )}>
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-bold text-text-primary text-sm">Flaw</span>
+        <div
+          className={cn(
+            'rounded-xl border-2 p-4',
+            selectedFlaw ? statusPanel.danger : statusPanel.neutral,
+          )}
+        >
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-sm font-bold text-text-primary">Flaw</span>
             <DescriptorChip
               size="sm"
               variant={statusBadgeDescriptorVariant(selectedFlaw ? 'danger' : 'neutral')}
@@ -229,7 +248,7 @@ export function AncestrySinglePanel({
         <TraitSection
           title="Species Traits"
           subtitle="Granted automatically. When a trait offers variants, pick one before continuing."
-          icon={<Heart className="w-5 h-5 text-primary-link-fg" />}
+          icon={<Heart className="h-5 w-5 text-primary-link-fg" />}
           traits={speciesTraits}
           selectable={false}
           selectedIds={[]}
@@ -244,7 +263,7 @@ export function AncestrySinglePanel({
         <TraitSection
           title="Ancestry Traits"
           subtitle={`Select ${maxAncestryTraits} trait${maxAncestryTraits > 1 ? 's' : ''}`}
-          icon={<Star className="w-5 h-5 text-warning-700 dark:text-warning-400" />}
+          icon={<Star className="h-5 w-5 text-warning-700 dark:text-warning-400" />}
           traits={ancestryTraits}
           selectable
           selectedIds={selectedTraitIds}
@@ -258,7 +277,7 @@ export function AncestrySinglePanel({
         <TraitSection
           title="Characteristics"
           subtitle="Select 1 characteristic (optional)"
-          icon={<Sparkles className="w-5 h-5 text-info-fg dark:text-info-400" />}
+          icon={<Sparkles className="h-5 w-5 text-info-fg dark:text-info-400" />}
           traits={characteristics}
           selectable
           selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}
@@ -272,7 +291,7 @@ export function AncestrySinglePanel({
         <TraitSection
           title="Flaws"
           subtitle="Select 1 flaw to gain an extra ancestry trait (optional)"
-          icon={<AlertTriangle className="w-5 h-5 text-danger-700 dark:text-danger-400" />}
+          icon={<AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />}
           traits={flaws}
           selectable
           selectedIds={selectedFlaw ? [selectedFlaw] : []}
@@ -283,10 +302,10 @@ export function AncestrySinglePanel({
       )}
 
       {ancestryTraits.length === 0 && speciesTraits.length === 0 && (
-        <div className="bg-surface-alt border border-border-light rounded-xl p-6 mb-6 text-center">
+        <div className="mb-6 rounded-xl border border-border-light bg-surface-alt p-6 text-center">
           <p className="text-text-secondary">
-            No specific ancestry traits defined for {selectedSpecies.name}.
-            You may continue without selecting traits.
+            No specific ancestry traits defined for {selectedSpecies.name}. You may continue without
+            selecting traits.
           </p>
         </div>
       )}

@@ -83,11 +83,7 @@ export interface GlrSurfaceSpec {
 
 /** Normalize column/header keys for flexible matching. */
 export function normalizeGlrColumnKey(key: string): string {
-  return key
-    .trim()
-    .toLowerCase()
-    .replace(/\./g, '')
-    .replace(/\s+/g, ' ');
+  return key.trim().toLowerCase().replace(/\./g, '').replace(/\s+/g, ' ');
 }
 
 function col(...keys: string[]): string[] {
@@ -232,13 +228,7 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
   'library-official-weapon': {
     surfaceId: 'library-official-weapon',
     entityType: 'weapon',
-    requiredFacts: [
-      FACT.rarity,
-      FACT.currency,
-      FACT.trainingPoints,
-      FACT.range,
-      FACT.damage,
-    ],
+    requiredFacts: [FACT.rarity, FACT.currency, FACT.trainingPoints, FACT.range, FACT.damage],
   },
   'library-official-armor': {
     surfaceId: 'library-official-armor',
@@ -256,13 +246,7 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
   'library-official-shield': {
     surfaceId: 'library-official-shield',
     entityType: 'shield',
-    requiredFacts: [
-      FACT.rarity,
-      FACT.currency,
-      FACT.trainingPoints,
-      FACT.block,
-      FACT.damage,
-    ],
+    requiredFacts: [FACT.rarity, FACT.currency, FACT.trainingPoints, FACT.block, FACT.damage],
   },
   'character-sheet-power-play': {
     surfaceId: 'character-sheet-power-play',
@@ -278,11 +262,7 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
   'character-sheet-technique-play': {
     surfaceId: 'character-sheet-technique-play',
     entityType: 'technique',
-    requiredFacts: [
-      { ...FACT.energy, placement: 'rightSlot' },
-      FACT.actionType,
-      FACT.weapon,
-    ],
+    requiredFacts: [{ ...FACT.energy, placement: 'rightSlot' }, FACT.actionType, FACT.weapon],
   },
   'character-sheet-armor': {
     surfaceId: 'character-sheet-armor',
@@ -309,12 +289,7 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
   'add-modal-technique': {
     surfaceId: 'add-modal-technique',
     entityType: 'technique',
-    requiredFacts: [
-      FACT.energy,
-      FACT.actionType,
-      FACT.weapon,
-      FACT.trainingPoints,
-    ],
+    requiredFacts: [FACT.energy, FACT.actionType, FACT.weapon, FACT.trainingPoints],
   },
   'codex-feat': {
     surfaceId: 'codex-feat',
@@ -380,13 +355,7 @@ export const GLR_SURFACE_REGISTRY: Record<GlrSurfaceId, GlrSurfaceSpec> = {
   'guided-equipment-weapon-l3': {
     surfaceId: 'guided-equipment-weapon-l3',
     entityType: 'weapon',
-    requiredFacts: [
-      FACT.rarity,
-      FACT.currency,
-      FACT.trainingPoints,
-      FACT.range,
-      FACT.damage,
-    ],
+    requiredFacts: [FACT.rarity, FACT.currency, FACT.trainingPoints, FACT.range, FACT.damage],
   },
   'guided-equipment-armor-l3': {
     surfaceId: 'guided-equipment-armor-l3',

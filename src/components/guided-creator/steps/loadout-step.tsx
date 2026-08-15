@@ -24,10 +24,7 @@ import { GuidedUnarmedProwessPanel } from '../guided-unarmed-prowess-panel';
 import { GuidedEquipmentPhaseLayout } from '../guided-equipment-phase-layout';
 import { GuidedEquipmentL1Phase } from '../guided-equipment-l1-phase';
 import { GuidedEquipmentL2Modal } from '../guided-equipment-l2-modal';
-import {
-  l2GridColumnsForPhase,
-  l2HeaderColumnsForPhase,
-} from '../guided-equipment-l2-grid';
+import { l2GridColumnsForPhase, l2HeaderColumnsForPhase } from '../guided-equipment-l2-grid';
 import {
   buildEquipmentLookup,
   pruneUnresolvedLoadoutRefs,
@@ -76,14 +73,8 @@ function normalizeEqId(id: string): string {
 }
 
 export function LoadoutStep() {
-  const {
-    draft,
-    updateDraft,
-    prevSubStep,
-    nextSubStep,
-    navigationIntent,
-    entryNonce,
-  } = useGuidedCreatorStore();
+  const { draft, updateDraft, prevSubStep, nextSubStep, navigationIntent, entryNonce } =
+    useGuidedCreatorStore();
   const { pathData, archetype, isLoading: pathLoading } = useGuidedPathData();
   const { data: officialItems = [], isLoading: officialLoading } = useOfficialLibrary('items');
   const { data: userItems = [], isLoading: userItemsLoading } = useUserItems();
@@ -98,14 +89,14 @@ export function LoadoutStep() {
   // L3 — no archetype path: inline full catalog per phase, no L2 modal (TASK-684).
   const isInlineCatalog = prefersDeepCatalogEntry(draft);
   const [librarySource, setLibrarySource] = useState<SourceFilterValue>(
-    isInlineCatalog ? 'all' : 'public'
+    isInlineCatalog ? 'all' : 'public',
   );
 
   const { catalog, itemProperties, tpSummary, allOfficial } = useGuidedEquipmentCatalog(
     draft,
     officialItems,
     codexEquipment,
-    { userItems, source: librarySource }
+    { userItems, source: librarySource },
   );
 
   /**
@@ -118,32 +109,29 @@ export function LoadoutStep() {
   // Power always skips armor (draft type or path.type) — path armorStep cannot override (TASK-689).
   const armorMode = resolveArmorStepMode(
     pathData?.level1?.armorStep,
-    draft.archetypeType ?? archetype?.type ?? null
+    draft.archetypeType ?? archetype?.type ?? null,
   );
 
   const equipmentPhase = draft.equipmentPhase ?? 'weapon';
 
   const equipmentLookup = useMemo(
     () => buildEquipmentLookup(allOfficial, codexEquipment),
-    [allOfficial, codexEquipment]
+    [allOfficial, codexEquipment],
   );
 
   /**
    * Recommendation pool from flat path columns only (quick kits removed from DB).
    * L2 modal still accepts an empty loadouts array for API compatibility.
    */
-  const itemPool = useMemo(
-    () => buildPathLoadoutPool(pathData?.level1),
-    [pathData?.level1]
-  );
+  const itemPool = useMemo(() => buildPathLoadoutPool(pathData?.level1), [pathData?.level1]);
 
   const hasWeaponOptions = useMemo(
     () => filterPoolToPhase(itemPool, 'weapon', officialItems, codexEquipment).length > 0,
-    [itemPool, officialItems, codexEquipment]
+    [itemPool, officialItems, codexEquipment],
   );
   const hasArmorOptions = useMemo(
     () => filterPoolToPhase(itemPool, 'armor', officialItems, codexEquipment).length > 0,
-    [itemPool, officialItems, codexEquipment]
+    [itemPool, officialItems, codexEquipment],
   );
 
   const phaseVisibility: EquipmentPhaseVisibility = useMemo(
@@ -155,7 +143,7 @@ export function LoadoutStep() {
         // Custom / no path: weapons for every archetype; armor only when mode ≠ none (Power).
         fullCatalog: isInlineCatalog,
       }),
-    [armorMode, hasWeaponOptions, hasArmorOptions, recommendUnarmed, isInlineCatalog]
+    [armorMode, hasWeaponOptions, hasArmorOptions, recommendUnarmed, isInlineCatalog],
   );
 
   const showWeaponsHatch = shouldShowPowerWeaponsHatch({
@@ -177,15 +165,12 @@ export function LoadoutStep() {
       if (row) return resolveCatalogRowUnitCost(row);
       return resolveRefUnitCost(ref, officialItems, codexEquipment, itemProperties);
     },
-    [catalog, officialItems, codexEquipment, itemProperties]
+    [catalog, officialItems, codexEquipment, itemProperties],
   );
 
   const armsSpent = useMemo(() => {
     const refs = [...draft.loadoutWeapons, ...draft.loadoutArmor];
-    return refs.reduce(
-      (sum, ref) => sum + resolveSpendCost(ref) * Math.max(1, ref.quantity),
-      0
-    );
+    return refs.reduce((sum, ref) => sum + resolveSpendCost(ref) * Math.max(1, ref.quantity), 0);
   }, [draft.loadoutWeapons, draft.loadoutArmor, resolveSpendCost]);
 
   const gearSpent = useMemo(
@@ -194,9 +179,9 @@ export function LoadoutStep() {
         draft.equipment.map((ref) => ({
           ...ref,
           cost: resolveSpendCost(ref),
-        }))
+        })),
       ),
-    [draft.equipment, resolveSpendCost]
+    [draft.equipment, resolveSpendCost],
   );
 
   const currencyStarting = useMemo(() => computeStartingCurrency(1), []);
@@ -205,7 +190,7 @@ export function LoadoutStep() {
 
   const currencyRemaining = useMemo(
     () => computeRemainingCurrency(currencyStarting, currencySpent),
-    [currencyStarting, currencySpent]
+    [currencyStarting, currencySpent],
   );
 
   /**
@@ -236,12 +221,12 @@ export function LoadoutStep() {
     librarySource === 'my' ? [] : codexEquipment,
     currencyStarting,
     armsSpent,
-    { catalog, tpSummary, itemProperties }
+    { catalog, tpSummary, itemProperties },
   );
 
   const inlineSelectedIds = useMemo(
     () => initialSelectedIdsForPhase(equipmentPhase, draft),
-    [equipmentPhase, draft]
+    [equipmentPhase, draft],
   );
 
   const {
@@ -265,13 +250,7 @@ export function LoadoutStep() {
         keepIds: inlineSelectedIds,
         idsForItem: selectableItemPathIds,
       }),
-    [
-      inlineItems,
-      inlinePathMatchIds,
-      inlinePathIndex,
-      inlineSelectedPathIds,
-      inlineSelectedIds,
-    ]
+    [inlineItems, inlinePathMatchIds, inlinePathIndex, inlineSelectedPathIds, inlineSelectedIds],
   );
 
   const inlineQuantities = useMemo(() => {
@@ -285,8 +264,7 @@ export function LoadoutStep() {
 
   // Scope the error to the phase it was raised on — switching phases clears it
   // without a state-reset effect (react-hooks/set-state-in-effect).
-  const inlineError =
-    inlineErrorState?.phase === equipmentPhase ? inlineErrorState.message : null;
+  const inlineError = inlineErrorState?.phase === equipmentPhase ? inlineErrorState.message : null;
 
   const handleInlineToggle = useCallback(
     (id: string) => {
@@ -296,7 +274,7 @@ export function LoadoutStep() {
         id,
         l2Catalog,
         l2TpSummary.limit,
-        currencyStarting
+        currencyStarting,
       );
       if (!result.ok) {
         setInlineErrorState({
@@ -308,7 +286,7 @@ export function LoadoutStep() {
       setInlineErrorState(null);
       if (result.partial) updateDraft(result.partial);
     },
-    [equipmentPhase, draft, l2Catalog, l2TpSummary.limit, currencyStarting, updateDraft]
+    [equipmentPhase, draft, l2Catalog, l2TpSummary.limit, currencyStarting, updateDraft],
   );
 
   const handleInlineQuantityChange = useCallback(
@@ -320,7 +298,7 @@ export function LoadoutStep() {
         delta,
         l2Catalog,
         l2TpSummary.limit,
-        currencyStarting
+        currencyStarting,
       );
       if (!result.ok) {
         setInlineErrorState({
@@ -332,7 +310,7 @@ export function LoadoutStep() {
       setInlineErrorState(null);
       if (result.partial) updateDraft(result.partial);
     },
-    [equipmentPhase, draft, l2Catalog, l2TpSummary.limit, currencyStarting, updateDraft]
+    [equipmentPhase, draft, l2Catalog, l2TpSummary.limit, currencyStarting, updateDraft],
   );
 
   const openItemCreator = useCallback(() => {
@@ -377,8 +355,7 @@ export function LoadoutStep() {
     const prunedArmor = pruneUnresolvedLoadoutRefs(draft.loadoutArmor, equipmentLookup);
     const prunedGear = pruneUnresolvedLoadoutRefs(draft.equipment, equipmentLookup);
     const next = rebucketLoadoutByLookup(prunedWeapons, prunedArmor, equipmentLookup);
-    const gearChanged =
-      JSON.stringify(prunedGear) !== JSON.stringify(draft.equipment);
+    const gearChanged = JSON.stringify(prunedGear) !== JSON.stringify(draft.equipment);
     if (
       JSON.stringify(next.loadoutWeapons) === JSON.stringify(draft.loadoutWeapons) &&
       JSON.stringify(next.loadoutArmor) === JSON.stringify(draft.loadoutArmor) &&
@@ -403,7 +380,7 @@ export function LoadoutStep() {
     (level: number) => {
       updateDraft({ unarmedProwess: level });
     },
-    [updateDraft]
+    [updateDraft],
   );
 
   const closeL2Modal = useCallback(() => {
@@ -515,7 +492,7 @@ export function LoadoutStep() {
             tpSpent={tpSummary.spent}
           >
             {inlineError ? (
-              <p className="font-nunito text-sm text-warning-fg text-center" role="alert">
+              <p className="text-center font-nunito text-sm text-warning-fg" role="alert">
                 {inlineError}
               </p>
             ) : null}
@@ -535,21 +512,17 @@ export function LoadoutStep() {
                       ? 'weapons'
                       : equipmentPhase === 'armor'
                         ? 'armor'
-                        : 'gear'
+                        : 'gear',
                   )
                 : phaseCopy.l2.emptyMessage(equipmentPhase)
             }
             searchPlaceholder={phaseCopy.l2.searchPlaceholder(equipmentPhase)}
             showQuantity={equipmentPhase === 'gear'}
             quantities={inlineQuantities}
-            onQuantityChange={
-              equipmentPhase === 'gear' ? handleInlineQuantityChange : undefined
-            }
+            onQuantityChange={equipmentPhase === 'gear' ? handleInlineQuantityChange : undefined}
             maxSelections={equipmentPhase === 'armor' ? 1 : undefined}
             selectedTitle={phaseCopy.l2.selectedTitle(equipmentPhase)}
-            scopeExtra={
-              <SourceFilter value={librarySource} onChange={setLibrarySource} />
-            }
+            scopeExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
             filterContent={
               <div className="grid grid-cols-1 items-start gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 <ArchetypePathFilter
@@ -564,10 +537,7 @@ export function LoadoutStep() {
           />
 
           {equipmentPhase !== 'gear' ? (
-            <GuidedLayerNav
-              expandLabel={phaseCopy.createArmament}
-              onExpand={openItemCreator}
-            />
+            <GuidedLayerNav expandLabel={phaseCopy.createArmament} onExpand={openItemCreator} />
           ) : null}
 
           {equipmentPhase === 'weapon' && recommendUnarmed ? (
@@ -588,9 +558,7 @@ export function LoadoutStep() {
             expandLabel={phaseCopy.seeMoreLabel}
             onExpand={() => setL2Open(true)}
             trailingExpandLabel={showWeaponsHatch ? stepCopy.seeWeapons : undefined}
-            onTrailingExpand={
-              showWeaponsHatch ? () => setWeaponsL2Open(true) : undefined
-            }
+            onTrailingExpand={showWeaponsHatch ? () => setWeaponsL2Open(true) : undefined}
           >
             <GuidedEquipmentL1Phase
               phase={equipmentPhase}
@@ -619,9 +587,7 @@ export function LoadoutStep() {
             items={inlineItems}
             tpLimit={l2TpSummary.limit}
             currencyStarting={currencyStarting}
-            scopeExtra={
-              <SourceFilter value={librarySource} onChange={setLibrarySource} />
-            }
+            scopeExtra={<SourceFilter value={librarySource} onChange={setLibrarySource} />}
             onClose={closeL2Modal}
             onDraftChange={updateDraft}
           />

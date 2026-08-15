@@ -18,11 +18,7 @@ import {
   FILTER_LABEL_ROW_CLASS,
 } from '@/components/shared/filters';
 import { CodexFeatRow } from '@/components/codex';
-import {
-  CodexBrowseListShell,
-  ErrorDisplay as ErrorState,
-  InfoTippy,
-} from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState, InfoTippy } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { Button } from '@/components/ui';
@@ -60,17 +56,13 @@ interface FeatFilters extends FeatListFilters {
   stateFeatMode: 'all' | 'only' | 'hide';
 }
 
-export function CodexFeatsTab({
-  codexMode = 'public',
-}: {
-  codexMode?: 'public' | 'my';
-}) {
+export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
   const loadPublicCodex = codexMode === 'public';
   const { data: feats, isLoading, error, refetch } = useCodexFeats({ enabled: loadPublicCodex });
   const { data: skills = [] } = useCodexSkills({ enabled: loadPublicCodex });
 
   const [characterFilterId, setCharacterFilterId] = useState(() =>
-    readInitialLibraryCharacterFilterId(codexMode === 'public')
+    readInitialLibraryCharacterFilterId(codexMode === 'public'),
   );
 
   // When a character is selected, hide feats they don't qualify for by default.
@@ -94,14 +86,16 @@ export function CodexFeatsTab({
       setFilters((f) =>
         f.maxLevel === null && f.abilityRequirements.length === 0
           ? f
-          : { ...f, maxLevel: null, abilityRequirements: [] }
+          : { ...f, maxLevel: null, abilityRequirements: [] },
       );
       setShowUnqualified(false);
     }
     writePersistedLibraryCharacterFilterId(id);
   }, []);
 
-  const { data: characterResult } = useCharacter(loadPublicCodex ? characterFilterId || undefined : undefined);
+  const { data: characterResult } = useCharacter(
+    loadPublicCodex ? characterFilterId || undefined : undefined,
+  );
   const character = characterResult?.character ?? undefined;
   const { sortState, handleSort, sortItems } = useSort('name');
   const maxLevelFilterId = useId();
@@ -113,17 +107,12 @@ export function CodexFeatsTab({
 
   const skillIdToName = useMemo(() => buildSkillIdToName(skills as Skill[]), [skills]);
 
-  const {
-    selectedPathIds,
-    setSelectedPathIds,
-    pathIndex,
-    pathRecommendedIds,
-    pathFilterActive,
-  } = usePathListFilter({
-    entities: feats,
-    kind: 'feats',
-    enabled: loadPublicCodex,
-  });
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({
+      entities: feats,
+      kind: 'feats',
+      enabled: loadPublicCodex,
+    });
 
   const filteredFeats = useMemo(() => {
     if (!feats) return [];
@@ -172,7 +161,7 @@ export function CodexFeatsTab({
                   className={cn(
                     'min-h-11 flex-shrink-0',
                     !showUnqualified &&
-                      'border-success-300 bg-success-50 text-success-fg hover:bg-success-50 dark:border-success-600/50 dark:bg-success-900/30'
+                      'border-success-300 bg-success-50 text-success-fg hover:bg-success-50 dark:border-success-600/50 dark:bg-success-900/30',
                   )}
                 >
                   {showUnqualified ? 'Hide unqualified feats' : 'Show unqualified feats'}
@@ -183,7 +172,10 @@ export function CodexFeatsTab({
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               <div className={cn('filter-group', filteringByCharacter && 'opacity-60')}>
                 <div className={FILTER_LABEL_ROW_CLASS}>
-                  <label htmlFor={maxLevelFilterId} className="text-sm font-medium leading-5 text-text-secondary">
+                  <label
+                    htmlFor={maxLevelFilterId}
+                    className="text-sm leading-5 font-medium text-text-secondary"
+                  >
                     Max Required Level
                   </label>
                   <InfoTippy
@@ -197,10 +189,12 @@ export function CodexFeatsTab({
                   type="number"
                   min={0}
                   value={filteringByCharacter ? '' : (filters.maxLevel ?? '')}
-                  onChange={(e) => setFilters(f => ({
-                    ...f,
-                    maxLevel: e.target.value ? parseInt(e.target.value) : null
-                  }))}
+                  onChange={(e) =>
+                    setFilters((f) => ({
+                      ...f,
+                      maxLevel: e.target.value ? parseInt(e.target.value) : null,
+                    }))
+                  }
                   placeholder={filteringByCharacter ? SET_BY_CHARACTER_HINT : 'No limit'}
                   disabled={filteringByCharacter}
                 />
@@ -211,11 +205,20 @@ export function CodexFeatsTab({
                   label="Ability/Defense Requirement"
                   abilities={filterOptions.abilReqAbilities}
                   requirements={filters.abilityRequirements}
-                  onAdd={(req) => setFilters(f => ({ ...f, abilityRequirements: [...f.abilityRequirements, req] }))}
-                  onRemove={(ability) => setFilters(f => ({
-                    ...f,
-                    abilityRequirements: f.abilityRequirements.filter(r => r.ability !== ability)
-                  }))}
+                  onAdd={(req) =>
+                    setFilters((f) => ({
+                      ...f,
+                      abilityRequirements: [...f.abilityRequirements, req],
+                    }))
+                  }
+                  onRemove={(ability) =>
+                    setFilters((f) => ({
+                      ...f,
+                      abilityRequirements: f.abilityRequirements.filter(
+                        (r) => r.ability !== ability,
+                      ),
+                    }))
+                  }
                   disabled={filteringByCharacter}
                   disabledHint={SET_BY_CHARACTER_HINT}
                 />
@@ -224,19 +227,23 @@ export function CodexFeatsTab({
               <ChipSelect
                 label="Category"
                 placeholder="Choose category"
-                options={filterOptions.categories.map(c => ({ value: c, label: c }))}
+                options={filterOptions.categories.map((c) => ({ value: c, label: c }))}
                 selectedValues={filters.categories}
-                onSelect={(v) => setFilters(f => ({ ...f, categories: [...f.categories, v] }))}
-                onRemove={(v) => setFilters(f => ({ ...f, categories: f.categories.filter(c => c !== v) }))}
+                onSelect={(v) => setFilters((f) => ({ ...f, categories: [...f.categories, v] }))}
+                onRemove={(v) =>
+                  setFilters((f) => ({ ...f, categories: f.categories.filter((c) => c !== v) }))
+                }
               />
 
               <ChipSelect
                 label="Ability"
                 placeholder="Choose ability"
-                options={filterOptions.abilities.map(a => ({ value: a, label: a }))}
+                options={filterOptions.abilities.map((a) => ({ value: a, label: a }))}
                 selectedValues={filters.abilities}
-                onSelect={(v) => setFilters(f => ({ ...f, abilities: [...f.abilities, v] }))}
-                onRemove={(v) => setFilters(f => ({ ...f, abilities: f.abilities.filter(a => a !== v) }))}
+                onSelect={(v) => setFilters((f) => ({ ...f, abilities: [...f.abilities, v] }))}
+                onRemove={(v) =>
+                  setFilters((f) => ({ ...f, abilities: f.abilities.filter((a) => a !== v) }))
+                }
               />
 
               <div className="md:col-span-2">
@@ -244,9 +251,11 @@ export function CodexFeatsTab({
                   tags={filterOptions.tags}
                   selectedTags={filters.tags}
                   tagMode={filters.tagMode}
-                  onSelect={(t) => setFilters(f => ({ ...f, tags: [...f.tags, t] }))}
-                  onRemove={(t) => setFilters(f => ({ ...f, tags: f.tags.filter(tag => tag !== t) }))}
-                  onModeChange={(mode) => setFilters(f => ({ ...f, tagMode: mode }))}
+                  onSelect={(t) => setFilters((f) => ({ ...f, tags: [...f.tags, t] }))}
+                  onRemove={(t) =>
+                    setFilters((f) => ({ ...f, tags: f.tags.filter((tag) => tag !== t) }))
+                  }
+                  onModeChange={(mode) => setFilters((f) => ({ ...f, tagMode: mode }))}
                 />
               </div>
 
@@ -258,7 +267,12 @@ export function CodexFeatsTab({
                   { value: 'archetype', label: 'Archetype' },
                   { value: 'character', label: 'Character' },
                 ]}
-                onChange={(v) => setFilters(f => ({ ...f, featTypeMode: v as 'all' | 'archetype' | 'character' }))}
+                onChange={(v) =>
+                  setFilters((f) => ({
+                    ...f,
+                    featTypeMode: v as 'all' | 'archetype' | 'character',
+                  }))
+                }
                 placeholder={null}
               />
 
@@ -276,7 +290,9 @@ export function CodexFeatsTab({
                   { value: 'only', label: 'Only State Feats' },
                   { value: 'hide', label: 'Hide State Feats' },
                 ]}
-                onChange={(v) => setFilters(f => ({ ...f, stateFeatMode: v as 'all' | 'only' | 'hide' }))}
+                onChange={(v) =>
+                  setFilters((f) => ({ ...f, stateFeatMode: v as 'all' | 'only' | 'hide' }))
+                }
                 placeholder={null}
               />
 
@@ -295,9 +311,7 @@ export function CodexFeatsTab({
         isLoading={isLoading}
         isEmpty={featFamilies.length === 0}
         emptyTitle={
-          pathFilterActive
-            ? pathFilterEmptyTitle('feats')
-            : 'No feats match your filters.'
+          pathFilterActive ? pathFilterEmptyTitle('feats') : 'No feats match your filters.'
         }
       >
         {featFamilies.map(({ main, levels }) => (
@@ -307,9 +321,7 @@ export function CodexFeatsTab({
             skillIdToName={skillIdToName}
             familyLevels={levels}
             nameChipLabels={
-              pathFilterActive
-                ? featPathChipNames(pathIndex, main, selectedPathIds)
-                : undefined
+              pathFilterActive ? featPathChipNames(pathIndex, main, selectedPathIds) : undefined
             }
           />
         ))}

@@ -36,13 +36,7 @@ export function TabSummarySection({
   className,
 }: TabSummarySectionProps) {
   return (
-    <div
-      className={cn(
-        'px-4 py-3 rounded-lg border mb-4',
-        variantStyles[variant],
-        className
-      )}
-    >
+    <div className={cn('mb-4 rounded-lg border px-4 py-3', variantStyles[variant], className)}>
       {children}
     </div>
   );
@@ -98,7 +92,7 @@ export function SummaryItem({
       <span
         className={cn(
           'shrink-0 text-sm font-bold',
-          highlight ? highlightColors[highlightColor] : 'text-text-primary'
+          highlight ? highlightColors[highlightColor] : 'text-text-primary',
         )}
       >
         {value}
@@ -117,10 +111,5 @@ export interface SummaryRowProps {
 }
 
 export function SummaryRow({ children, className }: SummaryRowProps) {
-  return (
-    <div className={cn('flex flex-wrap items-center gap-4', className)}>
-      {children}
-    </div>
-  );
+  return <div className={cn('flex flex-wrap items-center gap-4', className)}>{children}</div>;
 }
-

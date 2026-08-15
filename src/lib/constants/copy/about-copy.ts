@@ -364,8 +364,18 @@ export const ABOUT_CAROUSEL_SLIDES: AboutCarouselSlideCopy[] = [
       ],
       ctas: [
         { href: '/power-creator', label: 'Create a Power', icon: 'wand' },
-        { href: '/technique-creator', label: 'Create a Technique', variant: 'outline', icon: 'zap' },
-        { href: '/characters/new', label: 'Create a Character', variant: 'outline', icon: 'sparkles' },
+        {
+          href: '/technique-creator',
+          label: 'Create a Technique',
+          variant: 'outline',
+          icon: 'zap',
+        },
+        {
+          href: '/characters/new',
+          label: 'Create a Character',
+          variant: 'outline',
+          icon: 'sparkles',
+        },
       ],
     },
     mobile: {

@@ -8,22 +8,22 @@ import {
 describe('placeholder-art', () => {
   it('returns light and dark card placeholder paths', () => {
     expect(getPlaceholderCardArtPath('species', 'light')).toBe(
-      '/images/placeholder-species-card.svg'
+      '/images/placeholder-species-card.svg',
     );
     expect(getPlaceholderCardArtPath('species', 'dark')).toBe(
-      '/images/placeholder-species-card-dark.svg'
+      '/images/placeholder-species-card-dark.svg',
     );
   });
 
   it('swaps placeholder SVG paths to dark variants', () => {
     expect(getThemedPlaceholderSrc('/images/placeholder-power-card.svg', 'dark')).toBe(
-      '/images/placeholder-power-card-dark.svg'
+      '/images/placeholder-power-card-dark.svg',
     );
     expect(getThemedPlaceholderSrc('/images/placeholder-power-card.svg', 'light')).toBe(
-      '/images/placeholder-power-card.svg'
+      '/images/placeholder-power-card.svg',
     );
     expect(getThemedPlaceholderSrc('https://cdn.example/art.png', 'dark')).toBe(
-      'https://cdn.example/art.png'
+      'https://cdn.example/art.png',
     );
   });
 

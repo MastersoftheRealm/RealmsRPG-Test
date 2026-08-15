@@ -5,7 +5,7 @@
  * ================
  * Reusable modal/dialog with portal rendering and animation.
  * Matches vanilla site's modal-pop animation.
- * 
+ *
  * Supports two modes:
  * 1. Simple mode: Pass title/description for standard header + children as content
  * 2. Custom mode: Pass header/footer slots for full control over layout
@@ -181,7 +181,7 @@ export function Modal({
     const node = dialogRef.current;
     if (!node) return;
     const focusables = Array.from(node.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
-      (el) => el.offsetParent !== null || el === document.activeElement
+      (el) => el.offsetParent !== null || el === document.activeElement,
     );
     if (focusables.length === 0) {
       e.preventDefault();
@@ -211,46 +211,51 @@ export function Modal({
   // Callers may own overflow (e.g. UnifiedSelectionModal: overflow-hidden + inner list scroll).
   // Do not also apply overflow-y-auto — twMerge keeps both and forces an !important fight.
   const contentOwnsOverflow =
-    typeof contentClassName === 'string' &&
-    /(?:^|\s)!?overflow-/.test(contentClassName);
+    typeof contentClassName === 'string' && /(?:^|\s)!?overflow-/.test(contentClassName);
 
   const modalContent = (
-    <div className={cn(
-      'fixed inset-0 z-overlay flex',
-      useFullScreenMobile ? 'items-stretch' : 'items-center justify-center p-4'
-    )}>
+    <div
+      className={cn(
+        'fixed inset-0 z-overlay flex',
+        useFullScreenMobile ? 'items-stretch' : 'items-center justify-center p-4',
+      )}
+    >
       {/* Backdrop */}
       <div
         className={cn(
-          'fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-base ease-standard',
-          animating ? 'opacity-100' : 'opacity-0'
+          'duration-base fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity ease-standard',
+          animating ? 'opacity-100' : 'opacity-0',
         )}
         onClick={onClose}
         aria-hidden="true"
       />
-      
+
       {/* Modal */}
       <div
         ref={dialogRef}
         tabIndex={-1}
         onKeyDown={handleFocusTrap}
         className={cn(
-          'relative z-10 w-full bg-surface shadow-2xl border-border-light overflow-hidden focus:outline-none',
+          'relative z-10 w-full overflow-hidden border-border-light bg-surface shadow-2xl focus:outline-none',
           useFullScreenMobile
-            ? 'inset-0 flex flex-col rounded-none border-0 max-h-none'
+            ? 'inset-0 flex max-h-none flex-col rounded-none border-0'
             : cn(
                 'rounded-2xl border',
-                flexLayout ? 'flex flex-col max-h-[90vh]' : 'max-h-[90vh] overflow-auto scrollbar-thin',
+                flexLayout
+                  ? 'flex max-h-[90vh] flex-col'
+                  : 'max-h-[90vh] scrollbar-thin overflow-auto',
                 'animate-modal-pop',
-                sizeClasses[size]
+                sizeClasses[size],
               ),
-          className
+          className,
         )}
         role="dialog"
         aria-modal="true"
-        aria-labelledby={(title && hasSimpleHeader) || (!title && hasCustomHeader) ? titleId : undefined}
+        aria-labelledby={
+          (title && hasSimpleHeader) || (!title && hasCustomHeader) ? titleId : undefined
+        }
         aria-label={
-          ((title && hasSimpleHeader) || (!title && hasCustomHeader))
+          (title && hasSimpleHeader) || (!title && hasCustomHeader)
             ? undefined
             : (titleA11y ?? (!title && !hasCustomHeader ? 'Dialog' : undefined))
         }
@@ -258,14 +263,16 @@ export function Modal({
       >
         {/* Visually hidden title when custom header without title, for screen readers */}
         {!title && hasCustomHeader && (
-          <span id={titleId} className="sr-only">{titleA11y ?? 'Dialog'}</span>
+          <span id={titleId} className="sr-only">
+            {titleA11y ?? 'Dialog'}
+          </span>
         )}
         {/* Simple Header (title/description mode) — shrink-0 keeps it sticky outside scroll body */}
         {hasSimpleHeader && (
           <div
             className={cn(
-              'shrink-0 mx-4 mt-4 mb-2 px-4 py-3 bg-primary-subtle-bg rounded-xl border-b border-border-light',
-              showCloseButton && 'pr-12'
+              'mx-4 mt-4 mb-2 shrink-0 rounded-xl border-b border-border-light bg-primary-subtle-bg px-4 py-3',
+              showCloseButton && 'pr-12',
             )}
           >
             {title && (
@@ -283,36 +290,36 @@ export function Modal({
             )}
           </div>
         )}
-        
+
         {/* Custom Header (slot mode) */}
-        {hasCustomHeader && (
-          <div className="shrink-0">{header}</div>
-        )}
-        
+        {hasCustomHeader && <div className="shrink-0">{header}</div>}
+
         {/* Close button */}
         {showCloseButton && !hasCustomHeader && (
           <IconButton
             variant="ghost"
             onClick={onClose}
             label="Close modal"
-            className="absolute right-4 top-4 z-10"
+            className="absolute top-4 right-4 z-10"
           >
             <X className="h-5 w-5" />
           </IconButton>
         )}
-        
+
         {/* Content — flex column under sticky header/footer. Default scrolls as a whole;
             pass overflow-* in contentClassName for nested list scroll (see MOBILE_UX). */}
-        <div className={cn(
-          (flexLayout || useFullScreenMobile) && 'flex flex-col flex-1 min-h-0',
-          (flexLayout || useFullScreenMobile) &&
-            !contentOwnsOverflow &&
-            'overflow-y-auto scrollbar-thin',
-          contentClassName ?? 'p-6'
-        )}>
+        <div
+          className={cn(
+            (flexLayout || useFullScreenMobile) && 'flex min-h-0 flex-1 flex-col',
+            (flexLayout || useFullScreenMobile) &&
+              !contentOwnsOverflow &&
+              'scrollbar-thin overflow-y-auto',
+            contentClassName ?? 'p-6',
+          )}
+        >
           {children}
         </div>
-        
+
         {/* Footer (optional slot) — shrink-0 keeps sticky when flexLayout / fullScreenOnMobile.
             Put primary actions (Add Selected, Confirm, etc.) here — not inside children —
             so they stay pinned on mobile full-screen without scrolling. See MOBILE_UX.md. */}
@@ -320,7 +327,7 @@ export function Modal({
           <div
             className={cn(
               'shrink-0',
-              useFullScreenMobile && 'pb-[env(safe-area-inset-bottom,0px)]'
+              useFullScreenMobile && 'pb-[env(safe-area-inset-bottom,0px)]',
             )}
           >
             {footer}

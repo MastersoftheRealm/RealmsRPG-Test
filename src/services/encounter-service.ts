@@ -23,15 +23,14 @@ export const getEncounter = (encounterId: string): Promise<Encounter | null> =>
 
 /** Create a new encounter. Returns the new encounter ID. */
 export const createEncounter = (
-  data: Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'>,
 ): Promise<string> => client.create(data);
 
 /** Save (update) an existing encounter. */
 export const saveEncounter = (
   encounterId: string,
-  data: Partial<Omit<Encounter, 'id' | 'createdAt'>>
+  data: Partial<Omit<Encounter, 'id' | 'createdAt'>>,
 ): Promise<void> => client.save(encounterId, data);
 
 /** Delete an encounter. */
-export const deleteEncounter = (encounterId: string): Promise<void> =>
-  client.remove(encounterId);
+export const deleteEncounter = (encounterId: string): Promise<void> => client.remove(encounterId);

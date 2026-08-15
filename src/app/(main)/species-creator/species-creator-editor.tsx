@@ -81,7 +81,7 @@ export function SpeciesCreatorEditor({
   return (
     <div className="space-y-6">
       <CollapsibleSection title="Basics" collapsedSummary={basicsSummary}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Input
               label="Name *"
@@ -92,17 +92,24 @@ export function SpeciesCreatorEditor({
             />
           </div>
           <div>
-            <label htmlFor="species-type" className="block text-sm font-medium text-text-secondary mb-1">Type</label>
+            <label
+              htmlFor="species-type"
+              className="mb-1 block text-sm font-medium text-text-secondary"
+            >
+              Type
+            </label>
             <select
               id="species-type"
-              className="w-full px-3 py-2 rounded-lg border border-border-light bg-surface text-text-primary"
+              className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
               value={form.type}
               onChange={(e) => onFormChange((p) => ({ ...p, type: e.target.value }))}
               aria-label="Creature type"
             >
               <option value="">Select type</option>
               {CREATURE_TYPES.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
             </select>
           </div>
@@ -136,44 +143,79 @@ export function SpeciesCreatorEditor({
       </CollapsibleSection>
 
       <CollapsibleSection title={`Sizes (up to ${MAX_SIZES})`} collapsedSummary={sizesSummary}>
-        <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Choose up to two size options for this species.</p>
-        <ChipList items={form.sizes} onRemove={onRemoveSize} color="bg-primary-subtle-bg text-primary-subtle-fg" />
-        <div className="flex flex-wrap gap-2 mt-2">
-          {SIZE_OPTIONS.filter((s) => !form.sizes.includes(s)).slice(0, SIZE_OPTIONS.length - form.sizes.length).map((size) => (
-            <Button key={size} variant="outline" size="sm" onClick={() => onAddSize(size)} disabled={form.sizes.length >= MAX_SIZES}>
-              + {size}
-            </Button>
-          ))}
+        <p className="mb-4 text-sm text-text-muted">
+          Choose up to two size options for this species.
+        </p>
+        <ChipList
+          items={form.sizes}
+          onRemove={onRemoveSize}
+          color="bg-primary-subtle-bg text-primary-subtle-fg"
+        />
+        <div className="mt-2 flex flex-wrap gap-2">
+          {SIZE_OPTIONS.filter((s) => !form.sizes.includes(s))
+            .slice(0, SIZE_OPTIONS.length - form.sizes.length)
+            .map((size) => (
+              <Button
+                key={size}
+                variant="outline"
+                size="sm"
+                onClick={() => onAddSize(size)}
+                disabled={form.sizes.length >= MAX_SIZES}
+              >
+                + {size}
+              </Button>
+            ))}
         </div>
       </CollapsibleSection>
 
       <CollapsibleSection title="Base skills (2)" collapsedSummary={baseSkillsSummary}>
-        <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Select two base skills; one may be &quot;Any&quot; (id 0). You cannot pick the same skill twice.</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <p className="mb-4 text-sm text-text-muted">
+          Select two base skills; one may be &quot;Any&quot; (id 0). You cannot pick the same skill
+          twice.
+        </p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {([0, 1] as const).map((i) => (
             <div key={i}>
-              <label htmlFor={i === 0 ? 'base-skill-0' : 'base-skill-1'} className="block text-sm font-medium text-text-secondary mb-1">Skill {i + 1}</label>
+              <label
+                htmlFor={i === 0 ? 'base-skill-0' : 'base-skill-1'}
+                className="mb-1 block text-sm font-medium text-text-secondary"
+              >
+                Skill {i + 1}
+              </label>
               <select
                 id={i === 0 ? 'base-skill-0' : 'base-skill-1'}
-                className="w-full px-3 py-2 rounded-lg border border-border-light bg-surface text-text-primary"
+                className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
                 value={form.skillIds[i] ?? ''}
                 onChange={(e) => onSetSkill(i, e.target.value)}
                 aria-label={i === 0 ? 'First base skill' : 'Second base skill'}
               >
                 <option value="">Select</option>
-                {skillOptions.filter((opt) => opt.value !== form.skillIds[1 - i]).map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
+                {skillOptions
+                  .filter((opt) => opt.value !== form.skillIds[1 - i])
+                  .map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
               </select>
             </div>
           ))}
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title={`Languages (up to ${MAX_LANGUAGES})`} collapsedSummary={languagesSummary}>
-        <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Universal can be included by default; add or remove as desired.</p>
-        <ChipList items={form.languages} onRemove={onRemoveLanguage} color="bg-info-100 dark:bg-info-900/30 text-info-800 dark:text-info-300" />
-        <div className="flex gap-2 mt-2">
+      <CollapsibleSection
+        title={`Languages (up to ${MAX_LANGUAGES})`}
+        collapsedSummary={languagesSummary}
+      >
+        <p className="mb-4 text-sm text-text-muted">
+          Universal can be included by default; add or remove as desired.
+        </p>
+        <ChipList
+          items={form.languages}
+          onRemove={onRemoveLanguage}
+          color="bg-info-100 dark:bg-info-900/30 text-info-800 dark:text-info-300"
+        />
+        <div className="mt-2 flex gap-2">
           <Input
             label="New language"
             value={newLanguage}
@@ -183,7 +225,13 @@ export function SpeciesCreatorEditor({
             className="flex-1"
             aria-label="New language to add"
           />
-          <Button onClick={onAddLanguage} disabled={!newLanguage.trim() || form.languages.length >= MAX_LANGUAGES} size="sm">Add</Button>
+          <Button
+            onClick={onAddLanguage}
+            disabled={!newLanguage.trim() || form.languages.length >= MAX_LANGUAGES}
+            size="sm"
+          >
+            Add
+          </Button>
         </div>
       </CollapsibleSection>
 
@@ -195,43 +243,92 @@ export function SpeciesCreatorEditor({
             <Button
               size="sm"
               onClick={onOpenSpeciesAncestryModal}
-              disabled={form.species_traits.length >= MAX_SPECIES_TRAITS && form.ancestry_traits.length >= MAX_ANCESTRY_TRAITS}
+              disabled={
+                form.species_traits.length >= MAX_SPECIES_TRAITS &&
+                form.ancestry_traits.length >= MAX_ANCESTRY_TRAITS
+              }
             >
-              <Plus className="w-4 h-4 mr-1" aria-hidden />
+              <Plus className="mr-1 h-4 w-4" aria-hidden />
               Species/ancestry
             </Button>
-            <Button size="sm" variant="secondary" onClick={onOpenFlawModal} disabled={form.flaws.length >= MAX_FLAWS}>
-              <Plus className="w-4 h-4 mr-1" aria-hidden />
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={onOpenFlawModal}
+              disabled={form.flaws.length >= MAX_FLAWS}
+            >
+              <Plus className="mr-1 h-4 w-4" aria-hidden />
               Flaw
             </Button>
-            <Button size="sm" variant="secondary" onClick={onOpenCharacteristicModal} disabled={form.characteristics.length >= MAX_CHARACTERISTICS}>
-              <Plus className="w-4 h-4 mr-1" aria-hidden />
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={onOpenCharacteristicModal}
+              disabled={form.characteristics.length >= MAX_CHARACTERISTICS}
+            >
+              <Plus className="mr-1 h-4 w-4" aria-hidden />
               Characteristic
             </Button>
           </div>
         }
       >
-        <p className="text-sm text-text-muted dark:text-text-secondary mb-4">
-          Species traits ({MAX_SPECIES_TRAITS} max), ancestry traits ({MAX_ANCESTRY_TRAITS} max), characteristics ({MAX_CHARACTERISTICS} max), flaws ({MAX_FLAWS} max). Add from the matching list; species/ancestry traits are classified after you add.
+        <p className="mb-4 text-sm text-text-muted">
+          Species traits ({MAX_SPECIES_TRAITS} max), ancestry traits ({MAX_ANCESTRY_TRAITS} max),
+          characteristics ({MAX_CHARACTERISTICS} max), flaws ({MAX_FLAWS} max). Add from the
+          matching list; species/ancestry traits are classified after you add.
         </p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <TraitBlock title="Species traits" limit={MAX_SPECIES_TRAITS} ids={form.species_traits} traitIdToName={traitIdToName} onRemove={(id) => onRemoveTrait('species_traits', id)} />
-          <TraitBlock title="Ancestry traits" limit={MAX_ANCESTRY_TRAITS} ids={form.ancestry_traits} traitIdToName={traitIdToName} onRemove={(id) => onRemoveTrait('ancestry_traits', id)} />
-          <TraitBlock title="Characteristics" limit={MAX_CHARACTERISTICS} ids={form.characteristics} traitIdToName={traitIdToName} onRemove={(id) => onRemoveTrait('characteristics', id)} />
-          <TraitBlock title="Flaws" limit={MAX_FLAWS} ids={form.flaws} traitIdToName={traitIdToName} onRemove={(id) => onRemoveTrait('flaws', id)} />
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <TraitBlock
+            title="Species traits"
+            limit={MAX_SPECIES_TRAITS}
+            ids={form.species_traits}
+            traitIdToName={traitIdToName}
+            onRemove={(id) => onRemoveTrait('species_traits', id)}
+          />
+          <TraitBlock
+            title="Ancestry traits"
+            limit={MAX_ANCESTRY_TRAITS}
+            ids={form.ancestry_traits}
+            traitIdToName={traitIdToName}
+            onRemove={(id) => onRemoveTrait('ancestry_traits', id)}
+          />
+          <TraitBlock
+            title="Characteristics"
+            limit={MAX_CHARACTERISTICS}
+            ids={form.characteristics}
+            traitIdToName={traitIdToName}
+            onRemove={(id) => onRemoveTrait('characteristics', id)}
+          />
+          <TraitBlock
+            title="Flaws"
+            limit={MAX_FLAWS}
+            ids={form.flaws}
+            traitIdToName={traitIdToName}
+            onRemove={(id) => onRemoveTrait('flaws', id)}
+          />
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection title="Height, weight & lifespan *" collapsedSummary={heightWeightLifespanSummary}>
-        <p className="text-sm text-text-muted dark:text-text-secondary mb-4">Required. Average height (cm), average weight (kg), adulthood age, and lifespan (years).</p>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <CollapsibleSection
+        title="Height, weight & lifespan *"
+        collapsedSummary={heightWeightLifespanSummary}
+      >
+        <p className="mb-4 text-sm text-text-muted">
+          Required. Average height (cm), average weight (kg), adulthood age, and lifespan (years).
+        </p>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
             <Input
               label="Average height (cm) *"
               type="number"
               min={0}
               value={form.ave_height}
-              onChange={(e) => onFormChange((p) => ({ ...p, ave_height: e.target.value === '' ? '' : Number(e.target.value) }))}
+              onChange={(e) =>
+                onFormChange((p) => ({
+                  ...p,
+                  ave_height: e.target.value === '' ? '' : Number(e.target.value),
+                }))
+              }
               aria-label="Average height in centimeters"
             />
           </div>
@@ -241,7 +338,12 @@ export function SpeciesCreatorEditor({
               type="number"
               min={0}
               value={form.ave_weight}
-              onChange={(e) => onFormChange((p) => ({ ...p, ave_weight: e.target.value === '' ? '' : Number(e.target.value) }))}
+              onChange={(e) =>
+                onFormChange((p) => ({
+                  ...p,
+                  ave_weight: e.target.value === '' ? '' : Number(e.target.value),
+                }))
+              }
               aria-label="Average weight in kilograms"
             />
           </div>
@@ -251,7 +353,15 @@ export function SpeciesCreatorEditor({
               type="number"
               min={0}
               value={form.adulthood_lifespan[0]}
-              onChange={(e) => onFormChange((p) => ({ ...p, adulthood_lifespan: [e.target.value === '' ? '' : Number(e.target.value), p.adulthood_lifespan[1]] }))}
+              onChange={(e) =>
+                onFormChange((p) => ({
+                  ...p,
+                  adulthood_lifespan: [
+                    e.target.value === '' ? '' : Number(e.target.value),
+                    p.adulthood_lifespan[1],
+                  ],
+                }))
+              }
               aria-label="Adulthood age"
             />
           </div>
@@ -261,7 +371,15 @@ export function SpeciesCreatorEditor({
               type="number"
               min={0}
               value={form.adulthood_lifespan[1]}
-              onChange={(e) => onFormChange((p) => ({ ...p, adulthood_lifespan: [p.adulthood_lifespan[0], e.target.value === '' ? '' : Number(e.target.value)] }))}
+              onChange={(e) =>
+                onFormChange((p) => ({
+                  ...p,
+                  adulthood_lifespan: [
+                    p.adulthood_lifespan[0],
+                    e.target.value === '' ? '' : Number(e.target.value),
+                  ],
+                }))
+              }
               aria-label="Lifespan in years"
             />
           </div>
@@ -286,7 +404,9 @@ function TraitBlock({
 }) {
   return (
     <div>
-      <h3 className="text-sm font-semibold text-text-secondary mb-2">{title} ({ids.length} / {limit})</h3>
+      <h3 className="mb-2 text-sm font-semibold text-text-secondary">
+        {title} ({ids.length} / {limit})
+      </h3>
       {ids.length === 0 ? (
         <p className="text-sm text-text-muted italic">None</p>
       ) : (
@@ -294,7 +414,13 @@ function TraitBlock({
           {ids.map((id) => (
             <li key={id} className="flex items-center justify-between gap-2 py-1">
               <span className="text-text-primary">{traitIdToName.get(id) ?? id}</span>
-              <button type="button" onClick={() => onRemove(id)} className="text-text-muted hover:text-danger-fg">×</button>
+              <button
+                type="button"
+                onClick={() => onRemove(id)}
+                className="text-text-muted hover:text-danger-fg"
+              >
+                ×
+              </button>
             </li>
           ))}
         </ul>
@@ -336,8 +462,14 @@ export function TraitListModal({
   onThirdSpeciesTrait,
 }: TraitListModalProps) {
   const alreadyUsed = useMemo(
-    () => new Set([...form.species_traits, ...form.ancestry_traits, ...form.characteristics, ...form.flaws]),
-    [form]
+    () =>
+      new Set([
+        ...form.species_traits,
+        ...form.ancestry_traits,
+        ...form.characteristics,
+        ...form.flaws,
+      ]),
+    [form],
   );
 
   const items: SelectableItem[] = useMemo(() => {
@@ -369,9 +501,7 @@ export function TraitListModal({
   const canAddCharacteristic = form.characteristics.length < traitLimits.characteristics;
 
   const description =
-    mode === 'species_ancestry'
-      ? 'Add as species traits or ancestry traits.'
-      : undefined;
+    mode === 'species_ancestry' ? 'Add as species traits or ancestry traits.' : undefined;
 
   const addIds = (selected: SelectableItem[], category: TraitCategory) => {
     const ids = selected.map((s) => String(s.id));

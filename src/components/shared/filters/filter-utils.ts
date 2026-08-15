@@ -20,7 +20,7 @@ export function dedupeSelectOptions<T extends SelectOption>(options: T[]): T[] {
  */
 export function shouldShowSelectPlaceholder(
   placeholder: string | null | undefined,
-  options: SelectOption[]
+  options: SelectOption[],
 ): placeholder is string {
   if (placeholder == null) return false;
   return !options.some((o) => o.value === '' || o.value === 'all');

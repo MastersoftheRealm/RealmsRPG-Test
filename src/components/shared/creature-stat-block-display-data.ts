@@ -22,15 +22,19 @@ import {
 type LibraryPowerLike = LibraryPower & { docId?: string };
 type LibraryTechniqueLike = LibraryTechnique & { docId?: string };
 
-type SavedPartRef = string | {
-  id?: string | number;
-  name?: string;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
-};
+type SavedPartRef =
+  | string
+  | {
+      id?: string | number;
+      name?: string;
+      op_1_lvl?: number;
+      op_2_lvl?: number;
+      op_3_lvl?: number;
+    };
 
-function objectPartsOnly(parts: SavedPartRef[]): NonNullable<import('@/lib/calculators/power-calc').PowerDocument['parts']> {
+function objectPartsOnly(
+  parts: SavedPartRef[],
+): NonNullable<import('@/lib/calculators/power-calc').PowerDocument['parts']> {
   return parts
     .filter((part): part is Exclude<SavedPartRef, string> => typeof part !== 'string')
     .map((part) => ({
@@ -54,7 +58,7 @@ export function buildPowersForDisplay(
   creature: CreatureData,
   userPowers: LibraryPowerLike[],
   officialPowers: LibraryPower[],
-  powerPartsDb: PowerPart[]
+  powerPartsDb: PowerPart[],
 ): EntityPowerRow[] {
   const refs = Array.isArray(creature.powers) ? creature.powers : [];
   if (refs.length === 0) return [];
@@ -136,13 +140,14 @@ export function buildPowersForDisplay(
         actionType: enriched?.actionType,
         isReaction: enriched?.isReaction,
       },
-      powerPartsDb
+      powerPartsDb,
     );
 
     const partsChips = partsToChips(parts, powerPartsDb as CodexPart[]);
-    const damageStr = formatPowerDamage(Array.isArray(damage) ? damage : undefined) || (typeof ref.damage === 'string' ? ref.damage : undefined);
-    const rangeValue =
-      derived.range && derived.range !== '-' ? derived.range : ref.range;
+    const damageStr =
+      formatPowerDamage(Array.isArray(damage) ? damage : undefined) ||
+      (typeof ref.damage === 'string' ? ref.damage : undefined);
+    const rangeValue = derived.range && derived.range !== '-' ? derived.range : ref.range;
     const detailSections = buildPartsAndMetadataDetailSections({
       range: rangeValue,
       partChips: partsChips,
@@ -170,7 +175,7 @@ export function buildTechniquesForDisplay(
   creature: CreatureData,
   userTechniques: LibraryTechniqueLike[],
   officialTechniques: LibraryTechnique[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): EntityTechniqueRow[] {
   const refs = Array.isArray(creature.techniques) ? creature.techniques : [];
   if (refs.length === 0) return [];
@@ -248,12 +253,16 @@ export function buildTechniquesForDisplay(
         actionType: enriched?.actionType,
         isReaction: enriched?.isReaction,
       },
-      techniquePartsDb
+      techniquePartsDb,
     );
 
     const partsChips = partsToChips(parts, techniquePartsDb as CodexPart[]);
     const damageStr =
-      derived.damageStr !== '-' ? derived.damageStr : typeof ref.damage === 'string' ? ref.damage : undefined;
+      derived.damageStr !== '-'
+        ? derived.damageStr
+        : typeof ref.damage === 'string'
+          ? ref.damage
+          : undefined;
     const detailSections = buildPartsAndMetadataDetailSections({
       damage: damageStr,
       partChips: partsChips,
@@ -285,7 +294,7 @@ type CreatureSkillRow = {
 export function buildSkillRows(
   creature: CreatureData,
   creatureSkills: CreatureSkillRow[],
-  skillsDb: SkillDbEntry[]
+  skillsDb: SkillDbEntry[],
 ): Array<{
   key: string;
   rowId: string;
@@ -298,7 +307,7 @@ export function buildSkillRows(
     const def = skillsDb.find(
       (d) =>
         (s.id != null && String(d.id) === String(s.id)) ||
-        (d.name != null && d.name.toLowerCase() === s.name.toLowerCase())
+        (d.name != null && d.name.toLowerCase() === s.name.toLowerCase()),
     );
     const linked = def?.ability ?? '';
     const abilityKeys = String(linked)
@@ -313,10 +322,14 @@ export function buildSkillRows(
         : undefined;
 
     const baseSkillIdFromRow =
-      'baseSkillId' in s && s.baseSkillId != null && String(s.baseSkillId) !== '' ? s.baseSkillId : undefined;
+      'baseSkillId' in s && s.baseSkillId != null && String(s.baseSkillId) !== ''
+        ? s.baseSkillId
+        : undefined;
     const baseSkillIdRaw =
       baseSkillIdFromRow ??
-      (def?.base_skill_id != null && Number(def.base_skill_id) !== 0 ? def.base_skill_id : undefined);
+      (def?.base_skill_id != null && Number(def.base_skill_id) !== 0
+        ? def.base_skill_id
+        : undefined);
     const isSubSkill =
       ('isSubSkill' in s && s.isSubSkill === true) ||
       (baseSkillIdRaw != null && String(baseSkillIdRaw) !== '' && Number(baseSkillIdRaw) !== 0);
@@ -328,7 +341,7 @@ export function buildSkillRows(
         ? creatureSkills.find(
             (p) =>
               (p.id != null && String(p.id) === String(baseDef.id)) ||
-              String(p.name ?? '').toLowerCase() === String(baseDef.name ?? '').toLowerCase()
+              String(p.name ?? '').toLowerCase() === String(baseDef.name ?? '').toLowerCase(),
           )
         : undefined;
     }
@@ -341,14 +354,14 @@ export function buildSkillRows(
           parent ? parent.proficient !== false : false,
           creature.abilities as Abilities,
           s.proficient !== false,
-          chosen
+          chosen,
         )
       : calculateSkillBonusWithProficiency(
           linked,
           s.value ?? 0,
           creature.abilities as Abilities,
           s.proficient !== false,
-          chosen
+          chosen,
         );
 
     return {

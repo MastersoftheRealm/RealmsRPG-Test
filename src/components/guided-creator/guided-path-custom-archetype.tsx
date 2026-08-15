@@ -78,11 +78,7 @@ export function GuidedPathCustomArchetype({
                 selected={selectedType === type}
                 onSelect={() => onSelectType(type)}
                 titleMeta={
-                  <InfoTippy
-                    content={TYPE_TIP[type]}
-                    label={`About ${info.title}`}
-                    size="inline"
-                  />
+                  <InfoTippy content={TYPE_TIP[type]} label={`About ${info.title}`} size="inline" />
                 }
               />
             );
@@ -91,16 +87,18 @@ export function GuidedPathCustomArchetype({
       </div>
 
       {selectedType ? (
-        <Card className="bg-surface-alt p-4 sm:p-6 shadow-none border border-border-light">
+        <Card className="border border-border-light bg-surface-alt p-4 shadow-none sm:p-6">
           <GuidedSectionTitle className="mb-4">
             {stepCopy.chooseAbilityHeading[selectedType]}
           </GuidedSectionTitle>
 
           {selectedType === 'powered-martial' ? (
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid gap-6 md:grid-cols-2">
               <div>
-                <div className="flex items-center gap-1 mb-2">
-                  <h4 className="text-sm font-medium text-power-fg">{stepCopy.powerAbilityLabel}</h4>
+                <div className="mb-2 flex items-center gap-1">
+                  <h4 className="text-sm font-medium text-power-fg">
+                    {stepCopy.powerAbilityLabel}
+                  </h4>
                   <InfoTippy content={powerAbility} label="Power ability help" size="inline" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -117,8 +115,10 @@ export function GuidedPathCustomArchetype({
                 </div>
               </div>
               <div>
-                <div className="flex items-center gap-1 mb-2">
-                  <h4 className="text-sm font-medium text-martial-fg">{stepCopy.martialAbilityLabel}</h4>
+                <div className="mb-2 flex items-center gap-1">
+                  <h4 className="text-sm font-medium text-martial-fg">
+                    {stepCopy.martialAbilityLabel}
+                  </h4>
                   <InfoTippy content={martialAbility} label="Martial ability help" size="inline" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
@@ -136,15 +136,13 @@ export function GuidedPathCustomArchetype({
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+            <div className="grid grid-cols-2 gap-2 md:grid-cols-3">
               {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
                 <AbilityPickButton
                   key={ability}
                   variant={selectedType === 'power' ? 'power' : 'martial'}
                   ability={ability}
-                  selected={
-                    selectedType === 'power' ? powAbil === ability : martAbil === ability
-                  }
+                  selected={selectedType === 'power' ? powAbil === ability : martAbil === ability}
                   disabled={false}
                   onPick={() =>
                     selectedType === 'power'

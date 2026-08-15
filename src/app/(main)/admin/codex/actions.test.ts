@@ -43,7 +43,7 @@ function seed(options: { failInsertOnce?: Set<string> } = {}): FakeSupabase {
       codex_retired_ids: [],
       user_profiles: [{ id: 'victim', role: 'admin' }],
     },
-    options
+    options,
   );
   return currentDb;
 }
@@ -85,9 +85,7 @@ describe('id retirement', () => {
   it('records the deleted id and never hands it out again', async () => {
     const deleted = await deleteCodexDoc('codex_feats', '1', { acknowledgeReferences: true });
     expect(deleted.success).toBe(true);
-    expect(currentDb.tables.codex_retired_ids).toEqual([
-      { id: '1', entity_type: 'codex_feats' },
-    ]);
+    expect(currentDb.tables.codex_retired_ids).toEqual([{ id: '1', entity_type: 'codex_feats' }]);
 
     const created = await createCodexDoc('codex_feats', undefined, { name: 'Replacement' });
 
@@ -110,10 +108,7 @@ describe('referential integrity on delete', () => {
 
     expect(result.success).toBe(false);
     expect(result.references).toEqual(
-      expect.arrayContaining([
-        'Archetype "Blade" (level1_feats)',
-        'Archetype 5 level 2 (feats)',
-      ])
+      expect.arrayContaining(['Archetype "Blade" (level1_feats)', 'Archetype 5 level 2 (feats)']),
     );
     expect(currentDb.tables.codex_feats).toHaveLength(2);
   });
@@ -145,7 +140,7 @@ describe('optimistic locking', () => {
       'codex_skills',
       '10',
       { name: 'Renamed' },
-      { expectedUpdatedAt: '2026-08-13T09:00:00Z' }
+      { expectedUpdatedAt: '2026-08-13T09:00:00Z' },
     );
 
     expect(result.conflict).toBe(true);
@@ -157,7 +152,7 @@ describe('optimistic locking', () => {
       'codex_skills',
       '10',
       { name: 'Renamed' },
-      { expectedUpdatedAt: '2026-08-13T10:00:00Z' }
+      { expectedUpdatedAt: '2026-08-13T10:00:00Z' },
     );
 
     expect(result.success).toBe(true);
@@ -206,7 +201,10 @@ describe('archetype progression replace', () => {
   it('replaces the levels on a normal save', async () => {
     const result = await saveArchetypeWithPath({
       ...baseArchetype,
-      levels: [{ level: 2, feats: '1' }, { level: 5, feats: '2' }],
+      levels: [
+        { level: 2, feats: '1' },
+        { level: 5, feats: '2' },
+      ],
     });
 
     expect(result.success).toBe(true);

@@ -83,6 +83,8 @@ describe('deriveArmorItemCombatStats / getEquippedArmorQuickRef', () => {
   });
 
   it('returns null when no armor is equipped', () => {
-    expect(getEquippedArmorQuickRef([{ id: 'x', name: 'Mail', equipped: false } as Item], 10)).toBeNull();
+    expect(
+      getEquippedArmorQuickRef([{ id: 'x', name: 'Mail', equipped: false } as Item], 10),
+    ).toBeNull();
   });
 });

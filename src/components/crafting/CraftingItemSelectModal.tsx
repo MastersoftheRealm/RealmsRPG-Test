@@ -15,7 +15,10 @@ import {
   sourceFilterSummary,
   type SourceFilterValue,
 } from '@/components/shared/filters/source-filter';
-import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared/unified-selection-modal';
+import {
+  UnifiedSelectionModal,
+  type SelectableItem,
+} from '@/components/shared/unified-selection-modal';
 import { TabNavigation, useTabGroup } from '@/components/ui/tab-navigation';
 import {
   getCodexEquipmentMarketPrice,
@@ -50,7 +53,11 @@ function isEquipmentType(type: string | undefined): boolean {
   return (type || 'equipment').toLowerCase() === 'equipment';
 }
 
-export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingItemSelectModalProps) {
+export function CraftingItemSelectModal({
+  isOpen,
+  onClose,
+  onSelect,
+}: CraftingItemSelectModalProps) {
   const { tabGroupId, sharedPanelId } = useTabGroup();
   const [activeTab, setActiveTab] = useState<CraftingTabId>('armaments');
   const [source, setSource] = useState<SourceFilterValue>('all');
@@ -87,7 +94,9 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
         description: String(i.description ?? ''),
         type: String(i.type ?? ''),
         armamentType: String(i.type ?? ''),
-        properties: (Array.isArray(i.properties) ? i.properties : []) as LibraryItemLike['properties'],
+        properties: (Array.isArray(i.properties)
+          ? i.properties
+          : []) as LibraryItemLike['properties'],
         damage: i.damage,
       };
       const marketPrice = getLibraryItemMarketPrice(lib, propertiesDb);
@@ -131,7 +140,10 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
     userItems
       .filter((i: UserItem) => isEquipmentType(i.type as string))
       .forEach((i: UserItem) => {
-        const marketPrice = getLibraryItemMarketPrice(i as unknown as LibraryItemLike, propertiesDb);
+        const marketPrice = getLibraryItemMarketPrice(
+          i as unknown as LibraryItemLike,
+          propertiesDb,
+        );
         list.push({
           id: String(i.id ?? i.docId ?? ''),
           name: String(i.name ?? ''),
@@ -145,29 +157,33 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
           } as CraftingSelectedItem,
         });
       });
-    publicItems.filter((i) => isEquipmentType(i.type)).forEach((i) => {
-      const id = String(i.id ?? i.docId ?? '');
-      const lib: LibraryItemLike = {
-        id,
-        name: String(i.name ?? ''),
-        description: String(i.description ?? ''),
-        type: 'equipment',
-        properties: (Array.isArray(i.properties) ? i.properties : []) as LibraryItemLike['properties'],
-      };
-      const marketPrice = getLibraryItemMarketPrice(lib, propertiesDb);
-      list.push({
-        id,
-        name: String(i.name ?? ''),
-        description: String(i.description ?? ''),
-        columns: [{ key: 'Currency', value: marketPrice }],
-        data: {
-          source: 'public',
+    publicItems
+      .filter((i) => isEquipmentType(i.type))
+      .forEach((i) => {
+        const id = String(i.id ?? i.docId ?? '');
+        const lib: LibraryItemLike = {
           id,
           name: String(i.name ?? ''),
-          marketPrice,
-        } as CraftingSelectedItem,
+          description: String(i.description ?? ''),
+          type: 'equipment',
+          properties: (Array.isArray(i.properties)
+            ? i.properties
+            : []) as LibraryItemLike['properties'],
+        };
+        const marketPrice = getLibraryItemMarketPrice(lib, propertiesDb);
+        list.push({
+          id,
+          name: String(i.name ?? ''),
+          description: String(i.description ?? ''),
+          columns: [{ key: 'Currency', value: marketPrice }],
+          data: {
+            source: 'public',
+            id,
+            name: String(i.name ?? ''),
+            marketPrice,
+          } as CraftingSelectedItem,
+        });
       });
-    });
     return list;
   }, [codexEquipment, userItems, publicItems, propertiesDb]);
 
@@ -180,7 +196,7 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
       if (source === 'my') return d.source === 'library';
       return d.source === 'public';
     },
-    [source]
+    [source],
   );
   const isLoading = userLoading || codexLoading || publicLoading;
 
@@ -202,7 +218,10 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
       title="Select item to craft"
       scopeExtra={
         <TabNavigation
-          tabs={[{ id: 'armaments', label: 'Armaments' }, { id: 'equipment', label: 'Equipment' }]}
+          tabs={[
+            { id: 'armaments', label: 'Armaments' },
+            { id: 'equipment', label: 'Equipment' },
+          ]}
           activeTab={activeTab}
           onTabChange={(id) => setActiveTab(id as CraftingTabId)}
           variant="pill"
@@ -220,11 +239,16 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
       onConfirm={handleConfirm}
       maxSelections={1}
       displayFilter={displayFilter}
-      columns={[{ key: 'name', label: 'Name' }, { key: 'Currency', label: 'Currency', sortable: true }]}
+      columns={[
+        { key: 'name', label: 'Name' },
+        { key: 'Currency', label: 'Currency', sortable: true },
+      ]}
       gridColumns="1.4fr 0.8fr"
       itemLabel="item"
       emptyMessage={activeTab === 'armaments' ? 'No armaments found' : 'No equipment found'}
-      emptySubMessage={source !== 'all' ? 'Try another source or create items in the Item Creator.' : undefined}
+      emptySubMessage={
+        source !== 'all' ? 'Try another source or create items in the Item Creator.' : undefined
+      }
       searchPlaceholder="Search items..."
       size="lg"
       className="h-[70vh]"
@@ -232,4 +256,3 @@ export function CraftingItemSelectModal({ isOpen, onClose, onSelect }: CraftingI
     />
   );
 }
-

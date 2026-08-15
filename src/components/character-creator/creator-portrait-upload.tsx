@@ -142,11 +142,11 @@ export function CreatorPortraitUpload({
           aria-label={copy.changeAria(hasPortrait)}
           className={cn(
             'group relative flex h-24 w-24 items-center justify-center overflow-hidden rounded-card border-2 bg-image-matte shadow-sm transition-colors',
-            'min-h-[96px] min-w-[96px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border',
+            'min-h-[96px] min-w-[96px] focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none',
             hasPortrait
               ? 'border-border-light hover:border-primary-outline-border'
               : 'border-dashed border-border-light hover:border-primary-outline-border hover:bg-primary-subtle-bg/40',
-            isProcessing && 'cursor-wait opacity-80'
+            isProcessing && 'cursor-wait opacity-80',
           )}
         >
           {hasPortrait && portraitUrl ? (
@@ -158,8 +158,8 @@ export function CreatorPortraitUpload({
             )
           ) : (
             <div className="flex flex-col items-center gap-1 p-2 text-center">
-              <User className="h-8 w-8 text-text-muted dark:text-text-secondary" aria-hidden="true" />
-              <span className="font-nunito text-[10px] leading-tight text-text-muted dark:text-text-secondary">
+              <User className="h-8 w-8 text-text-muted" aria-hidden="true" />
+              <span className="font-nunito text-[10px] leading-tight text-text-muted">
                 {copy.emptyHint}
               </span>
             </div>
@@ -169,7 +169,7 @@ export function CreatorPortraitUpload({
             className={cn(
               'pointer-events-none absolute inset-0 flex items-center justify-center bg-text-primary/45 opacity-0 transition-opacity',
               'group-hover:opacity-100 group-focus-visible:opacity-100',
-              isProcessing && 'opacity-100'
+              isProcessing && 'opacity-100',
             )}
             aria-hidden="true"
           >
@@ -186,7 +186,7 @@ export function CreatorPortraitUpload({
             type="button"
             onClick={handleRemove}
             aria-label={copy.removeLabel}
-            className="absolute -right-2 -top-2 z-10 flex min-h-11 min-w-11 items-center justify-center rounded-full bg-danger-button text-sm text-text-on-dark hover:bg-danger-700"
+            className="absolute -top-2 -right-2 z-10 flex min-h-11 min-w-11 items-center justify-center rounded-full bg-danger-button text-sm text-text-on-dark hover:bg-danger-700"
           >
             ×
           </button>
@@ -229,11 +229,8 @@ export function CreatorPortraitUpload({
             </>
           ) : (
             <div className="p-2 text-center">
-              <User
-                className="mx-auto h-8 w-8 text-text-muted dark:text-text-secondary"
-                aria-hidden="true"
-              />
-              <p className="mt-1 text-xs text-text-muted dark:text-text-secondary">{copy.emptyHint}</p>
+              <User className="mx-auto h-8 w-8 text-text-muted" aria-hidden="true" />
+              <p className="mt-1 text-xs text-text-muted">{copy.emptyHint}</p>
             </div>
           )}
         </div>
@@ -246,8 +243,8 @@ export function CreatorPortraitUpload({
             className={cn(
               'inline-flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 transition-colors',
               isProcessing
-                ? 'cursor-not-allowed bg-surface-alt text-text-muted dark:text-text-secondary'
-                : 'border-primary-outline-border text-primary-link-fg hover:bg-primary-subtle-bg'
+                ? 'cursor-not-allowed bg-surface-alt text-text-muted'
+                : 'border-primary-outline-border text-primary-link-fg hover:bg-primary-subtle-bg',
             )}
           >
             {isProcessing ? (
@@ -262,10 +259,8 @@ export function CreatorPortraitUpload({
               </>
             )}
           </button>
-          <p className="mt-2 text-xs text-text-muted dark:text-text-secondary">{copy.helpText}</p>
-          {error && (
-            <p className="mt-1 text-xs font-medium text-danger-fg">{error}</p>
-          )}
+          <p className="mt-2 text-xs text-text-muted">{copy.helpText}</p>
+          {error && <p className="mt-1 text-xs font-medium text-danger-fg">{error}</p>}
         </div>
       </div>
 

@@ -9,7 +9,15 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Alert, Button, Input, PageContainer, PageHeader, LoadingState, EmptyState } from '@/components/ui';
+import {
+  Alert,
+  Button,
+  Input,
+  PageContainer,
+  PageHeader,
+  LoadingState,
+  EmptyState,
+} from '@/components/ui';
 import { ErrorDisplay } from '@/components/shared';
 import { apiFetch } from '@/lib/api-client';
 
@@ -79,8 +87,8 @@ export default function AdminRolesPage() {
                 can_upload_profile_picture: checked,
               },
             }
-          : r
-      )
+          : r,
+      ),
     );
   };
 
@@ -144,9 +152,11 @@ export default function AdminRolesPage() {
             const canUpload = Boolean(row.permissions?.can_upload_profile_picture);
             return (
               <section key={row.role} className="rounded-lg border border-border bg-surface p-5">
-                <h2 className="text-lg font-semibold text-text-primary mb-4">{ROLE_LABELS[row.role]}</h2>
+                <h2 className="mb-4 text-lg font-semibold text-text-primary">
+                  {ROLE_LABELS[row.role]}
+                </h2>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                   <LabeledNumberInput
                     label="Max Campaigns"
                     value={row.max_campaigns}
@@ -155,7 +165,9 @@ export default function AdminRolesPage() {
                   <LabeledNumberInput
                     label="Max Players Per Campaign"
                     value={row.max_players_per_campaign}
-                    onChange={(value) => onNumberChange(row.role, 'max_players_per_campaign', value)}
+                    onChange={(value) =>
+                      onNumberChange(row.role, 'max_players_per_campaign', value)
+                    }
                   />
                   <LabeledNumberInput
                     label="Max Characters"
@@ -184,7 +196,7 @@ export default function AdminRolesPage() {
                   />
                 </div>
 
-                <label className="inline-flex items-center gap-3 mt-4 min-h-[44px]">
+                <label className="mt-4 inline-flex min-h-[44px] items-center gap-3">
                   <input
                     type="checkbox"
                     checked={canUpload}
@@ -223,7 +235,7 @@ function LabeledNumberInput({
 }) {
   return (
     <label className="block">
-      <span className="block text-sm text-text-secondary mb-1">{label}</span>
+      <span className="mb-1 block text-sm text-text-secondary">{label}</span>
       <Input
         type="number"
         min={0}

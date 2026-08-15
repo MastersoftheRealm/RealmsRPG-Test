@@ -40,17 +40,14 @@ export function equipmentRefToDetailOption(
   catalog: ReturnType<typeof buildEquipmentCatalogRows>,
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
-  itemProperties: ItemPropertyTpRow[]
+  itemProperties: ItemPropertyTpRow[],
 ): DetailOptionItemModel | null {
   const resolved = resolveEquipmentRef(ref, lookup);
   if (!resolved.resolved) return null;
   const row = catalogRowForRef(ref.id, catalog);
   const lib = libraryRowForRef(ref.id, officialItems, codexEquipment ?? []);
-  const properties =
-    (lib && 'properties' in lib ? lib.properties : row?.properties) ?? [];
-  const itemType = String(
-    (lib && 'type' in lib ? lib.type : row?.type) ?? ''
-  ).toLowerCase();
+  const properties = (lib && 'properties' in lib ? lib.properties : row?.properties) ?? [];
+  const itemType = String((lib && 'type' in lib ? lib.type : row?.type) ?? '').toLowerCase();
   const isShield = itemType === 'shield';
   const factChips: ChipData[] = [];
   const storedRange =
@@ -74,9 +71,7 @@ export function equipmentRefToDetailOption(
     }
   } else if (isShield) {
     factChips.push(factChip('Shield'));
-    const block = deriveShieldAmountFromProperties(
-      (properties ?? []) as ItemPropertyPayload[]
-    );
+    const block = deriveShieldAmountFromProperties((properties ?? []) as ItemPropertyPayload[]);
     if (block !== '-') factChips.push(factChip(`Block ${block}`));
     const phase = buildEquipmentPhaseCardStats({
       category: 'weapon',

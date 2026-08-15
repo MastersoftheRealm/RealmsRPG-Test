@@ -1,14 +1,10 @@
-﻿"use client";
+﻿'use client';
 
-import type { Dispatch, SetStateAction } from "react";
-import { ChipSelect } from "@/components/shared/filters";
-import { Modal, Button, Input, Textarea } from "@/components/ui";
-import {
-  baseEnToPercent,
-  percentToBaseEn,
-  type PartFormState,
-} from "./admin-part-form";
-import { AdminPartEditModalOptions } from "./admin-part-edit-modal-options";
+import type { Dispatch, SetStateAction } from 'react';
+import { ChipSelect } from '@/components/shared/filters';
+import { Modal, Button, Input, Textarea } from '@/components/ui';
+import { baseEnToPercent, percentToBaseEn, type PartFormState } from './admin-part-form';
+import { AdminPartEditModalOptions } from './admin-part-edit-modal-options';
 
 export type AdminPartEditModalProps = {
   isOpen: boolean;
@@ -63,13 +59,11 @@ export function AdminPartEditModal({
                 onClick={onRequestDelete}
                 className={
                   deleteConfirm === editingId
-                    ? "border-danger-500 text-danger-700 dark:text-danger-400"
-                    : ""
+                    ? 'border-danger-500 text-danger-700 dark:text-danger-400'
+                    : ''
                 }
               >
-                {deleteConfirm === editingId
-                  ? "Click again to confirm delete"
-                  : "Delete"}
+                {deleteConfirm === editingId ? 'Click again to confirm delete' : 'Delete'}
               </Button>
             )}
           </div>
@@ -78,7 +72,7 @@ export function AdminPartEditModal({
               Cancel
             </Button>
             <Button onClick={onSave} disabled={saving || !form.name.trim()}>
-              {saving ? "Saving..." : "Save"}
+              {saving ? 'Saving...' : 'Save'}
             </Button>
           </div>
         </div>
@@ -86,17 +80,13 @@ export function AdminPartEditModal({
     >
       <div className="space-y-4">
         {copySourceName && (
-          <p className="text-sm text-text-secondary rounded-md bg-surface-alt px-3 py-2 border border-border-light">
-            Creating a copy of{" "}
-            <strong className="text-text-primary">{copySourceName}</strong>.
-            Change the name and details as needed, then save to add the new
-            part.
+          <p className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-secondary">
+            Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>.
+            Change the name and details as needed, then save to add the new part.
           </p>
         )}
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Name *
-          </label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Name *</label>
           <Input
             value={form.name}
             onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
@@ -104,14 +94,10 @@ export function AdminPartEditModal({
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
-            Description
-          </label>
+          <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
           <Textarea
             value={form.description}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, description: e.target.value }))
-            }
+            onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
             placeholder="Part description"
             className="min-h-[120px] resize-y"
             rows={4}
@@ -119,24 +105,21 @@ export function AdminPartEditModal({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Category
-            </label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Category</label>
             <select
               value={
                 form.category && filterCategories.includes(form.category)
                   ? form.category
                   : form.category
-                    ? "__new__"
-                    : ""
+                    ? '__new__'
+                    : ''
               }
               onChange={(e) => {
                 const v = e.target.value;
-                if (v === "__new__")
-                  setForm((f) => ({ ...f, category: f.category || "" }));
+                if (v === '__new__') setForm((f) => ({ ...f, category: f.category || '' }));
                 else setForm((f) => ({ ...f, category: v }));
               }}
-              className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Part category"
             >
               <option value="">None</option>
@@ -150,27 +133,23 @@ export function AdminPartEditModal({
             {form.category && !filterCategories.includes(form.category) && (
               <Input
                 value={form.category}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, category: e.target.value }))
-                }
+                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
                 placeholder="Type new category"
                 className="mt-2"
               />
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Type
-            </label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Type</label>
             <select
               value={form.type}
               onChange={(e) =>
                 setForm((f) => ({
                   ...f,
-                  type: e.target.value as "power" | "technique",
+                  type: e.target.value as 'power' | 'technique',
                 }))
               }
-              className="w-full px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-text-primary"
               aria-label="Part type (power or technique)"
             >
               <option value="power">Power</option>
@@ -180,8 +159,8 @@ export function AdminPartEditModal({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Base EN {form.percentage ? "(%)" : ""}
+            <label className="mb-1 block text-sm font-medium text-text-secondary">
+              Base EN {form.percentage ? '(%)' : ''}
             </label>
             {form.percentage ? (
               <div className="flex items-center gap-2">
@@ -197,42 +176,34 @@ export function AdminPartEditModal({
                   }
                   placeholder="e.g. -12.5 or 12.5"
                 />
-                <span className="text-sm text-text-muted shrink-0">%</span>
+                <span className="shrink-0 text-sm text-text-muted">%</span>
               </div>
             ) : (
               <Input
                 type="number"
                 min={0}
                 step="any"
-                value={form.base_en ?? ""}
+                value={form.base_en ?? ''}
                 onChange={(e) =>
                   setForm((f) => ({
                     ...f,
-                    base_en:
-                      e.target.value === ""
-                        ? undefined
-                        : parseFloat(e.target.value) || 0,
+                    base_en: e.target.value === '' ? undefined : parseFloat(e.target.value) || 0,
                   }))
                 }
               />
             )}
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1">
-              Base TP
-            </label>
+            <label className="mb-1 block text-sm font-medium text-text-secondary">Base TP</label>
             <Input
               type="number"
               min={0}
               step="any"
-              value={form.base_tp ?? ""}
+              value={form.base_tp ?? ''}
               onChange={(e) =>
                 setForm((f) => ({
                   ...f,
-                  base_tp:
-                    e.target.value === ""
-                      ? undefined
-                      : parseFloat(e.target.value) || 0,
+                  base_tp: e.target.value === '' ? undefined : parseFloat(e.target.value) || 0,
                 }))
               }
             />
@@ -243,9 +214,7 @@ export function AdminPartEditModal({
             <input
               type="checkbox"
               checked={form.mechanic}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, mechanic: e.target.checked }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, mechanic: e.target.checked }))}
             />
             <span className="text-sm text-text-secondary">Mechanic Part</span>
           </label>
@@ -253,9 +222,7 @@ export function AdminPartEditModal({
             <input
               type="checkbox"
               checked={form.percentage}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, percentage: e.target.checked }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, percentage: e.target.checked }))}
             />
             <span className="text-sm text-text-secondary">Percentage Cost</span>
           </label>
@@ -263,17 +230,13 @@ export function AdminPartEditModal({
             <input
               type="checkbox"
               checked={form.duration}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, duration: e.target.checked }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, duration: e.target.checked }))}
             />
-            <span className="text-sm text-text-secondary">
-              Affects Duration
-            </span>
+            <span className="text-sm text-text-secondary">Affects Duration</span>
           </label>
         </div>
         <div>
-          <label className="block text-sm font-medium text-text-secondary mb-1">
+          <label className="mb-1 block text-sm font-medium text-text-secondary">
             Targeted defenses (optional)
           </label>
           <ChipSelect
@@ -284,9 +247,7 @@ export function AdminPartEditModal({
               label: d,
             }))}
             selectedValues={form.defense}
-            onSelect={(v) =>
-              setForm((f) => ({ ...f, defense: [...f.defense, v] }))
-            }
+            onSelect={(v) => setForm((f) => ({ ...f, defense: [...f.defense, v] }))}
             onRemove={(v) =>
               setForm((f) => ({
                 ...f,

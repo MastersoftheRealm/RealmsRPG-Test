@@ -8,7 +8,7 @@ type ChipVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
 export type GridListBadgeColor = 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red';
 
 export function isGridListChipExpandable(chip: ChipData): boolean {
-  if (chip.kind === 'descriptor') return false;
+  if (chip.kind === 'descriptor' || chip.onSelect || chip.disabled) return false;
   if (chip.kind === 'expandable') {
     const hasCost = (chip.cost ?? 0) > 0;
     return !!(chip.description || hasCost || (chip.options?.length ?? 0) > 0);

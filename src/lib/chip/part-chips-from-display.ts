@@ -12,7 +12,7 @@ export type DisplayPartChip = {
 /** Map calculator display part chips to GridListRow `ChipData` (dense browse: `TP: N`). */
 export function partChipsFromDisplay(
   partChips: DisplayPartChip[],
-  opts?: { stripOptionSuffix?: boolean }
+  opts?: { stripOptionSuffix?: boolean },
 ): ChipData[] {
   return partChips.map((chip) => {
     let name = chip.text.split(' | TP:')[0].trim();

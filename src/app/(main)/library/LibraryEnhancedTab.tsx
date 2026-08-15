@@ -41,11 +41,7 @@ const HEADER_COLUMNS = [
   { key: 'uses', label: 'USES', align: 'right' as const },
 ];
 
-export function LibraryEnhancedTab({
-  onDelete,
-}: {
-  onDelete: (item: UserEnhancedItem) => void;
-}) {
+export function LibraryEnhancedTab({ onDelete }: { onDelete: (item: UserEnhancedItem) => void }) {
   const router = useRouter();
   const { data: items = [], isLoading, error, refetch } = useEnhancedItems();
   const [search, setSearch] = useState('');
@@ -74,7 +70,7 @@ export function LibraryEnhancedTab({
         (row) =>
           row.name.toLowerCase().includes(s) ||
           row.base.toLowerCase().includes(s) ||
-          row.power.toLowerCase().includes(s)
+          row.power.toLowerCase().includes(s),
       );
     }
 
@@ -89,7 +85,7 @@ export function LibraryEnhancedTab({
       error={error}
       onRetry={() => void refetch()}
       totalCount={cardData.length}
-      emptyIcon={<Sparkles className="w-8 h-8" />}
+      emptyIcon={<Sparkles className="h-8 w-8" />}
       search={search}
       onSearchChange={setSearch}
       sortState={sortState}
@@ -134,8 +130,7 @@ export function LibraryEnhancedTab({
                 </div>
                 {item.potency != null && (
                   <div>
-                    <span className="font-semibold text-text-primary">Potency:</span>{' '}
-                    {item.potency}
+                    <span className="font-semibold text-text-primary">Potency:</span> {item.potency}
                   </div>
                 )}
               </div>

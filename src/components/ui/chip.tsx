@@ -32,16 +32,20 @@ const chipVariants = cva(
         primary: 'bg-primary-chip-bg text-primary-chip-fg border-primary-chip-border',
 
         /** Opaque metadata label — feat type, tags, trait kind, requirements (non-expandable) */
-        descriptor: 'bg-surface text-text-secondary border-border-light dark:bg-surface dark:border-border-light',
+        descriptor:
+          'bg-surface text-text-secondary border-border-light dark:bg-surface dark:border-border-light',
 
         // Category-based colors for power/technique parts (KEEP - domain-specific)
         action: 'bg-category-action text-category-action-text border-category-action-border',
-        activation: 'bg-category-activation text-category-activation-text border-category-activation-border',
+        activation:
+          'bg-category-activation text-category-activation-text border-category-activation-border',
         area: 'bg-category-area text-category-area-text border-category-area-border',
-        duration: 'bg-category-duration text-category-duration-text border-category-duration-border',
+        duration:
+          'bg-category-duration text-category-duration-text border-category-duration-border',
         target: 'bg-category-target text-category-target-text border-category-target-border',
         special: 'bg-category-special text-category-special-text border-category-special-border',
-        restriction: 'bg-category-restriction text-category-restriction-text border-category-restriction-border',
+        restriction:
+          'bg-category-restriction text-category-restriction-text border-category-restriction-border',
 
         // Status colors (KEEP - semantic feedback)
         success: 'bg-success-light text-success-fg border-success-border',
@@ -118,12 +122,11 @@ const chipVariants = cva(
       size: 'md',
       interactive: false,
     },
-  }
+  },
 );
 
 export interface ChipProps
-  extends React.HTMLAttributes<HTMLSpanElement>,
-    VariantProps<typeof chipVariants> {
+  extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof chipVariants> {
   onRemove?: () => void;
 }
 
@@ -143,7 +146,7 @@ const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
               e.stopPropagation();
               onRemove();
             }}
-            className="ml-0.5 -mr-1 rounded-full p-0.5 hover:bg-black/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border transition-colors touch-target-md-compact inline-flex items-center justify-center"
+            className="touch-target-md-compact -mr-1 ml-0.5 inline-flex items-center justify-center rounded-full p-0.5 transition-colors hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
             aria-label="Remove"
           >
             <X className="h-3 w-3" />
@@ -151,7 +154,7 @@ const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
         )}
       </span>
     );
-  }
+  },
 );
 Chip.displayName = 'Chip';
 

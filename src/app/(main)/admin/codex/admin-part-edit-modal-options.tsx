@@ -31,7 +31,7 @@ export function AdminPartEditModalOptions({
             onClick={() => setOptionSlotCount((n) => Math.min(3, n + 1))}
             aria-label="Add option"
           >
-            <Plus className="w-4 h-4 mr-1 inline" />
+            <Plus className="mr-1 inline h-4 w-4" />
             Add option
           </Button>
         )}
@@ -45,7 +45,7 @@ export function AdminPartEditModalOptions({
           {[1, 2, 3].slice(0, optionSlotCount).map((n) => (
             <div
               key={n}
-              className="rounded-lg border border-border-light bg-surface-alt/50 p-3 space-y-2"
+              className="space-y-2 rounded-lg border border-border-light bg-surface-alt/50 p-3"
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm font-medium text-text-secondary">Option {n}</span>
@@ -56,11 +56,11 @@ export function AdminPartEditModalOptions({
                   onClick={() => deleteOptionAndCompact(n as 1 | 2 | 3)}
                   aria-label={`Remove option ${n}`}
                 >
-                  <X className="w-4 h-4" />
+                  <X className="h-4 w-4" />
                 </Button>
               </div>
               <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1">
+                <label className="mb-1 block text-sm font-medium text-text-secondary">
                   Description
                 </label>
                 <textarea
@@ -72,13 +72,13 @@ export function AdminPartEditModalOptions({
                     else setForm((f) => ({ ...f, op_3_desc: val }));
                   }}
                   placeholder={`What option ${n} does`}
-                  className="w-full min-h-[80px] resize-y px-3 py-2 rounded-md border border-border bg-background text-text-primary"
+                  className="min-h-[80px] w-full resize-y rounded-md border border-border bg-background px-3 py-2 text-text-primary"
                   rows={3}
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4 max-w-xs">
+              <div className="grid max-w-xs grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                  <label className="mb-1 block text-sm font-medium text-text-secondary">
                     EN cost {form.percentage ? '(±%)' : ''}
                   </label>
                   {form.percentage ? (
@@ -102,7 +102,7 @@ export function AdminPartEditModalOptions({
                         className="w-full"
                         placeholder="e.g. -12.5"
                       />
-                      <span className="text-sm text-text-muted shrink-0">%</span>
+                      <span className="shrink-0 text-sm text-text-muted">%</span>
                     </div>
                   ) : (
                     <Input
@@ -128,7 +128,7 @@ export function AdminPartEditModalOptions({
                   )}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-text-secondary mb-1">
+                  <label className="mb-1 block text-sm font-medium text-text-secondary">
                     TP cost
                   </label>
                   <Input

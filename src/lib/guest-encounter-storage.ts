@@ -58,7 +58,7 @@ export function getGuestEncounter(id: string): Encounter | null {
 }
 
 export function createGuestEncounter(
-  data: Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<Encounter, 'id' | 'createdAt' | 'updatedAt'>,
 ): string {
   const id = `${GUEST_PREFIX}${crypto.randomUUID()}`;
   const now = new Date().toISOString();
@@ -79,7 +79,7 @@ export function createGuestEncounter(
 
 export function saveGuestEncounter(
   id: string,
-  data: Partial<Omit<Encounter, 'id' | 'createdAt'>>
+  data: Partial<Omit<Encounter, 'id' | 'createdAt'>>,
 ): void {
   if (typeof window === 'undefined' || !isGuestEncounterId(id)) return;
   const existing = getGuestEncounter(id);

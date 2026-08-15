@@ -38,12 +38,7 @@ export function shouldShowPowerWeaponsHatch({
   phase: GuidedEquipmentPhase;
   fullCatalog: boolean;
 }): boolean {
-  return (
-    archetypeType === 'power' &&
-    !includeWeapon &&
-    phase === 'gear' &&
-    !fullCatalog
-  );
+  return archetypeType === 'power' && !includeWeapon && phase === 'gear' && !fullCatalog;
 }
 
 export function resolveEquipmentPhaseVisibility(
@@ -58,7 +53,7 @@ export function resolveEquipmentPhaseVisibility(
      * Path-based guided still uses pool emptiness to omit empty phases.
      */
     fullCatalog?: boolean;
-  }
+  },
 ): EquipmentPhaseVisibility {
   if (opts.fullCatalog) {
     return {
@@ -74,11 +69,10 @@ export function resolveEquipmentPhaseVisibility(
 
 export function visibleEquipmentPhases(
   armorMode: ArmorStepMode,
-  visibility?: Partial<EquipmentPhaseVisibility>
+  visibility?: Partial<EquipmentPhaseVisibility>,
 ): GuidedEquipmentPhase[] {
   const includeWeapon = visibility?.includeWeapon ?? true;
-  const includeArmor =
-    visibility?.includeArmor ?? !shouldSkipArmorPhase(armorMode);
+  const includeArmor = visibility?.includeArmor ?? !shouldSkipArmorPhase(armorMode);
 
   const phases: GuidedEquipmentPhase[] = [];
   if (includeWeapon) phases.push('weapon');
@@ -90,7 +84,7 @@ export function visibleEquipmentPhases(
 export function nextEquipmentPhase(
   current: GuidedEquipmentPhase,
   armorMode: ArmorStepMode,
-  visibility?: Partial<EquipmentPhaseVisibility>
+  visibility?: Partial<EquipmentPhaseVisibility>,
 ): GuidedEquipmentPhase | null {
   const phases = visibleEquipmentPhases(armorMode, visibility);
   const idx = phases.indexOf(current);
@@ -101,7 +95,7 @@ export function nextEquipmentPhase(
 export function prevEquipmentPhase(
   current: GuidedEquipmentPhase,
   armorMode: ArmorStepMode,
-  visibility?: Partial<EquipmentPhaseVisibility>
+  visibility?: Partial<EquipmentPhaseVisibility>,
 ): GuidedEquipmentPhase | null {
   const phases = visibleEquipmentPhases(armorMode, visibility);
   const idx = phases.indexOf(current);
@@ -112,7 +106,7 @@ export function prevEquipmentPhase(
 export function isFirstEquipmentPhase(
   current: GuidedEquipmentPhase,
   armorMode: ArmorStepMode,
-  visibility?: Partial<EquipmentPhaseVisibility>
+  visibility?: Partial<EquipmentPhaseVisibility>,
 ): boolean {
   return visibleEquipmentPhases(armorMode, visibility)[0] === current;
 }
@@ -120,7 +114,7 @@ export function isFirstEquipmentPhase(
 export function isLastEquipmentPhase(
   current: GuidedEquipmentPhase,
   armorMode: ArmorStepMode,
-  visibility?: Partial<EquipmentPhaseVisibility>
+  visibility?: Partial<EquipmentPhaseVisibility>,
 ): boolean {
   const phases = visibleEquipmentPhases(armorMode, visibility);
   return phases[phases.length - 1] === current;
@@ -129,7 +123,7 @@ export function isLastEquipmentPhase(
 export function equipmentPhaseIndex(
   phase: GuidedEquipmentPhase,
   armorMode: ArmorStepMode,
-  visibility?: Partial<EquipmentPhaseVisibility>
+  visibility?: Partial<EquipmentPhaseVisibility>,
 ): number {
   return visibleEquipmentPhases(armorMode, visibility).indexOf(phase);
 }
@@ -140,7 +134,7 @@ export function equipmentPhaseIndex(
  */
 export function canCompleteEquipmentPhase(
   phase: GuidedEquipmentPhase,
-  ctx: EquipmentPhaseCompletionContext
+  ctx: EquipmentPhaseCompletionContext,
 ): boolean {
   void phase;
   void ctx;
@@ -152,7 +146,7 @@ export function canNavigateToEquipmentPhase(
   current: GuidedEquipmentPhase,
   armorMode: ArmorStepMode,
   ctx: EquipmentPhaseCompletionContext,
-  visibility?: Partial<EquipmentPhaseVisibility>
+  visibility?: Partial<EquipmentPhaseVisibility>,
 ): boolean {
   const phases = visibleEquipmentPhases(armorMode, visibility);
   const targetIdx = phases.indexOf(target);

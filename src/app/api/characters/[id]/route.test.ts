@@ -9,21 +9,18 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
-// collectCharacterLibraryRefIds stays real: the scoping it produces is the P0 fix.
-vi.mock('@/lib/owner-library-for-view', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/lib/owner-library-for-view')>();
-  return {
-    ...actual,
-    getOwnerLibraryForView: vi.fn(),
-  };
-});
+vi.mock('@/lib/character-view-enrichment-server', () => ({
+  getOwnerLibraryAndEnrichmentForView: vi.fn(),
+}));
 
 vi.mock('@/lib/rate-limit', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@/lib/rate-limit')>();
   return {
     ...actual,
     standardLimiter: {
-      check: vi.fn(() => Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 })),
+      check: vi.fn(() =>
+        Promise.resolve({ success: true, remaining: 29, reset: Date.now() + 60_000 }),
+      ),
     },
   };
 });
@@ -57,13 +54,14 @@ vi.mock('@/lib/game/archetype-display', () => ({
 import { GET, PATCH, DELETE } from './route';
 import { getSession } from '@/lib/supabase/session';
 import { createClient } from '@/lib/supabase/server';
-import { getOwnerLibraryForView } from '@/lib/owner-library-for-view';
+import { emptyCharacterViewEnrichment } from '@/lib/character-view-enrichment';
+import { getOwnerLibraryAndEnrichmentForView } from '@/lib/character-view-enrichment-server';
 import { validateJson } from '@/lib/api-validation';
 import { standardLimiter } from '@/lib/rate-limit';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
-const mockGetOwnerLibraryForView = vi.mocked(getOwnerLibraryForView);
+const mockGetOwnerLibraryAndEnrichmentForView = vi.mocked(getOwnerLibraryAndEnrichmentForView);
 const mockValidateJson = vi.mocked(validateJson);
 const mockStandardLimiterCheck = vi.mocked(standardLimiter.check);
 
@@ -83,7 +81,7 @@ function makeCharacterRow(
   id: string,
   userId: string,
   overrides: Partial<CharacterRow['data']> = {},
-  column?: { visibility?: string | null }
+  column?: { visibility?: string | null },
 ): CharacterRow {
   const data = { name: 'Test Hero', level: 1, visibility: 'private', ...overrides };
   return {
@@ -220,7 +218,15 @@ async function readJson<T>(response: Response): Promise<T> {
 describe('GET /api/characters/[id]', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    mockGetOwnerLibraryForView.mockResolvedValue({ powers: [], techniques: [], items: [], creatures: [] });
+    mockGetOwnerLibraryAndEnrichmentForView.mockResolvedValue({
+      libraryForView: {
+        powers: [],
+        techniques: [],
+        items: [],
+        creatures: [],
+      },
+      enrichment: emptyCharacterViewEnrichment(),
+    });
   });
 
   it('returns 404 null for a nonexistent character id', async () => {
@@ -274,22 +280,36 @@ describe('GET /api/characters/[id]', () => {
     const body = await readJson<{ character: { id: string; name: string } }>(response);
     expect(body.character.id).toBe('char-owned');
     expect(body.character.name).toBe('Test Hero');
+    expect(mockGetOwnerLibraryAndEnrichmentForView).not.toHaveBeenCalled();
   });
 
   it('returns public characters to non-owner viewers', async () => {
     const row = makeCharacterRow('char-public', OWNER.uid, { visibility: 'public' });
     mockGetSession.mockResolvedValue({ user: OTHER, error: null });
     mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
-    mockGetOwnerLibraryForView.mockResolvedValue({ powers: [], techniques: [], items: [], creatures: [] });
+    mockGetOwnerLibraryAndEnrichmentForView.mockResolvedValue({
+      libraryForView: {
+        powers: [],
+        techniques: [],
+        items: [],
+        creatures: [],
+      },
+      enrichment: emptyCharacterViewEnrichment(),
+    });
 
     const response = await GET(makeGetRequest('char-public'), {
       params: Promise.resolve({ id: 'char-public' }),
     });
 
     expect(response.status).toBe(200);
-    const body = await readJson<{ character: { id: string }; libraryForView: unknown }>(response);
+    const body = await readJson<{
+      character: { id: string };
+      libraryForView: unknown;
+      enrichment: unknown;
+    }>(response);
     expect(body.character.id).toBe('char-public');
     expect(body.libraryForView).toEqual({ powers: [], techniques: [], items: [], creatures: [] });
+    expect(body.enrichment).toEqual(emptyCharacterViewEnrichment());
   });
 
   it('scopes the owner library to the ids the public character references', async () => {
@@ -304,12 +324,11 @@ describe('GET /api/characters/[id]', () => {
 
     await GET(makeGetRequest('char-public'), { params: Promise.resolve({ id: 'char-public' }) });
 
-    expect(mockGetOwnerLibraryForView).toHaveBeenCalledWith(OWNER.uid, {
-      powers: ['power-1'],
-      techniques: ['technique-1'],
-      items: ['item-1'],
-      creatures: [],
-    });
+    expect(mockGetOwnerLibraryAndEnrichmentForView).toHaveBeenCalledWith(
+      expect.anything(),
+      OWNER.uid,
+      row.data,
+    );
   });
 
   it('returns 404 when the visibility column is private even if the blob says public', async () => {
@@ -317,7 +336,7 @@ describe('GET /api/characters/[id]', () => {
       'char-desync',
       OWNER.uid,
       { visibility: 'public' },
-      { visibility: 'private' }
+      { visibility: 'private' },
     );
     mockGetSession.mockResolvedValue({ user: OTHER, error: null });
     mockCreateClient.mockResolvedValue(createMockSupabase(row) as never);
@@ -328,7 +347,7 @@ describe('GET /api/characters/[id]', () => {
 
     expect(response.status).toBe(404);
     await expect(readJson(response)).resolves.toBeNull();
-    expect(mockGetOwnerLibraryForView).not.toHaveBeenCalled();
+    expect(mockGetOwnerLibraryAndEnrichmentForView).not.toHaveBeenCalled();
   });
 });
 
@@ -422,8 +441,11 @@ describe('PATCH /api/characters/[id]', () => {
     } as never);
 
     const response = await PATCH(
-      makePatchRequest('char-owned', { name: 'Stale write', updatedAt: '2026-01-01T00:00:00.000Z' }),
-      { params: Promise.resolve({ id: 'char-owned' }) }
+      makePatchRequest('char-owned', {
+        name: 'Stale write',
+        updatedAt: '2026-01-01T00:00:00.000Z',
+      }),
+      { params: Promise.resolve({ id: 'char-owned' }) },
     );
 
     expect(response.status).toBe(409);
@@ -443,7 +465,7 @@ describe('PATCH /api/characters/[id]', () => {
 
     const response = await PATCH(
       makePatchRequest('char-owned', { notes: 'fresh', updatedAt: row.updated_at }),
-      { params: Promise.resolve({ id: 'char-owned' }) }
+      { params: Promise.resolve({ id: 'char-owned' }) },
     );
 
     expect(response.status).toBe(200);

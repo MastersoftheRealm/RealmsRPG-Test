@@ -29,22 +29,21 @@ export interface FooterProps {
   className?: string;
 }
 
-const linkBase =
-  'text-sm transition-colors py-2 min-h-[44px] flex items-center md:min-h-0 md:py-1';
+const linkBase = 'text-sm transition-colors py-2 min-h-[44px] flex items-center md:min-h-0 md:py-1';
 
 function footerLinkClass(tone: FooterTone) {
   return cn(
     linkBase,
     tone === 'auth'
       ? 'text-text-secondary hover:text-text-primary dark:text-text-on-dark/80 dark:hover:text-text-on-dark'
-      : 'text-text-secondary hover:text-text-primary'
+      : 'text-text-secondary hover:text-text-primary',
   );
 }
 
 function groupHeadingClass(tone: FooterTone) {
   return cn(
     'text-xs font-semibold uppercase tracking-wide mb-2 sm:mb-3',
-    tone === 'auth' ? 'text-text-primary dark:text-text-on-dark' : 'text-text-muted dark:text-text-secondary'
+    tone === 'auth' ? 'text-text-primary dark:text-text-on-dark' : 'text-text-muted',
   );
 }
 
@@ -75,9 +74,7 @@ function FooterLink({
       <a
         href={href}
         className={className}
-        {...(isMailto
-          ? {}
-          : { target: '_blank', rel: 'noopener noreferrer' })}
+        {...(isMailto ? {} : { target: '_blank', rel: 'noopener noreferrer' })}
       >
         {label}
       </a>
@@ -97,8 +94,8 @@ function FooterMinimal({ tone, className }: { tone: FooterTone; className?: stri
   return (
     <footer
       className={cn(
-        tone === 'default' && 'w-full bg-surface-alt border-t border-divider mt-auto',
-        className
+        tone === 'default' && 'mt-auto w-full border-t border-divider bg-surface-alt',
+        className,
       )}
     >
       <nav
@@ -127,22 +124,21 @@ function FooterFull({ tone, className }: { tone: FooterTone; className?: string 
   const year = new Date().getFullYear();
 
   return (
-    <footer
-      className={cn(
-        'w-full bg-surface-alt border-t border-divider mt-auto',
-        className
-      )}
-    >
+    <footer className={cn('mt-auto w-full border-t border-divider bg-surface-alt', className)}>
       <div className="layout-shell-wide py-8 sm:py-10">
         <div className="grid grid-cols-2 gap-x-6 gap-y-8 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
           <div className="col-span-2 flex flex-col items-center md:col-span-4 lg:col-span-1 lg:items-start">
-            <Link href="/" className="shrink-0 min-h-[44px] flex items-center" aria-label="Realms RPG home">
+            <Link
+              href="/"
+              className="flex min-h-[44px] shrink-0 items-center"
+              aria-label="Realms RPG home"
+            >
               <Image
                 src="/images/LogoSmall.png"
                 alt=""
                 width={44}
                 height={49}
-                className="w-11 h-auto"
+                className="h-auto w-11"
               />
             </Link>
           </div>
@@ -169,12 +165,12 @@ function FooterFull({ tone, className }: { tone: FooterTone; className?: string 
           ))}
         </div>
 
-        <div className="mt-8 pt-6 border-t border-divider flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
+        <div className="mt-8 flex flex-col items-center gap-4 border-t border-divider pt-6 sm:flex-row sm:justify-between">
           <MarketingExternalButton href={DISCORD_URL} variant="outline">
-            <DiscordIcon className="w-5 h-5" />
+            <DiscordIcon className="h-5 w-5" />
             {FOOTER_COPY.discordCta}
           </MarketingExternalButton>
-          <p className="text-sm text-text-secondary text-center sm:text-right">
+          <p className="text-center text-sm text-text-secondary sm:text-right">
             {FOOTER_COPY.copyright(year)}
           </p>
         </div>

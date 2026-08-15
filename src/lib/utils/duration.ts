@@ -60,10 +60,7 @@ function parseNumericDurationValue(value: unknown, fallback = 1): number {
  * Examples: "1 Minute", "10 Minutes", "2 Rounds", "1 Hour", "6 Hours", "Permanent", "Instant".
  * Use wherever duration is shown (character sheet, library, codex, power/technique cards).
  */
-export function formatDurationFromTypeAndValue(
-  type: string,
-  value: number
-): string {
+export function formatDurationFromTypeAndValue(type: string, value: number): string {
   const norm = normalizeDurationType(type);
   const val = parseNumericDurationValue(value, 1);
 
@@ -97,7 +94,7 @@ export function formatDurationFromTypeAndValue(
 export function formatDurationWithModifiers(
   type: string,
   value: number,
-  modifiers?: { focus?: boolean; sustain?: number }
+  modifiers?: { focus?: boolean; sustain?: number },
 ): string {
   let str = formatDurationFromTypeAndValue(type, value);
   if (modifiers?.focus) str += ' (Focus)';

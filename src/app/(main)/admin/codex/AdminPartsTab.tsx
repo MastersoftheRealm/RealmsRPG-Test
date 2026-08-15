@@ -1,11 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import {
-  CodexBrowseListShell,
-  ErrorDisplay as ErrorState,
-  GridListRow,
-} from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
 import { Button, IconButton, useToast } from '@/components/ui';
 import { SelectFilter } from '@/components/shared/filters';
 import { useParts, type Part } from '@/hooks';
@@ -103,10 +99,7 @@ export function AdminPartsTab() {
     writeOptionsToForm(opts.filter((_, i) => i !== idx));
   };
 
-  const targetedDefenseOptions = useMemo(
-    () => [...ABILITIES_AND_DEFENSES.slice(6), 'Evasion'],
-    []
-  );
+  const targetedDefenseOptions = useMemo(() => [...ABILITIES_AND_DEFENSES.slice(6), 'Evasion'], []);
 
   const filterOptions = useMemo(() => {
     if (!parts) return { categories: [] as string[] };
@@ -186,7 +179,9 @@ export function AdminPartsTab() {
     const data = partFormToSavePayload(form);
 
     const result = editing
-      ? await updateCodexDoc('codex_parts', editing.id, data, { expectedUpdatedAt: editing.updated_at })
+      ? await updateCodexDoc('codex_parts', editing.id, data, {
+          expectedUpdatedAt: editing.updated_at,
+        })
       : await createCodexDoc('codex_parts', undefined, data);
 
     setSaving(false);
@@ -247,7 +242,15 @@ export function AdminPartsTab() {
     await codexDelete.requestDelete(id);
   };
 
-  if (error) return <ErrorState message="Failed to load parts" onRetry={() => { void refetch(); }} />;
+  if (error)
+    return (
+      <ErrorState
+        message="Failed to load parts"
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
 
   return (
     <div>
@@ -258,35 +261,39 @@ export function AdminPartsTab() {
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
         searchPlaceholder="Search parts..."
         filters={
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <SelectFilter
-                label="Category"
-                value={filters.categoryFilter}
-                options={filterOptions.categories.map((c) => ({ value: c, label: c }))}
-                onChange={(v) => setFilters((f) => ({ ...f, categoryFilter: v }))}
-                placeholder="All Categories"
-              />
-              <SelectFilter
-                label="Type"
-                value={filters.typeFilter}
-                options={[
-                  { value: 'all', label: 'All' },
-                  { value: 'power', label: 'Power' },
-                  { value: 'technique', label: 'Technique' },
-                ]}
-                onChange={(v) => setFilters((f) => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))}
-                placeholder={null}
-              />
-              <SelectFilter
-                label="Mechanics"
-                value={filters.mechanicMode}
-                options={[
-                  { value: 'only', label: 'Only Mechanics' },
-                  { value: 'hide', label: 'Hide Mechanics' },
-                ]}
-                onChange={(v) => setFilters((f) => ({ ...f, mechanicMode: (v || '') as '' | 'only' | 'hide' }))}
-                placeholder="All parts"
-              />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <SelectFilter
+              label="Category"
+              value={filters.categoryFilter}
+              options={filterOptions.categories.map((c) => ({ value: c, label: c }))}
+              onChange={(v) => setFilters((f) => ({ ...f, categoryFilter: v }))}
+              placeholder="All Categories"
+            />
+            <SelectFilter
+              label="Type"
+              value={filters.typeFilter}
+              options={[
+                { value: 'all', label: 'All' },
+                { value: 'power', label: 'Power' },
+                { value: 'technique', label: 'Technique' },
+              ]}
+              onChange={(v) =>
+                setFilters((f) => ({ ...f, typeFilter: v as 'all' | 'power' | 'technique' }))
+              }
+              placeholder={null}
+            />
+            <SelectFilter
+              label="Mechanics"
+              value={filters.mechanicMode}
+              options={[
+                { value: 'only', label: 'Only Mechanics' },
+                { value: 'hide', label: 'Hide Mechanics' },
+              ]}
+              onChange={(v) =>
+                setFilters((f) => ({ ...f, mechanicMode: (v || '') as '' | 'only' | 'hide' }))
+              }
+              placeholder="All parts"
+            />
           </div>
         }
         headerColumns={ADMIN_PART_COLUMNS}
@@ -316,7 +323,8 @@ export function AdminPartsTab() {
             const chipParts: string[] = [];
             const enStr = formatEnergyCostAllowZero(p.op_1_en);
             if (enStr != null) chipParts.push(`EN: ${enStr}`);
-            if (p.op_1_tp !== undefined && !Number.isNaN(p.op_1_tp)) chipParts.push(`TP: ${formatDecimalPreserve(p.op_1_tp)}`);
+            if (p.op_1_tp !== undefined && !Number.isNaN(p.op_1_tp))
+              chipParts.push(`TP: ${formatDecimalPreserve(p.op_1_tp)}`);
             optionChips.push({
               name: chipParts.length ? `Option 1 (${chipParts.join(', ')})` : 'Option 1',
               description: p.op_1_desc,
@@ -327,7 +335,8 @@ export function AdminPartsTab() {
             const chipParts: string[] = [];
             const enStr = formatEnergyCostAllowZero(p.op_2_en);
             if (enStr != null) chipParts.push(`EN: ${enStr}`);
-            if (p.op_2_tp !== undefined && !Number.isNaN(p.op_2_tp)) chipParts.push(`TP: ${formatDecimalPreserve(p.op_2_tp)}`);
+            if (p.op_2_tp !== undefined && !Number.isNaN(p.op_2_tp))
+              chipParts.push(`TP: ${formatDecimalPreserve(p.op_2_tp)}`);
             optionChips.push({
               name: chipParts.length ? `Option 2 (${chipParts.join(', ')})` : 'Option 2',
               description: p.op_2_desc,
@@ -338,7 +347,8 @@ export function AdminPartsTab() {
             const chipParts: string[] = [];
             const enStr = formatEnergyCostAllowZero(p.op_3_en);
             if (enStr != null) chipParts.push(`EN: ${enStr}`);
-            if (p.op_3_tp !== undefined && !Number.isNaN(p.op_3_tp)) chipParts.push(`TP: ${formatDecimalPreserve(p.op_3_tp)}`);
+            if (p.op_3_tp !== undefined && !Number.isNaN(p.op_3_tp))
+              chipParts.push(`TP: ${formatDecimalPreserve(p.op_3_tp)}`);
             optionChips.push({
               name: chipParts.length ? `Option 3 (${chipParts.join(', ')})` : 'Option 3',
               description: p.op_3_desc,
@@ -358,34 +368,70 @@ export function AdminPartsTab() {
               gridColumns={PART_GRID_COLUMNS}
               columns={[
                 { key: 'Type', value: formatListCellLabel(p.type || 'power') },
-                { key: 'EN', value: formatEnergyCost(p.base_en, p.percentage), className: 'text-energy-text' },
-                { key: 'TP', value: p.base_tp != null ? String(p.base_tp) : '-', className: 'text-tp' },
+                {
+                  key: 'EN',
+                  value: formatEnergyCost(p.base_en, p.percentage),
+                  className: 'text-energy-text',
+                },
+                {
+                  key: 'TP',
+                  value: p.base_tp != null ? String(p.base_tp) : '-',
+                  className: 'text-tp',
+                },
               ]}
               detailSections={detailSections}
               rightSlot={
                 <div className="flex items-center gap-1 pr-2">
                   {pendingDeleteId === p.id ? (
                     <div className="flex items-center gap-1 text-xs">
-                      <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">Remove?</span>
-                      <Button size="sm" variant="danger" onClick={() => handleInlineDelete(p.id)} className="text-xs px-2 py-0.5 h-6">Yes</Button>
-                      <Button size="sm" variant="secondary" onClick={() => setPendingDeleteId(null)} className="text-xs px-2 py-0.5 h-6">No</Button>
+                      <span className="font-medium whitespace-nowrap text-danger-700 dark:text-danger-400">
+                        Remove?
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => handleInlineDelete(p.id)}
+                        className="h-6 px-2 py-0.5 text-xs"
+                      >
+                        Yes
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setPendingDeleteId(null)}
+                        className="h-6 px-2 py-0.5 text-xs"
+                      >
+                        No
+                      </Button>
                     </div>
                   ) : (
                     <>
-                      <IconButton variant="ghost" size="sm" onClick={() => openEdit(p)} label="Edit" aria-label="Edit">
-                        <Pencil className="w-4 h-4" />
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openEdit(p)}
+                        label="Edit"
+                        aria-label="Edit"
+                      >
+                        <Pencil className="h-4 w-4" />
                       </IconButton>
-                      <IconButton variant="ghost" size="sm" onClick={() => openDuplicate(p)} label="Duplicate" aria-label="Duplicate">
-                        <Copy className="w-4 h-4" />
+                      <IconButton
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => openDuplicate(p)}
+                        label="Duplicate"
+                        aria-label="Duplicate"
+                      >
+                        <Copy className="h-4 w-4" />
                       </IconButton>
                       <IconButton
                         variant="ghost"
                         size="sm"
                         onClick={() => setPendingDeleteId(p.id)}
                         label="Delete"
-                        className="text-danger-fg hover:opacity-80 hover:bg-transparent"
+                        className="text-danger-fg hover:bg-transparent hover:opacity-80"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                       </IconButton>
                     </>
                   )}

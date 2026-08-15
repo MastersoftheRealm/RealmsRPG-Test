@@ -35,9 +35,7 @@ function parseOptionalNumber(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function PathFilterLast(
-  pathFilter: NonNullable<ArmamentFiltersProps['pathFilter']>
-) {
+function PathFilterLast(pathFilter: NonNullable<ArmamentFiltersProps['pathFilter']>) {
   return (
     <ArchetypePathFilter
       options={pathFilter.options}
@@ -85,7 +83,7 @@ export function ArmamentFilters({
   const { rules } = useGameRules();
 
   const [characterId, setCharacterId] = useState(() =>
-    readInitialLibraryCharacterFilterId(persistCharacter)
+    readInitialLibraryCharacterFilterId(persistCharacter),
   );
 
   const { data: characterResult } = useCharacter(characterId || undefined);
@@ -116,7 +114,7 @@ export function ArmamentFilters({
         });
       }
     },
-    [onChange, persistCharacter, value]
+    [onChange, persistCharacter, value],
   );
 
   const hasCharacter = Boolean(characterId && characterContext);
@@ -157,9 +155,7 @@ export function ArmamentFilters({
                 type="checkbox"
                 className="h-4 w-4 shrink-0 rounded border-border-light text-primary-fg focus:ring-primary-outline-border"
                 checked={value.affordableCurrencyOnly}
-                onChange={(e) =>
-                  onChange({ ...value, affordableCurrencyOnly: e.target.checked })
-                }
+                onChange={(e) => onChange({ ...value, affordableCurrencyOnly: e.target.checked })}
               />
               <span className="text-sm text-text-primary">
                 Within currency (≤ {characterContext!.currency})
@@ -178,9 +174,7 @@ export function ArmamentFilters({
                   type="checkbox"
                   className="h-4 w-4 shrink-0 rounded border-border-light text-primary-fg focus:ring-primary-outline-border"
                   checked={value.rarityAccessibleOnly}
-                  onChange={(e) =>
-                    onChange({ ...value, rarityAccessibleOnly: e.target.checked })
-                  }
+                  onChange={(e) => onChange({ ...value, rarityAccessibleOnly: e.target.checked })}
                 />
                 <span className="text-sm text-text-primary">
                   Rarity this level can access (≤ {maxAccessibleRarity})
@@ -196,7 +190,10 @@ export function ArmamentFilters({
           {children}
           <div className="filter-group min-w-0">
             <div className={FILTER_LABEL_ROW_CLASS}>
-              <label htmlFor={minCurrencyId} className="text-sm font-medium leading-5 text-text-secondary">
+              <label
+                htmlFor={minCurrencyId}
+                className="text-sm leading-5 font-medium text-text-secondary"
+              >
                 Min currency
               </label>
             </div>
@@ -216,7 +213,10 @@ export function ArmamentFilters({
           </div>
           <div className="filter-group min-w-0">
             <div className={FILTER_LABEL_ROW_CLASS}>
-              <label htmlFor={maxCurrencyId} className="text-sm font-medium leading-5 text-text-secondary">
+              <label
+                htmlFor={maxCurrencyId}
+                className="text-sm leading-5 font-medium text-text-secondary"
+              >
                 Max currency
               </label>
             </div>

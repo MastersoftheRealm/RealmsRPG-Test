@@ -30,10 +30,7 @@ export function normalizeCampaignRosterCharacters(raw: unknown): CampaignCharact
       userId,
       characterId,
       characterName: String(e.characterName ?? e.character_name ?? 'Character'),
-      level:
-        typeof e.level === 'number' && !Number.isNaN(e.level)
-          ? e.level
-          : Number(e.level) || 1,
+      level: typeof e.level === 'number' && !Number.isNaN(e.level) ? e.level : Number(e.level) || 1,
       portrait: typeof e.portrait === 'string' ? e.portrait : undefined,
       species: typeof e.species === 'string' ? e.species : undefined,
       archetype: e.archetype as CampaignCharacter['archetype'],
@@ -50,7 +47,7 @@ export function normalizeCampaignRosterCharacters(raw: unknown): CampaignCharact
 
 /** Map a character archetype `type` to the roster display label. */
 export function archetypeDisplayNameFromType(
-  archetypeType?: string
+  archetypeType?: string,
 ): CampaignCharacter['archetype'] {
   if (!archetypeType) return undefined;
   const lower = archetypeType.toLowerCase();
@@ -90,11 +87,11 @@ export function buildRosterFieldsFromCharacterData(charData: Record<string, unkn
 export function isCharacterOnCampaignRoster(
   rosterRaw: unknown,
   userId: string,
-  characterId: string
+  characterId: string,
 ): boolean {
   const u = userId.trim();
   const c = characterId.trim();
   return normalizeCampaignRosterCharacters(rosterRaw).some(
-    (x) => x.userId === u && x.characterId === c
+    (x) => x.userId === u && x.characterId === c,
   );
 }

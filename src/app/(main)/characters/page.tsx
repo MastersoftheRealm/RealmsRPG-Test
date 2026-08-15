@@ -81,13 +81,13 @@ function CharactersContent() {
     return (
       <PageContainer size="xl">
         <PageHeader title="Characters" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="animate-pulse rounded-xl overflow-hidden bg-surface shadow-md">
-              <div className="aspect-square skeleton" />
-              <div className="p-4 space-y-2">
-                <div className="h-5 skeleton rounded w-3/4" />
-                <div className="h-4 skeleton rounded w-1/2" />
+            <div key={i} className="animate-pulse overflow-hidden rounded-xl bg-surface shadow-md">
+              <div className="skeleton aspect-square" />
+              <div className="space-y-2 p-4">
+                <div className="skeleton h-5 w-3/4 rounded" />
+                <div className="skeleton h-4 w-1/2 rounded" />
               </div>
             </div>
           ))}
@@ -103,7 +103,9 @@ function CharactersContent() {
         <ErrorDisplay
           message="Error loading characters"
           subMessage="Something went wrong while loading your characters."
-          onRetry={() => { void refetch(); }}
+          onRetry={() => {
+            void refetch();
+          }}
         />
       </PageContainer>
     );
@@ -124,7 +126,7 @@ function CharactersContent() {
       )}
 
       {hasCharacters ? (
-        <div className="grid grid-cols-1 items-stretch sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 items-stretch gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {characters.map((character) => (
             <CharacterCard
               key={character.id}
@@ -140,7 +142,7 @@ function CharactersContent() {
         </div>
       ) : (
         <EmptyState
-          icon={<UserPlus className="w-10 h-10" />}
+          icon={<UserPlus className="h-10 w-10" />}
           title={user ? 'No characters yet' : 'Characters'}
           description={
             user

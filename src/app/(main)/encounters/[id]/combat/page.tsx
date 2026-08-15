@@ -5,21 +5,16 @@
  * Ported from encounter-tracker with persistence via encounter-service.
  */
 
-"use client";
+'use client';
 
-import { useState, use } from "react";
-import Link from "next/link";
-import { LoadingState, PageContainer, Alert, useToast } from "@/components/ui";
-import {
-  useEncounter,
-  useSaveEncounter,
-  useAutoSave,
-  useCampaignsFull,
-} from "@/hooks";
-import { RollProvider } from "@/components/rolls";
-import type { Encounter } from "@/types/encounter";
-import CombatEncounterView from "../_components/CombatEncounterView";
-import { EncounterPageHeader } from "../_components/EncounterPageHeader";
+import { useState, use } from 'react';
+import Link from 'next/link';
+import { LoadingState, PageContainer, Alert, useToast } from '@/components/ui';
+import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
+import { RollProvider } from '@/components/rolls';
+import type { Encounter } from '@/types/encounter';
+import CombatEncounterView from '../_components/CombatEncounterView';
+import { EncounterPageHeader } from '../_components/EncounterPageHeader';
 
 interface PageParams {
   params: Promise<{ id: string }>;
@@ -29,20 +24,14 @@ export default function CombatEncounterPage({ params }: PageParams) {
   return <CombatEncounterContent params={params} />;
 }
 
-function CombatEncounterContent({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+function CombatEncounterContent({ params }: { params: Promise<{ id: string }> }) {
   const { id: encounterId } = use(params);
   const { data: encounterData, isLoading, error } = useEncounter(encounterId);
   const saveMutation = useSaveEncounter();
   const [encounter, setEncounter] = useState<Encounter | null>(null);
-  const [initializedEncounterId, setInitializedEncounterId] = useState<
-    string | null
-  >(null);
+  const [initializedEncounterId, setInitializedEncounterId] = useState<string | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
-  const [nameInput, setNameInput] = useState("");
+  const [nameInput, setNameInput] = useState('');
   const { data: campaignsFull = [] } = useCampaignsFull();
 
   if (encounterData && initializedEncounterId !== encounterId) {
@@ -64,10 +53,7 @@ function CombatEncounterContent({
     delay: 1500,
     enabled: isInitialized && !!encounter,
     onSaveError: () => {
-      showToast(
-        "Failed to save encounter. Your latest changes may not be stored.",
-        "error",
-      );
+      showToast('Failed to save encounter. Your latest changes may not be stored.', 'error');
     },
   });
 
@@ -85,10 +71,7 @@ function CombatEncounterContent({
         <Alert variant="danger" title="Encounter not found">
           This encounter may have been deleted or you may not have access.
         </Alert>
-        <Link
-          href="/encounters"
-          className="mt-4 inline-block text-primary-link-fg hover:underline"
-        >
+        <Link href="/encounters" className="mt-4 inline-block text-primary-link-fg hover:underline">
           Back to Encounters
         </Link>
       </PageContainer>
@@ -108,13 +91,13 @@ function CombatEncounterContent({
     if (trimmed && trimmed !== encounter.name) {
       setEncounter((prev) => (prev ? { ...prev, name: trimmed } : prev));
     } else {
-      setNameInput(encounter.name || "");
+      setNameInput(encounter.name || '');
     }
     setIsEditingName(false);
   };
 
   const handleCancelEditName = () => {
-    setNameInput(encounter.name || "");
+    setNameInput(encounter.name || '');
     setIsEditingName(false);
   };
 
@@ -129,7 +112,7 @@ function CombatEncounterContent({
           nameInput={nameInput}
           onNameInputChange={setNameInput}
           onStartEditingName={() => {
-            setNameInput(encounter.name || "");
+            setNameInput(encounter.name || '');
             setIsEditingName(true);
           }}
           onCommitName={handleCommitName}

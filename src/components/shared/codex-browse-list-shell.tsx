@@ -14,7 +14,12 @@ import type { ReactNode } from 'react';
 import { SectionHeader } from './section-header';
 import { LoadingState, EmptyState as ListEmptyState } from './list-components';
 import { ListSearchToolbar } from './list-search-toolbar';
-import { ListHeader, type ListColumn, type ListHeaderRowChrome, type SortState } from './list-header';
+import {
+  ListHeader,
+  type ListColumn,
+  type ListHeaderRowChrome,
+  type SortState,
+} from './list-header';
 import type { EmptyStateProps } from '@/components/ui/empty-state';
 
 export interface CodexBrowseListShellProps {
@@ -82,12 +87,7 @@ export function CodexBrowseListShell({
   return (
     <div className={className}>
       {sectionTitle != null ? (
-        <SectionHeader
-          title={sectionTitle}
-          onAdd={onAdd}
-          addLabel={addLabel}
-          size="md"
-        />
+        <SectionHeader title={sectionTitle} onAdd={onAdd} addLabel={addLabel} size="md" />
       ) : null}
 
       <ListSearchToolbar

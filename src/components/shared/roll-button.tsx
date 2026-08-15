@@ -3,20 +3,20 @@
  * ====================
  * Unified roll button for dice rolls across the entire site.
  * Used in character sheet, creature stat blocks, encounter tracker, etc.
- * 
+ *
  * Visual Design:
  * Solid colors using semantic Button / roll tokens.
  * - White text with +/- number format
  * - Rounded corners, clear white font
  * - Hover: darker shade, active: press effect
- * 
+ *
  * @example
  * // Ability roll in character sheet
  * <RollButton value={3} onClick={() => rollAbility('strength')} size="lg" />
- * 
+ *
  * // Skill roll
  * <RollButton value={5} onClick={() => rollSkill('athletics')} size="md" />
- * 
+ *
  * // Unproficient skill
  * <RollButton value={-1} variant="unproficient" onClick={handleRoll} />
  */
@@ -40,7 +40,7 @@ const rollButtonVariants = cva(
           'bg-primary-button hover:bg-primary-button-hover focus-visible:ring-primary-outline-border',
           'hover:scale-105 active:scale-95',
         ].join(' '),
-        
+
         // Unproficient/disadvantage - solid gray; dark mode for contrast
         unproficient: [
           'text-text-primary',
@@ -48,28 +48,28 @@ const rollButtonVariants = cva(
           'dark:bg-surface dark:hover:bg-surface-alt dark:text-text-primary',
           'hover:scale-105 active:scale-95',
         ].join(' '),
-        
+
         // Defense roll - solid utility blue
         defense: [
           'text-text-on-dark',
           'bg-utility-500 hover:bg-utility-600 focus-visible:ring-utility-400',
           'hover:scale-105 active:scale-95',
         ].join(' '),
-        
+
         // Success/green variant (for healing, etc.)
         success: [
           'text-text-on-dark',
           'bg-success-600 hover:bg-success-700 focus-visible:ring-success',
           'hover:scale-105 active:scale-95',
         ].join(' '),
-        
+
         // Danger/red variant (for damage, etc.)
         danger: [
           'text-text-on-dark',
           'bg-danger-600 hover:bg-danger-700 focus-visible:ring-danger',
           'hover:scale-105 active:scale-95',
         ].join(' '),
-        
+
         // Outline variant
         outline: [
           'text-primary-subtle-fg border-2 border-primary-outline-border bg-transparent',
@@ -78,7 +78,7 @@ const rollButtonVariants = cva(
           'focus-visible:ring-primary-outline-border',
         ].join(' '),
       },
-      
+
       size: {
         sm: 'px-3 py-1.5 text-sm min-w-[48px]',
         md: 'px-4 py-2 text-base min-w-[56px]',
@@ -90,11 +90,12 @@ const rollButtonVariants = cva(
       variant: 'primary',
       size: 'md',
     },
-  }
+  },
 );
 
 export interface RollButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'value'>,
+  extends
+    Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'value'>,
     VariantProps<typeof rollButtonVariants> {
   /** The numeric bonus value (will be formatted as +X or -X) */
   value: number;
@@ -111,7 +112,7 @@ const RollButton = React.forwardRef<HTMLButtonElement, RollButtonProps>(
     const display = displayValue ?? formatBonus(value);
     const labelBase = title ?? `Roll ${display}`;
     const accessibleLabel = title ? `${title}, ${display}` : `Roll ${display}`;
-    
+
     return (
       <button
         ref={ref}
@@ -123,7 +124,7 @@ const RollButton = React.forwardRef<HTMLButtonElement, RollButtonProps>(
         {display}
       </button>
     );
-  }
+  },
 );
 RollButton.displayName = 'RollButton';
 

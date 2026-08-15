@@ -8,6 +8,6 @@ const MINIMAL_CHROME_PREFIXES = ['/characters/new/guided'] as const;
 export function isMinimalChromeRoute(pathname: string | null | undefined): boolean {
   if (!pathname) return false;
   return MINIMAL_CHROME_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }

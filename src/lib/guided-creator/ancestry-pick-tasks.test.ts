@@ -10,9 +10,7 @@ import {
   type AncestryPickSpeciesInput,
 } from './ancestry-pick-tasks';
 
-function trait(
-  partial: Pick<Trait, 'id' | 'name'> & Partial<Trait>
-): Trait {
+function trait(partial: Pick<Trait, 'id' | 'name'> & Partial<Trait>): Trait {
   return {
     description: '',
     ...partial,
@@ -107,11 +105,7 @@ describe('buildAncestryPickTasks', () => {
       selectedAncestryTraitIds: [],
     });
 
-    expect(tasks.map((t) => t.phase)).toEqual([
-      'characteristic',
-      'ancestry-trait-1',
-      'flaw',
-    ]);
+    expect(tasks.map((t) => t.phase)).toEqual(['characteristic', 'ancestry-trait-1', 'flaw']);
   });
 
   it('returns empty when trait catalog is empty', () => {
@@ -121,7 +115,7 @@ describe('buildAncestryPickTasks', () => {
         allTraits: [],
         selectedFlawId: null,
         selectedAncestryTraitIds: [],
-      })
+      }),
     ).toEqual([]);
   });
 });

@@ -2,7 +2,13 @@ import type { SourceFilterValue } from '@/components/shared/filters/source-filte
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { EqItem as SharedEqItem } from '@/lib/library-selectable-builders';
 
-export type AddLibraryItemType = 'power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment';
+export type AddLibraryItemType =
+  | 'power'
+  | 'technique'
+  | 'weapon'
+  | 'shield'
+  | 'armor'
+  | 'equipment';
 export type PowerSelectionMode = 'powers' | 'empowered';
 
 /** Shared with load modal builders — see `@/lib/library-selectable-builders`. */

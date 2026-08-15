@@ -14,10 +14,7 @@ import { ImageUploadModal, RealmsImagePicker } from '@/components/shared';
 import { useMyAccountPage } from './_components/use-my-account-page';
 import { AccountRoleLimitsCard } from './_components/account-role-limits-card';
 import { AccountProfileCard } from './_components/account-profile-card';
-import {
-  AccountTutorialsCard,
-  AccountUsernameCard,
-} from './_components/account-preferences-cards';
+import { AccountTutorialsCard, AccountUsernameCard } from './_components/account-preferences-cards';
 import {
   AccountEmailCard,
   AccountPasswordCard,
@@ -37,17 +34,17 @@ function AccountContent() {
   }
 
   return (
-    <PageContainer size="xs" className="space-y-6 min-w-0">
+    <PageContainer size="xs" className="min-w-0 space-y-6">
       <PageHeader
         title="My Account"
-        icon={<UserIcon className="w-8 h-8 text-primary-link-fg" />}
+        icon={<UserIcon className="h-8 w-8 text-primary-link-fg" />}
         description="Manage your profile and account settings"
         className="mb-0 min-w-0"
       />
 
       {model.profileLoadError && (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
-          <Alert variant="danger" className="flex-1 min-w-0">
+          <Alert variant="danger" className="min-w-0 flex-1">
             {model.profileLoadError}. Some account details may be incomplete.
           </Alert>
           <Button

@@ -19,15 +19,9 @@ describe('derivePartCategories (TASK-673)', () => {
   it('collects unique non-mechanic categories in first-seen order', () => {
     expect(
       derivePartCategories(
-        [
-          { id: '1' },
-          { id: '3' },
-          { id: '4' },
-          { id: '2' },
-          { id: '5' },
-        ],
-        partsDb
-      )
+        [{ id: '1' }, { id: '3' }, { id: '4' }, { id: '2' }, { id: '5' }],
+        partsDb,
+      ),
     ).toEqual(['Offense', 'Defense', 'Control']);
   });
 
@@ -37,7 +31,7 @@ describe('derivePartCategories (TASK-673)', () => {
 
   it('uses saved category when DB miss but payload has category', () => {
     expect(
-      derivePartCategories([{ id: 'x', category: 'Utility', mechanic: false }], partsDb)
+      derivePartCategories([{ id: 'x', category: 'Utility', mechanic: false }], partsDb),
     ).toEqual(['Utility']);
   });
 
@@ -48,7 +42,7 @@ describe('derivePartCategories (TASK-673)', () => {
 
   it('adds Damage category when power has damage rows', () => {
     expect(
-      withDamageCategory(['Charm'], powerHasDamageCategory([{ amount: 1, size: 8, type: 'ice' }]))
+      withDamageCategory(['Charm'], powerHasDamageCategory([{ amount: 1, size: 8, type: 'ice' }])),
     ).toEqual(['Charm', 'Damage']);
     expect(withDamageCategory(['Damage'], true)).toEqual(['Damage']);
     expect(powerHasDamageCategory([{ amount: 1, size: 6, type: 'none' }])).toBe(false);
@@ -59,7 +53,7 @@ describe('derivePartCategories (TASK-673)', () => {
       collectCategoryFilterOptions([
         ['Offense', 'Utility'],
         ['Control', 'offense'],
-      ])
+      ]),
     ).toEqual(['Control', 'Offense', 'Utility']);
   });
 });

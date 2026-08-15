@@ -12,7 +12,10 @@ import { getRolePolicyForUser } from '@/lib/role-policy';
 import { buildRoleQuotaExceededResponse } from '@/lib/role-quota-messages';
 import { validateJson, characterCreateSchema } from '@/lib/api-validation';
 import { prepareCharacterForCreate } from '@/lib/character-save';
-import { normalizeCharacterForSave, normalizeCharacterOnLoad } from '@/lib/character/schema-normalize';
+import {
+  normalizeCharacterForSave,
+  normalizeCharacterOnLoad,
+} from '@/lib/character/schema-normalize';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import { getCharacterListColumns, resolveCharacterVisibility } from '@/lib/character-list-columns';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
@@ -40,7 +43,7 @@ type SupabaseLike = Awaited<ReturnType<typeof createClient>>;
 async function findCharacterByRequestId(
   supabase: SupabaseLike,
   userId: string,
-  clientRequestId: string
+  clientRequestId: string,
 ): Promise<string | null> {
   const { data } = await supabase
     .from('characters')
@@ -64,7 +67,7 @@ type CharacterInsertRow = {
  */
 async function insertCharacterRow(
   supabase: SupabaseLike,
-  row: CharacterInsertRow
+  row: CharacterInsertRow,
 ): Promise<{ id: string } | { uniqueViolation: true }> {
   const now = new Date().toISOString();
   const { data: created, error: insertErr } = await supabase
@@ -85,7 +88,7 @@ async function jsonForInsertResult(
   supabase: SupabaseLike,
   userId: string,
   clientRequestId: string | undefined,
-  result: { id: string } | { uniqueViolation: true }
+  result: { id: string } | { uniqueViolation: true },
 ): Promise<NextResponse> {
   if ('id' in result) return NextResponse.json({ id: result.id });
   if (clientRequestId) {
@@ -115,7 +118,9 @@ export async function GET() {
     const supabase = await createClient();
     const { data: rows, error: dbError } = await supabase
       .from('characters')
-      .select('id, user_id, data, name, level, archetype_name, ancestry_name, status, visibility, updated_at')
+      .select(
+        'id, user_id, data, name, level, archetype_name, ancestry_name, status, visibility, updated_at',
+      )
       .eq('user_id', user.uid)
       .order('updated_at', { ascending: false });
 
@@ -148,8 +153,10 @@ export async function GET() {
         level: r.level ?? (d.level as number) ?? 1,
         portrait: d.portrait as string | undefined,
         archetypeName: archName ?? undefined,
-        ancestryName: r.ancestry_name ?? (d.ancestry as { name?: string })?.name ?? (d.species as string),
-        status: (r.status as CharacterSummary['status']) ?? (d.status as CharacterSummary['status']),
+        ancestryName:
+          r.ancestry_name ?? (d.ancestry as { name?: string })?.name ?? (d.species as string),
+        status:
+          (r.status as CharacterSummary['status']) ?? (d.status as CharacterSummary['status']),
         visibility: resolveCharacterVisibility({ visibility: r.visibility, data: d }),
         updatedAt: r.updated_at ?? undefined,
       };
@@ -170,10 +177,13 @@ export async function POST(request: NextRequest) {
     }
 
     const { success } = await standardLimiter.check(
-      buildRateLimitKey('char-post', { userId: user.uid, ip: resolveClientIp(request.headers) })
+      buildRateLimitKey('char-post', { userId: user.uid, ip: resolveClientIp(request.headers) }),
     );
     if (!success) {
-      return NextResponse.json({ error: 'Too many requests' }, { status: 429, headers: { 'Retry-After': '60' } });
+      return NextResponse.json(
+        { error: 'Too many requests' },
+        { status: 429, headers: { 'Retry-After': '60' } },
+      );
     }
 
     const validation = await validateJson(request, characterCreateSchema);
@@ -204,7 +214,7 @@ export async function POST(request: NextRequest) {
           currentCount: characterCount ?? 0,
           maxAllowed: rolePolicy.maxCharacters,
         }),
-        { status: 403 }
+        { status: 403 },
       );
     }
 
@@ -231,7 +241,9 @@ export async function POST(request: NextRequest) {
       };
       normalizeCharacterForSave(newData);
       const archetypeNameById = await fetchArchetypeNameMap(supabase);
-      const listCols = getCharacterListColumns(newData as Record<string, unknown>, { archetypeNameById });
+      const listCols = getCharacterListColumns(newData as Record<string, unknown>, {
+        archetypeNameById,
+      });
       const newId = crypto.randomUUID();
 
       await ensureUserProfile(supabase, user.uid);
@@ -260,13 +272,15 @@ export async function POST(request: NextRequest) {
       if (violations.length > 0) {
         return NextResponse.json(
           { error: 'Character is not a legal level 1 build', details: violations },
-          { status: 400 }
+          { status: 400 },
         );
       }
     }
 
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
-    const listCols = getCharacterListColumns(cleanedData as Record<string, unknown>, { archetypeNameById });
+    const listCols = getCharacterListColumns(cleanedData as Record<string, unknown>, {
+      archetypeNameById,
+    });
     const newId = crypto.randomUUID();
 
     await ensureUserProfile(supabase, user.uid);
@@ -284,7 +298,7 @@ export async function POST(request: NextRequest) {
       GUIDED_CREATOR_COPY.steps.reveal.saveFailed,
       500,
       'POST /api/characters',
-      err
+      err,
     );
   }
 }

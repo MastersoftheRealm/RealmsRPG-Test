@@ -48,45 +48,36 @@ export function LoginPromptModal({
     router.push(`/register?redirect=${encodeURIComponent(returnPath)}`);
   };
 
-  const title =
-    reason === 'load' ? 'Login Required to Load' : 'Login Required to Save';
+  const title = reason === 'load' ? 'Login Required to Load' : 'Login Required to Save';
   const defaultMessage =
     reason === 'load'
       ? `Log in or create an account to load ${contentType} from your library. Guest progress on this page stays in your browser.`
       : `Your ${contentType} progress is saved locally. Log in or create an account to save your ${contentType} permanently to your library.`;
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={onClose}
-      fullScreenOnMobile
-      size="md"
-      titleA11y={title}
-    >
+    <Modal isOpen={isOpen} onClose={onClose} fullScreenOnMobile size="md" titleA11y={title}>
       <div className="text-center">
-        <div className="mx-auto w-16 h-16 bg-primary-subtle-bg rounded-full flex items-center justify-center mb-4">
-          <LogIn className="w-8 h-8 text-primary-link-fg" />
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary-subtle-bg">
+          <LogIn className="h-8 w-8 text-primary-link-fg" />
         </div>
 
-        <h2 className="text-xl font-semibold text-text-primary mb-2">{title}</h2>
+        <h2 className="mb-2 text-xl font-semibold text-text-primary">{title}</h2>
 
-        <p className="text-text-muted dark:text-text-secondary mb-6">
-          {message || defaultMessage}
-        </p>
+        <p className="mb-6 text-text-muted">{message || defaultMessage}</p>
 
         <Alert variant="info" className="mb-6 text-left">
-          <strong>Don&apos;t worry!</strong> Your work is automatically saved in your browser.
-          You can continue working, and your progress will be here when you return.
+          <strong>Don&apos;t worry!</strong> Your work is automatically saved in your browser. You
+          can continue working, and your progress will be here when you return.
         </Alert>
 
         <div className="space-y-3">
           <Button onClick={handleLogin} variant="primary" size="lg" className="w-full">
-            <LogIn className="w-5 h-5" />
+            <LogIn className="h-5 w-5" />
             Log In
           </Button>
 
           <Button onClick={handleRegister} variant="secondary" size="lg" className="w-full">
-            <UserPlus className="w-5 h-5" />
+            <UserPlus className="h-5 w-5" />
             Create Account
           </Button>
 

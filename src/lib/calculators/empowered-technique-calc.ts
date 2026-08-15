@@ -16,7 +16,7 @@ export interface EmpoweredTechniqueCostResult {
 
 function getTechniquePartEnergyContribution(
   part: TechniquePart,
-  payload: TechniquePartPayload
+  payload: TechniquePartPayload,
 ): number {
   return (
     (part.base_en || 0) +
@@ -28,7 +28,7 @@ function getTechniquePartEnergyContribution(
 
 export function getTechniquePercentageMultiplier(
   techniquePartsPayload: TechniquePartPayload[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): number {
   let multiplier = 1;
   const uniqueParts = dedupeSavedParts(techniquePartsPayload);
@@ -51,20 +51,15 @@ export interface CalculateEmpoweredTechniqueCostsInput {
 }
 
 export function calculateEmpoweredTechniqueCosts(
-  input: CalculateEmpoweredTechniqueCostsInput
+  input: CalculateEmpoweredTechniqueCostsInput,
 ): EmpoweredTechniqueCostResult {
-  const {
-    powerPartsPayload,
-    techniquePartsPayload,
-    powerPartsDb,
-    techniquePartsDb,
-  } = input;
+  const { powerPartsPayload, techniquePartsPayload, powerPartsDb, techniquePartsDb } = input;
 
   const powerCosts = calculatePowerCosts(powerPartsPayload, powerPartsDb);
   const techniqueCosts = calculateTechniqueCosts(techniquePartsPayload, techniquePartsDb);
   const techniquePercentageMultiplier = getTechniquePercentageMultiplier(
     techniquePartsPayload,
-    techniquePartsDb
+    techniquePartsDb,
   );
 
   // Empowered rule: technique percentage mechanics also scale the power side.

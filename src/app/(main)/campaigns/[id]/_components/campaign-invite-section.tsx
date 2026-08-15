@@ -19,20 +19,18 @@ export function CampaignInviteSection({
   onCopy: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-border-light bg-surface p-6 mb-6">
-      <h2 className="font-semibold text-text-primary mb-2 flex items-center gap-1">
-        Invite Code
-      </h2>
-      <p className="text-sm text-text-secondary mb-3">
+    <div className="mb-6 rounded-xl border border-border-light bg-surface p-6">
+      <h2 className="mb-2 flex items-center gap-1 font-semibold text-text-primary">Invite Code</h2>
+      <p className="mb-3 text-sm text-text-secondary">
         Share this code with players so they can join your campaign.
         {isCampaignFull && ' (Campaign is full. No new players can join until someone leaves.)'}
       </p>
       <div className="flex items-center gap-3">
-        <code className="px-4 py-2 bg-surface-alt rounded-lg font-mono text-xl font-bold tracking-widest text-primary-subtle-fg">
+        <code className="rounded-lg bg-surface-alt px-4 py-2 font-mono text-xl font-bold tracking-widest text-primary-subtle-fg">
           {inviteCode}
         </code>
         <Button variant="secondary" size="sm" onClick={onCopy}>
-          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+          {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
           {copied ? 'Copied!' : 'Copy'}
         </Button>
       </div>

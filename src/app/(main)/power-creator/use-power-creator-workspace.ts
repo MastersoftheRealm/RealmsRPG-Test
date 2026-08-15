@@ -37,7 +37,9 @@ export function usePowerCreatorWorkspace({
 }: UsePowerCreatorWorkspaceArgs) {
   const [name, setName] = useState(initialFormState.name);
   const [description, setDescription] = useState(initialFormState.description);
-  const [selectedParts, setSelectedParts] = useState<SelectedPart[]>(initialFormState.selectedParts);
+  const [selectedParts, setSelectedParts] = useState<SelectedPart[]>(
+    initialFormState.selectedParts,
+  );
   const [selectedAdvancedParts, setSelectedAdvancedParts] = useState<AdvancedPart[]>(
     initialFormState.selectedAdvancedParts,
   );
@@ -181,7 +183,12 @@ export function usePowerCreatorWorkspace({
     ]);
     const damageToSave = damages
       .filter((d) => d.type !== 'none' && d.amount > 0)
-      .map((d) => ({ amount: d.amount, size: d.size, type: d.type, applyDuration: d.applyDuration ?? false }));
+      .map((d) => ({
+        amount: d.amount,
+        size: d.size,
+        type: d.type,
+        applyDuration: d.applyDuration ?? false,
+      }));
     return {
       name: name.trim(),
       data: {

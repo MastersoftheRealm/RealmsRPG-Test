@@ -31,6 +31,8 @@ describe('resolveArmorDamageReduction', () => {
 
   it('returns 0 when no scalar or property DR is present', () => {
     expect(resolveArmorDamageReduction({})).toBe(0);
-    expect(resolveArmorDamageReduction({ properties: [{ name: 'Agility Reduction', op_1_lvl: 1 }] })).toBe(0);
+    expect(
+      resolveArmorDamageReduction({ properties: [{ name: 'Agility Reduction', op_1_lvl: 1 }] }),
+    ).toBe(0);
   });
 });

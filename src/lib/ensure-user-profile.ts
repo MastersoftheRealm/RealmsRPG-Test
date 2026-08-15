@@ -16,15 +16,13 @@ type SupabaseClient = Awaited<ReturnType<typeof import('@/lib/supabase/server').
  */
 export async function ensureUserProfile(supabase: SupabaseClient, uid: string): Promise<void> {
   const now = new Date().toISOString();
-  const { error } = await supabase
-    .from('user_profiles')
-    .upsert(
-      {
-        id: uid,
-        created_at: now,
-        updated_at: now,
-      },
-      { onConflict: 'id' }
-    );
+  const { error } = await supabase.from('user_profiles').upsert(
+    {
+      id: uid,
+      created_at: now,
+      updated_at: now,
+    },
+    { onConflict: 'id' },
+  );
   if (error) throw error;
 }

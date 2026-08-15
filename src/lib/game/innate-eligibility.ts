@@ -17,10 +17,7 @@ import {
   getArchetypeConfig,
   getArchetypeMilestoneLevels,
 } from '@/lib/game/formulas';
-import {
-  derivePowerDisplay,
-  type PowerDocument,
-} from '@/lib/calculators/power-calc';
+import { derivePowerDisplay, type PowerDocument } from '@/lib/calculators/power-calc';
 
 type Rules = Partial<CoreRulesMap>;
 
@@ -80,7 +77,7 @@ export function isHealingOrEnergyGainPart(part: {
  */
 export function isInnateEligibleActionType(
   actionType?: string | null,
-  isReaction?: boolean
+  isReaction?: boolean,
 ): boolean {
   const raw = String(actionType ?? '').trim();
   if (!raw) {
@@ -96,7 +93,7 @@ export function isInnateEligibleActionType(
 
 export function evaluateInnatePowerEligibility(
   power: InnatePowerSnapshot,
-  innateThreshold: number
+  innateThreshold: number,
 ): InnateEligibilityIssue[] {
   const issues: InnateEligibilityIssue[] = [];
   const label = power.name?.trim() || power.id;
@@ -117,8 +114,7 @@ export function evaluateInnatePowerEligibility(
   }
 
   if (!isInnateEligibleActionType(power.actionType, power.isReaction)) {
-    const actionLabel =
-      formatSavedActionHint(power.actionType, power.isReaction) || 'unknown';
+    const actionLabel = formatSavedActionHint(power.actionType, power.isReaction) || 'unknown';
     issues.push({
       severity: 'error',
       message: `Recommended innate power "${label}" Action Type must be Basic or Basic Reaction (got ${actionLabel}).`,
@@ -147,10 +143,7 @@ export function evaluateInnatePowerEligibility(
   return issues;
 }
 
-function formatSavedActionHint(
-  actionType?: string | null,
-  isReaction?: boolean
-): string {
+function formatSavedActionHint(actionType?: string | null, isReaction?: boolean): string {
   const raw = String(actionType ?? '').trim();
   if (!raw) return isReaction ? 'Reaction' : '';
   if (/\b(action|reaction)\b/i.test(raw)) return raw;
@@ -162,7 +155,7 @@ function formatSavedActionHint(
 export function getLevel1InnateBudget(
   archetypeType: ArchetypeCategory,
   powerProfStart?: number | null,
-  martialProfStart?: number | null
+  martialProfStart?: number | null,
 ): { innateThreshold: number; innatePools: number; innateEnergy: number } {
   const defaults = ARCHETYPE_CONFIGS[archetypeType] ?? ARCHETYPE_CONFIGS.power;
   const powerProf =
@@ -197,7 +190,7 @@ export function snapshotOfficialPowerForInnate(
       applyDuration?: boolean;
     }> | null;
   },
-  partsDb: PowerPart[]
+  partsDb: PowerPart[],
 ): InnatePowerSnapshot {
   const id = String(power.id ?? '');
   const doc: PowerDocument = {
@@ -226,7 +219,7 @@ export function validateRecommendedInnatePowers(
     powerProfStart?: number | null;
     martialProfStart?: number | null;
     resolvePower: (id: string) => InnatePowerSnapshot | null;
-  }
+  },
 ): InnateEligibilityIssue[] {
   const issues: InnateEligibilityIssue[] = [];
   const ids = Array.from(new Set(innatePowerIds.map(String).filter(Boolean)));
@@ -235,7 +228,7 @@ export function validateRecommendedInnatePowers(
   const budget = getLevel1InnateBudget(
     options.archetypeType,
     options.powerProfStart,
-    options.martialProfStart
+    options.martialProfStart,
   );
 
   if (budget.innateEnergy <= 0 || budget.innateThreshold <= 0) {
@@ -309,7 +302,7 @@ export function listInnateThresholdFilterOptions(rules?: Rules): number[] {
  */
 export function isPowerInnateEligible(
   power: InnatePowerSnapshot,
-  innateThreshold?: number | null
+  innateThreshold?: number | null,
 ): boolean {
   if (!isInnateEligibleActionType(power.actionType, power.isReaction)) return false;
 
@@ -320,11 +313,7 @@ export function isPowerInnateEligible(
     }
   }
 
-  if (
-    innateThreshold != null &&
-    innateThreshold > 0 &&
-    power.energy > innateThreshold
-  ) {
+  if (innateThreshold != null && innateThreshold > 0 && power.energy > innateThreshold) {
     return false;
   }
 

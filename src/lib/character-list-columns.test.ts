@@ -7,7 +7,7 @@ describe('resolveCharacterVisibility', () => {
       resolveCharacterVisibility({
         visibility: 'private',
         data: { visibility: 'public' },
-      })
+      }),
     ).toBe('private');
   });
 

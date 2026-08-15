@@ -35,7 +35,7 @@ export function buildLookup(items: GuidedPathLibraryRow[]): Map<string, GuidedPa
 
 export function resolveLibraryItem(
   id: string,
-  lookup: Map<string, GuidedPathLibraryRow>
+  lookup: Map<string, GuidedPathLibraryRow>,
 ): GuidedPathLibraryRow | undefined {
   return lookup.get(normalizeId(id));
 }
@@ -44,7 +44,7 @@ export function pickAffordableIds(
   ids: string[],
   costOf: (id: string) => number,
   alreadySpent: number,
-  limit: number
+  limit: number,
 ): string[] {
   const picked: string[] = [];
   let spent = alreadySpent;
@@ -68,13 +68,13 @@ export function pickInnateFillIds(
   threshold: number,
   energyMax: number,
   tpAlreadySpent: number,
-  tpLimit: number
+  tpLimit: number,
 ): string[] {
   const candidates = ids
     .map((id) => ({ id, energy: energyOf(id), tp: tpOf(id) }))
     .filter(
       (row): row is { id: string; energy: number; tp: number } =>
-        row.energy != null && row.energy >= 0 && row.energy <= threshold
+        row.energy != null && row.energy >= 0 && row.energy <= threshold,
     )
     .sort((a, b) => b.energy - a.energy);
 
@@ -104,10 +104,7 @@ export function innateSelectionBlockMessage(reason: InnateSelectionBlockReason):
   return ptCopy.tpBlocked;
 }
 
-function sumResolvedEnergy(
-  ids: string[],
-  energyOf: (id: string) => number | undefined
-): number {
+function sumResolvedEnergy(ids: string[], energyOf: (id: string) => number | undefined): number {
   return ids.reduce((sum, id) => {
     const energy = energyOf(id);
     return sum + (energy != null ? energy : 0);
@@ -157,7 +154,7 @@ export function applyInnateSelection(opts: {
     wouldExceedSharedTp(
       opts.otherTpSpent + sumTp(remaining, opts.tpOf),
       opts.tpLimit,
-      opts.tpOf(key)
+      opts.tpOf(key),
     )
   ) {
     return { ok: false, reason: 'tp' };

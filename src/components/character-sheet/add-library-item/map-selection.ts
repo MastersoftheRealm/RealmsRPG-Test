@@ -1,6 +1,11 @@
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
-import type { AddLibraryItemType, CodexDbRefs, EqItem, PowerSelectionMode } from '@/hooks/add-library-item/types';
+import type {
+  AddLibraryItemType,
+  CodexDbRefs,
+  EqItem,
+  PowerSelectionMode,
+} from '@/hooks/add-library-item/types';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 interface CodexPartLike {
@@ -23,10 +28,14 @@ interface SavedPartLike {
 
 function findCodexPart(codexList: CodexPartLike[], part: SavedPartLike): CodexPartLike | undefined {
   const id = part.id != null ? String(part.id).trim().toLowerCase() : '';
-  const name = String(part.name ?? '').trim().toLowerCase();
+  const name = String(part.name ?? '')
+    .trim()
+    .toLowerCase();
   return codexList.find((c) => {
     const cId = c.id != null ? String(c.id).trim().toLowerCase() : '';
-    const cName = String(c.name ?? '').trim().toLowerCase();
+    const cName = String(c.name ?? '')
+      .trim()
+      .toLowerCase();
     return (id && cId === id) || (name && cName === name);
   });
 }
@@ -35,7 +44,12 @@ function findCodexPart(codexList: CodexPartLike[], part: SavedPartLike): CodexPa
 function enrichSavedPart(part: SavedPartLike, codexList: CodexPartLike[]) {
   const codex = findCodexPart(codexList, part);
   return {
-    id: part.id !== undefined && part.id !== '' ? String(part.id) : codex?.id != null ? String(codex.id) : undefined,
+    id:
+      part.id !== undefined && part.id !== ''
+        ? String(part.id)
+        : codex?.id != null
+          ? String(codex.id)
+          : undefined,
     name: part.name || codex?.name || '',
     base_tp: codex?.base_tp ?? 0,
     op_1_lvl: part.op_1_lvl ?? 0,
@@ -52,7 +66,7 @@ export function mapSelectedToCharacterItems(
   itemType: AddLibraryItemType,
   selected: SelectableItem[],
   powerSelectionMode: PowerSelectionMode,
-  dbs?: CodexDbRefs
+  dbs?: CodexDbRefs,
 ): CharacterPower[] | CharacterTechnique[] | Item[] {
   const selectedRaw = selected.map((s) => s.data as UserPower | UserTechnique | EqItem);
   const powerPartsDb = (dbs?.powerPartsDb ?? []) as CodexPartLike[];
@@ -63,7 +77,7 @@ export function mapSelectedToCharacterItems(
       if (q != null) acc[String(s.id)] = q;
       return acc;
     },
-    {} as Record<string, number>
+    {} as Record<string, number>,
   );
 
   if (itemType === 'power') {
@@ -71,7 +85,9 @@ export function mapSelectedToCharacterItems(
       if (powerSelectionMode === 'empowered') {
         const raw = entry as unknown as Record<string, unknown>;
         const powerData = (raw.power as Record<string, unknown> | undefined) ?? {};
-        const savedParts = (Array.isArray(powerData.parts) ? powerData.parts : []) as SavedPartLike[];
+        const savedParts = (
+          Array.isArray(powerData.parts) ? powerData.parts : []
+        ) as SavedPartLike[];
         return {
           id: entry.id,
           name: entry.name,

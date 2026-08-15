@@ -39,7 +39,7 @@ function buildPartsDbIndex(partsDb: PartCategoryDbRow[]): Map<string, PartCatego
 
 function resolvePartDef(
   part: PartCategorySource,
-  index: Map<string, PartCategoryDbRow>
+  index: Map<string, PartCategoryDbRow>,
 ): PartCategoryDbRow | null {
   const byId = partLookupKey(part.id, null);
   if (byId) {
@@ -62,7 +62,7 @@ function resolvePartDef(
  */
 export function derivePartCategories(
   parts: PartCategorySource[] | null | undefined,
-  partsDb: PartCategoryDbRow[] = []
+  partsDb: PartCategoryDbRow[] = [],
 ): string[] {
   if (!parts?.length) return [];
   const index = buildPartsDbIndex(partsDb);
@@ -133,15 +133,13 @@ export function collectCategoryFilterOptions(categoryLists: string[][]): string[
 export function collectCategoryOptionsFromItems(
   items: Array<{ parts?: PartCategorySource[] | null; damage?: unknown }>,
   partsDb: PartCategoryDbRow[],
-  options?: { includeDamageCategory?: boolean }
+  options?: { includeDamageCategory?: boolean },
 ): string[] {
   const includeDamage = options?.includeDamageCategory === true;
   return collectCategoryFilterOptions(
     items.map((item) => {
       const cats = derivePartCategories(item.parts, partsDb);
-      return includeDamage
-        ? withDamageCategory(cats, powerHasDamageCategory(item.damage))
-        : cats;
-    })
+      return includeDamage ? withDamageCategory(cats, powerHasDamageCategory(item.damage)) : cats;
+    }),
   );
 }

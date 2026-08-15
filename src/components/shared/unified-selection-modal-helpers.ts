@@ -4,7 +4,7 @@ export function selectionDiffersFromInitial(
   initialIds: Set<string>,
   showQuantity: boolean,
   quantities: Record<string, number>,
-  initialQuantities: Record<string, number>
+  initialQuantities: Record<string, number>,
 ): boolean {
   if (selectedIds.size === 0) return false;
   if (selectedIds.size !== initialIds.size) return true;
@@ -14,10 +14,7 @@ export function selectionDiffersFromInitial(
   if (!showQuantity) return false;
   for (const id of selectedIds) {
     const current = quantities[id] ?? 1;
-    const seeded =
-      initialQuantities[id] ??
-      initialQuantities[id.toLowerCase()] ??
-      1;
+    const seeded = initialQuantities[id] ?? initialQuantities[id.toLowerCase()] ?? 1;
     const normalizedSeed = Math.max(1, Math.floor(Number(seeded)) || 1);
     if (current !== normalizedSeed) return true;
   }

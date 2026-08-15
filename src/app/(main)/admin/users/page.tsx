@@ -9,7 +9,16 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { PageContainer, PageHeader, Button, LoadingState, EmptyState, Alert, SearchInput, TableScroll } from '@/components/ui';
+import {
+  PageContainer,
+  PageHeader,
+  Button,
+  LoadingState,
+  EmptyState,
+  Alert,
+  SearchInput,
+  TableScroll,
+} from '@/components/ui';
 import { ConfirmActionModal, ErrorDisplay } from '@/components/shared';
 import { apiFetch } from '@/lib/api-client';
 
@@ -50,9 +59,12 @@ export default function AdminUsersPage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [pendingChange, setPendingChange] = useState<
-    { userId: string; label: string; oldRole: UserRole; newRole: UserRole } | null
-  >(null);
+  const [pendingChange, setPendingChange] = useState<{
+    userId: string;
+    label: string;
+    oldRole: UserRole;
+    newRole: UserRole;
+  } | null>(null);
 
   const {
     data: adminData,
@@ -72,7 +84,7 @@ export default function AdminUsersPage() {
           acc[row.role] = row;
           return acc;
         },
-        {} as Record<UserRole, RolePolicyRow>
+        {} as Record<UserRole, RolePolicyRow>,
       );
       return {
         users: Array.isArray(userData) ? userData : [],
@@ -115,9 +127,7 @@ export default function AdminUsersPage() {
         method: 'PATCH',
         body: JSON.stringify({ userId, role: newRole }),
       });
-      setUsers((prev) =>
-        prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u))
-      );
+      setUsers((prev) => prev.map((u) => (u.id === userId ? { ...u, role: newRole } : u)));
       const changed = users.find((u) => u.id === userId);
       const label = changed?.usernameDisplay || changed?.username || 'user';
       setMessage({ type: 'success', text: `Updated ${label} to ${ROLE_LABELS[newRole]}` });
@@ -133,10 +143,7 @@ export default function AdminUsersPage() {
 
   return (
     <PageContainer size="xl">
-      <PageHeader
-        title="User Management"
-        description="Change user roles by username."
-      />
+      <PageHeader title="User Management" description="Change user roles by username." />
       <div className="mb-4">
         <Button variant="secondary" asChild>
           <Link href="/admin">← Back to Admin</Link>
@@ -167,27 +174,33 @@ export default function AdminUsersPage() {
       ) : (
         <TableScroll className="rounded-lg border border-border bg-surface">
           <table className="w-full text-sm">
-            <thead className="bg-surface-alt border-b border-border">
+            <thead className="border-b border-border bg-surface-alt">
               <tr>
-                <th className="text-left py-3 px-4 font-semibold text-text-primary">Username</th>
-                <th className="text-left py-3 px-4 font-semibold text-text-primary">Display Name</th>
-                <th className="text-left py-3 px-4 font-semibold text-text-primary">Email</th>
-                <th className="text-left py-3 px-4 font-semibold text-text-primary">Role</th>
-                <th className="text-left py-3 px-4 font-semibold text-text-primary">Effective limits</th>
-                <th className="text-left py-3 px-4 font-semibold text-text-primary">Change role</th>
+                <th className="px-4 py-3 text-left font-semibold text-text-primary">Username</th>
+                <th className="px-4 py-3 text-left font-semibold text-text-primary">
+                  Display Name
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-text-primary">Email</th>
+                <th className="px-4 py-3 text-left font-semibold text-text-primary">Role</th>
+                <th className="px-4 py-3 text-left font-semibold text-text-primary">
+                  Effective limits
+                </th>
+                <th className="px-4 py-3 text-left font-semibold text-text-primary">Change role</th>
               </tr>
             </thead>
             <tbody>
               {filteredUsers.map((u) => (
                 <tr key={u.id} className="border-b border-border-light last:border-0">
-                  <td className="py-3 px-4 font-medium text-text-primary">{u.usernameDisplay || u.username || '(none)'}</td>
-                  <td className="py-3 px-4 text-text-secondary">{u.displayName || '(none)'}</td>
-                  <td className="py-3 px-4 text-text-secondary">{u.email || '(none)'}</td>
-                  <td className="py-3 px-4 text-text-secondary">{ROLE_LABELS[u.role]}</td>
-                  <td className="py-3 px-4 text-text-secondary">
+                  <td className="px-4 py-3 font-medium text-text-primary">
+                    {u.usernameDisplay || u.username || '(none)'}
+                  </td>
+                  <td className="px-4 py-3 text-text-secondary">{u.displayName || '(none)'}</td>
+                  <td className="px-4 py-3 text-text-secondary">{u.email || '(none)'}</td>
+                  <td className="px-4 py-3 text-text-secondary">{ROLE_LABELS[u.role]}</td>
+                  <td className="px-4 py-3 text-text-secondary">
                     <RoleLimitsCell role={u.role} rolePolicies={rolePolicies} />
                   </td>
-                  <td className="py-3 px-4">
+                  <td className="px-4 py-3">
                     <select
                       value={u.role}
                       onChange={(e) => {
@@ -270,7 +283,7 @@ function RoleLimitsCell({
   rolePolicies: Record<UserRole, RolePolicyRow> | null;
 }) {
   const p = rolePolicies?.[role];
-  if (!p) return <span className="text-text-muted dark:text-text-secondary">—</span>;
+  if (!p) return <span className="text-text-muted">—</span>;
 
   const canUpload = Boolean(p.permissions?.can_upload_profile_picture);
   const parts = [
@@ -287,7 +300,7 @@ function RoleLimitsCell({
   return (
     <div className="space-y-1">
       <div className="text-text-primary">{`Campaigns: ${p.max_campaigns} · Players/campaign: ${p.max_players_per_campaign} · Characters: ${p.max_characters}`}</div>
-      <div className="text-xs text-text-muted dark:text-text-secondary">
+      <div className="text-xs text-text-muted">
         {`Powers ${p.max_custom_powers} · Techniques ${p.max_custom_techniques} · Armaments ${p.max_custom_armaments} · Creatures ${p.max_custom_creatures} · Profile pic ${canUpload ? 'Yes' : 'No'}`}
       </div>
       <span className="sr-only">{parts.join(', ')}</span>

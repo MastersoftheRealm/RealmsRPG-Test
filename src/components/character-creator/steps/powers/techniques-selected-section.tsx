@@ -37,14 +37,14 @@ export function TechniquesSelectedSection({
 
   return (
     <section className="mb-8">
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-martial-light flex items-center justify-center">
-            <Swords className="w-5 h-5 text-martial-fg" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-martial-light">
+            <Swords className="h-5 w-5 text-martial-fg" />
           </div>
           <div>
             <h3 className="text-lg font-semibold text-text-primary">Techniques</h3>
-            <p className="text-sm text-text-muted dark:text-text-secondary">
+            <p className="text-sm text-text-muted">
               {selectedTechniques.length} technique{selectedTechniques.length !== 1 ? 's' : ''}{' '}
               selected
             </p>
@@ -55,13 +55,13 @@ export function TechniquesSelectedSection({
           disabled={addDisabled}
           className="bg-martial-dark hover:bg-martial-text"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="h-4 w-4" />
           Add Techniques
         </Button>
       </div>
 
       {selectedTechniqueItems.length > 0 ? (
-        <div className="border border-border-light rounded-lg overflow-hidden">
+        <div className="overflow-hidden rounded-lg border border-border-light">
           <ListHeader
             columns={TECHNIQUE_MODAL_COLUMNS.map(({ key, label }) => ({
               key,
@@ -108,7 +108,7 @@ export function TechniquesSelectedSection({
                       onClick={() => onRemove(tech.id)}
                       label="Remove technique"
                     >
-                      <X className="w-4 h-4" />
+                      <X className="h-4 w-4" />
                     </IconButton>
                   }
                   compact
@@ -122,19 +122,19 @@ export function TechniquesSelectedSection({
           title="No techniques selected"
           description='Click "Add Techniques" to choose from your library.'
           size="sm"
-          className="py-4 rounded-lg border border-dashed border-border"
+          className="rounded-lg border border-dashed border-border py-4"
         />
       ) : (
         <EmptyState
           title="No techniques in your library"
           size="sm"
-          className="py-4 rounded-lg border border-dashed border-border"
+          className="rounded-lg border border-dashed border-border py-4"
           action={
             <Link
               href="/technique-creator"
-              className="text-primary hover:underline inline-flex items-center gap-1"
+              className="inline-flex items-center gap-1 text-primary hover:underline"
             >
-              Create one <ExternalLink className="w-3 h-3" />
+              Create one <ExternalLink className="h-3 w-3" />
             </Link>
           }
         />

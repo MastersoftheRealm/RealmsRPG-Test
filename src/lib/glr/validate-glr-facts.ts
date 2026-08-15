@@ -3,10 +3,7 @@
  */
 
 import type { GlrFactId, GlrFactRule, GlrSurfaceId } from './required-facts-registry';
-import {
-  getGlrSurfaceSpec,
-  normalizeGlrColumnKey,
-} from './required-facts-registry';
+import { getGlrSurfaceSpec, normalizeGlrColumnKey } from './required-facts-registry';
 
 export interface GlrRowFactSnapshot {
   columnKeys: string[];
@@ -23,14 +20,11 @@ function columnKeysSatisfyRule(rule: GlrFactRule, columnKeys: string[]): boolean
 function chipLabelsSatisfyRule(rule: GlrFactRule, chipLabels: string[]): boolean {
   if (!rule.chipPatterns?.length) return false;
   return chipLabels.some((label) =>
-    rule.chipPatterns!.some((pattern) => pattern.test(label.trim()))
+    rule.chipPatterns!.some((pattern) => pattern.test(label.trim())),
   );
 }
 
-function factIsSatisfied(
-  rule: GlrFactRule,
-  snapshot: GlrRowFactSnapshot
-): boolean {
+function factIsSatisfied(rule: GlrFactRule, snapshot: GlrRowFactSnapshot): boolean {
   const inColumn = columnKeysSatisfyRule(rule, snapshot.columnKeys);
   const inChip = chipLabelsSatisfyRule(rule, snapshot.chipLabels);
 
@@ -54,7 +48,7 @@ function factIsSatisfied(
  */
 export function validateSurfaceColumnConfig(
   surfaceId: GlrSurfaceId,
-  columnKeys: string[]
+  columnKeys: string[],
 ): string[] {
   const spec = getGlrSurfaceSpec(surfaceId);
   const errors: string[] = [];
@@ -63,7 +57,7 @@ export function validateSurfaceColumnConfig(
     if (rule.placement !== 'column') continue;
     if (!columnKeysSatisfyRule(rule, columnKeys)) {
       errors.push(
-        `${surfaceId}: missing column for fact "${rule.id}" (expected one of: ${rule.columnKeys?.join(', ')})`
+        `${surfaceId}: missing column for fact "${rule.id}" (expected one of: ${rule.columnKeys?.join(', ')})`,
       );
     }
   }
@@ -77,7 +71,7 @@ export function validateSurfaceColumnConfig(
  */
 export function validateRowFactCoverage(
   surfaceId: GlrSurfaceId,
-  snapshot: GlrRowFactSnapshot
+  snapshot: GlrRowFactSnapshot,
 ): string[] {
   const spec = getGlrSurfaceSpec(surfaceId);
   const errors: string[] = [];
@@ -85,7 +79,7 @@ export function validateRowFactCoverage(
   for (const rule of spec.requiredFacts) {
     if (!factIsSatisfied(rule, snapshot)) {
       errors.push(
-        `${surfaceId}: fact "${rule.id}" missing (placement=${rule.placement}; columns=[${snapshot.columnKeys.join(', ')}]; chips=[${snapshot.chipLabels.join(', ')}])`
+        `${surfaceId}: fact "${rule.id}" missing (placement=${rule.placement}; columns=[${snapshot.columnKeys.join(', ')}]; chips=[${snapshot.chipLabels.join(', ')}])`,
       );
     }
   }
@@ -94,16 +88,13 @@ export function validateRowFactCoverage(
 }
 
 export function chipLabelsFromDetailSections(
-  sections?: ReadonlyArray<{ chips: ReadonlyArray<{ name: string }> }>
+  sections?: ReadonlyArray<{ chips: ReadonlyArray<{ name: string }> }>,
 ): string[] {
   return (sections ?? []).flatMap((s) => s.chips.map((c) => c.name));
 }
 
 /** Fail fast helper for vitest. */
-export function assertSurfaceColumnConfig(
-  surfaceId: GlrSurfaceId,
-  columnKeys: string[]
-): void {
+export function assertSurfaceColumnConfig(surfaceId: GlrSurfaceId, columnKeys: string[]): void {
   const errors = validateSurfaceColumnConfig(surfaceId, columnKeys);
   if (errors.length > 0) {
     throw new Error(errors.join('\n'));
@@ -111,10 +102,7 @@ export function assertSurfaceColumnConfig(
 }
 
 /** Fail fast helper for vitest. */
-export function assertRowFactCoverage(
-  surfaceId: GlrSurfaceId,
-  snapshot: GlrRowFactSnapshot
-): void {
+export function assertRowFactCoverage(surfaceId: GlrSurfaceId, snapshot: GlrRowFactSnapshot): void {
   const errors = validateRowFactCoverage(surfaceId, snapshot);
   if (errors.length > 0) {
     throw new Error(errors.join('\n'));

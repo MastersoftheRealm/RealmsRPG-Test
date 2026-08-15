@@ -36,14 +36,14 @@ export function AbilityPickButton({
       onClick={onPick}
       disabled={disabled}
       className={cn(
-        'px-3 py-2 min-h-11 min-w-11 rounded-lg text-sm font-medium transition-colors',
+        'min-h-11 min-w-11 rounded-lg px-3 py-2 text-sm font-medium transition-colors',
         selected
           ? variant === 'power'
             ? 'bg-power-dark text-text-on-dark'
             : 'bg-martial-dark text-text-on-dark'
           : disabled
-            ? 'bg-surface text-text-muted dark:text-text-secondary cursor-not-allowed'
-            : 'bg-surface border border-border-light hover:border-border',
+            ? 'cursor-not-allowed bg-surface text-text-muted'
+            : 'border border-border-light bg-surface hover:border-border',
       )}
     >
       {abilityLabel}
@@ -53,7 +53,10 @@ export function AbilityPickButton({
   if (!withTooltip) return button;
 
   return (
-    <InfoTippy content={getTooltipTextByPowerAbility(ability)} label={`${abilityLabel} ability guidance`}>
+    <InfoTippy
+      content={getTooltipTextByPowerAbility(ability)}
+      label={`${abilityLabel} ability guidance`}
+    >
       {button}
     </InfoTippy>
   );

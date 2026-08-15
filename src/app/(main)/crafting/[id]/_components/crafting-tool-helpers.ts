@@ -51,24 +51,24 @@ export function toCraftingItemRef(c: CraftingSelectedItem): CraftingItemRef {
 export function findMultipleUseIndexForConfig(
   rules: CraftingRules | undefined,
   usesType: UsesType | undefined,
-  usesCount: number | undefined
+  usesCount: number | undefined,
 ): number {
   if (!rules || !usesType) return -1;
   const table = rules.multipleUseTable ?? [];
   if (usesType === 'permanent') {
     return table.findIndex(
-      (row) => row.partialRecovery === 'permanent' && row.fullRecovery === 'permanent'
+      (row) => row.partialRecovery === 'permanent' && row.fullRecovery === 'permanent',
     );
   }
   if (!usesCount) return -1;
   if (usesType === 'full') {
     return table.findIndex(
-      (row) => typeof row.fullRecovery === 'number' && row.fullRecovery === usesCount
+      (row) => typeof row.fullRecovery === 'number' && row.fullRecovery === usesCount,
     );
   }
   if (usesType === 'partial') {
     return table.findIndex(
-      (row) => typeof row.partialRecovery === 'number' && row.partialRecovery === usesCount
+      (row) => typeof row.partialRecovery === 'number' && row.partialRecovery === usesCount,
     );
   }
   return -1;
@@ -78,7 +78,7 @@ export function resolveMultipleUseIndex(
   rules: CraftingRules | undefined,
   usesType: UsesType | undefined,
   usesCount: number | undefined,
-  explicitIndex: number | undefined
+  explicitIndex: number | undefined,
 ): number {
   const fromConfig = findMultipleUseIndexForConfig(rules, usesType, usesCount);
   return fromConfig >= 0 ? fromConfig : (explicitIndex ?? -1);
@@ -87,17 +87,15 @@ export function resolveMultipleUseIndex(
 export function getEffectiveCraftingEnergy(
   energyCost: number,
   multiIdx: number,
-  rules: CraftingRules
+  rules: CraftingRules,
 ): number {
-  return multiIdx >= 0
-    ? getMultipleUseAdjustedEnergy(energyCost, multiIdx, rules)
-    : energyCost;
+  return multiIdx >= 0 ? getMultipleUseAdjustedEnergy(energyCost, multiIdx, rules) : energyCost;
 }
 
 /** Uses-count choices for full/partial recovery selects. */
 export function getUsesCountOptions(
   rules: CraftingRules | undefined,
-  usesType: UsesType
+  usesType: UsesType,
 ): number[] {
   const table = rules?.multipleUseTable ?? [];
   const values =
@@ -106,9 +104,7 @@ export function getUsesCountOptions(
           .map((row) => (typeof row.fullRecovery === 'number' ? row.fullRecovery : null))
           .filter((n): n is number => n != null)
       : table
-          .map((row) =>
-            typeof row.partialRecovery === 'number' ? row.partialRecovery : null
-          )
+          .map((row) => (typeof row.partialRecovery === 'number' ? row.partialRecovery : null))
           .filter((n): n is number => n != null);
   const unique = Array.from(new Set(values)).sort((a, b) => a - b);
   return unique.length ? unique : [1];
@@ -122,14 +118,8 @@ export function getSessionDsForIndex(args: {
   craftBaseItemAlso: boolean;
   requirementsBreakdown: RequirementsBreakdown | null;
 }): number {
-  const {
-    index,
-    effectiveDS,
-    dsModifier,
-    isEnhanced,
-    craftBaseItemAlso,
-    requirementsBreakdown,
-  } = args;
+  const { index, effectiveDS, dsModifier, isEnhanced, craftBaseItemAlso, requirementsBreakdown } =
+    args;
   if (isEnhanced && craftBaseItemAlso && requirementsBreakdown) {
     const baseCount = requirementsBreakdown.baseItemReq.requiredSuccesses;
     const baseDs = requirementsBreakdown.baseItemReq.difficultyScore;
@@ -184,7 +174,7 @@ export function computeCraftingRequirements(args: {
       rulesData,
       usesType,
       usesCount,
-      session.data.multipleUseTableIndex
+      session.data.multipleUseTableIndex,
     );
     const energyCost = resolvedPowerRef.energyCost ?? 10;
     const effectiveEnergy = getEffectiveCraftingEnergy(energyCost, multiIdx, rulesData);
@@ -201,8 +191,7 @@ export function computeCraftingRequirements(args: {
         const toHours = (req: CraftingRequirements) =>
           req.timeUnit === 'days' ? req.timeValue * dayHours : req.timeValue;
         const combinedHours = toHours(baseItemReq) + toHours(enhancementReq);
-        const combinedTimeUnit: 'hours' | 'days' =
-          combinedHours >= dayHours ? 'days' : 'hours';
+        const combinedTimeUnit: 'hours' | 'days' = combinedHours >= dayHours ? 'days' : 'hours';
         const combinedTimeValue =
           combinedTimeUnit === 'days'
             ? Math.max(1, Math.ceil(combinedHours / dayHours))
@@ -210,12 +199,8 @@ export function computeCraftingRequirements(args: {
 
         base = {
           rarity: enhancementReq.rarity,
-          difficultyScore: Math.max(
-            baseItemReq.difficultyScore,
-            enhancementReq.difficultyScore
-          ),
-          requiredSuccesses:
-            baseItemReq.requiredSuccesses + enhancementReq.requiredSuccesses,
+          difficultyScore: Math.max(baseItemReq.difficultyScore, enhancementReq.difficultyScore),
+          requiredSuccesses: baseItemReq.requiredSuccesses + enhancementReq.requiredSuccesses,
           materialCost: baseItemReq.materialCost + enhancementReq.materialCost,
           timeValue: combinedTimeValue,
           timeUnit: combinedTimeUnit,
@@ -252,8 +237,7 @@ export function computeCraftingRequirements(args: {
   let r = base;
   const mods = session.data.optionalModifiers;
   const isCommonOrConsumableCommonToRare =
-    r.rarity === 'Common' ||
-    (isConsumable && ['Common', 'Uncommon', 'Rare'].includes(r.rarity));
+    r.rarity === 'Common' || (isConsumable && ['Common', 'Uncommon', 'Rare'].includes(r.rarity));
   if (
     mods?.reduceDifficultyByTime &&
     typeof mods.reduceDifficultyByTime === 'number' &&
@@ -312,7 +296,7 @@ export function computeRequirementsBreakdown(args: {
     rulesData,
     usesType,
     usesCount,
-    session.data.multipleUseTableIndex
+    session.data.multipleUseTableIndex,
   );
   const energyCost = resolvedPowerRef.energyCost ?? 10;
   const effectiveEnergy = getEffectiveCraftingEnergy(energyCost, multiIdx, rulesData);
@@ -325,7 +309,7 @@ export function computeRequirementsBreakdown(args: {
 
 export function computeOptionalModifierMaxSteps(
   rulesData: CraftingRules | undefined,
-  requirements: CraftingRequirements | null
+  requirements: CraftingRequirements | null,
 ): {
   maxReduceTimeByDifficultySteps: number;
   maxReduceTimeByCostSteps: number;
@@ -380,14 +364,13 @@ export function computeOptionalModifierMaxSteps(
           0,
           Math.floor(
             (requirements.difficultyScore - 1) /
-              (rulesData.optionalReduceDifficultyByTime.dsReduction || 1)
-          )
-        )
+              (rulesData.optionalReduceDifficultyByTime.dsReduction || 1),
+          ),
+        ),
       )
     : 0;
 
-  const maxReduceDifficultyByCostSteps =
-    rulesData.optionalReduceDifficultyByCost?.maxSteps ?? 0;
+  const maxReduceDifficultyByCostSteps = rulesData.optionalReduceDifficultyByCost?.maxSteps ?? 0;
 
   return {
     maxReduceTimeByDifficultySteps,

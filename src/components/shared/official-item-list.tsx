@@ -39,9 +39,9 @@ import {
 export type { OfficialItemRow, ArmamentLibraryKind };
 
 const ARMAMENT_ICONS: Record<ArmamentLibraryKind, ReactNode> = {
-  weapon: <Sword className="w-8 h-8" />,
-  armor: <Shirt className="w-8 h-8" />,
-  shield: <Shield className="w-8 h-8" />,
+  weapon: <Sword className="h-8 w-8" />,
+  armor: <Shirt className="h-8 w-8" />,
+  shield: <Shield className="h-8 w-8" />,
 };
 
 export interface OfficialItemListProps {
@@ -89,27 +89,21 @@ export function OfficialItemList({
   const { grid, headers } = ARMAMENT_LIBRARY_CONFIG[armamentKind];
   const [advancedFilters, setAdvancedFilters] =
     useState<ArmamentFilterState>(EMPTY_ARMAMENT_FILTERS);
-  const [characterContext, setCharacterContext] =
-    useState<ArmamentCharacterContext | null>(null);
+  const [characterContext, setCharacterContext] = useState<ArmamentCharacterContext | null>(null);
   const [characterFilterId, setCharacterFilterId] = useState('');
   const addToCharacter = useAddToCharacterFromLibrary(armamentKind, characterFilterId);
-  const {
-    selectedPathIds,
-    setSelectedPathIds,
-    pathIndex,
-    pathRecommendedIds,
-    pathFilterActive,
-  } = usePathListFilter({
-    entities: items,
-    kind: 'armaments',
-    enabled: variant === 'library',
-  });
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({
+      entities: items,
+      kind: 'armaments',
+      enabled: variant === 'library',
+    });
 
   const filterRows = useCallback(
     (
       rows: OfficialItemRow[],
       search: string,
-      sortItems: (items: OfficialItemRow[]) => OfficialItemRow[]
+      sortItems: (items: OfficialItemRow[]) => OfficialItemRow[],
     ) =>
       filterOfficialItemRows(
         rows,
@@ -117,9 +111,9 @@ export function OfficialItemList({
         sortItems,
         advancedFilters,
         characterContext,
-        variant === 'library' ? pathRecommendedIds : null
+        variant === 'library' ? pathRecommendedIds : null,
       ),
-    [advancedFilters, characterContext, pathRecommendedIds, variant]
+    [advancedFilters, characterContext, pathRecommendedIds, variant],
   );
 
   return (

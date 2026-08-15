@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  parseLevel1LoadoutsField,
-  serializeLevel1LoadoutsField,
-} from '@/lib/game/archetype-path';
+import { parseLevel1LoadoutsField, serializeLevel1LoadoutsField } from '@/lib/game/archetype-path';
 
 describe('level1 loadouts field', () => {
   it('parses legacy kit array for compat', () => {
@@ -40,7 +37,7 @@ describe('level1 loadouts field', () => {
     expect(
       serializeLevel1LoadoutsField({
         loadouts: [{ id: 'k1', title: 'Kit', armaments: [] }],
-      })
+      }),
     ).toBeNull();
   });
 });

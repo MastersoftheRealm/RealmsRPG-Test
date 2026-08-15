@@ -41,7 +41,7 @@ export function TagFilter({
   // share one group and silently clear each other's mode.
   const tagModeName = `${id}-tagMode`;
   const uniqueTags = useMemo(() => dedupeStrings(tags), [tags]);
-  const availableTags = uniqueTags.filter(t => !selectedTags.includes(t));
+  const availableTags = uniqueTags.filter((t) => !selectedTags.includes(t));
 
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const value = e.target.value;
@@ -53,7 +53,7 @@ export function TagFilter({
 
   return (
     <div className={cn('filter-group', className)}>
-      <label htmlFor={id} className="block text-sm font-medium text-text-secondary mb-1">
+      <label htmlFor={id} className="mb-1 block text-sm font-medium text-text-secondary">
         {label}
       </label>
       <div className="flex items-center gap-2">
@@ -75,37 +75,32 @@ export function TagFilter({
           aria-label="Tag match mode"
           className="flex min-h-11 items-center gap-2 rounded-md bg-surface-alt px-3"
         >
-          <label className="flex items-center gap-1 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-1">
             <input
               type="radio"
               name={tagModeName}
               checked={tagMode === 'any'}
               onChange={() => onModeChange('any')}
-              className="w-4 h-4 text-primary-link-fg focus:ring-primary-outline-border"
+              className="h-4 w-4 text-primary-link-fg focus:ring-primary-outline-border"
             />
             <span className="text-sm">Any</span>
           </label>
-          <label className="flex items-center gap-1 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-1">
             <input
               type="radio"
               name={tagModeName}
               checked={tagMode === 'all'}
               onChange={() => onModeChange('all')}
-              className="w-4 h-4 text-primary-link-fg focus:ring-primary-outline-border"
+              className="h-4 w-4 text-primary-link-fg focus:ring-primary-outline-border"
             />
             <span className="text-sm">All</span>
           </label>
         </div>
       </div>
       {selectedTags.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
-          {selectedTags.map(tag => (
-            <Chip
-              key={tag}
-              variant="primary"
-              size="sm"
-              onRemove={() => onRemove(tag)}
-            >
+        <div className="mt-2 flex flex-wrap gap-2">
+          {selectedTags.map((tag) => (
+            <Chip key={tag} variant="primary" size="sm" onRemove={() => onRemove(tag)}>
               {tag}
             </Chip>
           ))}

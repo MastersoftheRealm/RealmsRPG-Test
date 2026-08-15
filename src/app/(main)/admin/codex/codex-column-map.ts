@@ -32,9 +32,7 @@ function columnarSourceKeyToCamel(collection: CodexCollection, key: string): str
 }
 
 function camelToSnake(s: string): string {
-  return s
-    .replace(/([a-zA-Z])(\d)/g, '$1_$2')
-    .replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+  return s.replace(/([a-zA-Z])(\d)/g, '$1_$2').replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
 }
 
 /**
@@ -59,12 +57,106 @@ function toColumnValue(val: unknown): unknown {
 }
 
 export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
-  codex_feats: ['name', 'description', 'reqDesc', 'abilityReq', 'abilReqVal', 'skillReq', 'skillReqVal', 'featCatReq', 'powAbilReq', 'martAbilReq', 'powProfReq', 'martProfReq', 'speedReq', 'featLvl', 'lvlReq', 'usesPerRec', 'recPeriod', 'category', 'ability', 'tags', 'charFeat', 'stateFeat', 'baseFeatId'],
-  codex_skills: ['name', 'description', 'ability', 'baseSkill', 'baseSkillId', 'successDesc', 'failureDesc', 'dsCalc', 'craftFailureDesc', 'craftSuccessDesc'],
-  codex_species: ['name', 'description', 'type', 'sizes', 'skills', 'speciesTraits', 'ancestryTraits', 'flaws', 'characteristics', 'aveHgtCm', 'aveWgtKg', 'aveHeight', 'aveWeight', 'adulthoodLifespan', 'languages', 'isStarter', 'imageId', 'imageUrl'],
-  codex_traits: ['name', 'description', 'usesPerRec', 'recPeriod', 'flaw', 'characteristic', 'optionTraitIds'],
-  codex_parts: ['name', 'description', 'category', 'baseEn', 'baseTp', 'op1Desc', 'op1En', 'op1Tp', 'op2Desc', 'op2En', 'op2Tp', 'op3Desc', 'op3En', 'op3Tp', 'type', 'mechanic', 'percentage', 'duration', 'defense'],
-  codex_properties: ['name', 'description', 'baseIp', 'baseTp', 'baseC', 'op1Desc', 'op1Ip', 'op1Tp', 'op1C', 'type', 'mechanic'],
+  codex_feats: [
+    'name',
+    'description',
+    'reqDesc',
+    'abilityReq',
+    'abilReqVal',
+    'skillReq',
+    'skillReqVal',
+    'featCatReq',
+    'powAbilReq',
+    'martAbilReq',
+    'powProfReq',
+    'martProfReq',
+    'speedReq',
+    'featLvl',
+    'lvlReq',
+    'usesPerRec',
+    'recPeriod',
+    'category',
+    'ability',
+    'tags',
+    'charFeat',
+    'stateFeat',
+    'baseFeatId',
+  ],
+  codex_skills: [
+    'name',
+    'description',
+    'ability',
+    'baseSkill',
+    'baseSkillId',
+    'successDesc',
+    'failureDesc',
+    'dsCalc',
+    'craftFailureDesc',
+    'craftSuccessDesc',
+  ],
+  codex_species: [
+    'name',
+    'description',
+    'type',
+    'sizes',
+    'skills',
+    'speciesTraits',
+    'ancestryTraits',
+    'flaws',
+    'characteristics',
+    'aveHgtCm',
+    'aveWgtKg',
+    'aveHeight',
+    'aveWeight',
+    'adulthoodLifespan',
+    'languages',
+    'isStarter',
+    'imageId',
+    'imageUrl',
+  ],
+  codex_traits: [
+    'name',
+    'description',
+    'usesPerRec',
+    'recPeriod',
+    'flaw',
+    'characteristic',
+    'optionTraitIds',
+  ],
+  codex_parts: [
+    'name',
+    'description',
+    'category',
+    'baseEn',
+    'baseTp',
+    'op1Desc',
+    'op1En',
+    'op1Tp',
+    'op2Desc',
+    'op2En',
+    'op2Tp',
+    'op3Desc',
+    'op3En',
+    'op3Tp',
+    'type',
+    'mechanic',
+    'percentage',
+    'duration',
+    'defense',
+  ],
+  codex_properties: [
+    'name',
+    'description',
+    'baseIp',
+    'baseTp',
+    'baseC',
+    'op1Desc',
+    'op1Ip',
+    'op1Tp',
+    'op1C',
+    'type',
+    'mechanic',
+  ],
   codex_equipment: ['name', 'description', 'category', 'currency', 'rarity', 'imageId', 'imageUrl'],
   codex_archetypes: [
     'name',
@@ -95,7 +187,7 @@ export const COLUMNAR_FIELDS: Record<CodexCollection, string[]> = {
 /** Build create/update payload from admin payload (snake_case, arrays). Output camelCase for toDbPayload. */
 export function toColumnarPayload(
   collection: CodexCollection,
-  data: Record<string, unknown>
+  data: Record<string, unknown>,
 ): Record<string, unknown> {
   const allowed = new Set(COLUMNAR_FIELDS[collection] ?? []);
   const out: Record<string, unknown> = {};
@@ -111,7 +203,7 @@ export function toColumnarPayload(
 /** Convert camelCase payload to snake_case for Supabase (DB columns). Collection-specific aliases so API response keys round-trip to correct DB columns. */
 export function toDbPayload(
   collection: CodexCollection,
-  payload: Record<string, unknown>
+  payload: Record<string, unknown>,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(payload)) {
@@ -137,7 +229,7 @@ export function toDbPayload(
 /** Every DB column this collection's write path can set, derived from the allowlist itself. */
 export function columnarDbColumns(collection: CodexCollection): string[] {
   const camelPayload = Object.fromEntries(
-    (COLUMNAR_FIELDS[collection] ?? []).map((field) => [field, null])
+    (COLUMNAR_FIELDS[collection] ?? []).map((field) => [field, null]),
   );
   return Object.keys(toDbPayload(collection, camelPayload));
 }

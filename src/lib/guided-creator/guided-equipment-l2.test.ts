@@ -213,14 +213,7 @@ describe('guided-equipment-l2', () => {
         data: { ref: { id: 's1', quantity: 1 }, category: 'weapon', row: catalog.get('s1')! },
       },
     ];
-    const result = applyGuidedEquipmentL2Selection(
-      'weapon',
-      baseDraft,
-      selected,
-      catalog,
-      30,
-      200
-    );
+    const result = applyGuidedEquipmentL2Selection('weapon', baseDraft, selected, catalog, 30, 200);
     expect(result.ok).toBe(false);
   });
 
@@ -239,7 +232,7 @@ describe('guided-equipment-l2', () => {
           data: { ref: { id: 'w1', quantity: 1 }, category: 'weapon', row: catalog.get('w1')! },
         },
       ],
-      catalog
+      catalog,
     );
     expect(spent).toBe(14);
   });
@@ -249,9 +242,7 @@ describe('guided-equipment-l2', () => {
     const axe = items.find((i) => i.id === 'w1');
     expect(axe).toBeTruthy();
     const rowKeys = (axe!.columns ?? []).map((c) => c.key);
-    const headerKeys = WEAPON_L2_HEADER_COLUMNS.filter((c) => c.key !== 'name').map(
-      (c) => c.key
-    );
+    const headerKeys = WEAPON_L2_HEADER_COLUMNS.filter((c) => c.key !== 'name').map((c) => c.key);
     expect(rowKeys).toEqual(headerKeys);
     expect(axe!.columns?.find((c) => c.key === 'currency')?.value).toBe(25);
   });
@@ -287,11 +278,11 @@ describe('guided-equipment-l2', () => {
       catalog,
       { ...ctx, phase: 'armor' },
       [],
-      []
+      [],
     );
     const chain = armorItems.find((i) => i.id === 'a1');
     expect((chain!.columns ?? []).map((c) => c.key)).toEqual(
-      ARMOR_L2_HEADER_COLUMNS.filter((c) => c.key !== 'name').map((c) => c.key)
+      ARMOR_L2_HEADER_COLUMNS.filter((c) => c.key !== 'name').map((c) => c.key),
     );
 
     const gearItems = buildGuidedEquipmentL2Items(
@@ -299,22 +290,22 @@ describe('guided-equipment-l2', () => {
       catalog,
       { ...ctx, phase: 'gear', remainingCurrency: 200 },
       [],
-      []
+      [],
     );
     const rope = gearItems.find((i) => i.id === 'g1');
     expect((rope!.columns ?? []).map((c) => c.key)).toEqual(
-      GEAR_L2_HEADER_COLUMNS.filter((c) => c.key !== 'name').map((c) => c.key)
+      GEAR_L2_HEADER_COLUMNS.filter((c) => c.key !== 'name').map((c) => c.key),
     );
     expect(rope!.columns?.find((c) => c.key === 'category')?.value).toBe('Adventuring');
 
     const lockpicks = gearItems.find((i) => i.id === 'g2');
     expect(lockpicks!.columns?.find((c) => c.key === 'category')?.value).toBe('-');
-    expect(gearItems.find((i) => i.id === 'g3')?.columns?.find((c) => c.key === 'category')?.value).toBe(
-      'Tools'
-    );
-    expect(gearItems.find((i) => i.id === 'g4')?.columns?.find((c) => c.key === 'category')?.value).toBe(
-      '-'
-    );
+    expect(
+      gearItems.find((i) => i.id === 'g3')?.columns?.find((c) => c.key === 'category')?.value,
+    ).toBe('Tools');
+    expect(
+      gearItems.find((i) => i.id === 'g4')?.columns?.find((c) => c.key === 'category')?.value,
+    ).toBe('-');
   });
 
   it('does not add a type-duplicate Category column on weapon/armor phases (TASK-724)', () => {
@@ -327,7 +318,7 @@ describe('guided-equipment-l2', () => {
       catalog,
       { ...ctx, phase: 'armor' },
       [],
-      []
+      [],
     );
     const chain = armorItems.find((i) => i.id === 'a1');
     expect((chain!.columns ?? []).map((c) => c.key)).not.toContain('category');
@@ -352,7 +343,7 @@ describe('guided-equipment-l2', () => {
       ],
       catalog,
       30,
-      200
+      200,
     );
     expect(result.ok).toBe(true);
   });
@@ -383,14 +374,7 @@ describe('guided-equipment-l2', () => {
     ];
     expect(computeL2GearSpend(selected)).toBe(20);
 
-    const result = applyGuidedEquipmentL2Selection(
-      'gear',
-      baseDraft,
-      selected,
-      catalog,
-      30,
-      200
-    );
+    const result = applyGuidedEquipmentL2Selection('gear', baseDraft, selected, catalog, 30, 200);
     expect(result.ok).toBe(true);
     expect(result.partial?.equipment).toEqual([{ id: 'g1', quantity: 4 }]);
   });
@@ -414,7 +398,7 @@ describe('guided-equipment-l2', () => {
       overBudgetSelection,
       catalog,
       30,
-      200
+      200,
     );
     expect(over.ok).toBe(false);
 
@@ -424,7 +408,7 @@ describe('guided-equipment-l2', () => {
       [],
       catalog,
       30,
-      200
+      200,
     );
     expect(cleared.ok).toBe(true);
     expect(cleared.partial?.equipment).toEqual([]);
@@ -444,18 +428,11 @@ describe('guided-equipment-l2', () => {
       'w2',
       catalog,
       30,
-      200
+      200,
     );
     expect(rejected.ok).toBe(false);
 
-    const removed = toggleGuidedEquipmentL2Ref(
-      'weapon',
-      withShield,
-      's1',
-      catalog,
-      30,
-      200
-    );
+    const removed = toggleGuidedEquipmentL2Ref('weapon', withShield, 's1', catalog, 30, 200);
     expect(removed.ok).toBe(true);
     expect(removed.partial?.loadoutWeapons).toEqual([{ id: 'w2', quantity: 1 }]);
   });
@@ -465,38 +442,14 @@ describe('guided-equipment-l2', () => {
       ...baseDraft,
       equipment: [{ id: 'g1', quantity: 2 }],
     };
-    const bumped = changeGuidedEquipmentL2Quantity(
-      'gear',
-      draft,
-      'g1',
-      1,
-      catalog,
-      30,
-      200
-    );
+    const bumped = changeGuidedEquipmentL2Quantity('gear', draft, 'g1', 1, catalog, 30, 200);
     expect(bumped.ok).toBe(true);
     expect(bumped.partial?.equipment).toEqual([{ id: 'g1', quantity: 3 }]);
 
-    const over = changeGuidedEquipmentL2Quantity(
-      'gear',
-      draft,
-      'g1',
-      50,
-      catalog,
-      30,
-      200
-    );
+    const over = changeGuidedEquipmentL2Quantity('gear', draft, 'g1', 50, catalog, 30, 200);
     expect(over.ok).toBe(false);
 
-    const cleared = changeGuidedEquipmentL2Quantity(
-      'gear',
-      draft,
-      'g1',
-      -99,
-      catalog,
-      30,
-      200
-    );
+    const cleared = changeGuidedEquipmentL2Quantity('gear', draft, 'g1', -99, catalog, 30, 200);
     expect(cleared.ok).toBe(true);
     expect(cleared.partial?.equipment).toEqual([]);
   });

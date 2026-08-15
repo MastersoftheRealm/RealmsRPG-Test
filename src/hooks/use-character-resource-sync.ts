@@ -13,7 +13,7 @@ import {
 
 export function useCharacterResourceSync(
   character: Character | null | undefined,
-  enabled: boolean
+  enabled: boolean,
 ): void {
   const skipInitialRef = useRef(true);
 
@@ -31,8 +31,5 @@ export function useCharacterResourceSync(
     const patch = buildResourcePatchFromCharacter(character);
     if (!patch) return;
     scheduleCharacterResourceSync(character.id, patch);
-  }, [
-    enabled,
-    character,
-  ]);
+  }, [enabled, character]);
 }

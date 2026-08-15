@@ -16,36 +16,36 @@ export interface BaseGameItem {
 export interface DisplayItem extends BaseGameItem {
   // Allow dynamic field access for filtering/sorting
   [key: string]: unknown;
-  
+
   // Core display fields
   subtitle?: string;
   category?: string;
   type?: string;
-  
+
   // Cost/value fields
   cost?: number | string;
   costLabel?: string;
   secondaryCost?: number | string;
   secondaryCostLabel?: string;
-  
+
   // Tags and badges
   tags?: string[];
   badges?: ItemBadge[];
-  
+
   // Stats for quick display
   stats?: ItemStat[];
-  
+
   // Extended details for expanded view
   details?: ItemDetail[];
-  
+
   // Requirements
   requirements?: ItemRequirement[];
-  
+
   // Selection state (for use in selectors)
   isSelected?: boolean;
   isDisabled?: boolean;
   disabledReason?: string;
-  
+
   // Source data for editing/saving (creature creator stores typed payloads)
   sourceData?: unknown;
 }
@@ -100,7 +100,7 @@ export interface ItemSortState {
 }
 
 // Item category types
-export type ItemCategory = 
+export type ItemCategory =
   | 'power'
   | 'technique'
   | 'weapon'
@@ -121,12 +121,12 @@ export interface TransformContext {
   // Reference data needed for calculations
   parts?: Record<string, unknown>[];
   properties?: Record<string, unknown>[];
-  
+
   // Character context for requirement checking
   characterLevel?: number;
   characterAbilities?: Record<string, number>;
   characterSkills?: Record<string, number>;
-  
+
   // Selection context
   selectedIds?: Set<string>;
   maxSelections?: number;
@@ -134,10 +134,10 @@ export interface TransformContext {
 }
 
 // List mode types
-export type ListMode = 
-  | 'view'       // Read-only display (Codex, character sheet view mode)
-  | 'select'     // Select items (Character creator, adding items)
-  | 'manage';    // Edit/delete items (Library, character sheet edit mode)
+export type ListMode =
+  | 'view' // Read-only display (Codex, character sheet view mode)
+  | 'select' // Select items (Character creator, adding items)
+  | 'manage'; // Edit/delete items (Library, character sheet edit mode)
 
 // Action callbacks
 export interface ItemActions {

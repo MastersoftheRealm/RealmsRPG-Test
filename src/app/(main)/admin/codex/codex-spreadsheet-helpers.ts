@@ -54,7 +54,7 @@ export function rowDataWithoutId(row: Record<string, unknown>): Record<string, u
 /** Columns whose value differs from the snapshot taken when the grid loaded. */
 export function changedColumns(
   current: Record<string, unknown>,
-  original: Record<string, unknown> | null
+  original: Record<string, unknown> | null,
 ): string[] {
   if (!original) return Object.keys(current).filter((key) => key !== 'id');
   const keys = new Set([...Object.keys(current), ...Object.keys(original)]);

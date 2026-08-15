@@ -48,8 +48,7 @@ export function resolvePathAbilityLabels(path: Archetype): PathAbilityLabels {
   const secondaryField = asAbility(path.secondary_ability);
 
   if (pathType === 'powered-martial') {
-    const powAbil =
-      asAbility(path.pow_abil) ?? asAbility(path.archetype_ability) ?? null;
+    const powAbil = asAbility(path.pow_abil) ?? asAbility(path.archetype_ability) ?? null;
     // Martial archetype ability; secondary_ability is a common admin/data fallback for that side.
     const martAbil = asAbility(path.mart_abil) ?? secondaryField;
     const primaryAbilities = uniqAbilities([powAbil, martAbil]);
@@ -63,11 +62,8 @@ export function resolvePathAbilityLabels(path: Archetype): PathAbilityLabels {
 
   if (pathType === 'martial') {
     const martAbil =
-      asAbility(path.mart_abil) ??
-      asAbility(path.archetype_ability) ??
-      secondaryField;
-    const secondaryAbility =
-      secondaryField && secondaryField !== martAbil ? secondaryField : null;
+      asAbility(path.mart_abil) ?? asAbility(path.archetype_ability) ?? secondaryField;
+    const secondaryAbility = secondaryField && secondaryField !== martAbil ? secondaryField : null;
     return {
       primaryAbilities: martAbil ? [martAbil] : [],
       secondaryAbility,
@@ -76,10 +72,8 @@ export function resolvePathAbilityLabels(path: Archetype): PathAbilityLabels {
     };
   }
 
-  const powAbil =
-    asAbility(path.archetype_ability) ?? asAbility(path.pow_abil) ?? null;
-  const secondaryAbility =
-    secondaryField && secondaryField !== powAbil ? secondaryField : null;
+  const powAbil = asAbility(path.archetype_ability) ?? asAbility(path.pow_abil) ?? null;
+  const secondaryAbility = secondaryField && secondaryField !== powAbil ? secondaryField : null;
   return {
     primaryAbilities: powAbil ? [powAbil] : [],
     secondaryAbility,

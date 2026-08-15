@@ -53,26 +53,26 @@ export const ABILITY_LIMITS = {
 /** Archetype configurations (level 1 starting values) */
 export const ARCHETYPE_CONFIGS: Record<ArchetypeCategory, ArchetypeConfig> = {
   power: {
-    featLimit: 0,           // No bonus archetype feats (total = level)
-    armamentMax: 3,         // Martial Prof 0 → Armament Prof 3
-    innateEnergy: 16,       // L1 Innate Energy budget (Threshold 8 × Pools 2)
+    featLimit: 0, // No bonus archetype feats (total = level)
+    armamentMax: 3, // Martial Prof 0 → Armament Prof 3
+    innateEnergy: 16, // L1 Innate Energy budget (Threshold 8 × Pools 2)
     innateThreshold: 8,
     innatePools: 2,
     proficiency: { martial: 0, power: 2 },
     trainingPointBonus: 0,
   },
   'powered-martial': {
-    featLimit: 1,           // +1 bonus from martial proficiency joining
-    armamentMax: 8,         // Martial Prof 1 → Armament Prof 8
-    innateEnergy: 6,        // L1 Innate Energy (Threshold 6 × Pools 1)
+    featLimit: 1, // +1 bonus from martial proficiency joining
+    armamentMax: 8, // Martial Prof 1 → Armament Prof 8
+    innateEnergy: 6, // L1 Innate Energy (Threshold 6 × Pools 1)
     innateThreshold: 6,
     innatePools: 1,
     proficiency: { martial: 1, power: 1 },
     trainingPointBonus: 0,
   },
   martial: {
-    featLimit: 2,           // +2 bonus archetype feats at level 1
-    armamentMax: 12,        // Martial Prof 2 → Armament Prof 12
+    featLimit: 2, // +2 bonus archetype feats at level 1
+    armamentMax: 12, // Martial Prof 2 → Armament Prof 12
     innateEnergy: 0,
     innateThreshold: 0,
     innatePools: 0,
@@ -139,5 +139,5 @@ export const ABILITIES_AND_DEFENSES = [
 
 /** Map from draft ability key (lowercase) to full display name for character creator / finalize step. */
 export const ABILITY_DISPLAY_NAMES: Record<string, string> = Object.fromEntries(
-  ABILITIES_AND_DEFENSES.slice(0, 6).map((name) => [name.toLowerCase(), name])
+  ABILITIES_AND_DEFENSES.slice(0, 6).map((name) => [name.toLowerCase(), name]),
 );

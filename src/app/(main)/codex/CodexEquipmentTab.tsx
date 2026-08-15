@@ -8,11 +8,7 @@
 
 import { useMemo, useState } from 'react';
 import { SelectFilter, ArmamentFilters } from '@/components/shared/filters';
-import {
-  CodexBrowseListShell,
-  ErrorDisplay as ErrorState,
-  GridListRow,
-} from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
 import { EmptyState } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import { useEquipment, useItemProperties, usePathListFilter } from '@/hooks';
@@ -50,11 +46,9 @@ function EquipmentCard({
 }) {
   const detailSections = useMemo(
     () => buildCodexEquipmentDetailSections(item, propertiesDb),
-    [item, propertiesDb]
+    [item, propertiesDb],
   );
-  const nameChips = nameChipLabels?.length
-    ? nameChipLabels.map((label) => ({ label }))
-    : undefined;
+  const nameChips = nameChipLabels?.length ? nameChipLabels.map((label) => ({ label })) : undefined;
 
   return (
     <GridListRow
@@ -81,24 +75,17 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
     categoryFilter: '',
     rarityFilter: '',
   });
-  const [armamentFilters, setArmamentFilters] = useState<ArmamentFilterState>(EMPTY_ARMAMENT_FILTERS);
+  const [armamentFilters, setArmamentFilters] =
+    useState<ArmamentFilterState>(EMPTY_ARMAMENT_FILTERS);
   const [characterContext, setCharacterContext] = useState<ArmamentCharacterContext | null>(null);
-  const {
-    selectedPathIds,
-    setSelectedPathIds,
-    pathIndex,
-    pathRecommendedIds,
-    pathFilterActive,
-  } = usePathListFilter({
-    entities: equipment,
-    kind: EQUIPMENT_LIST_PATH_KINDS,
-    enabled: loadPublicCodex,
-  });
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({
+      entities: equipment,
+      kind: EQUIPMENT_LIST_PATH_KINDS,
+      enabled: loadPublicCodex,
+    });
 
-  const filterOptions = useMemo(
-    () => collectCodexEquipmentFilterOptions(equipment),
-    [equipment]
-  );
+  const filterOptions = useMemo(() => collectCodexEquipmentFilterOptions(equipment), [equipment]);
 
   const filteredEquipment = useMemo(() => {
     if (!equipment) return [];
@@ -108,8 +95,8 @@ export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'publi
         listFilters,
         armamentFilters,
         characterContext,
-        pathRecommendedIds
-      )
+        pathRecommendedIds,
+      ),
     );
   }, [equipment, listFilters, armamentFilters, characterContext, sortItems, pathRecommendedIds]);
 

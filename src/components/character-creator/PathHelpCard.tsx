@@ -31,7 +31,7 @@ export function PathHelpCard({ pathName, children, actions, className }: PathHel
       role="region"
       aria-label={`Guidance for path: ${pathName}`}
     >
-      <p className="text-text-primary font-medium">
+      <p className="font-medium text-text-primary">
         As a <strong className="text-primary-fg">{pathName}</strong>, {children}
       </p>
       {actions ? <div className="mt-3">{actions}</div> : null}
@@ -65,8 +65,8 @@ export function PathNotes({ pathName, notes, className }: PathNotesProps) {
       role="note"
       aria-label={`Path notes for ${pathName}`}
     >
-      <p className="text-sm font-semibold text-primary-fg mb-1">Path guidance</p>
-      <p className="text-sm text-text-secondary whitespace-pre-wrap">{trimmed}</p>
+      <p className="mb-1 text-sm font-semibold text-primary-fg">Path guidance</p>
+      <p className="text-sm whitespace-pre-wrap text-text-secondary">{trimmed}</p>
     </div>
   );
 }

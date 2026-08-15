@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   bodyToColumnar,
   bodyToColumnarSpecies,
+  columnarViewSelect,
   mergeLegacySpeciesRowWithImageColumns,
   rowToItem,
   toDbRow,
@@ -11,7 +12,7 @@ import {
 function apiRoundTrip(
   type: 'powers' | 'techniques' | 'empowered-techniques' | 'items',
   body: Record<string, unknown>,
-  source: 'official' | 'user' = 'user'
+  source: 'official' | 'user' = 'user',
 ): Record<string, unknown> {
   const { scalars, payload } = bodyToColumnar(type, body);
   const dbRow = toDbRow({
@@ -173,7 +174,10 @@ describe('library-columnar API round-trip — empowered techniques', () => {
       name: 'Old Official Empowered',
       payload: {
         empoweredTechnique: true,
-        power: { range: { steps: 0 }, parts: [{ id: 369, name: 'Add Weapon to Power', op_1_lvl: 2 }] },
+        power: {
+          range: { steps: 0 },
+          parts: [{ id: 369, name: 'Add Weapon to Power', op_1_lvl: 2 }],
+        },
         technique: { parts: [] },
       },
     };
@@ -183,7 +187,7 @@ describe('library-columnar API round-trip — empowered techniques', () => {
     expect(loaded.attackMode).toBe('weapon');
     expect(loaded.weaponName).toBe('Weapon');
     expect((loaded.power as { parts?: Array<{ name?: string }> }).parts?.[0]?.name).toBe(
-      'Add Weapon to Power'
+      'Add Weapon to Power',
     );
   });
 
@@ -278,9 +282,9 @@ describe('library-columnar API round-trip — powers', () => {
 
     const loaded = apiRoundTrip('powers', body);
 
-    expect((loaded.area as { applyDuration?: boolean; type?: string; level?: number }).applyDuration).toBe(
-      true,
-    );
+    expect(
+      (loaded.area as { applyDuration?: boolean; type?: string; level?: number }).applyDuration,
+    ).toBe(true);
     expect((loaded.area as { type?: string }).type).toBe('sphere');
     expect((loaded.area as { level?: number }).level).toBe(3);
     expect((loaded.range as { applyDuration?: boolean; steps?: number }).applyDuration).toBe(true);
@@ -396,12 +400,16 @@ describe('library-columnar image_id parity (TASK-497)', () => {
   });
 
   it('round-trips image refs for user library rows', () => {
-    const loaded = apiRoundTrip('powers', {
-      name: 'Shield',
-      imageId: '33333333-3333-3333-3333-333333333333',
-      imageUrl: 'https://example.com/shield.jpg',
-      parts: [],
-    }, 'user');
+    const loaded = apiRoundTrip(
+      'powers',
+      {
+        name: 'Shield',
+        imageId: '33333333-3333-3333-3333-333333333333',
+        imageUrl: 'https://example.com/shield.jpg',
+        parts: [],
+      },
+      'user',
+    );
 
     expect(loaded.imageId).toBe('33333333-3333-3333-3333-333333333333');
     expect(loaded.imageUrl).toBe('https://example.com/shield.jpg');
@@ -438,5 +446,15 @@ describe('library-columnar image_id parity (TASK-497)', () => {
     expect(merged.name).toBe('Legacy Elf');
     expect(merged.image_id).toBe('55555555-5555-5555-5555-555555555555');
     expect(merged.image_url).toBe('https://example.com/from-column.jpg');
+  });
+});
+
+describe('columnarViewSelect', () => {
+  it('lists identity, payload, and scalars without user_id', () => {
+    const columns = columnarViewSelect('powers').split(', ');
+    expect(columns).toContain('id');
+    expect(columns).toContain('payload');
+    expect(columns).toContain('name');
+    expect(columns).not.toContain('user_id');
   });
 });

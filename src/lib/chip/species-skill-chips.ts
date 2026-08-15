@@ -10,7 +10,7 @@ type SkillLike = { id: string | number; name?: string; description?: string };
 /** Map a species skill id to a summary/expandable chip item (codex + "Any"). */
 export function speciesSkillToSummaryChipItem(
   skillId: string | number,
-  allSkills: SkillLike[]
+  allSkills: SkillLike[],
 ): SummaryChipItem {
   const key = String(skillId);
   if (key === ANY_SPECIES_SKILL_ID) {
@@ -22,9 +22,7 @@ export function speciesSkillToSummaryChipItem(
     };
   }
   const skill = allSkills.find(
-    (s) =>
-      String(s.id) === key ||
-      String(s.name ?? '').toLowerCase() === key.toLowerCase()
+    (s) => String(s.id) === key || String(s.name ?? '').toLowerCase() === key.toLowerCase(),
   );
   return {
     key,

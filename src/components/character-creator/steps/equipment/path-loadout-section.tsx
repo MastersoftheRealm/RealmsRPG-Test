@@ -50,7 +50,7 @@ export function PathLoadoutSection({
 
   return (
     <>
-      <div className="flex flex-wrap gap-2 mb-4">
+      <div className="mb-4 flex flex-wrap gap-2">
         <Button
           variant={loadoutPhase === 'weapon' ? 'primary' : 'secondary'}
           onClick={() => onLoadoutPhaseChange('weapon')}
@@ -70,12 +70,12 @@ export function PathLoadoutSection({
       {/* Path mode: recommended equipment = armaments + general equipment from path */}
       {showRecommendedBlock && (
         <div className="mb-6">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-lg font-semibold text-text-primary">
                 {loadoutPhase === 'weapon' ? 'Recommended weapons' : 'Recommended armor'}
               </h3>
-              <p className="text-sm text-text-secondary mt-0.5">
+              <p className="mt-0.5 text-sm text-text-secondary">
                 {pathConfirmMode
                   ? 'Included in your path. Review your loadout below. Expand to swap gear or browse the full catalog.'
                   : pathRecommendedForPhase.length > 0
@@ -86,36 +86,36 @@ export function PathLoadoutSection({
               </p>
             </div>
             {pathConfirmMode ? (
-              <span className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 text-sm font-medium min-h-11">
-                <Check className="w-4 h-4" aria-hidden />
+              <span className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-success-100 px-3 py-2 text-sm font-medium text-success-700 dark:bg-success-900/30 dark:text-success-400">
+                <Check className="h-4 w-4" aria-hidden />
                 {recommendedInInventory.length} / {pathRecommendedItems.length} confirmed
               </span>
             ) : pathRecommendedItems.length > 0 ? (
               <Button
                 onClick={onAddAllRecommended}
-                className="inline-flex items-center gap-2 shrink-0"
+                className="inline-flex shrink-0 items-center gap-2"
                 aria-label="Add all recommended equipment to inventory (replaces any previously added recommended items)"
               >
-                <Check className="w-4 h-4" />
+                <Check className="h-4 w-4" />
                 Add Recommended Equipment
               </Button>
             ) : null}
           </div>
           {pathConfirmMode && pathRecommendedForPhase.length > 0 && (
-            <ul className="space-y-2 mb-4">
+            <ul className="mb-4 space-y-2">
               {pathRecommendedForPhase.map(({ item, quantity }) => {
                 const inInventory = recommendedInInventory.some((r) => r.item.id === item.id);
                 return (
                   <li
                     key={`${item.id}-${quantity}`}
-                    className="flex items-center gap-2 text-sm text-text-primary min-h-11"
+                    className="flex min-h-11 items-center gap-2 text-sm text-text-primary"
                   >
                     <span
                       className={cn(
-                        'inline-flex w-6 h-6 items-center justify-center rounded-full text-xs font-bold',
+                        'inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
                         inInventory
-                          ? 'bg-success-100 dark:bg-success-900/40 text-success-700 dark:text-success-400'
-                          : 'bg-surface-alt text-text-muted'
+                          ? 'bg-success-100 text-success-700 dark:bg-success-900/40 dark:text-success-400'
+                          : 'bg-surface-alt text-text-muted',
                       )}
                       aria-hidden
                     >
@@ -130,7 +130,7 @@ export function PathLoadoutSection({
           )}
           {publicItemsLoading && pathRecommendedItems.length === 0 && (
             <div className="flex items-center gap-2 py-4 text-text-secondary">
-              <Spinner className="w-5 h-5" />
+              <Spinner className="h-5 w-5" />
               <span>Loading recommended equipment…</span>
             </div>
           )}
@@ -147,19 +147,17 @@ export function PathLoadoutSection({
                     onClick={() => canAfford && onAddItemWithQuantity(item, quantity)}
                     disabled={!canAfford}
                     className={cn(
-                      'inline-flex items-center gap-2 px-3 py-2 rounded-lg border text-sm font-medium transition-colors min-h-[44px]',
+                      'inline-flex min-h-[44px] items-center gap-2 rounded-lg border px-3 py-2 text-sm font-medium transition-colors',
                       canAfford
-                        ? 'bg-primary-subtle-bg border-primary-subtle-border text-primary-subtle-fg hover:bg-primary-subtle-bg-hover'
-                        : 'bg-surface-alt border-border-light text-text-muted dark:text-text-secondary cursor-not-allowed'
+                        ? 'border-primary-subtle-border bg-primary-subtle-bg text-primary-subtle-fg hover:bg-primary-subtle-bg-hover'
+                        : 'cursor-not-allowed border-border-light bg-surface-alt text-text-muted',
                     )}
                   >
                     <span className="text-left">
                       {item.name}
                       {quantity > 1 ? ` ×${quantity}` : ''}
                     </span>
-                    <span className="text-xs text-text-secondary flex-shrink-0">
-                      {totalCost}c
-                    </span>
+                    <span className="flex-shrink-0 text-xs text-text-secondary">{totalCost}c</span>
                   </button>
                 );
               })}
@@ -174,9 +172,9 @@ export function PathLoadoutSection({
         <Button
           variant="secondary"
           onClick={onExpandFullCatalog}
-          className="inline-flex items-center gap-2 min-h-11"
+          className="inline-flex min-h-11 items-center gap-2"
         >
-          <ShoppingBag className="w-4 h-4" />
+          <ShoppingBag className="h-4 w-4" />
           See all equipment
         </Button>
         {loadoutPhase === 'weapon' ? (

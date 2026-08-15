@@ -58,7 +58,10 @@ describe('applyStarterEquippedFlags', () => {
   });
 
   it('picks first armor when DR ties', () => {
-    const rows = [{ id: 'a1', type: 'armor' as const }, { id: 'a2', type: 'armor' as const }];
+    const rows = [
+      { id: 'a1', type: 'armor' as const },
+      { id: 'a2', type: 'armor' as const },
+    ];
     expect(pickArmorEquipIndex(rows, () => 2)).toBe(0);
   });
 });

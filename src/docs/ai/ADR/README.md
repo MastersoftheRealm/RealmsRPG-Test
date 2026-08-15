@@ -37,3 +37,4 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0012 | Guided L3 inline catalog list | Accepted |
 | 0013 | Character dirty-key PATCH + updatedAt 409 | Accepted |
 | 0014 | Archetype Path filter reads path recommendation arrays live | Accepted |
+| 0015 | Wave 3B fetch contracts (enrichment + counts + codex collection) | Accepted (TASK-773 / TASK-774); Proposed (775) |

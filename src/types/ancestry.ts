@@ -5,13 +5,7 @@
  */
 
 /** Size categories */
-export type SizeCategory = 
-  | 'tiny'
-  | 'small'
-  | 'medium'
-  | 'large'
-  | 'huge'
-  | 'gargantuan';
+export type SizeCategory = 'tiny' | 'small' | 'medium' | 'large' | 'huge' | 'gargantuan';
 
 /** An ancestry/species from the database */
 export interface Ancestry {

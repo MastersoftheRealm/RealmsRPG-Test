@@ -3,12 +3,12 @@
  * ====================================
  * Shared component for viewing and editing abilities.
  * Used in character creator, character sheet (edit mode), and creature creator.
- * 
+ *
  * Point Costs:
  * - Increases to +4 and below: 1 point each (0→1 … 3→4)
  * - Increases from +4 to +5 and above: 2 points each (+4 total = 4 pts, +5 = 6, +6 = 8, etc.)
  * - Negative abilities give points back (1 per point)
- * 
+ *
  * Constraints vary by context:
  * - Character Creator: max +3, min -2, max negative sum -3
  * - Character Sheet: higher max based on level, no negative sum constraint
@@ -19,7 +19,13 @@
 
 import { useMemo } from 'react';
 import { cn, formatBonus } from '@/lib/utils';
-import { PointStatus, DecrementButton, IncrementButton, AbilityScoreGrid, WordHelpTip } from '@/components/shared';
+import {
+  PointStatus,
+  DecrementButton,
+  IncrementButton,
+  AbilityScoreGrid,
+  WordHelpTip,
+} from '@/components/shared';
 import type { AbilityName, Abilities } from '@/types';
 import { calculateAbilityScoreCost, getAbilityIncreaseCost } from '@/lib/game/formulas';
 import { getAbilityHelp } from '../../../public/tooltip-text';
@@ -57,16 +63,32 @@ export interface AbilityScoreEditorProps {
   variant?: 'default' | 'sheet';
 }
 
-const ABILITY_ORDER: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
+const ABILITY_ORDER: AbilityName[] = [
+  'strength',
+  'vitality',
+  'agility',
+  'acuity',
+  'intelligence',
+  'charisma',
+];
 
-const ABILITY_INFO: Record<AbilityName, { name: string; shortName: string; description: string }> = {
-  strength: { name: 'Strength', shortName: 'STR', description: 'Physical power and melee damage' },
-  vitality: { name: 'Vitality', shortName: 'VIT', description: 'Health and endurance' },
-  agility: { name: 'Agility', shortName: 'AGI', description: 'Speed, reflexes, and finesse' },
-  acuity: { name: 'Acuity', shortName: 'ACU', description: 'Perception and ranged accuracy' },
-  intelligence: { name: 'Intelligence', shortName: 'INT', description: 'Knowledge and mental power' },
-  charisma: { name: 'Charisma', shortName: 'CHA', description: 'Social influence and presence' },
-};
+const ABILITY_INFO: Record<AbilityName, { name: string; shortName: string; description: string }> =
+  {
+    strength: {
+      name: 'Strength',
+      shortName: 'STR',
+      description: 'Physical power and melee damage',
+    },
+    vitality: { name: 'Vitality', shortName: 'VIT', description: 'Health and endurance' },
+    agility: { name: 'Agility', shortName: 'AGI', description: 'Speed, reflexes, and finesse' },
+    acuity: { name: 'Acuity', shortName: 'ACU', description: 'Perception and ranged accuracy' },
+    intelligence: {
+      name: 'Intelligence',
+      shortName: 'INT',
+      description: 'Knowledge and mental power',
+    },
+    charisma: { name: 'Charisma', shortName: 'CHA', description: 'Social influence and presence' },
+  };
 
 export function AbilityScoreEditor({
   abilities,
@@ -125,12 +147,7 @@ export function AbilityScoreEditor({
   return (
     <div className="space-y-4">
       {!hidePointsStatus && (
-        <PointStatus
-          total={totalPoints}
-          spent={spentPoints}
-          variant="block"
-          showCalculation
-        />
+        <PointStatus total={totalPoints} spent={spentPoints} variant="block" showCalculation />
       )}
 
       {variant === 'sheet' ? (
@@ -153,7 +170,7 @@ export function AbilityScoreEditor({
         <div
           className={cn(
             'grid gap-3',
-            compact ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
+            compact ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
           )}
         >
           {ABILITY_ORDER.map((ability) => {
@@ -184,17 +201,17 @@ export function AbilityScoreEditor({
               <div key={ability} className="flex flex-col">
                 <div
                   className={cn(
-                    'p-3 rounded-xl border-2 transition-all flex-1',
+                    'flex-1 rounded-xl border-2 p-3 transition-all',
                     borderClass,
                     bgClass,
-                    !isEditMode && 'text-text-muted dark:text-text-secondary'
+                    !isEditMode && 'text-text-muted',
                   )}
                 >
                   <div className="mb-2 text-center">
                     <WordHelpTip
                       content={getAbilityHelp(ability)}
                       label={`About ${info.name}`}
-                      className="font-bold text-sm capitalize text-text-primary"
+                      className="text-sm font-bold text-text-primary capitalize"
                     >
                       {compact ? info.shortName : info.name}
                     </WordHelpTip>
@@ -211,12 +228,12 @@ export function AbilityScoreEditor({
 
                     <div
                       className={cn(
-                        'text-2xl font-bold min-w-[3rem] text-center',
+                        'min-w-[3rem] text-center text-2xl font-bold',
                         value > 0
                           ? 'text-success-fg'
                           : value < 0
                             ? 'text-danger-fg'
-                            : 'text-text-secondary'
+                            : 'text-text-secondary',
                       )}
                     >
                       {formatBonus(value)}
@@ -227,7 +244,9 @@ export function AbilityScoreEditor({
                         onClick={() => onAbilityChange(ability, value + 1)}
                         disabled={!canInc}
                         size="md"
-                        title={canInc && increaseCost > 1 ? `Cost: ${increaseCost} points` : undefined}
+                        title={
+                          canInc && increaseCost > 1 ? `Cost: ${increaseCost} points` : undefined
+                        }
                       />
                     )}
                   </div>
@@ -235,8 +254,8 @@ export function AbilityScoreEditor({
                   {isEditMode && useHighAbilityCost && (
                     <p
                       className={cn(
-                        'text-[10px] font-medium text-center mt-1',
-                        increaseCost > 1 && canInc ? 'text-warning-fg' : 'invisible'
+                        'mt-1 text-center text-[10px] font-medium',
+                        increaseCost > 1 && canInc ? 'text-warning-fg' : 'invisible',
                       )}
                     >
                       Next: {increaseCost} Points
@@ -245,7 +264,7 @@ export function AbilityScoreEditor({
                 </div>
 
                 {!compact && (
-                  <p className="text-xs text-text-muted dark:text-text-secondary text-center mt-1.5 px-1 line-clamp-2 min-h-[2.5rem]">
+                  <p className="mt-1.5 line-clamp-2 min-h-[2.5rem] px-1 text-center text-xs text-text-muted">
                     {info.description}
                   </p>
                 )}

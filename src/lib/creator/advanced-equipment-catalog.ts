@@ -120,11 +120,11 @@ export function availableUnarmedProwessLevels(charLevel = 1): UnarmedProwessLeve
 
 function enrichProperty(
   prop: string | { id?: string | number; name?: string; op_1_lvl?: number },
-  itemProperties: ItemPropertyTpRow[] | undefined
+  itemProperties: ItemPropertyTpRow[] | undefined,
 ): AdvancedEquipmentProperty {
   if (typeof prop === 'string') {
     const dbProp = itemProperties?.find(
-      (p) => String(p.name ?? '').toLowerCase() === prop.toLowerCase()
+      (p) => String(p.name ?? '').toLowerCase() === prop.toLowerCase(),
     );
     return {
       name: prop,
@@ -137,7 +137,7 @@ function enrichProperty(
   const dbProp = itemProperties?.find(
     (p) =>
       String(p.id) === String(prop.id) ||
-      String(p.name ?? '').toLowerCase() === String(prop.name ?? '').toLowerCase()
+      String(p.name ?? '').toLowerCase() === String(prop.name ?? '').toLowerCase(),
   );
   return {
     id: prop.id,
@@ -155,7 +155,7 @@ function normalizeArmamentType(raw: string): string {
 
 function tabTypeFromArmament(
   normalizedType: string,
-  rawType?: string
+  rawType?: string,
 ): 'weapon' | 'armor' | 'equipment' {
   if (normalizedType === 'Weapon' || normalizedType === 'Shield') return 'weapon';
   if (normalizedType === 'Armor') return 'armor';
@@ -172,7 +172,7 @@ export type AdvancedLibraryItemInput = UserItem & {
 
 function rowFromUserLibraryItem(
   userItem: AdvancedLibraryItemInput,
-  itemProperties: ItemPropertyTpRow[]
+  itemProperties: ItemPropertyTpRow[],
 ): AdvancedEquipmentItem | null {
   const rawData = userItem as unknown as Record<string, unknown>;
   const armamentType = (rawData.armamentType as string) || '';
@@ -195,7 +195,7 @@ function rowFromUserLibraryItem(
       })),
       damage: rawData.damage as { amount: number; size: number; type: string }[] | undefined,
     },
-    itemProperties as ItemProperty[]
+    itemProperties as ItemProperty[],
   );
 
   const type = tabTypeFromArmament(normalizedType);
@@ -219,7 +219,7 @@ function rowFromUserLibraryItem(
 
 function rowFromCodexItem(
   item: CodexEquipmentItem,
-  itemProperties: ItemPropertyTpRow[] | undefined
+  itemProperties: ItemPropertyTpRow[] | undefined,
 ): AdvancedEquipmentItem {
   return {
     id: item.id,
@@ -241,7 +241,7 @@ function rowFromCodexItem(
 
 function rowFromPublicLibraryItem(
   pub: LibraryItem,
-  itemProperties: ItemPropertyTpRow[]
+  itemProperties: ItemPropertyTpRow[],
 ): AdvancedEquipmentItem {
   const rawType = pub.type || '';
   const normalizedType = rawType ? normalizeArmamentType(rawType) : '';
@@ -252,13 +252,14 @@ function rowFromPublicLibraryItem(
       description: String(pub.description ?? ''),
       armamentType: (normalizedType || 'Weapon') as 'Weapon' | 'Armor' | 'Shield',
       properties: (Array.isArray(pub.properties) ? pub.properties : []).map((p) => ({
-        id: p.id != null ? (typeof p.id === 'number' ? p.id : parseInt(String(p.id), 10)) : undefined,
+        id:
+          p.id != null ? (typeof p.id === 'number' ? p.id : parseInt(String(p.id), 10)) : undefined,
         name: p.name,
         op_1_lvl: p.op_1_lvl,
       })),
       damage: pub.damage as { amount: number; size: number; type: string }[] | undefined,
     },
-    itemProperties as ItemProperty[]
+    itemProperties as ItemProperty[],
   );
 
   return {
@@ -271,7 +272,7 @@ function rowFromPublicLibraryItem(
     gold_cost: display.currencyCost,
     currency: display.currencyCost,
     properties: (Array.isArray(pub.properties) ? pub.properties : []).map((prop) =>
-      enrichProperty(prop, itemProperties)
+      enrichProperty(prop, itemProperties),
     ),
     rarity: display.rarity,
     category: type === 'equipment' ? 'Equipment' : undefined,
@@ -319,13 +320,15 @@ export function buildAdvancedEquipmentCatalog(args: {
 
 function findAdvancedEquipmentItem(
   catalog: AdvancedEquipmentItem[],
-  idOrName: string
+  idOrName: string,
 ): AdvancedEquipmentItem | undefined {
   const norm = String(idOrName).toLowerCase().trim();
   return catalog.find(
     (e) =>
       String(e.id).toLowerCase().trim() === norm ||
-      String(e.name ?? '').toLowerCase().trim() === norm
+      String(e.name ?? '')
+        .toLowerCase()
+        .trim() === norm,
   );
 }
 
@@ -333,7 +336,7 @@ function findAdvancedEquipmentItem(
 export function resolvePathRecommendedEquipment(
   catalog: AdvancedEquipmentItem[],
   armamentRecommendations: PathItemRecommendation[],
-  equipmentRecommendations: PathItemRecommendation[]
+  equipmentRecommendations: PathItemRecommendation[],
 ): Array<{ item: AdvancedEquipmentItem; quantity: number }> {
   const out: Array<{ item: AdvancedEquipmentItem; quantity: number }> = [];
   const seenIds = new Set<string>();
@@ -360,7 +363,7 @@ export function filterPathRecommendedForPhase(
     pathMode: boolean;
     showFullEquipmentList: boolean;
     loadoutPhase: AdvancedLoadoutPhase;
-  }
+  },
 ): Array<{ item: AdvancedEquipmentItem; quantity: number }> {
   if (!args.pathMode || args.showFullEquipmentList) return recommended;
   if (args.loadoutPhase === 'weapon') {
@@ -370,7 +373,7 @@ export function filterPathRecommendedForPhase(
 }
 
 export function selectedItemsFromInventory(
-  inventory: Item[] | null | undefined
+  inventory: Item[] | null | undefined,
 ): AdvancedSelectedItem[] {
   return (inventory || []).map((item) => ({
     id: String(item.id),
@@ -392,7 +395,7 @@ export function filterAdvancedEquipmentCatalog(
     activeTab: AdvancedEquipmentTabId;
     searchTerm?: string;
     sourceFilter?: AdvancedSourceFilter;
-  }
+  },
 ): AdvancedEquipmentItem[] {
   const { activeTab, searchTerm = '', sourceFilter = 'all' } = args;
   if (activeTab === 'unarmed') return [];
@@ -421,7 +424,7 @@ export function recommendationIdSet(recs: PathItemRecommendation[]): Set<string>
 export function isPathRecommendedItem(
   item: AdvancedEquipmentItem,
   recommendedArmamentRefs: Set<string>,
-  recommendedEquipmentRefs: Set<string>
+  recommendedEquipmentRefs: Set<string>,
 ): boolean {
   const idKey = String(item.id).toLowerCase();
   const nameKey = String(item.name).toLowerCase();
@@ -446,7 +449,12 @@ export function computeAdvancedEquipmentProficiencyTp(args: {
   martAbil?: string | null;
   level?: number;
   powerPartsDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number }>;
-  techniquePartsDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number }>;
+  techniquePartsDb?: Array<{
+    id?: string | number;
+    name?: string;
+    base_tp?: number;
+    op_1_tp?: number;
+  }>;
   itemPropertiesDb?: ItemPropertyTpRow[] | null;
 }): AdvancedProficiencyTpSummary {
   const inventory = args.inventory || [];
@@ -465,7 +473,7 @@ export function computeAdvancedEquipmentProficiencyTp(args: {
   });
   const spent = dedupeHighestProficiencies(required).reduce(
     (sum, p) => sum + calculateProficiencyTP(p),
-    0
+    0,
   );
 
   const abilities = args.abilities || {};
@@ -473,12 +481,12 @@ export function computeAdvancedEquipmentProficiencyTp(args: {
     key ? Number((abilities as Record<string, unknown>)[key] ?? 0) || 0 : 0;
   const highestAbility = Math.max(
     ...Object.values(abilities).filter((v): v is number => typeof v === 'number'),
-    0
+    0,
   );
   const archetypeAbility = Math.max(
     getAbility(args.powAbil),
     getAbility(args.martAbil),
-    highestAbility
+    highestAbility,
   );
   const limit = getTrainingPointLimit(args.level || 1, archetypeAbility);
   return { spent, limit, remaining: limit - spent };
@@ -505,7 +513,7 @@ export function addAdvancedEquipmentToInventory(
   inventory: Item[],
   item: AdvancedEquipmentItem,
   qty: number,
-  remainingCurrency: number
+  remainingCurrency: number,
 ): Item[] | null {
   if (qty < 1) return null;
   const cost = item.gold_cost || item.currency || 0;
@@ -524,10 +532,7 @@ export function addAdvancedEquipmentToInventory(
 }
 
 /** Decrease quantity by 1, or remove when quantity would drop below 1. */
-export function removeAdvancedEquipmentFromInventory(
-  inventory: Item[],
-  itemId: string
-): Item[] {
+export function removeAdvancedEquipmentFromInventory(inventory: Item[], itemId: string): Item[] {
   const existingIndex = inventory.findIndex((i) => String(i.id) === itemId);
   if (existingIndex < 0) return inventory;
   const existing = inventory[existingIndex];
@@ -546,20 +551,20 @@ export function removeAdvancedEquipmentFromInventory(
 /** Replace prior recommended set with current path recommendations (no duplicates). */
 export function replaceRecommendedInventory(
   inventory: Item[],
-  recommended: Array<{ item: AdvancedEquipmentItem; quantity: number }>
+  recommended: Array<{ item: AdvancedEquipmentItem; quantity: number }>,
 ): Item[] {
   if (recommended.length === 0) return inventory;
   const recommendedIds = new Set(recommended.map(({ item }) => String(item.id)));
   const otherItems = inventory.filter((i) => !recommendedIds.has(String(i.id)));
   const recommendedEntries = recommended.map(({ item, quantity }) =>
-    catalogItemToInventoryItem(item, quantity)
+    catalogItemToInventoryItem(item, quantity),
   );
   return [...otherItems, ...recommendedEntries];
 }
 
 export function recommendedItemsInInventory(
   inventory: Item[] | null | undefined,
-  recommended: Array<{ item: AdvancedEquipmentItem; quantity: number }>
+  recommended: Array<{ item: AdvancedEquipmentItem; quantity: number }>,
 ): Array<{ item: AdvancedEquipmentItem; quantity: number }> {
   const invIds = new Set((inventory ?? []).map((i) => String(i.id)));
   return recommended.filter(({ item }) => invIds.has(String(item.id)));
@@ -567,7 +572,7 @@ export function recommendedItemsInInventory(
 
 export function pathRecommendedMergeKey(
   archetypeId: string | null | undefined,
-  recommended: Array<{ item: AdvancedEquipmentItem; quantity: number }>
+  recommended: Array<{ item: AdvancedEquipmentItem; quantity: number }>,
 ): string {
   return `${archetypeId ?? ''}:${recommended.map(({ item, quantity }) => `${item.id}:${quantity}`).join('|')}`;
 }

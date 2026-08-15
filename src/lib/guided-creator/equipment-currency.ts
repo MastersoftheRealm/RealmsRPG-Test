@@ -38,9 +38,7 @@ export type CatalogRowCostFields = Pick<
 
 export type RefCostLookupItem = { id?: string | number } & CatalogRowCostFields;
 
-export function resolveCatalogRowUnitCost(
-  row: CatalogRowCostFields | null | undefined
-): number {
+export function resolveCatalogRowUnitCost(row: CatalogRowCostFields | null | undefined): number {
   if (!row) return 0;
   return resolveItemUnitCost(row);
 }
@@ -57,7 +55,7 @@ export function computeStartingCurrency(level = 1): number {
  */
 export function resolveItemUnitCost(
   item: CurrencyLineItem,
-  itemProperties: ItemPropertyTpRow[] = []
+  itemProperties: ItemPropertyTpRow[] = [],
 ): number {
   const explicit = item.gold_cost ?? item.currency ?? item.cost;
   if (explicit != null && Number.isFinite(Number(explicit))) {
@@ -72,7 +70,7 @@ export function resolveItemUnitCost(
   if (item.costs?.totalCurrency != null) {
     return calculateCurrencyCostAndRarity(
       Number(item.costs.totalCurrency) || 0,
-      Number(item.costs.totalIP) || 0
+      Number(item.costs.totalIP) || 0,
     ).currencyCost;
   }
 
@@ -81,12 +79,12 @@ export function resolveItemUnitCost(
 
 export function computeSpentCurrency(
   items: CurrencyLineItem[],
-  itemProperties: ItemPropertyTpRow[] = []
+  itemProperties: ItemPropertyTpRow[] = [],
 ): number {
   return items.reduce(
     (sum, item) =>
       sum + resolveItemUnitCost(item, itemProperties) * Math.max(1, item.quantity ?? 1),
-    0
+    0,
   );
 }
 
@@ -99,12 +97,10 @@ export function resolveRefUnitCost(
   ref: { id: string },
   officialItems: Array<RefCostLookupItem & Pick<CurrencyLineItem, 'properties'>>,
   codexEquipment: RefCostLookupItem[],
-  itemProperties: ItemPropertyTpRow[] = []
+  itemProperties: ItemPropertyTpRow[] = [],
 ): number {
   const key = String(ref.id).trim().toLowerCase();
-  const official = officialItems.find(
-    (i) => String(i.id).trim().toLowerCase() === key
-  );
+  const official = officialItems.find((i) => String(i.id).trim().toLowerCase() === key);
   if (official) return resolveItemUnitCost(official, itemProperties);
   const codex = codexEquipment.find((i) => String(i.id).trim().toLowerCase() === key);
   if (codex) return resolveCatalogRowUnitCost(codex);
@@ -115,7 +111,7 @@ export function resolveRefUnitCost(
 export function wouldExceedCurrency(
   remaining: number,
   unitCost: number,
-  quantity: number
+  quantity: number,
 ): boolean {
   return unitCost * quantity > remaining;
 }

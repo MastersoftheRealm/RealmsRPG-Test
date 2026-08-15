@@ -7,7 +7,10 @@
 
 import { useState } from 'react';
 import { Modal, Button, Checkbox } from '@/components/ui';
-import { MarketingExternalButton, MarketingLinkButton } from '@/components/landing/marketing-button';
+import {
+  MarketingExternalButton,
+  MarketingLinkButton,
+} from '@/components/landing/marketing-button';
 import { DISCORD_URL } from '@/lib/constants/site-copy';
 import { ONBOARDING_COPY } from '@/lib/constants/copy/onboarding-copy';
 import { markPlayTogetherSeen } from '@/lib/onboarding-preferences';
@@ -62,7 +65,7 @@ export function PlayTogetherModal({
       }
     >
       <div className="space-y-4 p-4">
-        <Button variant="primary" size="lg" className="w-full min-h-11" onClick={handleView}>
+        <Button variant="primary" size="lg" className="min-h-11 w-full" onClick={handleView}>
           {copy.viewCharacter}
         </Button>
 

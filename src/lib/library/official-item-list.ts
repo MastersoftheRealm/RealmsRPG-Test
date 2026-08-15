@@ -30,31 +30,33 @@ import {
 import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { formatDamageDisplay, formatListCellLabel } from '@/lib/utils';
 import type { ArmamentLibraryKind } from '@/lib/library/armament-library-labels';
-import {
-  applyArmamentFilters,
-  type ArmamentFilterState,
-} from '@/lib/library/armament-filters';
+import { applyArmamentFilters, type ArmamentFilterState } from '@/lib/library/armament-filters';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
-import { libraryRowPathIds, rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
+import {
+  libraryRowPathIds,
+  rowMatchesPathRecommendedIds,
+} from '@/lib/game/path-recommendation-index';
 
 export type { ArmamentLibraryKind };
 
 export function normalizeArmamentKind(type: string | undefined): ArmamentLibraryKind | null {
-  const t = String(type ?? '').toLowerCase().trim();
+  const t = String(type ?? '')
+    .toLowerCase()
+    .trim();
   if (t === 'weapon' || t === 'armor' || t === 'shield') return t;
   return null;
 }
 
 export function filterItemsByArmamentKind<T extends { type?: string }>(
   items: T[],
-  kind: ArmamentLibraryKind
+  kind: ArmamentLibraryKind,
 ): T[] {
   return items.filter((item) => normalizeArmamentKind(item.type) === kind);
 }
 
 export function countItemsByArmamentKind<T extends { type?: string }>(
   items: T[],
-  kind: ArmamentLibraryKind
+  kind: ArmamentLibraryKind,
 ): number {
   return filterItemsByArmamentKind(items, kind).length;
 }
@@ -134,10 +136,7 @@ export interface OfficialItemRow {
 /** Shown as armor Crit + column — omit from expanded property chips (no column+chip dupe). */
 const ARMOR_COLUMN_PROPERTY_NAMES = new Set(['critical range +1']);
 
-function propertyChipsForItem(
-  item: LibraryItem,
-  propertiesDb: ItemProperty[]
-): ChipData[] {
+function propertyChipsForItem(item: LibraryItem, propertiesDb: ItemProperty[]): ChipData[] {
   const props =
     (item.properties as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>) || [];
   const forChips =
@@ -152,7 +151,8 @@ function propertyChipsForItem(
       const n = typeof p === 'string' ? p : String(p?.name ?? '');
       return n.toLowerCase() === chip.name.toLowerCase();
     });
-    const lvl = typeof prop === 'object' && prop && prop.op_1_lvl != null ? Number(prop.op_1_lvl) : 0;
+    const lvl =
+      typeof prop === 'object' && prop && prop.op_1_lvl != null ? Number(prop.op_1_lvl) : 0;
     return {
       ...chip,
       level: lvl > 0 ? lvl : undefined,
@@ -175,10 +175,9 @@ function resolveCriticalRangeIncrease(item: LibraryItem, props: ItemPropertyPayl
 /** Column cell under Abl. Req. — Ability + level (header supplies "Req."). */
 function formatAbilityRequirementColumn(
   item: LibraryItem,
-  props: ItemPropertyPayload[]
+  props: ItemPropertyPayload[],
 ): { display: string; req: AbilityRequirement | null } {
-  const raw =
-    item.abilityRequirement ?? deriveAbilityRequirementFromProperties(props);
+  const raw = item.abilityRequirement ?? deriveAbilityRequirementFromProperties(props);
   if (!raw?.name?.trim() || raw.level == null || Number.isNaN(Number(raw.level))) {
     return { display: '-', req: null };
   }
@@ -194,16 +193,19 @@ function formatAbilityRequirementColumn(
 export function buildOfficialItemRows(
   items: LibraryItem[],
   propertiesDb: ItemProperty[],
-  kind?: ArmamentLibraryKind
+  kind?: ArmamentLibraryKind,
 ): OfficialItemRow[] {
   const filtered = kind ? filterItemsByArmamentKind(items, kind) : items;
   return filtered.map((item) => {
     const props = (Array.isArray(item.properties) ? item.properties : []) as ItemPropertyPayload[];
     const costs = calculateItemCosts(props, propertiesDb);
-    const { currencyCost, rarity } = calculateCurrencyCostAndRarity(costs.totalCurrency, costs.totalIP);
+    const { currencyCost, rarity } = calculateCurrencyCostAndRarity(
+      costs.totalCurrency,
+      costs.totalIP,
+    );
     const rangeStr = resolveWeaponRangeDisplay(
       (item as LibraryItem & { range?: string }).range,
-      props
+      props,
     );
     const damageStr = formatDamageDisplay(item.damage) || '-';
     const damageReduction = resolveArmorDamageReduction({ ...item, properties: props });
@@ -226,7 +228,7 @@ export function buildOfficialItemRows(
       currency: Math.round(currencyCost),
       tp: Math.round(costs.totalTP),
       range: rangeStr,
-      damage: kind === 'shield' ? (shieldDamage || '-') : damageStr,
+      damage: kind === 'shield' ? shieldDamage || '-' : damageStr,
       damageReduction,
       agilityReduction,
       abilityRequirement,
@@ -250,8 +252,7 @@ export function armamentRowColumns(row: OfficialItemRow, kind: ArmamentLibraryKi
     damageReduction: row.damageReduction > 0 ? row.damageReduction : '-',
     agilityReduction: row.agilityReduction > 0 ? row.agilityReduction : '-',
     abilityRequirement: row.abilityRequirement,
-    criticalRangeIncrease:
-      row.criticalRangeIncrease > 0 ? `+${row.criticalRangeIncrease}` : '-',
+    criticalRangeIncrease: row.criticalRangeIncrease > 0 ? `+${row.criticalRangeIncrease}` : '-',
     block: row.block,
   };
 
@@ -282,18 +283,24 @@ export function filterOfficialItemRows<
   sortItems: (items: T[]) => T[],
   filters?: ArmamentFilterState,
   characterContext?: ArmamentCharacterContext | null,
-  pathRecommendedIds?: ReadonlySet<string> | null
+  pathRecommendedIds?: ReadonlySet<string> | null,
 ): T[] {
   let result = rows;
   if (pathRecommendedIds) {
-    result = result.filter((x) => rowMatchesPathRecommendedIds(libraryRowPathIds(x), pathRecommendedIds));
+    result = result.filter((x) =>
+      rowMatchesPathRecommendedIds(libraryRowPathIds(x), pathRecommendedIds),
+    );
   }
   if (search) {
     const s = search.toLowerCase();
     result = result.filter(
       (x) =>
-        String(x.name ?? '').toLowerCase().includes(s) ||
-        String(x.description ?? '').toLowerCase().includes(s)
+        String(x.name ?? '')
+          .toLowerCase()
+          .includes(s) ||
+        String(x.description ?? '')
+          .toLowerCase()
+          .includes(s),
     );
   }
   if (filters) {

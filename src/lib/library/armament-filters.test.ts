@@ -26,7 +26,13 @@ describe('armament-filters', () => {
   const rows = [
     { name: 'Light', tp: 3, currency: 20, rarity: 'Common', abilityReq: null },
     { name: 'Heavy', tp: 12, currency: 40, rarity: 'Common', abilityReq: null },
-    { name: 'StrReq', tp: 4, currency: 30, rarity: 'Uncommon', abilityReq: { name: 'Strength', level: 3 } },
+    {
+      name: 'StrReq',
+      tp: 4,
+      currency: 30,
+      rarity: 'Uncommon',
+      abilityReq: { name: 'Strength', level: 3 },
+    },
     { name: 'Expensive', tp: 2, currency: 80, rarity: 'Rare', abilityReq: null },
   ];
 
@@ -39,7 +45,7 @@ describe('armament-filters', () => {
     const filtered = applyArmamentFilters(
       rows,
       { ...EMPTY_ARMAMENT_FILTERS, affordableCurrencyOnly: true },
-      ctx
+      ctx,
     );
     expect(filtered.map((r) => r.name)).toEqual(['Light']);
   });
@@ -48,7 +54,7 @@ describe('armament-filters', () => {
     const filtered = applyArmamentFilters(
       rows,
       { ...EMPTY_ARMAMENT_FILTERS, minCurrency: 25, maxCurrency: 50 },
-      null
+      null,
     );
     expect(filtered.map((r) => r.name)).toEqual(['Heavy', 'StrReq']);
   });
@@ -57,7 +63,7 @@ describe('armament-filters', () => {
     const filtered = applyArmamentFilters(
       rows,
       { ...EMPTY_ARMAMENT_FILTERS, rarityAccessibleOnly: true },
-      ctx
+      ctx,
     );
     // Level 6 → Uncommon: Common + Uncommon. Armament profile still drops Heavy (TP) and StrReq (ability).
     expect(filtered.map((r) => r.name)).toEqual(['Light']);
@@ -68,14 +74,14 @@ describe('armament-filters', () => {
       rows,
       { ...EMPTY_ARMAMENT_FILTERS, rarityAccessibleOnly: true },
       ctx,
-      'equipment'
+      'equipment',
     );
     expect(filtered.map((r) => r.name)).toEqual(['Light', 'Heavy', 'StrReq']);
   });
 
   it('passes all rows when no character context and no currency range', () => {
     expect(
-      applyArmamentFilters(rows, { ...EMPTY_ARMAMENT_FILTERS, affordableCurrencyOnly: true }, null)
+      applyArmamentFilters(rows, { ...EMPTY_ARMAMENT_FILTERS, affordableCurrencyOnly: true }, null),
     ).toHaveLength(4);
   });
 
@@ -83,13 +89,13 @@ describe('armament-filters', () => {
     expect(countActiveArmamentFilters(EMPTY_ARMAMENT_FILTERS, false)).toBe(0);
     expect(countActiveArmamentFilters(EMPTY_ARMAMENT_FILTERS, true)).toBe(1);
     expect(
-      countActiveArmamentFilters({ ...EMPTY_ARMAMENT_FILTERS, affordableCurrencyOnly: true }, true)
+      countActiveArmamentFilters({ ...EMPTY_ARMAMENT_FILTERS, affordableCurrencyOnly: true }, true),
     ).toBe(2);
     expect(
       countActiveArmamentFilters(
         { ...EMPTY_ARMAMENT_FILTERS, minCurrency: 0, maxCurrency: 10, rarityAccessibleOnly: true },
-        true
-      )
+        true,
+      ),
     ).toBe(4);
   });
 });

@@ -56,12 +56,7 @@ export function LoadoutBudgetBar({
   if (!showRow && !children) return null;
 
   const tpHelp = (
-    <InfoTippy
-      content={trainingPointsHelp}
-      label="Training Points help"
-      size="inline"
-      tone="tp"
-    />
+    <InfoTippy content={trainingPointsHelp} label="Training Points help" size="inline" tone="tp" />
   );
 
   return (
@@ -75,7 +70,7 @@ export function LoadoutBudgetBar({
         <div
           className={cn(
             'flex flex-wrap items-center gap-3',
-            align === 'end' ? 'justify-end' : 'justify-center'
+            align === 'end' ? 'justify-end' : 'justify-center',
           )}
         >
           {leading}

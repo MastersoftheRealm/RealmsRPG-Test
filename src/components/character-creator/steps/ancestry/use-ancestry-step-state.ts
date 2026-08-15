@@ -116,142 +116,169 @@ export function useAncestryStepState() {
 
   const maxAncestryTraits = selectedFlaw ? 2 : 1;
 
-  const toggleAncestryTrait = useCallback((traitId: string) => {
-    updateDraft({
-      ancestry: {
-        ...draft.ancestry,
-        id: draft.ancestry?.id || '',
-        name: draft.ancestry?.name || '',
-        selectedTraits: toggleCappedTraitSelection(selectedTraitIds, traitId, maxAncestryTraits),
-      },
-    });
-  }, [selectedTraitIds, maxAncestryTraits, draft.ancestry, updateDraft]);
+  const toggleAncestryTrait = useCallback(
+    (traitId: string) => {
+      updateDraft({
+        ancestry: {
+          ...draft.ancestry,
+          id: draft.ancestry?.id || '',
+          name: draft.ancestry?.name || '',
+          selectedTraits: toggleCappedTraitSelection(selectedTraitIds, traitId, maxAncestryTraits),
+        },
+      });
+    },
+    [selectedTraitIds, maxAncestryTraits, draft.ancestry, updateDraft],
+  );
 
-  const toggleFlaw = useCallback((flawId: string) => {
-    const newFlaw = toggleOptionalSingleSelection(selectedFlaw, flawId);
-    updateDraft({
-      ancestry: {
-        ...draft.ancestry,
-        id: draft.ancestry?.id || '',
-        name: draft.ancestry?.name || '',
-        selectedFlaw: newFlaw,
-        selectedTraits: trimTraitsForFlawMax(selectedTraitIds, newFlaw),
-      },
-    });
-  }, [selectedFlaw, selectedTraitIds, draft.ancestry, updateDraft]);
+  const toggleFlaw = useCallback(
+    (flawId: string) => {
+      const newFlaw = toggleOptionalSingleSelection(selectedFlaw, flawId);
+      updateDraft({
+        ancestry: {
+          ...draft.ancestry,
+          id: draft.ancestry?.id || '',
+          name: draft.ancestry?.name || '',
+          selectedFlaw: newFlaw,
+          selectedTraits: trimTraitsForFlawMax(selectedTraitIds, newFlaw),
+        },
+      });
+    },
+    [selectedFlaw, selectedTraitIds, draft.ancestry, updateDraft],
+  );
 
-  const toggleFlawMixed = useCallback((flawId: string, speciesId: string) => {
-    const isSelected = selectedFlaw === flawId;
-    const newFlaw = isSelected ? null : flawId;
-    const newFlawSpeciesId = isSelected ? null : speciesId;
-    updateDraft({
-      ancestry: {
-        ...draft.ancestry,
-        id: draft.ancestry?.id || '',
-        name: draft.ancestry?.name || '',
-        mixed: true,
-        speciesIds: draft.ancestry?.speciesIds,
-        speciesNames: draft.ancestry?.speciesNames,
-        selectedFlaw: newFlaw,
-        selectedFlawSpeciesId: newFlawSpeciesId,
-        selectedTraits: trimTraitsForFlawMax(selectedTraitIds, newFlaw),
-      },
-    });
-  }, [selectedFlaw, selectedTraitIds, draft.ancestry, updateDraft]);
+  const toggleFlawMixed = useCallback(
+    (flawId: string, speciesId: string) => {
+      const isSelected = selectedFlaw === flawId;
+      const newFlaw = isSelected ? null : flawId;
+      const newFlawSpeciesId = isSelected ? null : speciesId;
+      updateDraft({
+        ancestry: {
+          ...draft.ancestry,
+          id: draft.ancestry?.id || '',
+          name: draft.ancestry?.name || '',
+          mixed: true,
+          speciesIds: draft.ancestry?.speciesIds,
+          speciesNames: draft.ancestry?.speciesNames,
+          selectedFlaw: newFlaw,
+          selectedFlawSpeciesId: newFlawSpeciesId,
+          selectedTraits: trimTraitsForFlawMax(selectedTraitIds, newFlaw),
+        },
+      });
+    },
+    [selectedFlaw, selectedTraitIds, draft.ancestry, updateDraft],
+  );
 
-  const setMixedSize = useCallback((size: string) => {
-    updateDraft({
-      ancestry: {
-        ...draft.ancestry,
-        id: draft.ancestry?.id || '',
-        name: draft.ancestry?.name || '',
-        mixed: true,
-        speciesIds: draft.ancestry?.speciesIds,
-        speciesNames: draft.ancestry?.speciesNames,
-        selectedSize: size,
-        mixedPhysical: mixedAveragedPhysical ?? undefined,
-      },
-    });
-  }, [draft.ancestry, mixedAveragedPhysical, updateDraft]);
+  const setMixedSize = useCallback(
+    (size: string) => {
+      updateDraft({
+        ancestry: {
+          ...draft.ancestry,
+          id: draft.ancestry?.id || '',
+          name: draft.ancestry?.name || '',
+          mixed: true,
+          speciesIds: draft.ancestry?.speciesIds,
+          speciesNames: draft.ancestry?.speciesNames,
+          selectedSize: size,
+          mixedPhysical: mixedAveragedPhysical ?? undefined,
+        },
+      });
+    },
+    [draft.ancestry, mixedAveragedPhysical, updateDraft],
+  );
 
-  const setSpeciesTraitA = useCallback((traitId: string) => {
-    const current = draft.ancestry?.selectedSpeciesTraits ?? [undefined, undefined];
-    updateDraft({
-      ancestry: {
-        ...draft.ancestry,
-        id: draft.ancestry?.id || '',
-        name: draft.ancestry?.name || '',
-        mixed: true,
-        speciesIds: draft.ancestry?.speciesIds,
-        speciesNames: draft.ancestry?.speciesNames,
-        selectedSpeciesTraits: [traitId, current[1] ?? ''],
-      },
-    });
-  }, [draft.ancestry, updateDraft]);
+  const setSpeciesTraitA = useCallback(
+    (traitId: string) => {
+      const current = draft.ancestry?.selectedSpeciesTraits ?? [undefined, undefined];
+      updateDraft({
+        ancestry: {
+          ...draft.ancestry,
+          id: draft.ancestry?.id || '',
+          name: draft.ancestry?.name || '',
+          mixed: true,
+          speciesIds: draft.ancestry?.speciesIds,
+          speciesNames: draft.ancestry?.speciesNames,
+          selectedSpeciesTraits: [traitId, current[1] ?? ''],
+        },
+      });
+    },
+    [draft.ancestry, updateDraft],
+  );
 
-  const setSpeciesTraitB = useCallback((traitId: string) => {
-    const current = draft.ancestry?.selectedSpeciesTraits ?? [undefined, undefined];
-    updateDraft({
-      ancestry: {
-        ...draft.ancestry,
-        id: draft.ancestry?.id || '',
-        name: draft.ancestry?.name || '',
-        mixed: true,
-        speciesIds: draft.ancestry?.speciesIds,
-        speciesNames: draft.ancestry?.speciesNames,
-        selectedSpeciesTraits: [current[0] ?? '', traitId],
-      },
-    });
-  }, [draft.ancestry, updateDraft]);
+  const setSpeciesTraitB = useCallback(
+    (traitId: string) => {
+      const current = draft.ancestry?.selectedSpeciesTraits ?? [undefined, undefined];
+      updateDraft({
+        ancestry: {
+          ...draft.ancestry,
+          id: draft.ancestry?.id || '',
+          name: draft.ancestry?.name || '',
+          mixed: true,
+          speciesIds: draft.ancestry?.speciesIds,
+          speciesNames: draft.ancestry?.speciesNames,
+          selectedSpeciesTraits: [current[0] ?? '', traitId],
+        },
+      });
+    },
+    [draft.ancestry, updateDraft],
+  );
 
-  const setAncestryBaseMixed = useCallback((traitId: string) => {
-    const current = draft.ancestry?.selectedTraits ?? [];
-    const base = current[0];
-    const isSelected = base === traitId;
-    const newBase = isSelected ? '' : traitId;
-    const extra = selectedFlaw ? (current[1] ?? '') : '';
-    updateDraft({
-      ancestry: {
-        ...draft.ancestry,
-        id: draft.ancestry?.id || '',
-        name: draft.ancestry?.name || '',
-        mixed: true,
-        speciesIds: draft.ancestry?.speciesIds,
-        speciesNames: draft.ancestry?.speciesNames,
-        selectedTraits: extra ? [newBase, extra].filter(Boolean) : (newBase ? [newBase] : []),
-      },
-    });
-  }, [draft.ancestry, selectedFlaw, updateDraft]);
+  const setAncestryBaseMixed = useCallback(
+    (traitId: string) => {
+      const current = draft.ancestry?.selectedTraits ?? [];
+      const base = current[0];
+      const isSelected = base === traitId;
+      const newBase = isSelected ? '' : traitId;
+      const extra = selectedFlaw ? (current[1] ?? '') : '';
+      updateDraft({
+        ancestry: {
+          ...draft.ancestry,
+          id: draft.ancestry?.id || '',
+          name: draft.ancestry?.name || '',
+          mixed: true,
+          speciesIds: draft.ancestry?.speciesIds,
+          speciesNames: draft.ancestry?.speciesNames,
+          selectedTraits: extra ? [newBase, extra].filter(Boolean) : newBase ? [newBase] : [],
+        },
+      });
+    },
+    [draft.ancestry, selectedFlaw, updateDraft],
+  );
 
-  const setAncestryExtraMixed = useCallback((traitId: string) => {
-    const current = draft.ancestry?.selectedTraits ?? [];
-    const base = current[0] ?? '';
-    const extra = current[1];
-    const isSelected = extra === traitId;
-    const newExtra = isSelected ? '' : traitId;
-    updateDraft({
-      ancestry: {
-        ...draft.ancestry,
-        id: draft.ancestry?.id || '',
-        name: draft.ancestry?.name || '',
-        mixed: true,
-        speciesIds: draft.ancestry?.speciesIds,
-        speciesNames: draft.ancestry?.speciesNames,
-        selectedTraits: [base, newExtra].filter(Boolean),
-      },
-    });
-  }, [draft.ancestry, updateDraft]);
+  const setAncestryExtraMixed = useCallback(
+    (traitId: string) => {
+      const current = draft.ancestry?.selectedTraits ?? [];
+      const base = current[0] ?? '';
+      const extra = current[1];
+      const isSelected = extra === traitId;
+      const newExtra = isSelected ? '' : traitId;
+      updateDraft({
+        ancestry: {
+          ...draft.ancestry,
+          id: draft.ancestry?.id || '',
+          name: draft.ancestry?.name || '',
+          mixed: true,
+          speciesIds: draft.ancestry?.speciesIds,
+          speciesNames: draft.ancestry?.speciesNames,
+          selectedTraits: [base, newExtra].filter(Boolean),
+        },
+      });
+    },
+    [draft.ancestry, updateDraft],
+  );
 
-  const toggleCharacteristic = useCallback((charId: string) => {
-    updateDraft({
-      ancestry: {
-        ...draft.ancestry,
-        id: draft.ancestry?.id || '',
-        name: draft.ancestry?.name || '',
-        selectedCharacteristic: toggleOptionalSingleSelection(selectedCharacteristic, charId),
-      },
-    });
-  }, [selectedCharacteristic, draft.ancestry, updateDraft]);
+  const toggleCharacteristic = useCallback(
+    (charId: string) => {
+      updateDraft({
+        ancestry: {
+          ...draft.ancestry,
+          id: draft.ancestry?.id || '',
+          name: draft.ancestry?.name || '',
+          selectedCharacteristic: toggleOptionalSingleSelection(selectedCharacteristic, charId),
+        },
+      });
+    },
+    [selectedCharacteristic, draft.ancestry, updateDraft],
+  );
 
   const setSpeciesTraitChoice = useCallback(
     (parentId: string, optionId: string) => {
@@ -271,20 +298,23 @@ export function useAncestryStepState() {
     [draft.ancestry, updateDraft],
   );
 
-  const toggleMixedSpeciesSkill = useCallback((skillId: string) => {
-    const current = draft.ancestry?.selectedSpeciesSkillIds ?? [];
-    updateDraft({
-      ancestry: {
-        ...draft.ancestry,
-        id: draft.ancestry?.id || '',
-        name: draft.ancestry?.name || '',
-        mixed: true,
-        speciesIds: draft.ancestry?.speciesIds,
-        speciesNames: draft.ancestry?.speciesNames,
-        selectedSpeciesSkillIds: toggleMixedSpeciesSkillSelection(current, skillId),
-      },
-    });
-  }, [draft.ancestry, updateDraft]);
+  const toggleMixedSpeciesSkill = useCallback(
+    (skillId: string) => {
+      const current = draft.ancestry?.selectedSpeciesSkillIds ?? [];
+      updateDraft({
+        ancestry: {
+          ...draft.ancestry,
+          id: draft.ancestry?.id || '',
+          name: draft.ancestry?.name || '',
+          mixed: true,
+          speciesIds: draft.ancestry?.speciesIds,
+          speciesNames: draft.ancestry?.speciesNames,
+          selectedSpeciesSkillIds: toggleMixedSpeciesSkillSelection(current, skillId),
+        },
+      });
+    },
+    [draft.ancestry, updateDraft],
+  );
 
   const speciesChoiceTraitParents = speciesTraits.filter((t) => getChoiceOptionIds(t).length > 0);
   const canContinueSingle = canContinueAncestrySingle({
@@ -311,8 +341,7 @@ export function useAncestryStepState() {
   };
   const ancestryIssues = getValidationIssuesForStep('ancestry', draft, ancestryValidationContext);
   const ancestryCompletion = getStepCompletion('ancestry', draft, ancestryValidationContext);
-  const ancestryPathNotes =
-    draft.creationMode === 'path' ? pathData?.level1?.notes : undefined;
+  const ancestryPathNotes = draft.creationMode === 'path' ? pathData?.level1?.notes : undefined;
 
   return {
     draft,

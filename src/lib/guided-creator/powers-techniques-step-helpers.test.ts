@@ -55,45 +55,36 @@ describe('pickInnateFillIds', () => {
   const tpOf = (id: string) => (id === 'high' ? 3 : 1);
 
   it('prefers higher energy within threshold and fills toward energyMax', () => {
-    expect(
-      pickInnateFillIds(['low', 'mid', 'high'], energyOf, tpOf, 4, 5, 0, 10)
-    ).toEqual(['high', 'low']);
+    expect(pickInnateFillIds(['low', 'mid', 'high'], energyOf, tpOf, 4, 5, 0, 10)).toEqual([
+      'high',
+      'low',
+    ]);
   });
 
   it('stops when innate energy is fully allocated', () => {
-    expect(
-      pickInnateFillIds(['mid', 'low', 'high'], energyOf, tpOf, 4, 4, 0, 10)
-    ).toEqual(['high']);
+    expect(pickInnateFillIds(['mid', 'low', 'high'], energyOf, tpOf, 4, 4, 0, 10)).toEqual([
+      'high',
+    ]);
   });
 
   it('skips candidates above threshold or with unknown energy', () => {
-    expect(
-      pickInnateFillIds(['over', 'unknown', 'low'], energyOf, tpOf, 4, 5, 0, 10)
-    ).toEqual(['low']);
+    expect(pickInnateFillIds(['over', 'unknown', 'low'], energyOf, tpOf, 4, 5, 0, 10)).toEqual([
+      'low',
+    ]);
   });
 
   it('skips negative energy values', () => {
-    expect(
-      pickInnateFillIds(['negative', 'low'], energyOf, tpOf, 4, 5, 0, 10)
-    ).toEqual(['low']);
+    expect(pickInnateFillIds(['negative', 'low'], energyOf, tpOf, 4, 5, 0, 10)).toEqual(['low']);
   });
 
   it('respects shared Training Points budget', () => {
-    expect(
-      pickInnateFillIds(['mid', 'low'], energyOf, tpOf, 4, 5, 9, 10)
-    ).toEqual(['mid']);
-    expect(
-      pickInnateFillIds(['high', 'low'], energyOf, tpOf, 4, 5, 9, 10)
-    ).toEqual(['low']);
+    expect(pickInnateFillIds(['mid', 'low'], energyOf, tpOf, 4, 5, 9, 10)).toEqual(['mid']);
+    expect(pickInnateFillIds(['high', 'low'], energyOf, tpOf, 4, 5, 9, 10)).toEqual(['low']);
   });
 
   it('returns empty when no candidate fits energy or TP constraints', () => {
-    expect(
-      pickInnateFillIds(['high', 'mid'], energyOf, tpOf, 4, 1, 0, 10)
-    ).toEqual([]);
-    expect(
-      pickInnateFillIds(['low'], energyOf, tpOf, 4, 5, 10, 10)
-    ).toEqual([]);
+    expect(pickInnateFillIds(['high', 'mid'], energyOf, tpOf, 4, 1, 0, 10)).toEqual([]);
+    expect(pickInnateFillIds(['low'], energyOf, tpOf, 4, 5, 10, 10)).toEqual([]);
   });
 });
 
@@ -124,21 +115,24 @@ describe('applyInnateSelection', () => {
   };
 
   it('appends when the pick fits remaining Innate Energy', () => {
-    expect(
-      applyInnateSelection({ ...base, selectedIds: ['b2'], id: 'c3' })
-    ).toEqual({ ok: true, nextIds: ['b2', 'c3'] });
+    expect(applyInnateSelection({ ...base, selectedIds: ['b2'], id: 'c3' })).toEqual({
+      ok: true,
+      nextIds: ['b2', 'c3'],
+    });
   });
 
   it('swaps the last-selected pick when at energy cap (1-for-1)', () => {
-    expect(
-      applyInnateSelection({ ...base, selectedIds: ['a4', 'b2'], id: 'f2' })
-    ).toEqual({ ok: true, nextIds: ['a4', 'f2'] });
+    expect(applyInnateSelection({ ...base, selectedIds: ['a4', 'b2'], id: 'f2' })).toEqual({
+      ok: true,
+      nextIds: ['a4', 'f2'],
+    });
   });
 
   it('keeps dropping last-in until the new pick fits', () => {
-    expect(
-      applyInnateSelection({ ...base, selectedIds: ['a4', 'b2'], id: 'd5' })
-    ).toEqual({ ok: true, nextIds: ['d5'] });
+    expect(applyInnateSelection({ ...base, selectedIds: ['a4', 'b2'], id: 'd5' })).toEqual({
+      ok: true,
+      nextIds: ['d5'],
+    });
   });
 
   it('does not drop an earlier pick when dropping last-in is enough', () => {
@@ -147,23 +141,26 @@ describe('applyInnateSelection', () => {
         ...base,
         selectedIds: ['e1', 'a4'],
         id: 'c3',
-      })
+      }),
     ).toEqual({ ok: true, nextIds: ['e1', 'c3'] });
   });
 
   it('blocks over-threshold picks without changing the selection', () => {
-    expect(
-      applyInnateSelection({ ...base, selectedIds: ['b2'], id: 'over' })
-    ).toEqual({ ok: false, reason: 'threshold' });
+    expect(applyInnateSelection({ ...base, selectedIds: ['b2'], id: 'over' })).toEqual({
+      ok: false,
+      reason: 'threshold',
+    });
   });
 
   it('blocks unknown or negative energy as threshold-ineligible', () => {
-    expect(
-      applyInnateSelection({ ...base, selectedIds: [], id: 'unknown' })
-    ).toEqual({ ok: false, reason: 'threshold' });
-    expect(
-      applyInnateSelection({ ...base, selectedIds: [], id: 'negative' })
-    ).toEqual({ ok: false, reason: 'threshold' });
+    expect(applyInnateSelection({ ...base, selectedIds: [], id: 'unknown' })).toEqual({
+      ok: false,
+      reason: 'threshold',
+    });
+    expect(applyInnateSelection({ ...base, selectedIds: [], id: 'negative' })).toEqual({
+      ok: false,
+      reason: 'threshold',
+    });
   });
 
   it('blocks a pick that cannot fit Innate Energy alone', () => {
@@ -174,7 +171,7 @@ describe('applyInnateSelection', () => {
         threshold: 6,
         selectedIds: [],
         id: 'd5',
-      })
+      }),
     ).toEqual({ ok: false, reason: 'energy' });
   });
 
@@ -186,7 +183,7 @@ describe('applyInnateSelection', () => {
         id: 'e1',
         otherTpSpent: 9,
         tpLimit: 10,
-      })
+      }),
     ).toEqual({ ok: false, reason: 'tp' });
   });
 
@@ -198,7 +195,7 @@ describe('applyInnateSelection', () => {
         id: 'c3',
         otherTpSpent: 9,
         tpLimit: 10,
-      })
+      }),
     ).toEqual({ ok: true, nextIds: ['c3'] });
   });
 });
@@ -223,14 +220,13 @@ describe('buildLookup / resolveLibraryItem', () => {
 describe('innateSelectionBlockMessage', () => {
   it('maps block reasons onto powersTechniques copy', () => {
     expect(innateSelectionBlockMessage('threshold')).toBe(
-      'That power exceeds your Innate Threshold.'
+      'That power exceeds your Innate Threshold.',
     );
     expect(innateSelectionBlockMessage('energy')).toBe(
-      'Not enough Innate Energy remaining for that choice.'
+      'Not enough Innate Energy remaining for that choice.',
     );
     expect(innateSelectionBlockMessage('tp')).toBe(
-      'Not enough Training Points remaining for that choice.'
+      'Not enough Training Points remaining for that choice.',
     );
   });
 });
-

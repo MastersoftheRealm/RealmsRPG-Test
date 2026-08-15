@@ -15,10 +15,7 @@
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
-import {
-  guidedNavExpandClassName,
-  guidedNavPreviousClassName,
-} from './guided-nav-button-styles';
+import { guidedNavExpandClassName, guidedNavPreviousClassName } from './guided-nav-button-styles';
 
 export interface GuidedLayerNavProps {
   /** Layer 1 → deeper: button label (e.g. "Customize scores"). */
@@ -47,8 +44,7 @@ export function GuidedLayerNav({
   const hasTrailing = Boolean(onTrailingExpand && trailingExpandLabel);
   if (!hasExpand && !hasCollapse && !hasTrailing) return null;
 
-  const actionCount =
-    Number(hasExpand) + Number(hasCollapse) + Number(hasTrailing);
+  const actionCount = Number(hasExpand) + Number(hasCollapse) + Number(hasTrailing);
   const singleAction = actionCount === 1;
 
   return (
@@ -56,7 +52,7 @@ export function GuidedLayerNav({
       className={cn(
         'mt-5 flex w-full items-center gap-3',
         singleAction ? 'justify-start' : 'justify-between',
-        className
+        className,
       )}
     >
       {hasCollapse ? (

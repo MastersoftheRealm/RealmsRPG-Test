@@ -47,22 +47,16 @@ export function DeleteConfirmModal({
       titleA11y={`Delete ${itemName}?`}
     >
       <div className="flex flex-col items-center text-center">
-        <div className="w-12 h-12 rounded-full bg-danger-light flex items-center justify-center mb-4">
-          <AlertTriangle className="w-6 h-6 text-danger-fg" />
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-danger-light">
+          <AlertTriangle className="h-6 w-6 text-danger-fg" />
         </div>
-        <h3 className="text-lg font-semibold text-text-primary mb-2">
-          Delete {itemName}?
-        </h3>
-        <p className="text-text-muted mb-6">
-          This action cannot be undone. This will permanently remove the {itemType} from your {deleteContext}.
+        <h3 className="mb-2 text-lg font-semibold text-text-primary">Delete {itemName}?</h3>
+        <p className="mb-6 text-text-muted">
+          This action cannot be undone. This will permanently remove the {itemType} from your{' '}
+          {deleteContext}.
         </p>
-        <div className="flex items-center justify-center gap-3 w-full">
-          <Button
-            variant="secondary"
-            onClick={onClose}
-            disabled={isDeleting}
-            className="flex-1"
-          >
+        <div className="flex w-full items-center justify-center gap-3">
+          <Button variant="secondary" onClick={onClose} disabled={isDeleting} className="flex-1">
             Cancel
           </Button>
           <Button
@@ -79,4 +73,3 @@ export function DeleteConfirmModal({
     </Modal>
   );
 }
-

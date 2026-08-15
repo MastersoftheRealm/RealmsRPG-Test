@@ -18,19 +18,10 @@ export type EquipmentSlot =
   | 'waist';
 
 /** Item rarity levels */
-export type ItemRarity = 
-  | 'common'
-  | 'uncommon'
-  | 'rare'
-  | 'epic'
-  | 'legendary';
+export type ItemRarity = 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary';
 
 /** Weapon categories */
-export type WeaponCategory =
-  | 'simple'
-  | 'martial'
-  | 'exotic'
-  | 'unarmed';
+export type WeaponCategory = 'simple' | 'martial' | 'exotic' | 'unarmed';
 
 /** Damage types */
 export type DamageType =

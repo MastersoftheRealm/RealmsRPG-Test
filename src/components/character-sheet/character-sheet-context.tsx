@@ -84,18 +84,33 @@ export interface CharacterSheetContextValue {
   /** Modal action handlers (no-ops on read-only campaign view) */
   onModalAdd: (items: CharacterPower[] | CharacterTechnique[] | Item[]) => void;
   onAddFeats: (
-    feats: Array<{ id: string; name: string; description?: string; effect?: string; max_uses?: number }>,
-    type: 'archetype' | 'character' | 'state'
+    feats: Array<{
+      id: string;
+      name: string;
+      description?: string;
+      effect?: string;
+      max_uses?: number;
+    }>,
+    type: 'archetype' | 'character' | 'state',
   ) => void;
   onAddSkills: (
-    skills: Array<{ id: string; name: string; ability?: string; base_skill_id?: number; selectedBaseSkillId?: string }>
+    skills: Array<{
+      id: string;
+      name: string;
+      ability?: string;
+      base_skill_id?: number;
+      selectedBaseSkillId?: string;
+    }>,
   ) => void;
   onConfirmRemoveFeat: () => void;
   onLevelUp: (newLevel: number) => void;
   onFullRecovery: () => void;
   onPartialRecovery: (hpRestored: number, enRestored: number, resetPartialFeats: boolean) => void;
   onArchetypeSave: (result: EditArchetypeResult) => void;
-  onSpeciesSave: (updates: { ancestry: Character['ancestry']; skills: CharacterSkillRow[] }) => void;
+  onSpeciesSave: (updates: {
+    ancestry: Character['ancestry'];
+    skills: CharacterSkillRow[];
+  }) => void;
 
   /** Abilities & defenses */
   onAbilityChange: (ability: AbilityName, value: number) => void;
@@ -104,7 +119,10 @@ export interface CharacterSheetContextValue {
   onTempModifiersChange: (patch: CharacterTempModifiers) => void;
 
   /** Skills */
-  onSkillChange: (skillId: string, updates: Partial<{ skill_val: number; prof: boolean; ability: string }>) => void;
+  onSkillChange: (
+    skillId: string,
+    updates: Partial<{ skill_val: number; prof: boolean; ability: string }>,
+  ) => void;
   onRemoveSkill: (skillId: string) => void;
   onAddSubSkill: () => void;
 
@@ -137,9 +155,5 @@ interface CharacterSheetProviderProps {
 
 export function CharacterSheetProvider({ value, children }: CharacterSheetProviderProps) {
   // Pass through — React Compiler handles stability; avoid manual field-list useMemo (TASK-430).
-  return (
-    <CharacterSheetContext.Provider value={value}>
-      {children}
-    </CharacterSheetContext.Provider>
-  );
+  return <CharacterSheetContext.Provider value={value}>{children}</CharacterSheetContext.Provider>;
 }

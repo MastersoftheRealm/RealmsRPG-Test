@@ -8,7 +8,12 @@
 import Image from 'next/image';
 import { useMemo } from 'react';
 import { Heart, Sparkles } from 'lucide-react';
-import { ExpandableImage, SegmentedControl, SummaryChipList, type SummaryChipItem } from '@/components/shared';
+import {
+  ExpandableImage,
+  SegmentedControl,
+  SummaryChipList,
+  type SummaryChipItem,
+} from '@/components/shared';
 import { DescriptorChip } from '@/components/ui';
 import { useCodexSkills, findTraitByIdOrName, type Species, type Trait } from '@/hooks';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
@@ -20,7 +25,10 @@ import {
   GUIDED_CHOICE_STYLES,
   GUIDED_OVERVIEW_STYLES as o,
 } from './guided-choice-styles';
-import { speciesSkillToSummaryChipItem, ANY_SPECIES_SKILL_ID } from '@/lib/chip/species-skill-chips';
+import {
+  speciesSkillToSummaryChipItem,
+  ANY_SPECIES_SKILL_ID,
+} from '@/lib/chip/species-skill-chips';
 import { resolveChoiceCardImage } from './guided-choice-image';
 import { usePlaceholderTheme } from '@/hooks/use-placeholder-theme';
 import { getTraitRestrictionNotice } from '@/lib/codex/feat-restriction-notice';
@@ -67,7 +75,7 @@ interface VitalItem {
 function buildVitals(
   species: Species,
   fixedSize: string | null,
-  sizeOptionsLabel: string | null
+  sizeOptionsLabel: string | null,
 ): VitalItem[] {
   const items: VitalItem[] = [];
   if (fixedSize) {
@@ -123,11 +131,13 @@ export function SpeciesRevealPanel({
   const sizeOptions = useMemo(() => getSpeciesSizeOptions(species), [species]);
   const hasSizeChoice = sizeOptions.length > 1;
   const fixedSize =
-    sizeOptions.length === 1 ? titleCase(sizeOptions[0]) : !hasSizeChoice ? formatSizes(species) : null;
+    sizeOptions.length === 1
+      ? titleCase(sizeOptions[0])
+      : !hasSizeChoice
+        ? formatSizes(species)
+        : null;
   const sizeOptionsLabel =
-    readOnlyDetail && hasSizeChoice
-      ? sizeOptions.map((s) => titleCase(s)).join(' / ')
-      : null;
+    readOnlyDetail && hasSizeChoice ? sizeOptions.map((s) => titleCase(s)).join(' / ') : null;
 
   const speciesTraits = useMemo(() => {
     const ids = species.species_traits ?? [];
@@ -137,7 +147,10 @@ export function SpeciesRevealPanel({
       .filter((t): t is Trait => Boolean(t));
   }, [species.species_traits, allTraits]);
 
-  const { granted, choices } = useMemo(() => partitionSpeciesTraits(speciesTraits), [speciesTraits]);
+  const { granted, choices } = useMemo(
+    () => partitionSpeciesTraits(speciesTraits),
+    [speciesTraits],
+  );
 
   const skillItems = useMemo((): SummaryChipItem[] => {
     return (species.skills ?? [])
@@ -147,7 +160,7 @@ export function SpeciesRevealPanel({
 
   const vitals = useMemo(
     () => buildVitals(species, fixedSize, sizeOptionsLabel),
-    [species, fixedSize, sizeOptionsLabel]
+    [species, fixedSize, sizeOptionsLabel],
   );
   const abilityBonuses = species.ability_bonuses ?? {};
   const languages = species.languages?.filter(Boolean) ?? [];
@@ -166,13 +179,7 @@ export function SpeciesRevealPanel({
             stopPropagation={false}
             className="relative mx-auto h-28 w-28 shrink-0 overflow-hidden rounded-card border border-border-light bg-image-matte shadow-sm sm:mx-0 sm:h-32 sm:w-32"
           >
-            <Image
-              src={image.src}
-              alt=""
-              fill
-              sizes="128px"
-              className="object-contain"
-            />
+            <Image src={image.src} alt="" fill sizes="128px" className="object-contain" />
           </ExpandableImage>
           <div className="min-w-0 flex-1 text-center sm:text-left">
             {!readOnlyDetail ? (
@@ -183,7 +190,7 @@ export function SpeciesRevealPanel({
                 className={cn(
                   GUIDED_CHOICE_STYLES.body,
                   !readOnlyDetail && 'mt-1.5',
-                  'whitespace-pre-wrap'
+                  'whitespace-pre-wrap',
                 )}
               >
                 {species.description.trim()}
@@ -222,7 +229,9 @@ export function SpeciesRevealPanel({
             aria-label="Species size"
           />
           {!selectedSize && (
-            <p className="mt-2 font-nunito text-sm text-text-secondary">{copy.sizeChoiceRequired}</p>
+            <p className="mt-2 font-nunito text-sm text-text-secondary">
+              {copy.sizeChoiceRequired}
+            </p>
           )}
         </GuidedOverviewSection>
       ) : null}

@@ -129,7 +129,9 @@ export function ExpandableChip({
   const parensCost = costSuffix ?? legacyParensCost;
   const headerCost = expandOnCost ? cost : undefined;
   const hasHeaderCost =
-    typeof headerCost === 'number' ? headerCost > 0 : typeof headerCost === 'string' && headerCost.length > 0;
+    typeof headerCost === 'number'
+      ? headerCost > 0
+      : typeof headerCost === 'string' && headerCost.length > 0;
   const hasDescription = !!description?.trim() || !!sublabel?.trim();
   const canExpandByContent = hasDescription || hasOptions || (expandOnCost && hasHeaderCost);
   const canExpand = !descriptor && expandable !== false && canExpandByContent;
@@ -216,7 +218,7 @@ export function ExpandableChip({
     if (!canExpand) return;
     const target = e.target as HTMLElement;
     const interactive = target.closest?.(
-      'button, [role="button"], a, input, select, textarea, [data-expand-ignore]'
+      'button, [role="button"], a, input, select, textarea, [data-expand-ignore]',
     );
     if (interactive && interactive !== e.currentTarget) return;
     toggleExpanded(e);
@@ -246,7 +248,7 @@ export function ExpandableChip({
           isExpanded && interactiveHover && 'shadow-md',
           canExpand && 'cursor-pointer',
           !useButtonHeader && canExpand && !isExpanded && 'touch-target-md-compact',
-          className
+          className,
         ),
       })}
       onClick={canExpand ? handleShellClick : undefined}
@@ -262,8 +264,8 @@ export function ExpandableChip({
           onClick={canExpand ? toggleExpanded : (e) => e.stopPropagation()}
           disabled={!canExpand && !onToggle}
           className={cn(
-            'flex items-center gap-1.5 text-left w-full touch-target-md-compact',
-            canExpand ? 'cursor-pointer hover:opacity-90' : 'cursor-default'
+            'touch-target-md-compact flex w-full items-center gap-1.5 text-left',
+            canExpand ? 'cursor-pointer hover:opacity-90' : 'cursor-default',
           )}
           aria-expanded={canExpand ? isExpanded : undefined}
         >
@@ -280,14 +282,14 @@ export function ExpandableChip({
           {canExpand && (
             <ChevronDown
               className={cn(
-                'w-3.5 h-3.5 ml-auto shrink-0 transition-transform duration-base ease-standard',
-                isExpanded && 'rotate-180'
+                'duration-base ml-auto h-3.5 w-3.5 shrink-0 transition-transform ease-standard',
+                isExpanded && 'rotate-180',
               )}
             />
           )}
         </button>
       ) : (
-        <div className="flex items-center gap-2 w-full">
+        <div className="flex w-full items-center gap-2">
           <ChipHeaderContent
             label={label}
             level={level}
@@ -302,8 +304,8 @@ export function ExpandableChip({
           {canExpand && (
             <ChevronDown
               className={cn(
-                'w-4 h-4 ml-auto shrink-0 transition-transform duration-base ease-standard',
-                isExpanded && 'rotate-180'
+                'duration-base ml-auto h-4 w-4 shrink-0 transition-transform ease-standard',
+                isExpanded && 'rotate-180',
               )}
             />
           )}
@@ -313,8 +315,8 @@ export function ExpandableChip({
       {isExpanded && hasDescription && (
         <div
           className={cn(
-            'w-full pt-1.5 mt-1.5 text-text-secondary border-t border-current/15 leading-relaxed',
-            size === 'sm' ? 'text-xs' : 'text-sm'
+            'mt-1.5 w-full border-t border-current/15 pt-1.5 leading-relaxed text-text-secondary',
+            size === 'sm' ? 'text-xs' : 'text-sm',
           )}
         >
           {sublabel && <div className="font-medium text-text-primary">{sublabel}</div>}
@@ -361,34 +363,32 @@ function ChipHeaderContent({
   const hasEnergy = (energyCost ?? 0) > 0;
 
   return (
-    <span className="inline-flex items-center gap-1.5 min-w-0 flex-1 flex-nowrap overflow-hidden">
+    <span className="inline-flex min-w-0 flex-1 flex-nowrap items-center gap-1.5 overflow-hidden">
       <span className={cn('truncate', labelClassName)}>{label}</span>
       {level != null && level > 0 && (
-        <span className="text-xs text-text-secondary shrink-0">(Lv.{level})</span>
+        <span className="shrink-0 text-xs text-text-secondary">(Lv.{level})</span>
       )}
       {costSuffix !== undefined &&
         costSuffix !== '' &&
         !(typeof costSuffix === 'number' && costSuffix <= 0) && (
-        <span className="text-xs text-text-muted shrink-0">
-          ({costSuffix})
-        </span>
-      )}
+          <span className="shrink-0 text-xs text-text-muted">({costSuffix})</span>
+        )}
       {hasTp && (
         <>
-          <span className="opacity-40 shrink-0">|</span>
-          <span className="text-xs font-semibold shrink-0">TP: {tpCost}</span>
+          <span className="shrink-0 opacity-40">|</span>
+          <span className="shrink-0 text-xs font-semibold">TP: {tpCost}</span>
         </>
       )}
       {hasEnergy && (
         <>
-          <span className="opacity-40 shrink-0">|</span>
-          <span className="text-xs font-semibold text-energy shrink-0">{energyCost} EN</span>
+          <span className="shrink-0 opacity-40">|</span>
+          <span className="shrink-0 text-xs font-semibold text-energy">{energyCost} EN</span>
         </>
       )}
       {hasNumericCost && cost !== undefined && !hasTp && (
         <>
-          <span className="opacity-40 shrink-0">|</span>
-          <span className="text-xs font-semibold text-text-secondary dark:text-text-primary shrink-0">
+          <span className="shrink-0 opacity-40">|</span>
+          <span className="shrink-0 text-xs font-semibold text-text-secondary dark:text-text-primary">
             {costLabel}: {typeof cost === 'number' ? formatCostDisplay(cost) : cost}
           </span>
         </>
@@ -405,11 +405,7 @@ export interface ChipGroupProps extends React.HTMLAttributes<HTMLDivElement> {
 /** Flex-wrap host for ExpandableChip — marks the full-row expansion boundary. */
 export function ChipGroup({ children, className, ...rest }: ChipGroupProps) {
   return (
-    <div
-      {...rest}
-      data-chip-group
-      className={cn('flex flex-wrap gap-2 items-start', className)}
-    >
+    <div {...rest} data-chip-group className={cn('flex flex-wrap items-start gap-2', className)}>
       {children}
     </div>
   );

@@ -14,8 +14,8 @@ export function MainAppChrome({ children }: { children: ReactNode }) {
   // widen the document while absolute header menus still paint outside the bar.
   if (minimal) {
     return (
-      <div className="min-h-screen min-w-0 flex flex-col bg-background overflow-x-clip">
-        <main id="main-content" className="flex-1 min-w-0">
+      <div className="flex min-h-screen min-w-0 flex-col overflow-x-clip bg-background">
+        <main id="main-content" className="min-w-0 flex-1">
           <MainContentBoundary>{children}</MainContentBoundary>
         </main>
       </div>
@@ -23,9 +23,9 @@ export function MainAppChrome({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="min-h-screen min-w-0 flex flex-col bg-background overflow-x-clip">
+    <div className="flex min-h-screen min-w-0 flex-col overflow-x-clip bg-background">
       <Header />
-      <main id="main-content" className="flex-1 min-w-0">
+      <main id="main-content" className="min-w-0 flex-1">
         <MainContentBoundary>{children}</MainContentBoundary>
       </main>
       <Footer />

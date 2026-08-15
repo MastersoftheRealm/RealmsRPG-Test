@@ -31,9 +31,7 @@ export function CodexFeatRow({
   nameChipLabels?: string[];
 }) {
   const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels);
-  const nameChips = nameChipLabels?.length
-    ? nameChipLabels.map((label) => ({ label }))
-    : undefined;
+  const nameChips = nameChipLabels?.length ? nameChipLabels.map((label) => ({ label })) : undefined;
 
   return (
     <GridListRow

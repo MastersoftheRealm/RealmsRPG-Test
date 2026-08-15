@@ -36,7 +36,8 @@ function applyFeatCustomization(
     if (String(feat.id) !== featId) return feat;
     const next = { ...feat };
     if ('customName' in updates) {
-      if (updates.customName !== undefined && updates.customName !== '') next.customName = updates.customName;
+      if (updates.customName !== undefined && updates.customName !== '')
+        next.customName = updates.customName;
       else delete next.customName;
     }
     if ('note' in updates) {
@@ -61,7 +62,13 @@ export function useSheetFeatActions({
 }: UseSheetFeatActionsArgs) {
   const handleAddFeats = useCallback(
     (
-      feats: { id: string; name: string; description?: string; effect?: string; max_uses?: number }[],
+      feats: {
+        id: string;
+        name: string;
+        description?: string;
+        effect?: string;
+        max_uses?: number;
+      }[],
       type: 'archetype' | 'character' | 'state',
     ) => {
       if (!character) return;
@@ -78,7 +85,8 @@ export function useSheetFeatActions({
         newFeats.forEach((f) => {
           const codex = db.find(
             (x) =>
-              x.id === f.id || String(x.name ?? '').toLowerCase() === String(f.name ?? '').toLowerCase(),
+              x.id === f.id ||
+              String(x.name ?? '').toLowerCase() === String(f.name ?? '').toLowerCase(),
           );
           if (codex?.char_feat) toCharacter.push(f);
           else toArchetype.push(f);
@@ -96,25 +104,29 @@ export function useSheetFeatActions({
         type LeveledFeat = CodexFeat & { base_feat_id?: string; feat_lvl?: number };
         const db = featsDb as LeveledFeat[];
         const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
-        const getLevel = (f: LeveledFeat | undefined) => (f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1);
+        const getLevel = (f: LeveledFeat | undefined) =>
+          f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1;
         const getFamily = (f: LeveledFeat | undefined) =>
           f?.base_feat_id ? String(f.base_feat_id) : String(f?.id ?? '');
         setCharacter((prev) =>
           prev
             ? {
                 ...prev,
-                archetypeFeats: newFeats.reduce<CharacterFeat[]>((acc, nextFeat) => {
-                  const nextDef = byId.get(String(nextFeat.id));
-                  const nextFamily = getFamily(nextDef);
-                  const nextLevel = getLevel(nextDef);
-                  const filtered = acc.filter((existing) => {
-                    const existingDef = byId.get(String(existing.id));
-                    if (!existingDef || !nextFamily) return true;
-                    if (getFamily(existingDef) !== nextFamily) return true;
-                    return getLevel(existingDef) >= nextLevel;
-                  });
-                  return [...filtered, nextFeat];
-                }, [...(prev.archetypeFeats || [])]),
+                archetypeFeats: newFeats.reduce<CharacterFeat[]>(
+                  (acc, nextFeat) => {
+                    const nextDef = byId.get(String(nextFeat.id));
+                    const nextFamily = getFamily(nextDef);
+                    const nextLevel = getLevel(nextDef);
+                    const filtered = acc.filter((existing) => {
+                      const existingDef = byId.get(String(existing.id));
+                      if (!existingDef || !nextFamily) return true;
+                      if (getFamily(existingDef) !== nextFamily) return true;
+                      return getLevel(existingDef) >= nextLevel;
+                    });
+                    return [...filtered, nextFeat];
+                  },
+                  [...(prev.archetypeFeats || [])],
+                ),
               }
             : null,
         );
@@ -122,25 +134,29 @@ export function useSheetFeatActions({
         type LeveledFeat = CodexFeat & { base_feat_id?: string; feat_lvl?: number };
         const db = featsDb as LeveledFeat[];
         const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
-        const getLevel = (f: LeveledFeat | undefined) => (f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1);
+        const getLevel = (f: LeveledFeat | undefined) =>
+          f?.feat_lvl != null && f.feat_lvl > 0 ? f.feat_lvl : 1;
         const getFamily = (f: LeveledFeat | undefined) =>
           f?.base_feat_id ? String(f.base_feat_id) : String(f?.id ?? '');
         setCharacter((prev) =>
           prev
             ? {
                 ...prev,
-                feats: newFeats.reduce<CharacterFeat[]>((acc, nextFeat) => {
-                  const nextDef = byId.get(String(nextFeat.id));
-                  const nextFamily = getFamily(nextDef);
-                  const nextLevel = getLevel(nextDef);
-                  const filtered = acc.filter((existing) => {
-                    const existingDef = byId.get(String(existing.id));
-                    if (!existingDef || !nextFamily) return true;
-                    if (getFamily(existingDef) !== nextFamily) return true;
-                    return getLevel(existingDef) >= nextLevel;
-                  });
-                  return [...filtered, nextFeat];
-                }, [...(prev.feats || [])]),
+                feats: newFeats.reduce<CharacterFeat[]>(
+                  (acc, nextFeat) => {
+                    const nextDef = byId.get(String(nextFeat.id));
+                    const nextFamily = getFamily(nextDef);
+                    const nextLevel = getLevel(nextDef);
+                    const filtered = acc.filter((existing) => {
+                      const existingDef = byId.get(String(existing.id));
+                      if (!existingDef || !nextFamily) return true;
+                      if (getFamily(existingDef) !== nextFamily) return true;
+                      return getLevel(existingDef) >= nextLevel;
+                    });
+                    return [...filtered, nextFeat];
+                  },
+                  [...(prev.feats || [])],
+                ),
               }
             : null,
         );
@@ -344,7 +360,9 @@ export function useSheetFeatActions({
       setCharacter((prev) => {
         if (!prev) return null;
         const currentUses = prev.traitUses?.[traitName] ?? 0;
-        const traitData = traitsDb.find((t: Trait) => t.name?.toLowerCase() === traitName.toLowerCase());
+        const traitData = traitsDb.find(
+          (t: Trait) => t.name?.toLowerCase() === traitName.toLowerCase(),
+        );
         const maxUses = (traitData as Trait & { uses_per_rec?: number })?.uses_per_rec ?? 999;
         const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
         return {
@@ -382,7 +400,9 @@ export function useSheetFeatActions({
       const getMaxUses = (feat: CharacterFeat) => {
         const codex =
           db.find((f) => f.id === String(feat.id)) ??
-          db.find((f) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase());
+          db.find(
+            (f) => String(f.name ?? '').toLowerCase() === String(feat.name ?? '').toLowerCase(),
+          );
         return feat.maxUses ?? codex?.uses_per_rec ?? 0;
       };
       let nextArch = prev.archetypeFeats || [];

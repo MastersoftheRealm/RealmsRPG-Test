@@ -8,7 +8,7 @@ import { readRecordImageId, readRecordImageUrl } from '@/lib/entity-image-url';
 
 export async function enrichRowsWithBankImageUrls(
   supabase: SupabaseClient,
-  rows: Record<string, unknown>[]
+  rows: Record<string, unknown>[],
 ): Promise<void> {
   if (rows.length === 0) return;
 

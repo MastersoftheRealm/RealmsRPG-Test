@@ -9,7 +9,14 @@ import {
   type ChipData,
 } from '@/components/shared';
 import { Button, IconButton, useToast } from '@/components/ui';
-import { useSpecies, useCodexSkills, useTraits, type Species, type Trait, type Skill } from '@/hooks';
+import {
+  useSpecies,
+  useCodexSkills,
+  useTraits,
+  type Species,
+  type Trait,
+  type Skill,
+} from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';
 import { createCodexDoc, updateCodexDoc } from './actions';
 import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
@@ -88,9 +95,7 @@ export function AdminSpeciesTab() {
   const openDuplicate = (s: Species) => {
     setEditing(null);
     setCopySourceName(s.name);
-    setForm(
-      speciesToFormState(s, skillsArr, traitsArr, (s.name || '').trim() + COPY_NAME_SUFFIX),
-    );
+    setForm(speciesToFormState(s, skillsArr, traitsArr, (s.name || '').trim() + COPY_NAME_SUFFIX));
     setModalOpen(true);
   };
 
@@ -113,7 +118,9 @@ export function AdminSpeciesTab() {
     setSaving(true);
     const data = speciesFormToSavePayload(form);
     const result = editing
-      ? await updateCodexDoc('codex_species', editing.id, data, { expectedUpdatedAt: editing.updated_at })
+      ? await updateCodexDoc('codex_species', editing.id, data, {
+          expectedUpdatedAt: editing.updated_at,
+        })
       : await createCodexDoc('codex_species', undefined, data);
 
     if (!result.success) {
@@ -158,7 +165,15 @@ export function AdminSpeciesTab() {
     await codexDelete.requestDelete(id);
   };
 
-  if (error) return <ErrorState message="Failed to load species" onRetry={() => { void refetch(); }} />;
+  if (error)
+    return (
+      <ErrorState
+        message="Failed to load species"
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
 
   return (
     <div>
@@ -169,23 +184,23 @@ export function AdminSpeciesTab() {
         onSearchChange={setSearch}
         searchPlaceholder="Search species..."
         filters={
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <ChipSelect
-                label="Type"
-                placeholder="Choose type"
-                options={filterOptions.types.map((t) => ({ value: t, label: t }))}
-                selectedValues={typeFilters}
-                onSelect={(v) => setTypeFilters((prev) => [...prev, v])}
-                onRemove={(v) => setTypeFilters((prev) => prev.filter((t) => t !== v))}
-              />
-              <ChipSelect
-                label="Size"
-                placeholder="Choose size"
-                options={filterOptions.sizes.map((s) => ({ value: s, label: s }))}
-                selectedValues={sizeFilters}
-                onSelect={(v) => setSizeFilters((prev) => [...prev, v])}
-                onRemove={(v) => setSizeFilters((prev) => prev.filter((s) => s !== v))}
-              />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <ChipSelect
+              label="Type"
+              placeholder="Choose type"
+              options={filterOptions.types.map((t) => ({ value: t, label: t }))}
+              selectedValues={typeFilters}
+              onSelect={(v) => setTypeFilters((prev) => [...prev, v])}
+              onRemove={(v) => setTypeFilters((prev) => prev.filter((t) => t !== v))}
+            />
+            <ChipSelect
+              label="Size"
+              placeholder="Choose size"
+              options={filterOptions.sizes.map((s) => ({ value: s, label: s }))}
+              selectedValues={sizeFilters}
+              onSelect={(v) => setSizeFilters((prev) => [...prev, v])}
+              onRemove={(v) => setSizeFilters((prev) => prev.filter((s) => s !== v))}
+            />
           </div>
         }
         headerColumns={[
@@ -263,14 +278,14 @@ export function AdminSpeciesTab() {
                 <div className="flex items-center gap-1 pr-2">
                   {pendingDeleteId === s.id ? (
                     <div className="flex items-center gap-1 text-xs">
-                      <span className="text-danger-700 dark:text-danger-400 font-medium whitespace-nowrap">
+                      <span className="font-medium whitespace-nowrap text-danger-700 dark:text-danger-400">
                         Remove?
                       </span>
                       <Button
                         size="sm"
                         variant="danger"
                         onClick={() => handleInlineDelete(s.id)}
-                        className="text-xs px-2 py-0.5 h-6"
+                        className="h-6 px-2 py-0.5 text-xs"
                       >
                         Yes
                       </Button>
@@ -278,7 +293,7 @@ export function AdminSpeciesTab() {
                         size="sm"
                         variant="secondary"
                         onClick={() => setPendingDeleteId(null)}
-                        className="text-xs px-2 py-0.5 h-6"
+                        className="h-6 px-2 py-0.5 text-xs"
                       >
                         No
                       </Button>
@@ -292,7 +307,7 @@ export function AdminSpeciesTab() {
                         label="Edit"
                         aria-label="Edit"
                       >
-                        <Pencil className="w-4 h-4" />
+                        <Pencil className="h-4 w-4" />
                       </IconButton>
                       <IconButton
                         variant="ghost"
@@ -301,16 +316,16 @@ export function AdminSpeciesTab() {
                         label="Duplicate"
                         aria-label="Duplicate"
                       >
-                        <Copy className="w-4 h-4" />
+                        <Copy className="h-4 w-4" />
                       </IconButton>
                       <IconButton
                         variant="ghost"
                         size="sm"
                         onClick={() => setPendingDeleteId(s.id)}
                         label="Delete"
-                        className="text-danger-fg hover:opacity-80 hover:bg-transparent"
+                        className="text-danger-fg hover:bg-transparent hover:opacity-80"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="h-4 w-4" />
                       </IconButton>
                     </>
                   )}

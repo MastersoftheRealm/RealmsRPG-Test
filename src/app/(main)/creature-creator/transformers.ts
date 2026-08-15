@@ -67,9 +67,7 @@ const CREATURE_FEAT_SOURCE_LABELS: Record<CreatureFeatSourceType, string> = {
   characteristic: 'Characteristic',
 };
 
-export function labelCreatureFeatSource(
-  source: CreatureFeatSourceType | undefined
-): string {
+export function labelCreatureFeatSource(source: CreatureFeatSourceType | undefined): string {
   if (!source) return '-';
   return CREATURE_FEAT_SOURCE_LABELS[source];
 }
@@ -81,7 +79,7 @@ export function inferCreatureFeatSource(
     creatureFeatIds: Set<string>;
     codexFeatById: Map<string, { char_feat?: boolean }>;
     traitById: Map<string, { flaw?: boolean; characteristic?: boolean }>;
-  }
+  },
 ): CreatureFeatSourceType | undefined {
   if (feat.featSourceType) return feat.featSourceType;
   const id = String(feat.id);
@@ -133,16 +131,16 @@ export interface CreatureArmament {
 
 export function transformUserPowerToDisplayItem(
   power: UserPower,
-  partsDb: PowerPart[]
+  partsDb: PowerPart[],
 ): DisplayItem {
   const display = derivePowerDisplay(
-    { 
-      name: power.name, 
-      description: power.description, 
-      parts: power.parts || [], 
-      damage: power.damage 
+    {
+      name: power.name,
+      description: power.description,
+      parts: power.parts || [],
+      damage: power.damage,
     },
-    partsDb
+    partsDb,
   );
   const damageStr = formatPowerDamage(power.damage);
 
@@ -191,17 +189,17 @@ export function displayItemToCreaturePower(item: DisplayItem): CreaturePower {
 
 export function transformUserTechniqueToDisplayItem(
   technique: UserTechnique,
-  partsDb: TechniquePart[]
+  partsDb: TechniquePart[],
 ): DisplayItem {
   const display = deriveTechniqueDisplay(
-    { 
-      name: technique.name, 
-      description: technique.description, 
-      parts: technique.parts || [], 
+    {
+      name: technique.name,
+      description: technique.description,
+      parts: technique.parts || [],
       damage: technique.damage?.[0],
-      weapon: technique.weapon 
+      weapon: technique.weapon,
     },
-    partsDb
+    partsDb,
   );
 
   const stats: ItemStat[] = [
@@ -217,9 +215,7 @@ export function transformUserTechniqueToDisplayItem(
     description: technique.description,
     category: 'technique',
     stats,
-    details: [
-      ...(display.damageStr ? [{ label: 'Damage', value: display.damageStr }] : []),
-    ],
+    details: [...(display.damageStr ? [{ label: 'Damage', value: display.damageStr }] : [])],
     badges: [],
     sourceData: {
       id: technique.docId,
@@ -246,16 +242,16 @@ export function displayItemToCreatureTechnique(item: DisplayItem): CreatureTechn
 export function transformCreatureFeatToDisplayItem(
   feat: CodexCreatureFeat,
   selectedIds: Set<string> = new Set(),
-  mechanicalFeatIds: Set<number> = new Set()
+  mechanicalFeatIds: Set<number> = new Set(),
 ): DisplayItem | null {
   // Exclude already selected feats and mechanical feats
   if (selectedIds.has(feat.id)) return null;
-  
+
   const numId = parseInt(feat.id, 10);
   if (!isNaN(numId) && mechanicalFeatIds.has(numId)) return null;
 
   const points = feat.points ?? 1;
-  
+
   return {
     id: feat.id,
     name: feat.name,
@@ -286,7 +282,7 @@ export function displayItemToCreatureFeat(item: DisplayItem): CreatureFeat {
 
 export function transformUserItemToDisplayItem(
   item: UserItem,
-  propertiesDb: ItemProperty[]
+  propertiesDb: ItemProperty[],
 ): DisplayItem {
   // Convert item to expected format for deriveItemDisplay
   const typeMap: Record<string, 'Armor' | 'Weapon' | 'Shield' | 'Accessory'> = {
@@ -307,7 +303,7 @@ export function transformUserItemToDisplayItem(
       op_1_lvl: prop.op_1_lvl,
     };
   });
-  
+
   const itemDoc = {
     name: item.name,
     description: item.description,
@@ -315,7 +311,7 @@ export function transformUserItemToDisplayItem(
     properties: propertyPayloads,
     damage: item.damage as ItemDamage[] | undefined,
   };
-  
+
   const display = deriveItemDisplay(itemDoc, propertiesDb);
   let damageStr = display.damage;
   if (!damageStr && item.type === 'shield') {
@@ -337,9 +333,7 @@ export function transformUserItemToDisplayItem(
     type: item.type,
     stats,
     details: [],
-    badges: [
-      { label: display.rarity || 'Common', variant: 'default' },
-    ],
+    badges: [{ label: display.rarity || 'Common', variant: 'default' }],
     sourceData: {
       id: item.docId,
       name: item.name,
@@ -404,9 +398,7 @@ export function creatureTechniqueToDisplayItem(technique: CreatureTechnique): Di
       { label: 'Action', value: technique.action },
       ...(technique.weapon ? [{ label: 'Attack', value: technique.weapon }] : []),
     ],
-    details: [
-      ...(technique.damage ? [{ label: 'Damage', value: technique.damage }] : []),
-    ],
+    details: [...(technique.damage ? [{ label: 'Damage', value: technique.damage }] : [])],
     badges: [],
     sourceData: technique,
   };
@@ -439,9 +431,7 @@ export function creatureArmamentToDisplayItem(armament: CreatureArmament): Displ
       { label: 'Cost', value: `${armament.currency}c` },
     ],
     details: [],
-    badges: [
-      { label: armament.rarity, variant: 'default' },
-    ],
+    badges: [{ label: armament.rarity, variant: 'default' }],
     sourceData: armament,
   };
 }

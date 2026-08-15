@@ -37,7 +37,9 @@ export function EmpoweredTechniqueEditorTechniqueParts({
       ? `${selectedTechniqueParts
           .slice(0, 3)
           .map((row) => row.part.name)
-          .join(', ')}${selectedTechniqueParts.length > 3 ? ` +${selectedTechniqueParts.length - 3} more` : ''}`
+          .join(
+            ', ',
+          )}${selectedTechniqueParts.length > 3 ? ` +${selectedTechniqueParts.length - 3} more` : ''}`
       : 'No parts';
 
   return (
@@ -55,18 +57,18 @@ export function EmpoweredTechniqueEditorTechniqueParts({
               type="button"
               variant="primary"
               size="sm"
-              className="flex items-center gap-1 min-h-[44px]"
+              className="flex min-h-[44px] items-center gap-1"
               onClick={onAddTechniquePart}
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               Add Part
             </Button>
           </>
         }
       >
         {selectedTechniqueParts.length === 0 ? (
-          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-            <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <div className="py-8 text-center text-text-muted">
+            <Info className="mx-auto mb-2 h-12 w-12 opacity-50" />
             <p>No technique parts added yet.</p>
           </div>
         ) : (
@@ -98,7 +100,7 @@ export function EmpoweredTechniqueEditorTechniqueParts({
           />
         }
       >
-        <p className="text-sm text-text-secondary mb-4">
+        <p className="mb-4 text-sm text-text-secondary">
           This is the technique additional-damage mechanic (separate from power Add Damage).
         </p>
         <div className="flex flex-wrap items-center gap-4">
@@ -112,7 +114,7 @@ export function EmpoweredTechniqueEditorTechniqueParts({
             max={20}
           />
           <div className="flex items-center gap-1">
-            <span className="font-bold text-lg">d</span>
+            <span className="text-lg font-bold">d</span>
             <select
               value={techniqueDamage.size}
               onChange={(event) =>
@@ -121,7 +123,7 @@ export function EmpoweredTechniqueEditorTechniqueParts({
                   size: Number(event.target.value),
                 }))
               }
-              className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface min-h-[44px]"
+              className="min-h-[44px] rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
               aria-label="Technique additional damage die size"
             >
               {DIE_SIZES.map((size) => (

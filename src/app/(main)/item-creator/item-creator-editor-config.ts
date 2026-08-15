@@ -46,12 +46,16 @@ export type ItemCreatorEditorProps = {
   armorConfigSummary: string;
 
   shieldDR: { amount: number; size: number };
-  onShieldDRChange: (updater: (prev: { amount: number; size: number }) => { amount: number; size: number }) => void;
+  onShieldDRChange: (
+    updater: (prev: { amount: number; size: number }) => { amount: number; size: number },
+  ) => void;
   shieldBlockSummary: string;
   hasShieldDamage: boolean;
   onHasShieldDamageChange: (value: boolean) => void;
   shieldDamage: { amount: number; size: number };
-  onShieldDamageChange: (updater: (prev: { amount: number; size: number }) => { amount: number; size: number }) => void;
+  onShieldDamageChange: (
+    updater: (prev: { amount: number; size: number }) => { amount: number; size: number },
+  ) => void;
   shieldDamageSummary: string;
 
   abilityRequirement: { id: number; name: string; level: number } | null;
@@ -59,7 +63,9 @@ export type ItemCreatorEditorProps = {
     next:
       | { id: number; name: string; level: number }
       | null
-      | ((prev: { id: number; name: string; level: number } | null) => { id: number; name: string; level: number } | null),
+      | ((
+          prev: { id: number; name: string; level: number } | null,
+        ) => { id: number; name: string; level: number } | null),
   ) => void;
   abilityReqSummary: string;
 

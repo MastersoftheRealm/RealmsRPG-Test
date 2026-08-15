@@ -129,7 +129,7 @@ function PowerCreatorWorkspace({
 
   return (
     <CreatorPageShell
-      icon={<Wand2 className="w-8 h-8 text-primary-link-fg" />}
+      icon={<Wand2 className="h-8 w-8 text-primary-link-fg" />}
       title="Power Creator"
       description="Design custom powers by combining power parts. Each part contributes to the total energy cost and training point requirements."
       user={user}
@@ -180,8 +180,7 @@ function PowerCreatorWorkspace({
         isLoading: load.isLoading,
         error: load.error,
         title: 'Load Power from Library',
-        onSelect: (selected) =>
-          ws.handleLoadPower(selected.data as PowerLibraryRecord),
+        onSelect: (selected) => ws.handleLoadPower(selected.data as PowerLibraryRecord),
       }}
       sidebar={
         <CreatorSummaryPanel
@@ -190,14 +189,14 @@ function PowerCreatorWorkspace({
             {
               label: 'Energy Cost',
               value: ws.costs.totalEnergy,
-              icon: <Zap className="w-6 h-6" />,
+              icon: <Zap className="h-6 w-6" />,
               color: 'energy',
               help: <PowerCreatorHelp topic="energy" tone="current" />,
             },
             {
               label: 'Training Points',
               value: ws.costs.totalTP,
-              icon: <Target className="w-6 h-6" />,
+              icon: <Target className="h-6 w-6" />,
               color: 'tp',
               help: <PowerCreatorHelp topic="tp" tone="current" />,
             },

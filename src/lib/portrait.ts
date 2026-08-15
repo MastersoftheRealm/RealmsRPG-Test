@@ -5,19 +5,14 @@
 
 import { apiUpload } from '@/lib/api-client';
 import { CROPPED_IMAGE_MIME, fileFromCroppedBlob } from '@/lib/crop-image';
-import {
-  getFallbackPortraitDataUrl,
-  type PlaceholderTheme,
-} from '@/lib/placeholder-art';
+import { getFallbackPortraitDataUrl, type PlaceholderTheme } from '@/lib/placeholder-art';
 
 /** Legacy path that may be stored in DB; we treat it as no portrait and use inline fallback. */
 export const PLACEHOLDER_PORTRAIT_PATH = '/images/placeholder-portrait.png';
 
 /** True when `src` is the inline missing-portrait placeholder (either theme). */
 export function isPortraitFallbackSrc(src: string): boolean {
-  return (
-    src === getFallbackPortraitDataUrl('light') || src === getFallbackPortraitDataUrl('dark')
-  );
+  return src === getFallbackPortraitDataUrl('light') || src === getFallbackPortraitDataUrl('dark');
 }
 
 /** Append cache-bust query only for remote portrait URLs — never on data-URL fallbacks. */
@@ -30,8 +25,7 @@ export function withPortraitCacheBust(url: string, refreshKey?: number | null): 
 /** Max data-URL length for draft portraits before save-time Storage upload. */
 const MAX_PORTRAIT_DATA_URL_LENGTH = 700 * 1024;
 
-export const PORTRAIT_DRAFT_TOO_LARGE =
-  'Image is still too large. Please use a smaller image.';
+export const PORTRAIT_DRAFT_TOO_LARGE = 'Image is still too large. Please use a smaller image.';
 
 export const PORTRAIT_DRAFT_PROCESS_FALLBACK = 'Failed to process image';
 
@@ -48,7 +42,7 @@ export const PORTRAIT_SAVE_UPLOAD_FALLBACK =
  */
 export function getEffectivePortrait(
   portrait: string | null | undefined,
-  theme: PlaceholderTheme = 'light'
+  theme: PlaceholderTheme = 'light',
 ): string {
   if (!portrait || portrait.trim() === '') return getFallbackPortraitDataUrl(theme);
   if (portrait === PLACEHOLDER_PORTRAIT_PATH || portrait.endsWith('placeholder-portrait.png')) {

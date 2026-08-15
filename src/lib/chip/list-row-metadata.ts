@@ -61,13 +61,13 @@ export function isPartsOrPropertiesProficienciesLabel(label: string | undefined)
 }
 
 export function isPartsOrPropertiesProficienciesSection(
-  section: Pick<MetadataDetailSection, 'label' | 'defaultCollapsed'>
+  section: Pick<MetadataDetailSection, 'label' | 'defaultCollapsed'>,
 ): boolean {
   return section.defaultCollapsed === true || isPartsOrPropertiesProficienciesLabel(section.label);
 }
 
 export function helpKeyForPartsOrPropertiesLabel(
-  label: string | undefined
+  label: string | undefined,
 ): PartsPropertiesHelpKey | undefined {
   if (!label) return undefined;
   if (label === PARTS_PROFICIENCIES_LABEL || label === 'Parts') return 'parts';
@@ -77,7 +77,7 @@ export function helpKeyForPartsOrPropertiesLabel(
 
 export function partsProficienciesSection(
   chips: ChipData[],
-  family: 'power' | 'technique' | 'parts' = 'parts'
+  family: 'power' | 'technique' | 'parts' = 'parts',
 ): MetadataDetailSection | undefined {
   if (chips.length === 0) return undefined;
   const labelHelpKey: PartsPropertiesHelpKey =
@@ -92,7 +92,7 @@ export function partsProficienciesSection(
 
 export function propertiesProficienciesSection(
   chips: ChipData[],
-  family: 'weapon' | 'armor' | 'shield' | 'item' | 'properties' = 'properties'
+  family: 'weapon' | 'armor' | 'shield' | 'item' | 'properties' = 'properties',
 ): MetadataDetailSection | undefined {
   if (chips.length === 0) return undefined;
   const labelHelpKey: PartsPropertiesHelpKey =
@@ -121,7 +121,7 @@ export function metadataDescriptorChip(label: string): ChipData {
 function pushLabeledFact(
   chips: ChipData[],
   label: string,
-  value: string | number | null | undefined
+  value: string | number | null | undefined,
 ) {
   if (value == null) return;
   const text = String(value).trim();
@@ -175,7 +175,7 @@ export function buildArmorRequirementMetadataChips(opts: {
 
 export function metadataDetailSection(
   chips: ChipData[],
-  label = 'Details'
+  label = 'Details',
 ): MetadataDetailSection | undefined {
   if (chips.length === 0) return undefined;
   return { label, chips, hideLabelIfSingle: true };
@@ -244,8 +244,8 @@ export function buildUsesRecoveryDetailSections(opts: {
   if (usesDisplay !== '-') {
     chips.push(
       metadataDescriptorChip(
-        `Uses / recovery: ${usesDisplay}${opts.recPeriod ? ` / ${opts.recPeriod}` : ''}`
-      )
+        `Uses / recovery: ${usesDisplay}${opts.recPeriod ? ` / ${opts.recPeriod}` : ''}`,
+      ),
     );
   } else if (opts.recPeriod) {
     chips.push(metadataDescriptorChip(`Recovery: ${opts.recPeriod}`));

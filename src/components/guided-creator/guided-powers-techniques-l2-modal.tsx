@@ -164,13 +164,10 @@ export function GuidedPowersTechniquesL2Modal({
       archetypeAbility,
       abilities,
       innateThreshold,
-    ]
+    ],
   );
 
-  const initialSet = useMemo(
-    () => new Set(initialSelectedIds.map(String)),
-    [initialSelectedIds]
-  );
+  const initialSet = useMemo(() => new Set(initialSelectedIds.map(String)), [initialSelectedIds]);
 
   const selectable = useMemo(
     () =>
@@ -181,7 +178,7 @@ export function GuidedPowersTechniquesL2Modal({
         keepIds: initialSet,
         idsForItem: selectableItemPathIds,
       }),
-    [catalogItems, pathMatchIds, pathIndex, selectedPathIds, initialSet]
+    [catalogItems, pathMatchIds, pathIndex, selectedPathIds, initialSet],
   );
 
   const title =
@@ -210,7 +207,7 @@ export function GuidedPowersTechniquesL2Modal({
       setError(null);
       onConfirm(selectedIdsFromL2Items(selected));
     },
-    [mode, loadoutTpSpent, tpLimit, innateEnergyMax, onConfirm]
+    [mode, loadoutTpSpent, tpLimit, innateEnergyMax, onConfirm],
   );
 
   const nextInnateSelectedIds = useCallback(
@@ -232,14 +229,14 @@ export function GuidedPowersTechniquesL2Modal({
       setError(null);
       return applied.nextIds;
     },
-    [selectable, innateThreshold, innateEnergyMax, loadoutTpSpent, tpLimit]
+    [selectable, innateThreshold, innateEnergyMax, loadoutTpSpent, tpLimit],
   );
 
   const footerExtra = useCallback(
     (selected: SelectableItem[]) => {
       const tpSpent = computeL2PowersTechniquesTpSpent(selected, loadoutTpSpent);
       const errorEl = error ? (
-        <p className="font-nunito text-sm text-warning-fg text-center" role="alert">
+        <p className="text-center font-nunito text-sm text-warning-fg" role="alert">
           {error}
         </p>
       ) : null;
@@ -250,10 +247,7 @@ export function GuidedPowersTechniquesL2Modal({
             tpTotal={tpLimit}
             tpSpent={tpSpent}
             leading={
-              <InnateEnergyPointStatus
-                total={innateEnergyMax}
-                spent={energySpentOf(selected)}
-              />
+              <InnateEnergyPointStatus total={innateEnergyMax} spent={energySpentOf(selected)} />
             }
           >
             {errorEl}
@@ -267,7 +261,7 @@ export function GuidedPowersTechniquesL2Modal({
         </LoadoutBudgetBar>
       );
     },
-    [mode, innateEnergyMax, loadoutTpSpent, tpLimit, error]
+    [mode, innateEnergyMax, loadoutTpSpent, tpLimit, error],
   );
 
   const confirmDisabled = useCallback(
@@ -280,7 +274,7 @@ export function GuidedPowersTechniquesL2Modal({
       }
       return false;
     },
-    [mode, loadoutTpSpent, tpLimit, innateEnergyMax]
+    [mode, loadoutTpSpent, tpLimit, innateEnergyMax],
   );
 
   return (

@@ -14,7 +14,10 @@ export function itemDamageReduction(item: ArmorDrSource): number {
   return resolveArmorDamageReduction(item);
 }
 
-export { resolveArmorDamageReduction, type ArmorDrSource } from '@/lib/game/resolve-armor-damage-reduction';
+export {
+  resolveArmorDamageReduction,
+  type ArmorDrSource,
+} from '@/lib/game/resolve-armor-damage-reduction';
 
 /** Index of armor row to equip at creation (highest DR, else first). */
 export function pickArmorEquipIndex<T>(armorRows: T[], drScore: (row: T) => number): number {

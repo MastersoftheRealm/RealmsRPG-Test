@@ -23,22 +23,22 @@ for (const name of ['.env.local', '.env']) {
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local or .env');
+  console.error(
+    'Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in .env.local or .env',
+  );
   process.exit(1);
 }
 
 const DEFAULT_BUCKETS = ['portraits', 'profile-pictures', 'codex-art', 'vtt-maps'];
 const buckets = process.env.STORAGE_BACKUP_BUCKETS
-  ? process.env.STORAGE_BACKUP_BUCKETS.split(',').map((b) => b.trim()).filter(Boolean)
+  ? process.env.STORAGE_BACKUP_BUCKETS.split(',')
+      .map((b) => b.trim())
+      .filter(Boolean)
   : DEFAULT_BUCKETS;
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-const timestamp = new Date()
-  .toISOString()
-  .replace(/[-:]/g, '')
-  .replace('T', '-')
-  .slice(0, 15);
+const timestamp = new Date().toISOString().replace(/[-:]/g, '').replace('T', '-').slice(0, 15);
 const outDir = path.join(root, 'backups', `storage-${timestamp}`);
 
 async function listAllFiles(bucket, prefix = '') {

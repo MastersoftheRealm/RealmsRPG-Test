@@ -10,10 +10,7 @@
 import { logClientError } from '@/lib/api-client';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { trainingPointsFactChip } from '@/lib/detail-option/compact-facts';
-import {
-  pickHighestEnergyCost,
-  type EnergyCostPick,
-} from '@/lib/game/formulas';
+import { pickHighestEnergyCost, type EnergyCostPick } from '@/lib/game/formulas';
 import { buildLookup } from '@/lib/guided-creator/powers-techniques-step-helpers';
 import {
   buildPowerTechniqueBudgetDisplay,
@@ -52,7 +49,7 @@ export function resolvePowerTechniqueTpCost(
   kind: PowersTechniquesKind,
   item: LibraryPower | LibraryTechnique | undefined,
   powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): number {
   if (!item) return 0;
   try {
@@ -61,12 +58,12 @@ export function resolvePowerTechniqueTpCost(
       item,
       String(item.id ?? item.docId ?? item.name ?? ''),
       powerPartsDb,
-      techniquePartsDb
+      techniquePartsDb,
     ).tp;
   } catch (err) {
     logClientError(
       `power-technique-display: TP cost failed (${kind}, ${item?.name ?? 'unknown'})`,
-      err
+      err,
     );
     return 0;
   }
@@ -77,7 +74,7 @@ export function resolvePowerTechniqueEnergy(
   kind: PowersTechniquesKind,
   item: LibraryPower | LibraryTechnique | undefined,
   powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): number | undefined {
   if (!item) return undefined;
   try {
@@ -86,12 +83,12 @@ export function resolvePowerTechniqueEnergy(
       item,
       String(item.id ?? item.docId ?? item.name ?? ''),
       powerPartsDb,
-      techniquePartsDb
+      techniquePartsDb,
     ).energy;
   } catch (err) {
     logClientError(
       `power-technique-display: energy cost failed (${kind}, ${item?.name ?? 'unknown'})`,
-      err
+      err,
     );
     return undefined;
   }
@@ -102,7 +99,7 @@ export function buildPowerTechniqueCardFacts(
   item: LibraryPower | LibraryTechnique | undefined,
   fallbackId: string,
   powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): PowerTechniqueCardFacts {
   if (!item) {
     const titleChips: ChipData[] = [];
@@ -123,7 +120,7 @@ export function buildPowerTechniqueCardFacts(
       item,
       fallbackId,
       powerPartsDb,
-      techniquePartsDb
+      techniquePartsDb,
     );
     return {
       name: display.name,
@@ -137,10 +134,7 @@ export function buildPowerTechniqueCardFacts(
   } catch (err) {
     const name = item?.name ? String(item.name) : fallbackId;
     const description = item?.description ? String(item.description) : undefined;
-    logClientError(
-      `power-technique-display: card facts failed (${kind}, ${name})`,
-      err
-    );
+    logClientError(`power-technique-display: card facts failed (${kind}, ${name})`, err);
     const titleChips: ChipData[] = [];
     const tpChip = trainingPointsFactChip(0);
     if (tpChip) titleChips.push(tpChip);
@@ -153,7 +147,7 @@ export function resolvePowerTechniqueActionType(
   kind: PowersTechniquesKind,
   item: LibraryPower | LibraryTechnique,
   powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): string | undefined {
   return buildPowerTechniqueCardFacts(kind, item, itemId(item), powerPartsDb, techniquePartsDb)
     .actionType;
@@ -167,7 +161,7 @@ function toEnergyCostPick(
   kind: 'power' | 'technique',
   item: LibraryPower | LibraryTechnique | undefined,
   powerPartsDb: PowerPart[],
-  techniquePartsDb: TechniquePart[]
+  techniquePartsDb: TechniquePart[],
 ): EnergyCostPick | null {
   const catalogKind: PowersTechniquesKind = kind === 'technique' ? 'techniques' : 'powers';
   const energy = resolvePowerTechniqueEnergy(catalogKind, item, powerPartsDb, techniquePartsDb);
@@ -196,12 +190,12 @@ export function findHighestEnergyCostPick(args: {
   const picks: EnergyCostPick[] = [];
   const powerByKey = buildLookup((args.powers ?? []).filter((p): p is LibraryPower => !!p));
   const techniqueByKey = buildLookup(
-    (args.techniques ?? []).filter((t): t is LibraryTechnique => !!t)
+    (args.techniques ?? []).filter((t): t is LibraryTechnique => !!t),
   );
 
   const consider = (
     kind: 'power' | 'technique',
-    item: LibraryPower | LibraryTechnique | undefined
+    item: LibraryPower | LibraryTechnique | undefined,
   ) => {
     const pick = toEnergyCostPick(kind, item, args.powerPartsDb, args.techniquePartsDb);
     if (pick) picks.push(pick);

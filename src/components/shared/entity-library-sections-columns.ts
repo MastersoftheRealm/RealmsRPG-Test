@@ -100,12 +100,3 @@ export const FEAT_COLUMNS: ListColumn[] = [
   { key: 'recovery', label: 'Recovery', width: '4rem', align: 'center' },
 ];
 export const FEAT_GRID = 'minmax(140px, 1.6fr) 2.5fr 5rem 4rem';
-
-export const FEAT_COLUMNS_WITH_LEVEL: ListColumn[] = [
-  { key: 'name', label: 'Name', width: 'minmax(140px, 1.6fr)' },
-  { key: 'description', label: 'Description', width: '2fr' },
-  { key: 'level', label: 'Lvl', width: '3.5rem', align: 'center' },
-  { key: 'uses', label: 'Uses', width: '5rem', align: 'center' },
-  { key: 'recovery', label: 'Recovery', width: '4rem', align: 'center' },
-];
-export const FEAT_GRID_WITH_LEVEL = 'minmax(140px, 1.6fr) 2fr 3.5rem 5rem 4rem';

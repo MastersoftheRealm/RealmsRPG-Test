@@ -135,13 +135,13 @@ export function CharacterSheetBody() {
           Mobile: panel basis = padded content width (matches SheetHeader / PageContainer),
           gap between panels, scroll-padding so snap aligns with the same gutters. */}
       <div
-        className="flex flex-nowrap gap-4 overflow-x-auto snap-x snap-mandatory scroll-smooth touch-pan-x -mx-4 px-4 scroll-px-4 pb-4 sm:-mx-6 sm:px-6 sm:scroll-px-6 md:mx-0 md:px-0 md:scroll-px-0 md:pb-0 md:grid md:grid-cols-1 lg:grid-cols-[1fr_1fr_2fr] md:items-stretch md:overflow-visible md:snap-none"
+        className="-mx-4 flex touch-pan-x snap-x snap-mandatory scroll-px-4 flex-nowrap gap-4 overflow-x-auto scroll-smooth px-4 pb-4 sm:-mx-6 sm:scroll-px-6 sm:px-6 md:mx-0 md:grid md:snap-none md:scroll-px-0 md:grid-cols-1 md:items-stretch md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-[1fr_1fr_2fr]"
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <section
           aria-label="Abilities & Defenses"
           data-tour-id="sheet-tour-abilities"
-          className="md:hidden shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden box-border"
+          className="box-border shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-x-hidden overflow-y-auto md:hidden"
         >
           <AbilitiesPanel />
         </section>
@@ -149,24 +149,24 @@ export function CharacterSheetBody() {
         <section
           aria-label="Skills"
           data-tour-id="sheet-tour-skills"
-          className="shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
+          className="box-border shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-x-hidden overflow-y-auto md:flex md:min-h-[400px] md:min-w-0 md:basis-auto md:flex-col md:overflow-visible"
         >
-          <SkillsPanel className="flex-1 min-h-0 md:min-h-0" />
+          <SkillsPanel className="min-h-0 flex-1 md:min-h-0" />
         </section>
 
         <section
           aria-label="Archetype & Attacks"
-          className="shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
+          className="box-border shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-x-hidden overflow-y-auto md:flex md:min-h-[400px] md:min-w-0 md:basis-auto md:flex-col md:overflow-visible"
         >
-          <ArchetypePanel className="flex-1 min-h-0 md:min-h-0" />
+          <ArchetypePanel className="min-h-0 flex-1 md:min-h-0" />
         </section>
 
         <section
           aria-label="Library"
           data-tour-id="sheet-tour-library"
-          className="shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-y-auto overflow-x-hidden md:min-w-0 md:basis-auto md:overflow-visible md:flex md:flex-col md:min-h-[400px] box-border"
+          className="box-border shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-x-hidden overflow-y-auto md:flex md:min-h-[400px] md:min-w-0 md:basis-auto md:flex-col md:overflow-visible"
         >
-          <LibraryPanel className="flex-1 min-h-0 md:min-h-0" />
+          <LibraryPanel className="min-h-0 flex-1 md:min-h-0" />
         </section>
       </div>
     </>

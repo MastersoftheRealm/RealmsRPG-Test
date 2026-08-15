@@ -121,7 +121,12 @@ describe('equipment-eligibility', () => {
 
   it('rejects two-handed weapon with shield', () => {
     const result = validateWeaponHandSelection([
-      { id: '1', name: 'Greataxe', type: 'weapon', properties: [{ id: PROPERTY_IDS.TWO_HANDED, name: 'Two-Handed' }] },
+      {
+        id: '1',
+        name: 'Greataxe',
+        type: 'weapon',
+        properties: [{ id: PROPERTY_IDS.TWO_HANDED, name: 'Two-Handed' }],
+      },
       { id: '2', name: 'Shield', type: 'shield', properties: [] },
     ]);
     expect(result.valid).toBe(false);

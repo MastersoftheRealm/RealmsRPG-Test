@@ -41,7 +41,7 @@ function useHoldRepeat(
   minDelay = 80,
   maxDelay = 220,
   /** Delay (ms) before first repeat so a quick tap only fires once. Default 450ms. */
-  initialDelay = 450
+  initialDelay = 450,
 ) {
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const initialTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -119,34 +119,31 @@ const stepperButtonVariants = cva(
     defaultVariants: {
       size: 'md',
     },
-  }
+  },
 );
 
-const valueDisplayVariants = cva(
-  'text-center font-semibold tabular-nums',
-  {
-    variants: {
-      size: {
-        xs: 'min-w-[20px] text-xs',
-        sm: 'min-w-[24px] text-sm',
-        md: 'min-w-[32px] text-base',
-        lg: 'min-w-[40px] text-lg',
-        xl: 'min-w-[48px] text-xl',
-      },
-      valueState: {
-        positive: 'text-success-fg',
-        negative: 'text-danger-fg',
-        neutral: 'text-text-primary',
-        health: 'text-success-fg',
-        energy: 'text-info-fg',
-      },
+const valueDisplayVariants = cva('text-center font-semibold tabular-nums', {
+  variants: {
+    size: {
+      xs: 'min-w-[20px] text-xs',
+      sm: 'min-w-[24px] text-sm',
+      md: 'min-w-[32px] text-base',
+      lg: 'min-w-[40px] text-lg',
+      xl: 'min-w-[48px] text-xl',
     },
-    defaultVariants: {
-      size: 'md',
-      valueState: 'neutral',
+    valueState: {
+      positive: 'text-success-fg',
+      negative: 'text-danger-fg',
+      neutral: 'text-text-primary',
+      health: 'text-success-fg',
+      energy: 'text-info-fg',
     },
-  }
-);
+  },
+  defaultVariants: {
+    size: 'md',
+    valueState: 'neutral',
+  },
+});
 
 export interface ValueStepperProps extends VariantProps<typeof stepperButtonVariants> {
   /** Current value */
@@ -227,11 +224,17 @@ export function ValueStepper({
   const incrementHold = useHoldRepeat(handleIncrement, enableHoldRepeat && canIncrement);
 
   const valueState: 'positive' | 'negative' | 'neutral' | 'health' | 'energy' =
-    colorVariant === 'health' ? 'health' :
-    colorVariant === 'energy' ? 'energy' :
-    colorValue
-      ? value > 0 ? 'positive' : value < 0 ? 'negative' : 'neutral'
-      : 'neutral';
+    colorVariant === 'health'
+      ? 'health'
+      : colorVariant === 'energy'
+        ? 'energy'
+        : colorValue
+          ? value > 0
+            ? 'positive'
+            : value < 0
+              ? 'negative'
+              : 'neutral'
+          : 'neutral';
 
   const displayValue = formatValue ? formatValue(value) : String(value);
 
@@ -240,7 +243,7 @@ export function ValueStepper({
     variant === 'default' && 'gap-2',
     variant === 'inline' && 'gap-1',
     variant === 'compact' && 'gap-0.5',
-    className
+    className,
   );
 
   const labelClasses = cn(
@@ -248,7 +251,7 @@ export function ValueStepper({
     size === 'sm' && 'text-xs',
     size === 'md' && 'text-sm',
     size === 'lg' && 'text-base',
-    size === 'xl' && 'text-lg'
+    size === 'xl' && 'text-lg',
   );
 
   return (
@@ -302,10 +305,7 @@ export function ValueStepper({
       </button>
 
       {!hideValue && (
-        <span
-          className={valueDisplayVariants({ size, valueState })}
-          aria-live="polite"
-        >
+        <span className={valueDisplayVariants({ size, valueState })} aria-live="polite">
           {displayValue}
         </span>
       )}

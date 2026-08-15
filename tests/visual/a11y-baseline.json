@@ -1,6 +1,3 @@
 {
-  "allowed": [
-    "/dev/styleguide|dark|aria-allowed-attr",
-    "/dev/styleguide|light|aria-allowed-attr"
-  ]
+  "allowed": ["/dev/styleguide|dark|aria-allowed-attr", "/dev/styleguide|light|aria-allowed-attr"]
 }

@@ -30,20 +30,16 @@ export function ChoiceTraitOptionListPicker({
 
   return (
     <div className="mt-3 rounded-lg border border-border-light bg-background/60">
-      <div className="px-3 py-2 border-b border-border-light flex items-center justify-between gap-2">
-        <p className="text-xs font-semibold text-text-secondary uppercase tracking-wide">
-          Options
-        </p>
+      <div className="flex items-center justify-between gap-2 border-b border-border-light px-3 py-2">
+        <p className="text-xs font-semibold tracking-wide text-text-secondary uppercase">Options</p>
         {selected ? (
-          <DescriptorChip variant="info">
-            Selected: {selected.name}
-          </DescriptorChip>
+          <DescriptorChip variant="info">Selected: {selected.name}</DescriptorChip>
         ) : (
-          <span className="text-xs text-text-muted dark:text-text-secondary">{emptyLabel}</span>
+          <span className="text-xs text-text-muted">{emptyLabel}</span>
         )}
       </div>
 
-      <div className="p-2 space-y-2">
+      <div className="space-y-2 p-2">
         {optionTraits.map((opt) => {
           const optId = String(opt.id);
           const isSelected = optId === String(value);
@@ -56,11 +52,11 @@ export function ChoiceTraitOptionListPicker({
                 isSelected && 'border-primary-subtle-border bg-primary-subtle-bg',
               )}
             >
-              <summary className="list-none cursor-pointer px-3 py-2 flex items-start justify-between gap-3">
+              <summary className="flex cursor-pointer list-none items-start justify-between gap-3 px-3 py-2">
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-text-primary">{opt.name}</p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex shrink-0 items-center gap-2">
                   <Button
                     type="button"
                     variant={isSelected ? 'secondary' : 'outline'}
@@ -75,7 +71,7 @@ export function ChoiceTraitOptionListPicker({
                     {isSelected ? 'Selected' : 'Select'}
                   </Button>
                   <ChevronDown
-                    className="w-4 h-4 text-text-muted dark:text-text-secondary transition-transform group-open:rotate-180 mt-1"
+                    className="mt-1 h-4 w-4 text-text-muted transition-transform group-open:rotate-180"
                     aria-hidden="true"
                   />
                 </div>

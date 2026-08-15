@@ -14,13 +14,7 @@ import {
 import { mergeResourceUpdatesIntoCharacter } from '@/lib/encounter/character-resource-sync';
 
 /** Same membership as dirty-patch `META_KEY_SET` (unexported, TASK-741). */
-const PATCH_META_KEYS = new Set([
-  'id',
-  'userId',
-  'createdAt',
-  'updatedAt',
-  'lastPlayedAt',
-]);
+const PATCH_META_KEYS = new Set(['id', 'userId', 'createdAt', 'updatedAt', 'lastPlayedAt']);
 
 const REALTIME_RESOURCE_KEYS = new Set([
   'currentHealth',
@@ -44,7 +38,7 @@ function overlayRemoteNonResource(
   prev: Record<string, unknown>,
   remoteData: Record<string, unknown>,
   dirtyKeys: readonly string[],
-  updatedAt?: string | Date | null
+  updatedAt?: string | Date | null,
 ): Record<string, unknown> {
   const dirtySet = new Set(dirtyKeys);
   const stripped: Record<string, unknown> = {};
@@ -60,12 +54,12 @@ function overlayRemoteNonResource(
     characterLockToken(
       typeof remoteData.updatedAt === 'string' || remoteData.updatedAt instanceof Date
         ? remoteData.updatedAt
-        : undefined
+        : undefined,
     );
   const prevToken = characterLockToken(
     typeof prev.updatedAt === 'string' || prev.updatedAt instanceof Date
       ? (prev.updatedAt as string | Date)
-      : undefined
+      : undefined,
   );
   const stamp = Boolean(token && token !== prevToken);
   if (!adopted && !stamp) return prev;
@@ -91,17 +85,12 @@ export function mergeSheetRealtimePayload(
   options?: {
     suppressResources?: boolean;
     updatedAt?: string | Date | null;
-  }
+  },
 ): SheetRealtimeMerge {
   const prevRecord = prev as unknown as Record<string, unknown>;
   const cleaned = cleanForSave(prev) as Record<string, unknown>;
   const dirtyKeys = Object.keys(pickDirtyCharacterFields(cleaned, baseline));
-  const overlaid = overlayRemoteNonResource(
-    prevRecord,
-    remoteData,
-    dirtyKeys,
-    options?.updatedAt
-  );
+  const overlaid = overlayRemoteNonResource(prevRecord, remoteData, dirtyKeys, options?.updatedAt);
   let next = overlaid as unknown as Character;
   if (!options?.suppressResources) {
     next = mergeResourceUpdatesIntoCharacter(next, remoteData) ?? next;

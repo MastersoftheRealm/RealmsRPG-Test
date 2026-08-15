@@ -42,12 +42,7 @@ describe('migrateCharacterCreatorPersistedState', () => {
     const migrated = migrateCharacterCreatorPersistedState(v1InProgress, 1);
 
     expect(migrated.currentStep).toBe('skills');
-    expect(migrated.completedSteps).toEqual([
-      'archetype',
-      'species',
-      'ancestry',
-      'abilities',
-    ]);
+    expect(migrated.completedSteps).toEqual(['archetype', 'species', 'ancestry', 'abilities']);
     expect(migrated.draft.name).toBe('Hero');
     expect(migrated.draft.abilities).toEqual({
       ...DEFAULT_ABILITIES,
@@ -67,7 +62,7 @@ describe('migrateCharacterCreatorPersistedState', () => {
         completedSteps: ['archetype'],
         draft: { name: 'Partial' },
       },
-      1
+      1,
     );
 
     expect(migrated.draft.name).toBe('Partial');
@@ -89,7 +84,7 @@ describe('migrateCharacterCreatorPersistedState', () => {
     expect(CREATOR_STORE_SCHEMA_VERSION).toBeGreaterThan(1);
     const migrated = migrateCharacterCreatorPersistedState(
       v1InProgress,
-      CREATOR_STORE_SCHEMA_VERSION - 1
+      CREATOR_STORE_SCHEMA_VERSION - 1,
     );
     expect(migrated.draft.name).toBe('Hero');
     expect(migrated.currentStep).toBe('skills');
@@ -107,13 +102,13 @@ describe('migrateCharacterCreatorPersistedState', () => {
     const uuid = '11111111-2222-4333-8444-555555555555';
     const kept = migrateCharacterCreatorPersistedState(
       { ...v1InProgress, draft: { ...v1InProgress.draft, clientRequestId: uuid } },
-      3
+      3,
     );
     expect(kept.draft.clientRequestId).toBe(uuid);
 
     const dropped = migrateCharacterCreatorPersistedState(
       { ...v1InProgress, draft: { ...v1InProgress.draft, clientRequestId: 'not-a-uuid' } },
-      3
+      3,
     );
     expect(dropped.draft.clientRequestId).toBeUndefined();
   });
@@ -140,7 +135,7 @@ describe('getCharacter currency clamp (TASK-739)', () => {
       draft: { ...state.draft, currency: undefined },
     }));
     expect(useCharacterCreatorStore.getState().getCharacter().currency).toBe(
-      CHARACTER_STARTING_CURRENCY
+      CHARACTER_STARTING_CURRENCY,
     );
   });
 });

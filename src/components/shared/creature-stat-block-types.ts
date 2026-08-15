@@ -48,7 +48,16 @@ export interface CreatureData {
   senses?: string[];
   movementTypes?: string[];
   languages?: string[];
-  skills?: Array<{ id?: string; name: string; value: number; proficient?: boolean; baseSkillId?: string; isSubSkill?: boolean }> | Record<string, number>;
+  skills?:
+    | Array<{
+        id?: string;
+        name: string;
+        value: number;
+        proficient?: boolean;
+        baseSkillId?: string;
+        isSubSkill?: boolean;
+      }>
+    | Record<string, number>;
   powers?: Array<{
     id?: string;
     name: string;
@@ -62,7 +71,16 @@ export interface CreatureData {
     innate?: boolean;
     image_id?: string | null;
     image_url?: string | null;
-    parts?: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
+    parts?: Array<
+      | string
+      | {
+          id?: string | number;
+          name?: string;
+          op_1_lvl?: number;
+          op_2_lvl?: number;
+          op_3_lvl?: number;
+        }
+    >;
   }>;
   techniques?: Array<{
     id?: string;
@@ -75,7 +93,16 @@ export interface CreatureData {
     damage?: string;
     image_id?: string | null;
     image_url?: string | null;
-    parts?: Array<string | { id?: string | number; name?: string; op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number }>;
+    parts?: Array<
+      | string
+      | {
+          id?: string | number;
+          name?: string;
+          op_1_lvl?: number;
+          op_2_lvl?: number;
+          op_3_lvl?: number;
+        }
+    >;
   }>;
   feats?: Array<{ name: string; description?: string }>;
   armaments?: Array<{

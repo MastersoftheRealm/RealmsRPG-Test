@@ -43,7 +43,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
 
   return (
     <div className="flex flex-col gap-3 rounded-lg border border-border bg-surface">
-      <div className="md:hidden rounded-t-lg border-b border-border bg-surface-alt/70 px-4 py-2 text-xs text-text-secondary">
+      <div className="rounded-t-lg border-b border-border bg-surface-alt/70 px-4 py-2 text-xs text-text-secondary md:hidden">
         Spreadsheet works best on desktop. Consider List view on small screens.
       </div>
 
@@ -89,22 +89,26 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
               Cancel
             </Button>
             <Button size="sm" onClick={() => ws.performSaveAll()} disabled={ws.saving}>
-              {ws.saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
+              {ws.saving ? (
+                <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="mr-1 h-4 w-4" />
+              )}
               Save
             </Button>
           </div>
         }
       >
-        <div className="text-sm text-text-secondary space-y-3">
+        <div className="space-y-3 text-sm text-text-secondary">
           <p>
             Entry ids are never modified by a save — each row is written back to the id it was
             loaded with. You cannot undo after saving.
           </p>
-          <ul className="max-h-64 overflow-auto space-y-1">
+          <ul className="max-h-64 space-y-1 overflow-auto">
             {ws.pendingChanges.slice(0, CHANGE_PREVIEW_LIMIT).map((change) => (
               <li key={change.key} className="flex flex-wrap items-baseline gap-x-2">
                 <span className="font-medium text-text-primary">{change.name}</span>
-                <span className="text-xs text-text-muted dark:text-text-secondary">
+                <span className="text-xs text-text-muted">
                   {change.isNew
                     ? 'new entry'
                     : change.changedColumns.length === 0
@@ -115,7 +119,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
             ))}
           </ul>
           {ws.pendingChanges.length > CHANGE_PREVIEW_LIMIT && (
-            <p className="text-xs text-text-muted dark:text-text-secondary">
+            <p className="text-xs text-text-muted">
               and {ws.pendingChanges.length - CHANGE_PREVIEW_LIMIT} more row(s).
             </p>
           )}
@@ -141,7 +145,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
         stickyLeftFor={ws.stickyLeftFor}
       />
 
-      <div className="px-4 py-2 text-xs text-text-muted dark:text-text-secondary border-t border-border">
+      <div className="border-t border-border px-4 py-2 text-xs text-text-muted">
         {ws.rows.length} rows · {ws.columns.length} columns
         {ws.hasDirty && ` · ${ws.dirty.size} unsaved change(s)`}
       </div>

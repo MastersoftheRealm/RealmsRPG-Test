@@ -30,7 +30,7 @@ function GridListRowChromeIconButton({
   const isDelete = kind === 'delete';
   return (
     <div
-      className="flex items-center justify-center min-w-0 flex-shrink-0"
+      className="flex min-w-0 flex-shrink-0 items-center justify-center"
       style={columnWidth ? { width: columnWidth } : undefined}
       onClick={(e) => e.stopPropagation()}
     >
@@ -44,8 +44,8 @@ function GridListRowChromeIconButton({
         label={isDelete ? 'Remove' : 'Edit'}
         className={
           isDelete
-            ? 'text-danger-fg hover:opacity-80 hover:bg-transparent'
-            : 'text-text-muted dark:text-text-secondary hover:text-primary-fg-hover hover:bg-transparent'
+            ? 'text-danger-fg hover:bg-transparent hover:opacity-80'
+            : 'text-text-muted hover:bg-transparent hover:text-primary-fg-hover'
         }
       >
         {isDelete ? (
@@ -168,16 +168,22 @@ export function GridListRowCollapsed({
         aria-expanded={isRowClickable && isExpanded !== undefined ? isExpanded : undefined}
         // Only reference the panel while it exists — a dangling idref is worse
         // than none for screen readers.
-        aria-controls={isRowClickable && isExpanded && expandedPanelId ? expandedPanelId : undefined}
+        aria-controls={
+          isRowClickable && isExpanded && expandedPanelId ? expandedPanelId : undefined
+        }
         onClick={isRowClickable ? handleRowClickWithGuard : undefined}
-        onKeyDown={isRowClickable ? (e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleRowClick();
-          }
-        } : undefined}
+        onKeyDown={
+          isRowClickable
+            ? (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  handleRowClick();
+                }
+              }
+            : undefined
+        }
         className={cn(
-          'flex-1 text-left transition-colors min-h-[44px] min-w-0',
+          'min-h-[44px] min-w-0 flex-1 text-left transition-colors',
           // Compact rows are used heavily in add/load modals; keep 44px minimum touch target,
           // but avoid exceeding it via extra vertical padding.
           compact ? 'px-3 py-1.5' : 'px-4 py-2',
@@ -187,7 +193,7 @@ export function GridListRowCollapsed({
           // `gridTemplateColumns` — inline styles beat max-lg media queries and blocked
           // the mobile collapse (names squeezed; X landed mid-row before empty fr tracks).
           gridColumns &&
-            'grid gap-2 items-center [grid-template-columns:var(--glr-desktop-grid)] max-lg:[grid-template-columns:var(--glr-mobile-grid)]'
+            'grid [grid-template-columns:var(--glr-desktop-grid)] items-center gap-2 max-lg:[grid-template-columns:var(--glr-mobile-grid)]',
         )}
         style={
           resolvedGridColumns
@@ -214,26 +220,29 @@ export function GridListRowCollapsed({
               : undefined
           }
           className={cn(
-            '@container font-medium text-text-primary flex items-center gap-2 min-w-0',
+            '@container flex min-w-0 items-center gap-2 font-medium text-text-primary',
             useFlex && 'flex-1',
-            nameGridColumnSpan && 'lg:[grid-column:var(--glr-name-span)]'
+            nameGridColumnSpan && 'lg:[grid-column:var(--glr-name-span)]',
           )}
         >
           {!useThumbnailColumn && thumbnail && <ListRowThumbnail {...thumbnail} />}
           <span className="min-w-0 break-words lg:truncate">{nameContent ?? name}</span>
           {/* Innate indicator (hidden when already in innate section) */}
           {innate && !hideInnateBadge && (
-            <span className="text-[10px] px-1 py-0.5 rounded bg-power-light text-power-fg border border-power-border flex-shrink-0">★</span>
+            <span className="flex-shrink-0 rounded border border-power-border bg-power-light px-1 py-0.5 text-[10px] text-power-fg">
+              ★
+            </span>
           )}
           {/* Uses display (hidden when Uses column shows stepper). Show - when no/zero uses. */}
           {uses && !hideUsesInName && (
-            <span className="text-xs text-text-secondary flex-shrink-0">
+            <span className="flex-shrink-0 text-xs text-text-secondary">
               {uses.max > 0 ? `(${uses.current}/${uses.max})` : '-'}
             </span>
           )}
           {/* Quantity display - editable if onQuantityChange provided (allows 0 for quantity-first) */}
-          {quantity !== undefined && (onQuantityChange || quantity > 0) && (
-            onQuantityChange ? (
+          {quantity !== undefined &&
+            (onQuantityChange || quantity > 0) &&
+            (onQuantityChange ? (
               <QuantitySelector
                 quantity={quantity}
                 onChange={(val) => onQuantityChange(val - quantity)}
@@ -244,14 +253,13 @@ export function GridListRowCollapsed({
               />
             ) : (
               <QuantityBadge quantity={quantity} className="flex-shrink-0" />
-            )
-          )}
+            ))}
           {/* Inline badges for compact view (and non-compact rows that opt in via
               showBadgesInName). Hidden when the name column is narrow so the name keeps room;
               reappear at ≥13rem column width. Compact rows cap at 2 — the rest stays in the
               expanded view; opted-in rows show the full set because it is their only copy. */}
           {(compact || showBadgesInName) && badges.length > 0 && (
-            <span className="ml-2 hidden @[13rem]:inline-flex flex-wrap gap-1">
+            <span className="ml-2 hidden flex-wrap gap-1 @[13rem]:inline-flex">
               {(showBadgesInName ? badges : badges.slice(0, 2)).map((badge, i) => (
                 <DescriptorChip
                   key={i}
@@ -274,11 +282,12 @@ export function GridListRowCollapsed({
             return (
               <div
                 key={col.key}
-                style={columnSpans?.[colIndex] ? { gridColumn: `span ${columnSpans[colIndex]}` } : undefined}
-                className={cn(
-                  'text-sm min-w-0',
-                  col.hideOnMobile !== false && 'hidden lg:block'
-                )}
+                style={
+                  columnSpans?.[colIndex]
+                    ? { gridColumn: `span ${columnSpans[colIndex]}` }
+                    : undefined
+                }
+                className={cn('min-w-0 text-sm', col.hideOnMobile !== false && 'hidden lg:block')}
                 aria-hidden
               />
             );
@@ -286,15 +295,19 @@ export function GridListRowCollapsed({
           return (
             <div
               key={col.key}
-              style={columnSpans?.[colIndex] ? { gridColumn: `span ${columnSpans[colIndex]}` } : undefined}
+              style={
+                columnSpans?.[colIndex]
+                  ? { gridColumn: `span ${columnSpans[colIndex]}` }
+                  : undefined
+              }
               className={cn(
-                'text-sm truncate min-w-0',
+                'min-w-0 truncate text-sm',
                 col.hideOnMobile !== false && 'hidden lg:block',
                 col.className,
-                col.highlight ? 'text-primary-link-fg font-medium' : 'text-text-primary',
+                col.highlight ? 'font-medium text-primary-link-fg' : 'text-text-primary',
                 col.align === 'left' && 'text-left',
                 col.align === 'right' && 'text-right',
-                (!col.align || col.align === 'center') && 'text-center'
+                (!col.align || col.align === 'center') && 'text-center',
               )}
             >
               {col.value ?? '-'}
@@ -304,11 +317,13 @@ export function GridListRowCollapsed({
 
         {/* Flex mode: show key stats inline */}
         {useFlex && headerColumns.length > 0 && (
-          <div className="hidden md:flex items-center gap-4 text-sm text-text-secondary">
+          <div className="hidden items-center gap-4 text-sm text-text-secondary md:flex">
             {headerColumns.slice(0, 3).map((col) => (
               <span key={col.key} className="whitespace-nowrap">
-                <span className="text-text-muted dark:text-text-secondary">{(columnDisplayLabel(col))}:</span>{' '}
-                <span className={cn(col.highlight && 'text-primary-link-fg font-medium', col.className)}>
+                <span className="text-text-muted">{columnDisplayLabel(col)}:</span>{' '}
+                <span
+                  className={cn(col.highlight && 'font-medium text-primary-link-fg', col.className)}
+                >
                   {col.value ?? '-'}
                 </span>
               </span>
@@ -319,27 +334,28 @@ export function GridListRowCollapsed({
         {/* Warning indicator — only when a grid track is free (full grids use expanded/title fallback) */}
         {inlineWarning && (
           <div className="flex items-center text-warning-fg" title={warningMessage}>
-            <AlertCircle className="w-4 h-4" />
+            <AlertCircle className="h-4 w-4" />
           </div>
         )}
 
         {/* Inline controls: used when gridColumns already includes trailing action tracks */}
         {inlineRightSlot && (
-          <div className="flex items-center justify-center min-w-0" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="flex min-w-0 items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
             {rightSlot}
           </div>
         )}
-        {inlineEdit && onEdit && (
-          <GridListRowChromeIconButton kind="edit" onClick={onEdit} />
-        )}
+        {inlineEdit && onEdit && <GridListRowChromeIconButton kind="edit" onClick={onEdit} />}
         {inlineDelete && onDelete && (
           <GridListRowChromeIconButton kind="delete" onClick={onDelete} />
         )}
         {inlineSelectable && (
           <div
             className={cn(
-              'min-w-[44px] w-11 flex items-center justify-center min-h-[44px]',
-              disabled && 'cursor-not-allowed opacity-50'
+              'flex min-h-[44px] w-11 min-w-[44px] items-center justify-center',
+              disabled && 'cursor-not-allowed opacity-50',
             )}
             onClick={(e) => e.stopPropagation()}
             role="presentation"
@@ -354,7 +370,6 @@ export function GridListRowCollapsed({
             />
           </div>
         )}
-
       </div>
     </>
   );
@@ -398,10 +413,10 @@ export function GridListRowExternalChrome({
   const resolvedRightSlotWidth = rightSlotWidth ?? GRID_LIST_ROW_RIGHT_SLOT_FLEX_WIDTH;
 
   return (
-    <div className="flex items-center flex-shrink-0 min-h-[44px] pr-1">
+    <div className="flex min-h-[44px] flex-shrink-0 items-center pr-1">
       {showRightSlot && (
         <div
-          className="flex items-center flex-shrink-0 justify-center"
+          className="flex flex-shrink-0 items-center justify-center"
           style={{ width: resolvedRightSlotWidth }}
           onClick={(e) => e.stopPropagation()}
           aria-hidden={reserveRightSlotChrome && !rightSlot ? true : undefined}
@@ -429,8 +444,8 @@ export function GridListRowExternalChrome({
       {selectable && (
         <div
           className={cn(
-            'flex-shrink-0 flex items-center justify-center',
-            disabled && 'cursor-not-allowed opacity-50'
+            'flex flex-shrink-0 items-center justify-center',
+            disabled && 'cursor-not-allowed opacity-50',
           )}
           style={{
             width: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,

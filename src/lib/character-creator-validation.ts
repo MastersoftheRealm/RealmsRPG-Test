@@ -10,10 +10,23 @@ import type { CreatorStep } from '@/stores/character-creator-store';
 import { isCreatorStepSkipped } from '@/stores/character-creator-store';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
-import { calculateAbilityPoints, calculateAbilityScoreCost, calculateHealthEnergyPool, calculateSkillPointsForEntity, calculateTrainingPoints } from '@/lib/game/formulas';
+import {
+  calculateAbilityPoints,
+  calculateAbilityScoreCost,
+  calculateHealthEnergyPool,
+  calculateSkillPointsForEntity,
+  calculateTrainingPoints,
+} from '@/lib/game/formulas';
 import { CHARACTER_STARTING_CURRENCY } from '@/stores/character-creator-store';
-import { calculateSimpleSkillPointsSpent, resolveSkillAllocationRules } from '@/lib/game/skill-allocation';
-import { buildRequiredProficiencies, calculateProficiencyTP, dedupeHighestProficiencies } from '@/lib/proficiencies';
+import {
+  calculateSimpleSkillPointsSpent,
+  resolveSkillAllocationRules,
+} from '@/lib/game/skill-allocation';
+import {
+  buildRequiredProficiencies,
+  calculateProficiencyTP,
+  dedupeHighestProficiencies,
+} from '@/lib/proficiencies';
 
 export interface ValidationIssue {
   emoji: string;
@@ -60,7 +73,7 @@ export interface ValidationContext {
 export function getValidationIssuesForStep(
   step: CreatorStep,
   draft: CharacterDraft,
-  context: ValidationContext
+  context: ValidationContext,
 ): ValidationIssue[] {
   const issues: ValidationIssue[] = [];
   const level = draft.level || 1;
@@ -81,7 +94,7 @@ export function getValidationIssuesForStep(
       if (!draft.ancestry?.id) {
         issues.push({
           emoji: '🌟',
-          message: "You need to choose your species.",
+          message: 'You need to choose your species.',
           severity: 'error',
         });
       }
@@ -91,21 +104,26 @@ export function getValidationIssuesForStep(
       if (!draft.ancestry?.id) {
         issues.push({
           emoji: '🌟',
-          message: "Species is required before choosing ancestry traits.",
+          message: 'Species is required before choosing ancestry traits.',
           severity: 'error',
         });
       } else {
         const selectedTraits = draft.ancestry?.selectedTraits?.length ?? 0;
         const species = allSpecies.find(
-          (s) => s.id === draft.ancestry?.id || String(s.name ?? '').toLowerCase() === String(draft.ancestry?.name ?? '').toLowerCase()
+          (s) =>
+            s.id === draft.ancestry?.id ||
+            String(s.name ?? '').toLowerCase() === String(draft.ancestry?.name ?? '').toLowerCase(),
         );
-        const ancestryTraitCount = (species && 'ancestry_traits' in species && Array.isArray((species as { ancestry_traits?: unknown[] }).ancestry_traits))
-          ? (species as { ancestry_traits: unknown[] }).ancestry_traits.length
-          : 1;
+        const ancestryTraitCount =
+          species &&
+          'ancestry_traits' in species &&
+          Array.isArray((species as { ancestry_traits?: unknown[] }).ancestry_traits)
+            ? (species as { ancestry_traits: unknown[] }).ancestry_traits.length
+            : 1;
         if (ancestryTraitCount > 0 && selectedTraits < 1) {
           issues.push({
             emoji: '🧬',
-            message: "You need to select at least one ancestry trait.",
+            message: 'You need to select at least one ancestry trait.',
             severity: 'error',
           });
         }
@@ -165,7 +183,10 @@ export function getValidationIssuesForStep(
     case 'abilities': {
       const maxAbilityPoints = calculateAbilityPoints(level);
       const usedAbilityPoints = draft.abilities
-        ? Object.values(draft.abilities).reduce((sum, val) => sum + calculateAbilityScoreCost(val || 0), 0)
+        ? Object.values(draft.abilities).reduce(
+            (sum, val) => sum + calculateAbilityScoreCost(val || 0),
+            0,
+          )
         : 0;
       const remainingAbilityPoints = maxAbilityPoints - usedAbilityPoints;
       if (remainingAbilityPoints > 0) {
@@ -189,7 +210,11 @@ export function getValidationIssuesForStep(
       if (!ancestry?.id && !ancestry?.speciesIds?.length) break;
       let speciesSkillIds: Set<string>;
       const isMixed = ancestry?.mixed === true && ancestry?.speciesIds?.length === 2;
-      if (isMixed && Array.isArray(ancestry?.selectedSpeciesSkillIds) && ancestry.selectedSpeciesSkillIds.length === 2) {
+      if (
+        isMixed &&
+        Array.isArray(ancestry?.selectedSpeciesSkillIds) &&
+        ancestry.selectedSpeciesSkillIds.length === 2
+      ) {
         speciesSkillIds = new Set(ancestry.selectedSpeciesSkillIds.map((id) => String(id)));
       } else if (isMixed && ancestry?.speciesIds?.length === 2) {
         const a = allSpecies.find((s) => s.id === ancestry.speciesIds![0]);
@@ -200,7 +225,9 @@ export function getValidationIssuesForStep(
         speciesSkillIds = combined;
       } else {
         const species = allSpecies.find(
-          (s) => s.id === ancestry?.id || String(s.name ?? '').toLowerCase() === String(draft.ancestry?.name ?? '').toLowerCase()
+          (s) =>
+            s.id === ancestry?.id ||
+            String(s.name ?? '').toLowerCase() === String(draft.ancestry?.name ?? '').toLowerCase(),
         );
         speciesSkillIds = new Set<string>((species?.skills || []).map((id) => String(id)));
       }
@@ -215,7 +242,7 @@ export function getValidationIssuesForStep(
         speciesSkillIds,
         skillMeta,
         draft.defenseVals || draft.defenseSkills,
-        resolveSkillAllocationRules(rules)
+        resolveSkillAllocationRules(rules),
       );
       const remainingSkillPoints = maxSkillPoints - totalUsedSkillPoints;
       if (remainingSkillPoints > 0) {
@@ -254,7 +281,7 @@ export function getValidationIssuesForStep(
       if (characterFeats.length < 1) {
         issues.push({
           emoji: '🌠',
-          message: "You need to select a character feat.",
+          message: 'You need to select a character feat.',
           severity: 'warning',
         });
       }
@@ -267,9 +294,13 @@ export function getValidationIssuesForStep(
         key ? Number((abilities as Record<string, unknown>)[key] ?? 0) || 0 : 0;
       const highestAbility = Math.max(
         ...Object.values(abilities).filter((v): v is number => typeof v === 'number'),
-        0
+        0,
       );
-      const archetypeAbility = Math.max(getAbility(draft.pow_abil), getAbility(draft.mart_abil), highestAbility);
+      const archetypeAbility = Math.max(
+        getAbility(draft.pow_abil),
+        getAbility(draft.mart_abil),
+        highestAbility,
+      );
       const trainingPoints = calculateTrainingPoints(level, archetypeAbility);
 
       const inventory = draft.equipment?.inventory || [];
@@ -285,7 +316,7 @@ export function getValidationIssuesForStep(
       });
       const spentTP = dedupeHighestProficiencies(requiredProficiencies).reduce(
         (sum, prof) => sum + calculateProficiencyTP(prof),
-        0
+        0,
       );
       const remainingTP = trainingPoints - spentTP;
       if (remainingTP < 0) {
@@ -297,7 +328,10 @@ export function getValidationIssuesForStep(
       }
       const baseCurrency = CHARACTER_STARTING_CURRENCY;
       const equipmentItems = draft.equipment?.items || draft.equipment?.inventory || [];
-      const spentCurrency = equipmentItems.reduce((sum: number, item: { cost?: number }) => sum + (item.cost || 0), 0);
+      const spentCurrency = equipmentItems.reduce(
+        (sum: number, item: { cost?: number }) => sum + (item.cost || 0),
+        0,
+      );
       if (spentCurrency > baseCurrency) {
         issues.push({
           emoji: '💰',
@@ -316,7 +350,7 @@ export function getValidationIssuesForStep(
       if (!draft.name?.trim()) {
         issues.push({
           emoji: '📝',
-          message: "Your hero needs a name! Give them something legendary.",
+          message: 'Your hero needs a name! Give them something legendary.',
           severity: 'error',
         });
       }
@@ -352,7 +386,7 @@ export function getValidationIssuesForStep(
 export function getAllValidationIssues(
   draft: CharacterDraft,
   context: ValidationContext,
-  rules?: Partial<CoreRulesMap>
+  rules?: Partial<CoreRulesMap>,
 ): ValidationIssue[] {
   const steps: CreatorStep[] = [
     'archetype',
@@ -370,7 +404,7 @@ export function getAllValidationIssues(
   if (!draft.name?.trim()) {
     issues.push({
       emoji: '📝',
-      message: "Your hero needs a name! Give them something legendary.",
+      message: 'Your hero needs a name! Give them something legendary.',
       severity: 'error',
     });
   }
@@ -415,7 +449,7 @@ const OPTIONAL_STEPS: ReadonlySet<CreatorStep> = new Set<CreatorStep>(['powers']
 export function getStepCompletion(
   step: CreatorStep,
   draft: CharacterDraft,
-  context: ValidationContext
+  context: ValidationContext,
 ): StepCompletion {
   const issues = getValidationIssuesForStep(step, draft, context);
   if (isCreatorStepSkipped(step, draft)) {
@@ -431,7 +465,12 @@ export function getStepCompletion(
     made,
     required,
     optional,
-    label: required > 0 ? `${Math.max(0, made)} / ${required} ${noun}` : done ? 'Complete' : 'Incomplete',
+    label:
+      required > 0
+        ? `${Math.max(0, made)} / ${required} ${noun}`
+        : done
+          ? 'Complete'
+          : 'Incomplete',
   });
 
   switch (step) {
@@ -444,7 +483,10 @@ export function getStepCompletion(
     case 'abilities': {
       const required = calculateAbilityPoints(level);
       const made = draft.abilities
-        ? Object.values(draft.abilities).reduce((sum, val) => sum + calculateAbilityScoreCost(val || 0), 0)
+        ? Object.values(draft.abilities).reduce(
+            (sum, val) => sum + calculateAbilityScoreCost(val || 0),
+            0,
+          )
         : 0;
       return countable(made, required, 'points');
     }

@@ -19,11 +19,7 @@ export const ARCHETYPE_ABILITY_OPTIONS: AbilityName[] = [
 
 export type PathCategoryGroup = 'power' | 'powered-martial' | 'martial';
 
-export const PATH_CATEGORY_GROUPS: PathCategoryGroup[] = [
-  'power',
-  'powered-martial',
-  'martial',
-];
+export const PATH_CATEGORY_GROUPS: PathCategoryGroup[] = ['power', 'powered-martial', 'martial'];
 
 export function pathCategoryGroupLabel(group: PathCategoryGroup): string {
   if (group === 'power') return 'Power Paths';
@@ -73,9 +69,7 @@ export function listPlayerVisiblePaths(
     .filter((option) => (excludeId ? option.id !== excludeId : true));
 }
 
-export function groupPathsByCategory(
-  paths: Archetype[],
-): Record<PathCategoryGroup, Archetype[]> {
+export function groupPathsByCategory(paths: Archetype[]): Record<PathCategoryGroup, Archetype[]> {
   return {
     power: paths.filter((p) => p.type === 'power'),
     'powered-martial': paths.filter((p) => p.type === 'powered-martial'),
@@ -93,10 +87,7 @@ export type PathSwitchEditResult = {
 };
 
 /** Build sheet path-switch save payload (redistribute + level-5 path proficiency floor). */
-export function buildPathSwitchResult(
-  path: Archetype,
-  character: Character,
-): PathSwitchEditResult {
+export function buildPathSwitchResult(path: Archetype, character: Character): PathSwitchEditResult {
   const type = path.type;
   const level = character.level || 1;
   const totalProf = calculateProficiency(level);
@@ -108,10 +99,8 @@ export function buildPathSwitchResult(
   const labels = resolvePathAbilityLabels(path);
   // Legacy `ability` fallback matches prior sheet edit-archetype behavior.
   const legacyAbility = path.ability;
-  const powAbil =
-    type !== 'martial' ? (labels.powAbil ?? legacyAbility ?? undefined) : undefined;
-  const martAbil =
-    type !== 'power' ? (labels.martAbil ?? legacyAbility ?? undefined) : undefined;
+  const powAbil = type !== 'martial' ? (labels.powAbil ?? legacyAbility ?? undefined) : undefined;
+  const martAbil = type !== 'power' ? (labels.martAbil ?? legacyAbility ?? undefined) : undefined;
 
   const base: PathSwitchEditResult = {
     archetype: { id: path.id, type },
@@ -145,7 +134,7 @@ export function canSaveForgeAbilities(args: {
   if (selectedType === 'martial') return Boolean(selectedMartialAbility);
   return Boolean(
     selectedPowerAbility &&
-      selectedMartialAbility &&
-      selectedPowerAbility !== selectedMartialAbility,
+    selectedMartialAbility &&
+    selectedPowerAbility !== selectedMartialAbility,
   );
 }

@@ -31,12 +31,14 @@ export function PowerCreatorEditorPowerDamage({
       title="Damage"
       collapsedSummary={damageSummary}
       titleAddon={<PowerCreatorHelp topic="damage" />}
-      rightSlot={<SectionCostBadge en={sectionCosts.damage.energyRaw} tp={sectionCosts.damage.totalTP} />}
+      rightSlot={
+        <SectionCostBadge en={sectionCosts.damage.energyRaw} tp={sectionCosts.damage.totalTP} />
+      }
     >
       {damages.map((d, index) => (
         <div
           key={index}
-          className="flex flex-wrap items-center gap-4 mb-4 p-3 rounded-lg bg-surface-alt border border-border-light"
+          className="mb-4 flex flex-wrap items-center gap-4 rounded-lg border border-border-light bg-surface-alt p-3"
         >
           {d.type !== 'none' && d.amount > 0 && (
             <Checkbox
@@ -51,13 +53,15 @@ export function PowerCreatorEditorPowerDamage({
           )}
           <ValueStepper
             value={d.amount}
-            onChange={(v) => onDamagesChange((prev) => prev.map((x, i) => (i === index ? { ...x, amount: v } : x)))}
+            onChange={(v) =>
+              onDamagesChange((prev) => prev.map((x, i) => (i === index ? { ...x, amount: v } : x)))
+            }
             label="Dice:"
             min={0}
             max={20}
           />
           <div className="flex items-center gap-1">
-            <span className="font-bold text-lg">d</span>
+            <span className="text-lg font-bold">d</span>
             <select
               aria-label={`Damage die size, row ${index + 1}`}
               value={d.size}
@@ -66,7 +70,7 @@ export function PowerCreatorEditorPowerDamage({
                   prev.map((x, i) => (i === index ? { ...x, size: parseInt(e.target.value) } : x)),
                 )
               }
-              className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+              className="rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
             >
               {DIE_SIZES.map((size) => (
                 <option key={size} value={size}>
@@ -79,9 +83,11 @@ export function PowerCreatorEditorPowerDamage({
             aria-label={`Damage type, row ${index + 1}`}
             value={d.type}
             onChange={(e) =>
-              onDamagesChange((prev) => prev.map((x, i) => (i === index ? { ...x, type: e.target.value } : x)))
+              onDamagesChange((prev) =>
+                prev.map((x, i) => (i === index ? { ...x, type: e.target.value } : x)),
+              )
             }
-            className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+            className="rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
           >
             {DAMAGE_TYPES.map((type) => (
               <option key={type} value={type}>
@@ -93,10 +99,10 @@ export function PowerCreatorEditorPowerDamage({
             <button
               type="button"
               onClick={() => onDamagesChange((prev) => prev.filter((_, i) => i !== index))}
-              className="p-2 rounded-lg text-danger-fg hover:bg-danger-100 dark:hover:bg-danger-900/30 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg p-2 text-danger-fg hover:bg-danger-100 dark:hover:bg-danger-900/30"
               aria-label={`Remove damage type row ${index + 1}`}
             >
-              <Trash2 className="w-5 h-5" />
+              <Trash2 className="h-5 w-5" />
             </button>
           )}
         </div>
@@ -106,11 +112,14 @@ export function PowerCreatorEditorPowerDamage({
         variant="secondary"
         size="sm"
         onClick={() =>
-          onDamagesChange((prev) => [...prev, { amount: 0, size: 6, type: 'none', applyDuration: false }])
+          onDamagesChange((prev) => [
+            ...prev,
+            { amount: 0, size: 6, type: 'none', applyDuration: false },
+          ])
         }
         className="mt-2 min-h-[44px]"
       >
-        <Plus className="w-4 h-4 mr-1 inline" aria-hidden />
+        <Plus className="mr-1 inline h-4 w-4" aria-hidden />
         Add damage type
       </Button>
       {damages.some((d) => d.type !== 'none' && d.amount > 0) && (

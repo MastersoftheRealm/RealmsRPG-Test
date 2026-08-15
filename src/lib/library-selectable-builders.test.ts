@@ -27,25 +27,14 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     const headers = getListHeaderColumns('power').map((c) => c.key);
     expect(headers).toEqual(['name', 'Energy', 'Action', 'Duration', 'Area', 'Damage']);
 
-    const cols = getItemColumns(
-      { id: 'p1', name: 'Bolt' },
-      'power',
-      undefined,
-      {
-        energy: 2,
-        actionType: 'Action',
-        duration: 'Instant',
-        damage: '2d6 Fire',
-        area: 'Single',
-      }
-    );
-    expect(cols.map((c) => c.key)).toEqual([
-      'Energy',
-      'Action',
-      'Duration',
-      'Area',
-      'Damage',
-    ]);
+    const cols = getItemColumns({ id: 'p1', name: 'Bolt' }, 'power', undefined, {
+      energy: 2,
+      actionType: 'Action',
+      duration: 'Instant',
+      damage: '2d6 Fire',
+      area: 'Single',
+    });
+    expect(cols.map((c) => c.key)).toEqual(['Energy', 'Action', 'Duration', 'Area', 'Damage']);
     expect(cols.find((c) => c.key === 'Damage')?.value).toContain('2d6');
     expect(getModalGridColumns('power')).toMatch(/1\.2fr/);
   });
@@ -54,16 +43,12 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     const headers = getListHeaderColumns('technique').map((c) => c.key);
     expect(headers).toEqual(['name', 'Action', 'Energy', 'Attack', 'Training Pts']);
 
-    const cols = getItemColumns(
-      { id: 't1', name: 'Strike' },
-      'technique',
-      {
-        energy: 3,
-        weaponName: 'Weapon',
-        tp: 4,
-        actionType: 'Action',
-      }
-    );
+    const cols = getItemColumns({ id: 't1', name: 'Strike' }, 'technique', {
+      energy: 3,
+      weaponName: 'Weapon',
+      tp: 4,
+      actionType: 'Action',
+    });
     expect(cols.map((c) => c.key)).toEqual(['Action', 'Energy', 'Attack', 'Training Pts']);
     expect(cols.find((c) => c.key === 'Action')?.value).toBe('Action');
     expect(cols.find((c) => c.key === 'Energy')?.value).toBe('3');
@@ -81,7 +66,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
         parts: [],
       },
       'technique',
-      emptyCodex
+      emptyCodex,
     );
     expect(selectable.columns?.map((c) => c.key)).toEqual([
       'Action',
@@ -110,7 +95,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
         properties: [],
       },
       'item',
-      emptyCodex
+      emptyCodex,
     );
     expect(weapon.columns?.map((c) => c.key)).toEqual(['type', 'Damage']);
     expect(String(weapon.columns?.[1]?.value)).toMatch(/1d8/i);
@@ -125,7 +110,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
         properties: [],
       },
       'item',
-      emptyCodex
+      emptyCodex,
     );
     expect(armor.columns?.map((c) => c.key)).toEqual(['type', 'Armor']);
     expect(String(armor.columns?.[1]?.value)).toBe('3');
@@ -139,7 +124,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
         properties: [],
       },
       'item',
-      emptyCodex
+      emptyCodex,
     );
     expect(shield.columns?.[0]?.key).toBe('type');
     expect(String(shield.columns?.[0]?.value).toLowerCase()).toContain('shield');
@@ -173,7 +158,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       },
       'p1',
       [],
-      []
+      [],
     );
     expect(display.name).toBe('Test Bolt');
     expect(display.columns.map((c) => c.key)).toEqual(['action', 'energy', 'tp']);
@@ -192,7 +177,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
         parts: [],
       },
       'power',
-      emptyCodex
+      emptyCodex,
     );
     expect(selectable.powerTechniqueFilter).toMatchObject({
       actionTypeRaw: 'basic',
@@ -232,13 +217,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
 
     const officialEnergy = buildOfficialPowerRows([power], partsDb)[0]?.energy;
     const budgetFacts = derivePowerTechniqueBudgetFacts('power', power, partsDb, []);
-    const budgetDisplay = buildPowerTechniqueBudgetDisplay(
-      'power',
-      power,
-      'tri-bolt',
-      partsDb,
-      []
-    );
+    const budgetDisplay = buildPowerTechniqueBudgetDisplay('power', power, 'tri-bolt', partsDb, []);
     const directEnergy = derivePowerDisplay(libraryItemToPowerDocument(power), partsDb).energy;
 
     expect(typeof officialEnergy).toBe('number');
@@ -247,7 +226,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(budgetFacts.energy).toBe(officialEnergy);
     expect(budgetDisplay.energy).toBe(officialEnergy);
     expect(budgetDisplay.columns.find((c) => c.key === 'energy')?.value).toBe(
-      String(officialEnergy)
+      String(officialEnergy),
     );
   });
 
@@ -345,7 +324,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
         parts: [],
         actionType: power.actionType,
       },
-      partsDb
+      partsDb,
     ).energy;
 
     expect(officialEnergy).toBe(12);
@@ -381,7 +360,7 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       'technique',
       technique,
       [],
-      partsDb
+      partsDb,
     ).energy;
     const rows = buildPowersTechniquesL2Items({
       kind: 'techniques',

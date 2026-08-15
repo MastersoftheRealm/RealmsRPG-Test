@@ -33,9 +33,7 @@ export function ExpandableImageModal({
       isOpen={isOpen}
       onClose={onClose}
       title={alt}
-      description={
-        isPlaceholder ? 'Placeholder art. Full illustration coming later.' : undefined
-      }
+      description={isPlaceholder ? 'Placeholder art. Full illustration coming later.' : undefined}
       size="lg"
       fullScreenOnMobile
       contentClassName="flex items-center justify-center p-4"
@@ -87,7 +85,7 @@ export function ExpandableImage({
       if (stopPropagation) e.stopPropagation();
       setOpen(true);
     },
-    [stopPropagation]
+    [stopPropagation],
   );
 
   const label =

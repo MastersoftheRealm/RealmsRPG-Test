@@ -33,27 +33,27 @@ export function UnarmedProwessPanel({
   return (
     <div
       className={cn(
-        'border border-border-light rounded-lg bg-surface',
-        isPath ? 'mb-6 p-4' : 'mb-8 p-6'
+        'rounded-lg border border-border-light bg-surface',
+        isPath ? 'mb-6 p-4' : 'mb-8 p-6',
       )}
     >
       {isPath ? (
         <>
-          <h3 className="text-lg font-semibold text-text-primary mb-2">Unarmed Prowess</h3>
-          <p className="text-sm text-text-secondary mb-4">
+          <h3 className="mb-2 text-lg font-semibold text-text-primary">Unarmed Prowess</h3>
+          <p className="mb-4 text-sm text-text-secondary">
             Your path recommends Unarmed Prowess. Add it below if you want to use unarmed combat.
           </p>
         </>
       ) : (
-        <div className="flex items-start gap-4 mb-6">
-          <div className="p-3 rounded-full bg-warning-light">
-            <Swords className="w-8 h-8 text-martial-dark" />
+        <div className="mb-6 flex items-start gap-4">
+          <div className="rounded-full bg-warning-light p-3">
+            <Swords className="h-8 w-8 text-martial-dark" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-bold text-text-primary mb-1">Unarmed Prowess</h3>
-            <p className="text-text-secondary text-sm">
-              Master the art of unarmed combat. Your fists become deadly weapons,
-              dealing increasing damage as you train. Upgrades become available at higher character levels.
+            <h3 className="mb-1 text-lg font-bold text-text-primary">Unarmed Prowess</h3>
+            <p className="text-sm text-text-secondary">
+              Master the art of unarmed combat. Your fists become deadly weapons, dealing increasing
+              damage as you train. Upgrades become available at higher character levels.
             </p>
           </div>
         </div>
@@ -63,8 +63,10 @@ export function UnarmedProwessPanel({
         {availableLevels.map((prowessLevel) => {
           const isAvailable = prowessLevel.charLevel <= characterLevel;
           const isSelected = currentUnarmedProwess >= prowessLevel.level;
-          const tpCost = prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;
-          const canSelect = isAvailable && (currentUnarmedProwess === prowessLevel.level - 1 || isSelected);
+          const tpCost =
+            prowessLevel.level === 1 ? UNARMED_PROWESS_BASE_TP : UNARMED_PROWESS_UPGRADE_TP;
+          const canSelect =
+            isAvailable && (currentUnarmedProwess === prowessLevel.level - 1 || isSelected);
 
           return (
             <div
@@ -73,34 +75,35 @@ export function UnarmedProwessPanel({
                 'flex items-center gap-4 rounded-lg border transition-all',
                 isPath ? 'p-3' : 'p-4',
                 isSelected
-                  ? 'bg-primary-subtle-bg border-primary-subtle-border'
+                  ? 'border-primary-subtle-border bg-primary-subtle-bg'
                   : isPath
-                    ? 'bg-surface-alt border-border-light'
-                    : 'bg-surface border-border-light',
+                    ? 'border-border-light bg-surface-alt'
+                    : 'border-border-light bg-surface',
                 !isAvailable && 'opacity-50',
-                canSelect && !isSelected && 'hover:border-primary-outline-border cursor-pointer'
+                canSelect && !isSelected && 'cursor-pointer hover:border-primary-outline-border',
               )}
               onClick={() => {
                 if (!isAvailable) return;
                 if (isSelected) onSetLevel(prowessLevel.level - 1);
-                else if (currentUnarmedProwess === prowessLevel.level - 1) onSetLevel(prowessLevel.level);
+                else if (currentUnarmedProwess === prowessLevel.level - 1)
+                  onSetLevel(prowessLevel.level);
               }}
             >
               <div
                 className={cn(
-                  'w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0',
+                  'flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full',
                   isSelected
                     ? 'bg-primary-button text-text-on-dark'
                     : isPath
-                      ? 'bg-surface border border-border-light'
-                      : 'bg-surface-alt border border-border-light'
+                      ? 'border border-border-light bg-surface'
+                      : 'border border-border-light bg-surface-alt',
                 )}
               >
-                {isSelected && <Check className="w-4 h-4" />}
+                {isSelected && <Check className="h-4 w-4" />}
               </div>
 
               {isPath ? (
-                <div className="flex-1 min-w-0">
+                <div className="min-w-0 flex-1">
                   <span className="font-medium text-text-primary">{prowessLevel.name}</span>
                   {!isAvailable && (
                     <DescriptorChip size="sm" className="ml-2">
@@ -118,14 +121,16 @@ export function UnarmedProwessPanel({
                       </DescriptorChip>
                     )}
                   </div>
-                  <p className="text-sm text-text-secondary mt-1">{prowessLevel.description}</p>
+                  <p className="mt-1 text-sm text-text-secondary">{prowessLevel.description}</p>
                 </div>
               )}
 
               <div
                 className={cn(
-                  'px-3 py-1.5 rounded-lg text-sm font-bold flex-shrink-0',
-                  isSelected ? 'bg-primary-subtle-bg text-primary-fg' : cn(statusPanel.warningBg, 'text-warning-fg')
+                  'flex-shrink-0 rounded-lg px-3 py-1.5 text-sm font-bold',
+                  isSelected
+                    ? 'bg-primary-subtle-bg text-primary-fg'
+                    : cn(statusPanel.warningBg, 'text-warning-fg'),
                 )}
               >
                 {tpCost} TP
@@ -138,19 +143,14 @@ export function UnarmedProwessPanel({
       {currentUnarmedProwess > 0 && (
         <div
           className={cn(
-            'border-t border-border-light flex items-center justify-between',
-            isPath ? 'mt-4 pt-3' : 'mt-6 pt-4'
+            'flex items-center justify-between border-t border-border-light',
+            isPath ? 'mt-4 pt-3' : 'mt-6 pt-4',
           )}
         >
           <span className="text-text-secondary">
             {isPath ? 'Total Unarmed Prowess:' : 'Total Unarmed Prowess Cost:'}
           </span>
-          <span
-            className={cn(
-              'font-bold text-primary-link-fg',
-              !isPath && 'text-lg'
-            )}
-          >
+          <span className={cn('font-bold text-primary-link-fg', !isPath && 'text-lg')}>
             {unarmedProwessTPCost} TP
           </span>
         </div>

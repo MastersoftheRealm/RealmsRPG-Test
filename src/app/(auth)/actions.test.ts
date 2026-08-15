@@ -20,11 +20,7 @@ vi.mock('@supabase/supabase-js', () => ({
 vi.mock('@/lib/admin', () => ({ isAdmin: vi.fn(async () => false) }));
 vi.mock('@/lib/role-policy', () => ({ getRolePolicyForUser: vi.fn() }));
 
-import {
-  changeUsernameAction,
-  createUserProfileAction,
-  deleteAccountAction,
-} from './actions';
+import { changeUsernameAction, createUserProfileAction, deleteAccountAction } from './actions';
 import { requireAuth, getSession } from '@/lib/supabase/session';
 import { createClient as createServerClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
@@ -159,14 +155,16 @@ describe('changeUsernameAction', () => {
     const released = ops.find((op) => op.action === 'delete' && op.table === 'usernames');
     expect(released?.filters).toEqual({ username: 'newname', user_id: USER.uid });
     // The previous mapping is untouched.
-    expect(ops.filter((op) => op.action === 'delete' && op.filters.username === 'oldname')).toHaveLength(0);
+    expect(
+      ops.filter((op) => op.action === 'delete' && op.filters.username === 'oldname'),
+    ).toHaveLength(0);
   });
 
   it('rejects renaming to the current username', async () => {
     const { client } = createSupabaseStub((op) =>
       op.table === 'user_profiles' && op.action === 'select'
         ? ok({ username: 'samename', last_username_change: null })
-        : ok()
+        : ok(),
     );
     mockCreateServerClient.mockResolvedValue(client as never);
 

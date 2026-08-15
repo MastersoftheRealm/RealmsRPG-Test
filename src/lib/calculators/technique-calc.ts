@@ -10,7 +10,11 @@ import { computePartTrainingPoints } from '@/lib/calculators/part-training-point
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
-import { attackModeColumnLabel, deriveTechniqueAttackMode, type AttackMode } from '@/lib/attack-mode';
+import {
+  attackModeColumnLabel,
+  deriveTechniqueAttackMode,
+  type AttackMode,
+} from '@/lib/attack-mode';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
 
 // Re-export for convenience
@@ -94,7 +98,7 @@ export { computeSplits } from './dice-splits';
  * Format damage object as a string like "+2d6".
  */
 export function formatTechniqueDamage(
-  dmgObj?: { amount?: number | string; size?: number | string } | null
+  dmgObj?: { amount?: number | string; size?: number | string } | null,
 ): string {
   if (!dmgObj || !dmgObj.amount || !dmgObj.size) return '';
   if (dmgObj.amount === '0' || dmgObj.size === '0') return '';
@@ -110,7 +114,7 @@ export function formatTechniqueDamage(
  */
 export function computeActionType(
   partsPayload: TechniquePartPayload[] = [],
-  partsDb: TechniquePart[] = []
+  partsDb: TechniquePart[] = [],
 ): string {
   const ids = {
     reaction: PART_IDS.REACTION,
@@ -156,7 +160,7 @@ export const computeActionTypeFromSelection = actionTypeFromSelection;
  */
 export function calculateTechniqueCosts(
   partsPayload: TechniquePartPayload[] = [],
-  partsDb: TechniquePart[] = []
+  partsDb: TechniquePart[] = [],
 ): TechniqueCostResult {
   let sumNonPercentage = 0;
   let productPercentage = 1;
@@ -192,7 +196,7 @@ export function calculateTechniqueCosts(
     const partTP = computePartTrainingPoints(
       def,
       { op_1_lvl: l1, op_2_lvl: l2, op_3_lvl: l3 },
-      'technique'
+      'technique',
     );
     if (partTP > 0) {
       let src = `${partTP} TP: ${def.name}`;
@@ -220,7 +224,7 @@ export function calculateTechniqueCosts(
  */
 export function formatTechniquePartChip(
   def: TechniquePart,
-  pl: TechniquePartPayload
+  pl: TechniquePartPayload,
 ): TechniqueChipData {
   const l1 = pl.op_1_lvl || 0;
   const l2 = pl.op_2_lvl || 0;
@@ -252,7 +256,7 @@ export function formatTechniquePartChip(
  */
 export function deriveTechniqueDisplay(
   techniqueDoc: TechniqueDocument,
-  partsDb: TechniquePart[]
+  partsDb: TechniquePart[],
 ): TechniqueDisplayData {
   const partsPayload: TechniquePartPayload[] = dedupeSavedParts(
     Array.isArray(techniqueDoc.parts)
@@ -263,7 +267,7 @@ export function deriveTechniqueDisplay(
           op_2_lvl: p.op_2_lvl || 0,
           op_3_lvl: p.op_3_lvl || 0,
         }))
-      : []
+      : [],
   );
 
   const calc = calculateTechniqueCosts(partsPayload, partsDb);

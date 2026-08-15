@@ -56,20 +56,14 @@ export function UnifiedSelectionModalList({
           {error.message}
         </Alert>
       ) : filteredItems.length === 0 ? (
-        <EmptyState
-          title={emptyMessage}
-          description={emptySubMessage}
-          size="sm"
-        />
+        <EmptyState title={emptyMessage} description={emptySubMessage} size="sm" />
       ) : (
-        <div className="flex flex-col gap-1 min-w-0">
-          {filteredItems.map(item => {
+        <div className="flex min-w-0 flex-col gap-1">
+          {filteredItems.map((item) => {
             const itemIdStr = String(item.id);
             const isSelected = selectedIds.has(itemIdStr);
             const isSelectionDisabled = Boolean(item.disabled);
-            const qty = showQuantity
-              ? quantities[itemIdStr] ?? (isSelected ? 1 : 0)
-              : undefined;
+            const qty = showQuantity ? (quantities[itemIdStr] ?? (isSelected ? 1 : 0)) : undefined;
 
             return (
               <div key={itemIdStr} className="min-w-0">
@@ -111,11 +105,7 @@ export function UnifiedSelectionModalList({
                     ) : undefined
                   }
                   rightSlotWidth={showQuantity ? USM_QUANTITY_RIGHT_SLOT_WIDTH : undefined}
-                  rowChrome={
-                    showQuantity
-                      ? { rightSlot: true }
-                      : { externalSelection: true }
-                  }
+                  rowChrome={showQuantity ? { rightSlot: true } : { externalSelection: true }}
                 />
               </div>
             );
@@ -131,16 +121,14 @@ export function UnifiedSelectionModalList({
         tabGroupId={tabPanelA11y.tabGroupId}
         id={tabPanelA11y.id}
         activeTab={tabPanelA11y.activeTab}
-        className="flex-1 overflow-y-auto overflow-x-auto min-h-0"
+        className="min-h-0 flex-1 overflow-x-auto overflow-y-auto"
       >
         {listBody}
       </TabContentPanel>
     );
   }
 
-  return (
-    <div className="flex-1 overflow-y-auto overflow-x-auto min-h-0">{listBody}</div>
-  );
+  return <div className="min-h-0 flex-1 overflow-x-auto overflow-y-auto">{listBody}</div>;
 }
 
 export function UnifiedSelectionModalColumnHeaders({
@@ -164,7 +152,7 @@ export function UnifiedSelectionModalColumnHeaders({
   return (
     <div className="shrink-0">
       <ListHeader
-        columns={columns.map(col => ({
+        columns={columns.map((col) => ({
           key: col.key,
           label: col.label,
           sortable: col.sortable !== false,

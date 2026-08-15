@@ -143,11 +143,7 @@ export function GuidedEntityDetailModal({
                 headingLevel={3}
                 titleAddon={
                   section.tip ? (
-                    <InfoTippy
-                      content={section.tip}
-                      label={`About ${section.title}`}
-                      size="icon"
-                    />
+                    <InfoTippy content={section.tip} label={`About ${section.title}`} size="icon" />
                   ) : undefined
                 }
               >

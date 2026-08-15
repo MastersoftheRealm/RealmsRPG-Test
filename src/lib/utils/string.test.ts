@@ -11,7 +11,7 @@ describe('formatDamageDisplay', () => {
       formatDamageDisplay([
         { amount: 1, size: 8, type: 'slashing' },
         { amount: 1, size: 4, type: 'fire' },
-      ])
+      ]),
     ).toBe('1d8 Slashing, 1d4 Fire');
   });
 

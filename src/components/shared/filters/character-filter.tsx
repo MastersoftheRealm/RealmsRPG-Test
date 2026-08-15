@@ -63,7 +63,7 @@ export function CharacterFilter({
   return (
     <div className={cn('filter-group min-w-0', className)}>
       <div className="mb-1 flex items-center gap-1.5">
-        <UserRound className="h-4 w-4 shrink-0 text-text-muted dark:text-text-secondary" aria-hidden="true" />
+        <UserRound className="h-4 w-4 shrink-0 text-text-muted" aria-hidden="true" />
         <button
           type="button"
           aria-expanded={expanded}
@@ -73,14 +73,12 @@ export function CharacterFilter({
         >
           <span className="text-sm font-medium text-text-secondary">{label}</span>
           {!expanded && selectedLabel ? (
-            <span className="truncate text-xs text-text-muted dark:text-text-secondary">
-              {selectedLabel}
-            </span>
+            <span className="truncate text-xs text-text-muted">{selectedLabel}</span>
           ) : null}
           <ChevronDown
             className={cn(
-              'h-4 w-4 shrink-0 text-text-muted transition-transform duration-base ease-standard dark:text-text-secondary',
-              expanded && 'rotate-180'
+              'duration-base h-4 w-4 shrink-0 text-text-muted transition-transform ease-standard',
+              expanded && 'rotate-180',
             )}
             aria-hidden
           />

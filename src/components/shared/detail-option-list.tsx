@@ -36,7 +36,7 @@ export interface DetailOptionListProps {
 }
 
 const DEFAULT_MUTED = 'font-nunito text-sm text-text-secondary';
-const DEFAULT_HINT = 'mt-0.5 font-nunito text-xs text-text-muted dark:text-text-secondary';
+const DEFAULT_HINT = 'mt-0.5 font-nunito text-xs text-text-muted';
 
 export function DetailOptionList({
   items,
@@ -106,7 +106,7 @@ export function DetailOptionList({
                     value: desc ? (
                       <span className="line-clamp-2 text-left text-text-secondary">{desc}</span>
                     ) : (
-                      <span className="text-text-muted dark:text-text-secondary">None</span>
+                      <span className="text-text-muted">None</span>
                     ),
                   },
                 ]}

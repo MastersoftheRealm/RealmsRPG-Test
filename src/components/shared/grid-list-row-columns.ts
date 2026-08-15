@@ -13,7 +13,7 @@ export function columnDisplayLabel(col: ColumnValue): string {
  */
 export function columnsAlreadyShowTrainingPoints(
   columns: ColumnValue[],
-  costLabel?: string
+  costLabel?: string,
 ): boolean {
   const aliases = new Set(['tp', 'training points', 'total tp', 'total training points']);
   if (costLabel?.trim()) aliases.add(costLabel.trim().toLowerCase());
@@ -32,7 +32,7 @@ export function columnsForMobileSummary(columns: ColumnValue[]): ColumnValue[] {
 /** Stat columns for expanded mobile — skip description when the body already shows it. */
 export function columnsForExpandedMobileStats(
   columns: ColumnValue[],
-  hasDescriptionBody: boolean
+  hasDescriptionBody: boolean,
 ): ColumnValue[] {
   return columns.filter((col) => !(col.key === 'description' && hasDescriptionBody));
 }
@@ -44,7 +44,7 @@ export function columnsForExpandedMobileStats(
  */
 export function columnsWithoutDescriptionPreview(
   columns: ColumnValue[],
-  suppressDescriptionPreview: boolean
+  suppressDescriptionPreview: boolean,
 ): ColumnValue[] {
   if (!suppressDescriptionPreview) return columns;
   return columns.filter((col) => col.key !== 'description');
@@ -52,7 +52,7 @@ export function columnsWithoutDescriptionPreview(
 
 export function descriptionColumnTrackCount(
   columns: ColumnValue[],
-  columnSpans?: (number | undefined)[]
+  columnSpans?: (number | undefined)[],
 ): number {
   return columns.reduce((sum, col, idx) => {
     if (col.key !== 'description') return sum;

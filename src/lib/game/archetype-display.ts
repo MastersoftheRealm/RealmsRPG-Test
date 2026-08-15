@@ -6,7 +6,7 @@ const FORGE_ARCHETYPE_IDS = new Set(['power', 'martial', 'powered-martial']);
 
 /** Id used to look up codex_archetypes (path id preferred). */
 export function getArchetypeCodexLookupId(
-  data: Pick<Character, 'archetypePathId' | 'archetype'> | undefined
+  data: Pick<Character, 'archetypePathId' | 'archetype'> | undefined,
 ): string | undefined {
   if (!data) return undefined;
   const pathId = data.archetypePathId?.trim();
@@ -32,11 +32,11 @@ export function resolveArchetypeDisplayName(
         archetype?: { id?: string; name?: string; type?: string };
       }
     | undefined,
-  codexNameById?: Map<string, string>
+  codexNameById?: Map<string, string>,
 ): string | null {
   if (!data?.archetype?.type && !data?.archetype?.id && !data?.archetypePathId) return null;
   const lookupId = getArchetypeCodexLookupId(
-    data as Pick<Character, 'archetypePathId' | 'archetype'>
+    data as Pick<Character, 'archetypePathId' | 'archetype'>,
   );
   if (lookupId && codexNameById?.get(lookupId)) {
     return codexNameById.get(lookupId) ?? null;
@@ -46,7 +46,7 @@ export function resolveArchetypeDisplayName(
 }
 
 export async function fetchArchetypeNameMap(
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
 ): Promise<Map<string, string>> {
   const { data, error } = await supabase.from('codex_archetypes').select('id, name');
   if (error) {
@@ -72,7 +72,8 @@ function rowToArchetype(row: Record<string, unknown>): Archetype {
     power_prof_start: row.power_prof_start != null ? Number(row.power_prof_start) : undefined,
     martial_prof_start: row.martial_prof_start != null ? Number(row.martial_prof_start) : undefined,
     power_prof_level5: row.power_prof_level5 != null ? Number(row.power_prof_level5) : undefined,
-    martial_prof_level5: row.martial_prof_level5 != null ? Number(row.martial_prof_level5) : undefined,
+    martial_prof_level5:
+      row.martial_prof_level5 != null ? Number(row.martial_prof_level5) : undefined,
     path_data: parseArchetypePathData(row.path_data),
   };
 }
@@ -80,7 +81,7 @@ function rowToArchetype(row: Record<string, unknown>): Archetype {
 /** Fetch a single archetype with path_data composed like GET /api/codex (minimal columns). */
 export async function fetchCodexArchetypeById(
   supabase: SupabaseClient,
-  id: string
+  id: string,
 ): Promise<Archetype | null> {
   if (!id.trim()) return null;
 
@@ -137,18 +138,14 @@ export async function fetchCodexArchetypeById(
       ? (legacyPath.level1 as Record<string, unknown>)
       : undefined;
 
-  const loadoutsField = parseLevel1LoadoutsField(
-    r.level1_loadouts ?? level1FromLegacy?.loadouts
-  );
+  const loadoutsField = parseLevel1LoadoutsField(r.level1_loadouts ?? level1FromLegacy?.loadouts);
 
   const level1Raw: Record<string, unknown> = {
     feats: toStrArray(r.level1_feats),
     skills: toStrArray(r.level1_skills),
     powers: toStrArray(r.level1_powers),
     innatePowers: toStrArray(
-      r.level1_innate_powers ??
-        level1FromLegacy?.innate_powers ??
-        level1FromLegacy?.innatePowers
+      r.level1_innate_powers ?? level1FromLegacy?.innate_powers ?? level1FromLegacy?.innatePowers,
     ),
     techniques: toStrArray(r.level1_techniques),
     armaments: toStrArray(r.level1_armaments),
@@ -164,30 +161,29 @@ export async function fetchCodexArchetypeById(
       r.level1_recommended_abilities ?? level1FromLegacy?.recommended_abilities,
     loadouts: loadoutsField.loadouts,
     armorStep: loadoutsField.armorStep ?? level1FromLegacy?.armorStep,
-    sharedEquipment:
-      loadoutsField.sharedEquipment ?? level1FromLegacy?.sharedEquipment,
+    sharedEquipment: loadoutsField.sharedEquipment ?? level1FromLegacy?.sharedEquipment,
   };
   const level1FromColumns = parseArchetypePathData({ level1: level1Raw })?.level1;
 
   const hasLevel1 = Boolean(
     level1FromColumns &&
-      Object.entries(level1FromColumns).some(([key, value]) => {
-        if (key === 'recommendUnarmedProwess') return value === true;
-        if (key === 'armamentRecommendations' || key === 'equipmentRecommendations') return false;
-        if (Array.isArray(value)) return value.length > 0;
-        return Boolean(value);
-      })
+    Object.entries(level1FromColumns).some(([key, value]) => {
+      if (key === 'recommendUnarmedProwess') return value === true;
+      if (key === 'armamentRecommendations' || key === 'equipmentRecommendations') return false;
+      if (Array.isArray(value)) return value.length > 0;
+      return Boolean(value);
+    }),
   );
 
-  const legacyPathOnly =
-    legacyPath && typeof legacyPath === 'object' ? legacyPath : undefined;
+  const legacyPathOnly = legacyPath && typeof legacyPath === 'object' ? legacyPath : undefined;
 
-  const path_data = hasLevel1 || levels.length > 0
-    ? {
-        ...(hasLevel1 && level1FromColumns ? { level1: level1FromColumns } : {}),
-        ...(levels.length > 0 ? { levels } : {}),
-      }
-    : parseArchetypePathData(legacyPathOnly ?? r.path_data);
+  const path_data =
+    hasLevel1 || levels.length > 0
+      ? {
+          ...(hasLevel1 && level1FromColumns ? { level1: level1FromColumns } : {}),
+          ...(levels.length > 0 ? { levels } : {}),
+        }
+      : parseArchetypePathData(legacyPathOnly ?? r.path_data);
 
   return {
     ...rowToArchetype({ ...r, path_data }),
@@ -198,7 +194,7 @@ export async function fetchCodexArchetypeById(
 /** Merge codex display fields onto character for UI (does not change saved lean id/type). */
 export function mergeArchetypeFromCodex(
   character: Character,
-  codexArchetype: Archetype | null | undefined
+  codexArchetype: Archetype | null | undefined,
 ): Character {
   if (!codexArchetype || !character.archetype) return character;
 
@@ -212,7 +208,8 @@ export function mergeArchetypeFromCodex(
     power_prof_start: codexArchetype.power_prof_start ?? character.archetype.power_prof_start,
     martial_prof_start: codexArchetype.martial_prof_start ?? character.archetype.martial_prof_start,
     power_prof_level5: codexArchetype.power_prof_level5 ?? character.archetype.power_prof_level5,
-    martial_prof_level5: codexArchetype.martial_prof_level5 ?? character.archetype.martial_prof_level5,
+    martial_prof_level5:
+      codexArchetype.martial_prof_level5 ?? character.archetype.martial_prof_level5,
   };
 
   return { ...character, archetype: mergedArch };
@@ -222,7 +219,7 @@ export function mergeArchetypeFromCodex(
 export function applyPathProficiencyForLevel(
   character: Character,
   newLevel: number,
-  pathArchetype?: CharacterArchetype | null
+  pathArchetype?: CharacterArchetype | null,
 ): { pow_prof: number; mart_prof: number } | null {
   if (newLevel < 5) return null;
   if (!character.archetypePathId?.trim()) return null;

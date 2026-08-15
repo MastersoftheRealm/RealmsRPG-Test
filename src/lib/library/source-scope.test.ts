@@ -2,8 +2,14 @@ import { describe, expect, it } from 'vitest';
 import { mergeLibraryBySource } from './source-scope';
 
 describe('mergeLibraryBySource', () => {
-  const pub = [{ id: 'a', name: 'Public A' }, { id: 'b', name: 'Public B' }];
-  const mine = [{ id: 'c', name: 'My C' }, { id: 'a', name: 'My A' }];
+  const pub = [
+    { id: 'a', name: 'Public A' },
+    { id: 'b', name: 'Public B' },
+  ];
+  const mine = [
+    { id: 'c', name: 'My C' },
+    { id: 'a', name: 'My A' },
+  ];
 
   it('all: user then public (public wins on id)', () => {
     const rows = mergeLibraryBySource('all', pub, mine);
@@ -12,14 +18,19 @@ describe('mergeLibraryBySource', () => {
   });
 
   it('public: Realms only', () => {
-    expect(mergeLibraryBySource('public', pub, mine).map((r) => r.id).sort()).toEqual([
-      'a',
-      'b',
-    ]);
+    expect(
+      mergeLibraryBySource('public', pub, mine)
+        .map((r) => r.id)
+        .sort(),
+    ).toEqual(['a', 'b']);
   });
 
   it('my: user library only', () => {
-    expect(mergeLibraryBySource('my', pub, mine).map((r) => r.id).sort()).toEqual(['a', 'c']);
+    expect(
+      mergeLibraryBySource('my', pub, mine)
+        .map((r) => r.id)
+        .sort(),
+    ).toEqual(['a', 'c']);
   });
 
   it('keeps selected ids when source would hide them', () => {

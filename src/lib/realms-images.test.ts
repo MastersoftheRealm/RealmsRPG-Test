@@ -23,8 +23,14 @@ describe('realms-images helpers', () => {
 
   it('resolves picker category filters', () => {
     expect(resolveRealmsImagePickerCategories('weapon')).toEqual(['weapon']);
-    expect(resolveRealmsImagePickerCategories(['power', 'technique'])).toEqual(['power', 'technique']);
-    expect(resolveRealmsImagePickerCategories('empowered-technique')).toEqual(['power', 'technique']);
+    expect(resolveRealmsImagePickerCategories(['power', 'technique'])).toEqual([
+      'power',
+      'technique',
+    ]);
+    expect(resolveRealmsImagePickerCategories('empowered-technique')).toEqual([
+      'power',
+      'technique',
+    ]);
     expect(resolveRealmsImagePickerCategories('portrait')).toEqual(['species', 'creature']);
   });
 

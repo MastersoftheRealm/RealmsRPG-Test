@@ -11,7 +11,11 @@ interface StatBlockSectionProps {
   children: React.ReactNode;
 }
 
-export function StatBlockSection({ title, defaultExpanded = true, children }: StatBlockSectionProps) {
+export function StatBlockSection({
+  title,
+  defaultExpanded = true,
+  children,
+}: StatBlockSectionProps) {
   const [open, setOpen] = useState(defaultExpanded);
   return (
     <div>
@@ -22,14 +26,11 @@ export function StatBlockSection({ title, defaultExpanded = true, children }: St
           <button
             type="button"
             onClick={() => setOpen(!open)}
-            className="flex items-center justify-center w-7 h-7 rounded-full border border-border-light text-text-muted hover:bg-surface-alt hover:text-text-primary transition-colors"
+            className="flex h-7 w-7 items-center justify-center rounded-full border border-border-light text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary"
             aria-label={open ? `Collapse ${title}` : `Expand ${title}`}
           >
             <ChevronDown
-              className={cn(
-                'w-4 h-4 transition-transform',
-                open ? 'rotate-180' : 'rotate-0'
-              )}
+              className={cn('h-4 w-4 transition-transform', open ? 'rotate-180' : 'rotate-0')}
             />
           </button>
         }

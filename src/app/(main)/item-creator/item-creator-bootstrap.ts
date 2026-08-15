@@ -211,15 +211,15 @@ export function itemLibraryRecordToFormState(
     damage,
     imageId: item.imageId ?? item.image_id ?? null,
     imageUrl:
-      typeof (item.imageUrl ?? item.image_url) === 'string' && (item.imageUrl ?? item.image_url)?.trim()
-        ? (item.imageUrl ?? item.image_url) as string
+      typeof (item.imageUrl ?? item.image_url) === 'string' &&
+      (item.imageUrl ?? item.image_url)?.trim()
+        ? ((item.imageUrl ?? item.image_url) as string)
         : null,
     isTwoHanded:
       armamentType === 'Weapon' || armamentType === 'Shield' ? item.isTwoHanded || false : false,
     rangeLevel: armamentType === 'Weapon' ? item.rangeLevel || 0 : 0,
     abilityRequirement,
-    damageReduction:
-      armamentType === 'Armor' ? item.damageReduction ?? item.armorValue ?? 0 : 0,
+    damageReduction: armamentType === 'Armor' ? (item.damageReduction ?? item.armorValue ?? 0) : 0,
     agilityReduction: armamentType === 'Armor' ? item.agilityReduction || 0 : 0,
     criticalRangeIncrease: armamentType === 'Armor' ? item.criticalRangeIncrease || 0 : 0,
     shieldDR:

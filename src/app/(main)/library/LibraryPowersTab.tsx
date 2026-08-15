@@ -64,20 +64,16 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
   const duplicatePower = useDuplicatePower();
   const [search, setSearch] = useState('');
   const [advancedFilters, setAdvancedFilters] = useState<PowerTechniqueFilterState>(
-    EMPTY_POWER_TECHNIQUE_FILTERS
+    EMPTY_POWER_TECHNIQUE_FILTERS,
   );
-  const [characterContext, setCharacterContext] =
-    useState<PowerTechniqueCharacterContext | null>(null);
+  const [characterContext, setCharacterContext] = useState<PowerTechniqueCharacterContext | null>(
+    null,
+  );
   const [characterFilterId, setCharacterFilterId] = useState('');
   const addToCharacter = useAddToCharacterFromLibrary('power', characterFilterId);
   const { sortState, handleSort, sortItems } = useSort('name');
-  const {
-    selectedPathIds,
-    setSelectedPathIds,
-    pathIndex,
-    pathRecommendedIds,
-    pathFilterActive,
-  } = usePathListFilter({ entities: powers, kind: POWER_LIST_PATH_KINDS });
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({ entities: powers, kind: POWER_LIST_PATH_KINDS });
 
   const cardData = useMemo(() => {
     return buildOfficialPowerRows(powers, partsDb).map((row) => {
@@ -93,17 +89,14 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
 
   const categoryOptions = useMemo(
     () => collectCategoryOptionsFromItems(powers, partsDb, { includeDamageCategory: true }),
-    [powers, partsDb]
+    [powers, partsDb],
   );
 
-  const innateThresholdOptions = useMemo(
-    () => listInnateThresholdFilterOptions(rules),
-    [rules]
-  );
+  const innateThresholdOptions = useMemo(() => listInnateThresholdFilterOptions(rules), [rules]);
 
   const driftedIds = useMemo(
     () => cardData.filter((item) => item.hasDrift).map((item) => item.id),
-    [cardData]
+    [cardData],
   );
 
   const sync = useLibraryEntitySync({
@@ -126,130 +119,137 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
 
   const filteredData = useMemo(
     () =>
-      filterOfficialPowerRows(cardData, search, sortItems, advancedFilters, characterContext, pathRecommendedIds),
-    [cardData, search, advancedFilters, characterContext, sortItems, pathRecommendedIds]
+      filterOfficialPowerRows(
+        cardData,
+        search,
+        sortItems,
+        advancedFilters,
+        characterContext,
+        pathRecommendedIds,
+      ),
+    [cardData, search, advancedFilters, characterContext, sortItems, pathRecommendedIds],
   );
 
   return (
     <>
-    <UserLibraryEntityTabShell
-      labels={POWER_LIBRARY_LABELS}
-      isLoading={isLoading}
-      error={error}
-      onRetry={() => void refetch()}
-      totalCount={cardData.length}
-      emptyIcon={<Wand2 className="w-8 h-8" />}
-      search={search}
-      onSearchChange={setSearch}
-      sortState={sortState}
-      onSort={handleSort}
-      headerColumns={OFFICIAL_POWER_HEADER_COLUMNS}
-      gridColumns={OFFICIAL_POWER_GRID}
-      hasThumbnailColumn
-      rowChrome={POWER_ROW_CHROME}
-      filteredCount={filteredData.length}
-      driftedCount={sync.driftedCount}
-      syncingAll={sync.syncingAll}
-      showSyncAllConfirm={sync.showSyncAllConfirm}
-      onOpenSyncAllConfirm={() => sync.setShowSyncAllConfirm(true)}
-      onCloseSyncAllConfirm={() => sync.setShowSyncAllConfirm(false)}
-      onConfirmSyncAll={() => {
-        sync.setShowSyncAllConfirm(false);
-        void sync.handleSyncAll();
-      }}
-      duplicateConfirm={dup.duplicateConfirm}
-      onCloseDuplicate={dup.closeDuplicateConfirm}
-      onConfirmDuplicate={dup.onConfirmDuplicate}
-      duplicatePending={dup.isPending}
-      filters={
-        <PowerTechniqueFilters
-          kind="power"
-          value={advancedFilters}
-          onChange={setAdvancedFilters}
-          categoryOptions={categoryOptions}
-          innateThresholdOptions={innateThresholdOptions}
-          onCharacterContextChange={setCharacterContext}
-          onCharacterIdChange={setCharacterFilterId}
-          pathFilter={{
-            options: pathIndex.options,
-            selectedPathIds,
-            onChange: setSelectedPathIds,
-          }}
-        />
-      }
-      filterActiveCount={
-        countActivePowerTechniqueFilters(
-          advancedFilters,
-          'power',
-          Boolean(characterContext)
-        ) + (characterFilterId ? 1 : 0) + (pathFilterActive ? 1 : 0)
-      }
-      filterEmptyTitle={pathFilterActive ? pathFilterEmptyTitle('powers') : undefined}
-    >
-      {filteredData.map((power) => {
-        const partsSection = partsProficienciesSection(power.parts, 'power');
-        const nameLabels = pathFilterActive
-          ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(power), selectedPathIds)
-          : undefined;
-        const nameBadges = nameLabels?.map((label) => ({ label })) ?? [];
-        const driftBadges = power.hasDrift ? [{ label: 'Needs sync' as const, color: 'amber' as const }] : [];
-        const badges = [...nameBadges, ...driftBadges];
-        return (
-          <GridListRow
-            key={power.id}
-            id={power.id}
-            name={power.name}
-            description={power.description}
-            thumbnail={resolveListRowThumbnail('power', power.raw, power.name)}
-            gridColumns={OFFICIAL_POWER_GRID}
-            rowChrome={POWER_ROW_CHROME}
-            columns={[
-              { key: 'Category', value: power.category, align: 'center' },
-              { key: 'Energy', value: power.energy, highlight: true, align: 'center' },
-              { key: 'Action', value: power.action, align: 'center' },
-              { key: 'Duration', value: power.duration, align: 'center' },
-              { key: 'Range', value: power.range, align: 'center' },
-              { key: 'Area', value: power.area, align: 'center' },
-              { key: 'Damage', value: power.damage, align: 'center' },
-            ]}
-            detailSections={partsSection ? [partsSection] : undefined}
-            totalCost={power.tp}
-            costLabel="TP"
-            badges={badges.length > 0 ? badges : undefined}
-            showBadgesInName={nameBadges.length > 0}
-            warningMessage={power.syncIssues[0]?.message}
-            rightSlot={
-              addToCharacter.active && !addToCharacter.isOnCharacter(power.raw) ? (
-                <LibraryRowActionSlot>
-                  <LibraryAddToCharacterButton
-                    kind="power"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      addToCharacter.openAddConfirm(power.name, power.raw);
-                    }}
-                  />
-                  {power.hasDrift ? (
-                    <LibrarySyncRowAction
-                      syncing={sync.syncingIds.has(power.id)}
-                      onSync={() => void sync.handleSyncOne(power.id)}
-                    />
-                  ) : null}
-                </LibraryRowActionSlot>
-              ) : power.hasDrift ? (
-                <LibrarySyncRowAction
-                  syncing={sync.syncingIds.has(power.id)}
-                  onSync={() => void sync.handleSyncOne(power.id)}
-                />
-              ) : undefined
-            }
-            onEdit={() => router.push(`/power-creator?edit=${encodeURIComponent(power.id)}`)}
-            onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
-            onDuplicate={() => dup.openDuplicateConfirm(power.id, power.name)}
+      <UserLibraryEntityTabShell
+        labels={POWER_LIBRARY_LABELS}
+        isLoading={isLoading}
+        error={error}
+        onRetry={() => void refetch()}
+        totalCount={cardData.length}
+        emptyIcon={<Wand2 className="h-8 w-8" />}
+        search={search}
+        onSearchChange={setSearch}
+        sortState={sortState}
+        onSort={handleSort}
+        headerColumns={OFFICIAL_POWER_HEADER_COLUMNS}
+        gridColumns={OFFICIAL_POWER_GRID}
+        hasThumbnailColumn
+        rowChrome={POWER_ROW_CHROME}
+        filteredCount={filteredData.length}
+        driftedCount={sync.driftedCount}
+        syncingAll={sync.syncingAll}
+        showSyncAllConfirm={sync.showSyncAllConfirm}
+        onOpenSyncAllConfirm={() => sync.setShowSyncAllConfirm(true)}
+        onCloseSyncAllConfirm={() => sync.setShowSyncAllConfirm(false)}
+        onConfirmSyncAll={() => {
+          sync.setShowSyncAllConfirm(false);
+          void sync.handleSyncAll();
+        }}
+        duplicateConfirm={dup.duplicateConfirm}
+        onCloseDuplicate={dup.closeDuplicateConfirm}
+        onConfirmDuplicate={dup.onConfirmDuplicate}
+        duplicatePending={dup.isPending}
+        filters={
+          <PowerTechniqueFilters
+            kind="power"
+            value={advancedFilters}
+            onChange={setAdvancedFilters}
+            categoryOptions={categoryOptions}
+            innateThresholdOptions={innateThresholdOptions}
+            onCharacterContextChange={setCharacterContext}
+            onCharacterIdChange={setCharacterFilterId}
+            pathFilter={{
+              options: pathIndex.options,
+              selectedPathIds,
+              onChange: setSelectedPathIds,
+            }}
           />
-        );
-      })}
-    </UserLibraryEntityTabShell>
-    {addToCharacter.confirmModal}
+        }
+        filterActiveCount={
+          countActivePowerTechniqueFilters(advancedFilters, 'power', Boolean(characterContext)) +
+          (characterFilterId ? 1 : 0) +
+          (pathFilterActive ? 1 : 0)
+        }
+        filterEmptyTitle={pathFilterActive ? pathFilterEmptyTitle('powers') : undefined}
+      >
+        {filteredData.map((power) => {
+          const partsSection = partsProficienciesSection(power.parts, 'power');
+          const nameLabels = pathFilterActive
+            ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(power), selectedPathIds)
+            : undefined;
+          const nameBadges = nameLabels?.map((label) => ({ label })) ?? [];
+          const driftBadges = power.hasDrift
+            ? [{ label: 'Needs sync' as const, color: 'amber' as const }]
+            : [];
+          const badges = [...nameBadges, ...driftBadges];
+          return (
+            <GridListRow
+              key={power.id}
+              id={power.id}
+              name={power.name}
+              description={power.description}
+              thumbnail={resolveListRowThumbnail('power', power.raw, power.name)}
+              gridColumns={OFFICIAL_POWER_GRID}
+              rowChrome={POWER_ROW_CHROME}
+              columns={[
+                { key: 'Category', value: power.category, align: 'center' },
+                { key: 'Energy', value: power.energy, highlight: true, align: 'center' },
+                { key: 'Action', value: power.action, align: 'center' },
+                { key: 'Duration', value: power.duration, align: 'center' },
+                { key: 'Range', value: power.range, align: 'center' },
+                { key: 'Area', value: power.area, align: 'center' },
+                { key: 'Damage', value: power.damage, align: 'center' },
+              ]}
+              detailSections={partsSection ? [partsSection] : undefined}
+              totalCost={power.tp}
+              costLabel="TP"
+              badges={badges.length > 0 ? badges : undefined}
+              showBadgesInName={nameBadges.length > 0}
+              warningMessage={power.syncIssues[0]?.message}
+              rightSlot={
+                addToCharacter.active && !addToCharacter.isOnCharacter(power.raw) ? (
+                  <LibraryRowActionSlot>
+                    <LibraryAddToCharacterButton
+                      kind="power"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        addToCharacter.openAddConfirm(power.name, power.raw);
+                      }}
+                    />
+                    {power.hasDrift ? (
+                      <LibrarySyncRowAction
+                        syncing={sync.syncingIds.has(power.id)}
+                        onSync={() => void sync.handleSyncOne(power.id)}
+                      />
+                    ) : null}
+                  </LibraryRowActionSlot>
+                ) : power.hasDrift ? (
+                  <LibrarySyncRowAction
+                    syncing={sync.syncingIds.has(power.id)}
+                    onSync={() => void sync.handleSyncOne(power.id)}
+                  />
+                ) : undefined
+              }
+              onEdit={() => router.push(`/power-creator?edit=${encodeURIComponent(power.id)}`)}
+              onDelete={() => onDelete({ id: power.id, name: power.name } as DisplayItem)}
+              onDuplicate={() => dup.openDuplicateConfirm(power.id, power.name)}
+            />
+          );
+        })}
+      </UserLibraryEntityTabShell>
+      {addToCharacter.confirmModal}
     </>
   );
 }

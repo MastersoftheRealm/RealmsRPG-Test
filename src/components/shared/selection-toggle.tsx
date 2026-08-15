@@ -7,7 +7,7 @@
  * - Character sheet modals (add feats, skills, powers, etc.)
  * - Character creator (select ancestry traits, equipment, etc.)
  * - Creature creator (select abilities, powers, etc.)
- * 
+ *
  * Design: Sleek backgroundless + icon → Green check when selected
  * Smooth animation between states for polished feel
  */
@@ -61,19 +61,17 @@ export function SelectionToggle({
       aria-label={label || (isSelected ? 'Remove selection' : 'Add selection')}
       aria-pressed={isSelected}
       className={cn(
-        'flex items-center justify-center transition-all duration-base ease-standard',
+        'duration-base flex items-center justify-center transition-all ease-standard',
         SIZE_STYLES[size],
-        isSelected
-          ? 'text-success-fg'
-          : 'text-text-muted dark:text-text-secondary hover:text-primary-fg-hover',
-        disabled && 'opacity-40 cursor-not-allowed',
-        className
+        isSelected ? 'text-success-fg' : 'text-text-muted hover:text-primary-fg-hover',
+        disabled && 'cursor-not-allowed opacity-40',
+        className,
       )}
     >
       <span
         className={cn(
-          'transition-all duration-base ease-standard',
-          isSelected ? 'scale-110' : 'scale-100 hover:scale-110'
+          'duration-base transition-all ease-standard',
+          isSelected ? 'scale-110' : 'scale-100 hover:scale-110',
         )}
       >
         {isSelected ? (
@@ -85,4 +83,3 @@ export function SelectionToggle({
     </button>
   );
 }
-

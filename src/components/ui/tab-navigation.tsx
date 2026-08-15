@@ -189,15 +189,15 @@ export function TabNavigation({
               size === 'sm' && 'px-3 py-1.5 text-xs',
               size === 'lg' && 'px-5 py-2.5 text-base',
               activeTab === tab.id && 'tab-pill-trigger-active',
-              tab.disabled && 'opacity-50 cursor-not-allowed',
-              tab.dimmed && 'opacity-50'
+              tab.disabled && 'cursor-not-allowed opacity-50',
+              tab.dimmed && 'opacity-50',
             )}
           >
             <span className="flex items-center gap-2">
               {tab.icon}
               {tab.label}
               {typeof tab.count === 'number' && (
-                <span className="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-surface-alt text-text-muted">
+                <span className="ml-1 rounded-full bg-surface-alt px-1.5 py-0.5 text-xs text-text-muted">
                   {tab.count}
                 </span>
               )}
@@ -214,12 +214,14 @@ export function TabNavigation({
       {tab.icon}
       {tab.label}
       {typeof tab.count === 'number' && (
-        <span className={cn(
-          'ml-1 px-1.5 py-0.5 text-xs rounded-full',
-          activeTab === tab.id
-            ? 'bg-primary-subtle-bg-hover text-primary-subtle-fg'
-            : 'bg-surface-alt text-text-muted'
-        )}>
+        <span
+          className={cn(
+            'ml-1 rounded-full px-1.5 py-0.5 text-xs',
+            activeTab === tab.id
+              ? 'bg-primary-subtle-bg-hover text-primary-subtle-fg'
+              : 'bg-surface-alt text-text-muted',
+          )}
+        >
           {tab.count}
         </span>
       )}
@@ -233,7 +235,7 @@ export function TabNavigation({
       size === 'lg' && 'px-5 py-4 text-base',
       activeTab === tab.id && 'tab-nav-trigger-active',
       tab.disabled && 'opacity-50 cursor-not-allowed',
-      tab.dimmed && 'opacity-50'
+      tab.dimmed && 'opacity-50',
     );
 
   // Underline variant (default)
@@ -247,8 +249,8 @@ export function TabNavigation({
               <div
                 key={tab.id}
                 className={cn(
-                  'flex items-center shrink-0 border-b-2',
-                  isActive ? 'border-primary-outline-border' : 'border-transparent'
+                  'flex shrink-0 items-center border-b-2',
+                  isActive ? 'border-primary-outline-border' : 'border-transparent',
                 )}
               >
                 <button
@@ -262,11 +264,7 @@ export function TabNavigation({
             );
           }
           return (
-            <button
-              key={tab.id}
-              {...tabButtonProps(tab, isActive)}
-              className={triggerClass(tab)}
-            >
+            <button key={tab.id} {...tabButtonProps(tab, isActive)} className={triggerClass(tab)}>
               <span className="flex items-center gap-2">{renderTabLabel(tab)}</span>
             </button>
           );

@@ -46,7 +46,7 @@ export function clearArchetypeDependentDraftFields(): Partial<GuidedDraft> {
 /** Partial for `updateDraft`. Clears abilities/skills/feats/loadout/powers when path id changes. */
 export function buildPathSelectionDraftPatch(
   currentArchetypePathId: string | null,
-  path: Archetype
+  path: Archetype,
 ): Partial<GuidedDraft> {
   const pathId = String(path.id);
   const type = (path.type || 'power') as ArchetypeCategory;
@@ -119,7 +119,7 @@ export function buildOpenCustomPathEntryPatch(): Partial<GuidedDraft> {
  * URL `?entry=` is stripped after bootstrap, so reset cannot rely on query params.
  */
 export function buildCreatorResetDraftPatch(
-  creatorEntryMode: CreatorEntryMode
+  creatorEntryMode: CreatorEntryMode,
 ): Partial<GuidedDraft> {
   return creatorEntryMode === 'custom'
     ? buildOpenCustomPathEntryPatch()
@@ -130,7 +130,7 @@ export function buildCreatorResetDraftPatch(
 export function isGuidedCustomArchetypeComplete(
   type: ArchetypeCategory | null,
   powAbil: AbilityName | null,
-  martAbil: AbilityName | null
+  martAbil: AbilityName | null,
 ): boolean {
   if (!type) return false;
   if (type === 'powered-martial') {

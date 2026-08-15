@@ -40,15 +40,17 @@ export function CombatantCardInitiative({
       draggable
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
-      className="flex flex-col items-center gap-1 cursor-grab active:cursor-grabbing select-none"
+      className="flex cursor-grab flex-col items-center gap-1 select-none active:cursor-grabbing"
     >
-      <div className="text-text-muted dark:text-text-secondary hover:text-text-primary dark:hover:text-text-primary p-1 rounded hover:bg-surface-alt touch-target-md-compact flex items-center justify-center">
-        <GripVertical className="w-5 h-5" />
+      <div className="touch-target-md-compact flex items-center justify-center rounded p-1 text-text-muted hover:bg-surface-alt hover:text-text-primary dark:hover:text-text-primary">
+        <GripVertical className="h-5 w-5" />
       </div>
       <div
         className={cn(
-          'w-11 h-11 md:w-10 md:h-10 rounded-lg flex flex-col items-center justify-center cursor-pointer transition-colors',
-          isCurrentTurn ? 'bg-primary-button text-text-on-dark' : 'bg-surface-alt text-text-secondary hover:bg-surface'
+          'flex h-11 w-11 cursor-pointer flex-col items-center justify-center rounded-lg transition-colors md:h-10 md:w-10',
+          isCurrentTurn
+            ? 'bg-primary-button text-text-on-dark'
+            : 'bg-surface-alt text-text-secondary hover:bg-surface',
         )}
         onClick={onStartEditInitiative}
         title="Click to edit initiative"
@@ -61,14 +63,14 @@ export function CombatantCardInitiative({
             onChange={(e) => onUpdate({ initiative: parseInt(e.target.value) || 0 })}
             onBlur={onStopEditInitiative}
             onKeyDown={(e) => e.key === 'Enter' && onStopEditInitiative()}
-            className="w-8 h-8 text-center text-sm font-bold bg-transparent border-none outline-none"
+            className="h-8 w-8 border-none bg-transparent text-center text-sm font-bold outline-none"
             autoFocus
           />
         ) : (
           <>
-            <span className="text-lg font-bold leading-none">{combatant.initiative}</span>
+            <span className="text-lg leading-none font-bold">{combatant.initiative}</span>
             {combatant.acuity !== 0 && (
-              <span className="text-[10px] text-text-muted dark:text-text-secondary leading-none">+{combatant.acuity}</span>
+              <span className="text-[10px] leading-none text-text-muted">+{combatant.acuity}</span>
             )}
           </>
         )}

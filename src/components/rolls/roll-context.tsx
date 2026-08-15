@@ -47,7 +47,7 @@ interface RollContextValue {
   campaignContext?: CampaignRollContext | null;
   /** When false (e.g. viewing another user's character), rolling is disabled and roll UI should be hidden */
   canRoll: boolean;
-  
+
   // Roll functions
   rollAbility: (abilityName: string, bonus: number) => void;
   rollDefense: (defenseDisplayName: string, bonus: number) => void;
@@ -55,11 +55,11 @@ interface RollContextValue {
   rollAttack: (weaponName: string, attackBonus: number) => void;
   rollDamage: (damageStr: string, bonus?: number, titleOverride?: string) => void;
   rollCustom: (title: string, dieType: DieType, count: number, modifier: number) => void;
-  
+
   // History management
   clearHistory: () => void;
   addRoll: (roll: RollEntry) => void;
-  
+
   // Subscription for roll log auto-open
   subscribeToRolls: (callback: (roll: RollEntry) => void) => () => void;
 }
@@ -69,12 +69,12 @@ const RollContext = createContext<RollContextValue | null>(null);
 const STORAGE_KEY = 'realms-roll-log';
 const MAX_PERSISTED_ROLLS = 20;
 
-export function RollProvider({ 
-  children, 
+export function RollProvider({
+  children,
   maxHistory = 50,
   campaignContext,
   canRoll = true,
-}: { 
+}: {
   children: React.ReactNode;
   maxHistory?: number;
   /** When set, rolls are also written to campaign roll log */
@@ -91,51 +91,58 @@ export function RollProvider({
       if (stored) {
         const parsed = JSON.parse(stored) as RollEntry[];
         // Restore Date objects from ISO strings
-        return parsed.map(r => ({ ...r, timestamp: new Date(r.timestamp) }));
+        return parsed.map((r) => ({ ...r, timestamp: new Date(r.timestamp) }));
       }
-    } catch { /* ignore parse errors */ }
+    } catch {
+      /* ignore parse errors */
+    }
     return [];
   });
-  
+
   // Persist to localStorage whenever rolls change (keep last N, oldest-first)
   useEffect(() => {
     try {
       const toStore = rolls.slice(-MAX_PERSISTED_ROLLS);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
-    } catch { /* ignore storage errors */ }
+    } catch {
+      /* ignore storage errors */
+    }
   }, [rolls]);
-  
+
   // Subscribers to be notified when a new roll is added
   const subscribersRef = React.useRef<Set<(roll: RollEntry) => void>>(new Set());
 
-  const addRoll = useCallback((roll: RollEntry) => {
-    if (!canRoll) return;
-    setRolls(prev => [...prev, roll].slice(-maxHistory));
-    // Notify all subscribers
-    subscribersRef.current.forEach(callback => callback(roll));
-    // If in campaign context, also write to campaign roll log
-    if (campaignContext) {
-      const cid = String(campaignContext.campaignId);
-      import('@/services/campaign-roll-service').then(({ addCampaignRoll }) => {
-        addCampaignRoll({
-          campaignId: cid,
-          characterId: campaignContext.characterId,
-          characterName: campaignContext.characterName,
-          roll,
-        })
-          .then(() => {
-            // Own roll: Realtime can lag or not fire for the writer; refetch so Campaign tab updates immediately.
-            void queryClient.invalidateQueries({ queryKey: ['campaign-rolls', cid] });
+  const addRoll = useCallback(
+    (roll: RollEntry) => {
+      if (!canRoll) return;
+      setRolls((prev) => [...prev, roll].slice(-maxHistory));
+      // Notify all subscribers
+      subscribersRef.current.forEach((callback) => callback(roll));
+      // If in campaign context, also write to campaign roll log
+      if (campaignContext) {
+        const cid = String(campaignContext.campaignId);
+        import('@/services/campaign-roll-service').then(({ addCampaignRoll }) => {
+          addCampaignRoll({
+            campaignId: cid,
+            characterId: campaignContext.characterId,
+            characterName: campaignContext.characterName,
+            roll,
           })
-          .catch(() => {});
-      });
-    }
-  }, [maxHistory, campaignContext, canRoll, queryClient]);
+            .then(() => {
+              // Own roll: Realtime can lag or not fire for the writer; refetch so Campaign tab updates immediately.
+              void queryClient.invalidateQueries({ queryKey: ['campaign-rolls', cid] });
+            })
+            .catch(() => {});
+        });
+      }
+    },
+    [maxHistory, campaignContext, canRoll, queryClient],
+  );
 
   const clearHistory = useCallback(() => {
     setRolls([]);
   }, []);
-  
+
   // Subscribe to roll events (for auto-opening roll log)
   const subscribeToRolls = useCallback((callback: (roll: RollEntry) => void) => {
     subscribersRef.current.add(callback);
@@ -145,156 +152,170 @@ export function RollProvider({
   }, []);
 
   // Internal helper for d20 rolls (abilities, defenses, skills, attacks)
-  const makeD20Roll = useCallback((
-    type: RollType,
-    title: string,
-    bonus: number
-  ) => {
-    if (!canRoll) return;
-    const roll = rollDie('d20');
-    const isCrit = roll === 20;
-    const isCritFail = roll === 1;
-    
-    // Apply natural 20/1 bonuses like vanilla
-    let total = roll + bonus;
-    let critMessage: string | undefined;
-    
-    if (isCrit) {
-      total += 2; // Natural 20 adds +2
-      critMessage = 'Natural 20! +2 to the total!';
-    } else if (isCritFail) {
-      total -= 2; // Natural 1 subtracts 2
-      critMessage = 'Natural 1! -2 from the total!';
-    }
+  const makeD20Roll = useCallback(
+    (type: RollType, title: string, bonus: number) => {
+      if (!canRoll) return;
+      const roll = rollDie('d20');
+      const isCrit = roll === 20;
+      const isCritFail = roll === 1;
 
-    const newRoll: RollEntry = {
-      id: generateRollId(),
-      type,
-      title,
-      dice: [{ type: 'd20', value: roll, isMax: isCrit, isMin: isCritFail }],
-      modifier: bonus,
-      total,
-      isCrit,
-      isCritFail,
-      critMessage,
-      timestamp: new Date(),
-    };
+      // Apply natural 20/1 bonuses like vanilla
+      let total = roll + bonus;
+      let critMessage: string | undefined;
 
-    addRoll(newRoll);
-    return newRoll;
-  }, [addRoll, canRoll]);
+      if (isCrit) {
+        total += 2; // Natural 20 adds +2
+        critMessage = 'Natural 20! +2 to the total!';
+      } else if (isCritFail) {
+        total -= 2; // Natural 1 subtracts 2
+        critMessage = 'Natural 1! -2 from the total!';
+      }
+
+      const newRoll: RollEntry = {
+        id: generateRollId(),
+        type,
+        title,
+        dice: [{ type: 'd20', value: roll, isMax: isCrit, isMin: isCritFail }],
+        modifier: bonus,
+        total,
+        isCrit,
+        isCritFail,
+        critMessage,
+        timestamp: new Date(),
+      };
+
+      addRoll(newRoll);
+      return newRoll;
+    },
+    [addRoll, canRoll],
+  );
 
   // Roll an ability roll (Realms uses "Roll" not "Check" or "Save")
-  const rollAbility = useCallback((abilityName: string, bonus: number) => {
-    const title = abilityName.charAt(0).toUpperCase() + abilityName.slice(1).toLowerCase();
-    makeD20Roll('ability', title, bonus);
-  }, [makeD20Roll]);
+  const rollAbility = useCallback(
+    (abilityName: string, bonus: number) => {
+      const title = abilityName.charAt(0).toUpperCase() + abilityName.slice(1).toLowerCase();
+      makeD20Roll('ability', title, bonus);
+    },
+    [makeD20Roll],
+  );
 
   // Roll a defense roll (caller passes display name, e.g. "Discernment")
-  const rollDefense = useCallback((defenseDisplayName: string, bonus: number) => {
-    makeD20Roll('defense', defenseDisplayName, bonus);
-  }, [makeD20Roll]);
+  const rollDefense = useCallback(
+    (defenseDisplayName: string, bonus: number) => {
+      makeD20Roll('defense', defenseDisplayName, bonus);
+    },
+    [makeD20Roll],
+  );
 
   // Roll a skill roll: "Athletics (STR)" format when abilityAbbr provided
-  const rollSkill = useCallback((skillName: string, bonus: number, abilityAbbr?: string) => {
-    const title = abilityAbbr ? `${skillName} (${abilityAbbr})` : skillName;
-    makeD20Roll('skill', title, bonus);
-  }, [makeD20Roll]);
+  const rollSkill = useCallback(
+    (skillName: string, bonus: number, abilityAbbr?: string) => {
+      const title = abilityAbbr ? `${skillName} (${abilityAbbr})` : skillName;
+      makeD20Roll('skill', title, bonus);
+    },
+    [makeD20Roll],
+  );
 
   // Roll an attack (just weapon/attack name)
-  const rollAttack = useCallback((weaponName: string, attackBonus: number) => {
-    makeD20Roll('attack', weaponName, attackBonus);
-  }, [makeD20Roll]);
+  const rollAttack = useCallback(
+    (weaponName: string, attackBonus: number) => {
+      makeD20Roll('attack', weaponName, attackBonus);
+    },
+    [makeD20Roll],
+  );
 
   // Roll damage (parses damage strings like "2d6", "1d8+2", "1d6 Slashing")
-  const rollDamage = useCallback((damageStr: string, bonus: number = 0, titleOverride?: string) => {
-    if (!canRoll) return;
-    // Validate input is a string
-    if (typeof damageStr !== 'string') {
-      return;
-    }
-    
-    const match = damageStr.match(/(\d+)d(\d+)([+-]\d+)?(?:\s+([a-zA-Z]+))?/);
-    if (!match) return;
+  const rollDamage = useCallback(
+    (damageStr: string, bonus: number = 0, titleOverride?: string) => {
+      if (!canRoll) return;
+      // Validate input is a string
+      if (typeof damageStr !== 'string') {
+        return;
+      }
 
-    const [, numDice, dieSize, modifier, dmgType] = match;
-    const num = parseInt(numDice);
-    const size = parseInt(dieSize);
-    const mod = modifier ? parseInt(modifier) : 0;
-    const totalBonus = mod + bonus;
+      const match = damageStr.match(/(\d+)d(\d+)([+-]\d+)?(?:\s+([a-zA-Z]+))?/);
+      if (!match) return;
 
-    const diceResults: DieResult[] = [];
-    let total = totalBonus;
+      const [, numDice, dieSize, modifier, dmgType] = match;
+      const num = parseInt(numDice);
+      const size = parseInt(dieSize);
+      const mod = modifier ? parseInt(modifier) : 0;
+      const totalBonus = mod + bonus;
 
-    for (let i = 0; i < num; i++) {
-      const dieType = `d${size}` as DieResult['type'];
-      const value = rollDie(dieType);
-      diceResults.push({
-        type: dieType,
-        value,
-        isMax: value === size,
-        isMin: value === 1,
-      });
-      total += value;
-    }
+      const diceResults: DieResult[] = [];
+      let total = totalBonus;
 
-    const title = titleOverride ?? (dmgType
-      ? `${dmgType.charAt(0).toUpperCase() + dmgType.slice(1).toLowerCase()} Damage`
-      : 'Damage');
+      for (let i = 0; i < num; i++) {
+        const dieType = `d${size}` as DieResult['type'];
+        const value = rollDie(dieType);
+        diceResults.push({
+          type: dieType,
+          value,
+          isMax: value === size,
+          isMin: value === 1,
+        });
+        total += value;
+      }
 
-    const newRoll: RollEntry = {
-      id: generateRollId(),
-      type: 'damage',
-      title,
-      dice: diceResults,
-      modifier: totalBonus,
-      total,
-      timestamp: new Date(),
-    };
+      const title =
+        titleOverride ??
+        (dmgType
+          ? `${dmgType.charAt(0).toUpperCase() + dmgType.slice(1).toLowerCase()} Damage`
+          : 'Damage');
 
-    addRoll(newRoll);
-  }, [addRoll, canRoll]);
+      const newRoll: RollEntry = {
+        id: generateRollId(),
+        type: 'damage',
+        title,
+        dice: diceResults,
+        modifier: totalBonus,
+        total,
+        timestamp: new Date(),
+      };
+
+      addRoll(newRoll);
+    },
+    [addRoll, canRoll],
+  );
 
   // Roll custom dice
-  const rollCustom = useCallback((
-    title: string,
-    dieType: DieType,
-    count: number,
-    modifier: number
-  ) => {
-    if (!canRoll) return;
-    const diceResults: DieResult[] = [];
-    let total = modifier;
-    const max = DIE_MAX[dieType];
+  const rollCustom = useCallback(
+    (title: string, dieType: DieType, count: number, modifier: number) => {
+      if (!canRoll) return;
+      const diceResults: DieResult[] = [];
+      let total = modifier;
+      const max = DIE_MAX[dieType];
 
-    for (let i = 0; i < count; i++) {
-      const value = rollDie(dieType);
-      diceResults.push({
-        type: dieType,
-        value,
-        isMax: value === max,
-        isMin: value === 1,
-      });
-      total += value;
-    }
+      for (let i = 0; i < count; i++) {
+        const value = rollDie(dieType);
+        diceResults.push({
+          type: dieType,
+          value,
+          isMax: value === max,
+          isMin: value === 1,
+        });
+        total += value;
+      }
 
-    const isCrit = dieType === 'd20' && count === 1 && diceResults[0]?.value === 20;
-    const isCritFail = dieType === 'd20' && count === 1 && diceResults[0]?.value === 1;
+      const isCrit = dieType === 'd20' && count === 1 && diceResults[0]?.value === 20;
+      const isCritFail = dieType === 'd20' && count === 1 && diceResults[0]?.value === 1;
 
-    const newRoll: RollEntry = {
-      id: generateRollId(),
-      type: 'custom',
-      title,
-      dice: diceResults,
-      modifier,
-      total,
-      isCrit,
-      isCritFail,
-      timestamp: new Date(),
-    };
+      const newRoll: RollEntry = {
+        id: generateRollId(),
+        type: 'custom',
+        title,
+        dice: diceResults,
+        modifier,
+        total,
+        isCrit,
+        isCritFail,
+        timestamp: new Date(),
+      };
 
-    addRoll(newRoll);
-  }, [addRoll, canRoll]);
+      addRoll(newRoll);
+    },
+    [addRoll, canRoll],
+  );
 
   const value: RollContextValue = {
     rolls,
@@ -311,11 +332,7 @@ export function RollProvider({
     subscribeToRolls,
   };
 
-  return (
-    <RollContext.Provider value={value}>
-      {children}
-    </RollContext.Provider>
-  );
+  return <RollContext.Provider value={value}>{children}</RollContext.Provider>;
 }
 
 // Hook to use roll functions

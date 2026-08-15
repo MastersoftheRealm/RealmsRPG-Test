@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 function LegalList({ items }: { items?: readonly LegalListItem[] }) {
   if (!items?.length) return null;
   return (
-    <ul className="list-disc list-inside text-text-secondary space-y-1">
+    <ul className="list-inside list-disc space-y-1 text-text-secondary">
       {items.map((item) =>
         typeof item === 'string' ? (
           <li key={item}>{item}</li>
@@ -25,7 +25,7 @@ function LegalList({ items }: { items?: readonly LegalListItem[] }) {
           <li key={item.label}>
             <strong>{item.label}</strong> – {item.text}
           </li>
-        )
+        ),
       )}
     </ul>
   );
@@ -51,13 +51,13 @@ export default function PrivacyPage() {
 
         {PRIVACY_COPY.sections.map((section) => (
           <section key={section.heading}>
-            <h2 className="text-xl font-semibold text-text-primary mb-4">{section.heading}</h2>
+            <h2 className="mb-4 text-xl font-semibold text-text-primary">{section.heading}</h2>
             {section.paragraphs.map((para, i) => (
               <p
                 key={`${section.heading}-p-${i}`}
                 className={
                   i < section.paragraphs.length - 1 || section.list || section.contactEmail
-                    ? 'text-text-secondary mb-3'
+                    ? 'mb-3 text-text-secondary'
                     : 'text-text-secondary'
                 }
               >

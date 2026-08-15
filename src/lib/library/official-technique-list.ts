@@ -18,7 +18,10 @@ import {
   type PowerTechniqueFilterState,
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
-import { libraryRowPathIds, rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
+import {
+  libraryRowPathIds,
+  rowMatchesPathRecommendedIds,
+} from '@/lib/game/path-recommendation-index';
 
 /** Data columns only — edit/delete/add use ListHeader `rowChrome`. */
 export const OFFICIAL_TECHNIQUE_GRID = '1.4fr 1fr 0.7fr 0.7fr 0.9fr 1fr 1fr';
@@ -52,9 +55,11 @@ export interface OfficialTechniqueRow {
   partNames: string[];
 }
 
-export function getEmpoweredTechniqueTotals(item: LibraryTechnique & {
-  totals?: { energy?: number; trainingPoints?: number };
-}): { energy?: number; tp?: number } {
+export function getEmpoweredTechniqueTotals(
+  item: LibraryTechnique & {
+    totals?: { energy?: number; trainingPoints?: number };
+  },
+): { energy?: number; tp?: number } {
   const totals = item.totals;
   const energy = typeof totals?.energy === 'number' ? totals.energy : undefined;
   const tp = typeof totals?.trainingPoints === 'number' ? totals.trainingPoints : undefined;
@@ -64,7 +69,7 @@ export function getEmpoweredTechniqueTotals(item: LibraryTechnique & {
 export function buildOfficialTechniqueRows(
   items: LibraryTechnique[],
   partsDb: TechniquePart[],
-  mode: 'standard' | 'empowered' = 'standard'
+  mode: 'standard' | 'empowered' = 'standard',
 ): OfficialTechniqueRow[] {
   return items.map((t) => {
     const empowered = mode === 'empowered';
@@ -92,9 +97,7 @@ export function buildOfficialTechniqueRows(
       weapon: display.weaponName || '-',
       damage: damageStr,
       parts,
-      partIds: savedParts
-        .map((part) => (part.id != null ? String(part.id) : ''))
-        .filter(Boolean),
+      partIds: savedParts.map((part) => (part.id != null ? String(part.id) : '')).filter(Boolean),
       partNames: savedParts
         .map((part) => (part.name != null ? String(part.name) : ''))
         .filter(Boolean),
@@ -137,20 +140,30 @@ export function filterOfficialTechniqueRows<
   sortItems: (items: T[]) => T[],
   advanced?: PowerTechniqueFilterState,
   character?: PowerTechniqueCharacterContext | null,
-  pathRecommendedIds?: ReadonlySet<string> | null
+  pathRecommendedIds?: ReadonlySet<string> | null,
 ): T[] {
   let result = rows;
   if (pathRecommendedIds) {
-    result = result.filter((x) => rowMatchesPathRecommendedIds(libraryRowPathIds(x), pathRecommendedIds));
+    result = result.filter((x) =>
+      rowMatchesPathRecommendedIds(libraryRowPathIds(x), pathRecommendedIds),
+    );
   }
   if (search) {
     const s = search.toLowerCase();
     result = result.filter(
       (x) =>
-        String(x.name ?? '').toLowerCase().includes(s) ||
-        String(x.description ?? '').toLowerCase().includes(s) ||
-        String(x.weapon ?? '').toLowerCase().includes(s) ||
-        String(x.category ?? '').toLowerCase().includes(s)
+        String(x.name ?? '')
+          .toLowerCase()
+          .includes(s) ||
+        String(x.description ?? '')
+          .toLowerCase()
+          .includes(s) ||
+        String(x.weapon ?? '')
+          .toLowerCase()
+          .includes(s) ||
+        String(x.category ?? '')
+          .toLowerCase()
+          .includes(s),
     );
   }
   if (advanced) {

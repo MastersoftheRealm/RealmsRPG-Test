@@ -12,6 +12,7 @@
 import { DescriptorChip } from '@/components/ui';
 import { InfoTippy } from '@/components/shared/info-tippy';
 import type { ChipData } from '@/components/shared/grid-list-row-types';
+import { descriptorChipVariantForGridList } from '@/lib/chip/grid-list-chip-utils';
 import { cn } from '@/lib/utils';
 
 export interface DescriptorChipWithTipProps {
@@ -31,30 +32,37 @@ export function DescriptorChipWithTip({
   size = 'sm',
 }: DescriptorChipWithTipProps) {
   const tip = chip.description?.trim();
+  const variant = descriptorChipVariantForGridList(chip.category ?? 'default');
   const costSuffix =
     chip.cost != null && chip.cost > 0
       ? ` (${chip.cost} ${chip.costLabel || 'Training Points'})`
       : '';
   const label = `${chip.name}${costSuffix}`;
+  const wrapperClass = cn('inline-flex max-w-full', chip.disabled && 'opacity-60', className);
 
   if (!tip) {
     return (
-      <span className={cn('inline-flex max-w-full', className)}>
-        <DescriptorChip size={size}>{label}</DescriptorChip>
+      <span
+        className={wrapperClass}
+        aria-current={chip.current ? 'true' : undefined}
+        aria-disabled={chip.disabled ? true : undefined}
+      >
+        <DescriptorChip size={size} variant={variant}>
+          {label}
+        </DescriptorChip>
       </span>
     );
   }
 
   return (
-    <span className={cn('inline-flex max-w-full', className)}>
-      <DescriptorChip size={size} className="gap-1 pr-1.5">
+    <span
+      className={wrapperClass}
+      aria-current={chip.current ? 'true' : undefined}
+      aria-disabled={chip.disabled ? true : undefined}
+    >
+      <DescriptorChip size={size} variant={variant} className="gap-1 pr-1.5">
         <span className="min-w-0 truncate">{label}</span>
-        <InfoTippy
-          content={tip}
-          label={`${chip.name} details`}
-          size="inline"
-          tone="current"
-        />
+        <InfoTippy content={tip} label={`${chip.name} details`} size="inline" tone="current" />
       </DescriptorChip>
     </span>
   );

@@ -8,9 +8,7 @@ import { CACHE_EXPIRY_MS } from '@/lib/game/creator-constants';
  * Pure read — safe to call during render (no localStorage writes). Expired or
  * corrupt entries return null; the caller's autosave overwrites them on mount.
  */
-export function readCreatorCache<T extends { timestamp?: number }>(
-  key: string,
-): T | null {
+export function readCreatorCache<T extends { timestamp?: number }>(key: string): T | null {
   if (typeof window === 'undefined') return null;
   try {
     const raw = localStorage.getItem(key);

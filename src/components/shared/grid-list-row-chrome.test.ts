@@ -28,13 +28,13 @@ describe('grid-list-row-chrome mobile collapse', () => {
         resolvedGridColumns: desktop,
         hasThumbnailColumn: false,
         dataTracksUsed,
-      })
+      }),
     ).toBe('minmax(0, 1fr) 40px');
   });
 
   it('keeps thumbnail + trailing action tracks on mobile', () => {
     const desktop = gridTemplateColumnsWithThumbnail(
-      '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px'
+      '1.5fr 0.8fr 0.8fr 0.8fr 0.8fr 0.8fr 1fr 40px',
     );
     const dataTracksUsed = 2 + 6; // thumb + name + 6 cols
     expect(countGridTemplateTracks(desktop)).toBe(9);
@@ -43,15 +43,13 @@ describe('grid-list-row-chrome mobile collapse', () => {
         resolvedGridColumns: desktop,
         hasThumbnailColumn: true,
         dataTracksUsed,
-      })
+      }),
     ).toBe(`${GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH} minmax(0, 1fr) 40px`);
   });
 
   it('Library Powers: name + trailing 40px (inline X) — not mid-row empty fr', () => {
     // POWER_GRID_COLUMNS + thumbnail; 6 data cols; 1 trailing action → inline delete
-    const desktop = gridTemplateColumnsWithThumbnail(
-      '1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px'
-    );
+    const desktop = gridTemplateColumnsWithThumbnail('1.5fr 0.8fr 1fr 1fr 0.8fr 1fr 1fr 40px');
     const dataTracksUsed = 2 + 6;
     expect(countGridTemplateTracks(desktop) - dataTracksUsed).toBe(1);
     expect(
@@ -59,7 +57,7 @@ describe('grid-list-row-chrome mobile collapse', () => {
         resolvedGridColumns: desktop,
         hasThumbnailColumn: true,
         dataTracksUsed,
-      })
+      }),
     ).toBe(`${GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH} minmax(0, 1fr) 40px`);
   });
 
@@ -71,7 +69,7 @@ describe('grid-list-row-chrome mobile collapse', () => {
         hasThumbnailColumn: false,
         dataTracksUsed: 3,
         mobileVisibleDataTracks: 1,
-      })
+      }),
     ).toBe('minmax(0, 1fr) auto 40px');
   });
 });

@@ -3,10 +3,10 @@
  * =================================================
  */
 
-"use client";
+'use client';
 
-import type { Combatant, Encounter } from "@/types/encounter";
-import { orderCombatantsByInitiative } from "./combat-encounter-helpers";
+import type { Combatant, Encounter } from '@/types/encounter';
+import { orderCombatantsByInitiative } from './combat-encounter-helpers';
 
 type SetEncounter = React.Dispatch<React.SetStateAction<Encounter | null>>;
 
@@ -26,7 +26,7 @@ export function useCombatRoundActions({
             round: 1,
             currentTurnIndex: 0,
             isActive: true,
-            status: "active",
+            status: 'active',
           }
         : prev,
     );
@@ -75,7 +75,7 @@ export function useCombatRoundActions({
             round: 0,
             currentTurnIndex: -1,
             isActive: false,
-            status: "paused",
+            status: 'paused',
           }
         : prev,
     );
@@ -89,7 +89,7 @@ export function useCombatRoundActions({
             round: prev.round > 0 ? prev.round : 0,
             currentTurnIndex: -1,
             isActive: false,
-            status: "completed",
+            status: 'completed',
           }
         : prev,
     );
@@ -111,7 +111,7 @@ export function useCombatRoundActions({
             round: 0,
             currentTurnIndex: -1,
             isActive: false,
-            status: "preparing" as const,
+            status: 'preparing' as const,
           }
         : prev,
     );

@@ -46,22 +46,22 @@ export function ItemCreatorEditorWeaponShield({
           collapsedSummary={weaponShieldConfigSummary}
         >
           <div className="flex flex-wrap items-center gap-6">
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               <span className="text-sm font-medium text-text-secondary">Handedness:</span>
               <SectionCostBadge
                 ip={itemSectionCosts.handedness.totalIP}
                 tp={itemSectionCosts.handedness.totalTP}
                 currency={itemSectionCosts.handedness.totalCurrency}
               />
-              <div className="flex rounded-lg border border-border-light overflow-hidden">
+              <div className="flex overflow-hidden rounded-lg border border-border-light">
                 <button
                   type="button"
                   onClick={() => onIsTwoHandedChange(false)}
                   className={cn(
-                    'px-4 py-2 text-sm font-medium transition-colors min-h-[44px]',
+                    'min-h-[44px] px-4 py-2 text-sm font-medium transition-colors',
                     !isTwoHanded
                       ? 'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600'
-                      : 'bg-surface-alt dark:bg-surface text-text-primary hover:bg-surface',
+                      : 'bg-surface-alt text-text-primary hover:bg-surface dark:bg-surface',
                   )}
                 >
                   One-Handed
@@ -70,10 +70,10 @@ export function ItemCreatorEditorWeaponShield({
                   type="button"
                   onClick={() => onIsTwoHandedChange(true)}
                   className={cn(
-                    'px-4 py-2 text-sm font-medium transition-colors min-h-[44px]',
+                    'min-h-[44px] px-4 py-2 text-sm font-medium transition-colors',
                     isTwoHanded
                       ? 'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600'
-                      : 'bg-surface-alt dark:bg-surface text-text-primary hover:bg-surface',
+                      : 'bg-surface-alt text-text-primary hover:bg-surface dark:bg-surface',
                   )}
                 >
                   Two-Handed
@@ -82,17 +82,23 @@ export function ItemCreatorEditorWeaponShield({
             </div>
 
             {armamentType === 'Weapon' && (
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex flex-wrap items-center gap-3">
                 <span className="text-sm font-medium text-text-secondary">Range:</span>
-                <span className="font-medium text-tp-text min-w-[80px]">{rangeDisplay}</span>
+                <span className="min-w-[80px] font-medium text-tp-text">{rangeDisplay}</span>
                 <SectionCostBadge
                   ip={itemSectionCosts.range.totalIP}
                   tp={itemSectionCosts.range.totalTP}
                   currency={itemSectionCosts.range.totalCurrency}
                 />
-                <ValueStepper value={rangeLevel} onChange={onRangeLevelChange} min={0} max={20} size="sm" />
+                <ValueStepper
+                  value={rangeLevel}
+                  onChange={onRangeLevelChange}
+                  min={0}
+                  max={20}
+                  size="sm"
+                />
                 {rangeLevel > 0 && (
-                  <span className="text-xs text-text-muted dark:text-text-secondary">(8 spaces per level)</span>
+                  <span className="text-xs text-text-muted">(8 spaces per level)</span>
                 )}
               </div>
             )}
@@ -121,11 +127,11 @@ export function ItemCreatorEditorWeaponShield({
               max={10}
             />
             <div className="flex items-center gap-1">
-              <span className="font-bold text-lg">d</span>
+              <span className="text-lg font-bold">d</span>
               <select
                 value={damage.size}
                 onChange={(e) => onDamageChange((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+                className="rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
                 aria-label="Damage die size"
               >
                 {DIE_SIZES.map((size) => (
@@ -138,7 +144,7 @@ export function ItemCreatorEditorWeaponShield({
             <select
               value={damage.type}
               onChange={(e) => onDamageChange((d) => ({ ...d, type: e.target.value }))}
-              className="px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+              className="rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
               aria-label="Damage type"
             >
               {WEAPON_DAMAGE_TYPES.map((type) => (

@@ -11,10 +11,7 @@ export function libraryItemRowId(raw: { id?: string; docId?: string }): string {
   return String(raw.docId ?? raw.id ?? '');
 }
 
-function equipmentListForKind(
-  character: Character,
-  kind: 'weapon' | 'armor' | 'shield'
-): Item[] {
+function equipmentListForKind(character: Character, kind: 'weapon' | 'armor' | 'shield'): Item[] {
   if (kind === 'weapon') return (character.equipment?.weapons as Item[]) || [];
   if (kind === 'armor') return (character.equipment?.armor as Item[]) || [];
   return (character.equipment?.shields as Item[]) || [];
@@ -23,7 +20,7 @@ function equipmentListForKind(
 export function characterOwnsLibraryItem(
   character: Character,
   kind: LibraryToCharacterKind,
-  itemId: string
+  itemId: string,
 ): boolean {
   const id = itemId.trim();
   if (!id) return false;
@@ -36,28 +33,25 @@ export function characterOwnsLibraryItem(
   return equipmentListForKind(character, kind).some((entry) => String(entry.id) === id);
 }
 
-export function mapLibraryPowerToCharacter(
-  power: LibraryPower,
-  dbs: CodexDbRefs
-): CharacterPower {
+export function mapLibraryPowerToCharacter(power: LibraryPower, dbs: CodexDbRefs): CharacterPower {
   const items = mapSelectedToCharacterItems(
     'power',
     [{ id: libraryItemRowId(power), name: power.name, data: power }],
     'powers',
-    dbs
+    dbs,
   );
   return items[0] as CharacterPower;
 }
 
 export function mapLibraryTechniqueToCharacter(
   technique: LibraryTechnique,
-  dbs: CodexDbRefs
+  dbs: CodexDbRefs,
 ): CharacterTechnique {
   const items = mapSelectedToCharacterItems(
     'technique',
     [{ id: libraryItemRowId(technique), name: technique.name, data: technique }],
     'powers',
-    dbs
+    dbs,
   );
   return items[0] as CharacterTechnique;
 }
@@ -65,14 +59,14 @@ export function mapLibraryTechniqueToCharacter(
 export function mapLibraryArmamentToCharacter(
   item: LibraryItem,
   kind: 'weapon' | 'armor' | 'shield',
-  dbs: CodexDbRefs
+  dbs: CodexDbRefs,
 ): Item {
   const id = libraryItemRowId(item);
   const items = mapSelectedToCharacterItems(
     kind,
     [{ id, name: item.name, data: { ...item, id, type: kind } }],
     'powers',
-    dbs
+    dbs,
   );
   return items[0] as Item;
 }
@@ -81,7 +75,7 @@ export function appendLibraryItemToCharacter(
   character: Character,
   kind: LibraryToCharacterKind,
   raw: LibraryToCharacterRaw,
-  dbs: CodexDbRefs
+  dbs: CodexDbRefs,
 ): Character {
   if (kind === 'power') {
     const next = mapLibraryPowerToCharacter(raw as LibraryPower, dbs);
@@ -112,7 +106,7 @@ export function entityBucketLabel(kind: LibraryToCharacterKind, possessive = fal
 }
 
 export function isArmamentKind(
-  kind: LibraryToCharacterKind
+  kind: LibraryToCharacterKind,
 ): kind is 'weapon' | 'armor' | 'shield' {
   return kind === 'weapon' || kind === 'armor' || kind === 'shield';
 }
@@ -120,7 +114,7 @@ export function isArmamentKind(
 /** Dirty-key PATCH body for a library add (ADR-0013 / TASK-746). Do not smash the full document. */
 export function libraryAddDirtyFields(
   kind: LibraryToCharacterKind,
-  character: Character
+  character: Character,
 ): Partial<Character> {
   const dirty: Partial<Character> = isArmamentKind(kind)
     ? { equipment: character.equipment }
@@ -142,7 +136,7 @@ export function mergeLibraryAddOnConflict(
   remote: Character,
   kind: LibraryToCharacterKind,
   raw: LibraryToCharacterRaw,
-  apply: (character: Character) => { character: Character }
+  apply: (character: Character) => { character: Character },
 ): { dirty: Partial<Character>; updatedAt?: string | Date | null } {
   if (characterOwnsLibraryItem(remote, kind, libraryItemRowId(raw))) {
     return { dirty: {}, updatedAt: remote.updatedAt };

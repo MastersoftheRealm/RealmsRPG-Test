@@ -255,7 +255,7 @@ describe('selectedIdsFromFeatL2Items', () => {
       selectedIdsFromFeatL2Items([
         { id: '1', name: 'A' },
         { id: '2', name: 'B' },
-      ])
+      ]),
     ).toEqual(['1', '2']);
   });
 });

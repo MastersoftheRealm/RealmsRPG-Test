@@ -7,16 +7,8 @@
 import { useState } from 'react';
 import { Button, Input, Card } from '@/components/ui';
 import { CONDITIONS } from '@/lib/game/creator-constants';
-import {
-  DAMAGE_TYPES,
-  SENSES,
-  MOVEMENT_TYPES,
-} from './creature-creator-constants';
-import {
-  ChipList,
-  ExpandableChipList,
-  AddItemDropdown,
-} from './CreatureCreatorHelpers';
+import { DAMAGE_TYPES, SENSES, MOVEMENT_TYPES } from './creature-creator-constants';
+import { ChipList, ExpandableChipList, AddItemDropdown } from './CreatureCreatorHelpers';
 import type { CreatureCreatorEditorProps } from './creature-creator-editor';
 
 type TraitsSectionProps = Pick<
@@ -52,16 +44,21 @@ export function CreatureCreatorEditorTraitsSection({
 
   return (
     <>
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4">Resistances, Weaknesses & Immunities</h2>
-        <p className="text-sm text-text-muted dark:text-text-secondary mb-3">
-          Each type costs feat points as shown. Resistances and immunities cost points; weaknesses grant points.
+      <Card className="p-6 shadow-md">
+        <h2 className="mb-4 text-lg font-bold text-text-primary">
+          Resistances, Weaknesses & Immunities
+        </h2>
+        <p className="mb-3 text-sm text-text-muted">
+          Each type costs feat points as shown. Resistances and immunities cost points; weaknesses
+          grant points.
         </p>
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid gap-4 md:grid-cols-3">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">
+            <label className="mb-2 block text-sm font-medium text-text-secondary">
               Resistances{' '}
-              <span className="font-normal text-primary-link-fg">(+{stats.resistanceFeatCost} pt each)</span>
+              <span className="font-normal text-primary-link-fg">
+                (+{stats.resistanceFeatCost} pt each)
+              </span>
             </label>
             <ChipList
               items={creature.resistances}
@@ -79,9 +76,11 @@ export function CreatureCreatorEditorTraitsSection({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">
+            <label className="mb-2 block text-sm font-medium text-text-secondary">
               Weaknesses{' '}
-              <span className="font-normal text-primary-link-fg">({stats.weaknessFeatCost} pt each)</span>
+              <span className="font-normal text-primary-link-fg">
+                ({stats.weaknessFeatCost} pt each)
+              </span>
             </label>
             <ChipList
               items={creature.weaknesses}
@@ -99,9 +98,11 @@ export function CreatureCreatorEditorTraitsSection({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">
+            <label className="mb-2 block text-sm font-medium text-text-secondary">
               Immunities{' '}
-              <span className="font-normal text-primary-link-fg">(+{stats.immunityFeatCost} pt each)</span>
+              <span className="font-normal text-primary-link-fg">
+                (+{stats.immunityFeatCost} pt each)
+              </span>
             </label>
             <ChipList
               items={creature.immunities}
@@ -121,14 +122,14 @@ export function CreatureCreatorEditorTraitsSection({
         </div>
       </Card>
 
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4">Senses & Movement</h2>
-        <p className="text-sm text-text-muted dark:text-text-secondary mb-3">
+      <Card className="p-6 shadow-md">
+        <h2 className="mb-4 text-lg font-bold text-text-primary">Senses & Movement</h2>
+        <p className="mb-3 text-sm text-text-muted">
           Each sense and movement type has a feat point cost shown when adding and on each row.
         </p>
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid gap-4 md:grid-cols-2">
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">Senses</label>
+            <label className="mb-2 block text-sm font-medium text-text-secondary">Senses</label>
             <ExpandableChipList
               items={creature.senses}
               onRemove={(item) => removeFromArray('senses', item)}
@@ -146,7 +147,9 @@ export function CreatureCreatorEditorTraitsSection({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-text-secondary mb-2">Movement Types</label>
+            <label className="mb-2 block text-sm font-medium text-text-secondary">
+              Movement Types
+            </label>
             <ExpandableChipList
               items={creature.movementTypes}
               onRemove={(item) => removeFromArray('movementTypes', item)}
@@ -166,11 +169,13 @@ export function CreatureCreatorEditorTraitsSection({
         </div>
       </Card>
 
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4">Condition Immunities</h2>
-        <label className="block text-sm font-medium text-text-secondary mb-2">
+      <Card className="p-6 shadow-md">
+        <h2 className="mb-4 text-lg font-bold text-text-primary">Condition Immunities</h2>
+        <label className="mb-2 block text-sm font-medium text-text-secondary">
           Conditions{' '}
-          <span className="font-normal text-primary-link-fg">(+{stats.conditionImmunityFeatCost} pt each)</span>
+          <span className="font-normal text-primary-link-fg">
+            (+{stats.conditionImmunityFeatCost} pt each)
+          </span>
         </label>
         <ChipList
           items={creature.conditionImmunities}
@@ -188,14 +193,14 @@ export function CreatureCreatorEditorTraitsSection({
         />
       </Card>
 
-      <Card className="shadow-md p-6">
-        <h2 className="text-lg font-bold text-text-primary mb-4">Languages</h2>
+      <Card className="p-6 shadow-md">
+        <h2 className="mb-4 text-lg font-bold text-text-primary">Languages</h2>
         <ChipList
           items={creature.languages}
           onRemove={(item) => removeFromArray('languages', item)}
           color="bg-info-light text-info-fg"
         />
-        <div className="flex gap-2 mt-2">
+        <div className="mt-2 flex gap-2">
           <Input
             type="text"
             value={newLanguage}

@@ -15,10 +15,7 @@ import type {
   EquipmentEligibilityContext,
   EquipmentPhase,
 } from '@/lib/guided-creator/equipment-eligibility';
-import {
-  mergeLibraryBySource,
-  type LibrarySourceScope,
-} from '@/lib/library/source-scope';
+import { mergeLibraryBySource, type LibrarySourceScope } from '@/lib/library/source-scope';
 
 export function useGuidedEquipmentCatalog(
   draft: GuidedDraft,
@@ -27,7 +24,7 @@ export function useGuidedEquipmentCatalog(
   options?: {
     userItems?: LibraryItem[];
     source?: LibrarySourceScope;
-  }
+  },
 ) {
   const { rules } = useGameRules();
   const { data: itemProperties = [] } = useItemProperties();
@@ -36,41 +33,32 @@ export function useGuidedEquipmentCatalog(
 
   const selectedIds = useMemo(
     () =>
-      [...draft.loadoutWeapons, ...draft.loadoutArmor, ...draft.equipment].map((r) =>
-        String(r.id)
-      ),
-    [draft.loadoutWeapons, draft.loadoutArmor, draft.equipment]
+      [...draft.loadoutWeapons, ...draft.loadoutArmor, ...draft.equipment].map((r) => String(r.id)),
+    [draft.loadoutWeapons, draft.loadoutArmor, draft.equipment],
   );
 
   const scopedOfficial = useMemo(
     () => mergeLibraryBySource(source, officialItems, userItems, selectedIds),
-    [source, officialItems, userItems, selectedIds]
+    [source, officialItems, userItems, selectedIds],
   );
   const scopedCodex = useMemo(
     () => (source === 'my' ? [] : codexEquipment),
-    [source, codexEquipment]
+    [source, codexEquipment],
   );
 
   const allOfficial = useMemo(
     () => mergeLibraryBySource('all', officialItems, userItems),
-    [officialItems, userItems]
+    [officialItems, userItems],
   );
 
   const catalog = useMemo(
     () => buildEquipmentCatalogRows(scopedOfficial, scopedCodex, itemProperties),
-    [scopedOfficial, scopedCodex, itemProperties]
+    [scopedOfficial, scopedCodex, itemProperties],
   );
 
   const tpSummary = useMemo(
-    () =>
-      computeGuidedLoadoutTpSummary(
-        draft,
-        allOfficial,
-        codexEquipment,
-        itemProperties,
-        rules
-      ),
-    [draft, allOfficial, codexEquipment, itemProperties, rules]
+    () => computeGuidedLoadoutTpSummary(draft, allOfficial, codexEquipment, itemProperties, rules),
+    [draft, allOfficial, codexEquipment, itemProperties, rules],
   );
 
   return { catalog, tpSummary, itemProperties, rules, scopedOfficial, allOfficial };
@@ -81,7 +69,7 @@ export function buildGuidedEquipmentEligibilityContext(
   draft: GuidedDraft,
   tpSummary: { spent: number; limit: number },
   pathRecommendedIds: Set<string>,
-  remainingCurrency?: number
+  remainingCurrency?: number,
 ): EquipmentEligibilityContext {
   return {
     phase,

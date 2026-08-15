@@ -17,7 +17,10 @@ import {
   type SortState,
 } from '@/components/shared';
 import { Button, IconButton } from '@/components/ui';
-import type { LibraryEntityTabBasicLabels, LibraryEntityTabLabels } from './library-entity-tab.types';
+import type {
+  LibraryEntityTabBasicLabels,
+  LibraryEntityTabLabels,
+} from './library-entity-tab.types';
 
 type UserLibraryEntityTabShellBaseProps = {
   isLoading: boolean;
@@ -78,7 +81,7 @@ export type UserLibraryEntityTabShellProps =
   | UserLibraryEntityTabShellBasicProps;
 
 function isSyncMode(
-  props: UserLibraryEntityTabShellProps
+  props: UserLibraryEntityTabShellProps,
 ): props is UserLibraryEntityTabShellSyncProps {
   return props.enableSync !== false;
 }
@@ -132,7 +135,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
         action={
           <Button asChild>
             <Link href={labels.createHref}>
-              <Plus className="w-4 h-4" />
+              <Plus className="h-4 w-4" />
               {labels.createLabel}
             </Link>
           </Button>
@@ -155,7 +158,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
               onClick={props.onOpenSyncAllConfirm}
               disabled={props.driftedCount === 0 || props.syncingAll}
             >
-              <RefreshCw className={`w-4 h-4 ${props.syncingAll ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`h-4 w-4 ${props.syncingAll ? 'animate-spin' : ''}`} />
               Sync with current patch
               {props.driftedCount > 0 ? ` (${props.driftedCount})` : ''}
             </Button>
@@ -209,9 +212,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
             onConfirm={props.onConfirmSyncAll}
             title="Sync with current patch?"
             description={`Sync ${props.driftedCount} ${
-              props.driftedCount === 1
-                ? props.labels.entitySingular
-                : props.labels.entityPlural
+              props.driftedCount === 1 ? props.labels.entitySingular : props.labels.entityPlural
             } to current patch rules. ${props.labels.syncAllRemovedRefsHint}`}
             confirmLabel="Sync all"
             loadingLabel="Syncing..."
@@ -242,7 +243,9 @@ export function LibrarySyncRowAction({
       label="Sync with current patch"
       className="text-warning-fg hover:opacity-80"
     >
-      <RefreshCw className={`${GRID_LIST_ROW_ACTION_ICON_CLASS} ${syncing ? 'animate-spin' : ''}`} />
+      <RefreshCw
+        className={`${GRID_LIST_ROW_ACTION_ICON_CLASS} ${syncing ? 'animate-spin' : ''}`}
+      />
     </IconButton>
   );
 }

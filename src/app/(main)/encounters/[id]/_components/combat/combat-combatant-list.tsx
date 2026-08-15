@@ -2,13 +2,13 @@
  * Combat encounter combatant list (TASK-608)
  */
 
-"use client";
+'use client';
 
-import type { DragEvent } from "react";
-import { Card, CardContent, EmptyState } from "@/components/ui";
-import { CombatantCard } from "@/components/encounters/CombatantCard";
-import { isOwnedLinkedCombatant } from "@/lib/encounter/character-resource-sync";
-import type { Combatant, TrackedCombatant, Encounter } from "@/types/encounter";
+import type { DragEvent } from 'react';
+import { Card, CardContent, EmptyState } from '@/components/ui';
+import { CombatantCard } from '@/components/encounters/CombatantCard';
+import { isOwnedLinkedCombatant } from '@/lib/encounter/character-resource-sync';
+import type { Combatant, TrackedCombatant, Encounter } from '@/types/encounter';
 
 export interface CombatCombatantListProps {
   encounter: Encounter;
@@ -21,11 +21,7 @@ export interface CombatCombatantListProps {
   onDuplicate: (combatant: Combatant) => void;
   onAddCondition: (id: string, condition: string) => void;
   onRemoveCondition: (id: string, condition: string) => void;
-  onUpdateConditionLevel: (
-    id: string,
-    condition: string,
-    delta: number,
-  ) => void;
+  onUpdateConditionLevel: (id: string, condition: string, delta: number) => void;
   onUpdateAP: (id: string, delta: number) => void;
   onDragStart: (e: DragEvent<HTMLDivElement>, id: string) => void;
   onDragEnd: () => void;
@@ -56,15 +52,15 @@ export function CombatCombatantList({
   return (
     <>
       {!encounter.isActive && sortedCombatants.length > 0 && (
-        <div className="text-xs text-text-muted dark:text-text-secondary flex items-center gap-4 px-2 flex-shrink-0">
+        <div className="flex flex-shrink-0 items-center gap-4 px-2 text-xs text-text-muted">
           <span>
-            Drag the grip handle to reorder. Surprised creatures go last in
-            round 1. Companions always go last.
+            Drag the grip handle to reorder. Surprised creatures go last in round 1. Companions
+            always go last.
           </span>
         </div>
       )}
 
-      <div className="space-y-3 overflow-y-auto pr-2 scroll-smooth flex-1 min-h-[300px]">
+      <div className="min-h-[300px] flex-1 space-y-3 overflow-y-auto scroll-smooth pr-2">
         {sortedCombatants.length === 0 ? (
           <Card>
             <CardContent>
@@ -81,24 +77,15 @@ export function CombatCombatantList({
             <CombatantCard
               key={combatant.id}
               combatant={combatant}
-              canEditLinkedResources={isOwnedLinkedCombatant(
-                combatant as TrackedCombatant,
-                userId,
-              )}
-              isCurrentTurn={
-                encounter.isActive && index === encounter.currentTurnIndex
-              }
+              canEditLinkedResources={isOwnedLinkedCombatant(combatant as TrackedCombatant, userId)}
+              isCurrentTurn={encounter.isActive && index === encounter.currentTurnIndex}
               isDragOver={dragOverId === combatant.id}
               isDragging={draggedId === combatant.id}
               onUpdate={(updates) => onUpdate(combatant.id, updates)}
               onRemove={() => onRemove(combatant.id)}
               onDuplicate={() => onDuplicate(combatant)}
-              onAddCondition={(condition) =>
-                onAddCondition(combatant.id, condition)
-              }
-              onRemoveCondition={(condition) =>
-                onRemoveCondition(combatant.id, condition)
-              }
+              onAddCondition={(condition) => onAddCondition(combatant.id, condition)}
+              onRemoveCondition={(condition) => onRemoveCondition(combatant.id, condition)}
               onUpdateConditionLevel={(condition, delta) =>
                 onUpdateConditionLevel(combatant.id, condition, delta)
               }

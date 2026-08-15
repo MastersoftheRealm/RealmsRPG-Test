@@ -7,10 +7,7 @@
 'use client';
 
 import { useCallback, useMemo } from 'react';
-import {
-  useCharacterSheetActions,
-  resolveLibraryActiveTab,
-} from '@/components/character-sheet';
+import { useCharacterSheetActions, resolveLibraryActiveTab } from '@/components/character-sheet';
 import type { SheetLibraryModel } from '@/components/character-sheet/library-section-props';
 import { buildLevelUpGuideContent } from '@/lib/level-up-guide';
 import { useCharacterSheetPageData } from './use-character-sheet-page-data';
@@ -100,12 +97,7 @@ export function useCharacterSheetPage(id: string) {
       if (!data.character) return;
       const previousLevel = data.character.level || 1;
       applyLevelUp(newLevel);
-      const guide = buildLevelUpGuideContent(
-        data.character,
-        previousLevel,
-        newLevel,
-        data.rules,
-      );
+      const guide = buildLevelUpGuideContent(data.character, previousLevel, newLevel, data.rules);
       if (guide) {
         if (guide.enterEditMode) ui.setIsEditMode(true);
         ui.setLevelUpGuide(guide);

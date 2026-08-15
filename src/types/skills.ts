@@ -5,13 +5,7 @@
  */
 
 /** Skill categories */
-export type SkillCategory = 
-  | 'combat'
-  | 'physical'
-  | 'mental'
-  | 'social'
-  | 'knowledge'
-  | 'craft';
+export type SkillCategory = 'combat' | 'physical' | 'mental' | 'social' | 'knowledge' | 'craft';
 
 /** A skill from the database */
 export interface Skill {

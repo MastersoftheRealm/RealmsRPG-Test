@@ -16,10 +16,7 @@ import {
   FILTER_CONTROL_ROW_CLASS,
 } from '@/components/shared/filters';
 import { CodexSkillRow } from '@/components/codex';
-import {
-  CodexBrowseListShell,
-  ErrorDisplay as ErrorState,
-} from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState } from '@/components/shared';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useCodexSkills, useCharacter, usePathListFilter, type Skill } from '@/hooks';
@@ -39,7 +36,10 @@ import {
   readInitialLibraryCharacterFilterId,
   writePersistedLibraryCharacterFilterId,
 } from '@/lib/library/character-filter-persistence';
-import { pathChipLabelsForEntity, pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
+import {
+  pathChipLabelsForEntity,
+  pathFilterEmptyTitle,
+} from '@/lib/game/path-recommendation-index';
 
 const SKILL_CHARACTER_FILTER_HELP =
   'Filter this list by a character you own. Optionally keep only skills they know, skills they do not know, or sub-skills for a base skill they have.';
@@ -51,7 +51,7 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
   const baseOwnedId = useId();
 
   const [characterFilterId, setCharacterFilterId] = useState(() =>
-    readInitialLibraryCharacterFilterId(codexMode === 'public')
+    readInitialLibraryCharacterFilterId(codexMode === 'public'),
   );
 
   const [filters, setFilters] = useState<SkillListFilters>({
@@ -72,22 +72,17 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
   }, []);
 
   const { data: characterResult } = useCharacter(
-    loadPublicCodex ? characterFilterId || undefined : undefined
+    loadPublicCodex ? characterFilterId || undefined : undefined,
   );
   const character = characterResult?.character ?? undefined;
   const hasCharacter = Boolean(characterFilterId && character);
 
-  const {
-    selectedPathIds,
-    setSelectedPathIds,
-    pathIndex,
-    pathRecommendedIds,
-    pathFilterActive,
-  } = usePathListFilter({
-    entities: skills,
-    kind: 'skills',
-    enabled: loadPublicCodex,
-  });
+  const { selectedPathIds, setSelectedPathIds, pathIndex, pathRecommendedIds, pathFilterActive } =
+    usePathListFilter({
+      entities: skills,
+      kind: 'skills',
+      enabled: loadPublicCodex,
+    });
 
   const skillIdToName = useMemo(() => buildSkillIdToName(skills), [skills]);
 
@@ -98,12 +93,18 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
 
   const filterOptions = useMemo(
     () => buildSkillFilterOptions(skills, skillIdToName, { includeCategoryBaseSkills: true }),
-    [skills, skillIdToName]
+    [skills, skillIdToName],
   );
 
   const filteredSkills = useMemo(() => {
     if (!skills) return [];
-    const filtered = filterSkills(skills, filters, skillIdToName, characterKnownIds, pathRecommendedIds);
+    const filtered = filterSkills(
+      skills,
+      filters,
+      skillIdToName,
+      characterKnownIds,
+      pathRecommendedIds,
+    );
     if (filters.baseSkill) return sortSkillsForBaseFilter(filtered, filters.baseSkill);
     return sortItems<Skill>(filtered);
   }, [skills, filters, sortItems, skillIdToName, characterKnownIds, pathRecommendedIds]);
@@ -124,11 +125,11 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
           <CharacterFilter
             value={characterFilterId}
             onChange={handleCharacterFilterChange}
-            className="mb-4 min-w-0 max-w-md border-b border-border-light pb-4"
+            className="mb-4 max-w-md min-w-0 border-b border-border-light pb-4"
             helpContent={SKILL_CHARACTER_FILTER_HELP}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <ChipSelect
               label="Ability"
               placeholder="Choose ability"
@@ -178,9 +179,7 @@ export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' 
                     { value: 'known', label: 'Known' },
                     { value: 'not-known', label: 'Not known' },
                   ]}
-                  onChange={(v) =>
-                    setFilters((f) => ({ ...f, knownMode: v as SkillKnownMode }))
-                  }
+                  onChange={(v) => setFilters((f) => ({ ...f, knownMode: v as SkillKnownMode }))}
                   placeholder={null}
                 />
 

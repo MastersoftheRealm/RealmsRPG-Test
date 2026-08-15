@@ -9,7 +9,10 @@ import type { ItemProperty } from '@/hooks';
 import { ValueStepper, SectionCostBadge } from '@/components/shared';
 import { CollapsibleSection } from '@/components/creator';
 import { Button } from '@/components/ui';
-import type { ArmamentType, ItemSelectedProperty as SelectedProperty } from './item-creator-bootstrap';
+import type {
+  ArmamentType,
+  ItemSelectedProperty as SelectedProperty,
+} from './item-creator-bootstrap';
 import {
   WEAPON_ABILITY_REQUIREMENTS,
   ARMOR_ABILITY_REQUIREMENTS,
@@ -24,7 +27,9 @@ type ItemCreatorEditorAbilityPropertiesProps = {
     next:
       | { id: number; name: string; level: number }
       | null
-      | ((prev: { id: number; name: string; level: number } | null) => { id: number; name: string; level: number } | null),
+      | ((
+          prev: { id: number; name: string; level: number } | null,
+        ) => { id: number; name: string; level: number } | null),
   ) => void;
   abilityReqSummary: string;
   selectedProperties: SelectedProperty[];
@@ -62,31 +67,38 @@ export function ItemCreatorEditorAbilityProperties({
           />
         }
       >
-        <p className="text-sm text-text-secondary mb-4">
+        <p className="mb-4 text-sm text-text-secondary">
           Require a minimum Ability to use this {armamentType.toLowerCase()} effectively.
         </p>
         <div className="flex flex-wrap items-center gap-4">
-          <div className="flex-1 min-w-[200px]">
+          <div className="min-w-[200px] flex-1">
             <select
               value={abilityRequirement?.id || ''}
               onChange={(e) => {
                 if (!e.target.value) {
                   onAbilityRequirementChange(null);
                 } else {
-                  const reqs = armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS;
+                  const reqs =
+                    armamentType === 'Armor'
+                      ? ARMOR_ABILITY_REQUIREMENTS
+                      : WEAPON_ABILITY_REQUIREMENTS;
                   const req = reqs.find((r) => r.id === parseInt(e.target.value));
                   if (req) {
                     onAbilityRequirementChange({ id: req.id, name: req.name, level: 1 });
                   }
                 }
               }}
-              className="w-full px-3 py-2 border border-border-light rounded-lg text-text-primary bg-surface"
+              className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
               aria-label="Ability requirement"
             >
               <option value="">None</option>
-              {(armamentType === 'Armor' ? ARMOR_ABILITY_REQUIREMENTS : WEAPON_ABILITY_REQUIREMENTS).map((req) => (
+              {(armamentType === 'Armor'
+                ? ARMOR_ABILITY_REQUIREMENTS
+                : WEAPON_ABILITY_REQUIREMENTS
+              ).map((req) => (
                 <option key={req.id} value={req.id}>
-                  {req.label} ({req.name.replace(/Weapon |Armor /g, '').replace(' Requirement', '')})
+                  {req.label} ({req.name.replace(/Weapon |Armor /g, '').replace(' Requirement', '')}
+                  )
                 </option>
               ))}
             </select>
@@ -96,7 +108,9 @@ export function ItemCreatorEditorAbilityProperties({
               <span className="text-sm font-medium text-text-secondary">Level:</span>
               <ValueStepper
                 value={abilityRequirement.level}
-                onChange={(v) => onAbilityRequirementChange((prev) => (prev ? { ...prev, level: v } : null))}
+                onChange={(v) =>
+                  onAbilityRequirementChange((prev) => (prev ? { ...prev, level: v } : null))
+                }
                 min={1}
                 max={6}
               />
@@ -113,17 +127,17 @@ export function ItemCreatorEditorAbilityProperties({
             type="button"
             variant="primary"
             size="sm"
-            className="flex items-center gap-1 bg-warning-600 hover:bg-warning-700 dark:bg-warning-700 dark:hover:bg-warning-600 text-text-on-dark"
+            className="flex items-center gap-1 bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:hover:bg-warning-600"
             onClick={onAddProperty}
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="h-4 w-4" />
             Add Property
           </Button>
         }
       >
         {selectedProperties.length === 0 ? (
-          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
-            <Info className="w-12 h-12 mx-auto mb-2 opacity-50" />
+          <div className="py-8 text-center text-text-muted">
+            <Info className="mx-auto mb-2 h-12 w-12 opacity-50" />
             <p>No properties added yet. Click &quot;Add Property&quot; to enhance your item.</p>
           </div>
         ) : (

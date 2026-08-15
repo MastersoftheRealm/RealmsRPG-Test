@@ -8,7 +8,7 @@ import { tempModifierValueClass } from '@/lib/character/temp-modifiers';
 /** Co-located Temp Modifier chrome for sheet header (ADR-0006). Not a shared barrel export. */
 export function useTempModifierActive(
   isEditMode?: boolean,
-  onTempDeltaChange?: (delta: number) => void
+  onTempDeltaChange?: (delta: number) => void,
 ) {
   const [tempActive, setTempActive] = useState(false);
   const canTemp = Boolean(isEditMode && onTempDeltaChange);
@@ -46,8 +46,8 @@ export function TempModifierStepperRow({
       />
       <span
         className={cn(
-          'text-xs min-w-[2.5rem] text-center font-medium tabular-nums',
-          tempModifierValueClass(tempDelta) || 'text-text-muted dark:text-text-secondary'
+          'min-w-[2.5rem] text-center text-xs font-medium tabular-nums',
+          tempModifierValueClass(tempDelta) || 'text-text-muted',
         )}
       >
         {deltaText}
@@ -82,7 +82,7 @@ export function TempModifierInlineLabel({
 }) {
   const { tempActive, setTempActive, canTemp, showTempControls } = useTempModifierActive(
     isEditMode,
-    onTempDeltaChange
+    onTempDeltaChange,
   );
 
   return (
@@ -90,9 +90,9 @@ export function TempModifierInlineLabel({
       <div className="flex items-center gap-1">
         <span
           className={cn(
-            'text-xs text-text-muted dark:text-text-secondary tabular-nums',
+            'text-xs text-text-muted tabular-nums',
             valueClassName,
-            tempModifierValueClass(tempDelta)
+            tempModifierValueClass(tempDelta),
           )}
           aria-label={ariaLabel}
         >
@@ -103,9 +103,7 @@ export function TempModifierInlineLabel({
             isActive={tempActive}
             hasModifiers={tempDelta !== 0}
             onClick={() => setTempActive((prev) => !prev)}
-            title={
-              tempActive ? `Close ${titleLabel} Temp Modifier` : `${titleLabel} Temp Modifier`
-            }
+            title={tempActive ? `Close ${titleLabel} Temp Modifier` : `${titleLabel} Temp Modifier`}
           />
         )}
       </div>

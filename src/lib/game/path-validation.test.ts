@@ -1,8 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  validateLevel1Skills,
-  validatePathDataForPublish,
-} from '@/lib/game/path-validation';
+import { validateLevel1Skills, validatePathDataForPublish } from '@/lib/game/path-validation';
 
 describe('validateLevel1Skills (TASK-515)', () => {
   it('warns when more than 3 skills without blocking', () => {
@@ -61,8 +58,10 @@ describe('validatePathDataForPublish loadouts', () => {
       {
         resolveItemTrainingPoints: (id) => (id === 'a' ? 3 : 4),
         trainingPointLimit: 5,
-      }
+      },
     );
-    expect(issues.some((i) => i.severity === 'error' && i.message.includes('Heavy kit'))).toBe(true);
+    expect(issues.some((i) => i.severity === 'error' && i.message.includes('Heavy kit'))).toBe(
+      true,
+    );
   });
 });

@@ -60,7 +60,10 @@ export function ChipSelect({
     }
     return {
       ungroupedOptions: ungrouped,
-      groupedOptions: Array.from(groups, ([groupLabel, groupOptions]) => ({ groupLabel, groupOptions })),
+      groupedOptions: Array.from(groups, ([groupLabel, groupOptions]) => ({
+        groupLabel,
+        groupOptions,
+      })),
     };
   }, [uniqueOptions, selectedValues]);
 
@@ -75,7 +78,7 @@ export function ChipSelect({
   return (
     <div className={cn('filter-group', className)}>
       <div className={FILTER_LABEL_ROW_CLASS}>
-        <label htmlFor={id} className="text-sm font-medium leading-5 text-text-secondary">
+        <label htmlFor={id} className="text-sm leading-5 font-medium text-text-secondary">
           {label}
         </label>
         {labelAccessory}
@@ -98,23 +101,23 @@ export function ChipSelect({
         ))}
       </FilterNativeSelect>
       {selectedValues.length > 0 && (
-        <div className="flex flex-wrap gap-2 mt-2">
-          {selectedValues.map(value => {
-            const option = uniqueOptions.find(o => o.value === value);
+        <div className="mt-2 flex flex-wrap gap-2">
+          {selectedValues.map((value) => {
+            const option = uniqueOptions.find((o) => o.value === value);
             return (
               <span
                 key={value}
-                className="inline-flex items-center gap-1 px-2 py-1 bg-primary-subtle-bg text-primary-fg-hover rounded-full text-sm"
+                className="inline-flex items-center gap-1 rounded-full bg-primary-subtle-bg px-2 py-1 text-sm text-primary-fg-hover"
               >
                 {option?.label || value}
                 {onRemove && (
                   <button
                     type="button"
                     onClick={() => onRemove(value)}
-                    className="hover:bg-primary-subtle-bg-hover rounded-full p-0.5 transition-colors"
+                    className="rounded-full p-0.5 transition-colors hover:bg-primary-subtle-bg-hover"
                     aria-label={`Remove ${option?.label || value}`}
                   >
-                    <X className="w-3 h-3" />
+                    <X className="h-3 w-3" />
                   </button>
                 )}
               </span>

@@ -39,7 +39,7 @@ export function SheetActionToolbar({
 }: SheetActionToolbarProps) {
   if (!canEdit) {
     return (
-      <div className="fixed top-24 right-4 z-overlay flex items-center gap-2 px-3 py-2 rounded-full bg-surface border border-border-light text-text-muted text-sm">
+      <div className="fixed top-24 right-4 z-overlay flex items-center gap-2 rounded-full border border-border-light bg-surface px-3 py-2 text-sm text-text-muted">
         View only
       </div>
     );
@@ -47,32 +47,28 @@ export function SheetActionToolbar({
 
   return (
     <div
-      className="fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:bottom-auto md:top-24 z-overlay flex flex-row md:flex-col justify-center md:justify-start gap-2 md:gap-2"
+      className="fixed right-4 bottom-4 left-4 z-overlay flex flex-row justify-center gap-2 md:top-24 md:right-4 md:bottom-auto md:left-auto md:flex-col md:justify-start md:gap-2"
       data-tour-id="sheet-tour-edit"
     >
       {/* Edit / Done Toggle */}
       <button
         onClick={onToggleEditMode}
         className={cn(
-          'relative w-11 h-11 rounded-full shadow-lg transition-all duration-base ease-standard',
+          'duration-base relative h-11 w-11 rounded-full shadow-lg transition-all ease-standard',
           'flex items-center justify-center',
           'hover:scale-110 active:scale-95',
           isEditMode
-            ? 'bg-success-600 hover:bg-success-700 text-text-on-dark'
-            : 'bg-surface border border-border-light text-text-secondary hover:text-text-primary hover:bg-surface-alt'
+            ? 'bg-success-600 text-text-on-dark hover:bg-success-700'
+            : 'border border-border-light bg-surface text-text-secondary hover:bg-surface-alt hover:text-text-primary',
         )}
         title={isEditMode ? 'Done editing' : 'Edit character'}
         aria-label={isEditMode ? 'Done editing' : 'Edit character'}
       >
-        {isEditMode ? (
-          <Check className="w-5 h-5" />
-        ) : (
-          <Pencil className="w-4 h-4" />
-        )}
+        {isEditMode ? <Check className="h-5 w-5" /> : <Pencil className="h-4 w-4" />}
         {/* Notification dot for unapplied points */}
         {hasUnappliedPoints && !isEditMode && (
           <span
-            className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-danger-500 rounded-full animate-pulse"
+            className="absolute -top-0.5 -right-0.5 h-3 w-3 animate-pulse rounded-full bg-danger-500"
             title="You have unspent points!"
           />
         )}
@@ -82,30 +78,30 @@ export function SheetActionToolbar({
       <button
         onClick={onRecovery}
         className={cn(
-          'w-11 h-11 rounded-full shadow-lg transition-all duration-base ease-standard',
+          'duration-base h-11 w-11 rounded-full shadow-lg transition-all ease-standard',
           'flex items-center justify-center',
-          'bg-surface border border-border-light text-primary-link-fg',
-          'hover:scale-110 hover:bg-primary-subtle-bg dark:hover:bg-primary-subtle-bg hover:border-primary-subtle-border dark:hover:border-primary-outline-border active:scale-95'
+          'border border-border-light bg-surface text-primary-link-fg',
+          'hover:scale-110 hover:border-primary-subtle-border hover:bg-primary-subtle-bg active:scale-95 dark:hover:border-primary-outline-border dark:hover:bg-primary-subtle-bg',
         )}
         title="Recovery"
         aria-label="Recovery"
       >
-        <Heart className="w-5 h-5" />
+        <Heart className="h-5 w-5" />
       </button>
 
       {/* Level Up */}
       <button
         onClick={onLevelUp}
         className={cn(
-          'w-11 h-11 rounded-full shadow-lg transition-all duration-base ease-standard',
+          'duration-base h-11 w-11 rounded-full shadow-lg transition-all ease-standard',
           'flex items-center justify-center',
-          'bg-surface border border-border-light text-power-fg',
-          'hover:scale-110 hover:bg-power-light hover:border-power-border active:scale-95'
+          'border border-border-light bg-surface text-power-fg',
+          'hover:scale-110 hover:border-power-border hover:bg-power-light active:scale-95',
         )}
         title="Level Up"
         aria-label="Level Up"
       >
-        <ArrowUp className="w-5 h-5" />
+        <ArrowUp className="h-5 w-5" />
       </button>
 
       {/* Character settings (visibility, etc.) */}
@@ -113,15 +109,15 @@ export function SheetActionToolbar({
         <button
           onClick={onSettings}
           className={cn(
-            'w-11 h-11 rounded-full shadow-lg transition-all duration-base ease-standard',
+            'duration-base h-11 w-11 rounded-full shadow-lg transition-all ease-standard',
             'flex items-center justify-center',
-            'bg-surface border border-border-light text-text-secondary',
-            'hover:scale-110 hover:text-text-primary hover:bg-surface-alt active:scale-95'
+            'border border-border-light bg-surface text-text-secondary',
+            'hover:scale-110 hover:bg-surface-alt hover:text-text-primary active:scale-95',
           )}
           title="Character settings"
           aria-label="Character settings"
         >
-          <Settings className="w-5 h-5" />
+          <Settings className="h-5 w-5" />
         </button>
       )}
     </div>

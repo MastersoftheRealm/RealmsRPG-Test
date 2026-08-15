@@ -1,7 +1,14 @@
 import { cn } from '@/lib/utils';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
-export const ABILITY_ORDER: AbilityName[] = ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'];
+export const ABILITY_ORDER: AbilityName[] = [
+  'strength',
+  'vitality',
+  'agility',
+  'acuity',
+  'intelligence',
+  'charisma',
+];
 
 /** Sheet tip touch: hug on desktop; 44px below md (overrides WordHelpTip default min size). */
 const SHEET_TIP_TOUCH_CLASS =
@@ -10,20 +17,23 @@ const SHEET_TIP_TOUCH_CLASS =
 /** Sheet tip: defense/ability name labels. */
 export const SHEET_STAT_TIP_CLASS = cn(
   'text-sm font-semibold uppercase tracking-wide text-text-secondary text-center leading-none px-0.5',
-  SHEET_TIP_TOUCH_CLASS
+  SHEET_TIP_TOUCH_CLASS,
 );
 
 /** Defense Score value tip — keep large glance number. */
 export const SHEET_SCORE_TIP_CLASS = cn(
   'text-2xl font-bold leading-none tabular-nums',
-  SHEET_TIP_TOUCH_CLASS
+  SHEET_TIP_TOUCH_CLASS,
 );
 
 /** Shared tile chrome — breathing room without tall empty cards. */
 export const SHEET_STAT_TILE_CLASS =
   'flex flex-col items-center justify-center gap-2 px-2.5 py-3 rounded-xl border';
 
-export const ABILITY_INFO: Record<AbilityName, { name: string; shortName: string; defenseKey: keyof DefenseSkills }> = {
+export const ABILITY_INFO: Record<
+  AbilityName,
+  { name: string; shortName: string; defenseKey: keyof DefenseSkills }
+> = {
   strength: { name: 'Strength', shortName: 'STR', defenseKey: 'might' },
   vitality: { name: 'Vitality', shortName: 'VIT', defenseKey: 'fortitude' },
   agility: { name: 'Agility', shortName: 'AGI', defenseKey: 'reflex' },

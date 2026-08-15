@@ -32,12 +32,11 @@ const iconButtonVariants = cva(
       variant: 'default',
       size: 'md',
     },
-  }
+  },
 );
 
 export interface IconButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof iconButtonVariants> {
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof iconButtonVariants> {
   /** Accessible label for the button (required for accessibility) */
   label: string;
 }
@@ -55,7 +54,7 @@ const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(
         {children}
       </button>
     );
-  }
+  },
 );
 
 IconButton.displayName = 'IconButton';

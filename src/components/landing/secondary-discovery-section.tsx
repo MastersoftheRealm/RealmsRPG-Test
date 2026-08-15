@@ -20,31 +20,31 @@ export function SecondaryDiscoverySection() {
   return (
     <section className="bg-surface py-14 sm:py-20">
       <div className="layout-shell-wide px-4">
-        <div className="text-center max-w-[56ch] mx-auto mb-8 sm:mb-12">
-          <h2 className="font-display text-2xl sm:text-3xl font-bold text-text-primary">
+        <div className="mx-auto mb-8 max-w-[56ch] text-center sm:mb-12">
+          <h2 className="font-display text-2xl font-bold text-text-primary sm:text-3xl">
             {copy.heading}
           </h2>
-          <p className="mt-2 font-nunito text-base sm:text-lg text-text-secondary">
+          <p className="mt-2 font-nunito text-base text-text-secondary sm:text-lg">
             {copy.subheading}
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-4xl mx-auto">
+        <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2">
           {cards.map(({ title, body, cta, href, Icon }) => (
             <div
               key={title}
-              className="flex flex-col items-center text-center gap-3 rounded-card bg-surface-alt/60 p-6 border border-border-light dark:border-border"
+              className="flex flex-col items-center gap-3 rounded-card border border-border-light bg-surface-alt/60 p-6 text-center dark:border-border"
             >
               <span className="text-primary-link-fg">
-                <Icon className="w-7 h-7" aria-hidden="true" />
+                <Icon className="h-7 w-7" aria-hidden="true" />
               </span>
-              <h3 className="font-display text-lg sm:text-xl font-semibold text-text-primary">
+              <h3 className="font-display text-lg font-semibold text-text-primary sm:text-xl">
                 {title}
               </h3>
-              <p className="font-nunito text-base text-text-secondary leading-relaxed flex-1 max-w-[36ch]">
+              <p className="max-w-[36ch] flex-1 font-nunito text-base leading-relaxed text-text-secondary">
                 {body}
               </p>
-              <div className="pt-1 w-full flex justify-center">
+              <div className="flex w-full justify-center pt-1">
                 <MarketingLinkButton href={href} variant="outline">
                   {cta}
                 </MarketingLinkButton>

@@ -120,7 +120,7 @@ Helpers: `src/lib/realms-images.ts` (client + types), `src/lib/realms-images-ser
 
 If Supabase logs show **`permission denied for table user_species`**, the `authenticated` role is missing table `GRANT`s (common after creating/moving the table without grants). Run **`sql/supabase-user-species-grants-rls.sql`** in the SQL Editor. This does not fix campaign invite lookup by itself (that is separate RLS on `campaigns`); it fixes species library / hooks that query `user_species`.
 
-**API:** `GET/POST/PATCH/DELETE /api/user/library/[type]`; types: powers, techniques, empowered-techniques, items, creatures, species.
+**API:** `GET/POST/PATCH/DELETE /api/user/library/[type]`; types: powers, techniques, empowered-techniques, items, creatures, species. Tab badges: `GET /api/user/library/counts` (auth) and `GET /api/official/counts` (public).
 
 ---
 
@@ -398,7 +398,9 @@ Replay / verify: `node scripts/run-task-649-phase2.mjs` (idempotent) · `node sc
 | GET /api/codex | codex_feats, codex_skills, codex_species, codex_traits, codex_parts, codex_properties, codex_equipment, codex_archetypes, codex_creature_feats, core_rules |
 | GET /api/public/[type] | official_powers, official_techniques, official_empowered_techniques, official_items, official_creatures |
 | GET/POST/PATCH/DELETE /api/official/enhanced-items | official_enhanced_items (admin) |
+| GET /api/official/counts | official_powers, official_techniques, official_empowered_techniques, official_items, official_creatures (`enhanced` always 0) |
 | GET/POST/PATCH/DELETE /api/user/library/[type] | user_powers, user_techniques, user_empowered_techniques, user_items, user_creatures, user_species |
+| GET /api/user/library/counts | same user_* tables + user_enhanced_items (auth; armament split via `normalizeArmamentKind`) |
 | Characters CRUD | characters |
 | Campaigns | campaigns, campaign_members, campaign_rolls |
 | Encounters | encounters |

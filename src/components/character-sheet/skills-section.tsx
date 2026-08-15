@@ -22,7 +22,10 @@ import {
 } from '@/components/shared';
 import { ABILITY_ABBR } from '@/lib/constants/skills';
 import { Button, Card, TableScroll } from '@/components/ui';
-import { calculateSkillBonusWithProficiency, calculateSubSkillBonusWithProficiency } from '@/lib/game/formulas';
+import {
+  calculateSkillBonusWithProficiency,
+  calculateSubSkillBonusWithProficiency,
+} from '@/lib/game/formulas';
 import {
   calculateCharacterSkillPointsSpent,
   getSkillValueIncreaseCost,
@@ -92,7 +95,7 @@ export function SkillsSection({
 
   const effectiveAbilities = useMemo(
     () => getEffectiveAbilities(abilities, tempModifiers),
-    [abilities, tempModifiers]
+    [abilities, tempModifiers],
   );
 
   const displaySkills = useMemo(
@@ -101,21 +104,21 @@ export function SkillsSection({
         proficiencyFilter,
         showSubSkills,
       }),
-    [skills, codexSkills, proficiencyFilter, showSubSkills]
+    [skills, codexSkills, proficiencyFilter, showSubSkills],
   );
 
   const findParentSkill = (baseSkillName: string | undefined) =>
     baseSkillName
-      ? displaySkills.find(
+      ? (displaySkills.find(
           (s) =>
             !s.baseSkill &&
-            String(s.name ?? '').toLowerCase() === String(baseSkillName).toLowerCase()
+            String(s.name ?? '').toLowerCase() === String(baseSkillName).toLowerCase(),
         ) ??
         skills.find(
           (s) =>
             !s.baseSkill &&
-            String(s.name ?? '').toLowerCase() === String(baseSkillName).toLowerCase()
-        )
+            String(s.name ?? '').toLowerCase() === String(baseSkillName).toLowerCase(),
+        ))
       : undefined;
 
   const isSpeciesSkill = (skillName: string, skillId?: string): boolean => {
@@ -224,19 +227,17 @@ export function SkillsSection({
   };
 
   const speciesSkillIdSet = useMemo(
-    () => buildSpeciesSkillIdSet(speciesSkills.filter((ss) => ss !== '0'), skills),
-    [speciesSkills, skills]
+    () =>
+      buildSpeciesSkillIdSet(
+        speciesSkills.filter((ss) => ss !== '0'),
+        skills,
+      ),
+    [speciesSkills, skills],
   );
 
   const totalSpentFromSkills = useMemo(
-    () =>
-      calculateCharacterSkillPointsSpent(
-        skills,
-        speciesSkillIdSet,
-        undefined,
-        rules
-      ),
-    [skills, speciesSkillIdSet, rules]
+    () => calculateCharacterSkillPointsSpent(skills, speciesSkillIdSet, undefined, rules),
+    [skills, speciesSkillIdSet, rules],
   );
 
   const totalSpent = spentSkillPointsProp ?? totalSpentFromSkills;
@@ -290,7 +291,7 @@ export function SkillsSection({
         baseSkillProf,
         abilitySource,
         isProficient,
-        skill.ability
+        skill.ability,
       );
     }
     return calculateSkillBonusWithProficiency(
@@ -298,7 +299,7 @@ export function SkillsSection({
       skillValue,
       abilitySource,
       isProficient,
-      skill.ability
+      skill.ability,
     );
   };
 
@@ -307,7 +308,7 @@ export function SkillsSection({
   const hasSectionTemps = sectionHasTempModifiers(tempModifiers, 'skills');
 
   return (
-    <Card className={cn('shadow-md p-4 md:p-6 relative', className)}>
+    <Card className={cn('relative p-4 shadow-md md:p-6', className)}>
       {/* DESIGN_INTENT: pencil/Temp float top-right like Abilities (TASK-584); filters below title */}
       {isEditMode && (
         <div className="absolute top-3 right-3 z-10">
@@ -339,7 +340,7 @@ export function SkillsSection({
               { value: 'proficient', label: 'Proficient' },
             ]}
           />
-          <label className="inline-flex min-h-[44px] items-center gap-2 text-sm text-text-secondary cursor-pointer select-none">
+          <label className="inline-flex min-h-[44px] cursor-pointer items-center gap-2 text-sm text-text-secondary select-none">
             <input
               type="checkbox"
               checked={showSubSkills}
@@ -352,14 +353,14 @@ export function SkillsSection({
       </div>
 
       {showSpendControls && (
-        <div className="flex flex-wrap items-center justify-between gap-2 mb-4 p-3 bg-surface-secondary rounded-lg">
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-surface-secondary p-3">
           {totalSkillPoints !== undefined ? (
             <PointStatus
               label="Skill Points"
               total={totalSkillPoints}
               spent={totalSpent}
               variant="inline"
-              className="whitespace-nowrap shrink-0"
+              className="shrink-0 whitespace-nowrap"
             />
           ) : (
             <span />
@@ -375,16 +376,11 @@ export function SkillsSection({
 
       {/* DESIGN_INTENT: narrow lg Skills column must not crush ValueStepper; edit table min-width + TableScroll (TASK-543) */}
       <TableScroll>
-        <table
-          className={cn(
-            'w-full text-sm',
-            showEditControls && 'min-w-[28rem]'
-          )}
-        >
+        <table className={cn('w-full text-sm', showEditControls && 'min-w-[28rem]')}>
           <thead>
-            <tr className="text-xs text-text-muted uppercase tracking-wider border-b-2 border-border-light">
+            <tr className="border-b-2 border-border-light text-xs tracking-wider text-text-muted uppercase">
               <th className="w-10 min-w-10 py-2 text-center">Prof</th>
-              <th className="text-left py-2 pl-2">Skill</th>
+              <th className="py-2 pl-2 text-left">Skill</th>
               <th className="w-16 min-w-16 py-2 text-center">Ability</th>
               <th className="w-20 min-w-20 py-2 text-center">Bonus</th>
               {showEditControls && (
@@ -455,18 +451,14 @@ export function SkillsSection({
                   }}
                   canIncrease={showTempControls ? true : canIncreaseSkill(skill)}
                   minValue={
-                    showTempControls
-                      ? -99
-                      : allowDecrease && !skill.prof && isSubSkill
-                        ? -1
-                        : 0
+                    showTempControls ? -99 : allowDecrease && !skill.prof && isSubSkill ? -1 : 0
                   }
                   showRollButton={!showEditControls && rollContext?.canRoll !== false}
                   onRoll={() =>
                     rollContext?.rollSkill?.(
                       skill.name,
                       bonus,
-                      skill.ability ? ABILITY_ABBR[skill.ability.toLowerCase()] : undefined
+                      skill.ability ? ABILITY_ABBR[skill.ability.toLowerCase()] : undefined,
                     )
                   }
                   isSpeciesSkill={isFromSpecies}
@@ -478,7 +470,7 @@ export function SkillsSection({
         </table>
 
         {displaySkills.length === 0 && (
-          <div className="text-center py-8 text-text-muted dark:text-text-secondary">
+          <div className="py-8 text-center text-text-muted">
             {proficiencyFilter === 'proficient'
               ? 'No proficient skills to show. Switch filter to All or gain proficiency in spend mode.'
               : 'No skills available.'}

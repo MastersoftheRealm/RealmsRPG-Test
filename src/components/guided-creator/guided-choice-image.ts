@@ -20,7 +20,7 @@ export { readRecordImageUrl } from '@/lib/entity-image-url';
 export function resolveChoiceCardImage(
   kind: ChoiceCardImageKind,
   record?: unknown,
-  theme: PlaceholderTheme = 'light'
+  theme: PlaceholderTheme = 'light',
 ): { src: string; isPlaceholder: boolean } {
   const fromRecord = record ? readRecordImageUrl(record) : null;
   if (fromRecord) return { src: fromRecord, isPlaceholder: false };

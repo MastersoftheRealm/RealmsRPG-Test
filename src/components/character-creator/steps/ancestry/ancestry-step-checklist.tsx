@@ -30,19 +30,23 @@ export function AncestryStepChecklist({
       <div
         className={cn(
           'mb-6 rounded-xl border-2 p-4',
-          ancestryIssues.length === 0 ? statusPanel.complete : statusPanel.info
+          ancestryIssues.length === 0 ? statusPanel.complete : statusPanel.info,
         )}
         role="region"
         aria-label="Ancestry choices remaining"
       >
-        <h3 className="font-semibold text-text-primary mb-2">What to choose</h3>
+        <h3 className="mb-2 font-semibold text-text-primary">What to choose</h3>
         {ancestryIssues.length === 0 ? (
-          <p className="text-sm text-success-fg">✓ Your ancestry is complete. Nothing left to pick.</p>
+          <p className="text-sm text-success-fg">
+            ✓ Your ancestry is complete. Nothing left to pick.
+          </p>
         ) : (
           <ul className="space-y-1.5">
             {ancestryIssues.map((issue, i) => (
               <li key={i} className="flex items-start gap-2 text-sm text-text-secondary">
-                <span aria-hidden className="shrink-0">{issue.emoji}</span>
+                <span aria-hidden className="shrink-0">
+                  {issue.emoji}
+                </span>
                 <span>{issue.message}</span>
               </li>
             ))}

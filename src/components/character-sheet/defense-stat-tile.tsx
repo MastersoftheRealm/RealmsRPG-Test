@@ -2,12 +2,7 @@
 
 import { cn, formatBonus } from '@/lib/utils';
 import { useRollsOptional } from '@/components/rolls';
-import {
-  RollButton,
-  DecrementButton,
-  IncrementButton,
-  WordHelpTip,
-} from '@/components/shared';
+import { RollButton, DecrementButton, IncrementButton, WordHelpTip } from '@/components/shared';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import { defenseScoreHelp, getDefenseHelp } from '../../../public/tooltip-text';
 import {
@@ -65,9 +60,7 @@ export function DefenseStatTile({
   const displayDefenseBonus = defenseBonus;
   const displayDefenseScore = defenseScore;
   const spendDefenseBonus = (abilities[ability] ?? 0) + defenseValue;
-  const glanceDefenseScore = showSpendControls
-    ? 10 + spendDefenseBonus
-    : displayDefenseScore;
+  const glanceDefenseScore = showSpendControls ? 10 + spendDefenseBonus : displayDefenseScore;
   const netTempDelta = abilityTemp + defenseTemp;
   const canDecreaseDefense = defenseValue > 0;
   const canIncreaseDefense =
@@ -76,9 +69,7 @@ export function DefenseStatTile({
     (totalSkillPoints === undefined || skillPointsRemaining >= DEFENSE_INCREASE_COST);
 
   return (
-    <div
-      className={cn(SHEET_STAT_TILE_CLASS, 'bg-surface-alt border-border-light')}
-    >
+    <div className={cn(SHEET_STAT_TILE_CLASS, 'border-border-light bg-surface-alt')}>
       <WordHelpTip
         content={getDefenseHelp(defenseKey)}
         label={`About ${defenseInfo.name}`}
@@ -94,7 +85,7 @@ export function DefenseStatTile({
           SHEET_SCORE_TIP_CLASS,
           showSpendControls
             ? 'text-text-primary'
-            : tempModifierValueClass(netTempDelta) || 'text-text-primary'
+            : tempModifierValueClass(netTempDelta) || 'text-text-primary',
         )}
       >
         {glanceDefenseScore}
@@ -107,7 +98,7 @@ export function DefenseStatTile({
             disabled={!canDecreaseDefense}
             size="sm"
           />
-          <span className="text-sm font-bold min-w-[2rem] text-center text-primary-link-fg tabular-nums leading-none">
+          <span className="min-w-[2rem] text-center text-sm leading-none font-bold text-primary-link-fg tabular-nums">
             {formatBonus(spendDefenseBonus)}
           </span>
           <IncrementButton
@@ -136,8 +127,8 @@ export function DefenseStatTile({
           />
           <span
             className={cn(
-              'text-sm font-bold min-w-[2rem] text-center tabular-nums leading-none',
-              tempModifierValueClass(netTempDelta) || 'text-primary-link-fg'
+              'min-w-[2rem] text-center text-sm leading-none font-bold tabular-nums',
+              tempModifierValueClass(netTempDelta) || 'text-primary-link-fg',
             )}
           >
             {formatBonus(displayDefenseBonus)}
@@ -163,8 +154,8 @@ export function DefenseStatTile({
       ) : (
         <span
           className={cn(
-            'text-sm font-bold tabular-nums leading-none',
-            tempModifierValueClass(netTempDelta) || 'text-primary-link-fg'
+            'text-sm leading-none font-bold tabular-nums',
+            tempModifierValueClass(netTempDelta) || 'text-primary-link-fg',
           )}
         >
           {formatBonus(displayDefenseBonus)}
@@ -172,12 +163,12 @@ export function DefenseStatTile({
       )}
 
       {showSpendControls && defenseValue > 0 && (
-        <span className="text-[10px] text-primary-link-fg font-medium leading-none">
+        <span className="text-[10px] leading-none font-medium text-primary-link-fg">
           +{defenseValue} ({defenseValue * DEFENSE_INCREASE_COST}sp)
         </span>
       )}
       {showTempControls && defenseTemp !== 0 && (
-        <span className="text-[10px] text-text-muted dark:text-text-secondary font-medium leading-none">
+        <span className="text-[10px] leading-none font-medium text-text-muted">
           Temp {formatBonus(defenseTemp)}
         </span>
       )}

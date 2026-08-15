@@ -12,6 +12,9 @@ import type { ListRowThumbnailProps } from './list-row-thumbnail';
  * - **`kind` omitted** (expandable default) — parts, properties, leveled options.
  *   Expands when `description`, `cost > 0`, or `options` are present.
  *
+ * Optional **control** fields (`onSelect` / `disabled` / `current`) stay on this type so
+ * pickers (sheet feat rank) reuse `GridListChip` instead of a parallel chip renderer.
+ *
  * ## Metadata visibility rule
  * Every meaningful field appears in **collapsed columns** OR **expanded descriptor chips**, not
  * neither and not both. See `lib/chip/list-row-metadata.ts`, `lib/detail-option/compact-facts.ts`,
@@ -59,6 +62,17 @@ export interface ChipData {
   category?: 'default' | 'cost' | 'warning' | 'success' | 'archetype' | 'skill';
   /** Options with level > 0 (shown below description in expanded chip, collapsible) */
   options?: ChipOptionData[];
+  /**
+   * Control chip (TASK-780). GridListChip renders a button; never expands.
+   * Builders should also set `kind: 'descriptor'`.
+   */
+  onSelect?: () => void;
+  /** Accessible name for `onSelect` (e.g. `Set Speedy to Level 2`). */
+  selectAriaLabel?: string;
+  /** Unavailable control — muted, not clickable. Description is the tip. */
+  disabled?: boolean;
+  /** Current selection among a chip group (`aria-current`). */
+  current?: boolean;
 }
 
 export interface ColumnValue {

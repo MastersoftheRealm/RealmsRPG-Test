@@ -42,21 +42,22 @@
 
 ### User library
 
-- **Endpoints:** `GET/POST/PATCH/DELETE /api/user/library/{type}` — `type` = powers, techniques, items, creatures, species, empowered-techniques, enhanced-items.
-- **Query keys:** `['user-powers', userId]`, `['user-techniques', userId]`, etc. — per-type, per-user.
-- **Hooks:** `useUserPowers`, `useUserTechniques`, `useUserItems`, `useUserCreatures`, `useUserSpecies`, etc.
+- **Endpoints:** `GET/POST/PATCH/DELETE /api/user/library/{type}` — `type` = powers, techniques, items, creatures, species, empowered-techniques. Tab badges: `GET /api/user/library/counts` (auth). Enhanced items stay on `/api/user/enhanced-items`.
+- **Query keys:** `['user-powers', userId]`, `['user-techniques', userId]`, etc. — per-type, per-user. Counts: `['user-library-counts', userId]`.
+- **Hooks:** `useUserPowers`, `useUserTechniques`, `useUserItems`, `useUserCreatures`, `useUserSpecies`, `useUserLibraryCounts`, etc.
 - **Stale time:** 2 min; user library changes when the user saves from creators or add-to-library.
 
 ### Official library (Realms Library)
 
-- **Endpoint:** `GET /api/official/{type}` — type = powers, techniques, empowered-techniques, items, creatures, species. No auth.
-- **Cache:** `Cache-Control: public, max-age=300, s-maxage=600, stale-while-revalidate=300`.
-- **Query keys:** `['official-library', type]`.
-- **Hooks:** `useOfficialLibrary(type)`, `useAddOfficialToLibrary(type)` in `hooks/use-official-library.ts`.
+- **Endpoint:** `GET /api/official/{type}` — type = powers, techniques, empowered-techniques, items, creatures, species. No auth. Tab badges: `GET /api/official/counts` (`enhanced` is always 0).
+- **Cache:** list + counts use `Cache-Control: private, max-age=0, must-revalidate` so create/delete invalidation can refresh badges.
+- **Query keys:** `['official-library', type]`. Counts: `['official-library-counts']`.
+- **Hooks:** `useOfficialLibrary(type)`, `useOfficialLibraryCounts`, `useAddOfficialToLibrary(type)` in `hooks/use-official-library.ts`.
 
 ### Invalidation
 
-- After adding from official to user library: invalidate both `['official-library', type]` and the corresponding user library key.
+- After adding from official to user library: invalidate `['official-library', type]`, the corresponding user library key, and `['user-library-counts']`.
+- After create/delete/duplicate (creators, My Library, enhanced): invalidate that collection **and** the matching counts key.
 
 ---
 
@@ -67,6 +68,8 @@
 | Full codex     | `['codex']`                 | All codex hooks, useGameRules |
 | User library   | `['user-powers', userId]`    | useUserPowers              |
 | Official library | `['official-library', type]` | `useOfficialLibrary('powers')` |
+| User library counts | `['user-library-counts', userId]` | `useUserLibraryCounts` |
+| Official library counts | `['official-library-counts']` | `useOfficialLibraryCounts` |
 | Campaign rolls  | `['campaign-rolls', campaignId]` | useCampaignRolls       |
 
 ---
@@ -105,7 +108,8 @@ Spreadsheet and list edit modes in the Codex Editor persist via `createCodexDoc`
 | Codex types       | `src/types/codex.ts` (`CodexPayload` — canonical GET /api/codex shape) |
 | Game rules (codex slice) | `src/hooks/use-game-rules.ts` |
 | User library hooks | `src/hooks/use-user-library.ts` |
-| Official library hooks | `src/hooks/use-official-library.ts`, `src/app/api/official/[type]/route.ts` |
+| Official library hooks | `src/hooks/use-official-library.ts`, `src/app/api/official/[type]/route.ts`, `src/app/api/official/counts/route.ts` |
+| User library counts | `src/app/api/user/library/counts/route.ts`, `src/lib/library/library-tab-counts.ts` |
 | Library service   | `src/services/library-service.ts` |
 | Library types     | `src/types/library.ts` (`LibraryItemByType` — user + official GET shapes) |
 | Admin codex actions | `src/app/(main)/admin/codex/actions.ts` — create/update/delete codex + core_rules |

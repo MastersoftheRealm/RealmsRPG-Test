@@ -1,8 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import type { Feat } from '@/hooks';
-import { buildFeatDetailSections, featPathChipNames, filterFeats, type FeatListFilters } from './feat-list';
+import {
+  buildFeatDetailSections,
+  featPathChipNames,
+  filterFeats,
+  type FeatListFilters,
+} from './feat-list';
 import { parseArchetypePathData } from '@/lib/game/archetype-path';
-import { buildPathRecommendationIndex, pathRecommendedEntityIds } from '@/lib/game/path-recommendation-index';
+import {
+  buildPathRecommendationIndex,
+  pathRecommendedEntityIds,
+} from '@/lib/game/path-recommendation-index';
 
 function minimalFeat(overrides: Partial<Feat> = {}): Feat {
   return {
@@ -126,16 +134,24 @@ describe('filterFeats — Archetype Path filter (TASK-751)', () => {
   });
 
   it('composes with the required-level filter (path level does not override lvl_req)', () => {
-    const capped = filterFeats(feats, { ...baseFilters, maxLevel: 1 }, {
-      pathRecommendedIds: idsFor(['p-monk']),
-    });
+    const capped = filterFeats(
+      feats,
+      { ...baseFilters, maxLevel: 1 },
+      {
+        pathRecommendedIds: idsFor(['p-monk']),
+      },
+    );
     expect(capped.map((f) => f.id).sort()).toEqual(['10', '13']);
   });
 
   it('composes with the category filter', () => {
-    const combatOnly = filterFeats(feats, { ...baseFilters, categories: ['Utility'] }, {
-      pathRecommendedIds: idsFor(['p-monk']),
-    });
+    const combatOnly = filterFeats(
+      feats,
+      { ...baseFilters, categories: ['Utility'] },
+      {
+        pathRecommendedIds: idsFor(['p-monk']),
+      },
+    );
     expect(combatOnly.map((f) => f.id)).toEqual(['11']);
   });
 

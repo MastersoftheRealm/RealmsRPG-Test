@@ -21,7 +21,7 @@ export type SpeedDisplayUnit = 'spaces' | 'feet' | 'meters';
  */
 export function formatSpeedForDisplay(
   spaces: number,
-  unit: SpeedDisplayUnit = 'spaces'
+  unit: SpeedDisplayUnit = 'spaces',
 ): { value: number | string; suffix: string } {
   switch (unit) {
     case 'feet':
@@ -37,6 +37,7 @@ export function formatSpeedForDisplay(
 /** Format speed as a single string (e.g. "60 ft", "9 m", or "6" for spaces). */
 export function formatSpeedString(spaces: number, unit: SpeedDisplayUnit = 'spaces'): string {
   const { value, suffix } = formatSpeedForDisplay(spaces, unit);
-  const displayValue = typeof value === 'number' && value % 1 !== 0 ? value.toFixed(1) : String(value);
+  const displayValue =
+    typeof value === 'number' && value % 1 !== 0 ? value.toFixed(1) : String(value);
   return suffix ? `${displayValue} ${suffix}` : displayValue;
 }

@@ -8,7 +8,13 @@
 'use client';
 
 import { useState } from 'react';
-import { PageContainer, PageHeader, TabNavigation, TabContentPanel, useTabGroup } from '@/components/ui';
+import {
+  PageContainer,
+  PageHeader,
+  TabNavigation,
+  TabContentPanel,
+  useTabGroup,
+} from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
 import { AdminFeatsTab } from './AdminFeatsTab';
 import { AdminTraitsTab } from './AdminTraitsTab';
@@ -60,7 +66,7 @@ export default function AdminCodexPage() {
 
   return (
     <PageContainer size="xl">
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-4">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
         <PageHeader
           title="Codex Editor"
           description="Edit feats, skills, species, and other game reference data."
@@ -70,8 +76,12 @@ export default function AdminCodexPage() {
           value={viewMode}
           onChange={setViewMode}
           options={[
-            { value: 'list', label: 'List', icon: <List className="w-4 h-4" /> },
-            { value: 'spreadsheet', label: 'Spreadsheet', icon: <LayoutGrid className="w-4 h-4" /> },
+            { value: 'list', label: 'List', icon: <List className="h-4 w-4" /> },
+            {
+              value: 'spreadsheet',
+              label: 'Spreadsheet',
+              icon: <LayoutGrid className="h-4 w-4" />,
+            },
           ]}
         />
       </div>
@@ -87,21 +97,21 @@ export default function AdminCodexPage() {
       />
 
       <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>
-      {viewMode === 'spreadsheet' ? (
-        <CodexSpreadsheetView activeTab={activeTab} />
-      ) : (
-        <>
-          {activeTab === 'feats' && <AdminFeatsTab />}
-          {activeTab === 'skills' && <AdminSkillsTab />}
-          {activeTab === 'species' && <AdminSpeciesTab />}
-          {activeTab === 'traits' && <AdminTraitsTab />}
-          {activeTab === 'parts' && <AdminPartsTab />}
-          {activeTab === 'properties' && <AdminPropertiesTab />}
-          {activeTab === 'equipment' && <AdminEquipmentTab />}
-          {activeTab === 'archetypes' && <AdminArchetypesTab />}
-          {activeTab === 'creature_feats' && <AdminCreatureFeatsTab />}
-        </>
-      )}
+        {viewMode === 'spreadsheet' ? (
+          <CodexSpreadsheetView activeTab={activeTab} />
+        ) : (
+          <>
+            {activeTab === 'feats' && <AdminFeatsTab />}
+            {activeTab === 'skills' && <AdminSkillsTab />}
+            {activeTab === 'species' && <AdminSpeciesTab />}
+            {activeTab === 'traits' && <AdminTraitsTab />}
+            {activeTab === 'parts' && <AdminPartsTab />}
+            {activeTab === 'properties' && <AdminPropertiesTab />}
+            {activeTab === 'equipment' && <AdminEquipmentTab />}
+            {activeTab === 'archetypes' && <AdminArchetypesTab />}
+            {activeTab === 'creature_feats' && <AdminCreatureFeatsTab />}
+          </>
+        )}
       </TabContentPanel>
     </PageContainer>
   );

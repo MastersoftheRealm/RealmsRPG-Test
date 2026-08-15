@@ -29,7 +29,7 @@ export function filterPoolToPhase(
   pool: PathItemRecommendation[],
   phase: EquipmentPhase,
   officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
+  codexEquipment: CodexEquipmentItem[],
 ): PathItemRecommendation[] {
   const lookup = buildEquipmentLookup(officialItems, codexEquipment);
   return pool.filter((ref) => {
@@ -48,7 +48,7 @@ export function pathRecommendedIdSet(
   pool: PathItemRecommendation[],
   phase: EquipmentPhase,
   officialItems: LibraryItem[],
-  codexEquipment: CodexEquipmentItem[]
+  codexEquipment: CodexEquipmentItem[],
 ): Set<string> {
   const ids = new Set<string>();
   for (const ref of filterPoolToPhase(pool, phase, officialItems, codexEquipment)) {
@@ -59,7 +59,7 @@ export function pathRecommendedIdSet(
 
 function rowsForPool(
   pool: PathItemRecommendation[],
-  catalog: Map<string, EligibleEquipmentRow>
+  catalog: Map<string, EligibleEquipmentRow>,
 ): EligibleEquipmentRow[] {
   const seen = new Set<string>();
   const out: EligibleEquipmentRow[] = [];
@@ -92,7 +92,7 @@ export function getPhaseL1Candidates(
   rankCtx: PhaseL1RankContext,
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
-  selectedIds: string[] = []
+  selectedIds: string[] = [],
 ): EligibleEquipmentRow[] {
   const phasePool = filterPoolToPhase(pool, phase, officialItems, codexEquipment);
   const byId = new Map<string, EligibleEquipmentRow>();
