@@ -458,6 +458,7 @@ export function SkillsSection({
                 key={skill.id}
                 id={skill.id}
                 name={skill.name}
+                description={skill.description}
                 isSubSkill={isSubSkill}
                 baseSkillName={skill.baseSkill}
                 proficient={skill.prof || false}
