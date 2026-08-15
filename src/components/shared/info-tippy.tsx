@@ -189,11 +189,16 @@ export interface WordHelpTipProps {
   className?: string;
   placement?: TooltipPlacement;
   disabled?: boolean;
+  /**
+   * Dense table/list labels: 44px below `md`, hug the word on desktop.
+   * Default keeps a 44px target (ability tiles).
+   */
+  compact?: boolean;
 }
 
 // DESIGN_INTENT: Definition help on the word itself (not an Info icon sibling).
-// 44px touch target; InfoTippy hover/focus/touch-hold; copy from tooltip-text.tsx.
-/** Word-tied contextual help for ability/defense names (sheet + guided creator). */
+// Default 44px target (ability tiles); compact uses touch-target-md-compact.
+/** Word-tied contextual help for ability/defense/skill names (sheet + guided creator). */
 export function WordHelpTip({
   content,
   label,
@@ -201,6 +206,7 @@ export function WordHelpTip({
   className,
   placement = 'top',
   disabled = false,
+  compact = false,
 }: WordHelpTipProps) {
   return (
     <InfoTippy content={content} label={label} placement={placement} disabled={disabled}>
@@ -208,8 +214,10 @@ export function WordHelpTip({
         type="button"
         aria-label={label}
         className={cn(
-          'inline-flex cursor-help items-center justify-center rounded-sm',
-          'min-h-[var(--touch-target-min,44px)] min-w-[var(--touch-target-min,44px)] px-1',
+          'inline-flex cursor-help items-center rounded-sm',
+          compact
+            ? 'touch-target-md-compact justify-start px-0'
+            : 'min-h-[var(--touch-target-min,44px)] min-w-[var(--touch-target-min,44px)] justify-center px-1',
           'font-inherit leading-inherit tracking-inherit m-0 border-0 bg-transparent p-0 text-inherit',
           'focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none',
           className,

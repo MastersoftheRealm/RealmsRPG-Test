@@ -123,7 +123,7 @@ describe('mapFeatRows / mapTraitRows — play vs edit customization (TASK-783)',
   });
 });
 
-describe('feat/trait Customize draft (TASK-802)', () => {
+describe('feat/trait Customize draft (TASK-805)', () => {
   it('treats empty committed as empty string so spaces are kept until blur', () => {
     expect(customizationDraftDiffers('Flame', 'Flame')).toBe(false);
     expect(customizationDraftDiffers('Flame ', 'Flame')).toBe(true);

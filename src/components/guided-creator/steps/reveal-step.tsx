@@ -251,7 +251,7 @@ export function RevealStep() {
         primaryAction={
           <Button
             onClick={handleSave}
-            disabled={!canSave || saving || !!savedCharacterId}
+            disabled={!canSave || saving || !!savedCharacterId || showLogin}
             className="min-h-11"
           >
             <Sparkles className="mr-1.5 h-4 w-4" aria-hidden="true" />

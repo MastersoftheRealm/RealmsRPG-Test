@@ -56,7 +56,7 @@ the exact same operational sentence. Do not duplicate it in `tooltip-text.tsx`.
 |-----------|-----|----------------|
 | Optional rules / step help beside a heading | **`InfoTippy`** + export in `tooltip-text.tsx` | Raw Floating UI on the page, `Tooltip` from `@/components/ui`, `title=` only |
 | Help on a non-Info control (e.g. ability pick button) | **`InfoTippy`** with `children` + `label` / child `aria-label` | Separate tooltip library |
-| Definition tip on a label word (ability/defense name or Score value; no icon) | **`WordHelpTip`** + `getAbilityHelp` / `getDefenseHelp` / `defenseScoreHelp` in `tooltip-text.tsx` (name tips say the name once — e.g. “Acuity reflects…”, not “Acuity. Acuity…”) | Info icon sibling, `title=` only |
+| Definition tip on a label word (ability/defense/skill name or Score value; no icon) | **`WordHelpTip`** + `getAbilityHelp` / `getDefenseHelp` / `defenseScoreHelp` in `tooltip-text.tsx` (name tips say the name once — e.g. “Acuity reflects…”, not “Acuity. Acuity…”). Skill names pass Codex `description` and `compact` (TASK-803). | Info icon sibling, `title=` only |
 | Level-aware help copy (points at level N) | Helper in **`tooltip-text.tsx`** (e.g. `getAbilityPointsHelp`) → **`InfoTippy`** | Inline paragraph duplicating rules |
 | Rich help (bullets, bold, JSX) | JSX export in **`tooltip-text.tsx`** → **`InfoTippy`** `content` | DB tooltips, markdown in random components |
 | Full-screen or multi-step flow | **`Modal`** (`fullScreenOnMobile` on mobile) | InfoTippy |
@@ -95,7 +95,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 | `characters/new` page header | ✅ Wired | |
 | Navbar Library / Codex | ✅ Wired | `placement="bottom"` |
 | Campaigns hub | ✅ Wired | |
-| Character sheet | ◐ Partial | Ability + defense name tips via `WordHelpTip` (TASK-547); defense Score values via `defenseScoreHelp` (TASK-587); Inventory Armament Proficiency via `armamentProficiencyHelp` (TASK-581); broader first-exposure tour still planned per `REALMS_PRODUCT_OVERVIEW.md` § 11 |
+| Character sheet | ◐ Partial | Ability + defense name tips via `WordHelpTip` (TASK-547); skill names via `WordHelpTip` `compact` + Codex description (TASK-803); defense Score values via `defenseScoreHelp` (TASK-587); Inventory Armament Proficiency via `armamentProficiencyHelp` (TASK-581); broader first-exposure tour still planned per `REALMS_PRODUCT_OVERVIEW.md` § 11 |
 | Standalone creators (power, technique, item, …) | ◐ Partial | **Power creator advanced** InfoTippy wired (TASK-408). Technique/item/species/creature still planned. Guided power L1 deferred (TASK-410–414). |
 | Encounters, crafting, Codex/Library browse | ⬜ Planned | Scoped section help only where dense |
 
@@ -107,7 +107,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
    - Page/step title: `<InfoTippy content={…} label="…" size="inline" />` (layout-neutral hit; do not add `min-h-*` className)
    - Default icon trigger: omit `children`; **`label` is required** (becomes `aria-label`).
    - Custom trigger: pass `children` (single element); child needs its own `aria-label`; keep `label` for consistency.
-   - Label-word tip (no icon): `<WordHelpTip content={getAbilityHelp(…)} label="About Strength">Strength</WordHelpTip>` (ability/defense names; tip copy names the term once).
+   - Label-word tip (no icon): `<WordHelpTip content={getAbilityHelp(…)} label="About Strength">Strength</WordHelpTip>` (ability/defense names; tip copy names the term once). Dense table labels: `compact` (44px below `md`).
 4. **Mobile** — default touch-hold (~400ms) is built in; do not add parallel click handlers.
 5. **A11y** — every trigger has a discernable name; do not rely on `title` alone.
 6. **Verify** — hover, keyboard focus, touch-hold on ~360px width; JSX lists allow pointer into panel.
@@ -118,7 +118,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 
 - Filter labels use `FILTER_LABEL_ROW_CLASS` (`h-5`). Put `labelAccessory` (InfoTippy) in that row — do not add per-page `!min-h-*` on the trigger.
 - `GuidedSectionTitle` `titleAddon` is `shrink-0` so the (i) stays on the title line.
-- Do **not** switch sitewide help to `WordHelpTip` — that is for word-tied definitions (ability/defense names).
+- Do **not** switch sitewide help to `WordHelpTip` — that is for word-tied definitions (ability/defense/skill names).
 - New call sites: omit extra `className` sizing on `InfoTippy`; the shared trigger already preserves 44px touch without stretching flex/grid tracks.
 
 ## `InfoTippy` / `WordHelpTip` API (quick reference)
