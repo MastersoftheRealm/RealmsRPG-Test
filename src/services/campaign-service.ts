@@ -4,7 +4,7 @@
  * Client-side API calls for campaign data. Uses /api/campaigns (Supabase).
  */
 
-import type { Campaign, CampaignSummary } from '@/types/campaign';
+import type { Campaign, CampaignCharacterEncounterData, CampaignSummary } from '@/types/campaign';
 import type { Character } from '@/types';
 import { apiFetch, apiFetchOrNull } from '@/lib/api-client';
 import { normalizeInviteCodeInput, isValidInviteCodeFormat } from '@/lib/campaign-invite';
@@ -50,6 +50,22 @@ export async function getCampaignCharacterForView(
   );
   const { libraryForView, ...character } = data;
   return { character, libraryForView };
+}
+
+/**
+ * Minimal HP/EN/AP payload for combat/skill add and linked-character sync.
+ * `?scope=encounter` is member-readable and skips `libraryForView` — not the RM-view GET.
+ */
+export async function getCampaignCharacterForEncounter(
+  campaignId: string,
+  userId: string,
+  characterId: string,
+  init?: RequestInit
+): Promise<CampaignCharacterEncounterData | null> {
+  return apiFetchOrNull<CampaignCharacterEncounterData>(
+    `${API_BASE}/${encodeURIComponent(campaignId)}/characters/${encodeURIComponent(userId)}/${encodeURIComponent(characterId)}?scope=encounter`,
+    { ...init, cache: 'no-store' }
+  );
 }
 
 /**

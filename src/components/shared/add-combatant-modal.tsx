@@ -18,17 +18,24 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { cn, generateId } from '@/lib/utils';
-import { apiFetchOrNull, getErrorMessage, logClientError } from '@/lib/api-client';
+import { getErrorMessage } from '@/lib/api-client';
 import { BookOpen, Users } from 'lucide-react';
 import { Modal, Button, SearchInput, LoadingState, EmptyState, useToast } from '@/components/ui';
 import { SegmentedControl } from '@/components/shared';
 import { ValueStepper } from '@/components/shared/value-stepper';
-import { useUserCreatures, useCampaignsFull, type UserCreature } from '@/hooks';
+import {
+  fetchCampaignCharacterForEncounter,
+  useAuthStore,
+  useUserCreatures,
+  useCampaignsFull,
+  type UserCreature,
+} from '@/hooks';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { formatCreatureLevelShort } from '@/lib/game';
 import type { TrackedCombatant, CombatantType, SkillParticipant } from '@/types/encounter';
-import type { Campaign, CampaignCharacterEncounterData } from '@/types/campaign';
+import type { Campaign } from '@/types/campaign';
 
 type TabId = 'library' | 'campaign';
 
@@ -261,6 +268,8 @@ function CampaignCharactersTab({
   onClose: () => void;
 }) {
   const { data: campaigns = [], isLoading } = useCampaignsFull();
+  const { user } = useAuthStore();
+  const queryClient = useQueryClient();
   const { showToast } = useToast();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [selectedChars, setSelectedChars] = useState<Set<string>>(new Set());
@@ -284,20 +293,20 @@ function CampaignCharactersTab({
         (c) => selectedChars.has(`${c.userId}-${c.characterId}`)
       );
 
-      // Fetch each character's data via the API (scope=encounter allows any campaign member)
+      // Same ?scope=encounter fetcher as combat HP sync (member-readable; not the RM-view GET)
       const results = await Promise.all(
         chars.map(async (c) => {
           try {
-            const data = await apiFetchOrNull<CampaignCharacterEncounterData>(
-              `/api/campaigns/${selectedCampaign.id}/characters/${c.userId}/${c.characterId}?scope=encounter`
+            const data = await fetchCampaignCharacterForEncounter(
+              queryClient,
+              selectedCampaign.id,
+              user?.uid,
+              c.userId,
+              c.characterId
             );
             if (!data) return null;
             return { charMeta: c, data };
-          } catch (err) {
-            logClientError(
-              `add-combatant-modal: character fetch failed (${c.userId}/${c.characterId})`,
-              err
-            );
+          } catch {
             return null;
           }
         })

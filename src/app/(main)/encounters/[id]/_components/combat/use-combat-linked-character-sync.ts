@@ -1,21 +1,77 @@
 /**
- * Linked campaign-character HP/EN/AP sync for combat encounters (TASK-666a)
+ * Linked campaign-character HP/EN/AP sync for combat encounters (TASK-666a / TASK-762)
  * ========================================================================
- * Initial refetch, visibility-aware polling, and Supabase Realtime merges.
+ * React Query observers for `?scope=encounter`, visibility-aware polling, and
+ * Supabase Realtime merges.
  */
 
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef } from "react";
-import { apiFetchOrNull, logClientError } from "@/lib/api-client";
+import { useEffect, useMemo } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import {
+  campaignKeys,
+  useCampaignCharacterEncounters,
+  useGameRules,
+} from "@/hooks";
 import type { Encounter, TrackedCombatant } from "@/types/encounter";
 import type { CampaignCharacterEncounterData } from "@/types/campaign";
 import { createClient } from "@/lib/supabase/client";
 import { computeMaxHealthEnergy } from "@/lib/game/calculations";
-import { useGameRules } from "@/hooks";
 import { readResourcesFromCharacterData } from "@/lib/encounter/character-resource-sync";
 
 type SetEncounter = React.Dispatch<React.SetStateAction<Encounter | null>>;
+
+function applyLinkedEncounterResources(
+  prev: Encounter,
+  results: Array<{
+    combatantId: string;
+    data: CampaignCharacterEncounterData;
+  } | null>,
+): Encounter {
+  let changed = false;
+  const nextCombatants = prev.combatants.map((c) => {
+    const result = results.find((r) => r && r.combatantId === c.id);
+    if (!result?.data) return c;
+    const d = result.data as Record<string, unknown>;
+    const resources = readResourcesFromCharacterData(d);
+    const currentHp = resources.currentHealth;
+    const currentEn = resources.currentEnergy;
+    const maxHp = resources.healthMax;
+    const maxEn = resources.energyMax;
+    const ap = resources.actionPoints;
+    if (
+      currentHp === undefined &&
+      currentEn === undefined &&
+      maxHp === undefined &&
+      maxEn === undefined &&
+      ap === undefined
+    ) {
+      return c;
+    }
+    const next = {
+      ...c,
+      ...(currentHp !== undefined && { currentHealth: currentHp }),
+      ...(maxHp !== undefined && { maxHealth: maxHp }),
+      ...(currentEn !== undefined && { currentEnergy: currentEn }),
+      ...(maxEn !== undefined && { maxEnergy: maxEn }),
+      ...(ap !== undefined && { ap }),
+    };
+    if (
+      next.currentHealth === c.currentHealth &&
+      next.maxHealth === c.maxHealth &&
+      next.currentEnergy === c.currentEnergy &&
+      next.maxEnergy === c.maxEnergy &&
+      next.ap === c.ap
+    ) {
+      return c;
+    }
+    changed = true;
+    return next;
+  });
+  if (!changed) return prev;
+  return { ...prev, combatants: nextCombatants };
+}
 
 export function useCombatLinkedCharacterSync({
   encounterId,
@@ -27,103 +83,70 @@ export function useCombatLinkedCharacterSync({
   setEncounter: SetEncounter;
 }) {
   const { rules } = useGameRules();
-  const refetchedForEncounterIdRef = useRef<string | null>(null);
+  const queryClient = useQueryClient();
 
-  const refetchCharacterResources = useCallback(async () => {
-    if (!encounter?.campaignId || !encounter.combatants?.length) return;
-    const linked = encounter.combatants.filter(
-      (c): c is TrackedCombatant =>
-        c.sourceType === "campaign-character" &&
-        !!c.sourceId &&
-        !!c.sourceUserId,
-    );
-    if (linked.length === 0) return;
-    const results = await Promise.all(
-      linked.map(async (c) => {
-        try {
-          const data = await apiFetchOrNull<CampaignCharacterEncounterData>(
-            `/api/campaigns/${encounter!.campaignId}/characters/${c.sourceUserId}/${c.sourceId}?scope=encounter`,
-          );
-          if (!data) return null;
-          return { combatantId: c.id, data };
-        } catch (err) {
-          logClientError(
-            `combat-encounter: linked character sync failed (${c.sourceUserId}/${c.sourceId})`,
-            err,
-          );
-          return null;
-        }
-      }),
+  const linked = useMemo(
+    () =>
+      encounter.combatants.filter(
+        (c): c is TrackedCombatant =>
+          c.sourceType === "campaign-character" &&
+          !!c.sourceId &&
+          !!c.sourceUserId,
+      ),
+    [encounter.combatants],
+  );
+
+  const targets = useMemo(
+    () =>
+      linked.map((c) => ({
+        ownerId: c.sourceUserId as string,
+        characterId: c.sourceId as string,
+      })),
+    [linked],
+  );
+
+  const queries = useCampaignCharacterEncounters(
+    encounter.campaignId,
+    targets,
+  );
+
+  const resourceSyncStamp = JSON.stringify(
+    linked.map((c, i) => ({
+      combatantId: c.id,
+      data: queries[i]?.data ?? null,
+    })),
+  );
+
+  useEffect(() => {
+    const snapshots = JSON.parse(resourceSyncStamp) as Array<{
+      combatantId: string;
+      data: CampaignCharacterEncounterData | null;
+    }>;
+    if (snapshots.length === 0) return;
+    const results = snapshots.map((s) =>
+      s.data ? { combatantId: s.combatantId, data: s.data } : null,
     );
     setEncounter((prev) => {
       if (!prev) return prev;
-      let changed = false;
-      const nextCombatants = prev.combatants.map((c) => {
-        const result = results.find((r) => r && r.combatantId === c.id);
-        if (!result?.data) return c;
-        const d = result.data as Record<string, unknown>;
-        const resources = readResourcesFromCharacterData(d);
-        const currentHp = resources.currentHealth;
-        const currentEn = resources.currentEnergy;
-        const maxHp = resources.healthMax;
-        const maxEn = resources.energyMax;
-        const ap = resources.actionPoints;
-        if (
-          currentHp === undefined &&
-          currentEn === undefined &&
-          maxHp === undefined &&
-          maxEn === undefined &&
-          ap === undefined
-        ) {
-          return c;
-        }
-        changed = true;
-        return {
-          ...c,
-          ...(currentHp !== undefined && { currentHealth: currentHp }),
-          ...(maxHp !== undefined && { maxHealth: maxHp }),
-          ...(currentEn !== undefined && { currentEnergy: currentEn }),
-          ...(maxEn !== undefined && { maxEnergy: maxEn }),
-          ...(ap !== undefined && { ap }),
-        };
-      });
-      if (!changed) return prev;
-      return { ...prev, combatants: nextCombatants };
+      return applyLinkedEncounterResources(prev, results);
     });
-  }, [encounter, setEncounter]);
+  }, [resourceSyncStamp, setEncounter]);
 
-  useEffect(() => {
-    if (!encounter?.campaignId || !encounter?.id) return;
-    const hasLinked = encounter.combatants?.some(
-      (c) =>
-        (c as TrackedCombatant).sourceType === "campaign-character" &&
-        (c as TrackedCombatant).sourceId,
-    );
-    if (!hasLinked) return;
-    if (refetchedForEncounterIdRef.current === encounter.id) return;
-    refetchedForEncounterIdRef.current = encounter.id;
-    refetchCharacterResources();
-  }, [
-    encounter?.id,
-    encounter?.campaignId,
-    encounter?.combatants,
-    refetchCharacterResources,
-  ]);
-
-  const hasLinkedCombatants = encounter?.combatants?.some(
-    (c) =>
-      (c as TrackedCombatant).sourceType === "campaign-character" &&
-      (c as TrackedCombatant).sourceId,
-  );
+  const hasLinkedCombatants = linked.length > 0;
+  const campaignId = encounter.campaignId;
 
   // Poll linked character HP/energy every 90s only when tab is visible. When tab is hidden
   // (inactive or minimized), pause polling; when tab becomes visible again, refetch once then resume.
   useEffect(() => {
-    if (!hasLinkedCombatants || !refetchCharacterResources) return;
+    if (!hasLinkedCombatants || !campaignId) return;
+    const key = campaignKeys.characterEncounters(campaignId);
     let intervalId: ReturnType<typeof setInterval> | null = null;
+    const refetchLinked = () => {
+      void queryClient.refetchQueries({ queryKey: key, type: "active" });
+    };
     const startPolling = () => {
       if (intervalId) return;
-      intervalId = setInterval(refetchCharacterResources, 90_000);
+      intervalId = setInterval(refetchLinked, 90_000);
     };
     const stopPolling = () => {
       if (intervalId) {
@@ -133,7 +156,7 @@ export function useCombatLinkedCharacterSync({
     };
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        refetchCharacterResources();
+        refetchLinked();
         startPolling();
       } else {
         stopPolling();
@@ -145,7 +168,7 @@ export function useCombatLinkedCharacterSync({
       document.removeEventListener("visibilitychange", onVisibilityChange);
       stopPolling();
     };
-  }, [hasLinkedCombatants, refetchCharacterResources]);
+  }, [hasLinkedCombatants, campaignId, queryClient]);
 
   // Value-stable key: the combatants array is replaced on every HP/AP/condition edit, but the
   // realtime subscription should only restart when the set of linked character ids changes.

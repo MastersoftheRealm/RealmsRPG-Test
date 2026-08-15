@@ -46,6 +46,8 @@ export {
   useCampaignsFull,
   useCampaign,
   useCampaignCharacterView,
+  useCampaignCharacterEncounters,
+  fetchCampaignCharacterForEncounter,
   useInvalidateCampaigns,
   campaignKeys,
 } from './use-campaigns';

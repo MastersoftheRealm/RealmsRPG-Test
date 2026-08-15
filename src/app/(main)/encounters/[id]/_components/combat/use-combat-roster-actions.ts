@@ -6,7 +6,7 @@
 "use client";
 
 import { useCallback, useState, type DragEvent } from "react";
-import { apiFetchOrNull } from "@/lib/api-client";
+import { useQueryClient } from "@tanstack/react-query";
 import type {
   Combatant,
   CombatantCondition,
@@ -14,15 +14,12 @@ import type {
   TrackedCombatant,
 } from "@/types/encounter";
 import { CONDITION_OPTIONS } from "@/components/encounters/encounter-constants";
-import { useAuth } from "@/hooks";
+import { fetchCampaignCharacterForEncounter, useAuth } from "@/hooks";
 import {
   isOwnedLinkedCombatant,
   scheduleCharacterResourceSyncFromCombatant,
 } from "@/lib/encounter/character-resource-sync";
-import type {
-  Campaign,
-  CampaignCharacterEncounterData,
-} from "@/types/campaign";
+import type { Campaign } from "@/types/campaign";
 import {
   sortCombatantsForTurnOrder,
   remapTurnIndexAfterReorder,
@@ -45,6 +42,7 @@ export function useCombatRosterActions({
   campaignsFull: Campaign[];
 }) {
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [showAddModal, setShowAddModal] = useState(false);
   const [addingAllChars, setAddingAllChars] = useState(false);
   const [newCombatant, setNewCombatant] = useState<NewCombatantForm>(() =>
@@ -143,8 +141,12 @@ export function useCombatRosterActions({
       const results = await Promise.all(
         linkedCampaign.characters.map(async (c) => {
           try {
-            const data = await apiFetchOrNull<CampaignCharacterEncounterData>(
-              `/api/campaigns/${encounter.campaignId}/characters/${c.userId}/${c.characterId}?scope=encounter`,
+            const data = await fetchCampaignCharacterForEncounter(
+              queryClient,
+              encounter.campaignId as string,
+              user?.uid,
+              c.userId,
+              c.characterId,
             );
             if (!data) return null;
             return { charMeta: c, data };
@@ -166,7 +168,7 @@ export function useCombatRosterActions({
     } finally {
       setAddingAllChars(false);
     }
-  }, [encounter, linkedCampaign, setEncounter]);
+  }, [encounter, linkedCampaign, queryClient, setEncounter, user]);
 
   const duplicateCombatant = (combatant: Combatant) => {
     const existing = encounter?.combatants || [];

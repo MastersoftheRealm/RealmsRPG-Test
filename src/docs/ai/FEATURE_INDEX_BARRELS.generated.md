@@ -169,6 +169,7 @@ Generated: 2026-08-15
 - campaignKeys
 - characterKeys
 - characterViewerId
+- fetchCampaignCharacterForEncounter
 - findTraitByIdOrName
 - getGameRulesFallback
 - patchCharacterDetailQuery
@@ -209,6 +210,7 @@ Generated: 2026-08-15
 - useAuthStore
 - useAutoSave
 - useCampaign
+- useCampaignCharacterEncounters
 - useCampaignCharacterView
 - useCampaignRolls
 - useCampaigns
