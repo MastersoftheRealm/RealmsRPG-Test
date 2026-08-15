@@ -8663,7 +8663,7 @@ CREATE POLICY campaigns_owner_update ON public.campaigns FOR UPDATE TO authentic
 -- Name: campaigns campaigns_select_participants; Type: POLICY; Schema: public; Owner: -
 --
 
-CREATE POLICY campaigns_select_participants ON public.campaigns FOR SELECT TO authenticated USING (((owner_id = (( SELECT auth.uid() AS uid))::text) OR private.auth_is_campaign_participant(id)));
+CREATE POLICY campaigns_select_participants ON public.campaigns FOR SELECT TO authenticated USING (private.auth_is_campaign_participant(id));
 
 
 --

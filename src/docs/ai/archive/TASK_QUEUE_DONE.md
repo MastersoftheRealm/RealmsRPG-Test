@@ -13,8 +13,8 @@
     - sql/task-802-campaigns-select-owner-short-circuit.sql
     - sql/task-650-verify-applied.sql
     - sql/README.md
-    - sql/schema/0000_baseline_2026-08-13.sql
     - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/ACTIVE_TASKS.md
     - src/docs/ai/FEATURE_INDEX.md
     - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
     - src/docs/ai/BUILD_VALIDATION.md

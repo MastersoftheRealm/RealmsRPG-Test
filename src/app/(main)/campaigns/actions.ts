@@ -91,12 +91,7 @@ export async function createCampaignAction(data: { name: string; description?: s
 
     await ensureUserProfile(supabase, user.uid);
 
-    // INSERT … RETURNING is checked against SELECT RLS. After TASK-650 the only
-    // SELECT policy called STABLE `private.auth_is_campaign_participant(id)`,
-    // which cannot see the in-flight row and raises "new row violates row-level
-    // security policy". Supply the id (skip RETURNING) and add the owner to
-    // campaign_members (membership SoT). TASK-802 also restored an owner_id
-    // short-circuit on the SELECT policy so RETURNING is safe again.
+    // Skip RETURNING (SELECT RLS cannot see the in-flight row); membership SoT is campaign_members.
     const campaignId = crypto.randomUUID();
     const now = new Date().toISOString();
     const { error } = await supabase.from('campaigns').insert({
@@ -112,10 +107,12 @@ export async function createCampaignAction(data: { name: string; description?: s
     });
     if (error) throw error;
 
-    const { error: memberErr } = await supabase.from('campaign_members').upsert(
-      { campaign_id: campaignId, user_id: user.uid },
-      { onConflict: 'campaign_id,user_id' },
-    );
+    const { error: memberErr } = await supabase
+      .from('campaign_members')
+      .upsert(
+        { campaign_id: campaignId, user_id: user.uid },
+        { onConflict: 'campaign_id,user_id' },
+      );
     if (memberErr) {
       reportError(memberErr, {
         scope: 'createCampaignAction campaign_members',

@@ -2,6 +2,8 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-08-15 | agent | TASK-802 cleanup — drop dated-dump rewrite + create comment essay | files: 0000_baseline (reverted), campaigns/actions, archive TASK-802 related_files, AI_CHANGELOG | Summary: **Reverted** the TASK-802 rewrite of dated dump `sql/schema/0000_baseline_2026-08-13.sql` (replay stays `sql/task-802-*.sql`). **Deleted** the six-line create-action history comment. verification_status pending-qa (unchanged).
+
 - 2026-08-15 | agent | TASK-802 — campaign create RLS + Sentry CSP | files: campaigns/actions, next.config, sql/task-802-*, task-650-verify, SUPABASE_SCHEMA, FEATURE_INDEX, DEPLOYMENT, BUILD_VALIDATION, DTQ, ALL_FEEDBACK, ACTIVE→archive, AI_CHANGELOG | Summary: **Stopped** `createCampaignAction` from using `INSERT … RETURNING` (STABLE `auth_is_campaign_participant` cannot see the in-flight row after TASK-650). **Wired** owner `id` + `campaign_members` upsert; **applied** single SELECT policy `owner_id = auth.uid() OR` helper; **allowed** Sentry ingest on `connect-src`. verification_status pending-qa (DEV-V-042 T003).
 
 - 2026-08-15 | agent | TASK-801 — master CI privacy tablet snapshots + skip test-only Vercel builds | files: privacy-tablet-*-chromium-linux.png, vercel-ignore-build.sh, DEPLOYMENT_AND_SECRETS, ACTIVE→archive, AI_CHANGELOG | Summary: **Replaced** the two Linux privacy tablet visual baselines with CI actuals after TASK-771 shortened `SITE_URL` to `https://realmsrpg.com`. **Extended** `vercel-ignore-build.sh` so `tests/` and Playwright configs skip Hobby production rebuilds. verification_status n/a.
