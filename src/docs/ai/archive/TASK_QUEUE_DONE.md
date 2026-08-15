@@ -13771,11 +13771,11 @@ Firebase/RTDB - the project is Supabase-only.
     - Formula is centralized in formulas.ts as a shared function
     - npm run build passes
 
-- id: TASK-199b
+- id: TASK-768
   title: "Bug: SAVEABLE_FIELDS missing critical fields, xp vs experience mismatch"
   priority: high
   status: done
-  notes: "Done 2026-02-11. Added missing fields to SAVEABLE_FIELDS: archetypeFeats, unarmedProwess, description, status, namedNotes, currentHealth, currentEnergy, health_energy_points, defenseVals, experience, trainingPointsSpent."
+  notes: "Done 2026-02-11. Added missing fields to SAVEABLE_FIELDS: archetypeFeats, unarmedProwess, description, status, namedNotes, currentHealth, currentEnergy, health_energy_points, defenseVals, experience, trainingPointsSpent. Re-id from TASK-199b on 2026-08-15 (TASK-767): suffix id was not TASK-### digits."
   created_at: 2026-02-11
   created_by: agent
   description: |

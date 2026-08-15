@@ -40,7 +40,8 @@ function parseTasksFromFile(filePath) {
   const raw = fs.readFileSync(filePath, 'utf8');
   const blocks = raw.split(/\n(?=- id: TASK-)/m).map((s) => s.trim()).filter((s) => s.startsWith('- id: TASK-'));
   return blocks.map((block) => {
-    const id = block.match(/- id:\s*(TASK-\d+)/)?.[1] || null;
+    const idToken = block.match(/^- id:\s*(\S+)/)?.[1] || null;
+    const id = idToken && /^TASK-\d+$/.test(idToken) ? idToken : null;
     const title = block.match(/\n\s*title:\s*(.+)/)?.[1]?.trim() || '';
     const status = block.match(/\n\s*status:\s*(.+)/)?.[1]?.trim() || '';
     const completed_at = block.match(/\n\s*completed_at:\s*(.+)/)?.[1]?.trim() || '';
@@ -68,6 +69,27 @@ function duplicateIdGroups(tasks) {
   return Array.from(byId.entries()).filter(([, list]) => list.length > 1);
 }
 
+function nonCanonicalIdTokens(filePath) {
+  const raw = fs.readFileSync(filePath, 'utf8');
+  const blocks = raw
+    .split(/\n(?=- id: TASK-)/m)
+    .map((s) => s.trim())
+    .filter((s) => s.startsWith('- id: TASK-'));
+  const bad = [];
+  for (const block of blocks) {
+    const idToken = block.match(/^- id:\s*(\S+)/)?.[1] || '';
+    if (!/^TASK-\d+$/.test(idToken)) {
+      const title = block.match(/\n\s*title:\s*(.+)/)?.[1]?.trim() || '';
+      bad.push({
+        source: path.relative(repoRoot, filePath),
+        idToken,
+        title,
+      });
+    }
+  }
+  return bad;
+}
+
 function gitGrepTask(taskId) {
   try {
     const out = execSync(`git log --all --pretty=format:%H::%s --grep=${taskId}`, { encoding: 'utf8' });
@@ -91,7 +113,17 @@ function gitGrepTask(taskId) {
   }
 }
 
-const identityTasks = liveIdentityFiles().flatMap((file) => parseTasksFromFile(file));
+const identityFiles = liveIdentityFiles();
+const invalidIds = identityFiles.flatMap((file) => nonCanonicalIdTokens(file));
+if (invalidIds.length) {
+  console.error('Non-canonical task ids (use TASK-### digits only):');
+  for (const row of invalidIds) {
+    console.error(`  ${row.source} — ${row.idToken} — ${row.title || '(no title)'}`);
+  }
+  process.exit(2);
+}
+
+const identityTasks = identityFiles.flatMap((file) => parseTasksFromFile(file));
 const identityDupes = duplicateIdGroups(identityTasks);
 if (identityDupes.length) {
   console.error(

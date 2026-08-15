@@ -2,6 +2,8 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-08-15 | agent | TASK-767 TASK-768 — canonical live task IDs | files: reconcile_tasks.js, archive TASK-199b→768, AI_TASK_QUEUE, ACTIVE, AI_CHANGELOG | Summary: **Stopped** treating `TASK-199b` as `TASK-199` (`TASK-\d+` prefix). **Re-id'd** SAVEABLE_FIELDS work to TASK-768. Duplicate and non-canonical `- id:` still fail before git grep. verification_status n/a.
+
 - 2026-08-15 | agent | TASK-767 — fail reconcile on duplicate live TASK-### | files: reconcile_tasks.js, AI_TASK_QUEUE, guide/08, ACTIVE, archive TASK-767, AI_CHANGELOG | Summary: **Stopped** silently dropping a second `- id: TASK-###` in live ACTIVE / WAITING / `TASK_QUEUE_DONE.md` (the TASK-615/284 class). Dated July-15 snapshot copies stay excluded. verification_status n/a.
 
 - 2026-08-15 | agent | TASK-762 cleanup — drop unused encounter-target type + duplicate fetch log | files: use-campaigns, hooks barrel, add-combatant-modal, AUDIT_REMEDIATION, AI_CHANGELOG | Summary: **Deleted** the unused `CampaignCharacterEncounterTarget` barrel export and Add Combatant’s duplicate `logClientError` (shared encounter `queryFn` already logs non-abort failures). verification_status pending-qa (DEV-V-043 T008).
