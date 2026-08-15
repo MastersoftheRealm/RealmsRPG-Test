@@ -7,7 +7,21 @@ Last updated: 2026-08-15 (Continue Without Saving on character create)
 - Priority: High (guest cannot dismiss the save gate)
 - Feedback (verbatim summary): continue without saving button isn't working on character creation
 - Misinterpretation / code note: The button called `onClose`, but Modal unmounted on the same click. That tap then hit the sticky **Create character** footer (and on Legacy the still-open review modal), which reopened **Login Required to Save**. Looked like the button did nothing.
-- Disposition: **TASK-802 done** pending-qa — Modal close click-capture + deferred focus restore; login actions in `footer`; Legacy closes the review modal when showing/dismissing login. DEV-V-051 T011 + DEV-V-001 T019.
+- Disposition: **TASK-804 done** pending-qa — Modal close click-capture + deferred focus restore; login actions in `footer`; Legacy closes the review modal when showing/dismissing login. DEV-V-051 T011 + DEV-V-001 T019. (Renumbered: master already used TASK-802 for campaign RLS and TASK-803 for sheet skill names.)
+
+**Raw Feedback Log — 2026-08-15 (Sheet Skills: species-change id + missing hover description)**
+- Context: Character sheet Skills list after Edit Species
+- Priority: High (wrong label on a core play surface)
+- Feedback (verbatim summary): A skill (after changing species in sheet) is only on my skill list as an ID instead of the skill name. Also skills should have hover description (for the skill) in the character sheet.
+- Misinterpretation / code note: `migrateSkillsAfterSpeciesChange` inserted new species grants as `{ id, name: id }`. Sheet merge treated that owned row as the catalog match and showed the raw id. SkillRow rendered the name with no Codex description tip (ability names already use `WordHelpTip`).
+- Disposition: **TASK-803** — resolve Codex name/ability on species-change save; overlay names+descriptions at display time; `WordHelpTip` `compact` on sheet skill names. (Renumbered: master already used TASK-802 for campaign RLS.)
+
+**Raw Feedback Log — 2026-08-15 (Failed to create a campaign; Sentry CSP in console)**
+- Context: Production `/campaigns` Create tab; browser console
+- Priority: Critical (create campaign broken)
+- Feedback (verbatim summary): Console showed Grammarly/Iterable/Blackboard noise plus `Fetch API cannot load https://o….ingest.us.sentry.io/… Refused to connect because it violates the document's Content Security Policy.` Then: failed to create a campaign recently, please fix.
+- Misinterpretation / code note: Sentry CSP is why the client SDK could not report the failure. Live Postgres at 2026-08-15T17:15:54Z: `new row violates row-level security policy for table "campaigns"`. After TASK-650, `INSERT … RETURNING` is checked against STABLE `auth_is_campaign_participant`, which cannot see the in-flight row. Extension messages are unrelated.
+- Disposition: **TASK-802 done** pending-qa — create supplies `id` (no RETURNING) + owner `campaign_members`; SELECT policy `owner_id` short-circuit applied live; CSP allows Sentry ingest. DEV-V-042 T003 (+ T001 verify).
 
 **Raw Feedback Log — 2026-08-15 (Sheet Skills: edit/temp mode hidden by thin column)**
 - Context: Character sheet Skills panel — desktop `lg+` narrow column; Edit and Temp Modifier

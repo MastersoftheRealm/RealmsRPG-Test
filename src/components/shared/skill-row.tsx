@@ -28,6 +28,7 @@ import { ABILITY_ABBR, ABILITY_OPTIONS } from '@/lib/constants/skills';
 import { formatBonus } from '@/lib/utils';
 import { IconButton } from '@/components/ui';
 import { ValueStepper, RollButton } from '@/components/shared';
+import { WordHelpTip } from './info-tippy';
 
 // =============================================================================
 // Types
@@ -38,6 +39,8 @@ export interface SkillRowProps {
   id: string;
   /** Skill name */
   name: string;
+  /** Codex skill description shown on name hover (character sheet). */
+  description?: string;
   /** Is this a sub-skill? */
   isSubSkill?: boolean;
   /** Base skill name (for sub-skills) */
@@ -118,8 +121,26 @@ export interface SkillRowProps {
 // Component
 // =============================================================================
 
+function SkillNameLabel({
+  name,
+  description,
+  compact,
+}: {
+  name: string;
+  description?: string;
+  compact?: boolean;
+}) {
+  if (!description) return name;
+  return (
+    <WordHelpTip content={description} label={`About ${name}`} compact={compact}>
+      {name}
+    </WordHelpTip>
+  );
+}
+
 export const SkillRow = memo(function SkillRow({
   name,
+  description,
   isSubSkill = false,
   baseSkillName,
   proficient = false,
@@ -231,7 +252,7 @@ export const SkillRow = memo(function SkillRow({
               └
             </span>
           )}
-          {name}
+          <SkillNameLabel name={name} description={description} compact />
           {isEditing && isSpeciesSkill && (
             <span className="ml-1 text-xs text-text-muted">(species)</span>
           )}
@@ -372,7 +393,9 @@ export const SkillRow = memo(function SkillRow({
 
             {/* Name and ability */}
             <div className="flex flex-col">
-              <span className="font-medium text-text-primary">{name}</span>
+              <span className="font-medium text-text-primary">
+                <SkillNameLabel name={name} description={description} />
+              </span>
               {ability && <span className="text-xs text-text-muted capitalize">{ability}</span>}
             </div>
 
@@ -450,7 +473,7 @@ export const SkillRow = memo(function SkillRow({
                     : 'text-text-muted',
               )}
             >
-              {name}
+              <SkillNameLabel name={name} description={description} compact />
             </span>
             {isSpeciesSkill && (
               <span className="text-xs font-medium text-primary-link-fg">(species)</span>

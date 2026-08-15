@@ -16,9 +16,21 @@ describe('isCodexBaseSkill', () => {
 
 describe('mergeSheetSkillsWithCatalog', () => {
   const codex = [
-    { id: '1', name: 'Athletics', ability: 'strength', base_skill_id: undefined },
+    {
+      id: '1',
+      name: 'Athletics',
+      ability: 'strength',
+      description: 'Climb, swim, and jump.',
+      base_skill_id: undefined,
+    },
     { id: '2', name: 'Medicine', ability: 'intelligence', base_skill_id: undefined },
-    { id: '3', name: 'Surgery', ability: 'intelligence', base_skill_id: 2 },
+    {
+      id: '3',
+      name: 'Surgery',
+      ability: 'intelligence',
+      description: 'Operate under pressure.',
+      base_skill_id: 2,
+    },
   ];
 
   it('adds missing Codex base skills as catalog-only unproficient', () => {
@@ -61,6 +73,56 @@ describe('mergeSheetSkillsWithCatalog', () => {
     expect(names.indexOf('Medicine')).toBeLessThan(names.indexOf('Surgery'));
     expect(names).toContain('First Aid');
     expect(merged.filter((s) => s.baseSkill).every((s) => s.catalogOnly !== true)).toBe(true);
+  });
+
+  it('relabels owned rows whose name is the Codex id and attaches descriptions', () => {
+    const merged = mergeSheetSkillsWithCatalog(
+      [{ id: '1', name: '1', skill_val: 0, prof: true }],
+      codex,
+    );
+    const athletics = merged.filter((s) => s.name === 'Athletics');
+    expect(athletics).toHaveLength(1);
+    expect(athletics[0]).toMatchObject({
+      id: '1',
+      name: 'Athletics',
+      description: 'Climb, swim, and jump.',
+      prof: true,
+      catalogOnly: false,
+    });
+  });
+
+  it('dedupes an id-named species row against an already-owned skill of the same Codex name', () => {
+    const merged = mergeSheetSkillsWithCatalog(
+      [
+        { id: 'legacy-ath', name: 'Athletics', skill_val: 2, prof: true },
+        { id: '1', name: '1', skill_val: 0, prof: true },
+      ],
+      codex,
+    );
+    expect(merged.filter((s) => s.name === 'Athletics')).toHaveLength(1);
+    expect(merged.find((s) => s.name === 'Athletics')?.skill_val).toBe(2);
+  });
+
+  it('resolves sub-skill parent ids to names and attaches Codex descriptions', () => {
+    const merged = mergeSheetSkillsWithCatalog(
+      [
+        { id: '2', name: 'Medicine', skill_val: 1, prof: true },
+        {
+          id: '3',
+          name: '3',
+          skill_val: 1,
+          prof: true,
+          baseSkill: '2',
+        },
+      ],
+      codex,
+    );
+    const surgery = merged.find((s) => s.id === '3');
+    expect(surgery).toMatchObject({
+      name: 'Surgery',
+      baseSkill: 'Medicine',
+      description: 'Operate under pressure.',
+    });
   });
 });
 

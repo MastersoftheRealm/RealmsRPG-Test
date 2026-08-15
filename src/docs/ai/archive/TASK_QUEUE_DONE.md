@@ -1,4 +1,4 @@
-- id: TASK-802
+- id: TASK-804
   title: Continue Without Saving dismisses guest login on character create
   created_at: 2026-08-15
   completed_at: 2026-08-15
@@ -40,6 +40,102 @@
   notes: |
     Owner 2026-08-15 chat: "continue without saving button isn't working on
     character creation".
+    Renumbered from TASK-802 after master landed campaign RLS as TASK-802
+    and sheet skill names as TASK-803.
+
+- id: TASK-803
+  title: Sheet skill names after species change + hover descriptions
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/species-skill-migration.ts
+    - src/lib/species-skill-migration.test.ts
+    - src/lib/character/sheet-skills-display.ts
+    - src/lib/character/sheet-skills-display.test.ts
+    - src/lib/codex/skill-list.ts
+    - src/lib/codex/skill-list.test.ts
+    - src/components/character-sheet/use-edit-species-modal.ts
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/shared/skill-row.tsx
+    - src/components/shared/info-tippy.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/AI_CHANGELOG.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T055
+  developer_test_plan: |
+    Suite DEV-V-009 T055 — see BUILD_VALIDATION.md
+  description: |
+    After Edit Species, a newly granted skill could appear on the sheet as a raw
+    Codex id because migration saved `{ name: id }`. Skill names also had no
+    hover description. Resolve names from the Codex catalog on save and overlay
+    names plus descriptions at display time; wrap sheet skill names in WordHelpTip.
+  acceptance_criteria:
+    - Species-change migration writes Codex skill names (not ids) and does not duplicate an already-owned skill of the same name.
+    - Sheet Skills list overlays Codex names/descriptions for owned rows whose name is the id (existing saves).
+    - Skill names with Codex copy use WordHelpTip compact (desktop hugs the word; 44px below md).
+    - Typecheck, lint, targeted vitest. User-facing: pending-qa.
+  notes: |
+    Owner 2026-08-15 chat. Do not reopen TASK-584.
+    Renumbered from TASK-802 after master landed campaign RLS as TASK-802.
+
+- id: TASK-802
+  title: Fix campaign create RLS + allow Sentry in CSP
+  created_at: 2026-08-15
+  completed_at: 2026-08-15
+  created_by: owner
+  implemented_by: agent
+  priority: critical
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/campaigns/actions.ts
+    - next.config.ts
+    - sql/task-802-campaigns-select-owner-short-circuit.sql
+    - sql/task-650-verify-applied.sql
+    - sql/README.md
+    - src/docs/SUPABASE_SCHEMA.md
+    - src/docs/ai/ACTIVE_TASKS.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/DEPLOYMENT_AND_SECRETS_SUPABASE.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ALL_FEEDBACK_CLEAN.md
+    - src/docs/ai/AI_CHANGELOG.md
+  build_validation: |
+    suite: DEV-V-042
+    tests:
+      - DEV-V-042-T003
+      - DEV-V-042-T001
+  developer_test_plan: |
+    Suite DEV-V-042 T003 (create campaign) + T001 verify — see BUILD_VALIDATION.md
+  description: |
+    Signed-in create campaign failed with a generic error. Postgres logged an
+    RLS denial on campaigns INSERT. TASK-650 left only a STABLE participant
+    helper on SELECT, so INSERT … RETURNING could not see the new owner row.
+    Browser Sentry was also blocked by CSP, so the failure never reached
+    monitoring.
+  acceptance_criteria:
+    - createCampaignAction inserts with a client-generated id (no RETURNING).
+    - Owner is upserted into campaign_members after create.
+    - Live SELECT policy is owner_id OR auth_is_campaign_participant (one policy).
+    - CSP connect-src allows Sentry ingest hosts (including ingest.us).
+    - Typecheck, lint. User-facing: pending-qa.
+  notes: |
+    Owner 2026-08-15 console paste + "failed to create a campaign recently".
+    Live apply: sql/task-802-campaigns-select-owner-short-circuit.sql.
+    INSERT RETURNING smoke PASS on RealmsRPG-Test after apply.
 
 - id: TASK-801
   title: Rebaseline privacy tablet Linux snapshots; skip test-only Vercel builds

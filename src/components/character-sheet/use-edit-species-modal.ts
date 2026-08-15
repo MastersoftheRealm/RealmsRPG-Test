@@ -319,10 +319,15 @@ export function useEditSpeciesModal({
         mixedPhysical: mixedAveragedPhysical ?? draftAncestry.mixedPhysical,
       };
     }
-    const migratedSkills = migrateSkillsAfterSpeciesChange(character, ancestryToSave, allSpecies);
+    const migratedSkills = migrateSkillsAfterSpeciesChange(
+      character,
+      ancestryToSave,
+      allSpecies,
+      allSkills ?? [],
+    );
     onSave({ ancestry: ancestryToSave, skills: migratedSkills });
     onClose();
-  }, [character, draftAncestry, allSpecies, mixedAveragedPhysical, onSave, onClose]);
+  }, [character, draftAncestry, allSpecies, allSkills, mixedAveragedPhysical, onSave, onClose]);
 
   const nameA = draftAncestry?.speciesNames?.[0] ?? speciesA?.name;
   const nameB = draftAncestry?.speciesNames?.[1] ?? speciesB?.name;

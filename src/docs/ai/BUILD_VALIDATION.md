@@ -67,7 +67,7 @@ Moved (TASK-718): DEV-V-005, DEV-V-010, DEV-V-011, DEV-V-014, DEV-V-015, DEV-V-0
 
 ## DEV-V-001 — Advanced character creator step guards
 
-**Related tasks:** TASK-356, TASK-717, TASK-802  
+**Related tasks:** TASK-356, TASK-717, TASK-804  
 **Chooser vs Advanced:** `/characters/new` is the Guided / Custom / Legacy chooser (DEV-V-013-T001 / T075). Numbered steps (**1. Archetype** … **9. Finalize**), **Forge Your Own**, and **Choose a Path** live at `/characters/new/advanced` (chooser **Legacy**). Do not treat the chooser as step 1 Archetype.  
 **Start URL:** `/characters/new/advanced`  
 **Needs:** Logged-in test account  
@@ -495,13 +495,13 @@ Reach Advanced via **Characters** → **Add Character** → **Legacy**, or open 
 
 ---
 
-#### DEV-V-001-T019 — Continue Without Saving dismisses login on Finalize (TASK-802)
+#### DEV-V-001-T019 — Continue Without Saving dismisses login on Finalize (TASK-804)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-001 |
 | **Section** | 9. Finalize |
-| **Related task** | TASK-802 |
+| **Related task** | TASK-804 |
 | **Where** | `/characters/new/advanced` → **9. Finalize** |
 | **Needs** | Logged out (incognito); a complete legal level-1 build |
 
@@ -1137,7 +1137,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773, TASK-778, TASK-779, TASK-782, TASK-783, TASK-786, TASK-787, TASK-788, TASK-800)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773, TASK-778, TASK-779, TASK-782, TASK-783, TASK-786, TASK-787, TASK-788, TASK-800, TASK-803)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1916,6 +1916,27 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 **Expected**
 - Mode is named on the heading (`aria-live`) and visible in the first screenful of the Skills card.
 - Creator/allocation Skills tables still use a separate Value column.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T055 — Skills show Codex names + hover description after species change (TASK-803)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-803 |
+| **Where** | `/characters/[id]` → Skills panel; Edit Species |
+| **Needs** | Editable character; Codex skills loaded; a species whose granted skill the character does not already have |
+
+**Steps**
+1. Open the sheet Skills list. Confirm every skill **name** is a human label (not a UUID / raw id). Hover (desktop) or focus/touch-hold (phone) a skill name — the Codex skill description appears. Names without a description stay plain text.
+2. Edit Species: pick a different species (or mixed pair) that grants a skill the character did not have. Save.
+3. Confirm the new species skill appears in Skills as its Codex **name**, proficient, not as an id. Hover still shows that skill’s description.
+4. Optional ~360px: skill names remain tappable (44px); desktop names stay text-hugging (not 44px rows).
+
+**Expected**
+- Species-change never leaves a raw skill id in the Skills list.
+- Skill names with Codex copy use the same word-tied tip pattern as ability names (`WordHelpTip`).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6689,9 +6710,9 @@ Full Customize (L3, no archetype path) on archetype feats, character feat, loado
 
 ---
 
-## DEV-V-042 — Campaigns RLS SELECT consolidation (TASK-650)
+## DEV-V-042 — Campaigns RLS SELECT consolidation (TASK-650 / TASK-802)
 
-Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Automated SQL parity + RLS access: `node scripts/verify-task-650.mjs`.
+Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Automated SQL parity + RLS access: `node scripts/verify-task-650.mjs`. TASK-802 keeps a single SELECT policy and adds an `owner_id` short-circuit so create/`INSERT … RETURNING` works.
 
 #### DEV-V-042-T001 — Automated advisor + RLS access (DB)
 
@@ -6728,6 +6749,29 @@ Post-apply smoke for D6 `multiple_permissive_policies` on `public.campaigns`. Au
 
 **Expected**
 - Owner and member read access unchanged after policy drop; non-participant blocked; join-by-invite unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-042-T003 — Create campaign (signed-in owner)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-042 |
+| **Related task** | TASK-802 |
+| **Where** | `/campaigns` → Create tab |
+| **Needs** | Signed-in account under the campaign quota |
+
+**Steps**
+1. Sign in and open `/campaigns`.
+2. Open the **Create** tab. Enter a name of at least 2 characters (optional description).
+3. Submit. Confirm the success state shows an 8-character invite code (no “Failed to create campaign”).
+4. Click **View Campaign** — detail loads for the new campaign; invite code matches.
+5. Return to **My Campaigns** — the new campaign is in the list.
+6. Optional: DevTools console should not show a Sentry `ingest.us.sentry.io` Content-Security-Policy refusal.
+
+**Expected**
+- Campaign is created; invite code is shown; detail and list include the new campaign.
+- Browser console may still show Grammarly / Iterable / Blackboard extension noise (ignore).
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7003,9 +7047,9 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 
 ---
 
-## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754 / TASK-802)
+## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754 / TASK-804)
 
-Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy, plus TASK-802 guest **Continue Without Saving**. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`, `character-save.test.ts` (create-error copy). Guest Continue Without Saving is human-only (T011). These tests are the parts only a browser can show.
+Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy, plus TASK-804 guest **Continue Without Saving**. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`, `character-save.test.ts` (create-error copy). Guest Continue Without Saving is human-only (T011). These tests are the parts only a browser can show.
 
 #### DEV-V-051-T001 — Guided creator entry does not wait on the session
 
@@ -7216,12 +7260,12 @@ Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy, plus 
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-051-T011 — Continue Without Saving dismisses guest login (TASK-802)
+#### DEV-V-051-T011 — Continue Without Saving dismisses guest login (TASK-804)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-051 |
-| **Related task** | TASK-802 |
+| **Related task** | TASK-804 |
 | **Where** | `/characters/new/guided` → **10. Your Hero** |
 | **Needs** | Logged out (incognito); a complete guided draft (all chapters satisfied, Health/Energy remaining 0, named) |
 
@@ -7606,7 +7650,7 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 | DEV-V-046 | Library power/technique categories + filters (TASK-673 / TASK-676 / TASK-731 / TASK-725 / TASK-746) | — | Automated (category/filter/innate/formulas tests) + manual DEV-V-046 T001–T008 |
 | DEV-V-044 | Power Creator AoE applyDuration persistence (TASK-672) | — | Automated (library-columnar + power-calc tests) + manual DEV-V-044-T001 |
 | DEV-V-041 | Supabase least-privilege Phase 2 (TASK-649 / TASK-735) | — | Manual DEV-V-041 T001–T004 + `node scripts/verify-task-649.mjs` |
-| DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650) | — | `node scripts/verify-task-650.mjs` + optional DEV-V-042-T002 browser |
+| DEV-V-042 | Campaigns RLS SELECT consolidation (TASK-650 / TASK-802) | — | `node scripts/verify-task-650.mjs` + DEV-V-042-T002/T003 browser |
 | DEV-V-043 | Wave 5 page facade splits (TASK-666 / TASK-762) | — | Manual — see suite above |
 | DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`, `character-save` create-error copy) + manual DEV-V-051 T001–T010 |
 | DEV-V-052 | Archetype Path list filter (TASK-751 / TASK-752 / TASK-753) | — | Automated (`path-recommendation-index`, `feat-list`, `skill-list`, `equipment-list`) + manual DEV-V-052 T001–T006 |
