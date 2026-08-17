@@ -31,10 +31,11 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0006 | Temp Modifier mode (sheet-level exclusive + persist) | Amended (TASK-782) |
 | 0007 | Co-located private extracts for shared hot modules | Accepted |
 | 0008 | LoadoutBudgetBar in shared | Accepted |
-| 0009 | GLR required-facts registry | Accepted |
+| 0009 | GLR required-facts registry | Superseded by 0016 |
 | 0010 | Lib layer dependency direction | Accepted |
 | 0011 | List search toolbar | Accepted |
 | 0012 | Guided L3 inline catalog list | Accepted |
 | 0013 | Character dirty-key PATCH + updatedAt 409 | Accepted (TASK-786 same-tab queue) |
 | 0014 | Archetype Path filter reads path recommendation arrays live | Accepted |
 | 0015 | Wave 3B fetch contracts (enrichment + counts + codex collection) | Accepted (TASK-773 / TASK-774 / TASK-775) |
+| 0016 | GLR fact catalog, density modes, and layout solver | Accepted (TASK-806 / TASK-807 / TASK-810) |

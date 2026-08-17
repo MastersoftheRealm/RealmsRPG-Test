@@ -4,7 +4,7 @@
 
 'use client';
 
-import { cn, formatListCellLabel } from '@/lib/utils';
+import { formatListCellLabel } from '@/lib/utils';
 import { GridListRow, ListHeader, InnateToggle, ValueStepper } from '@/components/shared';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import { Button, IconButton } from '@/components/ui';
@@ -12,12 +12,11 @@ import { X } from 'lucide-react';
 import { CollapsibleSection } from '@/components/creator';
 import { buildFeatLevelChips } from '@/lib/leveled-feats';
 import type { CreatureCreatorEditorProps } from './creature-creator-editor';
+import { CreatureCreatorEditorInventorySection } from './creature-creator-editor-inventory-section';
 
 const CREATURE_FEAT_LIST_GRID = '1.15fr 0.58fr 0.52fr 0.4fr';
 const CREATURE_REMOVE_ROW_CHROME = { rightSlot: true } as const;
 const CREATURE_POWER_ROW_CHROME = { leftSlot: true, rightSlot: true } as const;
-const CREATURE_ARMAMENT_LIST_GRID =
-  'minmax(180px, 0.9fr) minmax(72px, 0.55fr) minmax(88px, 7rem) minmax(60px, 4rem) minmax(110px, 8rem) minmax(56px, 0.45fr) minmax(64px, 0.55fr)';
 
 type LoadoutSectionsProps = Pick<
   CreatureCreatorEditorProps,
@@ -316,100 +315,17 @@ export function CreatureCreatorEditorLoadoutSections({
         <Button onClick={() => onOpenTechniqueModal()}>Add Technique</Button>
       </CollapsibleSection>
 
-      <CollapsibleSection
-        title="Inventory"
-        subtitle="Weapons, armor, shields, and equipment"
-        collapsedSummary={armamentsSummary}
-        icon="🛡️"
-        optional
-        enabled={creature.enableArmaments}
-        onEnabledChange={(enabled) => updateCreature({ enableArmaments: enabled })}
-        itemCount={creature.armaments.length}
-      >
-        {creature.armaments.length === 0 ? (
-          <p className="mb-4 text-sm text-text-muted italic">No inventory items added</p>
-        ) : (
-          <div className="mb-4 flex flex-col gap-3">
-            <div className="rounded-lg border border-border-light bg-surface-alt p-3 text-sm">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="font-medium text-text-secondary dark:text-text-primary">
-                  Currency from inventory
-                </span>
-                <span
-                  className={cn(
-                    'font-semibold',
-                    stats.currencyRemaining < 0 ? 'text-danger-fg' : 'text-text-primary',
-                  )}
-                >
-                  {stats.currencyRemaining}c / {stats.currency}c
-                </span>
-              </div>
-              <p className="mt-1 text-xs text-text-muted">
-                Spent {stats.currencySpent}c from selected inventory items.
-              </p>
-            </div>
-            <div className="overflow-hidden rounded-lg border border-border-light">
-              <ListHeader
-                columns={[
-                  { key: 'name', label: 'NAME' },
-                  { key: 'type', label: 'TYPE', width: 'minmax(72px, 0.55fr)', align: 'center' },
-                  { key: 'range', label: 'RANGE', width: 'minmax(92px, 7.5rem)', align: 'center' },
-                  {
-                    key: 'attack',
-                    label: 'ATTACK',
-                    width: 'minmax(64px, 4.25rem)',
-                    align: 'center',
-                  },
-                  {
-                    key: 'damage',
-                    label: 'DAMAGE',
-                    width: 'minmax(92px, 6.75rem)',
-                    align: 'center',
-                  },
-                  { key: 'tp', label: 'TP', width: '0.5fr', align: 'center' },
-                  { key: 'currency', label: 'COST', width: '0.6fr', align: 'center' },
-                ]}
-                gridColumns={CREATURE_ARMAMENT_LIST_GRID}
-                sortState={armamentSort}
-                onSort={onArmamentSort}
-                hasThumbnailColumn
-                rowChrome={CREATURE_REMOVE_ROW_CHROME}
-              />
-              <div className="flex flex-col gap-1">
-                {sortedArmaments.map((armament) => (
-                  <GridListRow
-                    key={armament.id}
-                    id={armament.id}
-                    name={armament.name}
-                    thumbnail={resolveListRowThumbnail('equipment', armament, armament.name)}
-                    gridColumns={CREATURE_ARMAMENT_LIST_GRID}
-                    columns={[
-                      { key: 'type', value: armament.type, align: 'center' },
-                      { key: 'range', value: armament.range, align: 'center' },
-                      { key: 'attack', value: armament.attack, align: 'center' },
-                      { key: 'damage', value: armament.damage, align: 'center' },
-                      { key: 'tp', value: armament.tp, align: 'center' },
-                      { key: 'currency', value: armament.currency, align: 'center' },
-                    ]}
-                    rightSlot={
-                      <IconButton
-                        variant="danger"
-                        size="sm"
-                        onClick={() => onRemoveArmament(armament.id)}
-                        label="Remove inventory item"
-                      >
-                        <X className="h-4 w-4" />
-                      </IconButton>
-                    }
-                    compact
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-        <Button onClick={() => onOpenArmamentModal()}>Add Inventory Item</Button>
-      </CollapsibleSection>
+      <CreatureCreatorEditorInventorySection
+        creature={creature}
+        stats={stats}
+        armamentsSummary={armamentsSummary}
+        armamentSort={armamentSort}
+        onArmamentSort={onArmamentSort}
+        sortedArmaments={sortedArmaments}
+        updateCreature={updateCreature}
+        onRemoveArmament={onRemoveArmament}
+        onOpenArmamentModal={onOpenArmamentModal}
+      />
     </>
   );
 }

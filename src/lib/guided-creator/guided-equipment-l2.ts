@@ -33,9 +33,12 @@ import {
   normalizeArmamentKind,
   type OfficialItemRow,
 } from '@/lib/library/official-item-list';
+import { glrListChrome } from '@/lib/glr';
 import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { formatListCellLabel, normalizeId } from '@/lib/utils';
 import type { ItemProperty } from '@/hooks/codex-types';
+
+const gearBrowseChrome = glrListChrome({ entityType: 'gear', mode: 'browse' }, { sortable: true });
 
 export interface GuidedEquipmentL2ItemData {
   ref: PathItemRecommendation;
@@ -173,16 +176,17 @@ function buildL2Columns(
   officialRow: OfficialItemRow,
 ): NonNullable<SelectableItem['columns']> {
   if (phase === 'gear') {
-    return [
-      {
+    const byKey: Record<string, NonNullable<SelectableItem['columns']>[number]> = {
+      category: {
         key: 'category',
         label: 'Category',
         value: taxonomyCategoryColumnValue(row.itemCategory, row.type),
         align: 'center',
       },
-      { key: 'rarity', label: 'Rarity', value: rarityDisplay(row), align: 'center' },
-      { key: 'currency', label: 'Currency', value: String(unitCost), align: 'center' },
-    ];
+      rarity: { key: 'rarity', label: 'Rarity', value: rarityDisplay(row), align: 'center' },
+      currency: { key: 'currency', label: 'Currency', value: String(unitCost), align: 'center' },
+    };
+    return gearBrowseChrome.headers.filter((h) => h.key !== 'name').map((h) => byKey[h.key]!);
   }
 
   const kind = normalizeArmamentKind(row.type);

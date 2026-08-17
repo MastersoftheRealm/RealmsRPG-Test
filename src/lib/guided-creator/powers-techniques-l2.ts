@@ -25,7 +25,7 @@ import {
   OFFICIAL_TECHNIQUE_GRID,
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
 } from '@/lib/library/official-technique-list';
-import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
+import { partsProficienciesSection, glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import {
   applyPowerTechniqueFilters,
@@ -144,13 +144,22 @@ export function buildPowersTechniquesL2Items(opts: {
       if (!energyAllowed(energy, mode, maxEnergy, innateThreshold)) continue;
 
       const section = partsProficienciesSection(row.parts, 'technique');
+      const detailSections = glrSurfaceDetailSections(
+        'guided-techniques-l3',
+        {
+          category: row.category && row.category !== '—' ? row.category : undefined,
+          damage: row.damage && row.damage !== '-' ? row.damage : undefined,
+          trainingPoints: row.tp > 0 ? row.tp : undefined,
+        },
+        section ? [section] : undefined,
+      );
 
       rows.push({
         id,
         name: row.name,
         description: row.description,
         columns: officialTechniqueRowColumns(row),
-        detailSections: section ? [section] : undefined,
+        detailSections: detailSections.length > 0 ? detailSections : undefined,
         thumbnail: resolveListRowThumbnail('technique', row.raw, row.name),
         totalCost: row.tp,
         costLabel: TRAINING_POINTS_COST_LABEL,
@@ -172,13 +181,22 @@ export function buildPowersTechniquesL2Items(opts: {
       if (!energyAllowed(energy, mode, maxEnergy, innateThreshold)) continue;
 
       const section = partsProficienciesSection(row.parts, 'power');
+      const detailSections = glrSurfaceDetailSections(
+        'guided-powers-l3',
+        {
+          category: row.category && row.category !== '—' ? row.category : undefined,
+          range: row.range,
+          trainingPoints: row.tp > 0 ? row.tp : undefined,
+        },
+        section ? [section] : undefined,
+      );
 
       rows.push({
         id,
         name: row.name,
         description: row.description,
         columns: officialPowerRowColumns(row),
-        detailSections: section ? [section] : undefined,
+        detailSections: detailSections.length > 0 ? detailSections : undefined,
         thumbnail: resolveListRowThumbnail('power', row.raw, row.name),
         totalCost: row.tp,
         costLabel: TRAINING_POINTS_COST_LABEL,

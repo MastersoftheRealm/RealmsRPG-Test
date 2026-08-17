@@ -19,6 +19,7 @@ import {
   armamentRowColumns,
   buildOfficialItemRows,
   filterOfficialItemRows,
+  officialItemDetailSections,
   type ArmamentLibraryKind,
   type OfficialItemRow,
 } from '@/lib/library/official-item-list';
@@ -28,7 +29,6 @@ import {
   type ArmamentFilterState,
 } from '@/lib/library/armament-filters';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
-import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import {
   libraryRowPathIds,
@@ -158,13 +158,9 @@ export function OfficialItemList({
         }
         getColumns={(row) => armamentRowColumns(row, armamentKind)}
         getDetailSections={(row) => {
-          const family =
-            armamentKind === 'armor' ? 'armor' : armamentKind === 'shield' ? 'shield' : 'weapon';
-          const section = propertiesProficienciesSection(row.parts, family);
-          return section ? [section] : undefined;
+          const sections = officialItemDetailSections(row, armamentKind);
+          return sections.length > 0 ? sections : undefined;
         }}
-        getTotalCost={(row) => row.tp}
-        costLabel="TP"
         getThumbnail={(row) => resolveListRowThumbnail('equipment', row.raw, row.name)}
         errorMessage={errorMessage ?? labels.realmsLoadErrorMessage}
         sectionTitle={sectionTitle}

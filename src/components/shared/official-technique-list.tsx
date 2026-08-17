@@ -16,6 +16,7 @@ import type { LibraryTechnique } from '@/types/library';
 import {
   buildOfficialTechniqueRows,
   filterOfficialTechniqueRows,
+  officialTechniqueDetailSections,
   officialTechniqueRowColumns,
   OFFICIAL_TECHNIQUE_GRID,
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
@@ -29,7 +30,6 @@ import {
 } from '@/lib/library/power-technique-filters';
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
-import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import {
   libraryRowPathIds,
@@ -170,15 +170,15 @@ export function OfficialTechniqueList({
         }
         getColumns={(t) => officialTechniqueRowColumns(t)}
         getDetailSections={(t) => {
-          const section = empowered
-            ? empoweredTechniquePartsSection(t.raw, powerPartsDb, partsDb, {
-                stripOptionSuffix: true,
-              })
-            : partsProficienciesSection(t.parts, 'technique');
-          return section ? [section] : undefined;
+          if (empowered) {
+            const section = empoweredTechniquePartsSection(t.raw, powerPartsDb, partsDb, {
+              stripOptionSuffix: true,
+            });
+            return section ? [section] : undefined;
+          }
+          const sections = officialTechniqueDetailSections(t);
+          return sections.length > 0 ? sections : undefined;
         }}
-        getTotalCost={(t) => t.tp}
-        costLabel="TP"
         getThumbnail={(t) => resolveListRowThumbnail('technique', t.raw, t.name)}
         errorMessage={
           errorMessage ?? `Failed to load ${empowered ? 'empowered techniques' : 'techniques'}`

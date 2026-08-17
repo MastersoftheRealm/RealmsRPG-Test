@@ -113,6 +113,8 @@ export interface CreatureArmament {
   tp: number;
   currency: number;
   rarity: string;
+  /** Equipment stack size when stored; omit when unknown (do not fake 1). */
+  quantity?: number;
   damage?: string;
   range?: string;
   description?: string;

@@ -22,19 +22,21 @@ import {
   libraryRowPathIds,
   rowMatchesPathRecommendedIds,
 } from '@/lib/game/path-recommendation-index';
+import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
+import { glrSurfaceDetailSections, partsProficienciesSection } from '@/lib/chip/list-row-metadata';
+
+const officialTechniqueChrome = glrListChrome({ entityType: 'technique', mode: 'browse' });
 
 /** Data columns only — edit/delete/add use ListHeader `rowChrome`. */
-export const OFFICIAL_TECHNIQUE_GRID = '1.4fr 1fr 0.7fr 0.7fr 0.9fr 1fr 1fr';
+export const OFFICIAL_TECHNIQUE_GRID = officialTechniqueChrome.grid;
 
-export const OFFICIAL_TECHNIQUE_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME', align: 'left' as const },
-  { key: 'category', label: 'CATEGORY', align: 'center' as const },
-  { key: 'energy', label: 'ENERGY', align: 'center' as const },
-  { key: 'tp', label: 'TP', align: 'center' as const },
-  { key: 'action', label: 'ACTION', align: 'center' as const },
-  { key: 'weapon', label: 'ATTACK', align: 'center' as const },
-  { key: 'damage', label: 'DAMAGE', align: 'center' as const },
-];
+export const OFFICIAL_TECHNIQUE_HEADER_COLUMNS = officialTechniqueChrome.headers.map(
+  ({ key, label, align }) => ({
+    key,
+    label,
+    align: align ?? ('center' as const),
+  }),
+);
 
 export interface OfficialTechniqueRow {
   id: string;
@@ -105,16 +107,38 @@ export function buildOfficialTechniqueRows(
   });
 }
 
+export function officialTechniqueDetailSections(row: OfficialTechniqueRow) {
+  const parts = partsProficienciesSection(row.parts, 'technique');
+  return glrSurfaceDetailSections(
+    'library-official-technique',
+    {
+      category: row.category && row.category !== '—' ? row.category : undefined,
+      damage: row.damage && row.damage !== '-' ? row.damage : undefined,
+      trainingPoints: row.tp > 0 ? row.tp : undefined,
+    },
+    parts ? [parts] : undefined,
+  );
+}
+
 /** Dense browse columns — same keys as `OFFICIAL_TECHNIQUE_HEADER_COLUMNS` (Library + Guided L2/L3). */
 export function officialTechniqueRowColumns(row: OfficialTechniqueRow): ColumnValue[] {
-  return [
-    { key: 'category', value: row.category || '-', align: 'center' },
-    { key: 'energy', value: row.energy ?? '-', highlight: true, align: 'center' },
-    { key: 'tp', value: row.tp, align: 'center' },
-    { key: 'action', value: row.action || '-', align: 'center' },
-    { key: 'weapon', value: row.weapon || '-', align: 'center' },
-    { key: 'damage', value: row.damage || '-', align: 'center' },
-  ];
+  const values: Record<string, string | number> = {
+    category: row.category || '-',
+    energy: row.energy ?? '-',
+    tp: row.tp,
+    action: row.action || '-',
+    weapon: row.weapon || '-',
+    damage: row.damage || '-',
+  };
+  return officialTechniqueChrome.layout.columnFacts.map((id) => {
+    const key = glrColumnKeyFor(id, 'technique', 'browse');
+    return {
+      key,
+      value: values[key] ?? '-',
+      highlight: id === 'energy' ? true : undefined,
+      align: 'center' as const,
+    };
+  });
 }
 
 export function filterOfficialTechniqueRows<

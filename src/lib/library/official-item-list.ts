@@ -1,7 +1,8 @@
 /**
  * Shared official armament list helpers (Library Realms tab + Admin public library).
  *
- * GLR required-facts registry surfaces: `ARMAMENT_GLR_SURFACE` in `@/lib/glr`.
+ * GLR fact catalog surfaces: `library-official-{weapon,armor,shield}` in
+ * `glr-surface-bindings.ts` (ADR-0016). Headers come from `glrListChrome`.
  */
 
 import type { ChipData } from '@/components/shared';
@@ -36,6 +37,11 @@ import {
   libraryRowPathIds,
   rowMatchesPathRecommendedIds,
 } from '@/lib/game/path-recommendation-index';
+import { glrListChrome } from '@/lib/glr';
+import {
+  glrSurfaceDetailSections,
+  propertiesProficienciesSection,
+} from '@/lib/chip/list-row-metadata';
 
 export type { ArmamentLibraryKind };
 
@@ -68,46 +74,29 @@ type ArmamentHeaderColumn = {
   sortable?: boolean;
 };
 
+function armamentChrome(kind: ArmamentLibraryKind): {
+  grid: string;
+  headers: ArmamentHeaderColumn[];
+} {
+  const chrome = glrListChrome({ entityType: kind, mode: 'browse' });
+  return {
+    grid: chrome.grid,
+    headers: chrome.headers.map(({ key, label, align }) => ({
+      key,
+      label,
+      align: align ?? 'center',
+    })),
+  };
+}
+
 /** Data columns only — edit/delete/add use ListHeader `rowChrome`. */
 export const ARMAMENT_LIBRARY_CONFIG: Record<
   ArmamentLibraryKind,
   { grid: string; headers: ArmamentHeaderColumn[] }
 > = {
-  weapon: {
-    grid: '1.5fr 0.7fr 0.7fr 0.7fr 0.7fr 1fr',
-    headers: [
-      { key: 'name', label: 'NAME', align: 'left' },
-      { key: 'rarity', label: 'RARITY', align: 'center' },
-      { key: 'currency', label: 'CURRENCY', align: 'center' },
-      { key: 'tp', label: 'TP', align: 'center' },
-      { key: 'range', label: 'RANGE', align: 'center' },
-      { key: 'damage', label: 'DAMAGE', align: 'center' },
-    ],
-  },
-  armor: {
-    grid: '1.4fr 0.55fr 0.6fr 0.45fr 0.7fr 0.7fr 0.9fr 0.55fr',
-    headers: [
-      { key: 'name', label: 'NAME', align: 'left' },
-      { key: 'rarity', label: 'RARITY', align: 'center' },
-      { key: 'currency', label: 'CURRENCY', align: 'center' },
-      { key: 'tp', label: 'TP', align: 'center' },
-      { key: 'damageReduction', label: 'DAMAGE RED.', align: 'center' },
-      { key: 'agilityReduction', label: 'AGILITY RED.', align: 'center' },
-      { key: 'abilityRequirement', label: 'ABL. REQ.', align: 'center' },
-      { key: 'criticalRangeIncrease', label: 'CRIT +', align: 'center' },
-    ],
-  },
-  shield: {
-    grid: '1.5fr 0.7fr 0.7fr 0.7fr 0.8fr 1fr',
-    headers: [
-      { key: 'name', label: 'NAME', align: 'left' },
-      { key: 'rarity', label: 'RARITY', align: 'center' },
-      { key: 'currency', label: 'CURRENCY', align: 'center' },
-      { key: 'tp', label: 'TP', align: 'center' },
-      { key: 'block', label: 'BLOCK', align: 'center' },
-      { key: 'damage', label: 'DAMAGE', align: 'center' },
-    ],
-  },
+  weapon: armamentChrome('weapon'),
+  armor: armamentChrome('armor'),
+  shield: armamentChrome('shield'),
 };
 
 export interface OfficialItemRow {
@@ -133,20 +122,10 @@ export interface OfficialItemRow {
   parts: ChipData[];
 }
 
-/** Shown as armor Crit + column — omit from expanded property chips (no column+chip dupe). */
-const ARMOR_COLUMN_PROPERTY_NAMES = new Set(['critical range +1']);
-
 function propertyChipsForItem(item: LibraryItem, propertiesDb: ItemProperty[]): ChipData[] {
   const props =
     (item.properties as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>) || [];
-  const forChips =
-    normalizeArmamentKind(item.type) === 'armor'
-      ? props.filter((p) => {
-          const n = (typeof p === 'string' ? p : String(p?.name ?? '')).trim().toLowerCase();
-          return !ARMOR_COLUMN_PROPERTY_NAMES.has(n);
-        })
-      : props;
-  return namedPropertyDescriptorChips(forChips, propertiesDb).map((chip) => {
+  return namedPropertyDescriptorChips(props, propertiesDb).map((chip) => {
     const prop = props.find((p) => {
       const n = typeof p === 'string' ? p : String(p?.name ?? '');
       return n.toLowerCase() === chip.name.toLowerCase();
@@ -263,6 +242,33 @@ export function armamentRowColumns(row: OfficialItemRow, kind: ArmamentLibraryKi
     align: h.align,
     highlight: h.key === 'tp' ? true : undefined,
   }));
+}
+
+export function officialItemDetailSections(row: OfficialItemRow, kind: ArmamentLibraryKind) {
+  const family = kind === 'armor' ? 'armor' : kind === 'shield' ? 'shield' : 'weapon';
+  const surface =
+    kind === 'armor'
+      ? 'library-official-armor'
+      : kind === 'shield'
+        ? 'library-official-shield'
+        : 'library-official-weapon';
+  const properties = propertiesProficienciesSection(row.parts, family);
+  return glrSurfaceDetailSections(
+    surface,
+    {
+      rarity: row.rarity,
+      currency: row.currency,
+      trainingPoints: row.tp > 0 ? row.tp : undefined,
+      range: row.range,
+      abilityRequirement: row.abilityReq,
+      agilityReduction: row.agilityReduction,
+      criticalRangeIncrease: row.criticalRangeIncrease,
+      damageReduction: row.damageReduction,
+      damage: row.damage,
+      block: row.block,
+    },
+    properties ? [properties] : undefined,
+  );
 }
 
 export function filterOfficialItemRows<

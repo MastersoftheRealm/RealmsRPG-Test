@@ -17,13 +17,14 @@ import { useSort } from '@/hooks/use-sort';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import { usePathListFilter } from '@/hooks';
-import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { useUserPowers, usePowerParts, useDuplicatePower } from '@/hooks';
 import type { DisplayItem } from '@/types';
 import { getPowerSyncResult, sanitizePowerForSync } from '@/lib/library-sync';
 import {
   buildOfficialPowerRows,
   filterOfficialPowerRows,
+  officialPowerDetailSections,
+  officialPowerRowColumns,
   OFFICIAL_POWER_GRID,
   OFFICIAL_POWER_HEADER_COLUMNS,
 } from '@/lib/library/official-power-list';
@@ -185,7 +186,7 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
         filterEmptyTitle={pathFilterActive ? pathFilterEmptyTitle('powers') : undefined}
       >
         {filteredData.map((power) => {
-          const partsSection = partsProficienciesSection(power.parts, 'power');
+          const detailSections = officialPowerDetailSections(power);
           const nameLabels = pathFilterActive
             ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(power), selectedPathIds)
             : undefined;
@@ -203,18 +204,8 @@ export function LibraryPowersTab({ onDelete }: LibraryPowersTabProps) {
               thumbnail={resolveListRowThumbnail('power', power.raw, power.name)}
               gridColumns={OFFICIAL_POWER_GRID}
               rowChrome={POWER_ROW_CHROME}
-              columns={[
-                { key: 'Category', value: power.category, align: 'center' },
-                { key: 'Energy', value: power.energy, highlight: true, align: 'center' },
-                { key: 'Action', value: power.action, align: 'center' },
-                { key: 'Duration', value: power.duration, align: 'center' },
-                { key: 'Range', value: power.range, align: 'center' },
-                { key: 'Area', value: power.area, align: 'center' },
-                { key: 'Damage', value: power.damage, align: 'center' },
-              ]}
-              detailSections={partsSection ? [partsSection] : undefined}
-              totalCost={power.tp}
-              costLabel="TP"
+              columns={officialPowerRowColumns(power)}
+              detailSections={detailSections.length > 0 ? detailSections : undefined}
               badges={badges.length > 0 ? badges : undefined}
               showBadgesInName={nameBadges.length > 0}
               warningMessage={power.syncIssues[0]?.message}

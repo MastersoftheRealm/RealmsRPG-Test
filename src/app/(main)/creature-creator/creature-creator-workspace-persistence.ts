@@ -3,8 +3,13 @@
 import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import type { SelectableItem } from '@/components/shared';
 import { useCreatorSave } from '@/hooks';
+import {
+  appendCreatureInventoryItems,
+  removeCreatureInventoryItem,
+} from '@/lib/game/creature-inventory';
 import type { CreatureState } from './creature-creator-types';
 import { rawRecordToCreatureState } from './creature-skill-utils';
+import type { CreatureArmament } from './transformers';
 
 type CreatureSaveStats = {
   isOverBudget: boolean;
@@ -25,13 +30,12 @@ export function useCreatureCreatorWorkspacePersistence({
   stats,
   load,
 }: UseCreatureCreatorWorkspacePersistenceArgs) {
-  const getPayload = useCallback(
-    () => ({
+  const getPayload = useCallback(() => {
+    return {
       name: creature.name.trim(),
       data: { ...creature },
-    }),
-    [creature],
-  );
+    };
+  }, [creature]);
 
   const save = useCreatorSave({
     type: 'creatures',
@@ -120,7 +124,17 @@ export function useCreatureCreatorWorkspacePersistence({
     (armamentId: string) => {
       setCreature((prev) => ({
         ...prev,
-        armaments: prev.armaments.filter((a) => a.id !== armamentId),
+        ...removeCreatureInventoryItem(prev, armamentId),
+      }));
+    },
+    [setCreature],
+  );
+
+  const onAddArmaments = useCallback(
+    (items: CreatureArmament[]) => {
+      setCreature((prev) => ({
+        ...prev,
+        ...appendCreatureInventoryItems(prev, items),
       }));
     },
     [setCreature],
@@ -138,5 +152,6 @@ export function useCreatureCreatorWorkspacePersistence({
     onRemovePower,
     onRemoveTechnique,
     onRemoveArmament,
+    onAddArmaments,
   };
 }

@@ -17,7 +17,6 @@ import { ArmamentFilters } from '@/components/shared/filters';
 import { useSort } from '@/hooks/use-sort';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import { usePathListFilter } from '@/hooks';
-import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { useUserItems, useItemProperties, useDuplicateItem } from '@/hooks';
 import type { DisplayItem } from '@/types';
 import { getItemSyncResult, sanitizeItemForSync } from '@/lib/library-sync';
@@ -27,6 +26,7 @@ import {
   buildOfficialItemRows,
   filterItemsByArmamentKind,
   filterOfficialItemRows,
+  officialItemDetailSections,
   type ArmamentLibraryKind,
 } from '@/lib/library/official-item-list';
 import {
@@ -190,9 +190,7 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
       >
         {filteredData.map((item) => {
           const syncResult = getItemSyncResult(item.raw, propertiesDb);
-          const family =
-            armamentKind === 'armor' ? 'armor' : armamentKind === 'shield' ? 'shield' : 'weapon';
-          const propertySection = propertiesProficienciesSection(item.parts, family);
+          const propertySection = officialItemDetailSections(item, armamentKind);
           const nameLabels = pathFilterActive
             ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(item), selectedPathIds)
             : undefined;
@@ -211,9 +209,7 @@ export function LibraryItemsTab({ armamentKind, onDelete }: LibraryItemsTabProps
               gridColumns={grid}
               rowChrome={ARMAMENT_ROW_CHROME}
               columns={armamentRowColumns(item, armamentKind)}
-              detailSections={propertySection ? [propertySection] : undefined}
-              totalCost={item.tp}
-              costLabel="TP"
+              detailSections={propertySection.length > 0 ? propertySection : undefined}
               badges={badges.length > 0 ? badges : undefined}
               showBadgesInName={nameBadges.length > 0}
               warningMessage={syncResult.issues[0]?.message}

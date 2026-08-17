@@ -58,6 +58,8 @@ export type LoadModalLibraryType =
   | 'species'
   | 'creature';
 
+export type LoadModalArmamentKind = 'weapon' | 'armor' | 'shield';
+
 export type UseLoadModalLibraryOptions = {
   /**
    * Keep library rows fetching while the load modal is closed
@@ -65,6 +67,8 @@ export type UseLoadModalLibraryOptions = {
    * power/technique/item/empowered always fetch.
    */
   prefetch?: boolean;
+  /** Armament creator Load: filter + catalog chrome for one kind (no mixed Stat list). */
+  itemKind?: LoadModalArmamentKind;
 };
 
 export interface UseLoadModalLibraryReturn {
@@ -91,6 +95,7 @@ export function useLoadModalLibrary(
 ): UseLoadModalLibraryReturn {
   const [showLoadModal, setShowLoadModal] = useState(false);
   const [source, setSource] = useState<SourceFilterValue>('all');
+  const itemKind: LoadModalArmamentKind = options?.itemKind ?? 'weapon';
 
   const openLoadModal = useCallback(() => setShowLoadModal(true), []);
   const closeLoadModal = useCallback(() => {
@@ -318,7 +323,9 @@ export function useLoadModalLibrary(
     const raw = [...my, ...pub] as (UserPower | UserTechnique | UserItem | EqItem)[];
     const loading =
       (source !== 'public' && itemsLoading) || (source !== 'my' && publicItemsLoading);
-    const items = raw.map((item) => buildSelectableItem(item, 'item', codex));
+    const items = raw
+      .filter((item) => String((item as EqItem).type ?? '').toLowerCase() === itemKind)
+      .map((item) => buildSelectableItem(item, itemKind, codex));
     return {
       selectableItems: items,
       rawItems: raw,
@@ -328,6 +335,7 @@ export function useLoadModalLibrary(
   }, [
     type,
     source,
+    itemKind,
     userPowers,
     userTechniques,
     userEmpoweredTechniques,
@@ -376,7 +384,7 @@ export function useLoadModalLibrary(
               { key: 'level', label: 'Level', sortable: true },
               { key: 'type', label: 'Type', sortable: true },
             ]
-          : getListHeaderColumns(type === 'item' ? 'item' : (type as LibraryItemType));
+          : getListHeaderColumns(type === 'item' ? itemKind : (type as LibraryItemType));
 
   const gridColumns =
     type === 'empowered-technique'
@@ -385,13 +393,15 @@ export function useLoadModalLibrary(
         ? '1.4fr 0.8fr'
         : type === 'creature'
           ? '1.5fr 0.5fr 1fr'
-          : getModalGridColumns(type === 'item' ? 'item' : (type as LibraryItemType));
+          : getModalGridColumns(type === 'item' ? itemKind : (type as LibraryItemType));
 
   const typeLabel =
     type === 'power'
       ? 'powers'
       : type === 'item'
-        ? 'armaments'
+        ? itemKind === 'armor'
+          ? 'armor'
+          : `${itemKind}s`
         : type === 'empowered-technique'
           ? 'empowered techniques'
           : type === 'species'

@@ -1,14 +1,38 @@
 export {
-  ARMAMENT_GLR_SURFACE,
-  GLR_SURFACE_REGISTRY,
-  getGlrSurfaceSpec,
-  normalizeGlrColumnKey,
-  type GlrFactId,
-  type GlrFactPlacement,
-  type GlrFactRule,
+  GLR_SURFACE_BINDINGS,
+  getGlrSurfaceBinding,
+  resolveSurfaceLayout,
+  type GlrSurfaceBinding,
   type GlrSurfaceId,
-  type GlrSurfaceSpec,
-} from './required-facts-registry';
+} from './glr-surface-bindings';
+
+export {
+  GLR_FACT_CATALOG,
+  factsForEntity,
+  getGlrFactDef,
+  normalizeGlrColumnKey,
+  type GlrEntityType,
+  type GlrFactBand,
+  type GlrFactId,
+} from './glr-fact-catalog';
+
+export { GLR_DENSITY, type GlrDensityMode, type GlrLayoutFlags } from './glr-density';
+
+export {
+  glrColumnKeyFor,
+  resolveGlrFactLayout,
+  type GlrResolvedLayout,
+  type GlrResolveInput,
+} from './resolve-glr-fact-layout';
+
+export {
+  glrGridTemplate,
+  glrGridTemplateFromHeaders,
+  glrHeaderColumns,
+  glrListChrome,
+  type GlrExtraColumn,
+  type GlrHeaderColumn,
+} from './glr-list-chrome';
 
 export {
   assertRowFactCoverage,

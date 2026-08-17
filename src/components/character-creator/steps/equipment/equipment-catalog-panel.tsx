@@ -6,10 +6,8 @@ import {
   trainingPointsForItemPropertyRef,
   type ItemPropertyPayload,
 } from '@/lib/calculators/item-calc';
-import {
-  buildEntityMetadataDetailSections,
-  mergeDetailSections,
-} from '@/lib/chip/list-row-metadata';
+import { buildGlrFactDetailSections } from '@/lib/chip/list-row-metadata';
+import { resolveSurfaceLayout } from '@/lib/glr';
 import { toggleSort } from '@/hooks/use-sort';
 import {
   SearchInput,
@@ -335,10 +333,8 @@ export function EquipmentCatalogPanel({
                     if (activeTab === 'weapon') {
                       const propPayloads = (item.properties ?? []) as ItemPropertyPayload[];
                       const rangeLabel = resolveWeaponRangeDisplay(undefined, propPayloads);
-                      const rangeFacts = buildEntityMetadataDetailSections({
-                        range:
-                          rangeLabel && rangeLabel.toLowerCase() !== 'melee' ? rangeLabel : 'Melee',
-                      });
+                      const rangeValue =
+                        rangeLabel && rangeLabel.toLowerCase() !== 'melee' ? rangeLabel : 'Melee';
                       return (
                         <GridListRow
                           key={item.id}
@@ -357,7 +353,11 @@ export function EquipmentCatalogPanel({
                           ]}
                           gridColumns={WEAPON_LIST_GRID}
                           badges={badges}
-                          detailSections={mergeDetailSections(rangeFacts, propertySection)}
+                          detailSections={buildGlrFactDetailSections({
+                            chipFacts: resolveSurfaceLayout('add-modal-weapon').chipFacts,
+                            facts: { range: rangeValue },
+                            extraSections: propertySection,
+                          })}
                           rightSlot={rightSlotContent}
                           compact
                         />

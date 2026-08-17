@@ -1,6 +1,13 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-15 (Sheet Feats: Customize caret jumps while typing)
+Last updated: 2026-08-17 (Sheet Inventory: custom equipment add missing)
+
+**Raw Feedback Log — 2026-08-17 (Sheet Inventory: custom item add gone)**
+- Context: Character sheet Library → Inventory → Equipment → Add equipment
+- Priority: High (regression; one-off gear cannot be added)
+- Feedback (verbatim summary): We had functionality for adding custom items in the equipment section but it doesn't seem to be there anymore, there was regression
+- Misinterpretation / code note: `AddCustomEquipmentForm` still existed but TASK-564 put it in USM `headerExtra`, which is collapsed under **Filters**. The modal even hinted “Open Filters to add a custom item by name.” Custom add is not a filter, so it looked missing.
+- Disposition: **TASK-815 done** pending-qa — move the form to always-visible `scopeExtra`; SourceFilter stays in Filters; drop the Filters hint. DEV-V-009 T022 + DEV-V-016 T014.
 
 **Raw Feedback Log — 2026-08-15 (Sheet Feats: Customize caret jumps while typing)**
 - Context: Character sheet Library → Feats → Edit → expand a feat/trait → Customize

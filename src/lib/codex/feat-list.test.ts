@@ -63,6 +63,12 @@ describe('buildFeatDetailSections', () => {
     const tagsSection = sections.find((s) => s.label === 'Tags');
     expect(tagsSection?.chips.map((c) => c.name)).toEqual(['Craft']);
     expect(tagsSection?.hideLabelIfSingle).toBeUndefined();
+
+    const reqChips = sections
+      .find((s) => s.label === 'Ability Requirements')
+      ?.chips.map((c) => c.name);
+    expect(reqChips).toEqual(['Strength 3+']);
+    expect(reqChips?.some((n) => /requirement\s+\d+\+/i.test(n))).toBe(false);
   });
 
   it('omits Tags when feat has no tags', () => {

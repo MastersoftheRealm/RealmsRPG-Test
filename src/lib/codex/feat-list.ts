@@ -16,28 +16,30 @@ import {
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { descriptorChipData, tagDescriptorChip } from '@/lib/chip/chip-data-helpers';
+import { glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
 import type { Character } from '@/types';
+import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
+
+const codexFeatChrome = glrListChrome({ entityType: 'feat', mode: 'browse' });
+const creatorFeatChrome = glrListChrome({
+  entityType: 'feat',
+  mode: 'browse',
+  flags: { characterCreate: true },
+});
+const selectFeatChrome = glrListChrome({ entityType: 'feat', mode: 'select' });
 
 /** Data columns only — admin action chrome uses CodexBrowseListShell `rowChrome`. */
-export const FEAT_GRID_COLUMNS = '1.5fr 0.8fr 1fr 0.8fr 0.8fr 1fr';
+export const FEAT_GRID_COLUMNS = codexFeatChrome.grid;
 
-export const CODEX_FEAT_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'lvl_req', label: 'REQ. LEVEL' },
-  { key: 'category', label: 'CATEGORY' },
-  { key: 'ability', label: 'ABILITY' },
-  { key: 'uses_per_rec', label: 'USES' },
-  { key: 'rec_period', label: 'RECOVERY' },
-];
+/** Creator L2/L3 grid — same chrome as `featSelectableHeaderColumns({ omitRequiredLevel: true })`. */
+export const FEAT_CREATOR_GRID_COLUMNS = creatorFeatChrome.grid;
 
-export const ADMIN_FEAT_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'lvl_req', label: 'REQ. LEVEL' },
-  { key: 'category', label: 'CATEGORY' },
-  { key: 'ability', label: 'ABILITY' },
-  { key: 'rec_period', label: 'RECOVERY' },
-  { key: 'uses_per_rec', label: 'USES' },
-];
+export const CODEX_FEAT_HEADER_COLUMNS = codexFeatChrome.headers.map(({ key, label }) => ({
+  key,
+  label,
+}));
+
+export const ADMIN_FEAT_HEADER_COLUMNS = CODEX_FEAT_HEADER_COLUMNS;
 
 /** Codex browse headers with USM/L3 sortable + align (TASK-709). */
 export const FEAT_SELECTABLE_HEADER_COLUMNS = CODEX_FEAT_HEADER_COLUMNS.map((h) => ({
@@ -56,28 +58,91 @@ export interface FeatSelectableColumnOptions {
 export function featSelectableHeaderColumns(
   options: FeatSelectableColumnOptions = {},
 ): typeof FEAT_SELECTABLE_HEADER_COLUMNS {
-  return options.omitRequiredLevel
-    ? FEAT_SELECTABLE_HEADER_COLUMNS.filter((header) => header.key !== 'lvl_req')
-    : FEAT_SELECTABLE_HEADER_COLUMNS;
+  const chrome = options.omitRequiredLevel ? creatorFeatChrome : codexFeatChrome;
+  return chrome.headers.map((h) => ({
+    key: h.key,
+    label: h.label,
+    align: (h.key === 'name' ? 'left' : 'center') as 'left' | 'center',
+    sortable: true,
+  }));
 }
 
 /**
- * Same cells as Codex `buildFeatGridColumns('codex')`, keyed to `CODEX_FEAT_HEADER_COLUMNS`
- * so Guided L2/L3 sort matches Library/Codex (TASK-709).
+ * Same cells as Codex `buildFeatGridColumns('codex')`, keyed to resolved feat chrome
+ * so Guided L2/L3 sort matches Library/Codex (TASK-709 / TASK-807).
  */
 export function featSelectableColumns(
   feat: Feat,
   options: FeatSelectableColumnOptions = {},
 ): ColumnValue[] {
+  const chrome = options.omitRequiredLevel ? creatorFeatChrome : codexFeatChrome;
   const values = buildFeatGridColumns(feat, 'codex');
-  const headers = CODEX_FEAT_HEADER_COLUMNS.filter((h) => h.key !== 'name');
-  const columns = headers.map((h, i) => ({
+  const byKey = new Map(values.map((column) => [column.key, column]));
+  return chrome.headers
+    .filter((h) => h.key !== 'name')
+    .map((h) => ({
+      key: h.key,
+      label: h.label,
+      value: byKey.get(h.key)?.value ?? '-',
+      align: 'center' as const,
+    }));
+}
+
+function featColumnValues(feat: Feat): Record<string, string> {
+  const uses = feat.uses_per_rec != null && feat.uses_per_rec > 0 ? String(feat.uses_per_rec) : '-';
+  return {
+    lvl_req: feat.lvl_req != null && feat.lvl_req > 0 ? String(feat.lvl_req) : '-',
+    category: formatListCellLabel(feat.category),
+    ability: formatAbilityList(feat.ability),
+    uses_per_rec: uses,
+    rec_period: formatListCellLabel(feat.rec_period),
+  };
+}
+
+/** Add Feat USM — select density (Req. Level is a chip). */
+export const FEAT_SELECT_GRID_COLUMNS = selectFeatChrome.grid;
+
+export function featSelectHeaderColumns(): Array<{
+  key: string;
+  label: string;
+  align: 'left' | 'center';
+  sortable: boolean;
+}> {
+  return selectFeatChrome.headers.map((h) => ({
     key: h.key,
     label: h.label,
-    value: values[i]?.value ?? '-',
-    align: 'center' as const,
+    align: (h.key === 'name' ? 'left' : 'center') as 'left' | 'center',
+    sortable: true,
   }));
-  return options.omitRequiredLevel ? columns.filter((column) => column.key !== 'lvl_req') : columns;
+}
+
+export function featSelectColumns(feat: Feat): ColumnValue[] {
+  const values = featColumnValues(feat);
+  return selectFeatChrome.layout.columnFacts.map((id) => {
+    const key = glrColumnKeyFor(id, 'feat', 'select');
+    return {
+      key,
+      label: selectFeatChrome.headers.find((h) => h.key === key)?.label,
+      value: values[key] ?? '-',
+      align: 'center' as const,
+    };
+  });
+}
+
+export function featSelectDetailSections(
+  feat: Feat,
+  skillIdToName: Map<string, string>,
+  familyLevels: Feat[] = [],
+  opts?: { isCharacterFeat?: boolean; hideTypeSection?: boolean },
+) {
+  return glrSurfaceDetailSections(
+    'add-modal-feat',
+    { reqLevel: feat.lvl_req },
+    buildFeatDetailSections(feat, skillIdToName, familyLevels, {
+      isCharacterFeat: opts?.isCharacterFeat,
+      hideTypeSection: opts?.hideTypeSection ?? true,
+    }),
+  );
 }
 
 export interface FeatFilterOptions {
@@ -273,6 +338,9 @@ export function buildFeatDetailSections(
 
   // Category omitted — already shown in collapsed row columns (redundancy rule).
 
+  // Extra-chrome: min scores (`ability_req`) are not the ranked abilityRequirement fact.
+  // Browse already shows governing Ability in a column; keep "Strength 3+" labels so they
+  // do not match catalog chipPatterns ("… Requirement N+").
   const abilityReqChips = (feat.ability_req || []).map((a, i) => {
     const val = feat.abil_req_val?.[i];
     return descriptorChipData(`${a}${typeof val === 'number' ? ` ${val}+` : ''}`, 'default');
@@ -316,21 +384,15 @@ export function buildFeatGridColumns(
         ? String(feat.uses_per_rec)
         : '-';
 
-  const codexColumns = [
-    { key: 'Req. Level', value: String(reqLevel) },
-    { key: 'Category', value: formatListCellLabel(feat.category) },
-    { key: 'Ability', value: formatAbilityList(feat.ability) },
-    { key: 'Uses', value: uses },
-    { key: 'Recovery', value: formatListCellLabel(feat.rec_period) },
-  ];
-
-  if (variant === 'codex') return codexColumns;
-
-  return [
-    { key: 'Req. Level', value: String(reqLevel) },
-    { key: 'Category', value: formatListCellLabel(feat.category) },
-    { key: 'Ability', value: formatAbilityList(feat.ability) },
-    { key: 'Recovery', value: formatListCellLabel(feat.rec_period) },
-    { key: 'Uses', value: uses },
-  ];
+  const values: Record<string, string> = {
+    lvl_req: String(reqLevel),
+    category: formatListCellLabel(feat.category),
+    ability: formatAbilityList(feat.ability),
+    uses_per_rec: uses,
+    rec_period: formatListCellLabel(feat.rec_period),
+  };
+  return codexFeatChrome.layout.columnFacts.map((id) => {
+    const key = glrColumnKeyFor(id, 'feat', 'browse');
+    return { key, value: values[key] ?? '-' };
+  });
 }

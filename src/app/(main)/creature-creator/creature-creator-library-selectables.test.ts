@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { UserItem, UserTechnique } from '@/hooks';
 import {
   buildArmamentLibraryList,
+  buildArmamentSelectableItems,
   buildEmpoweredTechniqueLibraryList,
 } from './creature-creator-library-selectables';
 
@@ -67,5 +68,12 @@ describe('creature library source merge (TASK-712)', () => {
     expect(rows.find((r) => r.id === 'p1')?.name).toBe('Official P1');
     expect(rows.map((r) => r.docId).sort()).toEqual(['doc-p1', 'doc-p2', 'doc-u1']);
     expect(rows.filter((r) => r.docId === 'doc-p2')).toHaveLength(1);
+  });
+
+  it('armament picker rows use per-kind catalog columns (TASK-810)', () => {
+    const weapon = item({ id: 'w1', docId: 'doc-w1', name: 'Axe' });
+    const rows = buildArmamentSelectableItems([weapon], [], 'weapon');
+    expect(rows[0]?.columns?.map((c) => c.key)).toEqual(['Damage']);
+    expect(rows[0]?.columns?.some((c) => c.key === 'Type' || c.key === 'type')).toBe(false);
   });
 });

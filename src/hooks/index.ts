@@ -23,6 +23,7 @@ export { useGuidedEquipmentL2Catalog } from './use-guided-equipment-l2-catalog';
 export { useLoadModalLibrary } from './use-load-modal-library';
 export type {
   LoadModalLibraryType,
+  LoadModalArmamentKind,
   UseLoadModalLibraryReturn,
   UseLoadModalLibraryOptions,
 } from './use-load-modal-library';

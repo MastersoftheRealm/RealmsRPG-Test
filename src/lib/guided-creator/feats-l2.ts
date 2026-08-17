@@ -11,10 +11,12 @@
 
 import type { SelectableItem } from '@/components/shared/unified-selection-modal';
 import type { Feat, Skill } from '@/hooks';
+import { glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
 import {
   buildFeatDetailSections,
   featSelectableColumns,
   featSelectableHeaderColumns,
+  FEAT_CREATOR_GRID_COLUMNS,
 } from '@/lib/codex/feat-list';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import {
@@ -38,7 +40,7 @@ import {
 export const FEATS_L2_HEADER_COLUMNS = featSelectableHeaderColumns({
   omitRequiredLevel: true,
 });
-export const FEATS_L2_GRID = '1.5fr 1fr 0.8fr 0.8fr 1fr';
+export const FEATS_L2_GRID = FEAT_CREATOR_GRID_COLUMNS;
 
 /** Search covers name/description + tags/category (packed into `keywords`) — TASK-684. */
 export const FEATS_L2_SEARCH_FIELDS: (keyof SelectableItem)[] = ['name', 'description', 'keywords'];
@@ -153,10 +155,11 @@ export function buildGuidedFeatsL2Items(opts: {
         codexSkills,
         feats,
       );
-      const detailSections = buildFeatDetailSections(preferred, skillIdToName, familyLevels, {
+      const extra = buildFeatDetailSections(preferred, skillIdToName, familyLevels, {
         isCharacterFeat: preferred.char_feat,
         hideTypeSection: true,
       });
+      const detailSections = glrSurfaceDetailSections('guided-feats-l3', {}, extra);
       const id = String(preferred.id);
       const recommended = recommendedSet.has(id);
       const isSelected = selectedSet.has(id);

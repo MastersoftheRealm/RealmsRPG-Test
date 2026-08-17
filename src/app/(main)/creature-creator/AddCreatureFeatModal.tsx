@@ -21,7 +21,8 @@ import { buildFeatDetailSections } from '@/lib/codex/feat-list';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
-import { buildUsesRecoveryDetailSections } from '@/lib/chip/list-row-metadata';
+import { glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
+import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { formatCreatureLevelLabel } from '@/lib/game';
 import { getFeatLevel, groupFeatFamilies, formatFeatName } from '@/lib/leveled-feats';
 import {
@@ -34,7 +35,6 @@ import {
   UnifiedSelectionModal,
   type SelectableItem,
 } from '@/components/shared/unified-selection-modal';
-import type { ChipData } from '@/components/shared/grid-list-row';
 import { MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import {
   displayItemToCreatureFeat,
@@ -77,16 +77,22 @@ function featToSelectableItem(
   skillIdToName: Map<string, string>,
   featPoints: number,
 ): SelectableItem {
-  const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels, {
+  const extra = buildFeatDetailSections(feat, skillIdToName, familyLevels, {
     isCharacterFeat: feat.char_feat,
+    hideTypeSection: true,
   });
-
-  const usesSections = buildUsesRecoveryDetailSections({
-    usesPerRec: feat.uses_per_rec,
-    maxUses: feat.max_uses,
-    recPeriod: feat.rec_period,
-  });
-  if (usesSections.length > 0) detailSections.unshift(...usesSections);
+  const usesVal = feat.uses_per_rec ?? feat.max_uses;
+  const detailSections = glrSurfaceDetailSections(
+    'creature-feat-picker',
+    {
+      category: feat.category,
+      ability: formatAbilityList(feat.ability),
+      uses: usesVal != null && usesVal > 0 ? usesVal : undefined,
+      recovery: formatListCellLabel(feat.rec_period),
+      reqLevel: feat.lvl_req,
+    },
+    extra,
+  );
 
   const sourceTypeLabel: string = feat.char_feat ? 'Character' : 'Archetype';
   return {
@@ -282,35 +288,26 @@ export function AddCreatureFeatModal({
         : trait.characteristic
           ? 'Characteristic'
           : 'Trait';
-      const detailSections: Array<{
-        label: string;
-        chips: ChipData[];
-        hideLabelIfSingle?: boolean;
-      }> = [];
-      if (trait.flaw) {
-        detailSections.push({
-          label: 'Type',
-          chips: [descriptorChipData('Species flaw', 'warning')],
-          hideLabelIfSingle: true,
-        });
-      } else if (trait.characteristic) {
-        detailSections.push({
-          label: 'Type',
-          chips: [descriptorChipData('Species characteristic', 'default')],
-          hideLabelIfSingle: true,
-        });
-      } else {
-        detailSections.push({
-          label: 'Type',
-          chips: [descriptorChipData('Species trait', 'skill')],
-          hideLabelIfSingle: true,
-        });
-      }
-      const usesSections = buildUsesRecoveryDetailSections({
-        usesPerRec: trait.uses_per_rec,
-        recPeriod: trait.rec_period,
-      });
-      if (usesSections.length > 0) detailSections.push(...usesSections);
+      const typeSection = {
+        label: 'Type',
+        chips: [
+          trait.flaw
+            ? descriptorChipData('Species flaw', 'warning')
+            : trait.characteristic
+              ? descriptorChipData('Species characteristic', 'default')
+              : descriptorChipData('Species trait', 'skill'),
+        ],
+        hideLabelIfSingle: true,
+      };
+      const usesVal = trait.uses_per_rec;
+      const detailSections = glrSurfaceDetailSections(
+        'creature-feat-picker',
+        {
+          uses: usesVal != null && usesVal > 0 ? usesVal : undefined,
+          recovery: formatListCellLabel(trait.rec_period),
+        },
+        [typeSection],
+      );
 
       items.push({
         id: `trt:${id}`,

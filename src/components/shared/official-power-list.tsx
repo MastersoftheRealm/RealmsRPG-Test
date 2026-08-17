@@ -17,6 +17,7 @@ import type { LibraryPower } from '@/types/library';
 import {
   buildOfficialPowerRows,
   filterOfficialPowerRows,
+  officialPowerDetailSections,
   officialPowerRowColumns,
   OFFICIAL_POWER_GRID,
   OFFICIAL_POWER_HEADER_COLUMNS,
@@ -36,7 +37,6 @@ import {
   pathChipLabelsForEntity,
   pathFilterEmptyTitle,
 } from '@/lib/game/path-recommendation-index';
-import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 
 export type { OfficialPowerRow };
@@ -155,11 +155,9 @@ export function OfficialPowerList({
         }
         getColumns={(p) => officialPowerRowColumns(p)}
         getDetailSections={(p) => {
-          const section = partsProficienciesSection(p.parts, 'power');
-          return section ? [section] : undefined;
+          const sections = officialPowerDetailSections(p);
+          return sections.length > 0 ? sections : undefined;
         }}
-        getTotalCost={(p) => p.tp}
-        costLabel="TP"
         getThumbnail={(p) => resolveListRowThumbnail('power', p.raw, p.name)}
         errorMessage={errorMessage}
         sectionTitle={sectionTitle}

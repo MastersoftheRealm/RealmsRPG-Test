@@ -66,14 +66,14 @@ describe('codex equipment-list', () => {
     expect(equipmentCurrency({ gold_cost: 7 })).toBe(7);
   });
 
-  it('moves damage and DR into expand chips', () => {
+  it('does not chip Damage, DR, or Weight on mixed gear browse', () => {
     const sections = buildCodexEquipmentDetailSections(
       item({ id: 'w', name: 'Sword', damage: '1d8 Slashing', armor_value: 2, weight: 3 }),
     );
     const labels = sections.flatMap((s) => s.chips.map((c) => c.name));
-    expect(labels.some((n) => /1d8/i.test(n) && /damage/i.test(n))).toBe(true);
-    expect(labels.some((n) => /damage reduction 2/i.test(n))).toBe(true);
-    expect(labels.some((n) => /weight 3 kg/i.test(n))).toBe(true);
+    expect(labels.some((n) => /damage/i.test(n))).toBe(false);
+    expect(labels.some((n) => /damage reduction/i.test(n))).toBe(false);
+    expect(labels.some((n) => /weight/i.test(n))).toBe(false);
   });
 
   it('applies search, category, min currency, and optional affordability without TP gates', () => {

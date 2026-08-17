@@ -26,6 +26,21 @@ export interface CreatureDefenses {
   [key: string]: number | undefined;
 }
 
+export type CreatureStatBlockArmament = {
+  name: string;
+  description?: string;
+  type?: string;
+  quantity?: number;
+  damage?: string;
+  range?: string;
+  armorValue?: number;
+  damageReduction?: number;
+  properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }>;
+  libraryItem?: { properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }> };
+  image_id?: string | null;
+  image_url?: string | null;
+};
+
 export interface CreatureData {
   id: string;
   name: string;
@@ -105,19 +120,12 @@ export interface CreatureData {
     >;
   }>;
   feats?: Array<{ name: string; description?: string }>;
-  armaments?: Array<{
-    name: string;
-    description?: string;
-    type?: string;
-    damage?: string;
-    range?: string;
-    armorValue?: number;
-    damageReduction?: number;
-    properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }>;
-    libraryItem?: { properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }> };
-    image_id?: string | null;
-    image_url?: string | null;
-  }>;
+  weapons?: CreatureStatBlockArmament[];
+  armor?: CreatureStatBlockArmament[];
+  shields?: CreatureStatBlockArmament[];
+  equipment?: CreatureStatBlockArmament[];
+  /** Legacy mixed bag. Prefer kind buckets; migrate with resolveCreatureInventoryBuckets. */
+  armaments?: CreatureStatBlockArmament[];
 }
 
 export interface CreatureStatBlockProps {

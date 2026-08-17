@@ -1,3 +1,4 @@
+import { chipLabelsFromDetailSections } from '@/lib/glr';
 import { describe, expect, it } from 'vitest';
 import {
   mapPowerRows,
@@ -53,7 +54,9 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     const [row] = mapTechniqueRows(techniques, baseCtx);
     expect(columnKeys(row)).not.toContain('energy');
     expect(columnKeys(row)).toEqual(['action', 'weapon']);
-    expect(row.totalTp).toBe(2);
+    expect(row.totalTp).toBeUndefined();
+    const chips = chipLabelsFromDetailSections(row.detailSections);
+    expect(chips.some((l) => /training points\s+2/i.test(l))).toBe(true);
     expect(row.rightSlot).toBeTruthy();
   });
 

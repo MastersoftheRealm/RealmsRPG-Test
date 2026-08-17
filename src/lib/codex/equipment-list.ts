@@ -1,35 +1,28 @@
 /**
- * Shared Codex + Admin equipment list helpers (TASK-723).
- * Mixed GLR: Category / Currency / Rarity columns; damage and DR as expand chips.
+ * Shared Codex + Admin equipment list helpers (TASK-723 / TASK-806).
+ * Gear GLR: Category / Currency / Rarity only (ADR-0016). Named property chips stay.
  */
 
-import type { ChipData, ColumnValue } from '@/components/shared/grid-list-row-types';
-import {
-  metadataDescriptorChip,
-  metadataDetailSection,
-  type MetadataDetailSection,
-} from '@/lib/chip/list-row-metadata';
-import {
-  damageFactChip,
-  damageReductionFactChip,
-  namedPropertyDescriptorChips,
-} from '@/lib/detail-option/compact-facts';
+import type { ColumnValue } from '@/components/shared/grid-list-row-types';
+import { type MetadataDetailSection } from '@/lib/chip/list-row-metadata';
+import { namedPropertyDescriptorChips } from '@/lib/detail-option/compact-facts';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
 import { applyArmamentFilters, type ArmamentFilterState } from '@/lib/library/armament-filters';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import type { CodexEquipmentItem } from '@/types/codex';
 import { formatListCellLabel } from '@/lib/utils';
 import { rowMatchesPathRecommendedIds } from '@/lib/game/path-recommendation-index';
+import { glrListChrome } from '@/lib/glr';
 
-export const EQUIPMENT_GRID_COLUMNS = '1.5fr 1.1fr 0.7fr 0.85fr';
+const gearBrowseChrome = glrListChrome({ entityType: 'gear', mode: 'browse' });
+
+export const EQUIPMENT_GRID_COLUMNS = gearBrowseChrome.grid;
 
 /** Data columns only — admin action chrome uses CodexBrowseListShell `rowChrome`. */
-export const CODEX_EQUIPMENT_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME' },
-  { key: 'category', label: 'CATEGORY' },
-  { key: 'currency', label: 'CURRENCY' },
-  { key: 'rarity', label: 'RARITY' },
-];
+export const CODEX_EQUIPMENT_HEADER_COLUMNS = gearBrowseChrome.headers.map(({ key, label }) => ({
+  key,
+  label,
+}));
 
 export interface CodexEquipmentListFilters {
   search: string;
@@ -60,19 +53,6 @@ export function buildCodexEquipmentDetailSections(
   if (propertyChips.length > 0) {
     sections.push({ label: 'Properties', chips: propertyChips, hideLabelIfSingle: true });
   }
-
-  const factChips: ChipData[] = [];
-  const damageChip = damageFactChip(item.damage);
-  if (damageChip) factChips.push(damageChip);
-  if (item.armor_value != null) {
-    const drChip = damageReductionFactChip(item.armor_value);
-    if (drChip) factChips.push(drChip);
-  }
-  if (item.weight !== undefined) {
-    factChips.push(metadataDescriptorChip(`Weight ${item.weight} kg`));
-  }
-  const facts = metadataDetailSection(factChips);
-  if (facts) sections.push(facts);
   return sections;
 }
 

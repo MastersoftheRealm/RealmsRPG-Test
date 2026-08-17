@@ -4,6 +4,7 @@
 
 import type { CreatureData } from '@/components/shared/creature-stat-block-types';
 import { formatListCellLabel } from '@/lib/utils';
+import { resolveCreatureInventoryBuckets } from '@/lib/game/creature-inventory';
 import type { LibraryCreature } from '@/types/library';
 
 /** Full stat-block list chrome (Realms + My Library creature tabs). */
@@ -76,6 +77,7 @@ export function formatOfficialCreatureType(type: string): string {
 
 /** Map library API creature rows to CreatureStatBlock data. */
 export function mapLibraryCreatureToStatBlockData(creature: LibraryCreature): CreatureData {
+  const inventory = resolveCreatureInventoryBuckets(creature);
   return {
     id: String(creature.id ?? creature.docId ?? ''),
     name: creature.name || '',
@@ -102,6 +104,9 @@ export function mapLibraryCreatureToStatBlockData(creature: LibraryCreature): Cr
     powers: creature.powers,
     techniques: creature.techniques,
     feats: creature.feats,
-    armaments: creature.armaments,
+    weapons: inventory.weapons,
+    armor: inventory.armor,
+    shields: inventory.shields,
+    equipment: inventory.equipment,
   };
 }

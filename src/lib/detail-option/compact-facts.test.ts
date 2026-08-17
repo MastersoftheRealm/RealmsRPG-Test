@@ -14,6 +14,7 @@ import {
   formatActionTypeFact,
   formatActionTypeValue,
   formatCurrencyFact,
+  formatCriticalRangeIncreaseFact,
   formatDamageFact,
   formatEnergyFact,
   formatAgilityReductionFact,
@@ -27,6 +28,7 @@ import {
   namedPropertyDescriptorChips,
   propertyDescriptorChip,
   agilityReductionFactChip,
+  criticalRangeIncreaseFactChip,
   trainingPointsFactChip,
 } from './compact-facts';
 
@@ -132,6 +134,13 @@ describe('compact-facts formatters', () => {
     expect(agilityReductionFactChip(2)?.name).toBe('Agility Reduction -2');
   });
 
+  it('formats Critical Range increase as a compact fact', () => {
+    expect(formatCriticalRangeIncreaseFact(1)).toBe('Critical Range +1');
+    expect(formatCriticalRangeIncreaseFact(3)).toBe('Critical Range +3');
+    expect(formatCriticalRangeIncreaseFact(0)).toBeUndefined();
+    expect(criticalRangeIncreaseFactChip(1)?.name).toBe('Critical Range +1');
+  });
+
   it('builds non-expanding property descriptor chips with tippy description', () => {
     const chip = propertyDescriptorChip('Graze', 'Deal half damage on a miss.');
     expect(chip.kind).toBe('descriptor');
@@ -162,6 +171,8 @@ describe('compact-facts formatters', () => {
     expect(isMechanicPropertyName('Weapon Damage')).toBe(true);
     expect(isMechanicPropertyName('Armor Base')).toBe(true);
     expect(isMechanicPropertyName('Damage Reduction')).toBe(true);
+    expect(isMechanicPropertyName('Critical Range +1')).toBe(true);
+    expect(isMechanicPropertyName('Critical Range Increase')).toBe(true);
 
     const withCost = namedPropertyDescriptorChips(
       ['Graze'],

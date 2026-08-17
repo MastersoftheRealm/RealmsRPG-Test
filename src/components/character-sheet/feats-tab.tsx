@@ -60,6 +60,8 @@ interface CodexFeat {
   uses_per_rec?: number;
   rec_period?: string;
   category?: string;
+  ability?: string | string[];
+  lvl_req?: number;
   feat_lvl?: number;
   base_feat_id?: string;
 }
@@ -285,6 +287,9 @@ export function FeatsTab({
         description: feat.description || dbFeat?.description || dbFeat?.effect,
         maxUses: feat.maxUses ?? dbFeat?.uses_per_rec ?? dbFeat?.max_uses ?? 0,
         recovery: feat.recovery || dbFeat?.rec_period,
+        category: dbFeat?.category,
+        ability: dbFeat?.ability,
+        reqLevel: dbFeat?.lvl_req,
       };
     },
     [featsDb],

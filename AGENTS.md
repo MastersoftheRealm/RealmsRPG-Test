@@ -27,7 +27,7 @@ Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits
 | Exists already? | `FEATURE_INDEX.md` → `shared` / `ui` / `hooks` / `services` barrels |
 | DB schema | `SUPABASE_SCHEMA.md` |
 | Game formulas & terminology | `GAME_RULES.md` |
-| GLR required facts (column vs chip) | `lib/glr/required-facts-registry.ts` (ADR-0009) |
+| GLR required facts (column vs chip) | `lib/glr/glr-fact-catalog.ts` + `glr-density.ts` + `resolve-glr-fact-layout.ts` (ADR-0016; supersedes ADR-0009) |
 | Deep component patterns | `AGENT_GUIDE.md` hub → `guide/` appendices (on demand) |
 | Design tokens | `DESIGN_SYSTEM.md` — prefer `*-fg` tokens |
 | Mobile | `MOBILE_UX.md` |

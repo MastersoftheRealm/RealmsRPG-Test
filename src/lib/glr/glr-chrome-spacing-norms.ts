@@ -6,7 +6,7 @@
  * USM selection chrome is `rowChrome.externalSelection`; quantity mode pairs ListHeader +
  * GridListRow `rightSlotWidth` via `USM_QUANTITY_RIGHT_SLOT_WIDTH`. Creator-embedded GLR
  * lists follow the same row-container + rowChrome contract.
- * Complements required-facts registry (TASK-629 / ADR-0009).
+ * Complements the fact catalog (TASK-806 / ADR-0016).
  *
  * CI: `validate-glr-chrome-spacing.test.ts` · Guide: `guide/02-components-and-lists.md`
  */

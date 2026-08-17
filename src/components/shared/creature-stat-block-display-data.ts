@@ -6,7 +6,13 @@ import {
   calculateSkillBonusWithProficiency,
   calculateSubSkillBonusWithProficiency,
 } from '@/lib/game/formulas';
-import { buildPartsAndMetadataDetailSections } from '@/lib/chip/list-row-metadata';
+import { glrSurfaceDetailSections, partsProficienciesSection } from '@/lib/chip/list-row-metadata';
+import {
+  derivePartCategories,
+  formatPartCategoriesColumn,
+  powerHasDamageCategory,
+  withDamageCategory,
+} from '@/lib/library/power-technique-categories';
 import type { Abilities } from '@/types';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
@@ -144,15 +150,26 @@ export function buildPowersForDisplay(
     );
 
     const partsChips = partsToChips(parts, powerPartsDb as CodexPart[]);
+    const partsSection = partsProficienciesSection(partsChips, 'power');
     const damageStr =
       formatPowerDamage(Array.isArray(damage) ? damage : undefined) ||
       (typeof ref.damage === 'string' ? ref.damage : undefined);
     const rangeValue = derived.range && derived.range !== '-' ? derived.range : ref.range;
-    const detailSections = buildPartsAndMetadataDetailSections({
-      range: rangeValue,
-      partChips: partsChips,
-      partsFamily: 'power',
-    });
+    const categories = withDamageCategory(
+      derivePartCategories(objectPartsOnly(parts), powerPartsDb),
+      powerHasDamageCategory(Array.isArray(damage) ? damage : undefined),
+    );
+    const categoryText = formatPartCategoriesColumn(categories);
+    const tp = partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0);
+    const detailSections = glrSurfaceDetailSections(
+      'creature-stat-block-power',
+      {
+        category: categoryText && categoryText !== '—' ? categoryText : undefined,
+        range: rangeValue,
+        trainingPoints: tp > 0 ? tp : undefined,
+      },
+      partsSection ? [partsSection] : undefined,
+    );
 
     return {
       id: `${creature.id}-power-${refId ?? idx}`,
@@ -166,7 +183,6 @@ export function buildPowersForDisplay(
       energyCost: typeof derived.energy === 'number' ? derived.energy : ref.energy,
       innate: ref.innate,
       detailSections: detailSections.length > 0 ? detailSections : undefined,
-      totalTp: partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0),
     };
   });
 }
@@ -257,27 +273,33 @@ export function buildTechniquesForDisplay(
     );
 
     const partsChips = partsToChips(parts, techniquePartsDb as CodexPart[]);
+    const partsSection = partsProficienciesSection(partsChips, 'technique');
     const damageStr =
       derived.damageStr !== '-'
         ? derived.damageStr
         : typeof ref.damage === 'string'
           ? ref.damage
           : undefined;
-    const detailSections = buildPartsAndMetadataDetailSections({
-      damage: damageStr,
-      partChips: partsChips,
-      partsFamily: 'technique',
-    });
+    const categories = derivePartCategories(objectPartsOnly(parts), techniquePartsDb);
+    const categoryText = formatPartCategoriesColumn(categories);
+    const detailSections = glrSurfaceDetailSections(
+      'creature-stat-block-technique',
+      {
+        category: categoryText && categoryText !== '—' ? categoryText : undefined,
+        damage: damageStr,
+      },
+      partsSection ? [partsSection] : undefined,
+    );
     return {
       id: `${creature.id}-tech-${refId ?? idx}`,
       name: baseName,
       description: baseDescription,
       thumbnail: resolveListRowThumbnail('technique', imageRecord, baseName),
+      actionType: derived.actionType,
       energyCost: typeof derived.energy === 'number' ? derived.energy : ref.energy,
       weaponName: derived.weaponName || ref.weapon,
       tp: derived.tp ?? ref.tp,
       detailSections: detailSections.length > 0 ? detailSections : undefined,
-      totalTp: partsChips.reduce((sum, chip) => sum + (chip.cost ?? 0), 0),
     };
   });
 }

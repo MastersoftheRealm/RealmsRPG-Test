@@ -1,4 +1,4 @@
-import type {
+﻿import type {
   SavedPart,
   SavedProperty,
   UserItem,
@@ -7,6 +7,11 @@ import type {
 } from '@/hooks/use-user-library';
 import { findByIdOrName } from '@/lib/id-constants';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import {
+  collectCreatureInventoryItems,
+  resolveCreatureInventoryBuckets,
+  type CreatureInventoryBuckets,
+} from '@/lib/game/creature-inventory';
 
 type PartLike = {
   id?: string | number;
@@ -502,6 +507,13 @@ export function sanitizeItemForSync(
   };
 }
 
+type CreatureInventorySavedItem = {
+  id?: string;
+  name: string;
+  type?: string;
+  properties?: SavedProperty[];
+};
+
 type CreatureLike = {
   id?: string;
   docId?: string;
@@ -516,12 +528,115 @@ type CreatureLike = {
     name: string;
     parts?: SavedPart[];
   }>;
-  armaments?: Array<{
-    id?: string;
-    name: string;
-    properties?: SavedProperty[];
-  }>;
+  weapons?: CreatureInventorySavedItem[];
+  armor?: CreatureInventorySavedItem[];
+  shields?: CreatureInventorySavedItem[];
+  equipment?: CreatureInventorySavedItem[];
+  armaments?: CreatureInventorySavedItem[];
 };
+
+function syncCreatureInventoryBag(
+  creatureName: string,
+  items: CreatureInventorySavedItem[],
+  itemPropertiesDb: PropertyLike[],
+  options?: SyncOptions,
+): { items: CreatureInventorySavedItem[]; issues: SyncIssue[]; changed: boolean } {
+  const issues: SyncIssue[] = [];
+  let changed = false;
+  const next = items.map((a) => {
+    const r = syncItemProperties(
+      `${creatureName}: ${a.name}`,
+      a.properties ?? [],
+      itemPropertiesDb,
+      options,
+    );
+    if (r.hasDrift) issues.push(...r.issues);
+    if (r.changed) changed = true;
+    return { ...a, properties: r.value };
+  });
+  return { items: next, issues, changed };
+}
+
+function syncCreatureInventory(
+  creature: CreatureLike,
+  itemPropertiesDb: PropertyLike[],
+  options?: SyncOptions,
+): {
+  buckets: CreatureInventoryBuckets<CreatureInventorySavedItem>;
+  issues: SyncIssue[];
+  changed: boolean;
+} {
+  const resolved = resolveCreatureInventoryBuckets(creature);
+  const weapons = syncCreatureInventoryBag(
+    creature.name ?? 'Creature',
+    resolved.weapons,
+    itemPropertiesDb,
+    options,
+  );
+  const armor = syncCreatureInventoryBag(
+    creature.name ?? 'Creature',
+    resolved.armor,
+    itemPropertiesDb,
+    options,
+  );
+  const shields = syncCreatureInventoryBag(
+    creature.name ?? 'Creature',
+    resolved.shields,
+    itemPropertiesDb,
+    options,
+  );
+  const equipment = syncCreatureInventoryBag(
+    creature.name ?? 'Creature',
+    resolved.equipment,
+    itemPropertiesDb,
+    options,
+  );
+  return {
+    buckets: {
+      weapons: weapons.items,
+      armor: armor.items,
+      shields: shields.items,
+      equipment: equipment.items,
+    },
+    issues: [...weapons.issues, ...armor.issues, ...shields.issues, ...equipment.issues],
+    changed: weapons.changed || armor.changed || shields.changed || equipment.changed,
+  };
+}
+
+function creatureInventoryHasPropertyRefs(
+  buckets: CreatureInventoryBuckets<CreatureInventorySavedItem>,
+): boolean {
+  return collectCreatureInventoryItems(buckets).some((a) => (a.properties?.length ?? 0) > 0);
+}
+
+function withCreatureInventoryBuckets(
+  creature: CreatureLike,
+  buckets: CreatureInventoryBuckets<CreatureInventorySavedItem>,
+  nextPowers: CreatureLike['powers'],
+  nextTechniques: CreatureLike['techniques'],
+): CreatureLike {
+  const rest = { ...creature };
+  delete rest.armaments;
+  return {
+    ...rest,
+    ...(creature.powers ? { powers: nextPowers } : {}),
+    ...(creature.techniques ? { techniques: nextTechniques } : {}),
+    weapons: buckets.weapons,
+    armor: buckets.armor,
+    shields: buckets.shields,
+    equipment: buckets.equipment,
+  };
+}
+
+function creatureInventoryFingerprint(
+  buckets: CreatureInventoryBuckets<CreatureInventorySavedItem>,
+  itemPropertiesDb: PropertyLike[],
+) {
+  return collectCreatureInventoryItems(buckets).map((a) => ({
+    name: a.name,
+    fp: buildItemPropertyFingerprint(a.properties ?? [], itemPropertiesDb),
+  }));
+}
 
 export function getCreatureSyncResult(
   creature: CreatureLike,
@@ -554,23 +669,16 @@ export function getCreatureSyncResult(
     return { ...t, parts: r.value };
   });
 
-  const nextArmaments = (creature.armaments ?? []).map((a) => {
-    const r = syncItemProperties(
-      `${creature.name ?? 'Creature'}: ${a.name}`,
-      a.properties ?? [],
-      itemPropertiesDb,
-    );
-    if (r.hasDrift) issues.push(...r.issues);
-    if (r.changed) changed = true;
-    return { ...a, properties: r.value };
-  });
+  const inventory = syncCreatureInventory(creature, itemPropertiesDb);
+  issues.push(...inventory.issues);
+  if (inventory.changed) changed = true;
 
-  const next: CreatureLike = {
-    ...creature,
-    ...(creature.powers ? { powers: nextPowers } : {}),
-    ...(creature.techniques ? { techniques: nextTechniques } : {}),
-    ...(creature.armaments ? { armaments: nextArmaments } : {}),
-  };
+  const next = withCreatureInventoryBuckets(
+    creature,
+    inventory.buckets,
+    nextPowers,
+    nextTechniques,
+  );
   const currentFingerprint = stableFingerprint({
     powers: nextPowers.map((p) => ({
       name: p.name,
@@ -580,16 +688,13 @@ export function getCreatureSyncResult(
       name: t.name,
       fp: buildPowerPartFingerprint(t.parts ?? [], techniquePartsDb),
     })),
-    armaments: nextArmaments.map((a) => ({
-      name: a.name,
-      fp: buildItemPropertyFingerprint(a.properties ?? [], itemPropertiesDb),
-    })),
+    armaments: creatureInventoryFingerprint(inventory.buckets, itemPropertiesDb),
   });
   const storedFingerprint = getStoredFingerprint(creature);
   const hasRefs =
     (creature.powers?.some((p) => (p.parts?.length ?? 0) > 0) ?? false) ||
     (creature.techniques?.some((t) => (t.parts?.length ?? 0) > 0) ?? false) ||
-    (creature.armaments?.some((a) => (a.properties?.length ?? 0) > 0) ?? false);
+    creatureInventoryHasPropertyRefs(inventory.buckets);
   const definitionsChanged =
     hasRefs && !!storedFingerprint && storedFingerprint !== currentFingerprint;
   const neverSynced = hasRefs && !storedFingerprint;
@@ -648,24 +753,16 @@ export function sanitizeCreatureForSync(
     return { ...t, parts: r.value };
   });
 
-  const nextArmaments = (creature.armaments ?? []).map((a) => {
-    const r = syncItemProperties(
-      `${creature.name ?? 'Creature'}: ${a.name}`,
-      a.properties ?? [],
-      itemPropertiesDb,
-      { dropMissingRefs: true },
-    );
-    if (r.hasDrift) issues.push(...r.issues);
-    if (r.changed) changed = true;
-    return { ...a, properties: r.value };
-  });
+  const inventory = syncCreatureInventory(creature, itemPropertiesDb, { dropMissingRefs: true });
+  issues.push(...inventory.issues);
+  if (inventory.changed) changed = true;
 
-  const next: CreatureLike = {
-    ...creature,
-    ...(creature.powers ? { powers: nextPowers } : {}),
-    ...(creature.techniques ? { techniques: nextTechniques } : {}),
-    ...(creature.armaments ? { armaments: nextArmaments } : {}),
-  };
+  const next = withCreatureInventoryBuckets(
+    creature,
+    inventory.buckets,
+    nextPowers,
+    nextTechniques,
+  );
   const currentFingerprint = stableFingerprint({
     powers: nextPowers.map((p) => ({
       name: p.name,
@@ -675,16 +772,13 @@ export function sanitizeCreatureForSync(
       name: t.name,
       fp: buildPowerPartFingerprint(t.parts ?? [], techniquePartsDb),
     })),
-    armaments: nextArmaments.map((a) => ({
-      name: a.name,
-      fp: buildItemPropertyFingerprint(a.properties ?? [], itemPropertiesDb),
-    })),
+    armaments: creatureInventoryFingerprint(inventory.buckets, itemPropertiesDb),
   });
   const storedFingerprint = getStoredFingerprint(creature);
   const hasRefs =
     (creature.powers?.some((p) => (p.parts?.length ?? 0) > 0) ?? false) ||
     (creature.techniques?.some((t) => (t.parts?.length ?? 0) > 0) ?? false) ||
-    (creature.armaments?.some((a) => (a.properties?.length ?? 0) > 0) ?? false);
+    creatureInventoryHasPropertyRefs(inventory.buckets);
   const metaDrift = hasRefs && (!storedFingerprint || storedFingerprint !== currentFingerprint);
   const withMeta = withSyncMeta(next as object, currentFingerprint) as CreatureLike;
   const before = JSON.stringify(creature);

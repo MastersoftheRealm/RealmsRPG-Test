@@ -59,7 +59,10 @@ export interface CreatureState {
   powers: CreaturePower[];
   techniques: CreatureTechnique[];
   feats: CreatureFeat[];
-  armaments: CreatureArmament[];
+  weapons: CreatureArmament[];
+  armor: CreatureArmament[];
+  shields: CreatureArmament[];
+  equipment: CreatureArmament[];
   enablePowers: boolean;
   enableTechniques: boolean;
   enableArmaments: boolean;

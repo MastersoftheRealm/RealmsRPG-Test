@@ -1379,11 +1379,11 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-009 — Character sheet refactor |
-| **Task** | TASK-542 |
+| **Task** | TASK-542 / TASK-815 |
 | **Where** | `/characters/[id]` → Library → Inventory → Add equipment |
 | **Needs** | Owned character; Codex equipment available (or use custom form) |
-| **Steps** | 1. Open Add equipment. 2. Confirm Codex/library gear rows are listed (not an empty “already added” false empty). 3. Select one item with quantity ≥1 → Add Selected; confirm it appears under Equipment. 4. Add the same item again; confirm quantity stacks. 5. Add a custom item by name; confirm it appears and survives refresh. |
-| **Expected** | Library and custom adds update the Equipment list immediately; stacking merges quantity; custom notes persist after save/reload. |
+| **Steps** | 1. Open Add equipment. 2. Confirm Codex/library gear rows are listed (not an empty “already added” false empty). 3. Confirm the **Add custom** form (Name / Notes / Qty) is visible under Search without opening Filters. 4. Select one item with quantity ≥1 → Add Selected; confirm it appears under Equipment. 5. Add the same item again; confirm quantity stacks. 6. Add a custom item by name (and optional notes); confirm it appears and survives refresh. |
+| **Expected** | Custom-add is always visible (not buried in Filters). Library and custom adds update the Equipment list immediately; stacking merges quantity; custom notes persist after save/reload. |
 | **Report** | DEV-V-009-T022: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T023 — Roll log bonus badge readable in dark mode (TASK-542)
@@ -4289,10 +4289,10 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-016 |
-| **Task** | TASK-379 |
+| **Task** | TASK-379 / TASK-810 |
 | **Where** | `/item-creator` → Load |
-| **Steps** | 1. Open Load. 2. Confirm Type + Damage/Armor/Block columns for mixed armaments. 3. Load a weapon and an armor separately. |
-| **Expected** | Combined armament list; each load restores the correct item type fields. |
+| **Steps** | 1. Open Load. 2. Confirm **Weapons / Armor / Shields** tabs (no mixed All list). 3. Weapons: Damage column (Range is an expand chip). Armor: Damage Reduction column. Shields: Block + Damage. 4. Load a weapon, then switch to Armor and load an armor — form type fields follow the loaded kind. |
+| **Expected** | Per-kind catalog select-density columns (no Type + Stat mixed list). Each load restores the correct item type fields. |
 | **Report** | DEV-V-016-T003: PASS / FAIL / SKIP — |
 
 #### DEV-V-016-T004 — Empowered technique creator Load
@@ -4346,8 +4346,8 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Suite** | DEV-V-016 |
 | **Task** | TASK-723 |
 | **Where** | `/codex` → Equipment; `/admin/codex` → Equipment |
-| **Steps** | 1. Open Codex Equipment. 2. Confirm headers: Category, Currency, Rarity — no Cost, Damage, or Dmg. Red. columns. 3. Currency cells are plain numbers (no trailing “c”, not blue/highlighted). 4. Expand a weapon → damage chip; expand armor → Damage Reduction chip; weight still `Weight N kg`. 5. Filters: optional min/max currency. With a character selected, optional “rarity this level can access” and “within currency” are **off** by default; turning them on narrows the list. 6. Admin Equipment: same three headers and plain Currency cells. |
-| **Expected** | Mixed browse matches Library currency chrome; damage/DR live in expand chips; character filters are opt-in. |
+| **Steps** | 1. Open Codex Equipment. 2. Confirm headers: Category, Currency, Rarity — no Cost, Damage, or Dmg. Red. columns. 3. Currency cells are plain numbers (no trailing “c”, not blue/highlighted). 4. Expand a mixed row: **no** required Damage / Damage Reduction / Weight fact chips (gear closed set, TASK-806). Named property chips may still appear when the row has properties. 5. Filters: optional min/max currency. With a character selected, optional “rarity this level can access” and “within currency” are **off** by default; turning them on narrows the list. 6. Admin Equipment: same three headers and plain Currency cells. |
+| **Expected** | Mixed Codex/Admin browse is gear chrome (Category / Currency / Rarity). Combat facts belong on Official/sheet/guided armament lists, not this mixed list. Character filters are opt-in. |
 | **Report** | DEV-V-016-T008: PASS / FAIL / SKIP — |
 
 #### DEV-V-016-T009 — Creator powers/techniques omitted facts (TASK-437)
@@ -4366,10 +4366,10 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-016 |
-| **Task** | TASK-437 |
+| **Task** | TASK-437 / TASK-810 |
 | **Where** | `/creature-creator` |
-| **Steps** | 1. Select Powers → expand → `Duration …` chip when duration exists. 2. Select Inventory → expand a weapon → `Damage:` / `Range:` chips; armor → `Damage Reduction N`. |
-| **Expected** | Modal Type/TP/Cost layout still works; combat facts remain self-describing when expanded. |
+| **Steps** | 1. Select Powers → expand → `Duration …` chip when duration exists. 2. Select Inventory: no **All** tab; Weapons / Armor / Shields / Equipment. 3. Weapons tab: Damage column; expand a ranged weapon → Range chip (not a Range column, not a Damage chip). 4. Armor tab: Damage Reduction column; expand → Crit / Abl. Req. chips as applicable. |
+| **Expected** | Inventory picker uses the same select-density catalog columns as sheet Add Weapon/Armor/Shield. Combat facts are never both a column and a chip. |
 | **Report** | DEV-V-016-T010: PASS / FAIL / SKIP — |
 
 #### DEV-V-016-T011 — My Library Enhanced Items tab shell (no sync/duplicate) (TASK-475)
@@ -4413,11 +4413,11 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-016 |
-| **Task** | TASK-564 |
+| **Task** | TASK-564 / TASK-815 |
 | **Where** | `/characters/[id]` → Edit → Library → Add Power; also Add Feat, Add Skill, Add Equipment; spot-check creature creator Select Powers |
 | **Needs** | Narrow viewport (~360px) and a desktop width; enough list items to scroll |
-| **Steps** | 1. Open Add Power at ~360px. 2. Confirm **Search** + **Filters** on one row, and **Powers / Empowered Techniques** mode tabs always visible under search (not inside Filters). 3. Confirm a one-line source summary when Filters are closed (if source ≠ All). 4. Confirm several list rows are visible between chrome and the sticky footer. 5. Tap **Filters** — SourceFilter (and equipment custom-add when relevant) appear; mode tabs stay visible; Hide Filters collapses the panel. 6. Open Add Feat — Filters starts collapsed; opening it reveals category/ability/checkboxes. 7. Spot-check Crafting (Armaments/Equipment always visible; source under Filters), creature Add feat (feat-source tabs always visible), and a creator Load modal (source under Filters). 8. Spot-check desktop: Filters not permanently expanded. |
-| **Expected** | Primary mode tabs via `scopeExtra` always visible; `headerExtra`/`filterContent` collapsed by default; list remains the dominant focus; sticky footer still works (T013). |
+| **Steps** | 1. Open Add Power at ~360px. 2. Confirm **Search** + **Filters** on one row, and **Powers / Empowered Techniques** mode tabs always visible under search (not inside Filters). 3. Confirm a one-line source summary when Filters are closed (if source ≠ All). 4. Confirm several list rows are visible between chrome and the sticky footer. 5. Tap **Filters** — SourceFilter appears; mode tabs stay visible; Hide Filters collapses the panel. 6. Open Add equipment — custom-item form is visible under Search without opening Filters; Filters still holds SourceFilter / path only. 7. Open Add Feat — Filters starts collapsed; opening it reveals category/ability/checkboxes. 8. Spot-check Crafting (Armaments/Equipment always visible; source under Filters), creature Add feat (feat-source tabs always visible), and a creator Load modal (source under Filters). 9. Spot-check desktop: Filters not permanently expanded. |
+| **Expected** | Primary mode tabs (and sheet equipment custom-add) via `scopeExtra` always visible; `headerExtra`/`filterContent` collapsed by default; list remains the dominant focus; sticky footer still works (T013). |
 | **Report** | DEV-V-016-T014: PASS / FAIL / SKIP — |
 
 #### DEV-V-016-T015 — Add-modal chrome declutter + leave-with-selection prompt (TASK-574)
@@ -4490,6 +4490,66 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Steps** | 1. Open `/library` signed in (My Library). Confirm tab badges show counts. In Network, first paint should request `/api/user/library/counts` plus **only the active tab’s** list (default Powers → `/api/user/library/powers`), not techniques/items/creatures/enhanced. 2. Switch to Weapons, then Armor — items list may load once and stay cached; counts stay. 3. Delete one power — Powers badge drops without a full reload. 4. Switch to Realms Library — badges come from `/api/official/counts`; first Realms tab loads only that collection. Enhanced Items is hidden. 5. Guest / signed-out: Realms read-only, no My Library toggle, no Add to library. |
 | **Expected** | Badges use the counts endpoints (ADR-0015). Inactive tab row lists do not fetch on first paint. Create/delete updates counts. Enhanced stays My-Library only. |
 | **Report** | DEV-V-016-T020: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T021 — GLR density: browse vs play vs add-modal vs gear (TASK-807)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-807 |
+| **Where** | `/library` Official Powers/Weapons; `/characters/[id]` Library Powers + Inventory weapons; sheet Add Power; `/codex` Equipment |
+| **Needs** | Signed-in character with at least one power and one weapon; Codex equipment rows |
+| **Steps** | 1. Official Library Powers: Category / Energy / Action / Duration / Range / Area / Damage columns (TP not a dense column). 2. Sheet Powers play: Action / Damage / Area / Duration columns; Energy is the far-right spend control, not a value column. 3. Add Power: Energy / Action / Duration / Area / Damage columns; expand → Range chip when ranged (not a `Range —` leftover). 4. Codex Equipment: Category / Currency / Rarity only; expand does **not** require Damage/DR/Weight chips. 5. Guided gear L2/L3 matches those three gear headers. ~360px + desktop. |
+| **Expected** | One catalog + density mode drives column vs chip. Gear stays the closed three-fact set. Armament combat facts stay on Official/sheet/guided loadout, not mixed Codex browse. |
+| **Report** | DEV-V-016-T021: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T022 — GLR never-both + chipFacts-driven add-modal chips (TASK-808 / TASK-809)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-808 / TASK-809 |
+| **Where** | `/characters/[id]` → Edit → Library → Add Power / Add Weapon / Add Armor; Inventory armor row |
+| **Needs** | Signed-in character; a ranged power, a ranged weapon, and armor with Critical Range +1 plus an ability requirement |
+| **Steps** | 1. Add Power: columns Energy / Action / Duration / Area / Damage; expand a ranged power → **Range … Spaces** descriptor (not a Range column, not `Range —`). 2. Add Weapon: Damage column only; expand a ranged weapon → Range chip, no Range column. 3. Add Armor: Damage Reduction column; expand → Crit / Abl. Req. / Agility Red. as descriptor chips, **not** a duplicate Critical Range property chip. 4. Sheet Inventory armor: DR + Crit columns; expand → Strength/Agility requirement chips; **no** Critical Range property chip beside the Crit column. Desktop + ~360px. |
+| **Expected** | Ranked facts come from `layout.chipFacts` (plus parts/properties). A valued fact is a column **or** a chip, never both. Feat Ability Requirements chips stay extra-chrome (`Strength 3+`, not the ranked `… Requirement N+` fact). |
+| **Report** | DEV-V-016-T022: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T023 — Separated armament lists (TASK-810)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-810 |
+| **Where** | `/item-creator` Load; `/creature-creator` Inventory |
+| **Needs** | Signed-in user with at least one weapon and one armor in My or Realms library (empty tabs OK to confirm copy) |
+| **Steps** | 1. Armament Creator → Load: Weapons / Armor / Shields tabs; no combined Type+Stat list. 2. Creature Creator → Inventory: four selected lists (Weapons / Armor / Shields / Equipment) with sheet play columns; Add weapon/armor/shield/equipment opens the picker on that tab. 3. Picker has no All tab. Desktop + ~360px. |
+| **Expected** | No mixed weapon+armor+shield gear list. Kind tabs drive catalog columns. Selected creature inventory is split the same way as sheet Library → Inventory. |
+| **Report** | DEV-V-016-T023: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T024 — Creature inventory document kind buckets (TASK-812)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-812 |
+| **Where** | `/creature-creator`; Library → Creatures expand |
+| **Needs** | Signed-in user; a saved creature that still has mixed `data.armaments` if available, plus a new creature with one weapon and one equipment item |
+| **Steps** | 1. Creature Creator → add one weapon and one equipment item → Save. Reload `/creature-creator?edit=<id>`: items still sit in Weapons vs Equipment lists. 2. Equipment Qty is `-` unless that item actually has a quantity (do not show a fake 1). 3. Currency / TP summary still counts those items; picker hides already-selected ids. 4. Library → Creatures → expand the same creature: Weapons and Equipment sections match. 5. If an older creature with only `data.armaments` exists, Load it — kinds split correctly. Desktop + ~360px. |
+| **Expected** | Saved document uses kind buckets, not a mixed armaments dump. Legacy `armaments[]` still loads. Stat block and creator lists stay in sync. Equipment Qty is blank/`-` until quantity is real data. |
+| **Report** | DEV-V-016-T024: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T026 — GLR never-neither: demoted chips on sheet / Add Feat / Official (TASK-814)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-814 |
+| **Where** | `/characters/[id]` Library Powers / Inventory / Feats; Add Feat; `/library` Official Powers |
+| **Needs** | Signed-in character with a power that has parts + range, a feat with category/ability/req level, and inventory gear with rarity/cost; Official library powers |
+| **Steps** | 1. Sheet Library → Powers: expand a power → **Category**, **Range**, **Training Points** descriptor chips (Energy stays the spend control, not a column or Total TP footer). 2. Inventory equipment: expand → rarity / currency / TP chips; no `Cost Nc` badge. 3. Feats play: expand → Req. Level / Category / Ability chips (Uses/Recovery stay columns when present). 4. Add Feat: Category / Ability / Uses / Recovery columns; expand → Req. Level chip. 5. Official Powers: TP is an expand chip, not a dense column and not Total TP in the expanded footer. Desktop + ~360px. |
+| **Expected** | Overflow/demoted catalog facts appear as chips. A valued fact is a column **or** a chip **or** rightSlot, never both and never nowhere. Guided L2 still uses TP `rightSlot`/`totalCost` (`creatorBudget`). Skip Legacy `/characters/new/advanced`. |
+| **Report** | DEV-V-016-T026: PASS / FAIL / SKIP — |
 
 ---
 

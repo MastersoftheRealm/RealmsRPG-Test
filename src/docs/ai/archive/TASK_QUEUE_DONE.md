@@ -1,3 +1,386 @@
+- id: TASK-814
+  title: GLR never-neither — demote overflow facts to chips sitewide
+  created_at: 2026-08-17
+  completed_at: 2026-08-17
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T026
+  developer_test_plan: |
+    Suite DEV-V-016 T026 - see BUILD_VALIDATION.md
+  related_files:
+    - src/lib/glr/glr-density.ts
+    - src/lib/glr/resolve-glr-fact-layout.ts
+    - src/lib/glr/resolve-glr-fact-layout.test.ts
+    - src/lib/glr/glr-surface-bindings.ts
+    - src/lib/glr/glr-fact-catalog.ts
+    - src/lib/glr/glr-fact-catalog.test.ts
+    - src/lib/chip/list-row-metadata.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/components/character-sheet/library-entity-rows.test.ts
+    - src/components/character-sheet/library-feat-rows.tsx
+    - src/components/character-sheet/feats-tab.tsx
+    - src/components/character-sheet/add-feat-modal.tsx
+    - src/lib/library/official-power-list.ts
+    - src/lib/library/official-technique-list.ts
+    - src/lib/library/official-item-list.ts
+    - src/lib/library-selectable-builders.ts
+    - src/lib/library-selectable-builders.test.ts
+    - src/lib/codex/feat-list.ts
+    - src/hooks/add-library-item/build-empowered-selectable-item.ts
+    - src/lib/guided-creator/powers-techniques-l2.ts
+    - src/app/(main)/library/LibraryPowersTab.tsx
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/app/(main)/library/LibraryItemsTab.tsx
+    - src/app/(main)/creature-creator/AddCreatureFeatModal.tsx
+    - src/components/shared/creature-stat-block-display-data.ts
+    - src/docs/ai/ADR/0016-glr-fact-catalog.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/CHIP_UNIFICATION_PLAN.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/lib/chip/index.ts
+    - src/components/shared/official-entity-list.tsx
+    - src/lib/guided-creator/feats-l2.ts
+  follow_up_tasks:
+    - TASK-817
+    - TASK-818
+  description: |
+    After ADR-0016, play/select omitFacts dropped applicable facts instead of demoting them to expanded chips, and several GridListRow builders still skipped layout.chipFacts (sheet library especially). Density demotes overflow facts to chips (true omit remains characterCreate + reqLevel only). Non-legacy lists bind { entityType, mode, flags } and emit ranked chips from the resolver. Skip Legacy /characters/new/advanced.
+  acceptance_criteria:
+    - Play/select density no longer hides catalog facts; overflow and demoted facts appear as descriptor chips (never both column and chip).
+    - Character sheet Library powers/techniques/inventory/feats show catalog facts via derive + chipFacts (Energy stays spend rightSlot).
+    - Official / My Library / add-modals / creature pickers / guided L2/L3 / Add Feat reuse layout.chipFacts rather than per-surface chip tables.
+    - Tests: glr-fact-catalog + resolve-glr-fact-layout + sheet/selectable builders; npm run build. DEV-V-016-T026.
+  notes: |
+    Owner 2026-08-17: audit all non-legacy GLR surfaces; as little per-surface placement as possible. Do not change sheet characterSheet Qty steppers (TASK-813). Cleanup 2026-08-17: deleted unused buildArmorRequirementMetadataChips / buildUsesRecoveryDetailSections; dropped unused OfficialEntityList getTotalCost. Filed TASK-817 and TASK-818.
+- id: TASK-815
+  title: Restore sheet Add equipment custom-item form
+  created_at: 2026-08-17
+  completed_at: 2026-08-17
+  created_by: owner
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T022
+      - DEV-V-016-T014
+  developer_test_plan: |
+    Suite DEV-V-009 T022 (+ DEV-V-016 T014) - see BUILD_VALIDATION.md
+  related_files:
+    - src/components/character-sheet/add-library-item-modal.tsx
+    - src/components/character-sheet/add-library-item/add-custom-equipment-form.tsx
+    - src/components/character-sheet/add-library-item/build-custom-equipment.ts
+    - src/components/character-sheet/add-library-item/build-custom-equipment.test.ts
+    - src/components/shared/unified-selection-modal-types.ts
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - .cursor/rules/realms-unification.mdc
+  follow_up_tasks:
+    - TASK-816
+  description: |
+    TASK-564 buried AddCustomEquipmentForm in collapsed Filters (headerExtra). Restore it as always-visible scopeExtra so custom gear can be added without opening Filters.
+  acceptance_criteria:
+    - Sheet Add equipment shows Name / Notes / Qty / Add custom under Search without opening Filters.
+    - SourceFilter and path filters stay in the collapsed Filters panel.
+    - Custom add still merges into inventory and persists after save/reload (DEV-V-009 T022).
+    - Tests: vitest build-custom-equipment; npm run build.
+  notes: |
+    Owner regression 2026-08-17. Do not put custom-add back under Filters. TASK-814 is the GLR never-neither task, not this work.
+- id: TASK-812
+  title: Split creature inventory document by kind
+  created_at: 2026-08-17
+  completed_at: 2026-08-17
+  created_by: owner
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  follow_up_tasks:
+    - TASK-813
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T024
+  developer_test_plan: |
+    Suite DEV-V-016 T024 - see BUILD_VALIDATION.md
+  related_files:
+    - src/lib/game/creature-inventory.ts
+    - src/lib/game/creature-inventory.test.ts
+    - src/lib/game/index.ts
+    - src/app/(main)/creature-creator/creature-creator-types.ts
+    - src/app/(main)/creature-creator/creature-skill-utils.ts
+    - src/app/(main)/creature-creator/creature-skill-utils.test.ts
+    - src/app/(main)/creature-creator/creature-creator-workspace-persistence.ts
+    - src/app/(main)/creature-creator/creature-creator-derived-stats.ts
+    - src/app/(main)/creature-creator/creature-creator-derived-stats.test.ts
+    - src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx
+    - src/app/(main)/creature-creator/use-creature-creator-workspace.ts
+    - src/app/(main)/creature-creator/creature-creator-constants.ts
+    - src/app/(main)/creature-creator/creature-creator-library-selectables.ts
+    - src/app/(main)/creature-creator/creature-creator-summaries.ts
+    - src/app/(main)/creature-creator/creature-creator-feat-armament-display.ts
+    - src/app/(main)/creature-creator/creature-creator-bootstrap.ts
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/creature-creator/creature-creator-editor.tsx
+    - src/app/(main)/creature-creator/transformers.ts
+    - src/components/shared/creature-stat-block.tsx
+    - src/components/shared/creature-stat-block-types.ts
+    - src/components/shared/creature-stat-block-panels.tsx
+    - src/lib/library/official-creature-list.ts
+    - src/lib/library-sync.ts
+    - src/types/library.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    TASK-810 split creature Inventory lists but the saved creature was still one mixed armaments bag. Persist kind buckets and migrate on read.
+  acceptance_criteria:
+    - Creature save/load uses kind buckets (weapons / armor / shields / equipment), not one mixed armaments dump.
+    - Existing creatures with data.armaments still load (migrate on read).
+    - Stat block, currency/TP summaries, and hide-already-selected still work.
+    - Equipment selected rows do not fake a Qty of 1 unless quantity is real data.
+  notes: |
+    From TASK-810 /audit. UI lists already exist; this is persistence + typed state, not another mixed USM. Do not delete /characters/new/advanced.
+- id: TASK-810
+  title: Per-kind armament lists (drop mixed Stat USM)
+  created_at: 2026-08-17
+  completed_at: 2026-08-17
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/library-selectable-builders.ts
+    - src/lib/library-selectable-builders.test.ts
+    - src/hooks/use-load-modal-library.ts
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/creature-creator/creature-creator-library-selectables.ts
+    - src/app/(main)/creature-creator/creature-creator-library-selectables.test.ts
+    - src/app/(main)/creature-creator/use-creature-creator-workspace.ts
+    - src/app/(main)/creature-creator/page.tsx
+    - src/app/(main)/creature-creator/creature-creator-editor.tsx
+    - src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx
+    - src/app/(main)/creature-creator/creature-creator-feat-armament-display.ts
+    - src/docs/ai/ADR/0016-glr-fact-catalog.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T003
+      - DEV-V-016-T010
+      - DEV-V-016-T023
+  developer_test_plan: |
+    Suite DEV-V-016 T023 (+ T003 / T010) — see BUILD_VALIDATION.md
+  description: |
+    Owner chose per-kind catalog columns over a mixed Stat extra. Armament
+    Load and creature Inventory no longer dump weapons, armor, and shields
+    in one Type+Stat list.
+  acceptance_criteria:
+    - Owner picks combined Stat vs per-kind catalog columns before implement.
+    - Implementation matches that choice; mixed load tests updated.
+    - Filters/sort still work if a fact is a chip.
+  notes: |
+    Owner 2026-08-17: split kinds (no more mixed gear lists). Legacy character
+    creator is phasing out; creature creator is the remaining mixed leftover.
+
+- id: TASK-808
+  title: GLR never-both CI for column vs descriptor chips
+  created_at: 2026-08-17
+  completed_at: 2026-08-17
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/glr/validate-glr-facts.ts
+    - src/lib/glr/glr-fact-catalog.test.ts
+    - src/lib/glr/glr-fact-catalog.ts
+    - src/lib/detail-option/compact-facts.ts
+    - src/lib/chip/list-row-metadata.ts
+    - src/lib/library/official-item-list.ts
+    - src/components/shared/quick-armaments-sections.tsx
+    - src/lib/codex/feat-list.ts
+    - src/lib/codex/feat-list.test.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T022
+  developer_test_plan: |
+    Suite DEV-V-016 T022 — see BUILD_VALIDATION.md
+  description: |
+    ADR-0016: a valued fact must not appear as both a collapsed column and a
+    descriptor chip. Row coverage now fails on dual channels. Armor Crit
+    property chips dropped; feat Ability Requirements stay extra-chrome.
+  acceptance_criteria:
+    - Row coverage fails when a layout column/rightSlot fact is also matched by a descriptor chip.
+    - Vitest covers at least one positive (allowed chip-only) and one negative (column+chip) case.
+    - Known leftovers (feat ability-req chips, armor Crit property chips) are either dropped or explicitly extra-chrome, not dual facts.
+  notes: |
+    From TASK-806/807 /audit. Paired with TASK-809 chipFacts wiring.
+
+- id: TASK-809
+  title: Drive expanded GLR fact chips from layout.chipFacts
+  created_at: 2026-08-17
+  completed_at: 2026-08-17
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/library-selectable-builders.ts
+    - src/lib/library-selectable-builders.test.ts
+    - src/lib/glr/resolve-glr-fact-layout.ts
+    - src/lib/detail-option/compact-facts.ts
+    - src/lib/chip/list-row-metadata.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T022
+      - DEV-V-016-T007
+  developer_test_plan: |
+    Suite DEV-V-016 T022 (+ T007) — see BUILD_VALIDATION.md
+  description: |
+    Add-modal / load builders emit ranked fact chips from layout.chipFacts
+    (plus parts/properties) instead of hardcoded Range wiring.
+  acceptance_criteria:
+    - Add-modal / load builders emit ranked fact chips from layout.chipFacts (plus parts/properties).
+    - Add Power Range chip and add-weapon Range chip still appear when those facts are chips, not columns.
+    - Targeted vitest on library-selectable-builders + catalog bindings.
+  notes: |
+    From TASK-806/807 /audit. Do not chip parts/properties as ranked facts.
+
+- id: TASK-811
+  title: Rename required-facts-registry.test.ts to catalog CI name
+  created_at: 2026-08-17
+  completed_at: 2026-08-17
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/lib/glr/glr-fact-catalog.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/CHIP_UNIFICATION_PLAN.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/ADR/0009-glr-required-facts-registry.md
+  description: |
+    CI file renamed from ADR-0009 registry name to ADR-0016 catalog + bindings.
+  acceptance_criteria:
+    - Old test path is deleted; new path is the only CI entry.
+    - Docs that cite required-facts-registry.test.ts as live SoT are updated.
+    - npm test still runs the catalog binding suite.
+  notes: |
+    Hygiene only. Assertion behavior lives in TASK-808.
+
+- id: TASK-807
+  title: GLR resolver drives list chrome (Wave 2)
+  created_at: 2026-08-17
+  completed_at: 2026-08-17
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/glr/resolve-glr-fact-layout.ts
+    - src/lib/glr/resolve-glr-fact-layout.test.ts
+    - src/lib/glr/glr-list-chrome.ts
+    - src/lib/glr/index.ts
+    - src/lib/library/official-power-list.ts
+    - src/lib/library/official-technique-list.ts
+    - src/lib/library/official-item-list.ts
+    - src/lib/codex/feat-list.ts
+    - src/lib/codex/equipment-list.ts
+    - src/lib/library-selectable-builders.ts
+    - src/lib/library-selectable-builders.test.ts
+    - src/components/shared/entity-library-sections-columns.ts
+    - src/components/guided-creator/guided-equipment-l2-grid.ts
+    - src/lib/guided-creator/guided-equipment-l2.ts
+    - src/lib/guided-creator/feats-l2.ts
+    - src/components/shared/entity-library-powers-techniques.tsx
+    - src/components/shared/creature-stat-block-display-data.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T021
+      - DEV-V-016-T007
+      - DEV-V-016-T008
+  developer_test_plan: |
+    Suite DEV-V-016 T021 (+ T007 / T008) - see BUILD_VALIDATION.md
+  description: |
+    Wave 2 of ADR-0016: resolveGlrFactLayout drives Official, sheet, USM, and
+    guided list chrome so column vs chip follows density budget instead of
+    per-surface placement tables. Gear stays Category / Currency / Rarity.
+  acceptance_criteria:
+    - List builders consume one resolved layout per entity+mode (thin aliases for guided L3).
+    - Attack/description/qty remain extra chrome, not ranked facts.
+    - Wave 1 re-export required-facts-registry.ts is deleted.
+    - Typecheck/lint/targeted tests. User-facing: pending-qa.
+  notes: |
+    Plan ack 2026-08-17. Follows TASK-806 catalog + CI.
+
+- id: TASK-806
+  title: GLR fact catalog, density modes, and CI (Wave 1)
+  created_at: 2026-08-17
+  completed_at: 2026-08-17
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/docs/ai/ADR/0016-glr-fact-catalog.md
+    - src/docs/ai/ADR/0009-glr-required-facts-registry.md
+    - src/docs/ai/ADR/README.md
+    - src/lib/glr/glr-fact-catalog.ts
+    - src/lib/glr/glr-density.ts
+    - src/lib/glr/glr-surface-bindings.ts
+    - src/lib/glr/validate-glr-facts.ts
+    - src/lib/glr/glr-chrome-spacing-norms.ts
+    - src/lib/glr/required-facts-registry.test.ts
+    - src/lib/codex/equipment-list.ts
+    - src/lib/codex/equipment-list.test.ts
+    - AGENTS.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/CHIP_UNIFICATION_PLAN.md
+    - src/docs/ai/guide/04-floating-ui-tooltips.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Wave 1 of ADR-0016 (supersedes ADR-0009): sitewide fact catalog, density
+    modes, named flags, and surface bindings as CI pointers. Codex/Admin
+    equipment is a closed gear set (Category / Currency / Rarity) and no longer
+    promotes Damage / DR / Weight as required fact chips.
+  acceptance_criteria:
+    - Catalog + density + bindings are the SoT; validators cover applicable facts.
+    - Gear browse does not require combat fact chips.
+    - Docs point at ADR-0016. CI tests rewritten around bindings.
+    - verification_status n/a (CI + docs).
+  notes: |
+    Plan ack 2026-08-17. Wave 2 is TASK-807.
+
 - id: TASK-805
   title: Sheet feat Customize caret stays while typing
   created_at: 2026-08-15

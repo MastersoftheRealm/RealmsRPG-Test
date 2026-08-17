@@ -7,6 +7,7 @@
 
 import type { GuidedEquipmentPhase } from '@/stores/guided-creator-store';
 import { ARMAMENT_LIBRARY_CONFIG } from '@/lib/library/official-item-list';
+import { glrListChrome } from '@/lib/glr';
 
 export type L2ColumnHeader = {
   key: string;
@@ -42,14 +43,16 @@ export const WEAPON_L2_GRID = weaponCfg.grid;
 export const ARMOR_L2_HEADER_COLUMNS: L2ColumnHeader[] = armorCfg.headers;
 export const ARMOR_L2_GRID = armorCfg.grid;
 
-/** Gear — Name | Category | Rarity | Currency (taxonomy, not phase type). */
-export const GEAR_L2_HEADER_COLUMNS: L2ColumnHeader[] = [
-  { key: 'name', label: 'NAME', align: 'left', sortable: true },
-  { key: 'category', label: 'CATEGORY', align: 'center', sortable: true },
-  { key: 'rarity', label: 'RARITY', align: 'center', sortable: true },
-  { key: 'currency', label: 'CURRENCY', align: 'center', sortable: true },
-];
-export const GEAR_L2_GRID = '1.5fr 1fr 0.7fr 0.7fr';
+const gearChrome = glrListChrome({ entityType: 'gear', mode: 'browse' }, { sortable: true });
+
+/** Gear — Name | Category | Currency | Rarity (taxonomy, not phase type). */
+export const GEAR_L2_HEADER_COLUMNS: L2ColumnHeader[] = gearChrome.headers.map((h) => ({
+  key: h.key,
+  label: h.label,
+  align: (h.align ?? 'center') as 'left' | 'center' | 'right',
+  sortable: h.sortable !== false,
+}));
+export const GEAR_L2_GRID = gearChrome.grid;
 
 export function l2HeaderColumnsForPhase(phase: GuidedEquipmentPhase): L2ColumnHeader[] {
   if (phase === 'armor') return ARMOR_L2_HEADER_COLUMNS;

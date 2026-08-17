@@ -70,6 +70,7 @@ export function FeatsTraitsListSection({
   addButtonClassName,
   emptyMessage = 'No feats',
   collapsible,
+  headingLevel,
 }: {
   title?: string;
   items: EntityFeatRow[];
@@ -155,6 +156,7 @@ export function FeatsTraitsListSection({
         <SectionHeader
           title={title}
           size="lg"
+          headingLevel={headingLevel}
           onAdd={onAddWrapped}
           addLabel={addLabel}
           rightContent={headerRightContent}

@@ -17,6 +17,7 @@ import type { Feat } from '@/hooks';
 import type { SortState } from '@/components/shared/list-header';
 import type { CreatureState } from './creature-creator-types';
 import type { CreatureFeat } from './transformers';
+import type { CreatureInventoryTab } from './creature-creator-library-selectables';
 import { CREATURE_TYPE_OPTIONS } from './creature-creator-constants';
 import { CREATURE_LEVEL_SELECT_OPTIONS } from '@/lib/game';
 import { CREATURE_SIZES } from '@/lib/game/creator-constants';
@@ -87,8 +88,12 @@ export type CreatureCreatorEditorProps = {
     range: string;
     attack: string;
     damage: string;
+    block: string;
+    damageReduction: string;
+    criticalRangeIncrease: string;
     tp: number | string;
     currency: string;
+    quantity?: number;
     image_id?: string | null;
     image_url?: string | null;
   }>;
@@ -107,7 +112,7 @@ export type CreatureCreatorEditorProps = {
   onOpenFeatModal: () => void;
   onOpenPowerModal: () => void;
   onOpenTechniqueModal: () => void;
-  onOpenArmamentModal: () => void;
+  onOpenArmamentModal: (tab?: CreatureInventoryTab) => void;
 };
 
 export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {

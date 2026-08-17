@@ -15,3 +15,6 @@ export * from './calculations';
 
 // Creature level display (user-facing fractions)
 export * from './creature-level-display';
+
+// Creature inventory document (kind buckets + migrate-on-read)
+export * from './creature-inventory';

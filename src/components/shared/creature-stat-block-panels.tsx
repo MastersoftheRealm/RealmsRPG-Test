@@ -21,9 +21,10 @@ import { ListHeader } from './list-header';
 import { RollButton } from './roll-button';
 import type { useRollsOptional } from '@/components/rolls';
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
+import { formatCreatureEquipmentQuantity } from '@/lib/game/creature-inventory';
 import { formatListCellLabel, normalizeRangeDisplay } from '@/lib/utils';
 import type { Abilities } from '@/types';
-import type { CreatureData } from './creature-stat-block-types';
+import type { CreatureData, CreatureStatBlockArmament } from './creature-stat-block-types';
 import { StatBlockSection } from './creature-stat-block-section';
 import {
   REALMS_ABILITY_ORDER,
@@ -75,10 +76,10 @@ interface CreatureStatBlockExpandedContentProps {
   hasPowers: boolean;
   hasTechniques: boolean;
   hasEquipment: boolean;
-  weapons: NonNullable<CreatureData['armaments']>;
-  shields: NonNullable<CreatureData['armaments']>;
-  armor: NonNullable<CreatureData['armaments']>;
-  equipment: NonNullable<CreatureData['armaments']>;
+  weapons: CreatureStatBlockArmament[];
+  shields: CreatureStatBlockArmament[];
+  armor: CreatureStatBlockArmament[];
+  equipment: CreatureStatBlockArmament[];
   powersForDisplay: EntityPowerRow[];
   techniquesForDisplay: EntityTechniqueRow[];
 }
@@ -523,7 +524,7 @@ export function CreatureStatBlockExpandedContent({
                       { key: 'type', value: formatListCellLabel(e.type), align: 'center' },
                       {
                         key: 'quantity',
-                        value: (e as { quantity?: number }).quantity ?? 1,
+                        value: formatCreatureEquipmentQuantity(e.quantity),
                         align: 'center',
                       },
                     ]}

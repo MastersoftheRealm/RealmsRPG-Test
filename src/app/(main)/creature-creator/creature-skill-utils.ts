@@ -4,8 +4,13 @@
  */
 
 import type { Skill } from '@/hooks';
+import {
+  collectCreatureInventoryItems,
+  resolveCreatureInventoryBuckets,
+} from '@/lib/game/creature-inventory';
 import { initialState } from './creature-creator-constants';
 import type { CreatureSkill, CreatureState } from './creature-creator-types';
+import type { CreatureArmament } from './transformers';
 
 function resolveCodexSkill(skill: CreatureSkill, codexSkills: Skill[]): Skill | undefined {
   if (skill.id != null) {
@@ -70,6 +75,13 @@ export function allocationsToCreatureSkills(
 /** Normalize API / library row into CreatureState (load modal + ?edit=). */
 export function rawRecordToCreatureState(c: Record<string, unknown>): CreatureState {
   const row = c as unknown as CreatureState;
+  const inventory = resolveCreatureInventoryBuckets({
+    weapons: c.weapons as CreatureArmament[] | undefined,
+    armor: c.armor as CreatureArmament[] | undefined,
+    shields: c.shields as CreatureArmament[] | undefined,
+    equipment: c.equipment as CreatureArmament[] | undefined,
+    armaments: c.armaments as CreatureArmament[] | undefined,
+  });
   return {
     name: String(c.name ?? ''),
     level: Number(c.level ?? 1),
@@ -89,7 +101,8 @@ export function rawRecordToCreatureState(c: Record<string, unknown>): CreatureSt
     enablePowers: (c.enablePowers as boolean) ?? Boolean((c.powers as unknown[])?.length),
     enableTechniques:
       (c.enableTechniques as boolean) ?? Boolean((c.techniques as unknown[])?.length),
-    enableArmaments: (c.enableArmaments as boolean) ?? Boolean((c.armaments as unknown[])?.length),
+    enableArmaments:
+      (c.enableArmaments as boolean) ?? collectCreatureInventoryItems(inventory).length > 0,
     resistances: (c.resistances as string[]) ?? [],
     weaknesses: (c.weaknesses as string[]) ?? [],
     immunities: (c.immunities as string[]) ?? [],
@@ -101,6 +114,9 @@ export function rawRecordToCreatureState(c: Record<string, unknown>): CreatureSt
     powers: (c.powers as CreatureState['powers']) ?? [],
     techniques: (c.techniques as CreatureState['techniques']) ?? [],
     feats: (c.feats as CreatureState['feats']) ?? [],
-    armaments: (c.armaments as CreatureState['armaments']) ?? [],
+    weapons: inventory.weapons,
+    armor: inventory.armor,
+    shields: inventory.shields,
+    equipment: inventory.equipment,
   };
 }

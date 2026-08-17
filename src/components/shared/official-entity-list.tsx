@@ -61,9 +61,6 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   chipsLabel?: string;
   /** Labeled sections (Parts/Properties & Proficiencies with collapse + family tip). Overrides chips when set. */
   getDetailSections?: (row: TRow) => MetadataDetailSection[] | undefined;
-  /** Optional total cost for the expanded row. */
-  getTotalCost?: (row: TRow) => number | undefined;
-  costLabel?: string;
   /**
    * Optional list-row art (species/equipment/etc.). When set, ListHeader gets
    * `hasThumbnailColumn` and each row receives `GridListRow.thumbnail`.
@@ -118,8 +115,6 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   getChips,
   chipsLabel,
   getDetailSections,
-  getTotalCost,
-  costLabel = 'TP',
   getThumbnail,
   hasThumbnailColumn: hasThumbnailColumnProp,
   renderRow,
@@ -213,7 +208,6 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
           filtered.map((row) => {
             const detailSections = getDetailSections?.(row);
             const chips = detailSections ? undefined : getChips?.(row);
-            const totalCost = getTotalCost?.(row);
             const nameLabels = getNameChipLabels?.(row) ?? [];
             const nameBadges = nameLabels.map((label) => ({ label }));
             const badges = [...nameBadges, ...(getBadges?.(row) ?? [])];
@@ -229,8 +223,6 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
                 chips={chips}
                 chipsLabel={detailSections ? undefined : chipsLabel}
                 detailSections={detailSections}
-                totalCost={totalCost}
-                costLabel={costLabel}
                 badges={badges.length > 0 ? badges : undefined}
                 showBadgesInName={nameBadges.length > 0}
                 rightSlot={

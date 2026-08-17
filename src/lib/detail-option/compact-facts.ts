@@ -52,6 +52,9 @@ export const MECHANIC_PROPERTY_NAMES = new Set([
   'agility reduction',
   'range',
   'split damage dice',
+  // Ranked armor Crit + fact (column or compact chip — never a named property chip)
+  'critical range +1',
+  'critical range increase',
   // Calculation-only — never user-facing on cards/chips
   'armor base',
   'shield base',
@@ -254,6 +257,20 @@ export function formatDamageReductionFact(value: number | null | undefined): str
 
 export function damageReductionFactChip(value: number | null | undefined): ChipData | null {
   return compactFactChip(formatDamageReductionFact(value));
+}
+
+/** Critical Range +N — self-describing chip when Crit is not a column. */
+export function formatCriticalRangeIncreaseFact(
+  value: number | null | undefined,
+): string | undefined {
+  if (value == null || Number.isNaN(Number(value))) return undefined;
+  const n = Math.floor(Number(value));
+  if (n <= 0) return undefined;
+  return `Critical Range +${n}`;
+}
+
+export function criticalRangeIncreaseFactChip(value: number | null | undefined): ChipData | null {
+  return compactFactChip(formatCriticalRangeIncreaseFact(value));
 }
 
 /** Descriptor chip from a compact-fact label (never expands). */

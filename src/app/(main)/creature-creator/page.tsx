@@ -17,6 +17,7 @@ import {
   SegmentedControl,
   type SelectableItem,
 } from '@/components/shared';
+import { getListHeaderColumns, getModalGridColumns } from '@/lib/library-selectable-builders';
 import { LoadingState } from '@/components/ui';
 import { Skull } from 'lucide-react';
 import { RollLog, RollProvider } from '@/components/rolls';
@@ -66,7 +67,6 @@ function CreatureCreatorContent() {
     empoweredTechniqueSelectableItems,
     techniqueSelectableItems,
     armamentSelectableItems,
-    inventoryDisplayFilter,
     codexFeatsById,
     skillAllocations,
     abilityDefenseBonuses,
@@ -96,6 +96,7 @@ function CreatureCreatorContent() {
     onRemovePower,
     onRemoveTechnique,
     onRemoveArmament,
+    onAddArmaments,
     getCreatureSkillBonus,
     displayItemToCreaturePower,
     displayItemToCreatureTechnique,
@@ -381,7 +382,6 @@ function CreatureCreatorContent() {
                 aria-label="Inventory type"
                 tabs
                 options={[
-                  { value: 'all', label: 'All' },
                   { value: 'weapon', label: 'Weapons' },
                   { value: 'armor', label: 'Armor' },
                   { value: 'shield', label: 'Shields' },
@@ -394,22 +394,24 @@ function CreatureCreatorContent() {
             optionsActiveCount={librarySource !== 'all' ? 1 : 0}
             onConfirm={(selected) => {
               const items = selected.map((s: SelectableItem) => s.data as DisplayItem);
-              const armaments = items.map(displayItemToCreatureArmament);
-              setCreature((prev) => ({ ...prev, armaments: [...prev.armaments, ...armaments] }));
+              onAddArmaments(items.map(displayItemToCreatureArmament));
             }}
             items={armamentSelectableItems}
-            displayFilter={inventoryDisplayFilter}
+            key={inventoryTab}
             title="Select Inventory"
             maxSelections={10}
-            itemLabel="inventory item"
-            searchPlaceholder="Search inventory..."
-            columns={[
-              { key: 'name', label: 'Name', sortable: true },
-              { key: 'Type', label: 'Type', sortable: true },
-              { key: 'TP', label: 'TP', sortable: true },
-              { key: 'Cost', label: 'Cost', sortable: true },
-            ]}
-            gridColumns="1.5fr 0.6fr 0.5fr 0.6fr"
+            itemLabel={
+              inventoryTab === 'armor'
+                ? 'armor'
+                : inventoryTab === 'equipment'
+                  ? 'equipment'
+                  : inventoryTab === 'shield'
+                    ? 'shield'
+                    : 'weapon'
+            }
+            searchPlaceholder={`Search ${inventoryTab === 'armor' ? 'armor' : inventoryTab}...`}
+            columns={getListHeaderColumns(inventoryTab)}
+            gridColumns={getModalGridColumns(inventoryTab)}
             size="xl"
             className="min-h-0"
           />
@@ -453,7 +455,10 @@ function CreatureCreatorContent() {
         onOpenFeatModal={() => setShowFeatModal(true)}
         onOpenPowerModal={() => setShowPowerModal(true)}
         onOpenTechniqueModal={() => setShowTechniqueModal(true)}
-        onOpenArmamentModal={() => setShowArmamentModal(true)}
+        onOpenArmamentModal={(tab) => {
+          if (tab) setInventoryTab(tab);
+          setShowArmamentModal(true);
+        }}
       />
     </CreatorPageShell>
   );

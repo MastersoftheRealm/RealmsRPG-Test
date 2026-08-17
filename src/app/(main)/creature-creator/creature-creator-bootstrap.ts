@@ -30,5 +30,6 @@ export function bootstrapCreatureState(options: {
   }
 
   const parsed = readCreatorCache<CreatureCreatorCache>(CREATURE_CREATOR_CACHE_KEY);
-  return parsed?.creature || initialState;
+  if (!parsed?.creature) return initialState;
+  return rawRecordToCreatureState(parsed.creature as unknown as Record<string, unknown>);
 }

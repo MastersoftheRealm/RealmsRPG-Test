@@ -12,8 +12,8 @@ import { FEAT_GRID } from '@/components/shared/entity-library-sections';
 import { Input, Textarea } from '@/components/ui';
 import type { FeatTraitCustomization } from '@/types/feats';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
-import { metadataDetailSection } from '@/lib/chip/list-row-metadata';
-import { capitalize, truncateText } from '@/lib/utils';
+import { glrSurfaceDetailSections, metadataDetailSection } from '@/lib/chip/list-row-metadata';
+import { capitalize, formatAbilityList, truncateText } from '@/lib/utils';
 
 const DESCRIPTION_EXTENDED_TRUNCATE = 220;
 
@@ -228,6 +228,9 @@ export type FeatRowInput = {
   maxUses?: number;
   currentUses?: number;
   recovery?: string;
+  category?: string;
+  ability?: string | string[];
+  reqLevel?: number;
   /** For state feats — which list to update when customizing. */
   listType?: 'archetype' | 'character';
 };
@@ -426,6 +429,16 @@ export function mapFeatRows(
       feat.recovery,
       usesStepper,
     );
+    const extraSections = ctx.getFeatLevelDetailSections?.(featId, listType);
+    const detailSections = glrSurfaceDetailSections(
+      'character-sheet-feat',
+      {
+        reqLevel: feat.reqLevel,
+        category: feat.category,
+        ability: formatAbilityList(feat.ability),
+      },
+      extraSections,
+    );
 
     const customizationExtras = buildCustomizationExtras(
       `feat-${featId}`,
@@ -451,7 +464,7 @@ export function mapFeatRows(
       columns,
       columnSpans,
       badges: options?.badge ? [options.badge] : undefined,
-      detailSections: ctx.getFeatLevelDetailSections?.(featId, listType),
+      detailSections: detailSections.length > 0 ? detailSections : undefined,
       uses,
       hideUsesInName: !!(uses && ctx.onFeatUsesChange),
       onDelete:

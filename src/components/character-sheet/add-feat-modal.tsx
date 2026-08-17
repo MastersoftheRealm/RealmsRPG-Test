@@ -9,9 +9,12 @@ import { useState, useMemo, useCallback, useId } from 'react';
 import { useCodexFeats, useCodexSkills, usePathListFilter, type Feat } from '@/hooks';
 import { checkFeatRequirements } from '@/lib/game/feat-requirements';
 import {
-  buildFeatDetailSections,
   featFamilyIdsMatchingPath,
   featPathChipNames,
+  featSelectColumns,
+  featSelectDetailSections,
+  featSelectHeaderColumns,
+  FEAT_SELECT_GRID_COLUMNS,
 } from '@/lib/codex/feat-list';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
@@ -29,7 +32,6 @@ import {
 import { ArchetypePathFilter } from '@/components/shared/filters';
 import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 import type { Character } from '@/types';
-import { formatListCellLabel } from '@/lib/utils';
 
 interface FeatModal extends Feat {
   effect?: string;
@@ -54,31 +56,15 @@ function featToSelectableItem(
   nameBadges?: { label: string }[],
   showBadgesInName?: boolean,
 ): SelectableItem {
-  const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels, {
+  const detailSections = featSelectDetailSections(feat, skillIdToName, familyLevels, {
     isCharacterFeat: feat.char_feat,
   });
 
-  const usesVal = feat.uses_per_rec ?? (feat as FeatModal).max_uses;
-  const usesDisplay = usesVal === 0 || usesVal === undefined ? '-' : String(usesVal);
   return {
     id: String(feat.id),
     name: formatFeatName(feat),
     description: feat.description || (feat as FeatModal).effect,
-    columns: [
-      { key: 'uses_per_rec', label: 'Uses', value: usesDisplay, align: 'center' as const },
-      {
-        key: 'rec_period',
-        label: 'Recovery',
-        value: formatListCellLabel(feat.rec_period),
-        align: 'center' as const,
-      },
-      {
-        key: 'category',
-        label: 'Category',
-        value: formatListCellLabel(feat.category),
-        align: 'center' as const,
-      },
-    ],
+    columns: featSelectColumns(feat),
     detailSections: detailSections.length > 0 ? detailSections : undefined,
     disabled,
     warningMessage: warningMessage || undefined,
@@ -317,13 +303,8 @@ export function AddFeatModal({
         items={items}
         isLoading={loading}
         onConfirm={(selected) => onAdd(selected.map((i) => i.data as FeatModal))}
-        columns={[
-          { key: 'name', label: 'Name' },
-          { key: 'uses_per_rec', label: 'Uses' },
-          { key: 'rec_period', label: 'Recovery' },
-          { key: 'category', label: 'Category' },
-        ]}
-        gridColumns="1.5fr 0.6fr 0.6fr 0.8fr"
+        columns={featSelectHeaderColumns()}
+        gridColumns={FEAT_SELECT_GRID_COLUMNS}
         itemLabel="feat"
         emptyMessage={
           error ??

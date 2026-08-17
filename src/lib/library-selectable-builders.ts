@@ -9,15 +9,21 @@ import {
   formatDamageDisplay,
   formatSavedActionTypeForDisplay,
   formatActionTypeForDisplay,
-  formatListCellLabel,
   capitalize,
+  formatListCellLabel,
 } from '@/lib/utils';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { ChoiceCardImageKind } from '@/components/guided-creator/guided-choice-image';
 import {
+  deriveAgilityReductionFromProperties,
+  deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
+  resolveWeaponRangeDisplay,
+  calculateItemCosts,
+  type ItemPropertyPayload,
 } from '@/lib/calculators';
+import { deriveAbilityRequirementFromProperties } from '@/lib/game/weapon-attack-ability';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
 import type { PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
@@ -29,7 +35,8 @@ import {
 } from '@/lib/attack-mode';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import {
-  buildPartsAndMetadataDetailSections,
+  buildGlrFactDetailSections,
+  partsProficienciesSection,
   propertiesProficienciesSection,
 } from '@/lib/chip/list-row-metadata';
 import {
@@ -38,10 +45,11 @@ import {
   formatActionTypeValue,
   namedPropertyDescriptorChips,
   trainingPointsFactChip,
-  TRAINING_POINTS_COST_LABEL,
 } from '@/lib/detail-option/compact-facts';
+import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
 import {
   derivePartCategories,
+  formatPartCategoriesColumn,
   powerHasDamageCategory,
   withDamageCategory,
 } from '@/lib/library/power-technique-categories';
@@ -49,14 +57,52 @@ import type { PowerTechniqueFilterableRow } from '@/lib/library/power-technique-
 import type { PowerPart, TechniquePart, ItemProperty } from '@/hooks/codex-types';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 
-export type LibraryItemType =
-  | 'power'
-  | 'technique'
-  | 'weapon'
-  | 'shield'
-  | 'armor'
-  | 'equipment'
-  | 'item'; // 'item' = all armaments (load modal)
+const selectPowerChrome = glrListChrome(
+  { entityType: 'power', mode: 'select' },
+  { labelStyle: 'title', keyStyle: 'usm' },
+);
+const selectTechniqueChrome = glrListChrome(
+  { entityType: 'technique', mode: 'select' },
+  { labelStyle: 'title', keyStyle: 'usm' },
+);
+const selectWeaponChrome = glrListChrome(
+  { entityType: 'weapon', mode: 'select' },
+  { labelStyle: 'title', keyStyle: 'usm' },
+);
+const selectArmorChrome = glrListChrome(
+  { entityType: 'armor', mode: 'select' },
+  { labelStyle: 'title', keyStyle: 'usm' },
+);
+const selectShieldChrome = glrListChrome(
+  { entityType: 'shield', mode: 'select' },
+  { labelStyle: 'title', keyStyle: 'usm' },
+);
+
+const selectGearChrome = glrListChrome(
+  { entityType: 'gear', mode: 'select' },
+  { labelStyle: 'title', keyStyle: 'usm' },
+);
+
+function selectChromeFor(
+  type: 'power' | 'technique' | 'weapon' | 'armor' | 'shield' | 'equipment',
+) {
+  switch (type) {
+    case 'power':
+      return selectPowerChrome;
+    case 'technique':
+      return selectTechniqueChrome;
+    case 'weapon':
+      return selectWeaponChrome;
+    case 'armor':
+      return selectArmorChrome;
+    case 'shield':
+      return selectShieldChrome;
+    case 'equipment':
+      return selectGearChrome;
+  }
+}
+
+export type LibraryItemType = 'power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment';
 
 export type EqItem = {
   id: string;
@@ -64,11 +110,18 @@ export type EqItem = {
   description?: string;
   damage?: unknown;
   armorValue?: number;
+  range?: string | number | null;
+  abilityRequirement?: { name?: string; level?: number } | null;
+  agilityReduction?: number | null;
   properties?: Array<
     | string
     | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }
   >;
   type?: string;
+  rarity?: string;
+  category?: string;
+  cost?: number;
+  costs?: { totalTP?: number; totalCurrency?: number; totalIP?: number };
   image_id?: string | null;
   image_url?: string | null;
 };
@@ -80,8 +133,7 @@ function selectableImageKind(itemType: LibraryItemType): ChoiceCardImageKind | n
     itemType === 'weapon' ||
     itemType === 'shield' ||
     itemType === 'armor' ||
-    itemType === 'equipment' ||
-    itemType === 'item'
+    itemType === 'equipment'
   ) {
     return 'equipment';
   }
@@ -95,7 +147,7 @@ export type TechniqueColumnDisplay = {
   actionType: string;
 };
 
-/** Collapsed power columns for add/load modals (Range stays a labeled expanded chip). */
+/** Collapsed power columns for add/load modals (Range is a chipFact at select density). */
 export type PowerColumnDisplay = {
   energy: number | string;
   actionType: string;
@@ -352,85 +404,74 @@ export function getItemColumns(
   powerDisplay?: PowerColumnDisplay,
 ): ColumnValue[] {
   if (itemType === 'power') {
-    if (powerDisplay) {
-      return [
-        { key: 'Energy', value: String(powerDisplay.energy ?? '-'), align: 'center' as const },
-        { key: 'Action', value: powerDisplay.actionType || '-', align: 'center' as const },
-        { key: 'Duration', value: powerDisplay.duration || '-', align: 'center' as const },
-        { key: 'Area', value: powerDisplay.area || '-', align: 'center' as const },
-        { key: 'Damage', value: powerDisplay.damage || '-', align: 'center' as const },
-      ];
-    }
-    const power = item as UserPower;
-    const damageStr = formatPowerDamage(power.damage) || '-';
-    const areaStr = power.area?.type ? capitalize(power.area.type) : '-';
-    return [
-      { key: 'Energy', value: '-', align: 'center' as const },
-      {
-        key: 'Action',
-        value: formatSavedActionTypeForDisplay(power.actionType, power.isReaction),
-        align: 'center' as const,
-      },
-      { key: 'Duration', value: '-', align: 'center' as const },
-      { key: 'Area', value: areaStr, align: 'center' as const },
-      { key: 'Damage', value: damageStr, align: 'center' as const },
-    ];
-  }
-  if (itemType === 'technique' && techniqueDisplay) {
-    return [
-      { key: 'Action', value: techniqueDisplay.actionType || '-', align: 'center' as const },
-      { key: 'Energy', value: String(techniqueDisplay.energy), align: 'center' as const },
-      { key: 'Attack', value: techniqueDisplay.weaponName || '-', align: 'center' as const },
-      { key: 'Training Pts', value: String(techniqueDisplay.tp), align: 'center' as const },
-    ];
+    const values: Record<string, string> = powerDisplay
+      ? {
+          Energy: String(powerDisplay.energy ?? '-'),
+          Action: powerDisplay.actionType || '-',
+          Duration: powerDisplay.duration || '-',
+          Damage: powerDisplay.damage || '-',
+          Area: powerDisplay.area || '-',
+        }
+      : (() => {
+          const power = item as UserPower;
+          return {
+            Energy: '-',
+            Action: formatSavedActionTypeForDisplay(power.actionType, power.isReaction),
+            Duration: '-',
+            Area: power.area?.type ? capitalize(power.area.type) : '-',
+            Damage: formatPowerDamage(power.damage) || '-',
+          };
+        })();
+    return selectPowerChrome.layout.columnFacts.map((id) => {
+      const key = glrColumnKeyFor(id, 'power', 'select', 'usm');
+      return { key, value: values[key] ?? '-', align: 'center' as const };
+    });
   }
   if (itemType === 'technique') {
     const technique = item as UserTechnique;
-    const attackLabel = attackModeColumnLabel(
-      deriveTechniqueAttackMode({
-        attackMode: technique.attackMode,
-        parts: technique.parts,
-        weapon: technique.weapon,
-      }),
-    );
-    return [
-      {
-        key: 'Action',
-        value: formatActionTypeForDisplay(technique.actionType ?? ''),
-        align: 'center' as const,
-      },
-      { key: 'Attack', value: attackLabel, align: 'center' as const },
-      { key: 'Training Pts', value: '-', align: 'center' as const },
-    ];
+    const values: Record<string, string> = techniqueDisplay
+      ? {
+          Action: techniqueDisplay.actionType || '-',
+          Energy: String(techniqueDisplay.energy),
+          Attack: techniqueDisplay.weaponName || '-',
+          'Training Pts': String(techniqueDisplay.tp),
+        }
+      : {
+          Action: formatActionTypeForDisplay(technique.actionType ?? ''),
+          Energy: '-',
+          Attack: attackModeColumnLabel(
+            deriveTechniqueAttackMode({
+              attackMode: technique.attackMode,
+              parts: technique.parts,
+              weapon: technique.weapon,
+            }),
+          ),
+          'Training Pts': '-',
+        };
+    return selectTechniqueChrome.layout.columnFacts.map((id) => {
+      const key = glrColumnKeyFor(id, 'technique', 'select', 'usm');
+      return { key, value: values[key] ?? '-', align: 'center' as const };
+    });
   }
-  if (
-    itemType === 'weapon' ||
-    (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'weapon')
-  ) {
+  if (itemType === 'weapon') {
     const weapon = item as UserItem | EqItem;
-    const val = weapon.damage ? formatDamageDisplay(weapon.damage) : null;
-    return itemType === 'item' && val
-      ? [{ key: 'stat', value: val, highlight: true }]
-      : val
-        ? [{ key: 'Damage', value: val, highlight: true }]
-        : [];
+    const val = weapon.damage ? formatDamageDisplay(weapon.damage) : '-';
+    const values: Record<string, string> = { Damage: val };
+    return selectWeaponChrome.layout.columnFacts.map((id) => {
+      const key = glrColumnKeyFor(id, 'weapon', 'select', 'usm');
+      return { key, value: values[key] ?? '-', align: 'center' as const, highlight: true };
+    });
   }
-  if (
-    itemType === 'armor' ||
-    (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'armor')
-  ) {
+  if (itemType === 'armor') {
     const armor = item as UserItem | EqItem;
-    const val = armor.armorValue != null ? String(armor.armorValue) : null;
-    return itemType === 'item' && val
-      ? [{ key: 'stat', value: `Damage Reduction ${val}`, highlight: true }]
-      : val
-        ? [{ key: 'Armor', value: val, highlight: true }]
-        : [];
+    const val = armor.armorValue != null ? String(armor.armorValue) : '-';
+    const values: Record<string, string> = { armor: val };
+    return selectArmorChrome.layout.columnFacts.map((id) => {
+      const key = glrColumnKeyFor(id, 'armor', 'select', 'usm');
+      return { key, value: values[key] ?? '-', align: 'center' as const, highlight: true };
+    });
   }
-  if (
-    itemType === 'shield' ||
-    (itemType === 'item' && (item as EqItem).type?.toLowerCase() === 'shield')
-  ) {
+  if (itemType === 'shield') {
     const shield = item as UserItem | EqItem;
     const props = (shield.properties || []) as Array<{
       id?: number;
@@ -441,35 +482,49 @@ export function getItemColumns(
     const dmg =
       deriveShieldDamageFromProperties(props) ??
       (shield.damage ? formatDamageDisplay(shield.damage) : null);
-    if (itemType === 'item') {
-      const parts = [
-        block !== '-' ? `Block ${block}` : null,
-        dmg ? (String(dmg).toLowerCase().startsWith('damage') ? dmg : `Damage ${dmg}`) : null,
-      ].filter(Boolean);
-      return [{ key: 'stat', value: parts.join(' · ') || '-', highlight: true }];
-    }
-    const cols: ColumnValue[] = [];
-    if (block !== '-') cols.push({ key: 'Block', value: block, highlight: true });
-    if (dmg) cols.push({ key: 'Damage', value: dmg, highlight: true });
-    return cols;
+    const values: Record<string, string> = {
+      Block: block !== '-' ? block : '-',
+      Damage: dmg ? String(dmg) : '-',
+    };
+    return selectShieldChrome.layout.columnFacts.map((id) => {
+      const key = glrColumnKeyFor(id, 'shield', 'select', 'usm');
+      return { key, value: values[key] ?? '-', align: 'center' as const, highlight: true };
+    });
   }
-  return [];
+  const gear = item as UserItem | EqItem;
+  const storedCurrency = gear.costs?.totalCurrency;
+  const fallbackCost = 'cost' in gear ? gear.cost : undefined;
+  const currency =
+    storedCurrency != null
+      ? Math.round(storedCurrency)
+      : fallbackCost != null
+        ? fallbackCost
+        : undefined;
+  const values: Record<string, string> = {
+    category: formatListCellLabel(('category' in gear ? gear.category : undefined) || gear.type),
+    currency: currency != null ? String(currency) : '-',
+    rarity: formatListCellLabel(gear.rarity),
+  };
+  return selectGearChrome.layout.columnFacts.map((id) => {
+    const key = glrColumnKeyFor(id, 'gear', 'select', 'usm');
+    return { key, value: values[key] ?? '-', align: 'center' as const };
+  });
 }
 
 export function getModalGridColumns(itemType: LibraryItemType): string {
   switch (itemType) {
     case 'power':
-      // Name, Energy, Action, Duration, Area, Damage — Range is a labeled expanded chip
-      return '1.2fr 0.55fr 0.75fr 0.75fr 0.65fr 1fr';
+      return selectPowerChrome.grid;
     case 'technique':
-      return '1.4fr 1fr 0.7fr 1fr 0.8fr';
+      return selectTechniqueChrome.grid;
     case 'weapon':
+      return selectWeaponChrome.grid;
     case 'shield':
+      return selectShieldChrome.grid;
     case 'armor':
-      return '1.5fr 1fr';
-    case 'item':
-      return '1.2fr 0.6fr 1fr'; // Name, Type, Stat
+      return selectArmorChrome.grid;
     case 'equipment':
+      return selectGearChrome.grid;
     default:
       return '1.5fr';
   }
@@ -481,53 +536,51 @@ export function getListHeaderColumns(
   const base = [{ key: 'name', label: 'Name', align: 'left' as const }];
   switch (itemType) {
     case 'power':
-      return [
-        ...base,
-        { key: 'Energy', label: 'Energy', align: 'center' as const },
-        { key: 'Action', label: 'Action', align: 'center' as const },
-        { key: 'Duration', label: 'Duration', align: 'center' as const },
-        { key: 'Area', label: 'Area', align: 'center' as const },
-        { key: 'Damage', label: 'Damage', align: 'center' as const },
-      ];
+      return selectPowerChrome.headers.map(({ key, label, align }) => ({
+        key,
+        label,
+        align,
+      }));
     case 'technique':
-      return [
-        ...base,
-        { key: 'Action', label: 'Action', align: 'center' as const },
-        { key: 'Energy', label: 'Energy', align: 'center' as const },
-        { key: 'Attack', label: 'Attack', align: 'center' as const },
-        { key: 'Training Pts', label: 'Training Pts', align: 'center' as const },
-      ];
+      return selectTechniqueChrome.headers.map(({ key, label, align }) => ({
+        key,
+        label,
+        align,
+      }));
     case 'weapon':
-      return [...base, { key: 'damage', label: 'Damage', align: 'center' as const }];
+      return selectWeaponChrome.headers.map(({ key, label, align }) => ({
+        key,
+        label,
+        align,
+      }));
     case 'shield':
-      return [
-        ...base,
-        { key: 'Block', label: 'Block', align: 'center' as const },
-        { key: 'Damage', label: 'Damage', align: 'center' as const },
-      ];
+      return selectShieldChrome.headers.map(({ key, label, align }) => ({
+        key,
+        label,
+        align,
+      }));
     case 'armor':
-      return [...base, { key: 'armor', label: 'Dmg. Red.', align: 'center' as const }];
-    case 'item':
-      return [
-        ...base,
-        { key: 'type', label: 'Type', align: 'center' as const },
-        { key: 'stat', label: 'Damage / Damage Reduction / Block', align: 'center' as const },
-      ];
+      return selectArmorChrome.headers.map(({ key, label, align }) => ({
+        key,
+        label,
+        align,
+      }));
     case 'equipment':
+      return selectGearChrome.headers.map(({ key, label, align }) => ({
+        key,
+        label,
+        align,
+      }));
     default:
       return base;
   }
 }
 
 /** Columns for empowered technique rows (sheet add + creator load). */
-export const EMPOWERED_POWER_COLUMNS = [
-  { key: 'name', label: 'Name' },
-  { key: 'Energy', label: 'Energy' },
-  { key: 'Action', label: 'Action' },
-  { key: 'Duration', label: 'Duration' },
-  { key: 'Area', label: 'Area' },
-  { key: 'Damage', label: 'Damage' },
-];
+export const EMPOWERED_POWER_COLUMNS = selectPowerChrome.headers.map(({ key, label }) => ({
+  key,
+  label,
+}));
 
 export interface BuildSelectableItemCodex {
   powerPartsDb: PowerPart[];
@@ -543,15 +596,9 @@ export function buildSelectableItem(
 ): SelectableItem {
   let techniqueDisplay: TechniqueColumnDisplay | undefined;
   let detailSections: SelectableItem['detailSections'];
-  let totalCost: number | undefined;
-  const costLabel = TRAINING_POINTS_COST_LABEL;
   const { powerPartsDb, techniquePartsDb, itemPropertiesDb } = codex;
 
-  const effectiveType: LibraryItemType =
-    itemType === 'item'
-      ? ((item as UserItem | EqItem).type?.toLowerCase() as 'weapon' | 'armor' | 'shield') ||
-        'weapon'
-      : itemType;
+  const effectiveType = itemType;
 
   let powerDisplay: PowerColumnDisplay | undefined;
   if (itemType === 'power') {
@@ -559,13 +606,22 @@ export function buildSelectableItem(
     const doc = libraryItemToPowerDocument(p);
     const display = derivePowerDisplay(doc, powerPartsDb);
     const partChips = partChipsFromDisplay(display.partChips);
-    // Range omitted from dense modal columns → labeled expanded chip (TASK-437)
-    detailSections = buildPartsAndMetadataDetailSections({
-      range: display.range,
-      partChips,
-      partsFamily: 'power',
+    const parts = partsProficienciesSection(partChips, 'power');
+    const categories = withDamageCategory(
+      derivePartCategories(doc.parts, powerPartsDb),
+      powerHasDamageCategory(doc.damage),
+    );
+    const categoryText = formatPartCategoriesColumn(categories);
+    const sections = buildGlrFactDetailSections({
+      chipFacts: selectPowerChrome.layout.chipFacts,
+      facts: {
+        range: display.range,
+        category: categoryText && categoryText !== '—' ? categoryText : undefined,
+        trainingPoints: display.tp > 0 ? display.tp : undefined,
+      },
+      extraSections: parts ? [parts] : undefined,
     });
-    totalCost = display.tp > 0 ? display.tp : undefined;
+    detailSections = sections.length > 0 ? sections : undefined;
     powerDisplay = {
       energy: display.energy,
       actionType: display.actionType || formatSavedActionTypeForDisplay(p.actionType, p.isReaction),
@@ -584,18 +640,23 @@ export function buildSelectableItem(
       actionType: display.actionType,
     };
     const partChips = partChipsFromDisplay(display.partChips);
-    detailSections = buildPartsAndMetadataDetailSections({
-      damage: display.damageStr !== '-' ? display.damageStr : undefined,
-      partChips,
-      partsFamily: 'technique',
+    const parts = partsProficienciesSection(partChips, 'technique');
+    const categories = derivePartCategories(doc.parts, techniquePartsDb);
+    const categoryText = formatPartCategoriesColumn(categories);
+    const sections = buildGlrFactDetailSections({
+      chipFacts: selectTechniqueChrome.layout.chipFacts,
+      facts: {
+        category: categoryText && categoryText !== '—' ? categoryText : undefined,
+        damage: display.damageStr && display.damageStr !== '-' ? display.damageStr : undefined,
+      },
+      extraSections: parts ? [parts] : undefined,
     });
-    totalCost = typeof display.tp === 'number' && display.tp > 0 ? display.tp : undefined;
+    detailSections = sections.length > 0 ? sections : undefined;
   } else if (
     itemType === 'weapon' ||
     itemType === 'shield' ||
     itemType === 'armor' ||
-    itemType === 'equipment' ||
-    itemType === 'item'
+    itemType === 'equipment'
   ) {
     const it = item as UserItem | EqItem;
     const props = (Array.isArray(it.properties) ? it.properties : []) as Array<{
@@ -603,6 +664,8 @@ export function buildSelectableItem(
       name?: string;
       op_1_lvl?: number;
     }>;
+    const payload = props as ItemPropertyPayload[];
+    const costs = calculateItemCosts(payload, itemPropertiesDb);
     const propertyChips: ChipData[] = namedPropertyDescriptorChips(props, itemPropertiesDb).map(
       (chip) => {
         const prop = props.find((p) => {
@@ -628,20 +691,41 @@ export function buildSelectableItem(
             ? 'weapon'
             : 'item';
     const propertySection = propertiesProficienciesSection(propertyChips, propertyFamily);
-    detailSections = propertySection ? [propertySection] : undefined;
-    totalCost = propertyChips.reduce((sum, c) => sum + (c.cost ?? 0), 0) || undefined;
+    const storedCurrency = it.costs?.totalCurrency;
+    const fallbackCost = 'cost' in it ? it.cost : undefined;
+    const currency =
+      storedCurrency != null && storedCurrency > 0
+        ? Math.round(storedCurrency)
+        : fallbackCost != null && fallbackCost > 0
+          ? fallbackCost
+          : Math.round(costs.totalCurrency) || undefined;
+    const trainingPoints =
+      it.costs?.totalTP != null && it.costs.totalTP > 0
+        ? Math.round(it.costs.totalTP)
+        : Math.round(costs.totalTP) || undefined;
+    const sections = buildGlrFactDetailSections({
+      chipFacts: selectChromeFor(effectiveType).layout.chipFacts,
+      facts: {
+        rarity: it.rarity,
+        currency,
+        trainingPoints,
+        range: resolveWeaponRangeDisplay((it as EqItem).range, payload),
+        abilityRequirement:
+          it.abilityRequirement ?? deriveAbilityRequirementFromProperties(payload),
+        agilityReduction: it.agilityReduction ?? deriveAgilityReductionFromProperties(payload),
+        criticalRangeIncrease: deriveCriticalRangeIncreaseFromProperties(payload),
+        damageReduction: typeof it.armorValue === 'number' ? it.armorValue : undefined,
+        category: formatListCellLabel(
+          ('category' in it ? it.category : undefined) ||
+            (effectiveType === 'equipment' ? it.type : undefined),
+        ),
+      },
+      extraSections: propertySection ? [propertySection] : undefined,
+    });
+    detailSections = sections.length > 0 ? sections : undefined;
   }
 
-  const columns = getItemColumns(
-    item,
-    itemType === 'item' ? effectiveType : itemType,
-    techniqueDisplay,
-    powerDisplay,
-  );
-  if (itemType === 'item') {
-    const typeLabel = formatListCellLabel((item as EqItem).type);
-    columns.unshift({ key: 'type', value: typeLabel, align: 'center' as const });
-  }
+  const columns = getItemColumns(item, itemType, techniqueDisplay, powerDisplay);
 
   const name = String(item.name ?? '');
   const imageKind = selectableImageKind(itemType);
@@ -667,8 +751,6 @@ export function buildSelectableItem(
       'No description available.',
     columns,
     detailSections,
-    totalCost,
-    costLabel: totalCost != null ? costLabel : undefined,
     thumbnail,
     data: item,
     powerTechniqueFilter,

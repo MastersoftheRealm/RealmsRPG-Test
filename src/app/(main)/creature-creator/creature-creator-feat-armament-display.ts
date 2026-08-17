@@ -6,6 +6,12 @@ import { formatDamageDisplay, formatListCellLabel, normalizeRangeDisplay } from 
 import { checkFeatRequirements, getMaxQualifiedFeatLevel } from '@/lib/game/feat-requirements';
 import { buildFeatLevelsByFamily, getFeatFamilyId, getFeatLevel } from '@/lib/leveled-feats';
 import type { Feat, Skill } from '@/hooks';
+import {
+  deriveCriticalRangeIncreaseFromProperties,
+  deriveShieldAmountFromProperties,
+  type ItemPropertyPayload,
+} from '@/lib/calculators';
+import { collectCreatureInventoryItems } from '@/lib/game/creature-inventory';
 import { codexFeatToCreatureFeat, creatureToFeatRequirementCharacter } from './creature-feat-utils';
 import {
   inferCreatureFeatSource,
@@ -37,8 +43,12 @@ export type CreatureArmamentRow = {
   range: string;
   attack: string;
   damage: string;
+  block: string;
+  damageReduction: string;
+  criticalRangeIncrease: string;
   tp: number | string;
   currency: string;
+  quantity?: number;
   image_id?: string | null;
   image_url?: string | null;
 };
@@ -125,7 +135,7 @@ export function enrichArmamentsWithSortKeys(creature: CreatureState): CreatureAr
   const str = creature.abilities.strength ?? 0;
   const agi = creature.abilities.agility ?? 0;
   const acu = creature.abilities.acuity ?? 0;
-  return creature.armaments.map((armament) => {
+  return collectCreatureInventoryItems(creature).map((armament) => {
     const isWeapon = String(armament.type ?? '').toLowerCase() === 'weapon';
     const isShield = String(armament.type ?? '').toLowerCase() === 'shield';
     const propNames = (armament.properties || [])
@@ -141,11 +151,21 @@ export function enrichArmamentsWithSortKeys(creature: CreatureState): CreatureAr
       isWeapon || isShield
         ? formatDamageDisplay((armament as { damage?: unknown }).damage) || '-'
         : '-';
+    const payload = (armament.properties || []) as ItemPropertyPayload[];
+    const isArmor = String(armament.type ?? '').toLowerCase() === 'armor';
+    const block = isShield ? deriveShieldAmountFromProperties(payload) || '-' : '-';
+    const drValue = armament.damageReduction ?? armament.armorValue;
+    const damageReduction = isArmor && drValue != null ? String(drValue) : '-';
+    const crit = isArmor ? deriveCriticalRangeIncreaseFromProperties(payload) : 0;
+    const criticalRangeIncrease = isArmor && crit > 0 ? String(crit) : '-';
     return {
       ...armament,
       range,
       attack,
       damage,
+      block,
+      damageReduction,
+      criticalRangeIncrease,
       type: formatListCellLabel(armament.type),
       tp: armament.tp != null ? armament.tp : '-',
       currency: armament.currency != null ? `${armament.currency}c` : '-',

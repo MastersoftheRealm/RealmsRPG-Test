@@ -106,14 +106,15 @@ export interface UnifiedSelectionModalProps {
   searchFields?: (keyof SelectableItem)[];
 
   /**
-   * Always-visible primary mode/scope chrome (Powers vs Empowered, Armaments vs Equipment,
-   * feat-source tabs, inventory type). Stays outside the Filters disclosure so users can
-   * switch catalog identity without opening Filters (TASK-564).
+   * Always-visible primary chrome under Search (Powers vs Empowered, Armaments vs Equipment,
+   * feat-source tabs, inventory type, sheet Add equipment custom-item form). Stays outside
+   * the Filters disclosure (TASK-564 / TASK-815).
    */
   scopeExtra?: ReactNode;
   /**
-   * Secondary chrome (SourceFilter, advanced filters, custom-add forms).
-   * Collapsed into the Filters panel with filterContent — not mode tabs (use scopeExtra).
+   * Secondary chrome (SourceFilter, advanced filters).
+   * Collapsed into the Filters panel with filterContent — not mode tabs or custom-add
+   * (use scopeExtra).
    */
   headerExtra?: ReactNode;
   /** When set, only items passing this filter are shown in the list; selection and confirm still use the full items list so selections from other "tabs" are kept. */

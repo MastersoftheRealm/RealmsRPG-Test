@@ -80,10 +80,12 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(selectable.powerTechniqueFilter?.actionTypeRaw).toBe('basic');
   });
 
-  it('mixed armament headers + buildSelectableItem facts (DEV-V-016-T003)', () => {
-    // Headers use a combined "stat" column; buildSelectableItem passes effectiveType into
-    // getItemColumns so row keys are Damage / Armor / Block (positional grid alignment).
-    expect(getListHeaderColumns('item').map((c) => c.key)).toEqual(['name', 'type', 'stat']);
+  it('armament select headers are per-kind catalog facts (DEV-V-016-T003)', () => {
+    expect(getListHeaderColumns('weapon').map((c) => c.key)).toEqual(['name', 'Damage']);
+    expect(getListHeaderColumns('armor').map((c) => c.key)).toEqual(['name', 'armor']);
+    expect(getListHeaderColumns('shield').map((c) => c.key)).toEqual(['name', 'Block', 'Damage']);
+    expect(getListHeaderColumns('weapon').map((c) => c.key)).not.toContain('type');
+    expect(getListHeaderColumns('weapon').map((c) => c.key)).not.toContain('stat');
 
     const weapon = buildSelectableItem(
       {
@@ -94,11 +96,11 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
         damage: { amount: 1, size: 8, type: 'slashing' },
         properties: [],
       },
-      'item',
+      'weapon',
       emptyCodex,
     );
-    expect(weapon.columns?.map((c) => c.key)).toEqual(['type', 'Damage']);
-    expect(String(weapon.columns?.[1]?.value)).toMatch(/1d8/i);
+    expect(weapon.columns?.map((c) => c.key)).toEqual(['Damage']);
+    expect(String(weapon.columns?.[0]?.value)).toMatch(/1d8/i);
 
     const armor = buildSelectableItem(
       {
@@ -109,11 +111,11 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
         armorValue: 3,
         properties: [],
       },
-      'item',
+      'armor',
       emptyCodex,
     );
-    expect(armor.columns?.map((c) => c.key)).toEqual(['type', 'Armor']);
-    expect(String(armor.columns?.[1]?.value)).toBe('3');
+    expect(armor.columns?.map((c) => c.key)).toEqual(['armor']);
+    expect(String(armor.columns?.[0]?.value)).toBe('3');
 
     const shield = buildSelectableItem(
       {
@@ -123,11 +125,10 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
         description: '',
         properties: [],
       },
-      'item',
+      'shield',
       emptyCodex,
     );
-    expect(shield.columns?.[0]?.key).toBe('type');
-    expect(String(shield.columns?.[0]?.value).toLowerCase()).toContain('shield');
+    expect(shield.columns?.map((c) => c.key)).toEqual(['Block', 'Damage']);
   });
 
   it('buildSelectableItem preserves data for sheet add mapping (DEV-V-016-T006)', () => {
@@ -139,11 +140,11 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
       damage: { amount: 1, size: 8, type: 'slashing' },
       properties: [],
     };
-    const selectable = buildSelectableItem(weapon, 'item', emptyCodex);
+    const selectable = buildSelectableItem(weapon, 'weapon', emptyCodex);
     expect(selectable.id).toBe('w1');
     expect(selectable.data).toBe(weapon);
-    expect(selectable.columns?.[0]?.key).toBe('type');
-    expect(String(selectable.columns?.[0]?.value).toLowerCase()).toContain('weapon');
+    expect(selectable.columns?.[0]?.key).toBe('Damage');
+    expect(String(selectable.columns?.[0]?.value)).toMatch(/1d8/i);
   });
 
   it('buildPowerTechniqueBudgetDisplay shapes guided budget columns + chips (TASK-691)', () => {
@@ -375,5 +376,67 @@ describe('library-selectable-builders (DEV-V-016 parity)', () => {
     expect(officialEnergy).toBeGreaterThan(0);
     expect(budgetEnergy).toBe(officialEnergy);
     expect(rows[0]?.columns?.find((c) => c.key === 'energy')?.value).toBe(officialEnergy);
+  });
+
+  it('emits Add Power Range chip from select-density chipFacts (TASK-809)', () => {
+    const selectable = buildSelectableItem(
+      {
+        id: 'p1',
+        docId: 'p1',
+        name: 'Bolt',
+        description: 'A bolt.',
+        actionType: 'Action',
+        range: { steps: 16 },
+        parts: [],
+      },
+      'power',
+      emptyCodex,
+    );
+    expect(selectable.columns?.map((c) => c.key)).not.toContain('Range');
+    const chips = (selectable.detailSections ?? []).flatMap((s) => s.chips.map((c) => c.name));
+    expect(chips.some((l) => /^range\b/i.test(l))).toBe(true);
+  });
+
+  it('emits add-weapon Range chip from chipFacts when Range is not a column (TASK-809)', () => {
+    const selectable = buildSelectableItem(
+      {
+        id: 'w1',
+        name: 'Longbow',
+        type: 'weapon',
+        description: 'A bow.',
+        damage: { amount: 1, size: 8, type: 'piercing' },
+        range: '16 spaces',
+        properties: [{ id: 10, name: 'Range', op_1_lvl: 1 }],
+      },
+      'weapon',
+      emptyCodex,
+    );
+    expect(selectable.columns?.map((c) => c.key)).toEqual(['Damage']);
+    const chips = (selectable.detailSections ?? []).flatMap((s) => s.chips.map((c) => c.name));
+    expect(chips.some((l) => /^range\b/i.test(l))).toBe(true);
+  });
+
+  it('add-armor select density chips Crit / Abl. Req. / Agility Red. (TASK-809)', () => {
+    const selectable = buildSelectableItem(
+      {
+        id: 'a1',
+        name: 'Chain',
+        type: 'armor',
+        description: '',
+        armorValue: 3,
+        abilityRequirement: { name: 'Strength', level: 3 },
+        agilityReduction: 1,
+        properties: [{ id: 22, name: 'Critical Range +1', op_1_lvl: 0 }],
+      },
+      'armor',
+      emptyCodex,
+    );
+    expect(selectable.columns?.map((c) => c.key)).toEqual(['armor']);
+    const chips = (selectable.detailSections ?? []).flatMap((s) => s.chips.map((c) => c.name));
+    expect(chips.some((l) => /critical range/i.test(l))).toBe(true);
+    expect(chips).toEqual(
+      expect.arrayContaining(['Strength Requirement 3+', 'Agility Reduction -1']),
+    );
+    expect(chips.some((l) => l === 'Critical Range +1')).toBe(true);
   });
 });

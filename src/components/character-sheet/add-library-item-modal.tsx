@@ -29,7 +29,6 @@ import {
 import type { PowerTechniqueCharacterContext } from '@/lib/library/power-technique-character-context';
 import { collectCategoryFilterOptions } from '@/lib/library/power-technique-categories';
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
-import type { ReactNode } from 'react';
 import {
   applyLivePathFilter,
   EQUIPMENT_LIST_PATH_KINDS,
@@ -198,21 +197,14 @@ export function AddLibraryItemModal({
         powerSelectionMode={powerSelectionMode}
         onPowerSelectionModeChange={setPowerSelectionMode}
       />
+    ) : itemType === 'equipment' ? (
+      <AddCustomEquipmentForm
+        onAdd={(item) => {
+          onAdd([item]);
+          onClose();
+        }}
+      />
     ) : null;
-
-  const headerExtraContent: ReactNode = (
-    <div className="space-y-3">
-      <AddLibraryItemHeaderExtra source={source} onSourceChange={setSource} />
-      {itemType === 'equipment' && (
-        <AddCustomEquipmentForm
-          onAdd={(item) => {
-            onAdd([item]);
-            onClose();
-          }}
-        />
-      )}
-    </div>
-  );
 
   const filterContent = showPtFilters ? (
     <PowerTechniqueFilters
@@ -240,7 +232,7 @@ export function AddLibraryItemModal({
       ? EMPOWERED_POWER_COLUMNS
       : getListHeaderColumns(itemType);
 
-  // Mode tabs are always visible; summary/badge cover Filters-only state (source + P/T).
+  // Source/path live in Filters; summary/badge cover collapsed Filters state.
   const optionsSummary = sourceFilterSummary(source);
   const optionsActiveCount =
     (source !== 'all' ? 1 : 0) + ptActiveCount + (pathFilterActive ? 1 : 0);
@@ -250,11 +242,8 @@ export function AddLibraryItemModal({
       isOpen={isOpen}
       onClose={onClose}
       title={titleOverride ?? getAddLibraryItemTitle(itemType)}
-      {...(itemType === 'equipment'
-        ? { description: 'Open Filters to add a custom item by name.' }
-        : {})}
       scopeExtra={scopeExtra}
-      headerExtra={headerExtraContent}
+      headerExtra={<AddLibraryItemHeaderExtra source={source} onSourceChange={setSource} />}
       filterContent={filterContent}
       showFilters={Boolean(filterContent)}
       optionsSummary={optionsSummary}

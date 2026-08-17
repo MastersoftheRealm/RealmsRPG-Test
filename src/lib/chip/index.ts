@@ -45,12 +45,13 @@ export {
 export {
   metadataDescriptorChip,
   buildRangeDamageMetadataChips,
-  buildArmorRequirementMetadataChips,
   metadataDetailSection,
   mergeDetailSections,
   buildEntityMetadataDetailSections,
+  rankedGlrFactChips,
+  buildGlrFactDetailSections,
+  glrSurfaceDetailSections,
   buildPartsAndMetadataDetailSections,
-  buildUsesRecoveryDetailSections,
   partsProficienciesSection,
   propertiesProficienciesSection,
   isPartsOrPropertiesProficienciesLabel,
@@ -59,5 +60,6 @@ export {
   PARTS_PROFICIENCIES_LABEL,
   PROPERTIES_PROFICIENCIES_LABEL,
   type MetadataDetailSection,
+  type GlrFactChipSource,
   type PartsPropertiesHelpKey,
 } from './list-row-metadata';

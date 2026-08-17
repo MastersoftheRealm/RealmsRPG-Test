@@ -13,7 +13,6 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getSkillPointsHelp } from '../../../../public/tooltip-text';
 import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import type { SelectableItem } from '@/components/shared';
 import { useAuthStore } from '@/stores/auth-store';
 import {
   useUserPowers,
@@ -56,6 +55,7 @@ import {
 import { allocationsToCreatureSkills, creatureSkillsToAllocations } from './creature-skill-utils';
 import { bootstrapCreatureState } from './creature-creator-bootstrap';
 import { writeCreatorCache, clearCreatorCache } from '@/lib/game/creator-cache';
+import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import { mergeLibraryBySource } from '@/lib/library/source-scope';
 import { mergeCreatureFeatsOnAdd } from './creature-feat-utils';
 import {
@@ -65,7 +65,6 @@ import {
   buildEmpoweredTechniqueSelectableItems,
   buildPowerSelectableItems,
   buildTechniqueSelectableItems,
-  filterCreatureInventorySelectable,
   selectedArmamentIdsFromCreature,
   type CreatureInventoryTab,
 } from './creature-creator-library-selectables';
@@ -136,7 +135,7 @@ export function useCreatureCreatorWorkspace() {
   const [showFeatModal, setShowFeatModal] = useState(false);
   const [showArmamentModal, setShowArmamentModal] = useState(false);
   const [librarySource, setLibrarySource] = useState<SourceFilterValue>('all');
-  const [inventoryTab, setInventoryTab] = useState<CreatureInventoryTab>('all');
+  const [inventoryTab, setInventoryTab] = useState<CreatureInventoryTab>('weapon');
   const [powerModalTab, setPowerModalTab] = useState<PowerModalTab>('powers');
 
   const libraryQueriesEnabled = showPowerModal || showTechniqueModal || showArmamentModal;
@@ -187,8 +186,8 @@ export function useCreatureCreatorWorkspace() {
         userItems,
         publicItems,
         selectedArmamentIdsFromCreature(creature),
-      ),
-    [userItems, publicItems, librarySource, creature],
+      ).filter((item) => normalizeCreatureInventoryType(item.type) === inventoryTab),
+    [userItems, publicItems, librarySource, creature, inventoryTab],
   );
 
   const powerSelectableItems = useMemo(
@@ -209,13 +208,8 @@ export function useCreatureCreatorWorkspace() {
     [techniqueList, techniquePartsDb],
   );
   const armamentSelectableItems = useMemo(
-    () => buildArmamentSelectableItems(armamentList, itemPropertiesDb),
-    [armamentList, itemPropertiesDb],
-  );
-
-  const inventoryDisplayFilter = useCallback(
-    (item: SelectableItem) => filterCreatureInventorySelectable(inventoryTab, item),
-    [inventoryTab],
+    () => buildArmamentSelectableItems(armamentList, itemPropertiesDb, inventoryTab),
+    [armamentList, itemPropertiesDb, inventoryTab],
   );
 
   const sessionKey = editCreatureId ?? 'draft';
@@ -411,6 +405,7 @@ export function useCreatureCreatorWorkspace() {
     onRemovePower,
     onRemoveTechnique,
     onRemoveArmament,
+    onAddArmaments,
   } = useCreatureCreatorWorkspacePersistence({
     creature,
     setCreature,
@@ -489,7 +484,6 @@ export function useCreatureCreatorWorkspace() {
     empoweredTechniqueSelectableItems,
     techniqueSelectableItems,
     armamentSelectableItems,
-    inventoryDisplayFilter,
     codexFeatsById,
     skillAllocations,
     abilityDefenseBonuses,
@@ -519,6 +513,7 @@ export function useCreatureCreatorWorkspace() {
     onRemovePower,
     onRemoveTechnique,
     onRemoveArmament,
+    onAddArmaments,
     getCreatureSkillBonus,
     displayItemToCreaturePower,
     displayItemToCreatureTechnique,

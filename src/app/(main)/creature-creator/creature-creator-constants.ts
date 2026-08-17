@@ -223,5 +223,8 @@ export const initialState: CreatureState = {
   powers: [],
   techniques: [],
   feats: [],
-  armaments: [],
+  weapons: [],
+  armor: [],
+  shields: [],
+  equipment: [],
 };

@@ -3,6 +3,7 @@
  */
 
 import type { CreatureState } from './creature-creator-types';
+import { collectCreatureInventoryItems } from '@/lib/game/creature-inventory';
 
 function summarizeNamedItems(items: Array<{ name?: string }>, emptyLabel: string): string {
   if (items.length === 0) return emptyLabel;
@@ -24,5 +25,5 @@ export function buildCreatureTechniquesSummary(creature: CreatureState): string 
 }
 
 export function buildCreatureArmamentsSummary(creature: CreatureState): string {
-  return summarizeNamedItems(creature.armaments, 'No inventory items');
+  return summarizeNamedItems(collectCreatureInventoryItems(creature), 'No inventory items');
 }

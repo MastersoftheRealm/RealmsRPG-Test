@@ -49,6 +49,7 @@ export function WeaponsListSection({
   addLabel,
   emptyMessage = 'No weapons',
   collapsible,
+  headingLevel,
 }: {
   title?: string;
   items: EntityWeaponRow[];
@@ -164,6 +165,7 @@ export function WeaponsListSection({
         <SectionHeader
           title={title}
           size="lg"
+          headingLevel={headingLevel}
           onAdd={onAddWrapped}
           addLabel={addLabel}
           {...headerCollapseProps}
@@ -188,6 +190,7 @@ export function ShieldsListSection({
   addLabel,
   emptyMessage = 'No shields',
   collapsible,
+  headingLevel,
 }: {
   title?: string;
   items: EntityShieldRow[];
@@ -260,6 +263,7 @@ export function ShieldsListSection({
         <SectionHeader
           title={title}
           size="lg"
+          headingLevel={headingLevel}
           onAdd={onAddWrapped}
           addLabel={addLabel}
           {...headerCollapseProps}
@@ -284,6 +288,7 @@ export function ArmorListSection({
   addLabel,
   emptyMessage = 'No armor',
   collapsible,
+  headingLevel,
 }: {
   title?: string;
   items: EntityArmorRow[];
@@ -350,6 +355,7 @@ export function ArmorListSection({
         <SectionHeader
           title={title}
           size="lg"
+          headingLevel={headingLevel}
           onAdd={onAddWrapped}
           addLabel={addLabel}
           {...headerCollapseProps}
@@ -374,6 +380,7 @@ export function EquipmentListSection({
   addLabel,
   emptyMessage = 'No equipment',
   collapsible,
+  headingLevel,
 }: {
   title?: string;
   items: EntityEquipmentRow[];
@@ -451,6 +458,7 @@ export function EquipmentListSection({
         <SectionHeader
           title={title}
           size="lg"
+          headingLevel={headingLevel}
           onAdd={onAddWrapped}
           addLabel={addLabel}
           {...headerCollapseProps}

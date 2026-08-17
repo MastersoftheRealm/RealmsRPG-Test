@@ -19,7 +19,7 @@
  * - Any collapsible/expandable section with add functionality
  */
 
-import type { ReactNode } from 'react';
+import type { ElementType, ReactNode } from 'react';
 import { ChevronDown, Plus } from 'lucide-react';
 import { IconButton } from '@/components/ui';
 import { cn } from '@/lib/utils';
@@ -45,6 +45,11 @@ interface SectionHeaderBaseProps {
    * DESIGN_INTENT: default `md` sitewide; character Library list subsections pass `lg` explicitly.
    */
   size?: 'sm' | 'md' | 'lg';
+  /**
+   * Heading level for the title. Default `2` for page sections under an `h1`.
+   * Use `3` when nested under another `h2` (e.g. creature Inventory lists).
+   */
+  headingLevel?: 2 | 3 | 4;
 }
 
 export type SectionHeaderProps = SectionHeaderBaseProps & LibrarySectionCollapseHeaderProps;
@@ -71,10 +76,12 @@ export function SectionHeader({
   addButtonClassName,
   className,
   size = 'md',
+  headingLevel = 2,
   collapsible = false,
   expanded = true,
   onExpandedChange,
 }: SectionHeaderProps) {
+  const HeadingTag = `h${headingLevel}` as ElementType;
   const titleClassName = cn(
     'font-semibold text-text-muted uppercase tracking-wide',
     sizeTextStyles[size],
@@ -92,7 +99,7 @@ export function SectionHeader({
     >
       {/* Left: collapse control stays intact; optional help sits beside it, never nested in the button. */}
       <div className="flex min-w-0 items-center gap-1.5">
-        <h2 className={cn(titleClassName, canCollapse && 'm-0')}>
+        <HeadingTag className={cn(titleClassName, canCollapse && 'm-0')}>
           {canCollapse ? (
             <button
               type="button"
@@ -117,7 +124,7 @@ export function SectionHeader({
           ) : (
             title
           )}
-        </h2>
+        </HeadingTag>
         {titleAddon ? (
           <span className="inline-flex shrink-0 items-center self-center leading-none">
             {titleAddon}

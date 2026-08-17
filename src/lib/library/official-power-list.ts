@@ -24,20 +24,21 @@ import {
   libraryRowPathIds,
   rowMatchesPathRecommendedIds,
 } from '@/lib/game/path-recommendation-index';
+import { glrColumnKeyFor, glrListChrome } from '@/lib/glr';
+import { glrSurfaceDetailSections, partsProficienciesSection } from '@/lib/chip/list-row-metadata';
+
+const officialPowerChrome = glrListChrome({ entityType: 'power', mode: 'browse' });
 
 /** Data columns only — edit/delete/add use ListHeader `rowChrome` (not a leftover 40px track). */
-export const OFFICIAL_POWER_GRID = '1.4fr 1fr 0.7fr 0.9fr 0.9fr 0.7fr 0.9fr 0.9fr';
+export const OFFICIAL_POWER_GRID = officialPowerChrome.grid;
 
-export const OFFICIAL_POWER_HEADER_COLUMNS = [
-  { key: 'name', label: 'NAME', align: 'left' as const },
-  { key: 'category', label: 'CATEGORY', align: 'center' as const },
-  { key: 'energy', label: 'ENERGY', align: 'center' as const },
-  { key: 'action', label: 'ACTION', align: 'center' as const },
-  { key: 'duration', label: 'DURATION', align: 'center' as const },
-  { key: 'range', label: 'RANGE', align: 'center' as const },
-  { key: 'area', label: 'AREA', align: 'center' as const },
-  { key: 'damage', label: 'DAMAGE', align: 'center' as const },
-];
+export const OFFICIAL_POWER_HEADER_COLUMNS = officialPowerChrome.headers.map(
+  ({ key, label, align }) => ({
+    key,
+    label,
+    align: align ?? ('center' as const),
+  }),
+);
 
 export interface OfficialPowerRow {
   id: string;
@@ -99,17 +100,35 @@ export function buildOfficialPowerRows(
   });
 }
 
+export function officialPowerDetailSections(row: OfficialPowerRow) {
+  const parts = partsProficienciesSection(row.parts, 'power');
+  return glrSurfaceDetailSections(
+    'library-official-power',
+    { trainingPoints: row.tp > 0 ? row.tp : undefined },
+    parts ? [parts] : undefined,
+  );
+}
+
 /** Dense browse columns — same keys as `OFFICIAL_POWER_HEADER_COLUMNS` (Library + Guided L2/L3). */
 export function officialPowerRowColumns(row: OfficialPowerRow): ColumnValue[] {
-  return [
-    { key: 'category', value: row.category || '-', align: 'center' },
-    { key: 'energy', value: row.energy ?? '-', highlight: true, align: 'center' },
-    { key: 'action', value: row.action || '-', align: 'center' },
-    { key: 'duration', value: row.duration || '-', align: 'center' },
-    { key: 'range', value: row.range || '-', align: 'center' },
-    { key: 'area', value: row.area || '-', align: 'center' },
-    { key: 'damage', value: row.damage || '-', align: 'center' },
-  ];
+  const values: Record<string, string | number> = {
+    category: row.category || '-',
+    energy: row.energy ?? '-',
+    action: row.action || '-',
+    duration: row.duration || '-',
+    range: row.range || '-',
+    area: row.area || '-',
+    damage: row.damage || '-',
+  };
+  return officialPowerChrome.layout.columnFacts.map((id) => {
+    const key = glrColumnKeyFor(id, 'power', 'browse');
+    return {
+      key,
+      value: values[key] ?? '-',
+      highlight: id === 'energy' ? true : undefined,
+      align: 'center' as const,
+    };
+  });
 }
 
 export function filterOfficialPowerRows<

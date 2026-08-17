@@ -24,6 +24,7 @@ import {
   useAdmin,
   useLoadModalLibrary,
   type ItemProperty,
+  type LoadModalArmamentKind,
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { LoadingState } from '@/components/ui';
@@ -33,6 +34,7 @@ import {
   CreatorSummaryPanel,
 } from '@/components/creator';
 import { SourceFilter, sourceFilterSummary } from '@/components/shared/filters/source-filter';
+import { SegmentedControl } from '@/components/shared';
 import { useAuthStore } from '@/stores';
 import {
   bootstrapItemCreatorFormState,
@@ -50,7 +52,8 @@ function ItemCreatorContent() {
   const { isAdmin } = useAdmin();
   const searchParams = useSearchParams();
   const editItemId = searchParams.get('edit');
-  const load = useLoadModalLibrary('item');
+  const [loadKind, setLoadKind] = useState<LoadModalArmamentKind>('weapon');
+  const load = useLoadModalLibrary('item', { itemKind: loadKind });
 
   const { data: itemProperties = [], isLoading, error, refetch } = useItemProperties();
 
@@ -94,6 +97,8 @@ function ItemCreatorContent() {
       isAdmin={isAdmin}
       itemProperties={itemProperties}
       load={load}
+      loadKind={loadKind}
+      setLoadKind={setLoadKind}
       isLoading={isLoading}
       error={error}
       refetch={refetch}
@@ -108,6 +113,8 @@ interface ItemCreatorWorkspaceProps {
   isAdmin: boolean;
   itemProperties: ItemProperty[];
   load: UseLoadModalLibraryReturn;
+  loadKind: LoadModalArmamentKind;
+  setLoadKind: (kind: LoadModalArmamentKind) => void;
   isLoading: boolean;
   error: Error | null;
   refetch: () => void;
@@ -120,6 +127,8 @@ function ItemCreatorWorkspace({
   isAdmin,
   itemProperties,
   load,
+  loadKind,
+  setLoadKind,
   isLoading,
   error,
   refetch,
@@ -172,11 +181,24 @@ function ItemCreatorWorkspace({
         columns: load.columns,
         gridColumns: load.gridColumns,
         headerExtra: <SourceFilter value={load.source} onChange={load.setSource} />,
+        scopeExtra: (
+          <SegmentedControl
+            value={loadKind}
+            onChange={setLoadKind}
+            aria-label="Armament type"
+            tabs
+            options={[
+              { value: 'weapon', label: 'Weapons' },
+              { value: 'armor', label: 'Armor' },
+              { value: 'shield', label: 'Shields' },
+            ]}
+          />
+        ),
         optionsSummary: sourceFilterSummary(load.source),
         optionsActiveCount: load.source !== 'all' ? 1 : 0,
         emptyMessage: load.emptyMessage,
         emptySubMessage: load.emptySubMessage,
-        searchPlaceholder: 'Search armaments...',
+        searchPlaceholder: `Search ${loadKind === 'armor' ? 'armor' : `${loadKind}s`}...`,
         isLoading: load.isLoading,
         error: load.error,
         title: 'Load Armament from Library',

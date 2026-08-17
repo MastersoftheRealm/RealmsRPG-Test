@@ -2,10 +2,8 @@ import type { SelectableItem } from '@/components/shared/unified-selection-modal
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { UserTechnique } from '../use-user-library';
 import { formatPowerDamage, formatPowerRangeFromSteps } from '@/lib/calculators/power-calc';
-import {
-  buildEntityMetadataDetailSections,
-  mergeDetailSections,
-} from '@/lib/chip/list-row-metadata';
+import { buildGlrFactDetailSections } from '@/lib/chip/list-row-metadata';
+import { resolveSurfaceLayout } from '@/lib/glr';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
 import { formatDurationDisplay, formatSavedActionTypeForDisplay } from '@/lib/utils';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
@@ -44,13 +42,18 @@ export function buildEmpoweredPowerSelectableItem(
     typeof rangeSteps === 'number' && rangeSteps > 0
       ? formatPowerRangeFromSteps(rangeSteps)
       : undefined;
-  // Range omitted from columns → labeled expanded chip (TASK-437)
-  const metadataSections = buildEntityMetadataDetailSections({ range: rangeStr });
   const partsSection =
     codex?.powerPartsDb && codex?.techniquePartsDb
       ? empoweredTechniquePartsSection(item, codex.powerPartsDb, codex.techniquePartsDb)
       : undefined;
-  const detailSections = mergeDetailSections(metadataSections, partsSection);
+  const detailSections = buildGlrFactDetailSections({
+    chipFacts: resolveSurfaceLayout('empowered-power').chipFacts,
+    facts: {
+      range: rangeStr,
+      trainingPoints: Number(totals.trainingPoints ?? 0) || undefined,
+    },
+    extraSections: partsSection ? [partsSection] : undefined,
+  });
   const name = String(item.name ?? '');
 
   return {
@@ -66,8 +69,6 @@ export function buildEmpoweredPowerSelectableItem(
     ],
     detailSections: detailSections.length > 0 ? detailSections : undefined,
     badges: [{ label: 'Empowered', color: 'gray' as const }],
-    totalCost: Number(totals.trainingPoints ?? 0) || undefined,
-    costLabel: Number(totals.trainingPoints ?? 0) > 0 ? 'Training Points' : undefined,
     thumbnail: resolveListRowThumbnail('technique', item, name),
     data: item,
   };

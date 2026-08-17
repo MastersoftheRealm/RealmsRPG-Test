@@ -29,16 +29,17 @@ For **every** `GridListRow` (and entity-library-section) list backed by codex/DB
 
 > If a field is meaningful to the player and stored on the item, it must appear in **either** the collapsed row columns **or** descriptor chips in the expanded view — not nowhere.
 
-**SoT (TASK-629):** `src/lib/glr/required-facts-registry.ts` — per-surface required fact ids + column/chip placement. CI: `required-facts-registry.test.ts`. Formatting: `lib/detail-option/compact-facts.ts`.
+**SoT (TASK-806 / TASK-807 / ADR-0016):** `src/lib/glr/glr-fact-catalog.ts` (facts + bands) + `glr-density.ts` (modes/flags) + `resolve-glr-fact-layout.ts` (column vs chip vs rightSlot). Surface CI pointers: `glr-surface-bindings.ts`. CI: `glr-fact-catalog.test.ts`. Formatting: `lib/detail-option/compact-facts.ts`.
 
-Historical examples (see registry for live bindings — do not edit this table without updating CI):
+Historical examples (see `glr-surface-bindings.ts` + CI — do not edit this table without updating CI):
 
 | Entity | Collapsed columns (preferred) | Expanded descriptors (if not in columns) |
 |--------|------------------------------|------------------------------------------|
-| Power | Action, Damage, Area, Duration; **play sheet:** Energy via spend `rightSlot` only | Range (add-modal), TP on part chips |
-| Technique | **Play sheet:** Action, Weapon + Energy `rightSlot`. **Browse:** Energy/Weapon/TP | Range, damage breakdown |
-| Weapon/Armor/Shield | Library official: kind-specific (see `ARMAMENT_GLR_SURFACE`) | Named properties as expandable chips |
-| Feat | Req level, Category, Ability, Uses, Recovery | Type, requirements, feat levels, Tags last |
+| Power | Action, Damage, Area, Duration; **play sheet:** Energy via spend `rightSlot` only | Play/select: Category, Range, TP chips. Browse: TP chip (not a Total TP footer) |
+| Technique | **Play sheet:** Action, Weapon + Energy `rightSlot`. **Browse:** Energy/Weapon/TP | Play: Category, damage, TP chips. Range is extra-chrome (not a catalog fact) |
+| Weapon/Armor/Shield | Library official: kind-specific (`ARMAMENT_LIBRARY_CONFIG` / browse chrome) | Play: rarity / currency / TP chips. Named properties as expandable chips |
+| Feat | Browse: Req level, Category, Ability, Uses, Recovery. **Play sheet:** Uses, Recovery | Play: Req. Level / Category / Ability chips. Select: Req. Level chip |
+| Gear | Browse: Category, Currency, Rarity columns | Play: those three as chips (not `Cost Nc` badges) |
 
 ### 2. No redundancy
 
@@ -198,7 +199,7 @@ Add to `/dev/styleguide`:
 
 **Also:** `add-feat-modal` / `AddCreatureFeatModal` → `buildFeatDetailSections` (DRY); removed `tag` from `GridListChipCategory`.
 
-**Phase E audit (2026-07-03):** Explicit `kind: 'descriptor'` on codex parts/equipment stats, add-skill ability chips, admin species skills; `buildUsesRecoveryDetailSections` DRYs creature feat/trait uses metadata; stale `category: 'tag'` comment removed from `list-row-metadata.ts`. Playwright baselines committed (`chip-unification.pw.ts` × 4). Implicit descriptors without `kind` remain only on expandable chips (options, leveled feats, traits with descriptions).
+**Phase E audit (2026-07-03):** Explicit `kind: 'descriptor'` on codex parts/equipment stats, add-skill ability chips, admin species skills; stale `category: 'tag'` comment removed from `list-row-metadata.ts`. Playwright baselines committed (`chip-unification.pw.ts` × 4). Implicit descriptors without `kind` remain only on expandable chips (options, leveled feats, traits with descriptions). Creature feat/trait uses/recovery now go through `glrSurfaceDetailSections` (TASK-814).
 
 ## Success criteria
 

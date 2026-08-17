@@ -15,11 +15,21 @@ import type { ChipData } from '@/components/shared/grid-list-row-types';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import {
   abilityRequirementChip,
+  actionTypeFactChip,
   agilityReductionFactChip,
+  compactFactChip,
+  criticalRangeIncreaseFactChip,
+  currencyFactChip,
   damageFactChip,
+  damageReductionFactChip,
+  energyFactChip,
   formatActionTypeFact,
+  isMechanicPropertyName,
   rangeFactChip,
+  trainingPointsFactChip,
 } from '@/lib/detail-option/compact-facts';
+import type { GlrFactId } from '@/lib/glr/glr-fact-catalog';
+import { resolveSurfaceLayout, type GlrSurfaceId } from '@/lib/glr/glr-surface-bindings';
 
 /** InfoTippy key for Parts/Properties & Proficiencies (resolved in GridListRow). */
 export type PartsPropertiesHelpKey =
@@ -94,7 +104,9 @@ export function propertiesProficienciesSection(
   chips: ChipData[],
   family: 'weapon' | 'armor' | 'shield' | 'item' | 'properties' = 'properties',
 ): MetadataDetailSection | undefined {
-  if (chips.length === 0) return undefined;
+  const ranked =
+    family === 'armor' ? chips.filter((chip) => !isMechanicPropertyName(chip.name)) : chips;
+  if (ranked.length === 0) return undefined;
   const labelHelpKey: PartsPropertiesHelpKey =
     family === 'weapon'
       ? 'weapon-properties'
@@ -107,7 +119,7 @@ export function propertiesProficienciesSection(
             : 'properties';
   return {
     label: PROPERTIES_PROFICIENCIES_LABEL,
-    chips,
+    chips: ranked,
     defaultCollapsed: true,
     labelHelpKey,
   };
@@ -154,25 +166,6 @@ export function buildRangeDamageMetadataChips(opts: {
   return chips;
 }
 
-export function buildArmorRequirementMetadataChips(opts: {
-  abilityRequirement?: { name?: string; level?: number } | null;
-  agilityReduction?: number | null;
-}): ChipData[] {
-  const chips: ChipData[] = [];
-  if (opts.abilityRequirement?.name && opts.abilityRequirement?.level) {
-    const reqChip = abilityRequirementChip({
-      name: opts.abilityRequirement.name,
-      level: opts.abilityRequirement.level,
-    });
-    if (reqChip) chips.push(reqChip);
-  }
-  if (opts.agilityReduction && opts.agilityReduction > 0) {
-    const agilityChip = agilityReductionFactChip(-opts.agilityReduction);
-    if (agilityChip) chips.push(agilityChip);
-  }
-  return chips;
-}
-
 export function metadataDetailSection(
   chips: ChipData[],
   label = 'Details',
@@ -207,6 +200,149 @@ export function buildEntityMetadataDetailSections(opts: {
   return mergeDetailSections(meta, opts.extraSections);
 }
 
+/** Values for ranked GLR facts that the density resolver placed on chips. */
+export interface GlrFactChipSource {
+  actionType?: string | null;
+  area?: string | number | null;
+  abilityRequirement?: { name?: string; level?: number } | null;
+  agilityReduction?: number | null;
+  block?: string | number | null;
+  category?: string | null;
+  criticalRangeIncrease?: number | null;
+  currency?: number | null;
+  damage?: unknown;
+  damageReduction?: number | null;
+  duration?: string | null;
+  energy?: number | null;
+  range?: string | number | null;
+  rarity?: string | null;
+  recovery?: string | null;
+  reqLevel?: string | number | null;
+  trainingPoints?: number | null;
+  uses?: string | number | null;
+  weapon?: string | null;
+  /** Feat governing Ability column when no min-score requirement object exists. */
+  ability?: string | null;
+}
+
+function labeledFactChip(
+  label: string,
+  value: string | number | null | undefined,
+): ChipData | null {
+  if (value == null) return null;
+  const text = String(value).trim();
+  if (!text || text === '-') return null;
+  const alreadyLabeled = text.toLowerCase().startsWith(label.toLowerCase());
+  return compactFactChip(alreadyLabeled ? text : `${label} ${text}`);
+}
+
+/** Descriptor chips for `layout.chipFacts` — parts/properties stay in their own sections. */
+export function rankedGlrFactChips(
+  chipFacts: readonly GlrFactId[],
+  source: GlrFactChipSource,
+): ChipData[] {
+  const chips: ChipData[] = [];
+  for (const factId of chipFacts) {
+    let chip: ChipData | null = null;
+    switch (factId) {
+      case 'actionType':
+        chip = actionTypeFactChip(source.actionType);
+        break;
+      case 'area':
+        chip = labeledFactChip('Area', source.area);
+        break;
+      case 'abilityRequirement':
+        chip =
+          abilityRequirementChip(
+            source.abilityRequirement?.name && source.abilityRequirement.level != null
+              ? {
+                  name: source.abilityRequirement.name,
+                  level: source.abilityRequirement.level,
+                }
+              : null,
+          ) ?? labeledFactChip('Ability', source.ability);
+        break;
+      case 'agilityReduction':
+        chip = agilityReductionFactChip(source.agilityReduction);
+        break;
+      case 'block':
+        chip = labeledFactChip('Block', source.block);
+        break;
+      case 'category':
+        chip = labeledFactChip('Category', source.category);
+        break;
+      case 'criticalRangeIncrease':
+        chip = criticalRangeIncreaseFactChip(source.criticalRangeIncrease);
+        break;
+      case 'currency':
+        chip = currencyFactChip(source.currency);
+        break;
+      case 'damage':
+        chip = damageFactChip(source.damage);
+        break;
+      case 'damageReduction':
+        chip = damageReductionFactChip(source.damageReduction);
+        break;
+      case 'duration':
+        chip = labeledFactChip('Duration', source.duration);
+        break;
+      case 'energy':
+        chip = energyFactChip(source.energy);
+        break;
+      case 'range':
+        chip = rangeFactChip(source.range);
+        break;
+      case 'rarity':
+        chip = labeledFactChip('Rarity', source.rarity);
+        break;
+      case 'recovery':
+        chip = labeledFactChip('Recovery', source.recovery);
+        break;
+      case 'reqLevel':
+        chip = labeledFactChip('Req. Level', source.reqLevel);
+        break;
+      case 'trainingPoints':
+        chip = trainingPointsFactChip(source.trainingPoints);
+        break;
+      case 'uses':
+        chip = labeledFactChip('Uses', source.uses);
+        break;
+      case 'weapon':
+        chip = labeledFactChip('Attack', source.weapon);
+        break;
+      default:
+        break;
+    }
+    if (chip) chips.push(chip);
+  }
+  return chips;
+}
+
+/** Ranked fact chips from `layout.chipFacts`, then optional parts/properties sections. */
+export function buildGlrFactDetailSections(opts: {
+  chipFacts: readonly GlrFactId[];
+  facts: GlrFactChipSource;
+  extraSections?: MetadataDetailSection[];
+}): MetadataDetailSection[] {
+  return mergeDetailSections(
+    metadataDetailSection(rankedGlrFactChips(opts.chipFacts, opts.facts)),
+    opts.extraSections,
+  );
+}
+
+/** Bind a registered surface and emit its overflow/demoted fact chips. */
+export function glrSurfaceDetailSections(
+  surfaceId: GlrSurfaceId,
+  facts: GlrFactChipSource,
+  extraSections?: MetadataDetailSection[],
+): MetadataDetailSection[] {
+  return buildGlrFactDetailSections({
+    chipFacts: resolveSurfaceLayout(surfaceId).chipFacts,
+    facts,
+    extraSections,
+  });
+}
+
 /** Convenience: metadata chips + parts section (powers, techniques, modals). */
 export function buildPartsAndMetadataDetailSections(opts: {
   range?: string | number | null;
@@ -229,27 +365,4 @@ export function buildPartsAndMetadataDetailSections(opts: {
     actionType: opts.actionType,
     extraSections: parts ? [parts] : undefined,
   });
-}
-
-/** Uses / recovery metadata when collapsed columns omit those fields (e.g. creature feat modal). */
-export function buildUsesRecoveryDetailSections(opts: {
-  usesPerRec?: number | null;
-  maxUses?: number | null;
-  recPeriod?: string | null;
-}): MetadataDetailSection[] {
-  const usesVal = opts.usesPerRec ?? opts.maxUses;
-  const usesDisplay =
-    usesVal === 0 || usesVal === undefined || usesVal === null ? '-' : String(usesVal);
-  const chips: ChipData[] = [];
-  if (usesDisplay !== '-') {
-    chips.push(
-      metadataDescriptorChip(
-        `Uses / recovery: ${usesDisplay}${opts.recPeriod ? ` / ${opts.recPeriod}` : ''}`,
-      ),
-    );
-  } else if (opts.recPeriod) {
-    chips.push(metadataDescriptorChip(`Recovery: ${opts.recPeriod}`));
-  }
-  if (chips.length === 0) return [];
-  return [{ label: 'Uses', chips, hideLabelIfSingle: true }];
 }

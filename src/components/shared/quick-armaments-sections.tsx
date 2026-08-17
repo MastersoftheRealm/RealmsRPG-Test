@@ -17,9 +17,6 @@ import { calculateCriticalRange, calculateEvasion } from '@/lib/game/calculation
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
 import { useRollsOptional } from '@/components/rolls';
 
-/** Named props already shown as table columns (not in MECHANIC_PROPERTY_NAMES). */
-const QUICK_ARMAMENT_COLUMN_PROP_NAMES = new Set(['Critical Range +1', 'Critical Range Increase']);
-
 /**
  * QuickWeaponsTable column classes — content-sized metric cols (not large %) so the table
  * stays inside the panel; Name takes leftover width and wraps property bullets.
@@ -61,9 +58,7 @@ function getPropertyNames(props: QuickArmamentItem['properties']): string[] {
 }
 
 function displayNamedProperties(props: QuickArmamentItem['properties']): string[] {
-  return getPropertyNames(props).filter(
-    (name) => name && !isMechanicPropertyName(name) && !QUICK_ARMAMENT_COLUMN_PROP_NAMES.has(name),
-  );
+  return getPropertyNames(props).filter((name) => name && !isMechanicPropertyName(name));
 }
 
 /** One `• Property` per line under the armament name; long names wrap within the Name column. */

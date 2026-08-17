@@ -42,6 +42,7 @@ export function PowersListSection({
   addLabel,
   emptyMessage = 'No powers',
   collapsible,
+  headingLevel,
 }: {
   title?: string;
   /** Optional content beside the section title (e.g. InfoTippy). */
@@ -68,6 +69,7 @@ export function PowersListSection({
           title={title}
           titleAddon={titleAddon}
           size="lg"
+          headingLevel={headingLevel}
           onAdd={onAddWrapped}
           addLabel={addLabel}
           {...headerCollapseProps}
@@ -143,6 +145,7 @@ export function TechniquesListSection({
   addLabel,
   emptyMessage = 'No techniques',
   collapsible,
+  headingLevel,
 }: {
   title?: string;
   items: EntityTechniqueRow[];
@@ -165,6 +168,7 @@ export function TechniquesListSection({
         <SectionHeader
           title={title}
           size="lg"
+          headingLevel={headingLevel}
           onAdd={onAddWrapped}
           addLabel={addLabel}
           {...headerCollapseProps}
@@ -197,6 +201,7 @@ export function TechniquesListSection({
                     ];
                   }
                   return [
+                    { key: 'action', value: row.actionType ?? '-', align: 'center' as const },
                     { key: 'energy', value: row.energyCost ?? '-', align: 'center' as const },
                     { key: 'weapon', value: row.weaponName ?? '-', align: 'center' as const },
                     { key: 'tp', value: row.tp ?? '-', align: 'center' as const },

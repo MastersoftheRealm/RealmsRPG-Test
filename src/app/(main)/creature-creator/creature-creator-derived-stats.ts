@@ -16,6 +16,10 @@ import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import { calculateCreatureMaxHealth, calculateCreatureMaxEnergy } from '@/lib/game/encounter-utils';
 import { CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import { CREATURE_MECHANICAL_FEAT_POINTS } from '@/lib/game/creator-constants';
+import {
+  collectCreatureInventoryItems,
+  creatureInventoryQuantityMultiplier,
+} from '@/lib/game/creature-inventory';
 import type { CoreRulesMap } from '@/types/core-rules';
 import { SENSE_TO_FEAT_ID, MOVEMENT_TO_FEAT_ID } from './creature-creator-constants';
 import type { CreatureState } from './creature-creator-types';
@@ -124,6 +128,7 @@ export function calculateCreatureCreatorStats(
 
   const manualFeatSpent = creature.feats.reduce((sum, f) => sum + (f.points ?? 1), 0);
   const featSpent = manualFeatSpent + mechanicalFeatPoints;
+  const inventory = collectCreatureInventoryItems(creature);
   const trainingSpent =
     creature.powers.reduce(
       (sum, power) =>
@@ -136,19 +141,17 @@ export function calculateCreatureCreatorStats(
         (typeof technique.tp === 'number' && Number.isFinite(technique.tp) ? technique.tp : 0),
       0,
     ) +
-    creature.armaments.reduce(
-      (sum, armament) =>
-        sum + (typeof armament.tp === 'number' && Number.isFinite(armament.tp) ? armament.tp : 0),
-      0,
-    );
-  const currencySpent = creature.armaments.reduce(
-    (sum, armament) =>
-      sum +
-      (typeof armament.currency === 'number' && Number.isFinite(armament.currency)
+    inventory.reduce((sum, armament) => {
+      const tp = typeof armament.tp === 'number' && Number.isFinite(armament.tp) ? armament.tp : 0;
+      return sum + tp * creatureInventoryQuantityMultiplier(armament.quantity);
+    }, 0);
+  const currencySpent = inventory.reduce((sum, armament) => {
+    const currency =
+      typeof armament.currency === 'number' && Number.isFinite(armament.currency)
         ? armament.currency
-        : 0),
-    0,
-  );
+        : 0;
+    return sum + currency * creatureInventoryQuantityMultiplier(armament.quantity);
+  }, 0);
 
   const maxHealth = calculateCreatureMaxHealth(level, abilities, creature.hitPoints);
   const minEnergy = highestNonVitality * Math.max(1, level);

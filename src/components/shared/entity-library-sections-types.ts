@@ -42,6 +42,11 @@ export type EntityListControls = {
   emptyMessage?: string;
   /** Multi-section character sheet library tabs: session collapse (empty → closed). */
   collapsible?: boolean;
+  /**
+   * Heading level for the internal SectionHeader. Default `2`.
+   * Nested creator lists (e.g. creature Inventory) pass `3`.
+   */
+  headingLevel?: 2 | 3 | 4;
 };
 
 export type EntityPowerRow = {

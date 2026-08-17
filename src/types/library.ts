@@ -179,7 +179,12 @@ export interface LibraryCreature {
   powers?: Array<{ name: string; description?: string }>;
   techniques?: Array<{ name: string; description?: string }>;
   feats?: Array<{ name: string; description?: string }>;
-  armaments?: Array<{ name: string }>;
+  weapons?: Array<{ name: string; type?: string; quantity?: number }>;
+  armor?: Array<{ name: string; type?: string; quantity?: number }>;
+  shields?: Array<{ name: string; type?: string; quantity?: number }>;
+  equipment?: Array<{ name: string; type?: string; quantity?: number }>;
+  /** Legacy mixed bag. Prefer kind buckets. */
+  armaments?: Array<{ name: string; type?: string; quantity?: number }>;
   hp?: number;
   attacks?: unknown[];
   image_id?: string | null;

@@ -22,11 +22,16 @@ import { CREATURE_STAT_BLOCK_GRID } from '@/lib/library/official-creature-list';
 import { formatCreatureLevel, formatCreatureLevelLabel } from '@/lib/game';
 import { formatListCellLabel } from '@/lib/utils';
 import type { Abilities } from '@/types';
+import {
+  collectCreatureInventoryItems,
+  resolveCreatureInventoryBuckets,
+} from '@/lib/game/creature-inventory';
 
 export type {
   CreatureAbilities,
   CreatureDefenses,
   CreatureData,
+  CreatureStatBlockArmament,
   CreatureStatBlockProps,
 } from './creature-stat-block-types';
 
@@ -119,16 +124,12 @@ export function CreatureStatBlock({
   const speed = calculateCreatureSpeed(agility, rules);
   const evasion = calculateEvasion(agility, undefined, rules);
 
-  const armaments = useMemo(
-    () => (Array.isArray(creature.armaments) ? creature.armaments : []),
-    [creature.armaments],
-  );
-  const weapons = armaments.filter((a) => String(a.type ?? '').toLowerCase() === 'weapon');
-  const shields = armaments.filter((a) => String(a.type ?? '').toLowerCase() === 'shield');
-  const armor = armaments.filter((a) => String(a.type ?? '').toLowerCase() === 'armor');
-  const equipment = armaments.filter(
-    (a) => !['weapon', 'shield', 'armor'].includes(String(a.type ?? '').toLowerCase()),
-  );
+  const inventory = useMemo(() => resolveCreatureInventoryBuckets(creature), [creature]);
+  const weapons = inventory.weapons;
+  const shields = inventory.shields;
+  const armor = inventory.armor;
+  const equipment = inventory.equipment;
+  const armaments = collectCreatureInventoryItems(inventory);
 
   const senses = creature.senses ?? [];
   const movement = creature.movementTypes ?? [];

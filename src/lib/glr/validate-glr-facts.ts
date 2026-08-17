@@ -1,9 +1,29 @@
 /**
- * GLR fact coverage validators (TASK-629 / ADR-0009).
+ * GLR fact coverage validators (TASK-806 / ADR-0016).
  */
 
-import type { GlrFactId, GlrFactRule, GlrSurfaceId } from './required-facts-registry';
-import { getGlrSurfaceSpec, normalizeGlrColumnKey } from './required-facts-registry';
+import {
+  factIdMatchingColumnKey,
+  getGlrFactDef,
+  isGlrNonFactColumnKey,
+  normalizeGlrColumnKey,
+  type GlrFactId,
+} from './glr-fact-catalog';
+import {
+  getGlrSurfaceBinding,
+  resolveSurfaceLayout,
+  type GlrSurfaceId,
+} from './glr-surface-bindings';
+import { glrColumnKeyFor } from './resolve-glr-fact-layout';
+
+type GlrFactPlacement = 'column' | 'chip' | 'column-or-chip' | 'rightSlot';
+
+interface GlrFactRule {
+  id: GlrFactId;
+  placement: GlrFactPlacement;
+  columnKeys?: string[];
+  chipPatterns?: RegExp[];
+}
 
 export interface GlrRowFactSnapshot {
   columnKeys: string[];
@@ -11,53 +31,115 @@ export interface GlrRowFactSnapshot {
   hasRightSlot?: boolean;
 }
 
-function columnKeysSatisfyRule(rule: GlrFactRule, columnKeys: string[]): boolean {
-  if (!rule.columnKeys?.length) return false;
+function columnKeysSatisfyFact(
+  factId: GlrFactId,
+  columnKeys: string[],
+  extraAliases?: string[],
+): boolean {
   const normalized = columnKeys.map(normalizeGlrColumnKey);
-  return rule.columnKeys.some((candidate) => normalized.includes(candidate));
+  const aliases = extraAliases ?? getGlrFactDef(factId).columnKeys;
+  return aliases.some((candidate) => normalized.includes(normalizeGlrColumnKey(candidate)));
 }
 
-function chipLabelsSatisfyRule(rule: GlrFactRule, chipLabels: string[]): boolean {
-  if (!rule.chipPatterns?.length) return false;
-  return chipLabels.some((label) =>
-    rule.chipPatterns!.some((pattern) => pattern.test(label.trim())),
-  );
+function chipLabelsSatisfyFact(factId: GlrFactId, chipLabels: string[]): boolean {
+  const patterns = getGlrFactDef(factId).chipPatterns;
+  if (!patterns.length) return false;
+  return chipLabels.some((label) => patterns.some((pattern) => pattern.test(label.trim())));
 }
 
-function factIsSatisfied(rule: GlrFactRule, snapshot: GlrRowFactSnapshot): boolean {
-  const inColumn = columnKeysSatisfyRule(rule, snapshot.columnKeys);
-  const inChip = chipLabelsSatisfyRule(rule, snapshot.chipLabels);
+function ruleFromLayout(surfaceId: GlrSurfaceId, factId: GlrFactId): GlrFactRule {
+  const layout = resolveSurfaceLayout(surfaceId);
+  const def = getGlrFactDef(factId);
+  const aliased = layout.aliasColumnKeys[factId];
+  let placement: GlrFactRule['placement'] = 'column-or-chip';
+  if (layout.rightSlotFacts.includes(factId)) placement = 'rightSlot';
+  else if (layout.columnFacts.includes(factId)) placement = 'column';
+  else if (layout.chipFacts.includes(factId)) placement = 'chip';
+  else if (aliased?.length) placement = 'column-or-chip';
+  return {
+    id: factId,
+    placement,
+    columnKeys: aliased ?? def.columnKeys,
+    chipPatterns: def.chipPatterns,
+  };
+}
+
+function factCoverageErrors(
+  surfaceId: GlrSurfaceId,
+  rule: GlrFactRule,
+  snapshot: GlrRowFactSnapshot,
+): string[] {
+  const inColumn = columnKeysSatisfyFact(rule.id, snapshot.columnKeys, rule.columnKeys);
+  const inChip = chipLabelsSatisfyFact(rule.id, snapshot.chipLabels);
+  const inRightSlot = snapshot.hasRightSlot === true;
+  const loc = `columns=[${snapshot.columnKeys.join(', ')}]; chips=[${snapshot.chipLabels.join(', ')}]`;
+  const dual = (channels: string) =>
+    `${surfaceId}: fact "${rule.id}" appears as both ${channels} (${loc})`;
+  const missing = () =>
+    `${surfaceId}: fact "${rule.id}" missing (placement=${rule.placement}; ${loc})`;
 
   switch (rule.placement) {
     case 'column':
-      return inColumn;
+      if (!inColumn) return [missing()];
+      if (inChip) return [dual('column and chip')];
+      return [];
     case 'chip':
-      return inChip;
+      if (!inChip) return [missing()];
+      if (inColumn) return [dual('column and chip')];
+      return [];
     case 'rightSlot':
-      return snapshot.hasRightSlot === true;
+      if (!inRightSlot) return [missing()];
+      if (inColumn && inChip) return [dual('rightSlot, column, and chip')];
+      if (inColumn) return [dual('rightSlot and column')];
+      if (inChip) return [dual('rightSlot and chip')];
+      return [];
     case 'column-or-chip':
-      return inColumn || inChip;
+      if (!inColumn && !inChip) return [missing()];
+      if (inColumn && inChip) return [dual('column and chip')];
+      return [];
     default:
-      return false;
+      return [missing()];
   }
 }
 
+function columnKeyAllowed(surfaceId: GlrSurfaceId, key: string): boolean {
+  const binding = getGlrSurfaceBinding(surfaceId);
+  if (isGlrNonFactColumnKey(key, binding.entityType)) return true;
+  if (factIdMatchingColumnKey(key, binding.entityType)) return true;
+  const layout = resolveSurfaceLayout(surfaceId);
+  if (layout.columnFacts.some((id) => columnKeysSatisfyFact(id, [key]))) return true;
+  return Object.values(layout.aliasColumnKeys).some((aliases) =>
+    aliases?.some((alias) => normalizeGlrColumnKey(alias) === normalizeGlrColumnKey(key)),
+  );
+}
+
 /**
- * Validate that a surface's static column/header config declares every fact
- * that must appear as a collapsed column (placement `column` only).
+ * Static column/header config: primary facts must be columns (unless rightSlot / aliased),
+ * headers must be catalog facts or known non-fact chrome, and resolver column facts
+ * must be present.
  */
 export function validateSurfaceColumnConfig(
   surfaceId: GlrSurfaceId,
   columnKeys: string[],
 ): string[] {
-  const spec = getGlrSurfaceSpec(surfaceId);
+  const binding = getGlrSurfaceBinding(surfaceId);
+  const layout = resolveSurfaceLayout(surfaceId);
   const errors: string[] = [];
 
-  for (const rule of spec.requiredFacts) {
-    if (rule.placement !== 'column') continue;
-    if (!columnKeysSatisfyRule(rule, columnKeys)) {
+  for (const key of columnKeys) {
+    if (!columnKeyAllowed(surfaceId, key)) {
       errors.push(
-        `${surfaceId}: missing column for fact "${rule.id}" (expected one of: ${rule.columnKeys?.join(', ')})`,
+        `${surfaceId}: unknown column "${key}" is not a catalog fact for ${binding.entityType}`,
+      );
+    }
+  }
+
+  for (const factId of layout.columnFacts) {
+    const key = glrColumnKeyFor(factId, layout.entityType, layout.mode);
+    const aliases = [key, ...getGlrFactDef(factId).columnKeys];
+    if (!columnKeysSatisfyFact(factId, columnKeys, aliases)) {
+      errors.push(
+        `${surfaceId}: missing column for fact "${factId}" (expected one of: ${aliases.join(', ')})`,
       );
     }
   }
@@ -66,22 +148,24 @@ export function validateSurfaceColumnConfig(
 }
 
 /**
- * Validate that a row snapshot covers every required fact for a surface
- * (column, chip, rightSlot, or column-or-chip per rule).
+ * Row snapshot covers every layout fact (column, chip, rightSlot, or aliased column)
+ * and fails when a fact appears in more than one channel (ADR-0016 never-both).
  */
 export function validateRowFactCoverage(
   surfaceId: GlrSurfaceId,
   snapshot: GlrRowFactSnapshot,
 ): string[] {
-  const spec = getGlrSurfaceSpec(surfaceId);
+  const layout = resolveSurfaceLayout(surfaceId);
   const errors: string[] = [];
+  const factIds = new Set<GlrFactId>([
+    ...layout.columnFacts,
+    ...layout.chipFacts,
+    ...layout.rightSlotFacts,
+    ...(Object.keys(layout.aliasColumnKeys) as GlrFactId[]),
+  ]);
 
-  for (const rule of spec.requiredFacts) {
-    if (!factIsSatisfied(rule, snapshot)) {
-      errors.push(
-        `${surfaceId}: fact "${rule.id}" missing (placement=${rule.placement}; columns=[${snapshot.columnKeys.join(', ')}]; chips=[${snapshot.chipLabels.join(', ')}])`,
-      );
-    }
+  for (const factId of factIds) {
+    errors.push(...factCoverageErrors(surfaceId, ruleFromLayout(surfaceId, factId), snapshot));
   }
 
   return errors;
@@ -93,7 +177,6 @@ export function chipLabelsFromDetailSections(
   return (sections ?? []).flatMap((s) => s.chips.map((c) => c.name));
 }
 
-/** Fail fast helper for vitest. */
 export function assertSurfaceColumnConfig(surfaceId: GlrSurfaceId, columnKeys: string[]): void {
   const errors = validateSurfaceColumnConfig(surfaceId, columnKeys);
   if (errors.length > 0) {
@@ -101,12 +184,9 @@ export function assertSurfaceColumnConfig(surfaceId: GlrSurfaceId, columnKeys: s
   }
 }
 
-/** Fail fast helper for vitest. */
 export function assertRowFactCoverage(surfaceId: GlrSurfaceId, snapshot: GlrRowFactSnapshot): void {
   const errors = validateRowFactCoverage(surfaceId, snapshot);
   if (errors.length > 0) {
     throw new Error(errors.join('\n'));
   }
 }
-
-export type { GlrFactId };

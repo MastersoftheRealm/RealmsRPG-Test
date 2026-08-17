@@ -18,10 +18,11 @@ import { useSort } from '@/hooks/use-sort';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';
 import { usePathListFilter } from '@/hooks';
 import { empoweredTechniquePartsSection } from '@/lib/library/empowered-technique-display';
-import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import {
   buildOfficialTechniqueRows,
   filterOfficialTechniqueRows,
+  officialTechniqueDetailSections,
+  officialTechniqueRowColumns,
   OFFICIAL_TECHNIQUE_GRID,
   OFFICIAL_TECHNIQUE_HEADER_COLUMNS,
 } from '@/lib/library/official-technique-list';
@@ -229,12 +230,15 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
         }
       >
         {filteredData.map((tech) => {
-          const partsSection =
+          const detailSections =
             mode === 'empowered'
-              ? empoweredTechniquePartsSection(tech.raw, powerPartsDb, partsDb, {
-                  stripOptionSuffix: true,
-                })
-              : partsProficienciesSection(tech.parts, 'technique');
+              ? (() => {
+                  const section = empoweredTechniquePartsSection(tech.raw, powerPartsDb, partsDb, {
+                    stripOptionSuffix: true,
+                  });
+                  return section ? [section] : undefined;
+                })()
+              : officialTechniqueDetailSections(tech);
           const nameLabels =
             mode !== 'empowered' && pathFilterActive
               ? pathChipLabelsForEntity(pathIndex, libraryRowPathIds(tech), selectedPathIds)
@@ -253,19 +257,10 @@ export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTec
               thumbnail={resolveListRowThumbnail('technique', tech.raw, tech.name)}
               gridColumns={OFFICIAL_TECHNIQUE_GRID}
               rowChrome={TECHNIQUE_ROW_CHROME}
-              columns={[
-                { key: 'Category', value: tech.category, align: 'center' },
-                { key: 'Energy', value: tech.energy, highlight: true, align: 'center' },
-                { key: 'TP', value: tech.tp, align: 'center' },
-                { key: 'Action', value: tech.action, align: 'center' },
-                { key: 'Weapon', value: tech.weapon, align: 'center' },
-                { key: 'Damage', value: tech.damage, align: 'center' },
-              ]}
-              detailSections={partsSection ? [partsSection] : undefined}
-              totalCost={
-                typeof tech.tp === 'number' ? tech.tp : parseFloat(String(tech.tp)) || undefined
+              columns={officialTechniqueRowColumns(tech)}
+              detailSections={
+                detailSections && detailSections.length > 0 ? detailSections : undefined
               }
-              costLabel="TP"
               badges={badges.length > 0 ? badges : undefined}
               showBadgesInName={nameBadges.length > 0}
               warningMessage={tech.syncIssues[0]?.message}
