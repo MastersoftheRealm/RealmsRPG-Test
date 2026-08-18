@@ -51,7 +51,7 @@ export function ArchetypePathGuidance({ character }: { character: Character }) {
       aria-label={`Path information for ${pathName}`}
     >
       {description ? (
-        <p className="text-sm text-text-secondary dark:text-text-secondary">{description}</p>
+        <p className="text-sm text-text-secondary">{description}</p>
       ) : null}
 
       {showLevel1Notes && level <= 1 ? (

@@ -162,7 +162,7 @@ export function PowerTechniqueFilters({
           helpContent={CHARACTER_FILTER_HELP}
         >
           {hasCharacter && characterContext ? (
-            <p className="mt-2 text-xs text-text-secondary dark:text-text-secondary">
+            <p className="mt-2 text-xs text-text-secondary">
               {character?.name}: max Energy {characterContext.maxEnergy}
               {kind === 'power' && characterContext.innateThreshold > 0
                 ? ` · Innate Threshold ${characterContext.innateThreshold}`

@@ -2,22 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { Item } from '@/types/equipment';
 import {
   applyStarterEquippedFlags,
-  itemDamageReduction,
   pickArmorEquipIndex,
   toggleSheetArmorEquipped,
   type InventoryEquipRow,
 } from '@/lib/game/equipment-equipped';
-
-describe('itemDamageReduction', () => {
-  it('prefers explicit fields then Damage Reduction property', () => {
-    expect(itemDamageReduction({ armorValue: 3 })).toBe(3);
-    expect(
-      itemDamageReduction({
-        properties: [{ id: 1, name: 'Damage Reduction', op_1_lvl: 2 } as never],
-      }),
-    ).toBe(3);
-  });
-});
 
 describe('toggleSheetArmorEquipped', () => {
   const matchId = (item: Item, itemId: string | number) => String(item.id) === String(itemId);

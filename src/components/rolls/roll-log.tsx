@@ -264,7 +264,7 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
               <p className="text-sm text-danger-fg">
                 Couldn&apos;t load campaign rolls.
                 {campaignRollsError?.message ? (
-                  <span className="mt-1 block text-text-secondary dark:text-text-secondary">
+                  <span className="mt-1 block text-text-secondary">
                     {campaignRollsError.message}
                   </span>
                 ) : null}

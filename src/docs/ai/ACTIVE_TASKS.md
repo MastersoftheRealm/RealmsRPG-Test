@@ -4,7 +4,7 @@
 Skip `blocked` and human `assignee:` (those live in [`WAITING_TASKS.md`](WAITING_TASKS.md)).
 Do **not** read the done archive at session start.
 
-**Next task ID:** TASK-819
+**Next task ID:** TASK-820
 **Waiting / blocked / human:** [WAITING_TASKS.md](WAITING_TASKS.md)
 **Done archive:** [archive/TASK_QUEUE_DONE.md](archive/TASK_QUEUE_DONE.md) · snapshot [archive/TASK_QUEUE_DONE_2026-07-15.md](archive/TASK_QUEUE_DONE_2026-07-15.md)
 **Process:** [AI_TASK_QUEUE.md](AI_TASK_QUEUE.md) · Template: [AI_REQUEST_TEMPLATE.md](AI_REQUEST_TEMPLATE.md)
@@ -12,9 +12,9 @@ Do **not** read the done archive at session start.
 
 **Agent rules:** Prefer highest `priority` among `not-started` / continue `partial` / `in-progress`. Human-only → `DEVELOPER_TASK_QUEUE.md`. Done summaries live in the archive — do not re-list them here.
 
-**Counts:** 4 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
+**Counts:** 5 agent-eligible · waiting/blocked in WAITING_TASKS · done in archive.
 
-**Hot notes:** Owner 2026-08-17: **TASK-818 / TASK-817 filed** (TASK-814 /cleanup) — path More details catalog chips; creature selected-inventory play chips (not Qty). **TASK-816 filed** (TASK-815 /cleanup) — creature Add equipment custom-item form, reuse sheet `AddCustomEquipmentForm`. **TASK-815 done** pending-qa (sheet Add equipment custom-item form restored under Search, not buried in Filters). **TASK-814 done** pending-qa — GLR never-neither (demote overflow facts to chips; sheet library derives Official display). **TASK-813 filed** — unify `EquipmentListSection` creature-layout Qty with `formatCreatureEquipmentQuantity` (do not fake 1; sheet layout keeps steppers). **TASK-812 done** pending-qa (creature inventory document split into weapons / armor / shields / equipment; migrate `data.armaments` on read). **TASK-810 done** pending-qa (per-kind armament lists; no mixed Type+Stat USM; creature Inventory UI split). **TASK-808 / TASK-809 / TASK-811 done** (never-both CI, chipFacts-driven add-modal chips, catalog CI rename). **TASK-807 done** pending-qa (GLR resolver drives Official/sheet/USM/guided list chrome; DEV-V-016 T021). **TASK-806 done** n/a (ADR-0016 fact catalog + density + CI; Codex gear closed set). Owner 2026-08-15: **TASK-805 done** pending-qa (feat Customize caret no longer jumps mid-type; ID was TASK-802 until master landed campaign RLS as TASK-802, sheet skill names as TASK-803, and Continue Without Saving as TASK-804). **TASK-804 done** pending-qa (guest **Continue Without Saving** on character create). **TASK-803 done** pending-qa (sheet skill names after species change + hover descriptions). **TASK-802 done** pending-qa (campaign create RLS + Sentry CSP). **TASK-800 done** pending-qa (Skills spend/temp inline steppers + heading status). **Wave 3C implementable slices done** — TASK-789 landing RSC (pending-qa), TASK-790 Guided skills defense + governing Ability (pending-qa), TASK-791 currency/appearance-age extract (n/a), TASK-792 ValueStepper + ListHeader dedup (n/a), TASK-793 crafting/my-account titles + crawlable `/rules` intro (pending-qa). **Architect leftovers in WAITING:** TASK-794–799 (`shared/` split, generated types, `/rules` MDX + Codex detail metadata, indexed-access burn-down, Legacy shared extract, remaining list/modal clusters). Do **not** delete `/characters/new/advanced` this wave. 3A + 3B still pending-qa. TASK-410–414 deferred. Do not reopen ADR-0013 / 761 / 762 / TASK-584 / TASK-415 / TASK-585 / TASK-586.
+**Hot notes:** Owner 2026-08-18 `/debt`: **TASK-819 filed** — encounter full-card HP/EN ValueStepper parity (compact already has it). **AddCharacterModal** documented as intentional non-USM. Owner 2026-08-17: **TASK-818 / TASK-817 filed** (TASK-814 /cleanup) — path More details catalog chips; creature selected-inventory play chips (not Qty). **TASK-816 filed** (TASK-815 /cleanup) — creature Add equipment custom-item form, reuse sheet `AddCustomEquipmentForm`. **TASK-815 done** pending-qa (sheet Add equipment custom-item form restored under Search, not buried in Filters). **TASK-814 done** pending-qa — GLR never-neither (demote overflow facts to chips; sheet library derives Official display). **TASK-813 filed** — unify `EquipmentListSection` creature-layout Qty with `formatCreatureEquipmentQuantity` (latent default path still fakes 1; live creator/stat-block already format stored qty). **TASK-812 done** pending-qa (creature inventory document split into weapons / armor / shields / equipment; migrate `data.armaments` on read). **TASK-810 done** pending-qa (per-kind armament lists; no mixed Type+Stat USM; creature Inventory UI split). **TASK-808 / TASK-809 / TASK-811 done** (never-both CI, chipFacts-driven add-modal chips, catalog CI rename). **TASK-807 done** pending-qa (GLR resolver drives Official/sheet/USM/guided list chrome; DEV-V-016 T021). **TASK-806 done** n/a (ADR-0016 fact catalog + density + CI; Codex gear closed set). Owner 2026-08-15: **TASK-805 done** pending-qa (feat Customize caret no longer jumps mid-type; ID was TASK-802 until master landed campaign RLS as TASK-802, sheet skill names as TASK-803, and Continue Without Saving as TASK-804). **TASK-804 done** pending-qa (guest **Continue Without Saving** on character create). **TASK-803 done** pending-qa (sheet skill names after species change + hover descriptions). **TASK-802 done** pending-qa (campaign create RLS + Sentry CSP). **TASK-800 done** pending-qa (Skills spend/temp inline steppers + heading status). **Wave 3C implementable slices done** — TASK-789 landing RSC (pending-qa), TASK-790 Guided skills defense + governing Ability (pending-qa), TASK-791 currency/appearance-age extract (n/a), TASK-792 ValueStepper + ListHeader dedup (n/a), TASK-793 crafting/my-account titles + crawlable `/rules` intro (pending-qa). **Architect leftovers in WAITING:** TASK-794–799 (`shared/` split, generated types, `/rules` MDX + Codex detail metadata, indexed-access burn-down, Legacy shared extract, remaining list/modal clusters). Do **not** delete `/characters/new/advanced` this wave. 3A + 3B still pending-qa. TASK-410–414 deferred. Do not reopen ADR-0013 / 761 / 762 / TASK-584 / TASK-415 / TASK-585 / TASK-586.
 
 ---
 
@@ -99,12 +99,33 @@ Do **not** read the done archive at session start.
     - src/lib/game/creature-inventory.ts
     - src/app/(main)/creature-creator/creature-creator-editor-loadout-sections.tsx
   description: |
-    TASK-812 creator selected rows already pass layout="characterSheet" plus an explicit Qty column that uses formatCreatureEquipmentQuantity. EquipmentListSection's default layout="creature" still does e.quantity ?? 1 (and a no-op QuantitySelector). Stat block equipment Qty is a parallel hand-rolled column. Unify creature/stat-block display onto the shared section + helper; do not change sheet characterSheet Qty steppers that default missing quantity to 1.
+    TASK-812 creator selected rows already pass layout="characterSheet" plus an explicit Qty column that uses formatCreatureEquipmentQuantity. Stat-block equipment Qty already uses that helper (hand-rolled GridListRow, not EquipmentListSection). Remaining: EquipmentListSection's default layout="creature" still does e.quantity ?? 1 (and a no-op QuantitySelector) — unused today because creature creator overrides layout. Unify the default creature path + prefer routing the stat-block list through the shared section; do not change sheet characterSheet Qty steppers that default missing quantity to 1.
   acceptance_criteria:
     - EquipmentListSection layout="creature" shows stored quantity or "-" (formatCreatureEquipmentQuantity); it does not fake Qty 1.
     - Character sheet EquipmentListSection layout="characterSheet" still uses quantity steppers and may default missing quantity to 1.
     - Prefer routing creature/stat-block equipment lists through EquipmentListSection instead of a second Qty column, without a new shared/ui file.
     - Tests: targeted vitest if a helper is extracted; npm run build. Add DEV-V-016-T025 when implementing.
   notes: |
-    Filed from TASK-812 /cleanup. Creator Inventory already meets TASK-812 AC via custom columns. This is the leftover shared-section fork. Do not delete /characters/new/advanced.
+    Filed from TASK-812 /cleanup. Creator Inventory already meets TASK-812 AC via custom columns. Stat block no longer fakes Qty 1 — leftover is the unused default section path + hand-rolled columns. Do not delete /characters/new/advanced.
+
+---
+
+- id: TASK-819
+  title: Encounter full-card HP/EN ValueStepper parity
+  created_at: 2026-08-18
+  created_by: agent
+  priority: low
+  status: not-started
+  related_files:
+    - src/components/encounters/combatant-card-resources.tsx
+    - src/components/shared/value-stepper.tsx
+  description: |
+    Compact CombatantCard resource chrome already pairs number inputs with ValueStepper. The full variant is raw HP/EN current+max number inputs only. Add the same ValueStepper beside those inputs for parity (ADR-0002); keep direct numeric entry. Do not change initiative click-to-edit or condition chip +/- .
+  acceptance_criteria:
+    - Full combatant card Health/Energy (when not linked-character read-only) show ValueStepper next to the number inputs, matching compact.
+    - Linked-character read-only path is unchanged (no steppers).
+    - No new shared/ui file; reuse ValueStepper. Compact layout unchanged.
+    - Tests: npm run build. Add a DEV-V-008 case when implementing if the suite covers combatant cards.
+  notes: |
+    Filed from 2026-08-18 /global-audit → /debt. Compact already has the pattern. Initiative and condition chips stay out of scope.
 

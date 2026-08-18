@@ -239,7 +239,7 @@ export function AdminFeatEditModal({
               )}
               {dirtyLevelLabels.length > 0 && (
                 <div className="text-xs text-text-muted">
-                  <span className="font-medium text-text-secondary dark:text-text-secondary">
+                  <span className="font-medium text-text-secondary">
                     Unsaved:
                   </span>{' '}
                   {dirtyLevelLabels.join(', ')}

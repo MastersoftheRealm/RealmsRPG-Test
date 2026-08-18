@@ -54,7 +54,7 @@ Later `master` commits (`6adf344f`, `21ffcd18`, …) are unrelated product work 
 ### Uncommitted / follow-up coding
 
 Plan refresh + GAME_RULES / SIZES seed / admin editor prose may still be uncommitted.
-Wave 2 coding leftovers: none. Report 07 P2-5 RM-view enrichment landed as TASK-773 (Wave 3B). Wave 3C implementable TASK-789–793 is in the working tree (not yet batch-committed). Architect leftovers TASK-794–799 are in WAITING.
+Wave 2 coding leftovers: none. Report 07 P2-5 RM-view enrichment landed as TASK-773 (Wave 3B). Wave 3C implementable TASK-789–793 is committed on `master` (`2dcb2173`). Architect leftovers TASK-794–799 are in WAITING.
 
 ---
 

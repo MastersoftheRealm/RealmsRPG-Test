@@ -37,7 +37,6 @@ export { TempModifierToggle } from './temp-modifier-toggle';
 // Modal components
 export { LoginPromptModal } from './login-prompt-modal';
 export type { LoginPromptReason } from './login-prompt-modal';
-export { DiscordIcon } from './discord-icon';
 export { DeleteConfirmModal } from './delete-confirm-modal';
 export { ConfirmActionModal } from './confirm-action-modal';
 
@@ -93,7 +92,6 @@ export {
   prependThumbnailHeaderColumn,
   gridColumnsWithInlineSelection,
   GRID_LIST_INLINE_SELECTION_COLUMN_TRACK,
-  GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH,
   GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE,
   GRID_LIST_ROW_ACTION_ICON_CLASS,
   THUMBNAIL_HEADER_COLUMN_KEY,
@@ -198,7 +196,6 @@ export {
   FeatsTraitsListSection,
   LibraryCollapsibleSection,
 } from './entity-library-sections';
-export { splitDamageDiceAndType } from '@/lib/utils';
 export type {
   EntityPowerRow,
   EntityTechniqueRow,
@@ -268,7 +265,6 @@ export {
   TagFilter,
   SelectFilter,
   CharacterFilter,
-  CHARACTER_FILTER_NONE_LABEL,
   type CharacterFilterProps,
   PowerTechniqueFilters,
   type PowerTechniqueFiltersProps,
@@ -276,6 +272,7 @@ export {
   sourceFilterSummary,
   type SourceFilterValue,
 } from './filters';
+
 
 // ThemeToggle - Dark/Light/System theme switcher
 export { ThemeToggle } from './theme-toggle';

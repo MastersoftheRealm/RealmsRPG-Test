@@ -19,7 +19,8 @@ import { calculateMaxHealth, calculateMaxEnergyForArchetype } from '@/lib/game/c
 import type { CoreRulesMap } from '@/types/core-rules';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
-import { applyStarterEquippedFlags, itemDamageReduction } from '@/lib/game/equipment-equipped';
+import { applyStarterEquippedFlags } from '@/lib/game/equipment-equipped';
+import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { resolveArchetypeProficiencyStart } from '@/lib/game/formulas';
 import { clampSavedCurrency, isClientRequestId } from '@/lib/character-save';
 import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
@@ -570,7 +571,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
         // Transform equipment from inventory format to weapons/armor/items format
         // for compatibility with character sheet
         const inventory = applyStarterEquippedFlags(draft.equipment?.inventory || [], (row) =>
-          itemDamageReduction(row as Item),
+          resolveArmorDamageReduction(row as Item),
         );
         const weapons = inventory.filter((item) => item.type === 'weapon');
         const armor = inventory.filter((item) => item.type === 'armor');

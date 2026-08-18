@@ -169,4 +169,4 @@ Success responses remain route-specific (`{ id }`, `{ images }`, arrays, etc.); 
 
 Proficiency-inferred archetype in `getArchetypeType()` uses `ProficiencyDerivedArchetype` (`ArchetypeCategory | 'none'`) — same vocabulary as stored `archetype.type`, not a separate `mixed` label.
 
-Armor item DR at display time: resolve via canonical **`resolveArmorDamageReduction`** (`lib/game/resolve-armor-damage-reduction.ts`, TASK-644) — prefers `damageReduction`, then `armorValue` / `armor` / `armor_value`, then a Damage Reduction property. `deriveArmorItemCombatStats` and list/enrichment/guided catalog call sites consume that helper (`itemDamageReduction` is a deprecated alias).
+Armor item DR at display time: resolve via canonical **`resolveArmorDamageReduction`** (`lib/game/resolve-armor-damage-reduction.ts`, TASK-644) — prefers `damageReduction`, then `armorValue` / `armor` / `armor_value`, then a Damage Reduction property. `deriveArmorItemCombatStats` and list/enrichment/guided catalog/create auto-equip call sites consume that helper.

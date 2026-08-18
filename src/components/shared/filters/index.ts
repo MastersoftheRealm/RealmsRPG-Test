@@ -23,11 +23,7 @@ export { ArchetypePathFilter, type ArchetypePathFilterProps } from './archetype-
 export { AbilityRequirementFilter, type AbilityRequirement } from './ability-requirement-filter';
 export { TagFilter } from './tag-filter';
 export { SelectFilter } from './select-filter';
-export {
-  CharacterFilter,
-  CHARACTER_FILTER_NONE_LABEL,
-  type CharacterFilterProps,
-} from './character-filter';
+export { CharacterFilter, type CharacterFilterProps } from './character-filter';
 export { PowerTechniqueFilters, type PowerTechniqueFiltersProps } from './power-technique-filters';
 export { ArmamentFilters, type ArmamentFiltersProps } from './armament-filters';
 export {

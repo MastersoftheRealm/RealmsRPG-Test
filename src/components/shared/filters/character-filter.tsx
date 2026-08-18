@@ -20,7 +20,7 @@ import { InfoTippy } from '@/components/shared/info-tippy';
 import { cn } from '@/lib/utils';
 import { FilterNativeSelect } from './filter-native-select';
 
-export const CHARACTER_FILTER_NONE_LABEL = 'No character (show all)';
+const CHARACTER_FILTER_NONE_LABEL = 'No character (show all)';
 
 export interface CharacterFilterProps {
   /** Selected character id, or '' for no character (show all). */

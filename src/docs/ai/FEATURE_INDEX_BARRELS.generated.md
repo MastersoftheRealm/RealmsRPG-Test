@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-08-17
+Generated: 2026-08-18
 
 ## `src/components/shared/index.ts`
 
@@ -14,7 +14,6 @@ Generated: 2026-08-17
 - AddSkillModal
 - AddSubSkillModal
 - ArmorListSection
-- CHARACTER_FILTER_NONE_LABEL
 - CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME
 - CharacterFilter
 - ChipSelect
@@ -29,7 +28,6 @@ Generated: 2026-08-17
 - DeleteConfirmModal
 - DescriptorChipWithTip
 - DetailOptionList
-- DiscordIcon
 - EditSectionToggle
 - EquipmentListSection
 - EquipToggle
@@ -41,7 +39,6 @@ Generated: 2026-08-17
 - GRID_LIST_INLINE_SELECTION_COLUMN_TRACK
 - GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE
 - GRID_LIST_ROW_ACTION_ICON_CLASS
-- GRID_LIST_ROW_THUMBNAIL_COLUMN_WIDTH
 - gridColumnsWithInlineSelection
 - GridListChip
 - GridListRow
@@ -96,7 +93,6 @@ Generated: 2026-08-17
 - SkillsAllocationPage
 - SourceFilter
 - sourceFilterSummary
-- splitDamageDiceAndType
 - SummaryChipList
 - SummaryItem
 - SummaryRow

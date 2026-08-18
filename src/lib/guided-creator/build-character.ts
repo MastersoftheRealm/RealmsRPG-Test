@@ -27,7 +27,8 @@ import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';
 import { buildCreatorSkillSaveRows } from '@/lib/creator/build-creator-skills';
 import { buildRequiredProficiencies } from '@/lib/proficiencies';
 import { defaultLibraryTabVisibilityForArchetype } from '@/lib/character-library-tab-visibility';
-import { applyStarterEquippedFlags, itemDamageReduction } from '@/lib/game/equipment-equipped';
+import { applyStarterEquippedFlags } from '@/lib/game/equipment-equipped';
+import { resolveArmorDamageReduction } from '@/lib/game/resolve-armor-damage-reduction';
 import { findByNormalizedId, normalizeId } from '@/lib/utils';
 import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 
@@ -294,10 +295,10 @@ export function buildGuidedCharacterPayload(
 
   const drForInventoryRow = (row: { id: string }) => {
     const official = findByNormalizedId(ctx.officialItems, row.id);
-    if (official) return itemDamageReduction(official);
+    if (official) return resolveArmorDamageReduction(official);
     const codex = findByNormalizedId(ctx.codexEquipment, row.id);
     if (codex) {
-      return itemDamageReduction({
+      return resolveArmorDamageReduction({
         armorValue: codex.armor_value,
         properties: codex.properties?.map((name) => ({ name })),
       });
