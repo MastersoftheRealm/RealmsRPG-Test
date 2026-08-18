@@ -34,7 +34,6 @@ Generated: 2026-08-18
 - ErrorDisplay
 - ExpandableImage
 - FeatsTraitsListSection
-- FilterSection
 - getEditState
 - GRID_LIST_INLINE_SELECTION_COLUMN_TRACK
 - GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE

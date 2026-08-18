@@ -25,12 +25,6 @@ export interface SearchInputProps {
 }
 
 // =============================================================================
-// Filter Section
-// =============================================================================
-
-export { FilterSection, type FilterSectionProps } from './filters/filter-section';
-
-// =============================================================================
 // Empty State - Re-export from ui/ for backward compatibility
 // =============================================================================
 

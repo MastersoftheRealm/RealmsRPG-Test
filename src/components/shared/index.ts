@@ -157,17 +157,11 @@ export type { AddSubSkillModalProps, CharacterSkillForSubModal } from './add-sub
 // List components (shared between Codex and Library)
 export {
   SearchInput,
-  FilterSection,
   EmptyState as ListEmptyState,
   LoadingState,
   ErrorDisplay,
 } from './list-components';
-export type {
-  SearchInputProps,
-  FilterSectionProps,
-  EmptyStateProps,
-  ErrorDisplayProps,
-} from './list-components';
+export type { SearchInputProps, EmptyStateProps, ErrorDisplayProps } from './list-components';
 
 // SortState canonical export — from list-header.tsx
 export type { SortState } from './list-header';
@@ -272,7 +266,6 @@ export {
   sourceFilterSummary,
   type SourceFilterValue,
 } from './filters';
-
 
 // ThemeToggle - Dark/Light/System theme switcher
 export { ThemeToggle } from './theme-toggle';
