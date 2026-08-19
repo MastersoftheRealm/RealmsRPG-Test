@@ -197,7 +197,7 @@ export function UnifiedSelectionModal({
     const selected = selectedItems;
     if (showQuantity) {
       selected.forEach((item) => {
-        (item as SelectableItem & { quantity?: number }).quantity =
+        (item as SelectableItem & { quantity?: number | undefined }).quantity =
           quantities[String(item.id)] || 1;
       });
     }

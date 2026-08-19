@@ -65,12 +65,12 @@ export function archetypeDisplayNameFromType(
 export function buildRosterFieldsFromCharacterData(charData: Record<string, unknown>): {
   characterName: string;
   level: number;
-  portrait?: string;
-  species?: string;
+  portrait?: string | undefined;
+  species?: string | undefined;
   archetype: CampaignCharacter['archetype'];
 } {
-  const archetype = charData.archetype as { type?: string } | undefined;
-  const ancestry = charData.ancestry as { name?: string } | undefined;
+  const archetype = charData.archetype as { type?: string | undefined } | undefined;
+  const ancestry = charData.ancestry as { name?: string | undefined } | undefined;
   const speciesStr =
     (typeof ancestry?.name === 'string' && ancestry.name.trim()) ||
     (typeof charData.species === 'string' ? (charData.species as string).trim() : '') ||

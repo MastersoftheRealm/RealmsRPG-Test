@@ -51,7 +51,11 @@ function collectRefIds(value: unknown, into: Set<string>): void {
   }
 
   if (typeof value === 'object') {
-    const ref = value as { id?: unknown; docId?: unknown; refId?: unknown };
+    const ref = value as {
+      id?: unknown | undefined;
+      docId?: unknown | undefined;
+      refId?: unknown | undefined;
+    };
     for (const candidate of [ref.id, ref.docId, ref.refId]) {
       if (typeof candidate === 'string' || typeof candidate === 'number') {
         const id = String(candidate).trim();
@@ -82,7 +86,11 @@ function collectProficiencyIds(
   if (!Array.isArray(proficiencies)) return;
   for (const entry of proficiencies) {
     if (!entry || typeof entry !== 'object') continue;
-    const row = entry as { kind?: unknown; id?: unknown; refId?: unknown };
+    const row = entry as {
+      kind?: unknown | undefined;
+      id?: unknown | undefined;
+      refId?: unknown | undefined;
+    };
     const kind = typeof row.kind === 'string' ? row.kind : '';
     if (kind === 'custom') continue;
     const target = kind === 'item_property' ? properties : parts;
@@ -192,13 +200,13 @@ export function collectCharacterViewRefIds(characterData: unknown): CharacterVie
   const parts = new Set<string>();
   const itemProperties = new Set<string>();
   collectRefIds(
-    (data.powers as Array<{ parts?: unknown }> | undefined)?.flatMap((p) =>
+    (data.powers as Array<{ parts?: unknown | undefined }> | undefined)?.flatMap((p) =>
       p && typeof p === 'object' ? p.parts : [],
     ),
     parts,
   );
   collectRefIds(
-    (data.techniques as Array<{ parts?: unknown }> | undefined)?.flatMap((p) =>
+    (data.techniques as Array<{ parts?: unknown | undefined }> | undefined)?.flatMap((p) =>
       p && typeof p === 'object' ? p.parts : [],
     ),
     parts,
@@ -208,11 +216,11 @@ export function collectCharacterViewRefIds(characterData: unknown): CharacterVie
     if (Array.isArray(slot)) {
       for (const item of slot) {
         if (item && typeof item === 'object') {
-          collectRefIds((item as { properties?: unknown }).properties, itemProperties);
+          collectRefIds((item as { properties?: unknown | undefined }).properties, itemProperties);
         }
       }
     } else if (slot && typeof slot === 'object') {
-      collectRefIds((slot as { properties?: unknown }).properties, itemProperties);
+      collectRefIds((slot as { properties?: unknown | undefined }).properties, itemProperties);
     }
   }
   collectProficiencyIds(data.proficiencies, parts, itemProperties);

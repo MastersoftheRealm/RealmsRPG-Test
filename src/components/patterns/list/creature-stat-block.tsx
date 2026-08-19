@@ -137,12 +137,12 @@ export function CreatureStatBlock({
   const creatureSkills = useMemo(() => {
     if (!creature.skills)
       return [] as Array<{
-        id?: string;
+        id?: string | undefined;
         name: string;
         value: number;
         proficient: boolean;
-        baseSkillId?: string;
-        isSubSkill?: boolean;
+        baseSkillId?: string | undefined;
+        isSubSkill?: boolean | undefined;
       }>;
     if (Array.isArray(creature.skills)) {
       return creature.skills.map((s) => ({ ...s, proficient: s.proficient !== false }));

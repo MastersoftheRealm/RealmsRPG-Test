@@ -213,7 +213,7 @@ export function usePowerCreatorCostDerivation({
       op_1_lvl: number;
       op_2_lvl: number;
       op_3_lvl: number;
-      applyDuration?: boolean;
+      applyDuration?: boolean | undefined;
     }) => ({
       id: mp.id,
       name: mp.name,

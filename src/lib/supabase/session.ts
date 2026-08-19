@@ -8,10 +8,10 @@ import { createClient } from './server';
 
 export interface SessionUser {
   uid: string;
-  email?: string;
-  name?: string;
-  picture?: string;
-  emailVerified?: boolean;
+  email?: string | undefined;
+  name?: string | undefined;
+  picture?: string | undefined;
+  emailVerified?: boolean | undefined;
 }
 
 /**

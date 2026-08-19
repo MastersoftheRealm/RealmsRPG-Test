@@ -16,6 +16,9 @@ import {
   CharacterSheetProvider,
   CharacterSheetSettingsModal,
   CharacterSheetBody,
+  CharacterSheetColumn,
+  CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME,
+  CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME,
 } from '@/components/character-sheet';
 import { RollLog, RollProvider } from '@/components/rolls';
 import { SheetTourOfferModal, SheetTour, LevelUpGuideCard } from '@/components/onboarding';
@@ -103,7 +106,9 @@ export default function CharacterSheetPage({ params }: PageParams) {
   return (
     <RollProvider campaignContext={campaignContext} canRoll={isOwner}>
       <CharacterSheetProvider value={sheetContextValue!}>
-        <div className="min-h-screen bg-background pb-8">
+        <div
+          className={`bg-background md:min-h-screen ${CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME}`}
+        >
           <SheetActionToolbar
             isEditMode={isEditMode}
             isTempModifierMode={isTempModifierMode}
@@ -137,39 +142,45 @@ export default function CharacterSheetPage({ params }: PageParams) {
             />
           )}
 
-          <PageContainer size="tool" padded={false} className="pt-4">
-            {calculatedStats && (
-              <>
-                <SheetHeader
-                  character={characterForDisplay ?? character}
-                  calculatedStats={calculatedStats}
-                  isEditMode={effectiveEditMode}
-                  onHealthChange={handleHealthChange}
-                  onEnergyChange={handleEnergyChange}
-                  onActionPointsChange={handleActionPointsChange}
-                  onHealthPointsChange={handleHealthPointsChange}
-                  onEnergyPointsChange={handleEnergyPointsChange}
-                  onPortraitChange={handlePortraitChange}
-                  onPortraitUrlChange={handlePortraitUrlChange}
-                  isUploadingPortrait={uploadingPortrait}
-                  portraitRefreshKey={portraitRefreshKey}
-                  onNameChange={effectiveEditMode ? handleNameChange : undefined}
-                  onExperienceChange={handleExperienceChange}
-                  speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
-                  innateThreshold={archetypeProgression?.innateThreshold || 0}
-                  innatePools={archetypeProgression?.innatePools || 0}
-                  onEditArchetype={
-                    effectiveEditMode ? () => sheetContextValue!.onEditArchetype() : undefined
-                  }
-                  onEditSpecies={
-                    effectiveEditMode ? () => sheetContextValue!.onEditSpecies() : undefined
-                  }
-                />
+          <div className={CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME}>
+            <PageContainer
+              size="tool"
+              padded={false}
+              className="pt-4 max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col"
+            >
+              {calculatedStats && (
+                <CharacterSheetColumn>
+                  <SheetHeader
+                    character={characterForDisplay ?? character}
+                    calculatedStats={calculatedStats}
+                    isEditMode={effectiveEditMode}
+                    onHealthChange={handleHealthChange}
+                    onEnergyChange={handleEnergyChange}
+                    onActionPointsChange={handleActionPointsChange}
+                    onHealthPointsChange={handleHealthPointsChange}
+                    onEnergyPointsChange={handleEnergyPointsChange}
+                    onPortraitChange={handlePortraitChange}
+                    onPortraitUrlChange={handlePortraitUrlChange}
+                    isUploadingPortrait={uploadingPortrait}
+                    portraitRefreshKey={portraitRefreshKey}
+                    onNameChange={effectiveEditMode ? handleNameChange : undefined}
+                    onExperienceChange={handleExperienceChange}
+                    speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
+                    innateThreshold={archetypeProgression?.innateThreshold || 0}
+                    innatePools={archetypeProgression?.innatePools || 0}
+                    onEditArchetype={
+                      effectiveEditMode ? () => sheetContextValue!.onEditArchetype() : undefined
+                    }
+                    onEditSpecies={
+                      effectiveEditMode ? () => sheetContextValue!.onEditSpecies() : undefined
+                    }
+                  />
 
-                <CharacterSheetBody />
-              </>
-            )}
-          </PageContainer>
+                  <CharacterSheetBody />
+                </CharacterSheetColumn>
+              )}
+            </PageContainer>
+          </div>
 
           <RollLog />
           <CharacterSheetModals />

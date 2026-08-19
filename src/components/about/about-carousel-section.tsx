@@ -16,7 +16,7 @@ const FADE_IN_MS = 220;
 export type AboutCarouselSlide = {
   title: string;
   content: ReactNode;
-  contentMobile?: ReactNode;
+  contentMobile?: ReactNode | undefined;
 };
 
 type AboutCarouselSectionProps = {
@@ -25,7 +25,13 @@ type AboutCarouselSectionProps = {
   initialIndex: number;
 };
 
-function SlidePanel({ slide, className }: { slide: AboutCarouselSlide; className?: string }) {
+function SlidePanel({
+  slide,
+  className,
+}: {
+  slide: AboutCarouselSlide;
+  className?: string | undefined;
+}) {
   const mobileContent = slide.contentMobile ?? slide.content;
 
   return (
@@ -88,7 +94,7 @@ export function AboutCarouselSection({ slides, dice, initialIndex }: AboutCarous
   const slide = slides[activeIndex];
 
   return (
-    <div>
+    <div className="min-w-0">
       <div
         className={cn(fadeClass, contentVisible ? 'opacity-100' : 'opacity-0')}
         aria-live="polite"

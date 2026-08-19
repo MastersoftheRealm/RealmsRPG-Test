@@ -35,51 +35,51 @@ export type LibrarySectionRowsInput = {
   armor: Item[];
   equipment: Item[];
   innateEnergy: number;
-  currentInnateEnergy?: number;
+  currentInnateEnergy?: number | undefined;
   currentEnergy: number;
-  abilities?: Abilities;
-  powerAttackBonus?: number;
-  martialProficiency?: number;
+  abilities?: Abilities | undefined;
+  powerAttackBonus?: number | undefined;
+  martialProficiency?: number | undefined;
   powerPartsDb: Array<{
     id: string;
     name: string;
-    description?: string;
-    base_tp?: number;
-    op_1_tp?: number;
-    op_2_tp?: number;
-    op_3_tp?: number;
+    description?: string | undefined;
+    base_tp?: number | undefined;
+    op_1_tp?: number | undefined;
+    op_2_tp?: number | undefined;
+    op_3_tp?: number | undefined;
   }>;
   techniquePartsDb: Array<{
     id: string;
     name: string;
-    description?: string;
-    base_tp?: number;
-    op_1_tp?: number;
-    op_2_tp?: number;
-    op_3_tp?: number;
+    description?: string | undefined;
+    base_tp?: number | undefined;
+    op_1_tp?: number | undefined;
+    op_2_tp?: number | undefined;
+    op_3_tp?: number | undefined;
   }>;
   itemPropertiesDb: Array<{
     id: string | number;
     name: string;
-    description?: string;
-    base_tp?: number;
-    tp_cost?: number;
+    description?: string | undefined;
+    base_tp?: number | undefined;
+    tp_cost?: number | undefined;
   }>;
   proficiencies: CharacterProficiency[];
   showLibraryEditControls: boolean;
-  onUsePower?: (id: string | number, energyCost: number) => void;
-  onRemovePower?: (id: string | number) => void;
-  onTogglePowerInnate?: (id: string | number, isInnate: boolean) => void;
-  onUseTechnique?: (id: string | number, energyCost: number) => void;
-  onRemoveTechnique?: (id: string | number) => void;
-  onRemoveWeapon?: (id: string | number) => void;
-  onToggleEquipWeapon?: (id: string | number) => void;
-  onRemoveShield?: (id: string | number) => void;
-  onToggleEquipShield?: (id: string | number) => void;
-  onRemoveArmor?: (id: string | number) => void;
-  onToggleEquipArmor?: (id: string | number) => void;
-  onRemoveEquipment?: (id: string | number) => void;
-  onEquipmentQuantityChange?: (id: string | number, delta: number) => void;
+  onUsePower?: ((id: string | number, energyCost: number) => void) | undefined;
+  onRemovePower?: ((id: string | number) => void) | undefined;
+  onTogglePowerInnate?: ((id: string | number, isInnate: boolean) => void) | undefined;
+  onUseTechnique?: ((id: string | number, energyCost: number) => void) | undefined;
+  onRemoveTechnique?: ((id: string | number) => void) | undefined;
+  onRemoveWeapon?: ((id: string | number) => void) | undefined;
+  onToggleEquipWeapon?: ((id: string | number) => void) | undefined;
+  onRemoveShield?: ((id: string | number) => void) | undefined;
+  onToggleEquipShield?: ((id: string | number) => void) | undefined;
+  onRemoveArmor?: ((id: string | number) => void) | undefined;
+  onToggleEquipArmor?: ((id: string | number) => void) | undefined;
+  onRemoveEquipment?: ((id: string | number) => void) | undefined;
+  onEquipmentQuantityChange?: ((id: string | number, delta: number) => void) | undefined;
 };
 
 export function useLibrarySectionRows({
@@ -153,11 +153,11 @@ export function useLibrarySectionRows({
 
   const hasMissingForEntry = useCallback(
     (params: {
-      powers?: CharacterPower[];
-      techniques?: CharacterTechnique[];
-      weapons?: Item[];
-      shields?: Item[];
-      armor?: Item[];
+      powers?: CharacterPower[] | undefined;
+      techniques?: CharacterTechnique[] | undefined;
+      weapons?: Item[] | undefined;
+      shields?: Item[] | undefined;
+      armor?: Item[] | undefined;
     }) => {
       const requiredForEntry = buildRequiredProficiencies({
         powers: params.powers || [],

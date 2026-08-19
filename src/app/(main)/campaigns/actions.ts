@@ -42,7 +42,7 @@ async function getUsernameByUid(uid: string): Promise<string | undefined> {
     .select('username')
     .eq('id', uid)
     .maybeSingle();
-  return (data as { username?: string } | null)?.username ?? undefined;
+  return (data as { username?: string | undefined } | null)?.username ?? undefined;
 }
 
 async function ensureUniqueInviteCode(): Promise<string> {
@@ -59,7 +59,10 @@ async function ensureUniqueInviteCode(): Promise<string> {
   throw new Error('Failed to generate unique invite code');
 }
 
-export async function createCampaignAction(data: { name: string; description?: string }) {
+export async function createCampaignAction(data: {
+  name: string;
+  description?: string | undefined;
+}) {
   try {
     const user = await requireAuth();
     const name = data.name?.trim();
@@ -131,10 +134,10 @@ export async function joinCampaignAction(data: {
   inviteCode: string;
   characterId: string;
   characterName: string;
-  portrait?: string;
+  portrait?: string | undefined;
   level: number;
-  species?: string;
-  archetypeType?: string;
+  species?: string | undefined;
+  archetypeType?: string | undefined;
 }) {
   try {
     const user = await requireAuth();
@@ -307,10 +310,10 @@ export async function addCharacterToCampaignAction(data: {
   campaignId: string;
   characterId: string;
   characterName: string;
-  portrait?: string;
+  portrait?: string | undefined;
   level: number;
-  species?: string;
-  archetypeType?: string;
+  species?: string | undefined;
+  archetypeType?: string | undefined;
 }) {
   try {
     const user = await requireAuth();
@@ -471,7 +474,7 @@ export async function removeCharacterFromCampaignAction(data: {
 
 export async function updateCampaignAction(
   campaignId: string,
-  data: { name?: string; description?: string },
+  data: { name?: string | undefined; description?: string | undefined },
 ) {
   try {
     const user = await requireAuth();

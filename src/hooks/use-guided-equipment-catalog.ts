@@ -22,8 +22,8 @@ export function useGuidedEquipmentCatalog(
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
   options?: {
-    userItems?: LibraryItem[];
-    source?: LibrarySourceScope;
+    userItems?: LibraryItem[] | undefined;
+    source?: LibrarySourceScope | undefined;
   },
 ) {
   const { rules } = useGameRules();

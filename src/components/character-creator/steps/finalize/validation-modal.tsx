@@ -16,9 +16,9 @@ export function ValidationModal({
   isOpen: boolean;
   onClose: () => void;
   issues: ValidationIssue[];
-  onContinueAnyway?: () => void;
-  onSave?: () => void;
-  isSaving?: boolean;
+  onContinueAnyway?: (() => void) | undefined;
+  onSave?: (() => void) | undefined;
+  isSaving?: boolean | undefined;
 }) {
   const hasErrors = issues.some((i) => i.severity === 'error');
   const isValid = issues.length === 0;

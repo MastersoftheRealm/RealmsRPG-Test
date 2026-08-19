@@ -18,23 +18,64 @@ import { cn } from '@/lib/utils/cn';
 
 export type EditState = 'normal' | 'has-points' | 'over-budget';
 
-interface EditSectionToggleProps {
-  /** Click handler for the pencil icon */
-  onClick?: () => void;
-  /** Current edit state determines color */
-  state?: EditState;
-  /** Tooltip/title text */
-  title?: string;
-  /** Additional CSS classes */
-  className?: string;
-  /** Whether the section is actively being edited (adds subtle glow) */
-  isActive?: boolean;
+/** Shared paint for EditSectionToggle / TempModifierToggle (report 04 C3). */
+export type SheetModeToggleColors = {
+  icon: string;
+  glow?: string | undefined;
+  activeBg: string;
+  activeRing: string;
+  activeGlow?: string | undefined;
+};
+
+export function sheetModeToggleClassName({
+  colors,
+  isActive,
+  interactive,
+  className,
+  glowWhenInactiveOnly = false,
+}: {
+  colors: SheetModeToggleColors;
+  isActive: boolean;
+  interactive: boolean;
+  className?: string | undefined;
+  glowWhenInactiveOnly?: boolean | undefined;
+}): string {
+  const showIdleGlow = Boolean(colors.glow) && (glowWhenInactiveOnly ? !isActive : true);
+  return cn(
+    'touch-target-md-compact inline-flex items-center justify-center',
+    'rounded-md p-1 md:p-0.5',
+    'duration-base transition-all ease-standard',
+    'max-md:hover:scale-110',
+    'focus-visible:ring-2 focus-visible:ring-primary-outline-border/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none',
+    colors.icon,
+    showIdleGlow && colors.glow,
+    isActive && [
+      'ring-1',
+      colors.activeRing,
+      colors.activeGlow,
+      'max-md:scale-110',
+      colors.activeBg,
+      'md:bg-transparent',
+    ],
+    interactive ? 'cursor-pointer' : 'cursor-default',
+    className,
+  );
 }
 
-const STATE_COLORS: Record<
-  EditState,
-  { icon: string; glow?: string; activeBg: string; activeRing: string; activeGlow?: string }
-> = {
+interface EditSectionToggleProps {
+  /** Click handler for the pencil icon */
+  onClick?: (() => void) | undefined;
+  /** Current edit state determines color */
+  state?: EditState | undefined;
+  /** Tooltip/title text */
+  title?: string | undefined;
+  /** Additional CSS classes */
+  className?: string | undefined;
+  /** Whether the section is actively being edited (adds subtle glow) */
+  isActive?: boolean | undefined;
+}
+
+const STATE_COLORS: Record<EditState, SheetModeToggleColors> = {
   normal: {
     icon: 'text-primary-fg hover:text-primary-fg-hover',
     activeBg: 'bg-primary-subtle-bg',
@@ -72,29 +113,12 @@ export function EditSectionToggle({
         e.stopPropagation();
         onClick?.();
       }}
-      className={cn(
-        // 44px on mobile/touch; icon-hugging on desktop (MOBILE_UX.md — do not inflate md+ chrome)
-        'touch-target-md-compact inline-flex items-center justify-center',
-        'rounded-md p-1 md:p-0.5',
-        'duration-base transition-all ease-standard',
-        // Grow only on touch viewports; desktop stays icon-dense (MOBILE_UX.md)
-        'max-md:hover:scale-110',
-        'focus-visible:ring-2 focus-visible:ring-primary-outline-border/60 focus-visible:ring-offset-2 focus-visible:ring-offset-surface focus-visible:outline-none',
-        colors.icon,
-        colors.glow,
-        isActive && [
-          'ring-1',
-          colors.activeRing,
-          colors.activeGlow,
-          // Filled active plate only below md
-          'max-md:scale-110',
-          colors.activeBg,
-          'md:bg-transparent',
-        ],
-        onClick && 'cursor-pointer',
-        !onClick && 'cursor-default',
+      className={sheetModeToggleClassName({
+        colors,
+        isActive,
+        interactive: Boolean(onClick),
         className,
-      )}
+      })}
       title={title}
       aria-label={title}
       aria-pressed={isActive}

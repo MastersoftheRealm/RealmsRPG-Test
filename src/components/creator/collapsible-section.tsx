@@ -18,30 +18,30 @@ import { Button, Card } from '@/components/ui';
 
 export interface CollapsibleSectionProps {
   title: string;
-  subtitle?: string;
-  collapsedSummary?: string;
-  optional?: boolean;
-  enabled?: boolean;
-  onEnabledChange?: (enabled: boolean) => void;
+  subtitle?: string | undefined;
+  collapsedSummary?: string | undefined;
+  optional?: boolean | undefined;
+  enabled?: boolean | undefined;
+  onEnabledChange?: ((enabled: boolean) => void) | undefined;
   /** Initial expand state (default collapsed). */
-  defaultExpanded?: boolean;
-  itemCount?: number;
-  points?: { spent: number; total: number };
-  icon?: ReactNode;
+  defaultExpanded?: boolean | undefined;
+  itemCount?: number | undefined;
+  points?: { spent: number; total: number } | undefined;
+  icon?: ReactNode | undefined;
   /**
    * Inline content immediately after the title (e.g. compact InfoTippy).
    * Rendered outside the expand control so it stays interactive without nesting.
    */
-  titleAddon?: ReactNode;
+  titleAddon?: ReactNode | undefined;
   /** Actions next to the expand control (not nested inside it) */
-  rightSlot?: ReactNode;
+  rightSlot?: ReactNode | undefined;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
   /**
    * Heading level for the section title. Default `2` for page sections under an `h1`.
    * Use `3` inside dialogs whose accessible name / title is already an `h2` (e.g. deep-dive modals).
    */
-  headingLevel?: 2 | 3 | 4;
+  headingLevel?: 2 | 3 | 4 | undefined;
 }
 
 export function CollapsibleSection({

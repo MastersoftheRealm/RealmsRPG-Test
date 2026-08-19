@@ -9,13 +9,13 @@ import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 export function computePowersStepProficiencyTp(
   draft: {
-    equipment?: { inventory?: Item[] } | null;
-    powers?: CharacterPower[] | null;
-    techniques?: CharacterTechnique[] | null;
-    abilities?: object | null;
-    pow_abil?: string;
-    mart_abil?: string;
-    level?: number;
+    equipment?: { inventory?: Item[] | undefined } | null | undefined;
+    powers?: CharacterPower[] | null | undefined;
+    techniques?: CharacterTechnique[] | null | undefined;
+    abilities?: object | null | undefined;
+    pow_abil?: string | undefined;
+    mart_abil?: string | undefined;
+    level?: number | undefined;
   },
   powerParts: PowerPart[] | undefined | null,
   techniqueParts: TechniquePart[] | undefined | null,

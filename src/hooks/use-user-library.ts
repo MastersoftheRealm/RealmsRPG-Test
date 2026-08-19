@@ -105,7 +105,7 @@ async function duplicateLibraryItem(type: string, docId: string): Promise<string
  */
 export function useUserLibrary<T>(
   type: LibraryItemType,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean | undefined },
 ): UseQueryResult<T[], Error> {
   const { user } = useAuthStore();
   const userId = user?.uid || '';
@@ -120,26 +120,26 @@ export function useUserLibrary<T>(
   });
 }
 
-export const useUserPowers = (options?: { enabled?: boolean }) =>
+export const useUserPowers = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibraryPower>('powers', options);
 
-export const useUserTechniques = (options?: { enabled?: boolean }) =>
+export const useUserTechniques = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibraryTechnique>('techniques', options);
 
-export const useUserEmpoweredTechniques = (options?: { enabled?: boolean }) =>
+export const useUserEmpoweredTechniques = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibraryTechnique>('empowered-techniques', options);
 
-export const useUserItems = (options?: { enabled?: boolean }) =>
+export const useUserItems = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibraryItem>('items', options);
 
-export const useUserCreatures = (options?: { enabled?: boolean }) =>
+export const useUserCreatures = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibraryCreature>('creatures', options);
 
-export const useUserSpecies = (options?: { enabled?: boolean }) =>
+export const useUserSpecies = (options?: { enabled?: boolean | undefined }) =>
   useUserLibrary<LibrarySpecies>('species', options);
 
 export function useUserLibraryCounts(options?: {
-  enabled?: boolean;
+  enabled?: boolean | undefined;
 }): UseQueryResult<LibraryTabCounts, Error> {
   const { user } = useAuthStore();
   const userId = user?.uid || '';
@@ -182,7 +182,7 @@ export function userSpeciesToSpecies(u: UserSpecies): Species {
 
 /** Merged species list: user (My Codex) first, then codex (public). Use for species step, skills step, and character sheet so user-created species can be selected and resolved. */
 export function useMergedSpecies(options?: {
-  enabled?: boolean;
+  enabled?: boolean | undefined;
 }): UseQueryResult<Species[], Error> {
   const enabled = options?.enabled ?? true;
   const {

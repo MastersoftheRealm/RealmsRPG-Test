@@ -75,7 +75,7 @@ export function useAdminArchetypeWorkspace() {
   const selection = useAdminArchetypeSelectionOptions({
     codexFeats: codexFeats as CodexFeatLike[],
     codexSkills: codexSkills as CodexSkill[],
-    codexEquipment: codexEquipment as Array<{ id?: string; name?: string }>,
+    codexEquipment: codexEquipment as Array<{ id?: string | undefined; name?: string | undefined }>,
     officialPowers,
     officialTechniques,
     officialItems,

@@ -33,8 +33,8 @@ const alertIcons = {
 
 export interface AlertProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof alertVariants> {
-  title?: string;
-  onDismiss?: () => void;
+  title?: string | undefined;
+  onDismiss?: (() => void) | undefined;
 }
 
 export function Alert({

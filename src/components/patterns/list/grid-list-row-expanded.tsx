@@ -22,17 +22,20 @@ interface GridListRowExpandedBodyProps {
   selectable: boolean;
   isRowClickable: boolean;
   handleRowBodyClickWithGuard: (e: MouseEvent) => void;
-  expandedContent?: ReactNode;
+  expandedContent?: ReactNode | undefined;
   descTrimmed: string;
-  description?: string;
-  descriptionAfter?: ReactNode;
-  warningMessage?: string;
-  badges: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
-  gridColumns?: string;
+  description?: string | undefined;
+  descriptionAfter?: ReactNode | undefined;
+  warningMessage?: string | undefined;
+  badges: Array<{
+    label: string;
+    color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' | undefined;
+  }>;
+  gridColumns?: string | undefined;
   expandedMobileStatColumns: ColumnValue[];
-  totalCost?: number;
+  totalCost?: number | undefined;
   costLabel: string;
-  requirements?: ReactNode;
+  requirements?: ReactNode | undefined;
   hasDetailSections: boolean;
   expandedDetailSections: MetadataDetailSection[];
   openDetailSections: Record<string, boolean>;
@@ -41,11 +44,11 @@ interface GridListRowExpandedBodyProps {
   handleChipClick: (index: number, e: MouseEvent) => void;
   expandedOptionsChipIndex: number | null;
   setExpandedOptionsChipIndex: Dispatch<SetStateAction<number | null>>;
-  supplementalExpandedContent?: ReactNode;
-  showActions?: boolean;
-  onAddToLibrary?: () => void;
-  onEdit?: () => void;
-  onDuplicate?: () => void;
+  supplementalExpandedContent?: ReactNode | undefined;
+  showActions?: boolean | undefined;
+  onAddToLibrary?: (() => void) | undefined;
+  onEdit?: (() => void) | undefined;
+  onDuplicate?: (() => void) | undefined;
 }
 
 export function GridListRowExpandedBody({

@@ -50,7 +50,7 @@ export const EMPTY_PART_FORM: PartFormState = {
   op_3_tp: undefined,
 };
 
-export type PartOption = { desc: string; en?: number; tp?: number };
+export type PartOption = { desc: string; en?: number | undefined; tp?: number | undefined };
 
 /** Format number preserving decimals (no rounding); strip trailing zeros. */
 export function formatDecimalPreserve(n: number, maxDecimals = 10): string {
@@ -108,7 +108,7 @@ function rawOptNum(v: unknown): number | undefined {
   return v != null && v !== '' ? (v as number) : undefined;
 }
 
-export function partToFormState(p: Part & { defense?: string[] }): PartFormState {
+export function partToFormState(p: Part & { defense?: string[] | undefined }): PartFormState {
   const op1 = p.op_1_desc?.trim();
   const op2 = p.op_2_desc?.trim();
   const op3 = p.op_3_desc?.trim();

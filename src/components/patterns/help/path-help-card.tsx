@@ -16,9 +16,9 @@ export interface PathHelpCardProps {
   /** Message content; can be a paragraph or list */
   children: ReactNode;
   /** Optional controls below the guidance sentence (e.g. path skill chips). */
-  actions?: ReactNode;
+  actions?: ReactNode | undefined;
   /** Optional className */
-  className?: string;
+  className?: string | undefined;
 }
 
 export function PathHelpCard({ pathName, children, actions, className }: PathHelpCardProps) {
@@ -43,8 +43,8 @@ export interface PathNotesProps {
   /** Path name for the accessible label. */
   pathName: string;
   /** Author-written level-1 guidance (path_data.level1.notes). */
-  notes?: string;
-  className?: string;
+  notes?: string | undefined;
+  className?: string | undefined;
 }
 
 /**

@@ -10,13 +10,16 @@
 import { normalizeId } from '@/lib/utils/normalize-id';
 
 export type SavedPartLike = {
-  id?: string | number | null;
-  name?: string | null;
-  op_1_lvl?: number | null;
-  op_2_lvl?: number | null;
-  op_3_lvl?: number | null;
+  id?: string | number | null | undefined;
+  name?: string | null | undefined;
+  op_1_lvl?: number | null | undefined;
+  op_2_lvl?: number | null | undefined;
+  op_3_lvl?: number | null | undefined;
   /** UI-shape payloads nest the codex row under `part`. */
-  part?: { id?: string | number | null; name?: string | null } | null;
+  part?:
+    | { id?: string | number | null | undefined; name?: string | null | undefined }
+    | null
+    | undefined;
 };
 
 /** Collapse codex aliases such as `s377` and `377` to the same dedupe key. */
@@ -114,9 +117,9 @@ export function dedupeByNormalizedId<T>(
 }
 
 /** Character power / technique / feat refs: string or `{ id?, name? }`. */
-export function dedupeEntityRefs<T extends string | { id?: string | number; name?: string }>(
-  items: T[] | null | undefined,
-): T[] {
+export function dedupeEntityRefs<
+  T extends string | { id?: string | number | undefined; name?: string | undefined },
+>(items: T[] | null | undefined): T[] {
   return dedupeByNormalizedId(items ?? [], (item) => {
     if (typeof item === 'string') return item;
     return item.id ?? item.name;

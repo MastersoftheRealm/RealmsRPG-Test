@@ -120,11 +120,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const updatePayload: Record<string, unknown> = { data: merged };
     if (merged.status !== undefined) updatePayload.status = merged.status;
     if (merged.item !== undefined) {
-      const item = merged.item as { name?: string; marketPrice?: number } | null;
+      const item = merged.item as {
+        name?: string | undefined;
+        marketPrice?: number | undefined;
+      } | null;
       updatePayload.item_name = item?.name ?? null;
       updatePayload.currency_cost = (merged.materialCost as number) ?? item?.marketPrice ?? null;
     } else if (merged.customBaseItem !== undefined) {
-      const custom = merged.customBaseItem as { name?: string } | null;
+      const custom = merged.customBaseItem as { name?: string | undefined } | null;
       if (updatePayload.item_name === undefined) updatePayload.item_name = custom?.name ?? null;
     } else if (merged.materialCost !== undefined) {
       updatePayload.currency_cost = merged.materialCost;

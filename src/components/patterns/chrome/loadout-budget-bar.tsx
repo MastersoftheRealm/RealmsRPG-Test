@@ -12,24 +12,24 @@ const ptCopy = GUIDED_CREATOR_COPY.steps.powersTechniques;
 
 export interface LoadoutBudgetBarProps {
   /** Starting Currency (omit to hide Currency PointStatus). */
-  currencyTotal?: number;
+  currencyTotal?: number | undefined;
   /** Currency spent so far. */
-  currencySpent?: number;
+  currencySpent?: number | undefined;
   /** Training Points limit. */
-  tpTotal?: number;
+  tpTotal?: number | undefined;
   /** Training Points spent. */
-  tpSpent?: number;
-  currencyLabel?: string;
-  trainingPointsLabel?: string;
-  className?: string;
+  tpSpent?: number | undefined;
+  currencyLabel?: string | undefined;
+  trainingPointsLabel?: string | undefined;
+  className?: string | undefined;
   /** Budget row alignment (Guided default center; Advanced equipment header uses end). */
-  align?: 'center' | 'end';
+  align?: 'center' | 'end' | undefined;
   /** Extra PointStatus (or similar) before Currency/TP — e.g. Guided Powers Innate Energy. */
-  leading?: ReactNode;
+  leading?: ReactNode | undefined;
   /** Extra PointStatus (or similar) in the budget row — e.g. Advanced finalize Energy. */
-  trailing?: ReactNode;
+  trailing?: ReactNode | undefined;
   /** Extra content above the PointStatus row (e.g. L2 confirm error). */
-  children?: ReactNode;
+  children?: ReactNode | undefined;
 }
 
 /**

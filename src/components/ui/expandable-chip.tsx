@@ -23,7 +23,7 @@ import {
 
 export interface ExpandableChipOption {
   label: string;
-  description?: string;
+  description?: string | undefined;
   level: number;
 }
 
@@ -31,47 +31,47 @@ type ChipVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
 
 export interface ExpandableChipProps {
   label: string;
-  description?: string;
-  sublabel?: string;
-  category?: string;
-  variant?: ChipVariant;
-  size?: 'sm' | 'md';
-  className?: string;
+  description?: string | undefined;
+  sublabel?: string | undefined;
+  category?: string | undefined;
+  variant?: ChipVariant | undefined;
+  size?: 'sm' | 'md' | undefined;
+  className?: string | undefined;
   /**
    * When expanded, keep the collapsed row but move to the group’s left edge at full width.
    * Default true. When false, expand height-only at the header’s intrinsic width.
    */
-  fullWidthWhenExpanded?: boolean;
+  fullWidthWhenExpanded?: boolean | undefined;
 
   /** TP cost — renders `TP: N` in header */
-  tpCost?: number;
+  tpCost?: number | undefined;
   /** Energy cost — renders `N EN` in header (never EP) */
-  energyCost?: number;
+  energyCost?: number | undefined;
   /** Generic cost with label (GridListRow) — renders `| {costLabel}: N` */
-  cost?: number | string;
-  costLabel?: string;
+  cost?: number | string | undefined;
+  costLabel?: string | undefined;
   /** When true, chip with cost but no description can still expand (GridListRow) */
-  expandOnCost?: boolean;
+  expandOnCost?: boolean | undefined;
   /** Legacy creator chips — renders `(value)` after label */
-  costSuffix?: string | number;
+  costSuffix?: string | number | undefined;
 
-  level?: number;
-  options?: ExpandableChipOption[];
+  level?: number | undefined;
+  options?: ExpandableChipOption[] | undefined;
 
-  expanded?: boolean;
-  defaultExpanded?: boolean;
-  onExpandedChange?: (expanded: boolean) => void;
-  onToggle?: (e: React.MouseEvent) => void;
+  expanded?: boolean | undefined;
+  defaultExpanded?: boolean | undefined;
+  onExpandedChange?: ((expanded: boolean) => void) | undefined;
+  onToggle?: ((e: React.MouseEvent) => void) | undefined;
 
-  optionsOpen?: boolean;
-  onOptionsOpenChange?: (open: boolean) => void;
+  optionsOpen?: boolean | undefined;
+  onOptionsOpenChange?: ((open: boolean) => void) | undefined;
 
-  expandable?: boolean;
-  descriptor?: boolean;
-  descriptorVariant?: ChipVariant;
+  expandable?: boolean | undefined;
+  descriptor?: boolean | undefined;
+  descriptorVariant?: ChipVariant | undefined;
 
   /** Extra hover shadow (creator simple chips) */
-  interactiveHover?: boolean;
+  interactiveHover?: boolean | undefined;
 }
 
 function formatLevelSuffix(level?: number): string {
@@ -350,14 +350,14 @@ function ChipHeaderContent({
   labelClassName,
 }: {
   label: string;
-  level?: number;
-  tpCost?: number;
-  energyCost?: number;
-  cost?: number | string;
-  costLabel?: string;
-  costSuffix?: string | number;
-  hasNumericCost?: boolean;
-  labelClassName?: string;
+  level?: number | undefined;
+  tpCost?: number | undefined;
+  energyCost?: number | undefined;
+  cost?: number | string | undefined;
+  costLabel?: string | undefined;
+  costSuffix?: string | number | undefined;
+  hasNumericCost?: boolean | undefined;
+  labelClassName?: string | undefined;
 }) {
   const hasTp = (tpCost ?? 0) > 0;
   const hasEnergy = (energyCost ?? 0) > 0;
@@ -399,7 +399,7 @@ function ChipHeaderContent({
 
 export interface ChipGroupProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
-  className?: string;
+  className?: string | undefined;
 }
 
 /** Flex-wrap host for ExpandableChip — marks the full-row expansion boundary. */

@@ -219,9 +219,9 @@ function parseLoadouts(value: unknown): PathLoadout[] | undefined {
 export type Level1ArmorStep = 'required' | 'optional' | 'none';
 
 export interface Level1LoadoutsField {
-  loadouts?: PathLoadout[];
-  armorStep?: Level1ArmorStep;
-  sharedEquipment?: PathItemRecommendation[];
+  loadouts?: PathLoadout[] | undefined;
+  armorStep?: Level1ArmorStep | undefined;
+  sharedEquipment?: PathItemRecommendation[] | undefined;
 }
 
 function parseArmorStep(value: unknown): Level1ArmorStep | undefined {
@@ -384,7 +384,7 @@ export function parseArchetypePathData(value: unknown): ArchetypePathData | unde
 }
 
 export function getPathRecommendationsForLevel(
-  archetype: { path_data?: ArchetypePathData } | undefined,
+  archetype: { path_data?: ArchetypePathData | undefined } | undefined,
   level: number,
 ): ArchetypePathRecommendations | undefined {
   if (!archetype?.path_data) return undefined;

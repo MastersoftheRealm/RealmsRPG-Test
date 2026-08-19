@@ -54,7 +54,7 @@ export function AdminFeatEditModal({
   initialForm: FeatFormState;
   initialEditId: string | null;
   enableAddLevel: boolean;
-  onAddLevel?: (form: FeatFormState, sourceDbFeatId: string) => void;
+  onAddLevel?: ((form: FeatFormState, sourceDbFeatId: string) => void) | undefined;
 }) {
   // Fresh state per open: parent remounts with key={modalSessionKey}.
   const [form, setForm] = useState<FeatFormState>(initialForm);
@@ -239,9 +239,7 @@ export function AdminFeatEditModal({
               )}
               {dirtyLevelLabels.length > 0 && (
                 <div className="text-xs text-text-muted">
-                  <span className="font-medium text-text-secondary">
-                    Unsaved:
-                  </span>{' '}
+                  <span className="font-medium text-text-secondary">Unsaved:</span>{' '}
                   {dirtyLevelLabels.join(', ')}
                 </div>
               )}

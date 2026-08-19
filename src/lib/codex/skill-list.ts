@@ -29,9 +29,9 @@ export interface SkillListFilters {
   baseSkill: string;
   subSkillMode: 'all' | 'only' | 'hide' | '';
   /** Codex character filter: known vs not known. Ignored without characterKnownIds. */
-  knownMode?: SkillKnownMode;
+  knownMode?: SkillKnownMode | undefined;
   /** Codex character filter: keep sub-skills whose base the character has. */
-  baseSkillOwnedOnly?: boolean;
+  baseSkillOwnedOnly?: boolean | undefined;
 }
 
 /** Normalized id + name keys for skills on a saved character (TASK-722). */
@@ -82,7 +82,7 @@ export function buildSkillIdToName(skills: Skill[] | undefined): Map<string, str
 }
 
 /** Match a Codex/library skill by id or display name (species grants store ids). */
-export function findSkillByIdOrName<T extends { id: string | number; name?: string }>(
+export function findSkillByIdOrName<T extends { id: string | number; name?: string | undefined }>(
   skills: readonly T[] | undefined,
   lookup: string | number | null | undefined,
 ): T | undefined {
@@ -105,7 +105,7 @@ export function parseSkillAbilities(abilityString?: string): string[] {
 export function buildSkillFilterOptions(
   skills: Skill[] | undefined,
   skillIdToName: Map<string, string>,
-  options?: { includeCategoryBaseSkills?: boolean },
+  options?: { includeCategoryBaseSkills?: boolean | undefined },
 ): SkillFilterOptions {
   if (!skills) return { abilities: [], baseSkills: [] };
 
@@ -120,7 +120,7 @@ export function buildSkillFilterOptions(
       });
     }
     if (options?.includeCategoryBaseSkills) {
-      const cat = (s as Skill & { category?: string }).category;
+      const cat = (s as Skill & { category?: string | undefined }).category;
       if (cat && typeof cat === 'string') baseSkills.add(cat);
     }
     if (s.base_skill_id !== undefined) {

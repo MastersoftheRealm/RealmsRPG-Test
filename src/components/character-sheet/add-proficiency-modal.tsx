@@ -20,26 +20,26 @@ import type { CharacterProficiency } from '@/types';
 // Part-like: power or technique part from codex
 interface PartLike {
   id: string | number;
-  name?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
-  op_1_desc?: string;
-  op_2_desc?: string;
-  op_3_desc?: string;
-  mechanic?: boolean;
+  name?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
+  op_1_desc?: string | undefined;
+  op_2_desc?: string | undefined;
+  op_3_desc?: string | undefined;
+  mechanic?: boolean | undefined;
 }
 
 // Property-like: item property from codex
 interface PropertyLike {
   id: string | number;
-  name?: string;
-  type?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_1_desc?: string;
-  mechanic?: boolean;
+  name?: string | undefined;
+  type?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_1_desc?: string | undefined;
+  mechanic?: boolean | undefined;
 }
 
 export type AddProficiencyVariant =
@@ -53,9 +53,9 @@ interface AddProficiencyModalProps {
   onClose: () => void;
   variant: AddProficiencyVariant;
   /** For power_part / technique_part */
-  parts?: PartLike[];
+  parts?: PartLike[] | undefined;
   /** For weapon_shield_property / armor_property (pre-filtered by type) */
-  properties?: PropertyLike[];
+  properties?: PropertyLike[] | undefined;
   onAdd: (prof: CharacterProficiency) => void;
 }
 

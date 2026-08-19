@@ -8,28 +8,37 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
 
 ---
 
-- id: TASK-799
-  title: Remaining list/modal duplication clusters
-  created_at: 2026-08-15
+- id: TASK-842
+  title: Admin Codex CRUD tab scaffolding (save/search/row actions)
+  created_at: 2026-08-18
   created_by: agent
   priority: low
   status: not-started
   assignee: owner
   related_files:
-    - src/components/patterns/list/official-entity-list.tsx
-    - src/components/patterns/chrome/delete-confirm-modal.tsx
-    - src/components/patterns/list/list-header.tsx
-    - src/components/patterns/select/value-stepper.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/use-admin-codex-delete.tsx
   description: |
-    Reports 10/08/04 leftover clusters after path-filter (TASK-751–753) and
-    stepper/header internal dedup (TASK-792): OfficialEntityList internals,
-    confirm-modal / icon-toggle families, admin and sheet copies.
+    Report 08 Cluster A leftover after TASK-799. Delete confirm now uses
+    ConfirmActionModal (F-14). Remaining: duplicated openAdd/openEdit/handleSave,
+    row-action chrome, and edit-modal Cancel/Save footers across nine Codex tabs
+    (F-18). Do not merge OfficialEntityList with My Library (ADR-0001) or
+    CodexBrowseListShell (ADR-0005).
   acceptance_criteria:
-    - Inventory the remaining forks against FEATURE_INDEX before any move.
+    - Inventory remaining forks against FEATURE_INDEX before any move.
     - Delete the weaker copy; do not add a third wrapper.
-    - Architect ack if a new shared file is required.
+    - Architect ack if a new shared hook/shell file is required.
+    - Do not delete /characters/new/advanced.
   notes: |
-    Wave 3C leftover. Do not start without owner ack.
+    Filed from TASK-799. Do not start without owner ack. Do not fold TASK-821.
 
 ---
 
@@ -58,40 +67,9 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
   acceptance_criteria:
     - Owner confirms the unmatched set is current, or restores specific files from OneDrive.
     - No agent rewrite of those files from memory.
-    - Close this task before retrying TASK-824 if any restored file is a type-surface.
+    - Content recovery only — TASK-824 dest-type retry is on current disk and does not wait on this task.
   notes: |
     Filed from TASK-824 /audit. Human-only (OneDrive version history). See DEV-014.
-
----
-
-- id: TASK-824
-  title: exactOptionalPropertyTypes burn-down
-  created_at: 2026-08-18
-  created_by: agent
-  priority: low
-  status: not-started
-  assignee: owner
-  related_files:
-    - tsconfig.json
-    - tsconfig.strictest.json
-    - src/docs/ai/ADR/0022-nouncheckedindexedaccess.md
-  follow_up_tasks:
-    - TASK-834
-  description: |
-    Report 11 / ADR-0022 leftover: `{ x?: string }` still accepts explicit `undefined`,
-    so undefined can reach Supabase payloads. Preview via tsconfig.strictest.json after
-    TASK-797 moved noUncheckedIndexedAccess into the main tsconfig. Same class as TASK-797.
-  acceptance_criteria:
-    - Preview the flag in tsconfig.strictest.json, burn down errors with type-narrowing only
-      (optional fields omit vs undefined), then move it into the main tsconfig.
-    - No behavior changes beyond refusing explicit undefined on optional props.
-    - No new shared/ui file; do not delete /characters/new/advanced.
-  notes: |
-    Owner ack 2026-08-18 (next Architect leftover; do not remote Legacy). First attempt
-    aborted after a 529-file overlapping AST rewrite and `git checkout -- src`; flag is
-    off again. Retry only after TASK-834 (or owner skip): leaf-only / file-local fixes;
-    keep generated `database.types.ts` strict; never `git checkout -- src` on a dirty tree.
-    Do not fold noFallthroughCasesInSwitch / verbatimModuleSyntax / noImplicitOverride.
 
 ---
 

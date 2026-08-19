@@ -21,10 +21,10 @@ import { useIsClient } from './use-is-client';
 function toAuthUser(
   user: {
     id: string;
-    email?: string;
-    user_metadata?: Record<string, unknown>;
-    app_metadata?: { provider?: string };
-    identities?: Array<{ provider?: string }>;
+    email?: string | undefined;
+    user_metadata?: Record<string, unknown> | undefined;
+    app_metadata?: { provider?: string | undefined } | undefined;
+    identities?: Array<{ provider?: string | undefined }> | undefined;
   } | null,
 ): AuthUser | null {
   if (!user) return null;
@@ -206,7 +206,7 @@ export function useAuth() {
   );
 
   const updateUserProfile = useCallback(
-    async (updates: { displayName?: string; photoURL?: string }) => {
+    async (updates: { displayName?: string | undefined; photoURL?: string | undefined }) => {
       if (!user) throw new Error('No user logged in');
       setLoading(true);
       clearError();

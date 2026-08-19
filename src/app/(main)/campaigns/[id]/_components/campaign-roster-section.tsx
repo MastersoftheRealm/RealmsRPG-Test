@@ -21,11 +21,11 @@ export function CampaignRosterSection({
   onRemoveClick,
 }: {
   campaignId: string;
-  ownerUsername?: string;
+  ownerUsername?: string | undefined;
   ownerCharacters: CampaignCharacter[];
   otherCharacters: CampaignCharacter[];
   isRealmMaster: boolean;
-  currentUserId?: string;
+  currentUserId?: string | undefined;
   canAddOwnCharacters: boolean;
   onAddClick: () => void;
   onRemoveClick: (c: CampaignCharacter) => void;

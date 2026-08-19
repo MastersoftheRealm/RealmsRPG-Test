@@ -14,9 +14,9 @@ import { useIsClient } from '@/hooks/use-is-client';
 
 interface ThemeToggleProps {
   /** Whether to show as a dropdown menu or inline buttons */
-  variant?: 'dropdown' | 'inline';
+  variant?: 'dropdown' | 'inline' | undefined;
   /** Additional className */
-  className?: string;
+  className?: string | undefined;
 }
 
 const THEME_OPTIONS = [

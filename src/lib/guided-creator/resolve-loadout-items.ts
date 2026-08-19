@@ -13,7 +13,7 @@ export type LoadoutItemCategory = 'weapon' | 'armor' | 'equipment';
 export interface EquipmentLookupEntry {
   id: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
   category: LoadoutItemCategory;
 }
 
@@ -21,7 +21,7 @@ export interface ResolvedLoadoutItem {
   id: string;
   quantity: number;
   name: string;
-  description?: string;
+  description?: string | undefined;
   category: LoadoutItemCategory;
   categoryLabel: string;
   resolved: boolean;
@@ -114,9 +114,9 @@ export function resolveLoadoutItems(
 
 /** Phased weapon+armor buckets when present; otherwise legacy `armaments`. */
 export function draftArmamentRefs(draft: {
-  loadoutWeapons?: PathItemRecommendation[];
-  loadoutArmor?: PathItemRecommendation[];
-  armaments?: PathItemRecommendation[];
+  loadoutWeapons?: PathItemRecommendation[] | undefined;
+  loadoutArmor?: PathItemRecommendation[] | undefined;
+  armaments?: PathItemRecommendation[] | undefined;
 }): PathItemRecommendation[] {
   const merged = mergeLoadoutArmaments({
     loadoutWeapons: draft.loadoutWeapons ?? [],
@@ -127,9 +127,9 @@ export function draftArmamentRefs(draft: {
 
 export function resolveDraftArmaments(
   draft: {
-    loadoutWeapons?: PathItemRecommendation[];
-    loadoutArmor?: PathItemRecommendation[];
-    armaments?: PathItemRecommendation[];
+    loadoutWeapons?: PathItemRecommendation[] | undefined;
+    loadoutArmor?: PathItemRecommendation[] | undefined;
+    armaments?: PathItemRecommendation[] | undefined;
   },
   lookup: Map<string, EquipmentLookupEntry>,
   unresolvedLabel = 'Unknown item',

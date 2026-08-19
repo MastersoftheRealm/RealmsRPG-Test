@@ -10,7 +10,7 @@ import type { PowerSectionCosts } from './power-creator-cost-derivation';
 
 export type PowerAreaPartInfo = {
   description: string;
-  op1Desc?: string;
+  op1Desc?: string | undefined;
   op1Level: number;
 } | null;
 

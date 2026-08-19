@@ -8,11 +8,11 @@ type ChipVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;
 export interface SummaryChipItem {
   key: string;
   label: string;
-  description?: string | null;
-  variant?: ChipVariant;
-  category?: string;
-  className?: string;
-  energyCost?: number;
+  description?: string | null | undefined;
+  variant?: ChipVariant | undefined;
+  category?: string | undefined;
+  className?: string | undefined;
+  energyCost?: number | undefined;
 }
 
 /** Expandable entity chips in summary panels — `md` maps to entity inline size (matches DescriptorChip default). */
@@ -25,7 +25,7 @@ export function SummaryChipList({
   className,
 }: {
   items: SummaryChipItem[];
-  className?: string;
+  className?: string | undefined;
 }) {
   if (items.length === 0) return null;
 

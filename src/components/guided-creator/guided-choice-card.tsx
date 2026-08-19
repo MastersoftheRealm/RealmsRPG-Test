@@ -35,8 +35,8 @@ export type GuidedChoiceTag =
   | string
   | {
       label: string;
-      variant?: ChipProps['variant'];
-      size?: DescriptorChipSize;
+      variant?: ChipProps['variant'] | undefined;
+      size?: DescriptorChipSize | undefined;
     };
 
 function normalizeChoiceTag(tag: GuidedChoiceTag): {
@@ -58,74 +58,74 @@ function normalizeChoiceTag(tag: GuidedChoiceTag): {
 
 type GuidedChoiceCardBase = {
   title: string;
-  description?: string | null;
-  tagline?: string;
-  fullDescription?: ReactNode;
-  tags?: GuidedChoiceTag[];
+  description?: string | null | undefined;
+  tagline?: string | undefined;
+  fullDescription?: ReactNode | undefined;
+  tags?: GuidedChoiceTag[] | undefined;
   /**
    * Title-adjacent metadata (e.g. Currency / Training Points chips).
    * Renders beside the title — never under the disclosure row.
    */
-  titleMeta?: ReactNode;
+  titleMeta?: ReactNode | undefined;
   /** Explicit image URL (overrides imageKind/imageRecord resolution). */
-  imageUrl?: string | null;
+  imageUrl?: string | null | undefined;
   /** Codex record to read image_url from when imageUrl is omitted. */
-  imageRecord?: unknown;
+  imageRecord?: unknown | undefined;
   /** Placeholder + default layout family (species, equipment, power, etc.). */
-  imageKind?: ChoiceCardImageKind;
-  imageLayout?: ChoiceCardImageLayout;
-  icon?: ReactNode;
-  badge?: string;
-  children?: ReactNode;
+  imageKind?: ChoiceCardImageKind | undefined;
+  imageLayout?: ChoiceCardImageLayout | undefined;
+  icon?: ReactNode | undefined;
+  badge?: string | undefined;
+  children?: ReactNode | undefined;
   /**
    * Content above See more / See less / More details (e.g. quantity stepper).
    * Prefer this over `children` so nothing sits under the disclosure boundary.
    */
-  beforeDisclosure?: ReactNode;
+  beforeDisclosure?: ReactNode | undefined;
   /** Shown only when expanded (See more) — e.g. feat restriction notices. */
-  expandedExtra?: ReactNode;
+  expandedExtra?: ReactNode | undefined;
   /**
    * When true, string `tags` are hidden while the card is expanded (use expandable
    * chips in `expandedExtra` instead to avoid duplicating the same facts).
    */
-  hideTagsWhenExpanded?: boolean;
+  hideTagsWhenExpanded?: boolean | undefined;
   /** Label for the in-card expand control (default: “See more…”). */
-  expandLabel?: string;
+  expandLabel?: string | undefined;
   /** Label for the in-card collapse control when not selected (default: “See less”). */
-  collapseLabel?: string;
+  collapseLabel?: string | undefined;
   /**
    * Opens choice-card deep-dive (GuidedEntityDetailModal). Does not select the card.
    * Distinct from catalog Layer 2 (`GuidedLayerNav` “See more options”).
    * When the card also offers inline See more, this control appears only once expanded
    * (or selected, which auto-expands).
    */
-  onDetails?: () => void;
+  onDetails?: (() => void) | undefined;
   /** Visible label for the details control (default: guided copy “More details”). */
-  detailsLabel?: string;
-  className?: string;
-  fullWidth?: boolean;
+  detailsLabel?: string | undefined;
+  className?: string | undefined;
+  fullWidth?: boolean | undefined;
   /**
    * Per-step preview sizing (uniform within the step, not globally):
    * - species — 5 lines (longer species flavor)
    * - path — 4 lines (path cards)
    * - compact — 3 lines (feats, traits, loadouts)
    */
-  density?: GuidedChoiceCardDensity;
+  density?: GuidedChoiceCardDensity | undefined;
 };
 
 /** Display-only card: no select chrome. See more / See less still work. */
 type GuidedChoiceCardReadOnlyProps = GuidedChoiceCardBase & {
   readOnly: true;
-  onSelect?: never;
-  selected?: never;
-  selectAriaLabel?: never;
+  onSelect?: never | undefined;
+  selected?: never | undefined;
+  selectAriaLabel?: never | undefined;
 };
 
 type GuidedChoiceCardSelectableProps = GuidedChoiceCardBase & {
-  readOnly?: false;
+  readOnly?: false | undefined;
   onSelect: () => void;
-  selected?: boolean;
-  selectAriaLabel?: string;
+  selected?: boolean | undefined;
+  selectAriaLabel?: string | undefined;
 };
 
 export type GuidedChoiceCardProps = GuidedChoiceCardReadOnlyProps | GuidedChoiceCardSelectableProps;

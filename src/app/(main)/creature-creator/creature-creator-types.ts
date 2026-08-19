@@ -11,9 +11,9 @@ import type {
 } from './transformers';
 
 export interface CreatureSkill {
-  id?: string;
-  baseSkillId?: string;
-  isSubSkill?: boolean;
+  id?: string | undefined;
+  baseSkillId?: string | undefined;
+  isSubSkill?: boolean | undefined;
   name: string;
   value: number;
   proficient: boolean;

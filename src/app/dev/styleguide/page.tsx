@@ -66,7 +66,7 @@ function Section({
 }: {
   title: string;
   children: React.ReactNode;
-  id?: string;
+  id?: string | undefined;
 }) {
   return (
     <section id={id} className="border-b border-border-light py-8">
@@ -76,7 +76,7 @@ function Section({
   );
 }
 
-function Row({ label, children }: { label?: string; children: React.ReactNode }) {
+function Row({ label, children }: { label?: string | undefined; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-2">
       {label && <span className="text-xs tracking-wide text-text-muted uppercase">{label}</span>}
@@ -85,7 +85,7 @@ function Row({ label, children }: { label?: string; children: React.ReactNode })
   );
 }
 
-function Swatch({ token, label }: { token: string; label?: string }) {
+function Swatch({ token, label }: { token: string; label?: string | undefined }) {
   return (
     <div className="flex flex-col gap-1">
       <div
@@ -99,7 +99,7 @@ function Swatch({ token, label }: { token: string; label?: string }) {
   );
 }
 
-function TextSwatch({ token, label }: { token: string; label?: string }) {
+function TextSwatch({ token, label }: { token: string; label?: string | undefined }) {
   return (
     <div className="flex flex-col gap-1">
       <span className="text-base font-semibold" style={{ color: `var(${token})` }}>
@@ -120,7 +120,7 @@ function OnFillTextSwatch({
 }: {
   token: string;
   fillToken: string;
-  label?: string;
+  label?: string | undefined;
 }) {
   return (
     <div className="flex flex-col gap-1">

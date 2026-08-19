@@ -41,7 +41,7 @@ type TabId =
 
 type ViewMode = 'list' | 'spreadsheet';
 
-const TABS: { id: TabId; label: string; labelMobile?: string }[] = [
+const TABS: { id: TabId; label: string; labelMobile?: string | undefined }[] = [
   { id: 'feats', label: 'Feats' },
   { id: 'skills', label: 'Skills' },
   { id: 'species', label: 'Species' },

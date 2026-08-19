@@ -38,7 +38,7 @@ import { useLibraryDuplicateConfirm } from './hooks/use-library-duplicate-confir
 type CreatureListRow = LibraryCreature & {
   id: string;
   hasDrift: boolean;
-  syncMessage?: string;
+  syncMessage?: string | undefined;
 };
 
 /** Match Powers/Techniques — ListHeader must reserve edit/delete/sync tracks. */

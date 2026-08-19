@@ -16,10 +16,10 @@ type RollRow = {
   id: string;
   data: unknown;
   created_at: string | null;
-  character_id?: string | null;
-  user_id?: string | null;
-  type?: string | null;
-  title?: string | null;
+  character_id?: string | null | undefined;
+  user_id?: string | null | undefined;
+  type?: string | null | undefined;
+  title?: string | null | undefined;
 };
 
 function toEntry(row: RollRow): CampaignRollEntry {
@@ -43,7 +43,7 @@ function toEntry(row: RollRow): CampaignRollEntry {
         ? ts
         : typeof ts === 'string'
           ? new Date(ts)
-          : (ts as { seconds?: number })?.seconds
+          : (ts as { seconds?: number | undefined })?.seconds
             ? new Date((ts as { seconds: number }).seconds * 1000)
             : new Date(),
   };
@@ -183,9 +183,9 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     // character. The displayed name is taken from the roster, not the client.
     const roster =
       (campaign.characters as Array<{
-        userId?: string;
-        characterId?: string;
-        characterName?: string;
+        userId?: string | undefined;
+        characterId?: string | undefined;
+        characterName?: string | undefined;
       }> | null) ?? [];
     const ownEntry = roster.find((c) => c.userId === user.uid && c.characterId === characterId);
     const ownerEntry = isOwner ? roster.find((c) => c.characterId === characterId) : undefined;

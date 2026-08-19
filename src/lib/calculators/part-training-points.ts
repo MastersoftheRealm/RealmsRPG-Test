@@ -10,10 +10,10 @@ export type PartTpVariant = 'power' | 'technique';
 export interface CodexPartTpDef {
   id: string | number;
   name: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
 }
 
 /**
@@ -24,7 +24,11 @@ export interface CodexPartTpDef {
  */
 export function computePartTrainingPointsRaw(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
-  levels: { op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number },
+  levels: {
+    op_1_lvl?: number | undefined;
+    op_2_lvl?: number | undefined;
+    op_3_lvl?: number | undefined;
+  },
   variant: PartTpVariant = 'power',
 ): number {
   const l1 = levels.op_1_lvl ?? 0;
@@ -49,7 +53,11 @@ export function computePartTrainingPointsRaw(
  */
 export function computePartTrainingPoints(
   def: Pick<CodexPartTpDef, 'id' | 'name' | 'base_tp' | 'op_1_tp' | 'op_2_tp' | 'op_3_tp'>,
-  levels: { op_1_lvl?: number; op_2_lvl?: number; op_3_lvl?: number },
+  levels: {
+    op_1_lvl?: number | undefined;
+    op_2_lvl?: number | undefined;
+    op_3_lvl?: number | undefined;
+  },
   variant: PartTpVariant = 'power',
 ): number {
   return Math.floor(computePartTrainingPointsRaw(def, levels, variant));

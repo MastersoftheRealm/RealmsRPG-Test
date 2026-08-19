@@ -12,6 +12,7 @@ import {
   computePartTrainingPointsRaw,
 } from '@/lib/calculators/part-training-points';
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
+import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 import { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
 import { deriveActionType, actionTypeFromSelection } from './action-type';
@@ -29,16 +30,16 @@ export { PART_IDS, findByIdOrName };
 // =============================================================================
 
 export interface PowerPartPayload {
-  id?: number | string; // codex may use string ids e.g. "s377"
-  name?: string;
-  part?: PowerPart;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
-  opt1Level?: number; // Legacy format
-  opt2Level?: number;
-  opt3Level?: number;
-  applyDuration?: boolean;
+  id?: number | string | undefined; // codex may use string ids e.g. "s377"
+  name?: string | undefined;
+  part?: PowerPart | undefined;
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
+  opt1Level?: number | undefined; // Legacy format
+  opt2Level?: number | undefined;
+  opt3Level?: number | undefined;
+  applyDuration?: boolean | undefined;
 }
 
 export interface PowerCostResult {
@@ -69,7 +70,7 @@ export interface PartChipData {
   finalTP: number;
   hasTP: boolean;
   /** Max option level when > 0; omit at 0. */
-  optionLevel?: number;
+  optionLevel?: number | undefined;
 }
 
 /**
@@ -286,7 +287,7 @@ export function getAreaPartForDisplay(
   areaType: string,
   areaLevel: number,
   partsDb: PowerPart[] = [],
-): { part: PowerPart; description: string; op1Desc?: string; op1Level: number } | null {
+): { part: PowerPart; description: string; op1Desc?: string | undefined; op1Level: number } | null {
   const info = AREA_TYPE_TO_PART[areaType];
   if (!info) return null;
   const part = findByIdOrName(partsDb, { id: info.id, name: info.name });
@@ -548,46 +549,58 @@ function buildPowerPartsPayloadForCost(
   return [...dedupeSavedParts([...userParts, ...legacyAutoMechanics]), ...mechanicPayload];
 }
 
-export interface PowerDocument {
-  name?: string;
-  description?: string;
-  parts?: Array<{
-    id?: number;
-    name?: string;
-    op_1_lvl?: number;
-    op_2_lvl?: number;
-    op_3_lvl?: number;
-    applyDuration?: boolean;
-    isAdvanced?: boolean;
-  }>;
-  damage?: Array<{
-    amount?: number | string;
-    size?: number | string;
-    type?: string;
-    applyDuration?: boolean;
-  }>;
+interface PowerDocumentFields {
+  name?: string | undefined;
+  description?: string | undefined;
+  parts?:
+    | Array<{
+        id?: number | undefined;
+        name?: string | undefined;
+        op_1_lvl?: number | undefined;
+        op_2_lvl?: number | undefined;
+        op_3_lvl?: number | undefined;
+        applyDuration?: boolean | undefined;
+        isAdvanced?: boolean | undefined;
+      }>
+    | undefined;
+  damage?:
+    | Array<{
+        amount?: number | string | undefined;
+        size?: number | string | undefined;
+        type?: string | undefined;
+        applyDuration?: boolean | undefined;
+      }>
+    | undefined;
   // Directly saved fields from power creator
-  actionType?: string;
-  isReaction?: boolean;
-  range?: {
-    steps?: number;
-    applyDuration?: boolean;
-  };
-  area?: {
-    type?: string;
-    level?: number;
-    applyDuration?: boolean;
-  };
-  duration?: {
-    type?: string;
-    value?: number;
-    applyDuration?: boolean;
-    focus?: boolean;
-    noHarm?: boolean;
-    endsOnActivation?: boolean;
-    sustain?: number;
-  };
+  actionType?: string | undefined;
+  isReaction?: boolean | undefined;
+  range?:
+    | {
+        steps?: number | undefined;
+        applyDuration?: boolean | undefined;
+      }
+    | undefined;
+  area?:
+    | {
+        type?: string | undefined;
+        level?: number | undefined;
+        applyDuration?: boolean | undefined;
+      }
+    | undefined;
+  duration?:
+    | {
+        type?: string | undefined;
+        value?: number | undefined;
+        applyDuration?: boolean | undefined;
+        focus?: boolean | undefined;
+        noHarm?: boolean | undefined;
+        endsOnActivation?: boolean | undefined;
+        sustain?: number | undefined;
+      }
+    | undefined;
 }
+
+export type PowerDocument = AllowUndefinedOptionals<PowerDocumentFields>;
 
 /**
  * Build complete display data from a saved power document
@@ -677,7 +690,11 @@ export function derivePowerDisplay(
  * Format power damage as [amount]d[size] [type]. Supports multiple damage types (e.g. "2d6 slashing, 1d4 fire").
  */
 export function formatPowerDamage(
-  damageArr?: Array<{ amount?: number | string; size?: number | string; type?: string }>,
+  damageArr?: Array<{
+    amount?: number | string | undefined;
+    size?: number | string | undefined;
+    type?: string | undefined;
+  }>,
 ): string {
   if (!Array.isArray(damageArr)) return '';
   const parts = damageArr

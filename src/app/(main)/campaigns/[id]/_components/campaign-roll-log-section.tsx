@@ -21,7 +21,7 @@ export function CampaignRollLogSection({
   rolls: CampaignRollEntry[];
   loading: boolean;
   isError: boolean;
-  errorMessage?: string;
+  errorMessage?: string | undefined;
   scrollRef: RefObject<HTMLDivElement | null>;
   onRetry: () => void;
 }) {

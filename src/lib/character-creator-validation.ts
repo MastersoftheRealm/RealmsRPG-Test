@@ -49,21 +49,24 @@ export interface StepCompletion {
   /** Short human label, e.g. "2 / 3 feats" or "Complete". */
   label: string;
   /** Step has no hard requirement (e.g. powers/equipment in path mode). */
-  optional?: boolean;
+  optional?: boolean | undefined;
 }
 
 export interface ValidationContext {
   allSpecies: Array<{
     id: string;
-    name?: string;
-    skills?: (string | number)[];
-    species_traits?: (string | number)[];
+    name?: string | undefined;
+    skills?: (string | number)[] | undefined;
+    species_traits?: (string | number)[] | undefined;
   }>;
-  codexSkills: Array<{ id: string; base_skill_id?: number }> | null;
+  codexSkills: Array<{ id: string; base_skill_id?: number | undefined }> | null;
   /** Used to validate species trait choice picks (option_trait_ids). */
-  allTraits?: Array<{ id: string | number; option_trait_ids?: string[] }> | null;
+  allTraits?:
+    | Array<{ id: string | number; option_trait_ids?: string[] | undefined }>
+    | null
+    | undefined;
   /** Core rules for skill soft-cap / past-cap costs (optional; defaults match SKILLS_AND_DEFENSES seed). */
-  rules?: Partial<CoreRulesMap>;
+  rules?: Partial<CoreRulesMap> | undefined;
 }
 
 /**
@@ -117,7 +120,7 @@ export function getValidationIssuesForStep(
         const ancestryTraitCount =
           species &&
           'ancestry_traits' in species &&
-          Array.isArray((species as { ancestry_traits?: unknown[] }).ancestry_traits)
+          Array.isArray((species as { ancestry_traits?: unknown[] | undefined }).ancestry_traits)
             ? (species as { ancestry_traits: unknown[] }).ancestry_traits.length
             : 1;
         if (ancestryTraitCount > 0 && selectedTraits < 1) {
@@ -160,7 +163,8 @@ export function getValidationIssuesForStep(
           !String(anc.id).startsWith('mixed:')
         ) {
           const rawSpeciesTraitIds =
-            (species as { species_traits?: (string | number)[] } | undefined)?.species_traits || [];
+            (species as { species_traits?: (string | number)[] | undefined } | undefined)
+              ?.species_traits || [];
           const choices = anc.selectedSpeciesTraitChoices ?? {};
           for (const tid of rawSpeciesTraitIds) {
             const trait = traitsDb.find((t) => String(t.id) === String(tid));
@@ -264,8 +268,12 @@ export function getValidationIssuesForStep(
     case 'feats': {
       const archetypeType = draft.archetype?.type;
       const allFeats = draft.feats || [];
-      const archetypeFeats = allFeats.filter((f: { type?: string }) => f.type === 'archetype');
-      const characterFeats = allFeats.filter((f: { type?: string }) => f.type === 'character');
+      const archetypeFeats = allFeats.filter(
+        (f: { type?: string | undefined }) => f.type === 'archetype',
+      );
+      const characterFeats = allFeats.filter(
+        (f: { type?: string | undefined }) => f.type === 'character',
+      );
       let expectedArchetypeFeatCount = 0;
       if (archetypeType === 'power') expectedArchetypeFeatCount = 1;
       else if (archetypeType === 'powered-martial') expectedArchetypeFeatCount = 2;
@@ -329,7 +337,7 @@ export function getValidationIssuesForStep(
       const baseCurrency = CHARACTER_STARTING_CURRENCY;
       const equipmentItems = draft.equipment?.items || draft.equipment?.inventory || [];
       const spentCurrency = equipmentItems.reduce(
-        (sum: number, item: { cost?: number }) => sum + (item.cost || 0),
+        (sum: number, item: { cost?: number | undefined }) => sum + (item.cost || 0),
         0,
       );
       if (spentCurrency > baseCurrency) {

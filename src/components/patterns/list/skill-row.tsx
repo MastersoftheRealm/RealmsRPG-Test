@@ -41,19 +41,19 @@ export interface SkillRowProps {
   /** Skill name */
   name: string;
   /** Codex skill description shown on name hover (character sheet). */
-  description?: string;
+  description?: string | undefined;
   /** Is this a sub-skill? */
-  isSubSkill?: boolean;
+  isSubSkill?: boolean | undefined;
   /** Base skill name (for sub-skills) */
-  baseSkillName?: string;
+  baseSkillName?: string | undefined;
 
   // ----- Proficiency -----
   /** Is the skill proficient? */
-  proficient?: boolean;
+  proficient?: boolean | undefined;
   /** Can proficiency be toggled? (not for species skills) */
-  canToggleProficiency?: boolean;
+  canToggleProficiency?: boolean | undefined;
   /** Callback to toggle proficiency */
-  onToggleProficiency?: () => void;
+  onToggleProficiency?: (() => void) | undefined;
 
   // ----- Skill Values -----
   /** Skill training value (allocated points) */
@@ -61,59 +61,59 @@ export interface SkillRowProps {
   /** The calculated bonus (ability + skill value) */
   bonus: number;
   /** Optional class for the bonus text (e.g. Temp Modifier tint). Not applied to RollButton. */
-  bonusClassName?: string;
+  bonusClassName?: string | undefined;
 
   // ----- Ability -----
   /** Primary ability for this skill */
-  ability?: string;
+  ability?: string | undefined;
   /** Available abilities to choose from (for multi-ability skills) */
-  availableAbilities?: string[];
+  availableAbilities?: string[] | undefined;
   /** Callback when ability selection changes */
-  onAbilityChange?: (ability: string) => void;
+  onAbilityChange?: ((ability: string) => void) | undefined;
 
   // ----- Edit Mode -----
   /** Is edit mode active? */
-  isEditing?: boolean;
+  isEditing?: boolean | undefined;
   /**
    * Where spend/temp steppers go in the table variant.
    * `column` (default) = extra Value cell (creator/allocation).
    * `inline` = stepper + bonus caption in the Bonus cell (narrow sheet Skills panel).
    */
-  editControlsPlacement?: 'column' | 'inline';
+  editControlsPlacement?: 'column' | 'inline' | undefined;
   /** Callback when skill value changes */
-  onValueChange?: (delta: number) => void;
+  onValueChange?: ((delta: number) => void) | undefined;
   /** Minimum value (usually 0) */
-  minValue?: number;
+  minValue?: number | undefined;
   /** Can the value be increased? (check for available points) */
-  canIncrease?: boolean;
+  canIncrease?: boolean | undefined;
 
   // ----- Remove -----
   /** Callback to remove this skill */
-  onRemove?: () => void;
+  onRemove?: (() => void) | undefined;
 
   // ----- Roll -----
   /** Show roll button? */
-  showRollButton?: boolean;
+  showRollButton?: boolean | undefined;
   /** Callback when roll button clicked */
-  onRoll?: () => void;
+  onRoll?: (() => void) | undefined;
 
   // ----- Special States -----
   /** Species-granted skill. Table: lock + "(species)" / dimmed prof only when isEditing; play view matches other proficient rows. */
-  isSpeciesSkill?: boolean;
+  isSpeciesSkill?: boolean | undefined;
   /** Optional source label (e.g. archetype path name). Table: shown only when isEditing (creator/allocation); hidden on sheet play view. */
-  sourceLabel?: string;
+  sourceLabel?: string | undefined;
   /** Is this skill locked (can't be edited)? */
-  isLocked?: boolean;
+  isLocked?: boolean | undefined;
   /** Is the skill unlocked/available? (for sub-skills that require base proficiency) */
-  isUnlocked?: boolean;
+  isUnlocked?: boolean | undefined;
   /** Lock message (e.g., "Requires base skill") */
-  lockMessage?: string;
+  lockMessage?: string | undefined;
 
   // ----- Styling -----
   /** Display variant */
-  variant?: 'table' | 'card' | 'compact';
+  variant?: 'table' | 'card' | 'compact' | undefined;
   /** Additional className */
-  className?: string;
+  className?: string | undefined;
 }
 
 // Constants imported from @/lib/constants/skills
@@ -128,8 +128,8 @@ function SkillNameLabel({
   compact,
 }: {
   name: string;
-  description?: string;
-  compact?: boolean;
+  description?: string | undefined;
+  compact?: boolean | undefined;
 }) {
   if (!description) return name;
   return (

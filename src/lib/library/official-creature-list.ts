@@ -50,7 +50,11 @@ export function buildOfficialCreatureRows(items: LibraryCreature[]): OfficialCre
 }
 
 export function filterOfficialCreatureRows<
-  T extends { name?: string; description?: string; type?: string },
+  T extends {
+    name?: string | undefined;
+    description?: string | undefined;
+    type?: string | undefined;
+  },
 >(rows: T[], search: string, sortItems: (items: T[]) => T[]): T[] {
   let result = rows;
   if (search) {

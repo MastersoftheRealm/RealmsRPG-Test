@@ -153,9 +153,9 @@ export interface SizeCategoryDef {
 export interface SizesRules {
   categories: SizeCategoryDef[];
   halfCapacitySpeedPenalty: string;
-  spaceAndShape?: string;
-  carryingNotes?: string;
-  movementThroughEnemySpaces?: string;
+  spaceAndShape?: string | undefined;
+  carryingNotes?: string | undefined;
+  movementThroughEnemySpaces?: string | undefined;
 }
 
 // ─── Rarities ─────────────────────────────────────────────────────────────
@@ -218,11 +218,11 @@ export interface SuccessesTableRow {
   delta: number;
   failureEffect: string;
   successEffect: string;
-  failureItemWorthPercent?: number;
-  successItemWorthPercent?: number;
-  materialsRetainedPercent?: number;
-  extraItemCount?: number;
-  choiceExtraItemOrEnhance?: boolean;
+  failureItemWorthPercent?: number | undefined;
+  successItemWorthPercent?: number | undefined;
+  materialsRetainedPercent?: number | undefined;
+  extraItemCount?: number | undefined;
+  choiceExtraItemOrEnhance?: boolean | undefined;
 }
 
 export interface EnhancedCraftingTableRow {
@@ -301,15 +301,15 @@ export interface CraftingRules {
   npcServiceFeeWithMaterials: number;
   bulkCraftCount: number;
   bulkCraftMaterialCount: number;
-  finerToolsBonus?: Record<string, number>;
+  finerToolsBonus?: Record<string, number> | undefined;
   /** Optional mechanics: reduce time by increasing difficulty */
-  optionalReduceTimeByDifficulty?: OptionalReduceTimeByDifficulty;
+  optionalReduceTimeByDifficulty?: OptionalReduceTimeByDifficulty | undefined;
   /** Optional mechanics: reduce time by increasing cost */
-  optionalReduceTimeByCost?: OptionalReduceTimeByCost;
+  optionalReduceTimeByCost?: OptionalReduceTimeByCost | undefined;
   /** Optional mechanics: reduce difficulty by spending more time */
-  optionalReduceDifficultyByTime?: OptionalReduceDifficultyByTime;
+  optionalReduceDifficultyByTime?: OptionalReduceDifficultyByTime | undefined;
   /** Optional mechanics: reduce difficulty by spending more resources */
-  optionalReduceDifficultyByCost?: OptionalReduceDifficultyByCost;
+  optionalReduceDifficultyByCost?: OptionalReduceDifficultyByCost | undefined;
 }
 
 // ─── Aggregate ────────────────────────────────────────────────────────────

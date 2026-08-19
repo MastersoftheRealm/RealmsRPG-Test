@@ -71,7 +71,7 @@ export async function listRealmsImageUsages(
     }
 
     for (const row of data ?? []) {
-      const r = row as { id: string; name?: string | null };
+      const r = row as { id: string; name?: string | null | undefined };
       usages.push({
         table: consumer.table,
         id: String(r.id),

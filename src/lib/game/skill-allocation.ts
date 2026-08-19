@@ -38,7 +38,7 @@ export const SPECIES_SKILL_COUNT = 2;
 /** Match species skill refs (codex id or name) to skill row ids on the character sheet. */
 export function buildSpeciesSkillIdSet(
   speciesSkillRefs: string[],
-  skills: Array<{ id?: string; name?: string }>,
+  skills: Array<{ id?: string | undefined; name?: string | undefined }>,
 ): Set<string> {
   const set = new Set<string>();
   for (const ref of speciesSkillRefs.filter((id) => id !== '0')) {
@@ -182,12 +182,12 @@ export function canIncreaseDefense(
 // =============================================================================
 
 type CharacterSheetSkillRow = {
-  id?: string;
-  skill_val?: number;
-  prof?: boolean;
-  baseSkill?: string;
-  baseSkillId?: number;
-  selectedBaseSkillId?: string;
+  id?: string | undefined;
+  skill_val?: number | undefined;
+  prof?: boolean | undefined;
+  baseSkill?: string | undefined;
+  baseSkillId?: number | undefined;
+  selectedBaseSkillId?: string | undefined;
 };
 
 /**

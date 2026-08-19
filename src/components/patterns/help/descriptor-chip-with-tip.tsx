@@ -17,9 +17,9 @@ import { cn } from '@/lib/utils';
 
 export interface DescriptorChipWithTipProps {
   chip: ChipData;
-  className?: string;
+  className?: string | undefined;
   /** DescriptorChip size — default sm for inline metadata. */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
 }
 
 /**

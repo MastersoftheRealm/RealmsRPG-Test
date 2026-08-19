@@ -103,8 +103,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const validation = await validateJson(request, encounterUpdateSchema);
     if (!validation.success) return validation.error;
-    const updates = validation.data as Partial<Omit<Encounter, 'id' | 'createdAt'>>;
-    const cleaned = removeUndefined(updates as Record<string, unknown>);
+    const cleaned = removeUndefined({ ...validation.data } as Record<string, unknown>);
     cleaned.updatedAt = new Date().toISOString();
 
     const current = (row.data as Record<string, unknown>) ?? {};

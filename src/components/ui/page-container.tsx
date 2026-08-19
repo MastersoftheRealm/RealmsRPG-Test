@@ -24,11 +24,11 @@ const sizeClasses: Record<ContainerSize, string> = {
 
 interface PageContainerProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Container max-width size */
-  size?: ContainerSize;
+  size?: ContainerSize | undefined;
   /** Whether to include vertical padding */
-  padded?: boolean;
+  padded?: boolean | undefined;
   /** Whether to center the container */
-  centered?: boolean;
+  centered?: boolean | undefined;
 }
 
 export function PageContainer({

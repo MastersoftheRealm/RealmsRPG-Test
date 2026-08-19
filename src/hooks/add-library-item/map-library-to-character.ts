@@ -7,7 +7,10 @@ export type LibraryToCharacterKind = 'power' | 'technique' | 'weapon' | 'armor' 
 
 export type LibraryToCharacterRaw = LibraryPower | LibraryTechnique | LibraryItem;
 
-export function libraryItemRowId(raw: { id?: string; docId?: string }): string {
+export function libraryItemRowId(raw: {
+  id?: string | undefined;
+  docId?: string | undefined;
+}): string {
   return String(raw.docId ?? raw.id ?? '');
 }
 
@@ -137,7 +140,7 @@ export function mergeLibraryAddOnConflict(
   kind: LibraryToCharacterKind,
   raw: LibraryToCharacterRaw,
   apply: (character: Character) => { character: Character },
-): { dirty: Partial<Character>; updatedAt?: string | Date | null } {
+): { dirty: Partial<Character>; updatedAt?: string | Date | null | undefined } {
   if (characterOwnsLibraryItem(remote, kind, libraryItemRowId(raw))) {
     return { dirty: {}, updatedAt: remote.updatedAt };
   }

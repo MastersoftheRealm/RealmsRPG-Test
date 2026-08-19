@@ -127,7 +127,7 @@ describe('buildGuidedCharacterPayload', () => {
     const lean = cleanForSave(payload as Character);
     expect(lean.proficiencies?.length).toBe(payload.proficiencies?.length);
     expect(lean.powers?.[0]).toMatchObject({ id: 'p1', name: 'Firebolt', innate: false });
-    expect((lean.powers?.[0] as { parts?: unknown })?.parts).toBeUndefined();
+    expect((lean.powers?.[0] as { parts?: unknown | undefined })?.parts).toBeUndefined();
   });
 
   it('resolves user-library weapon names by docId when saving', () => {
@@ -428,7 +428,10 @@ describe('buildGuidedCharacterPayload', () => {
         ],
       },
     );
-    const rows = payload.skills as unknown as Array<{ id?: string; ability?: string }>;
+    const rows = payload.skills as unknown as Array<{
+      id?: string | undefined;
+      ability?: string | undefined;
+    }>;
     expect(rows.find((s) => s.id === '30')?.ability).toBe('intelligence');
     expect(payload.defenseVals).toEqual({ ...DEFAULT_DEFENSE_SKILLS, reflex: 1 });
   });
@@ -445,7 +448,10 @@ describe('buildGuidedCharacterPayload', () => {
         ],
       },
     );
-    const rows = payload.skills as unknown as Array<{ id?: string; ability?: string }>;
+    const rows = payload.skills as unknown as Array<{
+      id?: string | undefined;
+      ability?: string | undefined;
+    }>;
     expect(rows.find((s) => s.id === '30')?.ability).toBe('intelligence');
   });
 

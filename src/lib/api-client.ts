@@ -23,7 +23,7 @@ function formatApiDetails(details: unknown): string | undefined {
 }
 
 function parseApiErrorBody(err: unknown, fallback: string): string {
-  const payload = err as { error?: string; details?: unknown };
+  const payload = err as { error?: string | undefined; details?: unknown | undefined };
   const details = formatApiDetails(payload.details);
   if (details) {
     return `${payload.error ?? fallback}: ${details}`;
@@ -62,7 +62,7 @@ export function getErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof Error && err.message.trim()) return err.message;
   if (typeof err === 'string' && err.trim()) return err;
   if (err && typeof err === 'object' && 'message' in err) {
-    const message = (err as { message?: unknown }).message;
+    const message = (err as { message?: unknown | undefined }).message;
     if (typeof message === 'string' && message.trim()) return message;
   }
   return fallback;

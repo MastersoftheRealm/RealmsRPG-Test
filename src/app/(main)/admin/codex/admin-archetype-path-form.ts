@@ -77,13 +77,13 @@ export function isFeatOrientedGuidanceGroup(g: PathGuidanceGroup): boolean {
 }
 
 export type CodexFeatLike = {
-  id?: string;
-  name?: string;
-  description?: string;
-  feat_lvl?: number;
-  base_feat_id?: string;
-  lvl_req?: number;
-  char_feat?: boolean;
+  id?: string | undefined;
+  name?: string | undefined;
+  description?: string | undefined;
+  feat_lvl?: number | undefined;
+  base_feat_id?: string | undefined;
+  lvl_req?: number | undefined;
+  char_feat?: boolean | undefined;
 };
 
 export type PathLevelForm = {

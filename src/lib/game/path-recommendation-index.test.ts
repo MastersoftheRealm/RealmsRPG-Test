@@ -228,7 +228,11 @@ describe('buildPathRecommendationIndex', () => {
 
   it('applies live path filter chips and keeps selected rows that miss the union', () => {
     const ids = pathRecommendedEntityIds(index, ['p-monk']);
-    type Row = { id: string; badges?: Array<{ label: string }>; showBadgesInName?: boolean };
+    type Row = {
+      id: string;
+      badges?: Array<{ label: string }> | undefined;
+      showBadgesInName?: boolean | undefined;
+    };
     const rows = applyLivePathFilter<Row>(
       [
         { id: '10', badges: [{ label: 'Path' }] },

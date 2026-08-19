@@ -73,7 +73,7 @@ export interface GuidedEquipmentL1PhaseProps {
   pool: PathItemRecommendation[];
   officialItems: LibraryItem[];
   codexEquipment: CodexEquipmentItem[];
-  armorOptional?: boolean;
+  armorOptional?: boolean | undefined;
   /** Remaining Currency after arms + current gear (PointStatus). */
   currencyRemaining: number;
   onDraftChange: (partial: Partial<GuidedDraft>) => void;

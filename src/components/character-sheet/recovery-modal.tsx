@@ -30,16 +30,16 @@ interface RecoveryModalProps {
   feats?: Array<{
     id: string | number;
     name: string;
-    currentUses?: number;
-    maxUses?: number;
-    recovery?: string; // 'Full' | 'Partial' | etc.
+    currentUses?: number | undefined;
+    maxUses?: number | undefined;
+    recovery?: string | undefined; // 'Full' | 'Partial' | etc.
   }>;
   /** Traits with uses that can be recovered */
   traits?: Array<{
     name: string;
-    currentUses?: number;
-    maxUses?: number;
-    recovery?: string; // 'Full' | 'Partial' | etc.
+    currentUses?: number | undefined;
+    maxUses?: number | undefined;
+    recovery?: string | undefined; // 'Full' | 'Partial' | etc.
   }>;
   onConfirmFullRecovery: () => void;
   onConfirmPartialRecovery: (

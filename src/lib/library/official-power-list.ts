@@ -133,19 +133,21 @@ export function officialPowerRowColumns(row: OfficialPowerRow): ColumnValue[] {
 
 export function filterOfficialPowerRows<
   T extends {
-    id?: string | number;
-    raw?: { id?: string | number | null; docId?: string | number | null };
-    name?: string;
-    description?: string;
-    categories?: string[];
-    energy?: string | number | null;
-    tp?: number | null;
-    action?: string | null;
-    actionTypeRaw?: string | null;
-    isReaction?: boolean;
-    partIds?: string[];
-    partNames?: string[];
-    category?: string;
+    id?: string | number | undefined;
+    raw?:
+      | { id?: string | number | null | undefined; docId?: string | number | null | undefined }
+      | undefined;
+    name?: string | undefined;
+    description?: string | undefined;
+    categories?: string[] | undefined;
+    energy?: string | number | null | undefined;
+    tp?: number | null | undefined;
+    action?: string | null | undefined;
+    actionTypeRaw?: string | null | undefined;
+    isReaction?: boolean | undefined;
+    partIds?: string[] | undefined;
+    partNames?: string[] | undefined;
+    category?: string | undefined;
   },
 >(
   rows: T[],

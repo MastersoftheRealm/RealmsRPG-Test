@@ -129,7 +129,9 @@ export function useAddLibraryItemData({
     // Callers pass type-scoped ids (CharacterSheetModals.existingIdsForAddModal).
     // Equipment gets an empty set so stackable gear stays selectable.
     return list
-      .filter((item) => !existingIds.has(String((item as { id?: string | number }).id ?? '')))
+      .filter(
+        (item) => !existingIds.has(String((item as { id?: string | number | undefined }).id ?? '')),
+      )
       .map((item) =>
         buildSelectableItem(
           item as UserPower | UserTechnique | UserItem | EqItem,
@@ -160,7 +162,8 @@ export function useAddLibraryItemData({
 
   const displayFilterFn = useMemo(
     () => (item: SelectableItem) =>
-      source === 'all' || (item.data as { _source?: 'my' | 'public' })?._source === source,
+      source === 'all' ||
+      (item.data as { _source?: 'my' | 'public' | undefined })?._source === source,
     [source],
   );
 

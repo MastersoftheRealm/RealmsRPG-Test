@@ -13,7 +13,7 @@ import { FILTER_CONTROL_CLASS } from './filter-utils';
 const FILTER_NATIVE_SELECT_CLASS = cn(FILTER_CONTROL_CLASS, 'appearance-none pr-10');
 
 type FilterNativeSelectProps = SelectHTMLAttributes<HTMLSelectElement> & {
-  wrapperClassName?: string;
+  wrapperClassName?: string | undefined;
 };
 
 export function FilterNativeSelect({

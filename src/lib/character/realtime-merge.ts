@@ -38,7 +38,7 @@ function overlayRemoteNonResource(
   prev: Record<string, unknown>,
   remoteData: Record<string, unknown>,
   dirtyKeys: readonly string[],
-  updatedAt?: string | Date | null,
+  updatedAt?: string | Date | null | undefined,
 ): Record<string, unknown> {
   const dirtySet = new Set(dirtyKeys);
   const stripped: Record<string, unknown> = {};
@@ -83,8 +83,8 @@ export function mergeSheetRealtimePayload(
   remoteData: Record<string, unknown>,
   baseline: Record<string, unknown> | null | undefined,
   options?: {
-    suppressResources?: boolean;
-    updatedAt?: string | Date | null;
+    suppressResources?: boolean | undefined;
+    updatedAt?: string | Date | null | undefined;
   },
 ): SheetRealtimeMerge {
   const prevRecord = prev as unknown as Record<string, unknown>;

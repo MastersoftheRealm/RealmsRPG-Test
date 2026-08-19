@@ -9,8 +9,8 @@ import type { Skill } from '@/hooks';
 /** Compatible with GridListRow ChipData (name, description, category). */
 export interface SkillExtraChip {
   name: string;
-  description?: string;
-  category?: 'default';
+  description?: string | undefined;
+  category?: 'default' | undefined;
 }
 
 export function getSkillExtraDescriptionDetailSections(

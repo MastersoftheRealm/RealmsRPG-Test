@@ -17,20 +17,20 @@ export interface ChipSelectOption {
   value: string;
   label: string;
   /** Optional `<optgroup>` label — set on every option to group a long list (e.g. path types). */
-  group?: string;
+  group?: string | undefined;
 }
 
 interface ChipSelectProps {
   label: string;
-  placeholder?: string;
+  placeholder?: string | undefined;
   options: ChipSelectOption[];
   selectedValues: string[];
   onSelect: (value: string) => void;
   /** Required when selectedValues is non-empty (chip remove buttons). Omit for pick-only. */
-  onRemove?: (value: string) => void;
+  onRemove?: ((value: string) => void) | undefined;
   /** Optional control beside the label (e.g. InfoTippy). */
-  labelAccessory?: ReactNode;
-  className?: string;
+  labelAccessory?: ReactNode | undefined;
+  className?: string | undefined;
 }
 
 export function ChipSelect({

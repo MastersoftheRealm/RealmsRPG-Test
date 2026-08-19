@@ -13,7 +13,7 @@ export const FEAT_HEADER_COLUMNS = [
 export interface SelectedFeat {
   id: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
   type: 'archetype' | 'character';
 }
 

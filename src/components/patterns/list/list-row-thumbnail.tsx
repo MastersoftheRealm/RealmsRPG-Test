@@ -13,8 +13,8 @@ import { ExpandableImage } from '../help/expandable-image';
 export interface ListRowThumbnailProps {
   src: string;
   alt: string;
-  isPlaceholder?: boolean;
-  className?: string;
+  isPlaceholder?: boolean | undefined;
+  className?: string | undefined;
 }
 
 export function ListRowThumbnail({

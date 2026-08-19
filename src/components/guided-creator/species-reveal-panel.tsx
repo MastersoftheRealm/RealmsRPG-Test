@@ -45,17 +45,17 @@ const copy = GUIDED_CREATOR_COPY.steps.ancestry.speciesOverview;
 export interface SpeciesRevealPanelProps {
   species: Species;
   allTraits: Trait[];
-  className?: string;
-  selectedSize?: string | null;
-  onSizeChange?: (size: string) => void;
+  className?: string | undefined;
+  selectedSize?: string | null | undefined;
+  onSizeChange?: ((size: string) => void) | undefined;
   /**
    * Deep-dive modal mode (TASK-433): no size picker; multi-size shown as vitals text;
    * optional title hide (modal already titles the entity). Granted traits stay GLR
    * rows in this mode (TASK-711 cards are Ancestry overview only).
    */
-  readOnlyDetail?: boolean;
+  readOnlyDetail?: boolean | undefined;
   /** Hide the “Choices ahead” teaser when option catalogs are listed below. */
-  hideChoiceTeaser?: boolean;
+  hideChoiceTeaser?: boolean | undefined;
 }
 
 function formatSizes(species: Species): string | null {

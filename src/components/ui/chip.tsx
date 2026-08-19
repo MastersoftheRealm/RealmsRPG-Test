@@ -127,7 +127,7 @@ const chipVariants = cva(
 
 export interface ChipProps
   extends React.HTMLAttributes<HTMLSpanElement>, VariantProps<typeof chipVariants> {
-  onRemove?: () => void;
+  onRemove?: (() => void) | undefined;
 }
 
 const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
@@ -162,8 +162,8 @@ export type { DescriptorChipSizeProp as DescriptorChipSize } from '@/lib/chip/ch
 const DescriptorChip = React.forwardRef<
   HTMLSpanElement,
   Omit<ChipProps, 'shape' | 'interactive' | 'size'> & {
-    shape?: ChipProps['shape'];
-    size?: DescriptorChipSizeProp;
+    shape?: ChipProps['shape'] | undefined;
+    size?: DescriptorChipSizeProp | undefined;
   }
 >(({ variant = 'descriptor', shape = 'rounded', size = 'sm', ...props }, ref) => (
   <Chip

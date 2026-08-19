@@ -32,7 +32,7 @@ function GuidanceSection({
 }: {
   title: string;
   items: string[];
-  variant?: 'add' | 'remove';
+  variant?: 'add' | 'remove' | undefined;
 }) {
   if (items.length === 0) return null;
   return (
@@ -58,9 +58,9 @@ function GuidanceSection({
 export interface PathRemoveGuidanceProps {
   archetype: CharacterArchetype | undefined;
   targetLevel: number;
-  pathName?: string;
+  pathName?: string | undefined;
   /** Compact layout for sheet header (no outer card chrome). */
-  compact?: boolean;
+  compact?: boolean | undefined;
 }
 
 export function PathRemoveGuidance({
@@ -162,7 +162,7 @@ export function PathRemoveGuidance({
 
 export interface PathLevelGuidanceProps {
   archetype: CharacterArchetype | undefined;
-  pathName?: string;
+  pathName?: string | undefined;
   targetLevel: number;
 }
 

@@ -87,7 +87,9 @@ describe('GET /api/codex', () => {
 
     const archetype = body.archetypes?.[0];
     expect(archetype?.name).toBe('Guardian');
-    const pathData = archetype?.path_data as { levels?: { level?: number }[] } | undefined;
+    const pathData = archetype?.path_data as
+      | { levels?: { level?: number | undefined }[] }
+      | undefined;
     expect(pathData?.levels?.[0]?.level).toBe(2);
   });
 

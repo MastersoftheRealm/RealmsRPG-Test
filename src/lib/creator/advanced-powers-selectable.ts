@@ -24,8 +24,8 @@ import { TRAINING_POINTS_COST_LABEL } from '@/lib/detail-option/compact-facts';
 export type { WithSource };
 
 type PathSelectableOptions = {
-  selectedIds?: Set<string>;
-  pathName?: string;
+  selectedIds?: Set<string> | undefined;
+  pathName?: string | undefined;
 };
 
 /** Tag library rows with source for USM SourceFilter merge-by-source. */
@@ -38,7 +38,7 @@ export function mergeLibraryWithSource<T>(mine: T[], pub: T[]): WithSource<T>[] 
 
 /** Deduplicate by docId/id (first wins). */
 export function dedupeByDocId<
-  T extends { docId?: string | number | null; id?: string | number | null },
+  T extends { docId?: string | number | null | undefined; id?: string | number | null | undefined },
 >(list: T[]): T[] {
   const seen = new Set<string>();
   return list.filter((item) => {
@@ -51,7 +51,7 @@ export function dedupeByDocId<
 
 /** Merged user+public pool for selected-item lookup (persists across tab/source). */
 export function mergeLookupPool<
-  T extends { docId?: string | number | null; id?: string | number | null },
+  T extends { docId?: string | number | null | undefined; id?: string | number | null | undefined },
 >(mine: T[], pub: T[]): T[] {
   return dedupeByDocId([...mine, ...pub]);
 }

@@ -91,7 +91,11 @@ function PartCard({ part }: { part: Part }) {
     });
   }
 
-  const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> = [
+  const detailSections: Array<{
+    label: string;
+    chips: ChipData[];
+    hideLabelIfSingle?: boolean | undefined;
+  }> = [
     { label: 'Type', chips: typeChips, hideLabelIfSingle: true },
     ...(optionChips.length > 0 ? [{ label: 'Options', chips: optionChips }] : []),
   ];
@@ -123,7 +127,11 @@ interface PartFilters {
   mechanicMode: 'all' | 'only' | 'hide';
 }
 
-export function CodexPartsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+export function CodexPartsTab({
+  codexMode = 'public',
+}: {
+  codexMode?: 'public' | 'my' | undefined;
+}) {
   const loadPublicCodex = codexMode === 'public';
   const { data: parts, isLoading, error, refetch } = useParts({ enabled: loadPublicCodex });
   const { sortState, handleSort } = useSort('name');

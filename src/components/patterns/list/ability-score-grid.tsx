@@ -34,24 +34,24 @@ export const ABILITY_DISPLAY_INFO: Record<AbilityName, { name: string; shortName
 
 export interface AbilityScoreGridProps {
   abilities: Abilities;
-  powerAbility?: AbilityName;
-  martialAbility?: AbilityName;
+  powerAbility?: AbilityName | undefined;
+  martialAbility?: AbilityName | undefined;
   /** Path Secondary Ability — UI label for optional recommended ability (pill when distinct from power/martial Archetype Abilities). */
-  secondaryAbility?: AbilityName;
-  mode?: 'display' | 'edit';
-  onAbilityChange?: (ability: AbilityName, value: number) => void;
-  canIncrease?: (ability: AbilityName) => boolean;
-  canDecrease?: (ability: AbilityName) => boolean;
+  secondaryAbility?: AbilityName | undefined;
+  mode?: 'display' | 'edit' | undefined;
+  onAbilityChange?: ((ability: AbilityName, value: number) => void) | undefined;
+  canIncrease?: ((ability: AbilityName) => boolean) | undefined;
+  canDecrease?: ((ability: AbilityName) => boolean) | undefined;
   /** Show "Next: N Points" under a tile when the next increase costs > 1. */
-  getIncreaseCost?: (ability: AbilityName) => number;
+  getIncreaseCost?: ((ability: AbilityName) => number) | undefined;
   /**
    * Compact tiles for read-only overviews (e.g. Path More details recommended abilities).
    * Edit mode ignores compact (steppers need default space).
    */
-  density?: 'default' | 'compact';
+  density?: 'default' | 'compact' | undefined;
   /** When set, only render these abilities (order follows ABILITY_DISPLAY_ORDER). */
-  onlyAbilities?: AbilityName[];
-  className?: string;
+  onlyAbilities?: AbilityName[] | undefined;
+  className?: string | undefined;
 }
 
 type PathAbilityRole = 'power' | 'martial' | 'secondary';

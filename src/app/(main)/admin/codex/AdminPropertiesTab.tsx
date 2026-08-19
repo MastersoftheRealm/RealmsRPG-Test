@@ -140,7 +140,7 @@ export function AdminPropertiesTab() {
 
     setSaving(false);
     if (result.success) {
-      const savedId = editing ? editing.id : (result as { id?: string }).id;
+      const savedId = editing ? editing.id : (result as { id?: string | undefined }).id;
       if (!savedId) {
         showToast('Save succeeded but no ID was returned. Please refresh.', 'warning');
         closeModal();

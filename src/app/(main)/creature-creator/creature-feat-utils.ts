@@ -10,8 +10,8 @@ import type { CreatureFeat } from './transformers';
 
 export function creatureSkillsToFeatReqRecord(
   skills: CreatureSkill[],
-): Record<string, { prof?: boolean; val?: number }> {
-  const out: Record<string, { prof?: boolean; val?: number }> = {};
+): Record<string, { prof?: boolean | undefined; val?: number | undefined }> {
+  const out: Record<string, { prof?: boolean | undefined; val?: number | undefined }> = {};
   skills.forEach((s) => {
     const entry = { prof: s.proficient, val: s.value };
     if (s.id) out[String(s.id)] = entry;
@@ -40,8 +40,8 @@ export function creatureToFeatRequirementCharacter(
 }
 
 export function creaturePointsForPlayerFeat(feat: {
-  char_feat?: boolean;
-  feat_lvl?: number;
+  char_feat?: boolean | undefined;
+  feat_lvl?: number | undefined;
 }): number {
   const lvl = feat.feat_lvl != null && feat.feat_lvl > 0 ? feat.feat_lvl : 1;
   return feat.char_feat ? 0.5 * lvl : 1 * lvl;

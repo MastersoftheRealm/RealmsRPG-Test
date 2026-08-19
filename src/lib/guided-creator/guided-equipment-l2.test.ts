@@ -389,7 +389,7 @@ describe('guided-equipment-l2', () => {
   });
 
   it('gear Confirm rejects over-budget quantity; empty selection clears gear (DEV-V-013-T052)', () => {
-    const overBudgetSelection: Array<SelectableItem & { quantity?: number }> = [
+    const overBudgetSelection: Array<SelectableItem & { quantity?: number | undefined }> = [
       {
         id: 'g1',
         name: 'Rope',

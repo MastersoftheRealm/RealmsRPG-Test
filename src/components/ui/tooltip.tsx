@@ -24,14 +24,14 @@ import { renderMarkdownLite } from '@/lib/tooltips/markdown-lite';
 import type { TooltipPlacement, TooltipTrigger } from '@/types/tooltips';
 
 interface TooltipProps {
-  title?: string | null;
+  title?: string | null | undefined;
   content: ReactNode;
-  placement?: TooltipPlacement;
-  trigger?: TooltipTrigger;
-  className?: string;
-  contentClassName?: string;
-  disabled?: boolean;
-  children: ReactElement<{ className?: string }>;
+  placement?: TooltipPlacement | undefined;
+  trigger?: TooltipTrigger | undefined;
+  className?: string | undefined;
+  contentClassName?: string | undefined;
+  disabled?: boolean | undefined;
+  children: ReactElement<{ className?: string | undefined }>;
 }
 
 function hasTooltipContent(content: ReactNode): boolean {
@@ -45,9 +45,9 @@ function TooltipBody({
   content,
   className,
 }: {
-  title?: string | null;
+  title?: string | null | undefined;
   content: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <div className={cn('text-text-primary', className)}>
@@ -100,8 +100,8 @@ export function Tooltip({
 function FloatingTooltip({
   title,
   content,
-  placement,
-  trigger,
+  placement = 'top',
+  trigger = 'auto',
   className,
   contentClassName,
   children,

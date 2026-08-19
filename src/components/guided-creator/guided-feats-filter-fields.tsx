@@ -26,7 +26,10 @@ export interface GuidedFeatsFilterFieldsProps {
   onRemoveCategory: (value: string) => void;
   stateFeatMode: StateFeatFilterMode;
   onStateFeatModeChange: (value: StateFeatFilterMode) => void;
-  pathFilter?: Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'> | null;
+  pathFilter?:
+    | Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'>
+    | null
+    | undefined;
 }
 
 export function GuidedFeatsFilterFields({

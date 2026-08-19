@@ -7,7 +7,7 @@ import { ChevronDown } from 'lucide-react';
 
 interface StatBlockSectionProps {
   title: string;
-  defaultExpanded?: boolean;
+  defaultExpanded?: boolean | undefined;
   children: React.ReactNode;
 }
 

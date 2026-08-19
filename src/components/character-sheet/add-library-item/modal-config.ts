@@ -12,7 +12,7 @@ export function getModalGridColumns(itemType: AddLibraryItemType): string {
 
 export function getListHeaderColumns(
   itemType: AddLibraryItemType,
-): { key: string; label: string; sortable?: boolean }[] {
+): { key: string; label: string; sortable?: boolean | undefined }[] {
   return getSharedListHeaderColumns(itemType as LibraryItemType).map(
     ({ key, label, sortable }) => ({
       key,

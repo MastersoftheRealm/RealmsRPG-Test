@@ -56,7 +56,11 @@ interface FeatFilters extends FeatListFilters {
   stateFeatMode: 'all' | 'only' | 'hide';
 }
 
-export function CodexFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+export function CodexFeatsTab({
+  codexMode = 'public',
+}: {
+  codexMode?: 'public' | 'my' | undefined;
+}) {
   const loadPublicCodex = codexMode === 'public';
   const { data: feats, isLoading, error, refetch } = useCodexFeats({ enabled: loadPublicCodex });
   const { data: skills = [] } = useCodexSkills({ enabled: loadPublicCodex });

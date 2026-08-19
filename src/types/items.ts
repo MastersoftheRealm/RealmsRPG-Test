@@ -9,7 +9,7 @@
 export interface BaseGameItem {
   id: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
 }
 
 // Display-ready item for unified rendering
@@ -18,36 +18,36 @@ export interface DisplayItem extends BaseGameItem {
   [key: string]: unknown;
 
   // Core display fields
-  subtitle?: string;
-  category?: string;
-  type?: string;
+  subtitle?: string | undefined;
+  category?: string | undefined;
+  type?: string | undefined;
 
   // Cost/value fields
-  cost?: number | string;
-  costLabel?: string;
-  secondaryCost?: number | string;
-  secondaryCostLabel?: string;
+  cost?: number | string | undefined;
+  costLabel?: string | undefined;
+  secondaryCost?: number | string | undefined;
+  secondaryCostLabel?: string | undefined;
 
   // Tags and badges
-  tags?: string[];
-  badges?: ItemBadge[];
+  tags?: string[] | undefined;
+  badges?: ItemBadge[] | undefined;
 
   // Stats for quick display
-  stats?: ItemStat[];
+  stats?: ItemStat[] | undefined;
 
   // Extended details for expanded view
-  details?: ItemDetail[];
+  details?: ItemDetail[] | undefined;
 
   // Requirements
-  requirements?: ItemRequirement[];
+  requirements?: ItemRequirement[] | undefined;
 
   // Selection state (for use in selectors)
-  isSelected?: boolean;
-  isDisabled?: boolean;
-  disabledReason?: string;
+  isSelected?: boolean | undefined;
+  isDisabled?: boolean | undefined;
+  disabledReason?: string | undefined;
 
   // Source data for editing/saving (creature creator stores typed payloads)
-  sourceData?: unknown;
+  sourceData?: unknown | undefined;
 }
 
 export interface ItemBadge {
@@ -58,7 +58,7 @@ export interface ItemBadge {
 export interface ItemStat {
   label: string;
   value: string | number;
-  icon?: string;
+  icon?: string | undefined;
 }
 
 export interface ItemDetail {
@@ -69,7 +69,7 @@ export interface ItemDetail {
 export interface ItemRequirement {
   type: 'ability' | 'skill' | 'level' | 'feat' | 'other';
   name: string;
-  value?: number;
+  value?: number | undefined;
   met: boolean;
 }
 
@@ -78,8 +78,8 @@ export interface FilterOption {
   id: string;
   label: string;
   type: 'text' | 'select' | 'multiselect' | 'checkbox' | 'range';
-  options?: { value: string; label: string }[];
-  placeholder?: string;
+  options?: { value: string; label: string }[] | undefined;
+  placeholder?: string | undefined;
 }
 
 export interface SortOption {
@@ -119,18 +119,18 @@ export type ItemTransformer<T> = (item: T, context?: TransformContext) => Displa
 
 export interface TransformContext {
   // Reference data needed for calculations
-  parts?: Record<string, unknown>[];
-  properties?: Record<string, unknown>[];
+  parts?: Record<string, unknown>[] | undefined;
+  properties?: Record<string, unknown>[] | undefined;
 
   // Character context for requirement checking
-  characterLevel?: number;
-  characterAbilities?: Record<string, number>;
-  characterSkills?: Record<string, number>;
+  characterLevel?: number | undefined;
+  characterAbilities?: Record<string, number> | undefined;
+  characterSkills?: Record<string, number> | undefined;
 
   // Selection context
-  selectedIds?: Set<string>;
-  maxSelections?: number;
-  currentSelectionCount?: number;
+  selectedIds?: Set<string> | undefined;
+  maxSelections?: number | undefined;
+  currentSelectionCount?: number | undefined;
 }
 
 // List mode types
@@ -141,10 +141,10 @@ export type ListMode =
 
 // Action callbacks
 export interface ItemActions {
-  onSelect?: (item: DisplayItem) => void;
-  onDeselect?: (item: DisplayItem) => void;
-  onEdit?: (item: DisplayItem) => void;
-  onDelete?: (item: DisplayItem) => void;
-  onView?: (item: DisplayItem) => void;
-  onDuplicate?: (item: DisplayItem) => void;
+  onSelect?: ((item: DisplayItem) => void) | undefined;
+  onDeselect?: ((item: DisplayItem) => void) | undefined;
+  onEdit?: ((item: DisplayItem) => void) | undefined;
+  onDelete?: ((item: DisplayItem) => void) | undefined;
+  onView?: ((item: DisplayItem) => void) | undefined;
+  onDuplicate?: ((item: DisplayItem) => void) | undefined;
 }

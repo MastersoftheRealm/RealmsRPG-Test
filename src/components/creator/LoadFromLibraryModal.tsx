@@ -15,23 +15,23 @@ import {
 
 export interface LoadFromLibraryModalProps {
   selectableItems: SelectableItem[];
-  columns: Array<{ key: string; label: string; sortable?: boolean }>;
+  columns: Array<{ key: string; label: string; sortable?: boolean | undefined }>;
   gridColumns: string;
   onSelect: (selectedItem: SelectableItem) => void;
   isLoading: boolean;
-  error?: Error | null;
+  error?: Error | null | undefined;
   isOpen: boolean;
   onClose: () => void;
   title: string;
   /** Always-visible primary mode chrome (pass-through to UnifiedSelectionModal). */
-  scopeExtra?: ReactNode;
+  scopeExtra?: ReactNode | undefined;
   /** Secondary chrome (e.g. SourceFilter) — collapsed under Filters in UnifiedSelectionModal. */
-  headerExtra?: ReactNode;
-  optionsSummary?: ReactNode;
-  optionsActiveCount?: number;
-  emptyMessage?: string;
-  emptySubMessage?: string;
-  searchPlaceholder?: string;
+  headerExtra?: ReactNode | undefined;
+  optionsSummary?: ReactNode | undefined;
+  optionsActiveCount?: number | undefined;
+  emptyMessage?: string | undefined;
+  emptySubMessage?: string | undefined;
+  searchPlaceholder?: string | undefined;
 }
 
 export function LoadFromLibraryModal({

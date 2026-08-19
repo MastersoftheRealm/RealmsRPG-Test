@@ -39,13 +39,13 @@ export const EMPTY_ARMAMENT_FILTERS: ArmamentFilterState = {
 export type ArmamentFilterProfile = 'armament' | 'equipment';
 
 export interface ArmamentFilterableRow {
-  currency?: number | null;
-  tp?: number | null;
-  rarity?: string | null;
+  currency?: number | null | undefined;
+  tp?: number | null | undefined;
+  rarity?: string | null | undefined;
   /** Parsed ability requirement (preferred when building rows). */
-  abilityReq?: AbilityRequirement | null;
+  abilityReq?: AbilityRequirement | null | undefined;
   /** Raw properties when abilityReq not precomputed. */
-  properties?: WeaponPropertyRef[];
+  properties?: WeaponPropertyRef[] | undefined;
 }
 
 function rowCurrency(row: ArmamentFilterableRow): number {

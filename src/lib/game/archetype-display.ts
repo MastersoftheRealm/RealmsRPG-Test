@@ -28,8 +28,14 @@ export function formatArchetypeCategoryName(type?: string): string | null {
 export function resolveArchetypeDisplayName(
   data:
     | {
-        archetypePathId?: string;
-        archetype?: { id?: string; name?: string; type?: string };
+        archetypePathId?: string | undefined;
+        archetype?:
+          | {
+              id?: string | undefined;
+              name?: string | undefined;
+              type?: string | undefined;
+            }
+          | undefined;
       }
     | undefined,
   codexNameById?: Map<string, string>,

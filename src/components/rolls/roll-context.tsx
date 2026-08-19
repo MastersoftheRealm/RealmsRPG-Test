@@ -28,9 +28,9 @@ export interface RollEntry {
   dice: DieResult[];
   modifier: number;
   total: number;
-  isCrit?: boolean;
-  isCritFail?: boolean;
-  critMessage?: string;
+  isCrit?: boolean | undefined;
+  isCritFail?: boolean | undefined;
+  critMessage?: string | undefined;
   timestamp: Date;
 }
 
@@ -44,7 +44,7 @@ interface RollContextValue {
   // Roll history
   rolls: RollEntry[];
   /** When set, roll log can switch to campaign mode */
-  campaignContext?: CampaignRollContext | null;
+  campaignContext?: CampaignRollContext | null | undefined;
   /** When false (e.g. viewing another user's character), rolling is disabled and roll UI should be hidden */
   canRoll: boolean;
 
@@ -76,11 +76,11 @@ export function RollProvider({
   canRoll = true,
 }: {
   children: React.ReactNode;
-  maxHistory?: number;
+  maxHistory?: number | undefined;
   /** When set, rolls are also written to campaign roll log */
-  campaignContext?: CampaignRollContext;
+  campaignContext?: CampaignRollContext | undefined;
   /** When false, roll functions are no-ops and roll UI should be hidden (e.g. viewing another user's character) */
-  canRoll?: boolean;
+  canRoll?: boolean | undefined;
 }) {
   const queryClient = useQueryClient();
   const [rolls, setRolls] = useState<RollEntry[]>(() => {

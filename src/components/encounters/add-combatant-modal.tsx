@@ -43,7 +43,7 @@ export interface AddCombatantModalProps {
   onClose: () => void;
   onAdd: (combatants: TrackedCombatant[]) => void;
   /** For skill mode, also provide onAddParticipants */
-  onAddParticipants?: (participants: SkillParticipant[]) => void;
+  onAddParticipants?: ((participants: SkillParticipant[]) => void) | undefined;
   /** Mixed encounter pages reuse combat/skill views — pass those modes, not a third value. */
   mode: 'combat' | 'skill';
 }
@@ -113,7 +113,7 @@ function CreatureLibraryTab({
   onClose,
 }: {
   onAdd: (combatants: TrackedCombatant[]) => void;
-  onAddParticipants?: (participants: SkillParticipant[]) => void;
+  onAddParticipants?: ((participants: SkillParticipant[]) => void) | undefined;
   mode: string;
   onClose: () => void;
 }) {
@@ -298,7 +298,7 @@ function CampaignCharactersTab({
   onClose,
 }: {
   onAdd: (combatants: TrackedCombatant[]) => void;
-  onAddParticipants?: (participants: SkillParticipant[]) => void;
+  onAddParticipants?: ((participants: SkillParticipant[]) => void) | undefined;
   mode: string;
   onClose: () => void;
 }) {

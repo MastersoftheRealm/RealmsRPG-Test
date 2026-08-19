@@ -13,11 +13,11 @@ export interface SegmentedOption<T extends string = string> {
   value: T;
   label: string;
   /** Optional id for aria-labelledby / tab semantics */
-  id?: string;
+  id?: string | undefined;
   /** Optional leading icon (e.g. Lucide) */
-  icon?: ReactNode;
+  icon?: ReactNode | undefined;
   /** When true, segment is non-interactive and visually muted */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }
 
 export interface SegmentedControlProps<T extends string> {
@@ -26,18 +26,18 @@ export interface SegmentedControlProps<T extends string> {
   options: SegmentedOption<T>[];
   /** Accessible name for the control group */
   'aria-label': string;
-  className?: string;
+  className?: string | undefined;
   /** When true, uses tablist/tab roles (e.g. feat source tabs in a modal) */
-  tabs?: boolean;
+  tabs?: boolean | undefined;
   /** When tabs: element id of the associated panel (shared panel is ok) */
-  tabPanelId?: string;
+  tabPanelId?: string | undefined;
   /** Stretch segments equally (e.g. two-column modal header) */
-  equalWidth?: boolean;
+  equalWidth?: boolean | undefined;
   /**
    * `default` matches SourceFilter / Library chrome (44px segments).
    * `compact` is for dense sheet toolbars: text-hugging on md+, 44px below md (TASK-778).
    */
-  size?: 'default' | 'compact';
+  size?: 'default' | 'compact' | undefined;
 }
 
 export function SegmentedControl<T extends string>({

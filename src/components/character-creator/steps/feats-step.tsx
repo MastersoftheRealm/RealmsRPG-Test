@@ -144,7 +144,7 @@ export function FeatsStep() {
 
   // Check if character meets feat requirements (shared single source of truth)
   const checkRequirements = useCallback(
-    (feat: Feat): { met: boolean; reason?: string } => {
+    (feat: Feat): { met: boolean; reason?: string | undefined } => {
       const character: CharacterForFeatRequirement = {
         level: draft.level,
         abilities: draft.abilities,

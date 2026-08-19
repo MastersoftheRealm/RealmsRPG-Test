@@ -39,8 +39,8 @@ export interface TechniqueCreatorCache {
   isReaction: boolean;
   damage: TechniqueDamageConfig;
   attackMode: AttackMode;
-  imageId?: string | null;
-  imageUrl?: string | null;
+  imageId?: string | null | undefined;
+  imageUrl?: string | null | undefined;
   timestamp: number;
 }
 
@@ -57,22 +57,22 @@ export interface TechniqueCreatorFormState {
 }
 
 export type TechniqueLibraryRecord = {
-  name?: string;
-  description?: string;
-  parts?: unknown;
-  techniqueParts?: unknown;
-  actionType?: string;
-  actionTypeSelection?: string;
-  isReaction?: boolean;
-  reaction?: boolean;
-  attackMode?: unknown;
-  weapon?: { id?: string | number; name?: string };
-  weaponName?: string;
-  damage?: unknown;
-  imageId?: string | null;
-  image_id?: string | null;
-  imageUrl?: string | null;
-  image_url?: string | null;
+  name?: string | undefined;
+  description?: string | undefined;
+  parts?: unknown | undefined;
+  techniqueParts?: unknown | undefined;
+  actionType?: string | undefined;
+  actionTypeSelection?: string | undefined;
+  isReaction?: boolean | undefined;
+  reaction?: boolean | undefined;
+  attackMode?: unknown | undefined;
+  weapon?: { id?: string | number | undefined; name?: string | undefined } | undefined;
+  weaponName?: string | undefined;
+  damage?: unknown | undefined;
+  imageId?: string | null | undefined;
+  image_id?: string | null | undefined;
+  imageUrl?: string | null | undefined;
+  image_url?: string | null | undefined;
 };
 
 export function emptyTechniqueCreatorFormState(): TechniqueCreatorFormState {
@@ -127,11 +127,11 @@ export function techniqueLibraryRecordToFormState(
   techniqueParts: TechniquePart[],
 ): TechniqueCreatorFormState {
   const savedParts = (technique.parts || technique.techniqueParts || []) as Array<{
-    id?: number | string;
-    name?: string;
-    op_1_lvl?: number;
-    op_2_lvl?: number;
-    op_3_lvl?: number;
+    id?: number | string | undefined;
+    name?: string | undefined;
+    op_1_lvl?: number | undefined;
+    op_2_lvl?: number | undefined;
+    op_3_lvl?: number | undefined;
   }>;
 
   // Skip mechanic-only parts when loading; these are auto-generated from
@@ -162,7 +162,13 @@ export function techniqueLibraryRecordToFormState(
   // tolerate both the array form and a legacy single-object form.
   const rawDamage = Array.isArray(technique.damage) ? technique.damage[0] : technique.damage;
   const d = rawDamage as
-    | { amount?: number; dice?: number; size?: number; sides?: number; type?: string }
+    | {
+        amount?: number | undefined;
+        dice?: number | undefined;
+        size?: number | undefined;
+        sides?: number | undefined;
+        type?: string | undefined;
+      }
     | undefined;
   const damage: TechniqueDamageConfig = d
     ? {
@@ -196,7 +202,7 @@ export function bootstrapTechniqueCreatorFormState(options: {
 
   if (editTechniqueId) {
     const techniqueToEdit = rawItems.find((t) => {
-      const row = t as { docId?: string; id?: string };
+      const row = t as { docId?: string | undefined; id?: string | undefined };
       return String(row.docId) === editTechniqueId || String(row.id) === editTechniqueId;
     });
     if (!techniqueToEdit) {

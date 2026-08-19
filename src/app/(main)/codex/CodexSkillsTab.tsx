@@ -44,7 +44,11 @@ import {
 const SKILL_CHARACTER_FILTER_HELP =
   'Filter this list by a character you own. Optionally keep only skills they know, skills they do not know, or sub-skills for a base skill they have.';
 
-export function CodexSkillsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+export function CodexSkillsTab({
+  codexMode = 'public',
+}: {
+  codexMode?: 'public' | 'my' | undefined;
+}) {
   const loadPublicCodex = codexMode === 'public';
   const { data: skills, isLoading, error, refetch } = useCodexSkills({ enabled: loadPublicCodex });
   const { sortState, handleSort, sortItems } = useSort('name');

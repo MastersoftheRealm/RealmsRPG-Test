@@ -80,12 +80,15 @@ function toVersion(val: unknown): string | undefined {
   return typeof val === 'string' && val ? val : undefined;
 }
 
-function withRowVersion<T extends object>(mapped: T, r: Row): T & { updated_at?: string } {
+function withRowVersion<T extends object>(
+  mapped: T,
+  r: Row,
+): T & { updated_at?: string | undefined } {
   const updated_at = toVersion(r.updated_at);
   return updated_at ? { ...mapped, updated_at } : { ...mapped };
 }
 
-type TableError = { message?: string; code?: string } | null;
+type TableError = { message?: string | undefined; code?: string | undefined } | null;
 type TableResult = { data: Row[] | null; error: TableError };
 
 /** Skipped tables resolve empty so the mapping below stays one code path. */
@@ -136,7 +139,9 @@ async function fetchCodexFromClient(
   ]);
 
   /** If table is missing (e.g. codex_* still in codex schema), treat as empty instead of 500. Run sql/path-c-phase0-consolidate-to-public-part1c.sql to move codex_* to public. */
-  function isTableMissing(e: { message?: string; code?: string } | null): boolean {
+  function isTableMissing(
+    e: { message?: string | undefined; code?: string | undefined } | null,
+  ): boolean {
     if (!e) return false;
     return e.code === '42P01' || /does not exist|relation.*not found/i.test(e.message ?? '');
   }
@@ -160,11 +165,11 @@ async function fetchCodexFromClient(
     }
   });
   const firstRealError = errors.find((e) => e && !isTableMissing(e)) as
-    | { message?: string; code?: string }
+    | { message?: string | undefined; code?: string | undefined }
     | undefined;
   if (firstRealError) {
     const err = new Error(firstRealError.message ?? 'Codex fetch failed') as Error & {
-      code?: string;
+      code?: string | undefined;
     };
     err.code = firstRealError.code;
     throw err;
@@ -370,7 +375,7 @@ export async function GET(request: Request) {
     const message = err instanceof Error ? err.message : 'Unknown database error';
     const code =
       err && typeof err === 'object' && 'code' in err
-        ? String((err as { code?: string }).code)
+        ? String((err as { code?: string | undefined }).code)
         : undefined;
     const stack = err instanceof Error ? err.stack : undefined;
     logApiError('GET /api/codex', { message, code, stack, err });

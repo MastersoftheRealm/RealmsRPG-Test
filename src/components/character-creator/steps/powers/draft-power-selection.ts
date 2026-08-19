@@ -4,12 +4,12 @@ import type { PowerPart, TechniquePart } from '@/hooks';
 import type { CharacterPower, CharacterTechnique } from '@/types';
 
 type SavedPart = {
-  id?: string | number;
-  name?: string;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
-  applyDuration?: boolean;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
+  applyDuration?: boolean | undefined;
 };
 
 function enrichPowerParts(savedParts: SavedPart[], powerParts: PowerPart[] | undefined | null) {

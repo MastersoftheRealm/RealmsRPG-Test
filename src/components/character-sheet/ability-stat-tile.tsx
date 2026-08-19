@@ -37,17 +37,17 @@ export function AbilityStatTile({
   ability: AbilityName;
   abilities: Abilities;
   level: number;
-  powerAbility?: AbilityName;
-  martialAbility?: AbilityName;
-  tempModifiers?: CharacterTempModifiers;
+  powerAbility?: AbilityName | undefined;
+  martialAbility?: AbilityName | undefined;
+  tempModifiers?: CharacterTempModifiers | undefined;
   showSpendControls: boolean;
   showTempControls: boolean;
   showEditControls: boolean;
   maxAbility: number;
   abilityRemaining: number;
-  totalAbilityPoints?: number;
-  onAbilityChange?: (ability: AbilityName, value: number) => void;
-  onTempModifiersChange?: (patch: CharacterTempModifiers) => void;
+  totalAbilityPoints?: number | undefined;
+  onAbilityChange?: ((ability: AbilityName, value: number) => void) | undefined;
+  onTempModifiersChange?: ((patch: CharacterTempModifiers) => void) | undefined;
 }) {
   const rollContext = useRollsOptional();
   const baseValue = abilities[ability] ?? 0;

@@ -17,7 +17,7 @@ import { Swords } from 'lucide-react';
 export function AdminPublicTechniquesTab({
   mode = 'standard',
 }: {
-  mode?: 'standard' | 'empowered';
+  mode?: 'standard' | 'empowered' | undefined;
 }) {
   const { showToast } = useToast();
   const libraryType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';

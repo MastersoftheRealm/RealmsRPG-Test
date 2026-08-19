@@ -20,15 +20,15 @@ export interface AbilityRequirement {
 }
 
 interface AbilityRequirementFilterProps {
-  label?: string;
+  label?: string | undefined;
   abilities: string[];
   requirements: AbilityRequirement[];
   onAdd: (req: AbilityRequirement) => void;
   onRemove: (ability: string) => void;
-  className?: string;
+  className?: string | undefined;
   /** When set, controls are disabled and placeholders use this hint. */
-  disabled?: boolean;
-  disabledHint?: string;
+  disabled?: boolean | undefined;
+  disabledHint?: string | undefined;
 }
 
 export function AbilityRequirementFilter({

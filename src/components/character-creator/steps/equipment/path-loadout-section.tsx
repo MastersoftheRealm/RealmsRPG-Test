@@ -25,7 +25,7 @@ export interface PathLoadoutSectionProps {
   onAddItemWithQuantity: (item: AdvancedEquipmentItem, qty: number) => void;
   onExpandFullCatalog: () => void;
   /** Rendered between recommended list and expand/next actions (e.g. path Unarmed Prowess). */
-  children?: ReactNode;
+  children?: ReactNode | undefined;
 }
 
 export function PathLoadoutSection({

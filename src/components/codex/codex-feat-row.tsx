@@ -20,15 +20,15 @@ export function CodexFeatRow({
 }: {
   feat: Feat;
   skillIdToName: Map<string, string>;
-  familyLevels?: Feat[];
-  name?: string;
-  variant?: 'codex' | 'admin';
-  rightSlot?: ReactNode;
+  familyLevels?: Feat[] | undefined;
+  name?: string | undefined;
+  variant?: 'codex' | 'admin' | undefined;
+  rightSlot?: ReactNode | undefined;
   /**
    * Labels shown beside the name while a list filter needs them — the archetype paths that
    * recommend this feat (ADR-0014). Empty / omitted renders nothing.
    */
-  nameChipLabels?: string[];
+  nameChipLabels?: string[] | undefined;
 }) {
   const detailSections = buildFeatDetailSections(feat, skillIdToName, familyLevels);
   const nameChips = nameChipLabels?.length ? nameChipLabels.map((label) => ({ label })) : undefined;

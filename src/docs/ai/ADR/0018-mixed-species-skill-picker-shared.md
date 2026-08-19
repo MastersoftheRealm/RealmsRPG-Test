@@ -17,5 +17,5 @@ Move `MixedSpeciesSkillPicker` to `src/components/shared/mixed-species-skill-pic
 ## Consequences
 
 - Positive: Report 02 SHARED leftover closed; TASK-794 folder split can move this with the rest of `shared/`.
-- Negative / follow-ups: Allowlist +1 public file. Remaining Architect leftover: TASK-799. TASK-795 done (ADR-0020). TASK-796 done (ADR-0021). TASK-797 done (ADR-0022). After ADR-0019 this module lives at `src/components/patterns/select/mixed-species-skill-picker.tsx`.
+- Negative / follow-ups: Allowlist +1 public file. TASK-799 done (confirm/toggle/admin delete). TASK-795 done (ADR-0020). TASK-796 done (ADR-0021). TASK-797 done (ADR-0022). After ADR-0019 this module lives at `src/components/patterns/select/mixed-species-skill-picker.tsx`.
 - Rejected alternatives: Compat re-export from `character-creator/` (wrong dependency direction — ADR-0008 / ADR-0017).

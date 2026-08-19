@@ -12,17 +12,17 @@ interface PageHeaderProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'ti
   /** Main page title */
   title: React.ReactNode;
   /** Optional icon to display before the title */
-  icon?: React.ReactNode;
+  icon?: React.ReactNode | undefined;
   /** Optional description below title */
-  description?: React.ReactNode;
+  description?: React.ReactNode | undefined;
   /** Optional action buttons/elements to display on the right */
-  actions?: React.ReactNode;
+  actions?: React.ReactNode | undefined;
   /** Size variant for the title */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
   /** When set, the title is clickable (e.g. inline rename) */
-  onTitleClick?: () => void;
+  onTitleClick?: (() => void) | undefined;
   /** Accessible name when title is clickable */
-  titleAriaLabel?: string;
+  titleAriaLabel?: string | undefined;
 }
 
 const titleSizeClasses = {

@@ -16,14 +16,14 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 const shellCopy = GUIDED_CREATOR_COPY.shell;
 
 export interface GuidedCreatorPageShellProps {
-  title?: string;
-  subtitle?: ReactNode;
+  title?: string | undefined;
+  subtitle?: ReactNode | undefined;
   /** Tighter gradient header inside the creator flow. */
-  compact?: boolean;
+  compact?: boolean | undefined;
   /** Right-side header actions (e.g. Restart). */
-  actions?: ReactNode;
+  actions?: ReactNode | undefined;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }
 
 export function GuidedCreatorPageShell({

@@ -19,15 +19,15 @@ import { guidedNavExpandClassName, guidedNavPreviousClassName } from './guided-n
 
 export interface GuidedLayerNavProps {
   /** Layer 1 → deeper: button label (e.g. "Customize scores"). */
-  expandLabel?: string;
-  onExpand?: () => void;
+  expandLabel?: string | undefined;
+  onExpand?: (() => void) | undefined;
   /** Layer 2+ → simpler: button label (default "See recommendations"). */
-  collapseLabel?: string;
-  onCollapse?: () => void;
+  collapseLabel?: string | undefined;
+  onCollapse?: (() => void) | undefined;
   /** Optional second hatch (sibling Layer 2). Renders to the right of expand. */
-  trailingExpandLabel?: string;
-  onTrailingExpand?: () => void;
-  className?: string;
+  trailingExpandLabel?: string | undefined;
+  onTrailingExpand?: (() => void) | undefined;
+  className?: string | undefined;
 }
 
 export function GuidedLayerNav({

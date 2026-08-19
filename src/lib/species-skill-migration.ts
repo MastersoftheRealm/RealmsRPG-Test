@@ -8,22 +8,26 @@ import type { Character, CharacterAncestry } from '@/types';
 import { findSkillByIdOrName, parseSkillAbilities } from '@/lib/codex/skill-list';
 import { normalizeId } from '@/lib/utils';
 
-type SpeciesLike = { id: string; name?: string; skills?: (string | number)[] };
+type SpeciesLike = {
+  id: string;
+  name?: string | undefined;
+  skills?: (string | number)[] | undefined;
+};
 
 type SkillCatalogEntry = {
   id: string | number;
-  name?: string;
-  ability?: string;
+  name?: string | undefined;
+  ability?: string | undefined;
 };
 
 type SkillEntry = {
   id: string;
-  name?: string;
-  skill_val?: number;
-  prof?: boolean;
-  baseSkill?: string;
-  ability?: string;
-  availableAbilities?: string[];
+  name?: string | undefined;
+  skill_val?: number | undefined;
+  prof?: boolean | undefined;
+  baseSkill?: string | undefined;
+  ability?: string | undefined;
+  availableAbilities?: string[] | undefined;
   [key: string]: unknown;
 };
 

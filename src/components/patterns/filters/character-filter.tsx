@@ -26,13 +26,13 @@ export interface CharacterFilterProps {
   /** Selected character id, or '' for no character (show all). */
   value: string;
   onChange: (characterId: string) => void;
-  className?: string;
+  className?: string | undefined;
   /** Section label (default: Filter by character). */
-  label?: string;
+  label?: string | undefined;
   /** Tooltip beside the label explaining qualification filtering. */
-  helpContent?: string;
+  helpContent?: string | undefined;
   /** Extra content under the select (only when characters exist). Shown when expanded. */
-  children?: ReactNode;
+  children?: ReactNode | undefined;
 }
 
 export function CharacterFilter({

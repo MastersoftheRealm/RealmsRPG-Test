@@ -3,7 +3,7 @@
 import { Alert } from '@/components/ui';
 import { GridListRow } from '../list/grid-list-row';
 import { ListHeader } from '../list/list-header';
-import { EmptyState, LoadingState } from '../list/list-components';
+import { EmptyState, LoadingState } from '@/components/ui';
 import { QuantitySelector } from './quantity-selector';
 import { TabContentPanel } from '@/components/ui/tab-navigation';
 import type { SortState } from '@/components/patterns/list/list-header';
@@ -19,18 +19,20 @@ export interface UnifiedSelectionModalListProps {
   error: Error | null;
   filteredItems: SelectableItem[];
   emptyMessage: string;
-  emptySubMessage?: string;
-  gridColumns?: string;
+  emptySubMessage?: string | undefined;
+  gridColumns?: string | undefined;
   selectedIds: Set<string>;
   quantities: Record<string, number>;
   showQuantity: boolean;
   onToggleSelection: (id: string | number) => void;
   onQuantityChange: (itemIdStr: string, delta: number, isSelected: boolean) => void;
-  tabPanelA11y?: {
-    tabGroupId: string;
-    id: string;
-    activeTab: string;
-  };
+  tabPanelA11y?:
+    | {
+        tabGroupId: string;
+        id: string;
+        activeTab: string;
+      }
+    | undefined;
 }
 
 export function UnifiedSelectionModalList({
@@ -140,12 +142,12 @@ export function UnifiedSelectionModalColumnHeaders({
   showQuantity = false,
 }: {
   columns: ColumnHeader[];
-  gridColumns?: string;
+  gridColumns?: string | undefined;
   hasThumbnailColumn: boolean;
   sortState: SortState;
   onSort: (key: string) => void;
   /** When true, reserve far-right qty chrome instead of the selection + column. */
-  showQuantity?: boolean;
+  showQuantity?: boolean | undefined;
 }) {
   if (columns.length === 0) return null;
 

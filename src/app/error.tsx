@@ -13,7 +13,7 @@ import { Header, Footer } from '@/components/layout';
 import { Button, PageHeader } from '@/components/ui';
 
 interface ErrorProps {
-  error: Error & { digest?: string };
+  error: Error & { digest?: string | undefined };
   reset: () => void;
 }
 

@@ -9,21 +9,21 @@ import type {
 import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 
 interface CodexPartLike {
-  id?: string | number;
-  name?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
 }
 
 interface SavedPartLike {
-  id?: string | number;
-  name?: string;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
-  applyDuration?: boolean;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
+  applyDuration?: boolean | undefined;
 }
 
 function findCodexPart(codexList: CodexPartLike[], part: SavedPartLike): CodexPartLike | undefined {
@@ -73,7 +73,7 @@ export function mapSelectedToCharacterItems(
   const techniquePartsDb = (dbs?.techniquePartsDb ?? []) as CodexPartLike[];
   const quantities = selected.reduce(
     (acc, s) => {
-      const q = (s as SelectableItem & { quantity?: number }).quantity;
+      const q = (s as SelectableItem & { quantity?: number | undefined }).quantity;
       if (q != null) acc[String(s.id)] = q;
       return acc;
     },
@@ -124,7 +124,7 @@ export function mapSelectedToCharacterItems(
       cost: 0,
       actionType: t.actionType,
       isReaction: t.isReaction,
-      damage: (t as { damage?: unknown }).damage as CharacterTechnique['damage'],
+      damage: (t as { damage?: unknown | undefined }).damage as CharacterTechnique['damage'],
       image_id: t.image_id ?? null,
       image_url: t.image_url ?? null,
     }));

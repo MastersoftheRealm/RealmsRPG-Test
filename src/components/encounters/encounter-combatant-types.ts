@@ -33,17 +33,17 @@ export interface CombatantCardProps {
   onUpdateConditionLevel: (condition: string, delta: number) => void;
   onUpdateAP: (delta: number) => void;
   /** Optional: when omitted, compact mode uses ValueStepper-only HP/EN (no damage/heal/use/rest) */
-  onDamage?: (amount: number) => void;
-  onHeal?: (amount: number) => void;
-  onEnergyDrain?: (amount: number) => void;
-  onEnergyRestore?: (amount: number) => void;
+  onDamage?: ((amount: number) => void) | undefined;
+  onHeal?: ((amount: number) => void) | undefined;
+  onEnergyDrain?: ((amount: number) => void) | undefined;
+  onEnergyRestore?: ((amount: number) => void) | undefined;
   onDragStart: (e: DragEvent<HTMLDivElement>) => void;
   onDragEnd: () => void;
   onDragOver: (e: DragEvent<HTMLDivElement>) => void;
   onDragLeave: () => void;
   onDrop: (e: DragEvent<HTMLDivElement>) => void;
   /** Compact/quick-reference mode: ResourceInput-style HP/EN, no damage/heal buttons, larger AP */
-  variant?: 'full' | 'compact';
+  variant?: 'full' | 'compact' | undefined;
   /** When true, the logged-in user owns this linked character and may edit HP/EN/AP on the encounter card. */
-  canEditLinkedResources?: boolean;
+  canEditLinkedResources?: boolean | undefined;
 }

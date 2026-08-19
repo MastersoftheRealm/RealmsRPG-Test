@@ -5,8 +5,8 @@ import { usePortraitFallbackUrl } from '@/hooks/use-portrait-fallback-url';
 import { cn } from '@/lib/utils';
 
 export interface PortraitThumbProps {
-  portrait?: string | null;
-  className?: string;
+  portrait?: string | null | undefined;
+  className?: string | undefined;
 }
 
 /** Decorative portrait thumb — theme-aware fallback, soft matte behind transparent PNGs. */

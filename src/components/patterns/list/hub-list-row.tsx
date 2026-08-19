@@ -22,29 +22,29 @@ export interface HubListRowProps {
   /** Icon (e.g. Hammer, Brain). Rendered in iconContainerClassName box. */
   icon: ReactNode;
   /** Container for icon (e.g. bg-warning-light text-warning-fg) */
-  iconContainerClassName?: string;
+  iconContainerClassName?: string | undefined;
   /** Row title */
   title: string;
   /** Optional badge text (e.g. status) */
-  badge?: string;
+  badge?: string | undefined;
   /** Semantic badge variant (preferred over badgeClassName) */
-  badgeVariant?: DescriptorVariant;
+  badgeVariant?: DescriptorVariant | undefined;
   /** @deprecated Prefer badgeVariant */
-  badgeClassName?: string;
+  badgeClassName?: string | undefined;
   /** Subtitle / meta line (e.g. "100 currency · Mar 10, 2026") */
-  subtitle?: ReactNode;
+  subtitle?: ReactNode | undefined;
   /** Optional extra line below subtitle */
-  description?: ReactNode;
+  description?: ReactNode | undefined;
   /** Called when row is clicked. If undefined, row is not clickable. */
-  onClick?: () => void;
+  onClick?: (() => void) | undefined;
   /** Delete button: aria-label and onClick. If provided, delete button is shown. */
-  onDelete?: () => void;
-  deleteAriaLabel?: string;
+  onDelete?: (() => void) | undefined;
+  deleteAriaLabel?: string | undefined;
   /** Show trailing chevron (default true when onClick) */
-  showChevron?: boolean;
+  showChevron?: boolean | undefined;
   /** Optional right-side content instead of default delete + chevron */
-  rightSlot?: ReactNode;
-  className?: string;
+  rightSlot?: ReactNode | undefined;
+  className?: string | undefined;
 }
 
 export function HubListRow({

@@ -33,7 +33,7 @@ export type {
 } from '@/types/crafting';
 
 type UserEnhancedItemCreate = Omit<UserEnhancedItem, 'id' | 'createdAt' | 'updatedAt'>;
-type UserEnhancedItemPatch = { potency?: number; name?: string };
+type UserEnhancedItemPatch = { potency?: number | undefined; name?: string | undefined };
 
 const OFFICIAL_API = '/api/official/enhanced-items';
 
@@ -58,15 +58,15 @@ async function fetchEnhancedItems(scope: EnhancedItemsScope) {
 
 export function useEnhancedItems(
   scope?: 'user',
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean | undefined },
 ): UseQueryResult<UserEnhancedItem[], Error>;
 export function useEnhancedItems(
   scope: 'official',
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean | undefined },
 ): UseQueryResult<OfficialEnhancedItem[], Error>;
 export function useEnhancedItems(
   scope: EnhancedItemsScope = 'user',
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean | undefined },
 ) {
   return useQuery({
     queryKey: enhancedItemsKeys.list(scope),

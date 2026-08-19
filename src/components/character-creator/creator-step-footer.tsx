@@ -5,19 +5,19 @@ import { Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 export interface CreatorStepFooterProps {
-  onBack?: () => void;
-  onContinue?: () => void;
-  continueLabel?: string;
-  backLabel?: string;
-  continueDisabled?: boolean;
-  backDisabled?: boolean;
+  onBack?: (() => void) | undefined;
+  onContinue?: (() => void) | undefined;
+  continueLabel?: string | undefined;
+  backLabel?: string | undefined;
+  continueDisabled?: boolean | undefined;
+  backDisabled?: boolean | undefined;
   /** Replaces the default Continue button (e.g. Create Character). */
-  primaryAction?: ReactNode;
+  primaryAction?: ReactNode | undefined;
   /** Optional completion indicator shown between Back and Continue (e.g. "2 / 3 feats"). */
-  completionHint?: ReactNode;
+  completionHint?: ReactNode | undefined;
   /** `inline` = button row only (parent provides surrounding chrome). */
-  variant?: 'sticky' | 'inline';
-  className?: string;
+  variant?: 'sticky' | 'inline' | undefined;
+  className?: string | undefined;
 }
 
 /**

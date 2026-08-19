@@ -51,21 +51,21 @@ export function ParticipantCard({
   ds: number;
   codexSkills: CodexSkillOption[];
   useInitiative: boolean;
-  isDragOver?: boolean;
-  isDragging?: boolean;
+  isDragOver?: boolean | undefined;
+  isDragging?: boolean | undefined;
   onUpdateRoll: (value: number) => void;
   onUpdateSkill: (skill: string) => void;
   onUpdateRmBonus: (value: number | undefined) => void;
   onClearRoll: () => void;
   onSetHelping: (v: boolean) => void;
   onRemove: () => void;
-  onUpdateParticipantType?: (t: SkillParticipantType) => void;
-  onRollInitiative?: () => void;
-  onDragStart?: (e: DragEvent<HTMLDivElement>) => void;
-  onDragEnd?: () => void;
-  onDragOver?: (e: DragEvent<HTMLDivElement>) => void;
-  onDragLeave?: () => void;
-  onDrop?: (e: DragEvent<HTMLDivElement>) => void;
+  onUpdateParticipantType?: ((t: SkillParticipantType) => void) | undefined;
+  onRollInitiative?: (() => void) | undefined;
+  onDragStart?: ((e: DragEvent<HTMLDivElement>) => void) | undefined;
+  onDragEnd?: (() => void) | undefined;
+  onDragOver?: ((e: DragEvent<HTMLDivElement>) => void) | undefined;
+  onDragLeave?: (() => void) | undefined;
+  onDrop?: ((e: DragEvent<HTMLDivElement>) => void) | undefined;
 }) {
   const [rollInput, setRollInput] = useState('');
   const [rmBonusInput, setRmBonusInput] = useState(

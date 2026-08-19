@@ -20,7 +20,7 @@ Single reference for breakpoints, touch targets, and layout contracts.
 
 Viewport width is a *proxy* for input method, and it is wrong at both ends — a touchscreen laptop at 1400px needs a big hit area; a 700px-wide desktop window does not.
 
-**Deprecated** (viewport answers to a pointer question — migrate when you touch them): `.touch-target-md-compact`, the `md:min-h-0` in `.tab-nav-trigger` and `.tab-pill-trigger`, and the `md:` inset override on `.hit-area-layout-neutral`.
+**Migrated (TASK-841):** `Button` / `IconButton` / `ValueStepper` / tab triggers / `.hit-area-layout-neutral` use `@media (pointer: coarse)`. `.touch-target-md-compact` is a no-op painted min — it aliases `.hit-area-dense` (height-first expanded hit). Remaining viewport answers: form fields (TASK-830) and leftover `md:min-h-0` on a few feature controls.
 
 ---
 
@@ -89,6 +89,8 @@ A known-length set of sibling cards uses `grid` with equal tracks. `flex-wrap` w
 
 One dock owns each screen corner. Components **register** with the dock; they do not each declare their own `position: fixed` coordinates. The dock reserves page padding so content is never permanently covered. Two components independently choosing `bottom-4` and `bottom-5` is how the sheet toolbar and roll-log FAB ended up stacked on each other.
 
+**Landed (TASK-837):** `--dock-*` tokens + `.floating-dock-bottom-right` (RollLog) and `.sheet-mobile-action-dock` (sheet actions below `md`, FAB-sized end slot). `#main-content:has(.floating-dock-bottom-right)` reserves `--dock-reserved-end` from `md` up; the sheet mobile frame uses `pb-[var(--sheet-mobile-dock-height)]`. `body:has([aria-modal='true'])` hides both so Recovery / Level Up / Add Feat footers stay tappable. Do not add a third `fixed bottom-*`.
+
 ### C5 — Breakpoint honesty
 
 A layout switch happens at a width where the target arrangement **actually fits**, not at a nominal breakpoint name. The sheet header switches to three columns at `lg` (1024px) but the columns do not fit until ~1500px, so 1024–1280 is the most broken band in the app.
@@ -118,7 +120,7 @@ No horizontal page scroll at any audited width. Horizontal scroll exists only in
 
 Side-scroll between section panels is the preferred pattern — subject to **C1**, which is not optional.
 
-**Character sheet:** below `md`, side-scroll of Abilities, Skills, Archetype, Library (`character-sheet-body.tsx`). Panels share PageContainer gutters with the sheet header; gap between panels during swipe (TASK-538). Library → Inventory summary stacks Currency and Armament Proficiency below `sm` so labels do not overlap (TASK-537). Skills spend/temp steppers sit in the Bonus/Value cell (`editControlsPlacement="inline"`) so the narrow desktop Skills column needs no fifth column, forced table min-width, or inner `TableScroll` (TASK-800). Skill names use `WordHelpTip` `compact` for Codex descriptions (TASK-803).
+**Character sheet:** below `md`, side-scroll of Abilities, Skills, Archetype, Library (`character-sheet-body.tsx`). The carousel is height-bounded to the remaining viewport minus the C4 action dock (C1 / TASK-838, C4 / TASK-837) so each panel scrolls internally instead of stretching to the tallest sibling. The dock is an opaque bottom strip; the RollLog FAB sits in its end slot (not a second `fixed bottom-*`). Panels share PageContainer gutters with the sheet header; gap between panels during swipe (TASK-538). Library → Inventory summary stacks Currency and Armament Proficiency below `sm` so labels do not overlap (TASK-537). Skills spend/temp steppers sit in the Bonus/Value cell (`editControlsPlacement="inline"`) so the narrow desktop Skills column needs no fifth column, forced table min-width, or inner `TableScroll` (TASK-800). Skill names use `WordHelpTip` `compact` for Codex descriptions (TASK-803).
 
 **Other dense pages:** same idea for encounter tracker and campaign detail; collapse when sections are few.
 
@@ -164,5 +166,7 @@ Side-scroll between section panels is the preferred pattern — subject to **C1*
 | ExpandableChip / ChipGroup | `src/components/ui/expandable-chip.tsx` | Wrap groups use `items-start`; expand keeps its row, moves left, takes full group width. |
 | GridListRow | `src/components/patterns/list/grid-list-row.tsx` | `hideOnMobile` columns; mobile grid collapses vacated `fr` tracks; summary/body toggle expand. |
 | TabNavigation | `src/components/ui/tab-navigation.tsx` | `overflow-x-auto`; needs a C1 affordance (TASK-840). |
+| RollLog | `src/components/rolls/roll-log.tsx` | `.floating-dock-bottom-right` (C4 / TASK-837). Panel width `min(22.5rem, 100svw − 2×gap)`; hidden while `aria-modal` is open. |
+| SheetActionToolbar | `src/components/character-sheet/sheet-action-toolbar.tsx` | `.sheet-mobile-action-dock` below `md`; top-right column from `md`. |
 | TableScroll | `src/components/ui/table-scroll.tsx` | Horizontal scroll wrapper for data tables. |
 | PageContainer | `src/components/ui/page-container.tsx` | `px-4 sm:px-6 lg:px-8`. |

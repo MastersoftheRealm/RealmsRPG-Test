@@ -10,7 +10,7 @@ interface ApplyRecommendedPathFeatsArgs {
   maxArchetypeFeats: number;
   maxCharacterFeats: number;
   featById: Map<string, Feat>;
-  checkRequirements: (feat: Feat) => { met: boolean; reason?: string };
+  checkRequirements: (feat: Feat) => { met: boolean; reason?: string | undefined };
 }
 
 /** Merge recommended path feats into the working selection (Layer 1 auto-apply / button). */

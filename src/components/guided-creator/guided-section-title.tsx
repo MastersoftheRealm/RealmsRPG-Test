@@ -13,11 +13,11 @@ export type GuidedSectionTitleLevel = 'h3' | 'h4' | 'div';
 export interface GuidedSectionTitleProps {
   children: ReactNode;
   /** Optional help beside the title (e.g. InfoTippy). */
-  titleAddon?: ReactNode;
-  className?: string;
+  titleAddon?: ReactNode | undefined;
+  className?: string | undefined;
   /** Heading level for in-step sections. Use `div` when heading hierarchy is managed elsewhere. */
-  as?: GuidedSectionTitleLevel;
-  id?: string;
+  as?: GuidedSectionTitleLevel | undefined;
+  id?: string | undefined;
 }
 
 export function GuidedSectionTitle({

@@ -10,11 +10,11 @@ import { cn } from '@/lib/utils/cn';
 
 interface SpinnerProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | undefined;
   /** Color variant */
-  variant?: 'primary' | 'white';
+  variant?: 'primary' | 'white' | undefined;
   /** Optional label for accessibility */
-  label?: string;
+  label?: string | undefined;
 }
 
 const sizeClasses = {
@@ -60,11 +60,11 @@ export function Spinner({
  */
 interface LoadingStateProps {
   /** Loading message */
-  message?: string;
+  message?: string | undefined;
   /** Size of the spinner */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
   /** Vertical padding */
-  padding?: 'sm' | 'md' | 'lg';
+  padding?: 'sm' | 'md' | 'lg' | undefined;
 }
 
 const paddingClasses = {

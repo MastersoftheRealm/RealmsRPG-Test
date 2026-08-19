@@ -25,11 +25,11 @@ export type DurationDisplayInput =
   | string
   | number
   | {
-      type?: string;
-      value?: string | number;
-      unit?: string;
-      focus?: boolean;
-      sustain?: number;
+      type?: string | undefined;
+      value?: string | number | undefined;
+      unit?: string | undefined;
+      focus?: boolean | undefined;
+      sustain?: number | undefined;
     }
   | null
   | undefined;
@@ -94,7 +94,7 @@ export function formatDurationFromTypeAndValue(type: string, value: number): str
 export function formatDurationWithModifiers(
   type: string,
   value: number,
-  modifiers?: { focus?: boolean; sustain?: number },
+  modifiers?: { focus?: boolean | undefined; sustain?: number | undefined },
 ): string {
   let str = formatDurationFromTypeAndValue(type, value);
   if (modifiers?.focus) str += ' (Focus)';

@@ -23,7 +23,7 @@ import { defined } from '@/lib/utils';
 
 let currentDb: FakeSupabase;
 
-function seed(options: { failInsertOnce?: Set<string> } = {}): FakeSupabase {
+function seed(options: { failInsertOnce?: Set<string> | undefined } = {}): FakeSupabase {
   currentDb = new FakeSupabase(
     {
       codex_feats: [

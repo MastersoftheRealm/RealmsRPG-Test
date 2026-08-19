@@ -60,10 +60,10 @@ function makeCampaignRow(
 }
 
 function createMockSupabase(config: {
-  memberCampaignIds?: string[];
-  ownedCampaignIds?: string[];
-  campaigns?: CampaignRow[];
-  membersByCampaign?: Record<string, string[]>;
+  memberCampaignIds?: string[] | undefined;
+  ownedCampaignIds?: string[] | undefined;
+  campaigns?: CampaignRow[] | undefined;
+  membersByCampaign?: Record<string, string[]> | undefined;
 }) {
   const {
     memberCampaignIds = [],

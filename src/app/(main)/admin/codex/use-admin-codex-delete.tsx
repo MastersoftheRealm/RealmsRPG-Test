@@ -9,18 +9,24 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { ConfirmActionModal } from '@/components/patterns';
+import { ConfirmActionModal, DeleteConfirmModal } from '@/components/patterns';
 import { deleteCodexDoc } from './actions';
 import type { CodexCollection } from '@/lib/codex/collections';
 
 const REFERENCES_SHOWN = 8;
 
 type BlockedDelete = { id: string; references: string[] };
+type PendingConfirm = { id: string; name: string };
 
 export type AdminCodexDelete = {
   deleting: boolean;
   blocked: BlockedDelete | null;
-  requestDelete: (id: string) => Promise<boolean>;
+  pendingConfirm: PendingConfirm | null;
+  askDelete: (id: string, name: string) => void;
+  /** HEAD-tab alias while TASK-799 tabs are re-wired; name falls back to id. */
+  requestDelete: (id: string) => void;
+  confirmPendingDelete: () => Promise<boolean>;
+  cancelPendingDelete: () => void;
   confirmBlockedDelete: () => Promise<boolean>;
   cancelBlockedDelete: () => void;
 };
@@ -32,6 +38,7 @@ export function useAdminCodexDelete(options: {
 }): AdminCodexDelete {
   const { collection, onDeleted, onError } = options;
   const [blocked, setBlocked] = useState<BlockedDelete | null>(null);
+  const [pendingConfirm, setPendingConfirm] = useState<PendingConfirm | null>(null);
   const [deleting, setDeleting] = useState(false);
 
   const runDelete = useCallback(
@@ -45,10 +52,12 @@ export function useAdminCodexDelete(options: {
       setDeleting(false);
       if (result.success) {
         setBlocked(null);
+        setPendingConfirm(null);
         await onDeleted();
         return true;
       }
       if (result.references && result.references.length > 0) {
+        setPendingConfirm(null);
         setBlocked({ id, references: result.references });
         return false;
       }
@@ -61,13 +70,49 @@ export function useAdminCodexDelete(options: {
   return {
     deleting,
     blocked,
-    requestDelete: useCallback((id: string) => runDelete(id, false), [runDelete]),
+    pendingConfirm,
+    askDelete: useCallback((id: string, name: string) => {
+      setBlocked(null);
+      setPendingConfirm({ id, name });
+    }, []),
+    requestDelete: useCallback((id: string) => {
+      setBlocked(null);
+      setPendingConfirm({ id, name: id });
+    }, []),
+    confirmPendingDelete: useCallback(
+      () => (pendingConfirm ? runDelete(pendingConfirm.id, false) : Promise.resolve(false)),
+      [pendingConfirm, runDelete],
+    ),
+    cancelPendingDelete: useCallback(() => setPendingConfirm(null), []),
     confirmBlockedDelete: useCallback(
       () => (blocked ? runDelete(blocked.id, true) : Promise.resolve(false)),
       [blocked, runDelete],
     ),
     cancelBlockedDelete: useCallback(() => setBlocked(null), []),
   };
+}
+
+export function AdminCodexDeleteConfirmModal({
+  state,
+  entityLabel,
+}: {
+  state: AdminCodexDelete;
+  entityLabel: string;
+}) {
+  const pending = state.pendingConfirm;
+  return (
+    <DeleteConfirmModal
+      isOpen={pending !== null}
+      itemName={pending?.name ?? ''}
+      itemType={entityLabel}
+      deleteContext="Codex"
+      isDeleting={state.deleting}
+      onConfirm={() => {
+        void state.confirmPendingDelete();
+      }}
+      onClose={state.cancelPendingDelete}
+    />
+  );
 }
 
 export function AdminCodexDeleteReferenceModal({

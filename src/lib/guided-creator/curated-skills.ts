@@ -23,15 +23,15 @@ export interface GuidedCuratedSkillsOptions {
   abilities: Abilities;
   archetypeType: ArchetypeCategory | null;
   /** Path primary ability (archetype_ability / power side). */
-  primaryAbility?: AbilityName | null;
+  primaryAbility?: AbilityName | null | undefined;
   /** Legacy draft fallbacks when path abilities are unset. */
-  powAbil?: AbilityName | null;
-  martAbil?: AbilityName | null;
+  powAbil?: AbilityName | null | undefined;
+  martAbil?: AbilityName | null | undefined;
   pathSkillIds: string[];
   speciesSkillIds: string[];
   selectedSkillIds: Set<string>;
-  limit?: number;
-  minSuggestions?: number;
+  limit?: number | undefined;
+  minSuggestions?: number | undefined;
 }
 
 export interface GuidedCuratedSkillsResult {
@@ -86,9 +86,9 @@ type ArchetypeAbilitySource = Pick<
 export function resolveGuidedArchetypeAbilities(
   archetypeType: ArchetypeCategory | null,
   options?: {
-    archetype?: ArchetypeAbilitySource | null;
-    powAbil?: AbilityName | null;
-    martAbil?: AbilityName | null;
+    archetype?: ArchetypeAbilitySource | null | undefined;
+    powAbil?: AbilityName | null | undefined;
+    martAbil?: AbilityName | null | undefined;
   },
 ): { primary: AbilityName | null; secondary: AbilityName | null } {
   const archetype = options?.archetype;

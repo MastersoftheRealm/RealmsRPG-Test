@@ -25,8 +25,8 @@ interface MixedSpeciesModalProps {
   allSpecies: Species[];
   userSpeciesIds: Set<string>;
   /** Prefill when changing an existing mixed pair (Ancestry overview). */
-  initialSpeciesAId?: string;
-  initialSpeciesBId?: string;
+  initialSpeciesAId?: string | undefined;
+  initialSpeciesBId?: string | undefined;
 }
 
 export function MixedSpeciesModal({

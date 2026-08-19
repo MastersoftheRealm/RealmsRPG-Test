@@ -15,8 +15,8 @@ import type { RequirementsBreakdown } from './crafting-tool-helpers';
 
 type CraftSubSkill = {
   name: string;
-  craft_success_desc?: string;
-  craft_failure_desc?: string;
+  craft_success_desc?: string | undefined;
+  craft_failure_desc?: string | undefined;
 };
 
 type Props = {

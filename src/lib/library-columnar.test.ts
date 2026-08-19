@@ -106,7 +106,7 @@ describe('library-columnar API round-trip — techniques', () => {
 
     const loaded = rowToItem('techniques', row, 'user');
 
-    expect((loaded.range as { steps?: number }).steps).toBe(2);
+    expect((loaded.range as { steps?: number | undefined }).steps).toBe(2);
     expect(loaded.damage).toEqual([{ amount: 1, size: 8 }]);
   });
 });
@@ -143,8 +143,8 @@ describe('library-columnar API round-trip — empowered techniques', () => {
 
     expect(loaded.attackMode).toBe('weapon');
     expect(loaded.weaponName).toBe('Weapon');
-    expect((loaded.power as { range?: { steps?: number } }).range?.steps).toBe(3);
-    expect((loaded.technique as { parts?: unknown[] }).parts).toHaveLength(1);
+    expect((loaded.power as { range?: { steps?: number | undefined } }).range?.steps).toBe(3);
+    expect((loaded.technique as { parts?: unknown[] | undefined }).parts).toHaveLength(1);
   });
 
   it('derives Weapon for legacy empowered rows carrying power.addWeapon', () => {
@@ -185,9 +185,9 @@ describe('library-columnar API round-trip — empowered techniques', () => {
 
     expect(loaded.attackMode).toBe('weapon');
     expect(loaded.weaponName).toBe('Weapon');
-    expect((loaded.power as { parts?: Array<{ name?: string }> }).parts?.[0]?.name).toBe(
-      'Add Weapon to Power',
-    );
+    expect(
+      (loaded.power as { parts?: Array<{ name?: string | undefined }> }).parts?.[0]?.name,
+    ).toBe('Add Weapon to Power');
   });
 
   it('derives Weapon from technique Add Weapon autoMechanic (cheaper-EN path)', () => {
@@ -242,9 +242,13 @@ describe('library-columnar API round-trip — powers', () => {
 
     const loaded = apiRoundTrip('powers', body);
 
-    expect((loaded.range as { steps?: number }).steps).toBe(4);
-    expect((loaded.area as { type?: string; level?: number }).type).toBe('sphere');
-    expect((loaded.duration as { type?: string; value?: number }).value).toBe(3);
+    expect((loaded.range as { steps?: number | undefined }).steps).toBe(4);
+    expect((loaded.area as { type?: string | undefined; level?: number | undefined }).type).toBe(
+      'sphere',
+    );
+    expect(
+      (loaded.duration as { type?: string | undefined; value?: number | undefined }).value,
+    ).toBe(3);
     expect((loaded.parts as unknown[]).length).toBe(1);
   });
 
@@ -273,28 +277,47 @@ describe('library-columnar API round-trip — powers', () => {
     expect(scalars.areaLevel).toBe(3);
     expect(scalars.durationType).toBe('minutes');
     expect(scalars.durationValue).toBe(10);
-    expect((payload.area as { applyDuration?: boolean }).applyDuration).toBe(true);
-    expect((payload.range as { applyDuration?: boolean }).applyDuration).toBe(true);
-    expect((payload.duration as { focus?: boolean; sustain?: number }).focus).toBe(true);
-    expect((payload.duration as { focus?: boolean; sustain?: number }).sustain).toBe(2);
-    expect((payload.duration as { noHarm?: boolean }).noHarm).toBe(true);
+    expect((payload.area as { applyDuration?: boolean | undefined }).applyDuration).toBe(true);
+    expect((payload.range as { applyDuration?: boolean | undefined }).applyDuration).toBe(true);
+    expect(
+      (payload.duration as { focus?: boolean | undefined; sustain?: number | undefined }).focus,
+    ).toBe(true);
+    expect(
+      (payload.duration as { focus?: boolean | undefined; sustain?: number | undefined }).sustain,
+    ).toBe(2);
+    expect((payload.duration as { noHarm?: boolean | undefined }).noHarm).toBe(true);
 
     const loaded = apiRoundTrip('powers', body);
 
     expect(
-      (loaded.area as { applyDuration?: boolean; type?: string; level?: number }).applyDuration,
+      (
+        loaded.area as {
+          applyDuration?: boolean | undefined;
+          type?: string | undefined;
+          level?: number | undefined;
+        }
+      ).applyDuration,
     ).toBe(true);
-    expect((loaded.area as { type?: string }).type).toBe('sphere');
-    expect((loaded.area as { level?: number }).level).toBe(3);
-    expect((loaded.range as { applyDuration?: boolean; steps?: number }).applyDuration).toBe(true);
-    expect((loaded.range as { steps?: number }).steps).toBe(2);
-    expect((loaded.duration as { focus?: boolean }).focus).toBe(true);
-    expect((loaded.duration as { noHarm?: boolean }).noHarm).toBe(true);
-    expect((loaded.duration as { sustain?: number }).sustain).toBe(2);
-    expect((loaded.duration as { type?: string; value?: number }).type).toBe('minutes');
-    expect((loaded.duration as { value?: number }).value).toBe(10);
-    expect((loaded.damage as Array<{ applyDuration?: boolean }>)[0]?.applyDuration).toBe(true);
-    expect((loaded.parts as Array<{ applyDuration?: boolean }>)[0]?.applyDuration).toBe(true);
+    expect((loaded.area as { type?: string | undefined }).type).toBe('sphere');
+    expect((loaded.area as { level?: number | undefined }).level).toBe(3);
+    expect(
+      (loaded.range as { applyDuration?: boolean | undefined; steps?: number | undefined })
+        .applyDuration,
+    ).toBe(true);
+    expect((loaded.range as { steps?: number | undefined }).steps).toBe(2);
+    expect((loaded.duration as { focus?: boolean | undefined }).focus).toBe(true);
+    expect((loaded.duration as { noHarm?: boolean | undefined }).noHarm).toBe(true);
+    expect((loaded.duration as { sustain?: number | undefined }).sustain).toBe(2);
+    expect(
+      (loaded.duration as { type?: string | undefined; value?: number | undefined }).type,
+    ).toBe('minutes');
+    expect((loaded.duration as { value?: number | undefined }).value).toBe(10);
+    expect(
+      (loaded.damage as Array<{ applyDuration?: boolean | undefined }>)[0]?.applyDuration,
+    ).toBe(true);
+    expect((loaded.parts as Array<{ applyDuration?: boolean | undefined }>)[0]?.applyDuration).toBe(
+      true,
+    );
   });
 });
 
@@ -317,7 +340,7 @@ describe('library-columnar API round-trip — items (migration hardening)', () =
 
     expect(loaded.damage).toEqual([{ amount: 2, size: 8, type: 'slashing' }]);
     expect(loaded.properties).toHaveLength(1);
-    expect((loaded.costs as { totalTP?: number }).totalTP).toBe(2);
+    expect((loaded.costs as { totalTP?: number | undefined }).totalTP).toBe(2);
   });
 
   it('uses non-empty promoted columns when present', () => {
@@ -335,7 +358,7 @@ describe('library-columnar API round-trip — items (migration hardening)', () =
     const loaded = rowToItem('items', row, 'official');
 
     expect(loaded.armorValue).toBe(3);
-    expect((loaded.properties as Array<{ name?: string }>)[0]?.name).toBe('Armor Base');
+    expect((loaded.properties as Array<{ name?: string | undefined }>)[0]?.name).toBe('Armor Base');
   });
 });
 

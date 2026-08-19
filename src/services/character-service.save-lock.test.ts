@@ -30,7 +30,7 @@ describe('saveCharacter lock token', () => {
     rememberCharacterLockToken('c1', '2026-08-15T13:00:00.000Z');
     await saveCharacter('c1', { notes: 'x' }, { updatedAt: '2026-08-15T12:00:00.000Z' });
     const body = JSON.parse((apiFetch.mock.calls[0]?.[1] as { body: string }).body) as {
-      updatedAt?: string;
+      updatedAt?: string | undefined;
     };
     expect(body.updatedAt).toBe('2026-08-15T13:00:00.000Z');
   });
@@ -39,7 +39,7 @@ describe('saveCharacter lock token', () => {
     rememberCharacterLockToken('c1', '2026-08-15T13:00:00.000Z');
     await saveCharacter('c1', { currentHealth: 3 }, { skipLock: true });
     const body = JSON.parse((apiFetch.mock.calls[0]?.[1] as { body: string }).body) as {
-      updatedAt?: string;
+      updatedAt?: string | undefined;
     };
     expect(body.updatedAt).toBeUndefined();
   });

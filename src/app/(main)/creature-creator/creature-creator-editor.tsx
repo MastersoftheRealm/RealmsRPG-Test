@@ -71,12 +71,14 @@ export type CreatureCreatorEditorProps = {
   sortedFeats: Array<
     CreatureFeat & {
       typeLabel: string;
-      levelMeta?: {
-        family: Feat[];
-        currentLevel: number;
-        minLevel: number;
-        maxQualified: number;
-      };
+      levelMeta?:
+        | {
+            family: Feat[];
+            currentLevel: number;
+            minLevel: number;
+            maxQualified: number;
+          }
+        | undefined;
     }
   >;
   armamentSort: SortState;
@@ -93,9 +95,9 @@ export type CreatureCreatorEditorProps = {
     criticalRangeIncrease: string;
     tp: number | string;
     currency: string;
-    quantity?: number;
-    image_id?: string | null;
-    image_url?: string | null;
+    quantity?: number | undefined;
+    image_id?: string | null | undefined;
+    image_url?: string | null | undefined;
   }>;
   updateCreature: (updates: Partial<CreatureState>) => void;
   updateAbility: (ability: AbilityName, value: number) => void;
@@ -166,7 +168,7 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
               hint="Uploads are saved to the shared image bank."
             />
           )}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid min-w-0 grid-cols-3 gap-2 sm:gap-4">
             <Select
               label="Level"
               value={String(creature.level)}

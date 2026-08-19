@@ -106,24 +106,38 @@ export type LibraryItemType = 'power' | 'technique' | 'weapon' | 'armor' | 'shie
 
 export type EqItem = {
   id: string;
-  name?: string;
-  description?: string;
-  damage?: unknown;
-  armorValue?: number;
-  range?: string | number | null;
-  abilityRequirement?: { name?: string; level?: number } | null;
-  agilityReduction?: number | null;
-  properties?: Array<
-    | string
-    | { id?: string | number; name?: string; op_1_lvl?: number; base_tp?: number; op_1_tp?: number }
-  >;
-  type?: string;
-  rarity?: string;
-  category?: string;
-  cost?: number;
-  costs?: { totalTP?: number; totalCurrency?: number; totalIP?: number };
-  image_id?: string | null;
-  image_url?: string | null;
+  name?: string | undefined;
+  description?: string | undefined;
+  damage?: unknown | undefined;
+  armorValue?: number | undefined;
+  range?: string | number | null | undefined;
+  abilityRequirement?: { name?: string | undefined; level?: number | undefined } | null | undefined;
+  agilityReduction?: number | null | undefined;
+  properties?:
+    | Array<
+        | string
+        | {
+            id?: string | number | undefined;
+            name?: string | undefined;
+            op_1_lvl?: number | undefined;
+            base_tp?: number | undefined;
+            op_1_tp?: number | undefined;
+          }
+      >
+    | undefined;
+  type?: string | undefined;
+  rarity?: string | undefined;
+  category?: string | undefined;
+  cost?: number | undefined;
+  costs?:
+    | {
+        totalTP?: number | undefined;
+        totalCurrency?: number | undefined;
+        totalIP?: number | undefined;
+      }
+    | undefined;
+  image_id?: string | null | undefined;
+  image_url?: string | null | undefined;
 };
 
 function selectableImageKind(itemType: LibraryItemType): ChoiceCardImageKind | null {
@@ -163,28 +177,28 @@ export type PowerColumnDisplay = {
 export type PowerTechniqueBudgetKind = 'power' | 'technique';
 
 export interface PowerTechniqueBudgetFacts {
-  energy?: number;
+  energy?: number | undefined;
   tp: number;
   actionType: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
 }
 
 type PowerTechniqueBudgetItem = {
-  id?: string | number;
-  docId?: string;
-  name?: string;
-  description?: string;
-  parts?: unknown;
-  damage?: unknown;
-  actionType?: string;
-  isReaction?: boolean;
-  range?: PowerDocument['range'];
-  area?: PowerDocument['area'];
-  duration?: PowerDocument['duration'];
-  attackMode?: AttackMode;
-  weapon?: TechniqueDocument['weapon'];
-  weaponName?: string;
+  id?: string | number | undefined;
+  docId?: string | undefined;
+  name?: string | undefined;
+  description?: string | undefined;
+  parts?: unknown | undefined;
+  damage?: unknown | undefined;
+  actionType?: string | undefined;
+  isReaction?: boolean | undefined;
+  range?: PowerDocument['range'] | undefined;
+  area?: PowerDocument['area'] | undefined;
+  duration?: PowerDocument['duration'] | undefined;
+  attackMode?: AttackMode | undefined;
+  weapon?: TechniqueDocument['weapon'] | undefined;
+  weaponName?: string | undefined;
 };
 
 /** Match `buildOfficialPowerRows` / `buildSelectableItem` PowerDocument shape (TASK-708). */
@@ -284,13 +298,13 @@ export function getPowerTechniqueBudgetColumns(facts: PowerTechniqueBudgetFacts)
  */
 export interface PowerTechniqueBudgetDisplay {
   name: string;
-  description?: string;
-  energy?: number;
+  description?: string | undefined;
+  energy?: number | undefined;
   tp: number;
   /** Display Action Type (for columns). */
   actionType: string;
   /** Capitalized Action Type value for filters (no "Action Type" prefix). */
-  actionTypeFilter?: string;
+  actionTypeFilter?: string | undefined;
   columns: ColumnValue[];
   titleChips: ChipData[];
   detailChips: ChipData[];
@@ -358,9 +372,9 @@ export function buildPowerTechniqueBudgetDisplay(
 export function buildPowerTechniqueFilterableRow(
   kind: PowerTechniqueBudgetKind,
   item: PowerTechniqueBudgetItem & {
-    parts?: unknown;
-    damage?: unknown;
-    isReaction?: boolean;
+    parts?: unknown | undefined;
+    damage?: unknown | undefined;
+    isReaction?: boolean | undefined;
   },
   powerPartsDb: PowerPart[],
   techniquePartsDb: TechniquePart[],
@@ -384,13 +398,13 @@ export function buildPowerTechniqueFilterableRow(
     isReaction: item.isReaction === true,
     partIds: parts
       .map((part) => {
-        const p = part as { id?: string | number };
+        const p = part as { id?: string | number | undefined };
         return p.id != null ? String(p.id) : '';
       })
       .filter(Boolean),
     partNames: parts
       .map((part) => {
-        const p = part as { name?: string };
+        const p = part as { name?: string | undefined };
         return p.name != null ? String(p.name) : '';
       })
       .filter(Boolean),
@@ -474,9 +488,9 @@ export function getItemColumns(
   if (itemType === 'shield') {
     const shield = item as UserItem | EqItem;
     const props = (shield.properties || []) as Array<{
-      id?: number;
-      name?: string;
-      op_1_lvl?: number;
+      id?: number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
     }>;
     const block = deriveShieldAmountFromProperties(props);
     const dmg =
@@ -532,7 +546,12 @@ export function getModalGridColumns(itemType: LibraryItemType): string {
 
 export function getListHeaderColumns(
   itemType: LibraryItemType,
-): { key: string; label: string; sortable?: boolean; align?: 'left' | 'center' | 'right' }[] {
+): {
+  key: string;
+  label: string;
+  sortable?: boolean | undefined;
+  align?: 'left' | 'center' | 'right' | undefined;
+}[] {
   const base = [{ key: 'name', label: 'Name', align: 'left' as const }];
   switch (itemType) {
     case 'power':
@@ -660,9 +679,9 @@ export function buildSelectableItem(
   ) {
     const it = item as UserItem | EqItem;
     const props = (Array.isArray(it.properties) ? it.properties : []) as Array<{
-      id?: string | number;
-      name?: string;
-      op_1_lvl?: number;
+      id?: string | number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
     }>;
     const payload = props as ItemPropertyPayload[];
     const costs = calculateItemCosts(payload, itemPropertiesDb);

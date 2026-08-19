@@ -11,7 +11,7 @@ type UsesType = 'full' | 'partial' | 'permanent';
 function getUsesConfigFromIndex(
   index: number | undefined,
   rules: CraftingRules | undefined,
-): { usesType: UsesType; usesCount?: number } {
+): { usesType: UsesType; usesCount?: number | undefined } {
   if (!rules || index == null || index < 0 || index >= (rules.multipleUseTable?.length ?? 0)) {
     return { usesType: 'full', usesCount: 1 };
   }

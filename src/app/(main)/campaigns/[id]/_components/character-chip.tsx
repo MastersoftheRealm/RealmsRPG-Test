@@ -24,7 +24,7 @@ export function CharacterChip({
   isOwner: boolean;
   canRemove: boolean;
   onRemove: () => void;
-  onViewSheet?: string;
+  onViewSheet?: string | undefined;
 }) {
   const portraitSrc = useEffectivePortrait(character.portrait);
   const portraitFallbackUrl = usePortraitFallbackUrl();

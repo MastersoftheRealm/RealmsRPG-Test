@@ -28,10 +28,10 @@ export async function GET() {
     if (dbError) throw dbError;
 
     const items: UserEnhancedItem[] = (rows ?? []).map((r) => {
-      const d = ((r as { data?: unknown }).data as Record<string, unknown>) ?? {};
+      const d = ((r as { data?: unknown | undefined }).data as Record<string, unknown>) ?? {};
       return {
         id: (r as { id: string }).id,
-        name: (r as { name?: string }).name ?? (d.name as string) ?? 'Enhanced item',
+        name: (r as { name?: string | undefined }).name ?? (d.name as string) ?? 'Enhanced item',
         baseItem: d.baseItem as UserEnhancedItem['baseItem'],
         powerRef: d.powerRef as UserEnhancedItem['powerRef'],
         description: d.description as string | undefined,
@@ -40,8 +40,8 @@ export async function GET() {
         usesType: d.usesType as string | undefined,
         usesCount: d.usesCount as number | undefined,
         potency: d.potency as number | undefined,
-        createdAt: (r as { created_at?: string }).created_at ?? undefined,
-        updatedAt: (r as { updated_at?: string }).updated_at ?? undefined,
+        createdAt: (r as { created_at?: string | undefined }).created_at ?? undefined,
+        updatedAt: (r as { updated_at?: string | undefined }).updated_at ?? undefined,
       };
     });
 

@@ -6,17 +6,15 @@ import { Plus, RefreshCw } from 'lucide-react';
 import {
   ConfirmActionModal,
   ErrorDisplay,
-  ListEmptyState,
   ListHeader,
   ListSearchToolbar,
-  LoadingState,
   GRID_LIST_ROW_ACTION_ICON_BUTTON_SIZE,
   GRID_LIST_ROW_ACTION_ICON_CLASS,
   type ListColumn,
   type ListHeaderRowChrome,
   type SortState,
 } from '@/components/patterns';
-import { Button, IconButton } from '@/components/ui';
+import { Button, EmptyState, IconButton, LoadingState } from '@/components/ui';
 import type {
   LibraryEntityTabBasicLabels,
   LibraryEntityTabLabels,
@@ -35,25 +33,25 @@ type UserLibraryEntityTabShellBaseProps = {
   headerColumns: ListColumn[];
   gridColumns: string;
   /** Pair with GridListRow `thumbnail` (species/equipment art column). */
-  hasThumbnailColumn?: boolean;
+  hasThumbnailColumn?: boolean | undefined;
   /** Reserve header space for edit/delete/rightSlot (must match GridListRow actions). TASK-631 CI enforces pairing. */
-  rowChrome?: ListHeaderRowChrome;
+  rowChrome?: ListHeaderRowChrome | undefined;
   filteredCount: number;
   children: ReactNode;
-  listClassName?: string;
+  listClassName?: string | undefined;
   /** Optional content after the list (e.g. RollLog). */
-  afterList?: ReactNode;
+  afterList?: ReactNode | undefined;
   /** Filter panel body only — ListSearchToolbar wraps FilterSection compact (TASK-721). */
-  filters?: ReactNode;
+  filters?: ReactNode | undefined;
   /** Active-filter badge on the collapsed Filters toggle. */
-  filterActiveCount?: number;
+  filterActiveCount?: number | undefined;
   /** Overrides `searchEmptyTitle` when the current filter set yields zero rows. */
-  filterEmptyTitle?: string;
+  filterEmptyTitle?: string | undefined;
 };
 
 type UserLibraryEntityTabShellSyncProps = UserLibraryEntityTabShellBaseProps & {
   /** Full sync/duplicate chrome (default). */
-  enableSync?: true;
+  enableSync?: true | undefined;
   labels: LibraryEntityTabLabels;
   driftedCount: number;
   syncingAll: boolean;
@@ -128,7 +126,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
 
   if (!isLoading && totalCount === 0) {
     return (
-      <ListEmptyState
+      <EmptyState
         icon={emptyIcon}
         title={labels.emptyTitle}
         message={labels.emptyMessage}
@@ -181,7 +179,7 @@ export function UserLibraryEntityTabShell(props: UserLibraryEntityTabShellProps)
         {isLoading ? (
           <LoadingState />
         ) : filteredCount === 0 ? (
-          <ListEmptyState title={filterEmptyTitle ?? labels.searchEmptyTitle} size="sm" />
+          <EmptyState title={filterEmptyTitle ?? labels.searchEmptyTitle} size="sm" />
         ) : (
           children
         )}

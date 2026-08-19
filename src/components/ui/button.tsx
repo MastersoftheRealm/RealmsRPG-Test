@@ -19,9 +19,9 @@ import { cn } from '@/lib/utils/cn';
 import { Loader2 } from 'lucide-react';
 
 const buttonVariants = cva(
-  // Touch devices get a 44px minimum tap target (WCAG/MOBILE_UX). Scoped to
-  // coarse pointers so desktop dense layouts keep their compact sizing (TASK-332).
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-base ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 [@media(pointer:coarse)]:min-h-[44px] [@media(pointer:coarse)]:min-w-[44px]',
+  // ADR-0023: height under coarse pointer only — never a global min-w (that
+  // turned link/footer text into 167×44 slabs). Tiers live on size / variant.
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold transition-all duration-base ease-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -39,13 +39,19 @@ const buttonVariants = cva(
           'border-2 border-primary-outline-border text-primary-outline-fg bg-transparent hover:bg-primary-subtle-bg focus-visible:ring-primary-outline-border',
       },
       size: {
-        sm: 'h-8 px-3 text-xs',
-        md: 'h-10 px-4 py-2',
-        lg: 'h-12 px-6 text-base',
-        xl: 'h-14 px-8 text-lg',
-        icon: 'h-10 w-10',
+        sm: 'hit-area-dense h-8 px-3 text-xs',
+        md: 'touch-tier-standard h-10 px-4 py-2',
+        lg: 'touch-tier-primary h-12 px-6 text-base',
+        xl: 'touch-tier-primary h-14 px-8 text-lg',
+        icon: 'h-10 w-10 [@media(pointer:coarse)]:h-11 [@media(pointer:coarse)]:w-11',
       },
     },
+    compoundVariants: [
+      {
+        variant: 'link',
+        class: 'hit-area-dense h-auto px-0',
+      },
+    ],
     defaultVariants: {
       variant: 'primary',
       size: 'md',
@@ -55,8 +61,8 @@ const buttonVariants = cva(
 
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>, VariantProps<typeof buttonVariants> {
-  isLoading?: boolean;
-  asChild?: boolean;
+  isLoading?: boolean | undefined;
+  asChild?: boolean | undefined;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(

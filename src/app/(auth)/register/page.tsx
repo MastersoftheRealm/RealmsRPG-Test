@@ -62,7 +62,7 @@ function RegisterContent() {
         password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/confirm?next=${encodeURIComponent(redirectPath)}`,
-          data: chosenUsername ? { username_display: chosenUsername } : undefined,
+          ...(chosenUsername ? { data: { username_display: chosenUsername } } : {}),
         },
       });
       if (err) throw err;
@@ -294,7 +294,7 @@ export default function RegisterPage() {
   );
 }
 
-function CheckIcon({ className }: { className?: string }) {
+function CheckIcon({ className }: { className?: string | undefined }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

@@ -71,18 +71,18 @@ function toQuickArmamentItems(items: Array<EnrichedItem | Item>): QuickArmamentI
 
 interface ArchetypeSectionProps {
   character: Character;
-  isEditMode?: boolean;
-  onMartialProfChange?: (value: number) => void;
-  onPowerProfChange?: (value: number) => void;
-  onMilestoneChoiceChange?: (level: number, choice: 'innate' | 'feat') => void;
+  isEditMode?: boolean | undefined;
+  onMartialProfChange?: ((value: number) => void) | undefined;
+  onPowerProfChange?: ((value: number) => void) | undefined;
+  onMilestoneChoiceChange?: ((level: number, choice: 'innate' | 'feat') => void) | undefined;
   // Unarmed Prowess props
-  unarmedProwess?: number; // 0 = not selected, 1-5 = prowess level
-  onUnarmedProwessChange?: (level: number) => void;
+  unarmedProwess?: number | undefined; // 0 = not selected, 1-5 = prowess level
+  onUnarmedProwessChange?: ((level: number) => void) | undefined;
   // Enriched equipment (from codex/library) — used instead of raw character.equipment
-  enrichedWeapons?: EnrichedItem[];
-  enrichedShields?: EnrichedItem[];
-  enrichedArmor?: EnrichedItem[];
-  className?: string;
+  enrichedWeapons?: EnrichedItem[] | undefined;
+  enrichedShields?: EnrichedItem[] | undefined;
+  enrichedArmor?: EnrichedItem[] | undefined;
+  className?: string | undefined;
 }
 
 // Attack Bonuses Table - displays Prof/Unprof bonuses for each ability
@@ -96,8 +96,8 @@ function AttackBonusesTable({
   abilities: Abilities;
   martialProf: number;
   powerProf: number;
-  powerAbility?: string; // The archetype's power ability (pow_abil)
-  onRollBonus?: (name: string, bonus: number) => void;
+  powerAbility?: string | undefined; // The archetype's power ability (pow_abil)
+  onRollBonus?: ((name: string, bonus: number) => void) | undefined;
 }) {
   // Prof = Ability + Proficiency; Unprof = half the Ability, doubled if negative.
   const bonuses = calculateBonuses(martialProf, powerProf, abilities, powerAbility);
@@ -227,10 +227,10 @@ function WeaponsSection({
 }: {
   character: Character;
   martialProf: number;
-  unarmedProwess?: number;
-  onRollAttack?: (name: string, bonus: number) => void;
-  onRollDamage?: (damageStr: string, bonus: number) => void;
-  enrichedWeapons?: EnrichedItem[];
+  unarmedProwess?: number | undefined;
+  onRollAttack?: ((name: string, bonus: number) => void) | undefined;
+  onRollDamage?: ((damageStr: string, bonus: number) => void) | undefined;
+  enrichedWeapons?: EnrichedItem[] | undefined;
 }) {
   const abilities = character.abilities || {};
 
@@ -330,9 +330,9 @@ function ShieldsSection({
 }: {
   character: Character;
   martialProf: number;
-  onRollAttack?: (name: string, bonus: number) => void;
-  onRollDamage?: (damageStr: string, bonus: number) => void;
-  enrichedShields?: EnrichedItem[];
+  onRollAttack?: ((name: string, bonus: number) => void) | undefined;
+  onRollDamage?: ((damageStr: string, bonus: number) => void) | undefined;
+  enrichedShields?: EnrichedItem[] | undefined;
 }) {
   const abilities = character.abilities || {};
   const shields = enrichedShields || ((character.equipment?.shields || []) as Item[]);
@@ -354,7 +354,7 @@ function ArmorSection({
   enrichedArmor,
 }: {
   character: Character;
-  enrichedArmor?: EnrichedItem[];
+  enrichedArmor?: EnrichedItem[] | undefined;
 }) {
   const abilities = character.abilities || {};
 

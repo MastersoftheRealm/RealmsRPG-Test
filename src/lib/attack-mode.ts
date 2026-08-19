@@ -47,7 +47,7 @@ export function normalizeAttackMode(value: unknown): AttackMode | null {
   return value === 'none' || value === 'unarmed' || value === 'weapon' ? value : null;
 }
 
-type SavedPartLike = { id?: string | number; name?: string };
+type SavedPartLike = { id?: string | number | undefined; name?: string | undefined };
 
 const nameMatches = (part: SavedPartLike, ...names: string[]): boolean => {
   const n = String(part.name ?? '')
@@ -65,10 +65,10 @@ const hasPart = (parts: SavedPartLike[], id: number, ...names: string[]): boolea
  * older library rows still render and load correctly.
  */
 export function deriveTechniqueAttackMode(input: {
-  attackMode?: unknown;
-  parts?: SavedPartLike[] | null;
+  attackMode?: unknown | undefined;
+  parts?: SavedPartLike[] | null | undefined;
   /** @deprecated Legacy tied-weapon object; prefer parts / attackMode. */
-  weapon?: { id?: string | number; name?: string } | null;
+  weapon?: { id?: string | number | undefined; name?: string | undefined } | null | undefined;
 }): AttackMode {
   const explicit = normalizeAttackMode(input.attackMode);
   if (explicit) return explicit;
@@ -91,9 +91,9 @@ export function deriveTechniqueAttackMode(input: {
  * price-reduction part; only `weapon` adds a mechanic (Add Weapon to Power).
  */
 export function derivePowerAttackMode(input: {
-  attackMode?: unknown;
-  parts?: SavedPartLike[] | null;
-  weapon?: { id?: string | number; name?: string } | null;
+  attackMode?: unknown | undefined;
+  parts?: SavedPartLike[] | null | undefined;
+  weapon?: { id?: string | number | undefined; name?: string | undefined } | null | undefined;
 }): AttackMode {
   const explicit = normalizeAttackMode(input.attackMode);
   if (explicit) return explicit;
@@ -112,9 +112,9 @@ export function derivePowerAttackMode(input: {
  * historical empowered/power derivation.
  */
 export function deriveEmpoweredAttackMode(input: {
-  attackMode?: unknown;
-  parts?: SavedPartLike[] | null;
-  weapon?: { id?: string | number; name?: string } | null;
+  attackMode?: unknown | undefined;
+  parts?: SavedPartLike[] | null | undefined;
+  weapon?: { id?: string | number | undefined; name?: string | undefined } | null | undefined;
 }): AttackMode {
   const explicit = normalizeAttackMode(input.attackMode);
   if (explicit) return explicit;

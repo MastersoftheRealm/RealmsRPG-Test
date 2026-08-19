@@ -8,8 +8,8 @@ import {
 
 function createMockClient(config: {
   counts: Record<string, number>;
-  itemTypes?: string[];
-  errors?: Record<string, { message: string; code?: string }>;
+  itemTypes?: string[] | undefined;
+  errors?: Record<string, { message: string; code?: string | undefined }> | undefined;
 }): LibraryCountsClient {
   return {
     from: (table: string) => ({

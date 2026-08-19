@@ -45,11 +45,17 @@ type CropConfig = {
   src: string;
   alt: string;
   objectPosition: string;
-  scale?: number;
+  scale?: number | undefined;
   surface: 'dark' | 'light';
 };
 
-function FrameShell({ children, className }: { children: React.ReactNode; className?: string }) {
+function FrameShell({
+  children,
+  className,
+}: {
+  children: React.ReactNode;
+  className?: string | undefined;
+}) {
   return (
     <div
       className={cn(
@@ -70,7 +76,7 @@ function CroppedPanel({
   scale = 1.08,
   surface,
   priority = false,
-}: CropConfig & { priority?: boolean }) {
+}: CropConfig & { priority?: boolean | undefined }) {
   return (
     <div
       className={cn(
@@ -92,7 +98,7 @@ function CroppedPanel({
 }
 
 /** Three portrait crops — variety of Realms characters in one fixed frame. */
-export function CharacterVarietyTriptych({ priority = false }: { priority?: boolean }) {
+export function CharacterVarietyTriptych({ priority = false }: { priority?: boolean | undefined }) {
   const panels = [LANDING_ART.faust, LANDING_ART.gnome, LANDING_ART.humanGreyscale];
 
   return (
@@ -141,7 +147,7 @@ export function RulesBookPanel() {
 }
 
 /** Placeholder panel for cards without licensed art yet. */
-export function PlaceholderMediaPanel({ label = 'Preview' }: { label?: string }) {
+export function PlaceholderMediaPanel({ label = 'Preview' }: { label?: string | undefined }) {
   return (
     <FrameShell className="flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-50 dark:from-primary-800 dark:to-primary-900">
       <span className="text-[10px] tracking-wide text-text-muted uppercase">{label}</span>

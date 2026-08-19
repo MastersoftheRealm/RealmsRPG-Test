@@ -103,17 +103,18 @@ function useHoldRepeat(
 // =============================================================================
 
 const stepperButtonVariants = cva(
-  // 44px min on touch viewports (below md), compact on desktop per MOBILE_UX.md
-  // Chrome comes from `.btn-stepper` (ADR-0002) — keep sizing here only
-  'btn-stepper touch-manipulation select-none min-w-[var(--touch-target-min,44px)] min-h-[var(--touch-target-min,44px)] md:min-w-0 md:min-h-0',
+  // ADR-0023 Dense: compact painted box always; coarse pointer expands hit
+  // height (not width) so creature/skill cells are not forced to 44×44 slabs.
+  // Chrome comes from `.btn-stepper` (ADR-0002) — keep sizing here only.
+  'btn-stepper hit-area-dense shrink-0 touch-manipulation select-none',
   {
     variants: {
       size: {
-        xs: 'w-11 h-11 md:w-5 md:h-5 text-sm',
-        sm: 'w-11 h-11 md:w-6 md:h-6 text-base',
-        md: 'w-11 h-11 md:w-8 md:h-8 text-lg',
-        lg: 'w-12 h-12 md:w-10 md:h-10 text-xl',
-        xl: 'w-14 h-14 md:w-12 md:h-12 text-2xl',
+        xs: 'h-5 w-5 text-sm',
+        sm: 'h-6 w-6 text-base',
+        md: 'h-8 w-8 text-lg',
+        lg: 'h-10 w-10 text-xl',
+        xl: 'h-12 w-12 text-2xl',
       },
     },
     defaultVariants: {
@@ -160,11 +161,11 @@ function StepperGlyphButton({
   glyph: string;
   onActivate: () => void;
   disabled: boolean;
-  size?: VariantProps<typeof stepperButtonVariants>['size'];
+  size?: VariantProps<typeof stepperButtonVariants>['size'] | undefined;
   title: string;
   enableHoldRepeat: boolean;
   hold: StepperHold;
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <button
@@ -221,36 +222,36 @@ export interface ValueStepperProps extends VariantProps<typeof stepperButtonVari
   /** Change handler */
   onChange: (value: number) => void;
   /** Minimum allowed value */
-  min?: number;
+  min?: number | undefined;
   /** Maximum allowed value */
-  max?: number;
+  max?: number | undefined;
   /** Step amount per increment/decrement */
-  step?: number;
+  step?: number | undefined;
   /** Optional label displayed before the stepper */
-  label?: string;
+  label?: string | undefined;
   /** Whether to disable the stepper */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /** Whether to hide the value display (for custom layouts) */
-  hideValue?: boolean;
+  hideValue?: boolean | undefined;
   /** Custom value formatter (e.g., for +/- display) */
-  formatValue?: (value: number) => string;
+  formatValue?: ((value: number) => string) | undefined;
   /** Color the value based on positive/negative */
-  colorValue?: boolean;
+  colorValue?: boolean | undefined;
   /**
    * Colors the **value** text for health/energy contexts.
    * Buttons always use neutral `.btn-stepper` chrome (ADR-0002).
    */
-  colorVariant?: 'default' | 'health' | 'energy';
+  colorVariant?: 'default' | 'health' | 'energy' | undefined;
   /** Enable hold-to-repeat with exponential acceleration (HP/EN pools only) */
-  enableHoldRepeat?: boolean;
+  enableHoldRepeat?: boolean | undefined;
   /** Layout density */
-  variant?: 'default' | 'inline' | 'compact';
+  variant?: 'default' | 'inline' | 'compact' | undefined;
   /** Additional class name */
-  className?: string;
+  className?: string | undefined;
   /** Title for decrement button */
-  decrementTitle?: string;
+  decrementTitle?: string | undefined;
   /** Title for increment button */
-  incrementTitle?: string;
+  incrementTitle?: string | undefined;
 }
 
 /**
@@ -367,15 +368,15 @@ export interface StepperButtonProps {
   /** Click handler */
   onClick: () => void;
   /** Whether the button is disabled */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /** Size variant */
-  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+  size?: 'xs' | 'sm' | 'md' | 'lg' | 'xl' | undefined;
   /** Button title for accessibility */
-  title?: string;
+  title?: string | undefined;
   /** Enable hold-to-repeat (HP/EN pools only) */
-  enableHoldRepeat?: boolean;
+  enableHoldRepeat?: boolean | undefined;
   /** Additional className */
-  className?: string;
+  className?: string | undefined;
 }
 
 /**

@@ -116,8 +116,12 @@ export async function GET(
         agility: rawAbilities?.agility ?? rawAbilities?.agi ?? 0,
       };
       const { maxHealth, maxEnergy } = computeMaxHealthEnergy(charData as Record<string, unknown>);
-      const health = charData?.health as { max?: number; current?: number } | undefined;
-      const energy = charData?.energy as { max?: number; current?: number } | undefined;
+      const health = charData?.health as
+        | { max?: number | undefined; current?: number | undefined }
+        | undefined;
+      const energy = charData?.energy as
+        | { max?: number | undefined; current?: number | undefined }
+        | undefined;
       const currentHp =
         (charData?.currentHealth as number) ?? health?.current ?? health?.max ?? maxHealth;
       const currentEn =

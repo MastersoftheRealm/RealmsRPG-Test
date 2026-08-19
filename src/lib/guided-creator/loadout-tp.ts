@@ -193,7 +193,7 @@ export function wouldExceedSharedTp(
   spent: number,
   limit: number,
   addTp: number,
-  opts?: { alreadySelected?: boolean },
+  opts?: { alreadySelected?: boolean | undefined },
 ): boolean {
   if (opts?.alreadySelected) return false;
   const add = Math.max(0, Math.floor(Number(addTp) || 0));

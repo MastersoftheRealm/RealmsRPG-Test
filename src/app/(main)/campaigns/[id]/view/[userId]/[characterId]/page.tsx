@@ -20,6 +20,8 @@ import {
   SheetHeader,
   CharacterSheetProvider,
   CharacterSheetBody,
+  CharacterSheetColumn,
+  CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME,
   useCharacterSheetDerived,
   resolveLibraryActiveTab,
 } from '@/components/character-sheet';
@@ -199,32 +201,38 @@ function CampaignCharacterViewContent() {
       }}
     >
       <CharacterSheetProvider value={sheetContextValue}>
-        <div className="min-h-screen bg-background pb-8">
-          <PageContainer size="tool" padded={false} className="pt-4">
-            <Link
-              href={`/campaigns/${campaignId}`}
-              className="mb-4 inline-flex items-center gap-1 text-text-secondary hover:text-primary-fg-hover"
+        <div className="bg-background md:min-h-screen">
+          <div className={CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME}>
+            <PageContainer
+              size="tool"
+              padded={false}
+              className="pt-4 max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col"
             >
-              <ChevronLeft className="h-4 w-4" />
-              Back to Campaign
-            </Link>
-            <p className="mb-4 text-sm text-text-muted">View-only (Realm Master view)</p>
+              <Link
+                href={`/campaigns/${campaignId}`}
+                className="mb-4 inline-flex shrink-0 items-center gap-1 text-text-secondary hover:text-primary-fg-hover"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Back to Campaign
+              </Link>
+              <p className="mb-4 shrink-0 text-sm text-text-muted">View-only (Realm Master view)</p>
 
-            {calculatedStats && (
-              <>
-                <SheetHeader
-                  character={characterForDisplay ?? character}
-                  calculatedStats={calculatedStats}
-                  isEditMode={false}
-                  speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
-                  enrichedArmor={enrichedData?.armor as Item[] | undefined}
-                  innateThreshold={archetypeProgression?.innateThreshold || 0}
-                  innatePools={archetypeProgression?.innatePools || 0}
-                />
-                <CharacterSheetBody />
-              </>
-            )}
-          </PageContainer>
+              {calculatedStats && (
+                <CharacterSheetColumn>
+                  <SheetHeader
+                    character={characterForDisplay ?? character}
+                    calculatedStats={calculatedStats}
+                    isEditMode={false}
+                    speedDisplayUnit={character.speedDisplayUnit ?? 'spaces'}
+                    enrichedArmor={enrichedData?.armor as Item[] | undefined}
+                    innateThreshold={archetypeProgression?.innateThreshold || 0}
+                    innatePools={archetypeProgression?.innatePools || 0}
+                  />
+                  <CharacterSheetBody />
+                </CharacterSheetColumn>
+              )}
+            </PageContainer>
+          </div>
           <RollLog />
         </div>
       </CharacterSheetProvider>

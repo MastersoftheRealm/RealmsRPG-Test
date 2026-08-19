@@ -40,8 +40,8 @@ export function toggleSheetArmorEquipped(
 }
 
 export type InventoryEquipRow = {
-  type?: string;
-  equipped?: boolean;
+  type?: string | undefined;
+  equipped?: boolean | undefined;
 };
 
 /**

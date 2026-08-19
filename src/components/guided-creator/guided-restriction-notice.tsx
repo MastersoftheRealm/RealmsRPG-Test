@@ -10,7 +10,7 @@ import {
 
 export interface GuidedRestrictionNoticeProps {
   notice: string;
-  className?: string;
+  className?: string | undefined;
 }
 
 /** Shared info callout for guided choice-card restriction / uses notices. */
@@ -33,13 +33,13 @@ export function GuidedRestrictionNotice({ notice, className }: GuidedRestriction
 export interface GuidedFeatRestrictionNoticeProps {
   feat: Pick<Feat, 'state_feat'> & Partial<Pick<Feat, 'uses_per_rec' | 'rec_period'>>;
   /** Guided creator builds level-1 characters by default. */
-  level?: number;
+  level?: number | undefined;
   /**
    * Skip limited-uses sentence when a Uses DescriptorChip already states the same fact
    * (Path deep-dive feat rows — TASK-579).
    */
-  omitLimitedUses?: boolean;
-  className?: string;
+  omitLimitedUses?: boolean | undefined;
+  className?: string | undefined;
 }
 
 export function GuidedFeatRestrictionNotice({
@@ -55,7 +55,7 @@ export function GuidedFeatRestrictionNotice({
 
 export interface GuidedTraitRestrictionNoticeProps {
   trait: Pick<Trait, 'uses_per_rec' | 'rec_period'>;
-  className?: string;
+  className?: string | undefined;
 }
 
 export function GuidedTraitRestrictionNotice({

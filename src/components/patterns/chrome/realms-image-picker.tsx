@@ -43,18 +43,18 @@ export interface RealmsImagePickerProps {
    */
   categories: RealmsImagePickerFilter;
   /** Highlights the current selection when the modal opens. */
-  selectedImageId?: string | null;
-  title?: string;
-  description?: string;
+  selectedImageId?: string | null | undefined;
+  title?: string | undefined;
+  description?: string | undefined;
   /** Set false for pick-only surfaces such as portraits/profile pictures. */
-  allowAdminUpload?: boolean;
+  allowAdminUpload?: boolean | undefined;
   /**
    * Admin upload-into-bank defaults. `name` pre-fills the upload form; `extraCategories`
    * are merged with resolved `categories` (deduped) as initial tags.
    */
   uploadDefaults?: {
-    name?: string;
-    extraCategories?: RealmsImageCategory[];
+    name?: string | undefined;
+    extraCategories?: RealmsImageCategory[] | undefined;
   };
 }
 
@@ -63,9 +63,9 @@ export interface RealmsImageFieldProps {
   imageId: string | null;
   imageUrl: string | null;
   onChange: (selection: { imageId: string | null; imageUrl: string | null }) => void;
-  entityName?: string;
-  label?: string;
-  hint?: string;
+  entityName?: string | undefined;
+  label?: string | undefined;
+  hint?: string | undefined;
 }
 
 /**

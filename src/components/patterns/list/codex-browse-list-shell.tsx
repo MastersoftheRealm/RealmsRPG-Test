@@ -13,7 +13,7 @@
 import { Children, useLayoutEffect, useRef, useState, type ReactNode, type RefObject } from 'react';
 import { useWindowVirtualizer } from '@tanstack/react-virtual';
 import { SectionHeader } from '../chrome/section-header';
-import { LoadingState, EmptyState as ListEmptyState } from './list-components';
+import { LoadingState, EmptyState } from '@/components/ui';
 import { ListSearchToolbar } from './list-search-toolbar';
 import {
   ListHeader,
@@ -25,36 +25,36 @@ import type { EmptyStateProps } from '@/components/ui/empty-state';
 
 export interface CodexBrowseListShellProps {
   /** When set, renders SectionHeader (admin tabs). Omit for Codex browse. */
-  sectionTitle?: string;
-  onAdd?: () => void;
-  addLabel?: string;
+  sectionTitle?: string | undefined;
+  onAdd?: (() => void) | undefined;
+  addLabel?: string | undefined;
   search: string;
   onSearchChange: (value: string) => void;
   searchPlaceholder: string;
-  searchAriaLabel?: string;
+  searchAriaLabel?: string | undefined;
   /** Optional control after Filters (e.g. admin Create). Does not replace the Filters slot. */
-  searchTrailing?: ReactNode;
+  searchTrailing?: ReactNode | undefined;
   /** Filter panel body only — ListSearchToolbar wraps FilterSection compact (TASK-721). */
-  filters?: ReactNode;
+  filters?: ReactNode | undefined;
   /** Active-filter badge on the collapsed Filters toggle. */
-  filterActiveCount?: number;
+  filterActiveCount?: number | undefined;
   headerColumns: ListColumn[];
   gridColumns: string;
   sortState: SortState;
   onSort: (columnKey: string) => void;
-  hasThumbnailColumn?: boolean;
+  hasThumbnailColumn?: boolean | undefined;
   /** Reserve header space for GridListRow rightSlot / edit / delete chrome. */
-  rowChrome?: ListHeaderRowChrome;
-  isLoading?: boolean;
-  loadingMessage?: string;
-  isEmpty?: boolean;
-  emptyTitle?: string;
-  emptyMessage?: string;
-  emptyIcon?: ReactNode;
-  emptyAction?: EmptyStateProps['action'];
-  emptySize?: EmptyStateProps['size'];
+  rowChrome?: ListHeaderRowChrome | undefined;
+  isLoading?: boolean | undefined;
+  loadingMessage?: string | undefined;
+  isEmpty?: boolean | undefined;
+  emptyTitle?: string | undefined;
+  emptyMessage?: string | undefined;
+  emptyIcon?: ReactNode | undefined;
+  emptyAction?: EmptyStateProps['action'] | undefined;
+  emptySize?: EmptyStateProps['size'] | undefined;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }
 
 /** Below this row count the list mounts every child, exactly as before. */
@@ -197,7 +197,7 @@ export function CodexBrowseListShell({
         {isLoading ? (
           <LoadingState message={loadingMessage} />
         ) : isEmpty ? (
-          <ListEmptyState
+          <EmptyState
             icon={emptyIcon}
             title={emptyTitle}
             message={emptyMessage}

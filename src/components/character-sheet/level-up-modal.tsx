@@ -30,7 +30,7 @@ interface LevelUpModalProps {
   onClose: () => void;
   character: Character;
   /** Codex-hydrated character for path guidance (name + path_data). Falls back to `character`. */
-  displayCharacter?: Character;
+  displayCharacter?: Character | undefined;
   onConfirm: (newLevel: number) => void;
 }
 

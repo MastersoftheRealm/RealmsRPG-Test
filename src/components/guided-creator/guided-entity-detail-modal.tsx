@@ -21,12 +21,12 @@ import { GuidedSectionTitle } from './guided-section-title';
 export interface GuidedEntityDetailSection {
   id: string;
   title: string;
-  subtitle?: string;
+  subtitle?: string | undefined;
   /** Hover/focus tip explaining pick counts or section purpose (InfoTippy). */
-  tip?: ReactNode;
-  collapsedSummary?: string;
-  defaultExpanded?: boolean;
-  itemCount?: number;
+  tip?: ReactNode | undefined;
+  collapsedSummary?: string | undefined;
+  defaultExpanded?: boolean | undefined;
+  itemCount?: number | undefined;
   children: ReactNode;
 }
 
@@ -35,27 +35,27 @@ export interface GuidedEntityDetailModalProps {
   onClose: () => void;
   title: string;
   /** Short header line under the title (optional). */
-  description?: string;
+  description?: string | undefined;
   /** Primary overview block (vitals, prose, proficiency, etc.). */
   overview: ReactNode;
   /** Expandable option catalogs below the overview. Omit or pass [] when empty. */
-  sections?: GuidedEntityDetailSection[];
+  sections?: GuidedEntityDetailSection[] | undefined;
   /**
    * Optional bridge above catalogs (e.g. Path Options title + intro).
    * Rendered only when `sections` is non-empty so overview stays about the entity itself.
    */
-  optionsPreamble?: ReactNode;
+  optionsPreamble?: ReactNode | undefined;
   /**
    * When set, footer is Close (left) + Select (right). Select applies the entity
    * (caller should close). Distinct from catalog Layer 2 browse confirms.
    */
-  onSelect?: () => void;
-  selectLabel?: string;
-  selectDisabled?: boolean;
+  onSelect?: (() => void) | undefined;
+  selectLabel?: string | undefined;
+  selectDisabled?: boolean | undefined;
   /** Override footer actions entirely (default: Close, or Close + Select when onSelect set). */
-  footer?: ReactNode;
-  size?: 'md' | 'lg' | 'xl' | '2xl' | 'full';
-  className?: string;
+  footer?: ReactNode | undefined;
+  size?: 'md' | 'lg' | 'xl' | '2xl' | 'full' | undefined;
+  className?: string | undefined;
 }
 
 export function GuidedEntityDetailModal({

@@ -4,7 +4,7 @@
 
 'use client';
 
-import { cn } from '@/lib/utils';
+import { cn, type AllowUndefinedOptionals } from '@/lib/utils';
 import {
   getChoiceOptionIds,
   resolveChoiceOptionTraits,
@@ -14,21 +14,23 @@ import { SelectionToggle } from '../select/selection-toggle';
 import { ChoiceTraitOptionListPicker } from '../select/choice-trait-option-select';
 import type { Trait } from '@/hooks';
 
-export interface TraitSectionProps {
+interface TraitSectionPropsFields {
   title: string;
-  subtitle?: string;
+  subtitle?: string | undefined;
   icon: React.ReactNode;
   traits: Trait[];
   selectable: boolean;
   selectedIds: string[];
   onToggle: (id: string) => void;
-  variant?: 'default' | 'ancestry' | 'characteristic' | 'flaw';
+  variant?: 'default' | 'ancestry' | 'characteristic' | 'flaw' | undefined;
   /** When provided, choice traits (option_trait_ids) show a picker; onToggle(optionId) is used. */
-  allTraits?: Trait[] | null;
+  allTraits?: Trait[] | null | undefined;
   /** Single-species automatic species traits: parent id → chosen option trait id. */
-  speciesTraitChoices?: Record<string, string>;
-  onSpeciesTraitChoiceChange?: (parentTraitId: string, optionId: string) => void;
+  speciesTraitChoices?: Record<string, string> | undefined;
+  onSpeciesTraitChoiceChange?: ((parentTraitId: string, optionId: string) => void) | undefined;
 }
+
+export type TraitSectionProps = AllowUndefinedOptionals<TraitSectionPropsFields>;
 
 export function TraitSection({
   title,

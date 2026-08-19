@@ -6,8 +6,8 @@
  */
 
 type VerticalScroller = {
-  scrollBy?: (x: number, y: number) => void;
-  scrollTop?: number;
+  scrollBy?: ((x: number, y: number) => void) | undefined;
+  scrollTop?: number | undefined;
 };
 
 function applyVerticalScrollDelta(scroller: VerticalScroller, delta: number): void {

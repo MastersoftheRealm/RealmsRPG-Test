@@ -10,7 +10,7 @@ import {
 import { defined } from '@/lib/utils';
 import type { PowerTechniqueCharacterContext } from './power-technique-character-context';
 
-const rows: (PowerTechniqueFilterableRow & { tp?: number })[] = [
+const rows: (PowerTechniqueFilterableRow & { tp?: number | undefined })[] = [
   {
     categories: ['Offense'],
     energy: 6,

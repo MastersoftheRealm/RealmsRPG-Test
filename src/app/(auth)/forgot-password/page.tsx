@@ -111,7 +111,7 @@ export default function ForgotPasswordPage() {
   );
 }
 
-function CheckIcon({ className }: { className?: string }) {
+function CheckIcon({ className }: { className?: string | undefined }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

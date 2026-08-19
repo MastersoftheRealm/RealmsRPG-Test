@@ -9,8 +9,8 @@ import type { CreatureState } from './creature-creator-types';
 import { rawRecordToCreatureState } from './creature-skill-utils';
 
 interface CreatureCreatorCache {
-  creature?: CreatureState;
-  timestamp?: number;
+  creature?: CreatureState | undefined;
+  timestamp?: number | undefined;
 }
 
 export function bootstrapCreatureState(options: {
@@ -22,8 +22,10 @@ export function bootstrapCreatureState(options: {
   if (editCreatureId) {
     const match = rawItems.find(
       (x) =>
-        String((x as { id?: string; docId?: string }).id) === editCreatureId ||
-        String((x as { id?: string; docId?: string }).docId) === editCreatureId,
+        String((x as { id?: string | undefined; docId?: string | undefined }).id) ===
+          editCreatureId ||
+        String((x as { id?: string | undefined; docId?: string | undefined }).docId) ===
+          editCreatureId,
     );
     if (!match) return initialState;
     return rawRecordToCreatureState(match as Record<string, unknown>);

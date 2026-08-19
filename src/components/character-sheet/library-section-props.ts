@@ -17,9 +17,9 @@ import type { TabType } from './library-tab-config';
 /** Public LibrarySection props — tab chrome only; data comes from character-sheet context. */
 export interface LibrarySectionProps {
   /** Controlled tab (optional; page context owns tab when provided) */
-  activeTab?: TabType;
-  onActiveTabChange?: (tab: TabType) => void;
-  className?: string;
+  activeTab?: TabType | undefined;
+  onActiveTabChange?: ((tab: TabType) => void) | undefined;
+  className?: string | undefined;
 }
 
 /**
@@ -28,52 +28,62 @@ export interface LibrarySectionProps {
  */
 export interface SheetLibraryModel {
   archetypeProgression: {
-    innateEnergy?: number;
-    innateThreshold?: number;
-    innatePools?: number;
+    innateEnergy?: number | undefined;
+    innateThreshold?: number | undefined;
+    innatePools?: number | undefined;
   } | null;
   calculatedMaxEnergy: number;
-  powerPartsDb?: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    base_tp?: number;
-    op_1_tp?: number;
-    op_2_tp?: number;
-    op_3_tp?: number;
-  }>;
-  techniquePartsDb?: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    base_tp?: number;
-    op_1_tp?: number;
-    op_2_tp?: number;
-    op_3_tp?: number;
-  }>;
-  itemPropertiesDb?: Array<{
-    id: string | number;
-    name: string;
-    description?: string;
-    base_tp?: number;
-    tp_cost?: number;
-  }>;
-  traitsDb?: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    uses_per_rec?: number;
-    rec_period?: string;
-  }>;
-  featsDb?: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    effect?: string;
-    max_uses?: number;
-    rec_period?: string;
-    category?: string;
-  }>;
+  powerPartsDb?:
+    | Array<{
+        id: string;
+        name: string;
+        description?: string | undefined;
+        base_tp?: number | undefined;
+        op_1_tp?: number | undefined;
+        op_2_tp?: number | undefined;
+        op_3_tp?: number | undefined;
+      }>
+    | undefined;
+  techniquePartsDb?:
+    | Array<{
+        id: string;
+        name: string;
+        description?: string | undefined;
+        base_tp?: number | undefined;
+        op_1_tp?: number | undefined;
+        op_2_tp?: number | undefined;
+        op_3_tp?: number | undefined;
+      }>
+    | undefined;
+  itemPropertiesDb?:
+    | Array<{
+        id: string | number;
+        name: string;
+        description?: string | undefined;
+        base_tp?: number | undefined;
+        tp_cost?: number | undefined;
+      }>
+    | undefined;
+  traitsDb?:
+    | Array<{
+        id: string;
+        name: string;
+        description?: string | undefined;
+        uses_per_rec?: number | undefined;
+        rec_period?: string | undefined;
+      }>
+    | undefined;
+  featsDb?:
+    | Array<{
+        id: string;
+        name: string;
+        description?: string | undefined;
+        effect?: string | undefined;
+        max_uses?: number | undefined;
+        rec_period?: string | undefined;
+        category?: string | undefined;
+      }>
+    | undefined;
   characterSpeciesTraits: string[];
   archetypeFeatsForDisplay: CharacterFeat[];
   characterFeatsForDisplay: CharacterFeat[];
@@ -93,134 +103,145 @@ export interface LibrarySectionData {
   shields: Item[];
   armor: Item[];
   equipment: Item[];
-  currency?: number;
-  innateEnergy?: number;
-  innateThreshold?: number;
-  innatePools?: number;
-  currentInnateEnergy?: number;
-  currentEnergy?: number;
-  isEditMode?: boolean;
-  onAddPower?: () => void;
-  onRemovePower?: (id: string | number) => void;
-  onTogglePowerInnate?: (id: string | number, isInnate: boolean) => void;
-  onUsePower?: (id: string | number, energyCost: number) => void;
-  onAddTechnique?: () => void;
-  onRemoveTechnique?: (id: string | number) => void;
-  onUseTechnique?: (id: string | number, energyCost: number) => void;
-  onAddWeapon?: () => void;
-  onRemoveWeapon?: (id: string | number) => void;
-  onToggleEquipWeapon?: (id: string | number) => void;
-  onAddShield?: () => void;
-  onRemoveShield?: (id: string | number) => void;
-  onToggleEquipShield?: (id: string | number) => void;
-  onAddArmor?: () => void;
-  onRemoveArmor?: (id: string | number) => void;
-  onToggleEquipArmor?: (id: string | number) => void;
-  onAddEquipment?: () => void;
-  onRemoveEquipment?: (id: string | number) => void;
-  onEquipmentQuantityChange?: (id: string | number, delta: number) => void;
-  onCurrencyChange?: (value: number) => void;
-  visibility?: 'private' | 'campaign' | 'public';
-  onVisibilityChange?: (value: 'private' | 'campaign' | 'public') => void;
-  speedDisplayUnit?: 'spaces' | 'feet' | 'meters';
-  weight?: number;
-  height?: number;
-  appearance?: string;
-  archetypeDesc?: string;
-  notes?: string;
-  abilities?: Abilities;
-  powerAttackBonus?: number;
-  onWeightChange?: (value: number) => void;
-  onHeightChange?: (value: number) => void;
-  onAppearanceChange?: (value: string) => void;
-  onArchetypeDescChange?: (value: string) => void;
-  onNotesChange?: (value: string) => void;
-  namedNotes?: CharacterNote[];
-  onAddNote?: () => void;
-  onUpdateNote?: (id: string, updates: Partial<CharacterNote>) => void;
-  onDeleteNote?: (id: string) => void;
-  level?: number;
-  archetypeAbility?: number;
-  martialProficiency?: number;
-  powerPartsDb?: SheetLibraryModel['powerPartsDb'];
-  techniquePartsDb?: SheetLibraryModel['techniquePartsDb'];
-  itemPropertiesDb?: SheetLibraryModel['itemPropertiesDb'];
-  proficiencies?: CharacterProficiency[];
-  onProficienciesChange?: (next: CharacterProficiency[]) => void;
-  unarmedProwess?: number;
-  onUnarmedProwessChange?: (level: number) => void;
-  tabVisibility?: Partial<Record<TabType, boolean>>;
-  onTabVisibilityChange?: (next: Partial<Record<TabType, boolean>>) => void;
-  ancestry?: {
-    selectedTraits?: string[];
-    selectedFlaw?: string | null;
-    selectedCharacteristic?: string | null;
-  };
-  vanillaTraits?: {
-    ancestryTraits?: string[];
-    flawTrait?: string | null;
-    characteristicTrait?: string | null;
-    speciesTraits?: string[];
-  };
-  speciesTraitsFromCodex?: string[];
-  traitsDb?: SheetLibraryModel['traitsDb'];
-  traitUses?: Record<string, number>;
-  archetypeFeats?: Array<{
-    id?: string | number;
-    name: string;
-    description?: string;
-    maxUses?: number;
-    currentUses?: number;
-    recovery?: string;
-    customName?: string;
-    note?: string;
-  }>;
-  characterFeats?: Array<{
-    id?: string | number;
-    name: string;
-    description?: string;
-    maxUses?: number;
-    currentUses?: number;
-    recovery?: string;
-    customName?: string;
-    note?: string;
-  }>;
-  featsDb?: SheetLibraryModel['featsDb'];
-  onFeatUsesChange?: (featId: string, delta: number) => void;
-  onFeatLevelChange?: (
-    featId: string,
-    targetLevel: number,
-    listType: 'archetype' | 'character',
-  ) => void;
-  featRequirementCharacter?: import('@/lib/game/feat-requirements').CharacterForFeatRequirement;
-  onTraitUsesChange?: (traitName: string, delta: number) => void;
-  onAddArchetypeFeat?: () => void;
-  onAddCharacterFeat?: () => void;
-  onAddStateFeat?: () => void;
-  onRemoveFeat?: (featId: string) => void;
-  traitCustomizations?: Record<string, import('@/types/feats').FeatTraitCustomization>;
-  onFeatCustomizationChange?: (
-    featId: string,
-    listType: 'archetype' | 'character',
-    updates: Partial<import('@/types/feats').FeatTraitCustomization>,
-  ) => void;
-  onTraitCustomizationChange?: (
-    traitKey: string,
-    updates: Partial<import('@/types/feats').FeatTraitCustomization>,
-  ) => void;
-  stateFeats?: Array<{
-    id?: string | number;
-    name: string;
-    description?: string;
-    maxUses?: number;
-    currentUses?: number;
-    recovery?: string;
-    type?: 'archetype' | 'character';
-  }>;
-  stateUsesCurrent?: number;
-  stateUsesMax?: number;
-  onStateUsesChange?: (delta: number) => void;
-  onEnterState?: () => void;
-  maxArchetypeFeats?: number;
-  maxCharacterFeats?: number;
+  currency?: number | undefined;
+  innateEnergy?: number | undefined;
+  innateThreshold?: number | undefined;
+  innatePools?: number | undefined;
+  currentInnateEnergy?: number | undefined;
+  currentEnergy?: number | undefined;
+  isEditMode?: boolean | undefined;
+  onAddPower?: (() => void) | undefined;
+  onRemovePower?: ((id: string | number) => void) | undefined;
+  onTogglePowerInnate?: ((id: string | number, isInnate: boolean) => void) | undefined;
+  onUsePower?: ((id: string | number, energyCost: number) => void) | undefined;
+  onAddTechnique?: (() => void) | undefined;
+  onRemoveTechnique?: ((id: string | number) => void) | undefined;
+  onUseTechnique?: ((id: string | number, energyCost: number) => void) | undefined;
+  onAddWeapon?: (() => void) | undefined;
+  onRemoveWeapon?: ((id: string | number) => void) | undefined;
+  onToggleEquipWeapon?: ((id: string | number) => void) | undefined;
+  onAddShield?: (() => void) | undefined;
+  onRemoveShield?: ((id: string | number) => void) | undefined;
+  onToggleEquipShield?: ((id: string | number) => void) | undefined;
+  onAddArmor?: (() => void) | undefined;
+  onRemoveArmor?: ((id: string | number) => void) | undefined;
+  onToggleEquipArmor?: ((id: string | number) => void) | undefined;
+  onAddEquipment?: (() => void) | undefined;
+  onRemoveEquipment?: ((id: string | number) => void) | undefined;
+  onEquipmentQuantityChange?: ((id: string | number, delta: number) => void) | undefined;
+  onCurrencyChange?: ((value: number) => void) | undefined;
+  visibility?: 'private' | 'campaign' | 'public' | undefined;
+  onVisibilityChange?: ((value: 'private' | 'campaign' | 'public') => void) | undefined;
+  speedDisplayUnit?: 'spaces' | 'feet' | 'meters' | undefined;
+  weight?: number | undefined;
+  height?: number | undefined;
+  appearance?: string | undefined;
+  archetypeDesc?: string | undefined;
+  notes?: string | undefined;
+  abilities?: Abilities | undefined;
+  powerAttackBonus?: number | undefined;
+  onWeightChange?: ((value: number) => void) | undefined;
+  onHeightChange?: ((value: number) => void) | undefined;
+  onAppearanceChange?: ((value: string) => void) | undefined;
+  onArchetypeDescChange?: ((value: string) => void) | undefined;
+  onNotesChange?: ((value: string) => void) | undefined;
+  namedNotes?: CharacterNote[] | undefined;
+  onAddNote?: (() => void) | undefined;
+  onUpdateNote?: ((id: string, updates: Partial<CharacterNote>) => void) | undefined;
+  onDeleteNote?: ((id: string) => void) | undefined;
+  level?: number | undefined;
+  archetypeAbility?: number | undefined;
+  martialProficiency?: number | undefined;
+  powerPartsDb?: SheetLibraryModel['powerPartsDb'] | undefined;
+  techniquePartsDb?: SheetLibraryModel['techniquePartsDb'] | undefined;
+  itemPropertiesDb?: SheetLibraryModel['itemPropertiesDb'] | undefined;
+  proficiencies?: CharacterProficiency[] | undefined;
+  onProficienciesChange?: ((next: CharacterProficiency[]) => void) | undefined;
+  unarmedProwess?: number | undefined;
+  onUnarmedProwessChange?: ((level: number) => void) | undefined;
+  tabVisibility?: Partial<Record<TabType, boolean>> | undefined;
+  onTabVisibilityChange?: ((next: Partial<Record<TabType, boolean>>) => void) | undefined;
+  ancestry?:
+    | {
+        selectedTraits?: string[] | undefined;
+        selectedFlaw?: string | null | undefined;
+        selectedCharacteristic?: string | null | undefined;
+      }
+    | undefined;
+  vanillaTraits?:
+    | {
+        ancestryTraits?: string[] | undefined;
+        flawTrait?: string | null | undefined;
+        characteristicTrait?: string | null | undefined;
+        speciesTraits?: string[] | undefined;
+      }
+    | undefined;
+  speciesTraitsFromCodex?: string[] | undefined;
+  traitsDb?: SheetLibraryModel['traitsDb'] | undefined;
+  traitUses?: Record<string, number> | undefined;
+  archetypeFeats?:
+    | Array<{
+        id?: string | number | undefined;
+        name: string;
+        description?: string | undefined;
+        maxUses?: number | undefined;
+        currentUses?: number | undefined;
+        recovery?: string | undefined;
+        customName?: string | undefined;
+        note?: string | undefined;
+      }>
+    | undefined;
+  characterFeats?:
+    | Array<{
+        id?: string | number | undefined;
+        name: string;
+        description?: string | undefined;
+        maxUses?: number | undefined;
+        currentUses?: number | undefined;
+        recovery?: string | undefined;
+        customName?: string | undefined;
+        note?: string | undefined;
+      }>
+    | undefined;
+  featsDb?: SheetLibraryModel['featsDb'] | undefined;
+  onFeatUsesChange?: ((featId: string, delta: number) => void) | undefined;
+  onFeatLevelChange?:
+    | ((featId: string, targetLevel: number, listType: 'archetype' | 'character') => void)
+    | undefined;
+  featRequirementCharacter?:
+    | import('@/lib/game/feat-requirements').CharacterForFeatRequirement
+    | undefined;
+  onTraitUsesChange?: ((traitName: string, delta: number) => void) | undefined;
+  onAddArchetypeFeat?: (() => void) | undefined;
+  onAddCharacterFeat?: (() => void) | undefined;
+  onAddStateFeat?: (() => void) | undefined;
+  onRemoveFeat?: ((featId: string) => void) | undefined;
+  traitCustomizations?: Record<string, import('@/types/feats').FeatTraitCustomization> | undefined;
+  onFeatCustomizationChange?:
+    | ((
+        featId: string,
+        listType: 'archetype' | 'character',
+        updates: Partial<import('@/types/feats').FeatTraitCustomization>,
+      ) => void)
+    | undefined;
+  onTraitCustomizationChange?:
+    | ((traitKey: string, updates: Partial<import('@/types/feats').FeatTraitCustomization>) => void)
+    | undefined;
+  stateFeats?:
+    | Array<{
+        id?: string | number | undefined;
+        name: string;
+        description?: string | undefined;
+        maxUses?: number | undefined;
+        currentUses?: number | undefined;
+        recovery?: string | undefined;
+        type?: 'archetype' | 'character' | undefined;
+      }>
+    | undefined;
+  stateUsesCurrent?: number | undefined;
+  stateUsesMax?: number | undefined;
+  onStateUsesChange?: ((delta: number) => void) | undefined;
+  onEnterState?: (() => void) | undefined;
+  maxArchetypeFeats?: number | undefined;
+  maxCharacterFeats?: number | undefined;
 }

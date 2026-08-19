@@ -25,15 +25,15 @@ export interface PoweredMartialSliderProps {
   /** Callback when allocation changes */
   onChange: (powerValue: number, martialValue: number) => void;
   /** Whether the slider is disabled */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /** Compact mode for character sheet use */
-  compact?: boolean;
+  compact?: boolean | undefined;
   /** Hide the labels above the slider */
-  hideLabels?: boolean;
+  hideLabels?: boolean | undefined;
   /** Allow 0 at either end (for character sheet pure martial/power). When false, powered-martial requires min 1 each. */
-  allowZeroEnds?: boolean;
+  allowZeroEnds?: boolean | undefined;
   /** Additional className */
-  className?: string;
+  className?: string | undefined;
 }
 
 export function PoweredMartialSlider({

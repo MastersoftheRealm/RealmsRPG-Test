@@ -37,18 +37,18 @@ export function DefenseStatTile({
 }: {
   ability: AbilityName;
   abilities: { [K in AbilityName]?: number };
-  defenseSkills?: DefenseSkills;
+  defenseSkills?: DefenseSkills | undefined;
   level: number;
-  tempModifiers?: CharacterTempModifiers;
+  tempModifiers?: CharacterTempModifiers | undefined;
   showSpendControls: boolean;
   showTempControls: boolean;
   maxDefenseSkill: number;
   skillPointsRemaining: number;
-  totalSkillPoints?: number;
+  totalSkillPoints?: number | undefined;
   defenseBonus: number;
   defenseScore: number;
-  onDefenseChange?: (defense: keyof DefenseSkills, value: number) => void;
-  onTempModifiersChange?: (patch: CharacterTempModifiers) => void;
+  onDefenseChange?: ((defense: keyof DefenseSkills, value: number) => void) | undefined;
+  onTempModifiersChange?: ((patch: CharacterTempModifiers) => void) | undefined;
 }) {
   const rollContext = useRollsOptional();
   const info = ABILITY_INFO[ability];

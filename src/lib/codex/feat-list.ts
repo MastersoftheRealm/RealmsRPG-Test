@@ -51,7 +51,7 @@ export const FEAT_SELECTABLE_HEADER_COLUMNS = CODEX_FEAT_HEADER_COLUMNS.map((h) 
 
 export interface FeatSelectableColumnOptions {
   /** Creator eligibility already hides feats above level 1, so its catalog can omit this column. */
-  omitRequiredLevel?: boolean;
+  omitRequiredLevel?: boolean | undefined;
 }
 
 /** Compose selectable feat headers without forking the Codex column definitions. */
@@ -133,7 +133,7 @@ export function featSelectDetailSections(
   feat: Feat,
   skillIdToName: Map<string, string>,
   familyLevels: Feat[] = [],
-  opts?: { isCharacterFeat?: boolean; hideTypeSection?: boolean },
+  opts?: { isCharacterFeat?: boolean | undefined; hideTypeSection?: boolean | undefined },
 ) {
   return glrSurfaceDetailSections(
     'add-modal-feat',
@@ -166,19 +166,19 @@ export interface FeatListFilters {
 }
 
 export interface FilterFeatsOptions {
-  character?: Character;
-  showUnqualified?: boolean;
-  skills?: CodexSkillForFeat[];
-  allFeats?: Feat[];
+  character?: Character | undefined;
+  showUnqualified?: boolean | undefined;
+  skills?: CodexSkillForFeat[] | undefined;
+  allFeats?: Feat[] | undefined;
   /**
    * Archetype Path filter (ADR-0014): normalized ids the selected paths recommend, from
    * `pathRecommendedEntityIds`. `null` / omitted = no path filter. A feat matches when the path
    * recommends the row itself or its feat-family base, so higher ranks stay with their family.
    */
-  pathRecommendedIds?: ReadonlySet<string> | null;
+  pathRecommendedIds?: ReadonlySet<string> | null | undefined;
 }
 
-type FeatPathRow = Pick<Feat, 'id'> & { base_feat_id?: string | number | null };
+type FeatPathRow = Pick<Feat, 'id'> & { base_feat_id?: string | number | null | undefined };
 
 function featPathFamilyId(feat: FeatPathRow): string {
   return feat.base_feat_id ? String(feat.base_feat_id) : String(feat.id);
@@ -320,10 +320,13 @@ export function buildFeatDetailSections(
    * `feat.char_feat`. `hideTypeSection` omits Type chips when the list context
    * already separates archetype vs character feats (no column duplication).
    */
-  opts?: { isCharacterFeat?: boolean; hideTypeSection?: boolean },
-): Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> {
-  const detailSections: Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> =
-    [];
+  opts?: { isCharacterFeat?: boolean | undefined; hideTypeSection?: boolean | undefined },
+): Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean | undefined }> {
+  const detailSections: Array<{
+    label: string;
+    chips: ChipData[];
+    hideLabelIfSingle?: boolean | undefined;
+  }> = [];
 
   const isCharacterFeat = opts?.isCharacterFeat ?? feat.char_feat;
   if (!opts?.hideTypeSection) {

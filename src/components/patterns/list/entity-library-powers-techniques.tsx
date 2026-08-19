@@ -44,15 +44,15 @@ export function PowersListSection({
   collapsible,
   headingLevel,
 }: {
-  title?: string;
+  title?: string | undefined;
   /** Optional content beside the section title (e.g. InfoTippy). */
-  titleAddon?: ReactNode;
+  titleAddon?: ReactNode | undefined;
   items: EntityPowerRow[];
-  showListHeader?: boolean;
-  compactRows?: boolean;
-  includeEnergyColumn?: boolean;
+  showListHeader?: boolean | undefined;
+  compactRows?: boolean | undefined;
+  includeEnergyColumn?: boolean | undefined;
   /** When false, omit the internal SectionHeader title (for callers that provide their own header) */
-  showTitle?: boolean;
+  showTitle?: boolean | undefined;
 } & EntityListControls) {
   const hasAny = items.length > 0;
   const {
@@ -147,12 +147,12 @@ export function TechniquesListSection({
   collapsible,
   headingLevel,
 }: {
-  title?: string;
+  title?: string | undefined;
   items: EntityTechniqueRow[];
-  showListHeader?: boolean;
-  compactRows?: boolean;
-  showTitle?: boolean;
-  includeActionColumn?: boolean;
+  showListHeader?: boolean | undefined;
+  compactRows?: boolean | undefined;
+  showTitle?: boolean | undefined;
+  includeActionColumn?: boolean | undefined;
 } & EntityListControls) {
   const hasAny = items.length > 0;
   const {

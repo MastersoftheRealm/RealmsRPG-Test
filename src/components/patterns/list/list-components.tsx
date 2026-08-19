@@ -20,8 +20,8 @@ export { SearchInput } from '@/components/ui/search-input';
 export interface SearchInputProps {
   value: string;
   onChange: (value: string) => void;
-  placeholder?: string;
-  className?: string;
+  placeholder?: string | undefined;
+  className?: string | undefined;
 }
 
 // =============================================================================
@@ -44,11 +44,11 @@ export { LoadingState } from '@/components/ui/spinner';
 
 export interface ErrorDisplayProps {
   message: string;
-  subMessage?: string;
+  subMessage?: string | undefined;
   /** When provided, shows a retry button that calls this handler. */
-  onRetry?: () => void;
+  onRetry?: (() => void) | undefined;
   /** Label for the retry button (default: "Try again"). */
-  retryLabel?: string;
+  retryLabel?: string | undefined;
 }
 
 export function ErrorDisplay({

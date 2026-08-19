@@ -59,9 +59,9 @@ export interface OfficialTechniqueRow {
 
 export function getEmpoweredTechniqueTotals(
   item: LibraryTechnique & {
-    totals?: { energy?: number; trainingPoints?: number };
+    totals?: { energy?: number | undefined; trainingPoints?: number | undefined } | undefined;
   },
-): { energy?: number; tp?: number } {
+): { energy?: number | undefined; tp?: number | undefined } {
   const totals = item.totals;
   const energy = typeof totals?.energy === 'number' ? totals.energy : undefined;
   const tp = typeof totals?.trainingPoints === 'number' ? totals.trainingPoints : undefined;
@@ -143,20 +143,22 @@ export function officialTechniqueRowColumns(row: OfficialTechniqueRow): ColumnVa
 
 export function filterOfficialTechniqueRows<
   T extends {
-    id?: string | number;
-    raw?: { id?: string | number | null; docId?: string | number | null };
-    name?: string;
-    description?: string;
-    weapon?: string;
-    categories?: string[];
-    energy?: string | number | null;
-    tp?: number | null;
-    action?: string | null;
-    actionTypeRaw?: string | null;
-    isReaction?: boolean;
-    partIds?: string[];
-    partNames?: string[];
-    category?: string;
+    id?: string | number | undefined;
+    raw?:
+      | { id?: string | number | null | undefined; docId?: string | number | null | undefined }
+      | undefined;
+    name?: string | undefined;
+    description?: string | undefined;
+    weapon?: string | undefined;
+    categories?: string[] | undefined;
+    energy?: string | number | null | undefined;
+    tp?: number | null | undefined;
+    action?: string | null | undefined;
+    actionTypeRaw?: string | null | undefined;
+    isReaction?: boolean | undefined;
+    partIds?: string[] | undefined;
+    partNames?: string[] | undefined;
+    category?: string | undefined;
   },
 >(
   rows: T[],

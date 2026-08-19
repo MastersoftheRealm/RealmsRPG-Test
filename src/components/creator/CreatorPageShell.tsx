@@ -26,21 +26,21 @@ export type CreatorPageAuthConfig = {
   /** Path returned to after login (e.g. "/power-creator") */
   returnPath: string;
   /** LoginPromptModal content type label */
-  contentType?: string;
+  contentType?: string | undefined;
   /**
    * When true (default), Load requires auth and opens LoginPromptModal if logged out.
    * Species creator keeps Load ungated — set false.
    */
-  requireAuthToLoad?: boolean;
+  requireAuthToLoad?: boolean | undefined;
 };
 
 export type CreatorPageLoadingConfig = {
   isLoading: boolean;
-  loadingMessage?: string;
-  error?: Error | null;
-  onRetry?: () => void;
+  loadingMessage?: string | undefined;
+  error?: Error | null | undefined;
+  onRetry?: (() => void) | undefined;
   /** Full error message; if omitted, uses error.message with a generic prefix */
-  errorMessage?: string;
+  errorMessage?: string | undefined;
 };
 
 export type CreatorPagePublishConfig = {
@@ -49,7 +49,7 @@ export type CreatorPagePublishConfig = {
   onConfirm: () => void | Promise<void>;
   title: string;
   description: string;
-  confirmLabel?: string;
+  confirmLabel?: string | undefined;
 };
 
 export type CreatorPageResetConfirmConfig = {
@@ -58,24 +58,24 @@ export type CreatorPageResetConfirmConfig = {
   onConfirm: () => void;
   title: string;
   description: string;
-  confirmLabel?: string;
+  confirmLabel?: string | undefined;
 };
 
 export type CreatorPageShellProps = {
   icon: ReactNode;
   title: string;
   description: string;
-  size?: ContainerSize;
-  headerClassName?: string;
+  size?: ContainerSize | undefined;
+  headerClassName?: string | undefined;
 
   user: unknown;
   auth: CreatorPageAuthConfig;
-  showPublicPrivate?: boolean;
+  showPublicPrivate?: boolean | undefined;
 
   saveTarget: 'private' | 'public';
   onSaveTargetChange: (target: 'private' | 'public') => void;
   saving: boolean;
-  saveDisabled?: boolean;
+  saveDisabled?: boolean | undefined;
   /** Unauthenticated save handler — shell gates login */
   onSave: () => void | Promise<void>;
   onReset: () => void;
@@ -83,20 +83,20 @@ export type CreatorPageShellProps = {
   onLoad: () => void;
 
   publish: CreatorPagePublishConfig;
-  resetConfirm?: CreatorPageResetConfirmConfig;
+  resetConfirm?: CreatorPageResetConfirmConfig | undefined;
 
-  loading?: CreatorPageLoadingConfig;
+  loading?: CreatorPageLoadingConfig | undefined;
   /** When set, shell renders LoadFromLibraryModal. Omit for fully custom load in extraModals. */
-  loadModal?: LoadFromLibraryModalProps | null;
+  loadModal?: LoadFromLibraryModalProps | null | undefined;
 
-  stickySidebar?: boolean;
+  stickySidebar?: boolean | undefined;
   sidebar: ReactNode;
   children: ReactNode;
-  extraModals?: ReactNode;
+  extraModals?: ReactNode | undefined;
   /** Optional InfoTippy beside toolbar Load / Reset (power creator). */
   toolbarHelp?: {
-    load?: ReactNode;
-    reset?: ReactNode;
+    load?: ReactNode | undefined;
+    reset?: ReactNode | undefined;
   };
 };
 

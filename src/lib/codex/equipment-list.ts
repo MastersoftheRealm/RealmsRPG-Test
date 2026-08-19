@@ -30,7 +30,10 @@ export interface CodexEquipmentListFilters {
   rarityFilter: string;
 }
 
-export function equipmentCurrency(item: { currency?: number; gold_cost?: number }): number {
+export function equipmentCurrency(item: {
+  currency?: number | undefined;
+  gold_cost?: number | undefined;
+}): number {
   const value = item.currency ?? item.gold_cost ?? 0;
   return typeof value === 'number' && !Number.isNaN(value) ? value : 0;
 }

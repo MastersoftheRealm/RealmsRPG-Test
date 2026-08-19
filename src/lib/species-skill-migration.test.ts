@@ -16,7 +16,12 @@ const allSkills = [
 ];
 
 function characterWithSkills(
-  skills: Array<{ id: string; name?: string; skill_val?: number; prof?: boolean }>,
+  skills: Array<{
+    id: string;
+    name?: string | undefined;
+    skill_val?: number | undefined;
+    prof?: boolean | undefined;
+  }>,
   ancestry: CharacterAncestry = oldAncestry,
 ): Character {
   return {

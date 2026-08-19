@@ -14,15 +14,15 @@ import { LandingDiceDecor } from './landing-dice-decor';
 
 export interface CreatorFunnelHeroProps {
   title: string;
-  subtitle?: ReactNode;
+  subtitle?: ReactNode | undefined;
   /** Small label above the title (e.g. "Guided character creation"). */
-  eyebrow?: string;
-  actions?: ReactNode;
+  eyebrow?: string | undefined;
+  actions?: ReactNode | undefined;
   /** Chooser uses centered copy; guided creator uses start + optional actions. */
-  align?: 'center' | 'start';
+  align?: 'center' | 'start' | undefined;
   /** Tighter header for in-flow creator (less vertical scroll before content). */
-  compact?: boolean;
-  className?: string;
+  compact?: boolean | undefined;
+  className?: string | undefined;
 }
 
 export function CreatorFunnelHero({

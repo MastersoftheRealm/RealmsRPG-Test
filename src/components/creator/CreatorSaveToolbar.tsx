@@ -18,19 +18,19 @@ export interface CreatorSaveToolbarProps {
   onLoad: () => void;
   onReset: () => void;
   saving: boolean;
-  saveDisabled?: boolean;
-  showPublicPrivate?: boolean;
+  saveDisabled?: boolean | undefined;
+  showPublicPrivate?: boolean | undefined;
   user: unknown;
   /**
    * When false, Load is usable while logged out (species creator).
    * Affects Load button aria/tooltip only — shell still owns the auth gate.
    */
-  requireAuthToLoad?: boolean;
-  className?: string;
+  requireAuthToLoad?: boolean | undefined;
+  className?: string | undefined;
   /** Optional InfoTippy beside Load */
-  loadHelp?: ReactNode;
+  loadHelp?: ReactNode | undefined;
   /** Optional InfoTippy beside Reset */
-  resetHelp?: ReactNode;
+  resetHelp?: ReactNode | undefined;
 }
 
 export function CreatorSaveToolbar({

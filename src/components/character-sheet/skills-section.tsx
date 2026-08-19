@@ -54,19 +54,19 @@ type Skill = SheetDisplaySkill;
 interface SkillsSectionProps {
   skills: Skill[];
   abilities: Abilities;
-  isEditMode?: boolean;
-  isTempModifierMode?: boolean;
-  totalSkillPoints?: number;
+  isEditMode?: boolean | undefined;
+  isTempModifierMode?: boolean | undefined;
+  totalSkillPoints?: number | undefined;
   /** When provided, used for PointStatus and pencil state (includes defense spending). Enables red pencil when overspent. */
-  spentSkillPoints?: number;
+  spentSkillPoints?: number | undefined;
   // Species skills are locked and can't have proficiency removed
-  speciesSkills?: string[];
-  tempModifiers?: CharacterTempModifiers;
-  onTempModifiersChange?: (patch: CharacterTempModifiers) => void;
-  onSkillChange?: (skillId: string, updates: Partial<Skill>) => void;
-  onRemoveSkill?: (skillId: string) => void;
-  onAddSubSkill?: () => void;
-  className?: string;
+  speciesSkills?: string[] | undefined;
+  tempModifiers?: CharacterTempModifiers | undefined;
+  onTempModifiersChange?: ((patch: CharacterTempModifiers) => void) | undefined;
+  onSkillChange?: ((skillId: string, updates: Partial<Skill>) => void) | undefined;
+  onRemoveSkill?: ((skillId: string) => void) | undefined;
+  onAddSubSkill?: (() => void) | undefined;
+  className?: string | undefined;
 }
 
 export function SkillsSection({

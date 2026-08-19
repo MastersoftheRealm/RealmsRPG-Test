@@ -11,7 +11,7 @@ import { resolveGlrFactLayout, type GlrResolvedLayout } from './resolve-glr-fact
 export interface GlrSurfaceBinding {
   entityType: GlrEntityType;
   mode: GlrDensityMode;
-  flags?: GlrLayoutFlags;
+  flags?: GlrLayoutFlags | undefined;
 }
 
 export const GLR_SURFACE_BINDINGS = {

@@ -37,7 +37,7 @@ export interface GuidedEquipmentL2ModalProps {
   tpLimit: number;
   /** Level-1 starting Currency — PointStatus total and the ceiling for every phase. */
   currencyStarting: number;
-  scopeExtra?: ReactNode;
+  scopeExtra?: ReactNode | undefined;
   onClose: () => void;
   onDraftChange: (partial: Partial<GuidedDraft>) => void;
 }

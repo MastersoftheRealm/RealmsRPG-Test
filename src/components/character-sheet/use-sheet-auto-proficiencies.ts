@@ -23,7 +23,7 @@ import type { LibrarySectionData } from './library-section-props';
 
 export type ApplyAutoProficienciesResult = {
   character: Character;
-  overLimitWarning?: string;
+  overLimitWarning?: string | undefined;
 };
 
 type ShowToast = (message: string, variant?: 'success' | 'error' | 'warning' | 'info') => void;

@@ -20,13 +20,13 @@ interface SearchInputProps extends Omit<
   /** Change handler */
   onChange: (value: string) => void;
   /** Whether to show clear button when value is present */
-  showClear?: boolean;
+  showClear?: boolean | undefined;
   /** Custom icon to use instead of search icon */
-  icon?: React.ReactNode;
+  icon?: React.ReactNode | undefined;
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
   /** Forwarded to the input and merged with the internal ref used by clear-then-refocus. */
-  ref?: React.Ref<HTMLInputElement>;
+  ref?: React.Ref<HTMLInputElement> | undefined;
 }
 
 const sizeClasses = {
@@ -79,7 +79,7 @@ export function SearchInput({
   };
 
   return (
-    <div className={cn('search-input-wrapper', sizes.wrapper)}>
+    <div className={cn('search-input-wrapper min-w-0', sizes.wrapper)}>
       <span className={cn('search-input-icon', sizes.icon)}>
         {icon || <Search className="h-full w-full" />}
       </span>

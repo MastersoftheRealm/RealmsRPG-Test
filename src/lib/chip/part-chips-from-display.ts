@@ -3,16 +3,16 @@ import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
 
 export type DisplayPartChip = {
   text: string;
-  description?: string;
-  finalTP?: number;
+  description?: string | undefined;
+  finalTP?: number | undefined;
   /** Max option level > 0; omit when 0 / not leveled. */
-  optionLevel?: number;
+  optionLevel?: number | undefined;
 };
 
 /** Map calculator display part chips to GridListRow `ChipData` (dense browse: `TP: N`). */
 export function partChipsFromDisplay(
   partChips: DisplayPartChip[],
-  opts?: { stripOptionSuffix?: boolean },
+  opts?: { stripOptionSuffix?: boolean | undefined },
 ): ChipData[] {
   return partChips.map((chip) => {
     let name = (chip.text.split(' | TP:')[0] ?? chip.text).trim();

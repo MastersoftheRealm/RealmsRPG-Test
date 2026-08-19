@@ -57,7 +57,7 @@ export function redistributeProficiency(
 /** Player-visible paths with parsed path_data; optionally exclude current path id. */
 export function listPlayerVisiblePaths(
   codexArchetypes: Archetype[],
-  options?: { excludeId?: string | null },
+  options?: { excludeId?: string | null | undefined },
 ): Archetype[] {
   const excludeId = options?.excludeId ?? null;
   return (codexArchetypes ?? [])
@@ -79,8 +79,8 @@ export function groupPathsByCategory(paths: Archetype[]): Record<PathCategoryGro
 
 export type PathSwitchEditResult = {
   archetype: { id: string; type: ArchetypeCategory };
-  pow_abil?: AbilityName;
-  mart_abil?: AbilityName;
+  pow_abil?: AbilityName | undefined;
+  mart_abil?: AbilityName | undefined;
   mart_prof: number;
   pow_prof: number;
   archetypePathId: string;

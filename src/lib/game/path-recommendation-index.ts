@@ -36,14 +36,14 @@ export interface PathRecommendationSourcePath {
   id: string;
   name: string;
   type: ArchetypeCategory;
-  path_data?: ArchetypePathData;
+  path_data?: ArchetypePathData | undefined;
 }
 
 /** Any codex/library row a path can recommend (feat, skill, power, technique, item…). */
 export interface PathRecommendationEntity {
   id: string | number;
-  docId?: string | number | null;
-  name?: string | null;
+  docId?: string | number | null | undefined;
+  name?: string | null | undefined;
 }
 
 /** Path choice for `ArchetypePathFilter` options. */
@@ -201,19 +201,21 @@ export function pathIdsForArchetypeType(
 
 /** Official / My Library rows: list id plus source `id` / `docId` so copies match the same refs. */
 export function libraryRowPathIds(row: {
-  id?: string | number;
-  raw?: { id?: string | number | null; docId?: string | number | null };
+  id?: string | number | undefined;
+  raw?:
+    | { id?: string | number | null | undefined; docId?: string | number | null | undefined }
+    | undefined;
 }): Array<string | number | null | undefined> {
   return [row.id, row.raw?.id ?? null, row.raw?.docId ?? null];
 }
 
 /** USM / L2 rows: list id plus payload `id` / `docId`. */
 export function selectableItemPathIds(item: {
-  id?: string | number;
-  data?: unknown;
+  id?: string | number | undefined;
+  data?: unknown | undefined;
 }): Array<string | number | null | undefined> {
   const data = item.data as
-    | { id?: string | number | null; docId?: string | number | null }
+    | { id?: string | number | null | undefined; docId?: string | number | null | undefined }
     | null
     | undefined;
   return libraryRowPathIds({ id: item.id, raw: data ?? undefined });
@@ -221,8 +223,8 @@ export function selectableItemPathIds(item: {
 
 type PathFilterableRow = {
   id: string;
-  badges?: Array<{ label: string; color?: string }>;
-  showBadgesInName?: boolean;
+  badges?: Array<{ label: string; color?: string | undefined }> | undefined;
+  showBadgesInName?: boolean | undefined;
 };
 
 /**
@@ -236,8 +238,8 @@ export function applyLivePathFilter<T extends PathFilterableRow>(
     pathMatchIds: ReadonlySet<string> | null;
     pathIndex: PathRecommendationIndex;
     selectedPathIds: readonly string[];
-    keepIds?: ReadonlySet<string>;
-    idsForItem?: (item: T) => Array<string | number | null | undefined>;
+    keepIds?: ReadonlySet<string> | undefined;
+    idsForItem?: ((item: T) => Array<string | number | null | undefined>) | undefined;
   },
 ): T[] {
   const { pathMatchIds, pathIndex, selectedPathIds, keepIds } = opts;

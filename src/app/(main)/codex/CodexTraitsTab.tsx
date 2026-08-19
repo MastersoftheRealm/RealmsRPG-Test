@@ -25,7 +25,11 @@ const TRAIT_COLUMNS = [
   { key: 'rec_period', label: 'RECOVERY' },
 ];
 
-export function CodexTraitsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+export function CodexTraitsTab({
+  codexMode = 'public',
+}: {
+  codexMode?: 'public' | 'my' | undefined;
+}) {
   const loadPublicCodex = codexMode === 'public';
   const { data: traits, isLoading, error, refetch } = useTraits({ enabled: loadPublicCodex });
   const [search, setSearch] = useState('');

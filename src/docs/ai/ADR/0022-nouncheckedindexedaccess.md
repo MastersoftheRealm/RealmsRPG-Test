@@ -23,7 +23,7 @@ audit’s ~1,523 index sites). Tooling was ready; WAITING until owner ack.
 ## Consequences
 
 - Positive: indexed reads are `T | undefined`; empty-array `[0]` and regex groups are compile-time.
-- Negative / follow-ups: TASK-799 list/modal clusters still WAITING. `exactOptionalPropertyTypes`
-  stays off (WAITING TASK-824). Helper params that still take unparameterized `SupabaseClient`
-  remain TASK-822.
+- Negative / follow-ups: TASK-799 list/modal clusters done (pending-qa). `exactOptionalPropertyTypes`
+  is TASK-824 / ADR-0024 (Accepted; flag in main `tsconfig.json`). Helper params
+  that still take unparameterized `SupabaseClient` remain TASK-822.
 - Rejected: leave the flag preview-only; blanket `!` on every index; skip Legacy type errors.

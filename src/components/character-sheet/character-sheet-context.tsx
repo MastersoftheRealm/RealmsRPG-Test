@@ -89,9 +89,9 @@ export interface CharacterSheetContextValue {
     feats: Array<{
       id: string;
       name: string;
-      description?: string;
-      effect?: string;
-      max_uses?: number;
+      description?: string | undefined;
+      effect?: string | undefined;
+      max_uses?: number | undefined;
     }>,
     type: 'archetype' | 'character' | 'state',
   ) => void;
@@ -99,9 +99,9 @@ export interface CharacterSheetContextValue {
     skills: Array<{
       id: string;
       name: string;
-      ability?: string;
-      base_skill_id?: number;
-      selectedBaseSkillId?: string;
+      ability?: string | undefined;
+      base_skill_id?: number | undefined;
+      selectedBaseSkillId?: string | undefined;
     }>,
   ) => void;
   onConfirmRemoveFeat: () => void;
@@ -123,7 +123,15 @@ export interface CharacterSheetContextValue {
   /** Skills */
   onSkillChange: (
     skillId: string,
-    updates: Partial<{ skill_val: number; prof: boolean; ability: string }>,
+    updates: Partial<{
+      name: string;
+      skill_val: number;
+      prof: boolean | undefined;
+      ability: string | undefined;
+      availableAbilities: string[] | undefined;
+      category: string | undefined;
+      baseSkill: string | undefined;
+    }>,
   ) => void;
   onRemoveSkill: (skillId: string) => void;
   onAddSubSkill: () => void;

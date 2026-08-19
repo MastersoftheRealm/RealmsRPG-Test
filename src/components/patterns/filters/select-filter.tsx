@@ -25,14 +25,14 @@ interface SelectFilterProps {
    * Optional top option with `value=""` to represent an "unfiltered" state.
    * Pass `null` to omit the placeholder option entirely.
    */
-  placeholder?: string | null;
+  placeholder?: string | null | undefined;
   /** Optional control beside the label (e.g. InfoTippy). */
-  labelAccessory?: ReactNode;
+  labelAccessory?: ReactNode | undefined;
   /** Disable the select (e.g. value set by character filter). */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /** Shown beside the label when `disabled` (e.g. Set by character). */
-  disabledHint?: string;
-  className?: string;
+  disabledHint?: string | undefined;
+  className?: string | undefined;
 }
 
 export function SelectFilter({

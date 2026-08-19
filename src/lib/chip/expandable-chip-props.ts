@@ -10,11 +10,11 @@ import {
 export function expandableChipPropsFromPartData(
   part: PartData,
   ctx?: {
-    isExpanded?: boolean;
-    onClick?: (e: React.MouseEvent) => void;
-    size?: 'sm' | 'md';
-    fullWidthWhenExpanded?: boolean;
-    className?: string;
+    isExpanded?: boolean | undefined;
+    onClick?: ((e: React.MouseEvent) => void) | undefined;
+    size?: 'sm' | 'md' | undefined;
+    fullWidthWhenExpanded?: boolean | undefined;
+    className?: string | undefined;
   },
 ): ExpandableChipProps {
   const hasTP = (part.tpCost ?? 0) > 0;

@@ -14,15 +14,15 @@ import { FilterNativeSelect } from './filter-native-select';
 import { dedupeStrings } from './filter-utils';
 
 interface TagFilterProps {
-  label?: string;
-  placeholder?: string;
+  label?: string | undefined;
+  placeholder?: string | undefined;
   tags: string[];
   selectedTags: string[];
   tagMode: 'any' | 'all';
   onSelect: (tag: string) => void;
   onRemove: (tag: string) => void;
   onModeChange: (mode: 'any' | 'all') => void;
-  className?: string;
+  className?: string | undefined;
 }
 
 export function TagFilter({

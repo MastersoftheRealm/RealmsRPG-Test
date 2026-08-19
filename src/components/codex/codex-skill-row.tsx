@@ -15,9 +15,9 @@ export function CodexSkillRow({
 }: {
   skill: Skill;
   skillIdToName: Map<string, string>;
-  rightSlot?: ReactNode;
-  variant?: 'codex' | 'admin';
-  nameChipLabels?: string[];
+  rightSlot?: ReactNode | undefined;
+  variant?: 'codex' | 'admin' | undefined;
+  nameChipLabels?: string[] | undefined;
 }) {
   const isSubSkill = skill.base_skill_id !== undefined && skill.base_skill_id !== 0;
   const baseSkillName =

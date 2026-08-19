@@ -29,9 +29,9 @@ export function ChipList({
 }: {
   items: string[];
   onRemove: (item: string) => void;
-  color?: string;
+  color?: string | undefined;
   /** Optional: return feat point cost label per item (e.g. "+1 pt"). Shown as small chip. */
-  costLabel?: (item: string) => string | undefined;
+  costLabel?: ((item: string) => string | undefined) | undefined;
 }) {
   if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
 
@@ -83,11 +83,11 @@ export function ExpandableChipList({
 }: {
   items: string[];
   onRemove: (item: string) => void;
-  color?: string;
-  rowHoverClass?: string;
+  color?: string | undefined;
+  rowHoverClass?: string | undefined;
   descriptions: Record<string, string>;
   /** Optional: return feat point cost label per item (e.g. "+1 pt"). Shown in rightSlot as chip. */
-  costLabel?: (item: string) => string | undefined;
+  costLabel?: ((item: string) => string | undefined) | undefined;
 }) {
   if (items.length === 0) return <p className="text-sm text-text-muted italic">None</p>;
 
@@ -138,14 +138,16 @@ export function AddItemDropdown({
   costForOption,
   sectionCostLabel,
 }: {
-  options: readonly { value: string; label: string; description?: string }[] | readonly string[];
+  options:
+    | readonly { value: string; label: string; description?: string | undefined }[]
+    | readonly string[];
   selectedItems: readonly string[];
   onAdd: (item: string) => void;
   placeholder: string;
   /** Optional: return feat point cost to append to each option label (e.g. "+1 pt"). */
-  costForOption?: (value: string) => string | number | undefined;
+  costForOption?: ((value: string) => string | number | undefined) | undefined;
   /** Optional: short label for cost shown next to dropdown (e.g. "+1 pt each"). */
-  sectionCostLabel?: string;
+  sectionCostLabel?: string | undefined;
 }) {
   const [selectedValue, setSelectedValue] = useState('');
 
@@ -279,7 +281,7 @@ export function displayItemToSelectableItem(item: DisplayItem, columns?: string[
     data: item,
   };
   if (item.cost != null && (columns == null || columns.length === 0)) {
-    (base as SelectableItem & { Points?: number }).Points =
+    (base as SelectableItem & { Points?: number | undefined }).Points =
       typeof item.cost === 'number' ? item.cost : parseInt(String(item.cost), 10) || 0;
   }
   return base;

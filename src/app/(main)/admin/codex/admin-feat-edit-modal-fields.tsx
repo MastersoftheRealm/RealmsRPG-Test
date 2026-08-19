@@ -188,7 +188,7 @@ export function AdminFeatEditModalFields({
             {(feats ?? [])
               .filter(
                 (f) =>
-                  !(f as Feat & { base_feat_id?: string }).base_feat_id &&
+                  !(f as Feat & { base_feat_id?: string | undefined }).base_feat_id &&
                   ((f as Feat).feat_lvl == null || (f as Feat).feat_lvl === 1),
               )
               .map((f) => (

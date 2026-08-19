@@ -53,7 +53,7 @@ function stripCharacterPatchMeta(patch: Record<string, unknown>): Record<string,
 export function applyCharacterDirtyPatch(
   currentData: Record<string, unknown>,
   patch: Record<string, unknown>,
-  options?: { blobUpdatedAt?: string },
+  options?: { blobUpdatedAt?: string | undefined },
 ): Record<string, unknown> {
   const merged = { ...currentData, ...stripCharacterPatchMeta(patch) };
   if (options?.blobUpdatedAt) merged.updatedAt = options.blobUpdatedAt;

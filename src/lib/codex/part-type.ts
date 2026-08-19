@@ -7,7 +7,7 @@
 
 /** Rows arrive with `type` normalized to power/technique; blank stays in both lists. */
 interface PartTypeRow {
-  type?: string;
+  type?: string | undefined;
 }
 
 export function selectPowerParts<T extends PartTypeRow>(parts: readonly T[]): T[] {

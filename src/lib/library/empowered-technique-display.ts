@@ -99,7 +99,7 @@ export function deriveEmpoweredTechniquePartChips(
   item: unknown,
   powerPartsDb: PowerPart[],
   techniquePartsDb: TechniquePart[],
-  opts?: { stripOptionSuffix?: boolean },
+  opts?: { stripOptionSuffix?: boolean | undefined },
 ): ChipData[] {
   const powerDisplay = derivePowerDisplay(buildEmpoweredPowerDocument(item), powerPartsDb);
   const techniqueDisplay = deriveTechniqueDisplay(
@@ -116,7 +116,7 @@ export function empoweredTechniquePartsSection(
   item: unknown,
   powerPartsDb: PowerPart[],
   techniquePartsDb: TechniquePart[],
-  opts?: { stripOptionSuffix?: boolean },
+  opts?: { stripOptionSuffix?: boolean | undefined },
 ): MetadataDetailSection | undefined {
   const chips = deriveEmpoweredTechniquePartChips(item, powerPartsDb, techniquePartsDb, opts);
   return partsProficienciesSection(chips, 'parts');

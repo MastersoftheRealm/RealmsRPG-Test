@@ -7,8 +7,8 @@ export type LegalListItem = string | { label: string; text: string };
 export type LegalSection = {
   heading: string;
   paragraphs: string[];
-  list?: LegalListItem[];
-  contactEmail?: boolean;
+  list?: LegalListItem[] | undefined;
+  contactEmail?: boolean | undefined;
 };
 
 export const PRIVACY_COPY = {

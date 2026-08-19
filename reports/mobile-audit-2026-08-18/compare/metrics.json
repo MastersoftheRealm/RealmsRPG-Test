@@ -40,15 +40,15 @@
     "controlCount": 42,
     "medianControlHeight": 44,
     "controlHeightBuckets": {
-      "under32": 1,
+      "under32": 13,
       "32to43": 1,
-      "44to52": 40,
+      "44to52": 28,
       "over52": 0
     },
     "rowCount": 13,
     "medianRowHeight": 68,
     "chromeBeforeContent": 546,
-    "docHeight": 35336
+    "docHeight": 35240
   },
   {
     "id": "realms-library",
@@ -57,14 +57,14 @@
     "controlCount": 120,
     "medianControlHeight": 44,
     "controlHeightBuckets": {
-      "under32": 1,
-      "32to43": 1,
-      "44to52": 73,
+      "under32": 13,
+      "32to43": 3,
+      "44to52": 59,
       "over52": 45
     },
     "rowCount": 45,
     "medianRowHeight": 84,
     "chromeBeforeContent": 590,
-    "docHeight": 5366
+    "docHeight": 5270
   }
 ]

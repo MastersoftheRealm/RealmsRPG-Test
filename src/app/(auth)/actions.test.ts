@@ -34,13 +34,16 @@ const mockCreateServiceClient = vi.mocked(createServiceClient);
 const USER = { uid: 'user-1', email: 'hero@example.com' };
 const UNIQUE_VIOLATION = { code: '23505', message: 'duplicate key value' };
 
-type QueryResult = { data: unknown; error: { code?: string; message?: string } | null };
+type QueryResult = {
+  data: unknown;
+  error: { code?: string | undefined; message?: string | undefined } | null;
+};
 type Action = 'select' | 'insert' | 'update' | 'upsert' | 'delete';
 
 interface Op {
   table: string;
   action: Action;
-  payload?: unknown;
+  payload?: unknown | undefined;
   filters: Record<string, string>;
 }
 

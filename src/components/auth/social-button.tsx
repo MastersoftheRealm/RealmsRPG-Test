@@ -10,8 +10,8 @@ import Image from 'next/image';
 interface SocialButtonProps {
   provider: 'google' | 'apple';
   onClick: () => void;
-  disabled?: boolean;
-  className?: string;
+  disabled?: boolean | undefined;
+  className?: string | undefined;
 }
 
 const providerConfig = {

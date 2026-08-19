@@ -354,7 +354,11 @@ export function isMechanicPropertyName(name: string): boolean {
 export function propertyDescriptorChip(
   name: string,
   description?: string | null,
-  opts?: { cost?: number; costLabel?: string; includeCost?: boolean },
+  opts?: {
+    cost?: number | undefined;
+    costLabel?: string | undefined;
+    includeCost?: boolean | undefined;
+  },
 ): ChipData {
   const tip = description?.trim() || undefined;
   const includeCost = opts?.includeCost === true;
@@ -376,9 +380,14 @@ export function propertyDescriptorChip(
  * Default: property **name only** (no Training Points cost on the chip).
  */
 export function namedPropertyDescriptorChips(
-  properties: Array<string | { name?: string; id?: unknown; op_1_lvl?: number }> | undefined,
+  properties:
+    | Array<
+        | string
+        | { name?: string | undefined; id?: unknown | undefined; op_1_lvl?: number | undefined }
+      >
+    | undefined,
   itemProperties: ItemPropertyTpRow[] = [],
-  opts?: { includeCost?: boolean },
+  opts?: { includeCost?: boolean | undefined },
 ): ChipData[] {
   if (!properties?.length) return [];
   const includeCost = opts?.includeCost === true;

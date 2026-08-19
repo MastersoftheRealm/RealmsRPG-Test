@@ -103,7 +103,7 @@ export function AdminArchetypesTab() {
                 <GridListRow
                   id={a.id}
                   name={a.name || ''}
-                  description={(a as { description?: string }).description || ''}
+                  description={(a as { description?: string | undefined }).description || ''}
                   columns={[{ key: 'Type', value: formatListCellLabel(a.type) }]}
                 />
               </div>

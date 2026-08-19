@@ -126,7 +126,7 @@ export function CombatantCardResources({
 
   return (
     <div className="mb-2 flex items-center gap-3">
-      <div className="flex flex-1 items-center gap-1">
+      <div className="flex min-w-0 flex-1 items-center gap-1">
         <span className="shrink-0 text-xs font-medium text-health-text">Health</span>
         {linkedResourcesReadOnly ? (
           <span className="text-xs font-medium" title={linkedResourcesTitle}>
@@ -152,6 +152,16 @@ export function CombatantCardResources({
               onChange={(e) => onUpdate({ maxHealth: parseInt(e.target.value) || 1 })}
               className="min-h-[var(--touch-target-min,44px)] w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs md:min-h-0"
             />
+            <ValueStepper
+              value={combatant.currentHealth}
+              onChange={(v) => onUpdate({ currentHealth: Math.max(0, v) })}
+              min={0}
+              colorVariant="health"
+              size="xs"
+              variant="compact"
+              hideValue
+              enableHoldRepeat
+            />
           </>
         )}
         <div className="h-2 max-w-20 flex-1 overflow-hidden rounded-full bg-surface-alt">
@@ -165,7 +175,7 @@ export function CombatantCardResources({
         </div>
       </div>
 
-      <div className="flex flex-1 items-center gap-1">
+      <div className="flex min-w-0 flex-1 items-center gap-1">
         <span className="shrink-0 text-xs font-medium text-energy-text">Energy</span>
         {linkedResourcesReadOnly ? (
           <span className="text-xs font-medium" title={linkedResourcesTitle}>
@@ -185,6 +195,16 @@ export function CombatantCardResources({
               value={combatant.maxEnergy}
               onChange={(e) => onUpdate({ maxEnergy: parseInt(e.target.value) || 0 })}
               className="min-h-[var(--touch-target-min,44px)] w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs md:min-h-0"
+            />
+            <ValueStepper
+              value={combatant.currentEnergy}
+              onChange={(v) => onUpdate({ currentEnergy: Math.max(0, v) })}
+              min={0}
+              colorVariant="energy"
+              size="xs"
+              variant="compact"
+              hideValue
+              enableHoldRepeat
             />
           </>
         )}

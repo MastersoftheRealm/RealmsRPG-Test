@@ -107,10 +107,13 @@ export function useCreatureCreatorWorkspace() {
       creatureFeatIds: new Set(
         (creatureFeatsData as CodexCreatureFeatRow[]).map((cf) => String(cf.id)),
       ),
-      codexFeatById: new Map<string, { char_feat?: boolean }>(
+      codexFeatById: new Map<string, { char_feat?: boolean | undefined }>(
         (codexFeatsData as Feat[]).map((f) => [String(f.id), { char_feat: f.char_feat }]),
       ),
-      traitById: new Map<string, { flaw?: boolean; characteristic?: boolean }>(
+      traitById: new Map<
+        string,
+        { flaw?: boolean | undefined; characteristic?: boolean | undefined }
+      >(
         (codexTraitsData as Trait[]).map((t) => [
           String(t.id),
           { flaw: t.flaw, characteristic: t.characteristic },

@@ -26,9 +26,9 @@ export interface ArchetypePathFilterProps {
   options: PathFilterOption[];
   selectedPathIds: string[];
   onChange: (pathIds: string[]) => void;
-  label?: string;
-  placeholder?: string;
-  className?: string;
+  label?: string | undefined;
+  placeholder?: string | undefined;
+  className?: string | undefined;
 }
 
 /** Last control in a 4-col filter grid — niche, so it sits bottom-right. */

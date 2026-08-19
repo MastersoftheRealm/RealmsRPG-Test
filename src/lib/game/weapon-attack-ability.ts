@@ -15,7 +15,9 @@ const ABILITY_LABELS: Record<WeaponAttackAbility, string> = {
   acuity: 'Acuity',
 };
 
-export type WeaponPropertyRef = string | { id?: number; name?: string; op_1_lvl?: number };
+export type WeaponPropertyRef =
+  | string
+  | { id?: number | undefined; name?: string | undefined; op_1_lvl?: number | undefined };
 
 /** Ability score requirement derived from item property rows (e.g. Strength Requirement). */
 export interface AbilityRequirement {

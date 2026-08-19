@@ -63,25 +63,29 @@ const TEST_USER = { uid: 'user-123', email: 'hero@example.com' };
 const CREATE_FAILED = GUIDED_CREATOR_COPY.steps.reveal.saveFailed;
 
 type MockSupabaseConfig = {
-  characters?: unknown[];
-  charactersError?: { message: string } | null;
-  characterCount?: number;
-  insertId?: string;
+  characters?: unknown[] | undefined;
+  charactersError?: { message: string } | null | undefined;
+  characterCount?: number | undefined;
+  insertId?: string | undefined;
   /** Row the idempotency lookup finds for the request's `clientRequestId`. */
-  replayCharacterId?: string | null;
+  replayCharacterId?: string | null | undefined;
   /**
    * Row the lookup finds only once an insert has been attempted — the concurrent-retry
    * race, where both requests miss the lookup and the unique index picks a winner.
    */
-  replayCharacterIdAfterInsert?: string | null;
+  replayCharacterIdAfterInsert?: string | null | undefined;
   /** Error the insert rejects with (e.g. a 23505 from the idempotency index). */
-  insertError?: { code?: string; message?: string } | null;
-  coreRules?: Array<{ id: string; data: unknown }>;
+  insertError?: { code?: string | undefined; message?: string | undefined } | null;
+  coreRules?: Array<{ id: string; data: unknown }> | undefined;
   /** Official feats for the level-1 requirement check. Default [] skips the check. */
-  codexFeats?: unknown[];
-  codexSkills?: unknown[];
+  codexFeats?: unknown[] | undefined;
+  codexSkills?: unknown[] | undefined;
   /** When set, the catalog skill select fails (e.g. a 42703 from a wrong column). */
-  codexSkillsError?: { message?: string; hint?: string; code?: string } | null;
+  codexSkillsError?: {
+    message?: string | undefined;
+    hint?: string | undefined;
+    code?: string | undefined;
+  } | null;
 };
 
 function createMockSupabase(config: MockSupabaseConfig = {}) {
@@ -126,24 +130,26 @@ function createMockSupabase(config: MockSupabaseConfig = {}) {
     from: vi.fn((table: string) => {
       if (table === 'characters') {
         return {
-          select: vi.fn((cols?: string, opts?: { count?: string; head?: boolean }) => {
-            if (opts?.head) {
-              return {
-                eq: vi.fn().mockResolvedValue({ count: characterCount, error: null }),
+          select: vi.fn(
+            (cols?: string, opts?: { count?: string | undefined; head?: boolean | undefined }) => {
+              if (opts?.head) {
+                return {
+                  eq: vi.fn().mockResolvedValue({ count: characterCount, error: null }),
+                };
+              }
+              // `.eq()` returns itself so the idempotency lookup can chain user_id +
+              // client_request_id before `.maybeSingle()`.
+              const query: Record<string, unknown> = {
+                order: vi.fn().mockResolvedValue({ data: characters, error: charactersError }),
+                maybeSingle: vi.fn(async () => {
+                  const id = cols === 'id' ? replayedId() : null;
+                  return { data: id ? { id } : null, error: null };
+                }),
               };
-            }
-            // `.eq()` returns itself so the idempotency lookup can chain user_id +
-            // client_request_id before `.maybeSingle()`.
-            const query: Record<string, unknown> = {
-              order: vi.fn().mockResolvedValue({ data: characters, error: charactersError }),
-              maybeSingle: vi.fn(async () => {
-                const id = cols === 'id' ? replayedId() : null;
-                return { data: id ? { id } : null, error: null };
-              }),
-            };
-            query.eq = vi.fn().mockReturnValue(query);
-            return query;
-          }),
+              query.eq = vi.fn().mockReturnValue(query);
+              return query;
+            },
+          ),
           insert,
         };
       }
@@ -351,7 +357,7 @@ describe('POST /api/characters', () => {
     const response = await POST(makePostRequest({ name: '' }));
 
     expect(response.status).toBe(400);
-    const body = await readJson<{ error: string; details?: string[] }>(response);
+    const body = await readJson<{ error: string; details?: string[] | undefined }>(response);
     expect(body.error).toBe('Validation failed');
     expect(body.details?.some((d) => d.includes('name'))).toBe(true);
   });
@@ -380,7 +386,7 @@ describe('POST /api/characters', () => {
     const response = await POST(makePostRequest({ name: 'One Too Many' }));
 
     expect(response.status).toBe(403);
-    const body = await readJson<{ error: string; code?: string }>(response);
+    const body = await readJson<{ error: string; code?: string | undefined }>(response);
     expect(body.error).toMatch(/character/i);
   });
 
@@ -406,7 +412,7 @@ describe('POST /api/characters', () => {
       );
 
       expect(response.status).toBe(400);
-      const body = await readJson<{ error: string; details?: string[] }>(response);
+      const body = await readJson<{ error: string; details?: string[] | undefined }>(response);
       expect(body.error).toBe('Character is not a legal level 1 build');
       expect(body.details?.some((d) => /Ability points/.test(d))).toBe(true);
       // Negative currency is floored by prepareCharacterForCreate (TASK-739), so it is
@@ -422,7 +428,9 @@ describe('POST /api/characters', () => {
 
       expect(response.status).toBe(200);
       await expect(readJson(response)).resolves.toEqual({ id: 'clamped-currency-id' });
-      const inserted = supabase.insertedRows[0]?.data as { currency?: number } | undefined;
+      const inserted = supabase.insertedRows[0]?.data as
+        | { currency?: number | undefined }
+        | undefined;
       expect(inserted?.currency).toBe(0);
     });
 
@@ -473,7 +481,7 @@ describe('POST /api/characters', () => {
       const response = await POST(makePostRequest(legalLevel1Payload()));
 
       expect(response.status).toBe(400);
-      const body = await readJson<{ error: string; details?: string[] }>(response);
+      const body = await readJson<{ error: string; details?: string[] | undefined }>(response);
       expect(body.error).toBe('Character is not a legal level 1 build');
       expect(body.details?.some((d) => /Needs Level 4/.test(d))).toBe(true);
     });

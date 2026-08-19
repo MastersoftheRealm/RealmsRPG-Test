@@ -15,17 +15,17 @@ import {
 } from '@/components/patterns/guided-choice/guided-nav-button-styles';
 
 export interface GuidedStepFooterProps {
-  onBack?: () => void;
-  onContinue?: () => void;
-  continueLabel?: string;
-  backLabel?: string;
-  continueDisabled?: boolean;
-  backDisabled?: boolean;
+  onBack?: (() => void) | undefined;
+  onContinue?: (() => void) | undefined;
+  continueLabel?: string | undefined;
+  backLabel?: string | undefined;
+  continueDisabled?: boolean | undefined;
+  backDisabled?: boolean | undefined;
   /** Continue as primary (default) or outline previous-tone (e.g. close L2 browse). */
-  continueTone?: 'progress' | 'previous';
-  primaryAction?: ReactNode;
-  completionHint?: ReactNode;
-  className?: string;
+  continueTone?: 'progress' | 'previous' | undefined;
+  primaryAction?: ReactNode | undefined;
+  completionHint?: ReactNode | undefined;
+  className?: string | undefined;
 }
 
 export function GuidedStepFooter({

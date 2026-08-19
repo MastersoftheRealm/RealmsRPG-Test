@@ -18,10 +18,10 @@ export function GuidedOverviewSection({
 }: {
   title: string;
   /** Optional help beside the title (e.g. InfoTippy). */
-  titleAddon?: ReactNode;
-  hint?: string;
+  titleAddon?: ReactNode | undefined;
+  hint?: string | undefined;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }) {
   return (
     <section className={className}>

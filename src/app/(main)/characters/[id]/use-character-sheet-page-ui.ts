@@ -128,7 +128,10 @@ export function useCharacterSheetPageUi({
   );
 
   const handleSettingsConfirm = useCallback(
-    async (updates: { visibility?: CharacterVisibility; speedDisplayUnit?: SpeedDisplayUnit }) => {
+    async (updates: {
+      visibility?: CharacterVisibility | undefined;
+      speedDisplayUnit?: SpeedDisplayUnit | undefined;
+    }) => {
       if (!character) return;
       setCharacter((prev) => (prev ? { ...prev, ...updates } : null));
       const result = await saveCharacterWithConflictRetry(id, updates, {

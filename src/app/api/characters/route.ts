@@ -76,7 +76,10 @@ async function insertCharacterRow(
     .select('id')
     .single();
   if (insertErr) {
-    if (row.client_request_id && (insertErr as { code?: string }).code === UNIQUE_VIOLATION) {
+    if (
+      row.client_request_id &&
+      (insertErr as { code?: string | undefined }).code === UNIQUE_VIOLATION
+    ) {
       return { uniqueViolation: true };
     }
     throw insertErr;
@@ -133,12 +136,12 @@ export async function GET() {
       id: string;
       data: unknown;
       updated_at: string | null;
-      name?: string | null;
-      level?: number | null;
-      archetype_name?: string | null;
-      ancestry_name?: string | null;
-      status?: string | null;
-      visibility?: string | null;
+      name?: string | null | undefined;
+      level?: number | null | undefined;
+      archetype_name?: string | null | undefined;
+      ancestry_name?: string | null | undefined;
+      status?: string | null | undefined;
+      visibility?: string | null | undefined;
     }[];
 
     const archetypeNameById = await fetchArchetypeNameMap(supabase);
@@ -154,7 +157,9 @@ export async function GET() {
         portrait: d.portrait as string | undefined,
         archetypeName: archName ?? undefined,
         ancestryName:
-          r.ancestry_name ?? (d.ancestry as { name?: string })?.name ?? (d.species as string),
+          r.ancestry_name ??
+          (d.ancestry as { name?: string | undefined })?.name ??
+          (d.species as string),
         status:
           (r.status as CharacterSummary['status']) ?? (d.status as CharacterSummary['status']),
         visibility: resolveCharacterVisibility({ visibility: r.visibility, data: d }),

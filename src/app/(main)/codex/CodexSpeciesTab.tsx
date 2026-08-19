@@ -217,7 +217,11 @@ function SpeciesCard({
   );
 }
 
-export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+export function CodexSpeciesTab({
+  codexMode = 'public',
+}: {
+  codexMode?: 'public' | 'my' | undefined;
+}) {
   const isPublic = codexMode === 'public';
   const isMy = codexMode === 'my';
   const {
@@ -346,7 +350,7 @@ export function CodexSpeciesTab({ codexMode = 'public' }: { codexMode?: 'public'
       <CodexBrowseListShell
         search={filters.search}
         onSearchChange={(v) => setFilters((f) => ({ ...f, search: v }))}
-        searchPlaceholder="Search names, descriptions..."
+        searchPlaceholder="Search..."
         filters={
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <ChipSelect

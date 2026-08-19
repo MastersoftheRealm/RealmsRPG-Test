@@ -53,14 +53,14 @@ export function normalizeArmamentKind(type: string | undefined): ArmamentLibrary
   return null;
 }
 
-export function filterItemsByArmamentKind<T extends { type?: string }>(
+export function filterItemsByArmamentKind<T extends { type?: string | undefined }>(
   items: T[],
   kind: ArmamentLibraryKind,
 ): T[] {
   return items.filter((item) => normalizeArmamentKind(item.type) === kind);
 }
 
-export function countItemsByArmamentKind<T extends { type?: string }>(
+export function countItemsByArmamentKind<T extends { type?: string | undefined }>(
   items: T[],
   kind: ArmamentLibraryKind,
 ): number {
@@ -71,7 +71,7 @@ type ArmamentHeaderColumn = {
   key: string;
   label: string;
   align: 'left' | 'center' | 'right';
-  sortable?: boolean;
+  sortable?: boolean | undefined;
 };
 
 function armamentChrome(kind: ArmamentLibraryKind): {
@@ -124,7 +124,10 @@ export interface OfficialItemRow {
 
 function propertyChipsForItem(item: LibraryItem, propertiesDb: ItemProperty[]): ChipData[] {
   const props =
-    (item.properties as Array<string | { id?: unknown; name?: string; op_1_lvl?: number }>) || [];
+    (item.properties as Array<
+      | string
+      | { id?: unknown | undefined; name?: string | undefined; op_1_lvl?: number | undefined }
+    >) || [];
   return namedPropertyDescriptorChips(props, propertiesDb).map((chip) => {
     const prop = props.find((p) => {
       const n = typeof p === 'string' ? p : String(p?.name ?? '');
@@ -183,7 +186,7 @@ export function buildOfficialItemRows(
       costs.totalIP,
     );
     const rangeStr = resolveWeaponRangeDisplay(
-      (item as LibraryItem & { range?: string }).range,
+      (item as LibraryItem & { range?: string | undefined }).range,
       props,
     );
     const damageStr = formatDamageDisplay(item.damage) || '-';
@@ -273,15 +276,17 @@ export function officialItemDetailSections(row: OfficialItemRow, kind: ArmamentL
 
 export function filterOfficialItemRows<
   T extends {
-    id?: string | number;
-    raw?: { id?: string | number | null; docId?: string | number | null };
-    name?: string;
-    description?: string;
-    currency?: number | null;
-    tp?: number | null;
-    rarity?: string | null;
-    abilityReq?: AbilityRequirement | null;
-    properties?: WeaponPropertyRef[];
+    id?: string | number | undefined;
+    raw?:
+      | { id?: string | number | null | undefined; docId?: string | number | null | undefined }
+      | undefined;
+    name?: string | undefined;
+    description?: string | undefined;
+    currency?: number | null | undefined;
+    tp?: number | null | undefined;
+    rarity?: string | null | undefined;
+    abilityReq?: AbilityRequirement | null | undefined;
+    properties?: WeaponPropertyRef[] | undefined;
   },
 >(
   rows: T[],

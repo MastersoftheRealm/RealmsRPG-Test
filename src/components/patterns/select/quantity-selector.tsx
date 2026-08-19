@@ -22,21 +22,21 @@ export interface QuantitySelectorProps {
   /** Called when quantity changes */
   onChange: (value: number) => void;
   /** Minimum allowed value (default: 1) */
-  min?: number;
+  min?: number | undefined;
   /** Maximum allowed value (default: 99) */
-  max?: number;
+  max?: number | undefined;
   /** Size variant */
-  size?: 'sm' | 'md';
+  size?: 'sm' | 'md' | undefined;
   /** Whether to show the quantity even when it's 1 */
-  showWhenOne?: boolean;
+  showWhenOne?: boolean | undefined;
   /** Additional class names */
-  className?: string;
+  className?: string | undefined;
   /** Disabled state */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /** Accessible name for decrement (default: Decrease quantity) */
-  decrementLabel?: string;
+  decrementLabel?: string | undefined;
   /** Accessible name for increment (default: Increase quantity) */
-  incrementLabel?: string;
+  incrementLabel?: string | undefined;
 }
 
 export function QuantitySelector({
@@ -83,7 +83,7 @@ export function QuantitySelector({
  */
 export interface QuantityBadgeProps {
   quantity: number;
-  className?: string;
+  className?: string | undefined;
 }
 
 export function QuantityBadge({ quantity, className }: QuantityBadgeProps) {

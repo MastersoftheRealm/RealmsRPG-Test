@@ -32,8 +32,8 @@ type UseEmpoweredTechniqueCreatorWorkspaceArgs = {
   editId: string | null;
   powerParts: PowerPart[];
   techniqueParts: TechniquePart[];
-  powerPartsError?: Error | null;
-  techniquePartsError?: Error | null;
+  powerPartsError?: Error | null | undefined;
+  techniquePartsError?: Error | null | undefined;
 };
 
 export function useEmpoweredTechniqueCreatorWorkspace({

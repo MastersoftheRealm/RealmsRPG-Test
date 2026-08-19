@@ -11,10 +11,10 @@ import { GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
 
 export interface GuidedTraitOptionListProps {
   traits: Trait[];
-  emptyLabel?: string;
-  className?: string;
-  groupLabel?: string;
-  groupHint?: string;
+  emptyLabel?: string | undefined;
+  className?: string | undefined;
+  groupLabel?: string | undefined;
+  groupHint?: string | undefined;
 }
 
 export function GuidedTraitOptionList({

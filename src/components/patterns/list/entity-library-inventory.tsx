@@ -51,13 +51,13 @@ export function WeaponsListSection({
   collapsible,
   headingLevel,
 }: {
-  title?: string;
+  title?: string | undefined;
   items: EntityWeaponRow[];
-  showListHeader?: boolean;
-  compactRows?: boolean;
-  showTitle?: boolean;
-  rollTitlePrefix?: string;
-  layout?: 'creature' | 'characterSheet';
+  showListHeader?: boolean | undefined;
+  compactRows?: boolean | undefined;
+  showTitle?: boolean | undefined;
+  rollTitlePrefix?: string | undefined;
+  layout?: 'creature' | 'characterSheet' | undefined;
 } & EntityListControls) {
   const rollContext = useRollsOptional();
   const hasAny = items.length > 0;
@@ -192,12 +192,12 @@ export function ShieldsListSection({
   collapsible,
   headingLevel,
 }: {
-  title?: string;
+  title?: string | undefined;
   items: EntityShieldRow[];
-  showListHeader?: boolean;
-  compactRows?: boolean;
-  showTitle?: boolean;
-  layout?: 'creature' | 'characterSheet';
+  showListHeader?: boolean | undefined;
+  compactRows?: boolean | undefined;
+  showTitle?: boolean | undefined;
+  layout?: 'creature' | 'characterSheet' | undefined;
 } & EntityListControls) {
   const hasAny = items.length > 0;
   const {
@@ -290,12 +290,12 @@ export function ArmorListSection({
   collapsible,
   headingLevel,
 }: {
-  title?: string;
+  title?: string | undefined;
   items: EntityArmorRow[];
-  showListHeader?: boolean;
-  compactRows?: boolean;
-  showTitle?: boolean;
-  layout?: 'creature' | 'characterSheet';
+  showListHeader?: boolean | undefined;
+  compactRows?: boolean | undefined;
+  showTitle?: boolean | undefined;
+  layout?: 'creature' | 'characterSheet' | undefined;
 } & EntityListControls) {
   const hasAny = items.length > 0;
   const {
@@ -382,12 +382,12 @@ export function EquipmentListSection({
   collapsible,
   headingLevel,
 }: {
-  title?: string;
+  title?: string | undefined;
   items: EntityEquipmentRow[];
-  showListHeader?: boolean;
-  compactRows?: boolean;
-  showTitle?: boolean;
-  layout?: 'creature' | 'characterSheet';
+  showListHeader?: boolean | undefined;
+  compactRows?: boolean | undefined;
+  showTitle?: boolean | undefined;
+  layout?: 'creature' | 'characterSheet' | undefined;
 } & EntityListControls) {
   const hasAny = items.length > 0;
   const {

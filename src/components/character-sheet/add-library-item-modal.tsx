@@ -78,7 +78,7 @@ interface AddLibraryItemModalProps {
   existingIds: Set<string>;
   onAdd: (items: CharacterPower[] | CharacterTechnique[] | Item[]) => void;
   /** Optional modal title (e.g. innate power add flow) */
-  titleOverride?: string;
+  titleOverride?: string | undefined;
 }
 
 export function AddLibraryItemModal({

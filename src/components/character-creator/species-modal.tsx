@@ -22,9 +22,11 @@ interface ResolvedTrait {
   name: string;
   description: string;
   found: boolean;
-  uses_per_rec?: number | null;
-  rec_period?: string | null;
-  optionTraits?: Array<Pick<Trait, 'id' | 'name' | 'description' | 'uses_per_rec' | 'rec_period'>>;
+  uses_per_rec?: number | null | undefined;
+  rec_period?: string | null | undefined;
+  optionTraits?:
+    | Array<Pick<Trait, 'id' | 'name' | 'description' | 'uses_per_rec' | 'rec_period'>>
+    | undefined;
 }
 
 /** Resolve trait IDs via shared findTraitByIdOrName (+ choice-option children). */

@@ -27,8 +27,8 @@ export interface LibraryForView {
 
 export interface GetCharacterResult {
   character: Character | null;
-  libraryForView?: LibraryForView;
-  enrichment?: CharacterViewEnrichment;
+  libraryForView?: LibraryForView | undefined;
+  enrichment?: CharacterViewEnrichment | undefined;
 }
 
 /**
@@ -83,8 +83,12 @@ export async function getCharacter(characterId: string): Promise<GetCharacterRes
 export async function saveCharacter(
   characterId: string,
   data: Partial<Character>,
-  options: { updatedAt?: string | Date | null; skipLock?: boolean; enqueue?: boolean } = {},
-): Promise<{ ok: true; updatedAt?: string }> {
+  options: {
+    updatedAt?: string | Date | null | undefined;
+    skipLock?: boolean | undefined;
+    enqueue?: boolean | undefined;
+  } = {},
+): Promise<{ ok: true; updatedAt?: string | undefined }> {
   if (!characterId?.trim()) {
     throw new Error('Invalid character ID');
   }
@@ -98,7 +102,7 @@ export async function saveCharacter(
     if (lock) body.updatedAt = lock;
     else delete body.updatedAt;
 
-    const result = await apiFetch<{ ok: true; updatedAt?: string }>(
+    const result = await apiFetch<{ ok: true; updatedAt?: string | undefined }>(
       `${API_BASE}/${encodeURIComponent(id)}`,
       {
         method: 'PATCH',
@@ -120,13 +124,13 @@ export async function saveCharacterWithConflictRetry(
   characterId: string,
   dirty: Partial<Character>,
   options: {
-    updatedAt?: string | Date | null;
+    updatedAt?: string | Date | null | undefined;
     mergeOnConflict: (remote: Character) => {
       dirty: Partial<Character>;
-      updatedAt?: string | Date | null;
+      updatedAt?: string | Date | null | undefined;
     };
   },
-): Promise<{ updatedAt?: string; applied: Partial<Character> }> {
+): Promise<{ updatedAt?: string | undefined; applied: Partial<Character> }> {
   const id = characterId.trim();
   return enqueueCharacterSave(id, async () => {
     try {
@@ -162,7 +166,7 @@ export async function saveCharacterWithConflictRetry(
  */
 export async function createCharacter(
   data: Partial<Character>,
-  options: { clientRequestId?: string } = {},
+  options: { clientRequestId?: string | undefined } = {},
 ): Promise<string> {
   const result = await apiFetch<{ id: string }>(API_BASE, {
     method: 'POST',

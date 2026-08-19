@@ -23,8 +23,8 @@ export interface CampaignRollEntry {
   dice: DieResult[];
   modifier: number;
   total: number;
-  isCrit?: boolean;
-  isCritFail?: boolean;
-  critMessage?: string;
+  isCrit?: boolean | undefined;
+  isCritFail?: boolean | undefined;
+  critMessage?: string | undefined;
   timestamp: CampaignRollTimestamp;
 }

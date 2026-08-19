@@ -19,5 +19,6 @@ export type { NormalizedIdRow } from './normalize-id';
 export * from './string';
 export * from './number';
 export { defined, isDefined } from './defined';
+export type { AllowUndefinedOptionals } from './exact-optional';
 export * from './object';
 export * from './duration';

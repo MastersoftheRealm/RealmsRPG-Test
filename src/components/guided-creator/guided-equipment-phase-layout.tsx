@@ -6,19 +6,19 @@ import { GuidedLayerNav, LoadoutBudgetBar } from '@/components/patterns';
 export interface GuidedEquipmentPhaseLayoutProps {
   children: ReactNode;
   /** Starting Currency for PointStatus (abilities/skills pattern). */
-  currencyTotal?: number;
+  currencyTotal?: number | undefined;
   /** Currency spent so far (weapons + armor + gear). */
-  currencySpent?: number;
+  currencySpent?: number | undefined;
   /** Training Points limit (same pool L1/L2). */
-  tpTotal?: number;
+  tpTotal?: number | undefined;
   /** Training Points spent on current loadout selections. */
-  tpSpent?: number;
-  expandLabel?: string;
-  onExpand?: () => void;
-  collapseLabel?: string;
-  onCollapse?: () => void;
-  trailingExpandLabel?: string;
-  onTrailingExpand?: () => void;
+  tpSpent?: number | undefined;
+  expandLabel?: string | undefined;
+  onExpand?: (() => void) | undefined;
+  collapseLabel?: string | undefined;
+  onCollapse?: (() => void) | undefined;
+  trailingExpandLabel?: string | undefined;
+  onTrailingExpand?: (() => void) | undefined;
 }
 
 /**

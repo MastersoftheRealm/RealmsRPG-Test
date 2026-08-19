@@ -18,7 +18,7 @@ export interface MixedSpeciesSkillPickerProps {
   options: NamedIdOption[];
   selectedIds: string[];
   onToggle: (skillId: string) => void;
-  className?: string;
+  className?: string | undefined;
 }
 
 export function MixedSpeciesSkillPicker({

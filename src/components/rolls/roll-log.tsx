@@ -44,9 +44,9 @@ const ROLL_TYPE_ICONS: Record<RollType, string> = {
 };
 
 interface RollLogProps {
-  className?: string;
+  className?: string | undefined;
   /** When set (e.g. on encounter page), campaign tab shows this campaign's rolls but new rolls stay personal (not sent to campaign). */
-  viewOnlyCampaignId?: string;
+  viewOnlyCampaignId?: string | undefined;
 }
 
 type RollLogMode = 'personal' | 'campaign';
@@ -196,16 +196,19 @@ export function RollLog({ className, viewOnlyCampaignId }: RollLogProps) {
 
   return (
     <div
-      className={cn('fixed right-5 bottom-5 z-floating flex flex-col items-end', className)}
+      className={cn('floating-dock-bottom-right', className)}
+      data-floating-dock="bottom-right"
       data-tour-id="sheet-tour-roll-log"
     >
       {/* Panel */}
       <Card
         className={cn(
-          'absolute right-0 bottom-[70px] w-[360px] max-w-[calc(100vw-40px)]',
+          'absolute right-0 bottom-[calc(var(--dock-fab-size)+0.75rem)]',
           'overflow-hidden p-0 shadow-2xl',
           'duration-slow flex flex-col transition-all ease-standard',
-          isOpen ? 'h-[70vh] max-h-[600px] opacity-100' : 'pointer-events-none h-0 opacity-0',
+          isOpen
+            ? 'h-[70vh] max-h-[600px] w-[min(22.5rem,calc(100svw-2*var(--dock-gap)))] opacity-100'
+            : 'pointer-events-none h-0 w-0 max-w-0 opacity-0',
         )}
       >
         {/* Header */}
@@ -423,7 +426,7 @@ export function RollEntryCard({
   characterName,
 }: {
   roll: RollEntry | CampaignRollEntry;
-  characterName?: string;
+  characterName?: string | undefined;
 }) {
   const diceGroups = groupDiceByType(roll.dice);
   const showModifier = roll.modifier !== 0;

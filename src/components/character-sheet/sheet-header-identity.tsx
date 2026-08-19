@@ -31,14 +31,14 @@ export function SheetHeaderIdentity({
   character: Character;
   isEditMode: boolean;
   healthColor: 'green' | 'orange' | 'red';
-  onPortraitChange?: (file: File) => void | Promise<void>;
-  onPortraitUrlChange?: (url: string) => void | Promise<void>;
-  isUploadingPortrait?: boolean;
-  portraitRefreshKey?: number | null;
-  onNameChange?: (name: string) => void;
-  onExperienceChange?: (value: number) => void;
-  onEditArchetype?: () => void;
-  onEditSpecies?: () => void;
+  onPortraitChange?: ((file: File) => void | Promise<void>) | undefined;
+  onPortraitUrlChange?: ((url: string) => void | Promise<void>) | undefined;
+  isUploadingPortrait?: boolean | undefined;
+  portraitRefreshKey?: number | null | undefined;
+  onNameChange?: ((name: string) => void) | undefined;
+  onExperienceChange?: ((value: number) => void) | undefined;
+  onEditArchetype?: (() => void) | undefined;
+  onEditSpecies?: (() => void) | undefined;
 }) {
   // State for editing character name
   const [isEditingName, setIsEditingName] = useState(false);

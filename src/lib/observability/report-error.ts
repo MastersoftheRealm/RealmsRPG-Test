@@ -20,7 +20,7 @@ export interface ReportErrorContext {
   /** Where the failure happened, e.g. a route path or component name. */
   scope: string;
   /** Non-sensitive breadcrumbs to attach to the issue. */
-  extra?: ReportErrorExtra;
+  extra?: ReportErrorExtra | undefined;
 }
 
 export function reportError(error: unknown, context: ReportErrorContext): void {
@@ -37,7 +37,7 @@ export function reportError(error: unknown, context: ReportErrorContext): void {
     .then((Sentry) => {
       Sentry.captureException(error, {
         tags: { scope: context.scope },
-        extra: context.extra,
+        ...(context.extra ? { extra: context.extra } : {}),
       });
     })
     .catch(() => {

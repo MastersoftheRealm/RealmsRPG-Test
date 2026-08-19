@@ -40,12 +40,12 @@ export function ResourceInput({
   label: string;
   current: number;
   max: number;
-  onChange?: (value: number) => void;
-  colorVariant?: 'health' | 'energy' | 'default';
-  subLabel?: string;
+  onChange?: ((value: number) => void) | undefined;
+  colorVariant?: 'health' | 'energy' | 'default' | undefined;
+  subLabel?: string | undefined;
   /** Top-right slot (e.g. Terminal threshold on Health). Takes precedence over subLabel. */
-  headerRight?: ReactNode;
-  showBar?: boolean;
+  headerRight?: ReactNode | undefined;
+  showBar?: boolean | undefined;
 }) {
   const [inputValue, setInputValue] = useState(String(current));
   const [isEditing, setIsEditing] = useState(false);

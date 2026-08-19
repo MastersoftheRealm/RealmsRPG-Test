@@ -23,13 +23,13 @@ type FooterVariant = 'full' | 'minimal';
 type FooterTone = 'default' | 'auth';
 
 export interface FooterProps {
-  variant?: FooterVariant;
+  variant?: FooterVariant | undefined;
   /** Auth gradient shell — lighter link colors on dark gradient */
-  tone?: FooterTone;
-  className?: string;
+  tone?: FooterTone | undefined;
+  className?: string | undefined;
 }
 
-const linkBase = 'text-sm transition-colors py-2 min-h-[44px] flex items-center md:min-h-0 md:py-1';
+const linkBase = 'hit-area-dense flex items-center py-1 text-sm transition-colors';
 
 function footerLinkClass(tone: FooterTone) {
   return cn(
@@ -47,7 +47,7 @@ function groupHeadingClass(tone: FooterTone) {
   );
 }
 
-function resolveHref(href: string): { href: string; external?: boolean } {
+function resolveHref(href: string): { href: string; external?: boolean | undefined } {
   if (href === 'contact') {
     return { href: `mailto:${FOOTER_COPY.contactEmail}`, external: true };
   }
@@ -66,7 +66,7 @@ function FooterLink({
   href: string;
   label: string;
   className: string;
-  external?: boolean;
+  external?: boolean | undefined;
 }) {
   if (external) {
     const isMailto = href.startsWith('mailto:');
@@ -88,7 +88,7 @@ function FooterLink({
   );
 }
 
-function FooterMinimal({ tone, className }: { tone: FooterTone; className?: string }) {
+function FooterMinimal({ tone, className }: { tone: FooterTone; className?: string | undefined }) {
   const linkClass = footerLinkClass(tone);
 
   return (
@@ -119,7 +119,7 @@ function FooterMinimal({ tone, className }: { tone: FooterTone; className?: stri
   );
 }
 
-function FooterFull({ tone, className }: { tone: FooterTone; className?: string }) {
+function FooterFull({ tone, className }: { tone: FooterTone; className?: string | undefined }) {
   const linkClass = footerLinkClass(tone);
   const year = new Date().getFullYear();
 

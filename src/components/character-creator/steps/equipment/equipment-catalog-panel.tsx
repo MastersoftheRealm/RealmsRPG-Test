@@ -10,7 +10,6 @@ import { buildGlrFactDetailSections } from '@/lib/chip/list-row-metadata';
 import { resolveSurfaceLayout } from '@/lib/glr';
 import { toggleSort } from '@/hooks/use-sort';
 import {
-  SearchInput,
   GridListRow,
   QuantitySelector,
   ListHeader,
@@ -21,7 +20,7 @@ import {
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { SourceFilterValue } from '@/components/patterns/filters/source-filter';
 import { FilterSection } from '@/components/patterns/filters';
-import { Button, EmptyState } from '@/components/ui';
+import { Button, EmptyState, SearchInput } from '@/components/ui';
 import { TabNavigation, TabContentPanel } from '@/components/ui/tab-navigation';
 import { AlertCircle, ChevronLeft } from 'lucide-react';
 import type { ItemProperty } from '@/lib/calculators/item-calc';

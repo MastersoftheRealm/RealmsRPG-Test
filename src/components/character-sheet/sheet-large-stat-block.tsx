@@ -23,12 +23,12 @@ export function LargeStatBlock({
 }: {
   label: string;
   value: number | string;
-  valueSuffix?: string;
+  valueSuffix?: string | undefined;
   /** Optional accessible name for the value (e.g. read-only DR / Critical Range). */
-  valueAriaLabel?: string;
-  isTempModifierMode?: boolean;
-  tempDelta?: number;
-  onTempDeltaChange?: (delta: number) => void;
+  valueAriaLabel?: string | undefined;
+  isTempModifierMode?: boolean | undefined;
+  tempDelta?: number | undefined;
+  onTempDeltaChange?: ((delta: number) => void) | undefined;
 }) {
   const { tempActive, setTempActive, canTemp, showTempControls } = useTempModifierActive(
     isTempModifierMode,

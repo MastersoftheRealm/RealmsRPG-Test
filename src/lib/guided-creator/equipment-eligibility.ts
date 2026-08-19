@@ -28,16 +28,16 @@ export interface EligibleEquipmentRow {
   name: string;
   type: string;
   /** Codex/library taxonomy (Adventuring, Tools, …) — not weapon/armor/equipment type. */
-  itemCategory?: string | null;
-  rarity?: string | null;
-  properties?: WeaponPropertyRef[];
-  gold_cost?: number;
-  currency?: number;
-  cost?: number;
+  itemCategory?: string | null | undefined;
+  rarity?: string | null | undefined;
+  properties?: WeaponPropertyRef[] | undefined;
+  gold_cost?: number | undefined;
+  currency?: number | undefined;
+  cost?: number | undefined;
   /** Per-item armament TP from properties */
-  trainingPoints?: number | null;
-  range?: string | null;
-  abilityRequirement?: AbilityRequirement | null;
+  trainingPoints?: number | null | undefined;
+  range?: string | null | undefined;
+  abilityRequirement?: AbilityRequirement | null | undefined;
 }
 
 export interface EquipmentEligibilityContext {
@@ -47,11 +47,11 @@ export interface EquipmentEligibilityContext {
   powAbil: AbilityName | null;
   archetypeType: ArchetypeCategory | null;
   /** IDs path recommends — ranked first in weapon phase */
-  pathRecommendedIds?: Set<string>;
+  pathRecommendedIds?: Set<string> | undefined;
   /** Total TP already selected (armaments) */
-  selectedTpSpent?: number;
-  tpLimit?: number;
-  remainingCurrency?: number;
+  selectedTpSpent?: number | undefined;
+  tpLimit?: number | undefined;
+  remainingCurrency?: number | undefined;
 }
 
 function normalizeRarity(rarity: string | null | undefined): string {
@@ -135,7 +135,7 @@ export function filterEligibleEquipment(
 
 export interface WeaponHandValidation {
   valid: boolean;
-  message?: string;
+  message?: string | undefined;
 }
 
 /** Block illegal combos such as two-handed weapon + shield. */
@@ -154,9 +154,9 @@ export function validateWeaponHandSelection(weapons: EligibleEquipmentRow[]): We
 export function rankWeaponCandidates(
   rows: EligibleEquipmentRow[],
   ctx: {
-    pathRecommendedIds?: Set<string>;
-    martAbil?: AbilityName | null;
-    powAbil?: AbilityName | null;
+    pathRecommendedIds?: Set<string> | undefined;
+    martAbil?: AbilityName | null | undefined;
+    powAbil?: AbilityName | null | undefined;
   },
 ): EligibleEquipmentRow[] {
   const rec = ctx.pathRecommendedIds ?? new Set<string>();

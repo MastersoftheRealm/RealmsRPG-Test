@@ -13,11 +13,11 @@ export interface UnifiedSelectionModalToolbarProps {
   optionsExpanded: boolean;
   onOptionsExpandedChange: (expanded: boolean) => void;
   optionsActiveCount: number;
-  optionsSummary?: ReactNode;
-  scopeExtra?: ReactNode;
-  headerExtra?: ReactNode;
+  optionsSummary?: ReactNode | undefined;
+  scopeExtra?: ReactNode | undefined;
+  headerExtra?: ReactNode | undefined;
   showFilters: boolean;
-  filterContent?: ReactNode;
+  filterContent?: ReactNode | undefined;
 }
 
 export function UnifiedSelectionModalToolbar({

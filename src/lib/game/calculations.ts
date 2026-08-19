@@ -400,7 +400,12 @@ export function computeMaxHealthEnergy(
   const healthPoints = (record.healthPoints as number) ?? 0;
   const energyPoints = (record.energyPoints as number) ?? 0;
   const archetype = record.archetype as
-    | { type?: string; pow_abil?: string; mart_abil?: string; ability?: string }
+    | {
+        type?: string | undefined;
+        pow_abil?: string | undefined;
+        mart_abil?: string | undefined;
+        ability?: string | undefined;
+      }
     | undefined;
   // Match calculateAllStats: top-level pow_abil / archetype.pow_abil / archetype.ability
   const powAbil = (record.pow_abil as string) || archetype?.pow_abil || archetype?.ability;

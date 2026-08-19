@@ -44,7 +44,7 @@ interface LibraryPublicContentProps {
   activeTab: LibraryPublicTabId;
   onLoginRequired: () => void;
   /** When true, show lists without Add to library (e.g. for /browse when not logged in). */
-  readOnly?: boolean;
+  readOnly?: boolean | undefined;
 }
 
 export function LibraryPublicContent({
@@ -147,7 +147,7 @@ function PublicPowersList({
   readOnly = false,
 }: {
   onLoginRequired: () => void;
-  readOnly?: boolean;
+  readOnly?: boolean | undefined;
 }) {
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('powers');
   const { data: partsDb = [] } = usePowerParts();
@@ -186,8 +186,8 @@ function PublicTechniquesList({
   mode = 'standard',
 }: {
   onLoginRequired: () => void;
-  readOnly?: boolean;
-  mode?: 'standard' | 'empowered';
+  readOnly?: boolean | undefined;
+  mode?: 'standard' | 'empowered' | undefined;
 }) {
   const libraryType = mode === 'empowered' ? 'empowered-techniques' : 'techniques';
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary(libraryType);
@@ -242,7 +242,7 @@ function PublicItemsList({
 }: {
   armamentKind: ArmamentLibraryKind;
   onLoginRequired: () => void;
-  readOnly?: boolean;
+  readOnly?: boolean | undefined;
 }) {
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('items');
   const { data: propertiesDb = [] } = useItemProperties();
@@ -278,7 +278,7 @@ function PublicCreaturesList({
   readOnly = false,
 }: {
   onLoginRequired: () => void;
-  readOnly?: boolean;
+  readOnly?: boolean | undefined;
 }) {
   const { data: items = [], isLoading, error, refetch } = useOfficialLibrary('creatures');
   const addMutation = useAddOfficialToLibrary('creatures');

@@ -185,7 +185,7 @@ export function useCombatLinkedCharacterSync({
           table: 'characters',
           filter,
         },
-        (payload: { new: { id: string; data?: unknown } }) => {
+        (payload: { new: { id: string; data?: unknown | undefined } }) => {
           const row = payload.new;
           const charId = row.id;
           const raw = row.data;

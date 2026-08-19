@@ -14,12 +14,12 @@ export const STATE_FEAT_RESTRICTION_NOTICE = `This is a State feat. Activate it 
 
 export type FeatRestrictionNoticeOpts = {
   /** Character level — used for default Enter State uses when the feat has no per-feat limit. */
-  level?: number;
+  level?: number | undefined;
   /**
    * When true, skip the limited-uses sentence (e.g. Path deep-dive already shows a Uses chip).
    * State-feat teaching copy and default Enter State uses still surface.
    */
-  omitLimitedUses?: boolean;
+  omitLimitedUses?: boolean | undefined;
 };
 
 export type LimitedUseEntity = 'feat' | 'trait';
@@ -42,7 +42,7 @@ export function getLimitedUsesNotice(
   entity: LimitedUseEntity,
   usesPerRec: number | null | undefined,
   recPeriod: string | null | undefined,
-  opts?: { forceFullRecovery?: boolean },
+  opts?: { forceFullRecovery?: boolean | undefined },
 ): string | null {
   const uses = usesPerRec;
   if (uses == null || uses <= 0) return null;

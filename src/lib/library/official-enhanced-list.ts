@@ -20,7 +20,7 @@ export interface OfficialEnhancedRow {
   id: string;
   raw: OfficialEnhancedItem;
   name: string;
-  description?: string;
+  description?: string | undefined;
   base: string;
   power: string;
   rarity: string;

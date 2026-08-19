@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 export interface GuidedFactChipRowProps {
   chips: ChipData[];
-  className?: string;
+  className?: string | undefined;
 }
 
 /** Non-expanding fact chips for guided cards (DescriptorChipWithTip only). */

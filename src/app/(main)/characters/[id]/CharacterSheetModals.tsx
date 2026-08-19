@@ -63,17 +63,17 @@ function existingIdsForAddModal(
 
 interface TraitForModal {
   name: string;
-  currentUses?: number;
-  maxUses?: number;
-  recovery?: string;
+  currentUses?: number | undefined;
+  maxUses?: number | undefined;
+  recovery?: string | undefined;
 }
 
 interface FeatForModal {
   id: string;
   name: string;
-  currentUses?: number;
-  maxUses?: number;
-  recovery?: string;
+  currentUses?: number | undefined;
+  maxUses?: number | undefined;
+  recovery?: string | undefined;
 }
 
 export function CharacterSheetModals() {

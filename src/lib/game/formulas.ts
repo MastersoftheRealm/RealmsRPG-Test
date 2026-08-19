@@ -390,7 +390,7 @@ export function getArchetypeConfig(
  * Get the maximum armament value for an archetype.
  */
 export function getArmamentMax(
-  archetype: ArchetypeCategory | { type?: ArchetypeCategory },
+  archetype: ArchetypeCategory | { type?: ArchetypeCategory | undefined },
   rules?: Rules,
 ): number {
   const type = typeof archetype === 'string' ? archetype : archetype?.type;
@@ -405,8 +405,8 @@ export function getArmamentMax(
 export function resolveArchetypeProficiencyStart(
   type: ArchetypeCategory | string | null | undefined,
   archetype?: {
-    power_prof_start?: number | null;
-    martial_prof_start?: number | null;
+    power_prof_start?: number | null | undefined;
+    martial_prof_start?: number | null | undefined;
   } | null,
 ): { pow_prof: number; mart_prof: number } {
   const t = (type || 'power') as ArchetypeCategory;
@@ -576,7 +576,7 @@ export function calculateArchetypeProgression(
 
 /** Sum energy costs of powers marked innate (innate energy budget spent). */
 export function sumInnatePowerEnergyCosts(
-  powers: Array<{ innate?: boolean; cost?: number }> = [],
+  powers: Array<{ innate?: boolean | undefined; cost?: number | undefined }> = [],
 ): number {
   return powers.filter((p) => p.innate === true).reduce((sum, p) => sum + (p.cost ?? 0), 0);
 }
@@ -584,7 +584,7 @@ export function sumInnatePowerEnergyCosts(
 /** Remaining innate energy budget after innate power costs. */
 export function calculateRemainingInnateEnergy(
   maxInnateEnergy: number,
-  powers: Array<{ innate?: boolean; cost?: number }> = [],
+  powers: Array<{ innate?: boolean | undefined; cost?: number | undefined }> = [],
 ): number {
   return maxInnateEnergy - sumInnatePowerEnergyCosts(powers);
 }
@@ -695,7 +695,7 @@ export function calculateSkillBonusWithProficiency(
 /** Codex row shape for resolving a sub-skill's parent skill name (character save omits `baseSkill` string). */
 export interface CodexSkillParentRef {
   id: string | number;
-  name?: string;
+  name?: string | undefined;
 }
 
 /**
@@ -703,8 +703,8 @@ export interface CodexSkillParentRef {
  * Character `cleanForSave` strips `baseSkill`; re-attach before sheet bonus math (GAME_RULES: ability + base value + sub value).
  */
 export function resolveParentSkillNameForSubSkill(
-  saved: { selectedBaseSkillId?: string },
-  codexSkill: { base_skill_id?: number | string } | undefined,
+  saved: { selectedBaseSkillId?: string | undefined },
+  codexSkill: { base_skill_id?: number | string | undefined } | undefined,
   codexSkills: CodexSkillParentRef[],
 ): string | undefined {
   if (saved.selectedBaseSkillId != null && String(saved.selectedBaseSkillId) !== '') {
@@ -746,9 +746,9 @@ export function calculateSubSkillBonusWithProficiency(
 /** Codex skill shape for feat requirement resolution */
 export interface CodexSkillForFeat {
   id: string | number;
-  name?: string;
-  base_skill_id?: number | string;
-  ability?: string;
+  name?: string | undefined;
+  base_skill_id?: number | string | undefined;
+  ability?: string | undefined;
 }
 
 /**
@@ -763,7 +763,7 @@ export interface CodexSkillForFeat {
 export function getSkillBonusForFeatRequirement(
   skillId: string,
   abilities: Partial<Abilities> | Abilities,
-  skills: Record<string, number | { prof?: boolean; val?: number }>,
+  skills: Record<string, number | { prof?: boolean | undefined; val?: number | undefined }>,
   codexSkills: CodexSkillForFeat[],
 ): { bonus: number; proficient: boolean } {
   // Look up by ID first, then fall back to name match (feat data may use either)

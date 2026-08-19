@@ -36,7 +36,7 @@ type PowersTechniquesSelectionArgs = {
    * TP already spent on tracks that are not the current inner screen
    * (e.g. techniques while picking powers). Shared budget (TASK-756).
    */
-  siblingTpSpent?: number;
+  siblingTpSpent?: number | undefined;
   innateEnergyMax: number;
   innateThreshold: number;
   resolveTpCost: (id: string) => number;

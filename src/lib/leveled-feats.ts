@@ -1,15 +1,18 @@
 import type { ChipData } from '@/components/patterns/list/grid-list-row';
+import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 
-export interface LeveledFeatLike {
+interface LeveledFeatLikeFields {
   id: string | number;
-  name?: string;
-  description?: string;
-  feat_lvl?: number;
-  base_feat_id?: string;
-  lvl_req?: number;
-  uses_per_rec?: number;
-  rec_period?: string;
+  name?: string | undefined;
+  description?: string | undefined;
+  feat_lvl?: number | undefined;
+  base_feat_id?: string | undefined;
+  lvl_req?: number | undefined;
+  uses_per_rec?: number | undefined;
+  rec_period?: string | undefined;
 }
+
+export type LeveledFeatLike = AllowUndefinedOptionals<LeveledFeatLikeFields>;
 
 export interface FeatFamily<T extends LeveledFeatLike> {
   familyId: string;
@@ -83,17 +86,17 @@ export type FeatLevelChipSelect<T extends LeveledFeatLike = LeveledFeatLike> = {
   featName: string;
   maxQualified: number;
   onSelectLevel: (level: number) => void;
-  unmetReasonFor?: (feat: T) => string | undefined;
+  unmetReasonFor?: ((feat: T) => string | undefined) | undefined;
 };
 
 export type BuildFeatLevelChipsOptions<T extends LeveledFeatLike = LeveledFeatLike> = {
   /** Include the current rank as a marked descriptor chip (sheet play view). Codex omits it. */
-  includeCurrent?: boolean;
+  includeCurrent?: boolean | undefined;
   /**
    * Sheet edit rank picker (TASK-780). Implies includeCurrent.
    * Current = marked descriptor; qualified other ranks = `onSelect`; unqualified = disabled.
    */
-  select?: FeatLevelChipSelect<T>;
+  select?: FeatLevelChipSelect<T> | undefined;
 };
 
 export function buildFeatLevelChips<T extends LeveledFeatLike>(

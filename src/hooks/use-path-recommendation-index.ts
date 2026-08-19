@@ -29,7 +29,7 @@ export function usePathRecommendationIndex({
 }: {
   entities: readonly PathRecommendationEntity[] | undefined;
   kind: PathRecommendationKindInput;
-  enabled?: boolean;
+  enabled?: boolean | undefined;
 }): PathRecommendationIndex {
   const { data: codexArchetypes = [] } = useCodexArchetypes({ enabled });
   const kindsKey = typeof kind === 'string' ? kind : kind.join(',');
@@ -58,11 +58,11 @@ export function usePathListFilter({
 }: {
   entities: readonly PathRecommendationEntity[] | undefined;
   kind: PathRecommendationKindInput;
-  enabled?: boolean;
+  enabled?: boolean | undefined;
   /** When set and the user has not touched the control, select every player-visible path of this type. */
-  autoSelectType?: ArchetypeCategory | null;
+  autoSelectType?: ArchetypeCategory | null | undefined;
   /** Skip auto-select while false (closed modal). Custom / no-path catalogs omit `autoSelectType`. */
-  autoSelectWhen?: boolean;
+  autoSelectWhen?: boolean | undefined;
 }) {
   const [selectedPathIds, setSelectedPathIds] = useState<string[] | null>(null);
   const pathIndex = usePathRecommendationIndex({ entities, kind, enabled });

@@ -66,9 +66,9 @@ export type UseLoadModalLibraryOptions = {
    * (e.g. creature `?edit=` preload). Default false for species/creature;
    * power/technique/item/empowered always fetch.
    */
-  prefetch?: boolean;
+  prefetch?: boolean | undefined;
   /** Armament creator Load: filter + catalog chrome for one kind (no mixed Stat list). */
-  itemKind?: LoadModalArmamentKind;
+  itemKind?: LoadModalArmamentKind | undefined;
 };
 
 export interface UseLoadModalLibraryReturn {
@@ -82,10 +82,10 @@ export interface UseLoadModalLibraryReturn {
   error: Error | null;
   source: SourceFilterValue;
   setSource: (v: SourceFilterValue) => void;
-  columns: { key: string; label: string; sortable?: boolean }[];
+  columns: { key: string; label: string; sortable?: boolean | undefined }[];
   gridColumns: string;
   emptyMessage: string;
-  emptySubMessage?: string;
+  emptySubMessage?: string | undefined;
   isPublicError: boolean;
 }
 
@@ -267,11 +267,21 @@ export function useLoadModalLibrary(
       }
       if (source === 'public' || source === 'all') {
         publicSpecies.forEach((s) => {
-          items.push(buildSpeciesSelectableItem(s as { id?: string; name?: string }, 'public'));
+          items.push(
+            buildSpeciesSelectableItem(
+              s as { id?: string | undefined; name?: string | undefined },
+              'public',
+            ),
+          );
           raw.push(s);
         });
         codexSpecies.forEach((s) => {
-          items.push(buildSpeciesSelectableItem(s as { id?: string; name?: string }, 'public'));
+          items.push(
+            buildSpeciesSelectableItem(
+              s as { id?: string | undefined; name?: string | undefined },
+              'public',
+            ),
+          );
           raw.push(s);
         });
       }

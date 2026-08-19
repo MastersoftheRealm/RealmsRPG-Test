@@ -60,18 +60,18 @@ export interface PointStatusProps extends Omit<VariantProps<typeof pointStatusVa
   /** Points currently spent */
   spent: number;
   /** Optional label prefix */
-  label?: string;
+  label?: string | undefined;
   /**
    * Optional content immediately after the label (inside the status pill),
    * e.g. InfoTippy for Training Points help (TASK-465).
    */
-  labelAccessory?: React.ReactNode;
+  labelAccessory?: React.ReactNode | undefined;
   /** Inline/compact: show spent vs remaining (default `remaining`) */
-  metric?: 'remaining' | 'spent';
+  metric?: 'remaining' | 'spent' | undefined;
   /** Show the "Total - Spent = Remaining" breakdown (only for block variant) */
-  showCalculation?: boolean;
+  showCalculation?: boolean | undefined;
   /** Additional className */
-  className?: string;
+  className?: string | undefined;
 }
 
 /**

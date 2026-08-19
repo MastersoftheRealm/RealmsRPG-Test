@@ -46,3 +46,4 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0021 | First-party MDX rulebook + Codex detail metadata | Accepted (TASK-796) |
 | 0022 | Enable `noUncheckedIndexedAccess` | Accepted (TASK-797) |
 | 0023 | Responsive layout contracts and tiered touch targets | Accepted (TASK-831) |
+| 0024 | Enable `exactOptionalPropertyTypes` | Accepted (TASK-824) |

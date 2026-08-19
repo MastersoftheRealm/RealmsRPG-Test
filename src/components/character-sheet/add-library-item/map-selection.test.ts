@@ -18,8 +18,8 @@ describe('mapSelectedToCharacterItems (equipment)', () => {
 
     const items = mapSelectedToCharacterItems('equipment', selected, 'powers') as Array<{
       id: string | number;
-      type?: string;
-      quantity?: number;
+      type?: string | undefined;
+      quantity?: number | undefined;
     }>;
 
     expect(items).toHaveLength(1);
@@ -50,7 +50,7 @@ describe('mapSelectedToCharacterItems (equipment)', () => {
     ];
 
     const items = mapSelectedToCharacterItems('equipment', selected, 'powers') as Array<{
-      quantity?: number;
+      quantity?: number | undefined;
     }>;
 
     expect(defined(items[0]).quantity).toBe(2);

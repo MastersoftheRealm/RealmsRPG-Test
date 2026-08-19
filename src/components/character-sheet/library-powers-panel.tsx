@@ -27,8 +27,8 @@ export type LibraryPowersPanelProps = {
   powerSort: SortState;
   onPowerSort: (col: string) => void;
   powerRowChrome: ListHeaderRowChrome;
-  onAddInnatePower?: () => void;
-  onAddPower?: () => void;
+  onAddInnatePower?: (() => void) | undefined;
+  onAddPower?: (() => void) | undefined;
 };
 
 export function LibraryPowersPanel({

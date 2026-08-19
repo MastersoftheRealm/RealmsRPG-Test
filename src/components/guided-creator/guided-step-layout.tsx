@@ -13,21 +13,21 @@ export interface GuidedStepLayoutProps {
   subStep: GuidedSubStep;
   title: string;
   /** Optional help beside the title (e.g. InfoTippy). */
-  titleAddon?: ReactNode;
-  description?: ReactNode;
-  guidance?: ReactNode;
+  titleAddon?: ReactNode | undefined;
+  description?: ReactNode | undefined;
+  guidance?: ReactNode | undefined;
   children: ReactNode;
-  canContinue?: boolean;
-  continueLabel?: string;
-  completionHint?: ReactNode;
-  primaryAction?: ReactNode;
+  canContinue?: boolean | undefined;
+  continueLabel?: string | undefined;
+  completionHint?: ReactNode | undefined;
+  primaryAction?: ReactNode | undefined;
   /** Override default footer back (e.g. ancestry micro-flow). */
-  footerBack?: () => void;
+  footerBack?: (() => void) | undefined;
   /** Override default footer continue (e.g. ancestry micro-flow). */
-  footerContinue?: () => void;
+  footerContinue?: (() => void) | undefined;
   /** Continue chrome: primary forward (default) or outline shallower (e.g. loadout L2). */
-  continueTone?: 'progress' | 'previous';
-  hideBack?: boolean;
+  continueTone?: 'progress' | 'previous' | undefined;
+  hideBack?: boolean | undefined;
 }
 
 export function GuidedStepLayout({

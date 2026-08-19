@@ -25,11 +25,11 @@ export interface CreatorLayoutProps {
   /** Sidebar content (right 1/3, e.g. CreatorSummaryPanel) */
   sidebar: ReactNode;
   /** Modals and other fragments (Load modal, Login prompt, Publish confirm) */
-  modals?: ReactNode;
+  modals?: ReactNode | undefined;
   /** PageContainer size (default: xl) */
-  size?: ContainerSize;
+  size?: ContainerSize | undefined;
   /** Optional className for PageHeader */
-  headerClassName?: string;
+  headerClassName?: string | undefined;
 }
 
 export function CreatorLayout({

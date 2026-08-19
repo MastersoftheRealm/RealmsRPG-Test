@@ -37,41 +37,41 @@ import {
 interface CodexPart {
   id: string;
   name: string;
-  description?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
-  op_1_desc?: string;
-  op_2_desc?: string;
-  op_3_desc?: string;
+  description?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
+  op_1_desc?: string | undefined;
+  op_2_desc?: string | undefined;
+  op_3_desc?: string | undefined;
 }
 
 interface CodexProperty {
   id: string | number;
   name: string;
-  description?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_1_desc?: string;
+  description?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_1_desc?: string | undefined;
 }
 
 interface ProficienciesTabProps {
   powers: CharacterPower[];
   techniques: CharacterTechnique[];
   weapons: Item[];
-  shields?: Item[];
+  shields?: Item[] | undefined;
   armor: Item[];
   level: number;
   archetypeAbility: number;
-  powerPartsDb?: CodexPart[];
-  techniquePartsDb?: CodexPart[];
-  itemPropertiesDb?: CodexProperty[];
-  proficiencies?: CharacterProficiency[];
-  unarmedProwess?: number;
-  isEditMode?: boolean;
-  onProficienciesChange?: (next: CharacterProficiency[]) => void;
-  onUnarmedProwessChange?: (level: number) => void;
+  powerPartsDb?: CodexPart[] | undefined;
+  techniquePartsDb?: CodexPart[] | undefined;
+  itemPropertiesDb?: CodexProperty[] | undefined;
+  proficiencies?: CharacterProficiency[] | undefined;
+  unarmedProwess?: number | undefined;
+  isEditMode?: boolean | undefined;
+  onProficienciesChange?: ((next: CharacterProficiency[]) => void) | undefined;
+  onUnarmedProwessChange?: ((level: number) => void) | undefined;
 }
 
 function profChipLabel(p: CharacterProficiency): string {
@@ -129,7 +129,7 @@ function getProficiencyCategory(
         String(x.id) === String(p.refId ?? '') ||
         (x.name && p.name && x.name.toLowerCase() === p.name.toLowerCase()),
     );
-    const type = (prop as { type?: string })?.type?.toLowerCase();
+    const type = (prop as { type?: string | undefined })?.type?.toLowerCase();
     if (type === 'armor') return 'armor';
     return 'weapon'; // weapon, shield, or unknown
   }
@@ -357,8 +357,8 @@ export function ProficienciesTab({
     () =>
       itemPropertiesDb.filter(
         (p) =>
-          (p as { type?: string }).type &&
-          ['weapon', 'shield'].includes((p as { type?: string }).type!.toLowerCase()),
+          (p as { type?: string | undefined }).type &&
+          ['weapon', 'shield'].includes((p as { type?: string | undefined }).type!.toLowerCase()),
       ),
     [itemPropertiesDb],
   );
@@ -366,7 +366,8 @@ export function ProficienciesTab({
     () =>
       itemPropertiesDb.filter(
         (p) =>
-          (p as { type?: string }).type && (p as { type?: string }).type!.toLowerCase() === 'armor',
+          (p as { type?: string | undefined }).type &&
+          (p as { type?: string | undefined }).type!.toLowerCase() === 'armor',
       ),
     [itemPropertiesDb],
   );

@@ -1,3 +1,245 @@
+- id: TASK-824
+  title: exactOptionalPropertyTypes burn-down
+  created_at: 2026-08-18
+  completed_at: 2026-08-18
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: n/a
+  related_files:
+    - tsconfig.json
+    - tsconfig.strictest.json
+    - src/docs/ai/ADR/0024-exact-optional-property-types.md
+    - src/lib/utils/exact-optional.ts
+    - src/lib/utils/index.ts
+    - src/lib/utils/object.ts
+    - src/lib/library/official-power-list.ts
+    - playwright.config.ts
+    - src/hooks/use-characters.ts
+    - src/lib/game/path-recommendation-index.ts
+    - src/lib/game/archetype-display.ts
+    - src/lib/chip/list-row-metadata.ts
+    - src/types/archetype.ts
+    - src/components/patterns/list/creature-stat-block-types.ts
+    - src/lib/library-sync.ts
+    - src/lib/creator/advanced-equipment-catalog.ts
+    - src/components/character-sheet/character-sheet-context.tsx
+    - src/components/character-sheet/use-sheet-skill-identity-actions.ts
+    - src/components/landing/marketing-button.tsx
+    - src/components/layout/header.tsx
+    - src/components/patterns/help/info-tippy.tsx
+    - src/lib/observability/report-error.ts
+    - src/app/api/encounters/[id]/route.ts
+    - src/components/ui/tooltip.tsx
+    - src/components/patterns/chrome/creator-portrait-upload.tsx
+    - src/components/guided-creator/steps/ancestry-step.tsx
+  follow_up_tasks:
+    - TASK-834
+    - TASK-845
+  description: |
+    Report 11 / ADR-0022 leftover: `{ x?: string }` still accepts explicit `undefined`,
+    so undefined can reach Supabase payloads. Preview via tsconfig.strictest.json after
+    TASK-797 moved noUncheckedIndexedAccess into the main tsconfig. Same class as TASK-797.
+  acceptance_criteria:
+    - Preview the flag in tsconfig.strictest.json, burn down errors with type-narrowing only
+      (optional fields omit vs undefined), then move it into the main tsconfig.
+    - No behavior changes beyond refusing explicit undefined on optional props.
+    - No new shared/ui file; do not delete /characters/new/advanced.
+  notes: |
+    Owner ack 2026-08-18 (next Architect leftover; do not remote Legacy). First attempt
+    aborted after a 529-file overlapping AST rewrite and `git checkout -- src`. Retry was
+    dest-type widen / omit only. Keep generated `database.types.ts` strict.
+    Do not fold noFallthroughCasesInSwitch / verbatimModuleSyntax / noImplicitOverride.
+    Do not fold TASK-799. Do not delete `/characters/new/advanced`.
+  completed_work: |
+    Previewed the flag in tsconfig.strictest.json, widened in-memory/UI dests
+    (`AllowUndefinedOptionals` / `foo?: T | undefined`), and omitted unset keys at
+    persistence and third-party call sites. Moved `exactOptionalPropertyTypes` into
+    main tsconfig.json; dropped the duplicate from tsconfig.strictest.json. ADR-0024
+    Accepted. `npm run typecheck` and `npm run typecheck:strictest` both 0.
+    database.types.ts untouched. `/characters/new/advanced` kept. TASK-834 owner-only.
+- id: TASK-821
+  title: Drop patterns list-components ui/ SearchInput EmptyState LoadingState re-exports
+  created_at: 2026-08-18
+  completed_at: 2026-08-18
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/components/patterns/list/list-components.tsx
+    - src/components/patterns/index.ts
+    - src/components/patterns/list/official-entity-list.tsx
+    - src/components/patterns/list/codex-browse-list-shell.tsx
+    - src/components/patterns/select/unified-selection-modal-list.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/library/components/UserLibraryEntityTabShell.tsx
+    - src/app/(main)/library/page.tsx
+    - src/components/character-creator/steps/feats/full-feat-catalog.tsx
+    - src/components/character-creator/steps/equipment/equipment-catalog-panel.tsx
+    - src/app/(main)/admin/codex/admin-trait-edit-modal.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/FEATURE_INDEX_BARRELS.generated.md
+  description: |
+    patterns/list/list-components.tsx still re-exports SearchInput, EmptyState, and LoadingState from ui/ for backward compatibility, and the patterns barrel re-exports them (ListEmptyState alias). Callers should import those primitives from @/components/ui. Keep ErrorDisplay on patterns (it is real list chrome, not a ui re-export). Do not add a new patterns/ui file.
+  acceptance_criteria:
+    - SearchInput, EmptyState, and LoadingState are not exported from @/components/patterns or list-components.
+    - All former callers import from @/components/ui (SearchInput / EmptyState / LoadingState from spinner).
+    - ErrorDisplay stays on patterns. No new shared/ui file.
+    - Tests: npm run typecheck; npm run lint; npm run tasks:generate-index.
+  notes: |
+    Filed from TASK-794 /cleanup (audit leftover / report 04 barrel hazard). Intra-patterns barrel cycles and the @/components/shared import ban already landed in that cleanup. Do not fold TASK-799 list/modal clusters into this task.
+  completed_work: |
+    Deleted SearchInput / EmptyState / LoadingState re-exports from list-components and the patterns barrel.
+    Callers now import those primitives from @/components/ui. ErrorDisplay remains on patterns.
+    Regenerated FEATURE_INDEX_BARRELS. typecheck + eslint on touched files passed.
+- id: TASK-833
+  title: About carousel previous arrow renders off-screen on phones
+  created_at: 2026-08-18
+  completed_at: 2026-08-18
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/about/about-carousel-section.tsx
+    - src/components/about/about-dice-carousel.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Mobile audit 2026-08-18 (§2.6). On /about the Previous section control measures 431px left of the viewport
+    at 390px, so it is unreachable. The carousel dot buttons measure 31-42px, below the touch minimum.
+  acceptance_criteria:
+    - Both carousel arrows are within the viewport and tappable at 360px and 390px.
+    - Dot controls meet the touch minimum (or the Dense tier if TASK-831 lands).
+    - Tests: npm run typecheck; npm run lint; npm run build.
+  notes: |
+    Marketing page, low traffic impact — batch with other About work rather than shipping alone.
+  completed_work: |
+    Overlay Previous/Next arrows inside a w-full overflow-hidden track so they stay on-screen at 360/390.
+    Scale is applied to the die image, not the button, so dice stay 44x44 tap targets.
+- id: TASK-832
+  title: Truncate clipped control text with an ellipsis instead of cutting mid-word
+  created_at: 2026-08-18
+  completed_at: 2026-08-18
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/ui/select.tsx
+    - src/components/ui/search-input.tsx
+    - src/app/globals.css
+    - src/app/(main)/creature-creator/creature-creator-editor.tsx
+    - src/app/(main)/codex/CodexFeatsTab.tsx
+    - src/app/(main)/codex/CodexSkillsTab.tsx
+    - src/app/(main)/codex/CodexSpeciesTab.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Mobile audit 2026-08-18 (§2.5). Several controls clip text mid-word at 390px rather than truncating cleanly:
+    Creature Creator Type/Size selects render Huma and Medi; the Codex search placeholder renders
+    Search names, tags, descri.
+  acceptance_criteria:
+    - Controls that cannot fit their text truncate with an ellipsis (or shorten the copy) at 360px and 390px.
+    - No control reports overflowX hidden with textOverflow clip in the audit probe on the affected routes.
+    - Tests: npm run typecheck; npm run lint; npm run build.
+  notes: |
+    Prefer shorter copy where the full string is not load-bearing (search placeholders). Reserve ellipsis for
+    user data such as creature Type/Size values.
+  completed_work: |
+    Select and SearchInput use min-w-0 + truncate/ellipsis. Codex Feats/Skills/Species placeholders shortened
+    to Search.... Creature Type/Size grid is min-w-0.
+- id: TASK-819
+  title: Encounter full-card HP/EN ValueStepper parity
+  created_at: 2026-08-18
+  completed_at: 2026-08-18
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/encounters/combatant-card-resources.tsx
+    - src/docs/ai/BUILD_VALIDATION.md
+  description: |
+    Compact CombatantCard resource chrome already pairs number inputs with ValueStepper. The full variant is raw HP/EN current+max number inputs only. Add the same ValueStepper beside those inputs for parity (ADR-0002); keep direct numeric entry. Do not change initiative click-to-edit or condition chip +/- .
+  acceptance_criteria:
+    - Full combatant card Health/Energy (when not linked-character read-only) show ValueStepper next to the number inputs, matching compact.
+    - Linked-character read-only path is unchanged (no steppers).
+    - No new shared/ui file; reuse ValueStepper. Compact layout unchanged.
+    - Tests: npm run build. Add a DEV-V-008 case when implementing if the suite covers combatant cards.
+  notes: |
+    Filed from 2026-08-18 /global-audit → /debt. Compact already has the pattern. Initiative and condition chips stay out of scope.
+    DEV-V-008 does not cover combatant cards; added DEV-V-030-T003 instead.
+  completed_work: |
+    Full-card Health/Energy (editable path) now include the same compact hideValue ValueStepper as the compact variant.
+    Linked-character read-only path unchanged.
+- id: TASK-799
+  title: Remaining list/modal duplication clusters
+  created_at: 2026-08-15
+  completed_at: 2026-08-18
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  follow_up_tasks:
+    - TASK-842
+  build_validation: |
+    suite: DEV-V-028
+    tests:
+      - DEV-V-028-T005
+      - DEV-V-009-T057
+  developer_test_plan: |
+    Suite DEV-V-028 T005 + DEV-V-009 T057 — see BUILD_VALIDATION.md
+  related_files:
+    - src/components/patterns/chrome/confirm-action-modal.tsx
+    - src/components/patterns/chrome/delete-confirm-modal.tsx
+    - src/components/patterns/chrome/edit-section-toggle.tsx
+    - src/components/patterns/chrome/temp-modifier-toggle.tsx
+    - src/components/patterns/select/selection-toggle.tsx
+    - src/components/patterns/select/equip-toggle.tsx
+    - src/components/patterns/select/innate-toggle.tsx
+    - src/components/patterns/index.ts
+    - src/app/(main)/admin/codex/use-admin-codex-delete.tsx
+    - src/app/(main)/admin/codex/use-admin-archetype-workspace.ts
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/admin-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-part-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-property-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-species-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-trait-edit-modal.tsx
+  description: |
+    Reports 10/08/04 leftover clusters after path-filter (TASK-751–753) and
+    stepper/header internal dedup (TASK-792): OfficialEntityList internals,
+    confirm-modal / icon-toggle families, admin and sheet copies.
+  acceptance_criteria:
+    - Inventory the remaining forks against FEATURE_INDEX before any move.
+    - Delete the weaker copy; do not add a third wrapper.
+    - Architect ack if a new shared file is required.
+  notes: |
+    Wave 3C leftover. Owner ack this session: continue highest-priority Architect
+    work excluding Legacy route deletion. No new shared/ui file.
+  completed_work: |
+    Inventories OfficialEntityList vs My Library / CodexBrowseListShell as keep
+    (ADR-0001 / ADR-0005). Collapsed DeleteConfirmModal onto ConfirmActionModal;
+    Equip/Innate onto IconPairToggle; sheet Edit/Temp onto sheetModeToggleClassName.
+    Replaced Admin Codex two-click / inline Yes-No delete with ConfirmActionModal.
+    Left LoginPromptModal and USM leave-prompt as 3-action / nested gates.
+    Filed TASK-842 for remaining F-18 CRUD scaffolding. Did not delete
+    /characters/new/advanced. Did not fold TASK-821.
+
 - id: TASK-831
   title: Tiered mobile touch-target policy (replace blanket 44px)
   created_at: 2026-08-18

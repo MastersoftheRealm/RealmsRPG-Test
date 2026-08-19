@@ -123,7 +123,8 @@ describe('PathGuidanceGroup audience (TASK-514)', () => {
     });
     expect(parsed?.level1?.feats).toEqual(['1']);
     expect(
-      (parsed?.level1 as { recommended_species?: string[] } | undefined)?.recommended_species,
+      (parsed?.level1 as { recommended_species?: string[] | undefined } | undefined)
+        ?.recommended_species,
     ).toBeUndefined();
   });
 });

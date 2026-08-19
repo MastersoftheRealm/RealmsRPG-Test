@@ -62,7 +62,7 @@ async function fetchOwnerByIds(
   return (data ?? []) as unknown as Row[];
 }
 
-function mergeUniqueById<T extends { id?: string | number }>(rows: T[]): T[] {
+function mergeUniqueById<T extends { id?: string | number | undefined }>(rows: T[]): T[] {
   const seen = new Set<string>();
   const out: T[] = [];
   for (const row of rows) {

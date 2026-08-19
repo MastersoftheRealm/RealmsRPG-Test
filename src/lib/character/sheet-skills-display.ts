@@ -9,24 +9,24 @@ import { normalizeId } from '@/lib/utils';
 export interface SheetDisplaySkill {
   id: string;
   name: string;
-  category?: string;
+  category?: string | undefined;
   skill_val: number;
-  prof?: boolean;
-  baseSkill?: string;
-  ability?: string;
-  availableAbilities?: string[];
+  prof?: boolean | undefined;
+  baseSkill?: string | undefined;
+  ability?: string | undefined;
+  availableAbilities?: string[] | undefined;
   /** Codex description for name hover (not persisted on the character row). */
-  description?: string;
+  description?: string | undefined;
   /** True when row exists only from Codex catalog (not persisted on the character yet). */
-  catalogOnly?: boolean;
+  catalogOnly?: boolean | undefined;
 }
 
 export interface CodexSkillRef {
   id: string;
-  name?: string;
-  ability?: string;
-  description?: string;
-  base_skill_id?: number | null;
+  name?: string | undefined;
+  ability?: string | undefined;
+  description?: string | undefined;
+  base_skill_id?: number | null | undefined;
 }
 
 export type SkillProficiencyFilter = 'all' | 'proficient';

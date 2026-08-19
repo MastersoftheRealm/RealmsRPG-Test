@@ -8,12 +8,12 @@ import {
   type LibraryTabCounts,
 } from '@/lib/library/library-tab-counts';
 
-type CountError = { message?: string; code?: string } | null;
+type CountError = { message?: string | undefined; code?: string | undefined } | null;
 
 type CountQueryResult<T> = {
   data: T | null;
   error: CountError;
-  count?: number | null;
+  count?: number | null | undefined;
 };
 
 /** Thenable + `.eq()` — matches the PostgREST builder used by both count routes. */
@@ -25,7 +25,7 @@ export type LibraryCountsClient = {
   from: (table: string) => {
     select: (
       columns: string,
-      options?: { count?: 'exact'; head?: boolean },
+      options?: { count?: 'exact' | undefined; head?: boolean | undefined },
     ) => LibraryCountQuery<unknown>;
   };
 };
@@ -42,7 +42,7 @@ export type LibraryCountTables = {
   items: string;
   creatures: string;
   /** Omit on official — Enhanced is My Library only (ADR-0015). */
-  enhanced?: string;
+  enhanced?: string | undefined;
 };
 
 function isMissingTable(error: CountError): boolean {
@@ -75,7 +75,7 @@ async function itemTypes(
     if (isMissingTable(error)) return [];
     throw error;
   }
-  return ((data ?? []) as Array<{ type?: string }>).map((row) => row.type);
+  return ((data ?? []) as Array<{ type?: string | undefined }>).map((row) => row.type);
 }
 
 export async function fetchLibraryTabCounts(

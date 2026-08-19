@@ -25,7 +25,7 @@ export const officialLibraryKeys = {
 
 export function useOfficialLibrary<T extends LibraryItemType>(
   type: T,
-  options?: { enabled?: boolean },
+  options?: { enabled?: boolean | undefined },
 ): UseQueryResult<LibraryRow<T>[], Error> {
   const enabled = options?.enabled ?? true;
   return useQuery({
@@ -38,7 +38,7 @@ export function useOfficialLibrary<T extends LibraryItemType>(
 }
 
 export function useOfficialLibraryCounts(options?: {
-  enabled?: boolean;
+  enabled?: boolean | undefined;
 }): UseQueryResult<LibraryTabCounts, Error> {
   return useQuery({
     queryKey: officialLibraryKeys.counts,

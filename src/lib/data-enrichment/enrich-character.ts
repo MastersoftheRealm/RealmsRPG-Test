@@ -8,12 +8,12 @@ import { enrichItems } from './enrich-items';
 
 /** Helper to safely convert equipment arrays — preserves id, name, description, type, equipped, quantity */
 function toEquipmentArray(items: unknown): Array<{
-  id?: string | number;
-  name?: string;
-  description?: string;
-  type?: string;
-  equipped?: boolean;
-  quantity?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  description?: string | undefined;
+  type?: string | undefined;
+  equipped?: boolean | undefined;
+  quantity?: number | undefined;
 }> {
   if (!items) return [];
   if (Array.isArray(items)) {
@@ -23,12 +23,12 @@ function toEquipmentArray(items: unknown): Array<{
         if (item && typeof item === 'object') {
           const obj = item as Record<string, unknown>;
           const result: {
-            id?: string | number;
-            name?: string;
-            description?: string;
-            type?: string;
-            equipped?: boolean;
-            quantity?: number;
+            id?: string | number | undefined;
+            name?: string | undefined;
+            description?: string | undefined;
+            type?: string | undefined;
+            equipped?: boolean | undefined;
+            quantity?: number | undefined;
           } = {};
           if (obj.id) result.id = obj.id as string | number;
           if (obj.name) result.name = obj.name as string;
@@ -72,13 +72,14 @@ export function enrichCharacterData(
   powerPartsDb?: PowerPart[],
   techniquePartsDb?: TechniquePart[],
   publicLibraries?: {
-    powers?: UserPower[];
-    techniques?: UserTechnique[];
-    items?: UserItem[];
+    powers?: UserPower[] | undefined;
+    techniques?: UserTechnique[] | undefined;
+    items?: UserItem[] | undefined;
   },
 ): EnrichedCharacterData {
   // Normalize item type for comparison (official/codex may use 'Shield' vs 'shield')
-  const itemTypeIs = (i: { type?: string }, t: string) => (i.type || '').toLowerCase() === t;
+  const itemTypeIs = (i: { type?: string | undefined }, t: string) =>
+    (i.type || '').toLowerCase() === t;
   // Split items by type
   const weaponItems = userItems.filter((i) => itemTypeIs(i, 'weapon'));
   const shieldItems = userItems.filter((i) => itemTypeIs(i, 'shield'));

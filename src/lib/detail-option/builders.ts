@@ -18,26 +18,26 @@ import { formatTraitRecoveryLabel } from './format-recovery';
 export interface DetailOptionTraitLike {
   id: string | number;
   name: string;
-  description?: string | null;
-  uses_per_rec?: number | null;
-  rec_period?: string | null;
+  description?: string | null | undefined;
+  uses_per_rec?: number | null | undefined;
+  rec_period?: string | null | undefined;
 }
 
 export interface DetailOptionItemModel {
   id: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
   /**
    * @deprecated Prefer labeled expanded chips. Still accepted for migration; DetailOptionList ignores it.
    */
-  stats?: string;
-  chips?: ChipData[];
-  chipsLabel?: string;
+  stats?: string | undefined;
+  chips?: ChipData[] | undefined;
+  chipsLabel?: string | undefined;
   /** Plain-text expanded hint (legacy). Prefer chips with descriptions. */
-  expandedHint?: string;
-  hideUsesInName?: boolean;
+  expandedHint?: string | undefined;
+  hideUsesInName?: boolean | undefined;
   /** Dim row (e.g. unresolved legacy refs) — maps to GridListRow disabled opacity. */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }
 
 /** Self-describing fact chip for expanded GridListRow details. */

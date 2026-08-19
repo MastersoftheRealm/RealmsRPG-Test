@@ -5,7 +5,7 @@ export function FieldRow({
 }: {
   label: string;
   children: React.ReactNode;
-  hint?: string;
+  hint?: string | undefined;
 }) {
   return (
     <div className="flex flex-col gap-1 border-b border-border-subtle py-2 last:border-0 sm:flex-row sm:items-center sm:gap-4">
@@ -25,9 +25,9 @@ export function NumInput({
 }: {
   value: number;
   onChange: (v: number) => void;
-  min?: number;
-  max?: number;
-  step?: number;
+  min?: number | undefined;
+  max?: number | undefined;
+  step?: number | undefined;
 }) {
   return (
     <input
@@ -50,8 +50,8 @@ export function TextInput({
 }: {
   value: string;
   onChange: (v: string) => void;
-  wide?: boolean;
-  placeholder?: string;
+  wide?: boolean | undefined;
+  placeholder?: string | undefined;
 }) {
   return (
     <input

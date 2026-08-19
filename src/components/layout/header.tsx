@@ -270,16 +270,16 @@ export function Header() {
 
 interface DropdownItem {
   label: string;
-  href?: string;
-  external?: boolean;
-  dropdown?: { href: string; label: string }[];
+  href?: string | undefined;
+  external?: boolean | undefined;
+  dropdown?: { href: string; label: string }[] | undefined;
 }
 
 function AccountDropdown({
   profile,
   signOut,
 }: {
-  profile: { username?: string | null } | null;
+  profile: { username?: string | null | undefined } | null;
   signOut: () => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -403,7 +403,7 @@ function MobileDropdown({
 }: {
   item: DropdownItem;
   pathname: string;
-  onLinkClick?: () => void;
+  onLinkClick?: (() => void) | undefined;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -430,7 +430,7 @@ function MobileDropdown({
                 'flex min-h-11 items-center py-3 text-primary-fg',
                 pathname === subItem.href ? 'text-primary-fg-active' : '',
               )}
-              onClick={onLinkClick}
+              {...(onLinkClick ? { onClick: onLinkClick } : {})}
             >
               {subItem.label}
             </Link>
@@ -441,7 +441,7 @@ function MobileDropdown({
   );
 }
 
-function MenuIcon({ className }: { className?: string }) {
+function MenuIcon({ className }: { className?: string | undefined }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -461,7 +461,7 @@ function MenuIcon({ className }: { className?: string }) {
   );
 }
 
-function XIcon({ className }: { className?: string }) {
+function XIcon({ className }: { className?: string | undefined }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -477,7 +477,7 @@ function XIcon({ className }: { className?: string }) {
   );
 }
 
-function ChevronDownIcon({ className }: { className?: string }) {
+function ChevronDownIcon({ className }: { className?: string | undefined }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

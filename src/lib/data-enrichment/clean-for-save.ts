@@ -147,8 +147,12 @@ export function cleanForSave(data: Character): Partial<Character> {
   }
 
   // Persist health/energy { current, max } for realtime sync to encounter tracker; max from character-sheet logic (single source of truth)
-  const dataHealth = data.health as { current?: number; max?: number } | undefined;
-  const dataEnergy = data.energy as { current?: number; max?: number } | undefined;
+  const dataHealth = data.health as
+    | { current?: number | undefined; max?: number | undefined }
+    | undefined;
+  const dataEnergy = data.energy as
+    | { current?: number | undefined; max?: number | undefined }
+    | undefined;
   const healthCurrent = (cleaned.currentHealth as number) ?? dataHealth?.current;
   const energyCurrent = (cleaned.currentEnergy as number) ?? dataEnergy?.current;
   const { maxHealth: computedMaxHealth, maxEnergy: computedMaxEnergy } =
@@ -260,11 +264,11 @@ export function cleanForSave(data: Character): Partial<Character> {
     if (typeof f === 'string') return { name: f };
     if (f && typeof f === 'object') {
       const feat = f as {
-        id?: string | number;
-        name?: string;
-        currentUses?: number;
-        customName?: string;
-        note?: string;
+        id?: string | number | undefined;
+        name?: string | undefined;
+        currentUses?: number | undefined;
+        customName?: string | undefined;
+        note?: string | undefined;
       };
       const cleanFeat: Record<string, unknown> = {};
       if (feat.id) cleanFeat.id = feat.id;
@@ -282,8 +286,8 @@ export function cleanForSave(data: Character): Partial<Character> {
   if (Array.isArray(cleaned.feats)) {
     cleaned.feats = dedupeEntityRefs(
       cleaned.feats.map(cleanFeatEntry).filter(Boolean) as Array<{
-        id?: string | number;
-        name?: string;
+        id?: string | number | undefined;
+        name?: string | undefined;
       }>,
     );
   }
@@ -292,21 +296,24 @@ export function cleanForSave(data: Character): Partial<Character> {
   if (Array.isArray(cleaned.archetypeFeats)) {
     cleaned.archetypeFeats = dedupeEntityRefs(
       (cleaned.archetypeFeats as unknown[]).map(cleanFeatEntry).filter(Boolean) as Array<{
-        id?: string | number;
-        name?: string;
+        id?: string | number | undefined;
+        name?: string | undefined;
       }>,
     );
   }
 
   // Player trait customizations — keyed by trait id
   if (cleaned.traitCustomizations && typeof cleaned.traitCustomizations === 'object') {
-    const cleanedMap: Record<string, { customName?: string; note?: string }> = {};
+    const cleanedMap: Record<
+      string,
+      { customName?: string | undefined; note?: string | undefined }
+    > = {};
     for (const [key, raw] of Object.entries(
       cleaned.traitCustomizations as Record<string, unknown>,
     )) {
       if (!raw || typeof raw !== 'object') continue;
-      const entry = raw as { customName?: string; note?: string };
-      const next: { customName?: string; note?: string } = {};
+      const entry = raw as { customName?: string | undefined; note?: string | undefined };
+      const next: { customName?: string | undefined; note?: string | undefined } = {};
       const customName = entry.customName?.trim();
       const note = entry.note?.trim();
       if (customName) next.customName = customName;
@@ -328,7 +335,11 @@ export function cleanForSave(data: Character): Partial<Character> {
         .map((p: unknown) => {
           if (typeof p === 'string') return { name: p, innate: false };
           if (p && typeof p === 'object') {
-            const power = p as { id?: string | number; name?: string; innate?: boolean };
+            const power = p as {
+              id?: string | number | undefined;
+              name?: string | undefined;
+              innate?: boolean | undefined;
+            };
             const clean: Record<string, unknown> = {};
             if (power.id) clean.id = power.id;
             if (power.name) clean.name = power.name; // Backward compat lookup key
@@ -337,7 +348,7 @@ export function cleanForSave(data: Character): Partial<Character> {
           }
           return null;
         })
-        .filter(Boolean) as Array<{ id?: string | number; name?: string }>,
+        .filter(Boolean) as Array<{ id?: string | number | undefined; name?: string | undefined }>,
     );
   }
 
@@ -349,7 +360,7 @@ export function cleanForSave(data: Character): Partial<Character> {
         .map((t: unknown) => {
           if (typeof t === 'string') return { name: t };
           if (t && typeof t === 'object') {
-            const tech = t as { id?: string | number; name?: string };
+            const tech = t as { id?: string | number | undefined; name?: string | undefined };
             const clean: Record<string, unknown> = {};
             if (tech.id) clean.id = tech.id;
             if (tech.name) clean.name = tech.name; // Backward compat lookup key
@@ -357,7 +368,7 @@ export function cleanForSave(data: Character): Partial<Character> {
           }
           return null;
         })
-        .filter(Boolean) as Array<{ id?: string | number; name?: string }>,
+        .filter(Boolean) as Array<{ id?: string | number | undefined; name?: string | undefined }>,
     );
   }
 
@@ -382,11 +393,11 @@ export function cleanForSave(data: Character): Partial<Character> {
   // name kept as backward compat lookup key; id is primary lookup.
   if (cleaned.equipment && typeof cleaned.equipment === 'object') {
     const equip = cleaned.equipment as {
-      weapons?: unknown[];
-      shields?: unknown[];
-      armor?: unknown[];
-      items?: unknown[];
-      inventory?: unknown[]; // Remove redundant inventory array
+      weapons?: unknown[] | undefined;
+      shields?: unknown[] | undefined;
+      armor?: unknown[] | undefined;
+      items?: unknown[] | undefined;
+      inventory?: unknown[] | undefined; // Remove redundant inventory array
     };
 
     const cleanItem = (item: unknown): Record<string, unknown> | null => {

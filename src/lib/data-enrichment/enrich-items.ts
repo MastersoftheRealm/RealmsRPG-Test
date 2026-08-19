@@ -16,12 +16,12 @@ import { findInLibrary } from './find-in-library';
 export function enrichItems(
   characterItems:
     | Array<{
-        id?: string | number;
-        name?: string;
-        description?: string;
-        equipped?: boolean;
-        type?: string;
-        quantity?: number;
+        id?: string | number | undefined;
+        name?: string | undefined;
+        description?: string | undefined;
+        equipped?: boolean | undefined;
+        type?: string | undefined;
+        quantity?: number | undefined;
       }>
     | undefined,
   userItemLibrary: UserItem[],
@@ -49,9 +49,9 @@ export function enrichItems(
         typeof charItem === 'object' && charItem.id != null ? String(charItem.id) : libraryItem.id;
       // Convert properties from SavedProperty objects to string names
       const props = (libraryItem.properties || []) as Array<{
-        id?: number;
-        name?: string;
-        op_1_lvl?: number;
+        id?: number | undefined;
+        name?: string | undefined;
+        op_1_lvl?: number | undefined;
       }>;
       const propertyNames = props
         .map((p) => (typeof p === 'string' ? p : p.name))

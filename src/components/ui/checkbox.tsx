@@ -9,9 +9,9 @@ import * as React from 'react';
 import { cn } from '@/lib/utils/cn';
 
 export interface CheckboxProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'type'> {
-  label?: string;
-  description?: string;
-  error?: string;
+  label?: string | undefined;
+  description?: string | undefined;
+  error?: string | undefined;
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(

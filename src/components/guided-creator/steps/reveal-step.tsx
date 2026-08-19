@@ -186,7 +186,7 @@ export function RevealStep() {
         draft.portraitUrl.startsWith('data:');
       const base64Portrait = hasBase64Portrait ? draft.portraitUrl : null;
       if (hasBase64Portrait) {
-        delete (lean as { portrait?: string }).portrait;
+        delete (lean as { portrait?: string | undefined }).portrait;
       }
 
       const clientRequestId = resolveClientRequestId(draft.clientRequestId);

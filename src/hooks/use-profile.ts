@@ -58,21 +58,23 @@ export function useProfile(): { profile: ProfileDisplay | null; loading: boolean
 
 /** Full account-settings view of the same profile query. */
 export interface AccountProfile {
-  username?: string;
-  email?: string;
-  createdAt?: Date;
-  photoURL?: string;
-  role?: 'new_player' | 'playtester' | 'developer' | 'admin';
-  rolePolicy?: {
-    maxCampaigns: number;
-    maxPlayersPerCampaign: number;
-    maxCharacters: number;
-    maxPowers: number;
-    maxTechniques: number;
-    maxArmaments: number;
-    maxCreatures: number;
-    canUploadProfilePicture: boolean;
-  };
+  username?: string | undefined;
+  email?: string | undefined;
+  createdAt?: Date | undefined;
+  photoURL?: string | undefined;
+  role?: 'new_player' | 'playtester' | 'developer' | 'admin' | undefined;
+  rolePolicy?:
+    | {
+        maxCampaigns: number;
+        maxPlayersPerCampaign: number;
+        maxCharacters: number;
+        maxPowers: number;
+        maxTechniques: number;
+        maxArmaments: number;
+        maxCreatures: number;
+        canUploadProfilePicture: boolean;
+      }
+    | undefined;
 }
 
 function mapAccountProfile(

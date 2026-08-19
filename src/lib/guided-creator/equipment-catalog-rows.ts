@@ -21,7 +21,7 @@ import { findByNormalizedId, normalizeId } from '@/lib/utils';
 
 function readTaxonomyCategory(item: unknown): string | undefined {
   if (!item || typeof item !== 'object') return undefined;
-  const trimmed = String((item as { category?: unknown }).category ?? '').trim();
+  const trimmed = String((item as { category?: unknown | undefined }).category ?? '').trim();
   return trimmed || undefined;
 }
 
@@ -140,7 +140,7 @@ export function armorStatsForRef(
   refId: string,
   officialItems: LibraryItem[],
   codexEquipment: CodexEquipmentItem[],
-): { damageReduction?: number | null; agilityPenalty?: number | null } {
+): { damageReduction?: number | null | undefined; agilityPenalty?: number | null | undefined } {
   const official = findByNormalizedId(officialItems, refId);
   if (official) {
     const damageReduction = resolveArmorDamageReduction(official);

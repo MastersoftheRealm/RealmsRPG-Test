@@ -51,17 +51,17 @@ export const REACTION_FILTER_OPTIONS: { value: ReactionFilterMode; label: string
 ];
 
 export interface PowerTechniqueFilterableRow {
-  categories?: string[];
-  energy?: string | number | null;
+  categories?: string[] | undefined;
+  energy?: string | number | null | undefined;
   /** Training Points cost for Max TP / affordable filters. */
-  tp?: number | null;
+  tp?: number | null | undefined;
   /** Raw action type key or display string. */
-  actionTypeRaw?: string | null;
+  actionTypeRaw?: string | null | undefined;
   /** Display action (fallback when raw missing). */
-  action?: string | null;
-  isReaction?: boolean;
-  partIds?: string[];
-  partNames?: string[];
+  action?: string | null | undefined;
+  isReaction?: boolean | undefined;
+  partIds?: string[] | undefined;
+  partNames?: string[] | undefined;
 }
 
 /** Normalize display/persisted action labels to ACTION_OPTIONS values. */

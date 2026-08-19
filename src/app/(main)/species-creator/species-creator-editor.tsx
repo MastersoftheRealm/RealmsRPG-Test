@@ -446,7 +446,7 @@ interface TraitListModalProps {
   traitLimits: Record<TraitCategory, number>;
   mode: 'species_ancestry' | 'flaw' | 'characteristic';
   onAddBatch: (traitIds: string[], category: TraitCategory) => void;
-  onThirdSpeciesTrait?: (traitId: string) => void;
+  onThirdSpeciesTrait?: ((traitId: string) => void) | undefined;
 }
 
 export function TraitListModal({

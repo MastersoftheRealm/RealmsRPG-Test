@@ -52,7 +52,7 @@ export function resolveEquipmentPhaseVisibility(
      * `armorMode` only (Power skips armor; Martial / Powered-Martial keep it).
      * Path-based guided still uses pool emptiness to omit empty phases.
      */
-    fullCatalog?: boolean;
+    fullCatalog?: boolean | undefined;
   },
 ): EquipmentPhaseVisibility {
   if (opts.fullCatalog) {

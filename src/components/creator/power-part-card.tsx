@@ -20,7 +20,7 @@ interface SelectedPartLike {
   op_1_lvl: number;
   op_2_lvl: number;
   op_3_lvl: number;
-  applyDuration?: boolean;
+  applyDuration?: boolean | undefined;
   selectedCategory: string;
 }
 
@@ -30,7 +30,7 @@ export interface PowerPartCardProps {
   onRemove: () => void;
   onUpdate: (updates: Partial<SelectedPartLike>) => void;
   allParts: CreatorPart[];
-  showApplyDuration?: boolean;
+  showApplyDuration?: boolean | undefined;
 }
 
 export function PowerPartCard({
@@ -58,15 +58,15 @@ export function PowerPartCard({
 
   const hasOption = (n: 1 | 2 | 3) => {
     const partWithOptions = part as CreatorPart & {
-      op_1_desc?: string;
-      op_1_en?: number;
-      op_1_tp?: number;
-      op_2_desc?: string;
-      op_2_en?: number;
-      op_2_tp?: number;
-      op_3_desc?: string;
-      op_3_en?: number;
-      op_3_tp?: number;
+      op_1_desc?: string | undefined;
+      op_1_en?: number | undefined;
+      op_1_tp?: number | undefined;
+      op_2_desc?: string | undefined;
+      op_2_en?: number | undefined;
+      op_2_tp?: number | undefined;
+      op_3_desc?: string | undefined;
+      op_3_en?: number | undefined;
+      op_3_tp?: number | undefined;
     };
     const desc = partWithOptions[`op_${n}_desc`];
     const en = partWithOptions[`op_${n}_en`];

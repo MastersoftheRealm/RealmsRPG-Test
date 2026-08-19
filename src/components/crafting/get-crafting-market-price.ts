@@ -11,22 +11,28 @@ import { deriveItemDisplay, type ItemDocument } from '@/lib/calculators/item-cal
 /** Codex equipment row (from useEquipment) */
 export interface CodexEquipmentLike {
   id: string;
-  name?: string;
-  type?: string;
-  currency?: number;
-  gold_cost?: number;
-  properties?: unknown[];
+  name?: string | undefined;
+  type?: string | undefined;
+  currency?: number | undefined;
+  gold_cost?: number | undefined;
+  properties?: unknown[] | undefined;
 }
 
 /** User or public library item with optional properties */
 export interface LibraryItemLike {
   id: string;
-  name?: string;
-  description?: string;
-  type?: string;
-  armamentType?: string;
-  properties?: Array<{ id?: number | string; name?: string; op_1_lvl?: number }>;
-  damage?: unknown;
+  name?: string | undefined;
+  description?: string | undefined;
+  type?: string | undefined;
+  armamentType?: string | undefined;
+  properties?:
+    | Array<{
+        id?: number | string | undefined;
+        name?: string | undefined;
+        op_1_lvl?: number | undefined;
+      }>
+    | undefined;
+  damage?: unknown | undefined;
 }
 
 /**
@@ -74,7 +80,7 @@ export function getLibraryItemMarketPrice(
  * with empty properties (0). Or for codex-style item with a currency field.
  */
 export function getMarketPriceFallback(
-  item: LibraryItemLike & { currency?: number; gold_cost?: number },
+  item: LibraryItemLike & { currency?: number | undefined; gold_cost?: number | undefined },
 ): number {
   const c = item.currency ?? item.gold_cost ?? 0;
   return Math.max(0, Number(c));

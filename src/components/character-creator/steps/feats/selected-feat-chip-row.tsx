@@ -11,7 +11,7 @@ export function SelectedFeatChipRow({
   onRemove,
 }: {
   displayName: string;
-  description?: string;
+  description?: string | undefined;
   variant: 'listWarning' | 'list';
   isExpanded: boolean;
   onToggleExpand: () => void;

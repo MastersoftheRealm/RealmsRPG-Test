@@ -18,7 +18,7 @@ export function CreatureLibraryStatBlockRow({
 export interface CreatureLibraryStatBlockRowsProps {
   creatures: LibraryCreature[];
   /** Per-row props (badges, actions, rightSlot, etc.). Creature data is mapped internally. */
-  getRowProps?: (creature: LibraryCreature) => CreatureLibraryStatBlockRowProps;
+  getRowProps?: ((creature: LibraryCreature) => CreatureLibraryStatBlockRowProps) | undefined;
 }
 
 /**

@@ -15,30 +15,34 @@ import {
 import type { AdvancedPart, DamageConfig, RangeConfig, SelectedPart } from './power-creator-types';
 
 export type PowerLibraryRecord = {
-  name?: string;
-  description?: string;
-  parts?: unknown;
-  powerParts?: unknown;
-  damage?: unknown;
-  actionType?: string;
-  isReaction?: boolean;
-  attackMode?: unknown;
-  weapon?: { id?: string | number; name?: string };
-  range?: { steps?: number };
-  area?: { type?: string; level?: number; applyDuration?: boolean };
-  duration?: {
-    type?: string;
-    value?: number;
-    applyDuration?: boolean;
-    focus?: boolean;
-    noHarm?: boolean;
-    endsOnActivation?: boolean;
-    sustain?: number;
+  name?: string | undefined;
+  description?: string | undefined;
+  parts?: unknown | undefined;
+  powerParts?: unknown | undefined;
+  damage?: unknown | undefined;
+  actionType?: string | undefined;
+  isReaction?: boolean | undefined;
+  attackMode?: unknown | undefined;
+  weapon?: { id?: string | number | undefined; name?: string | undefined };
+  range?: { steps?: number | undefined };
+  area?: {
+    type?: string | undefined;
+    level?: number | undefined;
+    applyDuration?: boolean | undefined;
   };
-  imageId?: string | null;
-  image_id?: string | null;
-  imageUrl?: string | null;
-  image_url?: string | null;
+  duration?: {
+    type?: string | undefined;
+    value?: number | undefined;
+    applyDuration?: boolean | undefined;
+    focus?: boolean | undefined;
+    noHarm?: boolean | undefined;
+    endsOnActivation?: boolean | undefined;
+    sustain?: number | undefined;
+  };
+  imageId?: string | null | undefined;
+  image_id?: string | null | undefined;
+  imageUrl?: string | null | undefined;
+  image_url?: string | null | undefined;
 };
 
 export interface PowerCreatorCache {
@@ -66,8 +70,8 @@ export interface PowerCreatorCache {
   area: AreaConfig;
   duration: DurationConfig;
   attackMode: AttackMode;
-  imageId?: string | null;
-  imageUrl?: string | null;
+  imageId?: string | null | undefined;
+  imageUrl?: string | null | undefined;
   timestamp: number;
 }
 
@@ -206,13 +210,13 @@ export function powerLibraryRecordToFormState(
   powerParts: PowerPart[],
 ): PowerCreatorFormState {
   const savedParts = (power.parts || power.powerParts || []) as Array<{
-    id?: number | string;
-    name?: string;
-    op_1_lvl?: number;
-    op_2_lvl?: number;
-    op_3_lvl?: number;
-    applyDuration?: boolean;
-    isAdvanced?: boolean;
+    id?: number | string | undefined;
+    name?: string | undefined;
+    op_1_lvl?: number | undefined;
+    op_2_lvl?: number | undefined;
+    op_3_lvl?: number | undefined;
+    applyDuration?: boolean | undefined;
+    isAdvanced?: boolean | undefined;
   }>;
 
   const loadedParts: SelectedPart[] = [];
@@ -255,21 +259,21 @@ export function powerLibraryRecordToFormState(
   }
 
   let damageData: Array<{
-    amount?: number;
-    size?: number;
-    type?: string;
-    applyDuration?: boolean;
+    amount?: number | undefined;
+    size?: number | undefined;
+    type?: string | undefined;
+    applyDuration?: boolean | undefined;
   }> = [];
   if (Array.isArray(power.damage)) {
     damageData = power.damage;
   } else if (power.damage && typeof power.damage === 'object') {
     const d = power.damage as {
-      dice?: number;
-      amount?: number;
-      sides?: number;
-      size?: number;
-      type?: string;
-      applyDuration?: boolean;
+      dice?: number | undefined;
+      amount?: number | undefined;
+      sides?: number | undefined;
+      size?: number | undefined;
+      type?: string | undefined;
+      applyDuration?: boolean | undefined;
     };
     damageData = [
       {
@@ -343,7 +347,7 @@ export function bootstrapPowerCreatorFormState(options: {
 
   if (editPowerId) {
     const powerToEdit = rawItems.find((p) => {
-      const row = p as { docId?: string; id?: string };
+      const row = p as { docId?: string | undefined; id?: string | undefined };
       return String(row.docId) === editPowerId || String(row.id) === editPowerId;
     });
     if (!powerToEdit) {

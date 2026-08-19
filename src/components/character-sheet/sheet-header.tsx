@@ -25,6 +25,7 @@ import {
   shouldApplyAbilityTempsToResourceMaxima,
   type TempModifierScalarKey,
 } from '@/lib/character/temp-modifiers';
+import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 import { formatSpeedForDisplay } from '@/lib/utils/number';
 import { useCharacterSheetOptional } from './character-sheet-context';
 import { getEquippedArmorQuickRef } from './library-list-helpers';
@@ -45,38 +46,40 @@ interface CalculatedStats {
   defenseScores: Record<string, number>;
 }
 
-interface SheetHeaderProps {
+interface SheetHeaderPropsFields {
   character: Character;
   calculatedStats: CalculatedStats;
-  isEditMode?: boolean;
-  onHealthChange?: (value: number) => void;
-  onEnergyChange?: (value: number) => void;
-  onActionPointsChange?: (value: number) => void;
-  onHealthPointsChange?: (value: number) => void;
-  onEnergyPointsChange?: (value: number) => void;
-  onPortraitChange?: (file: File) => void | Promise<void>;
-  onPortraitUrlChange?: (url: string) => void | Promise<void>;
-  isUploadingPortrait?: boolean;
+  isEditMode?: boolean | undefined;
+  onHealthChange?: ((value: number) => void) | undefined;
+  onEnergyChange?: ((value: number) => void) | undefined;
+  onActionPointsChange?: ((value: number) => void) | undefined;
+  onHealthPointsChange?: ((value: number) => void) | undefined;
+  onEnergyPointsChange?: ((value: number) => void) | undefined;
+  onPortraitChange?: ((file: File) => void | Promise<void>) | undefined;
+  onPortraitUrlChange?: ((url: string) => void | Promise<void>) | undefined;
+  isUploadingPortrait?: boolean | undefined;
   /** After upload, pass a timestamp so the portrait image reloads (cache-bust). */
-  portraitRefreshKey?: number | null;
+  portraitRefreshKey?: number | null | undefined;
   // Character name editing
-  onNameChange?: (name: string) => void;
+  onNameChange?: ((name: string) => void) | undefined;
   // Experience editing
-  onExperienceChange?: (value: number) => void;
+  onExperienceChange?: ((value: number) => void) | undefined;
   /** How to display speed: spaces (default), feet, or meters. */
-  speedDisplayUnit?: 'spaces' | 'feet' | 'meters';
+  speedDisplayUnit?: 'spaces' | 'feet' | 'meters' | undefined;
   /** Sparse Temp Modifier patch (ADR-0006). Falls back to sheet context when omitted. */
-  onTempModifiersChange?: (patch: CharacterTempModifiers) => void;
+  onTempModifiersChange?: ((patch: CharacterTempModifiers) => void) | undefined;
   // Innate info from archetype progression
-  innateThreshold?: number;
-  innatePools?: number;
+  innateThreshold?: number | undefined;
+  innatePools?: number | undefined;
   // Edit archetype/ability (opens modal from sheet)
-  onEditArchetype?: () => void;
+  onEditArchetype?: (() => void) | undefined;
   // Edit species/ancestry (opens modal from sheet)
-  onEditSpecies?: () => void;
+  onEditSpecies?: (() => void) | undefined;
   /** Library-enriched armor (same source as sheet armor rows) for DR / Critical Range. */
-  enrichedArmor?: Item[];
+  enrichedArmor?: Item[] | undefined;
 }
+
+type SheetHeaderProps = AllowUndefinedOptionals<SheetHeaderPropsFields>;
 
 const DEFAULT_ACTION_POINTS = 4;
 

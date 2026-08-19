@@ -8,7 +8,7 @@
 /** Legacy Firestore Timestamp shape stored in older campaign roll rows. */
 export interface LegacyFirestoreTimestamp {
   seconds: number;
-  nanoseconds?: number;
+  nanoseconds?: number | undefined;
 }
 
 /** All timestamp shapes accepted from API / DB / client roll entries. */

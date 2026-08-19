@@ -35,15 +35,15 @@ export interface ImageUploadModalProps {
   /** Called with the cropped image blob when user confirms. Can return a Promise; modal stays open until resolved. */
   onConfirm: (blob: Blob) => void | Promise<void>;
   /** Shape of the crop frame */
-  cropShape?: CropShape;
+  cropShape?: CropShape | undefined;
   /** Aspect ratio of the crop (width/height). Default: 1 (square) for rect; pass e.g. 3/4 for tall portrait. */
-  aspect?: number;
+  aspect?: number | undefined;
   /** Title shown in the modal header */
-  title?: string;
+  title?: string | undefined;
   /** Max file size in bytes. Default 5MB */
-  maxFileSize?: number;
+  maxFileSize?: number | undefined;
   /** Optional handoff to the shared Realms Image Library picker. */
-  onChooseFromLibrary?: () => void;
+  onChooseFromLibrary?: (() => void) | undefined;
 }
 
 // =============================================================================

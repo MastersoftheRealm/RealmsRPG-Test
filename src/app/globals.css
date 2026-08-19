@@ -373,6 +373,14 @@
 
   /* Layout max-width utilities (pair with PageContainer sizes) */
   --max-width-wide: var(--container-wide);
+
+  /* C4 floating dock (ADR-0023 / TASK-837). One corner owner; consumers
+     register with these tokens instead of each guessing `bottom-4` / `bottom-5`. */
+  --dock-gap: 1rem;
+  --dock-fab-size: 3.5rem;
+  --dock-bottom: var(--dock-gap);
+  --sheet-mobile-dock-height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  --dock-reserved-end: calc(var(--dock-fab-size) + var(--dock-gap) * 2);
 }
 
 /* =============================================================================
@@ -656,31 +664,155 @@
   .font-display {
     font-family: var(--font-display);
   }
+
+  /* ---------------------------------------------------------------------------
+     C4 FLOATING DOCK (ADR-0023 / TASK-837)
+     Bottom-right is owned by `.floating-dock-bottom-right` (RollLog FAB).
+     Sheet actions below md occupy the same strip via `.sheet-mobile-action-dock`
+     and leave a FAB-sized end slot. Modal overlay hides the dock so footers stay
+     tappable; the sheet tour dialog is not `aria-modal` and is unaffected.
+     --------------------------------------------------------------------------- */
+  .floating-dock-bottom-right {
+    position: fixed;
+    z-index: var(--z-index-floating);
+    right: var(--dock-gap);
+    bottom: var(--dock-bottom);
+    display: flex;
+    width: var(--dock-fab-size);
+    flex-direction: column;
+    align-items: flex-end;
+    contain: layout;
+  }
+
+  .sheet-mobile-action-dock {
+    position: fixed;
+    z-index: var(--z-index-overlay);
+    inset-inline: 0;
+    bottom: 0;
+    display: flex;
+    height: var(--sheet-mobile-dock-height);
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    box-sizing: border-box;
+    border-top: 1px solid var(--color-border-light);
+    background-color: var(--color-surface);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: 0.75rem;
+    padding-right: calc(var(--dock-fab-size) + var(--dock-gap) * 1.5);
+  }
+
+  .has-sheet-mobile-dock {
+    --dock-bottom: calc(
+      (var(--sheet-mobile-dock-height) - var(--dock-fab-size) - env(safe-area-inset-bottom, 0px)) /
+        2 + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  @media (min-width: 768px) {
+    .sheet-mobile-action-dock {
+      inset: auto;
+      top: 6rem;
+      right: 1rem;
+      bottom: auto;
+      left: auto;
+      height: auto;
+      flex-direction: column;
+      justify-content: flex-start;
+      gap: 0.5rem;
+      border: 0;
+      background-color: transparent;
+      padding: 0;
+    }
+
+    .has-sheet-mobile-dock {
+      --dock-bottom: var(--dock-gap);
+    }
+
+    #main-content:has(.floating-dock-bottom-right) {
+      padding-right: var(--dock-reserved-end);
+      padding-bottom: var(--dock-reserved-end);
+    }
+  }
+
+  #main-content:has(.floating-dock-bottom-right):not(:has(.character-sheet-mobile-frame)) {
+    padding-bottom: var(--dock-reserved-end);
+  }
+
+  body:has([aria-modal='true']) .floating-dock-bottom-right,
+  body:has([aria-modal='true']) .sheet-mobile-action-dock {
+    visibility: hidden;
+    pointer-events: none;
+  }
 }
 
 /* Animations */
 @layer utilities {
-  /* Touch targets — 44px minimum below md; compact on desktop (MOBILE_UX.md) */
-  .touch-target {
-    min-width: var(--touch-target-min, 44px);
-    min-height: var(--touch-target-min, 44px);
-  }
-
-  .touch-target-md-compact {
-    min-width: var(--touch-target-min, 44px);
-    min-height: var(--touch-target-min, 44px);
-  }
-
-  @media (min-width: 768px) {
-    .touch-target-md-compact {
-      min-width: 0;
-      min-height: 0;
+  /* Standard 44 / Primary 48 — height only, coarse pointer (ADR-0023 / TASK-841). */
+  @media (pointer: coarse) {
+    .touch-tier-standard:not(.hit-area-dense):not(.hit-area-dense-square) {
+      min-height: var(--touch-target-min, 44px);
     }
+
+    .touch-tier-primary {
+      min-height: 48px;
+    }
+  }
+
+  /*
+    Deprecated (ADR-0023): was viewport 44 then md compact.
+    Painted min-size is a no-op; Dense hit is shared with .hit-area-dense.
+  */
+  .touch-target-md-compact,
+  .hit-area-dense,
+  .hit-area-dense-square {
+    position: relative;
+    isolation: isolate;
+  }
+
+  @media (pointer: coarse) {
+    .touch-target-md-compact::after,
+    .hit-area-dense::after,
+    .hit-area-dense-square::after {
+      content: '';
+      position: absolute;
+      pointer-events: auto;
+    }
+
+    /* Height-first: text buttons, links, row steppers — no min-w slab. */
+    .touch-target-md-compact::after,
+    .hit-area-dense::after {
+      top: 50%;
+      right: 0;
+      left: 0;
+      height: max(100%, var(--touch-target-min, 44px));
+      transform: translateY(-50%);
+    }
+
+    /* Square: icon-only Dense (painted stays small, hit is 44×44). */
+    .hit-area-dense-square::after {
+      top: 50%;
+      left: 50%;
+      width: max(100%, var(--touch-target-min, 44px));
+      height: max(100%, var(--touch-target-min, 44px));
+      transform: translate(-50%, -50%);
+    }
+  }
+
+  .touch-target-md-compact:hover,
+  .touch-target-md-compact:focus-visible,
+  .hit-area-dense:hover,
+  .hit-area-dense:focus-visible,
+  .hit-area-dense-square:hover,
+  .hit-area-dense-square:focus-visible {
+    z-index: 1;
   }
 
   /*
     Expand tap target without growing flex/grid track (TASK-725).
     Layout box stays the 16px icon; ::after is the extra hit area.
+    Coarse pointer gets the 44px hit; fine pointer keeps a modest inset (TASK-841).
   */
   .hit-area-layout-neutral {
     position: relative;
@@ -689,12 +821,12 @@
   .hit-area-layout-neutral::after {
     content: '';
     position: absolute;
-    inset: -14px;
+    inset: -6px;
   }
 
-  @media (min-width: 768px) {
+  @media (pointer: coarse) {
     .hit-area-layout-neutral::after {
-      inset: -6px;
+      inset: -14px;
     }
   }
 
@@ -838,7 +970,7 @@
   }
 
   .tab-nav-trigger {
-    @apply min-h-[var(--touch-target-min,44px)] border-b-2 border-transparent px-4 py-3 text-sm font-medium whitespace-nowrap text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none md:min-h-0 dark:hover:bg-surface-alt;
+    @apply border-b-2 border-transparent px-4 py-3 text-sm font-medium whitespace-nowrap text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none dark:hover:bg-surface-alt;
   }
 
   .tab-nav-trigger-active {
@@ -851,7 +983,14 @@
   }
 
   .tab-pill-trigger {
-    @apply min-h-[var(--touch-target-min,44px)] rounded-md px-4 py-2 text-sm font-medium text-text-muted transition-colors hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none md:min-h-0;
+    @apply rounded-md px-4 py-2 text-sm font-medium text-text-muted transition-colors hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none;
+  }
+
+  @media (pointer: coarse) {
+    .tab-nav-trigger,
+    .tab-pill-trigger {
+      min-height: var(--touch-target-min, 44px);
+    }
   }
 
   .tab-pill-trigger-active {
@@ -880,7 +1019,7 @@
      SEARCH INPUT - Unified component style
      --------------------------------------------------------------------------- */
   .search-input-wrapper {
-    @apply relative;
+    @apply relative min-w-0;
   }
 
   .search-input-icon {
@@ -888,7 +1027,7 @@
   }
 
   .search-input {
-    @apply w-full rounded-lg border border-border-light bg-surface py-2.5 pr-4 pl-10 text-text-primary placeholder:text-text-muted focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none;
+    @apply w-full min-w-0 truncate rounded-lg border border-border-light bg-surface py-2.5 pr-4 pl-10 text-text-primary placeholder:truncate placeholder:text-text-muted focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none;
   }
 
   .search-input-clear {

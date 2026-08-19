@@ -46,7 +46,7 @@ export function PowerCreatorHelp({
   tone,
 }: {
   topic: PowerCreatorHelpTopic;
-  tone?: InfoTippyTone;
+  tone?: InfoTippyTone | undefined;
 }) {
   const tip = POWER_CREATOR_TIPS[topic];
   return <InfoTippy content={tip.content} label={tip.label} tone={tone} />;

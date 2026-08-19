@@ -64,7 +64,7 @@ const TECHNIQUE_ROW_CHROME = { edit: true, delete: true, rightSlot: true } as co
 
 interface LibraryTechniquesTabProps {
   onDelete: (item: DisplayItem) => void;
-  mode?: 'standard' | 'empowered';
+  mode?: 'standard' | 'empowered' | undefined;
 }
 
 export function LibraryTechniquesTab({ onDelete, mode = 'standard' }: LibraryTechniquesTabProps) {

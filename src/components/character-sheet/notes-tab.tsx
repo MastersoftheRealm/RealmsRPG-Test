@@ -39,23 +39,23 @@ interface NotesTabProps {
   archetypeDesc: string;
   notes: string;
   // New: array of named notes
-  namedNotes?: CharacterNote[];
+  namedNotes?: CharacterNote[] | undefined;
   abilities: Abilities;
-  isEditMode?: boolean;
+  isEditMode?: boolean | undefined;
   /** Character visibility: who can view this sheet (private, campaign members, or public) */
-  visibility?: CharacterVisibility;
-  onVisibilityChange?: (value: CharacterVisibility) => void;
+  visibility?: CharacterVisibility | undefined;
+  onVisibilityChange?: ((value: CharacterVisibility) => void) | undefined;
   /** How to display speed (spaces, feet, or meters) for Jump/Climb/Swim */
-  speedDisplayUnit?: SpeedDisplayUnit;
-  onWeightChange?: (value: number) => void;
-  onHeightChange?: (value: number) => void;
-  onAppearanceChange?: (value: string) => void;
-  onArchetypeDescChange?: (value: string) => void;
-  onNotesChange?: (value: string) => void;
+  speedDisplayUnit?: SpeedDisplayUnit | undefined;
+  onWeightChange?: ((value: number) => void) | undefined;
+  onHeightChange?: ((value: number) => void) | undefined;
+  onAppearanceChange?: ((value: string) => void) | undefined;
+  onArchetypeDescChange?: ((value: string) => void) | undefined;
+  onNotesChange?: ((value: string) => void) | undefined;
   // New: handlers for named notes
-  onAddNote?: () => void;
-  onUpdateNote?: (id: string, updates: Partial<CharacterNote>) => void;
-  onDeleteNote?: (id: string) => void;
+  onAddNote?: (() => void) | undefined;
+  onUpdateNote?: ((id: string, updates: Partial<CharacterNote>) => void) | undefined;
+  onDeleteNote?: ((id: string) => void) | undefined;
 }
 
 // Collapsible note component with editable name
@@ -66,9 +66,9 @@ function NoteCard({
   isEditMode,
 }: {
   note: CharacterNote;
-  onUpdate?: (updates: Partial<CharacterNote>) => void;
-  onDelete?: () => void;
-  isEditMode?: boolean;
+  onUpdate?: ((updates: Partial<CharacterNote>) => void) | undefined;
+  onDelete?: (() => void) | undefined;
+  isEditMode?: boolean | undefined;
 }) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isEditingName, setIsEditingName] = useState(false);

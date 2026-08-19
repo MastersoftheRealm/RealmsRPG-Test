@@ -26,8 +26,8 @@ import type {
 
 export type LibraryInventoryPanelProps = {
   currency: number;
-  onCurrencyChange?: (value: number) => void;
-  martialProficiency?: number;
+  onCurrencyChange?: ((value: number) => void) | undefined;
+  martialProficiency?: number | undefined;
   showLibraryEditControls: boolean;
   weaponRows: EntityWeaponRow[];
   shieldRows: EntityShieldRow[];
@@ -41,14 +41,14 @@ export type LibraryInventoryPanelProps = {
   onShieldSort: (col: string) => void;
   onArmorSort: (col: string) => void;
   onEquipmentSort: (col: string) => void;
-  onAddWeapon?: () => void;
-  onRemoveWeapon?: (id: string | number) => void;
-  onAddShield?: () => void;
-  onRemoveShield?: (id: string | number) => void;
-  onAddArmor?: () => void;
-  onRemoveArmor?: (id: string | number) => void;
-  onAddEquipment?: () => void;
-  onRemoveEquipment?: (id: string | number) => void;
+  onAddWeapon?: (() => void) | undefined;
+  onRemoveWeapon?: ((id: string | number) => void) | undefined;
+  onAddShield?: (() => void) | undefined;
+  onRemoveShield?: ((id: string | number) => void) | undefined;
+  onAddArmor?: (() => void) | undefined;
+  onRemoveArmor?: ((id: string | number) => void) | undefined;
+  onAddEquipment?: (() => void) | undefined;
+  onRemoveEquipment?: ((id: string | number) => void) | undefined;
 };
 
 export function LibraryInventoryPanel({

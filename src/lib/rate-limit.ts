@@ -38,7 +38,7 @@ interface RateLimitOptions {
    * instead of falling back to the per-instance window. Only affects the error
    * path — with no backend configured at all, in-memory limiting still applies.
    */
-  failClosed?: boolean;
+  failClosed?: boolean | undefined;
 }
 
 export interface RateLimitResult {
@@ -57,8 +57,8 @@ interface TokenBucket {
 }
 
 interface RateLimitKeyInput {
-  userId?: string | null;
-  ip?: string | null;
+  userId?: string | null | undefined;
+  ip?: string | null | undefined;
 }
 
 let sharedRedis: Redis | null | undefined;

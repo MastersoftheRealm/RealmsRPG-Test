@@ -115,6 +115,7 @@ export async function getRolePolicyForUser(
     .eq('id', uid)
     .maybeSingle();
 
-  const role = ((profile as { role?: string } | null)?.role ?? DEFAULT_ROLE) as UserRole;
+  const role = ((profile as { role?: string | undefined } | null)?.role ??
+    DEFAULT_ROLE) as UserRole;
   return getRolePolicyForRole(role, supabase);
 }

@@ -87,8 +87,8 @@ function createMockSupabase({
   characterRow = null,
 }: {
   campaignRow: CampaignRow | null;
-  memberUserIds?: string[];
-  characterRow?: CharacterRow | null;
+  memberUserIds?: string[] | undefined;
+  characterRow?: CharacterRow | null | undefined;
 }) {
   return {
     from: vi.fn((table: string) => {
@@ -161,8 +161,8 @@ async function readJson<T>(response: Response): Promise<T> {
 
 function stubAuthedClient(args: {
   user: { uid: string; email: string };
-  memberUserIds?: string[];
-  characterRow?: CharacterRow | null;
+  memberUserIds?: string[] | undefined;
+  characterRow?: CharacterRow | null | undefined;
 }) {
   mockGetSession.mockResolvedValue({ user: args.user, error: null });
   const supabase = createMockSupabase({

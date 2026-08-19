@@ -26,7 +26,11 @@ export function buildEmpoweredPowerSelectableItem(
   const areaRaw = (powerData.area as Record<string, unknown> | undefined)?.type;
   const areaValue = areaRaw ? String(areaRaw).replace(/\b\w/g, (c) => c.toUpperCase()) : '-';
   const damageRows = Array.isArray(powerData.damage)
-    ? (powerData.damage as Array<{ amount?: number; size?: number; type?: string }>)
+    ? (powerData.damage as Array<{
+        amount?: number | undefined;
+        size?: number | undefined;
+        type?: string | undefined;
+      }>)
     : [];
   const damageValue = formatPowerDamage(damageRows) || '-';
 
@@ -37,7 +41,7 @@ export function buildEmpoweredPowerSelectableItem(
       : '-';
   const durationValue = formatDurationDisplay(powerData.duration ?? raw.duration);
 
-  const rangeSteps = (powerData.range as { steps?: number } | undefined)?.steps;
+  const rangeSteps = (powerData.range as { steps?: number | undefined } | undefined)?.steps;
   const rangeStr =
     typeof rangeSteps === 'number' && rangeSteps > 0
       ? formatPowerRangeFromSteps(rangeSteps)

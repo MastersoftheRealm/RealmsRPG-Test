@@ -19,9 +19,9 @@ export interface UseModalListStateOptions<T> {
   /** Object keys to search in (e.g. ['name', 'description']) */
   searchFields: (keyof T)[];
   /** Initial sort column key (default 'name') */
-  initialSortKey?: string;
+  initialSortKey?: string | undefined;
   /** Optional: custom string for search (overrides searchFields) */
-  getSearchableString?: (item: T) => string;
+  getSearchableString?: ((item: T) => string) | undefined;
 }
 
 export function useModalListState<T extends object>({

@@ -411,7 +411,7 @@ export interface DamageConfig {
   amount: number;
   size: DieSize | number;
   type: string;
-  applyDuration?: boolean;
+  applyDuration?: boolean | undefined;
 }
 
 export const DEFAULT_POWER_DAMAGE: DamageConfig = {

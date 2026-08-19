@@ -12,7 +12,12 @@ export { ArchetypeSection } from './archetype-section';
 export { LibrarySection } from './library-section';
 export { resolveLibraryActiveTab } from './library-tab-config';
 export { CharacterSheetProvider } from './character-sheet-context';
-export { CharacterSheetBody } from './character-sheet-body';
+export {
+  CharacterSheetBody,
+  CharacterSheetColumn,
+  CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME,
+  CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME,
+} from './character-sheet-body';
 export { useCharacterSheetDerived } from './use-character-sheet-derived';
 export { useCharacterSheetActions } from './use-character-sheet-actions';
 export { AddLibraryItemModal } from './add-library-item-modal';

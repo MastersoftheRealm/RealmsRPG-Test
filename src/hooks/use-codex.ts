@@ -24,7 +24,7 @@ const DEFAULT_OPTIONS = {
   refetchOnMount: true,
 };
 
-export type CodexQueryOptions = { enabled?: boolean };
+export type CodexQueryOptions = { enabled?: boolean | undefined };
 
 /** Query keys for `/api/codex`. Collection keys sit under `['codex']` so prefix invalidation covers them. */
 export const codexKeys = {

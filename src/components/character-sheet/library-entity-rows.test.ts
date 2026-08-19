@@ -20,7 +20,7 @@ const baseCtx: LibraryEntityRowContext = {
   onUseTechnique: () => {},
 };
 
-function columnKeys(row: { columns?: Array<{ key: string }> }): string[] {
+function columnKeys(row: { columns?: Array<{ key: string }> | undefined }): string[] {
   return (row.columns ?? []).map((c) => c.key);
 }
 

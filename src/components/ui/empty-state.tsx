@@ -13,26 +13,28 @@ export interface EmptyStateProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Main heading */
   title: string;
   /** Description text (alias: message) */
-  description?: string;
+  description?: string | undefined;
   /** Alias for description for backward compatibility */
-  message?: string;
+  message?: string | undefined;
   /** Icon to display (optional) */
-  icon?: React.ReactNode;
+  icon?: React.ReactNode | undefined;
   /** Primary action button */
   action?:
     | {
         label: string;
         onClick: () => void;
-        variant?: 'primary' | 'secondary';
+        variant?: 'primary' | 'secondary' | undefined;
       }
     | React.ReactNode;
   /** Secondary action button */
-  secondaryAction?: {
-    label: string;
-    onClick: () => void;
-  };
+  secondaryAction?:
+    | {
+        label: string;
+        onClick: () => void;
+      }
+    | undefined;
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
 }
 
 const sizeClasses = {
@@ -107,7 +109,8 @@ export function EmptyState({
           {isActionObject && (
             <Button
               variant={
-                (action as { variant?: 'primary' | 'secondary' }).variant === 'secondary'
+                (action as { variant?: 'primary' | 'secondary' | undefined }).variant ===
+                'secondary'
                   ? 'secondary'
                   : 'primary'
               }

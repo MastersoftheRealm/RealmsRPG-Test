@@ -10,5 +10,5 @@ export interface CombatEncounterViewProps {
   encounter: Encounter | null;
   setEncounter: React.Dispatch<React.SetStateAction<Encounter | null>>;
   campaignsFull: Campaign[];
-  showRollLog?: boolean;
+  showRollLog?: boolean | undefined;
 }

@@ -16,7 +16,7 @@ interface PathFeatListsProps {
   }> | null;
   pathModeArchetypeFeats: FeatFamilyEntry[];
   pathModeCharacterFeats: FeatFamilyEntry[];
-  archetypeName?: string;
+  archetypeName?: string | undefined;
   filters: FeatFilters;
   onSort: (col: string) => void;
   selectedArchetypeFeats: SelectedFeat[];
@@ -25,7 +25,7 @@ interface PathFeatListsProps {
   maxCharacterFeats: number;
   featById: Map<string, Feat>;
   skillIdToName: Map<string, string>;
-  checkRequirements: (feat: Feat) => { met: boolean; reason?: string };
+  checkRequirements: (feat: Feat) => { met: boolean; reason?: string | undefined };
   onToggleFeat: (feat: Feat, isCharacterFeat: boolean) => void;
 }
 

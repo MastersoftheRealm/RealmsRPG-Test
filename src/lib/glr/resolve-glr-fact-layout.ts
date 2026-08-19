@@ -24,7 +24,7 @@ export type GlrFactChannel = 'column' | 'chip' | 'rightSlot';
 export interface GlrResolveInput {
   entityType: GlrEntityType;
   mode: GlrDensityMode;
-  flags?: GlrLayoutFlags;
+  flags?: GlrLayoutFlags | undefined;
 }
 
 export interface GlrResolvedLayout {

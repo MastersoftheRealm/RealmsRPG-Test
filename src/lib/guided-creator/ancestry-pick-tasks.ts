@@ -25,12 +25,12 @@ export interface AncestryPickTask {
   title: string;
   description: string;
   options: Trait[];
-  parentTraitId?: string;
-  optional?: boolean;
+  parentTraitId?: string | undefined;
+  optional?: boolean | undefined;
   /** Mixed flaw pick: codex species id that owns this flaw option. */
-  flawSpeciesId?: string;
+  flawSpeciesId?: string | undefined;
   /** Mixed species-skills pick (not traits). */
-  skillOptions?: { id: string; name: string; description?: string }[];
+  skillOptions?: { id: string; name: string; description?: string | undefined }[] | undefined;
 }
 
 export type AncestryPickSpeciesInput = Pick<

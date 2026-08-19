@@ -34,8 +34,8 @@ import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 import type { Character } from '@/types';
 
 interface FeatModal extends Feat {
-  effect?: string;
-  max_uses?: number;
+  effect?: string | undefined;
+  max_uses?: number | undefined;
 }
 
 interface AddFeatModalProps {
@@ -122,7 +122,7 @@ export function AddFeatModal({
   }, [feats, featType]);
 
   const checkRequirements = useCallback(
-    (feat: FeatModal): { meets: boolean; warning?: string } => {
+    (feat: FeatModal): { meets: boolean; warning?: string | undefined } => {
       const { met, reason } = checkFeatRequirements(feat, character, codexSkills, feats);
       return { meets: met, warning: reason };
     },

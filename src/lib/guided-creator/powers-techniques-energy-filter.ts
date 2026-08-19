@@ -22,9 +22,9 @@ export interface GuidedL1MaxEnergyInput {
    * Archetype ability for Energy: `pow_abil` on the Power track,
    * `mart_abil` on the Techniques / Martial track (TASK-687).
    */
-  archetypeAbility?: AbilityName | string | null;
-  abilities?: Partial<Abilities> | null;
-  level?: number;
+  archetypeAbility?: AbilityName | string | null | undefined;
+  abilities?: Partial<Abilities> | null | undefined;
+  level?: number | undefined;
 }
 
 /**

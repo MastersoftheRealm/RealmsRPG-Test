@@ -4,9 +4,9 @@ export interface AdvancedCalculationRow {
 }
 
 interface AdvancedCalculationsPanelProps {
-  title?: string;
+  title?: string | undefined;
   rows: AdvancedCalculationRow[];
-  ruleText?: string;
+  ruleText?: string | undefined;
 }
 
 export function AdvancedCalculationsPanel({

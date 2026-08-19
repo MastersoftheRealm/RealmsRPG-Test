@@ -89,7 +89,7 @@ export default function SpeciesCreatorPage() {
         emptySubMessage: load.emptySubMessage,
         searchPlaceholder: 'Search species...',
         onSelect: (item) => {
-          const raw = (item.data as { raw?: Species | Record<string, unknown> })?.raw;
+          const raw = (item.data as { raw?: Species | Record<string, unknown> | undefined })?.raw;
           if (raw) ws.loadSpeciesIntoForm(raw as Species);
         },
       }}

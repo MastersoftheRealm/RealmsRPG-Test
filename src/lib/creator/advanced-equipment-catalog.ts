@@ -25,11 +25,11 @@ import type { LibraryItem, UserItem } from '@/types/library';
 export type AdvancedEquipmentProperty =
   | string
   | {
-      id?: string | number;
-      name?: string;
-      op_1_lvl?: number;
-      base_tp?: number;
-      op_1_tp?: number;
+      id?: string | number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
+      base_tp?: number | undefined;
+      op_1_tp?: number | undefined;
     };
 
 /** Unified catalog row for Advanced equipment step (inline list UX). */
@@ -38,16 +38,16 @@ export interface AdvancedEquipmentItem {
   name: string;
   type: 'weapon' | 'armor' | 'equipment';
   description: string;
-  damage?: string;
-  armor_value?: number;
+  damage?: string | undefined;
+  armor_value?: number | undefined;
   gold_cost: number;
   currency: number;
   properties: AdvancedEquipmentProperty[];
-  rarity?: string;
-  category?: string;
+  rarity?: string | undefined;
+  category?: string | undefined;
   source: 'library' | 'codex' | 'public';
-  image_id?: string | null;
-  image_url?: string | null;
+  image_id?: string | null | undefined;
+  image_url?: string | null | undefined;
 }
 
 /** Selected inventory row (quantity-aware). */
@@ -57,8 +57,15 @@ export interface AdvancedSelectedItem {
   type: string;
   cost: number;
   quantity: number;
-  damage?: string | Array<{ amount?: number | string; size?: number | string; type?: string }>;
-  armor?: number;
+  damage?:
+    | string
+    | Array<{
+        amount?: number | string | undefined;
+        size?: number | string | undefined;
+        type?: string | undefined;
+      }>
+    | undefined;
+  armor?: number | undefined;
   properties: AdvancedEquipmentProperty[];
 }
 
@@ -119,7 +126,13 @@ export function availableUnarmedProwessLevels(charLevel = 1): UnarmedProwessLeve
 }
 
 function enrichProperty(
-  prop: string | { id?: string | number; name?: string; op_1_lvl?: number },
+  prop:
+    | string
+    | {
+        id?: string | number | undefined;
+        name?: string | undefined;
+        op_1_lvl?: number | undefined;
+      },
   itemProperties: ItemPropertyTpRow[] | undefined,
 ): AdvancedEquipmentProperty {
   if (typeof prop === 'string') {
@@ -166,8 +179,8 @@ function tabTypeFromArmament(
 
 /** Loose library row (user items may still carry legacy `armamentType`). */
 export type AdvancedLibraryItemInput = UserItem & {
-  armamentType?: string;
-  damage?: { amount: number; size: number; type: string }[] | LibraryItem['damage'];
+  armamentType?: string | undefined;
+  damage?: { amount: number; size: number; type: string }[] | LibraryItem['damage'] | undefined;
 };
 
 function rowFromUserLibraryItem(
@@ -287,10 +300,10 @@ function rowFromPublicLibraryItem(
  * Advanced creator catalog rows (source tags preserved for SourceFilter).
  */
 export function buildAdvancedEquipmentCatalog(args: {
-  userItems?: AdvancedLibraryItemInput[] | null;
-  codexEquipment?: CodexEquipmentItem[] | null;
-  publicItems?: LibraryItem[] | null;
-  itemProperties?: ItemPropertyTpRow[] | null;
+  userItems?: AdvancedLibraryItemInput[] | null | undefined;
+  codexEquipment?: CodexEquipmentItem[] | null | undefined;
+  publicItems?: LibraryItem[] | null | undefined;
+  itemProperties?: ItemPropertyTpRow[] | null | undefined;
 }): AdvancedEquipmentItem[] {
   const { userItems, codexEquipment, publicItems, itemProperties } = args;
   const items: AdvancedEquipmentItem[] = [];
@@ -393,8 +406,8 @@ export function filterAdvancedEquipmentCatalog(
   catalog: AdvancedEquipmentItem[],
   args: {
     activeTab: AdvancedEquipmentTabId;
-    searchTerm?: string;
-    sourceFilter?: AdvancedSourceFilter;
+    searchTerm?: string | undefined;
+    sourceFilter?: AdvancedSourceFilter | undefined;
   },
 ): AdvancedEquipmentItem[] {
   const { activeTab, searchTerm = '', sourceFilter = 'all' } = args;
@@ -441,21 +454,26 @@ export interface AdvancedProficiencyTpSummary {
 }
 
 export function computeAdvancedEquipmentProficiencyTp(args: {
-  inventory?: Item[] | null;
-  powers?: CharacterPower[] | null;
-  techniques?: CharacterTechnique[] | null;
-  abilities?: Record<string, number | unknown> | object | null;
-  powAbil?: string | null;
-  martAbil?: string | null;
-  level?: number;
-  powerPartsDb?: Array<{ id?: string | number; name?: string; base_tp?: number; op_1_tp?: number }>;
-  techniquePartsDb?: Array<{
-    id?: string | number;
-    name?: string;
-    base_tp?: number;
-    op_1_tp?: number;
+  inventory?: Item[] | null | undefined;
+  powers?: CharacterPower[] | null | undefined;
+  techniques?: CharacterTechnique[] | null | undefined;
+  abilities?: Record<string, number | unknown> | object | null | undefined;
+  powAbil?: string | null | undefined;
+  martAbil?: string | null | undefined;
+  level?: number | undefined;
+  powerPartsDb?: Array<{
+    id?: string | number | undefined;
+    name?: string | undefined;
+    base_tp?: number | undefined;
+    op_1_tp?: number | undefined;
   }>;
-  itemPropertiesDb?: ItemPropertyTpRow[] | null;
+  techniquePartsDb?: Array<{
+    id?: string | number | undefined;
+    name?: string | undefined;
+    base_tp?: number | undefined;
+    op_1_tp?: number | undefined;
+  }>;
+  itemPropertiesDb?: ItemPropertyTpRow[] | null | undefined;
 }): AdvancedProficiencyTpSummary {
   const inventory = args.inventory || [];
   const weapons = inventory.filter((item) => item.type === 'weapon');

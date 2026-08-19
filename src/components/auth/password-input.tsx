@@ -10,9 +10,9 @@ import { forwardRef, useState, type InputHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 
 export interface PasswordInputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 'type'> {
-  label?: string;
-  error?: string;
-  showStrength?: boolean;
+  label?: string | undefined;
+  error?: string | undefined;
+  showStrength?: boolean | undefined;
 }
 
 const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
@@ -63,7 +63,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 PasswordInput.displayName = 'PasswordInput';
 
 // Simple eye icons
-function EyeIcon({ className }: { className?: string }) {
+function EyeIcon({ className }: { className?: string | undefined }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -83,7 +83,7 @@ function EyeIcon({ className }: { className?: string }) {
   );
 }
 
-function EyeOffIcon({ className }: { className?: string }) {
+function EyeOffIcon({ className }: { className?: string | undefined }) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"

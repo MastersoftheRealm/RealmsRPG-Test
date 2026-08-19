@@ -34,7 +34,7 @@ function PreviewChip({
 }: {
   label: string;
   value: string;
-  highlight?: 'power' | 'martial' | null;
+  highlight?: 'power' | 'martial' | null | undefined;
 }) {
   return (
     <div className={previewAbilityTileClass(highlight ?? null)}>
@@ -45,8 +45,8 @@ function PreviewChip({
 }
 
 export interface CharacterPreviewPanelProps {
-  className?: string;
-  variant?: 'strip' | 'panel';
+  className?: string | undefined;
+  variant?: 'strip' | 'panel' | undefined;
 }
 
 export function CharacterPreviewPanel({

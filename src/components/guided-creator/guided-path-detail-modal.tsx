@@ -57,7 +57,7 @@ export interface GuidedPathDetailModalProps {
   onClose: () => void;
   path: Archetype | null;
   /** Apply this path from the detail footer Select. */
-  onSelect?: () => void;
+  onSelect?: (() => void) | undefined;
 }
 
 function findFeatByIdOrName(feats: CodexFeat[], ref: string): CodexFeat | undefined {

@@ -47,7 +47,7 @@ type TabId =
 const MAIN_TAB_IDS: TabId[] = ['feats', 'skills', 'species', 'archetypes', 'equipment'];
 const ADVANCED_TAB_IDS: TabId[] = ['parts', 'properties', 'creature_feats', 'traits'];
 
-const TAB_META: { id: TabId; label: string; labelMobile?: string }[] = [
+const TAB_META: { id: TabId; label: string; labelMobile?: string | undefined }[] = [
   { id: 'feats', label: 'Feats' },
   { id: 'skills', label: 'Skills' },
   { id: 'species', label: 'Species' },

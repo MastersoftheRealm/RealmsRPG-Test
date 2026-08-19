@@ -17,7 +17,7 @@ export interface AbilityPickButtonProps {
   disabled: boolean;
   onPick: () => void;
   /** When false, skips InfoTippy (compact sheet forge chrome). Default true. */
-  withTooltip?: boolean;
+  withTooltip?: boolean | undefined;
 }
 
 export function AbilityPickButton({

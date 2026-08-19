@@ -29,7 +29,7 @@ import { useSort } from '@/hooks/use-sort';
 export interface OfficialEntityRow {
   id: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
 }
 
 export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> {
@@ -44,33 +44,36 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   gridColumns: string;
   headerColumns: ComponentProps<typeof ListHeader>['columns'];
   /** Collapsed-row column values for a single row (not used when `renderRow` is set). */
-  getColumns?: (row: TRow) => ColumnValue[];
+  getColumns?: ((row: TRow) => ColumnValue[]) | undefined;
   /** Optional row badges (e.g. Enhanced on admin enhanced items). */
-  getBadges?: (row: TRow) => ComponentProps<typeof GridListRow>['badges'];
+  getBadges?: ((row: TRow) => ComponentProps<typeof GridListRow>['badges']) | undefined;
   /**
    * Name-adjacent chips while a list filter is active (Archetype Path, TASK-752).
    * Combined with `getBadges` and shown in the name slot when present.
    */
-  getNameChipLabels?: (row: TRow) => string[] | undefined;
+  getNameChipLabels?: ((row: TRow) => string[] | undefined) | undefined;
   /** Optional expanded chips (parts/properties). Prefer getDetailSections for Parts/Properties tips. */
-  getChips?: (row: TRow) => ChipData[] | undefined;
-  chipsLabel?: string;
+  getChips?: ((row: TRow) => ChipData[] | undefined) | undefined;
+  chipsLabel?: string | undefined;
   /** Labeled sections (Parts/Properties & Proficiencies with collapse + family tip). Overrides chips when set. */
-  getDetailSections?: (row: TRow) => MetadataDetailSection[] | undefined;
+  getDetailSections?: ((row: TRow) => MetadataDetailSection[] | undefined) | undefined;
   /**
    * Optional list-row art (species/equipment/etc.). When set, ListHeader gets
    * `hasThumbnailColumn` and each row receives `GridListRow.thumbnail`.
    */
-  getThumbnail?: (row: TRow) => ListRowThumbnailProps;
+  getThumbnail?: ((row: TRow) => ListRowThumbnailProps) | undefined;
   /** Override ListHeader thumbnail column when using custom `renderRow`. */
-  hasThumbnailColumn?: boolean;
+  hasThumbnailColumn?: boolean | undefined;
   /** Custom row renderer (e.g. CreatureStatBlock). Skips GridListRow when set. */
-  renderRow?: (row: TRow, ctx: { canAdd: boolean; onAddRequest?: () => void }) => ReactNode;
-  listClassName?: string;
-  afterList?: ReactNode;
+  renderRow?: (
+    row: TRow,
+    ctx: { canAdd: boolean; onAddRequest?: (() => void) | undefined },
+  ) => ReactNode;
+  listClassName?: string | undefined;
+  afterList?: ReactNode | undefined;
 
   errorMessage: string;
-  sectionTitle?: string;
+  sectionTitle?: string | undefined;
   searchPlaceholder: string;
   emptyIcon: ReactNode;
   emptyTitle: string;
@@ -78,22 +81,24 @@ export interface OfficialEntityListProps<TRow extends OfficialEntityRow, TItem> 
   searchEmptyMessage: string;
 
   variant: 'library' | 'admin';
-  readOnly?: boolean;
-  onAddRequest?: (row: TRow) => void;
+  readOnly?: boolean | undefined;
+  onAddRequest?: ((row: TRow) => void) | undefined;
   /** When a character is filtered, add row directly to that character. */
-  addToCharacter?: {
-    kind: 'power' | 'technique' | 'weapon' | 'armor' | 'shield';
-    onRequest: (row: TRow) => void;
-    isOnCharacter: (row: TRow) => boolean;
-  };
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string, name: string) => void;
+  addToCharacter?:
+    | {
+        kind: 'power' | 'technique' | 'weapon' | 'armor' | 'shield';
+        onRequest: (row: TRow) => void;
+        isOnCharacter: (row: TRow) => boolean;
+      }
+    | undefined;
+  onEdit?: ((id: string) => void) | undefined;
+  onDelete?: ((id: string, name: string) => void) | undefined;
   /** Optional control after Filters (e.g. admin Create). Keeps list chrome when empty. */
-  searchTrailing?: ReactNode;
+  searchTrailing?: ReactNode | undefined;
   /** Filter panel body only — ListSearchToolbar wraps FilterSection compact (TASK-721). */
-  filters?: ReactNode;
+  filters?: ReactNode | undefined;
   /** Active-filter badge on the collapsed Filters toggle. */
-  filterActiveCount?: number;
+  filterActiveCount?: number | undefined;
 }
 
 export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({

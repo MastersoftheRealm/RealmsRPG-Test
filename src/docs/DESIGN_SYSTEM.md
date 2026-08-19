@@ -44,9 +44,10 @@ Common scales are encoded as semantic tokens so components share one ladder inst
 | Radius | `--radius-control`, `--radius-card`, `--radius-pill` | controls = `lg`, cards = `xl`, pills/avatars = `full` |
 | Elevation | `--shadow-card`, `--shadow-raised`, `--shadow-overlay` | resting card → hovered/raised → modal/popover |
 | Motion | `--duration-fast` (150ms), `--duration-base` (200ms), `--duration-slow` (300ms), `--ease-standard` | one easing curve for all transitions; use `duration-base ease-standard` in TSX; in `@apply` use `var(--duration-base)` + `var(--ease-standard)` |
-| Z-index | `--z-sticky` (10), `--z-header` / `--z-overlay` (50), `--z-popover` (70), `--z-toast` (100), `--z-floating` (1000), `--z-tour` (1100), `--z-skip-link` (9999), `--z-toast-stack` (10000) | sticky → header/modal → popovers/tooltips → floating widgets → onboarding tour cards → skip link / toast stack |
+| Z-index | `--z-sticky` (10), `--z-header` / `--z-overlay` (50), `--z-popover` (70), `--z-toast` (100), `--z-floating` (1000), `--z-tour` (1100), `--z-skip-link` (9999), `--z-toast-stack` (10000) | sticky → header/modal → popovers/tooltips → floating widgets → onboarding tour cards → skip link / toast stack. C4 docks (`.floating-dock-bottom-right`, `.sheet-mobile-action-dock`) hide while `aria-modal` is open so they cannot cover modal footers (TASK-837). |
+| Floating dock (C4) | `--dock-gap`, `--dock-fab-size`, `--dock-bottom`, `--sheet-mobile-dock-height`, `--dock-reserved-end`; `.floating-dock-bottom-right`, `.sheet-mobile-action-dock`, `.has-sheet-mobile-dock` | One owner per corner. Do not add a second `fixed bottom-*`. |
 | Focus | `focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2` | buttons, icon buttons, tabs; form controls use `:focus:` (same ring token); errors use `ring-danger-border` |
-| Touch | `--touch-target-min: 44px`; utilities `.touch-target`, `.hit-area-layout-neutral` (Dense tier) | **Pointer, not viewport:** `@media (pointer: coarse)` sets hit area. Tiers (ADR-0023 / `MOBILE_UX.md`): Primary 48 / Standard 44 / Dense 32 painted + 44 expanded hit. `.touch-target-md-compact` is deprecated. InfoTippy uses `.hit-area-layout-neutral` so the (i) does not stretch label rows. |
+| Touch | `--touch-target-min: 44px`; utilities `.touch-tier-standard` / `.touch-tier-primary`, `.hit-area-dense` (height-first), `.hit-area-dense-square`, `.hit-area-layout-neutral` (16px icons) | **Pointer, not viewport:** `@media (pointer: coarse)` sets hit area (TASK-841). Tiers: Primary 48 / Standard 44 / Dense 32 painted + 44 expanded hit. `.touch-target-md-compact` is a Dense-hit alias. InfoTippy uses `.hit-area-layout-neutral` so the (i) does not stretch label rows. |
 | Container | `--container-narrow` (4xl), `--container-standard` (7xl), `--container-wide` (1440px), `--container-full-tool` (1600px) | page max-widths; marketing chrome uses `.layout-shell-wide` |
 
 ## Color Palette
@@ -165,14 +166,14 @@ Standard patterns for consistent UX across the app.
 
 ### Modals
 - **Base component:** All modals must use `@/components/ui/modal` (Modal). Pass `isOpen`, `onClose`, and use `title`/`description` (simple) or `header`/`footer` (custom). After close, Modal holds an invisible `z-overlay` sink for 200ms so the dismiss click cannot fall through to Create/Save underneath.
-- **Confirm/delete:** Use `ConfirmActionModal` or `DeleteConfirmModal` from `@/components/shared`; both compose base Modal and accept `isOpen`.
+- **Confirm/delete:** Use `ConfirmActionModal` or `DeleteConfirmModal` from `@/components/patterns`; both compose base Modal and accept `isOpen`. `DeleteConfirmModal` is the delete-copy preset.
 - **Selection:** Use `UnifiedSelectionModal` for add-feat, add-power, add-technique, etc.
 - **Size guidance:** `sm`–`md` confirms; `lg`–`2xl` typical forms/lists; `full` (`max-w-6xl`) for high-complexity multi-section editors (admin codex add/edit). Large dialogs use `fullScreenOnMobile`.
 
 ### Error display
 - **Persistent errors** (form validation, failed load, permission): Use `<Alert variant="danger">` (or `warning`/`info`). Keep in layout until user dismisses or fixes.
 - **Transient feedback** (save success, copy link): Use Toast (e.g. `showToast(message, 'success')`). Auto-dismiss.
-- **List/page empty error state:** Use `ErrorDisplay` from `@/components/shared/list-components` for full-message + subMessage, or Alert for inline.
+- **List/page empty error state:** Use `ErrorDisplay` from `@/components/patterns` for full-message + subMessage, or Alert for inline.
 
 ### Loading states
 - **Page-level** (data fetch for whole page): Use `<LoadingState message="Loading…" size="lg" />` from `@/components/ui/spinner`.
@@ -239,6 +240,8 @@ import { Button } from '@/components/ui';
 // Loading state
 <Button isLoading>Loading...</Button>
 ```
+
+**Touch tiers (ADR-0023 / TASK-841):** coarse pointer only. `size="lg"` / `xl` = Primary (48px min-h). Default `md` = Standard (44px min-h, no min-w). `size="sm"` and `variant="link"` = Dense (painted compact + `.hit-area-dense`). Icon-only `size="icon"` and `IconButton` md/lg set an explicit square (`h-11` / `h-12`), not a global `min-w`.
 
 **Always use the `<Button>` component for buttons.** Legacy gradient utilities (`.btn-primary`, etc.) and raw link button classes (`.btn-solid`, `.btn-outline-clean`) were removed in Phase 0.4 / Phase 2.1. For links styled as buttons, use `<Button asChild><Link …></Button>`.
 
@@ -658,8 +661,8 @@ These components are used across multiple pages and should be imported rather th
 | `HealthEnergyAllocator` | `@/components/creator/health-energy-allocator` | Health/Energy pool allocation (PointStatus + steppers; HP/EN only when compact) |
 | `CreatorSummaryPanel` | `@/components/creator/creator-summary-panel` | Cost/point summary in creators |
 | `RecoveryModal` | `@/components/character-sheet/recovery-modal` | Full/partial recovery dialog |
-| `RollLog` | `@/components/rolls` | Dice roll history display (RollProvider / useRolls*) |
-| `SheetActionToolbar` | `@/components/character-sheet/sheet-action-toolbar` | Floating action toolbar on character sheet |
+| `RollLog` | `@/components/rolls` | Dice roll history; C4 `.floating-dock-bottom-right` (TASK-837) |
+| `SheetActionToolbar` | `@/components/character-sheet/sheet-action-toolbar` | Sheet actions; C4 `.sheet-mobile-action-dock` below md, top-right from md (TASK-837) |
 | `TabSummarySection` | `@/components/shared/tab-summary-section` | Color-coded solid summary bar for tabs (no gradient fills) |
 | `PoweredMartialSlider` | `@/components/shared/powered-martial-slider` | Power/martial proficiency allocation slider |
 

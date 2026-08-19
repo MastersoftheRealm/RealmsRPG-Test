@@ -14,8 +14,8 @@ export function ChipOptionsPanel({
   options: ExpandableChipOption[];
   optionsOpen: boolean;
   onToggle: (e: React.MouseEvent) => void;
-  listClassName?: string;
-  size?: 'sm' | 'md';
+  listClassName?: string | undefined;
+  size?: 'sm' | 'md' | undefined;
 }) {
   const bodyText = size === 'md' ? 'text-sm' : 'text-xs';
 

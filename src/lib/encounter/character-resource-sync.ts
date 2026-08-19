@@ -33,14 +33,18 @@ export function shouldSuppressRemoteResourceMerge(characterId: string): boolean 
 
 /** Read HP/EN/AP from character `data` JSON. Top-level fields win over nested health/energy.current. */
 export function readResourcesFromCharacterData(data: Record<string, unknown>): {
-  currentHealth?: number;
-  currentEnergy?: number;
-  actionPoints?: number;
-  healthMax?: number;
-  energyMax?: number;
+  currentHealth?: number | undefined;
+  currentEnergy?: number | undefined;
+  actionPoints?: number | undefined;
+  healthMax?: number | undefined;
+  energyMax?: number | undefined;
 } {
-  const health = data.health as { current?: number; max?: number } | undefined;
-  const energy = data.energy as { current?: number; max?: number } | undefined;
+  const health = data.health as
+    | { current?: number | undefined; max?: number | undefined }
+    | undefined;
+  const energy = data.energy as
+    | { current?: number | undefined; max?: number | undefined }
+    | undefined;
 
   return {
     currentHealth: typeof data.currentHealth === 'number' ? data.currentHealth : health?.current,
@@ -101,7 +105,11 @@ export function mergeResourceUpdatesIntoCharacter(
 
 export function withSyncedResourceFields(
   prev: Character,
-  patch: { currentHealth?: number; currentEnergy?: number; actionPoints?: number },
+  patch: {
+    currentHealth?: number | undefined;
+    currentEnergy?: number | undefined;
+    actionPoints?: number | undefined;
+  },
 ): Character {
   const next = { ...prev, ...patch };
   if (patch.currentHealth !== undefined) {
@@ -192,11 +200,11 @@ export function scheduleCharacterResourceSyncFromCombatant(combatant: TrackedCom
 }
 
 export function buildResourcePatchFromCharacter(character: {
-  currentHealth?: number;
-  currentEnergy?: number;
-  actionPoints?: number;
-  health?: { current?: number; max?: number };
-  energy?: { current?: number; max?: number };
+  currentHealth?: number | undefined;
+  currentEnergy?: number | undefined;
+  actionPoints?: number | undefined;
+  health?: { current?: number | undefined; max?: number | undefined } | undefined;
+  energy?: { current?: number | undefined; max?: number | undefined } | undefined;
 }): CharacterResourcePatch | null {
   const currentHealth = character.currentHealth ?? character.health?.current;
   const currentEnergy = character.currentEnergy ?? character.energy?.current;

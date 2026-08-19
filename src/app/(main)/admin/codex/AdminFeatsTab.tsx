@@ -437,7 +437,7 @@ export function AdminFeatsTab() {
                   </div>
                 ) : (
                   <>
-                    {!(feat as Feat & { base_feat_id?: string }).base_feat_id &&
+                    {!(feat as Feat & { base_feat_id?: string | undefined }).base_feat_id &&
                       (feat.feat_lvl == null || feat.feat_lvl === 1) && (
                         <IconButton
                           variant="ghost"

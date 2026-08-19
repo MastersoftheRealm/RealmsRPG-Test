@@ -19,7 +19,7 @@ export interface PowersStepChromeProps {
   hasPathPowerRecs: boolean;
   hasPathTechniqueRecs: boolean;
   minimizeTechniques: boolean;
-  pathNotes?: string;
+  pathNotes?: string | undefined;
   guidanceGroups: PathGuidanceGroup[] | undefined;
   powersLoading: boolean;
   techniquesLoading: boolean;

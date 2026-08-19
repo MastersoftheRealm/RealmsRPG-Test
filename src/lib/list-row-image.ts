@@ -27,7 +27,7 @@ export function resolveListRowThumbnail(
 
 /** Species rows: codex, official, or user library records. */
 export function resolveSpeciesListRowThumbnail(
-  species: { name: string; image_url?: string | null },
+  species: { name: string; image_url?: string | null | undefined },
   rawRecord?: unknown,
 ): ListRowThumbnailProps {
   const record =

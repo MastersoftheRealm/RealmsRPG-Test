@@ -15,7 +15,7 @@ export type LibrarySourceScope = 'all' | 'public' | 'my';
  * Selected ids (already on the draft) stay in the result so they can be deselected
  * after the player switches source.
  */
-export function mergeLibraryBySource<T extends { id?: string | number | null }>(
+export function mergeLibraryBySource<T extends { id?: string | number | null | undefined }>(
   source: LibrarySourceScope,
   publicItems: T[],
   userItems: T[],

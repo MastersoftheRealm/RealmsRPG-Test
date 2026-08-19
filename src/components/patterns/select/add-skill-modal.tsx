@@ -30,7 +30,7 @@ import type { GridListBadgeColor } from '@/lib/chip/grid-list-chip-utils';
 
 export interface AddSkillModalSkillBadge {
   label: string;
-  color?: GridListBadgeColor;
+  color?: GridListBadgeColor | undefined;
 }
 
 export interface AddSkillModalProps {
@@ -39,25 +39,25 @@ export interface AddSkillModalProps {
   existingSkillNames: string[];
   onAdd: (skills: Skill[]) => void;
   /** Inline descriptor chips for recommended skills (guided creator). Keyed by skill id. */
-  skillBadgesById?: Record<string, AddSkillModalSkillBadge[]>;
+  skillBadgesById?: Record<string, AddSkillModalSkillBadge[]> | undefined;
   /** When set, recommended skills sort to the top of the list. */
-  recommendedSkillIds?: string[];
+  recommendedSkillIds?: string[] | undefined;
   /** Max new skills selectable in this session (e.g. remaining skill points ÷ proficiency cost). */
-  maxSelections?: number;
+  maxSelections?: number | undefined;
   /**
    * Soft capacity message when over maxSelections (or max is 0).
    * Rows stay readable; Add Selected is blocked until under the limit.
    */
-  selectionLimitMessage?: string;
+  selectionLimitMessage?: string | undefined;
   /** Optional deeper layer hop (e.g. guided L2 → L3 sub-skills). */
-  deeperLayerLabel?: string;
-  onDeeperLayer?: () => void;
-  deeperLayerDisabled?: boolean;
-  deeperLayerDisabledTitle?: string;
+  deeperLayerLabel?: string | undefined;
+  onDeeperLayer?: (() => void) | undefined;
+  deeperLayerDisabled?: boolean | undefined;
+  deeperLayerDisabledTitle?: string | undefined;
   /** Path-flow See more: auto-select every player-visible path of this type. */
-  autoSelectPathType?: ArchetypeCategory | null;
+  autoSelectPathType?: ArchetypeCategory | null | undefined;
   /** Guided path See more opens with Filters expanded. */
-  optionsDefaultExpanded?: boolean;
+  optionsDefaultExpanded?: boolean | undefined;
 }
 
 /** Parse skill.ability (comma-separated) into list of abbreviated ability codes (STR, AGI, ...). */
@@ -93,7 +93,7 @@ function buildAbilityDisplay(abilityString?: string): {
 }
 
 function skillToSelectableItem(
-  skill: Skill & { ability?: string },
+  skill: Skill & { ability?: string | undefined },
   skillBadgesById?: Record<string, AddSkillModalSkillBadge[]>,
   pathChipLabels?: string[],
 ): SelectableItem {

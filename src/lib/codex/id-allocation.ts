@@ -45,7 +45,7 @@ export async function fetchRetiredIds(
     return new Set<string>();
   }
   const out = new Set<string>();
-  for (const row of (data ?? []) as Array<{ id?: unknown }>) {
+  for (const row of (data ?? []) as Array<{ id?: unknown | undefined }>) {
     if (row.id != null) out.add(String(row.id));
   }
   return out;
@@ -64,7 +64,7 @@ export async function allocateCodexNumericId(
   if (error) throw new Error(error.message);
 
   const taken = new Set<number>();
-  for (const row of (data ?? []) as Array<{ id?: unknown }>) {
+  for (const row of (data ?? []) as Array<{ id?: unknown | undefined }>) {
     const n = parseNumericId(row.id);
     if (n != null) taken.add(n);
   }

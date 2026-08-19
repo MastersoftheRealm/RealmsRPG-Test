@@ -21,11 +21,11 @@ interface LoginPromptModalProps {
   /** The path to return to after login */
   returnPath: string;
   /** Type of content being saved/loaded (for display purposes) */
-  contentType?: string;
+  contentType?: string | undefined;
   /** Whether the user tried Save or Load (affects title/copy) */
-  reason?: LoginPromptReason;
+  reason?: LoginPromptReason | undefined;
   /** Optional message to display (overrides default body copy) */
-  message?: string;
+  message?: string | undefined;
 }
 
 export function LoginPromptModal({

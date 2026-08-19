@@ -104,23 +104,23 @@ export function compactLine(label: string, items?: string[]): string | null {
 
 export type CodexPart = {
   id: string | number;
-  name?: string;
-  description?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
-  op_1_desc?: string;
-  op_2_desc?: string;
-  op_3_desc?: string;
+  name?: string | undefined;
+  description?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
+  op_1_desc?: string | undefined;
+  op_2_desc?: string | undefined;
+  op_3_desc?: string | undefined;
 };
 
 export type CodexProperty = {
   id: string | number;
-  name?: string;
-  description?: string;
-  base_tp?: number;
-  tp_cost?: number;
+  name?: string | undefined;
+  description?: string | undefined;
+  base_tp?: number | undefined;
+  tp_cost?: number | undefined;
 };
 
 export function partsToChips(
@@ -128,11 +128,11 @@ export function partsToChips(
     | Array<
         | string
         | {
-            id?: string | number;
-            name?: string;
-            op_1_lvl?: number;
-            op_2_lvl?: number;
-            op_3_lvl?: number;
+            id?: string | number | undefined;
+            name?: string | undefined;
+            op_1_lvl?: number | undefined;
+            op_2_lvl?: number | undefined;
+            op_3_lvl?: number | undefined;
           }
       >
     | undefined,
@@ -154,7 +154,7 @@ export function partsToChips(
       (codexPart?.op_1_tp ?? 0) * opt1 +
       (codexPart?.op_2_tp ?? 0) * opt2 +
       (codexPart?.op_3_tp ?? 0) * opt3;
-    const options: Array<{ label: string; description?: string; level: number }> = [];
+    const options: Array<{ label: string; description?: string | undefined; level: number }> = [];
     if (opt1 > 0)
       options.push({ label: 'Option 1', description: codexPart?.op_1_desc, level: opt1 });
     if (opt2 > 0)
@@ -173,16 +173,28 @@ export function partsToChips(
 }
 
 export function resolveArmamentProperties(item: {
-  properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }>;
-  libraryItem?: { properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }> };
-}): Array<{ id?: number; name?: string; op_1_lvl?: number }> {
+  properties?:
+    | Array<{ id?: number | undefined; name?: string | undefined; op_1_lvl?: number | undefined }>
+    | undefined;
+  libraryItem?:
+    | {
+        properties?: Array<{
+          id?: number | undefined;
+          name?: string | undefined;
+          op_1_lvl?: number | undefined;
+        }>;
+      }
+    | undefined;
+}): Array<{ id?: number | undefined; name?: string | undefined; op_1_lvl?: number | undefined }> {
   const fromLib = item.libraryItem?.properties;
   if (fromLib && fromLib.length > 0) return fromLib;
   return item.properties || [];
 }
 
 export function propertiesToChips(
-  properties: Array<{ id?: number; name?: string; op_1_lvl?: number }> | undefined,
+  properties:
+    | Array<{ id?: number | undefined; name?: string | undefined; op_1_lvl?: number | undefined }>
+    | undefined,
   codexProperties: CodexProperty[],
 ): ChipData[] {
   if (!properties || properties.length === 0) return [];

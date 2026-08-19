@@ -5,10 +5,10 @@ import { useState } from 'react';
 export interface CombatantCardResourceQuickActionsProps {
   variant: 'full' | 'compact';
   isLinkedToCharacter: boolean;
-  onDamage?: (amount: number) => void;
-  onHeal?: (amount: number) => void;
-  onEnergyDrain?: (amount: number) => void;
-  onEnergyRestore?: (amount: number) => void;
+  onDamage?: ((amount: number) => void) | undefined;
+  onHeal?: ((amount: number) => void) | undefined;
+  onEnergyDrain?: ((amount: number) => void) | undefined;
+  onEnergyRestore?: ((amount: number) => void) | undefined;
 }
 
 export function CombatantCardResourceQuickActions({

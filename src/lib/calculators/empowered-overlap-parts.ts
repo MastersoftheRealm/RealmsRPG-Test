@@ -14,8 +14,8 @@ export type EmpoweredPartCostCandidate = {
   part: {
     id: string | number;
     name: string;
-    base_en?: number | null;
-    mechanic?: boolean | null;
+    base_en?: number | null | undefined;
+    mechanic?: boolean | null | undefined;
   };
 };
 

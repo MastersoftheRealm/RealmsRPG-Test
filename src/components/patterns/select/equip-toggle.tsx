@@ -19,13 +19,13 @@ export interface EquipToggleProps {
   /** Callback when toggle is clicked */
   onToggle: () => void;
   /** Whether the toggle is disabled */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
   /** Additional className */
-  className?: string;
+  className?: string | undefined;
   /** Accessible label */
-  label?: string;
+  label?: string | undefined;
 }
 
 const SIZE_STYLES = {

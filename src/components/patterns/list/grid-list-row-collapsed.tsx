@@ -25,7 +25,7 @@ function GridListRowChromeIconButton({
 }: {
   kind: 'edit' | 'delete';
   onClick: () => void;
-  columnWidth?: string;
+  columnWidth?: string | undefined;
 }) {
   const isDelete = kind === 'delete';
   return (
@@ -67,48 +67,51 @@ interface GridListRowCollapsedProps {
    * is clickable but controls no panel (selection-only rows) so no `aria-expanded`
    * is emitted for a widget that never expands.
    */
-  isExpanded?: boolean;
+  isExpanded?: boolean | undefined;
   /** Id of the rendered expanded body; only pass while that body is in the DOM. */
-  expandedPanelId?: string;
+  expandedPanelId?: string | undefined;
   compact: boolean;
   disabled: boolean;
-  gridColumns?: string;
-  resolvedGridColumns?: string;
-  mobileGridColumns?: string;
+  gridColumns?: string | undefined;
+  resolvedGridColumns?: string | undefined;
+  mobileGridColumns?: string | undefined;
   useThumbnailColumn: boolean;
-  thumbnail?: ListRowThumbnailProps;
+  thumbnail?: ListRowThumbnailProps | undefined;
   useFlex: boolean;
-  nameGridColumnSpan?: number;
-  nameContent?: ReactNode;
+  nameGridColumnSpan?: number | undefined;
+  nameContent?: ReactNode | undefined;
   name: string;
   innate: boolean;
   hideInnateBadge: boolean;
-  uses?: { current: number; max: number };
+  uses?: { current: number; max: number } | undefined;
   hideUsesInName: boolean;
-  quantity?: number;
-  onQuantityChange?: (delta: number) => void;
+  quantity?: number | undefined;
+  onQuantityChange?: ((delta: number) => void) | undefined;
   quantityMin: number;
-  quantityDecrementLabel?: string;
-  quantityIncrementLabel?: string;
-  badges: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
+  quantityDecrementLabel?: string | undefined;
+  quantityIncrementLabel?: string | undefined;
+  badges: Array<{
+    label: string;
+    color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' | undefined;
+  }>;
   /** Non-compact rows opt in via `showBadgesInName` (compact rows always show them). */
   showBadgesInName: boolean;
   columns: ColumnValue[];
-  columnSpans?: (number | undefined)[];
+  columnSpans?: (number | undefined)[] | undefined;
   suppressDescriptionPreview: boolean;
   allDataColumnsAreDescription: boolean;
   headerColumns: ColumnValue[];
   inlineWarning: boolean;
-  warningMessage?: string;
+  warningMessage?: string | undefined;
   inlineRightSlot: boolean;
-  rightSlot?: ReactNode;
+  rightSlot?: ReactNode | undefined;
   inlineEdit: boolean;
-  onEdit?: () => void;
+  onEdit?: (() => void) | undefined;
   inlineDelete: boolean;
-  onDelete?: () => void;
+  onDelete?: (() => void) | undefined;
   inlineSelectable: boolean;
   isSelected: boolean;
-  onSelect?: () => void;
+  onSelect?: (() => void) | undefined;
 }
 
 export function GridListRowCollapsed({
@@ -386,17 +389,17 @@ export function GridListRowCollapsed({
  * Widths must match ListHeader spacers.
  */
 export interface GridListRowExternalChromeProps {
-  disabled?: boolean;
-  warningMessage?: string;
-  rightSlot?: ReactNode;
-  reserveRightSlotChrome?: boolean;
+  disabled?: boolean | undefined;
+  warningMessage?: string | undefined;
+  rightSlot?: ReactNode | undefined;
+  reserveRightSlotChrome?: boolean | undefined;
   /** Overrides default energy/use rightSlot width (e.g. USM quantity 7.5rem). */
-  rightSlotWidth?: string;
-  onEdit?: () => void;
-  onDelete?: () => void;
-  selectable?: boolean;
-  isSelected?: boolean;
-  onSelect?: () => void;
+  rightSlotWidth?: string | undefined;
+  onEdit?: (() => void) | undefined;
+  onDelete?: (() => void) | undefined;
+  selectable?: boolean | undefined;
+  isSelected?: boolean | undefined;
+  onSelect?: (() => void) | undefined;
 }
 
 export function GridListRowExternalChrome({

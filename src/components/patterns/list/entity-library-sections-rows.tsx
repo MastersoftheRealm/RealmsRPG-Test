@@ -24,9 +24,9 @@ export function formatRecoveryAbbrev(recovery: string | undefined): string {
 }
 
 type InteractiveRow = EntityRowExtras & {
-  id?: string | number;
+  id?: string | number | undefined;
   name: string;
-  description?: string;
+  description?: string | undefined;
 };
 
 export function renderInteractiveGridRows(

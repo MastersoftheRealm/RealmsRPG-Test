@@ -37,8 +37,11 @@ function PropertyCard({ property }: { property: ItemProperty }) {
   const tp = property.base_tp ?? property.tp_cost ?? 0;
   const cost = property.base_c ?? property.gold_cost ?? 0;
 
-  const optionChips: Array<{ name: string; description?: string; category: 'cost' | 'default' }> =
-    [];
+  const optionChips: Array<{
+    name: string;
+    description?: string | undefined;
+    category: 'cost' | 'default';
+  }> = [];
   if (property.op_1_desc) {
     const parts: string[] = [];
     // Include explicit 0 values so the user can tell the option was saved as 0 (not missing).
@@ -54,7 +57,7 @@ function PropertyCard({ property }: { property: ItemProperty }) {
 
   const detailSections: Array<{
     label: string;
-    chips: Array<{ name: string; description?: string; category: 'cost' | 'default' }>;
+    chips: Array<{ name: string; description?: string | undefined; category: 'cost' | 'default' }>;
   }> = optionChips.length > 0 ? [{ label: 'Options', chips: optionChips }] : [];
 
   return (
@@ -86,7 +89,11 @@ function PropertyCard({ property }: { property: ItemProperty }) {
   );
 }
 
-export function CodexPropertiesTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+export function CodexPropertiesTab({
+  codexMode = 'public',
+}: {
+  codexMode?: 'public' | 'my' | undefined;
+}) {
   const loadPublicCodex = codexMode === 'public';
   const {
     data: properties,

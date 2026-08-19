@@ -20,6 +20,8 @@
  * Widths mirror ListHeader spacers / `GridListRowExternalChrome` in grid-list-row-collapsed.
  */
 
+import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
+
 /** Matches GridListRow leftSlot wrapper: w-8 min-w-[2rem] */
 export const GRID_LIST_ROW_LEFT_SLOT_WIDTH = '2rem';
 
@@ -79,36 +81,38 @@ export function gridTemplateColumnsWithThumbnail(gridColumns: string): string {
 
 /** Blank header cell aligned over list-row thumbnails (not sortable). */
 export function prependThumbnailHeaderColumn<
-  T extends { key: string; label: string; sortable?: boolean },
+  T extends { key: string; label: string; sortable?: boolean | undefined },
 >(columns: T[]): T[] {
   return [{ key: THUMBNAIL_HEADER_COLUMN_KEY, label: '', sortable: false } as T, ...columns];
 }
 
-export interface ListHeaderRowChrome {
+interface ListHeaderRowChromeFields {
   /** GridListRow `leftSlot` (e.g. innate / equip toggle) — spacer before header grid */
-  leftSlot?: boolean;
+  leftSlot?: boolean | undefined;
   /** GridListRow `rightSlot` (energy / use button) — spacer after header grid */
-  rightSlot?: boolean;
+  rightSlot?: boolean | undefined;
   /**
    * Label over the rightSlot track (e.g. "Energy" on character sheet powers/techniques).
    * Requires `rightSlot: true`. Prefer this over a duplicate static Energy data column.
    */
-  rightSlotLabel?: string;
+  rightSlotLabel?: string | undefined;
   /**
    * Sort key for `rightSlotLabel` (e.g. character `cost`). Requires `onSort` on ListHeader.
    * Included in the mobile "Sort by" menu when set.
    */
-  rightSlotSortKey?: string;
+  rightSlotSortKey?: string | undefined;
   /** GridListRow `onEdit` pencil */
-  edit?: boolean;
+  edit?: boolean | undefined;
   /** GridListRow `onDelete` X */
-  delete?: boolean;
+  delete?: boolean | undefined;
   /**
    * Selection toggle rendered outside the row grid (rare).
    * Do not combine with `hasSelectionColumn` (that reserves space inside the grid).
    */
-  externalSelection?: boolean;
+  externalSelection?: boolean | undefined;
 }
+
+export type ListHeaderRowChrome = AllowUndefinedOptionals<ListHeaderRowChromeFields>;
 
 /** Character sheet Powers/Techniques: Energy label + sort over far-right spend buttons (not a mid-row value column). */
 export const CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME: Pick<
@@ -199,7 +203,7 @@ export interface MobileCollapsedGridColumnsOptions {
    * How many data-column tracks stay visible below `lg`
    * (`hideOnMobile: false`). Name always gets `minmax(0, 1fr)`.
    */
-  mobileVisibleDataTracks?: number;
+  mobileVisibleDataTracks?: number | undefined;
 }
 
 /**

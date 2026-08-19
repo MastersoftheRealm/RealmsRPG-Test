@@ -51,18 +51,18 @@ export interface OfficialItemListProps {
   isLoading: boolean;
   error: Error | null;
   onRetry: () => void;
-  errorMessage?: string;
-  sectionTitle?: string;
-  searchPlaceholder?: string;
-  emptyIcon?: ReactNode;
-  emptyTitle?: string;
-  emptyMessage?: string;
-  searchEmptyMessage?: string;
+  errorMessage?: string | undefined;
+  sectionTitle?: string | undefined;
+  searchPlaceholder?: string | undefined;
+  emptyIcon?: ReactNode | undefined;
+  emptyTitle?: string | undefined;
+  emptyMessage?: string | undefined;
+  searchEmptyMessage?: string | undefined;
   variant: 'library' | 'admin';
-  readOnly?: boolean;
-  onAddRequest?: (row: OfficialItemRow) => void;
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string, name: string) => void;
+  readOnly?: boolean | undefined;
+  onAddRequest?: ((row: OfficialItemRow) => void) | undefined;
+  onEdit?: ((id: string) => void) | undefined;
+  onDelete?: ((id: string, name: string) => void) | undefined;
 }
 
 export function OfficialItemList({

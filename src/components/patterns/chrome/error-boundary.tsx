@@ -19,14 +19,14 @@ import { Button } from '@/components/ui';
 interface ErrorBoundaryProps {
   children: ReactNode;
   /** Custom fallback UI. If not provided, uses a default card. */
-  fallback?: ReactNode;
+  fallback?: ReactNode | undefined;
   /** Section name for the error message (e.g., "Character Sheet") */
-  section?: string;
+  section?: string | undefined;
 }
 
 interface ErrorBoundaryState {
   hasError: boolean;
-  error?: Error;
+  error?: Error | undefined;
 }
 
 export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {

@@ -26,7 +26,7 @@ export interface GuidedChoiceGroup {
   /** Group heading, e.g. "Sturdy tank" or "Recommended weapons". */
   title: ReactNode;
   /** One-line "why pick this" copy (Appendix D). */
-  why?: ReactNode;
+  why?: ReactNode | undefined;
   /** The choice rows/cards for this group. */
   children: ReactNode;
 }
@@ -34,29 +34,29 @@ export interface GuidedChoiceGroup {
 export interface GuidedChoiceShellProps {
   /** Current disclosure layer for this step. */
   layer: CreatorLayer;
-  title?: ReactNode;
+  title?: ReactNode | undefined;
   /** Optional help icon or badge beside the title (e.g. InfoTippy). */
-  titleAddon?: ReactNode;
-  description?: ReactNode;
+  titleAddon?: ReactNode | undefined;
+  description?: ReactNode | undefined;
   /** Path guidance (e.g. PathHelpCard / PathNotes). Rendered above the choices. */
-  guidance?: ReactNode;
+  guidance?: ReactNode | undefined;
   /** Drives the completion badge ("2 / 3 feats"). */
-  completionState?: StepCompletion;
+  completionState?: StepCompletion | undefined;
   /** Recommendation groups shown at Layer 1. */
-  groups?: GuidedChoiceGroup[];
+  groups?: GuidedChoiceGroup[] | undefined;
   /** Full-system content (filters + full list); shown at Layer 2+. */
-  children?: ReactNode;
+  children?: ReactNode | undefined;
   /** Advance one layer (1 → 2 → 3). */
-  onExpandLayer?: () => void;
+  onExpandLayer?: (() => void) | undefined;
   /** Return to Layer 1 ("See recommendations"). */
-  onCollapseLayer?: () => void;
-  expandLabel?: string;
-  collapseLabel?: string;
+  onCollapseLayer?: (() => void) | undefined;
+  expandLabel?: string | undefined;
+  collapseLabel?: string | undefined;
   /** Hide the expand affordance (e.g. nothing more to reveal). */
-  canExpand?: boolean;
+  canExpand?: boolean | undefined;
   /** Optional header-level primary action. */
-  primaryAction?: ReactNode;
-  className?: string;
+  primaryAction?: ReactNode | undefined;
+  className?: string | undefined;
 }
 
 function CompletionBadge({ completion }: { completion: StepCompletion }) {

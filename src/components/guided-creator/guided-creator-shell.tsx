@@ -47,7 +47,7 @@ const STEP_COMPONENTS: Record<GuidedSubStep, React.ComponentType> = {
   reveal: RevealStep,
 };
 
-function ChapterRail({ className }: { className?: string }) {
+function ChapterRail({ className }: { className?: string | undefined }) {
   const { currentSubStep, isSubStepSatisfied, canNavigateToSubStep, setSubStep } =
     useGuidedCreatorStore();
   const activeChapterIndex = GUIDED_CHAPTERS.findIndex((c) => c.subSteps.includes(currentSubStep));

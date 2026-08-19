@@ -29,7 +29,7 @@ export interface GuidedSpeciesDetailModalProps {
   onClose: () => void;
   species: Species | null;
   /** Apply this species from the detail footer Select. */
-  onSelect?: () => void;
+  onSelect?: (() => void) | undefined;
 }
 
 interface SpeciesChoiceGroup {

@@ -39,16 +39,16 @@ export interface InfoTippyProps {
   /** Accessible name for the trigger (required). */
   label: string;
   /** @deprecated JSX and strings render natively; kept for existing call sites. */
-  allowHTML?: boolean;
-  placement?: TooltipPlacement;
+  allowHTML?: boolean | undefined;
+  placement?: TooltipPlacement | undefined;
   /** @deprecated No-op; layout is always the 16px icon + overlay hit (TASK-725). Kept for existing call sites. */
-  size?: 'inline' | 'icon';
+  size?: 'inline' | 'icon' | undefined;
   /** Trigger icon color. Default `info` (link blue). Prefer this over one-off `text-*` class fights. */
-  tone?: InfoTippyTone;
-  className?: string;
+  tone?: InfoTippyTone | undefined;
+  className?: string | undefined;
   /** Optional custom trigger element (must be a single DOM element). */
-  children?: ReactElement;
-  disabled?: boolean;
+  children?: ReactElement | undefined;
+  disabled?: boolean | undefined;
 }
 
 function TooltipBody({ content }: { content: ReactNode }) {
@@ -103,7 +103,7 @@ export function InfoTippy({
     mouseOnly: true,
     move: false,
     delay: { open: 100, close: 0 },
-    handleClose: isInteractive ? safePolygon() : undefined,
+    ...(isInteractive ? { handleClose: safePolygon() } : {}),
   });
   const focus = useFocus(context, { visibleOnly: false });
   const dismiss = useDismiss(context, { escapeKey: true, outsidePress: true });
@@ -186,18 +186,18 @@ export interface WordHelpTipProps {
   label: string;
   /** Visible label text (or short/full name spans). */
   children: ReactNode;
-  className?: string;
-  placement?: TooltipPlacement;
-  disabled?: boolean;
+  className?: string | undefined;
+  placement?: TooltipPlacement | undefined;
+  disabled?: boolean | undefined;
   /**
    * Dense table/list labels: 44px below `md`, hug the word on desktop.
    * Default keeps a 44px target (ability tiles).
    */
-  compact?: boolean;
+  compact?: boolean | undefined;
 }
 
 // DESIGN_INTENT: Definition help on the word itself (not an Info icon sibling).
-// Default 44px target (ability tiles); compact uses touch-target-md-compact.
+// Default 44px target (ability tiles); compact uses Dense `.hit-area-dense`.
 /** Word-tied contextual help for ability/defense/skill names (sheet + guided creator). */
 export function WordHelpTip({
   content,
@@ -216,7 +216,7 @@ export function WordHelpTip({
         className={cn(
           'inline-flex cursor-help items-center rounded-sm',
           compact
-            ? 'touch-target-md-compact justify-start px-0'
+            ? 'hit-area-dense justify-start px-0'
             : 'min-h-[var(--touch-target-min,44px)] min-w-[var(--touch-target-min,44px)] justify-center px-1',
           'font-inherit leading-inherit tracking-inherit m-0 border-0 bg-transparent p-0 text-inherit',
           'focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:outline-none',

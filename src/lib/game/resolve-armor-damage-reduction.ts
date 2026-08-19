@@ -9,13 +9,21 @@ import {
 } from '@/lib/calculators/item-calc';
 
 export type ArmorDrSource = {
-  damageReduction?: number | null;
-  armorValue?: number | null;
-  armor?: number | null;
-  armor_value?: number | null;
+  damageReduction?: number | null | undefined;
+  armorValue?: number | null | undefined;
+  armor?: number | null | undefined;
+  armor_value?: number | null | undefined;
   properties?:
     | ItemPropertyPayload[]
-    | Array<string | { id?: number | string; name?: string; op_1_lvl?: number }>;
+    | Array<
+        | string
+        | {
+            id?: number | string | undefined;
+            name?: string | undefined;
+            op_1_lvl?: number | undefined;
+          }
+      >
+    | undefined;
 };
 
 function propertiesForDr(props: ArmorDrSource['properties']): ItemPropertyPayload[] {

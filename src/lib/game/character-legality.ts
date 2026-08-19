@@ -65,19 +65,19 @@ const DEFENSE_KEYS = [
  * field is skipped rather than treated as 0, so partial documents stay creatable.
  */
 interface Level1LegalityCandidate {
-  level?: unknown;
-  abilities?: unknown;
-  skills?: unknown;
-  defenseVals?: unknown;
-  defenseSkills?: unknown;
-  archetype?: unknown;
-  archetypeFeats?: unknown;
-  feats?: unknown;
-  mart_abil?: unknown;
-  speedBase?: unknown;
-  currency?: unknown;
-  healthPoints?: unknown;
-  energyPoints?: unknown;
+  level?: unknown | undefined;
+  abilities?: unknown | undefined;
+  skills?: unknown | undefined;
+  defenseVals?: unknown | undefined;
+  defenseSkills?: unknown | undefined;
+  archetype?: unknown | undefined;
+  archetypeFeats?: unknown | undefined;
+  feats?: unknown | undefined;
+  mart_abil?: unknown | undefined;
+  speedBase?: unknown | undefined;
+  currency?: unknown | undefined;
+  healthPoints?: unknown | undefined;
+  energyPoints?: unknown | undefined;
 }
 
 /** Official catalog rows used to evaluate feat requirements on create. */
@@ -185,9 +185,9 @@ function toNumArray(val: unknown): number[] {
   return n === null ? [] : [n];
 }
 
-function featRefs(value: unknown): Array<{ id: string; name?: string }> {
+function featRefs(value: unknown): Array<{ id: string; name?: string | undefined }> {
   if (!Array.isArray(value)) return [];
-  const out: Array<{ id: string; name?: string }> = [];
+  const out: Array<{ id: string; name?: string | undefined }> = [];
   for (const row of value) {
     const rec = asRecord(row);
     if (rec) {

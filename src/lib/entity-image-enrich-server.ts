@@ -33,7 +33,7 @@ export async function enrichRowsWithBankImageUrls(
 
   const urlById = new Map<string, string>();
   for (const row of data ?? []) {
-    const r = row as { id?: string; public_url?: string };
+    const r = row as { id?: string | undefined; public_url?: string | undefined };
     if (r.id && typeof r.public_url === 'string' && r.public_url.trim()) {
       urlById.set(String(r.id), r.public_url.trim());
     }

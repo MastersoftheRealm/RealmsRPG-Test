@@ -135,8 +135,8 @@ export function withCacheBust(publicUrl: string, version = Date.now()): string {
 }
 
 export async function listRealmsImages(opts?: {
-  category?: RealmsImageCategory | RealmsImageCategory[];
-  q?: string;
+  category?: RealmsImageCategory | RealmsImageCategory[] | undefined;
+  q?: string | undefined;
 }): Promise<RealmsImage[]> {
   const params = new URLSearchParams();
   if (opts?.category) {
@@ -161,7 +161,7 @@ export interface CreateRealmsImageInput {
   file: Blob;
   name: string;
   categories: RealmsImageCategory[];
-  fileName?: string;
+  fileName?: string | undefined;
 }
 
 /** Admin-only create (multipart via apiUpload). */
@@ -180,7 +180,7 @@ export async function createRealmsImage(input: CreateRealmsImageInput): Promise<
 
 export async function updateRealmsImage(
   id: string,
-  patch: { name?: string; categories?: RealmsImageCategory[] },
+  patch: { name?: string | undefined; categories?: RealmsImageCategory[] | undefined },
 ): Promise<RealmsImage> {
   return apiFetch<RealmsImage>(`/api/images/${encodeURIComponent(id)}`, {
     method: 'PATCH',

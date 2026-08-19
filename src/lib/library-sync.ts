@@ -14,26 +14,26 @@ import {
 } from '@/lib/game/creature-inventory';
 
 type PartLike = {
-  id?: string | number;
-  name?: string;
-  op_1_desc?: string | null;
-  op_2_desc?: string | null;
-  op_3_desc?: string | null;
-  op_1_en?: number | null;
-  op_2_en?: number | null;
-  op_3_en?: number | null;
-  op_1_tp?: number | null;
-  op_2_tp?: number | null;
-  op_3_tp?: number | null;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  op_1_desc?: string | null | undefined;
+  op_2_desc?: string | null | undefined;
+  op_3_desc?: string | null | undefined;
+  op_1_en?: number | null | undefined;
+  op_2_en?: number | null | undefined;
+  op_3_en?: number | null | undefined;
+  op_1_tp?: number | null | undefined;
+  op_2_tp?: number | null | undefined;
+  op_3_tp?: number | null | undefined;
 };
 
 type PropertyLike = {
-  id?: string | number;
-  name?: string;
-  op_1_desc?: string | null;
-  op_1_ip?: number | null;
-  op_1_tp?: number | null;
-  op_1_c?: number | null;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  op_1_desc?: string | null | undefined;
+  op_1_ip?: number | null | undefined;
+  op_1_tp?: number | null | undefined;
+  op_1_c?: number | null | undefined;
 };
 
 export type SyncIssueCode =
@@ -47,9 +47,9 @@ export type SyncIssueCode =
 
 export interface SyncIssue {
   code: SyncIssueCode;
-  itemName?: string;
-  refId?: string;
-  refName?: string;
+  itemName?: string | undefined;
+  refId?: string | undefined;
+  refName?: string | undefined;
   message: string;
 }
 
@@ -61,13 +61,13 @@ export interface SyncResult<T> {
 }
 
 interface SyncOptions {
-  dropMissingRefs?: boolean;
+  dropMissingRefs?: boolean | undefined;
 }
 
 type SyncMetaCarrier = {
   syncMeta?: {
-    dependencyFingerprint?: string;
-    syncedAt?: string;
+    dependencyFingerprint?: string | undefined;
+    syncedAt?: string | undefined;
   };
 };
 
@@ -508,31 +508,35 @@ export function sanitizeItemForSync(
 }
 
 type CreatureInventorySavedItem = {
-  id?: string;
+  id?: string | undefined;
   name: string;
-  type?: string;
-  properties?: SavedProperty[];
+  type?: string | undefined;
+  properties?: SavedProperty[] | undefined;
 };
 
 type CreatureLike = {
-  id?: string;
-  docId?: string;
-  name?: string;
-  powers?: Array<{
-    id?: string;
-    name: string;
-    parts?: SavedPart[];
-  }>;
-  techniques?: Array<{
-    id?: string;
-    name: string;
-    parts?: SavedPart[];
-  }>;
-  weapons?: CreatureInventorySavedItem[];
-  armor?: CreatureInventorySavedItem[];
-  shields?: CreatureInventorySavedItem[];
-  equipment?: CreatureInventorySavedItem[];
-  armaments?: CreatureInventorySavedItem[];
+  id?: string | undefined;
+  docId?: string | undefined;
+  name?: string | undefined;
+  powers?:
+    | Array<{
+        id?: string | undefined;
+        name: string;
+        parts?: SavedPart[] | undefined;
+      }>
+    | undefined;
+  techniques?:
+    | Array<{
+        id?: string | undefined;
+        name: string;
+        parts?: SavedPart[] | undefined;
+      }>
+    | undefined;
+  weapons?: CreatureInventorySavedItem[] | undefined;
+  armor?: CreatureInventorySavedItem[] | undefined;
+  shields?: CreatureInventorySavedItem[] | undefined;
+  equipment?: CreatureInventorySavedItem[] | undefined;
+  armaments?: CreatureInventorySavedItem[] | undefined;
 };
 
 function syncCreatureInventoryBag(

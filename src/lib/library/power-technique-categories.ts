@@ -7,17 +7,17 @@
 export const DAMAGE_CATEGORY = 'Damage';
 
 export interface PartCategorySource {
-  id?: string | number | null;
-  name?: string | null;
-  category?: string | null;
-  mechanic?: boolean | null;
+  id?: string | number | null | undefined;
+  name?: string | null | undefined;
+  category?: string | null | undefined;
+  mechanic?: boolean | null | undefined;
 }
 
 export interface PartCategoryDbRow {
-  id?: string | number | null;
-  name?: string | null;
-  category?: string | null;
-  mechanic?: boolean | null;
+  id?: string | number | null | undefined;
+  name?: string | null | undefined;
+  category?: string | null | undefined;
+  mechanic?: boolean | null | undefined;
 }
 
 function partLookupKey(id?: string | number | null, name?: string | null): string {
@@ -88,7 +88,11 @@ export function powerHasDamageCategory(damage: unknown): boolean {
   if (!Array.isArray(damage)) return false;
   return damage.some((row) => {
     if (!row || typeof row !== 'object') return false;
-    const d = row as { amount?: unknown; size?: unknown; type?: unknown };
+    const d = row as {
+      amount?: unknown | undefined;
+      size?: unknown | undefined;
+      type?: unknown | undefined;
+    };
     const type = String(d.type ?? '')
       .trim()
       .toLowerCase();
@@ -131,9 +135,9 @@ export function collectCategoryFilterOptions(categoryLists: string[][]): string[
 
 /** Collect unique category labels from raw power/technique part payloads (no full row build). */
 export function collectCategoryOptionsFromItems(
-  items: Array<{ parts?: PartCategorySource[] | null; damage?: unknown }>,
+  items: Array<{ parts?: PartCategorySource[] | null | undefined; damage?: unknown | undefined }>,
   partsDb: PartCategoryDbRow[],
-  options?: { includeDamageCategory?: boolean },
+  options?: { includeDamageCategory?: boolean | undefined },
 ): string[] {
   const includeDamage = options?.includeDamageCategory === true;
   return collectCategoryFilterOptions(

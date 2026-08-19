@@ -133,7 +133,7 @@ export async function createCodexDoc(
   collection: CodexCollection,
   id: string | undefined,
   data: Record<string, unknown>,
-): Promise<{ success: boolean; id?: string; error?: string }> {
+): Promise<{ success: boolean; id?: string | undefined; error?: string | undefined }> {
   try {
     const changedByUserId = await requireAdmin();
     const safeCollection = assertCodexCollection(collection);
@@ -213,8 +213,8 @@ export async function updateCodexDoc(
   collection: CodexCollection,
   id: string,
   data: Record<string, unknown>,
-  options?: { expectedUpdatedAt?: string },
-): Promise<{ success: boolean; error?: string; conflict?: boolean }> {
+  options?: { expectedUpdatedAt?: string | undefined } | undefined,
+): Promise<{ success: boolean; error?: string | undefined; conflict?: boolean | undefined }> {
   try {
     const changedByUserId = await requireAdmin();
     const safeCollection = assertCodexCollection(collection);
@@ -283,8 +283,8 @@ export async function updateCodexDoc(
 export async function deleteCodexDoc(
   collection: CodexCollection,
   id: string,
-  options?: { acknowledgeReferences?: boolean },
-): Promise<{ success: boolean; error?: string; references?: string[] }> {
+  options?: { acknowledgeReferences?: boolean | undefined },
+): Promise<{ success: boolean; error?: string | undefined; references?: string[] | undefined }> {
   try {
     const changedByUserId = await requireAdmin();
     const safeCollection = assertCodexCollection(collection);
@@ -332,7 +332,7 @@ export async function deleteCodexDoc(
 
 export async function saveArchetypeWithPath(
   payload: SaveArchetypeWithPathInput,
-): Promise<{ success: boolean; error?: string; id?: string }> {
+): Promise<{ success: boolean; error?: string | undefined; id?: string | undefined }> {
   try {
     const changedByUserId = await requireAdmin();
     const supabase = createServiceRoleClient();

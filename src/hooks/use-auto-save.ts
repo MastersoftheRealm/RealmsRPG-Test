@@ -22,15 +22,15 @@ interface AutoSaveOptions<T> {
   /** Function to call when saving */
   onSave: (data: T) => Promise<void>;
   /** Debounce delay in milliseconds (default: 2000) */
-  delay?: number;
+  delay?: number | undefined;
   /** Whether auto-save is enabled (default: true) */
-  enabled?: boolean;
+  enabled?: boolean | undefined;
   /** Callback when save starts */
-  onSaveStart?: () => void;
+  onSaveStart?: (() => void) | undefined;
   /** Callback when save completes */
-  onSaveComplete?: () => void;
+  onSaveComplete?: (() => void) | undefined;
   /** Callback when save fails */
-  onSaveError?: (error: Error) => void;
+  onSaveError?: ((error: Error) => void) | undefined;
 }
 
 interface AutoSaveResult {

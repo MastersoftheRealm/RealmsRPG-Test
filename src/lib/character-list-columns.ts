@@ -19,8 +19,8 @@ function asVisibility(value: unknown): CharacterVisibility | null {
  * GET must read the column first; blob is only a fallback if the column is missing.
  */
 export function resolveCharacterVisibility(row: {
-  visibility?: string | null;
-  data?: unknown;
+  visibility?: string | null | undefined;
+  data?: unknown | undefined;
 }): CharacterVisibility {
   const fromColumn = asVisibility(row.visibility);
   if (fromColumn) return fromColumn;
@@ -33,7 +33,7 @@ export function resolveCharacterVisibility(row: {
 
 export function getCharacterListColumns(
   data: Record<string, unknown>,
-  options?: { archetypeNameById?: Map<string, string> },
+  options?: { archetypeNameById?: Map<string, string> | undefined },
 ): {
   name: string;
   level: number;
@@ -45,11 +45,13 @@ export function getCharacterListColumns(
   const archName = resolveArchetypeDisplayName(
     {
       archetypePathId: data.archetypePathId as string | undefined,
-      archetype: data.archetype as { id?: string; name?: string; type?: string } | undefined,
+      archetype: data.archetype as
+        | { id?: string | undefined; name?: string | undefined; type?: string | undefined }
+        | undefined,
     },
     options?.archetypeNameById,
   );
-  const ancestry = data.ancestry as { name?: string } | undefined;
+  const ancestry = data.ancestry as { name?: string | undefined } | undefined;
   return {
     name: (data.name as string) ?? 'Unnamed',
     level: typeof data.level === 'number' ? data.level : 1,

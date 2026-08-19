@@ -45,8 +45,8 @@ function EquipmentCard({
   nameChipLabels,
 }: {
   item: CodexEquipmentItem;
-  propertiesDb?: Parameters<typeof buildCodexEquipmentDetailSections>[1];
-  nameChipLabels?: string[];
+  propertiesDb?: Parameters<typeof buildCodexEquipmentDetailSections>[1] | undefined;
+  nameChipLabels?: string[] | undefined;
 }) {
   const detailSections = useMemo(
     () => buildCodexEquipmentDetailSections(item, propertiesDb),
@@ -69,7 +69,11 @@ function EquipmentCard({
   );
 }
 
-export function CodexEquipmentTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+export function CodexEquipmentTab({
+  codexMode = 'public',
+}: {
+  codexMode?: 'public' | 'my' | undefined;
+}) {
   const loadPublicCodex = codexMode === 'public';
   const { data: equipment, isLoading, error, refetch } = useEquipment({ enabled: loadPublicCodex });
   const { data: propertiesDb = [] } = useItemProperties({ enabled: loadPublicCodex });

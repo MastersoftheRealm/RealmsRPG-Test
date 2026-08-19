@@ -37,8 +37,8 @@ export interface GlrEntityFactMeta {
   band: GlrFactBand;
   orderInBand: number;
   displayOrder: number;
-  columnKey?: string;
-  headerTrack?: string;
+  columnKey?: string | undefined;
+  headerTrack?: string | undefined;
 }
 
 export interface GlrFactDef {
@@ -49,13 +49,13 @@ export interface GlrFactDef {
   titleLabel: string;
   preferredColumnKey: string;
   /** Add/load USM key when it differs from preferredColumnKey. */
-  usmKey?: string;
+  usmKey?: string | undefined;
   columnKeys: string[];
   chipPatterns: RegExp[];
   entities: Partial<Record<GlrEntityType, GlrEntityFactMeta>>;
   /** compact-facts helper name (documentation / Wave 2 chip builders). */
-  chipFormatter?: string;
-  zeroIsMeaningful?: boolean;
+  chipFormatter?: string | undefined;
+  zeroIsMeaningful?: boolean | undefined;
 }
 
 export const GLR_BAND_RANK: Record<GlrFactBand, number> = {

@@ -78,32 +78,32 @@ export type LibraryEntityRowContext = {
   powerPartsDb: CodexPart[];
   techniquePartsDb: CodexPart[];
   itemPropertiesDb: CodexProperty[];
-  abilities?: Abilities;
-  martialProficiency?: number;
-  powerAttackBonus?: number;
-  currentEnergy?: number;
+  abilities?: Abilities | undefined;
+  martialProficiency?: number | undefined;
+  powerAttackBonus?: number | undefined;
+  currentEnergy?: number | undefined;
   showLibraryEditControls: boolean;
   rollContext: RollContext;
   hasMissingForEntry: (params: {
-    powers?: CharacterPower[];
-    techniques?: CharacterTechnique[];
-    weapons?: Item[];
-    shields?: Item[];
-    armor?: Item[];
+    powers?: CharacterPower[] | undefined;
+    techniques?: CharacterTechnique[] | undefined;
+    weapons?: Item[] | undefined;
+    shields?: Item[] | undefined;
+    armor?: Item[] | undefined;
   }) => boolean;
-  onUsePower?: (id: string | number, energyCost: number) => void;
-  onRemovePower?: (id: string | number) => void;
-  onTogglePowerInnate?: (id: string | number, isInnate: boolean) => void;
-  onUseTechnique?: (id: string | number, energyCost: number) => void;
-  onRemoveTechnique?: (id: string | number) => void;
-  onRemoveWeapon?: (id: string | number) => void;
-  onToggleEquipWeapon?: (id: string | number) => void;
-  onRemoveShield?: (id: string | number) => void;
-  onToggleEquipShield?: (id: string | number) => void;
-  onRemoveArmor?: (id: string | number) => void;
-  onToggleEquipArmor?: (id: string | number) => void;
-  onRemoveEquipment?: (id: string | number) => void;
-  onEquipmentQuantityChange?: (id: string | number, delta: number) => void;
+  onUsePower?: ((id: string | number, energyCost: number) => void) | undefined;
+  onRemovePower?: ((id: string | number) => void) | undefined;
+  onTogglePowerInnate?: ((id: string | number, isInnate: boolean) => void) | undefined;
+  onUseTechnique?: ((id: string | number, energyCost: number) => void) | undefined;
+  onRemoveTechnique?: ((id: string | number) => void) | undefined;
+  onRemoveWeapon?: ((id: string | number) => void) | undefined;
+  onToggleEquipWeapon?: ((id: string | number) => void) | undefined;
+  onRemoveShield?: ((id: string | number) => void) | undefined;
+  onToggleEquipShield?: ((id: string | number) => void) | undefined;
+  onRemoveArmor?: ((id: string | number) => void) | undefined;
+  onToggleEquipArmor?: ((id: string | number) => void) | undefined;
+  onRemoveEquipment?: ((id: string | number) => void) | undefined;
+  onEquipmentQuantityChange?: ((id: string | number, delta: number) => void) | undefined;
 };
 
 function categoryFactValue(categories: string[]): string | undefined {
@@ -115,7 +115,7 @@ function categoryFactValue(categories: string[]): string | undefined {
 
 function partsForCategories(
   parts: CharacterPower['parts'] | CharacterTechnique['parts'],
-): Array<{ id?: string | number; name?: string }> {
+): Array<{ id?: string | number | undefined; name?: string | undefined }> {
   if (!parts) return [];
   return parts.map((part) => (typeof part === 'string' ? { name: part } : part));
 }
@@ -126,7 +126,7 @@ function sheetItemCostFacts(item: Item, ctx: LibraryEntityRowContext) {
   const costs = calculateItemCosts(propsPayload, ctx.itemPropertiesDb as ItemPropertyTpRow[]);
   const storedCost = item.cost != null && item.cost > 0 ? item.cost : undefined;
   const derivedCurrency = Math.round(costs.totalCurrency);
-  const storedTp = (item as Item & { tp?: number }).tp;
+  const storedTp = (item as Item & { tp?: number | undefined }).tp;
   return {
     rarity: item.rarity,
     currency: storedCost ?? (derivedCurrency > 0 ? derivedCurrency : undefined),
@@ -192,7 +192,8 @@ export function mapPowerRows(
   return powers.map((power, i) => {
     const id = power.id || String(i);
     const isInnate = power.innate === true;
-    const powerIsReaction = (power as CharacterPower & { isReaction?: boolean }).isReaction;
+    const powerIsReaction = (power as CharacterPower & { isReaction?: boolean | undefined })
+      .isReaction;
     const display = derivePowerDisplay(
       libraryItemToPowerDocument({
         name: power.name,
@@ -304,7 +305,8 @@ export function mapTechniqueRows(
 ): EntityTechniqueRow[] {
   return techniques.map((tech, i) => {
     const id = tech.id || String(i);
-    const techIsReaction = (tech as CharacterTechnique & { isReaction?: boolean }).isReaction;
+    const techIsReaction = (tech as CharacterTechnique & { isReaction?: boolean | undefined })
+      .isReaction;
     const display = deriveTechniqueDisplay(
       libraryItemToTechniqueDocument({
         name: tech.name,
@@ -324,7 +326,7 @@ export function mapTechniqueRows(
       partsToPartData(tech.parts, ctx.techniquePartsDb, 'technique'),
     );
     const partsSection = partsProficienciesSection(partChips, 'technique');
-    const techTP = (tech as { tp?: number }).tp;
+    const techTP = (tech as { tp?: number | undefined }).tp;
     const storedTp =
       typeof techTP === 'number' ? techTP : typeof techTP === 'string' ? parseFloat(techTP) : 0;
     const totalTP = display.tp > 0 ? display.tp : storedTp;
@@ -394,7 +396,7 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
       ),
     );
     const rangeValue = resolveWeaponRangeDisplay(
-      (item as Item & { range?: string }).range,
+      (item as Item & { range?: string | undefined }).range,
       (resolveItemProperties(item as ItemWithLibrarySource) ?? []) as ItemPropertyPayload[],
     );
     const {
@@ -481,7 +483,10 @@ export function mapWeaponRows(weapons: Item[], ctx: LibraryEntityRowContext): En
 export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): EntityShieldRow[] {
   return shields.map((item, i) => {
     const id = item.id ?? item.name ?? i;
-    const enriched = item as Item & { shieldAmount?: string; shieldDamage?: string | null };
+    const enriched = item as Item & {
+      shieldAmount?: string | undefined;
+      shieldDamage?: string | null | undefined;
+    };
     const shieldBlock = enriched.shieldAmount ?? '-';
     const shieldDamageStr = enriched.shieldDamage ?? (item.damage ? String(item.damage) : '-');
     const { bonus: attackBonus } = getWeaponAttackBonus(
@@ -490,7 +495,7 @@ export function mapShieldRows(shields: Item[], ctx: LibraryEntityRowContext): En
       ctx.martialProficiency,
     );
     const rangeValue = resolveWeaponRangeDisplay(
-      (item as Item & { range?: string }).range,
+      (item as Item & { range?: string | undefined }).range,
       (resolveItemProperties(item as ItemWithLibrarySource) ?? []) as ItemPropertyPayload[],
     );
     const {
@@ -616,9 +621,12 @@ export function mapArmorRows(armor: Item[], ctx: LibraryEntityRowContext): Entit
         ctx.itemPropertiesDb,
       ),
     );
-    const abilityReq = (item as Item & { abilityRequirement?: { name?: string; level?: number } })
-      .abilityRequirement;
-    const agilityRed = (item as Item & { agilityReduction?: number }).agilityReduction;
+    const abilityReq = (
+      item as Item & {
+        abilityRequirement?: { name?: string | undefined; level?: number | undefined };
+      }
+    ).abilityRequirement;
+    const agilityRed = (item as Item & { agilityReduction?: number | undefined }).agilityReduction;
 
     const { damageReduction, criticalRangeIncrease } = deriveArmorItemCombatStats(
       item as ItemWithLibrarySource,
@@ -687,7 +695,7 @@ export function mapEquipmentRows(
     );
     const propertySection = propertiesProficienciesSection(propertyChips, 'item');
     const itemType = formatListCellLabel(item.type);
-    const itemCategory = (item as Item & { category?: string }).category;
+    const itemCategory = (item as Item & { category?: string | undefined }).category;
     const qty = item.quantity ?? 1;
     const quantityStepper = ctx.onEquipmentQuantityChange ? (
       <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>

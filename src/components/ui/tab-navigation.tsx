@@ -16,13 +16,13 @@ import { cn } from '@/lib/utils/cn';
 interface Tab {
   id: string;
   label: string;
-  icon?: React.ReactNode;
-  count?: number;
-  disabled?: boolean;
+  icon?: React.ReactNode | undefined;
+  count?: number | undefined;
+  disabled?: boolean | undefined;
   /** Rendered to the right of the label (sibling of the tab button, not nested inside it) */
-  suffix?: React.ReactNode;
+  suffix?: React.ReactNode | undefined;
   /** Muted tab label (e.g. hidden outside edit mode) */
-  dimmed?: boolean;
+  dimmed?: boolean | undefined;
 }
 
 /** Stable tab button id for `aria-labelledby` / focus management */
@@ -54,7 +54,7 @@ export interface TabContentPanelProps {
   /** Panel element id — use `useTabGroup().sharedPanelId` with `sharedTabPanelId` on TabNavigation */
   id: string;
   children: React.ReactNode;
-  className?: string;
+  className?: string | undefined;
 }
 
 /** Single shared tabpanel for pages that swap conditional content (Library, Codex, etc.) */
@@ -82,7 +82,7 @@ export interface TabPanelProps {
   tabId: string;
   activeTab: string;
   children: React.ReactNode;
-  className?: string;
+  className?: string | undefined;
 }
 
 /** One panel per tab; inactive panels stay mounted with `hidden` (WAI-ARIA tabs pattern) */
@@ -109,19 +109,19 @@ interface TabNavigationProps {
   /** Callback when tab changes */
   onTabChange: (tabId: string) => void;
   /** Visual style variant */
-  variant?: 'underline' | 'pill';
+  variant?: 'underline' | 'pill' | undefined;
   /** Size variant */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
   /** Additional class name */
-  className?: string;
+  className?: string | undefined;
   /** Full width tabs */
-  fullWidth?: boolean;
+  fullWidth?: boolean | undefined;
   /** Stable id namespace — pass from `useTabGroup()` so panels can wire aria-labelledby */
-  tabGroupId?: string;
+  tabGroupId?: string | undefined;
   /** When set, every tab's `aria-controls` points here (shared panel mode) */
-  sharedTabPanelId?: string;
+  sharedTabPanelId?: string | undefined;
   /** When false, omit `aria-controls` (demo tabs without panels). Default true. */
-  associatePanels?: boolean;
+  associatePanels?: boolean | undefined;
 }
 
 export function TabNavigation({

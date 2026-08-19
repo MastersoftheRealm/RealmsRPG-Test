@@ -100,7 +100,7 @@ export interface RollButtonProps
   /** The numeric bonus value (will be formatted as +X or -X) */
   value: number;
   /** Optional pre-formatted string to display instead of value */
-  displayValue?: string;
+  displayValue?: string | undefined;
 }
 
 /**

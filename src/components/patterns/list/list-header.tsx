@@ -15,7 +15,7 @@
 
 import { useState, useRef, useEffect, type RefObject } from 'react';
 import { ChevronUp, ChevronDown, ChevronsUpDown } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, type AllowUndefinedOptionals } from '@/lib/utils';
 import {
   hasListHeaderRowChrome,
   type ListHeaderRowChrome,
@@ -31,20 +31,22 @@ import {
 
 export type { ListHeaderRowChrome } from './grid-list-row-chrome';
 
-export interface ListColumn {
+interface ListColumnFields {
   /** Column key for sorting */
   key: string;
   /** Display label */
   label: string;
   /** Is this column sortable? Default true */
-  sortable?: boolean;
+  sortable?: boolean | undefined;
   /** Column width (for grid template) */
-  width?: string;
+  width?: string | undefined;
   /** Additional className */
-  className?: string;
+  className?: string | undefined;
   /** Text alignment */
-  align?: 'left' | 'center' | 'right';
+  align?: 'left' | 'center' | 'right' | undefined;
 }
+
+export type ListColumn = AllowUndefinedOptionals<ListColumnFields>;
 
 export interface SortState {
   /** Currently sorted column key */
@@ -53,35 +55,37 @@ export interface SortState {
   dir: 1 | -1;
 }
 
-export interface ListHeaderProps {
+interface ListHeaderPropsFields {
   /** Column definitions */
   columns: ListColumn[];
   /** Grid template columns CSS (alternative to individual column widths) */
-  gridColumns?: string;
+  gridColumns?: string | undefined;
   /** Current sort state */
-  sortState?: SortState;
+  sortState?: SortState | undefined;
   /** Callback when a sortable column is clicked */
-  onSort?: (columnKey: string) => void;
+  onSort?: ((columnKey: string) => void) | undefined;
   /** Whether the list is in selectable mode (adds space for selection button) */
-  hasSelectionColumn?: boolean;
+  hasSelectionColumn?: boolean | undefined;
   /** Fixed width for a right slot (e.g. quantity); uses flex so header grid aligns with row grid */
-  rightSlotWidth?: string;
+  rightSlotWidth?: string | undefined;
   /**
    * Reserve the same horizontal space as `GridListRow` outer flex chrome (leftSlot / rightSlot / edit / delete / selection).
    * Pair flags with row actions — CI: `lib/glr/validate-glr-chrome-spacing.test.ts` (TASK-631).
    * Do not combine with `rightSlotWidth` (equipment-step pattern uses `rightSlotWidth` only).
    */
-  rowChrome?: ListHeaderRowChrome;
+  rowChrome?: ListHeaderRowChrome | undefined;
   /**
    * Reserve a blank first column aligned with `GridListRow.thumbnail` (44px).
    * Prepends to `gridColumns` automatically — pass the same base template as rows (without thumb track).
    */
-  hasThumbnailColumn?: boolean;
+  hasThumbnailColumn?: boolean | undefined;
   /** Compact mode: use px-3 to match GridListRow compact rows (e.g. in modals) */
-  compact?: boolean;
+  compact?: boolean | undefined;
   /** Additional className */
-  className?: string;
+  className?: string | undefined;
 }
+
+export type ListHeaderProps = AllowUndefinedOptionals<ListHeaderPropsFields>;
 
 const alignStyles = {
   left: 'text-left',
@@ -105,8 +109,8 @@ function MobileSortMenu({
   menuRef,
   onColumnClick,
 }: {
-  sortableColumns: Array<{ key: string; label: string }>;
-  sortState?: SortState;
+  sortableColumns: ListColumn[];
+  sortState?: SortState | undefined;
   currentLabel: string;
   currentDir: string;
   open: boolean;

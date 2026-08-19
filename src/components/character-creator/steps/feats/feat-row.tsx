@@ -18,7 +18,7 @@ interface FeatRowProps {
   maxCharacterFeats: number;
   featById: Map<string, Feat>;
   skillIdToName: Map<string, string>;
-  checkRequirements: (feat: Feat) => { met: boolean; reason?: string };
+  checkRequirements: (feat: Feat) => { met: boolean; reason?: string | undefined };
   onToggle: (feat: Feat, isCharacterFeat: boolean) => void;
 }
 

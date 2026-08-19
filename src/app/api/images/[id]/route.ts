@@ -62,7 +62,10 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
 
     const read = await readJsonBodyWithLimit(request);
     if (!read.success) return read.error;
-    const body = read.body as { name?: unknown; categories?: unknown } | null;
+    const body = read.body as {
+      name?: unknown | undefined;
+      categories?: unknown | undefined;
+    } | null;
     if (
       !body ||
       typeof body !== 'object' ||

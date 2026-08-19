@@ -85,7 +85,7 @@ export function verifyRequestOrigin(request: NextRequest): NextResponse<{ error:
  */
 export function verifyMutationRequest(
   request: NextRequest,
-  options: { requireJsonBody?: boolean } = {},
+  options: { requireJsonBody?: boolean | undefined } = {},
 ): NextResponse<{ error: string }> | null {
   if (options.requireJsonBody) {
     const contentType = request.headers.get('content-type') ?? '';

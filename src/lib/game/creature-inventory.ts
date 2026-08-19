@@ -13,12 +13,12 @@ export type CreatureInventoryBuckets<T> = {
 };
 
 export type CreatureInventorySource<T> = {
-  weapons?: T[] | null;
-  armor?: T[] | null;
-  shields?: T[] | null;
-  equipment?: T[] | null;
+  weapons?: T[] | null | undefined;
+  armor?: T[] | null | undefined;
+  shields?: T[] | null | undefined;
+  equipment?: T[] | null | undefined;
   /** Legacy mixed bag. Used only when kind buckets are absent. */
-  armaments?: T[] | null;
+  armaments?: T[] | null | undefined;
 };
 
 const KIND_TO_BUCKET = {
@@ -38,7 +38,7 @@ export function normalizeCreatureInventoryType(type: string | undefined): Creatu
   return 'equipment';
 }
 
-export function splitCreatureInventoryByKind<T extends { type?: string }>(
+export function splitCreatureInventoryByKind<T extends { type?: string | undefined }>(
   items: T[],
 ): CreatureInventoryBuckets<T> {
   const buckets: CreatureInventoryBuckets<T> = {
@@ -54,7 +54,7 @@ export function splitCreatureInventoryByKind<T extends { type?: string }>(
 }
 
 /** Prefer kind buckets; otherwise split a legacy mixed `armaments` array. */
-export function resolveCreatureInventoryBuckets<T extends { type?: string }>(
+export function resolveCreatureInventoryBuckets<T extends { type?: string | undefined }>(
   source: CreatureInventorySource<T>,
 ): CreatureInventoryBuckets<T> {
   const hasBuckets =
@@ -77,7 +77,7 @@ export function collectCreatureInventoryItems<T>(buckets: CreatureInventoryBucke
   return [...buckets.weapons, ...buckets.armor, ...buckets.shields, ...buckets.equipment];
 }
 
-export function appendCreatureInventoryItems<T extends { type?: string }>(
+export function appendCreatureInventoryItems<T extends { type?: string | undefined }>(
   buckets: CreatureInventoryBuckets<T>,
   items: T[],
 ): CreatureInventoryBuckets<T> {
@@ -93,7 +93,7 @@ export function appendCreatureInventoryItems<T extends { type?: string }>(
   return next;
 }
 
-export function removeCreatureInventoryItem<T extends { id?: string }>(
+export function removeCreatureInventoryItem<T extends { id?: string | undefined }>(
   buckets: CreatureInventoryBuckets<T>,
   id: string,
 ): CreatureInventoryBuckets<T> {

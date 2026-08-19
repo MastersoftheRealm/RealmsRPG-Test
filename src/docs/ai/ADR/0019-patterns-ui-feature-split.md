@@ -28,5 +28,5 @@
 ## Consequences
 
 - Positive: Layer names match the job; encounter picker is owned by encounters; FEATURE_INDEX / unification / GLR path lists stay in sync.
-- Negative / follow-ups: Monolithic patterns barrel remains (tree-shake). Intra-barrel `@/components/patterns` imports inside `patterns/` were removed in TASK-794 `/cleanup`. TASK-799 still WAITING. TASK-795 done (ADR-0020). TASK-796 done (ADR-0021). TASK-797 done (ADR-0022). Confirm-dialog / icon-toggle families stay TASK-799. `list-components` still re-exports `ui/` SearchInput/EmptyState/LoadingState (TASK-821).
+- Negative / follow-ups: Monolithic patterns barrel remains (tree-shake). Intra-barrel `@/components/patterns` imports inside `patterns/` were removed in TASK-794 `/cleanup`. TASK-799 done (confirm/icon-toggle/sheet families + admin Codex delete modal). TASK-795 done (ADR-0020). TASK-796 done (ADR-0021). TASK-797 done (ADR-0022). TASK-821 done (`list-components` no longer re-exports `ui/` SearchInput/EmptyState/LoadingState; patterns barrel keeps `ErrorDisplay` only). Leftover admin CRUD scaffolding is WAITING TASK-842.
 - Rejected alternatives: Full report-04 feature dump (would fork sheet list sections from creature creator). Sub-barrels-only (`@/components/patterns/list`) in this change (drive-by import rewrite). Compat re-export from `@/components/shared`.

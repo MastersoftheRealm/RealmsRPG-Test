@@ -30,7 +30,7 @@ type UseSheetFeatActionsArgs = {
 function applyFeatCustomization(
   feats: CharacterFeat[] | undefined,
   featId: string,
-  updates: Partial<{ customName?: string; note?: string }>,
+  updates: Partial<{ customName?: string | undefined; note?: string | undefined }>,
 ): CharacterFeat[] {
   return (feats || []).map((feat) => {
     if (String(feat.id) !== featId) return feat;
@@ -65,9 +65,9 @@ export function useSheetFeatActions({
       feats: {
         id: string;
         name: string;
-        description?: string;
-        effect?: string;
-        max_uses?: number;
+        description?: string | undefined;
+        effect?: string | undefined;
+        max_uses?: number | undefined;
       }[],
       type: 'archetype' | 'character' | 'state',
     ) => {
@@ -79,7 +79,7 @@ export function useSheetFeatActions({
       }));
 
       if (type === 'state') {
-        const db = featsDb as Array<CodexFeat & { char_feat?: boolean }>;
+        const db = featsDb as Array<CodexFeat & { char_feat?: boolean | undefined }>;
         const toArchetype: CharacterFeat[] = [];
         const toCharacter: CharacterFeat[] = [];
         newFeats.forEach((f) => {
@@ -101,7 +101,10 @@ export function useSheetFeatActions({
             : null,
         );
       } else if (type === 'archetype') {
-        type LeveledFeat = CodexFeat & { base_feat_id?: string; feat_lvl?: number };
+        type LeveledFeat = CodexFeat & {
+          base_feat_id?: string | undefined;
+          feat_lvl?: number | undefined;
+        };
         const db = featsDb as LeveledFeat[];
         const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
         const getLevel = (f: LeveledFeat | undefined) =>
@@ -131,7 +134,10 @@ export function useSheetFeatActions({
             : null,
         );
       } else {
-        type LeveledFeat = CodexFeat & { base_feat_id?: string; feat_lvl?: number };
+        type LeveledFeat = CodexFeat & {
+          base_feat_id?: string | undefined;
+          feat_lvl?: number | undefined;
+        };
         const db = featsDb as LeveledFeat[];
         const byId = new Map<string, LeveledFeat>(db.map((f) => [String(f.id), f]));
         const getLevel = (f: LeveledFeat | undefined) =>
@@ -170,10 +176,10 @@ export function useSheetFeatActions({
     (featId: string, targetLevel: number, listType: 'archetype' | 'character') => {
       if (!character) return;
       type LeveledFeat = CodexFeat & {
-        base_feat_id?: string;
-        feat_lvl?: number;
-        uses_per_rec?: number;
-        max_uses?: number;
+        base_feat_id?: string | undefined;
+        feat_lvl?: number | undefined;
+        uses_per_rec?: number | undefined;
+        max_uses?: number | undefined;
       };
       const db = featsDb as LeveledFeat[];
       const codexFeat = db.find((f) => String(f.id) === String(featId));
@@ -307,7 +313,7 @@ export function useSheetFeatActions({
     (
       featId: string,
       listType: 'archetype' | 'character',
-      updates: Partial<{ customName?: string; note?: string }>,
+      updates: Partial<{ customName?: string | undefined; note?: string | undefined }>,
     ) => {
       setCharacter((prev) => {
         if (!prev) return null;
@@ -327,7 +333,10 @@ export function useSheetFeatActions({
   );
 
   const handleTraitCustomizationChange = useCallback(
-    (traitKey: string, updates: Partial<{ customName?: string; note?: string }>) => {
+    (
+      traitKey: string,
+      updates: Partial<{ customName?: string | undefined; note?: string | undefined }>,
+    ) => {
       setCharacter((prev) => {
         if (!prev) return null;
         const existing = { ...(prev.traitCustomizations || {}) };
@@ -361,7 +370,8 @@ export function useSheetFeatActions({
         const traitData = traitsDb.find(
           (t: Trait) => t.name?.toLowerCase() === traitName.toLowerCase(),
         );
-        const maxUses = (traitData as Trait & { uses_per_rec?: number })?.uses_per_rec ?? 999;
+        const maxUses =
+          (traitData as Trait & { uses_per_rec?: number | undefined })?.uses_per_rec ?? 999;
         const newUses = Math.max(0, Math.min(maxUses, currentUses + delta));
         return {
           ...prev,
@@ -394,7 +404,9 @@ export function useSheetFeatActions({
     if (current <= 0) return;
     setCharacter((prev) => {
       if (!prev) return null;
-      const db = featsDb as Array<CodexFeat & { state_feat?: boolean; uses_per_rec?: number }>;
+      const db = featsDb as Array<
+        CodexFeat & { state_feat?: boolean | undefined; uses_per_rec?: number | undefined }
+      >;
       const getMaxUses = (feat: CharacterFeat) => {
         const codex =
           db.find((f) => f.id === String(feat.id)) ??

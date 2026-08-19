@@ -53,9 +53,9 @@ type PowerEnergySource = Pick<
 const CRAFT_BASE_SKILL_ID = 13;
 
 type CraftSkillFilterable = {
-  base_skill_id?: number;
-  craft_success_desc?: string;
-  craft_failure_desc?: string;
+  base_skill_id?: number | undefined;
+  craft_success_desc?: string | undefined;
+  craft_failure_desc?: string | undefined;
 };
 
 export function filterCraftSubSkills<T extends CraftSkillFilterable>(codexSkills: T[]): T[] {

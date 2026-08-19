@@ -19,7 +19,7 @@ export type RealmsImageRow = {
   created_at: string;
   updated_at: string;
   created_by: string | null;
-  realms_image_categories?: Array<{ category: string }> | null;
+  realms_image_categories?: Array<{ category: string }> | null | undefined;
 };
 
 export function mapRealmsImageRow(row: RealmsImageRow): RealmsImage {

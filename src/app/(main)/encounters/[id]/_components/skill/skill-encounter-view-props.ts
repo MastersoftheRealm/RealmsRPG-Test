@@ -10,7 +10,7 @@ export interface SkillEncounterViewProps {
   encounter: Encounter | null;
   setEncounter: React.Dispatch<React.SetStateAction<Encounter | null>>;
   campaignsFull: Campaign[];
-  showRollLog?: boolean;
+  showRollLog?: boolean | undefined;
   /** When true (mixed encounter), initiative defaults on and "Sync with combat order" is shown */
-  isMixedEncounter?: boolean;
+  isMixedEncounter?: boolean | undefined;
 }

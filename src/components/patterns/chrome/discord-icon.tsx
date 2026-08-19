@@ -5,7 +5,7 @@
 
 import { cn } from '@/lib/utils/cn';
 
-export function DiscordIcon({ className }: { className?: string }) {
+export function DiscordIcon({ className }: { className?: string | undefined }) {
   return (
     <svg
       className={cn('shrink-0', className)}

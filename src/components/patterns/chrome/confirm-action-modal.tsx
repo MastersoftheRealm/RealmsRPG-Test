@@ -6,7 +6,7 @@
  * Generic reusable confirmation modal for actions that need user verification.
  * Used for: publishing to Realms Library, destructive actions, etc.
  *
- * For delete-specific confirmations, see `DeleteConfirmModal`.
+ * For delete-specific copy, use `DeleteConfirmModal` (a preset of this modal).
  */
 
 import { Modal } from '@/components/ui/modal';
@@ -26,17 +26,17 @@ interface ConfirmActionModalProps {
   /** Description/body text */
   description: string;
   /** Label for the confirm button (default: "Confirm") */
-  confirmLabel?: string;
+  confirmLabel?: string | undefined;
   /** Label for the cancel button (default: "Cancel") */
-  cancelLabel?: string;
+  cancelLabel?: string | undefined;
   /** Button variant for the confirm button */
-  confirmVariant?: 'primary' | 'danger';
+  confirmVariant?: 'primary' | 'danger' | undefined;
   /** Whether the action is in progress */
-  isLoading?: boolean;
+  isLoading?: boolean | undefined;
   /** Label for confirm button when loading (default: "Publishing..." when confirmVariant is primary, else "Confirming...") */
-  loadingLabel?: string;
+  loadingLabel?: string | undefined;
   /** Icon to display: 'warning' | 'publish' (default: 'warning') */
-  icon?: 'warning' | 'publish';
+  icon?: 'warning' | 'publish' | undefined;
 }
 
 export function ConfirmActionModal({

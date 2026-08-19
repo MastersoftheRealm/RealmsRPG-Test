@@ -5,7 +5,11 @@ export const ANY_SPECIES_SKILL_ID = '0';
 export const ANY_SPECIES_SKILL_DESCRIPTION =
   'Your choice: pick any one skill as your second species skill, or treat this as an extra skill point.';
 
-type SkillLike = { id: string | number; name?: string; description?: string };
+type SkillLike = {
+  id: string | number;
+  name?: string | undefined;
+  description?: string | undefined;
+};
 
 /** Map a species skill id to a summary/expandable chip item (codex + "Any"). */
 export function speciesSkillToSummaryChipItem(

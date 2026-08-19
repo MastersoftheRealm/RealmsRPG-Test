@@ -27,15 +27,15 @@ export interface CreaturePower {
   id: string;
   name: string;
   energy: number;
-  tp?: number;
+  tp?: number | undefined;
   action: string;
   duration: string;
   range: string;
   area: string;
   damage: string;
-  innate?: boolean;
-  image_id?: string | null;
-  image_url?: string | null;
+  innate?: boolean | undefined;
+  image_id?: string | null | undefined;
+  image_url?: string | null | undefined;
 }
 
 export interface CreatureTechnique {
@@ -46,8 +46,8 @@ export interface CreatureTechnique {
   action: string;
   weapon: string;
   damage: string;
-  image_id?: string | null;
-  image_url?: string | null;
+  image_id?: string | null | undefined;
+  image_url?: string | null | undefined;
 }
 
 /** Where a creature builder feat was chosen from (shown in feat list and persisted on save). */
@@ -78,8 +78,8 @@ export function inferCreatureFeatSource(
   feat: Pick<CreatureFeat, 'id' | 'featSourceType'>,
   lookup: {
     creatureFeatIds: Set<string>;
-    codexFeatById: Map<string, { char_feat?: boolean }>;
-    traitById: Map<string, { flaw?: boolean; characteristic?: boolean }>;
+    codexFeatById: Map<string, { char_feat?: boolean | undefined }>;
+    traitById: Map<string, { flaw?: boolean | undefined; characteristic?: boolean | undefined }>;
   },
 ): CreatureFeatSourceType | undefined {
   if (feat.featSourceType) return feat.featSourceType;
@@ -102,9 +102,9 @@ export function inferCreatureFeatSource(
 export interface CreatureFeat {
   id: string;
   name: string;
-  description?: string;
-  points?: number;
-  featSourceType?: CreatureFeatSourceType;
+  description?: string | undefined;
+  points?: number | undefined;
+  featSourceType?: CreatureFeatSourceType | undefined;
 }
 
 export interface CreatureArmament {
@@ -115,17 +115,21 @@ export interface CreatureArmament {
   currency: number;
   rarity: string;
   /** Equipment stack size when stored; omit when unknown (do not fake 1). */
-  quantity?: number;
-  damage?: string;
-  range?: string;
-  description?: string;
-  properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }>;
-  damageReduction?: number;
-  armorValue?: number;
-  shieldDamage?: { amount: number; size: number } | null;
-  shieldDR?: { amount: number; size: number } | null;
-  image_id?: string | null;
-  image_url?: string | null;
+  quantity?: number | undefined;
+  damage?: string | undefined;
+  range?: string | undefined;
+  description?: string | undefined;
+  properties?: Array<{
+    id?: number | undefined;
+    name?: string | undefined;
+    op_1_lvl?: number | undefined;
+  }>;
+  damageReduction?: number | undefined;
+  armorValue?: number | undefined;
+  shieldDamage?: { amount: number; size: number } | null | undefined;
+  shieldDR?: { amount: number; size: number } | null | undefined;
+  image_id?: string | null | undefined;
+  image_url?: string | null | undefined;
 }
 
 // =============================================================================

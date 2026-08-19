@@ -38,97 +38,99 @@ import type { FeatTraitCustomization } from '@/types/feats';
 
 interface TraitData {
   name: string;
-  description?: string;
-  maxUses?: number;
-  recoveryPeriod?: string;
+  description?: string | undefined;
+  maxUses?: number | undefined;
+  recoveryPeriod?: string | undefined;
 }
 
 interface CodexTrait {
   id: string;
   name: string;
-  description?: string;
-  uses_per_rec?: number;
-  rec_period?: string;
+  description?: string | undefined;
+  uses_per_rec?: number | undefined;
+  rec_period?: string | undefined;
 }
 
 interface CodexFeat {
   id: string;
   name: string;
-  description?: string;
-  effect?: string;
-  max_uses?: number;
-  uses_per_rec?: number;
-  rec_period?: string;
-  category?: string;
-  ability?: string | string[];
-  lvl_req?: number;
-  feat_lvl?: number;
-  base_feat_id?: string;
+  description?: string | undefined;
+  effect?: string | undefined;
+  max_uses?: number | undefined;
+  uses_per_rec?: number | undefined;
+  rec_period?: string | undefined;
+  category?: string | undefined;
+  ability?: string | string[] | undefined;
+  lvl_req?: number | undefined;
+  feat_lvl?: number | undefined;
+  base_feat_id?: string | undefined;
 }
 
 interface FeatData {
-  id?: string | number;
+  id?: string | number | undefined;
   name: string;
-  description?: string;
-  maxUses?: number;
-  currentUses?: number;
-  recovery?: string;
-  type?: 'archetype' | 'character' | 'state';
-  customName?: string;
-  note?: string;
+  description?: string | undefined;
+  maxUses?: number | undefined;
+  currentUses?: number | undefined;
+  recovery?: string | undefined;
+  type?: 'archetype' | 'character' | 'state' | undefined;
+  customName?: string | undefined;
+  note?: string | undefined;
 }
 
 interface CharacterAncestry {
-  selectedTraits?: string[];
-  selectedFlaw?: string | null;
-  selectedCharacteristic?: string | null;
+  selectedTraits?: string[] | undefined;
+  selectedFlaw?: string | null | undefined;
+  selectedCharacteristic?: string | null | undefined;
 }
 
 interface VanillaTraitFields {
-  ancestryTraits?: string[];
-  flawTrait?: string | null;
-  characteristicTrait?: string | null;
-  speciesTraits?: string[];
+  ancestryTraits?: string[] | undefined;
+  flawTrait?: string | null | undefined;
+  characteristicTrait?: string | null | undefined;
+  speciesTraits?: string[] | undefined;
 }
 
 interface FeatsTabProps {
-  ancestry?: CharacterAncestry;
-  vanillaTraits?: VanillaTraitFields;
-  speciesTraitsFromCodex?: string[];
-  traits?: TraitData[];
-  traitsDb?: CodexTrait[];
-  featsDb?: CodexFeat[];
-  traitUses?: Record<string, number>;
-  archetypeFeats?: FeatData[];
-  characterFeats?: FeatData[];
-  stateFeats?: FeatData[];
-  stateUsesCurrent?: number;
-  stateUsesMax?: number;
-  onStateUsesChange?: (delta: number) => void;
-  onEnterState?: () => void;
-  isEditMode?: boolean;
-  showEditControls?: boolean;
-  maxArchetypeFeats?: number;
-  maxCharacterFeats?: number;
-  onFeatUsesChange?: (featId: string, delta: number) => void;
-  onFeatLevelChange?: (
-    featId: string,
-    targetLevel: number,
-    listType: 'archetype' | 'character',
-  ) => void;
-  featRequirementCharacter?: CharacterForFeatRequirement;
-  onTraitUsesChange?: (traitName: string, delta: number) => void;
-  onAddArchetypeFeat?: () => void;
-  onAddCharacterFeat?: () => void;
-  onAddStateFeat?: () => void;
-  onRemoveFeat?: (featId: string, featName?: string) => void;
-  traitCustomizations?: Record<string, FeatTraitCustomization>;
-  onFeatCustomizationChange?: (
-    featId: string,
-    listType: 'archetype' | 'character',
-    updates: Partial<FeatTraitCustomization>,
-  ) => void;
-  onTraitCustomizationChange?: (traitKey: string, updates: Partial<FeatTraitCustomization>) => void;
+  ancestry?: CharacterAncestry | undefined;
+  vanillaTraits?: VanillaTraitFields | undefined;
+  speciesTraitsFromCodex?: string[] | undefined;
+  traits?: TraitData[] | undefined;
+  traitsDb?: CodexTrait[] | undefined;
+  featsDb?: CodexFeat[] | undefined;
+  traitUses?: Record<string, number> | undefined;
+  archetypeFeats?: FeatData[] | undefined;
+  characterFeats?: FeatData[] | undefined;
+  stateFeats?: FeatData[] | undefined;
+  stateUsesCurrent?: number | undefined;
+  stateUsesMax?: number | undefined;
+  onStateUsesChange?: ((delta: number) => void) | undefined;
+  onEnterState?: (() => void) | undefined;
+  isEditMode?: boolean | undefined;
+  showEditControls?: boolean | undefined;
+  maxArchetypeFeats?: number | undefined;
+  maxCharacterFeats?: number | undefined;
+  onFeatUsesChange?: ((featId: string, delta: number) => void) | undefined;
+  onFeatLevelChange?:
+    | ((featId: string, targetLevel: number, listType: 'archetype' | 'character') => void)
+    | undefined;
+  featRequirementCharacter?: CharacterForFeatRequirement | undefined;
+  onTraitUsesChange?: ((traitName: string, delta: number) => void) | undefined;
+  onAddArchetypeFeat?: (() => void) | undefined;
+  onAddCharacterFeat?: (() => void) | undefined;
+  onAddStateFeat?: (() => void) | undefined;
+  onRemoveFeat?: ((featId: string, featName?: string) => void) | undefined;
+  traitCustomizations?: Record<string, FeatTraitCustomization> | undefined;
+  onFeatCustomizationChange?:
+    | ((
+        featId: string,
+        listType: 'archetype' | 'character',
+        updates: Partial<FeatTraitCustomization>,
+      ) => void)
+    | undefined;
+  onTraitCustomizationChange?:
+    | ((traitKey: string, updates: Partial<FeatTraitCustomization>) => void)
+    | undefined;
 }
 
 export function FeatsTab({
@@ -225,7 +227,7 @@ export function FeatsTab({
       return [{ label: 'Feat Levels', chips }] as Array<{
         label: string;
         chips: ChipData[];
-        hideLabelIfSingle?: boolean;
+        hideLabelIfSingle?: boolean | undefined;
       }>;
     },
     [

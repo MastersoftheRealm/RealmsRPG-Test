@@ -24,7 +24,7 @@ export type UsernameValidationResult = { ok: true } | { ok: false; error: string
 
 export function validateUsername(
   raw: string,
-  options?: { isAdmin?: boolean; allowEmpty?: boolean },
+  options?: { isAdmin?: boolean | undefined; allowEmpty?: boolean | undefined },
 ): UsernameValidationResult {
   const trimmed = raw.trim();
   const normalized = trimmed.toLowerCase();

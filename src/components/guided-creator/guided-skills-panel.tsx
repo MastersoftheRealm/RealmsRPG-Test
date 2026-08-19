@@ -43,16 +43,16 @@ export interface GuidedSkillsPanelProps {
   allocations: Record<string, number>;
   speciesSkillIds: Set<string>;
   pathSkillIds: Set<string>;
-  pathSourceLabel?: string;
+  pathSourceLabel?: string | undefined;
   totalPoints: number;
   spentPoints: number;
   onAllocationsChange: (allocations: Record<string, number>) => void;
   defenseSkills: DefenseSkills;
   onDefenseChange: (defense: DefenseSkills) => void;
-  skillAbilities?: Record<string, string>;
-  onSkillAbilityChange?: (skillId: string, abilityKey: string) => void;
-  level?: number;
-  className?: string;
+  skillAbilities?: Record<string, string> | undefined;
+  onSkillAbilityChange?: ((skillId: string, abilityKey: string) => void) | undefined;
+  level?: number | undefined;
+  className?: string | undefined;
 }
 
 interface GuidedSkillRowItem {
@@ -62,13 +62,13 @@ interface GuidedSkillRowItem {
   abilityLabel: string | null;
   abilityValue: number;
   multiAbility: boolean;
-  chosenAbilityKey?: string;
+  chosenAbilityKey?: string | undefined;
   linkedAbilityKeys: string[];
   abilitySkillId: string;
   isSpecies: boolean;
   isPath: boolean;
   isSubSkill: boolean;
-  baseSkillName?: string;
+  baseSkillName?: string | undefined;
   canIncrease: boolean;
   canDecrease: boolean;
 }
@@ -82,11 +82,11 @@ function GuidedSkillRow({
   onAbilityChange,
 }: {
   item: GuidedSkillRowItem;
-  pathSourceLabel?: string;
+  pathSourceLabel?: string | undefined;
   onDecrease: () => void;
   onIncrease: () => void;
-  onRemove?: () => void;
-  onAbilityChange?: (skillId: string, abilityKey: string) => void;
+  onRemove?: (() => void) | undefined;
+  onAbilityChange?: ((skillId: string, abilityKey: string) => void) | undefined;
 }) {
   const [expanded, setExpanded] = useState(false);
   const abilitySelectId = useId();

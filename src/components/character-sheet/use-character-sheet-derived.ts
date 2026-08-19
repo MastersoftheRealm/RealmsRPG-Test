@@ -41,13 +41,13 @@ export type { CharacterSheetStats };
 export interface CharacterSheetSkillRow {
   id: string;
   name: string;
-  category?: string;
+  category?: string | undefined;
   skill_val: number;
-  prof?: boolean;
-  baseSkill?: string;
-  selectedBaseSkillId?: string;
-  ability?: string;
-  availableAbilities?: string[];
+  prof?: boolean | undefined;
+  baseSkill?: string | undefined;
+  selectedBaseSkillId?: string | undefined;
+  ability?: string | undefined;
+  availableAbilities?: string[] | undefined;
 }
 
 export interface CharacterSheetPointBudgets {
@@ -239,13 +239,13 @@ export function useCharacterSheetDerived({
     const totalSkillPoints = calculateSkillPointsForEntity(level, 'character', rules);
 
     const skillsList = (character.skills || []) as Array<{
-      skill_val?: number;
-      prof?: boolean;
-      baseSkill?: string;
-      baseSkillId?: number;
-      selectedBaseSkillId?: string;
-      name?: string;
-      id?: string;
+      skill_val?: number | undefined;
+      prof?: boolean | undefined;
+      baseSkill?: string | undefined;
+      baseSkillId?: number | undefined;
+      selectedBaseSkillId?: string | undefined;
+      name?: string | undefined;
+      id?: string | undefined;
     }>;
     const speciesSkillIdSet = buildSpeciesSkillIdSet(
       characterSpeciesSkills.filter((id) => id !== '0'),
@@ -300,13 +300,13 @@ export function useCharacterSheetDerived({
 
     const totalSkillPoints = calculateSkillPointsForEntity(level, 'character', rules);
     const skillsList = (character.skills || []) as Array<{
-      skill_val?: number;
-      prof?: boolean;
-      baseSkill?: string;
-      baseSkillId?: number;
-      selectedBaseSkillId?: string;
-      name?: string;
-      id?: string;
+      skill_val?: number | undefined;
+      prof?: boolean | undefined;
+      baseSkill?: string | undefined;
+      baseSkillId?: number | undefined;
+      selectedBaseSkillId?: string | undefined;
+      name?: string | undefined;
+      id?: string | undefined;
     }>;
     const speciesSkillIdSet = buildSpeciesSkillIdSet(
       characterSpeciesSkills.filter((id) => id !== '0'),
@@ -332,7 +332,7 @@ export function useCharacterSheetDerived({
     const characterFeatSlots = calculateMaxCharacterFeats(level);
     const featLevelById = new Map<string, number>();
     (featsDb || []).forEach((f) => {
-      const feat = f as CodexFeat & { feat_lvl?: number };
+      const feat = f as CodexFeat & { feat_lvl?: number | undefined };
       const lvl = feat.feat_lvl != null && feat.feat_lvl > 0 ? feat.feat_lvl : 1;
       featLevelById.set(String(feat.id), lvl);
     });
@@ -358,7 +358,7 @@ export function useCharacterSheetDerived({
   const { archetypeFeatsForDisplay, characterFeatsForDisplay, stateFeatsList } = useMemo(() => {
     const arch = character?.archetypeFeats || [];
     const char = character?.feats || [];
-    const db = featsDb as Array<CodexFeat & { state_feat?: boolean }>;
+    const db = featsDb as Array<CodexFeat & { state_feat?: boolean | undefined }>;
     const isStateFeat = (feat: CharacterFeat) => {
       const codex =
         db.find((f) => f.id === String(feat.id)) ??
@@ -428,7 +428,7 @@ export function useCharacterSheetDerived({
         skill.baseSkill ??
         resolveParentSkillNameForSubSkill(
           skill,
-          codexSkill as { base_skill_id?: string | number } | undefined,
+          codexSkill as { base_skill_id?: string | number | undefined } | undefined,
           codexSkills,
         );
 

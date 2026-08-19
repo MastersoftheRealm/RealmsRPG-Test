@@ -58,35 +58,35 @@ export interface GuidedPowersTechniquesL2ModalProps {
    */
   loadoutTpSpent: number;
   tpLimit: number;
-  archetypeAbility?: AbilityName | string | null;
-  abilities?: Partial<Abilities> | null;
+  archetypeAbility?: AbilityName | string | null | undefined;
+  abilities?: Partial<Abilities> | null | undefined;
   /** Innate mode budgets. */
-  innateThreshold?: number;
-  innateEnergyMax?: number;
+  innateThreshold?: number | undefined;
+  innateEnergyMax?: number | undefined;
   onClose: () => void;
   onConfirm: (selectedIds: string[]) => void;
   /** SourceFilter — always-visible `scopeExtra` (same as L3), not collapsed Filters. */
-  scopeExtra?: ReactNode;
+  scopeExtra?: ReactNode | undefined;
   /** Same-type auto-select on path See more. Omit on custom / no-path. */
-  autoSelectPathType?: ArchetypeCategory | null;
+  autoSelectPathType?: ArchetypeCategory | null | undefined;
 }
 
 function energySpentOf(selected: SelectableItem[]): number {
   return selected.reduce((sum, row) => {
-    const data = row.data as { energy?: number } | undefined;
+    const data = row.data as { energy?: number | undefined } | undefined;
     return sum + Math.max(0, Math.floor(data?.energy ?? 0));
   }, 0);
 }
 
 function l2InnateEnergyOf(items: SelectableItem[], id: string): number | undefined {
   const row = items.find((item) => String(item.id) === id);
-  const data = row?.data as { energy?: number } | undefined;
+  const data = row?.data as { energy?: number | undefined } | undefined;
   return data?.energy;
 }
 
 function l2InnateTpOf(items: SelectableItem[], id: string): number {
   const row = items.find((item) => String(item.id) === id);
-  const data = row?.data as { tpCost?: number } | undefined;
+  const data = row?.data as { tpCost?: number | undefined } | undefined;
   if (data?.tpCost != null) return data.tpCost;
   return Math.max(0, Math.floor(row?.totalCost ?? 0));
 }

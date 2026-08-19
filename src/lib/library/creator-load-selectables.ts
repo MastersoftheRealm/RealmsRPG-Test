@@ -7,7 +7,13 @@ import { formatCreatureLevel } from '@/lib/game';
 import { formatListCellLabel } from '@/lib/utils';
 
 export function buildSpeciesSelectableItem(
-  record: { id?: string; docId?: string; name?: string; description?: string; type?: string },
+  record: {
+    id?: string | undefined;
+    docId?: string | undefined;
+    name?: string | undefined;
+    description?: string | undefined;
+    type?: string | undefined;
+  },
   source: 'my' | 'public',
 ): SelectableItem {
   const id = String(record.id ?? record.docId ?? '');
@@ -23,12 +29,12 @@ export function buildSpeciesSelectableItem(
 }
 
 export function buildCreatureSelectableItem(c: {
-  docId?: unknown;
-  id?: unknown;
-  name?: unknown;
-  description?: unknown;
-  level?: number | string | null;
-  type?: unknown;
+  docId?: unknown | undefined;
+  id?: unknown | undefined;
+  name?: unknown | undefined;
+  description?: unknown | undefined;
+  level?: number | string | null | undefined;
+  type?: unknown | undefined;
 }): SelectableItem {
   const id = String(c.docId ?? c.id ?? '');
   return {

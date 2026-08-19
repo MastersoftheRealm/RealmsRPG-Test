@@ -1,9 +1,10 @@
 /**
  * Sheet Action Toolbar
  * ====================
- * Floating action icons for the character sheet.
- * Positioned top-right, below the main navbar.
- * Replaces the old sticky top bar with compact, unintrusive icons.
+ * Character-sheet actions. Below md this is the C4 bottom dock (opaque strip with
+ * a reserved end slot for the RollLog FAB). From md it sits top-right under the
+ * navbar. Do not add a second `fixed bottom-*` here — RollLog uses the shared
+ * `.floating-dock-bottom-right` slot (ADR-0023 / TASK-837).
  *
  * Actions:
  * - Edit/Done toggle (with notification dot for unapplied points)
@@ -19,18 +20,18 @@ import { Pencil, Check, Heart, ArrowUp, Settings, SlidersHorizontal } from 'luci
 
 interface SheetActionToolbarProps {
   isEditMode: boolean;
-  isTempModifierMode?: boolean;
+  isTempModifierMode?: boolean | undefined;
   hasUnappliedPoints: boolean;
   /** Glow on the Temp control when persisted deltas exist (play or inactive). */
-  hasTempModifiers?: boolean;
+  hasTempModifiers?: boolean | undefined;
   onToggleEditMode: () => void;
-  onToggleTempModifierMode?: () => void;
+  onToggleTempModifierMode?: (() => void) | undefined;
   onRecovery: () => void;
   onLevelUp: () => void;
   /** Open character sheet settings (e.g. visibility). Shown for owners. */
-  onSettings?: () => void;
+  onSettings?: (() => void) | undefined;
   /** When false, hide edit/temp/recovery/level-up (view-only mode for non-owners). */
-  canEdit?: boolean;
+  canEdit?: boolean | undefined;
 }
 
 export function SheetActionToolbar({
@@ -54,10 +55,7 @@ export function SheetActionToolbar({
   }
 
   return (
-    <div
-      className="fixed right-4 bottom-4 left-4 z-overlay flex flex-row justify-center gap-2 md:top-24 md:right-4 md:bottom-auto md:left-auto md:flex-col md:justify-start md:gap-2"
-      data-tour-id="sheet-tour-edit"
-    >
+    <div className="sheet-mobile-action-dock" data-tour-id="sheet-tour-edit">
       {/* Edit / Done Toggle */}
       <button
         onClick={onToggleEditMode}

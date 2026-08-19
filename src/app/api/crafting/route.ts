@@ -18,18 +18,18 @@ type Row = {
   data: unknown;
   updated_at: string | null;
   created_at: string | null;
-  status?: string | null;
-  item_name?: string | null;
-  currency_cost?: number | null;
+  status?: string | null | undefined;
+  item_name?: string | null | undefined;
+  currency_cost?: number | null | undefined;
 };
 
 function toSummary(row: Row): CraftingSessionSummary {
   const d = (row.data as Record<string, unknown>) ?? {};
-  const item = d.item as { name?: string } | null;
+  const item = d.item as { name?: string | undefined } | null;
   const currencyCost =
     (row.currency_cost as number) ??
     (d.materialCost as number) ??
-    (item && (d.item as { marketPrice?: number }).marketPrice) ??
+    (item && (d.item as { marketPrice?: number | undefined }).marketPrice) ??
     0;
   return {
     id: row.id,
@@ -104,8 +104,10 @@ export async function POST(request: NextRequest) {
       updatedAt: now,
     } as Record<string, unknown>);
 
-    const item = (cleaned.item as { name?: string; marketPrice?: number } | null) ?? null;
-    const customBase = cleaned.customBaseItem as { name?: string } | null | undefined;
+    const item =
+      (cleaned.item as { name?: string | undefined; marketPrice?: number | undefined } | null) ??
+      null;
+    const customBase = cleaned.customBaseItem as { name?: string | undefined } | null | undefined;
     const itemName = item?.name ?? customBase?.name ?? null;
     const currencyCost = (cleaned.materialCost as number) ?? item?.marketPrice ?? null;
 

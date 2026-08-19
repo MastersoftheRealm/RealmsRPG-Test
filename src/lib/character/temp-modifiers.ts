@@ -102,7 +102,7 @@ export function shouldApplyAbilityTempsToResourceMaxima(
  * Default off — returns the same reference.
  */
 export function withAbilitiesForResourceMaxima<
-  T extends { abilities: Abilities; tempModifiers?: CharacterTempModifiers },
+  T extends { abilities: Abilities; tempModifiers?: CharacterTempModifiers | undefined },
 >(character: T): T {
   if (!shouldApplyAbilityTempsToResourceMaxima(character.tempModifiers)) {
     return character;

@@ -234,7 +234,11 @@ export function useCharacterSheetPageData(id: string) {
           filter: `id=eq.${character.id}`,
         },
         (payload: {
-          new: { id: string; data?: Record<string, unknown>; updated_at?: string | null };
+          new: {
+            id: string;
+            data?: Record<string, unknown> | undefined;
+            updated_at?: string | null | undefined;
+          };
         }) => {
           const data = payload.new?.data;
           if (!data) return;

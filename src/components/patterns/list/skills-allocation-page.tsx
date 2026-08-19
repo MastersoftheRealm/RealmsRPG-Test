@@ -73,9 +73,9 @@ export interface DefenseBonusesCardProps {
   onDefenseChange: (defense: DefenseSkills) => void;
   level: number;
   remainingPoints: number;
-  abilityDefenseBonuses?: Partial<Record<keyof DefenseSkills, number>>;
+  abilityDefenseBonuses?: Partial<Record<keyof DefenseSkills, number>> | undefined;
   skillRules: ReturnType<typeof resolveSkillAllocationRules>;
-  className?: string;
+  className?: string | undefined;
 }
 
 export function DefenseBonusesCard({
@@ -174,37 +174,37 @@ export interface SkillsAllocationPageProps {
   /** Species skill IDs (always proficient, can't remove). Id "0" = "Any" (extra skill point only). */
   speciesSkillIds: Set<string>;
   /** Path-recommended skill IDs (auto-added as proficient, show sourceLabel, can remove). */
-  pathSkillIds?: Set<string>;
+  pathSkillIds?: Set<string> | undefined;
   /** Label for path skills (e.g. archetype name), shown as "(label)" like species. */
-  pathSourceLabel?: string;
+  pathSourceLabel?: string | undefined;
   /** Extra skill points (e.g. when species has skill id "0" = Any) */
-  extraSkillPoints?: number;
+  extraSkillPoints?: number | undefined;
   /** Callback when allocations change */
   onAllocationsChange: (allocations: Record<string, number>) => void;
   /** Callback when defense skills change */
   onDefenseChange: (defense: DefenseSkills) => void;
   /** Optional: ability-derived defense bonuses for cap check */
-  abilityDefenseBonuses?: Partial<Record<keyof DefenseSkills, number>>;
+  abilityDefenseBonuses?: Partial<Record<keyof DefenseSkills, number>> | undefined;
   /** Optional: chosen ability per skill (for multi-ability skills). Key = skill ID (base skill for sub-skills). */
-  skillAbilities?: Record<string, string>;
+  skillAbilities?: Record<string, string> | undefined;
   /** Optional: callback when user changes chosen ability for a skill */
-  onSkillAbilityChange?: (skillId: string, abilityKey: string) => void;
+  onSkillAbilityChange?: ((skillId: string, abilityKey: string) => void) | undefined;
   /** Optional footer (e.g. Back/Continue buttons) */
-  footer?: React.ReactNode;
+  footer?: React.ReactNode | undefined;
   /** Optional content rendered after the description (e.g. path help card) */
-  afterDescription?: React.ReactNode;
+  afterDescription?: React.ReactNode | undefined;
   /** Optional heading-side content (e.g. help icon). */
-  headingAddon?: React.ReactNode;
+  headingAddon?: React.ReactNode | undefined;
   /** Optional help content next to the "Add Sub-Skill" button. */
-  addSubSkillAddon?: React.ReactNode;
+  addSubSkillAddon?: React.ReactNode | undefined;
   /** When true, hide the Defense Bonuses section (e.g. for choose-a-path creation) */
-  hideDefenseBonuses?: boolean;
+  hideDefenseBonuses?: boolean | undefined;
   /** When true, hide sub-skills and the Add Sub-Skill control (Layer 1 path mode). */
-  hideSubSkills?: boolean;
+  hideSubSkills?: boolean | undefined;
   /** When true, omit the page title/description (parent shell owns the step header). */
-  embeddedInShell?: boolean;
+  embeddedInShell?: boolean | undefined;
   /** Optional className */
-  className?: string;
+  className?: string | undefined;
 }
 
 export function SkillsAllocationPage({
@@ -368,7 +368,11 @@ export function SkillsAllocationPage({
   );
 
   const handleAddSubSkills = useCallback(
-    (skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => {
+    (
+      skills: Array<
+        Skill & { selectedBaseSkillId?: string | undefined; autoAddBaseSkill?: Skill | undefined }
+      >,
+    ) => {
       onAllocationsChange(applyAddedSubSkills(allocations, skills));
       setAddSubSkillModalOpen(false);
     },

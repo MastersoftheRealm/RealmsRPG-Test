@@ -7,7 +7,7 @@ import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 const copy = GUIDED_CREATOR_COPY.steps.reveal.portrait;
 
 export interface GuidedPortraitUploadProps {
-  className?: string;
+  className?: string | undefined;
 }
 
 /** Guided reveal portrait — wires guided store to shared CreatorPortraitUpload. */

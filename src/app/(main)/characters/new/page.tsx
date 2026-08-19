@@ -58,7 +58,7 @@ function firstSearchParam(value: string | string[] | undefined): string | null {
 export default async function NewCharacterChooserPage({
   searchParams,
 }: {
-  searchParams: Promise<{ returnTo?: string | string[] }>;
+  searchParams: Promise<{ returnTo?: string | string[] | undefined }>;
 }) {
   const params = await searchParams;
   const returnTo = firstSearchParam(params.returnTo);

@@ -9,10 +9,10 @@ import { getHighestLinkedAbilityKey, getLinkedAbilityKeys } from '@/lib/game/for
 
 export interface CreatorSkillCodexEntry {
   id: string | number;
-  name?: string;
-  category?: string;
-  ability?: string;
-  base_skill_id?: string | number | null;
+  name?: string | undefined;
+  category?: string | undefined;
+  ability?: string | undefined;
+  base_skill_id?: string | number | null | undefined;
 }
 
 export interface CreatorSkillSaveRow {
@@ -21,25 +21,25 @@ export interface CreatorSkillSaveRow {
   category: string;
   skill_val: number;
   prof: boolean;
-  ability?: string;
+  ability?: string | undefined;
   /** Display name of base skill when includeBaseSkillName is set (Advanced parity). */
-  baseSkill?: string;
+  baseSkill?: string | undefined;
 }
 
 export interface BuildCreatorSkillSaveRowsOptions {
   /** Species-granted skill ids (id "0" = Any / ignored). */
-  speciesSkillIds?: string[];
-  codexSkills?: CreatorSkillCodexEntry[];
+  speciesSkillIds?: string[] | undefined;
+  codexSkills?: CreatorSkillCodexEntry[] | undefined;
   /** When true, attach baseSkill display name from codex base_skill_id. */
-  includeBaseSkillName?: boolean;
+  includeBaseSkillName?: boolean | undefined;
   /**
    * Character abilities. Required for multi-ability skills: the Skill Bonus uses the
    * highest linked Ability (GAME_RULES "Skill Bonus Formulas"), so persisting the first
    * codex ability instead makes the sheet disagree with the creator.
    */
-  abilities?: Partial<Abilities>;
+  abilities?: Partial<Abilities> | undefined;
   /** Explicit per-skill Ability choice (skill id → ability key), e.g. `draft.skillAbilities`. */
-  skillAbilities?: Record<string, string | undefined>;
+  skillAbilities?: Record<string, string | undefined> | undefined;
 }
 
 /** Ability persisted for a skill row: explicit choice, else highest linked, else first listed. */

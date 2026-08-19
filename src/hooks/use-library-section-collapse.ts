@@ -39,7 +39,7 @@ export function useLibrarySectionCollapse(
 }
 
 export type LibrarySectionCollapseHeaderProps = {
-  collapsible?: boolean;
-  expanded?: boolean;
-  onExpandedChange?: (expanded: boolean) => void;
+  collapsible?: boolean | undefined;
+  expanded?: boolean | undefined;
+  onExpandedChange?: ((expanded: boolean) => void) | undefined;
 };

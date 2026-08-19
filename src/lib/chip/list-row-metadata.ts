@@ -45,14 +45,14 @@ export type PartsPropertiesHelpKey =
 export type MetadataDetailSection = {
   label: string;
   chips: ChipData[];
-  hideLabelIfSingle?: boolean;
+  hideLabelIfSingle?: boolean | undefined;
   /**
    * When true, section starts collapsed with a chevron toggle (TASK-583).
    * Used for Parts/Properties & Proficiencies; descriptor/metadata sections stay open.
    */
-  defaultCollapsed?: boolean;
+  defaultCollapsed?: boolean | undefined;
   /** InfoTippy beside the section label (Parts/Properties & Proficiencies). */
-  labelHelpKey?: PartsPropertiesHelpKey;
+  labelHelpKey?: PartsPropertiesHelpKey | undefined;
 };
 
 export const PARTS_PROFICIENCIES_LABEL = 'Parts & Proficiencies';
@@ -142,16 +142,16 @@ function pushLabeledFact(
 }
 
 export function buildRangeDamageMetadataChips(opts: {
-  range?: string | number | null;
-  damage?: string | null;
+  range?: string | number | null | undefined;
+  damage?: string | null | undefined;
   /** When Energy is omitted from collapsed columns (e.g. slim modal layouts). */
-  energy?: string | number | null;
+  energy?: string | number | null | undefined;
   /** When Duration is omitted from collapsed columns. */
-  duration?: string | null;
+  duration?: string | null | undefined;
   /** When Area is omitted from collapsed columns. */
-  area?: string | null;
+  area?: string | null | undefined;
   /** When Action Type is omitted from collapsed columns. */
-  actionType?: string | null;
+  actionType?: string | null | undefined;
 }): ChipData[] {
   const chips: ChipData[] = [];
   pushLabeledFact(chips, 'Energy', opts.energy);
@@ -188,13 +188,13 @@ export function mergeDetailSections(
 
 /** Metadata fact chips + optional parts/properties sections for expanded rows. */
 export function buildEntityMetadataDetailSections(opts: {
-  range?: string | number | null;
-  damage?: string | null;
-  energy?: string | number | null;
-  duration?: string | null;
-  area?: string | null;
-  actionType?: string | null;
-  extraSections?: MetadataDetailSection[];
+  range?: string | number | null | undefined;
+  damage?: string | null | undefined;
+  energy?: string | number | null | undefined;
+  duration?: string | null | undefined;
+  area?: string | null | undefined;
+  actionType?: string | null | undefined;
+  extraSections?: MetadataDetailSection[] | undefined;
 }): MetadataDetailSection[] {
   const meta = metadataDetailSection(buildRangeDamageMetadataChips(opts));
   return mergeDetailSections(meta, opts.extraSections);
@@ -202,27 +202,27 @@ export function buildEntityMetadataDetailSections(opts: {
 
 /** Values for ranked GLR facts that the density resolver placed on chips. */
 export interface GlrFactChipSource {
-  actionType?: string | null;
-  area?: string | number | null;
-  abilityRequirement?: { name?: string; level?: number } | null;
-  agilityReduction?: number | null;
-  block?: string | number | null;
-  category?: string | null;
-  criticalRangeIncrease?: number | null;
-  currency?: number | null;
-  damage?: unknown;
-  damageReduction?: number | null;
-  duration?: string | null;
-  energy?: number | null;
-  range?: string | number | null;
-  rarity?: string | null;
-  recovery?: string | null;
-  reqLevel?: string | number | null;
-  trainingPoints?: number | null;
-  uses?: string | number | null;
-  weapon?: string | null;
+  actionType?: string | null | undefined;
+  area?: string | number | null | undefined;
+  abilityRequirement?: { name?: string | undefined; level?: number | undefined } | null | undefined;
+  agilityReduction?: number | null | undefined;
+  block?: string | number | null | undefined;
+  category?: string | null | undefined;
+  criticalRangeIncrease?: number | null | undefined;
+  currency?: number | null | undefined;
+  damage?: unknown | undefined;
+  damageReduction?: number | null | undefined;
+  duration?: string | null | undefined;
+  energy?: number | null | undefined;
+  range?: string | number | null | undefined;
+  rarity?: string | null | undefined;
+  recovery?: string | null | undefined;
+  reqLevel?: string | number | null | undefined;
+  trainingPoints?: number | null | undefined;
+  uses?: string | number | null | undefined;
+  weapon?: string | null | undefined;
   /** Feat governing Ability column when no min-score requirement object exists. */
-  ability?: string | null;
+  ability?: string | null | undefined;
 }
 
 function labeledFactChip(
@@ -322,7 +322,7 @@ export function rankedGlrFactChips(
 export function buildGlrFactDetailSections(opts: {
   chipFacts: readonly GlrFactId[];
   facts: GlrFactChipSource;
-  extraSections?: MetadataDetailSection[];
+  extraSections?: MetadataDetailSection[] | undefined;
 }): MetadataDetailSection[] {
   return mergeDetailSections(
     metadataDetailSection(rankedGlrFactChips(opts.chipFacts, opts.facts)),
@@ -334,7 +334,7 @@ export function buildGlrFactDetailSections(opts: {
 export function glrSurfaceDetailSections(
   surfaceId: GlrSurfaceId,
   facts: GlrFactChipSource,
-  extraSections?: MetadataDetailSection[],
+  extraSections?: MetadataDetailSection[] | undefined,
 ): MetadataDetailSection[] {
   return buildGlrFactDetailSections({
     chipFacts: resolveSurfaceLayout(surfaceId).chipFacts,
@@ -343,42 +343,17 @@ export function glrSurfaceDetailSections(
   });
 }
 
-/** Values for ranked GLR facts that the density resolver placed on chips. */
-export interface GlrFactChipSource {
-  actionType?: string | null;
-  area?: string | number | null;
-  abilityRequirement?: { name?: string; level?: number } | null;
-  agilityReduction?: number | null;
-  block?: string | number | null;
-  category?: string | null;
-  criticalRangeIncrease?: number | null;
-  currency?: number | null;
-  damage?: unknown;
-  damageReduction?: number | null;
-  duration?: string | null;
-  energy?: number | null;
-  range?: string | number | null;
-  rarity?: string | null;
-  recovery?: string | null;
-  reqLevel?: string | number | null;
-  trainingPoints?: number | null;
-  uses?: string | number | null;
-  weapon?: string | null;
-  /** Feat governing Ability column when no min-score requirement object exists. */
-  ability?: string | null;
-}
-
 /** Convenience: metadata chips + parts section (powers, techniques, modals). */
 export function buildPartsAndMetadataDetailSections(opts: {
-  range?: string | number | null;
-  damage?: string | null;
-  energy?: string | number | null;
-  duration?: string | null;
-  area?: string | null;
-  actionType?: string | null;
+  range?: string | number | null | undefined;
+  damage?: string | null | undefined;
+  energy?: string | number | null | undefined;
+  duration?: string | null | undefined;
+  area?: string | null | undefined;
+  actionType?: string | null | undefined;
   partChips: ChipData[];
   /** Tailors Parts & Proficiencies InfoTippy copy (default generic parts). */
-  partsFamily?: 'power' | 'technique' | 'parts';
+  partsFamily?: 'power' | 'technique' | 'parts' | undefined;
 }): MetadataDetailSection[] {
   const parts = partsProficienciesSection(opts.partChips, opts.partsFamily ?? 'parts');
   return buildEntityMetadataDetailSections({

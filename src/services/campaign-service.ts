@@ -46,7 +46,10 @@ export async function getCampaignCharacterForView(
   characterId: string,
 ): Promise<GetCharacterResult> {
   const data = await apiFetch<
-    Character & { libraryForView?: LibraryForView; enrichment?: CharacterViewEnrichment }
+    Character & {
+      libraryForView?: LibraryForView | undefined;
+      enrichment?: CharacterViewEnrichment | undefined;
+    }
   >(
     `${API_BASE}/${encodeURIComponent(campaignId)}/characters/${encodeURIComponent(userId)}/${encodeURIComponent(characterId)}`,
     { cache: 'no-store' },

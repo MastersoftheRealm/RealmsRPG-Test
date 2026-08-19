@@ -17,35 +17,35 @@ export interface GlrHeaderColumn {
   key: string;
   label: string;
   align: 'left' | 'center' | 'right';
-  sortable?: boolean;
-  width?: string;
+  sortable?: boolean | undefined;
+  width?: string | undefined;
 }
 
 export interface GlrExtraColumn {
   key: string;
   label: string;
   width: string;
-  align?: 'left' | 'center' | 'right';
-  sortable?: boolean;
+  align?: 'left' | 'center' | 'right' | undefined;
+  sortable?: boolean | undefined;
   /** Insert after this header key (default: append). Use `name` to sit after identity. */
-  afterKey?: string;
+  afterKey?: string | undefined;
 }
 
 export interface GlrChromeOptions {
-  nameLabel?: string;
-  nameKey?: string;
-  nameWidth?: string;
+  nameLabel?: string | undefined;
+  nameKey?: string | undefined;
+  nameWidth?: string | undefined;
   /** browse → uppercase catalog headerLabel; play/select → titleLabel. */
-  labelStyle?: 'header' | 'title';
-  keyStyle?: 'canonical' | 'usm';
-  sortable?: boolean;
-  nameAlign?: 'left' | 'center' | 'right';
+  labelStyle?: 'header' | 'title' | undefined;
+  keyStyle?: 'canonical' | 'usm' | undefined;
+  sortable?: boolean | undefined;
+  nameAlign?: 'left' | 'center' | 'right' | undefined;
   /** Identity / roll / description tracks that are not ranked facts. */
-  extraColumns?: GlrExtraColumn[];
+  extraColumns?: GlrExtraColumn[] | undefined;
   /** Override fact or extra track sizes (e.g. sheet minmax). */
-  trackOverrides?: Record<string, string>;
+  trackOverrides?: Record<string, string> | undefined;
   /** Data-column keys after name (facts + extras). Name stays first. */
-  columnOrder?: string[];
+  columnOrder?: string[] | undefined;
 }
 
 function labelStyleForMode(mode: GlrDensityMode): 'header' | 'title' {

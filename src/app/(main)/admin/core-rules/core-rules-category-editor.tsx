@@ -23,8 +23,8 @@ export function CategoryEditor({
   category: CategoryId;
   data: Record<string, unknown>;
   onChange: (data: Record<string, unknown>) => void;
-  creatureData?: Record<string, unknown>;
-  onCreatureChange?: (data: Record<string, unknown>) => void;
+  creatureData?: Record<string, unknown> | undefined;
+  onCreatureChange?: ((data: Record<string, unknown>) => void) | undefined;
 }) {
   const set = (key: string, value: unknown) => {
     onChange({ ...data, [key]: value });

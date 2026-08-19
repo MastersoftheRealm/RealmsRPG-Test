@@ -28,7 +28,7 @@ type CharRow = {
   data: unknown;
   created_at: string | null;
   updated_at: string | null;
-  visibility?: string | null;
+  visibility?: string | null | undefined;
 };
 
 function rowToCharacter(row: CharRow): Character {
@@ -106,10 +106,10 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
         const inCampaign = list.some((c) => {
           const arr =
             (c.characters as Array<{
-              user_id?: string;
-              character_id?: string;
-              userId?: string;
-              characterId?: string;
+              user_id?: string | undefined;
+              character_id?: string | undefined;
+              userId?: string | undefined;
+              characterId?: string | undefined;
             }>) ?? [];
           return arr.some(
             (cc) =>
@@ -211,7 +211,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
 
     const savedUpdatedAt =
-      typeof (updated as { updated_at?: string | null }).updated_at === 'string'
+      typeof (updated as { updated_at?: string | null | undefined }).updated_at === 'string'
         ? (updated as { updated_at: string }).updated_at
         : now;
     return NextResponse.json({ ok: true, updatedAt: savedUpdatedAt });

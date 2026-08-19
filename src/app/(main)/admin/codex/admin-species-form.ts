@@ -105,7 +105,7 @@ export function speciesToFormState(
     adultAge: adult,
     maxAge: max,
     languages: (s.languages || []).join(', '),
-    isStarter: Boolean((s as Species & { is_starter?: boolean }).is_starter),
+    isStarter: Boolean((s as Species & { is_starter?: boolean | undefined }).is_starter),
     imageId: s.image_id ?? null,
     imageUrl: s.image_url ?? null,
   };

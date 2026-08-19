@@ -11,10 +11,10 @@ export type SkillCategory = 'combat' | 'physical' | 'mental' | 'social' | 'knowl
 export interface Skill {
   id: number | string;
   name: string;
-  category?: SkillCategory;
-  description?: string;
-  ability?: string; // Associated ability
-  untrained?: boolean; // Can be used untrained
+  category?: SkillCategory | undefined;
+  description?: string | undefined;
+  ability?: string | undefined; // Associated ability
+  untrained?: boolean | undefined; // Can be used untrained
 }
 
 /** Character's skill allocation */
@@ -22,7 +22,7 @@ export interface CharacterSkill {
   id: number | string;
   name: string;
   ranks: number;
-  bonus?: number; // Calculated bonus
+  bonus?: number | undefined; // Calculated bonus
 }
 
 /** Skills object on character */
@@ -33,15 +33,15 @@ export interface CharacterSkills {
 /** Lean skill row persisted on sheet / creator (array format). */
 export interface CharacterSkillRow {
   id: string | number;
-  name?: string;
-  skill_val?: number;
-  prof?: boolean;
-  ability?: string;
-  availableAbilities?: string[];
-  category?: string;
-  baseSkillId?: number;
-  selectedBaseSkillId?: string;
-  baseSkill?: string;
+  name?: string | undefined;
+  skill_val?: number | undefined;
+  prof?: boolean | undefined;
+  ability?: string | undefined;
+  availableAbilities?: string[] | undefined;
+  category?: string | undefined;
+  baseSkillId?: number | undefined;
+  selectedBaseSkillId?: string | undefined;
+  baseSkill?: string | undefined;
 }
 
 /** Defense skill allocations */

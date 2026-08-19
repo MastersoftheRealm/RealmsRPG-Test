@@ -19,38 +19,38 @@ import type { CharacterPower, CharacterTechnique, Item } from '@/types';
 export interface CodexPartRow {
   id: string | number;
   name: string;
-  description?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
-  op_1_desc?: string;
-  op_2_desc?: string;
-  op_3_desc?: string;
+  description?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
+  op_1_desc?: string | undefined;
+  op_2_desc?: string | undefined;
+  op_3_desc?: string | undefined;
 }
 
 export interface CodexPropertyRow {
   id: string | number;
   name: string;
-  description?: string;
-  base_tp?: number;
-  tp_cost?: number;
+  description?: string | undefined;
+  base_tp?: number | undefined;
+  tp_cost?: number | undefined;
 }
 
 type PartPayload = {
-  id?: string | number;
-  name?: string;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
 };
 
 type PropertyPayload = {
-  id?: string | number;
-  name?: string;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
 };
 
 export type { PartTpVariant } from '@/lib/calculators/part-training-points';

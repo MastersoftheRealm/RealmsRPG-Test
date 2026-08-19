@@ -22,31 +22,31 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   /** Simple mode: title text for header */
-  title?: string;
+  title?: string | undefined;
   /** Simple mode: description text for header */
-  description?: string;
+  description?: string | undefined;
   /** Custom mode: full control over header content */
-  header?: React.ReactNode;
+  header?: React.ReactNode | undefined;
   /** Custom mode: footer content (e.g., action buttons, selection count).
    *  Modal applies horizontal/vertical inset — do not add a second `p-4`/`px-6` on the row. */
-  footer?: React.ReactNode;
+  footer?: React.ReactNode | undefined;
   children: React.ReactNode;
-  className?: string;
+  className?: string | undefined;
   /** Content area className (use for custom padding/layout) */
-  contentClassName?: string;
+  contentClassName?: string | undefined;
   /**
    * Desktop max-width. Prefer `sm`–`md` for confirms, `lg`–`2xl` for typical forms/lists,
    * `full` for high-complexity editors (admin codex, multi-section forms).
    * On viewports &lt; md with `fullScreenOnMobile`, size is ignored (full viewport).
    */
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full';
-  showCloseButton?: boolean;
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | 'full' | undefined;
+  showCloseButton?: boolean | undefined;
   /** Use flex layout for scrollable content with sticky header/footer */
-  flexLayout?: boolean;
+  flexLayout?: boolean | undefined;
   /** When true, render full-screen on viewports < md (768px). Sticky header/footer, scrollable content. See MOBILE_UX.md. */
-  fullScreenOnMobile?: boolean;
+  fullScreenOnMobile?: boolean | undefined;
   /** Accessible name for the dialog when using custom content (no title/header). Overrides default "Dialog". */
-  titleA11y?: string;
+  titleA11y?: string | undefined;
 }
 
 const sizeClasses = {

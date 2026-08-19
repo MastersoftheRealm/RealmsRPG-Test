@@ -39,8 +39,8 @@ export interface GuidedLoadoutDraftSelection {
 
 export function isItemSelectedInDraft(
   draft: {
-    loadoutWeapons?: PathItemRecommendation[];
-    loadoutArmor?: PathItemRecommendation[];
+    loadoutWeapons?: PathItemRecommendation[] | undefined;
+    loadoutArmor?: PathItemRecommendation[] | undefined;
     armaments: PathItemRecommendation[];
     equipment: PathItemRecommendation[];
   },

@@ -69,16 +69,16 @@ export function buildGuidedFeatsL2Items(opts: {
   feats: Feat[];
   recommendedIds: string[];
   /** Keep currently selected rows visible even when filters would otherwise hide them. */
-  selectedIds?: string[];
+  selectedIds?: string[] | undefined;
   requirementCharacter: CharacterForFeatRequirement;
   codexSkills: Skill[];
-  categories?: string[];
-  stateFeatMode?: StateFeatFilterMode;
+  categories?: string[] | undefined;
+  stateFeatMode?: StateFeatFilterMode | undefined;
   /** Badge label for path / guidance recommended feats (only when the path filter is off). */
-  recommendedBadgeLabel?: string;
+  recommendedBadgeLabel?: string | undefined;
   /** Live path index — same collector as Codex (ADR-0014). */
-  pathIndex?: PathRecommendationIndex;
-  selectedPathIds?: string[];
+  pathIndex?: PathRecommendationIndex | undefined;
+  selectedPathIds?: string[] | undefined;
 }): SelectableItem[] {
   const {
     featType,

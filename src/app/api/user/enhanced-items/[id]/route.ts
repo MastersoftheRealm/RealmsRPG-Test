@@ -33,7 +33,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
     const validation = await validateJson(request, enhancedItemPatchSchema);
     if (!validation.success) return validation.error;
-    const body = validation.data as { potency?: number; name?: string };
+    const body = validation.data as { potency?: number | undefined; name?: string | undefined };
 
     const { id } = await params;
     const supabase = await createClient();

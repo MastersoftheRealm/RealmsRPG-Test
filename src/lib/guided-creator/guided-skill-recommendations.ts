@@ -17,7 +17,7 @@ export type GuidedSkillSuggestionKind = 'path-declined' | 'ability-match';
 
 export interface GuidedSkillSuggestionBadge {
   label: string;
-  color?: GridListBadgeColor;
+  color?: GridListBadgeColor | undefined;
 }
 
 export interface GuidedSkillSuggestion {
@@ -34,19 +34,19 @@ export interface BuildGuidedSkillSuggestionsOptions {
   codexSkills: Skill[];
   abilities: Abilities;
   declinedPathSkillIds: string[];
-  pathSourceLabel?: string;
+  pathSourceLabel?: string | undefined;
   archetypeType: ArchetypeCategory | null;
-  archetype?: Pick<
-    Archetype,
-    'archetype_ability' | 'secondary_ability' | 'pow_abil' | 'mart_abil'
-  > | null;
-  powAbil?: AbilityName | null;
-  martAbil?: AbilityName | null;
+  archetype?:
+    | Pick<Archetype, 'archetype_ability' | 'secondary_ability' | 'pow_abil' | 'mart_abil'>
+    | null
+    | undefined;
+  powAbil?: AbilityName | null | undefined;
+  martAbil?: AbilityName | null | undefined;
   pathSkillIds: string[];
   speciesSkillIds: string[];
   selectedSkillIds: Set<string>;
   /** When false, ability-match suggestions are omitted (declined path skills still show). */
-  includeAbilityMatches?: boolean;
+  includeAbilityMatches?: boolean | undefined;
 }
 
 export interface BuildGuidedSkillSuggestionsResult {

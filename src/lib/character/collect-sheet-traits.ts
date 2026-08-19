@@ -17,22 +17,24 @@ export interface SheetTraitRow {
 }
 
 export interface VanillaTraitFields {
-  ancestryTraits?: string[];
-  flawTrait?: string | null;
-  characteristicTrait?: string | null;
-  speciesTraits?: string[];
+  ancestryTraits?: string[] | undefined;
+  flawTrait?: string | null | undefined;
+  characteristicTrait?: string | null | undefined;
+  speciesTraits?: string[] | undefined;
 }
 
 export interface CollectSheetTraitsInput {
-  speciesTraitsFromCodex?: string[];
-  ancestry?: {
-    selectedTraits?: string[];
-    selectedFlaw?: string | null;
-    selectedCharacteristic?: string | null;
-  };
-  vanillaTraits?: VanillaTraitFields;
+  speciesTraitsFromCodex?: string[] | undefined;
+  ancestry?:
+    | {
+        selectedTraits?: string[] | undefined;
+        selectedFlaw?: string | null | undefined;
+        selectedCharacteristic?: string | null | undefined;
+      }
+    | undefined;
+  vanillaTraits?: VanillaTraitFields | undefined;
   /** Legacy top-level character.traits (names). */
-  legacyTraits?: Array<string | { name?: string }>;
+  legacyTraits?: Array<string | { name?: string | undefined }> | undefined;
 }
 
 function traitKey(name: string): string {

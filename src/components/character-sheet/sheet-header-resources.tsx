@@ -29,25 +29,25 @@ export function SheetHeaderResources({
   onEnergyPointsChange,
 }: {
   actionPoints: number;
-  onActionPointsChange?: (value: number) => void;
+  onActionPointsChange?: ((value: number) => void) | undefined;
   currentHealth: number;
   maxHealth: number;
-  onHealthChange?: (value: number) => void;
+  onHealthChange?: ((value: number) => void) | undefined;
   currentEnergy: number;
   maxEnergy: number;
-  onEnergyChange?: (value: number) => void;
+  onEnergyChange?: ((value: number) => void) | undefined;
   terminal: number;
-  terminalTempDelta?: number;
-  onTerminalTempChange?: (delta: number) => void;
-  innateThreshold?: number;
-  innatePools?: number;
+  terminalTempDelta?: number | undefined;
+  onTerminalTempChange?: ((delta: number) => void) | undefined;
+  innateThreshold?: number | undefined;
+  innatePools?: number | undefined;
   isEditMode: boolean;
-  isTempModifierMode?: boolean;
+  isTempModifierMode?: boolean | undefined;
   healthPoints: number;
   energyPoints: number;
   totalHEPool: number;
-  onHealthPointsChange?: (value: number) => void;
-  onEnergyPointsChange?: (value: number) => void;
+  onHealthPointsChange?: ((value: number) => void) | undefined;
+  onEnergyPointsChange?: ((value: number) => void) | undefined;
 }) {
   return (
     /* Right: Action Points (left, spans vertically) + Health & Energy (right) */

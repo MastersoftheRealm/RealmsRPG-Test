@@ -24,7 +24,7 @@ export type PowersTechniquesKind = 'powers' | 'techniques';
 
 export interface PowerTechniqueCardFacts {
   name: string;
-  description?: string;
+  description?: string | undefined;
   /** Title-adjacent budget descriptors (Training Points only). */
   titleChips: ChipData[];
   /**
@@ -33,12 +33,12 @@ export interface PowerTechniqueCardFacts {
    */
   detailChips: ChipData[];
   /** @deprecated Prefer detailChips Energy; kept empty for Loadout parity. */
-  tagline?: string;
+  tagline?: string | undefined;
   tpCost: number;
   /** Energy cost when known (filter / innate gate). */
-  energy?: number;
+  energy?: number | undefined;
   /** Capitalized Action Type value for filters (without "Action Type" prefix). */
-  actionType?: string;
+  actionType?: string | undefined;
 }
 
 function toBudgetKind(kind: PowersTechniquesKind): PowerTechniqueBudgetKind {
@@ -180,10 +180,10 @@ function toEnergyCostPick(
  * already-resolved library rows (Advanced finalize).
  */
 export function findHighestEnergyCostPick(args: {
-  powerIds?: Iterable<string>;
-  techniqueIds?: Iterable<string>;
-  powers?: Array<LibraryPower | undefined>;
-  techniques?: Array<LibraryTechnique | undefined>;
+  powerIds?: Iterable<string> | undefined;
+  techniqueIds?: Iterable<string> | undefined;
+  powers?: Array<LibraryPower | undefined> | undefined;
+  techniques?: Array<LibraryTechnique | undefined> | undefined;
   powerPartsDb: PowerPart[];
   techniquePartsDb: TechniquePart[];
 }): EnergyCostPick | null {

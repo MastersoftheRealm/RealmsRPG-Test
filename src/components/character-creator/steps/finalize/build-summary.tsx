@@ -247,13 +247,20 @@ export function BuildSummary({
                       name: String(p.name ?? ''),
                       description: String(p.description ?? ''),
                       parts: Array.isArray(p.parts) ? (p.parts as PowerDocument['parts']) : [],
-                      damage: (p as CharacterPower & { damage?: PowerDocument['damage'] }).damage,
-                      actionType: (p as CharacterPower & { actionType?: string }).actionType,
-                      isReaction: (p as CharacterPower & { isReaction?: boolean }).isReaction,
-                      range: (p as CharacterPower & { range?: PowerDocument['range'] }).range,
-                      area: (p as CharacterPower & { area?: PowerDocument['area'] }).area,
-                      duration: (p as CharacterPower & { duration?: PowerDocument['duration'] })
-                        .duration,
+                      damage: (
+                        p as CharacterPower & { damage?: PowerDocument['damage'] | undefined }
+                      ).damage,
+                      actionType: (p as CharacterPower & { actionType?: string | undefined })
+                        .actionType,
+                      isReaction: (p as CharacterPower & { isReaction?: boolean | undefined })
+                        .isReaction,
+                      range: (p as CharacterPower & { range?: PowerDocument['range'] | undefined })
+                        .range,
+                      area: (p as CharacterPower & { area?: PowerDocument['area'] | undefined })
+                        .area,
+                      duration: (
+                        p as CharacterPower & { duration?: PowerDocument['duration'] | undefined }
+                      ).duration,
                     };
                     const display = derivePowerDisplay(doc, powerPartsDb ?? []);
                     const en = typeof display.energy === 'number' ? display.energy : '-';
@@ -281,14 +288,21 @@ export function BuildSummary({
                       description: String(t.description ?? ''),
                       parts: Array.isArray(t.parts) ? (t.parts as TechniqueDocument['parts']) : [],
                       damage:
-                        Array.isArray((t as CharacterTechnique & { damage?: unknown }).damage) &&
-                        (t as CharacterTechnique & { damage: unknown[] }).damage[0]
+                        Array.isArray(
+                          (t as CharacterTechnique & { damage?: unknown | undefined }).damage,
+                        ) && (t as CharacterTechnique & { damage: unknown[] }).damage[0]
                           ? ((t as CharacterTechnique & { damage: unknown[] })
                               .damage[0] as TechniqueDocument['damage'])
-                          : (t as CharacterTechnique & { damage?: TechniqueDocument['damage'] })
-                              .damage,
-                      weapon: (t as CharacterTechnique & { weapon?: TechniqueDocument['weapon'] })
-                        .weapon,
+                          : (
+                              t as CharacterTechnique & {
+                                damage?: TechniqueDocument['damage'] | undefined;
+                              }
+                            ).damage,
+                      weapon: (
+                        t as CharacterTechnique & {
+                          weapon?: TechniqueDocument['weapon'] | undefined;
+                        }
+                      ).weapon,
                     };
                     const display = deriveTechniqueDisplay(doc, techniquePartsDb ?? []);
                     const en = typeof display.energy === 'number' ? display.energy : '-';

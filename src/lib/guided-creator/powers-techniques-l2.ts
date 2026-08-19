@@ -51,7 +51,11 @@ export function pathRecommendationKindForL2(
 }
 
 function toSelectableHeaders(
-  headers: ReadonlyArray<{ key: string; label: string; align?: 'left' | 'center' | 'right' }>,
+  headers: ReadonlyArray<{
+    key: string;
+    label: string;
+    align?: 'left' | 'center' | 'right' | undefined;
+  }>,
 ) {
   return headers.map((h) => ({
     key: h.key,
@@ -118,7 +122,7 @@ export function buildPowersTechniquesL2Items(opts: {
   techniquePartsDb: TechniquePart[];
   energyInput: GuidedL1MaxEnergyInput;
   /** Innate mode: max Energy per pick (Innate Threshold). */
-  innateThreshold?: number;
+  innateThreshold?: number | undefined;
 }): SelectableItem[] {
   const {
     kind,
@@ -237,7 +241,7 @@ export function computeL2PowersTechniquesTpSpent(
   loadoutTpSpent: number,
 ): number {
   const combat = selected.reduce((sum, row) => {
-    const data = row.data as { tpCost?: number } | undefined;
+    const data = row.data as { tpCost?: number | undefined } | undefined;
     return sum + Math.max(0, Math.floor(data?.tpCost ?? row.totalCost ?? 0));
   }, 0);
   return loadoutTpSpent + combat;

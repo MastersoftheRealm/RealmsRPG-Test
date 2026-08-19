@@ -26,7 +26,11 @@ const CREATURE_FEAT_COLUMNS = [
   { key: 'lvl_req', label: 'REQ. LVL' },
 ];
 
-export function CodexCreatureFeatsTab({ codexMode = 'public' }: { codexMode?: 'public' | 'my' }) {
+export function CodexCreatureFeatsTab({
+  codexMode = 'public',
+}: {
+  codexMode?: 'public' | 'my' | undefined;
+}) {
   const loadPublicCodex = codexMode === 'public';
   const {
     data: creatureFeats,

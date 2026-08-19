@@ -38,29 +38,29 @@ export interface AbilityScoreEditorProps {
   /** Callback when an ability changes */
   onAbilityChange: (ability: AbilityName, value: number) => void;
   /** Maximum value an ability can be (default: 3) */
-  maxAbility?: number;
+  maxAbility?: number | undefined;
   /** Minimum value an ability can be (default: -2) */
-  minAbility?: number;
+  minAbility?: number | undefined;
   /** Maximum total negative sum allowed (default: -3, set to null to disable) */
-  maxNegativeSum?: number | null;
+  maxNegativeSum?: number | null | undefined;
   /** Whether the component is in edit mode (default: true) */
-  isEditMode?: boolean;
+  isEditMode?: boolean | undefined;
   /** Power archetype ability name (for purple highlight) */
-  powerAbility?: AbilityName;
+  powerAbility?: AbilityName | undefined;
   /** Martial archetype ability name (for red highlight) */
-  martialAbility?: AbilityName;
+  martialAbility?: AbilityName | undefined;
   /** Path secondary recommended ability (pill when distinct from power/martial) */
-  secondaryAbility?: AbilityName;
+  secondaryAbility?: AbilityName | undefined;
   /** DEPRECATED: Use powerAbility/martialAbility instead */
-  highlightedAbilities?: AbilityName[];
+  highlightedAbilities?: AbilityName[] | undefined;
   /** Compact layout - 3 columns with short names (default: false) */
-  compact?: boolean;
+  compact?: boolean | undefined;
   /** Hide the points status bar for custom header (default: false) */
-  hidePointsStatus?: boolean;
+  hidePointsStatus?: boolean | undefined;
   /** Whether high abilities (4+) cost 2 points each (default: true) */
-  useHighAbilityCost?: boolean;
+  useHighAbilityCost?: boolean | undefined;
   /** sheet = character-sheet tile row; default = legacy card grid with descriptions */
-  variant?: 'default' | 'sheet';
+  variant?: 'default' | 'sheet' | undefined;
 }
 
 const ABILITY_ORDER: AbilityName[] = [

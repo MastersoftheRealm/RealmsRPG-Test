@@ -36,7 +36,7 @@ export function resolveLibraryActiveTab(
   activeTab: TabType,
   options: {
     isEditMode: boolean;
-    tabVisibility?: Partial<Record<TabType, boolean>>;
+    tabVisibility?: Partial<Record<TabType, boolean>> | undefined;
   },
 ): TabType {
   const visibility = { ...DEFAULT_TAB_VISIBILITY, ...(options.tabVisibility ?? {}) };

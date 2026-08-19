@@ -4,119 +4,149 @@ import type { SortState } from '@/components/patterns/list/list-header';
 import type { ListHeaderRowChrome } from '@/components/patterns/list/grid-list-row-chrome';
 import type { ListRowThumbnailProps } from '@/components/patterns/list/list-row-thumbnail';
 import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';
+import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 
 /** Optional per-row chrome passed through to GridListRow (character sheet edit/use flows). */
-export type EntityRowExtras = {
-  columns?: ColumnValue[];
-  gridColumns?: string;
-  leftSlot?: ReactNode;
-  rightSlot?: ReactNode;
-  onDelete?: () => void;
-  badges?: Array<{ label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' }>;
-  equipped?: boolean;
-  innate?: boolean;
-  hideInnateBadge?: boolean;
-  requirements?: ReactNode;
-  partsChips?: ChipData[];
-  chips?: ChipData[];
-  chipsLabel?: string;
-  totalTp?: number;
-  columnSpans?: (number | undefined)[];
-  detailSections?: MetadataDetailSection[];
-  uses?: { current: number; max: number };
-  hideUsesInName?: boolean;
-  nameContent?: ReactNode;
+type EntityRowExtrasFields = {
+  columns?: ColumnValue[] | undefined;
+  gridColumns?: string | undefined;
+  leftSlot?: ReactNode | undefined;
+  rightSlot?: ReactNode | undefined;
+  onDelete?: (() => void) | undefined;
+  badges?:
+    | Array<{
+        label: string;
+        color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' | undefined;
+      }>
+    | undefined;
+  equipped?: boolean | undefined;
+  innate?: boolean | undefined;
+  hideInnateBadge?: boolean | undefined;
+  requirements?: ReactNode | undefined;
+  partsChips?: ChipData[] | undefined;
+  chips?: ChipData[] | undefined;
+  chipsLabel?: string | undefined;
+  totalTp?: number | undefined;
+  columnSpans?: (number | undefined)[] | undefined;
+  detailSections?: MetadataDetailSection[] | undefined;
+  uses?: { current: number; max: number } | undefined;
+  hideUsesInName?: boolean | undefined;
+  nameContent?: ReactNode | undefined;
   /** In-box expanded description after-slot (TASK-783). */
-  descriptionAfter?: ReactNode;
-  supplementalExpandedContent?: ReactNode;
+  descriptionAfter?: ReactNode | undefined;
+  supplementalExpandedContent?: ReactNode | undefined;
   /** Art-capable rows: pair with ListHeader `hasThumbnailColumn`. */
-  thumbnail?: ListRowThumbnailProps;
+  thumbnail?: ListRowThumbnailProps | undefined;
 };
 
-export type EntityListControls = {
-  sortState?: SortState;
-  onSort?: (columnKey: string) => void;
-  rowChrome?: ListHeaderRowChrome;
-  onAdd?: () => void;
-  addLabel?: string;
-  emptyMessage?: string;
+export type EntityRowExtras = AllowUndefinedOptionals<EntityRowExtrasFields>;
+
+type EntityListControlsFields = {
+  sortState?: SortState | undefined;
+  onSort?: ((columnKey: string) => void) | undefined;
+  rowChrome?: ListHeaderRowChrome | undefined;
+  onAdd?: (() => void) | undefined;
+  addLabel?: string | undefined;
+  emptyMessage?: string | undefined;
   /** Multi-section character sheet library tabs: session collapse (empty → closed). */
-  collapsible?: boolean;
+  collapsible?: boolean | undefined;
   /**
    * Heading level for the internal SectionHeader. Default `2`.
    * Nested creator lists (e.g. creature Inventory) pass `3`.
    */
-  headingLevel?: 2 | 3 | 4;
+  headingLevel?: 2 | 3 | 4 | undefined;
 };
 
-export type EntityPowerRow = {
-  id?: string | number;
+export type EntityListControls = AllowUndefinedOptionals<EntityListControlsFields>;
+
+type EntityPowerRowFields = {
+  id?: string | number | undefined;
   name: string;
-  description?: string;
-  actionType?: string;
-  damage?: string | ReactNode;
-  area?: string;
-  duration?: string;
-  energyCost?: number;
-  innate?: boolean;
-  partsChips?: ChipData[];
-  totalTp?: number;
-  requirements?: ReactNode;
+  description?: string | undefined;
+  actionType?: string | undefined;
+  damage?: string | ReactNode | undefined;
+  area?: string | undefined;
+  duration?: string | undefined;
+  energyCost?: number | undefined;
+  innate?: boolean | undefined;
+  partsChips?: ChipData[] | undefined;
+  totalTp?: number | undefined;
+  requirements?: ReactNode | undefined;
 } & EntityRowExtras;
 
-export type EntityTechniqueRow = {
-  id?: string | number;
+export type EntityPowerRow = AllowUndefinedOptionals<EntityPowerRowFields>;
+
+type EntityTechniqueRowFields = {
+  id?: string | number | undefined;
   name: string;
-  description?: string;
-  actionType?: string;
-  energyCost?: number;
-  weaponName?: string;
-  tp?: number | string;
-  partsChips?: ChipData[];
-  totalTp?: number;
+  description?: string | undefined;
+  actionType?: string | undefined;
+  energyCost?: number | undefined;
+  weaponName?: string | undefined;
+  tp?: number | string | undefined;
+  partsChips?: ChipData[] | undefined;
+  totalTp?: number | undefined;
 } & EntityRowExtras;
 
-export type EntityWeaponRow = {
-  id?: string | number;
+export type EntityTechniqueRow = AllowUndefinedOptionals<EntityTechniqueRowFields>;
+
+type EntityWeaponRowFields = {
+  id?: string | number | undefined;
   name: string;
-  description?: string;
-  damage?: string;
-  range?: string;
-  attackBonus?: number;
-  chips?: ChipData[];
+  description?: string | undefined;
+  damage?: string | undefined;
+  range?: string | undefined;
+  attackBonus?: number | undefined;
+  chips?: ChipData[] | undefined;
 } & EntityRowExtras;
 
-export type EntityShieldRow = {
-  id?: string | number;
+export type EntityWeaponRow = AllowUndefinedOptionals<EntityWeaponRowFields>;
+
+type EntityShieldRowFields = {
+  id?: string | number | undefined;
   name: string;
-  description?: string;
-  damage?: string;
-  properties?: Array<{ id?: number; name?: string; op_1_lvl?: number }>;
-  chips?: ChipData[];
+  description?: string | undefined;
+  damage?: string | undefined;
+  properties?:
+    | Array<{
+        id?: number | undefined;
+        name?: string | undefined;
+        op_1_lvl?: number | undefined;
+      }>
+    | undefined;
+  chips?: ChipData[] | undefined;
 } & EntityRowExtras;
 
-export type EntityArmorRow = {
-  id?: string | number;
+export type EntityShieldRow = AllowUndefinedOptionals<EntityShieldRowFields>;
+
+type EntityArmorRowFields = {
+  id?: string | number | undefined;
   name: string;
-  description?: string;
-  damageReduction?: number;
-  armorValue?: number;
-  chips?: ChipData[];
+  description?: string | undefined;
+  damageReduction?: number | undefined;
+  armorValue?: number | undefined;
+  chips?: ChipData[] | undefined;
 } & EntityRowExtras;
 
-export type EntityEquipmentRow = {
-  id?: string | number;
+export type EntityArmorRow = AllowUndefinedOptionals<EntityArmorRowFields>;
+
+type EntityEquipmentRowFields = {
+  id?: string | number | undefined;
   name: string;
-  description?: string;
-  type?: string;
-  quantity?: number;
+  description?: string | undefined;
+  type?: string | undefined;
+  quantity?: number | undefined;
 } & EntityRowExtras;
 
-export type EntityFeatRow = {
-  id?: string | number;
+export type EntityEquipmentRow = AllowUndefinedOptionals<EntityEquipmentRowFields>;
+
+type EntityFeatRowFields = {
+  id?: string | number | undefined;
   name: string;
-  description?: string;
-  maxUses?: number;
-  currentUses?: number;
-  recovery?: string;
+  description?: string | undefined;
+  maxUses?: number | undefined;
+  currentUses?: number | undefined;
+  recovery?: string | undefined;
 } & EntityRowExtras;
+
+export type EntityFeatRow = AllowUndefinedOptionals<EntityFeatRowFields>;

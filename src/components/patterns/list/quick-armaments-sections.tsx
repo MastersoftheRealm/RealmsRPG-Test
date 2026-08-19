@@ -34,23 +34,28 @@ export const QUICK_WEAPON_COL = {
 } as const;
 
 export type QuickArmamentAbilities = {
-  strength?: number;
-  agility?: number;
-  acuity?: number;
+  strength?: number | undefined;
+  agility?: number | undefined;
+  acuity?: number | undefined;
 };
 
 export type QuickArmamentItem = {
-  id?: string | number;
+  id?: string | number | undefined;
   name: string;
-  description?: string;
-  damage?: unknown;
-  range?: string;
-  properties?: Array<string | { name?: string; id?: number; op_1_lvl?: number }>;
-  equipped?: boolean;
-  armorValue?: number;
-  armor?: number;
+  description?: string | undefined;
+  damage?: unknown | undefined;
+  range?: string | undefined;
+  properties?:
+    | Array<
+        | string
+        | { name?: string | undefined; id?: number | undefined; op_1_lvl?: number | undefined }
+      >
+    | undefined;
+  equipped?: boolean | undefined;
+  armorValue?: number | undefined;
+  armor?: number | undefined;
   /** Present on sheet-enriched items: full property payloads (op_1_lvl, etc.); `properties` may be name-only strings. */
-  libraryItem?: { properties?: QuickArmamentItem['properties'] };
+  libraryItem?: { properties?: QuickArmamentItem['properties'] | undefined } | undefined;
 };
 
 function getPropertyNames(props: QuickArmamentItem['properties']): string[] {
@@ -115,18 +120,18 @@ export function QuickWeaponsTable({
   /** Extra tbody rows (e.g. Unarmed Prowess) — same column layout as weapon rows. */
   trailingRows,
 }: {
-  title?: string;
+  title?: string | undefined;
   items: QuickArmamentItem[];
   abilities: QuickArmamentAbilities;
   martialProf: number;
-  className?: string;
+  className?: string | undefined;
   /** When true, only show equipped items (character sheet). Creatures pass false. */
-  filterEquipped?: boolean;
+  filterEquipped?: boolean | undefined;
   /** Optional prefix (e.g. creature name) so roll log shows the source. */
-  rollTitlePrefix?: string;
+  rollTitlePrefix?: string | undefined;
   /** When false, omit the SectionHeader wrapper (caller provides its own) */
-  showHeader?: boolean;
-  trailingRows?: ReactNode;
+  showHeader?: boolean | undefined;
+  trailingRows?: ReactNode | undefined;
 }) {
   const rollContext = useRollsOptional();
   const rows = filterEquipped ? items.filter((w) => w.equipped) : items;
@@ -244,14 +249,14 @@ export function QuickShieldsTable({
   rollTitlePrefix,
   showHeader = true,
 }: {
-  title?: string;
+  title?: string | undefined;
   items: QuickArmamentItem[];
   abilities: QuickArmamentAbilities;
   martialProf: number;
-  className?: string;
-  filterEquipped?: boolean;
-  rollTitlePrefix?: string;
-  showHeader?: boolean;
+  className?: string | undefined;
+  filterEquipped?: boolean | undefined;
+  rollTitlePrefix?: string | undefined;
+  showHeader?: boolean | undefined;
 }) {
   const rollContext = useRollsOptional();
   const rows = filterEquipped ? items.filter((s) => s.equipped) : items;
@@ -278,9 +283,9 @@ export function QuickShieldsTable({
               const blockStr = String(
                 deriveShieldAmountFromProperties(
                   resolveQuickArmamentProperties(shield) as {
-                    id?: number;
-                    name?: string;
-                    op_1_lvl?: number;
+                    id?: number | undefined;
+                    name?: string | undefined;
+                    op_1_lvl?: number | undefined;
                   }[],
                 ) ?? '-',
               );
@@ -386,12 +391,12 @@ export function QuickArmorTable({
   filterEquipped = false,
   showHeader = true,
 }: {
-  title?: string;
+  title?: string | undefined;
   items: QuickArmamentItem[];
-  abilities: { agility?: number };
-  className?: string;
-  filterEquipped?: boolean;
-  showHeader?: boolean;
+  abilities: { agility?: number | undefined };
+  className?: string | undefined;
+  filterEquipped?: boolean | undefined;
+  showHeader?: boolean | undefined;
 }) {
   const rows = filterEquipped ? items.filter((a) => a.equipped) : items;
   if (rows.length === 0) return null;

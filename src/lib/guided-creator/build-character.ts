@@ -33,41 +33,46 @@ import { findByNormalizedId, normalizeId } from '@/lib/utils';
 import { dedupeEntityRefs } from '@/lib/game/dedupe-saved-parts';
 
 interface CodexPartLike {
-  id?: string | number;
-  name?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
 }
 
 interface CodexPropertyLike {
-  id?: string | number;
-  name?: string;
-  base_tp?: number;
-  op_1_tp?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
 }
 
 export interface BuildGuidedCharacterContext {
-  archetype?: Archetype;
-  pathData?: ArchetypePathData;
-  species?: Species | null;
+  archetype?: Archetype | undefined;
+  pathData?: ArchetypePathData | undefined;
+  species?: Species | null | undefined;
   /** Mixed species parents for save enrichment. */
-  speciesA?: Species | null;
-  speciesB?: Species | null;
-  codexSkills?: Array<{ id: string | number; name?: string; ability?: string; category?: string }>;
+  speciesA?: Species | null | undefined;
+  speciesB?: Species | null | undefined;
+  codexSkills?: Array<{
+    id: string | number;
+    name?: string | undefined;
+    ability?: string | undefined;
+    category?: string | undefined;
+  }>;
   /** Codex feats — resolve archetype/character feat display names on save. */
-  codexFeats?: Array<{ id?: string | number; name?: string }>;
-  rules?: Parameters<typeof calculateMaxHealth>[5];
-  officialItems?: LibraryItem[];
-  codexEquipment?: CodexEquipmentItem[];
+  codexFeats?: Array<{ id?: string | number | undefined; name?: string | undefined }>;
+  rules?: Parameters<typeof calculateMaxHealth>[5] | undefined;
+  officialItems?: LibraryItem[] | undefined;
+  codexEquipment?: CodexEquipmentItem[] | undefined;
   /** Library powers (official + user) — resolve names/parts for proficiency and save. */
-  officialPowers?: LibraryPower[];
+  officialPowers?: LibraryPower[] | undefined;
   /** Library techniques (official + user) — resolve names/parts for proficiency and save. */
-  officialTechniques?: LibraryTechnique[];
-  powerPartsDb?: CodexPartLike[];
-  techniquePartsDb?: CodexPartLike[];
-  itemPropertiesDb?: CodexPropertyLike[];
+  officialTechniques?: LibraryTechnique[] | undefined;
+  powerPartsDb?: CodexPartLike[] | undefined;
+  techniquePartsDb?: CodexPartLike[] | undefined;
+  itemPropertiesDb?: CodexPropertyLike[] | undefined;
 }
 
 /** Resolve draft power ids to CharacterPower shapes with parts/damage for proficiency TP. */

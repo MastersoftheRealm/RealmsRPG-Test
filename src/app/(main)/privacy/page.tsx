@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description: PRIVACY_COPY.seoDescription,
 };
 
-function LegalList({ items }: { items?: readonly LegalListItem[] }) {
+function LegalList({ items }: { items?: readonly LegalListItem[] | undefined }) {
   if (!items?.length) return null;
   return (
     <ul className="list-inside list-disc space-y-1 text-text-secondary">

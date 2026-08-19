@@ -15,7 +15,7 @@ export type AncestryTraitBuckets = {
   characteristics: Trait[];
 };
 
-export type NamedIdOption = { id: string; name: string; description?: string };
+export type NamedIdOption = { id: string; name: string; description?: string | undefined };
 
 const EMPTY_BUCKETS: AncestryTraitBuckets = {
   speciesTraits: [],
@@ -188,7 +188,7 @@ export function buildMixedSpeciesAncestryDraft(
 
 /** Whether every choice-type species trait has a valid option pick. */
 export function areSpeciesTraitChoicesComplete(
-  parents: Array<{ id: string | number; option_trait_ids?: string[] }>,
+  parents: Array<{ id: string | number; option_trait_ids?: string[] | undefined }>,
   choicesMap: Record<string, string> | undefined,
 ): boolean {
   if (parents.length === 0) return true;
@@ -207,7 +207,7 @@ export function hasRequiredMixedSpeciesSkills(optionCount: number, selectedCount
 export function canContinueAncestrySingle(args: {
   selectedTraitIds: readonly string[];
   ancestryTraitCount: number;
-  speciesChoiceParents: Array<{ id: string | number; option_trait_ids?: string[] }>;
+  speciesChoiceParents: Array<{ id: string | number; option_trait_ids?: string[] | undefined }>;
   speciesTraitChoices: Record<string, string> | undefined;
 }): boolean {
   const { selectedTraitIds, ancestryTraitCount, speciesChoiceParents, speciesTraitChoices } = args;

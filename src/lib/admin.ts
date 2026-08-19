@@ -28,7 +28,7 @@ export async function isAdmin(uid: string | null | undefined): Promise<boolean> 
       .select('role')
       .eq('id', uid)
       .maybeSingle();
-    return (profile as { role?: string } | null)?.role === 'admin';
+    return (profile as { role?: string | undefined } | null)?.role === 'admin';
   } catch (err) {
     logApiError(`isAdmin(${uid})`, err);
     return false;

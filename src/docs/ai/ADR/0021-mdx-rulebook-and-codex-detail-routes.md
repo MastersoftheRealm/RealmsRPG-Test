@@ -31,6 +31,6 @@ rulebook source. Codex rows have no `slug` column.
 - Positive: `/rules` and Codex entries are indexable; mobile reading is page scroll, not an iframe.
 - Negative / follow-ups: glossary / The Realms chapters are unfinished in the source manuscript;
   Codex detail pages are name+description articles (browse still owns GLR chips). Sitemap Codex
-  URLs need the public Supabase env at generate time. TASK-799 remains WAITING.
+  URLs need the public Supabase env at generate time. TASK-799 is done (confirm/toggle/admin delete).
 - Rejected: keep the iframe; one mega `/rules` page; `/codex/[id]` without collection; putting
   rulebook prose in `core_rules`.

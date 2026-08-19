@@ -152,7 +152,7 @@ export function AdminPartsTab() {
     setModalOpen(true);
   };
 
-  const openDuplicate = (p: Part & { defense?: string[] }) => {
+  const openDuplicate = (p: Part & { defense?: string[] | undefined }) => {
     setEditing(null);
     setCopySourceName(p.name);
     const next = partToFormState(p);
@@ -161,7 +161,7 @@ export function AdminPartsTab() {
     setModalOpen(true);
   };
 
-  const openEdit = (p: Part & { defense?: string[] }) => {
+  const openEdit = (p: Part & { defense?: string[] | undefined }) => {
     setEditing(p);
     setCopySourceName(null);
     const next = partToFormState(p);
@@ -190,7 +190,7 @@ export function AdminPartsTab() {
 
     setSaving(false);
     if (result.success) {
-      const savedId = editing ? editing.id : (result as { id?: string }).id;
+      const savedId = editing ? editing.id : (result as { id?: string | undefined }).id;
       if (!savedId) {
         showToast('Save succeeded but no ID was returned. Please refresh.', 'warning');
         closeModal();
@@ -322,7 +322,11 @@ export function AdminPartsTab() {
             return formatDecimalPreserve(en);
           };
 
-          const optionChips: { name: string; description?: string; category?: 'default' }[] = [];
+          const optionChips: {
+            name: string;
+            description?: string | undefined;
+            category?: 'default' | undefined;
+          }[] = [];
           if (p.op_1_desc) {
             const chipParts: string[] = [];
             const enStr = formatEnergyCostAllowZero(p.op_1_en);

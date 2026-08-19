@@ -242,7 +242,7 @@ export function AdminSpeciesTab() {
           const detailSections: Array<{
             label: string;
             chips: ChipData[];
-            hideLabelIfSingle?: boolean;
+            hideLabelIfSingle?: boolean | undefined;
           }> = [];
 
           if (skillsChips.length > 0) {

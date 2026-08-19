@@ -11,11 +11,11 @@ export type GlrDensityMode = 'browse' | 'play' | 'select' | 'detail';
 
 export interface GlrLayoutFlags {
   /** Creator eligibility already hid unmet feats (TASK-758). */
-  characterCreate?: boolean;
+  characterCreate?: boolean | undefined;
   /** Power Training Points live on GridListRow totalCost / rightSlot. */
-  creatorBudget?: boolean;
+  creatorBudget?: boolean | undefined;
   /** Guided weapon+shield phase: shield Block may occupy the Damage cell. */
-  mixedArmamentPhase?: boolean;
+  mixedArmamentPhase?: boolean | undefined;
 }
 
 export interface GlrModeSpec {
@@ -26,12 +26,20 @@ export interface GlrModeSpec {
    * they still become expanded chips (ADR-0016 never-neither). True omit is
    * only `characterCreate` + feat `reqLevel`.
    */
-  demoteFacts?: Partial<Record<GlrEntityType, readonly GlrFactId[]>>;
-  orderInBandOverrides?: Partial<Record<GlrEntityType, Partial<Record<GlrFactId, number>>>>;
-  displayOrderOverrides?: Partial<Record<GlrEntityType, Partial<Record<GlrFactId, number>>>>;
-  columnKeyOverrides?: Partial<Record<GlrEntityType, Partial<Record<GlrFactId, string>>>>;
-  headerTrackOverrides?: Partial<Record<GlrEntityType, Partial<Record<GlrFactId, string>>>>;
-  nameTrack?: Partial<Record<GlrEntityType, string>>;
+  demoteFacts?: Partial<Record<GlrEntityType, readonly GlrFactId[]>> | undefined;
+  orderInBandOverrides?:
+    | Partial<Record<GlrEntityType, Partial<Record<GlrFactId, number>>>>
+    | undefined;
+  displayOrderOverrides?:
+    | Partial<Record<GlrEntityType, Partial<Record<GlrFactId, number>>>>
+    | undefined;
+  columnKeyOverrides?:
+    | Partial<Record<GlrEntityType, Partial<Record<GlrFactId, string>>>>
+    | undefined;
+  headerTrackOverrides?:
+    | Partial<Record<GlrEntityType, Partial<Record<GlrFactId, string>>>>
+    | undefined;
+  nameTrack?: Partial<Record<GlrEntityType, string>> | undefined;
 }
 
 export const GLR_DENSITY: Record<GlrDensityMode, GlrModeSpec> = {

@@ -11,7 +11,7 @@ const shellClass = 'pointer-events-none absolute overflow-hidden inset-0';
 const diceWrap = 'pointer-events-none absolute select-none hidden sm:block';
 
 type LandingDiceDecorProps = {
-  variant?: 'hero' | 'auth';
+  variant?: 'hero' | 'auth' | undefined;
 };
 
 export function LandingDiceDecor({ variant = 'hero' }: LandingDiceDecorProps) {

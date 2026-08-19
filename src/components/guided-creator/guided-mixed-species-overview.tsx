@@ -23,9 +23,9 @@ const mixedCopy = GUIDED_CREATOR_COPY.steps.ancestry.mixedOverview;
 export interface GuidedMixedSpeciesOverviewProps {
   speciesA: Species;
   speciesB: Species;
-  selectedSize?: string | null;
-  onSizeChange?: (size: string) => void;
-  onChangeParents?: () => void;
+  selectedSize?: string | null | undefined;
+  onSizeChange?: ((size: string) => void) | undefined;
+  onChangeParents?: (() => void) | undefined;
 }
 
 export function GuidedMixedSpeciesOverview({

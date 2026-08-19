@@ -19,16 +19,16 @@ export interface ListSearchToolbarProps {
   search: string;
   onSearchChange: (value: string) => void;
   placeholder: string;
-  searchAriaLabel?: string;
-  trailing?: ReactNode;
+  searchAriaLabel?: string | undefined;
+  trailing?: ReactNode | undefined;
   /**
    * Filter panel body only (no nested FilterSection). When set, Search + Filters
    * share one compact row.
    */
-  filters?: ReactNode;
+  filters?: ReactNode | undefined;
   /** Active-filter badge on the collapsed Filters toggle. */
-  filterActiveCount?: number;
-  className?: string;
+  filterActiveCount?: number | undefined;
+  className?: string | undefined;
 }
 
 export function ListSearchToolbar({

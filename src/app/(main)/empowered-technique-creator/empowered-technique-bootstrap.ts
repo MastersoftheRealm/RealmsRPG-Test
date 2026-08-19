@@ -16,7 +16,7 @@ export interface EmpoweredDamageConfig {
   amount: number;
   size: number;
   type: string;
-  applyDuration?: boolean;
+  applyDuration?: boolean | undefined;
 }
 
 export interface EmpoweredRangeConfig {
@@ -74,8 +74,8 @@ export interface EmpoweredTechniqueCache {
     op_3_lvl: number;
     selectedCategory: string;
   }>;
-  imageId?: string | null;
-  imageUrl?: string | null;
+  imageId?: string | null | undefined;
+  imageUrl?: string | null | undefined;
   timestamp: number;
 }
 
@@ -98,71 +98,71 @@ export interface EmpoweredTechniqueFormState {
 }
 
 export type EmpoweredLibraryRecord = {
-  name?: string;
-  description?: string;
-  empoweredTechnique?: boolean;
-  actionType?: string;
-  isReaction?: boolean;
-  attackMode?: unknown;
-  imageId?: string | null;
-  image_id?: string | null;
-  imageUrl?: string | null;
-  image_url?: string | null;
+  name?: string | undefined;
+  description?: string | undefined;
+  empoweredTechnique?: boolean | undefined;
+  actionType?: string | undefined;
+  isReaction?: boolean | undefined;
+  attackMode?: unknown | undefined;
+  imageId?: string | null | undefined;
+  image_id?: string | null | undefined;
+  imageUrl?: string | null | undefined;
+  image_url?: string | null | undefined;
   power?: {
     parts?: Array<{
-      id?: string | number;
-      name?: string;
-      op_1_lvl?: number;
-      op_2_lvl?: number;
-      op_3_lvl?: number;
-      applyDuration?: boolean;
+      id?: string | number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
+      op_2_lvl?: number | undefined;
+      op_3_lvl?: number | undefined;
+      applyDuration?: boolean | undefined;
     }>;
     mechanics?: Array<{
-      id?: string | number;
-      name?: string;
-      op_1_lvl?: number;
-      op_2_lvl?: number;
-      op_3_lvl?: number;
-      applyDuration?: boolean;
+      id?: string | number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
+      op_2_lvl?: number | undefined;
+      op_3_lvl?: number | undefined;
+      applyDuration?: boolean | undefined;
     }>;
     autoMechanics?: Array<{
-      id?: string | number;
-      name?: string;
-      op_1_lvl?: number;
-      op_2_lvl?: number;
-      op_3_lvl?: number;
-      applyDuration?: boolean;
+      id?: string | number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
+      op_2_lvl?: number | undefined;
+      op_3_lvl?: number | undefined;
+      applyDuration?: boolean | undefined;
     }>;
-    damage?: EmpoweredDamageConfig[];
-    range?: EmpoweredRangeConfig;
-    area?: AreaConfig;
-    duration?: DurationConfig;
+    damage?: EmpoweredDamageConfig[] | undefined;
+    range?: EmpoweredRangeConfig | undefined;
+    area?: AreaConfig | undefined;
+    duration?: DurationConfig | undefined;
     /** @deprecated Legacy persisted weapon reference; read-only for older rows. */
-    addWeapon?: { id?: string | number; name?: string } | null;
+    addWeapon?: { id?: string | number | undefined; name?: string | undefined } | null;
     addWeaponPowerPart?: {
-      id?: string | number;
-      name?: string;
-      op_1_lvl?: number;
-      op_2_lvl?: number;
-      op_3_lvl?: number;
+      id?: string | number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
+      op_2_lvl?: number | undefined;
+      op_3_lvl?: number | undefined;
     } | null;
   };
   technique?: {
     parts?: Array<{
-      id?: string | number;
-      name?: string;
-      op_1_lvl?: number;
-      op_2_lvl?: number;
-      op_3_lvl?: number;
+      id?: string | number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
+      op_2_lvl?: number | undefined;
+      op_3_lvl?: number | undefined;
     }>;
     autoMechanics?: Array<{
-      id?: string | number;
-      name?: string;
-      op_1_lvl?: number;
-      op_2_lvl?: number;
-      op_3_lvl?: number;
+      id?: string | number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
+      op_2_lvl?: number | undefined;
+      op_3_lvl?: number | undefined;
     }>;
-    additionalDamage?: Array<{ amount?: number; size?: number }>;
+    additionalDamage?: Array<{ amount?: number | undefined; size?: number | undefined }>;
   };
 };
 
@@ -198,14 +198,14 @@ export function emptyEmpoweredTechniqueFormState(): EmpoweredTechniqueFormState 
 
 function mapPowerRows(
   rows: Array<{
-    partId?: string | number;
-    id?: string | number;
-    name?: string;
-    op_1_lvl?: number;
-    op_2_lvl?: number;
-    op_3_lvl?: number;
-    applyDuration?: boolean;
-    selectedCategory?: string;
+    partId?: string | number | undefined;
+    id?: string | number | undefined;
+    name?: string | undefined;
+    op_1_lvl?: number | undefined;
+    op_2_lvl?: number | undefined;
+    op_3_lvl?: number | undefined;
+    applyDuration?: boolean | undefined;
+    selectedCategory?: string | undefined;
   }>,
   powerParts: PowerPart[],
   matchByName: boolean,
@@ -231,13 +231,13 @@ function mapPowerRows(
 
 function mapTechniqueRows(
   rows: Array<{
-    partId?: string | number;
-    id?: string | number;
-    name?: string;
-    op_1_lvl?: number;
-    op_2_lvl?: number;
-    op_3_lvl?: number;
-    selectedCategory?: string;
+    partId?: string | number | undefined;
+    id?: string | number | undefined;
+    name?: string | undefined;
+    op_1_lvl?: number | undefined;
+    op_2_lvl?: number | undefined;
+    op_3_lvl?: number | undefined;
+    selectedCategory?: string | undefined;
   }>,
   techniqueParts: TechniquePart[],
   matchByName: boolean,
@@ -357,8 +357,9 @@ export function bootstrapEmpoweredTechniqueFormState(options: {
   if (editId) {
     const match = rawItems.find(
       (item) =>
-        String((item as { docId?: string; id?: string }).docId) === editId ||
-        String((item as { docId?: string; id?: string }).id) === editId,
+        String((item as { docId?: string | undefined; id?: string | undefined }).docId) ===
+          editId ||
+        String((item as { docId?: string | undefined; id?: string | undefined }).id) === editId,
     );
     if (!match) {
       return emptyEmpoweredTechniqueFormState();

@@ -25,20 +25,20 @@ export interface MechanicPartResult {
   op_1_lvl: number;
   op_2_lvl: number;
   op_3_lvl: number;
-  applyDuration?: boolean;
+  applyDuration?: boolean | undefined;
 }
 
 /** Part database item - works with both PowerPart and TechniquePart */
 export interface PartDbItem {
   id: string | number;
   name: string;
-  mechanic?: boolean;
+  mechanic?: boolean | undefined;
 }
 
 /** Action type configuration */
 export interface ActionConfig {
   type: 'basic' | 'quick' | 'free' | 'long3' | 'long4' | string;
-  isReaction?: boolean;
+  isReaction?: boolean | undefined;
 }
 
 /** Damage configuration - power style (type-based) */
@@ -46,7 +46,7 @@ export interface PowerDamageConfig {
   type: string; // magic, fire, physical, etc.
   diceAmount: number;
   dieSize: number;
-  applyDuration?: boolean;
+  applyDuration?: boolean | undefined;
 }
 
 /** Damage configuration - technique style (additional damage) */
@@ -58,25 +58,25 @@ export interface TechniqueDamageConfig {
 /** Range configuration (power only) */
 export interface RangeConfig {
   steps: number; // 0 = melee (1 space), 1+ = ranged increments
-  applyDuration?: boolean;
+  applyDuration?: boolean | undefined;
 }
 
 /** Area of effect configuration (power only) */
 export interface AreaConfig {
   type: 'none' | 'sphere' | 'cylinder' | 'cone' | 'line' | 'trail';
   level: number; // 1-based level (1 = base, 2 = first option, etc.)
-  applyDuration?: boolean;
+  applyDuration?: boolean | undefined;
 }
 
 /** Duration configuration (power only) */
 export interface DurationConfig {
   type: 'instant' | 'rounds' | 'minutes' | 'hours' | 'days' | 'permanent';
   value: number; // actual units (e.g. 1, 10, 30 for minutes) or rounds count
-  applyDuration?: boolean;
-  focus?: boolean;
-  noHarm?: boolean;
-  endsOnActivation?: boolean;
-  sustain?: number; // 0 = no sustain, 1+ = sustain level
+  applyDuration?: boolean | undefined;
+  focus?: boolean | undefined;
+  noHarm?: boolean | undefined;
+  endsOnActivation?: boolean | undefined;
+  sustain?: number | undefined; // 0 = no sustain, 1+ = sustain level
 }
 
 /** Full context for building mechanic parts */
@@ -85,22 +85,22 @@ export interface MechanicBuilderContext {
   partsDb: PartDbItem[];
 
   // Common to both
-  action?: ActionConfig;
+  action?: ActionConfig | undefined;
 
   // Power-specific
-  powerDamage?: PowerDamageConfig[];
-  range?: RangeConfig;
-  area?: AreaConfig;
-  duration?: DurationConfig;
+  powerDamage?: PowerDamageConfig[] | undefined;
+  range?: RangeConfig | undefined;
+  area?: AreaConfig | undefined;
+  duration?: DurationConfig | undefined;
 
   // Technique-specific
-  techniqueDamage?: TechniqueDamageConfig;
+  techniqueDamage?: TechniqueDamageConfig | undefined;
   /**
    * Technique attack mode. `none` adds the "No Attack" reduction part,
    * `weapon` adds "Add Weapon to Technique" (flat base cost, no options),
    * `unarmed` adds nothing. Powers handle their weapon part separately.
    */
-  attackMode?: AttackMode;
+  attackMode?: AttackMode | undefined;
 }
 
 // =============================================================================
@@ -394,34 +394,34 @@ export function buildMechanicParts(ctx: MechanicBuilderContext): MechanicPartRes
 
 /** Legacy power mechanic context */
 export interface LegacyPowerMechanicContext {
-  actionTypeSelection?: string;
-  reaction?: boolean;
-  damageType?: string;
-  diceAmt?: number;
-  dieSize?: number;
-  range?: number;
-  rangeApplyDuration?: boolean;
-  areaType?: string;
-  areaLevel?: number;
-  areaApplyDuration?: boolean;
-  durationType?: string;
-  durationValue?: number;
-  durationApplyDuration?: boolean;
-  focus?: boolean;
-  noHarm?: boolean;
-  endsOnActivation?: boolean;
-  sustain?: number;
-  partsDb?: PartDbItem[];
+  actionTypeSelection?: string | undefined;
+  reaction?: boolean | undefined;
+  damageType?: string | undefined;
+  diceAmt?: number | undefined;
+  dieSize?: number | undefined;
+  range?: number | undefined;
+  rangeApplyDuration?: boolean | undefined;
+  areaType?: string | undefined;
+  areaLevel?: number | undefined;
+  areaApplyDuration?: boolean | undefined;
+  durationType?: string | undefined;
+  durationValue?: number | undefined;
+  durationApplyDuration?: boolean | undefined;
+  focus?: boolean | undefined;
+  noHarm?: boolean | undefined;
+  endsOnActivation?: boolean | undefined;
+  sustain?: number | undefined;
+  partsDb?: PartDbItem[] | undefined;
 }
 
 /** Legacy technique mechanic context */
 export interface LegacyTechniqueMechanicContext {
-  actionTypeSelection?: string;
-  reaction?: boolean;
-  diceAmt?: number;
-  dieSize?: number;
-  attackMode?: AttackMode;
-  partsDb?: PartDbItem[];
+  actionTypeSelection?: string | undefined;
+  reaction?: boolean | undefined;
+  diceAmt?: number | undefined;
+  dieSize?: number | undefined;
+  attackMode?: AttackMode | undefined;
+  partsDb?: PartDbItem[] | undefined;
 }
 
 /**

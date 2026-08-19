@@ -26,7 +26,7 @@ const INSUFFICIENT_PRIVILEGE = '42501';
 const USERNAME_TAKEN_ERROR = 'This username is already taken';
 const MAX_GENERATED_USERNAME_ATTEMPTS = 5;
 
-function isUniqueViolation(error: { code?: string } | null): boolean {
+function isUniqueViolation(error: { code?: string | undefined } | null): boolean {
   return error?.code === UNIQUE_VIOLATION;
 }
 
@@ -35,7 +35,7 @@ function isUniqueViolation(error: { code?: string } | null): boolean {
  * exists and belongs to someone else, so the owner-scoped UPDATE policy refuses
  * the upsert. Both mean the same thing to the user.
  */
-function isUsernameConflict(error: { code?: string } | null): boolean {
+function isUsernameConflict(error: { code?: string | undefined } | null): boolean {
   return isUniqueViolation(error) || error?.code === INSUFFICIENT_PRIVILEGE;
 }
 
@@ -58,10 +58,10 @@ function generateDefaultUsername(): string {
 }
 
 export async function createUserProfileAction(data: {
-  uid?: string;
-  email?: string;
-  username?: string;
-  displayName?: string;
+  uid?: string | undefined;
+  email?: string | undefined;
+  username?: string | undefined;
+  displayName?: string | undefined;
 }) {
   try {
     // SEC-02: bind identity to the verified session, never the client-supplied
@@ -84,10 +84,14 @@ export async function createUserProfileAction(data: {
     if (existingError) throw existingError;
 
     const existingUsername =
-      ((existing as { username?: string | null } | null)?.username ?? null)?.toString().trim() ||
-      null;
+      ((existing as { username?: string | null | undefined } | null)?.username ?? null)
+        ?.toString()
+        .trim() || null;
     const existingUsernameDisplay =
-      ((existing as { username_display?: string | null } | null)?.username_display ?? null)
+      (
+        (existing as { username_display?: string | null | undefined } | null)?.username_display ??
+        null
+      )
         ?.toString()
         .trim() || null;
 
@@ -167,7 +171,10 @@ export async function createUserProfileAction(data: {
   }
 }
 
-export async function updateUserProfileAction(data: { displayName?: string; username?: string }) {
+export async function updateUserProfileAction(data: {
+  displayName?: string | undefined;
+  username?: string | undefined;
+}) {
   try {
     const user = await requireAuth();
     // SEC-03: never write a username without validation, uniqueness, and the
@@ -242,7 +249,7 @@ export async function getUserProfileAction() {
  */
 export async function checkUsernameAvailableAction(
   username: string,
-): Promise<{ available: boolean | null; error?: string }> {
+): Promise<{ available: boolean | null; error?: string | undefined }> {
   try {
     // SEC-07: rate-limited and session-gated so it cannot be used to probe names.
     const { user } = await getSession();
@@ -290,13 +297,14 @@ export async function changeUsernameAction(newUsername: string) {
       .maybeSingle();
     if (profileError) throw profileError;
     const currentUsername = (
-      (profile as { username?: string } | null)?.username ?? ''
+      (profile as { username?: string | undefined } | null)?.username ?? ''
     ).toLowerCase();
     if (normalized === currentUsername)
       return { success: false, error: 'New username is the same as your current username' };
 
     if (!admin && profile) {
-      const lastChange = (profile as { last_username_change?: string }).last_username_change;
+      const lastChange = (profile as { last_username_change?: string | undefined })
+        .last_username_change;
       if (lastChange) {
         const t = typeof lastChange === 'string' ? new Date(lastChange).getTime() : lastChange;
         const daysSince = (Date.now() - t) / (24 * 60 * 60 * 1000);
@@ -418,7 +426,10 @@ export async function deleteAccountAction(): Promise<DeleteAccountResult> {
       if (!campaign) continue;
 
       const roster = (
-        (campaign.characters as Array<{ userId?: string; user_id?: string }>) ?? []
+        (campaign.characters as Array<{
+          userId?: string | undefined;
+          user_id?: string | undefined;
+        }>) ?? []
       ).filter((entry) => (entry.userId ?? entry.user_id) !== user.uid);
       const { error: rosterError } = await supabaseAdmin
         .from('campaigns')

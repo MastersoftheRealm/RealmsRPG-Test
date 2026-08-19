@@ -1,7 +1,7 @@
 /** Primary nav labels — edit for site header (`header.tsx`). */
 
 export type NavLink =
-  | { href: string; label: string; external?: boolean }
+  | { href: string; label: string; external?: boolean | undefined }
   | { label: string; dropdown: { href: string; label: string }[] };
 
 export const NAV_COPY: {

@@ -111,7 +111,11 @@ export function getCraftingSessionLabels(
 export function getSuccessesTableEffect(
   delta: number,
   table: SuccessesTableRow[],
-): { failureEffect?: string; successEffect?: string; row?: SuccessesTableRow } | null {
+): {
+  failureEffect?: string | undefined;
+  successEffect?: string | undefined;
+  row?: SuccessesTableRow | undefined;
+} | null {
   const absDelta = Math.abs(delta);
   const isFailure = delta < 0;
 

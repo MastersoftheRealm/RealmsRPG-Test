@@ -18,7 +18,7 @@ export type AuthErrorContext =
   | 'delete-account';
 
 function readAuthError(error: unknown): { message: string; code: string } {
-  const e = error as { message?: unknown; code?: unknown };
+  const e = error as { message?: unknown | undefined; code?: unknown | undefined };
   const message = typeof e?.message === 'string' ? e.message : '';
   const code = typeof e?.code === 'string' ? e.code : '';
   return { message, code };

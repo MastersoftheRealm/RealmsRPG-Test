@@ -25,17 +25,17 @@ import {
   type CodexPart,
 } from './creature-stat-block-helpers';
 
-type LibraryPowerLike = LibraryPower & { docId?: string };
-type LibraryTechniqueLike = LibraryTechnique & { docId?: string };
+type LibraryPowerLike = LibraryPower & { docId?: string | undefined };
+type LibraryTechniqueLike = LibraryTechnique & { docId?: string | undefined };
 
 type SavedPartRef =
   | string
   | {
-      id?: string | number;
-      name?: string;
-      op_1_lvl?: number;
-      op_2_lvl?: number;
-      op_3_lvl?: number;
+      id?: string | number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
+      op_2_lvl?: number | undefined;
+      op_3_lvl?: number | undefined;
     };
 
 function objectPartsOnly(
@@ -53,11 +53,11 @@ function objectPartsOnly(
 }
 
 type SkillDbEntry = {
-  id?: string | number;
-  name?: string;
-  ability?: string;
-  description?: string;
-  base_skill_id?: string | number | null;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  ability?: string | undefined;
+  description?: string | undefined;
+  base_skill_id?: string | number | null | undefined;
 };
 
 export function buildPowersForDisplay(
@@ -87,7 +87,7 @@ export function buildPowersForDisplay(
   });
 
   return refs.map((ref, idx): EntityPowerRow => {
-    const refId = (ref as { id?: string }).id;
+    const refId = (ref as { id?: string | undefined }).id;
     const refName = ref.name;
 
     const userMatch =
@@ -133,8 +133,9 @@ export function buildPowersForDisplay(
     const parts: SavedPartRef[] = enriched?.parts ?? ref.parts ?? [];
     const damage = enriched?.damage ?? ref.damage;
     const imageRecord = {
-      image_id: enriched?.image_id ?? (ref as { image_id?: string | null }).image_id,
-      image_url: enriched?.image_url ?? (ref as { image_url?: string | null }).image_url,
+      image_id: enriched?.image_id ?? (ref as { image_id?: string | null | undefined }).image_id,
+      image_url:
+        enriched?.image_url ?? (ref as { image_url?: string | null | undefined }).image_url,
     };
 
     const derived = derivePowerDisplay(
@@ -214,7 +215,7 @@ export function buildTechniquesForDisplay(
   });
 
   return refs.map((ref, idx): EntityTechniqueRow => {
-    const refId = (ref as { id?: string }).id;
+    const refId = (ref as { id?: string | undefined }).id;
     const refName = ref.name;
 
     const userMatch =
@@ -255,8 +256,9 @@ export function buildTechniquesForDisplay(
     const parts: SavedPartRef[] = enriched?.parts ?? ref.parts ?? [];
     const damage = enriched?.damage ?? ref.damage;
     const imageRecord = {
-      image_id: enriched?.image_id ?? (ref as { image_id?: string | null }).image_id,
-      image_url: enriched?.image_url ?? (ref as { image_url?: string | null }).image_url,
+      image_id: enriched?.image_id ?? (ref as { image_id?: string | null | undefined }).image_id,
+      image_url:
+        enriched?.image_url ?? (ref as { image_url?: string | null | undefined }).image_url,
     };
 
     const derived = deriveTechniqueDisplay(
@@ -305,12 +307,12 @@ export function buildTechniquesForDisplay(
 }
 
 type CreatureSkillRow = {
-  id?: string;
+  id?: string | undefined;
   name: string;
   value: number;
   proficient: boolean;
-  baseSkillId?: string;
-  isSubSkill?: boolean;
+  baseSkillId?: string | undefined;
+  isSubSkill?: boolean | undefined;
 };
 
 export function buildSkillRows(
@@ -321,7 +323,7 @@ export function buildSkillRows(
   key: string;
   rowId: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
   abilityAbbr: string;
   bonus: number;
 }> {

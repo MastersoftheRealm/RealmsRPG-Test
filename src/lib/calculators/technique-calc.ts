@@ -10,6 +10,7 @@ import { computePartTrainingPoints } from '@/lib/calculators/part-training-point
 import { dedupeSavedParts } from '@/lib/game/dedupe-saved-parts';
 import type { TechniquePart } from '@/hooks/codex-types';
 import { formatActionTypeForDisplay } from '@/lib/utils/action-type';
+import type { AllowUndefinedOptionals } from '@/lib/utils/exact-optional';
 import {
   attackModeColumnLabel,
   deriveTechniqueAttackMode,
@@ -25,13 +26,13 @@ export type { TechniquePart };
 // =============================================================================
 
 export interface TechniquePartPayload {
-  id?: number;
-  name?: string;
-  part?: TechniquePart;
-  op_1_lvl?: number;
-  op_2_lvl?: number;
-  op_3_lvl?: number;
-  applyDuration?: boolean;
+  id?: number | undefined;
+  name?: string | undefined;
+  part?: TechniquePart | undefined;
+  op_1_lvl?: number | undefined;
+  op_2_lvl?: number | undefined;
+  op_3_lvl?: number | undefined;
+  applyDuration?: boolean | undefined;
 }
 
 export interface TechniqueCostResult {
@@ -59,33 +60,41 @@ export interface TechniqueChipData {
   finalTP: number;
   hasTP: boolean;
   /** Max option level when > 0; omit at 0. */
-  optionLevel?: number;
+  optionLevel?: number | undefined;
 }
 
-export interface TechniqueDocument {
-  name?: string;
-  description?: string;
-  parts?: TechniquePartPayload[];
-  damage?: { amount?: number | string; size?: number | string; type?: string };
+interface TechniqueDocumentFields {
+  name?: string | undefined;
+  description?: string | undefined;
+  parts?: TechniquePartPayload[] | undefined;
+  damage?:
+    | {
+        amount?: number | string | undefined;
+        size?: number | string | undefined;
+        type?: string | undefined;
+      }
+    | undefined;
   /** Attack mode (none | unarmed | weapon). Preferred over legacy `weapon`. */
-  attackMode?: AttackMode;
+  attackMode?: AttackMode | undefined;
   /** @deprecated Legacy weapon reference; kept for reading older library rows. */
-  weapon?: { id?: string | number; name?: string };
+  weapon?: { id?: string | number | undefined; name?: string | undefined } | undefined;
   /** @deprecated Legacy columnar label; kept for reading older library rows. */
-  weaponName?: string;
+  weaponName?: string | undefined;
   /** Saved action type (basic, full, bonus, etc.) — used to avoid recalculation */
-  actionType?: string;
+  actionType?: string | undefined;
   /** Whether the technique can be used as a reaction */
-  isReaction?: boolean;
+  isReaction?: boolean | undefined;
 }
+
+export type TechniqueDocument = AllowUndefinedOptionals<TechniqueDocumentFields>;
 
 export interface MechanicContext {
-  actionTypeSelection?: string;
-  reaction?: boolean;
-  attackMode?: AttackMode;
-  diceAmt?: number;
-  dieSize?: number;
-  partsDb?: TechniquePart[];
+  actionTypeSelection?: string | undefined;
+  reaction?: boolean | undefined;
+  attackMode?: AttackMode | undefined;
+  diceAmt?: number | undefined;
+  dieSize?: number | undefined;
+  partsDb?: TechniquePart[] | undefined;
 }
 
 // =============================================================================
@@ -98,7 +107,7 @@ export { computeSplits } from './dice-splits';
  * Format damage object as a string like "+2d6".
  */
 export function formatTechniqueDamage(
-  dmgObj?: { amount?: number | string; size?: number | string } | null,
+  dmgObj?: { amount?: number | string | undefined; size?: number | string | undefined } | null,
 ): string {
   if (!dmgObj || !dmgObj.amount || !dmgObj.size) return '';
   if (dmgObj.amount === '0' || dmgObj.size === '0') return '';

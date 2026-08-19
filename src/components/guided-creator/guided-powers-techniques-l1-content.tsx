@@ -85,7 +85,7 @@ export function GuidedPowersTechniquesL1Content({
       selected: boolean;
       unavailable: boolean;
       onToggle: () => void;
-      pathRecommended?: boolean;
+      pathRecommended?: boolean | undefined;
     },
   ) => {
     const item = resolveDisplay(id);

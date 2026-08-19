@@ -11,14 +11,14 @@ import { cn } from '@/lib/utils';
 
 export interface SectionCostBadgeProps {
   /** Energy cost (power/technique creators) */
-  en?: number;
+  en?: number | undefined;
   /** Training point cost */
-  tp?: number;
+  tp?: number | undefined;
   /** Item point cost (armament creator) */
-  ip?: number;
+  ip?: number | undefined;
   /** Currency cost (armament creator) */
-  currency?: number;
-  className?: string;
+  currency?: number | undefined;
+  className?: string | undefined;
 }
 
 function formatBadgeNumber(value: number): string {

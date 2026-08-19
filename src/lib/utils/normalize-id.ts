@@ -9,8 +9,8 @@ export function normalizeId(id: string | number | null | undefined): string {
 }
 
 export type NormalizedIdRow = {
-  id?: string | number | null;
-  docId?: string | number | null;
+  id?: string | number | null | undefined;
+  docId?: string | number | null | undefined;
 };
 
 /** True when `refId` matches the row `id` or `docId` after normalizeId. */
@@ -46,7 +46,7 @@ export function indexByNormalizedIds<T extends NormalizedIdRow>(
   return map;
 }
 
-type NamedNormalizedIdRow = NormalizedIdRow & { name?: string | null };
+type NamedNormalizedIdRow = NormalizedIdRow & { name?: string | null | undefined };
 
 /** Name maps keyed by normalized id/docId, plus name fallback for path refs. */
 export function indexDisplayNamesByNormalizedIds(items: readonly NamedNormalizedIdRow[]): {

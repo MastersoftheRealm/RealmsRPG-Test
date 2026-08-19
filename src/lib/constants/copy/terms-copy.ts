@@ -6,9 +6,9 @@ export type LegalSection = {
   heading: string;
   /** Opening paragraph(s) before any list. */
   paragraphs: string[];
-  list?: LegalListItem[];
+  list?: LegalListItem[] | undefined;
   /** Paragraph(s) after the list (when list sits mid-section). */
-  afterList?: string[];
+  afterList?: string[] | undefined;
 };
 
 export const TERMS_COPY = {

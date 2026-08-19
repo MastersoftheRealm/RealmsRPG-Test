@@ -10,7 +10,7 @@ export interface ChoiceTraitOptionListPickerProps {
   optionTraits: ChoiceTraitOptionSource[];
   value: string;
   onChange: (next: string) => void;
-  emptyLabel?: string;
+  emptyLabel?: string | undefined;
 }
 
 /**

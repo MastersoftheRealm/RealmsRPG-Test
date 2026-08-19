@@ -48,16 +48,18 @@ export interface UseCreatorSaveOptions {
   /** Returns current name and payload for save. Called at save time. */
   getPayload: () => CreatorSavePayload;
   /** Require confirmation modal before saving to public library */
-  requirePublishConfirm?: boolean;
-  publishConfirmTitle?: string;
+  requirePublishConfirm?: boolean | undefined;
+  publishConfirmTitle?: string | undefined;
   /** Receives name and whether an item with that name already exists in the public library (override case). */
-  publishConfirmDescription?: (name: string, opts: { existingInPublic: boolean }) => string;
+  publishConfirmDescription?:
+    | ((name: string, opts: { existingInPublic: boolean }) => string)
+    | undefined;
   /** Called after successful save (e.g. reset form). Optional. */
-  onSaveSuccess?: () => void;
+  onSaveSuccess?: (() => void) | undefined;
   /** Success message for private save. Default: "Saved successfully!" */
-  successMessage?: string;
+  successMessage?: string | undefined;
   /** Success message for public save. Default: "Saved to Realms Library!" */
-  publicSuccessMessage?: string;
+  publicSuccessMessage?: string | undefined;
 }
 
 export interface UseCreatorSaveReturn {

@@ -15,9 +15,9 @@ export function expandableChipShellClass({
   className,
 }: {
   variant: ChipVariant;
-  expanded?: boolean;
-  size?: ExpandableChipShellSize;
-  className?: string;
+  expanded?: boolean | undefined;
+  size?: ExpandableChipShellSize | undefined;
+  className?: string | undefined;
 }) {
   return cn(
     'inline-flex flex-col items-start font-medium transition-[box-shadow,background-color,border-color,padding,ring] duration-base ease-standard',

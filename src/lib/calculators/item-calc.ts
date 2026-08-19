@@ -29,23 +29,23 @@ export type { ItemProperty };
 // =============================================================================
 
 export interface ItemPropertyPayload {
-  id?: number;
-  name?: string;
-  op_1_lvl?: number;
-  property?: ItemProperty;
+  id?: number | undefined;
+  name?: string | undefined;
+  op_1_lvl?: number | undefined;
+  property?: ItemProperty | undefined;
 }
 
 /** Codex / hook row shape for property TP lookup (IDs may be string or number from API). */
 export type ItemPropertyTpRow = HasIdAndName & {
-  description?: string;
-  base_tp?: number;
-  tp_cost?: number;
-  op_1_tp?: number;
-  base_ip?: number;
-  op_1_ip?: number;
-  base_c?: number;
-  op_1_c?: number;
-  mechanic?: boolean;
+  description?: string | undefined;
+  base_tp?: number | undefined;
+  tp_cost?: number | undefined;
+  op_1_tp?: number | undefined;
+  base_ip?: number | undefined;
+  op_1_ip?: number | undefined;
+  base_c?: number | undefined;
+  op_1_c?: number | undefined;
+  mechanic?: boolean | undefined;
 };
 
 export interface ItemCostResult {
@@ -76,11 +76,11 @@ export interface ItemDamage {
 }
 
 export interface ItemDocument {
-  name?: string;
-  description?: string;
-  armamentType?: 'Weapon' | 'Armor' | 'Shield' | 'Accessory';
-  properties?: ItemPropertyPayload[];
-  damage?: ItemDamage[];
+  name?: string | undefined;
+  description?: string | undefined;
+  armamentType?: 'Weapon' | 'Armor' | 'Shield' | 'Accessory' | undefined;
+  properties?: ItemPropertyPayload[] | undefined;
+  damage?: ItemDamage[] | undefined;
 }
 
 export interface ItemDisplayData {
@@ -165,7 +165,10 @@ export function isGeneralProperty(prop: ItemPropertyPayload | ItemProperty): boo
  * still works even if the codex has mechanic: false for e.g. Weapon Damage or Range).
  */
 export function isMechanicProperty(
-  prop: ItemPropertyPayload | ItemProperty | { mechanic?: boolean; id?: number | string },
+  prop:
+    | ItemPropertyPayload
+    | ItemProperty
+    | { mechanic?: boolean | undefined; id?: number | string | undefined },
 ): boolean {
   if (!prop || typeof prop !== 'object') return false;
   if ((prop as ItemProperty).mechanic === true) return true;
@@ -185,7 +188,11 @@ export function isMechanicProperty(
  * only for non-mechanic entries; mechanic entries are restored from their dedicated UI state.
  */
 export function filterSavedItemPropertiesForList(
-  savedProperties: Array<{ id?: number | string; name?: string; op_1_lvl?: number }>,
+  savedProperties: Array<{
+    id?: number | string | undefined;
+    name?: string | undefined;
+    op_1_lvl?: number | undefined;
+  }>,
   propertiesDb: ItemProperty[],
 ): Array<{ property: ItemProperty; op_1_lvl: number }> {
   const result: Array<{ property: ItemProperty; op_1_lvl: number }> = [];

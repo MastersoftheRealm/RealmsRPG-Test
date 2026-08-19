@@ -25,7 +25,7 @@ type Row = Record<string, unknown>;
 interface QueryCall {
   table: string;
   ids: string[];
-  ownerId?: string;
+  ownerId?: string | undefined;
 }
 
 function createMockClient(tables: Record<string, Row[]>) {

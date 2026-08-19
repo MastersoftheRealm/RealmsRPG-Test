@@ -11,8 +11,8 @@ export function ProgressionEditor({
 }: {
   data: Record<string, unknown>;
   set: (key: string, value: unknown) => void;
-  creatureData?: Record<string, unknown>;
-  setCreature?: (key: string, value: unknown) => void;
+  creatureData?: Record<string, unknown> | undefined;
+  setCreature?: ((key: string, value: unknown) => void) | undefined;
 }) {
   return (
     <>

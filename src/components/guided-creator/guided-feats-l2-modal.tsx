@@ -40,7 +40,7 @@ export interface GuidedFeatsL2ModalProps {
   onClose: () => void;
   onConfirm: (selectedIds: string[]) => void;
   /** Same-type auto-select for path flow. Omit on custom / no-path. */
-  autoSelectPathType?: ArchetypeCategory | null;
+  autoSelectPathType?: ArchetypeCategory | null | undefined;
 }
 
 export function GuidedFeatsL2Modal({

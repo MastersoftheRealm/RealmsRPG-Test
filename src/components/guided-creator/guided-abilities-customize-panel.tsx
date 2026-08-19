@@ -18,10 +18,10 @@ export interface GuidedAbilitiesCustomizePanelProps {
   totalPoints: number;
   spentPoints: number;
   onAbilityChange: (ability: AbilityName, value: number) => void;
-  powerAbility?: AbilityName;
-  martialAbility?: AbilityName;
-  secondaryAbility?: AbilityName;
-  className?: string;
+  powerAbility?: AbilityName | undefined;
+  martialAbility?: AbilityName | undefined;
+  secondaryAbility?: AbilityName | undefined;
+  className?: string | undefined;
 }
 
 export function GuidedAbilitiesCustomizePanel({

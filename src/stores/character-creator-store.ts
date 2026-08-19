@@ -152,29 +152,35 @@ interface CharacterCreatorState {
 
   // Generate final character (pass part DBs so proficiencies get correct TP from codex)
   getCharacter: (options?: {
-    powerPartsDb?: Array<{
-      id?: string | number;
-      name?: string;
-      base_tp?: number;
-      op_1_tp?: number;
-      op_2_tp?: number;
-      op_3_tp?: number;
-    }>;
-    techniquePartsDb?: Array<{
-      id?: string | number;
-      name?: string;
-      base_tp?: number;
-      op_1_tp?: number;
-      op_2_tp?: number;
-      op_3_tp?: number;
-    }>;
-    itemPropertiesDb?: Array<{
-      id?: string | number;
-      name?: string;
-      base_tp?: number;
-      op_1_tp?: number;
-    }>;
-    rules?: Partial<CoreRulesMap>;
+    powerPartsDb?:
+      | Array<{
+          id?: string | number | undefined;
+          name?: string | undefined;
+          base_tp?: number | undefined;
+          op_1_tp?: number | undefined;
+          op_2_tp?: number | undefined;
+          op_3_tp?: number | undefined;
+        }>
+      | undefined;
+    techniquePartsDb?:
+      | Array<{
+          id?: string | number | undefined;
+          name?: string | undefined;
+          base_tp?: number | undefined;
+          op_1_tp?: number | undefined;
+          op_2_tp?: number | undefined;
+          op_3_tp?: number | undefined;
+        }>
+      | undefined;
+    itemPropertiesDb?:
+      | Array<{
+          id?: string | number | undefined;
+          name?: string | undefined;
+          base_tp?: number | undefined;
+          op_1_tp?: number | undefined;
+        }>
+      | undefined;
+    rules?: Partial<CoreRulesMap> | undefined;
   }) => Partial<Character>;
 }
 
@@ -624,17 +630,17 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           // Separate feats by type - archetype feats vs character feats
           // The feats step stores them with type: 'archetype' | 'character'
           archetypeFeats: (draft.feats || [])
-            .filter((f: { type?: string }) => f.type !== 'character')
+            .filter((f: { type?: string | undefined }) => f.type !== 'character')
             .map((f) => {
               const rest = { ...f };
-              delete (rest as { type?: string }).type;
+              delete (rest as { type?: string | undefined }).type;
               return rest;
             }),
           feats: (draft.feats || [])
-            .filter((f: { type?: string }) => f.type === 'character')
+            .filter((f: { type?: string | undefined }) => f.type === 'character')
             .map((f) => {
               const rest = { ...f };
-              delete (rest as { type?: string }).type;
+              delete (rest as { type?: string | undefined }).type;
               return rest;
             }),
           powers: draft.powers || [],

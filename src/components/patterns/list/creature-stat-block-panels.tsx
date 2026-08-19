@@ -64,7 +64,7 @@ interface CreatureStatBlockExpandedContentProps {
     key: string;
     rowId: string;
     name: string;
-    description?: string;
+    description?: string | undefined;
     abilityAbbr: string;
     bonus: number;
   }>;

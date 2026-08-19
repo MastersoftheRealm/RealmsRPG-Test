@@ -47,17 +47,20 @@ export interface PowerTechniqueFiltersProps {
   /** Category options derived from the current list. */
   categoryOptions: string[];
   /** Innate Threshold dropdown values from `listInnateThresholdFilterOptions`. */
-  innateThresholdOptions?: number[];
+  innateThresholdOptions?: number[] | undefined;
   /** Notified when character context changes (for applyPowerTechniqueFilters). */
-  onCharacterContextChange?: (ctx: PowerTechniqueCharacterContext | null) => void;
+  onCharacterContextChange?: ((ctx: PowerTechniqueCharacterContext | null) => void) | undefined;
   /** Selected character id ('' when none). Used for add-to-character row actions. */
-  onCharacterIdChange?: (characterId: string) => void;
-  className?: string;
-  showCharacterFilter?: boolean;
+  onCharacterIdChange?: ((characterId: string) => void) | undefined;
+  className?: string | undefined;
+  showCharacterFilter?: boolean | undefined;
   /** Persist character pick (default true). USM/L3 pass false. */
-  persistCharacter?: boolean;
+  persistCharacter?: boolean | undefined;
   /** Archetype Path filter — last in the grid (TASK-752 / TASK-753). */
-  pathFilter?: Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'> | null;
+  pathFilter?:
+    | Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'>
+    | null
+    | undefined;
 }
 
 export function PowerTechniqueFilters({

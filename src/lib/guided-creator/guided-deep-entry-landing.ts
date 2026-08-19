@@ -14,7 +14,7 @@ export function shouldApplyGuidedDeepEntryOnArrival(args: {
   navigationIntent: GuidedNavigationIntent;
   entryNonce: number;
   lastAppliedEntryNonce: number | null;
-  enabled?: boolean;
+  enabled?: boolean | undefined;
 }): boolean {
   if (args.enabled === false) return false;
   if (!prefersDeepCatalogEntry(args.draft)) return false;

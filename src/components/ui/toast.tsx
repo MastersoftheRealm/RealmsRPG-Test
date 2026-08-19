@@ -21,7 +21,7 @@ interface Toast {
   id: string;
   message: string;
   type: ToastType;
-  duration?: number;
+  duration?: number | undefined;
 }
 
 interface ToastContextValue {

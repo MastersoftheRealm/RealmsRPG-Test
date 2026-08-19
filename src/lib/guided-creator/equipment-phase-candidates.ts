@@ -76,9 +76,9 @@ function rowsForPool(
 
 /** Fields needed to rank L1 weapon cards — not L2 eligibility (ability/TP/currency). */
 export type PhaseL1RankContext = {
-  pathRecommendedIds?: Set<string>;
-  martAbil?: AbilityName | null;
-  powAbil?: AbilityName | null;
+  pathRecommendedIds?: Set<string> | undefined;
+  martAbil?: AbilityName | null | undefined;
+  powAbil?: AbilityName | null | undefined;
 };
 
 /**

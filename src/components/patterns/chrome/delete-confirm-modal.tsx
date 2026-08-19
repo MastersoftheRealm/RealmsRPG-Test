@@ -19,9 +19,9 @@ interface DeleteConfirmModalProps {
   /** Type label for display (e.g., "power", "technique", "item", "feat") */
   itemType: string;
   /** Context for delete message (e.g., "library", "character"). Default: "library" */
-  deleteContext?: string;
+  deleteContext?: string | undefined;
   /** Whether deletion is in progress */
-  isDeleting?: boolean;
+  isDeleting?: boolean | undefined;
   /** Called when delete is confirmed */
   onConfirm: () => void;
   /** Called when modal is closed/cancelled */

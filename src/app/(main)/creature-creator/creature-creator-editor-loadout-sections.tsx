@@ -198,14 +198,14 @@ export function CreatureCreatorEditorLoadoutSections({
                 (power: {
                   id: string;
                   name: string;
-                  energy?: number;
-                  action?: string;
-                  damage?: string;
-                  area?: string;
-                  duration?: string;
-                  innate?: boolean;
-                  image_id?: string | null;
-                  image_url?: string | null;
+                  energy?: number | undefined;
+                  action?: string | undefined;
+                  damage?: string | undefined;
+                  area?: string | undefined;
+                  duration?: string | undefined;
+                  innate?: boolean | undefined;
+                  image_id?: string | null | undefined;
+                  image_url?: string | null | undefined;
                 }) => (
                   <GridListRow
                     key={power.id}
@@ -278,11 +278,11 @@ export function CreatureCreatorEditorLoadoutSections({
                 (tech: {
                   id: string;
                   name: string;
-                  energy?: number;
-                  weapon?: string;
-                  tp?: number;
-                  image_id?: string | null;
-                  image_url?: string | null;
+                  energy?: number | undefined;
+                  weapon?: string | undefined;
+                  tp?: number | undefined;
+                  image_id?: string | null | undefined;
+                  image_url?: string | null | undefined;
                 }) => (
                   <GridListRow
                     key={tech.id}

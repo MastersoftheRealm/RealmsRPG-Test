@@ -37,12 +37,12 @@ const DISALLOWED_INNATE_PART_IDS = new Set([
 
 export interface InnatePowerSnapshot {
   id: string;
-  name?: string;
+  name?: string | undefined;
   /** Energy cost (from derivePowerDisplay). */
   energy: number;
   /** Display or raw action type (e.g. "Basic Action", "basic"). */
-  actionType?: string;
-  isReaction?: boolean;
+  actionType?: string | undefined;
+  isReaction?: boolean | undefined;
   /** Part ids on the power (for healing / energy-gain checks). */
   partIds: string[];
   /** Part names (fallback when ids unknown). */
@@ -55,8 +55,8 @@ export interface InnateEligibilityIssue {
 }
 
 export function isHealingOrEnergyGainPart(part: {
-  id?: string | number | null;
-  name?: string | null;
+  id?: string | number | null | undefined;
+  name?: string | null | undefined;
 }): boolean {
   const id = part.id != null ? String(part.id).trim() : '';
   if (id && DISALLOWED_INNATE_PART_IDS.has(id)) return true;
@@ -179,17 +179,17 @@ export function getLevel1InnateBudget(
 
 export function snapshotOfficialPowerForInnate(
   power: {
-    id?: string | number | null;
-    name?: string | null;
-    actionType?: string | null;
-    isReaction?: boolean | null;
+    id?: string | number | null | undefined;
+    name?: string | null | undefined;
+    actionType?: string | null | undefined;
+    isReaction?: boolean | null | undefined;
     parts?: Array<{
-      id?: string | number | null;
-      name?: string | null;
-      op_1_lvl?: number;
-      op_2_lvl?: number;
-      op_3_lvl?: number;
-      applyDuration?: boolean;
+      id?: string | number | null | undefined;
+      name?: string | null | undefined;
+      op_1_lvl?: number | undefined;
+      op_2_lvl?: number | undefined;
+      op_3_lvl?: number | undefined;
+      applyDuration?: boolean | undefined;
     }> | null;
   },
   partsDb: PowerPart[],
@@ -218,8 +218,8 @@ export function validateRecommendedInnatePowers(
   innatePowerIds: string[],
   options: {
     archetypeType: ArchetypeCategory;
-    powerProfStart?: number | null;
-    martialProfStart?: number | null;
+    powerProfStart?: number | null | undefined;
+    martialProfStart?: number | null | undefined;
     resolvePower: (id: string) => InnatePowerSnapshot | null;
   },
 ): InnateEligibilityIssue[] {

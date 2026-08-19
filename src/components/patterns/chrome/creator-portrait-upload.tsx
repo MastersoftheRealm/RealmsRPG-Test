@@ -23,17 +23,17 @@ import {
 export type CreatorPortraitVariant = 'finalize' | 'reveal';
 
 export interface CreatorPortraitUploadLabels {
-  fieldLabel?: string;
-  emptyHint?: string;
-  modalTitle?: string;
-  removeLabel?: string;
-  changeAria?: (hasPortrait: boolean) => string;
-  uploadButton?: (hasPortrait: boolean) => string;
-  helpText?: string;
-  tooLarge?: string;
-  processError?: string;
-  libraryTitle?: string;
-  libraryDescription?: string;
+  fieldLabel?: string | undefined;
+  emptyHint?: string | undefined;
+  modalTitle?: string | undefined;
+  removeLabel?: string | undefined;
+  changeAria?: ((hasPortrait: boolean) => string) | undefined;
+  uploadButton?: ((hasPortrait: boolean) => string) | undefined;
+  helpText?: string | undefined;
+  tooLarge?: string | undefined;
+  processError?: string | undefined;
+  libraryTitle?: string | undefined;
+  libraryDescription?: string | undefined;
 }
 
 export interface CreatorPortraitUploadProps {
@@ -41,8 +41,8 @@ export interface CreatorPortraitUploadProps {
   portraitUrl: string | null | undefined;
   onPortraitChange: (url: string) => void;
   onPortraitRemove: () => void;
-  className?: string;
-  labels?: CreatorPortraitUploadLabels;
+  className?: string | undefined;
+  labels?: CreatorPortraitUploadLabels | undefined;
 }
 
 const DEFAULT_LABELS = {
@@ -60,6 +60,36 @@ const DEFAULT_LABELS = {
   libraryDescription: 'Pick species or creature art from the Realms Image Library.',
 } as const;
 
+type PortraitCopy = {
+  fieldLabel: string;
+  emptyHint: string;
+  modalTitle: string;
+  removeLabel: string;
+  changeAria: (hasPortrait: boolean) => string;
+  uploadButton: (hasPortrait: boolean) => string;
+  helpText: string;
+  tooLarge: string;
+  processError: string;
+  libraryTitle: string;
+  libraryDescription: string;
+};
+
+function mergePortraitCopy(overrides?: CreatorPortraitUploadLabels): PortraitCopy {
+  return {
+    fieldLabel: overrides?.fieldLabel ?? DEFAULT_LABELS.fieldLabel,
+    emptyHint: overrides?.emptyHint ?? DEFAULT_LABELS.emptyHint,
+    modalTitle: overrides?.modalTitle ?? DEFAULT_LABELS.modalTitle,
+    removeLabel: overrides?.removeLabel ?? DEFAULT_LABELS.removeLabel,
+    changeAria: overrides?.changeAria ?? DEFAULT_LABELS.changeAria,
+    uploadButton: overrides?.uploadButton ?? DEFAULT_LABELS.uploadButton,
+    helpText: overrides?.helpText ?? DEFAULT_LABELS.helpText,
+    tooLarge: overrides?.tooLarge ?? DEFAULT_LABELS.tooLarge,
+    processError: overrides?.processError ?? DEFAULT_LABELS.processError,
+    libraryTitle: overrides?.libraryTitle ?? DEFAULT_LABELS.libraryTitle,
+    libraryDescription: overrides?.libraryDescription ?? DEFAULT_LABELS.libraryDescription,
+  };
+}
+
 export function CreatorPortraitUpload({
   variant,
   portraitUrl,
@@ -68,7 +98,7 @@ export function CreatorPortraitUpload({
   className,
   labels,
 }: CreatorPortraitUploadProps) {
-  const copy = { ...DEFAULT_LABELS, ...labels };
+  const copy = mergePortraitCopy(labels);
   const [showModal, setShowModal] = useState(false);
   const [showBankPicker, setShowBankPicker] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);

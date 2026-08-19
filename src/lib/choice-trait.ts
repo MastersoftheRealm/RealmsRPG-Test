@@ -4,10 +4,10 @@ import type { ChipData } from '@/components/patterns/list/grid-list-row';
 export type ChoiceTraitOptionSource = {
   id: string | number;
   name: string;
-  description?: string;
+  description?: string | undefined;
 };
 
-export function getChoiceOptionIds(trait: { option_trait_ids?: string[] }): string[] {
+export function getChoiceOptionIds(trait: { option_trait_ids?: string[] | undefined }): string[] {
   return Array.isArray(trait.option_trait_ids) ? trait.option_trait_ids : [];
 }
 
@@ -55,7 +55,10 @@ export function choiceTraitOptionIdsToChipData(
 }
 
 /** Trait rows that include `option_trait_ids` (from codex). */
-export type TraitWithChoiceOptions = { id: string | number; option_trait_ids?: string[] };
+export type TraitWithChoiceOptions = {
+  id: string | number;
+  option_trait_ids?: string[] | undefined;
+};
 
 function traitByIdMapForChoiceOptions(
   traits: TraitWithChoiceOptions[] | null | undefined,

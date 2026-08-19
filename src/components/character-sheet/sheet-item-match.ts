@@ -4,7 +4,7 @@
  */
 
 export function matchesSheetEquipmentItem(
-  item: { id?: string | number; name?: string },
+  item: { id?: string | number | undefined; name?: string | undefined },
   itemId: string | number,
   idx: number,
 ): boolean {

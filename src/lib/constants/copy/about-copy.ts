@@ -7,11 +7,11 @@ import { LANDING_COPY } from './landing-copy';
 export type AboutInline =
   | string
   | { type: 'strong'; text: string }
-  | { type: 'link'; text: string; href: string; medium?: boolean };
+  | { type: 'link'; text: string; href: string; medium?: boolean | undefined };
 
 export type AboutParagraph = {
   parts: AboutInline[];
-  italic?: boolean;
+  italic?: boolean | undefined;
 };
 
 export type AboutListItem = {
@@ -33,16 +33,16 @@ export type AboutIconKey =
 export type AboutCta = {
   href: string;
   label: string;
-  variant?: 'primary' | 'outline';
+  variant?: 'primary' | 'outline' | undefined;
   icon: AboutIconKey;
   /** External URL (Discord, etc.) */
-  external?: boolean;
+  external?: boolean | undefined;
 };
 
 export type AboutSlideBody = {
   paragraphs: AboutParagraph[];
-  list?: AboutListItem[];
-  ctas?: AboutCta[];
+  list?: AboutListItem[] | undefined;
+  ctas?: AboutCta[] | undefined;
 };
 
 export type AboutCarouselSlideCopy = {

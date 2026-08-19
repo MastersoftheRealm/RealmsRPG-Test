@@ -172,7 +172,8 @@ export function PowersStep() {
 
   const displayFilterFn = useMemo(
     () => (item: SelectableItem) =>
-      source === 'all' || (item.data as { _source?: 'my' | 'public' })?._source === source,
+      source === 'all' ||
+      (item.data as { _source?: 'my' | 'public' | undefined })?._source === source,
     [source],
   );
 

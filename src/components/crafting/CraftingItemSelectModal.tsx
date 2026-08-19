@@ -71,7 +71,7 @@ export function CraftingItemSelectModal({
 
   const armamentsItems = useMemo((): SelectableItem[] => {
     const list: SelectableItem[] = [];
-    const addUser = (i: UserItem & { _source?: 'my' | 'public' }) => {
+    const addUser = (i: UserItem & { _source?: 'my' | 'public' | undefined }) => {
       const marketPrice = getLibraryItemMarketPrice(i, propertiesDb);
       list.push({
         id: String(i.id ?? i.docId ?? ''),
@@ -127,7 +127,7 @@ export function CraftingItemSelectModal({
       list.push({
         id: String(e.id),
         name: String(e.name ?? ''),
-        description: String((e as { description?: string }).description ?? ''),
+        description: String((e as { description?: string | undefined }).description ?? ''),
         columns: [{ key: 'Currency', value: marketPrice }],
         data: {
           source: 'public',

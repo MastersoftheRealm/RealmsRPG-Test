@@ -25,46 +25,55 @@ import { DEFAULT_DEFENSE_SKILLS } from '@/types/skills';
 /** Minimal feat shape needed for requirement checks (structurally compatible with codex Feat). */
 export interface FeatForRequirement {
   id: string | number;
-  name?: string;
-  lvl_req?: number;
-  ability_req?: string[];
-  abil_req_val?: number[];
-  skill_req?: Array<string | number>;
-  skill_req_val?: number[];
-  mart_abil_req?: number | string;
-  speed_req?: number;
-  feat_lvl?: number;
-  base_feat_id?: string;
+  name?: string | undefined;
+  lvl_req?: number | undefined;
+  ability_req?: string[] | undefined;
+  abil_req_val?: number[] | undefined;
+  skill_req?: Array<string | number> | undefined;
+  skill_req_val?: number[] | undefined;
+  mart_abil_req?: number | string | undefined;
+  speed_req?: number | undefined;
+  feat_lvl?: number | undefined;
+  base_feat_id?: string | undefined;
 }
 
 /** Minimal character/draft shape needed for requirement checks. */
 export interface CharacterForFeatRequirement {
-  level?: number;
-  abilities?: Partial<Abilities>;
+  level?: number | undefined;
+  abilities?: Partial<Abilities> | undefined;
   /** Character: Record<id, { prof, val }>; Draft: Record<id, value (number)>; legacy: array. */
   skills?:
-    | Record<string, number | { prof?: boolean; val?: number }>
-    | Array<{ id?: string | number; name?: string; skill_val?: number; prof?: boolean }>
-    | null;
+    | Record<string, number | { prof?: boolean | undefined; val?: number | undefined }>
+    | Array<{
+        id?: string | number | undefined;
+        name?: string | undefined;
+        skill_val?: number | undefined;
+        prof?: boolean | undefined;
+      }>
+    | null
+    | undefined;
   /** Canonical defense allocation field. */
-  defenseVals?: Partial<DefenseSkills> | null;
+  defenseVals?: Partial<DefenseSkills> | null | undefined;
   /** @deprecated legacy defense field, still honored for old saves/drafts. */
-  defenseSkills?: Partial<DefenseSkills> | null;
+  defenseSkills?: Partial<DefenseSkills> | null | undefined;
   /** Martial ability (top-level on saved characters). */
-  mart_abil?: number | string;
+  mart_abil?: number | string | undefined;
   /** Base speed (default 6). */
-  speedBase?: number;
+  speedBase?: number | undefined;
   /** Creator draft nests martial ability under archetype. */
-  archetype?: { mart_abil?: number | string } | null;
+  archetype?: { mart_abil?: number | string | undefined } | null | undefined;
   /** Selected/owned feats — used for leveled-feat prerequisite checks. */
-  feats?: Array<{ id?: string | number; name?: string }> | null;
-  archetypeFeats?: Array<{ id?: string | number; name?: string }> | null;
+  feats?: Array<{ id?: string | number | undefined; name?: string | undefined }> | null | undefined;
+  archetypeFeats?:
+    | Array<{ id?: string | number | undefined; name?: string | undefined }>
+    | null
+    | undefined;
 }
 
 export interface FeatRequirementResult {
   met: boolean;
   /** All failing reasons joined; undefined when met. */
-  reason?: string;
+  reason?: string | undefined;
   /** Individual failing reasons. */
   reasons: string[];
 }
@@ -139,10 +148,10 @@ export function getPreviousLevelFeatId(
 /** Normalize a character's skills into the shape `getSkillBonusForFeatRequirement` expects. */
 function normalizeSkills(
   skills: CharacterForFeatRequirement['skills'],
-): Record<string, number | { prof?: boolean; val?: number }> {
+): Record<string, number | { prof?: boolean | undefined; val?: number | undefined }> {
   if (!skills) return {};
   if (Array.isArray(skills)) {
-    const record: Record<string, { prof?: boolean; val?: number }> = {};
+    const record: Record<string, { prof?: boolean | undefined; val?: number | undefined }> = {};
     skills.forEach((s) => {
       const id = s.id != null ? String(s.id) : '';
       const name = s.name != null ? String(s.name) : '';
@@ -152,7 +161,10 @@ function normalizeSkills(
     });
     return record;
   }
-  return skills as Record<string, number | { prof?: boolean; val?: number }>;
+  return skills as Record<
+    string,
+    number | { prof?: boolean | undefined; val?: number | undefined }
+  >;
 }
 
 /**
@@ -248,7 +260,7 @@ export function checkFeatRequirements(
   if (prevLevelId) {
     const ownedFeatIds = new Set(
       [...(character.feats || []), ...(character.archetypeFeats || [])].map((f) =>
-        String(f.id ?? (f as { name?: string }).name),
+        String(f.id ?? (f as { name?: string | undefined }).name),
       ),
     );
     if (!ownedFeatIds.has(prevLevelId)) {
@@ -269,9 +281,12 @@ export function checkFeatRequirements(
 export function characterToFeatRequirementCharacter(
   character: import('@/types').Character,
 ): CharacterForFeatRequirement {
-  const skillsRecord: Record<string, number | { prof?: boolean; val?: number }> = {};
+  const skillsRecord: Record<
+    string,
+    number | { prof?: boolean | undefined; val?: number | undefined }
+  > = {};
   const rawSkills = character.skills as
-    | Record<string, number | { prof?: boolean; val?: number }>
+    | Record<string, number | { prof?: boolean | undefined; val?: number | undefined }>
     | undefined;
   if (rawSkills) {
     Object.entries(rawSkills).forEach(([key, sk]) => {

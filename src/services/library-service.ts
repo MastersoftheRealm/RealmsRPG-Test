@@ -21,7 +21,7 @@ export type LibraryType = LibraryItemType;
 export async function saveToLibrary(
   type: LibraryType,
   data: LibrarySaveBody,
-  options?: { existingId?: string },
+  options?: { existingId?: string | undefined },
 ): Promise<string> {
   if (options?.existingId) {
     await apiFetch<void>(`${API_BASE}/${type}/${encodeURIComponent(options.existingId)}`, {
@@ -49,7 +49,7 @@ export async function findLibraryItemByName(
 ): Promise<{ id: string } | null> {
   // PERF-01: server-side name lookup returns only matching `{ id, name }`
   // rows instead of the whole library.
-  const matches = await apiFetch<Array<{ id: string; name?: string }>>(
+  const matches = await apiFetch<Array<{ id: string; name?: string | undefined }>>(
     `${API_BASE}/${type}?name=${encodeURIComponent(name.trim())}`,
   );
   const found = matches[0];
@@ -99,8 +99,8 @@ export async function addOfficialItemToLibrary<T extends LibraryItemType>(
 ): Promise<string> {
   /* eslint-disable @typescript-eslint/no-unused-vars -- strip official-library metadata before copy */
   const { id, docId, _source, ...data } = officialItem as LibraryRow<T> & {
-    docId?: unknown;
-    _source?: unknown;
+    docId?: unknown | undefined;
+    _source?: unknown | undefined;
   };
   /* eslint-enable @typescript-eslint/no-unused-vars */
   return saveToLibrary(type, { ...data, createdAt: new Date().toISOString() });
@@ -110,7 +110,7 @@ export async function addOfficialItemToLibrary<T extends LibraryItemType>(
 export async function saveToOfficialLibrary(
   type: LibraryItemType,
   data: LibrarySaveBody,
-  options?: { existingId?: string },
+  options?: { existingId?: string | undefined },
 ): Promise<string> {
   const body = options?.existingId ? { ...data, id: options.existingId } : data;
   const result = await apiFetch<{ id: string }>(`/api/official/${type}`, {

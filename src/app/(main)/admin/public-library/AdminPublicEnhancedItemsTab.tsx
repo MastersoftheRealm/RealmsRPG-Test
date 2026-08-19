@@ -132,7 +132,7 @@ function EnhancedItemEditModal({
   onClose: () => void;
   items: LibraryItem[];
   powers: LibraryPower[];
-  initial?: OfficialEnhancedItem;
+  initial?: OfficialEnhancedItem | undefined;
   isSaving: boolean;
   onSave: (body: EnhancedEditBody) => Promise<void>;
 }) {
@@ -163,7 +163,7 @@ function EnhancedItemEditModal({
       powerSource: 'official',
       powerId: String(power.id),
       powerName: String(power.name ?? ''),
-      powerEnergy: Number((power as { energy?: unknown }).energy ?? 0),
+      powerEnergy: Number((power as { energy?: unknown | undefined }).energy ?? 0),
       usesType,
       usesCount: usesType === 'permanent' ? undefined : usesCount,
     };

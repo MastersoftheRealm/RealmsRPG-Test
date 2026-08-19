@@ -10,24 +10,24 @@ import { IconButton } from '@/components/ui';
 import { DEFAULT_TAB_VISIBILITY, LIBRARY_TAB_DEFS, type TabType } from './library-tab-config';
 import type { AddModalType } from './character-sheet-context';
 
-type LibraryTabDef = { id: TabType; label: string; onAdd?: () => void };
+type LibraryTabDef = { id: TabType; label: string; onAdd?: (() => void) | undefined };
 
 type LibraryNavTab = {
   id: TabType;
   label: string;
-  dimmed?: boolean;
-  suffix?: ReactNode;
+  dimmed?: boolean | undefined;
+  suffix?: ReactNode | undefined;
 };
 
 export function useLibraryTabNavigation(options: {
   isEditMode: boolean;
-  activeTabProp?: TabType;
-  onActiveTabChange?: (tab: TabType) => void;
-  tabVisibility?: Partial<Record<TabType, boolean>>;
-  onTabVisibilityChange?: (next: Partial<Record<TabType, boolean>>) => void;
-  onAddPowerProp?: () => void;
-  onAddTechniqueProp?: () => void;
-  setAddModalType?: (type: AddModalType) => void;
+  activeTabProp?: TabType | undefined;
+  onActiveTabChange?: ((tab: TabType) => void) | undefined;
+  tabVisibility?: Partial<Record<TabType, boolean>> | undefined;
+  onTabVisibilityChange?: ((next: Partial<Record<TabType, boolean>>) => void) | undefined;
+  onAddPowerProp?: (() => void) | undefined;
+  onAddTechniqueProp?: (() => void) | undefined;
+  setAddModalType?: ((type: AddModalType) => void) | undefined;
 }) {
   const {
     isEditMode,

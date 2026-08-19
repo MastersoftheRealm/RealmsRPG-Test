@@ -27,9 +27,9 @@ export interface SummaryItem {
   /** Remaining/available points */
   remaining: number;
   /** Total points available (optional, for display) */
-  total?: number;
+  total?: number | undefined;
   /** Custom color variant */
-  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info';
+  variant?: 'default' | 'success' | 'warning' | 'danger' | 'info' | undefined;
 }
 
 export interface CostStat {
@@ -38,11 +38,11 @@ export interface CostStat {
   /** The stat value */
   value: string | number;
   /** Lucide icon component */
-  icon?: ReactNode;
+  icon?: ReactNode | undefined;
   /** Color theme: energy (blue), tp (purple), health (red), currency (amber) */
   color: 'energy' | 'tp' | 'health' | 'currency';
   /** Optional InfoTippy beside the label */
-  help?: ReactNode;
+  help?: ReactNode | undefined;
 }
 
 export interface StatRow {
@@ -51,56 +51,62 @@ export interface StatRow {
   /** Right-side value */
   value: string | number;
   /** Optional custom color for value (for negative values, etc.) */
-  valueColor?: string;
+  valueColor?: string | undefined;
 }
 
 export interface BreakdownList {
   /** Section title */
   title: string;
   /** List items (can be strings or objects with label and optional detail) */
-  items: Array<string | { label: string; detail?: string }>;
+  items: Array<string | { label: string; detail?: string | undefined }>;
 }
 
 export interface CreatorSummaryPanelProps {
   /** Title of the summary panel */
   title: string;
   /** Large cost stat boxes at top (Energy/TP/Currency) */
-  costStats?: CostStat[];
+  costStats?: CostStat[] | undefined;
   /** Badge displayed prominently (for rarity, etc.) */
-  badge?: {
-    label: string;
-    variant?: ChipVariant;
-    /** @deprecated Prefer `variant` (canonical chip token) */
-    className?: string;
-  };
+  badge?:
+    | {
+        label: string;
+        variant?: ChipVariant | undefined;
+        /** @deprecated Prefer `variant` (canonical chip token) */
+        className?: string | undefined;
+      }
+    | undefined;
   /** Summary items to display (resource tracking with remaining points) */
-  items?: SummaryItem[];
+  items?: SummaryItem[] | undefined;
   /** Optional quick stats section (HP, EN, SPD chips) */
-  quickStats?: {
-    label: string;
-    value: string | number;
-    color?: string;
-  }[];
+  quickStats?:
+    | {
+        label: string;
+        value: string | number;
+        color?: string | undefined;
+      }[]
+    | undefined;
   /** Key-value stat rows */
-  statRows?: StatRow[];
+  statRows?: StatRow[] | undefined;
   /** Breakdown lists (TP sources, properties, etc.) */
-  breakdowns?: BreakdownList[];
+  breakdowns?: BreakdownList[] | undefined;
   /** Compact resource boxes at top (e.g. ability pts, skill pts - for creature creator) */
-  resourceBoxes?: Array<{
-    label: string;
-    value: number | string;
-    variant?: SummaryItem['variant'];
-  }>;
+  resourceBoxes?:
+    | Array<{
+        label: string;
+        value: number | string;
+        variant?: SummaryItem['variant'] | undefined;
+      }>
+    | undefined;
   /** Line items as sentences: "Skills: Stealth +3, Athletics -1" (D&D stat block style) */
-  lineItems?: Array<{ label: string; items: string[] }>;
+  lineItems?: Array<{ label: string; items: string[] }> | undefined;
   /** Abilities as chips (e.g. STR +2, VIT +1) — rendered in a section "Abilities" below quickStats with border/chip style */
-  abilitiesChips?: Array<{ abbr: string; value: number }>;
+  abilitiesChips?: Array<{ abbr: string; value: number }> | undefined;
   /** Additional content at the bottom */
-  children?: ReactNode;
+  children?: ReactNode | undefined;
   /** Help row under cost stats (e.g. Innate Power tip) */
-  costHelp?: ReactNode;
+  costHelp?: ReactNode | undefined;
   /** Additional class names */
-  className?: string;
+  className?: string | undefined;
 }
 
 const COST_STAT_COLORS: Record<CostStat['color'], { bg: string; text: string }> = {

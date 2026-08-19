@@ -19,20 +19,20 @@ import type { DetailOptionItemModel } from '@/lib/detail-option';
 
 export type DetailOptionItem = DetailOptionItemModel & {
   /** Override builders' expandedHint with custom React content. */
-  supplementalExpandedContent?: ReactNode;
+  supplementalExpandedContent?: ReactNode | undefined;
 };
 
 export interface DetailOptionListProps {
   items: DetailOptionItem[];
-  emptyLabel?: string;
-  className?: string;
-  groupLabel?: string;
-  groupHint?: string;
+  emptyLabel?: string | undefined;
+  className?: string | undefined;
+  groupLabel?: string | undefined;
+  groupHint?: string | undefined;
   /** When false, hide Name/Description column headers for a cleaner catalog list. Default true. */
-  showColumnHeaders?: boolean;
+  showColumnHeaders?: boolean | undefined;
   /** Semantic text styles for empty / group hint. */
-  mutedClassName?: string;
-  hintClassName?: string;
+  mutedClassName?: string | undefined;
+  hintClassName?: string | undefined;
 }
 
 const DEFAULT_MUTED = 'font-nunito text-sm text-text-secondary';

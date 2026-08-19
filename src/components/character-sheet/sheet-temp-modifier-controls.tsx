@@ -30,8 +30,8 @@ export function TempModifierStepperRow({
   tempDelta: number;
   onTempDeltaChange: (delta: number) => void;
   /** LargeStatBlock uses "Temp: +N"; inline health header uses signed only. */
-  deltaFormat?: 'temp-label' | 'signed';
-  className?: string;
+  deltaFormat?: 'temp-label' | 'signed' | undefined;
+  className?: string | undefined;
 }) {
   const deltaText =
     deltaFormat === 'signed'
@@ -78,10 +78,10 @@ export function TempModifierInlineLabel({
   ariaLabel: string;
   /** Used in stepper button titles (e.g. "Terminal"). */
   titleLabel: string;
-  tempDelta?: number;
-  isTempModifierMode?: boolean;
-  onTempDeltaChange?: (delta: number) => void;
-  valueClassName?: string;
+  tempDelta?: number | undefined;
+  isTempModifierMode?: boolean | undefined;
+  onTempDeltaChange?: ((delta: number) => void) | undefined;
+  valueClassName?: string | undefined;
 }) {
   const { tempActive, setTempActive, canTemp, showTempControls } = useTempModifierActive(
     isTempModifierMode,

@@ -30,7 +30,13 @@ import {
   powerAbility,
 } from '../../../../public/tooltip-text';
 
-function PathAbilityChips({ path, className }: { path: Archetype; className?: string }) {
+function PathAbilityChips({
+  path,
+  className,
+}: {
+  path: Archetype;
+  className?: string | undefined;
+}) {
   const chips = buildPathAbilityChipLabels(path);
   if (chips.length === 0) return null;
 

@@ -9,8 +9,8 @@ import { cn } from '@/lib/utils/cn';
 interface AuthCardProps {
   children: React.ReactNode;
   title: string;
-  subtitle?: string;
-  className?: string;
+  subtitle?: string | undefined;
+  className?: string | undefined;
 }
 
 export function AuthCard({ children, title, subtitle, className }: AuthCardProps) {

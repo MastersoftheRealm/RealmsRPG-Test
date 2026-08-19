@@ -57,12 +57,12 @@ export function buildReadOnlySheetContextValue(input: {
   pointBudgets: CharacterSheetPointBudgets | null;
   enrichedData: EnrichedCharacterData | null;
   libraryModel: SheetLibraryModel | null;
-  libraryHandlers?: CharacterSheetDerivedHandlers;
+  libraryHandlers?: CharacterSheetDerivedHandlers | undefined;
   characterSpeciesSkills: string[];
   libraryActiveTab: CharacterLibraryTabId;
   setLibraryActiveTab: (tab: CharacterLibraryTabId) => void;
-  displayCharacter?: Character | null;
-  calculatedStats?: CharacterSheetStats | null;
+  displayCharacter?: Character | null | undefined;
+  calculatedStats?: CharacterSheetStats | null | undefined;
 }): CharacterSheetContextValue {
   return {
     character: input.character,

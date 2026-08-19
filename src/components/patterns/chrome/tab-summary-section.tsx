@@ -17,9 +17,9 @@ export interface TabSummarySectionProps {
   /** Content to display in the summary section */
   children: ReactNode;
   /** Variant controls the color scheme */
-  variant?: 'default' | 'power' | 'martial' | 'currency' | 'physical';
+  variant?: 'default' | 'power' | 'martial' | 'currency' | 'physical' | undefined;
   /** Additional className */
-  className?: string;
+  className?: string | undefined;
 }
 
 const variantStyles = {
@@ -52,15 +52,15 @@ export interface SummaryItemProps {
   /** Value to display (can be string, number, or ReactNode) */
   value: ReactNode;
   /** Optional icon/emoji before the label */
-  icon?: ReactNode;
+  icon?: ReactNode | undefined;
   /** Optional help control beside the label (e.g. InfoTippy) — same slot as PointStatus.labelAccessory */
-  labelAccessory?: ReactNode;
+  labelAccessory?: ReactNode | undefined;
   /** Highlight the value with color */
-  highlight?: boolean;
+  highlight?: boolean | undefined;
   /** Color variant for highlighting */
-  highlightColor?: 'primary' | 'success' | 'warning' | 'danger' | 'power' | 'martial';
+  highlightColor?: 'primary' | 'success' | 'warning' | 'danger' | 'power' | 'martial' | undefined;
   /** Additional className */
-  className?: string;
+  className?: string | undefined;
 }
 
 const highlightColors = {
@@ -107,7 +107,7 @@ export function SummaryItem({
  */
 export interface SummaryRowProps {
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }
 
 export function SummaryRow({ children, className }: SummaryRowProps) {

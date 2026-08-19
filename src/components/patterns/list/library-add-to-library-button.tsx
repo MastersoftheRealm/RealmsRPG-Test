@@ -42,7 +42,7 @@ export function LibraryAddToLibraryButton({
   label = 'Add to my library',
 }: {
   onClick: (event: MouseEvent<HTMLButtonElement>) => void;
-  label?: string;
+  label?: string | undefined;
 }) {
   return (
     <LibraryRowAddIconButton onClick={onClick} label={label}>

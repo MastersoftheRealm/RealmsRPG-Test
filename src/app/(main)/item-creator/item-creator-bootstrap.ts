@@ -48,8 +48,8 @@ export interface ItemCreatorCache {
   hasShieldDamage: boolean;
   shieldDamage: { amount: number; size: number };
   abilityRequirement: ItemAbilityRequirement | null;
-  imageId?: string | null;
-  imageUrl?: string | null;
+  imageId?: string | null | undefined;
+  imageUrl?: string | null | undefined;
   timestamp: number;
 }
 
@@ -73,25 +73,28 @@ export interface ItemCreatorFormState {
 }
 
 export type ItemLibraryRecord = {
-  name?: string;
-  description?: string;
-  type?: string;
-  imageId?: string | null;
-  image_id?: string | null;
-  imageUrl?: string | null;
-  image_url?: string | null;
-  properties?: unknown;
-  damage?: unknown;
-  isTwoHanded?: boolean;
-  rangeLevel?: number;
-  damageReduction?: number;
-  armorValue?: number;
-  agilityReduction?: number;
-  criticalRangeIncrease?: number;
-  shieldDR?: { amount?: number; size?: number };
-  hasShieldDamage?: boolean;
-  shieldDamage?: { amount?: number; size?: number };
-  abilityRequirement?: { id?: number | string; name?: string; level?: number } | null;
+  name?: string | undefined;
+  description?: string | undefined;
+  type?: string | undefined;
+  imageId?: string | null | undefined;
+  image_id?: string | null | undefined;
+  imageUrl?: string | null | undefined;
+  image_url?: string | null | undefined;
+  properties?: unknown | undefined;
+  damage?: unknown | undefined;
+  isTwoHanded?: boolean | undefined;
+  rangeLevel?: number | undefined;
+  damageReduction?: number | undefined;
+  armorValue?: number | undefined;
+  agilityReduction?: number | undefined;
+  criticalRangeIncrease?: number | undefined;
+  shieldDR?: { amount?: number | undefined; size?: number | undefined } | undefined;
+  hasShieldDamage?: boolean | undefined;
+  shieldDamage?: { amount?: number | undefined; size?: number | undefined } | undefined;
+  abilityRequirement?:
+    | { id?: number | string | undefined; name?: string | undefined; level?: number | undefined }
+    | null
+    | undefined;
 };
 
 export function emptyItemCreatorFormState(): ItemCreatorFormState {
@@ -175,14 +178,22 @@ export function itemLibraryRecordToFormState(
     // Only non-mechanic properties belong in the selectable list; mechanic properties
     // are driven by dedicated UI fields (damage, rangeLevel, DR, etc.).
     selectedProperties = filterSavedItemPropertiesForList(
-      item.properties as Array<{ id?: number | string; name?: string; op_1_lvl?: number }>,
+      item.properties as Array<{
+        id?: number | string | undefined;
+        name?: string | undefined;
+        op_1_lvl?: number | undefined;
+      }>,
       itemProperties,
     );
   }
 
   let damage = { amount: 1, size: 6, type: 'slashing' };
   if (item.damage && Array.isArray(item.damage) && item.damage.length > 0) {
-    const dmg = item.damage[0] as { amount?: number; size?: number; type?: string };
+    const dmg = item.damage[0] as {
+      amount?: number | undefined;
+      size?: number | undefined;
+      type?: string | undefined;
+    };
     damage = {
       amount: Number(dmg.amount) || 1,
       size: Number(dmg.size) || 6,
@@ -243,7 +254,7 @@ export function bootstrapItemCreatorFormState(options: {
 
   if (editItemId) {
     const itemToEdit = rawItems.find((it) => {
-      const row = it as { docId?: string; id?: string };
+      const row = it as { docId?: string | undefined; id?: string | undefined };
       return String(row.docId) === editItemId || String(row.id) === editItemId;
     });
     if (!itemToEdit) {

@@ -20,7 +20,7 @@ export interface DamageConfig {
   amount: number;
   size: number;
   type: string;
-  applyDuration?: boolean;
+  applyDuration?: boolean | undefined;
 }
 
 export interface RangeConfig {

@@ -19,15 +19,21 @@ export const GUIDED_GEAR_L2_MAX_UNIT_COST = 50;
 const CURRENCY_GROWTH = 1.45;
 
 export interface CurrencyLineItem {
-  cost?: number;
-  quantity?: number;
+  cost?: number | undefined;
+  quantity?: number | undefined;
   /** Display Currency (market cost), not property C sum. */
-  gold_cost?: number;
+  gold_cost?: number | undefined;
   /** Display Currency when set (codex / derived rows). */
-  currency?: number;
+  currency?: number | undefined;
   /** Item-calc totals: totalCurrency = property C sum; totalIP needed to derive market cost. */
-  costs?: { totalCurrency?: number; totalIP?: number; totalTP?: number };
-  properties?: ItemPropertyPayload[];
+  costs?:
+    | {
+        totalCurrency?: number | undefined;
+        totalIP?: number | undefined;
+        totalTP?: number | undefined;
+      }
+    | undefined;
+  properties?: ItemPropertyPayload[] | undefined;
 }
 
 /** Pre-derived catalog row cost fields (avoids WeaponPropertyRef vs ItemPropertyPayload clash). */
@@ -36,7 +42,7 @@ export type CatalogRowCostFields = Pick<
   'gold_cost' | 'currency' | 'cost' | 'costs'
 >;
 
-export type RefCostLookupItem = { id?: string | number } & CatalogRowCostFields;
+export type RefCostLookupItem = { id?: string | number | undefined } & CatalogRowCostFields;
 
 export function resolveCatalogRowUnitCost(row: CatalogRowCostFields | null | undefined): number {
   if (!row) return 0;

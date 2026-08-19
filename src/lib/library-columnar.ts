@@ -22,7 +22,7 @@ export const COLUMNAR_LIBRARY_TYPES = [
 ] as const;
 export type ColumnarLibraryType = (typeof COLUMNAR_LIBRARY_TYPES)[number];
 
-type PartLike = { id?: string | number; name?: string };
+type PartLike = { id?: string | number | undefined; name?: string | undefined };
 
 /** Collect saved parts from a technique / empowered-technique payload for attack-mode derivation. */
 function collectPayloadParts(payload: Record<string, unknown>): PartLike[] {
@@ -276,13 +276,15 @@ export function rowToItem(
             attackMode: payload.attackMode,
             parts: savedParts,
             weapon: (payload.power as Record<string, unknown> | undefined)?.addWeapon as
-              | { id?: string | number; name?: string }
+              | { id?: string | number | undefined; name?: string | undefined }
               | undefined,
           })
         : deriveTechniqueAttackMode({
             attackMode: payload.attackMode,
             parts: savedParts,
-            weapon: payload.weapon as { id?: string | number; name?: string } | undefined,
+            weapon: payload.weapon as
+              | { id?: string | number | undefined; name?: string | undefined }
+              | undefined,
           });
     base.attackMode = attackMode;
     // DESIGN_INTENT: Attack column label is derived from parts/attackMode — not a DB column.
@@ -519,13 +521,15 @@ export function bodyToColumnar(
             attackMode: payload.attackMode ?? body.attackMode,
             parts: savedParts,
             weapon: (payload.power as Record<string, unknown> | undefined)?.addWeapon as
-              | { id?: string | number; name?: string }
+              | { id?: string | number | undefined; name?: string | undefined }
               | undefined,
           })
         : deriveTechniqueAttackMode({
             attackMode: payload.attackMode ?? body.attackMode,
             parts: savedParts,
-            weapon: body.weapon as { id?: string | number; name?: string } | undefined,
+            weapon: body.weapon as
+              | { id?: string | number | undefined; name?: string | undefined }
+              | undefined,
           });
     payload.attackMode = attackMode;
   }

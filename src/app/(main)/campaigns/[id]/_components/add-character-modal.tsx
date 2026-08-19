@@ -11,10 +11,10 @@ export type AddableCampaignCharacter = {
   id: string;
   name: string;
   level: number;
-  portrait?: string;
-  archetypeName?: string;
-  ancestryName?: string;
-  visibility?: string;
+  portrait?: string | undefined;
+  archetypeName?: string | undefined;
+  ancestryName?: string | undefined;
+  visibility?: string | undefined;
 };
 
 export function AddCharacterModal({

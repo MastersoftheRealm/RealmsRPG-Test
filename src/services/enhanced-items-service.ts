@@ -31,7 +31,7 @@ export async function deleteEnhancedItem(id: string): Promise<void> {
 
 export async function updateEnhancedItem(
   id: string,
-  patch: { potency?: number; name?: string },
+  patch: { potency?: number | undefined; name?: string | undefined },
 ): Promise<void> {
   await apiFetch<void>(`${API_BASE}/${encodeURIComponent(id)}`, {
     method: 'PATCH',

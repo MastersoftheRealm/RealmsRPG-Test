@@ -14,7 +14,7 @@ export function useGuidedDeepEntryOnArrival(args: {
   entryNonce: number;
   onDeepEntry: () => void;
   /** Gate until catalogs are ready (e.g. species list loaded). */
-  enabled?: boolean;
+  enabled?: boolean | undefined;
 }): void {
   const lastNonce = useRef<number | null>(null);
   const { draft, navigationIntent, entryNonce, onDeepEntry, enabled = true } = args;

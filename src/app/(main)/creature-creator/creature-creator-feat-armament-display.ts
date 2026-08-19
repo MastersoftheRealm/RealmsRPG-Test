@@ -23,18 +23,20 @@ import type { CreatureState } from './creature-creator-types';
 
 export type CreatureFeatSourceLookup = {
   creatureFeatIds: Set<string>;
-  codexFeatById: Map<string, { char_feat?: boolean }>;
-  traitById: Map<string, { flaw?: boolean; characteristic?: boolean }>;
+  codexFeatById: Map<string, { char_feat?: boolean | undefined }>;
+  traitById: Map<string, { flaw?: boolean | undefined; characteristic?: boolean | undefined }>;
 };
 
 export type CreatureFeatRow = CreatureFeat & {
   typeLabel: string;
-  levelMeta?: {
-    currentLevel: number;
-    minLevel: number;
-    maxQualified: number;
-    family: Feat[];
-  };
+  levelMeta?:
+    | {
+        currentLevel: number;
+        minLevel: number;
+        maxQualified: number;
+        family: Feat[];
+      }
+    | undefined;
 };
 
 export type CreatureArmamentRow = {
@@ -49,14 +51,14 @@ export type CreatureArmamentRow = {
   criticalRangeIncrease: string;
   tp: number | string;
   currency: string;
-  rarity?: string;
-  description?: string;
-  properties?: CreatureArmament['properties'];
-  armorValue?: number;
-  quantity?: number;
-  category?: string;
-  image_id?: string | null;
-  image_url?: string | null;
+  rarity?: string | undefined;
+  description?: string | undefined;
+  properties?: CreatureArmament['properties'] | undefined;
+  armorValue?: number | undefined;
+  quantity?: number | undefined;
+  category?: string | undefined;
+  image_id?: string | null | undefined;
+  image_url?: string | null | undefined;
 };
 
 export function buildFeatLevelsByFamilyMap(codexFeatsData: Feat[]) {
@@ -146,17 +148,20 @@ export function enrichArmamentsWithSortKeys(creature: CreatureState): CreatureAr
     const isWeapon = String(armament.type ?? '').toLowerCase() === 'weapon';
     const isShield = String(armament.type ?? '').toLowerCase() === 'shield';
     const propNames = (armament.properties || [])
-      .map((p: unknown) => (typeof p === 'string' ? p : (p as { name?: string }).name || ''))
+      .map((p: unknown) =>
+        typeof p === 'string' ? p : (p as { name?: string | undefined }).name || '',
+      )
       .filter(Boolean);
     const finesse = propNames.some((p: string) => p.toLowerCase() === 'finesse');
     const range =
-      normalizeRangeDisplay((armament as { range?: string }).range) || (isWeapon ? 'Melee' : '-');
+      normalizeRangeDisplay((armament as { range?: string | undefined }).range) ||
+      (isWeapon ? 'Melee' : '-');
     const isRanged = range.toLowerCase() !== 'melee';
     const attackBonus = isWeapon ? (finesse ? agi : isRanged ? acu : str) + prof : null;
     const attack = attackBonus != null ? `${attackBonus >= 0 ? '+' : ''}${attackBonus}` : '-';
     const damage =
       isWeapon || isShield
-        ? formatDamageDisplay((armament as { damage?: unknown }).damage) || '-'
+        ? formatDamageDisplay((armament as { damage?: unknown | undefined }).damage) || '-'
         : '-';
     const payload = (armament.properties || []) as ItemPropertyPayload[];
     const isArmor = String(armament.type ?? '').toLowerCase() === 'armor';

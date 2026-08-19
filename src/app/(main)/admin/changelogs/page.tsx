@@ -51,7 +51,7 @@ type ChangeLogEntry = {
   } | null;
 };
 
-const TABS: { id: TabId; label: string; labelMobile?: string }[] = [
+const TABS: { id: TabId; label: string; labelMobile?: string | undefined }[] = [
   { id: 'codex_feats', label: 'Feats' },
   { id: 'codex_skills', label: 'Skills' },
   { id: 'codex_species', label: 'Species' },

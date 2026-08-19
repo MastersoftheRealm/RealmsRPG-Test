@@ -16,44 +16,44 @@ import { Button } from '@/components/ui';
 interface FilterSectionProps {
   children: ReactNode;
   /** Initial expand state (default collapsed). */
-  defaultExpanded?: boolean;
+  defaultExpanded?: boolean | undefined;
   /** Controlled expanded state (e.g. reset when a modal reopens). */
-  expanded?: boolean;
-  onExpandedChange?: (expanded: boolean) => void;
+  expanded?: boolean | undefined;
+  onExpandedChange?: ((expanded: boolean) => void) | undefined;
   /**
    * `page` — stacked toggle (Advanced creator catalogs).
    * `compact` — USM/L3 and ListSearchToolbar browse; optional toolbarStart for search + Filters on one row.
    */
-  variant?: 'page' | 'compact';
+  variant?: 'page' | 'compact' | undefined;
   /** Shown on the toggle when collapsed and > 0 (active filter count). */
-  activeCount?: number;
+  activeCount?: number | undefined;
   /** Optional one-line hint when collapsed (e.g. current source). */
-  summary?: ReactNode;
+  summary?: ReactNode | undefined;
   /** Accessible / visible label stem (default "Filters"). */
-  label?: string;
+  label?: string | undefined;
   /**
    * Compact only: content placed before the Filters toggle (typically SearchInput).
    * Creates a single toolbar row so the list stays the main focus below.
    * Used by USM/L3 and ListSearchToolbar browse lists (TASK-721).
    */
-  toolbarStart?: ReactNode;
+  toolbarStart?: ReactNode | undefined;
   /**
    * Compact only: after the Filters toggle (e.g. Create / Sync). Must not replace
    * the Filters slot — searchTrailing stays to the right of Filters.
    */
-  toolbarEnd?: ReactNode;
+  toolbarEnd?: ReactNode | undefined;
   /** Compact toolbarStart wrapper classes (default min-w-0). Browse lists pass min-w-[200px]. */
-  toolbarStartClassName?: string;
+  toolbarStartClassName?: string | undefined;
   /** Compact toolbar row classes. Browse lists pass flex-wrap; USM/L3 omit. */
-  toolbarClassName?: string;
+  toolbarClassName?: string | undefined;
   /** Extra classes on the Filters toggle. Browse lists pass max-md 44px min size. */
-  toggleClassName?: string;
+  toggleClassName?: string | undefined;
   /**
    * Compact only: always-visible content between the toolbar row and the panel
    * (e.g. primary mode tabs — TASK-564 scopeExtra).
    */
-  belowToolbar?: ReactNode;
-  className?: string;
+  belowToolbar?: ReactNode | undefined;
+  className?: string | undefined;
 }
 
 export function FilterSection({

@@ -28,12 +28,12 @@ export const PREVIEW_ABILITY_ABBR: Record<AbilityName, string> = {
 export type PreviewAbilityHighlight = 'power' | 'martial' | null;
 
 export interface PreviewArchetypeAbilityContext {
-  draftPowAbil?: AbilityName | null;
-  draftMartAbil?: AbilityName | null;
-  archetypePowAbil?: AbilityName | null;
-  archetypeMartAbil?: AbilityName | null;
-  archetypePrimary?: AbilityName | null;
-  archetypeType?: ArchetypeCategory | null;
+  draftPowAbil?: AbilityName | null | undefined;
+  draftMartAbil?: AbilityName | null | undefined;
+  archetypePowAbil?: AbilityName | null | undefined;
+  archetypeMartAbil?: AbilityName | null | undefined;
+  archetypePrimary?: AbilityName | null | undefined;
+  archetypeType?: ArchetypeCategory | null | undefined;
 }
 
 /** Signed ability value for preview chips (+2, 0, −1). Uses Unicode minus. */

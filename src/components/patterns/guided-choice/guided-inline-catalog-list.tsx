@@ -52,40 +52,40 @@ export interface GuidedInlineCatalogListProps {
    * Immediate toggle — required for non-quantity catalogs. Omit when `showQuantity` (TASK-685):
    * the far-right qty stepper is the only add/remove path.
    */
-  onToggleSelection?: (id: string) => void;
-  isLoading?: boolean;
-  error?: Error | null;
-  columns?: ColumnHeader[];
-  gridColumns?: string;
+  onToggleSelection?: ((id: string) => void) | undefined;
+  isLoading?: boolean | undefined;
+  error?: Error | null | undefined;
+  columns?: ColumnHeader[] | undefined;
+  gridColumns?: string | undefined;
   /** "feat", "weapon", "power", etc. — used in default copy. */
-  itemLabel?: string;
-  emptyMessage?: string;
-  emptySubMessage?: string;
-  searchPlaceholder?: string;
-  searchFields?: (keyof SelectableItem)[];
+  itemLabel?: string | undefined;
+  emptyMessage?: string | undefined;
+  emptySubMessage?: string | undefined;
+  searchPlaceholder?: string | undefined;
+  searchFields?: (keyof SelectableItem)[] | undefined;
   /** Filter panel content (reuse the same fields as the L2 modal's filterContent). */
-  filterContent?: ReactNode;
-  showFilters?: boolean;
-  optionsActiveCount?: number;
-  optionsSummary?: ReactNode;
-  optionsLabel?: string;
+  filterContent?: ReactNode | undefined;
+  showFilters?: boolean | undefined;
+  optionsActiveCount?: number | undefined;
+  optionsSummary?: ReactNode | undefined;
+  optionsLabel?: string | undefined;
   /** Always-visible chrome above the toolbar (e.g. a type toggle) — mirrors USM `scopeExtra`. */
-  scopeExtra?: ReactNode;
-  maxSelections?: number;
-  selectionLimitMessage?: string;
+  scopeExtra?: ReactNode | undefined;
+  maxSelections?: number | undefined;
+  selectionLimitMessage?: string | undefined;
   /** Heading for the selected-items panel above the list; omit to hide the title row. */
-  selectedTitle?: ReactNode;
+  selectedTitle?: ReactNode | undefined;
   /** Optional count/progress chip beside the selected title (e.g. "2 / 3"). */
-  selectedCountLabel?: ReactNode;
+  selectedCountLabel?: ReactNode | undefined;
   /** Override the default remove button per selected row (rarely needed). */
-  renderSelectedRightSlot?: (item: SelectableItem) => ReactNode;
+  renderSelectedRightSlot?: ((item: SelectableItem) => ReactNode) | undefined;
   /** Per-item quantity stepper (gear-style rows) — mirrors USM showQuantity/quantities. */
-  showQuantity?: boolean;
-  quantities?: Record<string, number>;
-  onQuantityChange?: (itemIdStr: string, delta: number, isSelected: boolean) => void;
+  showQuantity?: boolean | undefined;
+  quantities?: Record<string, number> | undefined;
+  onQuantityChange?: ((itemIdStr: string, delta: number, isSelected: boolean) => void) | undefined;
   /** Budget/status chrome below the list (e.g. `LoadoutBudgetBar` currency + TP totals). */
-  footer?: ReactNode;
-  className?: string;
+  footer?: ReactNode | undefined;
+  className?: string | undefined;
 }
 
 export function GuidedInlineCatalogList({

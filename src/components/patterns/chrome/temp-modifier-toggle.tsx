@@ -15,17 +15,23 @@ import { cn } from '@/lib/utils/cn';
 import type { TempModifierTint } from '@/lib/character/temp-modifiers';
 
 export interface TempModifierToggleProps {
-  onClick?: () => void;
-  isActive?: boolean;
+  onClick?: (() => void) | undefined;
+  isActive?: boolean | undefined;
   /** Signed tint for persisted temps on this control (none = blue). */
-  tint?: TempModifierTint;
-  title?: string;
-  className?: string;
+  tint?: TempModifierTint | undefined;
+  title?: string | undefined;
+  className?: string | undefined;
 }
 
 const TINT_COLORS: Record<
   TempModifierTint,
-  { icon: string; glow?: string; activeBg: string; activeRing: string; activeGlow?: string }
+  {
+    icon: string;
+    glow?: string | undefined;
+    activeBg: string;
+    activeRing: string;
+    activeGlow?: string | undefined;
+  }
 > = {
   none: {
     icon: 'text-primary-fg hover:text-primary-fg-hover',

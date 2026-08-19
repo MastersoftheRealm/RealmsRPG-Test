@@ -14,7 +14,7 @@ export type EncounterTypeLabel = 'Combat' | 'Skill' | 'Mixed';
 export interface EncounterPageHeaderProps {
   encounterType: EncounterTypeLabel;
   name: string;
-  description?: string;
+  description?: string | undefined;
   isEditingName: boolean;
   nameInput: string;
   onNameInputChange: (value: string) => void;

@@ -49,8 +49,8 @@ import type { CreatureState } from './creature-creator-types';
 type FeatSourceTab = 'creature' | 'library' | 'species';
 
 interface FeatModal extends Feat {
-  effect?: string;
-  max_uses?: number;
+  effect?: string | undefined;
+  max_uses?: number | undefined;
 }
 
 type ModalRowData =
@@ -170,7 +170,7 @@ export function AddCreatureFeatModal({
   );
 
   const checkPlayerFeatRequirements = useCallback(
-    (feat: FeatModal): { meets: boolean; warning?: string } => {
+    (feat: FeatModal): { meets: boolean; warning?: string | undefined } => {
       const { met, reason } = checkFeatRequirements(
         feat,
         featRequirementCharacter,

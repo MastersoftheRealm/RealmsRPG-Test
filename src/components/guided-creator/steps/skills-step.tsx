@@ -304,7 +304,11 @@ export function SkillsStep() {
   );
 
   const handleAddSubSkills = useCallback(
-    (skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>) => {
+    (
+      skills: Array<
+        Skill & { selectedBaseSkillId?: string | undefined; autoAddBaseSkill?: Skill | undefined }
+      >,
+    ) => {
       handleAllocationsChange(applyAddedSubSkills(allocationsWithDefaults, skills));
       setSubBrowseOpen(false);
     },

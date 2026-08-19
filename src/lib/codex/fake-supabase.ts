@@ -5,11 +5,11 @@
  */
 
 type Row = Record<string, unknown>;
-type QueryResult = { data: unknown; error: { message: string; code?: string } | null };
+type QueryResult = { data: unknown; error: { message: string; code?: string | undefined } | null };
 
 export type FakeSupabaseOptions = {
   /** Tables whose *next* insert fails, simulating a mid-write DB error that then clears. */
-  failInsertOnce?: Set<string>;
+  failInsertOnce?: Set<string> | undefined;
 };
 
 export class FakeSupabase {

@@ -27,12 +27,12 @@ export function LibraryCollapsibleSection({
 }: {
   title: string;
   itemCount: number;
-  onAdd?: () => void;
-  addLabel?: string;
-  rightContent?: ReactNode;
-  addButtonClassName?: string;
+  onAdd?: (() => void) | undefined;
+  addLabel?: string | undefined;
+  rightContent?: ReactNode | undefined;
+  addButtonClassName?: string | undefined;
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
 }) {
   const {
     isContentVisible,
@@ -72,13 +72,13 @@ export function FeatsTraitsListSection({
   collapsible,
   headingLevel,
 }: {
-  title?: string;
+  title?: string | undefined;
   items: EntityFeatRow[];
-  showListHeader?: boolean;
-  compactRows?: boolean;
-  showTitle?: boolean;
-  headerRightContent?: ReactNode;
-  addButtonClassName?: string;
+  showListHeader?: boolean | undefined;
+  compactRows?: boolean | undefined;
+  showTitle?: boolean | undefined;
+  headerRightContent?: ReactNode | undefined;
+  addButtonClassName?: string | undefined;
 } & EntityListControls) {
   const hasAny = items.length > 0;
   const useInteractiveRows = items.some((item) => item.columns != null);

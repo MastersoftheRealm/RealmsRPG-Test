@@ -21,14 +21,14 @@ type GlrFactPlacement = 'column' | 'chip' | 'column-or-chip' | 'rightSlot';
 interface GlrFactRule {
   id: GlrFactId;
   placement: GlrFactPlacement;
-  columnKeys?: string[];
-  chipPatterns?: RegExp[];
+  columnKeys?: string[] | undefined;
+  chipPatterns?: RegExp[] | undefined;
 }
 
 export interface GlrRowFactSnapshot {
   columnKeys: string[];
   chipLabels: string[];
-  hasRightSlot?: boolean;
+  hasRightSlot?: boolean | undefined;
 }
 
 function columnKeysSatisfyFact(

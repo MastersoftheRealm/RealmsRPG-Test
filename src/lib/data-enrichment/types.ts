@@ -5,81 +5,89 @@ import type { UserPower, UserTechnique, UserItem, SavedDamage } from '@/hooks/us
 export interface EnrichedPower extends CharacterPower {
   // Display fields from library
   description: string;
-  cost?: number; // Energy cost of the power
-  actionType?: string;
-  area?: string;
-  duration?: string;
-  damageStr?: string;
-  range?: string | number;
-  targets?: string;
+  cost?: number | undefined; // Energy cost of the power
+  actionType?: string | undefined;
+  area?: string | undefined;
+  duration?: string | undefined;
+  damageStr?: string | undefined;
+  range?: string | number | undefined;
+  targets?: string | undefined;
   // Full parts data for display
-  displayParts?: Array<{
-    name: string;
-    description?: string;
-    base_en?: number;
-    base_tp?: number;
-  }>;
+  displayParts?:
+    | Array<{
+        name: string;
+        description?: string | undefined;
+        base_en?: number | undefined;
+        base_tp?: number | undefined;
+      }>
+    | undefined;
   // Original library item for reference
-  libraryItem?: UserPower;
+  libraryItem?: UserPower | undefined;
   // Innate power flag
-  innate?: boolean;
+  innate?: boolean | undefined;
   // Flag if not found in library
-  notInLibrary?: boolean;
+  notInLibrary?: boolean | undefined;
 }
 
 /** Enriched technique with full data from user's library */
 export interface EnrichedTechnique extends CharacterTechnique {
   // Display fields from library
   description: string;
-  cost?: number; // Energy cost of the technique
-  tp?: number; // Training points cost of the technique
-  actionType?: string;
-  weaponName?: string;
-  damageStr?: string;
+  cost?: number | undefined; // Energy cost of the technique
+  tp?: number | undefined; // Training points cost of the technique
+  actionType?: string | undefined;
+  weaponName?: string | undefined;
+  damageStr?: string | undefined;
   // Full parts data for display
-  displayParts?: Array<{
-    name: string;
-    description?: string;
-    base_tp?: number;
-  }>;
+  displayParts?:
+    | Array<{
+        name: string;
+        description?: string | undefined;
+        base_tp?: number | undefined;
+      }>
+    | undefined;
   // Original library item for reference
-  libraryItem?: UserTechnique;
+  libraryItem?: UserTechnique | undefined;
   // Flag if not found in library
-  notInLibrary?: boolean;
+  notInLibrary?: boolean | undefined;
 }
 
 /** Enriched item/armament with full data from user's library */
 export interface EnrichedItem {
   id: string;
   name: string;
-  description?: string;
+  description?: string | undefined;
   type: 'weapon' | 'armor' | 'equipment' | 'shield';
-  equipped?: boolean;
-  quantity?: number;
+  equipped?: boolean | undefined;
+  quantity?: number | undefined;
   // Display fields
-  damage?: string | SavedDamage[];
-  range?: string;
-  armorValue?: number;
-  armor?: number;
-  properties?: string[];
-  displayProperties?: Array<{
-    name: string;
-    description?: string;
-  }>;
+  damage?: string | SavedDamage[] | undefined;
+  range?: string | undefined;
+  armorValue?: number | undefined;
+  armor?: number | undefined;
+  properties?: string[] | undefined;
+  displayProperties?:
+    | Array<{
+        name: string;
+        description?: string | undefined;
+      }>
+    | undefined;
   // Armor-specific fields
-  critRange?: number;
-  agilityReduction?: number;
-  abilityRequirement?: {
-    name?: string;
-    level?: number;
-  };
+  critRange?: number | undefined;
+  agilityReduction?: number | undefined;
+  abilityRequirement?:
+    | {
+        name?: string | undefined;
+        level?: number | undefined;
+      }
+    | undefined;
   // Shield-specific (block amount and optional damage)
-  shieldAmount?: string;
-  shieldDamage?: string | null;
+  shieldAmount?: string | undefined;
+  shieldDamage?: string | null | undefined;
   // Original library item for reference
-  libraryItem?: UserItem;
+  libraryItem?: UserItem | undefined;
   // Flag if not found in library
-  notInLibrary?: boolean;
+  notInLibrary?: boolean | undefined;
 }
 
 /**
@@ -89,16 +97,16 @@ export interface CodexEquipmentItem {
   id: string;
   name: string;
   type: 'weapon' | 'armor' | 'equipment' | 'shield';
-  subtype?: string;
-  category?: string;
+  subtype?: string | undefined;
+  category?: string | undefined;
   description: string;
-  damage?: string;
-  armor_value?: number;
-  gold_cost?: number;
-  currency?: number;
-  properties?: string[];
-  rarity?: string;
-  weight?: number;
+  damage?: string | undefined;
+  armor_value?: number | undefined;
+  gold_cost?: number | undefined;
+  currency?: number | undefined;
+  properties?: string[] | undefined;
+  rarity?: string | undefined;
+  weight?: number | undefined;
 }
 
 /**

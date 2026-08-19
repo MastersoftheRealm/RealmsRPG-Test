@@ -52,27 +52,27 @@ export interface EquipmentPhaseCardStats {
    * See more facts: mechanics + named properties (non-expanding chips).
    */
   detailChips: ChipData[];
-  primaryLine?: string;
-  secondaryLine?: string;
+  primaryLine?: string | undefined;
+  secondaryLine?: string | undefined;
   /** Full fact chips (title + detail) for L2/deep-dive consumers. */
   factChips: ChipData[];
 }
 
 export interface BuildPhaseCardStatsInput {
   category: LoadoutItemCategory;
-  properties?: WeaponPropertyRef[];
-  damageLine?: string;
-  damageReduction?: number | null;
-  agilityPenalty?: number | null;
+  properties?: WeaponPropertyRef[] | undefined;
+  damageLine?: string | undefined;
+  damageReduction?: number | null | undefined;
+  agilityPenalty?: number | null | undefined;
   /** @deprecated Do not chip duplicate description text; keep description on the card. */
-  shortUse?: string;
-  unitCost?: number | null;
+  shortUse?: string | undefined;
+  unitCost?: number | null | undefined;
   /** Armament Training Points cost. */
-  trainingPoints?: number | null;
-  abilityRequirement?: AbilityRequirement | null;
-  itemProperties?: ItemPropertyTpRow[];
+  trainingPoints?: number | null | undefined;
+  abilityRequirement?: AbilityRequirement | null | undefined;
+  itemProperties?: ItemPropertyTpRow[] | undefined;
   /** Stored range (may be corrupt `0` / bare level); display SoT is resolveWeaponRangeDisplay. */
-  storedRange?: string | number | null;
+  storedRange?: string | number | null | undefined;
 }
 
 /** Build title / See more / L2 fact chips for GuidedChoiceCard. */
@@ -186,7 +186,13 @@ export function buildEquipmentPhaseCardStats(
 
 /** Format library damage array for labeled column values (bare XdY Type; chips add "Damage"). */
 export function formatWeaponDamageLine(
-  damage: Array<{ amount?: number | string; size?: number | string; type?: string }> | undefined,
+  damage:
+    | Array<{
+        amount?: number | string | undefined;
+        size?: number | string | undefined;
+        type?: string | undefined;
+      }>
+    | undefined,
 ): string | undefined {
   if (!damage?.length) return undefined;
   const formatted = formatDamageDisplay(damage[0]);

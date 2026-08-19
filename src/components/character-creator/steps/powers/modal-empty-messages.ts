@@ -6,7 +6,7 @@ export function powerModalEmptyCopy(args: {
   displayFilterFn: (item: SelectableItem) => boolean;
   source: SourceFilterValue;
   publicPowersError: boolean;
-}): { emptyMessage?: string; emptySubMessage?: string } {
+}): { emptyMessage?: string | undefined; emptySubMessage?: string | undefined } {
   const { items, displayFilterFn, source, publicPowersError } = args;
   if (items.filter(displayFilterFn).length > 0) return {};
   const emptyMessage =
@@ -31,7 +31,7 @@ export function techniqueModalEmptyCopy(args: {
   displayFilterFn: (item: SelectableItem) => boolean;
   source: SourceFilterValue;
   publicTechniquesError: boolean;
-}): { emptyMessage?: string; emptySubMessage?: string } {
+}): { emptyMessage?: string | undefined; emptySubMessage?: string | undefined } {
   const { items, displayFilterFn, source, publicTechniquesError } = args;
   if (items.filter(displayFilterFn).length > 0) return {};
   const emptyMessage =

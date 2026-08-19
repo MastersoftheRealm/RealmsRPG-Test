@@ -290,8 +290,8 @@ export const GENERAL_PROPERTY_NAMES = new Set([
 // =============================================================================
 
 export interface HasIdAndName {
-  id?: string | number;
-  name?: string;
+  id?: string | number | undefined;
+  name?: string | undefined;
 }
 
 /**
@@ -300,7 +300,7 @@ export interface HasIdAndName {
  */
 export function findByIdOrName<T extends HasIdAndName>(
   db: T[],
-  ref: { id?: number | string; name?: string },
+  ref: { id?: number | string | undefined; name?: string | undefined },
 ): T | undefined {
   if (!Array.isArray(db) || !ref) return undefined;
 

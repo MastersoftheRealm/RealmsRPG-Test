@@ -20,12 +20,12 @@ export interface RawItemsInput {
   userItems: UserItem[];
   codexEquipment: Array<{
     id: string;
-    name?: string;
-    description?: string;
-    damage?: unknown;
-    armor_value?: number;
-    properties?: string[];
-    type?: string;
+    name?: string | undefined;
+    description?: string | undefined;
+    damage?: unknown | undefined;
+    armor_value?: number | undefined;
+    properties?: string[] | undefined;
+    type?: string | undefined;
   }>;
   publicPowers: LibraryPower[];
   publicTechniques: LibraryTechnique[];
@@ -188,8 +188,8 @@ export function loadEmpoweredRawItems(input: {
   const seen = new Set<string>();
   return merged.filter((technique) => {
     const id = String(
-      (technique as { docId?: string; id?: string }).docId ??
-        (technique as { id?: string }).id ??
+      (technique as { docId?: string | undefined; id?: string | undefined }).docId ??
+        (technique as { id?: string | undefined }).id ??
         '',
     );
     if (!id || seen.has(id)) return false;

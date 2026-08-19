@@ -22,9 +22,9 @@ export function buildExistingSkillNames(
 }
 
 export interface CharacterSkillForSubModalEntry {
-  id?: string;
+  id?: string | undefined;
   name: string;
-  prof?: boolean;
+  prof?: boolean | undefined;
 }
 
 export function buildCharacterSkillsForSubModal(
@@ -56,8 +56,8 @@ export function applyAddedBaseSkills(
 }
 
 export type SubSkillAddPayload = Skill & {
-  selectedBaseSkillId?: string;
-  autoAddBaseSkill?: Skill;
+  selectedBaseSkillId?: string | undefined;
+  autoAddBaseSkill?: Skill | undefined;
 };
 
 export function applyAddedSubSkills(

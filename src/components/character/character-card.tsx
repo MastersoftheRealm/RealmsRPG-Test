@@ -28,10 +28,10 @@ const CARD_FOOTER_CLASS = 'flex min-h-[5.75rem] shrink-0 flex-col justify-center
 
 interface CharacterCardProps {
   character: CharacterSummary;
-  onDelete?: (id: string, name: string) => void;
-  onDuplicate?: (id: string, name: string) => void;
-  isDeleting?: boolean;
-  isDuplicating?: boolean;
+  onDelete?: ((id: string, name: string) => void) | undefined;
+  onDuplicate?: ((id: string, name: string) => void) | undefined;
+  isDeleting?: boolean | undefined;
+  isDuplicating?: boolean | undefined;
 }
 
 export function CharacterCard({
@@ -133,7 +133,7 @@ export function CharacterCard({
 }
 
 interface AddCharacterCardProps {
-  onClick?: () => void;
+  onClick?: (() => void) | undefined;
 }
 
 /** Same outer size as CharacterCard: square portrait slot + fixed footer band. */

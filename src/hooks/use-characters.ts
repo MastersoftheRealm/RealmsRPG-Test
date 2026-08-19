@@ -75,7 +75,7 @@ export function patchCharacterDetailQuery(
 
 export interface UseCharactersOptions {
   /** When false, the query does not run (e.g. when user is not signed in). */
-  enabled?: boolean;
+  enabled?: boolean | undefined;
 }
 
 /**
@@ -94,7 +94,7 @@ export function useCharacters(options?: UseCharactersOptions) {
 
 export interface UseCharacterOptions {
   /** Sheet passes false so a focus refetch cannot clobber unsaved setQueryData edits. */
-  refetchOnWindowFocus?: boolean;
+  refetchOnWindowFocus?: boolean | undefined;
 }
 
 /**
@@ -108,7 +108,9 @@ export function useCharacter(characterId: string | undefined, options?: UseChara
     queryKey: characterKeys.detail(userId, characterId || ''),
     queryFn: () => getCharacter(characterId || ''),
     enabled: !!characterId && !authLoading,
-    refetchOnWindowFocus: options?.refetchOnWindowFocus,
+    ...(options?.refetchOnWindowFocus !== undefined
+      ? { refetchOnWindowFocus: options.refetchOnWindowFocus }
+      : {}),
   });
 }
 
@@ -135,10 +137,10 @@ export function useSaveCharacter() {
     }: {
       id: string;
       data: Partial<Character>;
-      updatedAt?: string | Date | null;
+      updatedAt?: string | Date | null | undefined;
       mergeOnConflict?: (remote: Character) => {
         dirty: Partial<Character>;
-        updatedAt?: string | Date | null;
+        updatedAt?: string | Date | null | undefined;
       };
     }) =>
       saveCharacterWithConflictRetry(id, data, {

@@ -40,7 +40,13 @@ const ICONS: Record<Exclude<AboutIconKey, 'discord'>, LucideIcon> = {
   zap: Zap,
 };
 
-function InlineRuns({ parts, emphasizeLinks }: { parts: AboutInline[]; emphasizeLinks?: boolean }) {
+function InlineRuns({
+  parts,
+  emphasizeLinks,
+}: {
+  parts: AboutInline[];
+  emphasizeLinks?: boolean | undefined;
+}) {
   return (
     <>
       {parts.map((part, i) => {
@@ -75,7 +81,7 @@ function InlineRuns({ parts, emphasizeLinks }: { parts: AboutInline[]; emphasize
   );
 }
 
-function CtaIcon({ icon, className }: { icon: AboutIconKey; className?: string }) {
+function CtaIcon({ icon, className }: { icon: AboutIconKey; className?: string | undefined }) {
   if (icon === 'discord') {
     return <DiscordIcon className={className} />;
   }
@@ -83,7 +89,7 @@ function CtaIcon({ icon, className }: { icon: AboutIconKey; className?: string }
   return <Icon className={className} />;
 }
 
-function CtaRow({ ctas, compact }: { ctas: AboutCta[]; compact?: boolean }) {
+function CtaRow({ ctas, compact }: { ctas: AboutCta[]; compact?: boolean | undefined }) {
   return (
     <div className={cn('flex flex-wrap gap-4', compact ? 'mt-4 gap-3' : 'mt-6')}>
       {ctas.map((cta) => {
@@ -117,7 +123,13 @@ function CtaRow({ ctas, compact }: { ctas: AboutCta[]; compact?: boolean }) {
   );
 }
 
-export function AboutSlideBodyView({ body, compact }: { body: AboutSlideBody; compact?: boolean }) {
+export function AboutSlideBodyView({
+  body,
+  compact,
+}: {
+  body: AboutSlideBody;
+  compact?: boolean | undefined;
+}) {
   const pClass = compact
     ? 'text-base text-text-secondary leading-relaxed mb-4'
     : 'text-lg text-text-secondary leading-relaxed mb-4';

@@ -16,7 +16,7 @@ export type SourceFilterValue = LibrarySourceScope;
 interface SourceFilterProps {
   value: SourceFilterValue;
   onChange: (value: SourceFilterValue) => void;
-  className?: string;
+  className?: string | undefined;
 }
 
 const OPTIONS: { value: SourceFilterValue; label: string }[] = [

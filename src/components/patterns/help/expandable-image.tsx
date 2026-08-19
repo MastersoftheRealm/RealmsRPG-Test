@@ -15,7 +15,7 @@ import { Modal } from '@/components/ui';
 export interface ExpandableImageModalProps {
   src: string;
   alt: string;
-  isPlaceholder?: boolean;
+  isPlaceholder?: boolean | undefined;
   isOpen: boolean;
   onClose: () => void;
 }
@@ -54,15 +54,15 @@ export interface ExpandableImageProps {
   src: string;
   /** Accessible name for preview modal title and expand button */
   alt: string;
-  isPlaceholder?: boolean;
+  isPlaceholder?: boolean | undefined;
   /** Visible image area (e.g. next/image with fill, or img) */
   children: ReactNode;
-  className?: string;
+  className?: string | undefined;
   /** When true, click does not bubble (nested cards / list rows). Default true. */
-  stopPropagation?: boolean;
+  stopPropagation?: boolean | undefined;
   /** Render children only — no expand affordance (e.g. missing src). */
-  disabled?: boolean;
-  previewAriaLabel?: string;
+  disabled?: boolean | undefined;
+  previewAriaLabel?: string | undefined;
 }
 
 const EXPAND_TRIGGER_CLASS =

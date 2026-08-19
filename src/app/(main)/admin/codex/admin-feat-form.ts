@@ -91,7 +91,7 @@ export function featToFormState(feat: Feat): FeatFormState {
     rec_period: feat.rec_period || '',
     char_feat: feat.char_feat ?? false,
     state_feat: feat.state_feat ?? false,
-    base_feat_id: String((feat as { base_feat_id?: string }).base_feat_id ?? ''),
+    base_feat_id: String((feat as { base_feat_id?: string | undefined }).base_feat_id ?? ''),
   };
 }
 

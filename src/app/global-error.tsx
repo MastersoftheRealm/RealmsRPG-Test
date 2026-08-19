@@ -11,7 +11,7 @@ import Link from 'next/link';
 import { reportError } from '@/lib/observability';
 
 interface GlobalErrorProps {
-  error: Error & { digest?: string };
+  error: Error & { digest?: string | undefined };
   reset: () => void;
 }
 

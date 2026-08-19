@@ -8,13 +8,13 @@ export interface UnifiedSelectionModalFooterProps {
   selectedItems: SelectableItem[];
   selectedCount: number;
   itemLabel: string;
-  maxSelections?: number;
-  footerExtra?: (selectedItems: SelectableItem[]) => ReactNode;
+  maxSelections?: number | undefined;
+  footerExtra?: ((selectedItems: SelectableItem[]) => ReactNode) | undefined;
   onRequestClose: () => void;
   onConfirm: () => void;
   isConfirmDisabled: boolean;
   confirmLabel: string;
-  primaryActions?: ReactNode | ((selectedItems: SelectableItem[]) => ReactNode);
+  primaryActions?: ReactNode | ((selectedItems: SelectableItem[]) => ReactNode) | undefined;
 }
 
 export function UnifiedSelectionModalFooter({

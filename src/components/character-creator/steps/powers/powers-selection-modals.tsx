@@ -51,10 +51,10 @@ export interface PowersSelectionModalsProps {
   powersModalLoading: boolean;
   empoweredModalLoading: boolean;
   techniquesModalLoading: boolean;
-  powerModalEmptyMessage?: string;
-  powerModalEmptySubMessage?: string;
-  techniqueModalEmptyMessage?: string;
-  techniqueModalEmptySubMessage?: string;
+  powerModalEmptyMessage?: string | undefined;
+  powerModalEmptySubMessage?: string | undefined;
+  techniqueModalEmptyMessage?: string | undefined;
+  techniqueModalEmptySubMessage?: string | undefined;
   publicEmpoweredTechniquesError: boolean;
 }
 

@@ -4,30 +4,30 @@ import { findByIdOrName } from '@/lib/id-constants';
 import { calculateTrainingPoints } from '@/lib/game/formulas';
 
 interface CodexPartLike {
-  id?: string | number;
-  name?: string;
-  base_tp?: number;
-  op_1_tp?: number;
-  op_2_tp?: number;
-  op_3_tp?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
+  op_2_tp?: number | undefined;
+  op_3_tp?: number | undefined;
 }
 
 interface CodexPropertyLike {
-  id?: string | number;
-  name?: string;
-  base_tp?: number;
-  op_1_tp?: number;
+  id?: string | number | undefined;
+  name?: string | undefined;
+  base_tp?: number | undefined;
+  op_1_tp?: number | undefined;
 }
 
 interface BuildRequiredProficienciesInput {
   powers: CharacterPower[];
   techniques: CharacterTechnique[];
   weapons: Item[];
-  shields?: Item[];
+  shields?: Item[] | undefined;
   armor: Item[];
-  powerPartsDb?: CodexPartLike[];
-  techniquePartsDb?: CodexPartLike[];
-  itemPropertiesDb?: CodexPropertyLike[];
+  powerPartsDb?: CodexPartLike[] | undefined;
+  techniquePartsDb?: CodexPartLike[] | undefined;
+  itemPropertiesDb?: CodexPropertyLike[] | undefined;
 }
 
 /**
@@ -85,7 +85,11 @@ function parseDamageTypes(value: unknown): string[] {
           .map((d) => {
             if (typeof d === 'string') return normalizeDamageType(d);
             if (!d || typeof d !== 'object') return undefined;
-            const maybeDamage = d as { type?: unknown; damageType?: unknown; name?: unknown };
+            const maybeDamage = d as {
+              type?: unknown | undefined;
+              damageType?: unknown | undefined;
+              name?: unknown | undefined;
+            };
             return normalizeDamageType(
               maybeDamage.type ?? maybeDamage.damageType ?? maybeDamage.name,
             );
@@ -208,14 +212,14 @@ export function buildRequiredProficiencies(
   };
 
   powers.forEach((power) => {
-    const damageTypes = parseDamageTypes((power as { damage?: unknown }).damage);
+    const damageTypes = parseDamageTypes((power as { damage?: unknown | undefined }).damage);
     (power.parts || []).forEach((part) => pushPart('power_part', part, powerPartsDb, damageTypes));
   });
 
   techniques.forEach((technique) => {
     const damageTypes = parseDamageTypes(
-      (technique as { damage?: unknown; damageStr?: unknown }).damage ??
-        (technique as { damageStr?: unknown }).damageStr,
+      (technique as { damage?: unknown | undefined; damageStr?: unknown | undefined }).damage ??
+        (technique as { damageStr?: unknown | undefined }).damageStr,
     );
     (technique.parts || []).forEach((part) =>
       pushPart('technique_part', part, techniquePartsDb, damageTypes),

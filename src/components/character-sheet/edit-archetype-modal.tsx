@@ -43,12 +43,12 @@ type PendingConfirm = { type: 'switch-forge' } | { type: 'switch-path'; path: Ar
 
 export interface EditArchetypeResult {
   archetype: { id: string; type: ArchetypeCategory };
-  pow_abil?: AbilityName;
-  mart_abil?: AbilityName;
+  pow_abil?: AbilityName | undefined;
+  mart_abil?: AbilityName | undefined;
   mart_prof: number;
   pow_prof: number;
   /** Pass `null` to clear when switching off a path. */
-  archetypePathId?: string | null;
+  archetypePathId?: string | null | undefined;
 }
 
 interface EditArchetypeModalProps {
@@ -56,7 +56,7 @@ interface EditArchetypeModalProps {
   onClose: () => void;
   character: Character;
   /** Codex-hydrated character for path name, description, and path_data. */
-  displayCharacter?: Character | null;
+  displayCharacter?: Character | null | undefined;
   onSave: (result: EditArchetypeResult) => void;
 }
 

@@ -74,14 +74,14 @@ type CharacterRow = {
   data: Record<string, unknown>;
   created_at: string;
   updated_at: string;
-  visibility?: string | null;
+  visibility?: string | null | undefined;
 };
 
 function makeCharacterRow(
   id: string,
   userId: string,
   overrides: Partial<CharacterRow['data']> = {},
-  column?: { visibility?: string | null },
+  column?: { visibility?: string | null | undefined },
 ): CharacterRow {
   const data = { name: 'Test Hero', level: 1, visibility: 'private', ...overrides };
   return {

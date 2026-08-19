@@ -207,16 +207,18 @@ export function AncestryStep() {
 
     if (!isMixed && species) {
       const sizes = getSpeciesSizeOptions(species);
-      if (sizes.length === 1 && !draft.selectedSize) {
-        updateDraft({ selectedSize: sizes[0] });
+      const size = sizes[0];
+      if (sizes.length === 1 && size && !draft.selectedSize) {
+        updateDraft({ selectedSize: size });
       }
       return;
     }
 
     if (isMixed && speciesA && speciesB) {
       const sizes = combineSpeciesSizes(speciesA, speciesB);
-      if (sizes.length === 1 && !draft.selectedSize) {
-        updateDraft({ selectedSize: sizes[0] });
+      const size = sizes[0];
+      if (sizes.length === 1 && size && !draft.selectedSize) {
+        updateDraft({ selectedSize: size });
       }
     }
   }, [ready, isMixed, species, speciesA, speciesB, draft.selectedSize, updateDraft]);

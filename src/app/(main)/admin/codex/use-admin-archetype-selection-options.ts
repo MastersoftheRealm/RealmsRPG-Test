@@ -26,13 +26,17 @@ import {
 import type { CodexSkill } from '@/types/codex';
 import type { PathGuidanceGroup } from '@/types/archetype';
 
-type OfficialItemLike = { id?: string; name?: string; type?: string };
-type OfficialNamedLike = { id?: string; name?: string };
+type OfficialItemLike = {
+  id?: string | undefined;
+  name?: string | undefined;
+  type?: string | undefined;
+};
+type OfficialNamedLike = { id?: string | undefined; name?: string | undefined };
 
 export type AdminArchetypeSelectionOptionsInput = {
   codexFeats: CodexFeatLike[];
   codexSkills: CodexSkill[];
-  codexEquipment: Array<{ id?: string; name?: string }>;
+  codexEquipment: Array<{ id?: string | undefined; name?: string | undefined }>;
   officialPowers: OfficialNamedLike[];
   officialTechniques: OfficialNamedLike[];
   officialItems: OfficialItemLike[];

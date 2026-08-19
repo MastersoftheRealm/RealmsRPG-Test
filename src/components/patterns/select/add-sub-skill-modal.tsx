@@ -27,9 +27,9 @@ import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descri
 import type { ChipData } from '@/components/patterns/list/grid-list-row';
 
 export interface CharacterSkillForSubModal {
-  id?: string;
+  id?: string | undefined;
   name: string;
-  prof?: boolean;
+  prof?: boolean | undefined;
 }
 
 export interface AddSubSkillModalProps {
@@ -38,11 +38,13 @@ export interface AddSubSkillModalProps {
   characterSkills: CharacterSkillForSubModal[];
   existingSkillNames: string[];
   onAdd: (
-    skills: Array<Skill & { selectedBaseSkillId?: string; autoAddBaseSkill?: Skill }>,
+    skills: Array<
+      Skill & { selectedBaseSkillId?: string | undefined; autoAddBaseSkill?: Skill | undefined }
+    >,
   ) => void;
   /** Optional shallower layer hop (e.g. guided L3 → L2 base skills). */
-  shallowerLayerLabel?: string;
-  onShallowerLayer?: () => void;
+  shallowerLayerLabel?: string | undefined;
+  onShallowerLayer?: (() => void) | undefined;
 }
 
 const SUB_SKILL_COLUMNS = [

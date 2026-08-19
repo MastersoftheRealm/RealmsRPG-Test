@@ -24,19 +24,19 @@ export interface OfficialEnhancedListProps {
   isLoading: boolean;
   error: Error | null;
   onRetry: () => void;
-  errorMessage?: string;
-  sectionTitle?: string;
-  searchPlaceholder?: string;
-  emptyIcon?: ReactNode;
+  errorMessage?: string | undefined;
+  sectionTitle?: string | undefined;
+  searchPlaceholder?: string | undefined;
+  emptyIcon?: ReactNode | undefined;
   emptyTitle: string;
   emptyMessage: string;
-  searchEmptyMessage?: string;
+  searchEmptyMessage?: string | undefined;
   variant: 'library' | 'admin';
-  readOnly?: boolean;
-  onAddRequest?: (row: OfficialEnhancedRow) => void;
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string, name: string) => void;
-  searchTrailing?: ReactNode;
+  readOnly?: boolean | undefined;
+  onAddRequest?: ((row: OfficialEnhancedRow) => void) | undefined;
+  onEdit?: ((id: string) => void) | undefined;
+  onDelete?: ((id: string, name: string) => void) | undefined;
+  searchTrailing?: ReactNode | undefined;
 }
 
 export function OfficialEnhancedList({

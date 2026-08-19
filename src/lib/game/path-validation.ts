@@ -13,20 +13,20 @@ import {
 
 export interface PathValidationContext {
   /** Resolve armament TP from codex/official library (admin save). Returns null if item not found. */
-  resolveItemTrainingPoints?: (itemId: string) => number | null;
+  resolveItemTrainingPoints?: ((itemId: string) => number | null) | undefined;
   /** Level-1 TP cap (typically from path recommended abilities). */
-  trainingPointLimit?: number;
+  trainingPointLimit?: number | undefined;
   /** Archetype category for Innate Energy / Threshold (TASK-473). */
-  archetypeType?: ArchetypeCategory;
-  powerProfStart?: number | null;
-  martialProfStart?: number | null;
+  archetypeType?: ArchetypeCategory | undefined;
+  powerProfStart?: number | null | undefined;
+  martialProfStart?: number | null | undefined;
   /** Resolve official power snapshot for innate eligibility. */
-  resolveInnatePower?: (powerId: string) => InnatePowerSnapshot | null;
+  resolveInnatePower?: ((powerId: string) => InnatePowerSnapshot | null) | undefined;
   /**
    * Return true when the skill is a sub-skill (has a base). Used for Level 1 skill authoring
    * warnings (TASK-515). Omit or return null when unknown — unknown ids are not treated as sub-skills.
    */
-  isSubSkill?: (skillId: string) => boolean | null;
+  isSubSkill?: ((skillId: string) => boolean | null) | undefined;
 }
 
 export interface PathValidationIssue {

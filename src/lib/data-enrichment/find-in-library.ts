@@ -3,7 +3,7 @@
  */
 export function findInLibrary<T extends { id: string; name: string }>(
   library: T[],
-  reference: string | { id?: string | number; name?: string },
+  reference: string | { id?: string | number | undefined; name?: string | undefined },
 ): T | undefined {
   if (!library || library.length === 0) return undefined;
 

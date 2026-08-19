@@ -33,18 +33,18 @@ export interface OfficialCreatureListProps {
   isLoading: boolean;
   error: Error | null;
   onRetry: () => void;
-  errorMessage?: string;
-  sectionTitle?: string;
-  searchPlaceholder?: string;
-  emptyIcon?: ReactNode;
+  errorMessage?: string | undefined;
+  sectionTitle?: string | undefined;
+  searchPlaceholder?: string | undefined;
+  emptyIcon?: ReactNode | undefined;
   emptyTitle: string;
   emptyMessage: string;
-  searchEmptyMessage?: string;
+  searchEmptyMessage?: string | undefined;
   variant: 'library' | 'admin';
-  readOnly?: boolean;
-  onAddRequest?: (row: OfficialCreatureRow) => void;
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string, name: string) => void;
+  readOnly?: boolean | undefined;
+  onAddRequest?: ((row: OfficialCreatureRow) => void) | undefined;
+  onEdit?: ((id: string) => void) | undefined;
+  onDelete?: ((id: string, name: string) => void) | undefined;
 }
 
 export function OfficialCreatureList({

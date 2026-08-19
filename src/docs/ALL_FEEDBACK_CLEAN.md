@@ -237,7 +237,7 @@ Last updated: 2026-08-17 (Sheet Inventory: custom equipment add missing)
 - Context: Post-save sheet tour on character sheet (TASK-388 §11.2)
 - Feedback: Tour **Next** button sometimes hidden behind the dice roll log FAB; cannot continue the tour.
 - Expected: Tour card above roll-log FAB; Next always clickable; optional retake from settings.
-- Disposition: **Consolidated** `ONBOARDING_FLOATING_CARD_CLASS` + `z-tour` (1100); repositioned card bottom-left on desktop; **added** Take the tour again in Character settings. BUILD_VALIDATION DEV-V-029-T004. verification_status pending-qa.
+- Disposition: **Consolidated** `ONBOARDING_FLOATING_CARD_CLASS` + `z-tour` (1100); repositioned card bottom-left on desktop; **added** Take the tour again in Character settings. BUILD_VALIDATION DEV-V-029-T004. verification_status pending-qa. **2026-08-18:** TASK-837 changed FAB geometry to a 4.5rem C4 dock → re-check is TASK-844 (do not reopen TASK-388).
 
 **Raw Feedback Log — 2026-08-06 (Post-save play-together modal — sheet-first CTAs)**
 - Context: Character creator finish — `PlayTogetherModal` after first save (TASK-388 §11.1)

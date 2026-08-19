@@ -43,23 +43,23 @@ export interface OfficialTechniqueListProps {
   items: LibraryTechnique[];
   partsDb: TechniquePart[];
   /** Required when `mode="empowered"` — nested power part chips use derivePowerDisplay. */
-  powerPartsDb?: PowerPart[];
+  powerPartsDb?: PowerPart[] | undefined;
   isLoading: boolean;
   error: Error | null;
   onRetry: () => void;
-  mode?: 'standard' | 'empowered';
-  errorMessage?: string;
-  sectionTitle?: string;
-  searchPlaceholder?: string;
-  emptyIcon?: ReactNode;
+  mode?: 'standard' | 'empowered' | undefined;
+  errorMessage?: string | undefined;
+  sectionTitle?: string | undefined;
+  searchPlaceholder?: string | undefined;
+  emptyIcon?: ReactNode | undefined;
   emptyTitle: string;
   emptyMessage: string;
-  searchEmptyMessage?: string;
+  searchEmptyMessage?: string | undefined;
   variant: 'library' | 'admin';
-  readOnly?: boolean;
-  onAddRequest?: (row: OfficialTechniqueRow) => void;
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string, name: string) => void;
+  readOnly?: boolean | undefined;
+  onAddRequest?: ((row: OfficialTechniqueRow) => void) | undefined;
+  onEdit?: ((id: string) => void) | undefined;
+  onDelete?: ((id: string, name: string) => void) | undefined;
 }
 
 export function OfficialTechniqueList({

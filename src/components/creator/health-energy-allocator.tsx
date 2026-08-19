@@ -38,13 +38,13 @@ export interface HealthEnergyAllocatorProps {
   /** Callback when Energy allocation changes */
   onEnergyChange: (value: number) => void;
   /** Layout variant: 'card' for creators, 'inline' for sheet */
-  variant?: 'card' | 'inline';
+  variant?: 'card' | 'inline' | undefined;
   /** Whether editing is disabled */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
   /** Enable hold-to-repeat with exponential acceleration */
-  enableHoldRepeat?: boolean;
+  enableHoldRepeat?: boolean | undefined;
   /** Allow allocating more points than the pool provides (for manual overrides) */
-  allowOverallocation?: boolean;
+  allowOverallocation?: boolean | undefined;
 }
 
 function ResourceName({ full, abbrev }: { full: string; abbrev: string }) {

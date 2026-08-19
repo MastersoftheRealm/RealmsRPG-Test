@@ -29,9 +29,9 @@ export interface ArchetypeSelectorProps {
   /** Callback when proficiency allocation changes */
   onProficiencyChange: (power: number, martial: number) => void;
   /** Whether the component is in compact mode */
-  compact?: boolean;
+  compact?: boolean | undefined;
   /** Whether selection is disabled/locked */
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }
 
 /** Selector-only icons; titles/descriptions come from ARCHETYPE_CATEGORY_INFO. */

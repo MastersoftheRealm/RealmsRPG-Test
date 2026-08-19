@@ -1137,7 +1137,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773, TASK-778, TASK-779, TASK-782, TASK-783, TASK-786, TASK-787, TASK-788, TASK-800, TASK-803, TASK-805)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773, TASK-778, TASK-779, TASK-782, TASK-783, TASK-786, TASK-787, TASK-788, TASK-800, TASK-803, TASK-805, TASK-838, TASK-837)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1475,7 +1475,7 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Task** | TASK-582 |
 | **Where** | `/characters/[id]` → Edit mode → Abilities / Skills pencils (desktop `md+`) |
 | **Steps** | 1. Enter sheet edit mode at ≥768px. 2. Inspect Abilities and Skills pencil icons. 3. Confirm the control hugs the icon (no large empty button chrome). 4. Optional below `md`: confirm tap target is still comfortable (~44px). |
-| **Expected** | Desktop pencils are icon-dense; mobile still meets touch sizing via `touch-target-md-compact`. |
+| **Expected** | Desktop pencils are icon-dense; coarse-pointer tap uses Dense expanded hit (`.hit-area-dense` / `.touch-target-md-compact` alias), not a 44px painted slab. |
 | **Report** | DEV-V-009-T030: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T031 — Parts/Properties & Proficiencies default collapsed + InfoTippy (TASK-583)
@@ -1987,6 +1987,69 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-009-T057 — Innate star and Equip circle stay icon-pair toggles (TASK-799)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-799 |
+| **Where** | `/characters/[id]` → Library → Powers (innate star) and Inventory (equip circle on a weapon or armor) |
+| **Needs** | Editable character with at least one power and one weapon or armor |
+
+**Steps**
+1. On Powers, click the innate star on a power. Confirm it fills (Lucide star, not ☆/★ text) and the power is marked innate. Click again to clear.
+2. On Inventory, click the equip circle on a weapon or armor. Confirm it becomes a filled check-circle; click again to unequip.
+3. Optional ~360px: both controls remain tappable without overlapping neighbors.
+
+**Expected**
+- Same select/equip/innate behavior as before. Innate uses a star icon. Equip uses circle → check-circle. Edit/Temp pencils still color-code remaining vs over-budget.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T058 — Mobile sheet panels do not stretch to the tallest sibling (TASK-838)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-838 |
+| **Where** | `/characters/[id]` at 360px and 390px (below `md`) |
+| **Needs** | A populated character (Library panel taller than Abilities — level-20 / loaded sheet) |
+
+**Steps**
+1. Open the sheet at ~390px. Confirm the Abilities panel is on screen.
+2. Scroll the page / panel to the end of Abilities. Confirm you reach the last ability/defense content with at most one viewport of trailing blank — not ~3 empty viewport heights.
+3. Swipe to Skills, Archetype, and Library. Confirm horizontal snap still stops on each panel (`scroll-snap-stop: always`).
+4. On Library, scroll through the list; confirm the panel scrolls internally and the page does not grow to ~4700px.
+5. Repeat at ~360px. Optional ≥768px: confirm the `md+` grid (`lg:grid-cols-[1fr_1fr_2fr]`) is visually unchanged.
+
+**Expected**
+- Each mobile panel is bounded to the remaining viewport and scrolls its own content. Page height does not follow the tallest sibling. Snap and desktop grid unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T059 — Sheet action dock and RollLog FAB do not overlap content or modal footers (TASK-837)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-837 |
+| **Where** | `/characters/[id]` at 360px and 390px (below `md`); also 768 / 1024 / 1280 / 1440 |
+| **Needs** | Logged-in owner of a character; Recovery / Level Up / Add Feat available |
+
+**Steps**
+1. Open the sheet at ~390px. Confirm the Edit / Temp / Recovery / Level Up / Settings controls sit in an opaque bottom bar, not over STRENGTH / VITALITY / AGILITY tiles.
+2. Confirm the dice FAB sits in the bar's right slot and does not cover any of those circular buttons.
+3. Open **Recovery**. Confirm **Full Recovery** (and the rest of the footer) is fully tappable — the FAB and action bar are gone while the modal is open. Close it.
+4. Repeat with **Level Up** and **Add Feat**: footer primary actions stay clear of the FAB.
+5. At ≥768px: confirm the action icons are top-right (not a bottom bar) and the dice FAB is bottom-right with a gutter so it does not sit on the Library panel.
+6. Optional ~360px: same as steps 1–4.
+
+**Expected**
+- Mobile: one bottom dock (opaque bar + FAB slot); sheet content has reserved space; no FAB on modal footers.
+- Desktop: toolbar top-right, RollLog bottom-right, reserved gutter, no control-to-control overlap.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-005--rls-policy-consolidation-task-352-task-327).
@@ -2264,6 +2327,25 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 **Expected**
 - `/` is `(main)/page.tsx` (server page + `HeroSection` island). About and the chooser are server pages. Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-012-T010 — About carousel arrows stay on-screen (TASK-833)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-012 — Landing page rebuild |
+| **Related task** | TASK-833 |
+| **Where** | `/about` at 360px and 390px |
+| **Needs** | None |
+
+**Steps**
+1. Open `/about` at 390px (and 360px). Confirm **Previous section** and **Next section** arrows are fully inside the viewport and tappable.
+2. Tap each arrow — the slide title/body changes. Tap a neighboring die — the same slide change happens.
+3. Confirm each die control is at least 44×44 (scale is on the image, not the button).
+
+**Expected**
+- Neither arrow sits off the left/right edge. Dice stay 44×44 tap targets. Overlay arrows + `w-full` replaced the old fixed-width flex track on **all** widths — desktop should still read as a centered dice row, not the prior 464px side-arrow layout.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -4689,6 +4771,18 @@ Admin Codex tabs, Codex browse tabs (including Codex Archetypes header chrome), 
 | **Expected** | Shell chrome; path-card bodies unchanged. Admin `/admin/codex` Archetypes may still use bordered non-ListHeader layout. |
 | **Report** | DEV-V-028-T004: PASS / FAIL / SKIP — |
 
+#### DEV-V-028-T005 — Admin Codex delete uses DeleteConfirmModal (TASK-799)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-028 — Codex browse list shell |
+| **Task** | TASK-799 / TASK-845 |
+| **Where** | `/admin/codex` → any entity tab (Skills is enough) |
+| **Needs** | Admin account |
+| **Steps** | 1. Open Skills (or Feats). 2. Click a row’s trash icon. 3. Confirm a delete modal titled **Delete {name}?** with Cancel / Delete and copy that the entry is removed from your Codex — not “Click again to confirm delete” and not an inline **Remove? Yes/No** row. 4. Cancel — row remains. 5. Open the same row’s edit modal → footer **Delete** — same confirm modal. 6. Confirm Delete on an unreferenced row — it disappears. 7. If you have a referenced row: confirm Delete, then the existing **still referenced / Delete anyway** modal still appears. |
+| **Expected** | First-step delete is `DeleteConfirmModal` on row trash and edit-modal Delete. Referential-integrity gate unchanged. `/characters/new/advanced` still loads. |
+| **Report** | DEV-V-028-T005: PASS / FAIL / SKIP — |
+
 ---
 
 ## DEV-V-017 — Site copy modules (TASK-390)
@@ -5093,6 +5187,24 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 **Expected**
 - All listed advanced fields have accessible InfoTippy copy from `tooltip-text.tsx`.
 - Guided L1 placeholder strings exist in `tooltip-text.tsx` but are **not** wired on this page.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T015 — Creature Type/Size and Codex search truncate with an ellipsis (TASK-832)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | TASK-832 |
+| **Where** | `/creature-creator` and `/codex` at 360px and 390px |
+| **Needs** | Signed-in for creature creator |
+
+**Steps**
+1. Open Creature Creator at 390px. Confirm Type and Size selected values end with an ellipsis instead of a mid-word cut (e.g. not "Huma" / "Medi" with no ellipsis).
+2. Open `/codex` → Feats at 390px. Confirm the search field shows **Search...** (or a truncated placeholder with an ellipsis), not "Search names, tags, descri".
+
+**Expected**
+- Overflowing select values use `text-overflow: ellipsis`. Codex browse placeholders are short or ellipsized. Desktop is unchanged.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6017,6 +6129,26 @@ Smoke suite for combat/skill encounter view splits. Routes and AddCombatantModal
 **Expected**
 - Tracker + ParticipantCard + sidebar config parity with pre-split behavior.
 - AddCombatantModal `mode="skill"` still adds participants; no USM fork.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-030-T003 — Full combatant card Health/Energy ValueStepper (TASK-819)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-030 — Encounter play facades |
+| **Related task** | TASK-819 |
+| **Where** | `/encounters/<id>/combat` (full combatant card, not compact) |
+| **Needs** | Signed-in; a combat encounter with a non-linked combatant |
+
+**Steps**
+1. Open a combat encounter in the full-card layout.
+2. On a manual (not linked-character) combatant, confirm Health and Energy show current + max number inputs **and** a ValueStepper beside them.
+3. Step Health and Energy up/down; type a number directly — both persist after refresh.
+4. Open a linked-character combatant — still read-only current/max text, no steppers.
+
+**Expected**
+- Full cards match compact stepper parity (ADR-0002). Initiative click-to-edit and condition chips are unchanged. Compact layout is unchanged.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7761,6 +7893,38 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ---
 
+## DEV-V-055 — ADR-0023 control touch tiers (TASK-841)
+
+**Related tasks:** TASK-841  
+**Start URL:** `/dev/styleguide` (Buttons row); also `/` footer and `/creature-creator` ability tiles  
+**Needs:** Coarse pointer (phone or DevTools touch emulation). Fine-pointer desktop is a separate check.
+
+#### DEV-V-055-T001 — Button / IconButton / stepper / footer tiers
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-055 — ADR-0023 control touch tiers |
+| **Section** | Shared controls |
+| **Related task** | TASK-841 |
+| **Where** | `/dev/styleguide` Buttons; site footer; Creature Creator STR/VIT tiles |
+| **Needs** | Touch emulation at 390px and a fine-pointer desktop window |
+
+**Steps**
+1. Open `/dev/styleguide` with **touch** emulation at 390px. Inspect **Large** (should be ≥48px tall), default **Primary** (≥44px tall, not extra-wide), **Small** and **Link** (painted ≤36px, still tappable).
+2. Confirm **Link** is not a ~167×44 slab around the text.
+3. Switch to a fine-pointer / desktop window: icon buttons and Small stay compact (no empty 44px padding).
+4. Open `/` and check footer nav links: compact painted height, tappable on touch, not 44px-tall slabs on desktop.
+5. Open `/creature-creator` at 390px: ability ± glyphs stay inside their tile (Dense painted size, not 44×44 layout).
+
+**Expected**
+- Coarse Primary (`size="lg"`) ≥48px tall; Standard standalone ≥44px tall; Dense (`sm` / `link` / steppers) paint ≤36px with a 44px expanded hit.
+- Fine pointer stays compact. Footer links and `variant="link"` are not 167×44 boxes.
+- Creature ability steppers do not overflow their tile from a 44px min-w.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## Planned suites (split from legacy DEV-T)
 
 | Suite | Topic | Legacy | Status |
@@ -7806,5 +7970,6 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 | DEV-V-052 | Archetype Path list filter (TASK-751 / TASK-752 / TASK-753) | — | Automated (`path-recommendation-index`, `feat-list`, `skill-list`, `equipment-list`) + manual DEV-V-052 T001–T006 |
 | DEV-V-053 | Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771 / TASK-793) | — | Automated (`site-url`, `robots-sitemap`) + manual DEV-V-053 T001–T006 |
 | DEV-V-054 | Codex per-collection fetch + virtualized browse rows (TASK-775) | — | Automated (`api/codex/route.test`, `use-codex.keys.test`) + manual DEV-V-054 T001–T003 |
+| DEV-V-055 | ADR-0023 control touch tiers (TASK-841) | — | Automated (`button-tiers.test.ts`) + manual DEV-V-055 T001 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

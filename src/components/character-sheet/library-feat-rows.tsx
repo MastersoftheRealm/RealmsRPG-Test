@@ -30,7 +30,7 @@ function formatRecoveryAbbrev(recovery: string | undefined): string {
 /** Stable trait id for customization lookup (prefers codex id). */
 export function resolveTraitCustomizationKey(
   traitNameOrId: string,
-  traitsDb: Array<{ id: string; name?: string }>,
+  traitsDb: Array<{ id: string; name?: string | undefined }>,
 ): string {
   const byId = traitsDb.find((t) => t.id === traitNameOrId);
   if (byId) return byId.id;
@@ -72,10 +72,10 @@ function FeatTraitCustomizationBlock({
 }: {
   fieldId: string;
   codexName: string;
-  customName?: string;
-  note?: string;
-  onCustomNameChange?: (value: string) => void;
-  onNoteChange?: (value: string) => void;
+  customName?: string | undefined;
+  note?: string | undefined;
+  onCustomNameChange?: ((value: string) => void) | undefined;
+  onNoteChange?: ((value: string) => void) | undefined;
 }) {
   const [isCustomizationOpen, setIsCustomizationOpen] = useState(false);
   const [draftName, setDraftName] = useState(customName ?? '');
@@ -208,50 +208,56 @@ function FeatTraitCustomizationBlock({
 
 export type TraitRowInput = {
   name: string;
-  codexName?: string;
-  traitKey?: string;
-  customName?: string;
-  note?: string;
-  description?: string;
-  maxUses?: number;
-  recoveryPeriod?: string;
-  category?: string;
+  codexName?: string | undefined;
+  traitKey?: string | undefined;
+  customName?: string | undefined;
+  note?: string | undefined;
+  description?: string | undefined;
+  maxUses?: number | undefined;
+  recoveryPeriod?: string | undefined;
+  category?: string | undefined;
 };
 
 export type FeatRowInput = {
-  id?: string | number;
+  id?: string | number | undefined;
   name: string;
-  codexName?: string;
-  customName?: string;
-  note?: string;
-  description?: string;
-  maxUses?: number;
-  currentUses?: number;
-  recovery?: string;
-  category?: string;
-  ability?: string | string[];
-  reqLevel?: number;
+  codexName?: string | undefined;
+  customName?: string | undefined;
+  note?: string | undefined;
+  description?: string | undefined;
+  maxUses?: number | undefined;
+  currentUses?: number | undefined;
+  recovery?: string | undefined;
+  category?: string | undefined;
+  ability?: string | string[] | undefined;
+  reqLevel?: number | undefined;
   /** For state feats — which list to update when customizing. */
-  listType?: 'archetype' | 'character';
+  listType?: 'archetype' | 'character' | undefined;
 };
 
 export type FeatRowContext = {
   showEditControls: boolean;
   traitUses: Record<string, number>;
-  onTraitUsesChange?: (traitName: string, delta: number) => void;
-  onFeatUsesChange?: (featId: string, delta: number) => void;
-  onRemoveFeat?: (featId: string, featName?: string) => void;
+  onTraitUsesChange?: ((traitName: string, delta: number) => void) | undefined;
+  onFeatUsesChange?: ((featId: string, delta: number) => void) | undefined;
+  onRemoveFeat?: ((featId: string, featName?: string) => void) | undefined;
   getFeatLevelDetailSections?: (
     featId: string | number,
     listType: 'archetype' | 'character',
-  ) => Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean }> | undefined;
-  featListType?: 'archetype' | 'character';
-  onFeatCustomizationChange?: (
-    featId: string,
-    listType: 'archetype' | 'character',
-    updates: Partial<FeatTraitCustomization>,
-  ) => void;
-  onTraitCustomizationChange?: (traitKey: string, updates: Partial<FeatTraitCustomization>) => void;
+  ) =>
+    | Array<{ label: string; chips: ChipData[]; hideLabelIfSingle?: boolean | undefined }>
+    | undefined;
+  featListType?: 'archetype' | 'character' | undefined;
+  onFeatCustomizationChange?:
+    | ((
+        featId: string,
+        listType: 'archetype' | 'character',
+        updates: Partial<FeatTraitCustomization>,
+      ) => void)
+    | undefined;
+  onTraitCustomizationChange?:
+    | ((traitKey: string, updates: Partial<FeatTraitCustomization>) => void)
+    | undefined;
 };
 
 function buildUsesStepper(
@@ -285,7 +291,7 @@ function buildFeatTraitColumns(
   uses: { current: number; max: number } | undefined,
   recovery: string | undefined,
   usesStepper: ReactNode,
-): { columns: ColumnValue[]; columnSpans?: (number | undefined)[] } {
+): { columns: ColumnValue[]; columnSpans?: (number | undefined)[] | undefined } {
   const recoveryDisplay = formatRecoveryAbbrev(recovery) || '-';
   const noUsesOrRecovery = !uses && recoveryDisplay === '-';
   if (noUsesOrRecovery) {
@@ -322,8 +328,8 @@ function buildCustomizationExtras(
   customName: string | undefined,
   note: string | undefined,
   handlers: {
-    onCustomName?: (value: string) => void;
-    onNote?: (value: string) => void;
+    onCustomName?: ((value: string) => void) | undefined;
+    onNote?: ((value: string) => void) | undefined;
   },
 ): Pick<EntityFeatRow, 'nameContent' | 'descriptionAfter' | 'supplementalExpandedContent'> {
   const noteTrimmed = note?.trim();
@@ -404,7 +410,10 @@ export function mapFeatRows(
   feats: FeatRowInput[],
   ctx: FeatRowContext,
   options?: {
-    badge?: { label: string; color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' };
+    badge?: {
+      label: string;
+      color?: 'blue' | 'purple' | 'green' | 'amber' | 'gray' | 'red' | undefined;
+    };
   },
 ): EntityFeatRow[] {
   return feats.map((feat, index) => {

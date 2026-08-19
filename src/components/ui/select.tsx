@@ -12,18 +12,18 @@ import { ChevronDown } from 'lucide-react';
 export interface SelectOption {
   value: string;
   label: string;
-  disabled?: boolean;
+  disabled?: boolean | undefined;
 }
 
 export interface SelectProps extends Omit<
   React.SelectHTMLAttributes<HTMLSelectElement>,
   'children'
 > {
-  label?: string;
-  error?: string;
-  helperText?: string;
+  label?: string | undefined;
+  error?: string | undefined;
+  helperText?: string | undefined;
   options: SelectOption[];
-  placeholder?: string;
+  placeholder?: string | undefined;
 }
 
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
@@ -34,18 +34,18 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
     const helperId = `${selectId}-helper`;
 
     return (
-      <div className="w-full">
+      <div className="w-full min-w-0">
         {label && (
           <label htmlFor={selectId} className="mb-1.5 block text-sm font-medium text-text-primary">
             {label}
           </label>
         )}
-        <div className="relative">
+        <div className="relative min-w-0">
           <select
             id={selectId}
             ref={ref}
             className={cn(
-              'flex h-10 w-full appearance-none rounded-lg border bg-surface px-4 py-2.5 pr-10 text-sm',
+              'flex h-10 w-full min-w-0 appearance-none truncate rounded-lg border bg-surface px-4 py-2.5 pr-10 text-sm',
               'text-text-primary',
               'focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none',
               'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:opacity-50',

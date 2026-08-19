@@ -48,21 +48,24 @@ function PathFilterLast(pathFilter: NonNullable<ArmamentFiltersProps['pathFilter
 export interface ArmamentFiltersProps {
   value: ArmamentFilterState;
   onChange: (next: ArmamentFilterState) => void;
-  onCharacterContextChange?: (ctx: ArmamentCharacterContext | null) => void;
+  onCharacterContextChange?: ((ctx: ArmamentCharacterContext | null) => void) | undefined;
   /** Selected character id ('' when none). Used for add-to-character row actions. */
-  onCharacterIdChange?: (characterId: string) => void;
-  className?: string;
+  onCharacterIdChange?: ((characterId: string) => void) | undefined;
+  className?: string | undefined;
   /** Persist character pick (default true). USM/L3 pass false. */
-  persistCharacter?: boolean;
+  persistCharacter?: boolean | undefined;
   /**
    * Codex mixed equipment: min/max currency always, plus rarity-by-level when a
    * character is selected. Library weapons/armor/shields leave this off.
    */
-  showEquipmentExtras?: boolean;
+  showEquipmentExtras?: boolean | undefined;
   /** Extra filter controls (e.g. Category / Rarity selects) in the panel body. */
-  children?: ReactNode;
+  children?: ReactNode | undefined;
   /** Archetype Path filter — last in the grid (TASK-752 / TASK-753). */
-  pathFilter?: Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'> | null;
+  pathFilter?:
+    | Pick<ArchetypePathFilterProps, 'options' | 'selectedPathIds' | 'onChange'>
+    | null
+    | undefined;
 }
 
 export function ArmamentFilters({

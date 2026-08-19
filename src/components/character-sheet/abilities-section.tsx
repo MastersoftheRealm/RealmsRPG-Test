@@ -39,21 +39,21 @@ import { DefenseStatTile } from './defense-stat-tile';
 
 interface AbilitiesSectionProps {
   abilities: Abilities;
-  defenseSkills?: DefenseSkills;
+  defenseSkills?: DefenseSkills | undefined;
   level: number;
-  archetypeAbility?: AbilityName;
-  martialAbility?: AbilityName;
-  powerAbility?: AbilityName;
-  isEditMode?: boolean;
-  isTempModifierMode?: boolean;
-  totalAbilityPoints?: number;
-  spentAbilityPoints?: number;
-  totalSkillPoints?: number;
-  spentSkillPoints?: number;
-  tempModifiers?: CharacterTempModifiers;
-  onTempModifiersChange?: (patch: CharacterTempModifiers) => void;
-  onAbilityChange?: (ability: AbilityName, value: number) => void;
-  onDefenseChange?: (defense: keyof DefenseSkills, value: number) => void;
+  archetypeAbility?: AbilityName | undefined;
+  martialAbility?: AbilityName | undefined;
+  powerAbility?: AbilityName | undefined;
+  isEditMode?: boolean | undefined;
+  isTempModifierMode?: boolean | undefined;
+  totalAbilityPoints?: number | undefined;
+  spentAbilityPoints?: number | undefined;
+  totalSkillPoints?: number | undefined;
+  spentSkillPoints?: number | undefined;
+  tempModifiers?: CharacterTempModifiers | undefined;
+  onTempModifiersChange?: ((patch: CharacterTempModifiers) => void) | undefined;
+  onAbilityChange?: ((ability: AbilityName, value: number) => void) | undefined;
+  onDefenseChange?: ((defense: keyof DefenseSkills, value: number) => void) | undefined;
 }
 
 // =============================================================================

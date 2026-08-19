@@ -25,7 +25,7 @@ export type CodexPart = CodexPartRow;
 export type CodexProperty = CodexPropertyRow;
 
 export type ItemWithLibrarySource = Item & {
-  libraryItem?: { properties?: Item['properties'] };
+  libraryItem?: { properties?: Item['properties'] | undefined };
 };
 
 export function partsToPartData(
@@ -73,11 +73,11 @@ export function resolveItemProperties(item: ItemWithLibrarySource): Item['proper
 }
 
 type ArmorScalarFields = Item & {
-  armorValue?: number;
-  armor?: number;
-  damageReduction?: number;
-  criticalRangeIncrease?: number;
-  critRange?: number;
+  armorValue?: number | undefined;
+  armor?: number | undefined;
+  damageReduction?: number | undefined;
+  criticalRangeIncrease?: number | undefined;
+  critRange?: number | undefined;
 };
 
 export interface ArmorItemCombatStats {
@@ -155,7 +155,11 @@ export function getWeaponAttackBonus(
 ): { bonus: number; abilityName: string } {
   const props = resolveItemProperties(weapon) ?? weapon.properties ?? [];
   const { bonus, abilityName } = getWeaponAttackBonusFromProperties(
-    props as { id?: number; name?: string; op_1_lvl?: number }[],
+    props as {
+      id?: number | undefined;
+      name?: string | undefined;
+      op_1_lvl?: number | undefined;
+    }[],
     abilities,
     martialProficiency,
   );

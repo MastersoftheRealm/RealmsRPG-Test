@@ -22,37 +22,40 @@
 import type { ElementType, ReactNode } from 'react';
 import { ChevronDown, Plus } from 'lucide-react';
 import { IconButton } from '@/components/ui';
-import { cn } from '@/lib/utils';
+import { cn, type AllowUndefinedOptionals } from '@/lib/utils';
 import type { LibrarySectionCollapseHeaderProps } from '@/hooks/use-library-section-collapse';
 
-interface SectionHeaderBaseProps {
+interface SectionHeaderBasePropsFields {
   /** Section title */
   title: string;
   /** Optional content beside the title (e.g. InfoTippy) */
-  titleAddon?: ReactNode;
+  titleAddon?: ReactNode | undefined;
   /** Callback for add button - if provided, shows + button on far right */
-  onAdd?: () => void;
+  onAdd?: (() => void) | undefined;
   /** Accessibility label for add button (defaults to "Add {title}") */
-  addLabel?: string;
+  addLabel?: string | undefined;
   /** Additional content to render on the right side (before add button) */
-  rightContent?: ReactNode;
+  rightContent?: ReactNode | undefined;
   /** Optional className for the add button (e.g. text-danger-700 when over budget) */
-  addButtonClassName?: string;
+  addButtonClassName?: string | undefined;
   /** Custom className for container */
-  className?: string;
+  className?: string | undefined;
   /**
    * Size variant - controls text size and spacing.
    * DESIGN_INTENT: default `md` sitewide; character Library list subsections pass `lg` explicitly.
    */
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | undefined;
   /**
    * Heading level for the title. Default `2` for page sections under an `h1`.
    * Use `3` when nested under another `h2` (e.g. creature Inventory lists).
    */
-  headingLevel?: 2 | 3 | 4;
+  headingLevel?: 2 | 3 | 4 | undefined;
 }
 
-export type SectionHeaderProps = SectionHeaderBaseProps & LibrarySectionCollapseHeaderProps;
+type SectionHeaderBaseProps = AllowUndefinedOptionals<SectionHeaderBasePropsFields>;
+
+export type SectionHeaderProps = SectionHeaderBaseProps &
+  AllowUndefinedOptionals<LibrarySectionCollapseHeaderProps>;
 
 /** Text size on the title itself (not only the row) so collapse buttons cannot shrink it. */
 const sizeTextStyles = {

@@ -209,7 +209,7 @@ export interface GuidedDraft {
    * Idempotency key for POST create. Persisted with the draft so a reload-then-retry
    * still hits the same row. Cleared by `resetCreator` (new character).
    */
-  clientRequestId?: string | null;
+  clientRequestId?: string | null | undefined;
 }
 
 function createInitialDraft(): GuidedDraft {
@@ -390,8 +390,8 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
         }
 
         let state = persisted as GuidedCreatorState & {
-          completedSubSteps?: GuidedSubStep[];
-          draft?: GuidedDraft & { skillIds?: string[] };
+          completedSubSteps?: GuidedSubStep[] | undefined;
+          draft?: (GuidedDraft & { skillIds?: string[] | undefined }) | undefined;
         };
 
         if (version < 2 && state.draft) {
@@ -467,7 +467,7 @@ export const useGuidedCreatorStore = create<GuidedCreatorState>()(
 
         if (version < 8 && state.draft) {
           const { creationMode: _removed, ...rest } = state.draft as GuidedDraft & {
-            creationMode?: string;
+            creationMode?: string | undefined;
           };
           void _removed;
           state = { ...state, draft: rest as GuidedDraft };

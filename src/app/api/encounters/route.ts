@@ -18,15 +18,16 @@ type Row = {
   data: unknown;
   updated_at: string | null;
   created_at: string | null;
-  name?: string | null;
-  type?: string | null;
-  status?: string | null;
+  name?: string | null | undefined;
+  type?: string | null | undefined;
+  status?: string | null | undefined;
 };
 
 function toSummary(row: Row): EncounterSummary {
   const d = (row.data as Record<string, unknown>) ?? {};
   const combatants = (d.combatants as unknown[]) ?? [];
-  const participants = (d.skillEncounter as { participants?: unknown[] })?.participants ?? [];
+  const participants =
+    (d.skillEncounter as { participants?: unknown[] | undefined })?.participants ?? [];
   return {
     id: row.id,
     name: row.name ?? (d.name as string) ?? 'Unnamed Encounter',

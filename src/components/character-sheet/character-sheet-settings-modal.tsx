@@ -31,24 +31,26 @@ const SPEED_DISPLAY_OPTIONS: { value: SpeedDisplayUnit; label: string }[] = [
 export interface CharacterSheetSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  visibility?: CharacterVisibility;
-  onVisibilityChange?: (value: CharacterVisibility) => void;
+  visibility?: CharacterVisibility | undefined;
+  onVisibilityChange?: ((value: CharacterVisibility) => void) | undefined;
   /** Called when user clicks Confirm: save visibility then show feedback. Parent should save, toast, and close. */
-  onConfirmVisibility?: (value: CharacterVisibility) => void | Promise<void>;
+  onConfirmVisibility?: ((value: CharacterVisibility) => void | Promise<void>) | undefined;
   /** When false, visibility is read-only. */
-  canEdit?: boolean;
+  canEdit?: boolean | undefined;
   /** When true, Private option is disabled (character must leave campaign to set private). */
-  isInCampaign?: boolean;
+  isInCampaign?: boolean | undefined;
   /** How to display speed (spaces, feet, or meters). Editing is always in spaces. */
-  speedDisplayUnit?: SpeedDisplayUnit;
-  onSpeedDisplayUnitChange?: (value: SpeedDisplayUnit) => void;
+  speedDisplayUnit?: SpeedDisplayUnit | undefined;
+  onSpeedDisplayUnitChange?: ((value: SpeedDisplayUnit) => void) | undefined;
   /** Called on Confirm to save both visibility and speed display. If provided, overrides onConfirmVisibility for full save. */
-  onConfirm?: (updates: {
-    visibility?: CharacterVisibility;
-    speedDisplayUnit?: SpeedDisplayUnit;
-  }) => void | Promise<void>;
+  onConfirm?:
+    | ((updates: {
+        visibility?: CharacterVisibility | undefined;
+        speedDisplayUnit?: SpeedDisplayUnit | undefined;
+      }) => void | Promise<void>)
+    | undefined;
   /** Restart the post-save sheet tour from step 1 (owner only). */
-  onTakeSheetTour?: () => void;
+  onTakeSheetTour?: (() => void) | undefined;
 }
 
 export function CharacterSheetSettingsModal({

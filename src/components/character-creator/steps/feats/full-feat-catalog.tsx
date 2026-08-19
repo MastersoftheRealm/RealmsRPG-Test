@@ -2,8 +2,8 @@
 
 import { cn } from '@/lib/utils';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
-import { EmptyState } from '@/components/ui';
-import { SearchInput, ListHeader, SegmentedControl } from '@/components/patterns';
+import { EmptyState, SearchInput } from '@/components/ui';
+import { ListHeader, SegmentedControl } from '@/components/patterns';
 import { FilterSection, ChipSelect } from '@/components/patterns/filters';
 import type { Feat } from '@/hooks';
 import { FEAT_GRID_COLUMNS, FEAT_HEADER_COLUMNS } from './feat-list-columns';
@@ -24,7 +24,7 @@ interface FullFeatCatalogProps {
   maxCharacterFeats: number;
   featById: Map<string, Feat>;
   skillIdToName: Map<string, string>;
-  checkRequirements: (feat: Feat) => { met: boolean; reason?: string };
+  checkRequirements: (feat: Feat) => { met: boolean; reason?: string | undefined };
   onToggleFeat: (feat: Feat, isCharacterFeat: boolean) => void;
 }
 

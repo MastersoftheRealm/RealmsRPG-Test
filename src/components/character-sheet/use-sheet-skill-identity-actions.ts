@@ -38,9 +38,9 @@ export function useSheetSkillIdentityActions({
       newSkills: Array<{
         id: string;
         name: string;
-        ability?: string;
-        base_skill_id?: number;
-        selectedBaseSkillId?: string;
+        ability?: string | undefined;
+        base_skill_id?: number | undefined;
+        selectedBaseSkillId?: string | undefined;
       }>,
     ) => {
       if (!character) return;
@@ -101,11 +101,11 @@ export function useSheetSkillIdentityActions({
       updates: Partial<{
         name: string;
         skill_val: number;
-        prof: boolean;
-        ability: string;
-        availableAbilities: string[];
-        category: string;
-        baseSkill: string;
+        prof: boolean | undefined;
+        ability: string | undefined;
+        availableAbilities: string[] | undefined;
+        category: string | undefined;
+        baseSkill: string | undefined;
       }>,
     ) => {
       if (!character) return;
