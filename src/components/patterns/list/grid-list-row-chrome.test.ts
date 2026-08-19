@@ -13,6 +13,7 @@ describe('grid-list-row-chrome mobile collapse', () => {
     expect(countGridTemplateTracks('1fr 2fr 40px')).toBe(3);
     expect(expandGridTemplateTokens('repeat(2, minmax(0, 1fr)) 40px')).toEqual([
       'minmax(0, 1fr)',
+      'minmax(0, 1fr)',
       '40px',
     ]);
     expect(countGridTemplateTracks('repeat(2, minmax(0, 1fr)) 40px')).toBe(3);

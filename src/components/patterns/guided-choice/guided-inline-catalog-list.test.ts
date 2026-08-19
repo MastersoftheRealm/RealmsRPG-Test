@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const repoRoot = path.resolve(import.meta.dirname, '../../../..');
 const componentSource = readFileSync(
-  path.join(repoRoot, 'src/components/shared/guided-choice/guided-inline-catalog-list.tsx'),
+  path.join(repoRoot, 'src/components/patterns/guided-choice/guided-inline-catalog-list.tsx'),
   'utf8',
 );
 

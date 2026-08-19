@@ -126,10 +126,13 @@ function sheetItemCostFacts(item: Item, ctx: LibraryEntityRowContext) {
   const costs = calculateItemCosts(propsPayload, ctx.itemPropertiesDb as ItemPropertyTpRow[]);
   const storedCost = item.cost != null && item.cost > 0 ? item.cost : undefined;
   const derivedCurrency = Math.round(costs.totalCurrency);
+  const storedTp = (item as Item & { tp?: number }).tp;
   return {
     rarity: item.rarity,
     currency: storedCost ?? (derivedCurrency > 0 ? derivedCurrency : undefined),
-    trainingPoints: Math.round(costs.totalTP) || undefined,
+    trainingPoints:
+      Math.round(costs.totalTP) ||
+      (typeof storedTp === 'number' && storedTp > 0 ? Math.round(storedTp) : undefined),
   };
 }
 

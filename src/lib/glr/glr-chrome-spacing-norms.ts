@@ -34,8 +34,8 @@ export const CODEX_BROWSE_LIST_ROW_CLASSNAME = 'mt-2 flex flex-col gap-1' as con
 /** Shell components that own GLR list row spacing. */
 export const GLR_LIST_SHELL_SOURCES = [
   'src/app/(main)/library/components/UserLibraryEntityTabShell.tsx',
-  'src/components/shared/official-entity-list.tsx',
-  'src/components/shared/codex-browse-list-shell.tsx',
+  'src/components/patterns/list/official-entity-list.tsx',
+  'src/components/patterns/list/codex-browse-list-shell.tsx',
 ] as const;
 
 /** My Library entity tabs — must pair row actions with shell `rowChrome`. */
@@ -80,7 +80,7 @@ export const CODEX_BROWSE_SHELL_SOURCES = [
 
 /** UnifiedSelectionModal list row container (selection modals). */
 export const USM_LIST_SHELL_SOURCES = [
-  'src/components/shared/unified-selection-modal-list.tsx',
+  'src/components/patterns/select/unified-selection-modal-list.tsx',
 ] as const;
 
 /**
@@ -88,8 +88,8 @@ export const USM_LIST_SHELL_SOURCES = [
  * `USM_QUANTITY_RIGHT_SLOT_WIDTH` (TASK-702).
  */
 export const USM_QUANTITY_CHROME_SOURCES = [
-  'src/components/shared/unified-selection-modal-list.tsx',
-  'src/components/shared/guided-choice/guided-inline-catalog-list.tsx',
+  'src/components/patterns/select/unified-selection-modal-list.tsx',
+  'src/components/patterns/guided-choice/guided-inline-catalog-list.tsx',
 ] as const;
 
 /** Creator pages with embedded ListHeader + GridListRow lists (not library/codex shells). */
@@ -105,19 +105,19 @@ export const CREATOR_EMBEDDED_GLR_SOURCES = [
  * action column; chrome must not `self-start` beside the expanded body.
  */
 export const GLR_ROW_LAYOUT_SOURCES = [
-  'src/components/shared/grid-list-row.tsx',
-  'src/components/shared/grid-list-row-collapsed.tsx',
-  'src/components/shared/grid-list-row-expanded.tsx',
+  'src/components/patterns/list/grid-list-row.tsx',
+  'src/components/patterns/list/grid-list-row-collapsed.tsx',
+  'src/components/patterns/list/grid-list-row-expanded.tsx',
 ] as const;
 
 /** Callers that may pass `listClassName` into GLR shells. */
 export const GLR_LIST_CLASSNAME_CALLER_SOURCES = [
   ...MY_LIBRARY_ENTITY_TAB_SOURCES,
-  'src/components/shared/official-power-list.tsx',
-  'src/components/shared/official-technique-list.tsx',
-  'src/components/shared/official-item-list.tsx',
-  'src/components/shared/official-creature-list.tsx',
-  'src/components/shared/official-enhanced-list.tsx',
+  'src/components/patterns/list/official-power-list.tsx',
+  'src/components/patterns/list/official-technique-list.tsx',
+  'src/components/patterns/list/official-item-list.tsx',
+  'src/components/patterns/list/official-creature-list.tsx',
+  'src/components/patterns/list/official-enhanced-list.tsx',
 ] as const;
 
 /**

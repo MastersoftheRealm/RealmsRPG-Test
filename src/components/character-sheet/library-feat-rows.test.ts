@@ -25,7 +25,11 @@ describe('mapTraitRows — kind chip expanded-only (TASK-779)', () => {
     );
 
     expect(rows.map((row) => row.badges)).toEqual([undefined, undefined, undefined]);
-    expect(rows.map((row) => row.detailSections?.[0]?.hideLabelIfSingle)).toEqual([true]);
+    expect(rows.map((row) => row.detailSections?.[0]?.hideLabelIfSingle)).toEqual([
+      true,
+      true,
+      true,
+    ]);
     expect(rows.map((row) => row.detailSections?.[0]?.chips[0])).toEqual([
       { name: 'Ancestry', kind: 'descriptor', category: 'default' },
       { name: 'Characteristic', kind: 'descriptor', category: 'default' },

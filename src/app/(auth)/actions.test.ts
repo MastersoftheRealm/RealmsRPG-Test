@@ -195,6 +195,7 @@ describe('createUserProfileAction', () => {
     expect(opLabels(ops)).toEqual([
       'select:user_profiles',
       'insert:user_profiles',
+      'insert:user_profiles',
       'upsert:usernames',
     ]);
   });
