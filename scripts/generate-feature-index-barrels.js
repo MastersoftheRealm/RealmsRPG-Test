@@ -66,8 +66,8 @@ if (check) {
     process.exit(2);
   }
   const prev = fs.readFileSync(outPath, 'utf8');
-  // Ignore the Generated: date line when comparing
-  const stripDate = (s) => s.replace(/^Generated:.*$/m, 'Generated: <date>');
+  // Ignore the Generated: date line and Windows CRLF when comparing
+  const stripDate = (s) => s.replace(/\r\n/g, '\n').replace(/^Generated:.*$/m, 'Generated: <date>');
   if (stripDate(prev) !== stripDate(next)) {
     console.error(`${outRel} is stale. Run: npm run tasks:generate-index`);
     process.exit(2);
