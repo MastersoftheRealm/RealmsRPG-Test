@@ -117,7 +117,7 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 |-------|----------|
 | **UX goals, terminology, done/backlog** | This file: `src/docs/USER_EXPERIENCE_GOALS.md` |
 | **Full UX plan (source)** | Plan doc (e.g. `realms_ux_retention_onboarding_*.plan.md`) — goals, personas, journey, priorities |
-| **Mobile and touch** | `src/docs/MOBILE_UX.md` — breakpoints, 44px touch targets, fullScreenOnMobile, side-scroll/collapse |
+| **Responsive / touch** | `src/docs/MOBILE_UX.md` (ADR-0023) — six-width contracts, tiered touch targets, fullScreenOnMobile, side-scroll/collapse |
 | **Accessibility and contrast** | `src/docs/ACCESSIBILITY.md`, `.cursor/rules/realms-accessibility.mdc` — WCAG 2.1 AA, labels, headings, modals |
 | **Game rules and terminology** | `src/docs/GAME_RULES.md` — ability names, formulas, display conventions |
 | **Owner feedback and tasks** | `src/docs/ALL_FEEDBACK_CLEAN.md` (curated + raw log), `src/docs/ai/ACTIVE_TASKS.md` (process: `AI_TASK_QUEUE.md`) |
@@ -129,7 +129,7 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 - **Character creator:** Keep guest flow; default to Realms Library/Codex in selection steps; show “Create account to save” when not logged in; keep step progress and success message on save.
 - **CTAs:** Any new landing or nav should consider “Create a character,” “Browse Codex,” “Browse Realms Library,” and “Join the Community” (Discord) where relevant.
 - **Tone:** Epic but not childish; avoid heavy gamification or “Achievement unlocked!” style copy.
-- **Mobile:** New pages/modals follow MOBILE_UX.md (fullScreenOnMobile for large modals, 44px touch targets, side-scroll or collapse for dense sections).
+- **Responsive:** New pages/modals follow MOBILE_UX.md (fullScreenOnMobile for large modals, tiered touch targets, C1–C6 layout contracts; verify at 360 / 390 / 768 / 1024 / 1280 / 1440).
 - **Accessibility:** New controls have labels or aria-label; status/copy use contrast-safe tokens (see ACCESSIBILITY.md).
 
 ### 5.3 Where to record UX feedback and work
@@ -147,7 +147,7 @@ When implementing or reviewing **any** UI, copy, or flow that touches onboarding
 | Character creator | `src/app/(main)/characters/new/page.tsx`, `src/components/character-creator/steps/*.tsx`, `src/stores/character-creator-store.ts` |
 | Home / landing | `src/app/(main)/page.tsx` (post-activation onboarding shipped — TASK-388) |
 | Header / footer / Discord | `src/components/layout/header.tsx`, `src/components/layout/footer.tsx` |
-| Library and Codex labels | `src/app/(main)/library/page.tsx`, `src/app/(main)/codex/page.tsx`, `src/components/shared/filters/source-filter.tsx` |
+| Library and Codex labels | `src/app/(main)/library/page.tsx`, `src/app/(main)/codex/page.tsx`, `src/components/patterns/filters/source-filter.tsx` |
 
 ---
 

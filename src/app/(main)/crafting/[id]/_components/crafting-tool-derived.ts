@@ -189,8 +189,9 @@ export function buildRequirementsSyncPatch(args: {
 
   const existingSessions = session.data.sessions ?? [];
   const newSessions: CraftingRollSession[] = labels.map((label, i) => {
-    if (i < existingSessions.length) {
-      return { ...existingSessions[i], label };
+    const existing = existingSessions[i];
+    if (existing !== undefined) {
+      return { ...existing, label };
     }
     return { label, roll: null, successes: 0, failures: 0 };
   });

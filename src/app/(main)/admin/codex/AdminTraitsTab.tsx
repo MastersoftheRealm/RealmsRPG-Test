@@ -1,7 +1,11 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
+import {
+  CodexBrowseListShell,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+} from '@/components/patterns';
 import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
 import { Button, IconButton, useToast } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';

@@ -13,7 +13,7 @@ import { Button, Spinner, SelectionCard, Card, DescriptorChip } from '@/componen
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { useCodexArchetypes } from '@/hooks';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { AbilityPickButton } from '@/components/character-creator/AbilityPickButton';
+import { AbilityPickButton, InfoTippy } from '@/components/patterns';
 import {
   ARCHETYPE_ABILITY_OPTIONS,
   PATH_CATEGORY_GROUPS,
@@ -24,7 +24,6 @@ import {
 import { buildPathAbilityChipLabels } from '@/lib/guided-creator/path-ability-labels';
 import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy';
 import type { Archetype, ArchetypeCategory, AbilityName } from '@/types';
-import { InfoTippy } from '@/components/shared';
 import {
   chooseCharacterCreationStyle,
   martialAbility,

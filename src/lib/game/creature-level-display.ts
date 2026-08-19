@@ -83,7 +83,9 @@ export function parseCreatureLevelSortValue(level: unknown): number | null {
         const wholePart = trimmed.slice(0, -fracChar.length);
         const whole = wholePart === '' ? 0 : Number(wholePart);
         if (!Number.isFinite(whole) || whole < 0) return null;
-        return whole + UNICODE_FRACTION_TO_DECIMAL[fracChar];
+        const frac = UNICODE_FRACTION_TO_DECIMAL[fracChar];
+        if (frac == null) return null;
+        return whole + frac;
       }
     }
 

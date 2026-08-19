@@ -15,7 +15,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { Moon, Sun, Clock, Zap, Heart, Sparkles, RotateCcw } from 'lucide-react';
 import { Modal, Button } from '@/components/ui';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/patterns';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { cn } from '@/lib/utils';
 

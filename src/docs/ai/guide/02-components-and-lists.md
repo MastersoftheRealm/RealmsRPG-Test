@@ -26,7 +26,8 @@ Quick location table: [`AGENT_GUIDE.md`](../AGENT_GUIDE.md) § Components. Unifi
 | Species detail view, level-up wizard | Custom layouts | Justified exceptions |
 | Add-feat, add-skill, add-library-item modals | **GridListRow** or **UnifiedSelectionModal** | Consistent list selection |
 | Add combatant / session participant (encounters, VTT, downtime) | **AddCombatantModal** | Intentional non-USM shared shell (TASK-571); extend for new session-play surfaces |
-| Mixed species (exactly two species) | **MixedSpeciesModal** | Intentional non-USM dual `<select>` picker (TASK-605); Advanced species-step + sheet Edit Species + Guided Species L2 + Ancestry mixed overview change — not list add-X / USM |
+| Mixed species (exactly two species) | **MixedSpeciesModal** | Intentional non-USM dual `<select>` picker (TASK-605 / ADR-0017); Legacy species-step + sheet Edit Species + Guided Species L2 + Ancestry mixed overview change — not list add-X / USM |
+| Mixed species skill rows (Legacy Ancestry + sheet Edit Species) | **MixedSpeciesSkillPicker** | Shared selectable rows (ADR-0018); Guided mixed skills stay GuidedChoiceCard (TASK-670) |
 | Entity **thumbnail** in list row (left of name, click to preview) | **GridListRow** `thumbnail` + **ListRowThumbnail** | See [`03-entity-card-art.md`](03-entity-card-art.md) § Adoption inventory (TASK-478) |
 
 **List item actions:** GridListRow uses a shared action set (view/edit/duplicate/delete, plus quantity where applicable). Use IconButton and the same placement pattern; see `src/docs/human/UI_COMPONENT_REFERENCE.md` for extended catalog details.

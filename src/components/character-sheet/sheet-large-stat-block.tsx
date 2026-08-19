@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui';
-import { TempModifierToggle } from '@/components/shared';
+import { TempModifierToggle } from '@/components/patterns';
 import { tempModifierTintFromDelta, tempModifierValueClass } from '@/lib/character/temp-modifiers';
 import { TempModifierStepperRow, useTempModifierActive } from './sheet-temp-modifier-controls';
 

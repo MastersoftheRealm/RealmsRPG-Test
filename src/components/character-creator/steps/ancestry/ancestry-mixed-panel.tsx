@@ -1,10 +1,8 @@
 'use client';
 
 import { Card } from '@/components/ui';
-import { InfoTippy } from '@/components/shared';
+import { InfoTippy, MixedSpeciesSkillPicker, TraitSection } from '@/components/patterns';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { TraitSection } from '@/components/character-creator/TraitSection';
-import { MixedSpeciesSkillPicker } from '@/components/character-creator/mixed-species-skill-picker';
 import { resolveTraitIds, type Species, type Trait } from '@/hooks';
 import type { CharacterAncestry, CharacterDraft } from '@/types';
 import type { NamedIdOption } from '@/lib/ancestry/ancestry-selection';

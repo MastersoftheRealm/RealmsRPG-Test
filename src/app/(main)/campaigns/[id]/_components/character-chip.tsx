@@ -7,7 +7,7 @@
 import Link from 'next/link';
 import { ExternalLink, Trash2 } from 'lucide-react';
 import { IconButton } from '@/components/ui';
-import { ExpandableImage } from '@/components/shared';
+import { ExpandableImage } from '@/components/patterns';
 import type { CampaignCharacter } from '@/types/campaign';
 import { isPortraitFallbackSrc } from '@/lib/portrait';
 import { useEffectivePortrait } from '@/hooks/use-effective-portrait';

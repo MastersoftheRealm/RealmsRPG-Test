@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import { PathHelpCard } from '@/components/character-creator/PathHelpCard';
+import { PathHelpCard } from '@/components/patterns';
 import { getPathRecommendationsForLevel } from '@/lib/game/archetype-path';
 import { PathRemoveGuidance } from '@/components/character-sheet/path-level-guidance';
 import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';
@@ -50,9 +50,7 @@ export function ArchetypePathGuidance({ character }: { character: Character }) {
       role="region"
       aria-label={`Path information for ${pathName}`}
     >
-      {description ? (
-        <p className="text-sm text-text-secondary">{description}</p>
-      ) : null}
+      {description ? <p className="text-sm text-text-secondary">{description}</p> : null}
 
       {showLevel1Notes && level <= 1 ? (
         <PathHelpCard pathName={pathName}>

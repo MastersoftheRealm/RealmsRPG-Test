@@ -26,7 +26,7 @@ import {
   Alert,
   useToast,
 } from '@/components/ui';
-import { InfoTippy } from '@/components/shared';
+import { InfoTippy } from '@/components/patterns';
 import { campaignsHelp } from '../../../../public/tooltip-text';
 import { cn } from '@/lib/utils';
 import { PortraitThumb } from '@/components/character/portrait-thumb';

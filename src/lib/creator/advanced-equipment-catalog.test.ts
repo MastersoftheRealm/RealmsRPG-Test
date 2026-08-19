@@ -27,6 +27,7 @@ import { CHARACTER_STARTING_CURRENCY } from '@/lib/game/constants';
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { LibraryItem } from '@/types/library';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
+import { defined } from '@/lib/utils';
 
 const props: ItemPropertyTpRow[] = [
   { id: 1, name: 'Sharp', base_tp: 2, op_1_tp: 1, base_c: 1, op_1_c: 0, base_ip: 0, op_1_ip: 0 },
@@ -262,11 +263,13 @@ describe('filter + inventory helpers', () => {
     expect(addAdvancedEquipmentToInventory([], sword, 1, 30)).toBeNull();
 
     const stacked = addAdvancedEquipmentToInventory(added!, sword, 1, 120);
-    expect(stacked?.[0].quantity).toBe(3);
+    expect(defined(stacked?.[0]).quantity).toBe(3);
 
     const decremented = removeAdvancedEquipmentFromInventory(stacked!, 'sword-1');
-    expect(decremented[0].quantity).toBe(2);
-    expect(removeAdvancedEquipmentFromInventory(decremented, 'sword-1')[0].quantity).toBe(1);
+    expect(defined(decremented[0]).quantity).toBe(2);
+    expect(defined(removeAdvancedEquipmentFromInventory(decremented, 'sword-1')[0]).quantity).toBe(
+      1,
+    );
     expect(
       removeAdvancedEquipmentFromInventory(
         [{ id: 'sword-1', name: 'Longsword', type: 'weapon', cost: 40, quantity: 1 }],

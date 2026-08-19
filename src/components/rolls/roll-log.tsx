@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils/cn';
 import { Trash2, Users, User } from 'lucide-react';
 import { useRolls, type RollEntry, type RollType, type DieResult } from './roll-context';
 import { useCampaignRolls } from '@/hooks/use-campaign-rolls';
-import { DecrementButton, IncrementButton } from '@/components/shared';
+import { DecrementButton, IncrementButton } from '@/components/patterns';
 import { LoadingState, EmptyState, Card } from '@/components/ui';
 import type { CampaignRollEntry } from '@/types/campaign-roll';
 import { formatRollTimestamp } from '@/lib/roll-timestamp';

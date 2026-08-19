@@ -5,7 +5,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
+import { ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import { WEAPON_DAMAGE_TYPES, DIE_SIZES } from '@/lib/game/creator-constants';
 import type { ArmamentType, ItemDamageConfig as DamageConfig } from './item-creator-bootstrap';

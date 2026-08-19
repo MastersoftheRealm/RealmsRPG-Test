@@ -12,7 +12,7 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
-import { ThemeToggle, InfoTippy } from '@/components/shared';
+import { ThemeToggle, InfoTippy } from '@/components/patterns';
 import { navbarCodex, navbarLibrary } from '../../../public/tooltip-text';
 import { NAV_COPY, type NavLink } from '@/lib/constants/site-copy';
 
@@ -72,6 +72,7 @@ export function Header() {
     if (focusables.length === 0) return;
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
+    if (first === undefined || last === undefined) return;
     if (e.shiftKey && document.activeElement === first) {
       e.preventDefault();
       last.focus();

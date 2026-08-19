@@ -7,7 +7,7 @@ import {
   GridListRow,
   gridColumnsWithInlineSelection,
   type SortState,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { Modal, Button, Input, Textarea } from '@/components/ui';
 import type { Trait } from '@/hooks';
 import { Plus } from 'lucide-react';

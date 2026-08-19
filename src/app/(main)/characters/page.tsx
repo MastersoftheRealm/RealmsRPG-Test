@@ -12,7 +12,7 @@ import { useRouter } from 'next/navigation';
 import { CharacterCard, AddCharacterCard } from '@/components/character';
 import { PageContainer, PageHeader, EmptyState, useToast } from '@/components/ui';
 import { Alert } from '@/components/ui/alert';
-import { DeleteConfirmModal, ErrorDisplay } from '@/components/shared';
+import { DeleteConfirmModal, ErrorDisplay } from '@/components/patterns';
 import { useCharacters, useDeleteCharacter, useDuplicateCharacter, useAuth } from '@/hooks';
 import { UserPlus } from 'lucide-react';
 

@@ -6,6 +6,7 @@
 
 import { createClient } from '@/lib/supabase/server';
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Json, Tables } from '@/lib/supabase/database';
 import { ROLE_LIMITS, type RoleLimits, type UserRole } from './role-limits';
 
 type SupabaseClientLike = SupabaseClient;
@@ -15,17 +16,25 @@ export interface RolePolicy extends RoleLimits {
   permissions: Record<string, unknown>;
 }
 
-type RolePolicyRow = {
-  role: UserRole;
-  max_campaigns: number;
-  max_players_per_campaign: number;
-  max_characters: number;
-  max_custom_powers: number;
-  max_custom_techniques: number;
-  max_custom_armaments: number;
-  max_custom_creatures: number;
-  permissions: Record<string, unknown> | null;
-};
+type RolePolicyRow = Pick<
+  Tables<'role_policies'>,
+  | 'role'
+  | 'max_campaigns'
+  | 'max_players_per_campaign'
+  | 'max_characters'
+  | 'max_custom_powers'
+  | 'max_custom_techniques'
+  | 'max_custom_armaments'
+  | 'max_custom_creatures'
+  | 'permissions'
+>;
+
+function jsonRecord(value: Json | null | undefined): Record<string, unknown> | null {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as Record<string, unknown>;
+  }
+  return null;
+}
 
 const DEFAULT_ROLE: UserRole = 'new_player';
 const ROLE_VALUES: UserRole[] = ['new_player', 'playtester', 'developer', 'admin'];
@@ -56,7 +65,7 @@ export function getDefaultRolePolicy(role: UserRole | string | null): RolePolicy
 
 function rowToPolicy(row: RolePolicyRow): RolePolicy {
   const fallback = getDefaultRolePolicy(row.role);
-  const permissions = row.permissions ?? fallback.permissions;
+  const permissions = jsonRecord(row.permissions) ?? fallback.permissions;
   const canUpload =
     typeof permissions.can_upload_profile_picture === 'boolean'
       ? permissions.can_upload_profile_picture
@@ -92,7 +101,7 @@ export async function getRolePolicyForRole(
     .maybeSingle();
 
   if (!data) return fallback;
-  return rowToPolicy(data as RolePolicyRow);
+  return rowToPolicy(data);
 }
 
 export async function getRolePolicyForUser(

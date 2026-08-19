@@ -12,8 +12,8 @@ import {
   InfoTippy,
   type SortState,
   type ListHeaderRowChrome,
-} from '@/components/shared';
-import type { EntityPowerRow } from '@/components/shared/entity-library-sections';
+} from '@/components/patterns';
+import type { EntityPowerRow } from '@/components/patterns/list/entity-library-sections';
 import { innateEnergyHelp, innatePowersHelp } from '../../../public/tooltip-text';
 
 export type LibraryPowersPanelProps = {

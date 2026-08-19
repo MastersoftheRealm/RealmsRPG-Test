@@ -1,6 +1,6 @@
 'use client';
 
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
+import { ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import { Checkbox } from '@/components/ui';
 import {
@@ -37,6 +37,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
   sectionCosts,
 }: EmpoweredTechniqueEditorPowerConfigProps) {
   const powerConfigSummary = `${rangeDisplay} • ${area.type === 'none' ? 'Single target' : formatAreaForDisplay(area.type, area.level)} • ${duration.type === 'instant' ? 'Instant' : formatDurationFromTypeAndValue(duration.type, duration.value)}`;
+  const durationValueOptions = DURATION_VALUES[duration.type];
 
   return (
     <CollapsibleSection title="Power Configuration" collapsedSummary={powerConfigSummary}>
@@ -114,7 +115,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
             </select>
             {duration.type !== 'instant' &&
               duration.type !== 'permanent' &&
-              DURATION_VALUES[duration.type] && (
+              durationValueOptions && (
                 <select
                   value={duration.value}
                   onChange={(event) =>
@@ -126,7 +127,7 @@ export function EmpoweredTechniqueEditorPowerConfig({
                   className="min-h-[44px] rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
                   aria-label="Empowered technique duration value"
                 >
-                  {DURATION_VALUES[duration.type].map((option) => (
+                  {durationValueOptions.map((option) => (
                     <option key={option.value} value={option.value}>
                       {option.label}
                     </option>

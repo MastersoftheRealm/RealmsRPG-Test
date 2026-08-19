@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus, Info } from 'lucide-react';
-import { SectionCostBadge } from '@/components/shared';
+import { SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection, PowerPartCard } from '@/components/creator';
 import { Button } from '@/components/ui';
 import type { SelectedPowerPart } from './empowered-technique-bootstrap';

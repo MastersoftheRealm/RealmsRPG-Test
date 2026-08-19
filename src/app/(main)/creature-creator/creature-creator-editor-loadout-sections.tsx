@@ -5,7 +5,7 @@
 'use client';
 
 import { formatListCellLabel } from '@/lib/utils';
-import { GridListRow, ListHeader, InnateToggle, ValueStepper } from '@/components/shared';
+import { GridListRow, ListHeader, InnateToggle, ValueStepper } from '@/components/patterns';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import { Button, IconButton } from '@/components/ui';
 import { X } from 'lucide-react';

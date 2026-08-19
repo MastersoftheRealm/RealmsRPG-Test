@@ -188,9 +188,9 @@ export function formatGuidedAbilityKeysLabel(abilityKeys: Set<string> | string[]
   const keys = abilityKeys instanceof Set ? [...abilityKeys] : abilityKeys;
   const labels = keys.map((k) => formatAbilityLabel(k as AbilityName));
   if (labels.length === 0) return 'your path';
-  if (labels.length === 1) return labels[0];
-  if (labels.length === 2) return `${labels[0]} or ${labels[1]}`;
-  return `${labels.slice(0, -1).join(', ')}, or ${labels[labels.length - 1]}`;
+  if (labels.length === 1) return labels[0] ?? 'your path';
+  if (labels.length === 2) return `${labels[0] ?? ''} or ${labels[1] ?? ''}`;
+  return `${labels.slice(0, -1).join(', ')}, or ${labels[labels.length - 1] ?? ''}`;
 }
 
 /** Label for which ability a skill will use on the character's sheet. */

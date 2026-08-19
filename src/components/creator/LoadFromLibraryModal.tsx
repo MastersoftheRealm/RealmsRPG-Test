@@ -11,7 +11,7 @@ import type { ReactNode } from 'react';
 import {
   UnifiedSelectionModal,
   type SelectableItem,
-} from '@/components/shared/unified-selection-modal';
+} from '@/components/patterns/select/unified-selection-modal';
 
 export interface LoadFromLibraryModalProps {
   selectableItems: SelectableItem[];

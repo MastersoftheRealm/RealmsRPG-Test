@@ -8,6 +8,7 @@ import {
   type WithSource,
 } from '@/lib/creator/advanced-powers-selectable';
 import type { UserPower } from '@/hooks/use-user-library';
+import { defined } from '@/lib/utils';
 
 describe('advanced-powers-selectable merge helpers', () => {
   it('tags mine vs public sources', () => {
@@ -69,16 +70,17 @@ describe('powerListToSelectable', () => {
       } as WithSource<UserPower>,
     ];
     const items = powerListToSelectable(list, [], new Set(['firebolt']));
+    const item = defined(items[0]);
     expect(items).toHaveLength(1);
-    expect(items[0].id).toBe('firebolt');
-    expect(items[0].name).toBe('Firebolt');
-    expect(items[0].columns?.map((c) => c.key)).toEqual([
+    expect(item.id).toBe('firebolt');
+    expect(item.name).toBe('Firebolt');
+    expect(item.columns?.map((c) => c.key)).toEqual([
       'Action',
       'Energy',
       'Training Points',
       'Damage',
     ]);
-    expect((items[0].data as WithSource<UserPower>)._source).toBe('public');
+    expect((item.data as WithSource<UserPower>)._source).toBe('public');
   });
 
   it('adds path badge only when selected + recommended + pathName', () => {
@@ -94,12 +96,12 @@ describe('powerListToSelectable', () => {
       pathName: 'Mage',
       selectedIds: new Set(),
     });
-    expect(without[0].badges).toBeUndefined();
+    expect(defined(without[0]).badges).toBeUndefined();
 
     const withBadge = powerListToSelectable([power], [], new Set(['p1']), {
       pathName: 'Mage',
       selectedIds: new Set(['p1']),
     });
-    expect(withBadge[0].badges).toEqual([{ label: '(Mage)', color: 'gray' }]);
+    expect(defined(withBadge[0]).badges).toEqual([{ label: '(Mage)', color: 'gray' }]);
   });
 });

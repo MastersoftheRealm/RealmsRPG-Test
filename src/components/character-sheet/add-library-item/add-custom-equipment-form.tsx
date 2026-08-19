@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { Plus } from 'lucide-react';
 import { Button, Input } from '@/components/ui';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import { buildCustomEquipmentItem } from './build-custom-equipment';
 import type { Item } from '@/types';
 

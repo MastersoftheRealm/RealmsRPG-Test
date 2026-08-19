@@ -233,7 +233,9 @@ export function useCraftingToolPage() {
       if (!session) return;
       const sessions = [...session.data.sessions];
       if (index < 0 || index >= sessions.length) return;
-      const label = sessions[index].label;
+      const current = sessions[index];
+      if (current === undefined) return;
+      const label = current.label;
       const dsForSession = getSessionDsForIndex({
         index,
         effectiveDS,

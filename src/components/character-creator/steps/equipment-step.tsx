@@ -22,13 +22,12 @@ import {
   useCreatorPathData,
 } from '@/hooks';
 import { sortByColumn } from '@/hooks/use-sort';
-import type { SortState } from '@/components/shared';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
+import { PathHelpCard, PathNotes, type SortState } from '@/components/patterns';
+import type { SourceFilterValue } from '@/components/patterns/filters/source-filter';
 import { Spinner, Button } from '@/components/ui';
 import { useTabGroup } from '@/components/ui/tab-navigation';
 import type { Item } from '@/types';
 import type { PathItemRecommendation } from '@/types/archetype';
-import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
 import {

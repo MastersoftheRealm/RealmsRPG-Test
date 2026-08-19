@@ -1,14 +1,14 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { ChipSelect } from '@/components/shared/filters';
+import { ChipSelect } from '@/components/patterns/filters';
 import {
   GridListRow,
   RealmsImageField,
   UnifiedSelectionModal,
   type SelectableItem,
   type SelectionColumnHeader,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { Modal, Button, Input, Textarea, IconButton } from '@/components/ui';
 import type { Skill, Trait } from '@/hooks';
 import { Plus, X } from 'lucide-react';

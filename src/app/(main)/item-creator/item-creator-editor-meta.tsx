@@ -5,7 +5,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { RealmsImageField } from '@/components/shared';
+import { RealmsImageField } from '@/components/patterns';
 import { Card } from '@/components/ui';
 import type { ArmamentType } from './item-creator-bootstrap';
 import { ARMAMENT_TYPES } from './item-creator-helpers';

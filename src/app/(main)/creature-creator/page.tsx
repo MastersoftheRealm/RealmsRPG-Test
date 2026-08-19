@@ -16,12 +16,21 @@ import {
   sourceFilterSummary,
   SegmentedControl,
   type SelectableItem,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { getListHeaderColumns, getModalGridColumns } from '@/lib/library-selectable-builders';
 import { LoadingState } from '@/components/ui';
 import { Skull } from 'lucide-react';
 import { RollLog, RollProvider } from '@/components/rolls';
 import { formatListCellLabel } from '@/lib/utils';
+
+const CREATURE_ABILITY_ABBRS = {
+  strength: 'STR',
+  vitality: 'VIT',
+  agility: 'AGI',
+  acuity: 'ACU',
+  intelligence: 'INT',
+  charisma: 'CHA',
+} as const;
 import { formatCreatureLevel } from '@/lib/game';
 import { CreatorSummaryPanel, CreatorPageShell } from '@/components/creator';
 import type { DisplayItem } from '@/types/items';
@@ -255,11 +264,10 @@ function CreatureCreatorContent() {
           ]}
           abilitiesChips={(
             ['strength', 'vitality', 'agility', 'acuity', 'intelligence', 'charisma'] as const
-          ).map((k, i) => {
-            const abbr = ['STR', 'VIT', 'AGI', 'ACU', 'INT', 'CHA'][i];
-            const v = creature.abilities[k];
-            return { abbr, value: v };
-          })}
+          ).map((k) => ({
+            abbr: CREATURE_ABILITY_ABBRS[k],
+            value: creature.abilities[k],
+          }))}
           statRows={[
             { label: 'Archetype', value: formatListCellLabel(creature.archetypeType) },
             { label: 'Level', value: formatCreatureLevel(creature.level) },

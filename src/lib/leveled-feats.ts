@@ -1,4 +1,4 @@
-import type { ChipData } from '@/components/shared/grid-list-row';
+import type { ChipData } from '@/components/patterns/list/grid-list-row';
 
 export interface LeveledFeatLike {
   id: string | number;
@@ -37,16 +37,21 @@ export function groupFeatFamilies<T extends LeveledFeatLike>(feats: T[]): FeatFa
   feats.forEach((feat) => {
     const familyId = getFeatFamilyId(feat);
     if (!byFamily.has(familyId)) byFamily.set(familyId, []);
-    byFamily.get(familyId)!.push(feat);
+    const familyGroup = byFamily.get(familyId);
+    if (familyGroup === undefined) return;
+    familyGroup.push(feat);
   });
 
-  return [...byFamily.entries()].map(([familyId, group]) => {
-    const sorted = [...group].sort((a, b) => getFeatLevel(a) - getFeatLevel(b));
-    const levelOne = sorted.find((f) => getFeatLevel(f) === 1);
-    const explicitBase = sorted.find((f) => !f.base_feat_id && getFeatLevel(f) <= 1);
-    const main = explicitBase ?? levelOne ?? sorted[0];
-    return { familyId, main, levels: sorted };
-  });
+  return [...byFamily.entries()]
+    .map(([familyId, group]) => {
+      const sorted = [...group].sort((a, b) => getFeatLevel(a) - getFeatLevel(b));
+      const levelOne = sorted.find((f) => getFeatLevel(f) === 1);
+      const explicitBase = sorted.find((f) => !f.base_feat_id && getFeatLevel(f) <= 1);
+      const main = explicitBase ?? levelOne ?? sorted[0];
+      if (main === undefined) return null;
+      return { familyId, main, levels: sorted };
+    })
+    .filter((family): family is FeatFamily<T> => family !== null);
 }
 
 /** Map feat family id → sorted levels (level 1 first). Used for feat rank chips and family lookup. */
@@ -55,7 +60,9 @@ export function buildFeatLevelsByFamily<T extends LeveledFeatLike>(feats: T[]): 
   feats.forEach((feat) => {
     const family = getFeatFamilyId(feat);
     if (!map.has(family)) map.set(family, []);
-    map.get(family)!.push(feat);
+    const familyLevels = map.get(family);
+    if (familyLevels === undefined) return;
+    familyLevels.push(feat);
   });
   map.forEach((levels) => levels.sort((a, b) => getFeatLevel(a) - getFeatLevel(b)));
   return map;

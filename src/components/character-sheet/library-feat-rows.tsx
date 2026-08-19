@@ -5,10 +5,10 @@
  */
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { DecrementButton, IncrementButton, type ColumnValue } from '@/components/shared';
-import type { ChipData } from '@/components/shared/grid-list-row';
-import type { EntityFeatRow } from '@/components/shared/entity-library-sections';
-import { FEAT_GRID } from '@/components/shared/entity-library-sections';
+import { DecrementButton, IncrementButton, type ColumnValue } from '@/components/patterns';
+import type { ChipData } from '@/components/patterns/list/grid-list-row';
+import type { EntityFeatRow } from '@/components/patterns/list/entity-library-sections';
+import { FEAT_GRID } from '@/components/patterns/list/entity-library-sections';
 import { Input, Textarea } from '@/components/ui';
 import type { FeatTraitCustomization } from '@/types/feats';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';

@@ -9,9 +9,9 @@ import { useMemo, useState } from 'react';
 import {
   UnifiedSelectionModal,
   type SelectableItem,
-} from '@/components/shared/unified-selection-modal';
-import { ArchetypePathFilter, PowerTechniqueFilters } from '@/components/shared/filters';
-import { sourceFilterSummary } from '@/components/shared/filters/source-filter';
+} from '@/components/patterns/select/unified-selection-modal';
+import { ArchetypePathFilter, PowerTechniqueFilters } from '@/components/patterns/filters';
+import { sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import {
   useAddLibraryItemData,
   type AddLibraryItemType,

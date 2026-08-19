@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Fail if new files appear under src/components/shared|ui without being on the allowlist.
+ * Fail if new files appear under src/components/patterns|ui without being on the allowlist.
  * Architect path: add ADR + append path to scripts/shared-ui-allowlist.json.
  *
  * Usage:
@@ -12,7 +12,7 @@ const path = require('path');
 
 const repoRoot = path.resolve(__dirname, '..');
 const allowPath = path.join(repoRoot, 'scripts/shared-ui-allowlist.json');
-const roots = ['src/components/shared', 'src/components/ui'];
+const roots = ['src/components/patterns', 'src/components/ui'];
 
 function walk(dir, acc = []) {
   if (!fs.existsSync(dir)) return acc;

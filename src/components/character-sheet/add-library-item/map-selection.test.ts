@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import { defined } from '@/lib/utils';
 import { mapSelectedToCharacterItems } from './map-selection';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 
 describe('mapSelectedToCharacterItems (equipment)', () => {
   it('sets type equipment and resolves quantity from string id keys', () => {
@@ -22,9 +23,10 @@ describe('mapSelectedToCharacterItems (equipment)', () => {
     }>;
 
     expect(items).toHaveLength(1);
-    expect(items[0].type).toBe('equipment');
-    expect(items[0].quantity).toBe(3);
-    expect(items[0].id).toBe(1);
+    const item = defined(items[0]);
+    expect(item.type).toBe('equipment');
+    expect(item.quantity).toBe(3);
+    expect(item.id).toBe(1);
   });
 
   it('normalizes fractional/invalid quantities to at least 1 (DEV-V-009-T022)', () => {
@@ -51,7 +53,7 @@ describe('mapSelectedToCharacterItems (equipment)', () => {
       quantity?: number;
     }>;
 
-    expect(items[0].quantity).toBe(2);
-    expect(items[1].quantity).toBe(1);
+    expect(defined(items[0]).quantity).toBe(2);
+    expect(defined(items[1]).quantity).toBe(1);
   });
 });

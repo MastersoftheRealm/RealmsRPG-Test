@@ -6,7 +6,7 @@
 
 import { useMemo, useCallback, useState } from 'react';
 import { EmptyState, Spinner } from '@/components/ui';
-import { GuidedInlineCatalogList, GuidedLayerNav } from '@/components/shared';
+import { GuidedInlineCatalogList, GuidedLayerNav } from '@/components/patterns';
 import { cn } from '@/lib/utils';
 import { useCodexFeats, useCodexSkills, usePathListFilter, type Feat } from '@/hooks';
 import { calculateMaxArchetypeFeats } from '@/lib/game/formulas';

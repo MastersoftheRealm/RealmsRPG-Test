@@ -1,6 +1,6 @@
 'use client';
 
-import { CreatorPortraitUpload } from '@/components/character-creator/creator-portrait-upload';
+import { CreatorPortraitUpload } from '@/components/patterns';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 

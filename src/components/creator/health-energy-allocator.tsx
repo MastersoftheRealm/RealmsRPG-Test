@@ -20,7 +20,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { PointStatus, ValueStepper } from '@/components/shared';
+import { PointStatus, ValueStepper } from '@/components/patterns';
 
 export interface HealthEnergyAllocatorProps {
   /** Additional Health points allocated beyond base */

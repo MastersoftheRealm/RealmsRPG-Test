@@ -7,7 +7,7 @@
 
 import { useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { SelectionToggle } from '@/components/shared';
+import { SelectionToggle } from '@/components/patterns';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import type { NamedIdOption } from '@/lib/ancestry/ancestry-selection';
 

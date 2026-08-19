@@ -14,9 +14,9 @@ import {
   SelectFilter,
   CharacterFilter,
   FILTER_CONTROL_ROW_CLASS,
-} from '@/components/shared/filters';
+} from '@/components/patterns/filters';
 import { CodexSkillRow } from '@/components/codex';
-import { CodexBrowseListShell, ErrorDisplay as ErrorState } from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState } from '@/components/patterns';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useCodexSkills, useCharacter, usePathListFilter, type Skill } from '@/hooks';

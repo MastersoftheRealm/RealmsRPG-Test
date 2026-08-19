@@ -13,7 +13,7 @@ import {
   UnifiedSelectionModal,
   type SelectableItem,
   type ColumnHeader,
-} from '@/components/shared/unified-selection-modal';
+} from '@/components/patterns/select/unified-selection-modal';
 import { calculateProficiencyTP, generateProficiencyId } from '@/lib/proficiencies';
 import type { CharacterProficiency } from '@/types';
 

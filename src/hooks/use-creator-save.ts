@@ -157,6 +157,10 @@ export function useCreatorSave(options: UseCreatorSaveOptions): UseCreatorSaveRe
             queryKey: userLibraryKeys.countsRoot,
             refetchType: 'all',
           });
+          await queryClient.invalidateQueries({
+            queryKey: userLibraryKeys.countsRoot,
+            refetchType: 'all',
+          });
           setSaveMessage({ type: 'success', text: successMessage });
         }
         setTimeout(() => {

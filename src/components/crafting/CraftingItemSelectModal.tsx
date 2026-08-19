@@ -14,11 +14,11 @@ import {
   SourceFilter,
   sourceFilterSummary,
   type SourceFilterValue,
-} from '@/components/shared/filters/source-filter';
+} from '@/components/patterns/filters/source-filter';
 import {
   UnifiedSelectionModal,
   type SelectableItem,
-} from '@/components/shared/unified-selection-modal';
+} from '@/components/patterns/select/unified-selection-modal';
 import { TabNavigation, useTabGroup } from '@/components/ui/tab-navigation';
 import {
   getCodexEquipmentMarketPrice,

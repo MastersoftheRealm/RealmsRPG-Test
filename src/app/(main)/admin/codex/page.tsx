@@ -15,7 +15,7 @@ import {
   TabContentPanel,
   useTabGroup,
 } from '@/components/ui';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/patterns';
 import { AdminFeatsTab } from './AdminFeatsTab';
 import { AdminTraitsTab } from './AdminTraitsTab';
 import { AdminSpeciesTab } from './AdminSpeciesTab';

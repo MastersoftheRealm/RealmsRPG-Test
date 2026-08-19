@@ -1,6 +1,6 @@
 'use client';
 
-import { SectionCostBadge } from '@/components/shared';
+import { SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import { Checkbox } from '@/components/ui';
 import { ACTION_OPTIONS } from '@/lib/game/creator-constants';

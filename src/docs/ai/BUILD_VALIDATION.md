@@ -1782,6 +1782,29 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+---
+
+#### DEV-V-009-T048 — Sheet feat rank via expanded Feat Levels chips (TASK-780)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-780 |
+| **Where** | `/characters/[id]` → Feats (character with a multi-rank archetype or character feat) |
+| **Needs** | Edit access; a feat family with at least two ranks; one higher rank the character does not yet qualify for if possible |
+
+**Steps**
+1. Play view: expand the feat. Confirm **Feat Levels** chips include the current rank (marked) and other ranks; collapsed row has **no Lvl column** or quantity stepper beside Uses/Recovery.
+2. Enter sheet edit. Expand the same feat. Confirm there is still no collapsed Lvl stepper. Current rank chip is marked (`aria-current`); a qualified other rank is a clickable Feat Levels chip (same `GridListChip` path as play); an unqualified rank is disabled (not ±).
+3. Click a qualified higher or lower rank. Confirm the row swaps to that family rank, feat-point slot count updates, and Uses/Recovery still track uses (not rank).
+4. Optional ~360px: Feat Levels chips wrap; Uses ± still distinct from rank chips.
+
+**Expected**
+- Rank change uses the existing family replace (`onFeatLevelChange`); play view has no rank picker.
+- Creature creator Lvl stepper is unchanged (out of scope).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 #### DEV-V-009-T049 — Sheet autosave does not 409 on same-tab edits (TASK-786)
 
 | Field | Value |
@@ -4161,6 +4184,49 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 **Expected**
 - Guided no longer hard-saves default-zero `defenseVals` or first-listed Ability when the player chose otherwise.
 - Same `DefenseBonusesCard` as Legacy/creature allocation. Desktop + ~360px.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T089 — Shared Legacy creator chrome (TASK-798)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-798 |
+| **Where** | Guided Path L3 / Species L2; Legacy `/characters/new/advanced`; sheet Edit Species / Edit Archetype / identity |
+| **Needs** | A forge-capable draft or saved character; a mixed-species pair optional |
+
+**Steps**
+1. Guided Custom Path L3: Power/Martial **AbilityPickButton**s still pick abilities (tooltips on).
+2. Guided Species L2: **Mixed species** still opens the dual-select modal (`fullScreenOnMobile`); confirm a pair.
+3. Guided Reveal: portrait crop + library pick still uses the same presenter as Legacy Finalize.
+4. Legacy Ancestry: **TraitSection** chrome (header + SelectionToggle / choice picker) unchanged; path **PathHelpCard** still shows on path steps.
+5. Sheet: Edit Archetype forge buttons, Edit Species ancestry TraitSection, and path identity PathHelpCard still match.
+6. Confirm `/characters/new/advanced` still loads (do not treat this as a delete). Desktop + ~360px.
+
+**Expected**
+- One shared module each; no parallel copies under `character-creator/` for these five symbols.
+- MixedSpeciesModal stays non-USM dual `<select>`s. Behavior unchanged from pre-move.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T090 — Shared MixedSpeciesSkillPicker (TASK-820)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-820 |
+| **Where** | Legacy `/characters/new/advanced` mixed Ancestry; sheet Edit Species (mixed) |
+| **Needs** | A mixed-species pair with combined skill options |
+
+**Steps**
+1. Legacy mixed Ancestry: **Species skills** still uses TraitSection-style rows with descriptions (clamp + See more when long). Toggles still select.
+2. Sheet **Edit Species** (mixed): same picker in the ancestry step.
+3. Confirm `/characters/new/advanced` still loads (do not treat this as a delete). Desktop + ~360px.
+
+**Expected**
+- One shared `MixedSpeciesSkillPicker` from `@/components/shared`; no copy under `character-creator/`.
+- Guided mixed skills stay `GuidedChoiceCard` (T079). Behavior unchanged from pre-move.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7707,7 +7773,7 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 | DEV-V-007 | Auth UI (Google only) | DEV-T-007 | Planned |
 | DEV-V-014 | Codex typing + roll timestamp (TASK-378) | — | Archived (CI) — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-014--codex-payload--roll-timestamp-task-378) |
 | DEV-V-015 | Library API typing (TASK-420) | — | Archived (CI) — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-015--library-api-typing-task-420) |
-| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541, TASK-712) | — | Manual — see suite above (T001–T019) |
+| DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541, TASK-712) | — | Manual — see suite above (T001–T028) |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
 | DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |

@@ -10,7 +10,7 @@
 import { User as UserIcon } from 'lucide-react';
 import { ProtectedRoute } from '@/components/layout';
 import { LoadingState, Button, Alert, PageContainer, PageHeader } from '@/components/ui';
-import { ImageUploadModal, RealmsImagePicker } from '@/components/shared';
+import { ImageUploadModal, RealmsImagePicker } from '@/components/patterns';
 import { useMyAccountPage } from './_components/use-my-account-page';
 import { AccountRoleLimitsCard } from './_components/account-role-limits-card';
 import { AccountProfileCard } from './_components/account-profile-card';

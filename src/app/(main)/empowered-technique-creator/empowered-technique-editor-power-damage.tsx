@@ -1,7 +1,7 @@
 'use client';
 
 import { Plus } from 'lucide-react';
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
+import { ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import { Button, Checkbox } from '@/components/ui';
 import { DIE_SIZES, POWER_DAMAGE_TYPES } from '@/lib/game/creator-constants';

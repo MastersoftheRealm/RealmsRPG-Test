@@ -15,7 +15,7 @@ import {
   DISCORD_URL,
   LANDING_COPY,
 } from '@/lib/constants/site-copy';
-import { DiscordIcon } from '@/components/shared/discord-icon';
+import { DiscordIcon } from '@/components/patterns/chrome/discord-icon';
 import {
   MarketingLinkButton,
   MarketingExternalButton,

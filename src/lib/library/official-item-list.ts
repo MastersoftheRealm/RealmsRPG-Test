@@ -5,8 +5,8 @@
  * `glr-surface-bindings.ts` (ADR-0016). Headers come from `glrListChrome`.
  */
 
-import type { ChipData } from '@/components/shared';
-import type { ColumnValue } from '@/components/shared/grid-list-row';
+import type { ChipData } from '@/components/patterns';
+import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import type { ItemProperty } from '@/hooks/codex-types';
 import type { LibraryItem } from '@/types/library';
 import {

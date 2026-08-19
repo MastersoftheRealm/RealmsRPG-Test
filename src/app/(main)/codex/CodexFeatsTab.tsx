@@ -16,9 +16,9 @@ import {
   CharacterFilter,
   FilterInput,
   FILTER_LABEL_ROW_CLASS,
-} from '@/components/shared/filters';
+} from '@/components/patterns/filters';
 import { CodexFeatRow } from '@/components/codex';
-import { CodexBrowseListShell, ErrorDisplay as ErrorState, InfoTippy } from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState, InfoTippy } from '@/components/patterns';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { Button } from '@/components/ui';

@@ -13,7 +13,7 @@ import Image from 'next/image';
 import { cn, indexByNormalizedIds, normalizeId } from '@/lib/utils';
 import { User } from 'lucide-react';
 import { DescriptorChip } from '@/components/ui';
-import { ExpandableImage } from '@/components/shared';
+import { ExpandableImage } from '@/components/patterns';
 import { useMergedSpecies, useCodexFeats } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { resolveGuidedSpeciesContext } from '@/lib/guided-creator/guided-species-resolve';

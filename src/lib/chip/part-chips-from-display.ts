@@ -1,4 +1,4 @@
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
 
 export type DisplayPartChip = {
@@ -15,7 +15,7 @@ export function partChipsFromDisplay(
   opts?: { stripOptionSuffix?: boolean },
 ): ChipData[] {
   return partChips.map((chip) => {
-    let name = chip.text.split(' | TP:')[0].trim();
+    let name = (chip.text.split(' | TP:')[0] ?? chip.text).trim();
     let optionLevel = chip.optionLevel;
     if (opts?.stripOptionSuffix) {
       if (optionLevel == null) {

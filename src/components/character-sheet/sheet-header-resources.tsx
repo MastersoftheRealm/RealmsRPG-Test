@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils';
 import { HealthEnergyAllocator } from '@/components/creator';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import { TempModifierInlineLabel } from './sheet-temp-modifier-controls';
 import { ResourceInput } from './sheet-resource-input';
 

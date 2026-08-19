@@ -45,7 +45,6 @@ vi.mock('@/lib/library-columnar', () => ({
   bodyToColumnar: vi.fn(() => ({ scalars: { name: 'Updated' }, payload: {} })),
   toDbRow: vi.fn((input: unknown) => input),
   rowToItemSpecies: vi.fn(),
-  mergeLegacySpeciesRowWithImageColumns: vi.fn(),
   bodyToColumnarSpecies: vi.fn(),
   toDbRowSpecies: vi.fn(),
 }));

@@ -73,6 +73,11 @@ jobs:
         # Uses npx playwright (not npm run verify:shell-creators-audit) to avoid a second build.
         # Budget: ~1–2 min on Linux (workers=1; review screenshots under .shell-creators-audit/).
         run: npx playwright test -c playwright.shell-creators-audit.config.ts
+      - name: Responsive layout contracts (ADR-0023)
+        # 8 guest routes × 6 widths. Ratchets overflow / clip / fixed-collision counts
+        # against tests/visual/responsive-baseline.json. No auth. Reuses the job build.
+        # Update locally: npm run verify:responsive:update
+        run: npx playwright test -c playwright.responsive.config.ts
       - name: Authenticated visual + a11y (DEV-003 secrets)
         # Missing secrets used to `exit 0`, so an unrun gate reported green. Now the step
         # either runs, or fails with instructions, or is an explicitly acknowledged skip:
@@ -102,5 +107,6 @@ jobs:
           path: |
             playwright-report/
             .shell-creators-audit/
+            .responsive-layout/
             test-results/**/*-actual.png
           retention-days: 14

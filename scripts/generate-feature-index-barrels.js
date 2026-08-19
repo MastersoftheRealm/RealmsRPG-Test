@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generate FEATURE_INDEX_BARRELS.generated.md from shared/ui/hooks/services barrels.
+ * Generate FEATURE_INDEX_BARRELS.generated.md from patterns/ui/hooks/services barrels.
  * Curated FEATURE_INDEX.md stays human-authored; this file is the machine-checked inventory.
  *
  * Usage:
@@ -14,7 +14,7 @@ const repoRoot = path.resolve(__dirname, '..');
 const outRel = 'src/docs/ai/FEATURE_INDEX_BARRELS.generated.md';
 const outPath = path.join(repoRoot, outRel);
 const barrels = [
-  'src/components/shared/index.ts',
+  'src/components/patterns/index.ts',
   'src/components/ui/index.ts',
   'src/hooks/index.ts',
   'src/services/index.ts',

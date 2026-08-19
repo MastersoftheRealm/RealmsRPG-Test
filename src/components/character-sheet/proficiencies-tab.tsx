@@ -16,7 +16,7 @@ import {
   ValueStepper,
   ConfirmActionModal,
   LibraryCollapsibleSection,
-} from '@/components/shared';
+} from '@/components/patterns';
 import type { PartData } from '@/lib/chip/part-data';
 import { expandableChipPropsFromPartData } from '@/lib/chip/expandable-chip-props';
 import { AddProficiencyModal, type AddProficiencyVariant } from './add-proficiency-modal';

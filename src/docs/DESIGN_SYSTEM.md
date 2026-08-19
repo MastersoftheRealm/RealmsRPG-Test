@@ -46,7 +46,7 @@ Common scales are encoded as semantic tokens so components share one ladder inst
 | Motion | `--duration-fast` (150ms), `--duration-base` (200ms), `--duration-slow` (300ms), `--ease-standard` | one easing curve for all transitions; use `duration-base ease-standard` in TSX; in `@apply` use `var(--duration-base)` + `var(--ease-standard)` |
 | Z-index | `--z-sticky` (10), `--z-header` / `--z-overlay` (50), `--z-popover` (70), `--z-toast` (100), `--z-floating` (1000), `--z-tour` (1100), `--z-skip-link` (9999), `--z-toast-stack` (10000) | sticky → header/modal → popovers/tooltips → floating widgets → onboarding tour cards → skip link / toast stack |
 | Focus | `focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2` | buttons, icon buttons, tabs; form controls use `:focus:` (same ring token); errors use `ring-danger-border` |
-| Touch | `--touch-target-min: 44px`; utilities `.touch-target`, `.touch-target-md-compact`, `.hit-area-layout-neutral` | 44px below `md`; compact on desktop; `Button`/`IconButton` also use `@media(pointer:coarse)`. InfoTippy uses `.hit-area-layout-neutral` so the (i) does not stretch label rows. |
+| Touch | `--touch-target-min: 44px`; utilities `.touch-target`, `.hit-area-layout-neutral` (Dense tier) | **Pointer, not viewport:** `@media (pointer: coarse)` sets hit area. Tiers (ADR-0023 / `MOBILE_UX.md`): Primary 48 / Standard 44 / Dense 32 painted + 44 expanded hit. `.touch-target-md-compact` is deprecated. InfoTippy uses `.hit-area-layout-neutral` so the (i) does not stretch label rows. |
 | Container | `--container-narrow` (4xl), `--container-standard` (7xl), `--container-wide` (1440px), `--container-full-tool` (1600px) | page max-widths; marketing chrome uses `.layout-shell-wide` |
 
 ## Color Palette
@@ -249,7 +249,7 @@ import { Button } from '@/components/ui';
 - **Allowed props:** `size`, layout `variant` (`default` | `inline` | `compact`), `enableHoldRepeat` (HP/EN pools only), and **value** coloring (`colorVariant` / `colorValue` for the number only). Buttons stay neutral everywhere.
 - **Do not:** hand-roll ± buttons; tint stepper buttons green/red/blue; reintroduce `.btn-stepper-danger` / `.btn-stepper-success`.
 
-Touch targets remain ≥44px on viewports below `md` (see `MOBILE_UX.md`).
+Touch targets follow the Primary / Standard / Dense tiers in `MOBILE_UX.md` (ADR-0023). Height under `@media (pointer: coarse)`, not a blanket `md:` 44px.
 
 ### Cards
 

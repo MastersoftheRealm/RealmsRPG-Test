@@ -9,6 +9,7 @@ import {
   validateRecommendedInnatePowers,
   type InnatePowerSnapshot,
 } from './innate-eligibility';
+import { defined } from '@/lib/utils';
 
 function snap(partial: Partial<InnatePowerSnapshot> & { id: string }): InnatePowerSnapshot {
   return {
@@ -106,7 +107,7 @@ describe('innate-eligibility', () => {
     expect(opts).toContain(9);
     expect(opts).toContain(14);
     expect(opts).not.toContain(7); // PM first innate bump is 6→8, never 7
-    expect(opts[0]).toBeLessThan(opts[opts.length - 1]);
+    expect(defined(opts[0])).toBeLessThan(defined(opts[opts.length - 1]));
   });
 
   it('isPowerInnateEligible enforces action, parts, and optional threshold', () => {

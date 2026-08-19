@@ -15,6 +15,7 @@ import {
   toggleOptionalSingleSelection,
   trimTraitsForFlawMax,
 } from './ancestry-selection';
+import { defined } from '@/lib/utils';
 
 const traits = [
   { id: 'st1', name: 'Species Trait 1', description: '', option_trait_ids: ['opt1', 'opt2'] },
@@ -137,16 +138,16 @@ describe('gates and toggles', () => {
       canContinueAncestrySingle({
         selectedTraitIds: ['a1'],
         ancestryTraitCount: 2,
-        speciesChoiceParents: [traits[0]],
+        speciesChoiceParents: [defined(traits[0])],
         speciesTraitChoices: {},
       }),
     ).toBe(false);
-    expect(areSpeciesTraitChoicesComplete([traits[0]], { st1: 'opt1' })).toBe(true);
+    expect(areSpeciesTraitChoicesComplete([defined(traits[0])], { st1: 'opt1' })).toBe(true);
     expect(
       canContinueAncestrySingle({
         selectedTraitIds: ['a1'],
         ancestryTraitCount: 2,
-        speciesChoiceParents: [traits[0]],
+        speciesChoiceParents: [defined(traits[0])],
         speciesTraitChoices: { st1: 'opt1' },
       }),
     ).toBe(true);

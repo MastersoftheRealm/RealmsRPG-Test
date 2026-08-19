@@ -8,7 +8,7 @@
 
 'use client';
 
-import { AddCombatantModal } from '@/components/shared';
+import { AddCombatantModal } from '@/components/encounters/add-combatant-modal';
 import { RollLog } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';
 import { useCombatEncounterView } from './combat/use-combat-encounter-view';

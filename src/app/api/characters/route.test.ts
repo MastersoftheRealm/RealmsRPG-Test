@@ -50,6 +50,7 @@ import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { fetchArchetypeNameMap } from '@/lib/game/archetype-display';
 import { standardLimiter } from '@/lib/rate-limit';
 import { getDefaultRolePolicy } from '@/lib/role-policy';
+import { defined } from '@/lib/utils';
 
 const mockGetSession = vi.mocked(getSession);
 const mockCreateClient = vi.mocked(createClient);
@@ -532,7 +533,7 @@ describe('POST /api/characters', () => {
         expect.objectContaining({ client_request_id: clientRequestId }),
       );
       // The key is routing metadata, not character data.
-      const savedData = supabase.insertedRows[0].data as Record<string, unknown>;
+      const savedData = defined(supabase.insertedRows[0]).data as Record<string, unknown>;
       expect(savedData.clientRequestId).toBeUndefined();
     });
 

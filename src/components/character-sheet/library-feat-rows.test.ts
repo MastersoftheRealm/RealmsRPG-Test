@@ -6,6 +6,7 @@ import {
   traitRowId,
   type FeatRowContext,
 } from './library-feat-rows';
+import { defined } from '@/lib/utils';
 
 const ctx: FeatRowContext = {
   showEditControls: false,
@@ -24,11 +25,7 @@ describe('mapTraitRows — kind chip expanded-only (TASK-779)', () => {
     );
 
     expect(rows.map((row) => row.badges)).toEqual([undefined, undefined, undefined]);
-    expect(rows.map((row) => row.detailSections?.[0]?.hideLabelIfSingle)).toEqual([
-      true,
-      true,
-      true,
-    ]);
+    expect(rows.map((row) => row.detailSections?.[0]?.hideLabelIfSingle)).toEqual([true]);
     expect(rows.map((row) => row.detailSections?.[0]?.chips[0])).toEqual([
       { name: 'Ancestry', kind: 'descriptor', category: 'default' },
       { name: 'Characteristic', kind: 'descriptor', category: 'default' },
@@ -37,9 +34,11 @@ describe('mapTraitRows — kind chip expanded-only (TASK-779)', () => {
   });
 
   it('keeps species kind omitted (no header badge, no expanded chip)', () => {
-    const [row] = mapTraitRows(
-      [{ name: 'Darkvision', category: 'species', description: 'See in the dark.' }],
-      ctx,
+    const row = defined(
+      mapTraitRows(
+        [{ name: 'Darkvision', category: 'species', description: 'See in the dark.' }],
+        ctx,
+      )[0],
     );
 
     expect(row.badges).toBeUndefined();
@@ -49,9 +48,11 @@ describe('mapTraitRows — kind chip expanded-only (TASK-779)', () => {
 
 describe('mapFeatRows — state-feat header badges stay (TASK-779)', () => {
   it('still accepts collapsed Archetype / Character badges', () => {
-    const [row] = mapFeatRows([{ name: 'Focused' }], ctx, {
-      badge: { label: 'Archetype', color: 'blue' },
-    });
+    const row = defined(
+      mapFeatRows([{ name: 'Focused' }], ctx, {
+        badge: { label: 'Archetype', color: 'blue' },
+      })[0],
+    );
 
     expect(row.badges).toEqual([{ label: 'Archetype', color: 'blue' }]);
     expect(row.detailSections).toBeUndefined();
@@ -73,7 +74,7 @@ describe('mapFeatRows / mapTraitRows — play vs edit customization (TASK-783)',
   };
 
   it('play view: note is descriptionAfter; no customize chrome; custom name stays the title', () => {
-    const [row] = mapFeatRows([playFeat], ctx);
+    const row = defined(mapFeatRows([playFeat], ctx)[0]);
 
     expect(row.name).toBe('Flame Tongue');
     expect(row.nameContent).toBeTruthy();
@@ -83,9 +84,11 @@ describe('mapFeatRows / mapTraitRows — play vs edit customization (TASK-783)',
   });
 
   it('play view: custom name only does not invent a note or customize block', () => {
-    const [row] = mapFeatRows(
-      [{ name: 'Elemental Adept', customName: 'Flame Tongue', description: 'Pick an element.' }],
-      ctx,
+    const row = defined(
+      mapFeatRows(
+        [{ name: 'Elemental Adept', customName: 'Flame Tongue', description: 'Pick an element.' }],
+        ctx,
+      )[0],
     );
 
     expect(row.descriptionAfter).toBeUndefined();
@@ -94,7 +97,7 @@ describe('mapFeatRows / mapTraitRows — play vs edit customization (TASK-783)',
   });
 
   it('edit mode: Customize block is supplemental; note is not inlined', () => {
-    const [row] = mapFeatRows([playFeat], editCtx);
+    const row = defined(mapFeatRows([playFeat], editCtx)[0]);
 
     expect(row.descriptionAfter).toBeUndefined();
     expect(row.supplementalExpandedContent).toBeTruthy();
@@ -102,17 +105,19 @@ describe('mapFeatRows / mapTraitRows — play vs edit customization (TASK-783)',
   });
 
   it('traits share the same play-view note slot', () => {
-    const [row] = mapTraitRows(
-      [
-        {
-          name: 'Curious',
-          category: 'characteristic',
-          customName: 'Always Asking',
-          note: 'Ask about the mural.',
-          description: 'You ask why.',
-        },
-      ],
-      ctx,
+    const row = defined(
+      mapTraitRows(
+        [
+          {
+            name: 'Curious',
+            category: 'characteristic',
+            customName: 'Always Asking',
+            note: 'Ask about the mural.',
+            description: 'You ask why.',
+          },
+        ],
+        ctx,
+      )[0],
     );
 
     expect(row.badges).toBeUndefined();
@@ -144,6 +149,6 @@ describe('feat/trait Customize draft (TASK-805)', () => {
       traitRowId('ancestry', 'trait-z'),
       traitRowId('ancestry', 'trait-a'),
     ]);
-    expect(rows[0].id).not.toBe('ancestry-0');
+    expect(defined(rows[0]).id).not.toBe('ancestry-0');
   });
 });

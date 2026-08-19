@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
+import { PathHelpCard, PathNotes } from '@/components/patterns';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import type { CharacterDraft } from '@/types';
 import type { ValidationIssue } from '@/lib/character-creator-validation';

@@ -1,6 +1,6 @@
 'use client';
 
-import { ChipSelect } from '@/components/shared';
+import { ChipSelect } from '@/components/patterns';
 import { Button, Input, IconButton } from '@/components/ui';
 import { Plus, X } from 'lucide-react';
 import { LAYER1_GOVERNANCE } from '@/lib/constants/creator-layer-governance';

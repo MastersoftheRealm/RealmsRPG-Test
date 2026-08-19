@@ -8,7 +8,7 @@
  * orchestration + TP totalCost. Path-name chips come from `applyLivePathFilter`.
  */
 
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import { type PowersTechniquesKind } from '@/lib/guided-creator/power-technique-display';

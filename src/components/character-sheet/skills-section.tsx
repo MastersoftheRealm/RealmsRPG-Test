@@ -20,7 +20,7 @@ import {
   SegmentedControl,
   SkillRow,
   TempModifierToggle,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { ABILITY_ABBR } from '@/lib/constants/skills';
 import { Button, Card } from '@/components/ui';
 import {

@@ -7,6 +7,7 @@ import {
   withInnateThresholdSelected,
   type PowerTechniqueFilterableRow,
 } from './power-technique-filters';
+import { defined } from '@/lib/utils';
 import type { PowerTechniqueCharacterContext } from './power-technique-character-context';
 
 const rows: (PowerTechniqueFilterableRow & { tp?: number })[] = [
@@ -78,7 +79,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
       'technique',
     );
     expect(result).toHaveLength(1);
-    expect(result[0].isReaction).toBe(true);
+    expect(defined(result[0]).isReaction).toBe(true);
   });
 
   it('innate eligible excludes heal parts and high energy vs threshold', () => {
@@ -125,7 +126,7 @@ describe('power-technique-filters (TASK-673 / TASK-676)', () => {
       'technique',
     );
     expect(byMax).toHaveLength(1);
-    expect(byMax[0].tp).toBe(2);
+    expect(defined(byMax[0]).tp).toBe(2);
 
     const affordable = applyPowerTechniqueFilters(
       rows,

@@ -56,10 +56,7 @@ export function enqueueCharacterSave<T>(characterId: string, work: () => Promise
   const next = prev.then(work, work);
   saveTails.set(
     id,
-    next.then(
-      () => undefined,
-      () => undefined,
-    ),
+    next.then(() => undefined),
   );
   return next;
 }

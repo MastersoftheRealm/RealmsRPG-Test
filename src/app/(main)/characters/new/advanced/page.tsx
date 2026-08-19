@@ -17,7 +17,7 @@ import {
   STEP_ORDER,
   isCreatorStepSkipped,
 } from '@/stores/character-creator-store';
-import { InfoTippy } from '@/components/shared';
+import { InfoTippy } from '@/components/patterns';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import {
   CreatorTabBar,

@@ -62,7 +62,7 @@ Default `armorStep` from `archetypeType` when omitted (power → none). **Power 
 
 ## Shared components (mandatory)
 
-`GuidedChoiceCard`, `UnifiedSelectionModal` (search/sort/filter inside the shared modal — not a parallel list stack), `GuidedLayerNav`, `PointStatus` via **`LoadoutBudgetBar`** (`@/components/shared`; TASK-614). Advanced creator reuses the same budget chrome (TASK-606). See TASK-424 / TASK-443 / TASK-447.
+`GuidedChoiceCard`, `UnifiedSelectionModal` (search/sort/filter inside the shared modal — not a parallel list stack), `GuidedLayerNav`, `PointStatus` via **`LoadoutBudgetBar`** (`@/components/patterns`; TASK-614). Advanced creator reuses the same budget chrome (TASK-606). See TASK-424 / TASK-443 / TASK-447.
 
 ## Compliance checklist (per PR)
 

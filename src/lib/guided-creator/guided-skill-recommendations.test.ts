@@ -3,6 +3,7 @@ import {
   buildGuidedSkillSuggestions,
   guidedSuggestionsToBadgeMap,
 } from './guided-skill-recommendations';
+import { defined } from '@/lib/utils';
 import type { Skill } from '@/hooks';
 import type { Abilities } from '@/types';
 
@@ -57,9 +58,10 @@ describe('buildGuidedSkillSuggestions', () => {
     });
 
     expect(suggestions).toHaveLength(1);
-    expect(suggestions[0].skillId).toBe('99');
-    expect(suggestions[0].tags).toEqual(['Berserker', 'Strength']);
-    expect(suggestions[0].badges).toEqual([
+    const first = defined(suggestions[0]);
+    expect(first.skillId).toBe('99');
+    expect(first.tags).toEqual(['Berserker', 'Strength']);
+    expect(first.badges).toEqual([
       { label: 'Berserker', color: 'purple' },
       { label: 'Strength', color: 'blue' },
     ]);
@@ -126,8 +128,8 @@ describe('buildGuidedSkillSuggestions', () => {
       includeAbilityMatches: true,
     });
 
-    expect(suggestions[0].skillId).toBe('99');
-    expect(suggestions[0].kinds).toEqual(['path-declined']);
+    expect(defined(suggestions[0]).skillId).toBe('99');
+    expect(defined(suggestions[0]).kinds).toEqual(['path-declined']);
     expect(suggestions.some((s) => s.kinds.includes('ability-match'))).toBe(true);
   });
 

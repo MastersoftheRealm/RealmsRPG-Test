@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DeleteConfirmModal, OfficialItemList, SegmentedControl } from '@/components/shared';
+import { DeleteConfirmModal, OfficialItemList, SegmentedControl } from '@/components/patterns';
 import { useToast } from '@/components/ui';
 import { officialLibraryKeys, useOfficialLibrary, useItemProperties } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';

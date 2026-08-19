@@ -1,5 +1,5 @@
 import type { ExpandableChipProps } from '@/components/ui/expandable-chip';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import type { PartData } from '@/lib/chip/part-data';
 import {
   formatGridListChipLabel,

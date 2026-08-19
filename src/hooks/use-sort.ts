@@ -9,7 +9,7 @@
  */
 
 import { useState, useCallback } from 'react';
-import type { SortState } from '@/components/shared/list-header';
+import type { SortState } from '@/components/patterns/list/list-header';
 import { parseCreatureLevelSortValue } from '@/lib/game/creature-level-display';
 
 /**

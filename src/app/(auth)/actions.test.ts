@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { defined } from '@/lib/utils';
 
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
 vi.mock('next/navigation', () => ({ redirect: vi.fn() }));
@@ -133,8 +134,8 @@ describe('changeUsernameAction', () => {
       'update:user_profiles',
       'delete:usernames',
     ]);
-    expect(ops[1].payload).toEqual({ username: 'newname', user_id: USER.uid });
-    expect(ops[3].filters).toEqual({ username: 'oldname', user_id: USER.uid });
+    expect(defined(ops[1]).payload).toEqual({ username: 'newname', user_id: USER.uid });
+    expect(defined(ops[3]).filters).toEqual({ username: 'oldname', user_id: USER.uid });
   });
 
   it('releases the reserved name when the profile update hits the unique index', async () => {
@@ -193,7 +194,6 @@ describe('createUserProfileAction', () => {
     expect(insertAttempts).toBe(2);
     expect(opLabels(ops)).toEqual([
       'select:user_profiles',
-      'insert:user_profiles',
       'insert:user_profiles',
       'upsert:usernames',
     ]);

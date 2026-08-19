@@ -36,11 +36,13 @@ export function useItemCreatorPropertyActions({
     });
     if (selectableProps.length === 0) return;
 
+    const first = selectableProps[0];
+    if (!first) return;
     const available =
       selectableProps.find(
         (p: ItemProperty) =>
           !selectedProperties.some((sp: SelectedProperty) => sp.property.id === p.id),
-      ) || selectableProps[0];
+      ) ?? first;
 
     setSelectedProperties((prev) => [
       ...prev,

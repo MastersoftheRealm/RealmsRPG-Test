@@ -17,10 +17,10 @@ import {
   SourceFilter,
   type ChipData,
   type SortState,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { FilterSection } from '@/components/shared/filters';
+import type { SourceFilterValue } from '@/components/patterns/filters/source-filter';
+import { FilterSection } from '@/components/patterns/filters';
 import { Button, EmptyState } from '@/components/ui';
 import { TabNavigation, TabContentPanel } from '@/components/ui/tab-navigation';
 import { AlertCircle, ChevronLeft } from 'lucide-react';

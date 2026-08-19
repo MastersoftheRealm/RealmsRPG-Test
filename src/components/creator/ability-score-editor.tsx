@@ -25,7 +25,7 @@ import {
   IncrementButton,
   AbilityScoreGrid,
   WordHelpTip,
-} from '@/components/shared';
+} from '@/components/patterns';
 import type { AbilityName, Abilities } from '@/types';
 import { calculateAbilityScoreCost, getAbilityIncreaseCost } from '@/lib/game/formulas';
 import { getAbilityHelp } from '../../../public/tooltip-text';

@@ -75,8 +75,9 @@ export function ArmamentProficiencyEditor({
       <button
         type="button"
         onClick={() => {
+          const lastRow = table[table.length - 1];
           const nextProf = table.length > 0 ? Math.max(...table.map((r) => r.martialProf)) + 1 : 0;
-          const nextMax = table.length > 0 ? table[table.length - 1].armamentMax + 3 : 3;
+          const nextMax = lastRow ? lastRow.armamentMax + 3 : 3;
           set('table', [...table, { martialProf: nextProf, armamentMax: nextMax }]);
         }}
         className="mt-2 flex min-h-[44px] items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover md:min-h-0"

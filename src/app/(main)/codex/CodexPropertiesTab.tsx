@@ -7,8 +7,12 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { SelectFilter } from '@/components/shared/filters';
-import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
+import { SelectFilter } from '@/components/patterns/filters';
+import {
+  CodexBrowseListShell,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+} from '@/components/patterns';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useItemProperties, type ItemProperty } from '@/hooks';

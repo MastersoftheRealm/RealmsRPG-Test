@@ -2,7 +2,7 @@
  * Selectable-row builders for species/creature load modals (creator Load flow).
  */
 
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import { formatCreatureLevel } from '@/lib/game';
 import { formatListCellLabel } from '@/lib/utils';
 

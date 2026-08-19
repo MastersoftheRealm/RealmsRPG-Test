@@ -9,7 +9,7 @@
 import type { ReactNode } from 'react';
 import { FolderOpen } from 'lucide-react';
 import { Button } from '@/components/ui';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/patterns';
 
 export interface CreatorSaveToolbarProps {
   saveTarget: 'private' | 'public';

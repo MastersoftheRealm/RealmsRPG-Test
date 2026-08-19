@@ -67,7 +67,7 @@ const WRITE_TARGETS: Array<{ table: string; columns: string[] }> = [
   { table: 'codex_archetypes', columns: Object.keys(buildArchetypeRow('1', SAMPLE_ARCHETYPE)) },
   {
     table: 'codex_archetype_levels',
-    columns: Object.keys(buildArchetypeLevelRows('1', SAMPLE_ARCHETYPE.levels)[0]),
+    columns: Object.keys(buildArchetypeLevelRows('1', SAMPLE_ARCHETYPE.levels)[0] ?? {}),
   },
 ];
 

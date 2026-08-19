@@ -5,7 +5,7 @@
 'use client';
 
 import { Button, Input, Card } from '@/components/ui';
-import { SectionHeader } from '@/components/shared';
+import { SectionHeader } from '@/components/patterns';
 import { useCreateEnhancedItem, useUpdateEnhancedItem } from '@/hooks';
 import { getEnhancedMarketPrice } from '@/lib/game/crafting-utils';
 import type { CraftingRequirements } from '@/lib/game/crafting-utils';

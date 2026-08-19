@@ -2,8 +2,8 @@
  * Shared official power list helpers (Library Realms tab + Admin public library).
  */
 
-import type { ChipData } from '@/components/shared';
-import type { ColumnValue } from '@/components/shared/grid-list-row';
+import type { ChipData } from '@/components/patterns';
+import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryPower } from '@/types/library';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';

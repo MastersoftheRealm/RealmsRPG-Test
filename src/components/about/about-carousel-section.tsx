@@ -85,6 +85,7 @@ export function AboutCarouselSection({ slides, dice, initialIndex }: AboutCarous
         'transition-opacity ease-in-out',
         contentVisible ? 'duration-[220ms] ease-in' : 'duration-[180ms] ease-out',
       );
+  const slide = slides[activeIndex];
 
   return (
     <div>
@@ -92,7 +93,7 @@ export function AboutCarouselSection({ slides, dice, initialIndex }: AboutCarous
         className={cn(fadeClass, contentVisible ? 'opacity-100' : 'opacity-0')}
         aria-live="polite"
       >
-        <SlidePanel slide={slides[activeIndex]} />
+        {slide ? <SlidePanel slide={slide} /> : null}
       </div>
 
       <AboutDiceCarousel

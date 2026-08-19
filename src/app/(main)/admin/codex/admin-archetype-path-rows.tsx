@@ -1,6 +1,6 @@
 'use client';
 
-import { GridListRow, QuantitySelector } from '@/components/shared';
+import { GridListRow, QuantitySelector } from '@/components/patterns';
 import { IconButton } from '@/components/ui';
 import { formatFeatName } from '@/lib/leveled-feats';
 import { X } from 'lucide-react';

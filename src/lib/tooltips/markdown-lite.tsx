@@ -68,15 +68,17 @@ export function renderMarkdownLite(markdown: string): ReactNode {
 
   while (i < lines.length) {
     const line = lines[i];
-    if (!line.trim()) {
+    if (line === undefined || !line.trim()) {
       i += 1;
       continue;
     }
 
     if (line.startsWith('- ')) {
       const bullets: ReactNode[] = [];
-      while (i < lines.length && lines[i].startsWith('- ')) {
-        bullets.push(<li key={`li-${i}`}>{renderInline(lines[i].slice(2))}</li>);
+      while (i < lines.length) {
+        const bullet = lines[i];
+        if (bullet === undefined || !bullet.startsWith('- ')) break;
+        bullets.push(<li key={`li-${i}`}>{renderInline(bullet.slice(2))}</li>);
         i += 1;
       }
       elements.push(

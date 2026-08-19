@@ -16,7 +16,7 @@ import { useMergedSpecies, useCodexSkills, useGameRules } from '@/hooks';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { useGuidedPathData } from '../use-guided-path-data';
 import { GuidedStepLayout } from '../guided-step-layout';
-import { AddSkillModal, AddSubSkillModal, GuidedLayerNav } from '@/components/shared';
+import { AddSkillModal, AddSubSkillModal, GuidedLayerNav } from '@/components/patterns';
 import { prefersDeepCatalogEntry } from '@/lib/guided-creator/creator-entry-mode';
 import { DEFAULT_ABILITIES, DEFAULT_DEFENSE_SKILLS } from '@/types';
 import {

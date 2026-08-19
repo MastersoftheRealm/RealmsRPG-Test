@@ -4,7 +4,7 @@
 
 'use client';
 
-import { InfoTippy, type InfoTippyTone } from '@/components/shared';
+import { InfoTippy, type InfoTippyTone } from '@/components/patterns';
 import {
   powerCreatorActionTypeHelp,
   powerCreatorAreaHelp,

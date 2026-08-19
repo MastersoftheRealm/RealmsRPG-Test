@@ -7,6 +7,7 @@ vi.mock('@/lib/supabase/server', () => ({
 import { collectCharacterLibraryRefIds } from './character-view-enrichment';
 import { getOwnerLibraryForView } from './owner-library-for-view';
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { defined } from '@/lib/utils';
 
 const mockCreateServiceRoleClient = vi.mocked(createServiceRoleClient);
 
@@ -115,7 +116,7 @@ describe('getOwnerLibraryForView', () => {
     expect(result.powers.map((p) => p.id)).toEqual(['power-referenced']);
     expect(result.powers.map((p) => p.name)).not.toContain('Secret Homebrew');
     expect(calls).toHaveLength(1);
-    expect(calls[0].ids).toEqual(['power-referenced']);
+    expect(defined(calls[0]).ids).toEqual(['power-referenced']);
   });
 
   it('never selects the owner user_id column', async () => {
@@ -131,9 +132,10 @@ describe('getOwnerLibraryForView', () => {
       creatures: [],
     });
 
-    expect(calls[0].columns).toContain('id');
-    expect(calls[0].columns).toContain('payload');
-    expect(calls[0].columns.split(', ')).not.toContain('user_id');
+    const call = defined(calls[0]);
+    expect(call.columns).toContain('id');
+    expect(call.columns).toContain('payload');
+    expect(call.columns.split(', ')).not.toContain('user_id');
   });
 
   it('queries only the tables with referenced ids', async () => {

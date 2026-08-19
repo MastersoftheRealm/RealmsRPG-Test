@@ -4,14 +4,14 @@ import { useMemo, useState } from 'react';
 import {
   UnifiedSelectionModal,
   type SelectableItem,
-} from '@/components/shared/unified-selection-modal';
+} from '@/components/patterns/select/unified-selection-modal';
 import {
   PowerTechniqueFilters,
   SegmentedControl,
   SourceFilter,
   sourceFilterSummary,
   type SourceFilterValue,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { listInnateThresholdFilterOptions } from '@/lib/game/innate-eligibility';
 import {

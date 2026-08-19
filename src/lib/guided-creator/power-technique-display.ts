@@ -8,7 +8,7 @@
  */
 
 import { logClientError } from '@/lib/api-client';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { trainingPointsFactChip } from '@/lib/detail-option/compact-facts';
 import { pickHighestEnergyCost, type EnergyCostPick } from '@/lib/game/formulas';
 import { buildLookup } from '@/lib/guided-creator/powers-techniques-step-helpers';

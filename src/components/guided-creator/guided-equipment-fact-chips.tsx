@@ -1,7 +1,7 @@
 'use client';
 
-import { DescriptorChipWithTip } from '@/components/shared';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import { DescriptorChipWithTip } from '@/components/patterns';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { cn } from '@/lib/utils';
 
 export interface GuidedFactChipRowProps {

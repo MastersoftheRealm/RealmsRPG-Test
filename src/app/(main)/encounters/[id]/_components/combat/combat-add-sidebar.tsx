@@ -6,7 +6,7 @@
 
 import { cn } from '@/lib/utils';
 import { Button, Checkbox, Input, Card } from '@/components/ui';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import { CONDITION_OPTIONS } from '@/components/encounters/encounter-constants';
 import type { Encounter } from '@/types/encounter';
 import type { Campaign } from '@/types/campaign';

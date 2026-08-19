@@ -428,7 +428,9 @@ export function calculateArmamentProficiency(martialProf: number, rules?: Rules)
       : ARMAMENT_PROFICIENCY_TABLE;
   const sorted = [...table].sort((a, b) => a.martialProf - b.martialProf);
   for (let i = sorted.length - 1; i >= 0; i--) {
-    if (sorted[i].martialProf <= martialProf) return sorted[i].armamentMax;
+    const row = sorted[i];
+    if (row === undefined) continue;
+    if (row.martialProf <= martialProf) return row.armamentMax;
   }
   return sorted[0]?.armamentMax ?? ARCHETYPE_CONFIGS.power.armamentMax;
 }

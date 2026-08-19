@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import type { Dispatch, SetStateAction } from 'react';
-import { ChipSelect } from '@/components/shared/filters';
+import { ChipSelect } from '@/components/patterns/filters';
 import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { baseEnToPercent, percentToBaseEn, type PartFormState } from './admin-part-form';
 import { AdminPartEditModalOptions } from './admin-part-edit-modal-options';

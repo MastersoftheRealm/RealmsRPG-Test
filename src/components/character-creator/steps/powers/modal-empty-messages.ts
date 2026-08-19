@@ -1,5 +1,5 @@
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
-import type { SourceFilterValue } from '@/components/shared';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
+import type { SourceFilterValue } from '@/components/patterns';
 
 export function powerModalEmptyCopy(args: {
   items: SelectableItem[];

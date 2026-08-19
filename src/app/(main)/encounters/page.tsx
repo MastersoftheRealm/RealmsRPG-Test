@@ -26,7 +26,7 @@ import {
   SearchInput,
   useToast,
 } from '@/components/ui';
-import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/shared';
+import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/patterns';
 import { IconButton } from '@/components/ui';
 import {
   useEncounters,

@@ -10,9 +10,8 @@
 import { useMemo, useCallback } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { AbilityScoreEditor } from '@/components/creator';
-import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { GuidedChoiceShell, InfoTippy } from '@/components/shared';
+import { GuidedChoiceShell, InfoTippy, PathHelpCard, PathNotes } from '@/components/patterns';
 import { Button } from '@/components/ui';
 import { calculateAbilityPoints, calculateAbilityScoreCost } from '@/lib/game/formulas';
 import { buildSuggestedAbilityArray } from '@/lib/game/suggested-abilities';

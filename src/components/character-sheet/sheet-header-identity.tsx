@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { Camera, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Spinner } from '@/components/ui/spinner';
-import { ImageUploadModal, RealmsImagePicker, ExpandableImage } from '@/components/shared';
+import { ImageUploadModal, RealmsImagePicker, ExpandableImage } from '@/components/patterns';
 import type { Character } from '@/types';
 import { isPortraitFallbackSrc, withPortraitCacheBust } from '@/lib/portrait';
 import { fileFromCroppedBlob } from '@/lib/crop-image';

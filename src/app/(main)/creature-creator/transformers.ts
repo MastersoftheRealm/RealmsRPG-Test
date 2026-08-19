@@ -5,6 +5,7 @@
  * selection modals and GridListRow list sections.
  */
 
+import type { Item } from '@/types';
 import type { DisplayItem, ItemStat } from '@/types/items';
 import type { UserPower, UserTechnique, UserItem } from '@/hooks/use-user-library';
 import type { CreatureFeat as CodexCreatureFeat, ItemProperty } from '@/hooks/codex-types';
@@ -363,6 +364,20 @@ export function transformUserItemToDisplayItem(
 
 export function displayItemToCreatureArmament(item: DisplayItem): CreatureArmament {
   return item.sourceData as CreatureArmament;
+}
+
+/** One-off sheet custom equipment → creature inventory equipment bucket (TASK-816). */
+export function customEquipmentItemToCreatureArmament(item: Item): CreatureArmament {
+  return {
+    id: String(item.id),
+    name: item.name.trim(),
+    type: 'equipment',
+    tp: 0,
+    currency: typeof item.cost === 'number' ? item.cost : 0,
+    rarity: 'Common',
+    quantity: item.quantity,
+    description: item.description,
+  };
 }
 
 // =============================================================================

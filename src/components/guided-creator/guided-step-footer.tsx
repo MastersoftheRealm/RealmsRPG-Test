@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils';
 import {
   guidedNavPreviousClassName,
   guidedNavProgressClassName,
-} from '@/components/shared/guided-choice/guided-nav-button-styles';
+} from '@/components/patterns/guided-choice/guided-nav-button-styles';
 
 export interface GuidedStepFooterProps {
   onBack?: () => void;

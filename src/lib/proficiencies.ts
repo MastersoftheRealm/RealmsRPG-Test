@@ -96,7 +96,9 @@ function parseDamageTypes(value: unknown): string[] {
   }
 
   if (typeof value === 'string') {
-    const found = Array.from(value.toLowerCase().matchAll(/\b([a-z]+)\b/g)).map((m) => m[1]);
+    const found = Array.from(value.toLowerCase().matchAll(/\b([a-z]+)\b/g), (m) => m[1]).filter(
+      (token): token is string => token !== undefined,
+    );
     const known = new Set([
       'magic',
       'fire',

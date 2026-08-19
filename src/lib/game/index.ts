@@ -18,3 +18,6 @@ export * from './creature-level-display';
 
 // Creature inventory document (kind buckets + migrate-on-read)
 export * from './creature-inventory';
+
+// Creature inventory document (kind buckets + migrate-on-read)
+export * from './creature-inventory';

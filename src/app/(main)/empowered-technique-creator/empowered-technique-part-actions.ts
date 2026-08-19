@@ -31,10 +31,12 @@ export function useEmpoweredTechniquePartActions({
 }: UseEmpoweredTechniquePartActionsArgs) {
   const addPowerPart = useCallback(() => {
     if (nonMechanicPowerParts.length === 0) return;
+    const first = nonMechanicPowerParts[0];
+    if (!first) return;
     setSelectedPowerParts((previous) => [
       ...previous,
       {
-        part: nonMechanicPowerParts[0],
+        part: first,
         op_1_lvl: 0,
         op_2_lvl: 0,
         op_3_lvl: 0,
@@ -46,10 +48,12 @@ export function useEmpoweredTechniquePartActions({
 
   const addPowerMechanicPart = useCallback(() => {
     if (powerMechanicsForList.length === 0) return;
+    const first = powerMechanicsForList[0];
+    if (!first) return;
     setSelectedPowerAdvancedParts((previous) => [
       ...previous,
       {
-        part: powerMechanicsForList[0],
+        part: first,
         op_1_lvl: 0,
         op_2_lvl: 0,
         op_3_lvl: 0,
@@ -61,10 +65,12 @@ export function useEmpoweredTechniquePartActions({
 
   const addTechniquePart = useCallback(() => {
     if (nonMechanicTechniqueParts.length === 0) return;
+    const first = nonMechanicTechniqueParts[0];
+    if (!first) return;
     setSelectedTechniqueParts((previous) => [
       ...previous,
       {
-        part: nonMechanicTechniqueParts[0],
+        part: first,
         op_1_lvl: 0,
         op_2_lvl: 0,
         op_3_lvl: 0,

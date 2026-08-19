@@ -10,7 +10,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { PoweredMartialSlider } from '@/components/shared';
+import { PoweredMartialSlider } from '@/components/patterns';
 import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy';
 
 export type ArchetypeType = 'martial' | 'power' | 'powered-martial';

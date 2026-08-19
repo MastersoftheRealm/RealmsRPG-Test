@@ -2,7 +2,7 @@
 
 import { useState, useRef, KeyboardEvent, ChangeEvent, type ReactNode } from 'react';
 import { cn } from '@/lib/utils';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 
 /**
  * Get health color based on current health percentage

@@ -12,7 +12,7 @@
 | Creator state | `src/stores/character-creator-store.ts` (Advanced) · `src/stores/guided-creator-store.ts` (Simple/Guided) |
 | Supabase | `src/lib/supabase/` |
 | **Database schema (single source of truth)** | `src/docs/SUPABASE_SCHEMA.md` — all public tables, columnar vs JSONB, API→tables; do not duplicate elsewhere |
-| Database types | Domain types in `src/types/` (`character.ts`, `codex.ts`, `campaign.ts`, …). Schema authority is `SUPABASE_SCHEMA.md` — no generated `database.ts`. |
+| Database types | Generated Postgres rows: `src/types/database.types.ts` (regenerate `npm run db:types`; ADR-0020). Domain/API shapes stay in `src/types/` (`character.ts`, `codex.ts`, `campaign.ts`, …). Schema narrative: `SUPABASE_SCHEMA.md`. Helpers: `lib/supabase/database.ts`. |
 | Codex API | `src/app/api/codex/` — fetches from Supabase |
 | **Game rules + user-facing terms** | `src/docs/GAME_RULES.md` — formulas, caps, **Terminology & Definitions** (capitalize game terms; **named Bonuses Title Case** e.g. Attack Bonus, Martial Bonus, Power Bonus; prefer/avoid vocab; Score = Bonus + 10; no em dash in new UI copy; **spell game terms in full on Layer 1/2**, e.g. Currency not `c`). Read before writing labels, tips, or guided copy. |
 | **Entity card art (list thumb, choice cards, upload)** | `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 + [`ADR-0003`](../ADR/0003-realms-image-library.md) + [`03-entity-card-art.md`](03-entity-card-art.md); bank: `realms-images.ts` + `/api/images*`; admin bank UI: `/admin/images`; resolve: `guided-choice-image.ts`, `list-row-image.ts` |

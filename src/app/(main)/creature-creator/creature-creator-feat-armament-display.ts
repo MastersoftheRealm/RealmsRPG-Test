@@ -16,6 +16,7 @@ import { codexFeatToCreatureFeat, creatureToFeatRequirementCharacter } from './c
 import {
   inferCreatureFeatSource,
   labelCreatureFeatSource,
+  type CreatureArmament,
   type CreatureFeat,
 } from './transformers';
 import type { CreatureState } from './creature-creator-types';
@@ -48,7 +49,12 @@ export type CreatureArmamentRow = {
   criticalRangeIncrease: string;
   tp: number | string;
   currency: string;
+  rarity?: string;
+  description?: string;
+  properties?: CreatureArmament['properties'];
+  armorValue?: number;
   quantity?: number;
+  category?: string;
   image_id?: string | null;
   image_url?: string | null;
 };
@@ -104,6 +110,7 @@ export function applyCreatureFeatLevelChange(
   if (idx === -1) return prev;
 
   const current = prev.feats[idx];
+  if (!current) return prev;
   const src = current.featSourceType ?? inferCreatureFeatSource(current, creatureFeatSourceLookup);
   if (src !== 'character' && src !== 'archetype') return prev;
 

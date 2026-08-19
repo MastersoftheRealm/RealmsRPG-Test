@@ -10,7 +10,7 @@ import {
   AbilityScoreGrid,
   GuidedLayerNav,
   resolveDistinctSecondaryAbility,
-} from '@/components/shared';
+} from '@/components/patterns';
 import {
   canContinueGuidedAbilitiesStep,
   prefersDeepCatalogEntry,

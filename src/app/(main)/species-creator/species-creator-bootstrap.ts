@@ -4,6 +4,7 @@
  */
 
 import type { Trait, Skill, Species } from '@/hooks';
+import { defined } from '@/lib/utils';
 import { CREATOR_CACHE_KEYS } from '@/lib/game/creator-constants';
 
 export const MAX_SPECIES_TRAITS = 3;
@@ -221,7 +222,8 @@ export function speciesLibraryRecordToFormState(
     languages: languages.length ? languages.slice(0, MAX_LANGUAGES) : [...DEFAULT_LANGUAGES],
     ave_height: d.ave_height != null ? Number(d.ave_height) : '',
     ave_weight: d.ave_weight != null ? Number(d.ave_weight) : '',
-    adulthood_lifespan: lifespan && lifespan.length >= 2 ? [lifespan[0], lifespan[1]] : ['', ''],
+    adulthood_lifespan:
+      lifespan && lifespan.length >= 2 ? [defined(lifespan[0]), defined(lifespan[1])] : ['', ''],
     imageId: typeof (d.imageId ?? d.image_id) === 'string' ? String(d.imageId ?? d.image_id) : null,
     imageUrl:
       typeof (d.imageUrl ?? d.image_url) === 'string' ? String(d.imageUrl ?? d.image_url) : null,

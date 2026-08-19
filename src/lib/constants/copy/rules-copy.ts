@@ -3,10 +3,11 @@
 export const RULES_COPY = {
   pageTitle: 'Core Rulebook Alpha',
   pageDescription:
-    "Scroll through or use Ctrl+F to find the desired rule or reference you're looking for! Enjoy playing!",
+    'Pick a chapter below, then use in-page nav or your browser find to jump to a rule. Enjoy playing!',
   seoDescription:
     'Learn the core rules, combat mechanics, and character progression for RealmsRPG.',
   embedTroublePrefix: 'Having trouble viewing the embedded rulebook?',
+  viewSourcePrefix: 'Prefer these chapter pages, or',
   openInNewTab: 'Open in new tab',
   iframeTitle: 'Realms RPG Core Rulebook',
   embedUrl:

@@ -9,7 +9,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { ConfirmActionModal } from '@/components/shared';
+import { ConfirmActionModal } from '@/components/patterns';
 import { deleteCodexDoc } from './actions';
 import type { CodexCollection } from '@/lib/codex/collections';
 

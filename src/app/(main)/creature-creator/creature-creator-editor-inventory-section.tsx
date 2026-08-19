@@ -1,5 +1,5 @@
 /**
- * Creature Creator — inventory loadout section (TASK-810, TASK-812)
+ * Creature Creator — inventory loadout section (TASK-810, TASK-812, TASK-817)
  * Split from loadout sections so GLR chrome spacing CI scopes ListHeader blocks per file.
  */
 
@@ -11,26 +11,13 @@ import {
   ShieldsListSection,
   ArmorListSection,
   EquipmentListSection,
-} from '@/components/shared';
-import { resolveListRowThumbnail } from '@/lib/list-row-image';
+} from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import type { CreatureCreatorEditorProps } from './creature-creator-editor';
-import {
-  collectCreatureInventoryItems,
-  formatCreatureEquipmentQuantity,
-  normalizeCreatureInventoryType,
-} from '@/lib/game/creature-inventory';
-import type { CreatureArmamentRow } from './creature-creator-feat-armament-display';
+import { collectCreatureInventoryItems } from '@/lib/game/creature-inventory';
+import { mapCreatureSelectedInventoryRows } from './map-creature-inventory-rows';
 
 const CREATURE_INVENTORY_ROW_CHROME = { delete: true } as const;
-
-function inventoryThumbnail(armament: CreatureArmamentRow) {
-  return resolveListRowThumbnail('equipment', armament, armament.name);
-}
-
-function tpCost(armament: CreatureArmamentRow): number | undefined {
-  return typeof armament.tp === 'number' && armament.tp > 0 ? armament.tp : undefined;
-}
 
 type InventorySectionProps = Pick<
   CreatureCreatorEditorProps,
@@ -56,6 +43,12 @@ export function CreatureCreatorEditorInventorySection({
   onRemoveArmament,
   onOpenArmamentModal,
 }: InventorySectionProps) {
+  const selected = mapCreatureSelectedInventoryRows({
+    sortedArmaments,
+    creature,
+    onRemoveArmament,
+  });
+
   return (
     <CollapsibleSection
       title="Inventory"
@@ -70,9 +63,7 @@ export function CreatureCreatorEditorInventorySection({
       <div className="mb-4 flex flex-col gap-3">
         <div className="rounded-lg border border-border-light bg-surface-alt p-3 text-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-medium text-text-secondary dark:text-text-primary">
-              Currency from inventory
-            </span>
+            <span className="font-medium text-text-secondary">Currency from inventory</span>
             <span
               className={cn(
                 'font-semibold',
@@ -90,20 +81,7 @@ export function CreatureCreatorEditorInventorySection({
           layout="characterSheet"
           title="Weapons"
           headingLevel={3}
-          items={sortedArmaments
-            .filter((row) => normalizeCreatureInventoryType(row.type) === 'weapon')
-            .map((armament) => ({
-              id: armament.id,
-              name: armament.name,
-              thumbnail: inventoryThumbnail(armament),
-              totalTp: tpCost(armament),
-              columns: [
-                { key: 'range', value: armament.range, align: 'center' as const },
-                { key: 'attack', value: armament.attack, align: 'center' as const },
-                { key: 'damage', value: armament.damage, align: 'center' as const },
-              ],
-              onDelete: () => onRemoveArmament(armament.id),
-            }))}
+          items={selected.weapons}
           onAdd={() => onOpenArmamentModal('weapon')}
           addLabel="Add weapon"
           sortState={armamentSort}
@@ -115,21 +93,7 @@ export function CreatureCreatorEditorInventorySection({
           layout="characterSheet"
           title="Shields"
           headingLevel={3}
-          items={sortedArmaments
-            .filter((row) => normalizeCreatureInventoryType(row.type) === 'shield')
-            .map((armament) => ({
-              id: armament.id,
-              name: armament.name,
-              thumbnail: inventoryThumbnail(armament),
-              totalTp: tpCost(armament),
-              columns: [
-                { key: 'range', value: armament.range, align: 'center' as const },
-                { key: 'attack', value: armament.attack, align: 'center' as const },
-                { key: 'damage', value: armament.damage, align: 'center' as const },
-                { key: 'block', value: armament.block, align: 'center' as const },
-              ],
-              onDelete: () => onRemoveArmament(armament.id),
-            }))}
+          items={selected.shields}
           onAdd={() => onOpenArmamentModal('shield')}
           addLabel="Add shield"
           sortState={armamentSort}
@@ -141,19 +105,7 @@ export function CreatureCreatorEditorInventorySection({
           layout="characterSheet"
           title="Armor"
           headingLevel={3}
-          items={sortedArmaments
-            .filter((row) => normalizeCreatureInventoryType(row.type) === 'armor')
-            .map((armament) => ({
-              id: armament.id,
-              name: armament.name,
-              thumbnail: inventoryThumbnail(armament),
-              totalTp: tpCost(armament),
-              columns: [
-                { key: 'dr', value: armament.damageReduction, align: 'center' as const },
-                { key: 'crit', value: armament.criticalRangeIncrease, align: 'center' as const },
-              ],
-              onDelete: () => onRemoveArmament(armament.id),
-            }))}
+          items={selected.armor}
           onAdd={() => onOpenArmamentModal('armor')}
           addLabel="Add armor"
           sortState={armamentSort}
@@ -165,23 +117,7 @@ export function CreatureCreatorEditorInventorySection({
           layout="characterSheet"
           title="Equipment"
           headingLevel={3}
-          items={sortedArmaments
-            .filter((row) => normalizeCreatureInventoryType(row.type) === 'equipment')
-            .map((armament) => ({
-              id: armament.id,
-              name: armament.name,
-              thumbnail: inventoryThumbnail(armament),
-              totalTp: tpCost(armament),
-              columns: [
-                { key: 'type', value: armament.type, align: 'center' as const },
-                {
-                  key: 'quantity',
-                  value: formatCreatureEquipmentQuantity(armament.quantity),
-                  align: 'center' as const,
-                },
-              ],
-              onDelete: () => onRemoveArmament(armament.id),
-            }))}
+          items={selected.equipment}
           onAdd={() => onOpenArmamentModal('equipment')}
           addLabel="Add equipment"
           sortState={armamentSort}

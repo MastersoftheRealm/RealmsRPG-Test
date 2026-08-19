@@ -4,6 +4,7 @@ import {
   getCampaignCharacterForView,
 } from '@/services/campaign-service';
 import { campaignKeys } from './use-campaigns';
+import { defined } from '@/lib/utils';
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -48,7 +49,9 @@ describe('getCampaignCharacterForView', () => {
 
     const result = await getCampaignCharacterForView('camp1', 'player1', 'char1');
 
-    expect(fetchMock.mock.calls[0][0]).toBe('/api/campaigns/camp1/characters/player1/char1');
+    expect(defined(defined(fetchMock.mock.calls[0])[0])).toBe(
+      '/api/campaigns/camp1/characters/player1/char1',
+    );
     expect(result).toEqual({
       character: { id: 'char1', name: 'Hero' },
       libraryForView: { powers: [], techniques: [], items: [], creatures: [] },
@@ -99,10 +102,12 @@ describe('getCampaignCharacterForEncounter', () => {
 
     const result = await getCampaignCharacterForEncounter('camp1', 'player1', 'char1');
 
-    expect(fetchMock.mock.calls[0][0]).toBe(
+    expect(defined(defined(fetchMock.mock.calls[0])[0])).toBe(
       '/api/campaigns/camp1/characters/player1/char1?scope=encounter',
     );
-    expect(fetchMock.mock.calls[0][0]).not.toBe('/api/campaigns/camp1/characters/player1/char1');
+    expect(defined(defined(fetchMock.mock.calls[0])[0])).not.toBe(
+      '/api/campaigns/camp1/characters/player1/char1',
+    );
     expect(result).toEqual({ currentHealth: 12, health: { current: 12, max: 20 } });
   });
 });

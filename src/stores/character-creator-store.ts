@@ -90,6 +90,7 @@ function resolveAdjacentStep(
   let idx = STEP_ORDER.indexOf(from) + direction;
   while (idx >= 0 && idx < STEP_ORDER.length) {
     const candidate = STEP_ORDER[idx];
+    if (candidate === undefined) break;
     if (!isCreatorStepSkipped(candidate, draft)) return candidate;
     idx += direction;
   }
@@ -292,7 +293,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
           const nextIdx = STEP_ORDER.indexOf(next);
           for (let i = currentIdx + 1; i < nextIdx; i++) {
             const between = STEP_ORDER[i];
-            if (isCreatorStepSkipped(between, get().draft)) {
+            if (between !== undefined && isCreatorStepSkipped(between, get().draft)) {
               get().markStepComplete(between);
             }
           }
@@ -320,7 +321,7 @@ export const useCharacterCreatorStore = create<CharacterCreatorState>()(
 
         for (let i = 0; i < idx; i++) {
           const prev = STEP_ORDER[i];
-          if (isCreatorStepSkipped(prev, draft)) continue;
+          if (prev === undefined || isCreatorStepSkipped(prev, draft)) continue;
           if (prev === 'archetype') {
             if (!draft.archetype?.type) return false;
             continue;

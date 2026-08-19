@@ -9,7 +9,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils/cn';
 import { FOOTER_COPY, DISCORD_URL } from '@/lib/constants/site-copy';
-import { DiscordIcon } from '@/components/shared/discord-icon';
+import { DiscordIcon } from '@/components/patterns/chrome/discord-icon';
 import { MarketingExternalButton } from '@/components/landing/marketing-button';
 
 const GROUPS = [

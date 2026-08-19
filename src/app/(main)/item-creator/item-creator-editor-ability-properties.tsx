@@ -6,7 +6,7 @@
 
 import { Plus, Info } from 'lucide-react';
 import type { ItemProperty } from '@/hooks';
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
+import { ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import { Button } from '@/components/ui';
 import type {

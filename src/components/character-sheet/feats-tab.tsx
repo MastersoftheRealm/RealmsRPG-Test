@@ -8,10 +8,10 @@
 'use client';
 
 import { useMemo, useState, useCallback, type ReactNode } from 'react';
-import { FeatsTraitsListSection } from '@/components/shared';
-import type { ChipData } from '@/components/shared/grid-list-row';
-import type { SortState } from '@/components/shared';
-import { DecrementButton, IncrementButton } from '@/components/shared';
+import { FeatsTraitsListSection } from '@/components/patterns';
+import type { ChipData } from '@/components/patterns/list/grid-list-row';
+import type { SortState } from '@/components/patterns';
+import { DecrementButton, IncrementButton } from '@/components/patterns';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { useCodexSkills } from '@/hooks';
 import { cn } from '@/lib/utils';

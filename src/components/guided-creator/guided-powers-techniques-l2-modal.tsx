@@ -12,12 +12,12 @@ import {
   PointStatus,
   InfoTippy,
   type SelectableItem,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { innateEnergyHelp, innatePowersHelp } from '../../../public/tooltip-text';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { Abilities, AbilityName } from '@/types';
-import { ArchetypePathFilter } from '@/components/shared/filters';
+import { ArchetypePathFilter } from '@/components/patterns/filters';
 import { usePathListFilter } from '@/hooks';
 import {
   applyLivePathFilter,

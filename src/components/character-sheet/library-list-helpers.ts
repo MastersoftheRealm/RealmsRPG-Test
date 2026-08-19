@@ -18,7 +18,7 @@ import {
 } from '@/lib/library/part-display';
 import { TP_COST_LABEL } from '@/lib/detail-option/compact-facts';
 import { capitalizeWords } from '@/lib/utils';
-import type { PartData } from '@/components/shared';
+import type { PartData } from '@/components/patterns';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
 
 export type CodexPart = CodexPartRow;

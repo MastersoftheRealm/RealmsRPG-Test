@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Swords, Brain } from 'lucide-react';
 import { PageContainer, LoadingState, Alert, useToast } from '@/components/ui';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/patterns';
 import { useEncounter, useSaveEncounter, useAutoSave, useCampaignsFull } from '@/hooks';
 import { RollProvider, RollLog } from '@/components/rolls';
 import type { Encounter } from '@/types/encounter';

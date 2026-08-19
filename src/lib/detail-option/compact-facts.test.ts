@@ -4,6 +4,7 @@
 
 import { describe, expect, it } from 'vitest';
 import { PROPERTY_IDS } from '@/lib/id-constants';
+import { defined } from '@/lib/utils';
 import {
   abilityRequirementChip,
   actionTypeFactChip,
@@ -141,6 +142,13 @@ describe('compact-facts formatters', () => {
     expect(criticalRangeIncreaseFactChip(1)?.name).toBe('Critical Range +1');
   });
 
+  it('formats Critical Range increase as a compact fact', () => {
+    expect(formatCriticalRangeIncreaseFact(1)).toBe('Critical Range +1');
+    expect(formatCriticalRangeIncreaseFact(3)).toBe('Critical Range +3');
+    expect(formatCriticalRangeIncreaseFact(0)).toBeUndefined();
+    expect(criticalRangeIncreaseFactChip(1)?.name).toBe('Critical Range +1');
+  });
+
   it('builds non-expanding property descriptor chips with tippy description', () => {
     const chip = propertyDescriptorChip('Graze', 'Deal half damage on a miss.');
     expect(chip.kind).toBe('descriptor');
@@ -162,15 +170,18 @@ describe('compact-facts formatters', () => {
       ],
     );
     expect(named).toHaveLength(1);
-    expect(named[0].name).toBe('Graze');
-    expect(named[0].kind).toBe('descriptor');
-    expect(named[0].description).toBe('Deal half damage on a miss.');
-    expect(named[0].cost).toBeUndefined();
+    const namedChip = defined(named[0]);
+    expect(namedChip.name).toBe('Graze');
+    expect(namedChip.kind).toBe('descriptor');
+    expect(namedChip.description).toBe('Deal half damage on a miss.');
+    expect(namedChip.cost).toBeUndefined();
     expect(isMechanicPropertyName('Finesse')).toBe(true);
     expect(isMechanicPropertyName('Graze')).toBe(false);
     expect(isMechanicPropertyName('Weapon Damage')).toBe(true);
     expect(isMechanicPropertyName('Armor Base')).toBe(true);
     expect(isMechanicPropertyName('Damage Reduction')).toBe(true);
+    expect(isMechanicPropertyName('Critical Range +1')).toBe(true);
+    expect(isMechanicPropertyName('Critical Range Increase')).toBe(true);
     expect(isMechanicPropertyName('Critical Range +1')).toBe(true);
     expect(isMechanicPropertyName('Critical Range Increase')).toBe(true);
 

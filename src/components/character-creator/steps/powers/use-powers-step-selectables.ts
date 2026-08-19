@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
 import type { PowerPart, TechniquePart } from '@/hooks';
 import type { CharacterPower, CharacterTechnique } from '@/types';

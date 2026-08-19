@@ -14,7 +14,7 @@ import {
   ArmorListSection,
   EquipmentListSection,
   type SortState,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { armamentProficiencyHelp } from '../../../public/tooltip-text';
 import { calculateArmamentProficiency } from '@/lib/game/formulas';
 import type {
@@ -22,7 +22,7 @@ import type {
   EntityShieldRow,
   EntityArmorRow,
   EntityEquipmentRow,
-} from '@/components/shared/entity-library-sections';
+} from '@/components/patterns/list/entity-library-sections';
 
 export type LibraryInventoryPanelProps = {
   currency: number;

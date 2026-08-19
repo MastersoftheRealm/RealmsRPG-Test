@@ -19,7 +19,7 @@ import {
 import type { PathItemRecommendation } from '@/types/archetype';
 import type { CodexEquipmentItem } from '@/types/codex';
 import type { LibraryItem } from '@/types/library';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators';
 import type { ItemPropertyPayload } from '@/lib/calculators/item-calc';
 import { factChip, type DetailOptionItemModel } from './builders';

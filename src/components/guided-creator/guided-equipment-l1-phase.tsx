@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { cn, normalizeId } from '@/lib/utils';
 import { Button } from '@/components/ui';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import type { PathItemRecommendation } from '@/types/archetype';
 import type { LibraryItem } from '@/types/library';
 import type { CodexEquipmentItem } from '@/types/codex';

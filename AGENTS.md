@@ -24,13 +24,13 @@ Do **not** load full historical queues, full `AGENT_GUIDE.md`, or archive audits
 | For… | Authority |
 |------|-----------|
 | Product / UX / selection grammar | `REALMS_PRODUCT_OVERVIEW.md` + `human/USER_EXPERIENCE_GOALS.md` |
-| Exists already? | `FEATURE_INDEX.md` → `shared` / `ui` / `hooks` / `services` barrels |
+| Exists already? | `FEATURE_INDEX.md` → `patterns` / `ui` / `hooks` / `services` barrels |
 | DB schema | `SUPABASE_SCHEMA.md` |
 | Game formulas & terminology | `GAME_RULES.md` |
 | GLR required facts (column vs chip) | `lib/glr/glr-fact-catalog.ts` + `glr-density.ts` + `resolve-glr-fact-layout.ts` (ADR-0016; supersedes ADR-0009) |
 | Deep component patterns | `AGENT_GUIDE.md` hub → `guide/` appendices (on demand) |
 | Design tokens | `DESIGN_SYSTEM.md` — prefer `*-fg` tokens |
-| Mobile | `MOBILE_UX.md` |
+| Responsive / mobile | `MOBILE_UX.md` (ADR-0023) |
 | Accessibility | `ACCESSIBILITY.md` |
 | Open tasks | `ACTIVE_TASKS.md` · waiting `WAITING_TASKS.md` · process `AI_TASK_QUEUE.md` · human `DEVELOPER_TASK_QUEUE.md` |
 | Audit remediation status | `REMEDIATION_STATUS_2026-08.md` (June snapshot: `REMEDIATION_STATUS_2026-06.md`) |
@@ -52,7 +52,7 @@ Rules under `.cursor/rules/` are terse pointers. If a rule and an authority disa
 - Search before you build (anti-re-implementation).
 - Unification over duplication; delete parallel systems when consolidating.
 - Verify in code — docs can lag.
-- Mobile + a11y on every UI change (`MOBILE_UX.md`, `ACCESSIBILITY.md`).
+- Responsive + a11y on every UI change (`MOBILE_UX.md` / ADR-0023, `ACCESSIBILITY.md`).
 - Prefer theme-aware `*-fg` status/archetype tokens over numbered ramp + ad-hoc `dark:`.
 
 ## Definition of Done (summary)

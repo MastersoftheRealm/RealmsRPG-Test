@@ -9,13 +9,13 @@
 
 'use client';
 
-import { InfoTippy } from '@/components/shared';
+import { InfoTippy } from '@/components/patterns';
 import {
   ArchetypePathFilter,
   ChipSelect,
   SelectFilter,
   type ArchetypePathFilterProps,
-} from '@/components/shared/filters';
+} from '@/components/patterns/filters';
 import { STATE_FEAT_RESTRICTION_NOTICE } from '@/lib/codex/feat-restriction-notice';
 import type { StateFeatFilterMode } from '@/lib/guided-creator/feats-l2';
 

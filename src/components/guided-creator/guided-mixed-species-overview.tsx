@@ -5,7 +5,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/patterns';
 import { Button, DescriptorChip } from '@/components/ui';
 import type { Species } from '@/hooks';
 import { averageMixedPhysical, combineSpeciesSizes } from '@/lib/ancestry/ancestry-selection';
@@ -40,6 +40,7 @@ export function GuidedMixedSpeciesOverview({
     () => combineSpeciesSizes(speciesA, speciesB),
     [speciesA, speciesB],
   );
+  const onlyCombinedSize = combinedSizes[0];
   const averaged = useMemo(() => averageMixedPhysical(speciesA, speciesB), [speciesA, speciesB]);
 
   const sizeOptions = combinedSizes.map((s) => ({ value: s, label: titleCase(s) }));
@@ -94,8 +95,8 @@ export function GuidedMixedSpeciesOverview({
       {averaged ? (
         <GuidedOverviewSection title={copy.vitalsTitle}>
           <div className="flex flex-wrap gap-2">
-            {combinedSizes.length === 1 ? (
-              <DescriptorChip size="sm">{titleCase(combinedSizes[0])}</DescriptorChip>
+            {combinedSizes.length === 1 && onlyCombinedSize !== undefined ? (
+              <DescriptorChip size="sm">{titleCase(onlyCombinedSize)}</DescriptorChip>
             ) : null}
             {averaged.aveHeight != null ? (
               <DescriptorChip size="sm">

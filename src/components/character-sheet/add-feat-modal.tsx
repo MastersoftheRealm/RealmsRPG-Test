@@ -28,8 +28,8 @@ import { Alert } from '@/components/ui';
 import {
   UnifiedSelectionModal,
   type SelectableItem,
-} from '@/components/shared/unified-selection-modal';
-import { ArchetypePathFilter } from '@/components/shared/filters';
+} from '@/components/patterns/select/unified-selection-modal';
+import { ArchetypePathFilter } from '@/components/patterns/filters';
 import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 import type { Character } from '@/types';
 
@@ -174,6 +174,7 @@ export function AddFeatModal({
           .sort((a, b) => getFeatLevel(b) - getFeatLevel(a));
         if (selectableLevels.length === 0) return null;
         const displayFeat = selectableLevels[0];
+        if (!displayFeat) return null;
         const { meets, warning } = checkRequirements(displayFeat);
         const pathLabels = pathFilterActive
           ? featPathChipNames(pathIndex, displayFeat, selectedPathIds)

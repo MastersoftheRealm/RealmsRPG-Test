@@ -521,9 +521,11 @@ export function addAdvancedEquipmentToInventory(
   const existingIndex = inventory.findIndex((i) => String(i.id) === item.id);
   if (existingIndex >= 0) {
     const updated = [...inventory];
-    const existingQty = updated[existingIndex].quantity || 1;
+    const existing = updated[existingIndex];
+    if (!existing) return inventory;
+    const existingQty = existing.quantity || 1;
     updated[existingIndex] = {
-      ...updated[existingIndex],
+      ...existing,
       quantity: existingQty + qty,
     };
     return updated;
@@ -536,13 +538,14 @@ export function removeAdvancedEquipmentFromInventory(inventory: Item[], itemId: 
   const existingIndex = inventory.findIndex((i) => String(i.id) === itemId);
   if (existingIndex < 0) return inventory;
   const existing = inventory[existingIndex];
+  if (!existing) return inventory;
   const currentQty = existing.quantity || 1;
   if (currentQty <= 1) {
     return inventory.filter((i) => String(i.id) !== itemId);
   }
   const updated = [...inventory];
   updated[existingIndex] = {
-    ...updated[existingIndex],
+    ...existing,
     quantity: currentQty - 1,
   };
   return updated;

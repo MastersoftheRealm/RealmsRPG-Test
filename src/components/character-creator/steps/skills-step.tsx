@@ -19,9 +19,14 @@ import {
   type Species,
   type Skill,
 } from '@/hooks';
-import { SkillsAllocationPage, InfoTippy, GuidedChoiceShell } from '@/components/shared';
+import {
+  SkillsAllocationPage,
+  InfoTippy,
+  GuidedChoiceShell,
+  PathHelpCard,
+  PathNotes,
+} from '@/components/patterns';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
-import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { Button } from '@/components/ui';
 import { getSkillPointsHelp, subSkillsHelp } from '../../../../public/tooltip-text';
@@ -35,20 +40,26 @@ function pathHelpContent(_pathName: string, names: string[]): React.ReactNode {
     <strong className="text-primary-fg">{children}</strong>
   );
   if (names.length === 1) {
+    const only = names[0];
+    if (!only) return null;
     return (
       <>
-        The recommended Skill <Bold>{names[0]}</Bold> has been added!
+        The recommended Skill <Bold>{only}</Bold> has been added!
       </>
     );
   }
   if (names.length === 2) {
+    const first = names[0];
+    const second = names[1];
+    if (!first || !second) return null;
     return (
       <>
-        The recommended Skills <Bold>{names[0]}</Bold> and <Bold>{names[1]}</Bold> have been added!
+        The recommended Skills <Bold>{first}</Bold> and <Bold>{second}</Bold> have been added!
       </>
     );
   }
   const last = names[names.length - 1];
+  if (!last) return null;
   const rest = names.slice(0, -1);
   return (
     <>

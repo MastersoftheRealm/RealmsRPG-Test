@@ -21,7 +21,7 @@ import {
   POWER_COLUMNS,
   POWER_COLUMNS_WITH_ENERGY,
   TECHNIQUE_COLUMNS,
-} from '@/components/shared/entity-library-sections-columns';
+} from '@/components/patterns/list/entity-library-sections-columns';
 import {
   ARMAMENT_LIBRARY_CONFIG,
   armamentRowColumns,
@@ -45,6 +45,7 @@ import {
 } from '@/lib/library/official-power-list';
 import { OFFICIAL_TECHNIQUE_HEADER_COLUMNS } from '@/lib/library/official-technique-list';
 import { buildSelectableItem, getListHeaderColumns } from '@/lib/library-selectable-builders';
+import { defined } from '@/lib/utils';
 import {
   assertRowFactCoverage,
   assertSurfaceColumnConfig,
@@ -158,6 +159,11 @@ describe('GLR fact catalog — surface column configs (ADR-0016)', () => {
     assertSurfaceColumnConfig('add-modal-gear', headerKeys(getListHeaderColumns('equipment')));
   });
 
+  it('add-modal feat/gear columns satisfy select density', () => {
+    assertSurfaceColumnConfig('add-modal-feat', headerKeys(featSelectHeaderColumns()));
+    assertSurfaceColumnConfig('add-modal-gear', headerKeys(getListHeaderColumns('equipment')));
+  });
+
   it('creature stat-block power columns match select density', () => {
     assertSurfaceColumnConfig('creature-stat-block-power', headerKeys(POWER_COLUMNS_WITH_ENERGY));
   });
@@ -235,7 +241,7 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
   ];
 
   it('armor official row exposes ability req and crit + in columns (TASK-628 regression)', () => {
-    const [row] = buildOfficialItemRows(catalog, propertiesDb, 'armor');
+    const row = defined(buildOfficialItemRows(catalog, propertiesDb, 'armor')[0]);
     const cols = armamentRowColumns(row, 'armor');
     assertRowFactCoverage('library-official-armor', {
       columnKeys: columnValueKeys(cols),
@@ -328,20 +334,22 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
   });
 
   it('character-sheet armor row covers DR/crit columns and requirement chips', () => {
-    const [row] = mapArmorRows(
-      [
-        {
-          id: 'a1',
-          name: 'Chain Mail',
-          abilityRequirement: { name: 'Strength', level: 3 },
-          agilityReduction: 1,
-          armorValue: 2,
-          rarity: 'uncommon',
-          cost: 40,
-          properties: [{ id: 22, name: 'Critical Range +1', op_1_lvl: 0 }],
-        } as unknown as Item,
-      ],
-      sheetCtx,
+    const row = defined(
+      mapArmorRows(
+        [
+          {
+            id: 'a1',
+            name: 'Chain Mail',
+            abilityRequirement: { name: 'Strength', level: 3 },
+            agilityReduction: 1,
+            armorValue: 2,
+            rarity: 'uncommon',
+            cost: 40,
+            properties: [{ id: 22, name: 'Critical Range +1', op_1_lvl: 0 }],
+          } as unknown as Item,
+        ],
+        sheetCtx,
+      )[0],
     );
     assertRowFactCoverage('character-sheet-armor', {
       columnKeys: columnValueKeys(row.columns ?? []),
@@ -411,20 +419,22 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
   });
 
   it('official power browse chips Training Points (not a dense column)', () => {
-    const [row] = buildOfficialPowerRows(
-      [
-        {
-          id: 'p1',
-          docId: 'p1',
-          name: 'Bolt',
-          description: 'A bolt.',
-          actionType: 'Action',
-          range: { steps: 16 },
-          parts: [{ id: 1, name: 'Spark', op_1_lvl: 0 }],
-          damage: [{ amount: 1, size: 8, type: 'fire' }],
-        },
-      ],
-      sheetCtx.powerPartsDb as never[],
+    const row = defined(
+      buildOfficialPowerRows(
+        [
+          {
+            id: 'p1',
+            docId: 'p1',
+            name: 'Bolt',
+            description: 'A bolt.',
+            actionType: 'Action',
+            range: { steps: 16 },
+            parts: [{ id: 1, name: 'Spark', op_1_lvl: 0 }],
+            damage: [{ amount: 1, size: 8, type: 'fire' }],
+          },
+        ],
+        sheetCtx.powerPartsDb as never[],
+      )[0],
     );
     const chipLabels = chipLabelsFromDetailSections(officialPowerDetailSections(row));
     assertRowFactCoverage('library-official-power', {
@@ -435,19 +445,21 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
   });
 
   it('character-sheet power play chips category / range / TP', () => {
-    const [row] = mapPowerRows(
-      [
-        {
-          id: 'p1',
-          name: 'Bolt',
-          cost: 4,
-          actionType: 'Action',
-          range: '16 Spaces',
-          parts: [{ id: 1, name: 'Spark', op_1_lvl: 0 }],
-          damage: [{ amount: 1, size: 8, type: 'fire' }],
-        } as never,
-      ],
-      { ...sheetCtx, onUsePower: () => {} },
+    const row = defined(
+      mapPowerRows(
+        [
+          {
+            id: 'p1',
+            name: 'Bolt',
+            cost: 4,
+            actionType: 'Action',
+            range: '16 Spaces',
+            parts: [{ id: 1, name: 'Spark', op_1_lvl: 0 }],
+            damage: [{ amount: 1, size: 8, type: 'fire' }],
+          } as never,
+        ],
+        { ...sheetCtx, onUsePower: () => {} },
+      )[0],
     );
     const chipLabels = chipLabelsFromDetailSections(row.detailSections);
     assertRowFactCoverage('character-sheet-power-play', {
@@ -461,18 +473,20 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
   });
 
   it('character-sheet gear play chips category / currency / rarity', () => {
-    const [row] = mapEquipmentRows(
-      [
-        {
-          id: 'e1',
-          name: 'Rope',
-          type: 'equipment',
-          category: 'Adventuring',
-          rarity: 'common',
-          cost: 5,
-        } as Item,
-      ],
-      sheetCtx,
+    const row = defined(
+      mapEquipmentRows(
+        [
+          {
+            id: 'e1',
+            name: 'Rope',
+            type: 'equipment',
+            category: 'Adventuring',
+            rarity: 'common',
+            cost: 5,
+          } as Item,
+        ],
+        sheetCtx,
+      )[0],
     );
     assertRowFactCoverage('character-sheet-gear', {
       columnKeys: columnValueKeys(row.columns ?? []),
@@ -481,18 +495,20 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
   });
 
   it('character-sheet feat play chips Req. Level / Category / Ability', () => {
-    const [row] = mapFeatRows(
-      [
-        {
-          name: 'Focused',
-          category: 'Utility',
-          ability: 'Vitality',
-          reqLevel: 1,
-          maxUses: 1,
-          recovery: 'Rest',
-        },
-      ],
-      { showEditControls: false, traitUses: {} },
+    const row = defined(
+      mapFeatRows(
+        [
+          {
+            name: 'Focused',
+            category: 'Utility',
+            ability: 'Vitality',
+            reqLevel: 1,
+            maxUses: 1,
+            recovery: 'Rest',
+          },
+        ],
+        { showEditControls: false, traitUses: {} },
+      )[0],
     );
     const chipLabels = chipLabelsFromDetailSections(row.detailSections);
     assertRowFactCoverage('character-sheet-feat', {

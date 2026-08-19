@@ -1,6 +1,6 @@
 /**
  * Shared power/technique library filter state + apply logic (TASK-673 / TASK-676).
- * UI: `PowerTechniqueFilters` in `@/components/shared/filters`.
+ * UI: `PowerTechniqueFilters` in `@/components/patterns/filters`.
  */
 
 import { ACTION_OPTIONS } from '@/lib/game/creator-constants';

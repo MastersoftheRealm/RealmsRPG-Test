@@ -15,7 +15,7 @@ import {
   useTabGroup,
   DescriptorChip,
 } from '@/components/ui';
-import { ErrorDisplay } from '@/components/shared';
+import { ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
 
 type TabId =

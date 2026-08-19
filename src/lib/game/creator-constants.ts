@@ -274,7 +274,9 @@ const RARITY_RANK = new Map(
 export function maxRarityForCharacterLevel(level: number): LevelRarity {
   const lvl = Number.isFinite(level) ? Math.floor(level) : 1;
   for (let i = LEVELS_BY_RARITY.length - 1; i >= 0; i--) {
-    if (lvl >= LEVELS_BY_RARITY[i].minLevel) return LEVELS_BY_RARITY[i].rarity;
+    const row = LEVELS_BY_RARITY[i];
+    if (row === undefined) continue;
+    if (lvl >= row.minLevel) return row.rarity;
   }
   return 'Common';
 }

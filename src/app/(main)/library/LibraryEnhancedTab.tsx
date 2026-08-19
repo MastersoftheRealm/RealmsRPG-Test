@@ -10,7 +10,7 @@
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Sparkles } from 'lucide-react';
-import { GridListRow } from '@/components/shared';
+import { GridListRow } from '@/components/patterns';
 import { useSort } from '@/hooks/use-sort';
 import { useEnhancedItems } from '@/hooks';
 import type { UserEnhancedItem } from '@/types/crafting';

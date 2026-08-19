@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import { DecrementButton, IncrementButton, TempModifierToggle } from '@/components/shared';
+import { DecrementButton, IncrementButton, TempModifierToggle } from '@/components/patterns';
 import { tempModifierTintFromDelta, tempModifierValueClass } from '@/lib/character/temp-modifiers';
 
 /** Local open/close for a header Temp control. Resets when sheet Temp mode ends. */

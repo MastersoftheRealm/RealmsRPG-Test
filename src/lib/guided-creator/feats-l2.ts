@@ -9,7 +9,7 @@
  * (archetype vs character) is omitted because each guided step already scopes to one `featType`.
  */
 
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { Feat, Skill } from '@/hooks';
 import { glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
 import {

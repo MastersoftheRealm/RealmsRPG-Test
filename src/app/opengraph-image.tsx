@@ -17,6 +17,8 @@ export default function OpenGraphImage() {
         justifyContent: 'center',
         // DESIGN_INTENT: ImageResponse/Satori cannot use Tailwind tokens.
         // Hexes match DESIGN_SYSTEM primary-700, light on-dark, and accent-gold.
+        // DESIGN_INTENT: ImageResponse/Satori cannot use Tailwind tokens.
+        // Hexes match DESIGN_SYSTEM primary-700, light on-dark, and accent-gold.
         background: '#053357',
         color: '#f9f9f9',
       }}

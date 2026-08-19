@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import type { Combatant } from '@/types/encounter';
 
 export interface CombatantCardHeaderProps {

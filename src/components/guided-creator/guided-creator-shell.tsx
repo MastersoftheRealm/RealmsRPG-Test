@@ -9,7 +9,7 @@
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui';
-import { ConfirmActionModal } from '@/components/shared';
+import { ConfirmActionModal } from '@/components/patterns';
 import { ChevronDown, RotateCcw } from 'lucide-react';
 import {
   useGuidedCreatorStore,
@@ -65,6 +65,7 @@ function ChapterRail({ className }: { className?: string }) {
           const isComplete =
             index < activeChapterIndex && chapter.subSteps.every(isSubStepSatisfied);
           const firstSub = chapter.subSteps[0];
+          if (firstSub === undefined) return null;
           const canOpen = canNavigateToSubStep(firstSub);
 
           return (

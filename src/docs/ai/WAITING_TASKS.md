@@ -8,129 +8,6 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
 
 ---
 
-- id: TASK-794
-  title: Split shared/ into ui / patterns / feature
-  created_at: 2026-08-15
-  created_by: agent
-  priority: medium
-  status: not-started
-  assignee: owner
-  related_files:
-    - src/components/shared/index.ts
-    - scripts/shared-ui-allowlist.json
-    - src/docs/ai/ADR/README.md
-  description: |
-    Architect: split `src/components/shared/` into ui / patterns / feature
-    (audit report 04). TASK-751 already added `shared/filters` — do not mix
-    with Prettier or a drive-by import rewrite.
-  acceptance_criteria:
-    - ADR accepted before any folder move.
-    - Allowlist + barrels + FEATURE_INDEX updated in the same change.
-    - No behavior change; import paths migrate with a documented map.
-  notes: |
-    Wave 3C leftover. Do not start without a fresh Architect ack.
-
----
-
-- id: TASK-795
-  title: Generate and adopt typed Supabase Database client
-  created_at: 2026-08-15
-  created_by: agent
-  priority: medium
-  status: not-started
-  assignee: owner
-  related_files:
-    - src/lib/supabase/client.ts
-    - src/lib/supabase/server.ts
-    - src/docs/SUPABASE_SCHEMA.md
-  description: |
-    Report 12: generate Supabase `Database` types and thread them through
-    the client. Large typed-client churn — not an implementable Wave 3C slice.
-  acceptance_criteria:
-    - Generated types live in-repo and regenerate from a documented command.
-    - Browser + server clients are typed; no silent `any` widening.
-    - Typecheck + targeted API tests pass.
-  notes: |
-    Wave 3C leftover. Do not start without owner ack.
-
----
-
-- id: TASK-796
-  title: Server-render /rules MDX + Codex detail generateMetadata
-  created_at: 2026-08-15
-  created_by: agent
-  priority: medium
-  status: not-started
-  assignee: owner
-  related_files:
-    - src/app/(main)/rules/page.tsx
-    - src/app/(main)/codex/page.tsx
-    - src/lib/constants/copy/rules-copy.ts
-  description: |
-    Report 07 P1-2 / win #8: replace the Google Doc iframe with a first-party
-    MDX rulebook and add Codex detail routes with `generateMetadata` per slug.
-    TASK-793 only added crawlable intro prose — the iframe remains until a
-    rulebook source exists in-repo.
-  acceptance_criteria:
-    - Owner supplies or approves the rulebook source before the iframe is removed.
-    - `/rules` is SSR/MDX with working in-page nav.
-    - Codex detail URLs have unique titles/descriptions.
-  notes: |
-    Content strategy. Do not invent a rulebook or delete the embed without ack.
-
----
-
-- id: TASK-797
-  title: noUncheckedIndexedAccess burn-down (~163 errors)
-  created_at: 2026-08-15
-  created_by: agent
-  priority: low
-  status: not-started
-  assignee: owner
-  related_files:
-    - tsconfig.strictest.json
-    - tsconfig.json
-    - package.json
-  description: |
-    Report 11/12: enable `noUncheckedIndexedAccess` after burning down the
-    ~163 errors already visible via `npm run typecheck:strictest`.
-  acceptance_criteria:
-    - `typecheck:strictest` is clean, then the flag moves into the main tsconfig.
-    - No behavior changes; fixes are type-narrowing only.
-  notes: |
-    Wave 3C leftover. Tooling is ready. Do not start without owner ack.
-
----
-
-- id: TASK-798
-  title: Extract remaining Legacy creator symbols into shared/
-  created_at: 2026-08-15
-  created_by: agent
-  priority: medium
-  status: not-started
-  assignee: owner
-  related_files:
-    - src/components/character-creator/AbilityPickButton.tsx
-    - src/components/character-creator/MixedSpeciesModal.tsx
-    - src/components/character-creator/PathHelpCard.tsx
-    - src/components/character-creator/TraitSection.tsx
-    - src/components/character-creator/creator-portrait-upload.tsx
-    - scripts/shared-ui-allowlist.json
-  description: |
-    Report 02 Steps 1/3+: move AbilityPickButton, MixedSpeciesModal,
-    PathHelpCard, TraitSection, and creator-portrait-upload into `shared/`
-    (allowlist + ADR). Do **not** delete `/characters/new/advanced` — REALMS
-    phases Legacy into L3 later.
-  acceptance_criteria:
-    - Each move is a shared-first addition with allowlist + FEATURE_INDEX.
-    - Legacy and Guided import the shared module; no parallel copies.
-    - The Legacy route still exists.
-  notes: |
-    Wave 3C leftover. Currency + appearance-age already extracted (TASK-791).
-    Guided skills UI parity already landed (TASK-790).
-
----
-
 - id: TASK-799
   title: Remaining list/modal duplication clusters
   created_at: 2026-08-15
@@ -139,10 +16,10 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
   status: not-started
   assignee: owner
   related_files:
-    - src/components/shared/official-entity-list.tsx
-    - src/components/shared/delete-confirm-modal.tsx
-    - src/components/shared/list-header.tsx
-    - src/components/shared/value-stepper.tsx
+    - src/components/patterns/list/official-entity-list.tsx
+    - src/components/patterns/chrome/delete-confirm-modal.tsx
+    - src/components/patterns/list/list-header.tsx
+    - src/components/patterns/select/value-stepper.tsx
   description: |
     Reports 10/08/04 leftover clusters after path-filter (TASK-751–753) and
     stepper/header internal dedup (TASK-792): OfficialEntityList internals,
@@ -153,6 +30,91 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
     - Architect ack if a new shared file is required.
   notes: |
     Wave 3C leftover. Do not start without owner ack.
+
+---
+
+- id: TASK-834
+  title: Spot-check 2026-08-18 transcript recovery (51 unmatched files)
+  created_at: 2026-08-18
+  created_by: agent
+  priority: medium
+  status: not-started
+  assignee: owner
+  parent_task: TASK-824
+  related_files:
+    - src/app/(main)/library/LibraryPowersTab.tsx
+    - src/app/(main)/library/LibraryTechniquesTab.tsx
+    - src/app/(main)/library/LibraryItemsTab.tsx
+    - src/app/(main)/creature-creator/use-creature-creator-workspace.ts
+    - src/app/(main)/creature-creator/creature-creator-bootstrap.ts
+    - src/app/(main)/admin/public-library/AdminPublicCreaturesTab.tsx
+    - src/docs/MOBILE_UX.md
+  description: |
+    TASK-824 attempt used `git checkout -- src` after a broken AST rewrite. Transcript
+    replay restored ~167 tracked files; 51 StrReplace patches never matched (library
+    tabs, some creature workspace files, a few docs). Owner should compare those paths
+    to OneDrive versions from before 2026-08-18 18:50 and restore any still-stale file.
+    Agents must not invent missing content.
+  acceptance_criteria:
+    - Owner confirms the unmatched set is current, or restores specific files from OneDrive.
+    - No agent rewrite of those files from memory.
+    - Close this task before retrying TASK-824 if any restored file is a type-surface.
+  notes: |
+    Filed from TASK-824 /audit. Human-only (OneDrive version history). See DEV-014.
+
+---
+
+- id: TASK-824
+  title: exactOptionalPropertyTypes burn-down
+  created_at: 2026-08-18
+  created_by: agent
+  priority: low
+  status: not-started
+  assignee: owner
+  related_files:
+    - tsconfig.json
+    - tsconfig.strictest.json
+    - src/docs/ai/ADR/0022-nouncheckedindexedaccess.md
+  follow_up_tasks:
+    - TASK-834
+  description: |
+    Report 11 / ADR-0022 leftover: `{ x?: string }` still accepts explicit `undefined`,
+    so undefined can reach Supabase payloads. Preview via tsconfig.strictest.json after
+    TASK-797 moved noUncheckedIndexedAccess into the main tsconfig. Same class as TASK-797.
+  acceptance_criteria:
+    - Preview the flag in tsconfig.strictest.json, burn down errors with type-narrowing only
+      (optional fields omit vs undefined), then move it into the main tsconfig.
+    - No behavior changes beyond refusing explicit undefined on optional props.
+    - No new shared/ui file; do not delete /characters/new/advanced.
+  notes: |
+    Owner ack 2026-08-18 (next Architect leftover; do not remote Legacy). First attempt
+    aborted after a 529-file overlapping AST rewrite and `git checkout -- src`; flag is
+    off again. Retry only after TASK-834 (or owner skip): leaf-only / file-local fixes;
+    keep generated `database.types.ts` strict; never `git checkout -- src` on a dirty tree.
+    Do not fold noFallthroughCasesInSwitch / verbatimModuleSyntax / noImplicitOverride.
+
+---
+
+- id: TASK-823
+  title: Finish Glossary and The Realms chapters from owner manuscript
+  created_at: 2026-08-18
+  created_by: agent
+  priority: low
+  status: not-started
+  assignee: owner
+  related_files:
+    - src/content/rules/glossary.mdx
+    - src/content/rules/the-realms.mdx
+    - src/content/rules/chapters.json
+  description: |
+    TASK-796 converted Core Rulebook Test.docx; Glossary and The Realms are unfinished
+    in that source (ADR-0021). Do not invent setting or glossary prose.
+  acceptance_criteria:
+    - Owner supplies the remaining manuscript (or says skip those chapters).
+    - Convert into the existing MDX files; update chapters.json headings to match.
+    - Keep first-party /rules (no iframe); do not dump prose into core_rules.
+  notes: |
+    Filed from TASK-796 /cleanup. Blocked on owner source. Do not start without the text.
 
 ---
 

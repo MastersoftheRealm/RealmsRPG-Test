@@ -8,13 +8,13 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { SkillsAllocationPage, InfoTippy, RealmsImageField } from '@/components/shared';
+import { SkillsAllocationPage, InfoTippy, RealmsImageField } from '@/components/patterns';
 import { subSkillsHelp } from '../../../../public/tooltip-text';
 import { Input, Select, Textarea, Card } from '@/components/ui';
 import { HealthEnergyAllocator, AbilityScoreEditor, ArchetypeSelector } from '@/components/creator';
 import type { AbilityName } from '@/types';
 import type { Feat } from '@/hooks';
-import type { SortState } from '@/components/shared/list-header';
+import type { SortState } from '@/components/patterns/list/list-header';
 import type { CreatureState } from './creature-creator-types';
 import type { CreatureFeat } from './transformers';
 import type { CreatureInventoryTab } from './creature-creator-library-selectables';

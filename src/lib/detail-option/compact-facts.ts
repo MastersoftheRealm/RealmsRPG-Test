@@ -9,7 +9,7 @@
  * @see GAME_RULES.md — Terminology & Definitions (capitalize rules terms)
  */
 
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import {
   resolveWeaponRangeDisplay,
@@ -91,10 +91,7 @@ export function formatAbilityRequirementFact(
     .trim()
     .replace(/\s+requirement\s*$/i, '')
     .trim();
-  ability = ability
-    .replace(/^(ability|weapon|armor)\s+/i, '')
-    .replace(/^(ability|weapon|armor)\s+/i, '')
-    .trim();
+  ability = ability.replace(/^(ability|weapon|armor)\s+/i, '').trim();
   if (!ability) return undefined;
   return `${capitalize(ability)} Requirement ${level}+`;
 }

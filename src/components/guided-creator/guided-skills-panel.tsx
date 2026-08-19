@@ -29,8 +29,8 @@ import {
   IncrementButton,
   InfoTippy,
   PointStatus,
-} from '@/components/shared';
-import { FilterNativeSelect } from '@/components/shared/filters';
+} from '@/components/patterns';
+import { FilterNativeSelect } from '@/components/patterns/filters';
 import { DescriptorChip, IconButton, Spinner } from '@/components/ui';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { getGuidedSkillBonusHelp } from '../../../public/tooltip-text';

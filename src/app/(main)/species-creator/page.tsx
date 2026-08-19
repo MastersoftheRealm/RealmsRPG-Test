@@ -22,8 +22,8 @@ import {
   type Skill,
 } from '@/hooks';
 import { CreatorPageShell, CreatorSummaryPanel } from '@/components/creator';
-import { SourceFilter, sourceFilterSummary } from '@/components/shared/filters/source-filter';
-import { ConfirmActionModal } from '@/components/shared';
+import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
+import { ConfirmActionModal } from '@/components/patterns';
 import { SPECIES_TRAIT_WARNING, TRAIT_LIMITS } from './species-creator-bootstrap';
 import { SpeciesCreatorEditor, TraitListModal } from './species-creator-editor';
 import { useSpeciesCreatorWorkspace } from './use-species-creator-workspace';

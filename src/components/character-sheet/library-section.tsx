@@ -19,7 +19,7 @@ import {
   EditSectionToggle,
   TechniquesListSection,
   CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { Card } from '@/components/ui';
 import { TabNavigation } from '@/components/ui/tab-navigation';
 import { useCharacterSheet } from './character-sheet-context';

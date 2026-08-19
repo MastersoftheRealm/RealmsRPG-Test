@@ -6,7 +6,7 @@
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import { derivePowerDisplay, type PowerDocument } from '@/lib/calculators/power-calc';
 import { deriveTechniqueDisplay, type TechniqueDocument } from '@/lib/calculators/technique-calc';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { partChipsFromDisplay } from '@/lib/chip/part-chips-from-display';
 import { partsProficienciesSection } from '@/lib/chip/list-row-metadata';
 import type { MetadataDetailSection } from '@/lib/chip/list-row-metadata';

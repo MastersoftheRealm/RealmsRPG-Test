@@ -135,7 +135,7 @@ function createMemoryLimiter({ interval, limit }: Pick<RateLimitOptions, 'interv
       bucket.timestamps = bucket.timestamps.filter((t) => t > cutoff);
 
       if (bucket.timestamps.length >= limit) {
-        const oldestInWindow = bucket.timestamps[0];
+        const oldestInWindow = bucket.timestamps[0] ?? now;
         return {
           success: false,
           remaining: 0,

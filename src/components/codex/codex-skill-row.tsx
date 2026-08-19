@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { GridListRow } from '@/components/shared';
+import { GridListRow } from '@/components/patterns';
 import type { Skill } from '@/hooks';
 import { getSkillExtraDescriptionDetailSections } from '@/lib/skill-extra-descriptions';
 import { SKILL_GRID_COLUMNS } from '@/lib/codex/skill-list';

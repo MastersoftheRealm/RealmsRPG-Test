@@ -17,7 +17,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
-import { DiscordIcon } from '@/components/shared/discord-icon';
+import { DiscordIcon } from '@/components/patterns/chrome/discord-icon';
 import {
   MarketingExternalButton,
   MarketingLinkButton,

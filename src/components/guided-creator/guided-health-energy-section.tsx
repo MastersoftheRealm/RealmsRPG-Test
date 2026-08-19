@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui';
 import { HealthEnergyAllocator } from '@/components/creator';
-import { InfoTippy } from '@/components/shared';
+import { InfoTippy } from '@/components/patterns';
 import {
   useGameRules,
   usePowerParts,

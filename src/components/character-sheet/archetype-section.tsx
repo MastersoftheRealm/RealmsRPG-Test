@@ -7,7 +7,7 @@
 'use client';
 
 import { useState } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, defined } from '@/lib/utils';
 import {
   calculateProficiency,
   getArchetypeType,
@@ -24,7 +24,7 @@ import {
   PoweredMartialSlider,
   DecrementButton,
   IncrementButton,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { TableScroll } from '@/components/ui';
 import type { Character, Abilities, Item } from '@/types';
 import type { EnrichedItem } from '@/lib/data-enrichment';
@@ -34,7 +34,7 @@ import {
   QuickWeaponsTable,
   QUICK_WEAPON_COL,
   type QuickArmamentItem,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { Card, DescriptorChip } from '@/components/ui';
 import { profPointsDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
 
@@ -251,7 +251,7 @@ function WeaponsSection({
     : unproficientBonus(unarmedAbility);
 
   // Damage equals the Attack Bonus, plus dice from Prowess II upward.
-  const prowessData = UNARMED_PROWESS_DAMAGE[unarmedProwess] || UNARMED_PROWESS_DAMAGE[0];
+  const prowessData = defined(UNARMED_PROWESS_DAMAGE[unarmedProwess] ?? UNARMED_PROWESS_DAMAGE[0]);
   const unarmedDamageDisplay = hasProwess
     ? prowessData.damage
       ? `${prowessData.damage} + ${unarmedAttackBonus}`

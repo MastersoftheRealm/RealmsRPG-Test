@@ -8,9 +8,13 @@
 
 import { useState, useMemo } from 'react';
 import { formatListCellLabel } from '@/lib/utils';
-import { ChipSelect } from '@/components/shared/filters';
-import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
-import type { ColumnValue } from '@/components/shared/grid-list-row';
+import { ChipSelect } from '@/components/patterns/filters';
+import {
+  CodexBrowseListShell,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+} from '@/components/patterns';
+import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
 
 const SPECIES_GRID_COLUMNS = '1.5fr 1fr 0.8fr 1fr';

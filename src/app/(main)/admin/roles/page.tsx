@@ -18,7 +18,7 @@ import {
   LoadingState,
   EmptyState,
 } from '@/components/ui';
-import { ErrorDisplay } from '@/components/shared';
+import { ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';

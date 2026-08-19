@@ -6,9 +6,9 @@
 
 import { useEffect, useMemo, useCallback, useState, useRef } from 'react';
 import { Spinner } from '@/components/ui';
-import { GuidedInlineCatalogList, GuidedLayerNav, LoadoutBudgetBar } from '@/components/shared';
-import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
-import { ArchetypePathFilter } from '@/components/shared/filters';
+import { GuidedInlineCatalogList, GuidedLayerNav, LoadoutBudgetBar } from '@/components/patterns';
+import { SourceFilter, type SourceFilterValue } from '@/components/patterns/filters/source-filter';
+import { ArchetypePathFilter } from '@/components/patterns/filters';
 import {
   useEquipment,
   useOfficialLibrary,

@@ -1,8 +1,12 @@
 'use client';
 
 import { useMemo, useState, useCallback, type ReactNode } from 'react';
-import { UnifiedSelectionModal, LoadoutBudgetBar, type SelectableItem } from '@/components/shared';
-import { ArchetypePathFilter } from '@/components/shared/filters';
+import {
+  UnifiedSelectionModal,
+  LoadoutBudgetBar,
+  type SelectableItem,
+} from '@/components/patterns';
+import { ArchetypePathFilter } from '@/components/patterns/filters';
 import { usePathListFilter } from '@/hooks';
 import {
   applyLivePathFilter,

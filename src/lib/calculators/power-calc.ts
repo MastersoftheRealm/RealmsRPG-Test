@@ -336,7 +336,10 @@ export function deriveArea(partsPayload: PowerPartPayload[] = []): string {
       const name = p.part?.name || p.name;
       return name === `${areaNames[i]} of Effect`;
     });
-    if (found) return areaNames[i];
+    if (found) {
+      const areaName = areaNames[i];
+      if (areaName !== undefined) return areaName;
+    }
   }
   return '1 target';
 }

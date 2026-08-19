@@ -6,7 +6,7 @@
 
 import { ListOrdered, RotateCcw } from 'lucide-react';
 import { Button, Card } from '@/components/ui';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import { SuccessFailureTracker } from './skill-success-failure-tracker';
 import type { SkillEncounterState } from '@/types/encounter';
 

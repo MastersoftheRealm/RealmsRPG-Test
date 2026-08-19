@@ -9,9 +9,9 @@ import {
   SelectFilter,
   FilterInput,
   FILTER_LABEL_ROW_CLASS,
-} from '@/components/shared/filters';
+} from '@/components/patterns/filters';
 import { CodexFeatRow } from '@/components/codex';
-import { CodexBrowseListShell, ErrorDisplay as ErrorState, InfoTippy } from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState, InfoTippy } from '@/components/patterns';
 import { Button, IconButton, useToast } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, usePathListFilter, type Feat, type Skill } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';

@@ -9,7 +9,7 @@
 
 import { Plus, Info } from 'lucide-react';
 import type { TechniquePart } from '@/hooks';
-import { ValueStepper, SectionCostBadge, RealmsImageField } from '@/components/shared';
+import { ValueStepper, SectionCostBadge, RealmsImageField } from '@/components/patterns';
 import { CollapsibleSection, PowerPartCard } from '@/components/creator';
 import { Checkbox, Button, Input, Textarea, Card } from '@/components/ui';
 import { ACTION_OPTIONS, DIE_SIZES } from '@/lib/game/creator-constants';

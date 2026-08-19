@@ -13,7 +13,7 @@
 
 1. **This file** (`ARCHITECTURE_CONSTITUTION.md`)
 2. **`ACTIVE_TASKS.md`** — open tasks only (skip `blocked` + human `assignee:`)
-3. When implementing: **`FEATURE_INDEX.md`** + barrel greps (`shared/index.ts`, `ui/index.ts`, `hooks/index.ts`, `services/index.ts`)
+3. When implementing: **`FEATURE_INDEX.md`** + barrel greps (`patterns/index.ts`, `ui/index.ts`, `hooks/index.ts`, `services/index.ts`)
 
 Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` appendices, or archive history at session start. Pull topic docs on demand via the SoT map in `AGENTS.md`.
 
@@ -27,7 +27,7 @@ Do **not** load full `AI_TASK_QUEUE.md`, full `AGENT_GUIDE.md` / `guide/` append
 | Game terms / formulas | `GAME_RULES.md` |
 | Shared UI patterns | `AGENT_GUIDE.md` hub → `guide/` appendices (on demand) + `realms-unification.mdc` |
 | Tokens / contrast | `DESIGN_SYSTEM.md` + `ACCESSIBILITY.md` — prefer `*-fg` theme-aware tokens |
-| Mobile | `MOBILE_UX.md` |
+| Responsive / mobile | `MOBILE_UX.md` (ADR-0023 — six-width contracts, tiered touch targets) |
 | Design constraints | `DESIGN_INTENT.md` + `// DESIGN_INTENT:` comments |
 | Architecture decisions | `ADR/` |
 

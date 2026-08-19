@@ -9,7 +9,7 @@ Use before marking a task `done` or opening a PR. Keep answers short.
 5. **Commit subjects (push gate, not session DoD)** — When the owner commits/pushes, the landing subject lists every newly `done` `TASK-###` (`git log --grep=TASK-###`). **One commit may cover many tasks** (preferred). Do not require or create a commit per task. Missing commit during `/audit` / mark-done is **not** a gap. Ranges like `TASK-530–534` do **not** count — list IDs explicitly. Squash merges that drop subjects need a follow-up reconcile commit.
 6. **Build** — `npm run build` green? When touching TS/JS: `npm run typecheck` + `npm run lint` (`--max-warnings 0`) + targeted tests (TASK-655/656)?
 7. **Tokens** — Semantic / `*-fg`; no raw palette outside exemptions?
-8. **Mobile** — `fullScreenOnMobile` / 44px targets where needed?
+8. **Responsive** — `fullScreenOnMobile` where needed? Touch tier assigned (not blanket 44px)? Contracts C1–C6 hold at 360 / 390 / 768 / 1024 / 1280 / 1440 (`npm run verify:responsive`)?
 9. **A11y** — Labels, headings, modal title/`titleA11y`?
 10. **Uploads** — Went through `apiUpload`?
 11. **Domain parsers** — Used `src/lib/game/*` not a local fork?

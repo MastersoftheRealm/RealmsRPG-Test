@@ -7,8 +7,12 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
-import type { ColumnValue } from '@/components/shared/grid-list-row';
+import {
+  CodexBrowseListShell,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+} from '@/components/patterns';
+import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import { useSort, sortByColumn } from '@/hooks/use-sort';
 import {
   useCodexArchetypes,

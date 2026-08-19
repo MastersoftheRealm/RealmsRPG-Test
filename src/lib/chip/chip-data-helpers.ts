@@ -1,4 +1,4 @@
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 
 /** Opaque metadata chip (tags, feat type, range labels). Never expands in GridListRow. */
 export function descriptorChipData(

@@ -7,7 +7,7 @@
  */
 
 import { useCallback, useMemo, useState, type ReactNode } from 'react';
-import { ConfirmActionModal } from '@/components/shared';
+import { ConfirmActionModal } from '@/components/patterns';
 import { useToast } from '@/components/ui';
 import {
   computeAutoProficiencies,

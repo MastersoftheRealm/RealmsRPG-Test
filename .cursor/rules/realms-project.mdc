@@ -7,7 +7,7 @@ alwaysApply: true
 
 **Stack:** Next.js App Router, React, Tailwind, Supabase, Vercel. No Prisma. Schema: `SUPABASE_SCHEMA.md`.
 
-**Dirs:** `src/app/`, `src/components/{ui,shared,...}/`, `src/hooks/`, `src/stores/`, `src/lib/`, `src/services/`.
+**Dirs:** `src/app/`, `src/components/{ui,patterns,...}/`, `src/hooks/`, `src/stores/`, `src/lib/`, `src/services/`.
 
 **Agent OS:** `ARCHITECTURE_CONSTITUTION.md` · tasks `ACTIVE_TASKS.md` · SoT map in root `AGENTS.md`.
 

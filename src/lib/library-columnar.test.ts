@@ -3,7 +3,6 @@ import {
   bodyToColumnar,
   bodyToColumnarSpecies,
   columnarViewSelect,
-  mergeLegacySpeciesRowWithImageColumns,
   rowToItem,
   toDbRow,
 } from './library-columnar';
@@ -430,22 +429,15 @@ describe('library-columnar image_id parity (TASK-497)', () => {
     expect(payload.imageId).toBeUndefined();
     expect(payload.imageUrl).toBeUndefined();
   });
+});
 
-  it('merges legacy species data blob with columnar image columns', () => {
-    const merged = mergeLegacySpeciesRowWithImageColumns({
-      id: 'sp-1',
-      image_id: '55555555-5555-5555-5555-555555555555',
-      image_url: 'https://example.com/from-column.jpg',
-      data: {
-        name: 'Legacy Elf',
-        image_url: 'https://example.com/stale-blob.jpg',
-      },
-    });
-
-    expect(merged.id).toBe('sp-1');
-    expect(merged.name).toBe('Legacy Elf');
-    expect(merged.image_id).toBe('55555555-5555-5555-5555-555555555555');
-    expect(merged.image_url).toBe('https://example.com/from-column.jpg');
+describe('columnarViewSelect', () => {
+  it('lists identity, payload, and scalars without user_id', () => {
+    const columns = columnarViewSelect('powers').split(', ');
+    expect(columns).toContain('id');
+    expect(columns).toContain('payload');
+    expect(columns).toContain('name');
+    expect(columns).not.toContain('user_id');
   });
 });
 

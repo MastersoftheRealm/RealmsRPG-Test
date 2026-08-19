@@ -17,7 +17,7 @@ import {
   ConfirmActionModal,
   ErrorDisplay,
   type LoginPromptReason,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { CreatorLayout } from './CreatorLayout';
 import { CreatorSaveToolbar } from './CreatorSaveToolbar';
 import { LoadFromLibraryModal, type LoadFromLibraryModalProps } from './LoadFromLibraryModal';

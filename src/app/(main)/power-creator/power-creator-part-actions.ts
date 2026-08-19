@@ -25,10 +25,12 @@ export function usePowerCreatorPartActions({
 }: UsePowerCreatorPartActionsArgs) {
   const addPart = useCallback(() => {
     if (nonMechanicParts.length === 0) return;
+    const first = nonMechanicParts[0];
+    if (!first) return;
     setSelectedParts((prev) => [
       ...prev,
       {
-        part: nonMechanicParts[0],
+        part: first,
         op_1_lvl: 0,
         op_2_lvl: 0,
         op_3_lvl: 0,
@@ -55,6 +57,7 @@ export function usePowerCreatorPartActions({
   const addMechanicPart = useCallback(() => {
     if (mechanicPartsForList.length === 0) return;
     const first = mechanicPartsForList[0];
+    if (!first) return;
     if (selectedAdvancedParts.some((ap) => ap.part.id === first.id)) return;
     setSelectedAdvancedParts((prev) => [
       ...prev,

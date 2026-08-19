@@ -7,7 +7,7 @@
 'use client';
 
 import { AbilityScoreEditor } from '@/components/creator';
-import { PointStatus } from '@/components/shared';
+import { PointStatus } from '@/components/patterns';
 import type { AbilityName, Abilities } from '@/types';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 

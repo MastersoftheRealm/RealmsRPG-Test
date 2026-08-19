@@ -12,7 +12,7 @@ import {
   IncrementButton,
   type SelectableItem,
   type ColumnValue,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { Button, DescriptorChip } from '@/components/ui';
 import type { DisplayItem } from '@/types/items';
 import { resolveListRowThumbnail, type ListRowImageKind } from '@/lib/list-row-image';

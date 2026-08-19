@@ -7,7 +7,7 @@
 
 import { useMemo, useState, useCallback, useEffect, useRef } from 'react';
 import { Spinner } from '@/components/ui';
-import { MixedSpeciesModal } from '@/components/character-creator/MixedSpeciesModal';
+import { MixedSpeciesModal } from '@/components/patterns';
 import {
   useMergedSpecies,
   useTraits,

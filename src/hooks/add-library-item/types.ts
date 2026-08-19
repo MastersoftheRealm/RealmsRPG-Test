@@ -1,5 +1,5 @@
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SourceFilterValue } from '@/components/patterns/filters/source-filter';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { EqItem as SharedEqItem } from '@/lib/library-selectable-builders';
 
 export type AddLibraryItemType =

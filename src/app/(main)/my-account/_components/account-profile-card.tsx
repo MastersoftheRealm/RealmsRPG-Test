@@ -8,7 +8,7 @@ import { User as UserIcon, Camera } from 'lucide-react';
 import type { AccountProfile } from '@/hooks';
 import { cn } from '@/lib/utils';
 import { Button, Card, Spinner } from '@/components/ui';
-import { ExpandableImage } from '@/components/shared';
+import { ExpandableImage } from '@/components/patterns';
 import { formatMemberSince, type AccountMessage } from './account-helpers';
 
 type Props = {

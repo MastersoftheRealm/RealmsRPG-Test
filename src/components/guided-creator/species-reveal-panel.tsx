@@ -13,7 +13,7 @@ import {
   SegmentedControl,
   SummaryChipList,
   type SummaryChipItem,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { DescriptorChip } from '@/components/ui';
 import { useCodexSkills, findTraitByIdOrName, type Species, type Trait } from '@/hooks';
 import { getChoiceOptionIds } from '@/lib/choice-trait';
@@ -130,9 +130,10 @@ export function SpeciesRevealPanel({
 
   const sizeOptions = useMemo(() => getSpeciesSizeOptions(species), [species]);
   const hasSizeChoice = sizeOptions.length > 1;
+  const onlySizeOption = sizeOptions[0];
   const fixedSize =
-    sizeOptions.length === 1
-      ? titleCase(sizeOptions[0])
+    sizeOptions.length === 1 && onlySizeOption !== undefined
+      ? titleCase(onlySizeOption)
       : !hasSizeChoice
         ? formatSizes(species)
         : null;

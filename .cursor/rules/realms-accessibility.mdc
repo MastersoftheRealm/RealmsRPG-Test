@@ -17,7 +17,7 @@ When **creating or editing** UI:
 
 5. **Modals:** `title` or `titleA11y`.
 
-6. **Touch targets:** ≥44×44px (`MOBILE_UX.md`).
+6. **Touch targets:** assign a tier from `MOBILE_UX.md` / ADR-0023 (Primary 48 / Standard 44 / Dense 32+expanded hit). Do not apply a blanket 44×44 to every control.
 
 7. **Images:** Decorative → `alt=""`; meaningful → descriptive alt.
 

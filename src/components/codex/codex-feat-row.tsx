@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { GridListRow } from '@/components/shared';
+import { GridListRow } from '@/components/patterns';
 import type { Feat } from '@/hooks';
 import {
   FEAT_GRID_COLUMNS,

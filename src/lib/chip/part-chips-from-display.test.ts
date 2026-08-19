@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { partChipsFromDisplay } from './part-chips-from-display';
+import { defined } from '@/lib/utils';
 
 describe('partChipsFromDisplay', () => {
   it('uses dense TP cost label and omits zero cost', () => {
@@ -16,8 +17,8 @@ describe('partChipsFromDisplay', () => {
       costLabel: 'TP',
       category: 'cost',
     });
-    expect(chips[1].cost).toBeUndefined();
-    expect(chips[1].level).toBeUndefined();
+    expect(defined(chips[1]).cost).toBeUndefined();
+    expect(defined(chips[1]).level).toBeUndefined();
   });
 
   it('surfaces option level from Opt suffixes when stripping', () => {

@@ -9,7 +9,7 @@
 
 import { useMemo, useState } from 'react';
 import { Spinner, EmptyState } from '@/components/ui';
-import { GuidedLayerNav, InfoTippy } from '@/components/shared';
+import { GuidedLayerNav, InfoTippy } from '@/components/patterns';
 import { useCodexArchetypes } from '@/hooks';
 import {
   PATH_CATEGORY_GROUPS,

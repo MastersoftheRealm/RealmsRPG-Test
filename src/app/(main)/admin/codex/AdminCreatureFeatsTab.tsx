@@ -1,7 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
+import {
+  CodexBrowseListShell,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+} from '@/components/patterns';
 import { Modal, Button, Input, IconButton, useToast } from '@/components/ui';
 import { useCreatureFeats, type CreatureFeat } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';

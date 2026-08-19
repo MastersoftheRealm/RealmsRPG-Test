@@ -35,7 +35,7 @@ import { calculateMaxEnergyForArchetype } from '@/lib/game/calculations';
 import { navigateThenResetCreator, scheduleCreatorReset } from '@/lib/creator-save-handoff';
 import { sanitizeRedirectPath } from '@/lib/safe-redirect';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
-import { LoginPromptModal, InfoTippy, PointStatus, LoadoutBudgetBar } from '@/components/shared';
+import { LoginPromptModal, InfoTippy, PointStatus, LoadoutBudgetBar } from '@/components/patterns';
 import { PlayTogetherModal } from '@/components/onboarding';
 import {
   characterSheetUrlWithTourOffer,

@@ -10,7 +10,7 @@ import { ChevronDown, ChevronUp, X } from 'lucide-react';
 import { formatCost } from '@/lib/game/creator-constants';
 import { partChipVariant } from '@/lib/chip/part-chip-variant';
 import { IconButton, Checkbox, DescriptorChip } from '@/components/ui';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import type { PowerPart, TechniquePart } from '@/hooks';
 
 type CreatorPart = PowerPart | TechniquePart;

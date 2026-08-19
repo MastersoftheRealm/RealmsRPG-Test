@@ -387,7 +387,8 @@ export function useSkillEncounterView({
         const draggedIndex = participants.findIndex((p) => p.id === draggedId);
         const targetIndex = participants.findIndex((p) => p.id === targetId);
         if (draggedIndex === -1 || targetIndex === -1) return prev;
-        const [dragged] = participants.splice(draggedIndex, 1);
+        const dragged = participants.splice(draggedIndex, 1)[0];
+        if (!dragged) return prev;
         participants.splice(targetIndex, 0, dragged);
         return {
           ...prev,

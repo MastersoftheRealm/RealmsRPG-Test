@@ -58,6 +58,55 @@ const eslintConfig = defineConfig([
       'realms/no-raw-color': 'error',
       'realms/no-muted-dark-secondary-pairing': 'error',
       'realms/no-raw-upload-fetch': 'error',
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@/components/shared',
+              message:
+                'src/components/shared was removed (ADR-0019 / TASK-794). Import from @/components/patterns, or AddCombatantModal from @/components/encounters/add-combatant-modal.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@/components/shared', '@/components/shared/*'],
+              message:
+                'src/components/shared was removed (ADR-0019 / TASK-794). Import from @/components/patterns (or a patterns/<bucket> deep path).',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  // ADR-0019: do not import the patterns barrel from inside patterns/ (intra-barrel cycles).
+  {
+    files: ['src/components/patterns/**/*.{ts,tsx}'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          paths: [
+            {
+              name: '@/components/patterns',
+              message:
+                'Deep-import siblings under patterns/<bucket>/; do not import the patterns barrel from inside patterns/ (ADR-0019 / TASK-794).',
+            },
+            {
+              name: '@/components/shared',
+              message:
+                'src/components/shared was removed (ADR-0019 / TASK-794). Import siblings under patterns/<bucket>/.',
+            },
+          ],
+          patterns: [
+            {
+              group: ['@/components/shared', '@/components/shared/*'],
+              message:
+                'src/components/shared was removed (ADR-0019 / TASK-794). Import siblings under patterns/<bucket>/.',
+            },
+          ],
+        },
+      ],
     },
   },
   // Exemptions:

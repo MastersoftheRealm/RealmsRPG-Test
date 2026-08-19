@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { DeleteConfirmModal, OfficialEnhancedList } from '@/components/shared';
+import { DeleteConfirmModal, OfficialEnhancedList } from '@/components/patterns';
 import {
   useOfficialLibrary,
   useEnhancedItems,

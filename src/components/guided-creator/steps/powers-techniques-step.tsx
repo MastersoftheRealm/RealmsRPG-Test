@@ -9,9 +9,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Spinner } from '@/components/ui';
-import { LoadoutBudgetBar, GuidedInlineCatalogList } from '@/components/shared';
-import { PowerTechniqueFilters, FilterSection } from '@/components/shared/filters';
-import { SourceFilter, type SourceFilterValue } from '@/components/shared/filters/source-filter';
+import { LoadoutBudgetBar, GuidedInlineCatalogList } from '@/components/patterns';
+import { PowerTechniqueFilters, FilterSection } from '@/components/patterns/filters';
+import { SourceFilter, type SourceFilterValue } from '@/components/patterns/filters/source-filter';
 import {
   useEquipment,
   useOfficialLibrary,

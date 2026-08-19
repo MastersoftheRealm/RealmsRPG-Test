@@ -30,14 +30,14 @@
 | Unification audit (historical) | `src/docs/ai/archive/UNIFICATION_AUDIT_2026-02-20.md` — shared logic, creators, libraries, allocation, centralized sources of truth |
 | Modal unification audit (historical) | `src/docs/ai/archive/MODAL_UNIFICATION_AUDIT_2026-02-20.md` — list modals (add-X, load, selection): logic, styles, EmptyState/LoadingState, FilterSection, alignment with Codex/Library. See TASK-264. |
 | **Performance & edge usage** | `src/docs/PERFORMANCE_AND_EDGE.md` — Vercel CDN/edge requests, proxy matcher, cache headers, prefetch, polling; checklist for new public APIs and hooks. Web Analytics ops: `DEPLOYMENT_AND_SECRETS_SUPABASE.md` Step 3b. |
-| **Mobile UX** | `src/docs/MOBILE_UX.md` — breakpoints, touch targets, full-screen modals, dense-layout strategy (side-scroll vs collapse). When adding a new page or modal, follow MOBILE_UX.md and the Agent checklist there. |
+| **Responsive UX** | `src/docs/MOBILE_UX.md` (ADR-0023) — six-width contracts, tiered touch targets, full-screen modals, dense-layout strategy. When adding a new page or modal, follow MOBILE_UX.md and the Agent checklist there. |
 | **User experience goals** | `src/docs/human/USER_EXPERIENCE_GOALS.md` — human reference; update when completing UX tasks |
 
 ## Mobile
 
 - **Modals:** Use `fullScreenOnMobile` on `Modal` for selection, add-X, load, recovery, level-up, settings, and other large dialogs so they render full-screen on viewports &lt; 768px.
 - **Dense layouts:** Prefer **side-scroll** between section panels on mobile; use **Collapsible** when sections are few or content is lighter. See MOBILE_UX.md.
-- **New/edited UI:** Check the Agent checklist in MOBILE_UX.md (breakpoints, touch targets ≥44px, list/table patterns).
+- **New/edited UI:** Check the Agent checklist in MOBILE_UX.md (six widths, touch *tier*, C1–C6, list/table patterns).
 
 ## Creating New Tasks
 

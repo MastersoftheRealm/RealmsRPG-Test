@@ -107,7 +107,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
    - Page/step title: `<InfoTippy content={…} label="…" size="inline" />` (layout-neutral hit; do not add `min-h-*` className)
    - Default icon trigger: omit `children`; **`label` is required** (becomes `aria-label`).
    - Custom trigger: pass `children` (single element); child needs its own `aria-label`; keep `label` for consistency.
-   - Label-word tip (no icon): `<WordHelpTip content={getAbilityHelp(…)} label="About Strength">Strength</WordHelpTip>` (ability/defense names; tip copy names the term once). Dense table labels: `compact` (44px below `md`).
+   - Label-word tip (no icon): `<WordHelpTip content={getAbilityHelp(…)} label="About Strength">Strength</WordHelpTip>` (ability/defense names; tip copy names the term once). Dense table labels: `compact` (Dense tier — 44px expanded hit under coarse pointer).
 4. **Mobile** — default touch-hold (~400ms) is built in; do not add parallel click handlers.
 5. **A11y** — every trigger has a discernable name; do not rely on `title` alone.
 6. **Verify** — hover, keyboard focus, touch-hold on ~360px width; JSX lists allow pointer into panel.

@@ -1,3 +1,114 @@
+- id: TASK-831
+  title: Tiered mobile touch-target policy (replace blanket 44px)
+  created_at: 2026-08-18
+  completed_at: 2026-08-18
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/ADR/README.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ACCESSIBILITY.md
+    - src/docs/ai/ARCHITECTURE_CONSTITUTION.md
+    - AGENTS.md
+    - .cursor/rules/realms-mobile.mdc
+    - .cursor/rules/realms-accessibility.mdc
+    - tests/visual/responsive-layout.pw.ts
+    - tests/visual/responsive-ratchet.ts
+    - tests/visual/responsive-baseline.json
+    - playwright.responsive.config.ts
+    - .github/workflows/ui-verify.yml
+  description: |
+    Owner decision + docs/CI for the 2026-08-18 mobile audit policy: replace the
+    blanket 44x44 rule with three touch tiers and six layout contracts.
+  acceptance_criteria:
+    - Owner approves the tiered policy.
+    - MOBILE_UX.md rewritten as contracts; mechanism named (pointer vs viewport).
+    - ADR recorded.
+    - Multi-width layout gate wired in ui-verify.yml.
+  notes: |
+    Owner approved 2026-08-18 (full rework + CI gate). Button/IconButton/ValueStepper
+    code migration is TASK-841 so this commit stays docs+gate. Form-field height is TASK-830.
+  completed_work: |
+    Accepted ADR-0023. Rewrote MOBILE_UX.md as C1-C6 contracts + Primary/Standard/Dense
+    tiers. Pointer drives hit area; viewport drives layout. Wired npm run verify:responsive
+    (8 guest routes x 6 widths, ratchet vs responsive-baseline.json) into ui-verify.yml.
+- id: TASK-797
+  title: noUncheckedIndexedAccess burn-down (~163 errors)
+  created_at: 2026-08-15
+  completed_at: 2026-08-18
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - tsconfig.json
+    - tsconfig.strictest.json
+    - src/lib/utils/defined.ts
+    - src/lib/utils/defined.test.ts
+    - src/lib/utils/index.ts
+    - src/docs/ai/ADR/0022-nouncheckedindexedaccess.md
+    - src/docs/ai/ADR/README.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/lib/tooltips/markdown-lite.tsx
+  description: |
+    Report 11/12: enable `noUncheckedIndexedAccess` after burning down the
+    ~163 errors already visible via `npm run typecheck:strictest` (now ~210).
+  acceptance_criteria:
+    - `typecheck:strictest` is clean, then the flag moves into the main tsconfig.
+    - No behavior changes; fixes are type-narrowing only.
+  notes: |
+    Wave 3C leftover. Owner ack 2026-08-18: start next Architect leftover; do not
+    touch /characters/new/advanced (type-narrow Legacy files only). ADR-0022.
+  completed_work: |
+    Enabled noUncheckedIndexedAccess in tsconfig.json after burning down ~210
+    strictest errors with defined()/isDefined() and loop/regex guards. Legacy
+    route kept.
+
+- id: TASK-817
+  title: Creature selected inventory — play chipFacts, drop totalTp footer
+  created_at: 2026-08-17
+  completed_at: 2026-08-18
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T028
+  developer_test_plan: |
+    Suite DEV-V-016 T028 — see BUILD_VALIDATION.md
+  related_files:
+    - src/app/(main)/creature-creator/map-creature-inventory-rows.ts
+    - src/app/(main)/creature-creator/map-creature-inventory-rows.test.ts
+    - src/app/(main)/creature-creator/creature-creator-editor-inventory-section.tsx
+    - src/app/(main)/creature-creator/creature-creator-feat-armament-display.ts
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  description: |
+    TASK-814 wired creature Inventory pickers onto select-density chipFacts, but selected Weapons/Armor/Shields/Equipment lists still hand-roll columns plus totalTp. Play density demotes rarity/currency/TP to chips, so a Total TP footer with no TP column is never-neither (and never-both if chips are added later). Reuse sheet library-entity-rows mappers (or glrSurfaceDetailSections on the same bindings) instead of a second fact table. Qty display stays TASK-813.
+  acceptance_criteria:
+    - Creature Creator selected inventory rows show play catalog facts as column XOR chip XOR rightSlot (rarity/currency/TP as chips when they are not columns).
+    - Expanded Total TP is omitted when TP is a chip (no totalTp on those rows).
+    - Reuse mapWeaponRows / mapArmorRows / mapEquipmentRows or the same glrSurfaceDetailSections bindings; do not fork a second chip table or a new shared/ui file.
+    - Sheet characterSheet Qty steppers are unchanged (TASK-813). Skip Legacy /characters/new/advanced.
+    - Tests: targeted vitest for the selected-row mapper if extracted; npm run build. Add DEV-V-016-T028 when implementing.
+  notes: |
+    Filed from TASK-814 /cleanup. Pickers are done; this is the selected-list leftover. Do not fold TASK-813 Qty into this task.
+  follow_up_tasks:
+    - TASK-825
+  completed_work: |
+    Extracted mapCreatureSelectedInventoryRows onto sheet mapWeaponRows / mapShieldRows / mapArmorRows / mapEquipmentRows. Stored tp/currency fill play cost chips; totalTp omitted. Equipment Qty still formatCreatureEquipmentQuantity.
+
 - id: TASK-814
   title: GLR never-neither — demote overflow facts to chips sitewide
   created_at: 2026-08-17

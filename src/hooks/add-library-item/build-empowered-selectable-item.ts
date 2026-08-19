@@ -1,4 +1,4 @@
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { UserTechnique } from '../use-user-library';
 import { formatPowerDamage, formatPowerRangeFromSteps } from '@/lib/calculators/power-calc';

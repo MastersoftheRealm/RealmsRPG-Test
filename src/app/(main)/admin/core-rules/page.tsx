@@ -22,10 +22,11 @@ import {
   LoadingState,
   Spinner,
 } from '@/components/ui';
-import { ConfirmActionModal } from '@/components/shared';
+import { ConfirmActionModal } from '@/components/patterns';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { updateCodexDoc, createCodexDoc } from '../codex/actions';
 import type { CoreRulesMap } from '@/types/core-rules';
+import { defined } from '@/lib/utils';
 import { TABS, type CategoryId } from './core-rules-tabs';
 import { CategoryEditor } from './core-rules-category-editor';
 
@@ -53,7 +54,7 @@ export default function AdminCoreRulesPage() {
   const { tabGroupId, sharedPanelId } = useTabGroup();
   const { rules, isLoading } = useGameRules();
   const queryClient = useQueryClient();
-  const [activeTab, setActiveTab] = useState(TABS[0].id);
+  const [activeTab, setActiveTab] = useState(defined(TABS[0]).id);
   const [editData, setEditData] = useState<Record<string, unknown>>({});
   const [creatureEditData, setCreatureEditData] = useState<Record<string, unknown>>({});
   const [saving, setSaving] = useState(false);

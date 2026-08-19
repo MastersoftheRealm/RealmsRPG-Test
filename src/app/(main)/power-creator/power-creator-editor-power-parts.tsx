@@ -6,7 +6,7 @@
 
 import { Plus, Info } from 'lucide-react';
 import type { PowerPart } from '@/hooks';
-import { SectionCostBadge } from '@/components/shared';
+import { SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection, PowerPartCard } from '@/components/creator';
 import { Button } from '@/components/ui';
 import type { SelectedPart, AdvancedPart } from './power-creator-types';

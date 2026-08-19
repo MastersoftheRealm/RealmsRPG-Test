@@ -10,13 +10,12 @@
 import { useMemo, useState, useCallback } from 'react';
 import { GitMerge } from 'lucide-react';
 import { Spinner, EmptyState } from '@/components/ui';
-import { GuidedLayerNav } from '@/components/shared';
+import { GuidedLayerNav, MixedSpeciesModal } from '@/components/patterns';
 import { useMergedSpecies, useUserSpecies } from '@/hooks';
 import type { Species } from '@/hooks';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { useGuidedDeepEntryOnArrival } from '@/lib/guided-creator/use-guided-deep-entry-on-arrival';
 import { useGuidedCreatorStore } from '@/stores/guided-creator-store';
-import { MixedSpeciesModal } from '@/components/character-creator/MixedSpeciesModal';
 import {
   buildGuidedMixedSpeciesDraftPatch,
   buildGuidedSingleSpeciesDraftPatch,

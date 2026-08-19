@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
-import type { SelectableItem } from '@/components/shared';
+import type { SelectableItem } from '@/components/patterns';
 import { useCreatorSave } from '@/hooks';
 import {
   appendCreatureInventoryItems,

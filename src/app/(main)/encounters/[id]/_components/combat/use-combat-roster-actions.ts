@@ -87,7 +87,8 @@ export function useCombatRosterActions({
         const draggedIndex = combatants.findIndex((c) => c.id === draggedId);
         const targetIndex = combatants.findIndex((c) => c.id === targetId);
         if (draggedIndex === -1 || targetIndex === -1) return prev;
-        const [draggedItem] = combatants.splice(draggedIndex, 1);
+        const draggedItem = combatants.splice(draggedIndex, 1)[0];
+        if (!draggedItem) return prev;
         combatants.splice(targetIndex, 0, draggedItem);
         const newSorted = sortCombatantsForTurnOrder(combatants, prev.round);
         const newTurnIndex = remapTurnIndexAfterReorder(

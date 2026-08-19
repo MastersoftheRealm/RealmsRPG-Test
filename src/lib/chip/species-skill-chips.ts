@@ -1,4 +1,4 @@
-import type { SummaryChipItem } from '@/components/shared/summary-chip-list';
+import type { SummaryChipItem } from '@/components/patterns/list/summary-chip-list';
 
 export const ANY_SPECIES_SKILL_ID = '0';
 

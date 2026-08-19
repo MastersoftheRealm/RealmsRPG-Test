@@ -23,7 +23,7 @@ import {
   useTechniqueParts,
   useItemProperties,
 } from '@/hooks';
-import { LoginPromptModal } from '@/components/shared';
+import { LoginPromptModal } from '@/components/patterns';
 import { PlayTogetherModal } from '@/components/onboarding';
 import { GUIDED_SUBSTEP_ORDER, useGuidedCreatorStore } from '@/stores/guided-creator-store';
 import { isGuidedDraftSaveable } from '@/lib/guided-creator/substep-satisfaction';

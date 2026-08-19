@@ -19,7 +19,7 @@ import {
   SearchInput,
   TableScroll,
 } from '@/components/ui';
-import { ConfirmActionModal, ErrorDisplay } from '@/components/shared';
+import { ConfirmActionModal, ErrorDisplay } from '@/components/patterns';
 import { apiFetch } from '@/lib/api-client';
 
 type UserRole = 'new_player' | 'playtester' | 'developer' | 'admin';

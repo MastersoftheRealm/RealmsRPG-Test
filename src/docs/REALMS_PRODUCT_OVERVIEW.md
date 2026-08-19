@@ -197,7 +197,7 @@ Earlier drafts over-emphasized “accept path defaults and barely touch the midd
 
 [`GuidedChoiceShell`](../components/shared/guided-choice/guided-choice-shell.tsx) + [`GuidedLayerNav`](../components/shared/guided-choice/guided-layer-nav.tsx) own expand/collapse for Ladder B. **Placement:** below step content (not the sticky footer); one action → bottom left; two+ actions → shallower left, deeper right (outline collapse and/or hatch expand; optional second hatch for a sibling Layer 2). Character-creator steps use `GuidedStepLayout` + `GuidedLayerNav` (same labels). Absorb remaining Custom/Advanced catalog behaviors into those layers rather than inventing per-step toggles or a second wizard.
 
-Legacy Advanced surfaces still being absorbed into the cohesive creator: [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx), [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx), [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx), [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) forge face, [`PathHelpCard.tsx`](../components/character-creator/PathHelpCard.tsx).
+Legacy Advanced surfaces still being absorbed into the cohesive creator: [`feats-step.tsx`](../components/character-creator/steps/feats-step.tsx), [`equipment-step.tsx`](../components/character-creator/steps/equipment-step.tsx), [`powers-step.tsx`](../components/character-creator/steps/powers-step.tsx), [`archetype-step.tsx`](../components/character-creator/steps/archetype-step.tsx) forge face, [`path-help-card.tsx`](../components/shared/path-help-card.tsx).
 
 ### Current state: most creators are Layer 3 today
 
@@ -492,7 +492,7 @@ The user assigns abilities, understanding what each one does and which their pat
 | Path guidance | Primary and secondary abilities auto-highlighted; an optional one-click suggested array in Layer 1 |
 | Layer 2 / 3 | Free point-buy as today via [`ability-score-editor.tsx`](../components/creator/ability-score-editor.tsx) |
 
-**Shipped (guided):** Recommended ability array as soft default; **Customize scores** via `GuidedLayerNav` (§3.1 soft automation OK here). **Advanced gap:** [`PathHelpCard`](../components/character-creator/PathHelpCard.tsx) text nudge only.
+**Shipped (guided):** Recommended ability array as soft default; **Customize scores** via `GuidedLayerNav` (§3.1 soft automation OK here). **Advanced gap:** [`PathHelpCard`](../components/shared/path-help-card.tsx) text nudge only.
 
 ### 5.5 Skills Selection
 

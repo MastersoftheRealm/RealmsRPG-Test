@@ -4,7 +4,7 @@
 
 'use client';
 
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
+import { ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import { Checkbox } from '@/components/ui';
 import { DIE_SIZES } from '@/lib/game/creator-constants';

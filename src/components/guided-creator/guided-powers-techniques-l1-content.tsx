@@ -1,14 +1,14 @@
 'use client';
 
 import { DescriptorChip, EmptyState } from '@/components/ui';
-import { GuidedLayerNav } from '@/components/shared';
+import { GuidedLayerNav } from '@/components/patterns';
 import { cn } from '@/lib/utils';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { isPathRecommendedPowersTechniquesId } from '@/lib/guided-creator/powers-techniques-l1-candidates';
 import type { PowersTechniquesItemKind } from '@/lib/guided-creator/powers-techniques-step-helpers';
 import type { GuidedPowersPhase } from '@/stores/guided-creator-store';
 import type { PathGuidanceGroup } from '@/types/archetype';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { GuidedChoiceCard } from './guided-choice-card';
 import { GUIDED_CHOICE_COMPACT_GRID_CLASS } from './guided-choice-styles';
 import { GuidedFactChipRow } from './guided-equipment-fact-chips';

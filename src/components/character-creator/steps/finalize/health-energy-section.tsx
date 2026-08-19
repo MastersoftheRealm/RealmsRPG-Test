@@ -2,7 +2,7 @@
 
 import { useMemo, useCallback } from 'react';
 import { Button } from '@/components/ui';
-import { InfoTippy } from '@/components/shared';
+import { InfoTippy } from '@/components/patterns';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import { usePowerParts, useTechniqueParts, useGameRules } from '@/hooks';
 import { calculateMaxHealth, calculateMaxEnergyForArchetype } from '@/lib/game/calculations';

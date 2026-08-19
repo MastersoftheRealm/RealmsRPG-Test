@@ -3,7 +3,7 @@
  * TP math aligns with power-calc / technique-calc chip formatters (SA-4-17).
  */
 
-import type { PartData } from '@/components/shared';
+import type { PartData } from '@/components/patterns';
 import {
   trainingPointsForItemPropertyRef,
   type ItemPropertyTpRow,

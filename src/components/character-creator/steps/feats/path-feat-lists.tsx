@@ -1,7 +1,7 @@
 'use client';
 
 import { EmptyState } from '@/components/ui';
-import { ListHeader } from '@/components/shared';
+import { ListHeader } from '@/components/patterns';
 import type { Feat } from '@/hooks';
 import type { PathGuidanceGroup } from '@/types/archetype';
 import { FEAT_GRID_COLUMNS, FEAT_HEADER_COLUMNS } from './feat-list-columns';

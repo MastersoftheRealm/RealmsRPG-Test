@@ -3,7 +3,7 @@
  * Gear GLR: Category / Currency / Rarity only (ADR-0016). Named property chips stay.
  */
 
-import type { ColumnValue } from '@/components/shared/grid-list-row-types';
+import type { ColumnValue } from '@/components/patterns/list/grid-list-row-types';
 import { type MetadataDetailSection } from '@/lib/chip/list-row-metadata';
 import { namedPropertyDescriptorChips } from '@/lib/detail-option/compact-facts';
 import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';

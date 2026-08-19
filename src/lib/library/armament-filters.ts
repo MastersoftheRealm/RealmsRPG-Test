@@ -1,6 +1,6 @@
 /**
  * Shared armament / mixed-equipment filter state + apply logic (TASK-680 / TASK-723).
- * UI: `ArmamentFilters` in `@/components/shared/filters`.
+ * UI: `ArmamentFilters` in `@/components/patterns/filters`.
  */
 
 import {

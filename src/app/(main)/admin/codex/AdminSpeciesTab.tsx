@@ -1,13 +1,13 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChipSelect } from '@/components/shared/filters';
+import { ChipSelect } from '@/components/patterns/filters';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
   type ChipData,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { Button, IconButton, useToast } from '@/components/ui';
 import {
   useSpecies,

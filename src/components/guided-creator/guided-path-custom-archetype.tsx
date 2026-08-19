@@ -6,8 +6,7 @@
 'use client';
 
 import { Card } from '@/components/ui';
-import { InfoTippy } from '@/components/shared';
-import { AbilityPickButton } from '@/components/character-creator/AbilityPickButton';
+import { AbilityPickButton, InfoTippy } from '@/components/patterns';
 import { ARCHETYPE_ABILITY_OPTIONS } from '@/lib/game/archetype-edit';
 import { ARCHETYPE_CATEGORY_INFO } from '@/lib/constants/copy';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';

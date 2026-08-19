@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * Styleguide/demo tooltip only. For contextual page help use `InfoTippy` from `@/components/shared`.
+ * Styleguide/demo tooltip only. For contextual page help use `InfoTippy` from `@/components/patterns`.
  *
  * Uses the same Floating UI primitives as InfoTippy (Collin PR #14) with configurable triggers.
  */

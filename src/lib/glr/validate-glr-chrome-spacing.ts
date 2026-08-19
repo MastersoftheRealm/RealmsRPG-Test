@@ -50,7 +50,7 @@ function extractConstObjectBody(source: string, constName: string): string | nul
     'm',
   );
   const match = source.match(pattern);
-  if (match) return match[1];
+  if (match) return match[1] ?? null;
   const plain = new RegExp(`const\\s+${constName}\\s*=\\s*\\{([\\s\\S]*?)\\}`, 'm');
   const plainMatch = source.match(plain);
   return plainMatch?.[1] ?? null;
@@ -77,13 +77,15 @@ export function resolvedRowChromeFlags(source: string): RowChromeFlags {
   };
 
   const inlineMatch = source.match(/rowChrome=\{\{([\s\S]*?)\}\}/);
-  if (inlineMatch) {
+  if (inlineMatch?.[1] !== undefined) {
     applyRowChromeBody(flags, inlineMatch[1]);
     return flags;
   }
 
   for (const match of source.matchAll(/rowChrome=\{([A-Z][A-Z0-9_]*)\}/g)) {
-    const body = extractConstObjectBody(source, match[1]);
+    const constName = match[1];
+    if (!constName) continue;
+    const body = extractConstObjectBody(source, constName);
     if (!body) continue;
     applyRowChromeBody(flags, body);
   }
@@ -104,13 +106,13 @@ export function resolvedRowChromeFlagsInBlock(
   };
 
   const inlineMatch = section.match(/rowChrome=\{\{([\s\S]*?)\}\}/);
-  if (inlineMatch) {
+  if (inlineMatch?.[1] !== undefined) {
     applyRowChromeBody(flags, inlineMatch[1]);
     return flags;
   }
 
   const constMatch = section.match(/rowChrome=\{([A-Z][A-Z0-9_]*)\}/);
-  if (constMatch) {
+  if (constMatch?.[1]) {
     const lookup = fullSource ?? section;
     const body = extractConstObjectBody(lookup, constMatch[1]);
     if (body) applyRowChromeBody(flags, body);
@@ -216,7 +218,9 @@ export function validateEmbeddedGlrListRowContainers(
   const containerPattern = /<div className="([^"]+)"[^>]*>\s*\{[^}]*\.map\([\s\S]*?<GridListRow/g;
 
   for (const match of source.matchAll(containerPattern)) {
-    errors.push(...validateGlrListClassName(match[1], `${relativePath} GLR row container`));
+    const className = match[1];
+    if (className === undefined) continue;
+    errors.push(...validateGlrListClassName(className, `${relativePath} GLR row container`));
   }
 
   return errors;
@@ -228,29 +232,32 @@ export function validateGlrListShellSource(relativePath: string, source: string)
 
   if (relativePath.endsWith('UserLibraryEntityTabShell.tsx')) {
     const defaultMatch = source.match(/listClassName\s*=\s*['"]([^'"]+)['"]/);
-    if (!defaultMatch) {
+    const defaultClass = defaultMatch?.[1];
+    if (!defaultClass) {
       errors.push(`${relativePath}: missing listClassName default`);
-    } else if (!classListEquals(defaultMatch[1], DEFAULT_GLR_LIST_CLASSNAME)) {
+    } else if (!classListEquals(defaultClass, DEFAULT_GLR_LIST_CLASSNAME)) {
       errors.push(
-        `${relativePath}: listClassName default must be "${DEFAULT_GLR_LIST_CLASSNAME}" (got "${defaultMatch[1]}")`,
+        `${relativePath}: listClassName default must be "${DEFAULT_GLR_LIST_CLASSNAME}" (got "${defaultClass}")`,
       );
     }
   }
 
   if (relativePath.endsWith('official-entity-list.tsx')) {
     const defaultMatch = source.match(/listClassName\s*=\s*['"]([^'"]+)['"]/);
-    if (!defaultMatch) {
+    const defaultClass = defaultMatch?.[1];
+    if (!defaultClass) {
       errors.push(`${relativePath}: missing listClassName default`);
-    } else if (!classListEquals(defaultMatch[1], DEFAULT_GLR_LIST_CLASSNAME)) {
+    } else if (!classListEquals(defaultClass, DEFAULT_GLR_LIST_CLASSNAME)) {
       errors.push(
-        `${relativePath}: listClassName default must be "${DEFAULT_GLR_LIST_CLASSNAME}" (got "${defaultMatch[1]}")`,
+        `${relativePath}: listClassName default must be "${DEFAULT_GLR_LIST_CLASSNAME}" (got "${defaultClass}")`,
       );
     }
   }
 
   if (relativePath.endsWith('codex-browse-list-shell.tsx')) {
     const rowMatch = source.match(/<div className="([^"]+)">\s*\{isLoading/);
-    if (!rowMatch || !classListEquals(rowMatch[1], CODEX_BROWSE_LIST_ROW_CLASSNAME)) {
+    const rowClass = rowMatch?.[1];
+    if (!rowClass || !classListEquals(rowClass, CODEX_BROWSE_LIST_ROW_CLASSNAME)) {
       errors.push(`${relativePath}: row container must use "${CODEX_BROWSE_LIST_ROW_CLASSNAME}"`);
     }
   }
@@ -265,7 +272,10 @@ export function validateGlrListClassNameCaller(relativePath: string, source: str
 
   for (const match of source.matchAll(/listClassName=\{?['"{]([^'"}]+)['"}]\}?/g)) {
     const value = match[1];
-    if (value.includes('flex') || value.includes('space-y') || value.includes('gap-')) {
+    if (
+      value !== undefined &&
+      (value.includes('flex') || value.includes('space-y') || value.includes('gap-'))
+    ) {
       errors.push(...validateGlrListClassName(value, `${relativePath} listClassName`));
     }
   }
@@ -285,6 +295,7 @@ export function validateGlrGridColumnSource(relativePath: string, source: string
   for (const pattern of patterns) {
     for (const match of source.matchAll(pattern)) {
       const template = match[1];
+      if (template === undefined) continue;
       if (FORBIDDEN_GLR_GRID_ACTION_TRACK_REGEX.test(template)) {
         errors.push(
           `${relativePath}: grid "${template}" must not include 40px action track — use ListHeader rowChrome`,
@@ -295,9 +306,11 @@ export function validateGlrGridColumnSource(relativePath: string, source: string
 
   const tabGridConsts = source.matchAll(/const\s+[A-Z0-9_]*GRID[A-Z0-9_]*\s*=\s*['"]([^'"]+)['"]/g);
   for (const match of tabGridConsts) {
-    if (FORBIDDEN_GLR_GRID_ACTION_TRACK_REGEX.test(match[1])) {
+    const template = match[1];
+    if (template === undefined) continue;
+    if (FORBIDDEN_GLR_GRID_ACTION_TRACK_REGEX.test(template)) {
       errors.push(
-        `${relativePath}: grid "${match[1]}" must not include 40px action track — use ListHeader rowChrome`,
+        `${relativePath}: grid "${template}" must not include 40px action track — use ListHeader rowChrome`,
       );
     }
   }
@@ -356,6 +369,10 @@ export function validateUsmListShellSource(relativePath: string, source: string)
   }
 
   const className = listContainerMatch[1];
+  if (className === undefined) {
+    errors.push(`${relativePath}: missing USM list row container`);
+    return errors;
+  }
   if (!classListEquals(className, DEFAULT_USM_LIST_CLASSNAME)) {
     errors.push(
       `${relativePath}: USM list row container must be "${DEFAULT_USM_LIST_CLASSNAME}" (got "${className}")`,

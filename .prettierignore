@@ -40,3 +40,4 @@ scripts/contrast-baseline.json
 
 # generated
 FEATURE_INDEX_BARRELS.generated.md
+src/types/database.types.ts

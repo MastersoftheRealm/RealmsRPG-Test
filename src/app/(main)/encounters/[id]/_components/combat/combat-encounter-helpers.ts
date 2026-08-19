@@ -126,7 +126,8 @@ export function buildManualCombatantsFromForm(form: NewCombatantForm): TrackedCo
 /** Next unused A–Z suffix for a duplicated combatant base name. */
 function nextDuplicateCombatantName(combatantName: string, existingNames: string[]): string {
   const baseNameMatch = combatantName.match(/^(.+?)\s*[A-Z]?$/);
-  const baseName = baseNameMatch ? baseNameMatch[1].trim() : combatantName;
+  const capturedBase = baseNameMatch?.[1];
+  const baseName = capturedBase !== undefined ? capturedBase.trim() : combatantName;
   const escaped = baseName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const usedSuffixes = existingNames
     .filter((n) => n.startsWith(baseName))

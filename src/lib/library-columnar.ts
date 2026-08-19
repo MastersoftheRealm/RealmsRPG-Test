@@ -558,10 +558,7 @@ function toStrArray(val: unknown): string[] {
   return [];
 }
 
-/**
- * Legacy user_species rows may still store fields in `data` JSON while image refs live in columns.
- * Prefer columnar image_id / image_url (and bank enrichment) over the blob.
- */
+/** Flatten a legacy `data` JSON species row, overlaying columnar image columns. */
 export function mergeLegacySpeciesRowWithImageColumns(
   row: Record<string, unknown>,
 ): Record<string, unknown> {

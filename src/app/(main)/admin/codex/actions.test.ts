@@ -19,6 +19,7 @@ vi.mock('@/lib/supabase/server', () => ({ createServiceRoleClient: vi.fn(() => c
 
 import { createCodexDoc, deleteCodexDoc, saveArchetypeWithPath, updateCodexDoc } from './actions';
 import { recordCodexChange } from '@/lib/codex-changelog';
+import { defined } from '@/lib/utils';
 
 let currentDb: FakeSupabase;
 
@@ -77,7 +78,7 @@ describe('changelog failures', () => {
     const result = await createCodexDoc('codex_feats', undefined, { name: 'New Feat' });
 
     expect(result.success).toBe(true);
-    expect(currentDb.tables.codex_feats.some((row) => row.name === 'New Feat')).toBe(true);
+    expect(defined(currentDb.tables.codex_feats).some((row) => row.name === 'New Feat')).toBe(true);
   });
 });
 
@@ -124,7 +125,7 @@ describe('referential integrity on delete', () => {
     const result = await deleteCodexDoc('codex_skills', '11');
 
     expect(result.success).toBe(true);
-    expect(currentDb.tables.codex_skills.map((row) => row.id)).toEqual(['10']);
+    expect(defined(currentDb.tables.codex_skills).map((row) => row.id)).toEqual(['10']);
   });
 
   it('reports the feat that requires a skill before the skill is deleted', async () => {
@@ -144,7 +145,7 @@ describe('optimistic locking', () => {
     );
 
     expect(result.conflict).toBe(true);
-    expect(currentDb.tables.codex_skills[0].name).toBe('Athletics');
+    expect(defined(defined(currentDb.tables.codex_skills)[0]).name).toBe('Athletics');
   });
 
   it('accepts a save that carries the current version', async () => {
@@ -156,7 +157,7 @@ describe('optimistic locking', () => {
     );
 
     expect(result.success).toBe(true);
-    expect(currentDb.tables.codex_skills[0].name).toBe('Renamed');
+    expect(defined(defined(currentDb.tables.codex_skills)[0]).name).toBe('Renamed');
   });
 });
 
@@ -195,7 +196,9 @@ describe('archetype progression replace', () => {
 
     expect(result.success).toBe(false);
     expect(result.error).toContain('restored');
-    expect(currentDb.tables.codex_archetype_levels.map((row) => row.level)).toEqual([2, 3]);
+    expect(defined(currentDb.tables.codex_archetype_levels).map((row) => row.level)).toEqual([
+      2, 3,
+    ]);
   });
 
   it('replaces the levels on a normal save', async () => {
@@ -208,6 +211,8 @@ describe('archetype progression replace', () => {
     });
 
     expect(result.success).toBe(true);
-    expect(currentDb.tables.codex_archetype_levels.map((row) => row.level)).toEqual([2, 5]);
+    expect(defined(currentDb.tables.codex_archetype_levels).map((row) => row.level)).toEqual([
+      2, 5,
+    ]);
   });
 });

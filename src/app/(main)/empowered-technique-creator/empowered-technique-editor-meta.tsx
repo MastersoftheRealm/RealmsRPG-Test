@@ -1,6 +1,6 @@
 'use client';
 
-import { RealmsImageField } from '@/components/shared';
+import { RealmsImageField } from '@/components/patterns';
 import { Input, Textarea, Card } from '@/components/ui';
 import type { EmpoweredTechniqueCreatorEditorProps } from './empowered-technique-editor-config';
 

@@ -1,8 +1,8 @@
 /**
  * User Library API
  * ================
- * List and create user library items. Powers, techniques, items, creatures use
- * columnar tables (Supabase). Species uses legacy id+data.
+ * List and create user library items. Powers, techniques, items, creatures, and
+ * species use columnar tables (Supabase).
  */
 
 import { NextRequest, NextResponse } from 'next/server';

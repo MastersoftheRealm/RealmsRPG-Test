@@ -1,9 +1,9 @@
 'use client';
 
-import { SourceFilter } from '@/components/shared/filters/source-filter';
-import { SegmentedControl } from '@/components/shared';
+import { SourceFilter } from '@/components/patterns/filters/source-filter';
+import { SegmentedControl } from '@/components/patterns';
 import type { PowerSelectionMode } from '@/hooks/add-library-item/types';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
+import type { SourceFilterValue } from '@/components/patterns/filters/source-filter';
 
 /** Primary mode tabs — pass as UnifiedSelectionModal `scopeExtra` (always visible). */
 export function AddLibraryItemScopeExtra({

@@ -14,7 +14,7 @@ import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { Check } from 'lucide-react';
 import { DescriptorChip, type ChipProps, type DescriptorChipSize } from '@/components/ui';
-import { ExpandableImage } from '@/components/shared';
+import { ExpandableImage } from '@/components/patterns';
 import { usePlaceholderTheme } from '@/hooks/use-placeholder-theme';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { shouldExpandTaglineBody } from './guided-text';

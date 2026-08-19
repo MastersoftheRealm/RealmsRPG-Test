@@ -235,6 +235,7 @@ export function Modal({
     }
     const first = focusables[0];
     const last = focusables[focusables.length - 1];
+    if (first === undefined || last === undefined) return;
     const active = document.activeElement;
     if (e.shiftKey) {
       if (active === first || !node.contains(active)) {
@@ -326,10 +327,7 @@ export function Modal({
               </h2>
             )}
             {description && (
-              <p
-                id={descriptionId}
-                className="mt-1 text-sm text-text-secondary"
-              >
+              <p id={descriptionId} className="mt-1 text-sm text-text-secondary">
                 {description}
               </p>
             )}

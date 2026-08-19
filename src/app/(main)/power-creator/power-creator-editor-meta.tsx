@@ -5,7 +5,7 @@
 'use client';
 
 import Link from 'next/link';
-import { RealmsImageField } from '@/components/shared';
+import { RealmsImageField } from '@/components/patterns';
 import { Card, Input, Textarea } from '@/components/ui';
 import { PowerCreatorHelp } from './power-creator-help';
 

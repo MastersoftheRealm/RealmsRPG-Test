@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { Modal, Button, Card, DescriptorChip } from '@/components/ui';
-import { DetailOptionList, SummaryChipList, type DetailOptionItem } from '@/components/shared';
+import { DetailOptionList, SummaryChipList, type DetailOptionItem } from '@/components/patterns';
 import { speciesSkillToSummaryChipItem } from '@/lib/chip/species-skill-chips';
 import { traitToDetailOption } from '@/lib/detail-option';
 import { findTraitByIdOrName, useCodexSkills } from '@/hooks';

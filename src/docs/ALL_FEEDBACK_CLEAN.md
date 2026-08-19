@@ -450,7 +450,7 @@ How to use
 - Powers/Techniques/Armaments: ensure Codex enrichment computes and displays EN/TP/C in all list views.
 - **Power creator: option levels must not be negative.** Implemented 2026-02-23: PowerPartCard and PowerAdvancedMechanics ValueSteppers for op_1/2/3_lvl now use min={0}.
 - **Console: InvalidNodeTypeError (Range/selectNode ? "the given Node has no parent").** Triggered on mouse up; likely React/dependency selection logic when a node was unmounted. TASK-268 done: source is dependency (chunk 525.js); added SelectionGuard to clear selection when anchor node is detached; documented in ACCESSIBILITY.md.
-- **Rules page (embedded Google Doc): DOCS_timing is not defined.** Error is from inside the embedded Google Doc iframe; not fixable in our codebase.
+- **Rules page (embedded Google Doc): DOCS_timing is not defined.** Was Google’s iframe (not our code). TASK-796 removed the embed; first-party MDX rulebook.
 - **Resources page: Character Sheet PDF 404.** Link is `/Realms Character Sheet Alpha.pdf`; file must exist in `public/` or link updated. TASK-269.
 - **Zustand default export deprecation:** Our stores use named import; warning is from a dependency (noted in AI_CHANGELOG 2026-02-23).
 - **Official library not saving:** Powers, techniques, armaments do not persist when admin saves to official library. TASK-289 (critical).
@@ -1955,7 +1955,7 @@ Notes
 - Priority: Medium
 - Feedback: No way to increase feat level after adding a leveled character/archetype feat; should be easy (step up in feat list).
 - Expected: Level stepper on added library feats; respects requirements and updates feat points.
-- Disposition: Implemented 2026-06-26. LVL column with ValueStepper for multi-level library feats; add-feat merges replace lower levels in same family. **2026-08-15 revisit:** sheet Lvl stepper replaced — **TASK-780** option A (expanded Feat Levels chips). Creature creator stepper unchanged.
+- Disposition: Implemented 2026-06-26. LVL column with ValueStepper for multi-level library feats; add-feat merges replace lower levels in same family. **2026-08-15 revisit:** sheet Lvl stepper replaced — **TASK-780** option A (expanded Feat Levels chips). Creature creator stepper unchanged. **2026-08-15 revisit:** sheet Lvl stepper replaced — **TASK-780** option A (expanded Feat Levels chips). Creature creator stepper unchanged.
 
 **Raw Feedback Log ? 2026-06-26 (Feat/trait custom name + player note)**
 - Date: 2026-06-26

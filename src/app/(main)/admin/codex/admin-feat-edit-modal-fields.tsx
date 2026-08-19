@@ -1,6 +1,6 @@
 'use client';
 
-import { ChipSelect } from '@/components/shared/filters';
+import { ChipSelect } from '@/components/patterns/filters';
 import { Button, Input, Textarea, IconButton } from '@/components/ui';
 import type { Feat, Skill } from '@/hooks';
 import { Plus, X } from 'lucide-react';

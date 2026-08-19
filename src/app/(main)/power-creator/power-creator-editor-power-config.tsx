@@ -5,7 +5,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
+import { ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import { Checkbox } from '@/components/ui';
 import { formatAreaForDisplay, type AreaConfig, type DurationConfig } from '@/lib/calculators';
@@ -40,6 +40,7 @@ export function PowerCreatorEditorPowerConfig({
   durationSummary,
   sectionCosts,
 }: PowerCreatorEditorPowerConfigProps) {
+  const durationValueOptions = DURATION_VALUES[duration.type];
   return (
     <>
       <CollapsibleSection
@@ -164,37 +165,35 @@ export function PowerCreatorEditorPowerConfig({
               </option>
             ))}
           </select>
-          {duration.type !== 'instant' &&
-            duration.type !== 'permanent' &&
-            DURATION_VALUES[duration.type] && (
-              <select
-                aria-label="Duration value"
-                value={duration.value}
-                onChange={(e) => {
-                  const newValue = parseInt(e.target.value);
-                  if (duration.type === 'rounds' && newValue === 1) {
-                    onDurationChange({
-                      type: duration.type,
-                      value: newValue,
-                      applyDuration: duration.applyDuration ?? false,
-                      focus: false,
-                      noHarm: false,
-                      endsOnActivation: false,
-                      sustain: 0,
-                    });
-                  } else {
-                    onDurationChange((d) => ({ ...d, value: newValue }));
-                  }
-                }}
-                className="rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
-              >
-                {DURATION_VALUES[duration.type].map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            )}
+          {duration.type !== 'instant' && duration.type !== 'permanent' && durationValueOptions && (
+            <select
+              aria-label="Duration value"
+              value={duration.value}
+              onChange={(e) => {
+                const newValue = parseInt(e.target.value);
+                if (duration.type === 'rounds' && newValue === 1) {
+                  onDurationChange({
+                    type: duration.type,
+                    value: newValue,
+                    applyDuration: duration.applyDuration ?? false,
+                    focus: false,
+                    noHarm: false,
+                    endsOnActivation: false,
+                    sustain: 0,
+                  });
+                } else {
+                  onDurationChange((d) => ({ ...d, value: newValue }));
+                }
+              }}
+              className="rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+            >
+              {durationValueOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
         {(() => {
           const isShortDuration =

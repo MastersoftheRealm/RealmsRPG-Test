@@ -61,6 +61,16 @@ npm run db:backup
 
 Writes `backups/supabase-<timestamp>/` (`roles.sql`, `schema.sql`, `data.sql`). **Postgres client tools** (`pg_dump` on PATH) or **Supabase CLI** (+ Docker for CLI dumps) must be installed. This backs up the database only — not Storage. See [scripts/README.md](../../scripts/README.md).
 
+### Generated Database types
+
+After applying schema migrations, regenerate checked-in Postgres row types:
+
+```bash
+npm run db:types
+```
+
+Writes `src/types/database.types.ts` (ADR-0020). Review the git diff; do not hand-edit that file. Optional `SUPABASE_PROJECT_ID` override. This is type generation, not a data backup.
+
 ### Local Storage backup (files)
 
 ```bash

@@ -48,9 +48,9 @@ import {
   PageHeader,
   useToast,
 } from '@/components/ui';
-import { PointStatus } from '@/components/shared/point-status';
-import { TabSummarySection, SummaryItem } from '@/components/shared/tab-summary-section';
-import { GridListRow } from '@/components/shared/grid-list-row';
+import { PointStatus } from '@/components/patterns/chrome/point-status';
+import { TabSummarySection, SummaryItem } from '@/components/patterns/chrome/tab-summary-section';
+import { GridListRow } from '@/components/patterns/list/grid-list-row';
 import { buildFeatDetailSections } from '@/lib/codex/feat-list';
 import type { Feat } from '@/hooks';
 import { buildPartsAndMetadataDetailSections } from '@/lib/chip/list-row-metadata';

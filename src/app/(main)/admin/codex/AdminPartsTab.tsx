@@ -1,9 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
+import {
+  CodexBrowseListShell,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+} from '@/components/patterns';
 import { Button, IconButton, useToast } from '@/components/ui';
-import { SelectFilter } from '@/components/shared/filters';
+import { SelectFilter } from '@/components/patterns/filters';
 import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { formatListCellLabel } from '@/lib/utils';

@@ -33,8 +33,8 @@ import {
   AdvancedCalculationsPanel,
   CreatorSummaryPanel,
 } from '@/components/creator';
-import { SourceFilter, sourceFilterSummary } from '@/components/shared/filters/source-filter';
-import { SegmentedControl } from '@/components/shared';
+import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
+import { SegmentedControl } from '@/components/patterns';
 import { useAuthStore } from '@/stores';
 import {
   bootstrapItemCreatorFormState,

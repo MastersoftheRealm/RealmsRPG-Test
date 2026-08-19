@@ -10,7 +10,7 @@
 'use client';
 
 import { useCallback, useMemo, useState } from 'react';
-import { UnifiedSelectionModal, type SelectableItem } from '@/components/shared';
+import { UnifiedSelectionModal, type SelectableItem } from '@/components/patterns';
 import { usePathListFilter, useCodexSkills, type Feat } from '@/hooks';
 import type { CharacterForFeatRequirement } from '@/lib/game/feat-requirements';
 import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';

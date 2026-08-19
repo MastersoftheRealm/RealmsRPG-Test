@@ -13,9 +13,8 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { Button, Spinner } from '@/components/ui';
-import { GuidedChoiceShell, InfoTippy } from '@/components/shared';
+import { GuidedChoiceShell, InfoTippy, PathHelpCard, PathNotes } from '@/components/patterns';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import {
   useCodexFeats,

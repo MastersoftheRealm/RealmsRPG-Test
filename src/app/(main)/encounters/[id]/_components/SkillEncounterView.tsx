@@ -9,7 +9,7 @@
 
 'use client';
 
-import { AddCombatantModal } from '@/components/shared';
+import { AddCombatantModal } from '@/components/encounters/add-combatant-modal';
 import { RollLog } from '@/components/rolls';
 import type { Encounter, SkillEncounterState } from '@/types/encounter';
 import { useSkillEncounterView } from './skill/use-skill-encounter-view';

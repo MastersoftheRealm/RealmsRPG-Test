@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import {
   applyGuidedEquipmentL2Selection,
   buildGuidedEquipmentL2Items,

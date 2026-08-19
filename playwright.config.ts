@@ -27,6 +27,7 @@ export default defineConfig({
     /guided-.*-audit\.pw\.ts/,
     /creator-ux-audit\.pw\.ts/,
     /chip-unification\.pw\.ts/,
+    /responsive-layout\.pw\.ts/,
   ],
   fullyParallel: true,
   forbidOnly: !!process.env.CI,

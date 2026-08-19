@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { Plus, Swords, X, ExternalLink } from 'lucide-react';
-import { GridListRow, ListHeader } from '@/components/shared';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import { GridListRow, ListHeader } from '@/components/patterns';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import { Button, IconButton, EmptyState } from '@/components/ui';
 import type { CharacterTechnique } from '@/types';
 import { TECHNIQUE_GRID_COLUMNS, TECHNIQUE_MODAL_COLUMNS } from './modal-columns';

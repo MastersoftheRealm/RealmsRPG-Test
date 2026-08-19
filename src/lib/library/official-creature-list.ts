@@ -2,7 +2,7 @@
  * Shared official creature list helpers (Library Realms tab + Admin public library).
  */
 
-import type { CreatureData } from '@/components/shared/creature-stat-block-types';
+import type { CreatureData } from '@/components/patterns/list/creature-stat-block-types';
 import { formatListCellLabel } from '@/lib/utils';
 import { resolveCreatureInventoryBuckets } from '@/lib/game/creature-inventory';
 import type { LibraryCreature } from '@/types/library';

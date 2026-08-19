@@ -14,7 +14,7 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
   ListEmptyState as EmptyState,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { Modal, Button, IconButton } from '@/components/ui';
 import { AdminArchetypeEditor } from './admin-archetype-editor';
 import { useAdminArchetypeWorkspace, type ArchetypeItem } from './use-admin-archetype-workspace';

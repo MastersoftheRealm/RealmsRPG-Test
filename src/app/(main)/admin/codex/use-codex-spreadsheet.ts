@@ -395,7 +395,11 @@ export function useCodexSpreadsheet({ activeTab }: UseCodexSpreadsheetArgs) {
   const stickyLeftFor = useCallback(
     (colKey: string): number | undefined => {
       if (colKey === 'id') return 48;
-      if (colKey === 'name' && idColIndex >= 0) return 48 + columnWidths[idColIndex];
+      if (colKey === 'name' && idColIndex >= 0) {
+        const idWidth = columnWidths[idColIndex];
+        if (idWidth === undefined) return undefined;
+        return 48 + idWidth;
+      }
       return undefined;
     },
     [idColIndex, columnWidths],

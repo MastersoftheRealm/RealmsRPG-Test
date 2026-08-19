@@ -228,7 +228,9 @@ export function getMultipleUseAdjustedEnergy(
 ): number {
   const table = rules.multipleUseTable ?? [];
   if (tableIndex < 0 || tableIndex >= table.length) return baseEnergy;
-  const pct = table[tableIndex].adjustedEnergyPercent ?? 100;
+  const row = table[tableIndex];
+  if (!row) return baseEnergy;
+  const pct = row.adjustedEnergyPercent ?? 100;
   return baseEnergy * (pct / 100);
 }
 

@@ -24,7 +24,7 @@ import {
   getStepCompletion,
   type ValidationIssue,
 } from '@/lib/character-creator-validation';
-import { ConfirmActionModal } from '@/components/shared';
+import { ConfirmActionModal } from '@/components/patterns';
 import { Modal, Button } from '@/components/ui';
 
 const STEP_NAMES: Record<CreatorStep, string> = {

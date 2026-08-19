@@ -28,7 +28,7 @@ import {
   AdvancedCalculationsPanel,
 } from '@/components/creator';
 import { LoadingState } from '@/components/ui';
-import { SourceFilter, sourceFilterSummary } from '@/components/shared/filters/source-filter';
+import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import { EmpoweredTechniqueCreatorEditor } from './empowered-technique-creator-editor';
 import {
   bootstrapEmpoweredTechniqueFormState,

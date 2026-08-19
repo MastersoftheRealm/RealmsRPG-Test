@@ -33,7 +33,7 @@ import {
   type WeaponPropertyRef,
 } from '@/lib/game/weapon-attack-ability';
 import type { LoadoutItemCategory } from '@/lib/guided-creator/resolve-loadout-items';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 
 export interface EquipmentPhaseCardStats {
   /** Collapsed string tags (legacy); prefer titleChips / detailChips. */

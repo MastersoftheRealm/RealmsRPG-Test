@@ -26,7 +26,7 @@ import {
   type UseLoadModalLibraryReturn,
 } from '@/hooks';
 import { useAuthStore } from '@/stores';
-import { SourceFilter, sourceFilterSummary } from '@/components/shared/filters/source-filter';
+import { SourceFilter, sourceFilterSummary } from '@/components/patterns/filters/source-filter';
 import {
   CreatorPageShell,
   AdvancedCalculationsPanel,

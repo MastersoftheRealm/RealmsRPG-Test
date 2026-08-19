@@ -41,10 +41,6 @@ function getTableName(collection: CodexCollection): string {
   return collection;
 }
 
-function getSupabaseAdmin() {
-  return createServiceRoleClient();
-}
-
 /**
  * The changelog is an audit trail, not part of the mutation. A failed insert used to invert a
  * completed write into `{ success: false }`, which made admins retry and duplicate the entity.
@@ -66,7 +62,7 @@ async function applyFeatTagNormalization(
   if (collection !== 'codex_feats' || !('tags' in data)) return data;
   const input = featTagsToNormalizeInput(parseFeatTagsFromDb(data.tags));
   if (!input) return { ...data, tags: null };
-  const supabase = getSupabaseAdmin();
+  const supabase = createServiceRoleClient();
   const { data: normalized, error } = await supabase.rpc('normalize_feat_tags', {
     tag_string: input,
   });
@@ -77,7 +73,7 @@ async function applyFeatTagNormalization(
 }
 
 async function fetchRowById(table: string, id: string): Promise<Record<string, unknown> | null> {
-  const supabase = getSupabaseAdmin();
+  const supabase = createServiceRoleClient();
   const { data, error } = await supabase.from(table).select('*').eq('id', id).maybeSingle();
   if (error) throw new Error(error.message);
   return (data as Record<string, unknown> | null) ?? null;
@@ -89,7 +85,7 @@ type ArchetypeSnapshot = {
 };
 
 async function getArchetypeSnapshot(archetypeId: string): Promise<ArchetypeSnapshot | null> {
-  const supabase = getSupabaseAdmin();
+  const supabase = createServiceRoleClient();
   const { data: archetype, error: archetypeError } = await supabase
     .from('codex_archetypes')
     .select('*')
@@ -115,7 +111,7 @@ async function getArchetypeSnapshot(archetypeId: string): Promise<ArchetypeSnaps
 async function findCodexReferences(collection: CodexCollection, id: string): Promise<string[]> {
   const probes = REFERENCE_PROBES[collection];
   if (!probes || !id) return [];
-  const supabase = getSupabaseAdmin();
+  const supabase = createServiceRoleClient();
   const found: string[] = [];
 
   for (const probe of probes) {
@@ -141,7 +137,7 @@ export async function createCodexDoc(
   try {
     const changedByUserId = await requireAdmin();
     const safeCollection = assertCodexCollection(collection);
-    const supabase = getSupabaseAdmin();
+    const supabase = createServiceRoleClient();
     const table = getTableName(safeCollection);
 
     const shouldAllocateNumeric = isColumnarCollection(safeCollection);
@@ -222,7 +218,7 @@ export async function updateCodexDoc(
   try {
     const changedByUserId = await requireAdmin();
     const safeCollection = assertCodexCollection(collection);
-    const supabase = getSupabaseAdmin();
+    const supabase = createServiceRoleClient();
     const table = getTableName(safeCollection);
 
     const before = await fetchRowById(table, id);
@@ -292,7 +288,7 @@ export async function deleteCodexDoc(
   try {
     const changedByUserId = await requireAdmin();
     const safeCollection = assertCodexCollection(collection);
-    const supabase = getSupabaseAdmin();
+    const supabase = createServiceRoleClient();
     const table = getTableName(safeCollection);
     const before = await fetchRowById(table, id);
 
@@ -339,7 +335,7 @@ export async function saveArchetypeWithPath(
 ): Promise<{ success: boolean; error?: string; id?: string }> {
   try {
     const changedByUserId = await requireAdmin();
-    const supabase = getSupabaseAdmin();
+    const supabase = createServiceRoleClient();
     const id = payload.id
       ? sanitizeId(payload.id)
       : await allocateCodexNumericId(supabase, 'codex_archetypes');
@@ -405,7 +401,7 @@ async function replaceArchetypeLevels(
   incoming: Record<string, unknown>[],
   snapshot: Record<string, unknown>[],
 ): Promise<void> {
-  const supabase = getSupabaseAdmin();
+  const supabase = createServiceRoleClient();
 
   const { error: clearError } = await supabase
     .from('codex_archetype_levels')
@@ -439,7 +435,7 @@ async function restoreArchetypeLevels(
   archetypeId: string,
   snapshot: Record<string, unknown>[],
 ): Promise<boolean> {
-  const supabase = getSupabaseAdmin();
+  const supabase = createServiceRoleClient();
   try {
     await supabase.from('codex_archetype_levels').delete().eq('archetype_id', archetypeId);
     if (snapshot.length === 0) return true;

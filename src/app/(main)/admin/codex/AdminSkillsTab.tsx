@@ -1,9 +1,9 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CodexBrowseListShell, ErrorDisplay as ErrorState } from '@/components/shared';
+import { CodexBrowseListShell, ErrorDisplay as ErrorState } from '@/components/patterns';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
-import { ChipSelect, SelectFilter, ArchetypePathFilter } from '@/components/shared/filters';
+import { ChipSelect, SelectFilter, ArchetypePathFilter } from '@/components/patterns/filters';
 import { CodexSkillRow } from '@/components/codex';
 import { useCodexSkills, usePathListFilter, type Skill } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';

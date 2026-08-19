@@ -11,7 +11,7 @@
  * `labelHelpKey` so GridListRow collapses them by default with type-appropriate InfoTippy.
  */
 
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import {
   abilityRequirementChip,
@@ -341,6 +341,31 @@ export function glrSurfaceDetailSections(
     facts,
     extraSections,
   });
+}
+
+/** Values for ranked GLR facts that the density resolver placed on chips. */
+export interface GlrFactChipSource {
+  actionType?: string | null;
+  area?: string | number | null;
+  abilityRequirement?: { name?: string; level?: number } | null;
+  agilityReduction?: number | null;
+  block?: string | number | null;
+  category?: string | null;
+  criticalRangeIncrease?: number | null;
+  currency?: number | null;
+  damage?: unknown;
+  damageReduction?: number | null;
+  duration?: string | null;
+  energy?: number | null;
+  range?: string | number | null;
+  rarity?: string | null;
+  recovery?: string | null;
+  reqLevel?: string | number | null;
+  trainingPoints?: number | null;
+  uses?: string | number | null;
+  weapon?: string | null;
+  /** Feat governing Ability column when no min-score requirement object exists. */
+  ability?: string | null;
 }
 
 /** Convenience: metadata chips + parts section (powers, techniques, modals). */

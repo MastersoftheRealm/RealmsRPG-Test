@@ -1,4 +1,4 @@
-import type { ListColumn } from '@/components/shared';
+import type { ListColumn } from '@/components/patterns';
 
 /** List column definitions and grid (unified with Library/Codex); name column wider for readability */
 export const WEAPON_LIST_COLUMNS: ListColumn[] = [

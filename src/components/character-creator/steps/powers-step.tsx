@@ -9,7 +9,7 @@
 
 import { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import { calculateArchetypeProgression } from '@/lib/game/formulas';
 import {
   useUserPowers,
@@ -25,7 +25,7 @@ import {
   useCreatorPathData,
 } from '@/hooks';
 import { getValidationIssuesForStep, getStepCompletion } from '@/lib/character-creator-validation';
-import type { SourceFilterValue } from '@/components/shared';
+import type { SourceFilterValue } from '@/components/patterns';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import type { CharacterPower, CharacterTechnique } from '@/types';
 import type { PowerModalTab } from './powers/modal-columns';

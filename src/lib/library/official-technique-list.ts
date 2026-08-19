@@ -2,8 +2,8 @@
  * Shared official technique list helpers (Library Realms tab + Admin public library).
  */
 
-import type { ChipData } from '@/components/shared';
-import type { ColumnValue } from '@/components/shared/grid-list-row';
+import type { ChipData } from '@/components/patterns';
+import type { ColumnValue } from '@/components/patterns/list/grid-list-row';
 import type { TechniquePart } from '@/hooks/codex-types';
 import type { LibraryTechnique } from '@/types/library';
 import { deriveTechniqueDisplay, formatTechniqueDamage } from '@/lib/calculators/technique-calc';

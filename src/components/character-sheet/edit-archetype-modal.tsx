@@ -11,8 +11,7 @@
 import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Modal, Button, Spinner, SelectionCard, DescriptorChip } from '@/components/ui';
-import { ConfirmActionModal } from '@/components/shared';
-import { AbilityPickButton } from '@/components/character-creator/AbilityPickButton';
+import { AbilityPickButton, ConfirmActionModal } from '@/components/patterns';
 import { useCodexArchetypes } from '@/hooks';
 import { calculateProficiency } from '@/lib/game/formulas';
 import { resolveArchetypeDisplayName } from '@/lib/game/archetype-display';

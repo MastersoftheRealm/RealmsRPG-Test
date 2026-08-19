@@ -22,7 +22,7 @@ import {
   useTabGroup,
   useToast,
 } from '@/components/ui';
-import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/shared';
+import { DeleteConfirmModal, HubListRow, ErrorDisplay } from '@/components/patterns';
 import {
   useCraftingSessions,
   useDeleteCraftingSession,

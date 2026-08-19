@@ -8,7 +8,7 @@ import {
   DetailOptionList,
   type DetailOptionItem,
   type DetailOptionListProps,
-} from '@/components/shared/detail-option-list';
+} from '@/components/patterns/list/detail-option-list';
 import { GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';
 
 export type GuidedDetailOptionItem = DetailOptionItem;

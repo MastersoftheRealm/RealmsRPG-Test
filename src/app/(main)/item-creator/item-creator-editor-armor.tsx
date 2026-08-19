@@ -4,7 +4,7 @@
 
 'use client';
 
-import { ValueStepper, SectionCostBadge } from '@/components/shared';
+import { ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import type { ItemSectionCosts } from './item-creator-cost-derivation';
 

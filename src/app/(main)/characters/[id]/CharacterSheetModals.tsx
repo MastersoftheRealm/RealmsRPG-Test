@@ -15,7 +15,7 @@ import {
   EditArchetypeModal,
   EditSpeciesModal,
 } from '@/components/character-sheet';
-import { DeleteConfirmModal, AddSubSkillModal } from '@/components/shared';
+import { DeleteConfirmModal, AddSubSkillModal } from '@/components/patterns';
 import type { AddLibraryItemType } from '@/hooks/use-add-library-item-data';
 import {
   useCharacterSheet,

@@ -22,8 +22,8 @@ import {
   useCodexItemProperties,
   useCodexSpecies,
 } from './use-codex';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SourceFilterValue } from '@/components/patterns/filters/source-filter';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import {
   buildSelectableItem,
   getListHeaderColumns,

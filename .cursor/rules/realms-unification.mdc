@@ -12,31 +12,32 @@ alwaysApply: false
 
 | Need | Import from |
 |------|-------------|
-| List rows (expandable) | `@/components/shared` → GridListRow |
-| List row entity thumb (44px, click preview) | `@/components/shared` → **ListRowThumbnail**; pass via `GridListRow` **`thumbnail`** prop — resolve with `resolveListRowThumbnail` / `resolveSpeciesListRowThumbnail` from `@/lib/list-row-image.ts` (see `guide/03-entity-card-art.md`) |
-| Click-to-enlarge any inline image | `@/components/shared` → **ExpandableImage** — species art, portraits, choice cards, list thumbs; see `guide/03-entity-card-art.md` |
+| List rows (expandable) | `@/components/patterns` → GridListRow |
+| List row entity thumb (44px, click preview) | `@/components/patterns` → **ListRowThumbnail**; pass via `GridListRow` **`thumbnail`** prop — resolve with `resolveListRowThumbnail` / `resolveSpeciesListRowThumbnail` from `@/lib/list-row-image.ts` (see `guide/03-entity-card-art.md`) |
+| Click-to-enlarge any inline image | `@/components/patterns` → **ExpandableImage** — species art, portraits, choice cards, list thumbs; see `guide/03-entity-card-art.md` |
 | Guided choice card hero art | `@/components/guided-creator` → **GuidedChoiceCard** + `guided-choice-image.ts` |
-| Admin / official card art | `@/components/shared` → **RealmsImageField** / **RealmsImagePicker** (`realms-images.ts`, ADR-0003) |
-| Sortable column headers | `@/components/shared` → ListHeader (default styling; see below) |
-| List selection modal (add-X, pick from library) | `@/components/shared` → UnifiedSelectionModal (list-first: Search+Filters; mode tabs + sheet equipment custom-add in `scopeExtra`; SourceFilter/advanced in `headerExtra`; ≤1-line header help or none; leave-with-selection Add selected? — TASK-574 / TASK-815) |
-| Encounter / session participant picker (combat, skill, VTT, downtime) | `@/components/shared` → **AddCombatantModal** — intentional non-USM (TASK-571); extend, do not fork or migrate to USM |
+| Admin / official card art | `@/components/patterns` → **RealmsImageField** / **RealmsImagePicker** (`realms-images.ts`, ADR-0003) |
+| Sortable column headers | `@/components/patterns` → ListHeader (default styling; see below) |
+| List selection modal (add-X, pick from library) | `@/components/patterns` → UnifiedSelectionModal (list-first: Search+Filters; mode tabs + sheet/creature Add equipment custom-add in `scopeExtra`; SourceFilter/advanced in `headerExtra`; ≤1-line header help or none; leave-with-selection Add selected? — TASK-574 / TASK-815 / TASK-816) |
+| Encounter / session participant picker (combat, skill, VTT, downtime) | `@/components/encounters/add-combatant-modal` → **AddCombatantModal** — intentional non-USM (TASK-571); extend, do not fork or migrate to USM |
 | Campaign roster add-character | `campaigns/[id]/_components/add-character-modal` → **AddCharacterModal** — intentional non-USM simple portrait picker; do not migrate to USM unless search/filters are needed |
-| Mixed-species dual picker (Advanced creator + sheet Edit Species + Guided Ancestry change) | `character-creator/MixedSpeciesModal` — intentional non-USM (TASK-605); dual ordered species picks, not list add-X; do not fork or migrate to USM |
-| Source scope: All / Realms Library / My Library | `@/components/shared` → SourceFilter (built on SegmentedControl) |
-| Two–N option pill toggle (same look as Library / source filter) | `@/components/shared` → SegmentedControl (`size="compact"` for dense sheet toolbars) |
-| Admin Codex / Codex browse list chrome | `@/components/shared` → **CodexBrowseListShell** (ADR-0005); not for Official* grids or Admin Archetypes path rows |
-| Section headers with + | `@/components/shared` → SectionHeader |
-| Roll buttons | `@/components/shared` → RollButton |
-| +/- steppers | `@/components/shared` → **ValueStepper** / Dec/Inc (ADR-0002 chrome); quantities → **QuantitySelector** (wraps ValueStepper). Never hand-roll ± |
-| Point display (spent/total) | `@/components/shared` → PointStatus |
-| Loadout / creator budget chrome (Currency + Training Points + extra trackers) | `@/components/shared` → **LoadoutBudgetBar** (ADR-0008; Guided + Advanced; `leading`/`trailing` for Innate Energy / Energy) |
+| Mixed-species dual picker (Advanced creator + sheet Edit Species + Guided Ancestry change) | `@/components/patterns` → **MixedSpeciesModal** — intentional non-USM (TASK-605 / ADR-0017); dual ordered species picks, not list add-X; do not fork or migrate to USM |
+| Mixed-species skill picker (Legacy Ancestry + sheet Edit Species) | `@/components/patterns` → **MixedSpeciesSkillPicker** (ADR-0018); TraitSection-style selectable rows; Guided mixed skills stay GuidedChoiceCard |
+| Source scope: All / Realms Library / My Library | `@/components/patterns` → SourceFilter (built on SegmentedControl) |
+| Two–N option pill toggle (same look as Library / source filter) | `@/components/patterns` → SegmentedControl (`size="compact"` for dense sheet toolbars) |
+| Admin Codex / Codex browse list chrome | `@/components/patterns` → **CodexBrowseListShell** (ADR-0005); not for Official* grids or Admin Archetypes path rows |
+| Section headers with + | `@/components/patterns` → SectionHeader |
+| Roll buttons | `@/components/patterns` → RollButton |
+| +/- steppers | `@/components/patterns` → **ValueStepper** / Dec/Inc (ADR-0002 chrome); quantities → **QuantitySelector** (wraps ValueStepper). Never hand-roll ± |
+| Point display (spent/total) | `@/components/patterns` → PointStatus |
+| Loadout / creator budget chrome (Currency + Training Points + extra trackers) | `@/components/patterns` → **LoadoutBudgetBar** (ADR-0008; Guided + Advanced; `leading`/`trailing` for Innate Energy / Energy) |
 | Sheet spend vs Temp Modifier | Sheet toolbar pencil vs `SlidersHorizontal` (exclusive modes). Per-section: `EditSectionToggle` in Edit, `TempModifierToggle` in Temp (ADR-0006 / TASK-782). Helpers `lib/character/temp-modifiers.ts`. Do not nest Temp under Edit or restore dual pairs. |
-| Skill rows | `@/components/shared` → SkillRow |
+| Skill rows | `@/components/patterns` → SkillRow |
 | Search | `@/components/ui` → SearchInput |
 | Primary nav tabs (underline, badges) | `@/components/ui` → TabNavigation |
 | Page layout | `@/components/ui` → PageContainer, PageHeader |
 | Modals, Buttons, Chips | `@/components/ui` |
-| Contextual help (optional rules / step info) | `@/components/shared` → **InfoTippy** / **WordHelpTip** (label-word tip, no icon) + `public/tooltip-text.tsx` — **not** for menus/filters; see `guide/04-floating-ui-tooltips.md` |
+| Contextual help (optional rules / step info) | `@/components/patterns` → **InfoTippy** / **WordHelpTip** (label-word tip, no icon) + `public/tooltip-text.tsx` — **not** for menus/filters; see `guide/04-floating-ui-tooltips.md` |
 | Entity list thumb / choice-card art | **Do not** build per-page — `guide/03-entity-card-art.md`; `REALMS_PRODUCT_OVERVIEW.md` §5.0.3 |
 
 ### ListHeader in modals
@@ -59,13 +60,13 @@ Use semantic tokens, not raw colors: `bg-surface`, `bg-background`, `bg-surface-
 Before creating **any** new component, hook, service, API route, or util, confirm it doesn't already exist:
 
 1. Check `src/docs/ai/FEATURE_INDEX.md` (feature → file map).
-2. Grep the barrels: `src/components/shared/index.ts`, `src/components/ui/index.ts`, `src/hooks/index.ts`, `src/services/index.ts`.
+2. Grep the barrels: `src/components/patterns/index.ts`, `src/components/ui/index.ts`, `src/hooks/index.ts`, `src/services/index.ts`.
 3. Grep `src/lib/` for calculators/formulas/utils by keyword.
 4. If something similar exists, **extend it with a prop/variant** rather than forking a parallel copy.
-5. New shared/ui file or zustand store → Architect path (`ARCHITECTURE_CONSTITUTION.md` + ADR or owner ack).
+5. New patterns/ui file or zustand store → Architect path (`ARCHITECTURE_CONSTITUTION.md` + ADR or owner ack).
 
 This is the main guardrail against re-implementation — e.g. do not fork another My Library tab; use `UserLibraryEntityTabShell` under `library/components/` (ADR-0001).
 
 ## Before adding a new component
 
-Search `src/components/shared/index.ts` and the table above. Prefer extending shared components with props/variants over creating new ones. If you duplicate `flex … p-1 rounded-lg bg-surface-alt` + multiple buttons, use **SegmentedControl** instead.
+Search `src/components/patterns/index.ts` and the table above. Prefer extending shared components with props/variants over creating new ones. If you duplicate `flex … p-1 rounded-lg bg-surface-alt` + multiple buttons, use **SegmentedControl** instead.

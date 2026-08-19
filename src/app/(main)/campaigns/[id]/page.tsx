@@ -11,7 +11,7 @@
 import Link from 'next/link';
 import { ProtectedRoute } from '@/components/layout';
 import { PageContainer, Button, LoadingState, Alert, Modal } from '@/components/ui';
-import { DeleteConfirmModal } from '@/components/shared';
+import { DeleteConfirmModal } from '@/components/patterns';
 import { useCampaignDetailPage } from './_components/use-campaign-detail-page';
 import { CampaignDetailHeader } from './_components/campaign-detail-header';
 import { CampaignInviteSection } from './_components/campaign-invite-section';

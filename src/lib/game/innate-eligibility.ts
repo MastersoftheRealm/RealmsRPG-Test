@@ -127,11 +127,13 @@ export function evaluateInnatePowerEligibility(
   for (let i = 0; i < partCount; i++) {
     const id = power.partIds[i];
     const name = power.partNames[i];
+    const partLabel = name || id;
+    if (!partLabel) continue;
     if (!isHealingOrEnergyGainPart({ id, name })) continue;
-    const key = (name || id || '').toLowerCase();
-    if (!key || seen.has(key)) continue;
+    const key = partLabel.toLowerCase();
+    if (seen.has(key)) continue;
     seen.add(key);
-    disallowedParts.push(name || id);
+    disallowedParts.push(partLabel);
   }
   if (disallowedParts.length > 0) {
     issues.push({

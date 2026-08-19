@@ -4,7 +4,7 @@
 
 'use client';
 
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import type {
   CraftingSession as CraftingSessionType,

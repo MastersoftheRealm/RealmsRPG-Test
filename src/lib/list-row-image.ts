@@ -12,7 +12,7 @@ import {
   resolveChoiceCardImage,
   type ChoiceCardImageKind,
 } from '@/components/guided-creator/guided-choice-image';
-import type { ListRowThumbnailProps } from '@/components/shared/list-row-thumbnail';
+import type { ListRowThumbnailProps } from '@/components/patterns/list/list-row-thumbnail';
 
 export type ListRowImageKind = ChoiceCardImageKind;
 

@@ -1,4 +1,4 @@
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import {
   buildSelectableItem as buildSharedSelectableItem,
   type BuildSelectableItemCodex,

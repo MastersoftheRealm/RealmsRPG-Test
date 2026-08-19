@@ -11,8 +11,8 @@ import {
   GridListRow,
   LibraryAddToCharacterButton,
   LibraryRowActionSlot,
-} from '@/components/shared';
-import { PowerTechniqueFilters } from '@/components/shared/filters';
+} from '@/components/patterns';
+import { PowerTechniqueFilters } from '@/components/patterns/filters';
 import { useSort } from '@/hooks/use-sort';
 import { useGameRules } from '@/hooks/use-game-rules';
 import { useAddToCharacterFromLibrary } from '@/hooks/use-add-to-character-from-library';

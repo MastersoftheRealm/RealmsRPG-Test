@@ -1,4 +1,4 @@
-import type { ChipData } from '@/components/shared/grid-list-row';
+import type { ChipData } from '@/components/patterns/list/grid-list-row';
 
 /** Minimal trait shape for resolving choice-trait option IDs from codex data. */
 export type ChoiceTraitOptionSource = {

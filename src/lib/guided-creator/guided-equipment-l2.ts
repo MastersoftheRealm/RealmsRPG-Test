@@ -2,7 +2,7 @@
  * Layer 2 — full catalog items + apply selection to guided draft.
  */
 
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { GuidedDraft } from '@/stores/guided-creator-store';
 import type { PathItemRecommendation } from '@/types/archetype';
 import type { LibraryItem } from '@/types/library';

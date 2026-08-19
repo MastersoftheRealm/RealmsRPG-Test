@@ -10,7 +10,7 @@
 
 import { Save, Loader2 } from 'lucide-react';
 import { Button, LoadingState, Modal } from '@/components/ui';
-import { ErrorDisplay } from '@/components/shared';
+import { ErrorDisplay } from '@/components/patterns';
 import { CodexSpreadsheetTable } from './codex-spreadsheet-table';
 import { CodexSpreadsheetToolbar } from './codex-spreadsheet-toolbar';
 import { type CodexSpreadsheetTabId } from './codex-spreadsheet-config';

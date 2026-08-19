@@ -11,7 +11,7 @@ import {
 import { deriveTechniqueDisplay, type TechniqueDocument } from '@/lib/calculators/technique-calc';
 import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import type { LibraryPower, LibraryTechnique } from '@/types/library';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { type DetailOptionItemModel } from './builders';
 import {
   actionTypeFactChip,

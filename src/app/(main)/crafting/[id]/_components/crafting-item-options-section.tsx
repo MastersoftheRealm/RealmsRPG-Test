@@ -5,7 +5,7 @@
 'use client';
 
 import { Button, Input } from '@/components/ui';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import type { CraftingRules } from '@/types/core-rules';
 import type {

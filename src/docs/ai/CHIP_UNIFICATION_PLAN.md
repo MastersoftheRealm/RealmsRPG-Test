@@ -237,6 +237,6 @@ Add to `/dev/styleguide`:
 ## References
 
 - `src/components/ui/chip.tsx` — CVA variants
-- `src/components/shared/grid-list-row.tsx` — list row expanded body
+- `src/components/patterns/list/grid-list-row.tsx` — list row expanded body
 - `src/lib/codex/feat-list.ts` — feat `detailSections` builder (reference pattern)
 - `UI_UNIFICATION_PLAN.md` Phase 2.2 (token consolidation — prerequisite)

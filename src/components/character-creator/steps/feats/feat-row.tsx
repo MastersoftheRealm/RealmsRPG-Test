@@ -1,6 +1,6 @@
 'use client';
 
-import { GridListRow } from '@/components/shared';
+import { GridListRow } from '@/components/patterns';
 import type { Feat } from '@/hooks';
 import { formatAbilityList, formatListCellLabel } from '@/lib/utils';
 import { getFeatFamilyId, getFeatLevel, formatFeatName } from '@/lib/leveled-feats';

@@ -6,7 +6,7 @@ import {
   SummaryChipList,
   resolveDistinctSecondaryAbility,
   type SummaryChipItem,
-} from '@/components/shared';
+} from '@/components/patterns';
 import {
   useMergedSpecies,
   useCodexSkills,

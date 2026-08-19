@@ -6,9 +6,9 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
   RealmsImageField,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { Modal, Button, Input, Textarea, IconButton, useToast } from '@/components/ui';
-import { SelectFilter, ArchetypePathFilter } from '@/components/shared/filters';
+import { SelectFilter, ArchetypePathFilter } from '@/components/patterns/filters';
 import { useEquipment, usePathListFilter } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';

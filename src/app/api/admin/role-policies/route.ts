@@ -14,23 +14,14 @@ import {
   strictLimiter,
 } from '@/lib/rate-limit';
 import { adminRolePolicyPatchSchema, validateJson } from '@/lib/api-validation';
-import type { UserRole } from '@/lib/role-limits';
+import { asDbJson } from '@/lib/supabase/database';
 
 export const dynamic = 'force-dynamic';
 
-type RolePolicyRow = {
-  role: UserRole;
-  max_campaigns: number;
-  max_players_per_campaign: number;
-  max_characters: number;
-  max_custom_powers: number;
-  max_custom_techniques: number;
-  max_custom_armaments: number;
-  max_custom_creatures: number;
-  permissions: Record<string, unknown> | null;
-  updated_at: string | null;
-  updated_by: string | null;
-};
+function permissionFlag(source: unknown): boolean {
+  if (!source || typeof source !== 'object' || Array.isArray(source)) return false;
+  return Boolean((source as Record<string, unknown>).can_upload_profile_picture);
+}
 
 export async function GET() {
   try {
@@ -48,7 +39,7 @@ export async function GET() {
       .order('role');
     if (error) throw error;
 
-    return NextResponse.json((data ?? []) as RolePolicyRow[]);
+    return NextResponse.json(data ?? []);
   } catch (err) {
     console.error('[API Error] GET /api/admin/role-policies:', err);
     return NextResponse.json({ error: 'Failed to load role policies' }, { status: 500 });
@@ -92,23 +83,21 @@ export async function PATCH(request: NextRequest) {
     if (existingError) throw existingError;
     if (!existing) return NextResponse.json({ error: 'Role policy not found' }, { status: 404 });
 
-    const row = existing as RolePolicyRow;
-    const permissionsIn = body.permissions ?? row.permissions ?? {};
     // Only persist known permission keys (allowlist) — never spread arbitrary
     // client-supplied keys into the stored permissions blob (TASK-330).
-    const permissions: Record<string, boolean> = {
-      can_upload_profile_picture: Boolean(permissionsIn.can_upload_profile_picture),
+    const permissions = {
+      can_upload_profile_picture: permissionFlag(body.permissions ?? existing.permissions),
     };
 
     const updates = {
-      max_campaigns: body.maxCampaigns ?? row.max_campaigns,
-      max_players_per_campaign: body.maxPlayersPerCampaign ?? row.max_players_per_campaign,
-      max_characters: body.maxCharacters ?? row.max_characters,
-      max_custom_powers: body.maxCustomPowers ?? row.max_custom_powers,
-      max_custom_techniques: body.maxCustomTechniques ?? row.max_custom_techniques,
-      max_custom_armaments: body.maxCustomArmaments ?? row.max_custom_armaments,
-      max_custom_creatures: body.maxCustomCreatures ?? row.max_custom_creatures,
-      permissions,
+      max_campaigns: body.maxCampaigns ?? existing.max_campaigns,
+      max_players_per_campaign: body.maxPlayersPerCampaign ?? existing.max_players_per_campaign,
+      max_characters: body.maxCharacters ?? existing.max_characters,
+      max_custom_powers: body.maxCustomPowers ?? existing.max_custom_powers,
+      max_custom_techniques: body.maxCustomTechniques ?? existing.max_custom_techniques,
+      max_custom_armaments: body.maxCustomArmaments ?? existing.max_custom_armaments,
+      max_custom_creatures: body.maxCustomCreatures ?? existing.max_custom_creatures,
+      permissions: asDbJson(permissions),
       updated_at: new Date().toISOString(),
       updated_by: auth.userId,
     };
@@ -123,7 +112,7 @@ export async function PATCH(request: NextRequest) {
       .single();
     if (error) throw error;
 
-    return NextResponse.json(data as RolePolicyRow);
+    return NextResponse.json(data);
   } catch (err) {
     console.error('[API Error] PATCH /api/admin/role-policies:', err);
     return NextResponse.json({ error: 'Failed to update role policy' }, { status: 500 });

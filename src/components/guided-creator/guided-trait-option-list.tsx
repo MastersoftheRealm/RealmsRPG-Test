@@ -4,7 +4,7 @@
 
 'use client';
 
-import { DetailOptionList } from '@/components/shared/detail-option-list';
+import { DetailOptionList } from '@/components/patterns/list/detail-option-list';
 import type { Trait } from '@/hooks';
 import { traitToDetailOption } from '@/lib/detail-option';
 import { GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';

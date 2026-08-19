@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME, type SortState } from '@/components/shared';
+import { CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME, type SortState } from '@/components/patterns';
 import { toggleSort, sortByColumn } from '@/hooks/use-sort';
 import { useRollsOptional } from '@/components/rolls';
 import { calculateRemainingInnateEnergy } from '@/lib/game/formulas';

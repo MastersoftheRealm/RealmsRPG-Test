@@ -3,8 +3,8 @@
 import { cn } from '@/lib/utils';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
 import { EmptyState } from '@/components/ui';
-import { SearchInput, ListHeader, SegmentedControl } from '@/components/shared';
-import { FilterSection, ChipSelect } from '@/components/shared/filters';
+import { SearchInput, ListHeader, SegmentedControl } from '@/components/patterns';
+import { FilterSection, ChipSelect } from '@/components/patterns/filters';
 import type { Feat } from '@/hooks';
 import { FEAT_GRID_COLUMNS, FEAT_HEADER_COLUMNS } from './feat-list-columns';
 import type { FeatFilters, SelectedFeat } from './feat-list-columns';

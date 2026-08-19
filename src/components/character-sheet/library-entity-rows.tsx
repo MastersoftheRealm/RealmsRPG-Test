@@ -18,7 +18,7 @@ import {
   EquipToggle,
   QuantitySelector,
   type ColumnValue,
-} from '@/components/shared';
+} from '@/components/patterns';
 import type {
   EntityPowerRow,
   EntityTechniqueRow,
@@ -26,13 +26,13 @@ import type {
   EntityShieldRow,
   EntityArmorRow,
   EntityEquipmentRow,
-} from '@/components/shared/entity-library-sections';
+} from '@/components/patterns/list/entity-library-sections';
 import {
   POWER_GRID,
   CHARACTER_SHEET_TECHNIQUE_GRID,
   CHARACTER_SHEET_WEAPON_GRID,
   CHARACTER_SHEET_SHIELD_GRID,
-} from '@/components/shared/entity-library-sections';
+} from '@/components/patterns/list/entity-library-sections';
 import type { useRollsOptional } from '@/components/rolls';
 import type { Abilities, CharacterPower, CharacterTechnique, Item } from '@/types';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';

@@ -28,7 +28,7 @@ import {
   LoginPromptModal,
   SegmentedControl,
   LoadingState,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { getErrorMessage } from '@/lib/api-client';
 import {
   useUserLibraryCounts,

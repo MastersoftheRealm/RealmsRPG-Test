@@ -13,7 +13,7 @@
 'use client';
 
 import { Button, Alert } from '@/components/ui';
-import { InfoTippy } from '@/components/shared';
+import { InfoTippy } from '@/components/patterns';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
 import { chooseYourAncestryTraits } from '../../../../public/tooltip-text';
 import { useAncestryStepState } from './ancestry/use-ancestry-step-state';

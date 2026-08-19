@@ -8,7 +8,7 @@
 import { useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Users } from 'lucide-react';
-import { CreatureLibraryStatBlockRows } from '@/components/shared';
+import { CreatureLibraryStatBlockRows } from '@/components/patterns';
 import { RollLog, RollProvider } from '@/components/rolls';
 import { useSort } from '@/hooks/use-sort';
 import {

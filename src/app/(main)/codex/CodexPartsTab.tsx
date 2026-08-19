@@ -8,13 +8,13 @@
 
 import { useState, useMemo } from 'react';
 import { formatListCellLabel } from '@/lib/utils';
-import { SelectFilter } from '@/components/shared/filters';
+import { SelectFilter } from '@/components/patterns/filters';
 import {
   CodexBrowseListShell,
   ErrorDisplay as ErrorState,
   GridListRow,
   type ChipData,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { useSort } from '@/hooks/use-sort';
 import { CodexMyCodexEmpty } from './CodexMyCodexEmpty';
 import { useParts } from '@/hooks';

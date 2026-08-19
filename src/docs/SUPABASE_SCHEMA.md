@@ -11,7 +11,7 @@
 | Item | Value |
 |------|--------|
 | **Schema** | Single schema: **`public`** only. There is **no `codex` schema** — all tables (including `codex_feats`, `codex_skills`, etc.) live in `public`. |
-| **Data access** | Supabase server client: `createClient()` from `@/lib/supabase/server`; all reads/writes use `supabase.from('table_name')` and hit `public`. |
+| **Data access** | Typed Supabase clients: `createClient()` from `@/lib/supabase/server` (browser + middleware factories too), parameterized with generated `Database` (`src/types/database.types.ts`; ADR-0020). All reads/writes use `.from('table_name')` and hit `public`. Regenerate types: `npm run db:types`. Schema-type drift shows up as a git diff of `database.types.ts` after regen (SQL baseline drift is still `npm run db:diff`). JSONB writes go through `asDbJson` / `asDbInsert` / `asDbUpdate`; variable table names through `fromPublicTable` (`lib/supabase/database.ts`). |
 | **Migrations** | SQL only (run in Supabase Dashboard or CI). No Prisma. |
 
 **Shape convention:** Prefer **columnar** (scalar columns ± one JSONB for variable payload) where possible. Some tables remain **id + data (JSONB)** or hybrid (list columns + data); see table list below.
@@ -120,7 +120,7 @@ Helpers: `src/lib/realms-images.ts` (client + types), `src/lib/realms-images-ser
 
 If Supabase logs show **`permission denied for table user_species`**, the `authenticated` role is missing table `GRANT`s (common after creating/moving the table without grants). Run **`sql/supabase-user-species-grants-rls.sql`** in the SQL Editor. This does not fix campaign invite lookup by itself (that is separate RLS on `campaigns`); it fixes species library / hooks that query `user_species`.
 
-**API:** `GET/POST/PATCH/DELETE /api/user/library/[type]`; types: powers, techniques, empowered-techniques, items, creatures, species. Tab badges: `GET /api/user/library/counts` (auth) and `GET /api/official/counts` (public).
+**API:** `GET/POST/PATCH/DELETE /api/user/library/[type]`; types: powers, techniques, empowered-techniques, items, creatures, species. Tab badges: `GET /api/user/library/counts` (auth) and `GET /api/official/counts` (public). Tab badges: `GET /api/user/library/counts` (auth) and `GET /api/official/counts` (public).
 
 ---
 
@@ -399,7 +399,9 @@ Replay / verify: `node scripts/run-task-649-phase2.mjs` (idempotent) · `node sc
 | GET /api/public/[type] | official_powers, official_techniques, official_empowered_techniques, official_items, official_creatures |
 | GET/POST/PATCH/DELETE /api/official/enhanced-items | official_enhanced_items (admin) |
 | GET /api/official/counts | official_powers, official_techniques, official_empowered_techniques, official_items, official_creatures (`enhanced` always 0) |
+| GET /api/official/counts | official_powers, official_techniques, official_empowered_techniques, official_items, official_creatures (`enhanced` always 0) |
 | GET/POST/PATCH/DELETE /api/user/library/[type] | user_powers, user_techniques, user_empowered_techniques, user_items, user_creatures, user_species |
+| GET /api/user/library/counts | same user_* tables + user_enhanced_items (auth; armament split via `normalizeArmamentKind`) |
 | GET /api/user/library/counts | same user_* tables + user_enhanced_items (auth; armament split via `normalizeArmamentKind`) |
 | Characters CRUD | characters |
 | Campaigns | campaigns, campaign_members, campaign_rolls |

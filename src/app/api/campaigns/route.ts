@@ -11,18 +11,9 @@ import { getSession } from '@/lib/supabase/session';
 import { buildRateLimitKey, resolveClientIp, standardLimiter } from '@/lib/rate-limit';
 import type { Campaign, CampaignSummary } from '@/types/campaign';
 import { normalizeCampaignRosterCharacters } from '@/lib/campaign-roster';
+import type { Tables } from '@/lib/supabase/database';
 
-type CampaignRow = {
-  id: string;
-  name: string;
-  description: string | null;
-  owner_id: string;
-  owner_username: string | null;
-  invite_code: string;
-  characters: unknown;
-  created_at: string | null;
-  updated_at: string | null;
-};
+type CampaignRow = Tables<'campaigns'>;
 
 function rowToCampaign(row: CampaignRow, memberIds: string[], isOwner: boolean): Campaign {
   const characters = normalizeCampaignRosterCharacters(row.characters);

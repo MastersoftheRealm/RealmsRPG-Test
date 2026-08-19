@@ -13,7 +13,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { EditSectionToggle, PointStatus, TempModifierToggle } from '@/components/shared';
+import { EditSectionToggle, PointStatus, TempModifierToggle } from '@/components/patterns';
 import { Card } from '@/components/ui';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import { calculateAbilityScoreCost } from '@/lib/game/formulas';

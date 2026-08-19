@@ -15,7 +15,7 @@ import {
   OfficialTechniqueList,
   OfficialItemList,
   OfficialCreatureList,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { useToast } from '@/components/ui';
 import {
   useOfficialLibrary,

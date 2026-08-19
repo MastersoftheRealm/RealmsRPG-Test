@@ -1,6 +1,6 @@
 import type { VariantProps } from 'class-variance-authority';
 import type { chipVariants } from '@/components/ui/chip';
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { gridListChipVariant } from '@/lib/chip/grid-list-chip-variant';
 
 type ChipVariant = NonNullable<VariantProps<typeof chipVariants>['variant']>;

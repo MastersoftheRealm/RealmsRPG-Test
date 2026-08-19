@@ -3,7 +3,7 @@
  * =================
  * Text input with label and error handling.
  * Filter panels (Codex/Library number fields next to FilterNativeSelect) use
- * `FilterInput` from `@/components/shared/filters` — do not restyle this default h-10 chrome per page.
+ * `FilterInput` from `@/components/patterns/filters` — do not restyle this default h-10 chrome per page.
  */
 
 import * as React from 'react';

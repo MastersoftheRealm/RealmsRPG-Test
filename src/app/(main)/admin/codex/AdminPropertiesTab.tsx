@@ -1,9 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { CodexBrowseListShell, ErrorDisplay as ErrorState, GridListRow } from '@/components/shared';
+import {
+  CodexBrowseListShell,
+  ErrorDisplay as ErrorState,
+  GridListRow,
+} from '@/components/patterns';
 import { Button, IconButton, useToast } from '@/components/ui';
-import { SelectFilter } from '@/components/shared/filters';
+import { SelectFilter } from '@/components/patterns/filters';
 import { useItemProperties, type ItemProperty } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useQueryClient } from '@tanstack/react-query';

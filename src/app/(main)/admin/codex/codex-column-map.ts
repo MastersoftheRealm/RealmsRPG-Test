@@ -23,9 +23,12 @@ function columnarSourceKeyToCamel(collection: CodexCollection, key: string): str
   if ((collection === 'codex_properties' || collection === 'codex_parts') && /^op_\d+_/.test(key)) {
     const m = key.match(/^op_(\d+)_(.+)$/);
     if (m) {
-      const restCamel = snakeToCamel(m[2]);
+      const optionIndex = m[1];
+      const rest = m[2];
+      if (optionIndex === undefined || rest === undefined) return snakeToCamel(key);
+      const restCamel = snakeToCamel(rest);
       if (!restCamel) return snakeToCamel(key);
-      return `op${m[1]}${restCamel.charAt(0).toUpperCase()}${restCamel.slice(1)}`;
+      return `op${optionIndex}${restCamel.charAt(0).toUpperCase()}${restCamel.slice(1)}`;
     }
   }
   return snakeToCamel(key);

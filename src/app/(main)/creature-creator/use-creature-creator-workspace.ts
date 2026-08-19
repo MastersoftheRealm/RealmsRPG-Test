@@ -12,7 +12,7 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { getSkillPointsHelp } from '../../../../public/tooltip-text';
-import type { SourceFilterValue } from '@/components/shared/filters/source-filter';
+import type { SourceFilterValue } from '@/components/patterns/filters/source-filter';
 import { useAuthStore } from '@/stores/auth-store';
 import {
   useUserPowers,

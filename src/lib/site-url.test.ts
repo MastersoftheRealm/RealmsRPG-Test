@@ -43,3 +43,21 @@ describe('isProductionIndexingEnabled', () => {
     expect(isProductionIndexingEnabled()).toBe(false);
   });
 });
+
+describe('isProductionIndexingEnabled', () => {
+  const original = process.env.VERCEL_ENV;
+
+  afterEach(() => {
+    if (original === undefined) delete process.env.VERCEL_ENV;
+    else process.env.VERCEL_ENV = original;
+  });
+
+  it('is true only when VERCEL_ENV is production', () => {
+    process.env.VERCEL_ENV = 'production';
+    expect(isProductionIndexingEnabled()).toBe(true);
+    process.env.VERCEL_ENV = 'preview';
+    expect(isProductionIndexingEnabled()).toBe(false);
+    delete process.env.VERCEL_ENV;
+    expect(isProductionIndexingEnabled()).toBe(false);
+  });
+});

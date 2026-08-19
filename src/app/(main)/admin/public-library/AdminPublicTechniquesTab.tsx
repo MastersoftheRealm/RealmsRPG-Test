@@ -7,7 +7,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { DeleteConfirmModal, OfficialTechniqueList } from '@/components/shared';
+import { DeleteConfirmModal, OfficialTechniqueList } from '@/components/patterns';
 import { useToast } from '@/components/ui';
 import { officialLibraryKeys, useOfficialLibrary, useTechniqueParts, usePowerParts } from '@/hooks';
 import { useQueryClient } from '@tanstack/react-query';

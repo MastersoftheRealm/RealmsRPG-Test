@@ -2,7 +2,7 @@
 
 import { cn, formatBonus } from '@/lib/utils';
 import { useRollsOptional } from '@/components/rolls';
-import { RollButton, DecrementButton, IncrementButton, WordHelpTip } from '@/components/shared';
+import { RollButton, DecrementButton, IncrementButton, WordHelpTip } from '@/components/patterns';
 import { canIncreaseAbility, getAbilityIncreaseCost } from '@/lib/game/formulas';
 import { getAbilityHelp } from '../../../public/tooltip-text';
 import {

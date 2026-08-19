@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { Plus, Wand2, X, ExternalLink } from 'lucide-react';
-import { GridListRow, InnateToggle, ListHeader } from '@/components/shared';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import { GridListRow, InnateToggle, ListHeader } from '@/components/patterns';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import { Button, IconButton, EmptyState } from '@/components/ui';
 import type { CharacterPower } from '@/types';
 import { POWER_GRID_COLUMNS, POWER_MODAL_COLUMNS } from './modal-columns';

@@ -12,8 +12,8 @@ import { CollapsibleSection } from '@/components/creator';
 import {
   UnifiedSelectionModal,
   type SelectableItem,
-} from '@/components/shared/unified-selection-modal';
-import { RealmsImageField } from '@/components/shared';
+} from '@/components/patterns/select/unified-selection-modal';
+import { RealmsImageField } from '@/components/patterns';
 import { Button, Input, Textarea } from '@/components/ui';
 import { ChipList } from '../creature-creator/CreatureCreatorHelpers';
 import { formatListCellLabel } from '@/lib/utils';
@@ -507,7 +507,9 @@ export function TraitListModal({
     const ids = selected.map((s) => String(s.id));
     if (!ids.length) return;
     if (category === 'species_traits' && ids.length === 1 && form.species_traits.length === 2) {
-      onThirdSpeciesTrait?.(ids[0]);
+      const firstId = ids[0];
+      if (!firstId) return;
+      onThirdSpeciesTrait?.(firstId);
       onClose();
       return;
     }

@@ -71,11 +71,13 @@ export function mergeEquipmentIntoInventory(existing: Item[], incoming: Item[]):
             .toLowerCase() === nameKey),
     );
     if (idx >= 0) {
+      const existing = next[idx];
+      if (existing === undefined) continue;
       const addQty = item.quantity ?? 1;
       next[idx] = {
-        ...next[idx],
+        ...existing,
         ...item,
-        quantity: (next[idx].quantity ?? 1) + addQty,
+        quantity: (existing.quantity ?? 1) + addQty,
       };
     } else {
       next.push({ ...item, quantity: item.quantity ?? 1 });

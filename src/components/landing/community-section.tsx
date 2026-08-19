@@ -5,7 +5,7 @@
  * create yet: Join Discord. Closing section of the landing scroll story.
  */
 
-import { DiscordIcon } from '@/components/shared/discord-icon';
+import { DiscordIcon } from '@/components/patterns/chrome/discord-icon';
 import { LANDING_COPY, DISCORD_URL } from '@/lib/constants/site-copy';
 import { MarketingExternalButton } from './marketing-button';
 

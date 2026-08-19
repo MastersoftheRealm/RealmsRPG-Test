@@ -9,7 +9,7 @@
 import { useState, useMemo } from 'react';
 import { ArrowUp, ArrowDown, Star, Heart, Shield, Sword, Check } from 'lucide-react';
 import { Modal, Button } from '@/components/ui';
-import { DecrementButton, IncrementButton } from '@/components/shared';
+import { DecrementButton, IncrementButton } from '@/components/patterns';
 import { PathLevelGuidance } from '@/components/character-sheet/path-level-guidance';
 import {
   calculateAbilityPoints,

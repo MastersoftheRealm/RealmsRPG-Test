@@ -3,13 +3,12 @@
 import { cn } from '@/lib/utils';
 import { Card, DescriptorChip } from '@/components/ui';
 import { statusBadgeDescriptorVariant } from '@/lib/chip/descriptor-chip-variants';
-import { InfoTippy, SummaryChipList } from '@/components/shared';
+import { InfoTippy, SummaryChipList, TraitSection } from '@/components/patterns';
 import { CreatorStepFooter } from '@/components/character-creator/creator-step-footer';
-import { TraitSection } from '@/components/character-creator/TraitSection';
 import type { Species, Trait } from '@/hooks';
 import type { CharacterDraft } from '@/types';
 import type { ValidationIssue, StepCompletion } from '@/lib/character-creator-validation';
-import type { SummaryChipItem } from '@/components/shared/summary-chip-list';
+import type { SummaryChipItem } from '@/components/patterns/list/summary-chip-list';
 import { Heart, AlertTriangle, Sparkles, Star } from 'lucide-react';
 import { chooseYourAncestryTraits } from '../../../../../public/tooltip-text';
 import { statusPanel } from '@/lib/ui/status-surface-classes';

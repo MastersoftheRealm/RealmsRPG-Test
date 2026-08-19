@@ -9,7 +9,7 @@
  * in feature components.
  */
 
-import type { ChipData } from '@/components/shared/grid-list-row-types';
+import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
 import { descriptorChipData } from '@/lib/chip/chip-data-helpers';
 import type { CodexFeat } from '@/types/codex';
 import { formatTraitRecoveryLabel } from './format-recovery';

@@ -3,7 +3,7 @@
  * Co-located extract from use-creature-creator-workspace.
  */
 
-import type { SelectableItem } from '@/components/shared';
+import type { SelectableItem } from '@/components/patterns';
 import { buildEmpoweredPowerSelectableItem } from '@/hooks/add-library-item/build-empowered-selectable-item';
 import type { ItemProperty, UserPower, UserTechnique, UserItem } from '@/hooks';
 import { buildSelectableItem } from '@/lib/library-selectable-builders';

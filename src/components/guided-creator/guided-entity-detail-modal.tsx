@@ -12,7 +12,7 @@
 import type { ReactNode } from 'react';
 import { Button, Modal } from '@/components/ui';
 import { CollapsibleSection } from '@/components/creator';
-import { InfoTippy } from '@/components/shared';
+import { InfoTippy } from '@/components/patterns';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { cn } from '@/lib/utils';
 import { GUIDED_OVERVIEW_STYLES as o } from './guided-choice-styles';

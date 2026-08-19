@@ -18,5 +18,6 @@ export {
 export type { NormalizedIdRow } from './normalize-id';
 export * from './string';
 export * from './number';
+export { defined, isDefined } from './defined';
 export * from './object';
 export * from './duration';

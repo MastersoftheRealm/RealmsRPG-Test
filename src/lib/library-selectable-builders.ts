@@ -3,8 +3,8 @@
  * Single source of truth for columns, grid, and mapping raw library items to SelectableItem (with chips, detailSections).
  */
 
-import type { ColumnValue, ChipData } from '@/components/shared/grid-list-row';
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { ColumnValue, ChipData } from '@/components/patterns/list/grid-list-row';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import {
   formatDamageDisplay,
   formatSavedActionTypeForDisplay,
@@ -102,7 +102,7 @@ function selectChromeFor(
   }
 }
 
-export type LibraryItemType = 'power' | 'technique' | 'weapon' | 'shield' | 'armor' | 'equipment';
+export type LibraryItemType = 'power' | 'technique' | 'weapon' | 'armor' | 'shield' | 'equipment';
 
 export type EqItem = {
   id: string;

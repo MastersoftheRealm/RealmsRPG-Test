@@ -3,14 +3,14 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-08-18
+Generated: 2026-08-19
 
-## `src/components/shared/index.ts`
+## `src/components/patterns/index.ts`
 
 - ABILITY_DISPLAY_ORDER
+- AbilityPickButton
 - AbilityRequirementFilter
 - AbilityScoreGrid
-- AddCombatantModal
 - AddSkillModal
 - AddSubSkillModal
 - ArmorListSection
@@ -20,6 +20,7 @@ Generated: 2026-08-18
 - ChoiceTraitOptionListPicker
 - CodexBrowseListShell
 - ConfirmActionModal
+- CreatorPortraitUpload
 - CreatureLibraryStatBlockRow
 - CreatureLibraryStatBlockRows
 - CreatureStatBlock
@@ -28,9 +29,11 @@ Generated: 2026-08-18
 - DeleteConfirmModal
 - DescriptorChipWithTip
 - DetailOptionList
+- DiscordIcon
 - EditSectionToggle
 - EquipmentListSection
 - EquipToggle
+- ErrorBoundary
 - ErrorDisplay
 - ExpandableImage
 - FeatsTraitsListSection
@@ -61,11 +64,15 @@ Generated: 2026-08-18
 - LoadingState
 - LoadoutBudgetBar
 - LoginPromptModal
+- MixedSpeciesModal
+- MixedSpeciesSkillPicker
 - OfficialCreatureList
 - OfficialEnhancedList
 - OfficialItemList
 - OfficialPowerList
 - OfficialTechniqueList
+- PathHelpCard
+- PathNotes
 - PointStatus
 - PoweredMartialSlider
 - PowersListSection
@@ -101,6 +108,7 @@ Generated: 2026-08-18
 - TempModifierToggle
 - ThemeToggle
 - THUMBNAIL_HEADER_COLUMN_KEY
+- TraitSection
 - type AbilityRequirement
 - type CharacterFilterProps
 - type EditState

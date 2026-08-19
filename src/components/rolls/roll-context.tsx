@@ -237,6 +237,7 @@ export function RollProvider({
       if (!match) return;
 
       const [, numDice, dieSize, modifier, dmgType] = match;
+      if (numDice === undefined || dieSize === undefined) return;
       const num = parseInt(numDice);
       const size = parseInt(dieSize);
       const mod = modifier ? parseInt(modifier) : 0;

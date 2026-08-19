@@ -1,6 +1,6 @@
 'use client';
 
-import { InfoTippy, LoadoutBudgetBar } from '@/components/shared';
+import { InfoTippy, LoadoutBudgetBar } from '@/components/patterns';
 import { equipmentCurrencyHelp } from '../../../../../public/tooltip-text';
 
 export interface EquipmentStepHeaderProps {

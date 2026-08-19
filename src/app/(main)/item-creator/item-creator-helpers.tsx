@@ -10,7 +10,7 @@ import { useState, useMemo } from 'react';
 import { X, ChevronDown, ChevronUp, Shield, Sword, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { ItemProperty } from '@/hooks';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import { IconButton, Card, TableScroll, DescriptorChip } from '@/components/ui';
 import { isGeneralProperty } from '@/lib/calculators';
 import { PROPERTY_IDS } from '@/lib/id-constants';

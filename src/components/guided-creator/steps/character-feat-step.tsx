@@ -7,7 +7,7 @@
 
 import { useMemo, useState, useCallback } from 'react';
 import { EmptyState, Spinner } from '@/components/ui';
-import { GuidedInlineCatalogList, GuidedLayerNav } from '@/components/shared';
+import { GuidedInlineCatalogList, GuidedLayerNav } from '@/components/patterns';
 import { useCodexFeats, useCodexSkills, usePathListFilter } from '@/hooks';
 import {
   guidedDraftToFeatRequirementCharacter,

@@ -10,7 +10,13 @@ import { useState, useMemo } from 'react';
 import type { KeyboardEvent } from 'react';
 import { cn } from '@/lib/utils';
 import { Button, Alert, Spinner, SelectionCardSurface, DescriptorChip } from '@/components/ui';
-import { SegmentedControl, InfoTippy } from '@/components/shared';
+import {
+  SegmentedControl,
+  InfoTippy,
+  MixedSpeciesModal,
+  PathHelpCard,
+  PathNotes,
+} from '@/components/patterns';
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
 import {
   useMergedSpecies,
@@ -22,9 +28,7 @@ import {
   type Species,
 } from '@/hooks';
 import { SpeciesModal } from '../species-modal';
-import { MixedSpeciesModal } from '../MixedSpeciesModal';
 import { CreatorStepFooter } from '../creator-step-footer';
-import { PathHelpCard, PathNotes } from '@/components/character-creator/PathHelpCard';
 import { getStepCompletion } from '@/lib/character-creator-validation';
 import { GitMerge } from 'lucide-react';
 import { chooseYourSpecies } from '../../../../public/tooltip-text';

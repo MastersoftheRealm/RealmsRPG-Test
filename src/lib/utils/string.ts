@@ -162,14 +162,14 @@ export function splitDamageDiceAndType(damage: unknown): {
     const str = damage.trim();
     const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
     if (!match) return { dice: str, type: '', rollStr: str };
-    return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
+    return { dice: (match[1] ?? str).trim(), type: (match[2] ?? '').trim(), rollStr: str };
   }
   const formatted = formatDamageDisplay(damage);
   const str = formatted ? String(formatted).trim() : '';
   if (!str) return { dice: '-', type: '', rollStr: '-' };
   const match = str.match(/^([\dd+\-\s]+)(?:\s+(.+))?$/);
   if (!match) return { dice: str, type: '', rollStr: str };
-  return { dice: match[1].trim(), type: (match[2] ?? '').trim(), rollStr: str };
+  return { dice: (match[1] ?? str).trim(), type: (match[2] ?? '').trim(), rollStr: str };
 }
 
 /**

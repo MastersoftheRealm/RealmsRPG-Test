@@ -6,7 +6,7 @@
 
 import { Brain, Plus, GripVertical, Swords } from 'lucide-react';
 import { Button, Input, Card } from '@/components/ui';
-import { ValueStepper } from '@/components/shared';
+import { ValueStepper } from '@/components/patterns';
 import type { Encounter, SkillEncounterState, TrackedCombatant } from '@/types/encounter';
 import type { Campaign } from '@/types/campaign';
 

@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import { defined } from '@/lib/utils';
 import {
   deriveArmorItemCombatStats,
   getEquippedArmorQuickRef,
   partDataToChips,
 } from './library-list-helpers';
-import type { PartData } from '@/components/shared';
+import type { PartData } from '@/components/patterns';
 import type { Item } from '@/types';
 
 describe('partDataToChips (character sheet)', () => {
@@ -19,11 +20,12 @@ describe('partDataToChips (character sheet)', () => {
     ];
 
     const chips = partDataToChips(parts);
+    const chip = defined(chips[0]);
     expect(chips).toHaveLength(1);
-    expect(chips[0].kind).toBe('expandable');
-    expect(chips[0].costLabel).toBe('TP');
-    expect(chips[0].cost).toBe(3);
-    expect(chips[0].description).toContain('Deal damage.');
+    expect(chip.kind).toBe('expandable');
+    expect(chip.costLabel).toBe('TP');
+    expect(chip.cost).toBe(3);
+    expect(chip.description).toContain('Deal damage.');
   });
 
   it('keeps expandable kind when option levels are present', () => {
@@ -38,9 +40,10 @@ describe('partDataToChips (character sheet)', () => {
     ];
 
     const chips = partDataToChips(parts);
-    expect(chips[0].kind).toBe('expandable');
-    expect(chips[0].costLabel).toBe('TP');
-    expect(chips[0].level).toBe(2);
+    const chip = defined(chips[0]);
+    expect(chip.kind).toBe('expandable');
+    expect(chip.costLabel).toBe('TP');
+    expect(chip.level).toBe(2);
   });
 });
 

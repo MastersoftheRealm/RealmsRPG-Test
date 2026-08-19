@@ -8,7 +8,7 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ChipSelect, CodexBrowseListShell, GridListRow, ErrorDisplay } from '@/components/shared';
+import { ChipSelect, CodexBrowseListShell, GridListRow, ErrorDisplay } from '@/components/patterns';
 import { PageContainer, PageHeader } from '@/components/ui';
 import { useSort } from '@/hooks/use-sort';
 import {

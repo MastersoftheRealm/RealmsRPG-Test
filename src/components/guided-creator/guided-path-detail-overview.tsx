@@ -11,7 +11,7 @@ import {
   ABILITY_DISPLAY_ORDER,
   InfoTippy,
   SummaryChipList,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { useCodexSkills, useGameRules } from '@/hooks';
 import { GUIDED_CREATOR_COPY } from '@/lib/constants/site-copy';
 import { speciesSkillToSummaryChipItem } from '@/lib/chip/species-skill-chips';

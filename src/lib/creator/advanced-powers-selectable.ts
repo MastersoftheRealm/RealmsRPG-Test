@@ -3,7 +3,7 @@
  * Keeps sheet `buildEmpoweredPowerSelectableItem` as the empowered base (no fork).
  */
 
-import type { SelectableItem } from '@/components/shared/unified-selection-modal';
+import type { SelectableItem } from '@/components/patterns/select/unified-selection-modal';
 import type { UserPower, UserTechnique } from '@/hooks/use-user-library';
 import type { PowerPart, TechniquePart } from '@/hooks';
 import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';

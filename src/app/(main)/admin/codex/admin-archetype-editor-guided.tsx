@@ -1,6 +1,6 @@
 'use client';
 
-import { ValueStepper, ChipSelect } from '@/components/shared';
+import { ValueStepper, ChipSelect } from '@/components/patterns';
 import type { Level1ArmorStep } from '@/lib/game/archetype-path';
 import {
   ABILITY_OPTIONS,

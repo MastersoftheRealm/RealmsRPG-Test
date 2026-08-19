@@ -1,7 +1,7 @@
 'use client';
 
 import { useCharacterCreatorStore } from '@/stores/character-creator-store';
-import { CreatorPortraitUpload } from '@/components/character-creator/creator-portrait-upload';
+import { CreatorPortraitUpload } from '@/components/patterns';
 
 /** Advanced finalize portrait — wires creator store to shared CreatorPortraitUpload. */
 export function PortraitUpload() {

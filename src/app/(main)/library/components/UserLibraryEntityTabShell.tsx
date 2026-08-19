@@ -15,7 +15,7 @@ import {
   type ListColumn,
   type ListHeaderRowChrome,
   type SortState,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { Button, IconButton } from '@/components/ui';
 import type {
   LibraryEntityTabBasicLabels,

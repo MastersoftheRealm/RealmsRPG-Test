@@ -1,6 +1,6 @@
 'use client';
 
-import { ChipSelect } from '@/components/shared';
+import { ChipSelect } from '@/components/patterns';
 import { Button, Input } from '@/components/ui';
 import { dedupeStrings, makeLevelRow } from './admin-archetype-path-form';
 import { SelectedFeatRows } from './admin-archetype-path-rows';

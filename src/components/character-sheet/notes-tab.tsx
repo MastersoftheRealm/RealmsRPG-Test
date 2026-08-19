@@ -21,7 +21,7 @@ import {
   SummaryItem,
   SummaryRow,
   LibraryCollapsibleSection,
-} from '@/components/shared';
+} from '@/components/patterns';
 import { formatSpeedString, type SpeedDisplayUnit } from '@/lib/utils/number';
 import type { Abilities } from '@/types';
 import type { CharacterVisibility } from '@/types';

@@ -4,8 +4,7 @@
 
 'use client';
 
-import { TraitSection } from '@/components/character-creator/TraitSection';
-import { MixedSpeciesSkillPicker } from '@/components/character-creator/mixed-species-skill-picker';
+import { MixedSpeciesSkillPicker, TraitSection } from '@/components/patterns';
 import type { CharacterAncestry } from '@/types';
 import type { Species, Trait } from '@/hooks';
 import type { NamedIdOption } from '@/lib/ancestry/ancestry-selection';

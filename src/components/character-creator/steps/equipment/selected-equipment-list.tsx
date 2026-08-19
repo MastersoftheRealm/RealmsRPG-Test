@@ -1,6 +1,6 @@
 'use client';
 
-import { GridListRow, ListHeader } from '@/components/shared';
+import { GridListRow, ListHeader } from '@/components/patterns';
 import { Card, IconButton } from '@/components/ui';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import { X } from 'lucide-react';

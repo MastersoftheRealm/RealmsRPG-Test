@@ -1,3 +1,4 @@
+import { defined } from '@/lib/utils';
 import { chipLabelsFromDetailSections } from '@/lib/glr';
 import { describe, expect, it } from 'vitest';
 import {
@@ -34,7 +35,7 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
         damage: '1d8',
       } as CharacterPower,
     ];
-    const [row] = mapPowerRows(powers, baseCtx);
+    const row = defined(mapPowerRows(powers, baseCtx)[0]);
     expect(columnKeys(row)).not.toContain('energy');
     expect(columnKeys(row)).toEqual(['action', 'damage', 'area', 'duration']);
     expect(row.rightSlot).toBeTruthy();
@@ -51,7 +52,7 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
         tp: 2,
       } as CharacterTechnique,
     ];
-    const [row] = mapTechniqueRows(techniques, baseCtx);
+    const row = defined(mapTechniqueRows(techniques, baseCtx)[0]);
     expect(columnKeys(row)).not.toContain('energy');
     expect(columnKeys(row)).toEqual(['action', 'weapon']);
     expect(row.totalTp).toBeUndefined();
@@ -64,7 +65,7 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     const powers: CharacterPower[] = [
       { id: 'innate', name: 'Innate', cost: 0, innate: true } as CharacterPower,
     ];
-    const [row] = mapPowerRows(powers, baseCtx);
+    const row = defined(mapPowerRows(powers, baseCtx)[0]);
     expect(row.rightSlot).toBeNull();
   });
 
@@ -72,7 +73,7 @@ describe('mapPowerRows / mapTechniqueRows — Energy is rightSlot only (TASK-502
     const powers: CharacterPower[] = [
       { id: 'p2', name: 'View', cost: 5, actionType: 'Action' } as CharacterPower,
     ];
-    const [row] = mapPowerRows(powers, { ...baseCtx, onUsePower: undefined });
+    const row = defined(mapPowerRows(powers, { ...baseCtx, onUsePower: undefined })[0]);
     expect(columnKeys(row)).not.toContain('energy');
     expect(row.rightSlot).toBeTruthy();
   });

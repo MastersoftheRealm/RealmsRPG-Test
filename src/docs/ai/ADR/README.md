@@ -39,3 +39,10 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0014 | Archetype Path filter reads path recommendation arrays live | Accepted |
 | 0015 | Wave 3B fetch contracts (enrichment + counts + codex collection) | Accepted (TASK-773 / TASK-774 / TASK-775) |
 | 0016 | GLR fact catalog, density modes, and layout solver | Accepted (TASK-806 / TASK-807 / TASK-810) |
+| 0017 | Legacy creator symbols live in shared/ | Accepted (TASK-798) |
+| 0018 | MixedSpeciesSkillPicker lives in shared/ | Accepted (TASK-820) |
+| 0019 | Split shared/ into ui / patterns / feature | Accepted (TASK-794) |
+| 0020 | Generated Supabase Database types | Accepted (TASK-795) |
+| 0021 | First-party MDX rulebook + Codex detail metadata | Accepted (TASK-796) |
+| 0022 | Enable `noUncheckedIndexedAccess` | Accepted (TASK-797) |
+| 0023 | Responsive layout contracts and tiered touch targets | Accepted (TASK-831) |

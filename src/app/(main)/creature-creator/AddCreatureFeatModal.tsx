@@ -30,11 +30,11 @@ import {
   creaturePointsForPlayerFeat,
 } from './creature-feat-utils';
 import { Alert } from '@/components/ui';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/patterns';
 import {
   UnifiedSelectionModal,
   type SelectableItem,
-} from '@/components/shared/unified-selection-modal';
+} from '@/components/patterns/select/unified-selection-modal';
 import { MECHANICAL_CREATURE_FEAT_IDS } from '@/lib/id-constants';
 import {
   displayItemToCreatureFeat,
@@ -251,6 +251,7 @@ export function AddCreatureFeatModal({
           .sort((a, b) => getFeatLevel(b) - getFeatLevel(a));
         if (selectableLevels.length === 0) return null;
         const displayFeat = selectableLevels[0];
+        if (!displayFeat) return null;
         const { meets, warning } = checkPlayerFeatRequirements(displayFeat);
         const pts = creaturePointsForPlayerFeat(displayFeat);
         return featToSelectableItem(

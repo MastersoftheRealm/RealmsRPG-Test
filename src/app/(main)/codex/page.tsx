@@ -29,7 +29,7 @@ import { CodexCreatureFeatsTab } from './CodexCreatureFeatsTab';
 import { CodexArchetypesTab } from './CodexArchetypesTab';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { SegmentedControl } from '@/components/shared';
+import { SegmentedControl } from '@/components/patterns';
 
 type CodexMode = 'public' | 'my';
 
