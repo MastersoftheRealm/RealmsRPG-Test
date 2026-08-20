@@ -95,12 +95,7 @@ export function AncestryMixedPanel({
         <div>
           <div className="mb-2 flex items-center gap-1">
             <h2 className="text-2xl font-bold text-text-primary">Mixed Species: Ancestry</h2>
-            <InfoTippy
-              content={chooseYourAncestryTraits}
-              allowHTML
-              label="Ancestry trait rules"
-              size="inline"
-            />
+            <InfoTippy content={chooseYourAncestryTraits} label="Ancestry trait rules" />
           </div>
           <p className="text-text-secondary">
             <strong>{nameA}</strong> + <strong>{nameB}</strong>. Set physical traits and choose one
@@ -218,7 +213,7 @@ export function AncestryMixedPanel({
               ? '1 from either species; 2nd below from the species you took the flaw from'
               : 'Choose 1 from either species'
           }
-          icon={<Star className="h-5 w-5 text-warning-700 dark:text-warning-400" />}
+          icon={<Star className="h-5 w-5 text-warning-fg" />}
           traits={ancestryForFirstSlot}
           selectable
           selectedIds={
@@ -234,7 +229,7 @@ export function AncestryMixedPanel({
         <TraitSection
           title="Characteristic"
           subtitle="Choose 1 (optional)"
-          icon={<Sparkles className="h-5 w-5 text-info-fg dark:text-info-400" />}
+          icon={<Sparkles className="h-5 w-5 text-info-fg" />}
           traits={characteristics}
           selectable
           selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}
@@ -247,14 +242,14 @@ export function AncestryMixedPanel({
       {(flawsFromA.length > 0 || flawsFromB.length > 0) && (
         <div className="mb-6">
           <h3 className="mb-2 flex items-center gap-2 font-semibold text-text-primary">
-            <AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />
+            <AlertTriangle className="h-5 w-5 text-danger-fg" />
             Flaw (optional, grants +1 ancestry trait from the same species)
           </h3>
           {flawsFromA.length > 0 && (
             <TraitSection
               title={`Flaws from ${nameA}`}
               subtitle="Choose up to 1"
-              icon={<AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />}
+              icon={<AlertTriangle className="h-5 w-5 text-danger-fg" />}
               traits={flawsFromA}
               selectable
               selectedIds={
@@ -269,7 +264,7 @@ export function AncestryMixedPanel({
             <TraitSection
               title={`Flaws from ${nameB}`}
               subtitle="Choose up to 1"
-              icon={<AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />}
+              icon={<AlertTriangle className="h-5 w-5 text-danger-fg" />}
               traits={flawsFromB}
               selectable
               selectedIds={
@@ -287,7 +282,7 @@ export function AncestryMixedPanel({
         <TraitSection
           title={`Extra ancestry trait (from ${selectedFlawSpeciesId === speciesA.id ? nameA : nameB} only)`}
           subtitle="Choose 1"
-          icon={<Star className="h-5 w-5 text-warning-700 dark:text-warning-400" />}
+          icon={<Star className="h-5 w-5 text-warning-fg" />}
           traits={ancestryForSecondSlot}
           selectable
           selectedIds={

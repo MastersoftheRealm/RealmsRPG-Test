@@ -23,7 +23,7 @@ row moves to `done`, record the commit subject. When a row is `partial`, record 
 | **0 — foundation** | `done` | Backups, schema baseline, codex data-loss determination. |
 | **1 — stop the bleeding** | `done` (code + DB + ops) | GitHub required checks + Actions public Supabase secrets + `E2E_OPTIONAL=1` + orphan profile delete. **2026-08-13 Vercel:** Upstash Redis + Sentry DSN live on production/preview; `NEXT_PUBLIC_SITE_URL` on production; production rebuilt. Still owner: HIBP, E2E test user, optional “require PR”. |
 | **2 — correctness** | `done` (code; pending-qa) | P0/P1-1–P1-5 **committed** on `master`. TASK-740 Advanced persist migrate **done**; TASK-738 guided P1-6–P1-10 + server legality + idempotent create **done**; TASK-744 styleguide Linux baselines **done**; TASK-741 dirty-key PATCH **done**; TASK-742 acked rules leftovers **done**; TASK-739 Advanced currency clamp **done**; TASK-746 library add lock **done**; TASK-747 realtime non-resource merge **done**; TASK-749 PATCH currency floor **done**; TASK-750 sheet Query SoT **done**; TASK-761 campaign RM view Query load **done**; TASK-762 combat `?scope=encounter` Query **done**. Remaining Wave 2 coding: none. |
-| **3 — structure** | `partial` (3A + 3B + implementable 3C done; Architect leftovers TASK-794–799 / 820 / 824 done) | Wave 3A landed (TASK-769–772). **3B** complete: TASK-773–775 done (pending-qa); ADR-0015 Accepted. **3C implementable** TASK-789–793 done (pending-qa / n/a). **TASK-794 done** (ADR-0019); **TASK-795 done** (ADR-0020); **TASK-796 done** (ADR-0021); **TASK-797 done** (ADR-0022); **TASK-798 done** (ADR-0017); **TASK-799 done** (pending-qa); **TASK-820 done** (ADR-0018); **TASK-824 done** (ADR-0024). Leftover admin CRUD scaffolding is WAITING TASK-842. |
+| **3 — structure** | `partial` (3A + 3B + implementable 3C done; Architect leftovers TASK-794–799 / 820 / 824 / 842 / 845 done) | Wave 3A landed (TASK-769–772). **3B** complete: TASK-773–775 done (pending-qa); ADR-0015 Accepted. **3C implementable** TASK-789–793 done (pending-qa / n/a). **TASK-794 done** (ADR-0019); **TASK-795 done** (ADR-0020); **TASK-796 done** (ADR-0021); **TASK-797 done** (ADR-0022); **TASK-798 done** (ADR-0017); **TASK-799 done** (pending-qa); **TASK-820 done** (ADR-0018); **TASK-824 done** (ADR-0024); **TASK-842 / TASK-845 done** (ADR-0025 pending-qa). |
 
 ### Commits on `master` (audit program, oldest → newest)
 
@@ -54,7 +54,7 @@ Later `master` commits (`6adf344f`, `21ffcd18`, …) are unrelated product work 
 ### Uncommitted / follow-up coding
 
 Plan refresh + GAME_RULES / SIZES seed / admin editor prose may still be uncommitted.
-Wave 2 coding leftovers: none. Report 07 P2-5 RM-view enrichment landed as TASK-773 (Wave 3B). Wave 3C implementable TASK-789–793 is committed on `master` (`2dcb2173`). Architect leftover **TASK-798 done** (ADR-0017); **TASK-820 done** (ADR-0018); **TASK-794–797 done**; **TASK-799 done** (pending-qa); **TASK-824 done** (ADR-0024). Leftover admin CRUD scaffolding: WAITING TASK-842.
+Wave 2 coding leftovers: none. Report 07 P2-5 RM-view enrichment landed as TASK-773 (Wave 3B). Wave 3C implementable TASK-789–793 is committed on `master` (`2dcb2173`). Architect leftover **TASK-798 done** (ADR-0017); **TASK-820 done** (ADR-0018); **TASK-794–797 done**; **TASK-799 done** (pending-qa); **TASK-824 done** (ADR-0024); **TASK-842 / TASK-845 done** (ADR-0025 pending-qa).
 
 ---
 
@@ -273,7 +273,7 @@ No Architect, no API contract. Quiet window: no parallel product work on this tr
 | Library tab counts + lazy tab rows | report 07 P2-5 | TASK-774 | `done` pending-qa. `GET /api/user/library/counts` + `GET /api/official/counts`; page fetches counts + the active tab only |
 | Codex per-collection fetch + `CodexBrowseListShell` virtualization | report 07 P1-3 / P2+ | TASK-775 | `done` pending-qa. `?collection=` on the existing route (one payload shape, 400 on unknown); hooks on `['codex', collection]` under the same prefix; `useGameRules` → `coreRules` slice; shell window-virtualizes rows past 40 (ADR-0005 shell kept). Path filter now costs the archetypes slice. |
 
-### Wave 3C — implementable (`done`) + Architect leftovers (`done` TASK-794–799 / 820 / 824; remaining TASK-842)
+### Wave 3C — implementable (`done`) + Architect leftovers (`done` TASK-794–799 / 820 / 824 / 842 / 845)
 
 Owner 2026-08-15: finish Wave 3 = implement the non-Architect slices. Do **not** delete `/characters/new/advanced` (REALMS: phase into L3).
 
@@ -283,11 +283,11 @@ Owner 2026-08-15: finish Wave 3 = implement the non-Architect slices. Do **not**
 | Guided skills UI: defense + per-skill governing Ability | report 02 Step 0 | `done` TASK-790 pending-qa | Shared `DefenseBonusesCard`; persist schema v15 `defenseVals` + `skillAbilities`. |
 | Extract currency + appearance-age from Legacy | report 02 Step 2 | `done` TASK-791 n/a | `CHARACTER_STARTING_CURRENCY` in `lib/game/constants.ts`; age helpers in `lib/character/appearance-age.ts`. |
 | `value-stepper` / `list-header` copy-paste | reports 04 C4 / C5 | `done` TASK-792 n/a | One `StepperGlyphButton`; one `MobileSortMenu`. |
-| Crafting / My Account titles + crawlable `/rules` intro | report 07 leftovers | `done` TASK-793 pending-qa | Layout metadata; `RULES_COPY.seoDescription`. Full MDX rulebook is TASK-796. |
+| Crafting / My Account titles + crawlable `/rules` intro | report 07 leftovers | `done` TASK-793 pending-qa | Layout metadata; `RULES_COPY.seoDescription`. |
 | Server-render `/rules` MDX + Codex detail `generateMetadata` | report 07 P1-2 / win #8 | **done** TASK-796 pending-qa | ADR-0021. MDX chapters + `/codex/[collection]/[slug]`. Google Doc is view-source only. |
 | Legacy extract of shared creator symbols (AbilityPickButton, MixedSpeciesModal, …) | report 02 Steps 1, 3+ | **done** TASK-798 pending-qa | ADR-0017. Shared barrel + allowlist. Do not delete the Legacy route. |
 | MixedSpeciesSkillPicker extract | report 02 leftover | **done** TASK-820 pending-qa | ADR-0018. Shared barrel + allowlist. No character-creator shim. Do not delete the Legacy route. |
-| Remaining duplication clusters (OfficialEntityList, confirm/icon-toggle, admin/sheet) | reports 10, 08, 04 | **done** TASK-799 pending-qa | Confirm/icon-toggle/sheet families collapsed onto existing components (no new shared/ui file). Admin Codex two-click / inline Yes-No delete now `ConfirmActionModal`. Report 10 C1 Official+My Library merge stays rejected (ADR-0001). Admin CRUD save/search scaffolding leftover is WAITING TASK-842. |
+| Remaining duplication clusters (OfficialEntityList, confirm/icon-toggle, admin/sheet) | reports 10, 08, 04 | **done** TASK-799 pending-qa; **done** TASK-842 / TASK-845 pending-qa; **done** TASK-849 pending-qa | Confirm/icon-toggle/sheet families collapsed onto existing components (no new shared/ui file). Admin Codex two-click / inline Yes-No delete now `DeleteConfirmModal`. Report 10 C1 Official+My Library merge stays rejected (ADR-0001). Admin CRUD save/row/footer is ADR-0025 (co-located under `admin/codex/`, not CodexBrowseListShell). Cluster B: one `COPY_NAME_SUFFIX` + Skills/Equipment/CreatureFeat edit modals extracted. |
 | Split `shared/` into `ui / patterns / feature` | report 04 | **done** TASK-794 n/a | ADR-0019. `src/components/shared/` deleted; public barrel is `@/components/patterns`. |
 | Generated Supabase types | report 12 | **done** TASK-795 n/a | ADR-0020. `npm run db:types` → `src/types/database.types.ts`. Factories parameterized; untyped admin `createClient` removed. |
 | `noUncheckedIndexedAccess` burn-down (163 errors) | report 11 / 12 | **done** TASK-797 n/a | ADR-0022. Flag in main `tsconfig.json`. `/characters/new/advanced` kept. |
@@ -348,7 +348,7 @@ parallel.
 Wave 3A (TASK-769–772), Wave 3B (TASK-773–775), and implementable Wave 3C (TASK-789–793) are coded. 3A/3B/789/790/793 pending owner QA. ADR-0015 is fully Accepted.
 
 1. **Owner QA** — DEV-V-012 T009, DEV-V-013 T088, DEV-V-053 T006, plus earlier 3A/3B suites.
-2. **Wave 3 Architect leftovers** — TASK-794–799 / 820 / 821 / 824 done. Leftover admin CRUD scaffolding is WAITING TASK-842 (needs Architect ack). TASK-798 done (ADR-0017). TASK-820 done (ADR-0018). TASK-824 done (ADR-0024).
+2. **Wave 3 Architect leftovers** — TASK-794–799 / 820 / 821 / 824 / 842 / 845 done. TASK-798 done (ADR-0017). TASK-820 done (ADR-0018). TASK-824 done (ADR-0024). TASK-842 / TASK-845 done (ADR-0025 pending-qa).
 3. **Do not** delete `/characters/new/advanced` or reopen ADR-0013 / TASK-761 / TASK-762.
 
 ---

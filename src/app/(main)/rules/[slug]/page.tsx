@@ -94,7 +94,7 @@ export default async function RulebookChapterPage({ params }: { params: Promise<
             {previous ? (
               <Link
                 href={`/rules/${previous.slug}`}
-                className="min-h-[44px] font-medium text-primary-link-fg hover:underline md:min-h-0"
+                className="touch-tier-standard inline-flex items-center font-medium text-primary-link-fg hover:underline"
               >
                 ← {previous.title}
               </Link>
@@ -104,7 +104,7 @@ export default async function RulebookChapterPage({ params }: { params: Promise<
             {next ? (
               <Link
                 href={`/rules/${next.slug}`}
-                className="min-h-[44px] font-medium text-primary-link-fg hover:underline sm:text-right md:min-h-0"
+                className="touch-tier-standard inline-flex items-center font-medium text-primary-link-fg hover:underline sm:justify-end"
               >
                 {next.title} →
               </Link>

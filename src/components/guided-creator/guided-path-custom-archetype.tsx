@@ -59,7 +59,6 @@ export function GuidedPathCustomArchetype({
             <InfoTippy
               content={guidedChooseArchetypeTypeHelp}
               label="About choosing your archetype type"
-              size="inline"
             />
           }
         >
@@ -76,9 +75,7 @@ export function GuidedPathCustomArchetype({
                 description={info.description}
                 selected={selectedType === type}
                 onSelect={() => onSelectType(type)}
-                titleMeta={
-                  <InfoTippy content={TYPE_TIP[type]} label={`About ${info.title}`} size="inline" />
-                }
+                titleMeta={<InfoTippy content={TYPE_TIP[type]} label={`About ${info.title}`} />}
               />
             );
           })}
@@ -98,7 +95,7 @@ export function GuidedPathCustomArchetype({
                   <h4 className="text-sm font-medium text-power-fg">
                     {stepCopy.powerAbilityLabel}
                   </h4>
-                  <InfoTippy content={powerAbility} label="Power ability help" size="inline" />
+                  <InfoTippy content={powerAbility} label="Power ability help" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
@@ -118,7 +115,7 @@ export function GuidedPathCustomArchetype({
                   <h4 className="text-sm font-medium text-martial-fg">
                     {stepCopy.martialAbilityLabel}
                   </h4>
-                  <InfoTippy content={martialAbility} label="Martial ability help" size="inline" />
+                  <InfoTippy content={martialAbility} label="Martial ability help" />
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (

@@ -44,7 +44,13 @@ export {
 } from './expandable-chip';
 
 // Navigation components
-export { TabNavigation, TabContentPanel, useTabGroup, type Tab } from './tab-navigation';
+export {
+  TabNavigation,
+  TabContentPanel,
+  TabNavOverflowScroller,
+  useTabGroup,
+  type Tab,
+} from './tab-navigation';
 // Note: tabs.tsx (Tabs, TabsList, TabsTrigger, TabsContent) was removed - use TabNavigation instead
 
 // Feedback components

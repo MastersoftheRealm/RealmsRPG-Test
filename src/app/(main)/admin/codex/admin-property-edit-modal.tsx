@@ -4,6 +4,8 @@ import type { Dispatch, SetStateAction } from 'react';
 import { Modal, Button, Input, Textarea } from '@/components/ui';
 import { Plus, X } from 'lucide-react';
 import { PROPERTY_TYPES, type PropertyFormState } from './admin-property-form';
+import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
+import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
 
 export type AdminPropertyEditModalProps = {
   isOpen: boolean;
@@ -17,8 +19,7 @@ export type AdminPropertyEditModalProps = {
   setOptionSlotCount: Dispatch<SetStateAction<number>>;
   clearOption: () => void;
   saving: boolean;
-  deleteConfirm: string | null;
-  onRequestDelete: () => void;
+  onDelete?: (() => void) | undefined;
   onSave: () => void;
 };
 
@@ -34,8 +35,7 @@ export function AdminPropertyEditModal({
   setOptionSlotCount,
   clearOption,
   saving,
-  deleteConfirm,
-  onRequestDelete,
+  onDelete,
   onSave,
 }: AdminPropertyEditModalProps) {
   return (
@@ -46,40 +46,17 @@ export function AdminPropertyEditModal({
       size="full"
       fullScreenOnMobile
       footer={
-        <div className="flex justify-between">
-          <div>
-            {editingId && (
-              <Button
-                variant="outline"
-                onClick={onRequestDelete}
-                className={
-                  deleteConfirm === editingId
-                    ? 'border-danger-500 text-danger-700 dark:text-danger-400'
-                    : ''
-                }
-              >
-                {deleteConfirm === editingId ? 'Click again to confirm delete' : 'Delete'}
-              </Button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={onSave} disabled={saving || !form.name.trim()}>
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
-        </div>
+        <AdminCodexEditModalFooter
+          onDelete={editingId ? onDelete : undefined}
+          onClose={onClose}
+          onSave={onSave}
+          saveDisabled={saving || !form.name.trim()}
+          saving={saving}
+        />
       }
     >
       <div className="space-y-4">
-        {copySourceName && (
-          <p className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-secondary">
-            Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>.
-            Change the name and details as needed, then save to add the new property.
-          </p>
-        )}
+        <AdminCodexCopySourceBanner copySourceName={copySourceName} entityLabel="property" />
         <div>
           <label className="mb-1 block text-sm font-medium text-text-secondary">Name *</label>
           <Input

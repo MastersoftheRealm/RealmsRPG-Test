@@ -39,11 +39,11 @@ Task `related_files` may reference outdated paths. When implementing, prefer the
 | Category | Location | Notes |
 |----------|----------|-------|
 | UI primitives | `src/components/ui/` | Button, IconButton, Input, Select, Checkbox, Textarea, Modal, Chip, etc. |
-| Shared patterns | `src/components/shared/` | GridListRow, SkillRow, **ValueStepper** / Dec/Inc (ADR-0002; QuantitySelector wraps it), RollButton, PointStatus, SectionHeader, **SegmentedControl**, **UnifiedSelectionModal**, **AddCombatantModal** (encounter/session participants — non-USM), **SourceFilter** |
-| List utilities | `src/components/shared/list-components.tsx` | SearchInput, FilterSection, ResultsCount, EmptyState, LoadingState. **List headers:** use `ListHeader` from `src/components/shared/list-header.tsx` for all sortable list views (single source of truth; Option B). SortHeader/SortHeaderRow in list-components are legacy and unused in list views. **Do not** override ListHeader with transparent/flat `className` in modals unless there is a documented exception — keep the same bar styling as Codex/Library. |
+| Shared patterns | `src/components/patterns/` | GridListRow, SkillRow, **ValueStepper** / Dec/Inc (ADR-0002; QuantitySelector wraps it), RollButton, PointStatus, SectionHeader, **SegmentedControl**, **UnifiedSelectionModal**. **AddCombatantModal** lives in `src/components/encounters/add-combatant-modal.tsx` (encounter/session participants — non-USM). **SourceFilter** is under `patterns/filters/`. Import `@/components/patterns`. |
+| List utilities | `src/components/ui/` + `src/components/patterns/list/` | SearchInput, EmptyState, LoadingState live in `ui/`. **ErrorDisplay** is `patterns/list/list-components.tsx`. FilterSection is `patterns/filters/`. **List headers:** use `ListHeader` from `src/components/patterns/list/list-header.tsx` for all sortable list views. **Do not** override ListHeader with transparent/flat `className` in modals unless there is a documented exception — keep the same bar styling as Codex/Library. |
 | Character sheet | `src/components/character-sheet/` | library-section, abilities-section, skills-section, feats-tab, modals |
 | Creators | `src/components/creator/` | ability-score-editor, health-energy-allocator, creator-summary-panel |
-| Filters | `src/components/shared/filters/` | TagFilter, SelectFilter, AbilityRequirementFilter, ChipSelect, SourceFilter (All / Realms Library / My Library) |
+| Filters | `src/components/patterns/filters/` | TagFilter, SelectFilter, AbilityRequirementFilter, ChipSelect, SourceFilter (All / Realms Library / My Library) |
 
 Deep list/selection rules → [`guide/02-components-and-lists.md`](guide/02-components-and-lists.md).
 

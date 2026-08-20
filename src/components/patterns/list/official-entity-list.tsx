@@ -12,7 +12,8 @@
 import { useMemo, useState, type ReactNode, type ComponentProps } from 'react';
 import { GridListRow } from './grid-list-row';
 import { ListHeader } from './list-header';
-import { LoadingState, ErrorDisplay, EmptyState as ListEmptyState } from './list-components';
+import { LoadingState, EmptyState } from '@/components/ui';
+import { ErrorDisplay } from './list-components';
 import { SectionHeader } from '../chrome/section-header';
 import { ListSearchToolbar } from './list-search-toolbar';
 import {
@@ -154,7 +155,7 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
   // Bare empty when there is no create/trailing control; with searchTrailing keep chrome
   // so admin create is not a dead-end on an empty library.
   if (!isLoading && cardData.length === 0 && !searchTrailing) {
-    return <ListEmptyState icon={emptyIcon} title={emptyTitle} message={emptyMessage} />;
+    return <EmptyState icon={emptyIcon} title={emptyTitle} message={emptyMessage} />;
   }
 
   const canAdd = () => variant === 'library' && !readOnly && !!onAddRequest;
@@ -192,9 +193,9 @@ export function OfficialEntityList<TRow extends OfficialEntityRow, TItem>({
           <LoadingState />
         ) : filtered.length === 0 ? (
           cardData.length === 0 ? (
-            <ListEmptyState icon={emptyIcon} title={emptyTitle} message={emptyMessage} />
+            <EmptyState icon={emptyIcon} title={emptyTitle} message={emptyMessage} />
           ) : (
-            <ListEmptyState title={searchEmptyMessage} size="sm" />
+            <EmptyState title={searchEmptyMessage} size="sm" />
           )
         ) : renderRow ? (
           filtered.map((row) => (

@@ -195,18 +195,6 @@ export function compactResolvedWeaponRange(resolved: string): string {
 }
 
 /**
- * Compact weapon range for dense table cells when only a stored value is available.
- * Rejects corrupt bare integers / `"0"`; prefer `formatWeaponRangeDisplayCompact` when properties exist.
- */
-export function formatWeaponRangeCompact(range: string | number | null | undefined): string {
-  const normalized = normalizeRangeDisplay(range);
-  if (!normalized || normalized === '0' || normalized === '-') return 'Melee';
-  if (/^melee$/i.test(normalized)) return 'Melee';
-  if (/^\d+$/.test(normalized)) return 'Melee';
-  return compactResolvedWeaponRange(normalized);
-}
-
-/**
  * Format feat ability (sorting) for list display: "Strength, Intelligence" etc.
  * Handles array, comma-separated string, slash-separated legacy values, or concatenated names.
  */

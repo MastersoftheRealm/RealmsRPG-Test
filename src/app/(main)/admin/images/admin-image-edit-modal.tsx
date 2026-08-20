@@ -204,6 +204,7 @@ export function AdminImageEditModal({
                 Cancel
               </Button>
               <Button
+                size="lg"
                 onClick={handleSave}
                 disabled={saving || replacing || !name.trim()}
                 isLoading={saving}

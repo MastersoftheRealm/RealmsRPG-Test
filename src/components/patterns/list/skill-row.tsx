@@ -198,6 +198,20 @@ export const SkillRow = memo(function SkillRow({
       />
     ) : null;
 
+    // Dense 16px paint + 44px hit (TASK-836). Coarse py-4 keeps an 8px gap between
+    // stacked ::after overlays so they do not swallow the next row or the name cell.
+    const tableCellY = 'py-2 [@media(pointer:coarse)]:py-4';
+    const proficiencyLabel =
+      isEditing && isSpeciesSkill
+        ? 'Species Skill (locked)'
+        : proficient
+          ? canToggleProficiency
+            ? 'Proficient (click to toggle)'
+            : 'Proficient'
+          : canToggleProficiency
+            ? 'Not proficient (click to toggle)'
+            : 'Not proficient';
+
     return (
       <tr
         className={cn(
@@ -209,33 +223,25 @@ export const SkillRow = memo(function SkillRow({
         )}
       >
         {/* Proficiency Dot — play view: identical styling for species vs other proficient skills */}
-        <td className="py-2 text-center">
+        <td className={cn('overflow-hidden text-center', tableCellY)}>
           {!isSubSkill && (
             <button
+              type="button"
               onClick={() => canToggleProficiency && onToggleProficiency?.()}
               disabled={!canToggleProficiency || isLocked || isSpeciesSkill}
               className={cn(
-                'inline-block h-4 w-4 rounded-full transition-all',
+                'hit-area-layout-neutral inline-flex size-4 shrink-0 items-center justify-center rounded-full border-2 transition-all',
                 proficient
-                  ? 'border-2 border-primary-outline-border bg-primary-button'
-                  : 'border-2 border-warning-400 bg-warning-400',
+                  ? 'border-primary-outline-border bg-primary-button'
+                  : 'border-warning-400 bg-warning-400',
                 canToggleProficiency &&
                   !isLocked &&
                   !isSpeciesSkill &&
                   'cursor-pointer hover:scale-110',
                 isEditing && (isLocked || isSpeciesSkill) && 'opacity-70',
               )}
-              title={
-                isEditing && isSpeciesSkill
-                  ? 'Species Skill (locked)'
-                  : proficient
-                    ? canToggleProficiency
-                      ? 'Proficient (click to toggle)'
-                      : 'Proficient'
-                    : canToggleProficiency
-                      ? 'Not proficient (click to toggle)'
-                      : 'Not proficient'
-              }
+              aria-label={proficiencyLabel}
+              title={proficiencyLabel}
             />
           )}
         </td>
@@ -243,7 +249,8 @@ export const SkillRow = memo(function SkillRow({
         {/* DESIGN_INTENT: sheet play view = uniform skill list; source/lock chrome only while editing */}
         <td
           className={cn(
-            'py-2 pl-2 font-medium text-text-primary',
+            'pl-2 font-medium text-text-primary',
+            tableCellY,
             isSubSkill && 'italic',
             !isUnlocked && 'text-text-muted',
           )}
@@ -263,7 +270,7 @@ export const SkillRow = memo(function SkillRow({
         </td>
 
         {/* Ability */}
-        <td className="py-2 text-center">
+        <td className={cn('text-center', tableCellY)}>
           {isEditing && onAbilityChange && abilityOptions.length > 1 ? (
             <select
               value={ability || abilityOptions[0]?.value || 'strength'}
@@ -286,7 +293,8 @@ export const SkillRow = memo(function SkillRow({
         {/* Bonus / Roll / inline spend-temp stepper (TASK-800) — tint value only, never RollButton (ADR-0006) */}
         <td
           className={cn(
-            'py-2 text-center',
+            'text-center',
+            tableCellY,
             isEditing &&
               editControlsPlacement === 'inline' &&
               onValueChange &&
@@ -314,12 +322,12 @@ export const SkillRow = memo(function SkillRow({
 
         {/* DESIGN_INTENT: creator/allocation keep a Value column; sheet uses inline (TASK-800) */}
         {isEditing && editControlsPlacement === 'column' && valueStepper && (
-          <td className="px-1 py-2 text-center whitespace-nowrap">{valueStepper}</td>
+          <td className={cn('px-1 text-center whitespace-nowrap', tableCellY)}>{valueStepper}</td>
         )}
 
         {/* Remove button (edit mode) — omit column when onRemove unset (sheet uses − path, TASK-584) */}
         {isEditing && onRemove && (
-          <td className="px-0.5 py-2 text-center whitespace-nowrap">
+          <td className={cn('px-0.5 text-center whitespace-nowrap', tableCellY)}>
             <IconButton
               variant="ghost"
               size="sm"

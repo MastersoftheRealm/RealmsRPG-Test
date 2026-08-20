@@ -70,7 +70,7 @@ export function PowerCreatorEditorPowerDamage({
                   prev.map((x, i) => (i === index ? { ...x, size: parseInt(e.target.value) } : x)),
                 )
               }
-              className="rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
+              className="touch-tier-standard rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
             >
               {DIE_SIZES.map((size) => (
                 <option key={size} value={size}>
@@ -87,7 +87,7 @@ export function PowerCreatorEditorPowerDamage({
                 prev.map((x, i) => (i === index ? { ...x, type: e.target.value } : x)),
               )
             }
-            className="rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
+            className="touch-tier-standard rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
           >
             {DAMAGE_TYPES.map((type) => (
               <option key={type} value={type}>

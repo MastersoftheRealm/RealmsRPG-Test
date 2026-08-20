@@ -88,7 +88,7 @@ export function CodexSpreadsheetView({ activeTab }: CodexSpreadsheetViewProps) {
             >
               Cancel
             </Button>
-            <Button size="sm" onClick={() => ws.performSaveAll()} disabled={ws.saving}>
+            <Button size="lg" onClick={() => ws.performSaveAll()} disabled={ws.saving}>
               {ws.saving ? (
                 <Loader2 className="mr-1 h-4 w-4 animate-spin" />
               ) : (

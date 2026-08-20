@@ -4,8 +4,6 @@
 
 import type { ItemProperty } from '@/hooks';
 
-export const COPY_NAME_SUFFIX = ' copy';
-
 export type PropertyFormState = {
   name: string;
   description: string;

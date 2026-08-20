@@ -1,34 +1,26 @@
 /**
  * Library Power / Technique → DetailOptionItem for path deep-dive catalogs.
+ * Combat chips come from detail-density `layout.chipFacts` (ADR-0016 / TASK-818).
  */
 
 import { logClientError } from '@/lib/api-client';
-import {
-  derivePowerDisplay,
-  formatPowerDamage,
-  type PowerDocument,
-} from '@/lib/calculators/power-calc';
-import { deriveTechniqueDisplay, type TechniqueDocument } from '@/lib/calculators/technique-calc';
-import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
-import type { LibraryPower, LibraryTechnique } from '@/types/library';
+import { derivePowerDisplay, formatPowerDamage } from '@/lib/calculators/power-calc';
+import { deriveTechniqueDisplay } from '@/lib/calculators/technique-calc';
+import { glrSurfaceDetailSections } from '@/lib/chip/list-row-metadata';
 import type { ChipData } from '@/components/patterns/list/grid-list-row-types';
-import { type DetailOptionItemModel } from './builders';
+import type { PowerPart, TechniquePart } from '@/hooks/codex-types';
 import {
-  actionTypeFactChip,
-  compactFactChip,
-  damageFactChip,
-  energyFactChip,
-  rangeFactChip,
-  trainingPointsFactChip,
-} from './compact-facts';
-
-function pushFact(chips: ChipData[], label: string, value: string | number | null | undefined) {
-  if (value == null) return;
-  const text = String(value).trim();
-  if (!text || text === '—' || text.toLowerCase() === 'none') return;
-  const chip = compactFactChip(`${label} ${text}`);
-  if (chip) chips.push(chip);
-}
+  libraryItemToPowerDocument,
+  libraryItemToTechniqueDocument,
+} from '@/lib/library-selectable-builders';
+import {
+  derivePartCategories,
+  formatPartCategoriesColumn,
+  powerHasDamageCategory,
+  withDamageCategory,
+} from '@/lib/library/power-technique-categories';
+import type { LibraryPower, LibraryTechnique } from '@/types/library';
+import { type DetailOptionItemModel } from './builders';
 
 export function buildCombatLookup(
   rows: Array<LibraryPower | LibraryTechnique>,
@@ -46,29 +38,23 @@ export function powerToDetailOption(
   powerPartsDb: PowerPart[],
   idOverride?: string,
 ): DetailOptionItemModel {
-  const chips: ChipData[] = [];
+  let chips: ChipData[] = [];
   try {
-    const disp = derivePowerDisplay(
-      {
-        name: String(power.name ?? ''),
-        description: String(power.description ?? ''),
-        parts: power.parts ?? [],
-      } satisfies PowerDocument,
-      powerPartsDb,
+    const disp = derivePowerDisplay(libraryItemToPowerDocument(power), powerPartsDb);
+    const categories = withDamageCategory(
+      derivePartCategories(power.parts ?? [], powerPartsDb),
+      powerHasDamageCategory(power.damage),
     );
-    const tpChip = trainingPointsFactChip(disp.tp);
-    if (tpChip) chips.push(tpChip);
-    const energyChip = energyFactChip(typeof disp.energy === 'number' ? disp.energy : undefined);
-    if (energyChip) chips.push(energyChip);
-    const actionChip = actionTypeFactChip(disp.actionType);
-    if (actionChip) chips.push(actionChip);
-    const rangeChip = rangeFactChip(disp.range);
-    if (rangeChip) chips.push(rangeChip);
-    if (disp.area) pushFact(chips, 'Area', disp.area);
-    if (disp.duration) pushFact(chips, 'Duration', disp.duration);
-    const damage = formatPowerDamage(power.damage);
-    const dmgChip = damageFactChip(damage);
-    if (dmgChip) chips.push(dmgChip);
+    chips = glrSurfaceDetailSections('detail-option-power', {
+      category: formatPartCategoriesColumn(categories),
+      energy: disp.energy,
+      actionType: disp.actionType,
+      duration: disp.duration,
+      range: disp.range,
+      area: disp.area,
+      damage: formatPowerDamage(power.damage),
+      trainingPoints: disp.tp,
+    }).flatMap((section) => section.chips);
   } catch (err) {
     logClientError(`combat-builder: power detail chips failed (${power.name ?? power.id})`, err);
   }
@@ -86,27 +72,22 @@ export function techniqueToDetailOption(
   techniquePartsDb: TechniquePart[],
   idOverride?: string,
 ): DetailOptionItemModel {
-  const chips: ChipData[] = [];
+  let chips: ChipData[] = [];
   try {
     const disp = deriveTechniqueDisplay(
-      {
-        name: String(technique.name ?? ''),
-        description: String(technique.description ?? ''),
-        parts: technique.parts ?? [],
-        actionType: technique.actionType,
-        weapon: technique.weapon?.name ? { name: technique.weapon.name } : undefined,
-      } satisfies TechniqueDocument,
+      libraryItemToTechniqueDocument(technique),
       techniquePartsDb,
     );
-    const tpChip = trainingPointsFactChip(disp.tp);
-    if (tpChip) chips.push(tpChip);
-    const energyChip = energyFactChip(typeof disp.energy === 'number' ? disp.energy : undefined);
-    if (energyChip) chips.push(energyChip);
-    const actionChip = actionTypeFactChip(disp.actionType);
-    if (actionChip) chips.push(actionChip);
-    const dmgChip = damageFactChip(disp.damageStr);
-    if (dmgChip) chips.push(dmgChip);
-    if (disp.weaponName) pushFact(chips, 'Attack', disp.weaponName);
+    chips = glrSurfaceDetailSections('detail-option-technique', {
+      category: formatPartCategoriesColumn(
+        derivePartCategories(technique.parts ?? [], techniquePartsDb),
+      ),
+      energy: disp.energy,
+      actionType: disp.actionType,
+      damage: disp.damageStr,
+      weapon: disp.weaponName,
+      trainingPoints: disp.tp,
+    }).flatMap((section) => section.chips);
   } catch (err) {
     logClientError(
       `combat-builder: technique detail chips failed (${technique.name ?? technique.id})`,

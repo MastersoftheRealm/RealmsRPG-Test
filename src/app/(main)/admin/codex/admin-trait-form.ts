@@ -4,8 +4,6 @@
 
 import type { Trait } from '@/hooks';
 
-export const COPY_NAME_SUFFIX = ' copy';
-
 export type TraitFormState = {
   name: string;
   description: string;

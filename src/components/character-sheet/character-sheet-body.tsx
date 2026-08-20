@@ -20,16 +20,24 @@ import { useCharacterSheet } from './character-sheet-context';
 /**
  * Site `Header` is `h-20` (5rem). Below md, lock the sheet column to the leftover
  * viewport so the carousel cannot stretch to the tallest sibling (TASK-838 / C1).
- * `box-border` + dock padding reserves the C4 bottom strip (TASK-837).
+ * Bottom reserve is `--sheet-mobile-bottom-reserve` (TASK-843): owner dock height
+ * when `.has-sheet-mobile-dock` wraps the frame, else 0 (FAB gutter lives on panels).
  */
 export const CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME =
-  'character-sheet-mobile-frame max-md:box-border max-md:flex max-md:h-[calc(100svh-5rem)] max-md:flex-col max-md:overflow-hidden max-md:pb-[var(--sheet-mobile-dock-height)]';
+  'character-sheet-mobile-frame max-md:box-border max-md:flex max-md:h-[calc(100svh-5rem)] max-md:min-w-0 max-md:w-full max-md:flex-col max-md:overflow-hidden max-md:pb-[var(--sheet-mobile-bottom-reserve)]';
 
 /** Marks the owner sheet so the RollLog FAB shares the mobile action-dock strip. */
 export const CHARACTER_SHEET_MOBILE_DOCK_SCOPE_CLASSNAME = 'has-sheet-mobile-dock';
 
+/**
+ * Floor for the mobile carousel when the sheet header is taller than leftover
+ * viewport (loaded level-20 header). Flex-1 still grows when the header is short.
+ */
+const MOBILE_CAROUSEL_MIN_HEIGHT =
+  'max-md:min-h-[min(50dvh,calc(100svh-5rem-var(--sheet-mobile-bottom-reserve)))]';
+
 const MOBILE_SNAP_PANEL_CLASSNAME =
-  'box-border shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-x-hidden overflow-y-auto max-md:h-full max-md:min-h-0 max-md:overscroll-y-contain max-md:pb-4';
+  'box-border shrink-0 grow-0 basis-full snap-start [scroll-snap-stop:always] overflow-x-hidden overflow-y-auto max-md:h-full max-md:min-h-0 max-md:overscroll-y-contain pb-4 max-md:pb-[var(--sheet-panel-end-pad)]';
 
 const DESKTOP_GRID_PANEL_CLASSNAME =
   'md:flex md:min-h-[400px] md:min-w-0 md:basis-auto md:flex-col md:overflow-visible';
@@ -37,7 +45,7 @@ const DESKTOP_GRID_PANEL_CLASSNAME =
 /** Flex column below md; `contents` on md+ so header + body stay PageContainer siblings. */
 export function CharacterSheetColumn({ children }: { children: ReactNode }) {
   return (
-    <div className="max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col md:contents max-md:[&>*:first-child]:shrink-0">
+    <div className="max-md:flex max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:flex-1 max-md:flex-col max-md:overflow-y-auto max-md:overscroll-y-contain md:contents max-md:[&>*:first-child]:shrink-0">
       {children}
     </div>
   );
@@ -169,7 +177,10 @@ export function CharacterSheetBody() {
           gap between panels, scroll-padding so snap aligns with the same gutters.
           Height-bound below md so overflow-y-auto on each panel actually engages (TASK-838). */}
       <div
-        className="-mx-4 flex touch-pan-x snap-x snap-mandatory scroll-px-4 flex-nowrap gap-4 overflow-x-auto scroll-smooth px-4 pb-4 max-md:min-h-0 max-md:flex-1 max-md:overflow-y-hidden sm:-mx-6 sm:scroll-px-6 sm:px-6 md:mx-0 md:grid md:snap-none md:scroll-px-0 md:grid-cols-1 md:items-stretch md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-[1fr_1fr_2fr]"
+        className={cn(
+          '-mx-4 flex touch-pan-x snap-x snap-mandatory scroll-px-4 flex-nowrap gap-4 overflow-x-auto scroll-smooth px-4 pb-4 max-md:w-full max-md:min-w-0 max-md:flex-1 max-md:overflow-y-hidden sm:-mx-6 sm:scroll-px-6 sm:px-6 md:mx-0 md:grid md:snap-none md:scroll-px-0 md:grid-cols-1 md:items-stretch md:overflow-visible md:px-0 md:pb-0 lg:grid-cols-[1fr_1fr_2fr]',
+          MOBILE_CAROUSEL_MIN_HEIGHT,
+        )}
         style={{ WebkitOverflowScrolling: 'touch' }}
       >
         <section

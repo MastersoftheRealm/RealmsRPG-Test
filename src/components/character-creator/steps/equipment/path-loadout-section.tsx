@@ -86,7 +86,7 @@ export function PathLoadoutSection({
               </p>
             </div>
             {pathConfirmMode ? (
-              <span className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-success-100 px-3 py-2 text-sm font-medium text-success-700 dark:bg-success-900/30 dark:text-success-400">
+              <span className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-success-100 px-3 py-2 text-sm font-medium text-success-fg dark:bg-success-900/30">
                 <Check className="h-4 w-4" aria-hidden />
                 {recommendedInInventory.length} / {pathRecommendedItems.length} confirmed
               </span>
@@ -114,7 +114,7 @@ export function PathLoadoutSection({
                       className={cn(
                         'inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold',
                         inInventory
-                          ? 'bg-success-100 text-success-700 dark:bg-success-900/40 dark:text-success-400'
+                          ? 'bg-success-100 text-success-fg dark:bg-success-900/40'
                           : 'bg-surface-alt text-text-muted',
                       )}
                       aria-hidden

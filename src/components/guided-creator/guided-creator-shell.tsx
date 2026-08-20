@@ -8,7 +8,7 @@
 
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { Button } from '@/components/ui';
+import { Button, TabNavOverflowScroller } from '@/components/ui';
 import { ConfirmActionModal } from '@/components/patterns';
 import { ChevronDown, RotateCcw } from 'lucide-react';
 import {
@@ -54,9 +54,12 @@ function ChapterRail({ className }: { className?: string | undefined }) {
 
   return (
     <nav aria-label="Creation chapters" className={cn(className)}>
-      <ol
-        className="flex scrollbar-thin flex-nowrap gap-2 overflow-x-auto pb-1"
-        style={{ WebkitOverflowScrolling: 'touch' }}
+      <TabNavOverflowScroller
+        as="ol"
+        overflowSignature={currentSubStep}
+        listClassName="gap-2 pb-1"
+        previousAriaLabel="Show previous chapters"
+        nextAriaLabel="Show more chapters"
       >
         {GUIDED_CHAPTERS.map((chapter, index) => {
           const isActive = index === activeChapterIndex;
@@ -110,7 +113,7 @@ function ChapterRail({ className }: { className?: string | undefined }) {
             </li>
           );
         })}
-      </ol>
+      </TabNavOverflowScroller>
     </nav>
   );
 }
@@ -154,7 +157,7 @@ export function GuidedCreatorShell() {
       <div
         className={cn(
           'sticky top-0 z-20 -mx-4 mb-4 px-4 py-2.5',
-          'bg-background/95 backdrop-blur-md',
+          'bg-background md:bg-background/95 md:backdrop-blur-md',
           'border-b border-border-light shadow-sm dark:border-border',
         )}
       >

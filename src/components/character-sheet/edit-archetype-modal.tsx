@@ -190,26 +190,22 @@ export function EditArchetypeModal({
         footer={
           uiMode === 'forge-edit' ? (
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={onClose} className="min-h-[44px]">
+              <Button variant="outline" onClick={onClose}>
                 Cancel
               </Button>
-              <Button onClick={handleForgeSave} disabled={!canSaveForge} className="min-h-[44px]">
+              <Button size="lg" onClick={handleForgeSave} disabled={!canSaveForge}>
                 Save
               </Button>
             </div>
           ) : uiMode === 'path-picker' ? (
             <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setUiMode('path-view')}
-                className="min-h-[44px]"
-              >
+              <Button variant="outline" onClick={() => setUiMode('path-view')}>
                 Back
               </Button>
             </div>
           ) : (
             <div className="flex justify-end gap-2">
-              <Button variant="outline" onClick={onClose} className="min-h-[44px]">
+              <Button variant="outline" onClick={onClose}>
                 Close
               </Button>
             </div>

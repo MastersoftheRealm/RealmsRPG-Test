@@ -20,7 +20,6 @@ import {
 } from '@/hooks/use-codex';
 import { useOfficialLibrary } from '@/hooks/use-official-library';
 import { useQueryClient } from '@tanstack/react-query';
-import { deleteCodexDoc } from './actions';
 import { type ArchetypeItem, type CodexFeatLike } from './admin-archetype-path-form';
 import { useAdminArchetypeSelectionOptions } from './use-admin-archetype-selection-options';
 import {
@@ -34,6 +33,7 @@ import {
   toastLevel1SkillsFromForm,
 } from './admin-archetype-workspace-open';
 import { saveAdminArchetype } from './admin-archetype-workspace-save';
+import { useAdminCodexEntity } from './use-admin-codex-entity';
 import type { PowerPart } from '@/hooks/codex-types';
 import type { LibraryItem, LibraryPower } from '@/types/library';
 import type { CodexSkill, CodexEquipmentItem } from '@/types/codex';
@@ -56,13 +56,23 @@ export function useAdminArchetypeWorkspace() {
     useOfficialLibrary('items');
   const { data: itemProperties = [] } = useCodexItemProperties();
   const queryClient = useQueryClient();
+  const {
+    modalOpen,
+    editing,
+    saving,
+    setSaving,
+    copySourceName,
+    openAdd: beginAdd,
+    openDuplicate: beginDuplicate,
+    openEdit: beginEdit,
+    closeModal,
+    askDelete,
+    deleteModals,
+  } = useAdminCodexEntity<ArchetypeItem>({
+    collection: 'codex_archetypes',
+    entityLabel: 'archetype',
+  });
   const [search, setSearch] = useState('');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<ArchetypeItem | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [copySourceName, setCopySourceName] = useState<string | null>(null);
   const [form, setForm] = useState(EMPTY_ARCHETYPE_FORM);
 
   const filtered = (archetypes || []).filter(
@@ -123,37 +133,21 @@ export function useAdminArchetypeWorkspace() {
   const { addLevel1Armament, updateLevel1ArmamentQty, removeLevel1Armament } =
     createLevel1ArmamentMutators(setForm);
 
-  const openAdd = () => {
-    setEditing(null);
-    setCopySourceName(null);
-    setForm(EMPTY_ARCHETYPE_FORM);
-    setModalOpen(true);
-  };
+  const openAdd = () => beginAdd(() => setForm(EMPTY_ARCHETYPE_FORM));
 
-  const openDuplicate = (a: ArchetypeItem) => {
-    setEditing(null);
-    setCopySourceName(a.name || '');
-    const nextForm = buildDuplicateArchetypeForm(a, optionsByField);
-    setForm(nextForm);
-    toastLevel1SkillsFromForm(nextForm, codexSkills as CodexSkill[], showToast);
-    setModalOpen(true);
-  };
+  const openDuplicate = (a: ArchetypeItem) =>
+    beginDuplicate(a, () => {
+      const nextForm = buildDuplicateArchetypeForm(a, optionsByField);
+      setForm(nextForm);
+      toastLevel1SkillsFromForm(nextForm, codexSkills as CodexSkill[], showToast);
+    });
 
-  const openEdit = (a: ArchetypeItem) => {
-    setEditing(a);
-    setCopySourceName(null);
-    const nextForm = buildArchetypeFormFromItem(a, optionsByField);
-    setForm(nextForm);
-    toastLevel1SkillsFromForm(nextForm, codexSkills as CodexSkill[], showToast);
-    setModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setEditing(null);
-    setCopySourceName(null);
-    setDeleteConfirm(null);
-  };
+  const openEdit = (a: ArchetypeItem) =>
+    beginEdit(a, () => {
+      const nextForm = buildArchetypeFormFromItem(a, optionsByField);
+      setForm(nextForm);
+      toastLevel1SkillsFromForm(nextForm, codexSkills as CodexSkill[], showToast);
+    });
 
   const handleSave = async () => {
     await saveAdminArchetype({
@@ -173,41 +167,6 @@ export function useAdminArchetypeWorkspace() {
     });
   };
 
-  const handleDelete = async (id: string) => {
-    if (deleteConfirm !== id) {
-      setDeleteConfirm(id);
-      return;
-    }
-    const result = await deleteCodexDoc('codex_archetypes', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['gameData', 'archetypes'] });
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['gameData', 'archetypes'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
-  };
-
-  const handleInlineDelete = async (id: string) => {
-    if (pendingDeleteId !== id) {
-      setPendingDeleteId(id);
-      return;
-    }
-    const result = await deleteCodexDoc('codex_archetypes', id);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['gameData', 'archetypes'] });
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['gameData', 'archetypes'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-      setPendingDeleteId(null);
-    }
-  };
-
   return {
     showToast,
     isLoading,
@@ -218,9 +177,6 @@ export function useAdminArchetypeWorkspace() {
     modalOpen,
     editing,
     saving,
-    deleteConfirm,
-    pendingDeleteId,
-    setPendingDeleteId,
     copySourceName,
     form,
     setForm,
@@ -255,7 +211,7 @@ export function useAdminArchetypeWorkspace() {
     openEdit,
     closeModal,
     handleSave,
-    handleDelete,
-    handleInlineDelete,
+    askDelete,
+    deleteModals,
   };
 }

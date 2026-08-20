@@ -329,22 +329,11 @@ export function SkillsStep() {
       embeddedInShell={pathMode}
       headingAddon={
         !pathMode ? (
-          <InfoTippy
-            content={skillPointsHelp}
-            allowHTML
-            label="Skill allocation help"
-            size="inline"
-          />
+          <InfoTippy content={skillPointsHelp} label="Skill allocation help" />
         ) : undefined
       }
       addSubSkillAddon={
-        <InfoTippy
-          content={subSkillsHelp}
-          allowHTML
-          label="Sub-skill help"
-          placement="top"
-          size="inline"
-        />
+        <InfoTippy content={subSkillsHelp} label="Sub-skill help" placement="top" />
       }
     />
   );
@@ -366,14 +355,7 @@ export function SkillsStep() {
           <GuidedChoiceShell
             layer={layer}
             title="Allocate Skills"
-            titleAddon={
-              <InfoTippy
-                content={skillPointsHelp}
-                allowHTML
-                label="Skill allocation help"
-                size="inline"
-              />
-            }
+            titleAddon={<InfoTippy content={skillPointsHelp} label="Skill allocation help" />}
             description="Spend skill points on proficiencies and values. Species skills stay locked; expand for sub-skills and defense bonuses."
             guidance={pathHelpAfterDescription}
             completionState={completion}

@@ -152,7 +152,23 @@ export function LevelUpModal({
     pathCharacter.archetype;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Adjust Level" fullScreenOnMobile>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Adjust Level"
+      fullScreenOnMobile
+      footer={
+        <div className="flex gap-3">
+          <Button variant="secondary" className="flex-1" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button size="lg" className="flex-1" onClick={handleConfirm} disabled={!isLevelChange}>
+            {isLevelDown ? <ArrowDown className="h-5 w-5" /> : <ArrowUp className="h-5 w-5" />}
+            Set Level to {targetLevel}
+          </Button>
+        </div>
+      }
+    >
       <div className="space-y-6">
         {/* Level Selector */}
         <div className="text-center">
@@ -206,7 +222,7 @@ export function LevelUpModal({
             description="Pool points"
           />
           <GainCard
-            icon={<Sword className="h-5 w-5 text-warning-500" />}
+            icon={<Sword className="h-5 w-5 text-warning-fg" />}
             label="Training Points"
             value={formatDelta(gains.trainingPoints)}
             description="For powers/techniques"
@@ -232,17 +248,6 @@ export function LevelUpModal({
             targetLevel={targetLevel}
           />
         )}
-
-        {/* Confirm Button */}
-        <div className="flex gap-3">
-          <Button variant="secondary" className="flex-1" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button className="flex-1" onClick={handleConfirm} disabled={!isLevelChange}>
-            {isLevelDown ? <ArrowDown className="h-5 w-5" /> : <ArrowUp className="h-5 w-5" />}
-            Set Level to {targetLevel}
-          </Button>
-        </div>
       </div>
     </Modal>
   );

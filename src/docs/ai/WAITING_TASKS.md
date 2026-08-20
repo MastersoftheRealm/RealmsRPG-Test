@@ -8,40 +8,6 @@ Move a task back to [`ACTIVE_TASKS.md`](ACTIVE_TASKS.md) when it becomes unblock
 
 ---
 
-- id: TASK-842
-  title: Admin Codex CRUD tab scaffolding (save/search/row actions)
-  created_at: 2026-08-18
-  created_by: agent
-  priority: low
-  status: not-started
-  assignee: owner
-  related_files:
-    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
-    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
-    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
-    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
-    - src/app/(main)/admin/codex/AdminPartsTab.tsx
-    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
-    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
-    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
-    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
-    - src/app/(main)/admin/codex/use-admin-codex-delete.tsx
-  description: |
-    Report 08 Cluster A leftover after TASK-799. Delete confirm now uses
-    ConfirmActionModal (F-14). Remaining: duplicated openAdd/openEdit/handleSave,
-    row-action chrome, and edit-modal Cancel/Save footers across nine Codex tabs
-    (F-18). Do not merge OfficialEntityList with My Library (ADR-0001) or
-    CodexBrowseListShell (ADR-0005).
-  acceptance_criteria:
-    - Inventory remaining forks against FEATURE_INDEX before any move.
-    - Delete the weaker copy; do not add a third wrapper.
-    - Architect ack if a new shared hook/shell file is required.
-    - Do not delete /characters/new/advanced.
-  notes: |
-    Filed from TASK-799. Do not start without owner ack. Do not fold TASK-821.
-
----
-
 - id: TASK-834
   title: Spot-check 2026-08-18 transcript recovery (51 unmatched files)
   created_at: 2026-08-18

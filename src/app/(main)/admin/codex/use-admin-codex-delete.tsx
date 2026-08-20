@@ -23,8 +23,6 @@ export type AdminCodexDelete = {
   blocked: BlockedDelete | null;
   pendingConfirm: PendingConfirm | null;
   askDelete: (id: string, name: string) => void;
-  /** HEAD-tab alias while TASK-799 tabs are re-wired; name falls back to id. */
-  requestDelete: (id: string) => void;
   confirmPendingDelete: () => Promise<boolean>;
   cancelPendingDelete: () => void;
   confirmBlockedDelete: () => Promise<boolean>;
@@ -75,10 +73,6 @@ export function useAdminCodexDelete(options: {
       setBlocked(null);
       setPendingConfirm({ id, name });
     }, []),
-    requestDelete: useCallback((id: string) => {
-      setBlocked(null);
-      setPendingConfirm({ id, name: id });
-    }, []),
     confirmPendingDelete: useCallback(
       () => (pendingConfirm ? runDelete(pendingConfirm.id, false) : Promise.resolve(false)),
       [pendingConfirm, runDelete],
@@ -92,7 +86,7 @@ export function useAdminCodexDelete(options: {
   };
 }
 
-export function AdminCodexDeleteConfirmModal({
+function AdminCodexDeleteConfirmModal({
   state,
   entityLabel,
 }: {
@@ -115,7 +109,7 @@ export function AdminCodexDeleteConfirmModal({
   );
 }
 
-export function AdminCodexDeleteReferenceModal({
+function AdminCodexDeleteReferenceModal({
   state,
   entityLabel,
 }: {
@@ -142,5 +136,20 @@ export function AdminCodexDeleteReferenceModal({
       }}
       onClose={state.cancelBlockedDelete}
     />
+  );
+}
+
+export function AdminCodexDeleteModals({
+  state,
+  entityLabel,
+}: {
+  state: AdminCodexDelete;
+  entityLabel: string;
+}) {
+  return (
+    <>
+      <AdminCodexDeleteConfirmModal state={state} entityLabel={entityLabel} />
+      <AdminCodexDeleteReferenceModal state={state} entityLabel={entityLabel} />
+    </>
   );
 }

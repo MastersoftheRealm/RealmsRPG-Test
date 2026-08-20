@@ -29,5 +29,5 @@ Keep **`OfficialEntityList`** for official library entity grids. Do **not** put 
 ## Consequences
 
 - Positive: one chrome for Codex admin/browse (including Codex Archetypes header); FEATURE_INDEX points here.
-- Negative: Admin Archetypes remains a documented exception until product wants a path-card admin shell.
+- Negative: Admin Archetypes remains a documented exception until product wants a path-card admin shell. Admin entity CRUD (save / row actions / edit-modal footer) is ADR-0025 (TASK-842), not an extension of this shell.
 - Rejected: extending `OfficialEntityList` for Codex rows; a second Official* wrapper fork.

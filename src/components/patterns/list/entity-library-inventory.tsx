@@ -3,10 +3,9 @@
 import { GridListRow, type ColumnValue } from '@/components/patterns/list/grid-list-row';
 import { ListHeader } from '@/components/patterns/list/list-header';
 import { SectionHeader } from '@/components/patterns/chrome/section-header';
-import { QuantitySelector } from '@/components/patterns/select/quantity-selector';
 import { RollButton } from '@/components/patterns/chrome/roll-button';
 import { deriveShieldAmountFromProperties } from '@/lib/calculators/item-calc';
-import { formatListCellLabel, splitDamageDiceAndType } from '@/lib/utils';
+import { splitDamageDiceAndType } from '@/lib/utils';
 import { useRollsOptional } from '@/components/rolls';
 import {
   WEAPON_COLUMNS,
@@ -21,6 +20,7 @@ import {
   ARMOR_GRID,
   EQUIPMENT_COLUMNS,
   EQUIPMENT_GRID,
+  buildCreatureEquipmentColumns,
 } from './entity-library-sections-columns';
 import {
   renderInteractiveGridRows,
@@ -416,34 +416,26 @@ export function EquipmentListSection({
           </div>
         ) : (
           <div className="space-y-1">
-            {items.map((e, idx) => {
-              const itemType = formatListCellLabel(e.type);
-              const qty = e.quantity ?? 1;
-              const qtyCell = (
-                <div
-                  className="flex items-center justify-center"
-                  onClick={(ev) => ev.stopPropagation()}
-                >
-                  <QuantitySelector quantity={qty} min={0} max={99} size="sm" onChange={() => {}} />
-                </div>
-              );
-              const columns: ColumnValue[] = [
-                { key: 'type', value: itemType, align: 'center' },
-                { key: 'quantity', value: qtyCell, align: 'center' },
-              ];
-              return (
-                <GridListRow
-                  key={String(e.id ?? `${e.name}-${idx}`)}
-                  id={String(e.id ?? idx)}
-                  name={e.name}
-                  description={e.description}
-                  thumbnail={e.thumbnail}
-                  columns={columns}
-                  gridColumns={grid}
-                  compact={compactRows}
-                />
-              );
-            })}
+            {items.map((e, idx) => (
+              <GridListRow
+                key={String(e.id ?? `${e.name}-${idx}`)}
+                id={String(e.id ?? idx)}
+                name={e.name}
+                description={e.description}
+                thumbnail={e.thumbnail}
+                columns={buildCreatureEquipmentColumns(e.type, e.quantity)}
+                gridColumns={e.gridColumns ?? grid}
+                chips={e.chips}
+                chipsLabel={e.chips?.length ? 'Properties & Proficiencies' : undefined}
+                detailSections={e.detailSections}
+                rightSlot={e.rightSlot}
+                leftSlot={e.leftSlot}
+                onDelete={e.onDelete}
+                badges={e.badges}
+                equipped={e.equipped}
+                compact={compactRows}
+              />
+            ))}
           </div>
         )
       ) : (
@@ -454,7 +446,7 @@ export function EquipmentListSection({
 
   return (
     <div>
-      {(showTitle || layout !== 'characterSheet') && (
+      {showTitle && (
         <SectionHeader
           title={title}
           size="lg"

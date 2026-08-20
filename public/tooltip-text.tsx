@@ -239,22 +239,6 @@ export const chooseYourAncestryTraits = (
   </div>
 );
 
-/** @deprecated Use getAbilityPointsHelp for level-aware copy */
-export const assignAbilities = (
-  <div>
-    <div>Ability Point Rules</div>
-    <div>
-      At level <strong>1</strong>, you have <strong>7 Ability Points.</strong>
-    </div>
-    <div>
-      At creation, each Ability can be between <strong>-2</strong> and <strong>3</strong>.
-    </div>
-    <div>
-      Total negative adjustments cannot go below <strong>-3</strong>.
-    </div>
-  </div>
-);
-
 export function getAbilityPointsHelp(level: number, rules: CoreRulesMap) {
   const points = calculateAbilityPoints(level, false, rules);
   const min = rules.ABILITY_RULES.min;

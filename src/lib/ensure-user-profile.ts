@@ -5,8 +5,7 @@
  * are NOT NULL and have no DEFAULT, upsert must supply them so the row can be created.
  */
 
-/** Supabase client from createClient() (server). */
-type SupabaseClient = Awaited<ReturnType<typeof import('@/lib/supabase/server').createClient>>;
+import type { TypedSupabaseClient } from '@/lib/supabase/database';
 
 /**
  * Ensures a row exists in user_profiles for the given uid so that inserts into
@@ -14,7 +13,7 @@ type SupabaseClient = Awaited<ReturnType<typeof import('@/lib/supabase/server').
  * Supplies created_at and updated_at so NOT NULL constraints are met even when
  * the table has no DEFAULT.
  */
-export async function ensureUserProfile(supabase: SupabaseClient, uid: string): Promise<void> {
+export async function ensureUserProfile(supabase: TypedSupabaseClient, uid: string): Promise<void> {
   const now = new Date().toISOString();
   const { error } = await supabase.from('user_profiles').upsert(
     {

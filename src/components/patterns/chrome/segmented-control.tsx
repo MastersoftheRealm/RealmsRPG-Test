@@ -1,7 +1,5 @@
 /**
  * SegmentedControl — pill group toggle (Library My/Realms, source filter, modal tabs).
- * Default size matches library page and SourceFilter. `size="compact"` is the
- * lighter sheet-toolbar variant (TASK-778).
  */
 
 'use client';
@@ -34,8 +32,8 @@ export interface SegmentedControlProps<T extends string> {
   /** Stretch segments equally (e.g. two-column modal header) */
   equalWidth?: boolean | undefined;
   /**
-   * `default` matches SourceFilter / Library chrome (44px segments).
-   * `compact` is for dense sheet toolbars: text-hugging on md+, 44px below md (TASK-778).
+   * `default` matches SourceFilter / Library chrome (Standard 44 under coarse).
+   * `compact` is for dense sheet toolbars: Dense paint + expanded coarse hit (TASK-778).
    */
   size?: 'default' | 'compact' | undefined;
 }
@@ -74,8 +72,8 @@ export function SegmentedControl<T extends string>({
         const classNameBtn = cn(
           'inline-flex items-center justify-center rounded border font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:ring-offset-2 focus-visible:ring-offset-background',
           compact
-            ? 'touch-target-md-compact gap-1.5 px-2 py-0.5 text-xs'
-            : 'min-h-[44px] gap-2 px-3 py-1 text-sm',
+            ? 'hit-area-dense gap-1.5 px-2 py-0.5 text-xs'
+            : 'touch-tier-standard gap-2 px-3 py-1 text-sm',
           equalWidth && 'min-w-0 flex-1',
           disabled
             ? 'cursor-not-allowed border-border-light bg-surface-alt text-text-muted opacity-60 hover:border-border-light hover:text-text-muted'

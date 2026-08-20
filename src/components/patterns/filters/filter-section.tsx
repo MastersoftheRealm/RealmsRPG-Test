@@ -1,9 +1,8 @@
 /**
  * FilterSection Component
  * =======================
- * Collapsible filter container with consistent styling.
- * Used across browse lists (ListSearchToolbar compact + toolbarStart) and
- * selection modals (compact). Page variant remains for Advanced creator catalogs.
+ * Collapsible filter container (USM/L3 + ListSearchToolbar browse).
+ * Search + Filters share one row via toolbarStart when provided.
  */
 
 'use client';
@@ -20,11 +19,6 @@ interface FilterSectionProps {
   /** Controlled expanded state (e.g. reset when a modal reopens). */
   expanded?: boolean | undefined;
   onExpandedChange?: ((expanded: boolean) => void) | undefined;
-  /**
-   * `page` — stacked toggle (Advanced creator catalogs).
-   * `compact` — USM/L3 and ListSearchToolbar browse; optional toolbarStart for search + Filters on one row.
-   */
-  variant?: 'page' | 'compact' | undefined;
   /** Shown on the toggle when collapsed and > 0 (active filter count). */
   activeCount?: number | undefined;
   /** Optional one-line hint when collapsed (e.g. current source). */
@@ -32,24 +26,22 @@ interface FilterSectionProps {
   /** Accessible / visible label stem (default "Filters"). */
   label?: string | undefined;
   /**
-   * Compact only: content placed before the Filters toggle (typically SearchInput).
+   * Content placed before the Filters toggle (typically SearchInput).
    * Creates a single toolbar row so the list stays the main focus below.
    * Used by USM/L3 and ListSearchToolbar browse lists (TASK-721).
    */
   toolbarStart?: ReactNode | undefined;
   /**
-   * Compact only: after the Filters toggle (e.g. Create / Sync). Must not replace
+   * After the Filters toggle (e.g. Create / Sync). Must not replace
    * the Filters slot — searchTrailing stays to the right of Filters.
    */
   toolbarEnd?: ReactNode | undefined;
-  /** Compact toolbarStart wrapper classes (default min-w-0). Browse lists pass min-w-[200px]. */
+  /** toolbarStart wrapper classes (default min-w-0). Browse lists pass min-w-[200px]. */
   toolbarStartClassName?: string | undefined;
-  /** Compact toolbar row classes. Browse lists pass flex-wrap; USM/L3 omit. */
+  /** Toolbar row classes. Browse lists pass flex-wrap; USM/L3 omit. */
   toolbarClassName?: string | undefined;
-  /** Extra classes on the Filters toggle. Browse lists pass max-md 44px min size. */
-  toggleClassName?: string | undefined;
   /**
-   * Compact only: always-visible content between the toolbar row and the panel
+   * Always-visible content between the toolbar row and the panel
    * (e.g. primary mode tabs — TASK-564 scopeExtra).
    */
   belowToolbar?: ReactNode | undefined;
@@ -61,7 +53,6 @@ export function FilterSection({
   defaultExpanded = false,
   expanded: expandedControlled,
   onExpandedChange,
-  variant = 'page',
   activeCount = 0,
   summary,
   label = 'Filters',
@@ -69,7 +60,6 @@ export function FilterSection({
   toolbarEnd,
   toolbarStartClassName,
   toolbarClassName,
-  toggleClassName,
   belowToolbar,
   className,
 }: FilterSectionProps) {
@@ -77,25 +67,23 @@ export function FilterSection({
   const isControlled = expandedControlled !== undefined;
   const isExpanded = isControlled ? expandedControlled : uncontrolledExpanded;
   const panelId = useId();
-  const isCompact = variant === 'compact';
 
   const setExpanded = (next: boolean) => {
     if (!isControlled) setUncontrolledExpanded(next);
     onExpandedChange?.(next);
   };
 
-  // Compact toolbar: short "Filters" / "Hide Filters". Page: "Show Filters" / "Hide Filters".
-  const toggleLabel = isExpanded ? `Hide ${label}` : isCompact ? label : `Show ${label}`;
+  const toggleLabel = isExpanded ? `Hide ${label}` : label;
 
   const toggleButton = (
     <Button
       type="button"
       variant="ghost"
-      size="sm"
+      size="md"
       aria-expanded={isExpanded}
       aria-controls={panelId}
       onClick={() => setExpanded(!isExpanded)}
-      className={cn('shrink-0', isCompact ? 'min-h-11 gap-1.5 px-3' : 'mb-4', toggleClassName)}
+      className="shrink-0 gap-1.5 px-3"
     >
       <Filter className="h-4 w-4" aria-hidden />
       <span>{toggleLabel}</span>
@@ -118,8 +106,8 @@ export function FilterSection({
   );
 
   return (
-    <div className={cn(isCompact ? 'mb-0' : 'mb-6', className)}>
-      {isCompact && toolbarStart ? (
+    <div className={cn('mb-0', className)}>
+      {toolbarStart ? (
         <div className={cn('flex items-center gap-2', toolbarClassName)}>
           <div className={cn('min-w-0 flex-1', toolbarStartClassName)}>{toolbarStart}</div>
           {toggleButton}
@@ -129,7 +117,7 @@ export function FilterSection({
         toggleButton
       )}
 
-      {isCompact && belowToolbar ? <div className="mt-2 shrink-0">{belowToolbar}</div> : null}
+      {belowToolbar ? <div className="mt-2 shrink-0">{belowToolbar}</div> : null}
 
       {!isExpanded && summary ? <p className="mt-2 text-xs text-text-muted">{summary}</p> : null}
 
@@ -137,10 +125,7 @@ export function FilterSection({
       <div
         id={panelId}
         hidden={!isExpanded}
-        className={cn(
-          'rounded-lg border border-border-light bg-surface-alt',
-          isCompact ? 'mt-2 space-y-3 p-3' : 'p-4',
-        )}
+        className="mt-2 space-y-3 rounded-lg border border-border-light bg-surface-alt p-3"
       >
         {children}
       </div>

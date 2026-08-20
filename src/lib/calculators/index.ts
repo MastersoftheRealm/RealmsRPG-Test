@@ -4,24 +4,9 @@
  * Export all calculator utilities
  */
 
-// Re-export shared ID constants and utilities
-export {
-  PART_IDS,
-  PROPERTY_IDS,
-  GENERAL_PROPERTY_IDS,
-  GENERAL_PROPERTY_NAMES,
-  findByIdOrName,
-  findByIdOrNameValue,
-  normalizeRef,
-  normalizeRefsArray,
-} from '@/lib/id-constants';
-export type { HasIdAndName } from '@/lib/id-constants';
-
 // Unified Mechanic Builder (shared by Power, Technique, and future Empowered Technique creators)
 export {
   buildMechanicParts,
-  buildPowerMechanicParts,
-  buildTechniqueMechanicParts,
   calculateDamageOptionLevel,
   type CreatorType,
   type MechanicPartResult,
@@ -47,7 +32,6 @@ export {
 export {
   calculatePowerCosts,
   calculatePowerSectionContribution,
-  computeActionType as computePowerActionType,
   computeActionTypeFromSelection as computePowerActionTypeFromSelection,
   formatPowerRangeFromSteps,
   deriveRange,
@@ -55,7 +39,6 @@ export {
   deriveDuration,
   getAreaPartForDisplay,
   formatAreaForDisplay,
-  formatPowerPartChip,
   derivePowerDisplay,
   formatPowerDamage,
   type PowerPartPayload,
@@ -65,16 +48,10 @@ export {
   type PowerDocument,
 } from './power-calc';
 
-// Duration display (shared: character sheet, library, codex)
-export { formatDurationFromTypeAndValue, formatDurationWithModifiers } from '@/lib/utils/duration';
-
 // Technique Calculator
 export {
   calculateTechniqueCosts,
-  computeActionType as computeTechniqueActionType,
   computeActionTypeFromSelection as computeTechniqueActionTypeFromSelection,
-  computeSplits as computeTechniqueSplits,
-  formatTechniquePartChip,
   deriveTechniqueDisplay,
   formatTechniqueDamage,
   type TechniquePart,
@@ -89,7 +66,6 @@ export {
 // Empowered Technique Calculator
 export {
   calculateEmpoweredTechniqueCosts,
-  getTechniquePercentageMultiplier,
   type EmpoweredTechniqueCostResult,
   type CalculateEmpoweredTechniqueCostsInput,
 } from './empowered-technique-calc';
@@ -105,8 +81,6 @@ export {
 export {
   calculateItemCosts,
   calculateCurrencyCostAndRarity,
-  calculateGoldCostAndRarity,
-  computeSplits as computeItemSplits,
   resolveWeaponRangeDisplay,
   formatWeaponRangeDisplayCompact,
   deriveDamageReductionFromProperties,
@@ -114,9 +88,7 @@ export {
   deriveCriticalRangeIncreaseFromProperties,
   deriveShieldAmountFromProperties,
   deriveShieldDamageFromProperties,
-  extractProficiencies,
   deriveItemDisplay,
-  formatProficiencyChip,
   isGeneralProperty,
   isMechanicProperty,
   filterSavedItemPropertiesForList,

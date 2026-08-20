@@ -13,14 +13,14 @@ import {
   GridListRow,
   QuantitySelector,
   ListHeader,
+  ListSearchToolbar,
   SourceFilter,
   type ChipData,
   type SortState,
 } from '@/components/patterns';
 import { resolveListRowThumbnail } from '@/lib/list-row-image';
 import type { SourceFilterValue } from '@/components/patterns/filters/source-filter';
-import { FilterSection } from '@/components/patterns/filters';
-import { Button, EmptyState, SearchInput } from '@/components/ui';
+import { Button, EmptyState } from '@/components/ui';
 import { TabNavigation, TabContentPanel } from '@/components/ui/tab-navigation';
 import { AlertCircle, ChevronLeft } from 'lucide-react';
 import type { ItemProperty } from '@/lib/calculators/item-calc';
@@ -165,35 +165,34 @@ export function EquipmentCatalogPanel({
           />
         ) : (
           <>
-            <div className="mb-4">
-              <SearchInput
-                value={searchTerm}
-                onChange={onSearchTermChange}
-                placeholder={`Search ${activeTab}s by name or description...`}
-              />
-            </div>
+            <ListSearchToolbar
+              search={searchTerm}
+              onSearchChange={onSearchTermChange}
+              placeholder={`Search ${activeTab}s by name or description...`}
+              searchAriaLabel={`Search ${activeTab}s by name or description`}
+              filterActiveCount={sourceFilter === 'all' ? 0 : 1}
+              filters={
+                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                  <SourceFilter value={sourceFilter} onChange={onSourceFilterChange} />
 
-            <FilterSection>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <SourceFilter value={sourceFilter} onChange={onSourceFilterChange} />
-
-                <div className="filter-group">
-                  <label className="mb-1 block text-sm font-medium text-text-secondary">
-                    Budget
-                  </label>
-                  <div
-                    className={cn(
-                      'rounded-lg border px-3 py-2 text-sm',
-                      remainingCurrency >= 0
-                        ? 'border-success-200 bg-success-50 text-success-fg dark:border-success-600/50 dark:bg-success-900/30'
-                        : 'border-danger-200 bg-danger-50 text-danger-fg dark:border-danger-600/50 dark:bg-danger-900/30',
-                    )}
-                  >
-                    {remainingCurrency}c remaining of {startingCurrency}c
+                  <div className="filter-group">
+                    <label className="mb-1 block text-sm font-medium text-text-secondary">
+                      Budget
+                    </label>
+                    <div
+                      className={cn(
+                        'rounded-lg border px-3 py-2 text-sm',
+                        remainingCurrency >= 0
+                          ? 'border-success-200 bg-success-50 text-success-fg dark:border-success-600/50 dark:bg-success-900/30'
+                          : 'border-danger-200 bg-danger-50 text-danger-fg dark:border-danger-600/50 dark:bg-danger-900/30',
+                      )}
+                    >
+                      {remainingCurrency}c remaining of {startingCurrency}c
+                    </div>
                   </div>
                 </div>
-              </div>
-            </FilterSection>
+              }
+            />
 
             <div className="mb-8 overflow-hidden bg-surface">
               {activeTab === 'weapon' && sortedEquipment.length > 0 && (

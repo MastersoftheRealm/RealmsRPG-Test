@@ -16,6 +16,11 @@
  * viewer the owner's whole private library (audit 2026-08-13 P0-1).
  */
 
+import {
+  fromPublicTable,
+  type PublicTableName,
+  type TypedSupabaseClient,
+} from '@/lib/supabase/database';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { columnarViewSelect, rowToItem, type ColumnarLibraryType } from '@/lib/library-columnar';
 import type { OwnerLibraryRefIds } from '@/lib/character-view-enrichment';
@@ -27,7 +32,7 @@ export interface LibraryForView {
   creatures: Array<Record<string, unknown>>;
 }
 
-const TABLE: Record<keyof OwnerLibraryRefIds, string> = {
+const TABLE: Record<keyof OwnerLibraryRefIds, PublicTableName> = {
   powers: 'user_powers',
   techniques: 'user_techniques',
   items: 'user_items',
@@ -47,7 +52,7 @@ export function emptyLibraryForView(): LibraryForView {
 }
 
 async function fetchReferenced(
-  supabase: ReturnType<typeof createServiceRoleClient>,
+  supabase: TypedSupabaseClient,
   kind: keyof OwnerLibraryRefIds,
   ownerUserId: string,
   ids: string[],
@@ -55,8 +60,7 @@ async function fetchReferenced(
   if (ids.length === 0) return [];
 
   const type = ROW_TO_ITEM_TYPE[kind];
-  const { data, error } = await supabase
-    .from(TABLE[kind])
+  const { data, error } = await fromPublicTable(supabase, TABLE[kind])
     .select(columnarViewSelect(type))
     .eq('user_id', ownerUserId)
     .in('id', ids);

@@ -20,8 +20,6 @@ import {
 } from '@/lib/utils/string';
 import type { ItemProperty } from '@/hooks/codex-types';
 
-// Re-export for convenience
-export { PROPERTY_IDS, GENERAL_PROPERTY_IDS, GENERAL_PROPERTY_NAMES };
 export type { ItemProperty };
 
 // =============================================================================
@@ -207,8 +205,6 @@ export function filterSavedItemPropertiesForList(
   }
   return result;
 }
-
-export { computeSplits } from './dice-splits';
 
 // =============================================================================
 // Core Calculations

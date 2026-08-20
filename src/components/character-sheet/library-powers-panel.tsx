@@ -53,9 +53,7 @@ export function LibraryPowersPanel({
             <SummaryItem
               icon="✨"
               label="Innate Energy"
-              labelAccessory={
-                <InfoTippy content={innateEnergyHelp} label="Innate Energy help" size="inline" />
-              }
+              labelAccessory={<InfoTippy content={innateEnergyHelp} label="Innate Energy help" />}
               value={`${displayedCurrentInnateEnergy} / ${innateEnergy}`}
               highlight
               highlightColor={innateEnergyOverBudget ? 'danger' : 'power'}
@@ -69,9 +67,7 @@ export function LibraryPowersPanel({
       <div className="space-y-2">
         <PowersListSection
           title="Innate Powers"
-          titleAddon={
-            <InfoTippy content={innatePowersHelp} label="Innate Powers help" size="inline" />
-          }
+          titleAddon={<InfoTippy content={innatePowersHelp} label="Innate Powers help" />}
           items={innatePowerRows}
           onAdd={onAddInnatePower}
           addLabel="Add innate power"

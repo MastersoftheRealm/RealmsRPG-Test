@@ -8,7 +8,6 @@ import {
   GridListRow,
   type ChipData,
 } from '@/components/patterns';
-import { Button, IconButton, useToast } from '@/components/ui';
 import {
   useSpecies,
   useCodexSkills,
@@ -17,37 +16,43 @@ import {
   type Trait,
   type Skill,
 } from '@/hooks';
-import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc } from './actions';
-import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
-import { Pencil, Copy, X } from 'lucide-react';
 import { formatListCellLabel } from '@/lib/utils';
 import { resolveSpeciesListRowThumbnail } from '@/lib/list-row-image';
 import { speciesSkillToChipData } from '@/lib/chip/species-skill-chips';
 import { useSort } from '@/hooks/use-sort';
+import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
-  COPY_NAME_SUFFIX,
   EMPTY_SPECIES_FORM,
   speciesFormToSavePayload,
   speciesToFormState,
   type SpeciesFormState,
 } from './admin-species-form';
 import { AdminSpeciesEditModal } from './admin-species-edit-modal';
+import { useAdminCodexEntity } from './use-admin-codex-entity';
+import { AdminCodexRowActions } from './admin-codex-row-actions';
 
 export function AdminSpeciesTab() {
-  const { showToast } = useToast();
   const { data: species, isLoading, error, refetch } = useSpecies();
   const { data: skills = [] } = useCodexSkills();
   const { data: traits = [] } = useTraits();
-  const queryClient = useQueryClient();
+  const {
+    modalOpen,
+    editing,
+    saving,
+    copySourceName,
+    openAdd: beginAdd,
+    openDuplicate: beginDuplicate,
+    openEdit: beginEdit,
+    closeModal,
+    save,
+    askDelete,
+    deleteModals,
+  } = useAdminCodexEntity<Species>({
+    collection: 'codex_species',
+    entityLabel: 'species',
+  });
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Species | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [copySourceName, setCopySourceName] = useState<string | null>(null);
   const [form, setForm] = useState<SpeciesFormState>(EMPTY_SPECIES_FORM);
   const [typeFilters, setTypeFilters] = useState<string[]>([]);
   const [sizeFilters, setSizeFilters] = useState<string[]>([]);
@@ -85,84 +90,24 @@ export function AdminSpeciesTab() {
     }),
   );
 
-  const openAdd = () => {
-    setEditing(null);
-    setCopySourceName(null);
-    setForm(EMPTY_SPECIES_FORM);
-    setModalOpen(true);
-  };
+  const openAdd = () => beginAdd(() => setForm(EMPTY_SPECIES_FORM));
 
-  const openDuplicate = (s: Species) => {
-    setEditing(null);
-    setCopySourceName(s.name);
-    setForm(speciesToFormState(s, skillsArr, traitsArr, (s.name || '').trim() + COPY_NAME_SUFFIX));
-    setModalOpen(true);
-  };
+  const openDuplicate = (s: Species) =>
+    beginDuplicate(s, () =>
+      setForm(
+        speciesToFormState(s, skillsArr, traitsArr, (s.name || '').trim() + COPY_NAME_SUFFIX),
+      ),
+    );
 
-  const openEdit = (s: Species) => {
-    setEditing(s);
-    setCopySourceName(null);
-    setForm(speciesToFormState(s, skillsArr, traitsArr));
-    setModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setEditing(null);
-    setCopySourceName(null);
-    setDeleteConfirm(null);
-  };
+  const openEdit = (s: Species) =>
+    beginEdit(s, () => setForm(speciesToFormState(s, skillsArr, traitsArr)));
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
-    setSaving(true);
-    const data = speciesFormToSavePayload(form);
-    const result = editing
-      ? await updateCodexDoc('codex_species', editing.id, data, {
-          expectedUpdatedAt: editing.updated_at,
-        })
-      : await createCodexDoc('codex_species', undefined, data);
-
-    if (!result.success) {
-      setSaving(false);
-      showToast(result.error ?? 'Operation failed', 'error');
-      return;
-    }
-
-    setSaving(false);
-    queryClient.invalidateQueries({ queryKey: ['codex'] });
-    await queryClient.refetchQueries({ queryKey: ['codex'] });
-    closeModal();
-  };
-
-  const codexDelete = useAdminCodexDelete({
-    collection: 'codex_species',
-    onDeleted: async () => {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-      closeModal();
-    },
-    onError: (message) => {
-      setPendingDeleteId(null);
-      showToast(message, 'error');
-    },
-  });
-
-  const handleDelete = async (id: string) => {
-    if (deleteConfirm !== id) {
-      setDeleteConfirm(id);
-      return;
-    }
-    await codexDelete.requestDelete(id);
-  };
-
-  const handleInlineDelete = async (id: string) => {
-    if (pendingDeleteId !== id) {
-      setPendingDeleteId(id);
-      return;
-    }
-    await codexDelete.requestDelete(id);
+    await save({
+      payload: speciesFormToSavePayload(form),
+      expectedUpdatedAt: editing?.updated_at,
+    });
   };
 
   if (error)
@@ -275,61 +220,12 @@ export function AdminSpeciesTab() {
               ]}
               detailSections={detailSections.length > 0 ? detailSections : undefined}
               rightSlot={
-                <div className="flex items-center gap-1 pr-2">
-                  {pendingDeleteId === s.id ? (
-                    <div className="flex items-center gap-1 text-xs">
-                      <span className="font-medium whitespace-nowrap text-danger-700 dark:text-danger-400">
-                        Remove?
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => handleInlineDelete(s.id)}
-                        className="h-6 px-2 py-0.5 text-xs"
-                      >
-                        Yes
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setPendingDeleteId(null)}
-                        className="h-6 px-2 py-0.5 text-xs"
-                      >
-                        No
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(s)}
-                        label="Edit"
-                        aria-label="Edit"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </IconButton>
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openDuplicate(s)}
-                        label="Duplicate"
-                        aria-label="Duplicate"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </IconButton>
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setPendingDeleteId(s.id)}
-                        label="Delete"
-                        className="text-danger-fg hover:bg-transparent hover:opacity-80"
-                      >
-                        <X className="h-4 w-4" />
-                      </IconButton>
-                    </>
-                  )}
-                </div>
+                <AdminCodexRowActions
+                  entity={s}
+                  onEdit={openEdit}
+                  onDuplicate={openDuplicate}
+                  onDelete={askDelete}
+                />
               }
             />
           );
@@ -347,12 +243,11 @@ export function AdminSpeciesTab() {
         skills={skillsArr}
         traits={traitsArr}
         saving={saving}
-        deleteConfirm={deleteConfirm}
-        onRequestDelete={() => editing && handleDelete(editing.id)}
+        onDelete={editing ? () => askDelete(editing) : undefined}
         onSave={handleSave}
       />
 
-      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="species" />
+      {deleteModals}
     </div>
   );
 }

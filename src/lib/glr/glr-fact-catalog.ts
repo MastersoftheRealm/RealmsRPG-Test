@@ -315,6 +315,7 @@ export const GLR_FACT_CATALOG: Record<GlrFactId, GlrFactDef> = {
       weapon: { band: 'secondary', orderInBand: 3, displayOrder: 3, headerTrack: '0.7fr' },
       armor: { band: 'secondary', orderInBand: 5, displayOrder: 3, headerTrack: '0.45fr' },
       shield: { band: 'secondary', orderInBand: 3, displayOrder: 3, headerTrack: '0.7fr' },
+      gear: { band: 'secondary', orderInBand: 1, displayOrder: 4, headerTrack: '0.7fr' },
     },
   },
   uses: {

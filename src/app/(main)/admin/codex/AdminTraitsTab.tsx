@@ -7,16 +7,15 @@ import {
   GridListRow,
 } from '@/components/patterns';
 import { traitsByIdMap, choiceTraitOptionIdsToChipData } from '@/lib/choice-trait';
-import { Button, IconButton, useToast } from '@/components/ui';
+import { useToast } from '@/components/ui';
 import { useTraits, type Trait } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
 import { useModalListState } from '@/hooks/use-modal-list-state';
-import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc } from './actions';
-import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
-import { Pencil, Copy, X } from 'lucide-react';
+import { createCodexDoc } from './actions';
+import { useAdminCodexEntity } from './use-admin-codex-entity';
+import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
-  COPY_NAME_SUFFIX,
   EMPTY_TRAIT_FORM,
   traitFormToSavePayload,
   traitToFormState,
@@ -35,15 +34,25 @@ const ADMIN_TRAIT_COLUMNS = [
 export function AdminTraitsTab() {
   const { showToast } = useToast();
   const { data: traits, isLoading, error, refetch } = useTraits();
-  const queryClient = useQueryClient();
+  const {
+    modalOpen,
+    editing,
+    saving,
+    copySourceName,
+    openAdd: beginAdd,
+    openDuplicate: beginDuplicate,
+    openEdit: beginEdit,
+    closeModal,
+    save,
+    refreshCodex,
+    askDelete,
+    deleteModals,
+  } = useAdminCodexEntity<Trait>({
+    collection: 'codex_traits',
+    entityLabel: 'trait',
+  });
   const [search, setSearch] = useState('');
   const { sortState, handleSort, sortItems } = useSort('name');
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Trait | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [copySourceName, setCopySourceName] = useState<string | null>(null);
   const [form, setForm] = useState<TraitFormState>(EMPTY_TRAIT_FORM);
   const [createTraitOpen, setCreateTraitOpen] = useState(false);
   const [createTraitForm, setCreateTraitForm] = useState({ name: '', description: '' });
@@ -76,32 +85,15 @@ export function AdminTraitsTab() {
 
   const traitById = useMemo(() => traitsByIdMap(traits || []), [traits]);
 
-  const openAdd = () => {
-    setEditing(null);
-    setCopySourceName(null);
-    setForm(EMPTY_TRAIT_FORM);
-    setModalOpen(true);
-  };
+  const openAdd = () => beginAdd(() => setForm(EMPTY_TRAIT_FORM));
 
-  const openDuplicate = (t: Trait) => {
-    setEditing(null);
-    setCopySourceName(t.name);
-    setForm(traitToFormState(t, (t.name || '').trim() + COPY_NAME_SUFFIX));
-    setModalOpen(true);
-  };
+  const openDuplicate = (t: Trait) =>
+    beginDuplicate(t, () => setForm(traitToFormState(t, (t.name || '').trim() + COPY_NAME_SUFFIX)));
 
-  const openEdit = (t: Trait) => {
-    setEditing(t);
-    setCopySourceName(null);
-    setForm(traitToFormState(t));
-    setModalOpen(true);
-  };
+  const openEdit = (t: Trait) => beginEdit(t, () => setForm(traitToFormState(t)));
 
-  const closeModal = () => {
-    setModalOpen(false);
-    setEditing(null);
-    setCopySourceName(null);
-    setDeleteConfirm(null);
+  const handleCloseModal = () => {
+    closeModal();
     setCreateTraitOpen(false);
   };
 
@@ -119,8 +111,7 @@ export function AdminTraitsTab() {
         showToast('Create succeeded but no ID was returned. Please refresh.', 'warning');
         return;
       }
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
+      await refreshCodex();
       setForm((f) => ({ ...f, option_trait_ids: [...f.option_trait_ids, id] }));
       setCreateTraitForm({ name: '', description: '' });
       setCreateTraitOpen(false);
@@ -131,52 +122,10 @@ export function AdminTraitsTab() {
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
-    setSaving(true);
-    const data = traitFormToSavePayload(form);
-    const result = editing
-      ? await updateCodexDoc('codex_traits', editing.id, data, {
-          expectedUpdatedAt: editing.updated_at,
-        })
-      : await createCodexDoc('codex_traits', undefined, data);
-
-    setSaving(false);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
-  };
-
-  const codexDelete = useAdminCodexDelete({
-    collection: 'codex_traits',
-    onDeleted: async () => {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-      closeModal();
-    },
-    onError: (message) => {
-      setPendingDeleteId(null);
-      showToast(message, 'error');
-    },
-  });
-
-  const handleDelete = async (id: string) => {
-    if (deleteConfirm !== id) {
-      setDeleteConfirm(id);
-      return;
-    }
-    await codexDelete.requestDelete(id);
-  };
-
-  const handleInlineDelete = async (id: string) => {
-    if (pendingDeleteId !== id) {
-      setPendingDeleteId(id);
-      return;
-    }
-    await codexDelete.requestDelete(id);
+    await save({
+      payload: traitFormToSavePayload(form),
+      expectedUpdatedAt: editing?.updated_at,
+    });
   };
 
   if (error)
@@ -231,61 +180,12 @@ export function AdminTraitsTab() {
                   : undefined
               }
               rightSlot={
-                <div className="flex items-center gap-1 pr-2">
-                  {pendingDeleteId === t.id ? (
-                    <div className="flex items-center gap-1 text-xs">
-                      <span className="font-medium whitespace-nowrap text-danger-700 dark:text-danger-400">
-                        Remove?
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => handleInlineDelete(t.id)}
-                        className="h-6 px-2 py-0.5 text-xs"
-                      >
-                        Yes
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setPendingDeleteId(null)}
-                        className="h-6 px-2 py-0.5 text-xs"
-                      >
-                        No
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(t)}
-                        label="Edit"
-                        aria-label="Edit"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </IconButton>
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openDuplicate(t)}
-                        label="Duplicate"
-                        aria-label="Duplicate"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </IconButton>
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setPendingDeleteId(t.id)}
-                        label="Delete"
-                        className="text-danger-fg hover:bg-transparent hover:opacity-80"
-                      >
-                        <X className="h-4 w-4" />
-                      </IconButton>
-                    </>
-                  )}
-                </div>
+                <AdminCodexRowActions
+                  entity={t}
+                  onEdit={openEdit}
+                  onDuplicate={openDuplicate}
+                  onDelete={askDelete}
+                />
               }
             />
           );
@@ -294,7 +194,7 @@ export function AdminTraitsTab() {
 
       <AdminTraitEditModal
         isOpen={modalOpen}
-        onClose={closeModal}
+        onClose={handleCloseModal}
         title={editing ? 'Edit Trait' : 'Add Trait'}
         copySourceName={copySourceName}
         editingId={editing?.id ?? null}
@@ -306,8 +206,7 @@ export function AdminTraitsTab() {
         choiceSortState={choiceSortState}
         handleChoiceSort={handleChoiceSort}
         saving={saving}
-        deleteConfirm={deleteConfirm}
-        onRequestDelete={() => editing && handleDelete(editing.id)}
+        onDelete={editing ? () => askDelete(editing) : undefined}
         onSave={handleSave}
         onOpenCreateTrait={() => setCreateTraitOpen(true)}
       />
@@ -321,7 +220,7 @@ export function AdminTraitsTab() {
         onCreate={handleCreateTraitAndAdd}
       />
 
-      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="trait" />
+      {deleteModals}
     </div>
   );
 }

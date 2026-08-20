@@ -11,8 +11,6 @@ import { PART_IDS, findByIdOrName } from '@/lib/id-constants';
 import type { AttackMode } from '@/lib/attack-mode';
 import { computeSplits } from './dice-splits';
 
-export { computeSplits };
-
 // =============================================================================
 // Types
 // =============================================================================

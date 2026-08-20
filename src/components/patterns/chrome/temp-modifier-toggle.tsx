@@ -71,7 +71,7 @@ export function TempModifierToggle({
         onClick?.();
       }}
       className={cn(
-        'touch-target-md-compact inline-flex items-center justify-center',
+        'hit-area-dense-square inline-flex items-center justify-center',
         'rounded-md p-1 md:p-0.5',
         'duration-base transition-all ease-standard',
         'max-md:hover:scale-110',

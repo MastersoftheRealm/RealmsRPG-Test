@@ -4,8 +4,8 @@
 
 import type { CodexSkill } from '@/types/codex';
 import { coerceJsonRecord } from '@/lib/game/archetype-path';
+import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
-  COPY_NAME_SUFFIX,
   guidedAbilitiesFromPath,
   guidedEquipmentMetaFromPath,
   guidanceGroupsFromPathData,

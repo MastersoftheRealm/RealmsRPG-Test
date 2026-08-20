@@ -60,7 +60,7 @@ export function CombatantCardConditionChips({
               onClick={() =>
                 isLeveled ? onUpdateConditionLevel(cond.name, -1) : onRemoveCondition(cond.name)
               }
-              className="touch-target-md-compact inline-flex items-center justify-center font-bold hover:text-danger-fg"
+              className="hit-area-dense-square inline-flex items-center justify-center font-bold hover:text-danger-fg"
               title={isLeveled ? 'Decrease level (removes at 0)' : 'Remove condition'}
               aria-label={
                 isLeveled ? `Decrease ${cond.name} level` : `Remove ${cond.name} condition`
@@ -108,7 +108,7 @@ export function CombatantCardConditionsPanel({
         <select
           value={selectedCondition}
           onChange={(e) => setSelectedCondition(e.target.value)}
-          className="min-h-[var(--touch-target-min,44px)] flex-1 rounded border border-border-light px-3 py-1 text-sm md:min-h-0"
+          className="touch-tier-standard flex-1 rounded border border-border-light px-3 py-1 text-sm"
           aria-label="Select condition to add"
         >
           <option value="">Select Condition...</option>
@@ -140,7 +140,7 @@ export function CombatantCardConditionsPanel({
           onChange={(e) => setCustomCondition(e.target.value)}
           placeholder="Custom condition..."
           aria-label="Custom condition name"
-          className="min-h-[var(--touch-target-min,44px)] flex-1 rounded border border-border-light px-3 py-1 text-sm md:min-h-0"
+          className="touch-tier-standard flex-1 rounded border border-border-light px-3 py-1 text-sm"
           onKeyDown={(e) => e.key === 'Enter' && handleAddCustomCondition()}
           maxLength={30}
         />

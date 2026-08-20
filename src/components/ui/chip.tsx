@@ -51,6 +51,7 @@ const chipVariants = cva(
         success: 'bg-success-light text-success-fg border-success-border',
         danger: 'bg-danger-light text-danger-fg border-danger-border',
         warning: 'bg-warning-light text-warning-fg border-warning-border',
+        info: 'bg-info-light text-info-fg border-info-border',
 
         // GridListRow expandable list chips (Phase 2.2 — unified from CHIP_STYLES)
         list: 'bg-surface-alt border-border-light text-text-secondary hover:bg-surface',
@@ -61,6 +62,10 @@ const chipVariants = cva(
         /** Proficiency / training-point (TP) domain chip — creator + sheet summaries */
         tp: 'bg-tp-light text-tp-text border-tp-border',
 
+        /** Power / martial domain chips — path type, trait kind, archetype summaries */
+        power: 'bg-power-light text-power-fg border-power-border',
+        technique: 'bg-martial-light text-martial-fg border-martial-border',
+
         /** Item rarity badges (Phase 4 — theme-aware semantic tokens) */
         rarityCommon: 'bg-surface-alt text-text-primary border-border-light',
         rarityUncommon: 'bg-success-light text-success-fg border-success-300',
@@ -69,32 +74,6 @@ const chipVariants = cva(
         rarityLegendary: 'bg-warning-light text-warning-fg border-warning-border',
         rarityMythic: 'bg-danger-light text-danger-fg border-danger-border',
         rarityAscended: 'bg-accent-light text-accent-fg border-accent-border',
-
-        // DEPRECATED VARIANTS (kept for backwards compatibility)
-        /** @deprecated Use 'default' instead */
-        secondary: 'bg-surface text-text-secondary border-border-light',
-        /** @deprecated Use 'default' instead */
-        outline: 'border-border-light bg-transparent text-text-secondary hover:bg-surface-alt',
-        /** @deprecated Use 'default' instead */
-        info: 'bg-info-light text-info-fg border-info-border',
-
-        // Equipment types - DEPRECATED (context provides meaning)
-        /** @deprecated Use 'default' - context provides meaning */
-        weapon: 'bg-warning-light text-warning-fg border-warning-border',
-        /** @deprecated Use 'default' - context provides meaning */
-        armor: 'bg-info-light text-info-fg border-info-border',
-        /** @deprecated Use 'default' - context provides meaning */
-        shield: 'bg-success-light text-success-fg border-success-border',
-
-        // Character content types - DEPRECATED (context provides meaning)
-        /** @deprecated Use 'default' - context provides meaning */
-        feat: 'bg-surface-alt text-text-secondary border-border-light',
-        /** @deprecated Use 'default' - context provides meaning */
-        proficiency: 'bg-info-light text-info-fg border-info-border',
-        /** @deprecated Use 'default' - context provides meaning */
-        power: 'bg-power-light text-power-fg border-power-border',
-        /** @deprecated Use 'default' - context provides meaning */
-        technique: 'bg-martial-light text-martial-fg border-martial-border',
       },
       shape: {
         /** Filters, removable tags, legacy chips */
@@ -146,7 +125,7 @@ const Chip = React.forwardRef<HTMLSpanElement, ChipProps>(
               e.stopPropagation();
               onRemove();
             }}
-            className="touch-target-md-compact -mr-1 ml-0.5 inline-flex items-center justify-center rounded-full p-0.5 transition-colors hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
+            className="hit-area-dense-square -mr-1 ml-0.5 inline-flex items-center justify-center rounded-full p-0.5 transition-colors hover:bg-black/10 focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
             aria-label="Remove"
           >
             <X className="h-3 w-3" />

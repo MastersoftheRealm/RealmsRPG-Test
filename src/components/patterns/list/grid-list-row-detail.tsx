@@ -82,7 +82,7 @@ export function DetailSectionLabel({
       )}
       {helpContent ? (
         <span className="inline-flex shrink-0" onClick={(e) => e.stopPropagation()}>
-          <InfoTippy content={helpContent} label={`${label} help`} size="inline" />
+          <InfoTippy content={helpContent} label={`${label} help`} />
         </span>
       ) : null}
     </div>

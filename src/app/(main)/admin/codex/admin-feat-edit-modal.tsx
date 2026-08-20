@@ -7,6 +7,8 @@ import { Layers } from 'lucide-react';
 import { getFeatLevel } from '@/lib/leveled-feats';
 import { featToFormState, type FeatFormState } from './admin-feat-form';
 import { AdminFeatEditModalFields } from './admin-feat-edit-modal-fields';
+import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
+import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
 
 export function AdminFeatEditModal({
   isOpen,
@@ -20,8 +22,7 @@ export function AdminFeatEditModal({
   abilityOptions,
   saving,
   canDelete,
-  deleteConfirm,
-  onRequestDelete,
+  onDelete,
   onSave,
   onSaveAll,
   initialForm,
@@ -47,8 +48,7 @@ export function AdminFeatEditModal({
   abilityOptions: { value: string; label: string }[];
   saving: boolean;
   canDelete: boolean;
-  deleteConfirm: string | null;
-  onRequestDelete: () => void;
+  onDelete?: (() => void) | undefined;
   onSave: (id: string | null, form: FeatFormState) => void;
   onSaveAll: (editsById: Record<string, FeatFormState>) => void;
   initialForm: FeatFormState;
@@ -155,49 +155,30 @@ export function AdminFeatEditModal({
       size="full"
       fullScreenOnMobile
       footer={
-        <div className="flex justify-between">
-          <div>
-            {canDelete && (
-              <Button
-                variant="outline"
-                onClick={onRequestDelete}
-                className={
-                  deleteConfirm ? 'border-danger-500 text-danger-700 dark:text-danger-400' : ''
-                }
-              >
-                {deleteConfirm ? 'Click again to confirm delete' : 'Delete'}
-              </Button>
-            )}
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              onClick={() => {
-                if (hasLevels) {
-                  // Ensure current form is captured before bulk-save.
-                  const currentId = selectedEditId;
-                  const nextDrafts: Record<string, FeatFormState> = { ...draftsById };
-                  if (currentId) nextDrafts[currentId] = form;
-                  const payload: Record<string, FeatFormState> = {};
-                  dirtyIds.forEach((id) => {
-                    const draft = nextDrafts[id];
-                    if (draft) payload[id] = draft;
-                  });
-                  // If user didn't change anything, do nothing.
-                  if (Object.keys(payload).length === 0) return;
-                  onSaveAll(payload);
-                  return;
-                }
-                onSave(selectedEditId, form);
-              }}
-              disabled={saving || !form.name.trim() || (hasLevels && dirtyIds.size === 0)}
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </Button>
-          </div>
-        </div>
+        <AdminCodexEditModalFooter
+          onDelete={canDelete ? onDelete : undefined}
+          onClose={onClose}
+          onSave={() => {
+            if (hasLevels) {
+              // Ensure current form is captured before bulk-save.
+              const currentId = selectedEditId;
+              const nextDrafts: Record<string, FeatFormState> = { ...draftsById };
+              if (currentId) nextDrafts[currentId] = form;
+              const payload: Record<string, FeatFormState> = {};
+              dirtyIds.forEach((id) => {
+                const draft = nextDrafts[id];
+                if (draft) payload[id] = draft;
+              });
+              // If user didn't change anything, do nothing.
+              if (Object.keys(payload).length === 0) return;
+              onSaveAll(payload);
+              return;
+            }
+            onSave(selectedEditId, form);
+          }}
+          saveDisabled={saving || !form.name.trim() || (hasLevels && dirtyIds.size === 0)}
+          saving={saving}
+        />
       }
     >
       <div className="space-y-4">
@@ -273,12 +254,7 @@ export function AdminFeatEditModal({
             </Button>
           </div>
         )}
-        {copySourceName && (
-          <p className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-secondary">
-            Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>.
-            Change the name and details as needed, then save to add the new feat.
-          </p>
-        )}
+        <AdminCodexCopySourceBanner copySourceName={copySourceName} entityLabel="feat" />
         <AdminFeatEditModalFields
           form={form}
           setFormField={setFormField}

@@ -79,7 +79,7 @@ Each principle below carries a **decision rule** for resolving tradeoffs in the 
 
 In-context explanation is central to this UX vision. **Use `InfoTippy` + static copy in `public/tooltip-text.tsx`** as the only contextual-help standard:
 
-- `@floating-ui/react` via `InfoTippy` from `@/components/shared`
+- `@floating-ui/react` via `InfoTippy` from `@/components/patterns`
 - `Info` icon triggers (or custom `children` for non-icon triggers)
 - Copy is static, reviewable, and version-controlled in `public/tooltip-text.tsx`
 - Legacy DB tooltip stack removed (Jun 2026); do not reintroduce `useTooltipByKey`, admin `/api/tooltips`, or user show-tooltips toggle

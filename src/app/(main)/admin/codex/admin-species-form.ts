@@ -4,8 +4,6 @@
 
 import type { Species, Skill, Trait } from '@/hooks';
 
-export const COPY_NAME_SUFFIX = ' copy';
-
 export type TraitPickerField =
   | 'speciesTraitIds'
   | 'ancestryTraitIds'

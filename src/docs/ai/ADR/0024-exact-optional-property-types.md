@@ -32,7 +32,6 @@ an AST pass and recovered with `git checkout -- src` — do not repeat that.
 
 - Positive: optional-vs-undefined is explicit; Supabase insert/update stays gated
   by generated types.
-- Negative / follow-ups: TASK-834 stays owner content recovery. Helper params
-  that still take unparameterized `SupabaseClient` remain TASK-822.
+- Negative / follow-ups: TASK-834 stays owner content recovery.
 - Rejected: 529-file AST rewrite of implementations; `git checkout -- src` on a
   dirty tree; widening generated DB types; leave the flag preview-only.

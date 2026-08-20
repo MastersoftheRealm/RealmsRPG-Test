@@ -2,7 +2,7 @@
 
 import { Plus, Trash2 } from 'lucide-react';
 import { TableScroll } from '@/components/ui';
-import { NumInput, SectionTitle } from './core-rules-field-editors';
+import { CORE_RULES_ADD_ROW_CLASS, NumInput, SectionTitle } from './core-rules-field-editors';
 
 export function RaritiesEditor({
   data,
@@ -83,7 +83,7 @@ export function RaritiesEditor({
                         tiers.filter((_, idx) => idx !== i),
                       )
                     }
-                    className="touch-target-md-compact p-1 text-text-muted hover:text-danger-fg"
+                    className="hit-area-dense-square p-1 text-text-muted hover:text-danger-fg"
                     aria-label={`Remove rarity tier ${(t.name as string) || i + 1}`}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
@@ -102,7 +102,7 @@ export function RaritiesEditor({
             { name: 'New Tier', levelMin: 1, levelMax: null, currencyMin: 0, currencyMax: null },
           ])
         }
-        className="mt-2 flex min-h-[44px] items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover md:min-h-0"
+        className={CORE_RULES_ADD_ROW_CLASS}
       >
         <Plus className="h-3.5 w-3.5" /> Add Rarity Tier
       </button>

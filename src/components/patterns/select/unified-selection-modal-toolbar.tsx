@@ -48,7 +48,6 @@ export function UnifiedSelectionModalToolbar({
     <div className="shrink-0">
       {hasOptions ? (
         <FilterSection
-          variant="compact"
           label={optionsLabel}
           expanded={optionsExpanded}
           onExpandedChange={onOptionsExpandedChange}

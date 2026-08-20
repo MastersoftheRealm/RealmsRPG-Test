@@ -6,9 +6,13 @@
  * this allocator so the guarantee cannot be reimplemented per table.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
+import {
+  fromPublicTable,
+  type PublicTableName,
+  type TypedSupabaseClient,
+} from '@/lib/supabase/database';
 
-export const RETIRED_IDS_TABLE = 'codex_retired_ids';
+export const RETIRED_IDS_TABLE = 'codex_retired_ids' as const;
 
 export function parseNumericId(id: unknown): number | null {
   if (typeof id !== 'string' && typeof id !== 'number') return null;
@@ -33,7 +37,7 @@ export function lowestUnusedNumericId(taken: ReadonlySet<number>): string {
 
 /** Retired ids are advisory: a missing tombstone table must not break admin writes. */
 export async function fetchRetiredIds(
-  supabase: SupabaseClient,
+  supabase: TypedSupabaseClient,
   entityType: string,
 ): Promise<Set<string>> {
   const { data, error } = await supabase
@@ -45,7 +49,7 @@ export async function fetchRetiredIds(
     return new Set<string>();
   }
   const out = new Set<string>();
-  for (const row of (data ?? []) as Array<{ id?: unknown | undefined }>) {
+  for (const row of data ?? []) {
     if (row.id != null) out.add(String(row.id));
   }
   return out;
@@ -56,11 +60,11 @@ export async function fetchRetiredIds(
  * `entityType` keys the tombstone rows and is the table name for every current caller.
  */
 export async function allocateCodexNumericId(
-  supabase: SupabaseClient,
+  supabase: TypedSupabaseClient,
   table: string,
   entityType: string = table,
 ): Promise<string> {
-  const { data, error } = await supabase.from(table).select('id');
+  const { data, error } = await fromPublicTable(supabase, table as PublicTableName).select('id');
   if (error) throw new Error(error.message);
 
   const taken = new Set<number>();
@@ -78,7 +82,7 @@ export async function allocateCodexNumericId(
 
 /** Tombstone a deleted id. Best-effort: never blocks or fails the delete that triggered it. */
 export async function retireCodexId(
-  supabase: SupabaseClient,
+  supabase: TypedSupabaseClient,
   entityType: string,
   id: string,
 ): Promise<void> {

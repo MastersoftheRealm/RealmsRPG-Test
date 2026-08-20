@@ -194,7 +194,7 @@ export function EditSpeciesAncestryStep({
         <TraitSection
           title="Ancestry Traits"
           subtitle={`Select ${maxAncestryTraits} trait${maxAncestryTraits > 1 ? 's' : ''}`}
-          icon={<Star className="h-5 w-5 text-warning-700 dark:text-warning-400" />}
+          icon={<Star className="h-5 w-5 text-warning-fg" />}
           traits={ancestryTraits}
           selectable
           selectedIds={selectedTraitIds}
@@ -212,7 +212,7 @@ export function EditSpeciesAncestryStep({
               ? '1 from either species; 2nd below from the species you took the flaw from'
               : 'Choose 1 from either species'
           }
-          icon={<Star className="h-5 w-5 text-warning-700 dark:text-warning-400" />}
+          icon={<Star className="h-5 w-5 text-warning-fg" />}
           traits={ancestryTraits}
           selectable
           selectedIds={selectedTraitIds[0] ? [selectedTraitIds[0]] : []}
@@ -226,7 +226,7 @@ export function EditSpeciesAncestryStep({
         <TraitSection
           title="Characteristics"
           subtitle="Select 1 characteristic (optional)"
-          icon={<Sparkles className="h-5 w-5 text-info-fg dark:text-info-400" />}
+          icon={<Sparkles className="h-5 w-5 text-info-fg" />}
           traits={characteristics}
           selectable
           selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}
@@ -240,7 +240,7 @@ export function EditSpeciesAncestryStep({
         <TraitSection
           title="Characteristic"
           subtitle="Choose 1 (optional)"
-          icon={<Sparkles className="h-5 w-5 text-info-fg dark:text-info-400" />}
+          icon={<Sparkles className="h-5 w-5 text-info-fg" />}
           traits={characteristics}
           selectable
           selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}
@@ -254,7 +254,7 @@ export function EditSpeciesAncestryStep({
         <TraitSection
           title="Flaws"
           subtitle="Select 1 flaw to gain an extra ancestry trait (optional)"
-          icon={<AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />}
+          icon={<AlertTriangle className="h-5 w-5 text-danger-fg" />}
           traits={flaws}
           selectable
           selectedIds={selectedFlaw ? [selectedFlaw] : []}
@@ -267,14 +267,14 @@ export function EditSpeciesAncestryStep({
       {isMixed && (flawsFromA.length > 0 || flawsFromB.length > 0) && speciesA && speciesB && (
         <div className="mb-2">
           <h3 className="mb-2 flex items-center gap-2 font-semibold text-text-primary">
-            <AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />
+            <AlertTriangle className="h-5 w-5 text-danger-fg" />
             Flaw (optional, grants +1 ancestry trait from the same species)
           </h3>
           {flawsFromA.length > 0 && (
             <TraitSection
               title={`Flaws from ${nameA}`}
               subtitle="Choose up to 1"
-              icon={<AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />}
+              icon={<AlertTriangle className="h-5 w-5 text-danger-fg" />}
               traits={flawsFromA}
               selectable
               selectedIds={
@@ -289,7 +289,7 @@ export function EditSpeciesAncestryStep({
             <TraitSection
               title={`Flaws from ${nameB}`}
               subtitle="Choose up to 1"
-              icon={<AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />}
+              icon={<AlertTriangle className="h-5 w-5 text-danger-fg" />}
               traits={flawsFromB}
               selectable
               selectedIds={
@@ -307,7 +307,7 @@ export function EditSpeciesAncestryStep({
         <TraitSection
           title={`Extra ancestry trait (from ${selectedFlawSpeciesId === speciesA?.id ? nameA : nameB} only)`}
           subtitle="Choose 1"
-          icon={<Star className="h-5 w-5 text-warning-700 dark:text-warning-400" />}
+          icon={<Star className="h-5 w-5 text-warning-fg" />}
           traits={ancestryTraitsFromFlawSpecies}
           selectable
           selectedIds={selectedTraitIds[1] ? [selectedTraitIds[1]] : []}

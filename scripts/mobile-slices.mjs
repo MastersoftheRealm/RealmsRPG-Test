@@ -4,9 +4,15 @@
  *
  * Usage: node scripts/mobile-slices.mjs <route> [slices] [width]
  */
+import { config as loadEnv } from 'dotenv';
 import { chromium, devices } from 'playwright';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+loadEnv({ path: path.join(repoRoot, '.env') });
+loadEnv({ path: path.join(repoRoot, '.env.local'), override: true });
 
 const route = process.argv[2] ?? '/';
 const slices = Number(process.argv[3] ?? 6);

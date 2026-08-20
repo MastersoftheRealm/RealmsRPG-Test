@@ -230,9 +230,7 @@ export default function AdminCoreRulesPage() {
               'Save Changes'
             )}
           </Button>
-          {dirty && (
-            <span className="text-xs text-warning-700 dark:text-warning-400">Unsaved changes</span>
-          )}
+          {dirty && <span className="text-xs text-warning-fg">Unsaved changes</span>}
         </div>
       </TabContentPanel>
     </PageContainer>

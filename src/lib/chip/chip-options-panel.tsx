@@ -25,7 +25,7 @@ export function ChipOptionsPanel({
         type="button"
         onClick={onToggle}
         className={cn(
-          'touch-target-md-compact -mx-1 flex min-h-11 items-center gap-1 px-1 font-medium text-text-secondary hover:text-text-primary',
+          'hit-area-dense -mx-1 flex min-h-11 items-center gap-1 px-1 font-medium text-text-secondary hover:text-text-primary',
           bodyText,
         )}
       >

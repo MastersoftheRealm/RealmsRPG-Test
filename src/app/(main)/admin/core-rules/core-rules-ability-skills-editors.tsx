@@ -1,7 +1,12 @@
 'use client';
 
 import { Plus, Trash2 } from 'lucide-react';
-import { FieldRow, NumInput, SectionTitle } from './core-rules-field-editors';
+import {
+  CORE_RULES_ADD_ROW_CLASS,
+  FieldRow,
+  NumInput,
+  SectionTitle,
+} from './core-rules-field-editors';
 
 export function AbilityRulesEditor({
   data,
@@ -85,7 +90,7 @@ export function AbilityRulesEditor({
               delete updated[name];
               set('standardArrays', updated);
             }}
-            className="touch-target-md-compact p-1 text-text-muted transition-colors hover:text-danger-fg"
+            className="hit-area-dense-square p-1 text-text-muted transition-colors hover:text-danger-fg"
             aria-label={`Remove ${name} array`}
             title="Remove array"
           >
@@ -99,7 +104,7 @@ export function AbilityRulesEditor({
           const newName = `custom_${Object.keys(arrays).length + 1}`;
           set('standardArrays', { ...arrays, [newName]: [2, 2, 1, 1, 0, -1] });
         }}
-        className="mt-2 flex min-h-[44px] items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover md:min-h-0"
+        className={CORE_RULES_ADD_ROW_CLASS}
       >
         <Plus className="h-3.5 w-3.5" /> Add Standard Array
       </button>

@@ -150,7 +150,7 @@ export function PropertyCard({
                   onUpdate({ property: newProp, op_1_lvl: 0 });
                 }
               }}
-              className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-text-primary"
+              className="touch-tier-standard w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-text-primary"
               aria-label="Property"
             >
               {selectableProperties.map((p, idx) => (

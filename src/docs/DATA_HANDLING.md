@@ -71,8 +71,6 @@
 | Official library | `['official-library', type]` | `useOfficialLibrary('powers')` |
 | User library counts | `['user-library-counts', userId]` | `useUserLibraryCounts` |
 | Official library counts | `['official-library-counts']` | `useOfficialLibraryCounts` |
-| User library counts | `['user-library-counts', userId]` | `useUserLibraryCounts` |
-| Official library counts | `['official-library-counts']` | `useOfficialLibraryCounts` |
 | Campaign rolls  | `['campaign-rolls', campaignId]` | useCampaignRolls       |
 
 ---

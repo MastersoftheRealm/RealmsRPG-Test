@@ -264,7 +264,6 @@ export function GuidedInlineCatalogList({
       <div className="flex flex-col gap-2">
         {hasOptions ? (
           <FilterSection
-            variant="compact"
             label={optionsLabel}
             expanded={optionsExpanded}
             onExpandedChange={setOptionsExpanded}

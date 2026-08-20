@@ -42,7 +42,7 @@ export function CombatantCardInitiative({
       onDragEnd={onDragEnd}
       className="flex cursor-grab flex-col items-center gap-1 select-none active:cursor-grabbing"
     >
-      <div className="touch-target-md-compact flex items-center justify-center rounded p-1 text-text-muted hover:bg-surface-alt hover:text-text-primary dark:hover:text-text-primary">
+      <div className="hit-area-dense-square flex items-center justify-center rounded p-1 text-text-muted hover:bg-surface-alt hover:text-text-primary dark:hover:text-text-primary">
         <GripVertical className="h-5 w-5" />
       </div>
       <div

@@ -63,7 +63,7 @@ export function ItemCreatorEditorShieldPanels({
             <select
               value={shieldDR.size}
               onChange={(e) => onShieldDRChange((d) => ({ ...d, size: parseInt(e.target.value) }))}
-              className="rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
+              className="touch-tier-standard rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
               aria-label="Shield damage reduction die size"
             >
               {DIE_SIZES.map((size) => (
@@ -117,7 +117,7 @@ export function ItemCreatorEditorShieldPanels({
                   onChange={(e) =>
                     onShieldDamageChange((d) => ({ ...d, size: parseInt(e.target.value) }))
                   }
-                  className="rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
+                  className="touch-tier-standard rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
                   aria-label="Shield damage die size"
                 >
                   {DIE_SIZES.map((size) => (

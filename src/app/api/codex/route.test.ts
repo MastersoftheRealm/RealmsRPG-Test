@@ -4,16 +4,22 @@ vi.mock('@/lib/supabase/server', () => ({
   createClient: vi.fn(),
 }));
 
+vi.mock('@/lib/supabase/session', () => ({
+  getSession: vi.fn(),
+}));
+
 vi.mock('@/lib/core-rules-server', () => ({
   fetchCoreRules: vi.fn(async () => ({ PROGRESSION_PLAYER: { baseHealth: 8 } })),
 }));
 
 import { GET } from './route';
 import { createClient } from '@/lib/supabase/server';
+import { getSession } from '@/lib/supabase/session';
 import { fetchCoreRules } from '@/lib/core-rules-server';
 import { CODEX_PAYLOAD_KEYS, type CodexPayload } from '@/types/codex';
 
 const mockCreateClient = vi.mocked(createClient);
+const mockGetSession = vi.mocked(getSession);
 const mockFetchCoreRules = vi.mocked(fetchCoreRules);
 
 const ROWS: Record<string, Record<string, unknown>[]> = {
@@ -77,6 +83,7 @@ describe('GET /api/codex', () => {
     expect(body.feats?.[0]?.name).toBe('Cleave');
     expect(queriedTables).toEqual(['codex_feats']);
     expect(mockFetchCoreRules).not.toHaveBeenCalled();
+    expect(mockGetSession).not.toHaveBeenCalled();
   });
 
   it('reads both archetype tables for the archetypes slice', async () => {
@@ -118,5 +125,19 @@ describe('GET /api/codex', () => {
     expect(response.status).toBe(400);
     await expect(response.json()).resolves.toEqual({ error: 'Unknown codex collection' });
     expect(queriedTables).toEqual([]);
+  });
+
+  it('does not leak debug details to anonymous callers in production', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    mockGetSession.mockResolvedValue({ user: null, error: 'No session' });
+    mockCreateClient.mockRejectedValue(new Error('secret connection string'));
+
+    try {
+      const response = await GET(new Request('http://localhost/api/codex?debug=1'));
+      expect(response.status).toBe(500);
+      await expect(response.json()).resolves.toEqual({ error: 'Failed to load codex' });
+    } finally {
+      vi.unstubAllEnvs();
+    }
   });
 });

@@ -3,11 +3,11 @@
  * Mutates rows in place (sets image_url when cache absent). Safe no-op when column missing.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { readRecordImageId, readRecordImageUrl } from '@/lib/entity-image-url';
+import type { TypedSupabaseClient } from '@/lib/supabase/database';
 
 export async function enrichRowsWithBankImageUrls(
-  supabase: SupabaseClient,
+  supabase: TypedSupabaseClient,
   rows: Record<string, unknown>[],
 ): Promise<void> {
   if (rows.length === 0) return;
@@ -33,9 +33,8 @@ export async function enrichRowsWithBankImageUrls(
 
   const urlById = new Map<string, string>();
   for (const row of data ?? []) {
-    const r = row as { id?: string | undefined; public_url?: string | undefined };
-    if (r.id && typeof r.public_url === 'string' && r.public_url.trim()) {
-      urlById.set(String(r.id), r.public_url.trim());
+    if (row.id && typeof row.public_url === 'string' && row.public_url.trim()) {
+      urlById.set(String(row.id), row.public_url.trim());
     }
   }
 

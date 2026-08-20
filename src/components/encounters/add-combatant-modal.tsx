@@ -17,7 +17,14 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import {
+  useState,
+  useMemo,
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  type MutableRefObject,
+} from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { cn, generateId } from '@/lib/utils';
 import { getErrorMessage } from '@/lib/api-client';
@@ -38,6 +45,37 @@ import type { TrackedCombatant, CombatantType, SkillParticipant } from '@/types/
 import type { Campaign } from '@/types/campaign';
 
 type TabId = 'library' | 'campaign';
+
+/** Footer chrome only — the Add handler lives on a ref (not in React state). */
+type AddFooterChrome = {
+  label: string;
+  disabled?: boolean | undefined;
+};
+
+type AddHandlerRef = MutableRefObject<() => void | Promise<void>>;
+
+function useStickyAddFooter(
+  setChrome: (chrome: AddFooterChrome | null) => void,
+  handlerRef: AddHandlerRef,
+  ready: boolean,
+  label: string,
+  onAdd: () => void | Promise<void>,
+  disabled: boolean,
+) {
+  useLayoutEffect(() => {
+    if (!ready) {
+      handlerRef.current = () => undefined;
+      setChrome(null);
+      return;
+    }
+    handlerRef.current = onAdd;
+    setChrome(disabled ? { label, disabled: true } : { label });
+    return () => {
+      handlerRef.current = () => undefined;
+      setChrome(null);
+    };
+  }, [ready, label, onAdd, disabled, setChrome, handlerRef]);
+}
 
 export interface AddCombatantModalProps {
   onClose: () => void;
@@ -60,9 +98,30 @@ export function AddCombatantModal({
   mode,
 }: AddCombatantModalProps) {
   const [tab, setTab] = useState<TabId>('library');
+  const addHandlerRef = useRef<() => void | Promise<void>>(() => undefined);
+  const [addFooter, setAddFooter] = useState<AddFooterChrome | null>(null);
 
   return (
-    <Modal isOpen onClose={onClose} title="Add From Library / Campaign" fullScreenOnMobile>
+    <Modal
+      isOpen
+      onClose={onClose}
+      title="Add From Library / Campaign"
+      fullScreenOnMobile
+      footer={
+        addFooter ? (
+          <Button
+            size="lg"
+            className="w-full"
+            onClick={() => {
+              void addHandlerRef.current();
+            }}
+            disabled={addFooter.disabled === true}
+          >
+            {addFooter.label}
+          </Button>
+        ) : undefined
+      }
+    >
       <SegmentedControl
         value={tab}
         onChange={setTab}
@@ -89,6 +148,8 @@ export function AddCombatantModal({
           onAddParticipants={onAddParticipants}
           mode={mode}
           onClose={onClose}
+          setAddFooter={setAddFooter}
+          addHandlerRef={addHandlerRef}
         />
       ) : (
         <CampaignCharactersTab
@@ -96,6 +157,8 @@ export function AddCombatantModal({
           onAddParticipants={onAddParticipants}
           mode={mode}
           onClose={onClose}
+          setAddFooter={setAddFooter}
+          addHandlerRef={addHandlerRef}
         />
       )}
     </Modal>
@@ -111,11 +174,15 @@ function CreatureLibraryTab({
   onAddParticipants,
   mode,
   onClose,
+  setAddFooter,
+  addHandlerRef,
 }: {
   onAdd: (combatants: TrackedCombatant[]) => void;
   onAddParticipants?: ((participants: SkillParticipant[]) => void) | undefined;
   mode: string;
   onClose: () => void;
+  setAddFooter: (footer: AddFooterChrome | null) => void;
+  addHandlerRef: AddHandlerRef;
 }) {
   const { data: creatures = [], isLoading } = useUserCreatures();
   const [search, setSearch] = useState('');
@@ -131,7 +198,7 @@ function CreatureLibraryTab({
     );
   }, [creatures, search]);
 
-  const handleAdd = () => {
+  const handleAdd = useCallback(() => {
     if (!selected) return;
 
     const level = selected.level || 1;
@@ -185,7 +252,16 @@ function CreatureLibraryTab({
     }
     onAdd(combatants);
     onClose();
-  };
+  }, [selected, quantity, combatantType, mode, onAdd, onAddParticipants, onClose]);
+
+  useStickyAddFooter(
+    setAddFooter,
+    addHandlerRef,
+    selected !== null,
+    selected ? (quantity > 1 ? `Add ${quantity} Creatures` : `Add ${selected.name}`) : '',
+    handleAdd,
+    false,
+  );
 
   if (isLoading) {
     return <LoadingState message="Loading creatures..." size="md" padding="sm" />;
@@ -277,10 +353,6 @@ function CreatureLibraryTab({
               </div>
             )}
           </div>
-
-          <Button onClick={handleAdd} className="w-full">
-            Add {quantity > 1 ? `${quantity} Creatures` : selected.name}
-          </Button>
         </div>
       )}
     </div>
@@ -296,11 +368,15 @@ function CampaignCharactersTab({
   onAddParticipants,
   mode,
   onClose,
+  setAddFooter,
+  addHandlerRef,
 }: {
   onAdd: (combatants: TrackedCombatant[]) => void;
   onAddParticipants?: ((participants: SkillParticipant[]) => void) | undefined;
   mode: string;
   onClose: () => void;
+  setAddFooter: (footer: AddFooterChrome | null) => void;
+  addHandlerRef: AddHandlerRef;
 }) {
   const { data: campaigns = [], isLoading } = useCampaignsFull();
   const { user } = useAuthStore();
@@ -319,7 +395,7 @@ function CampaignCharactersTab({
     });
   };
 
-  const handleAdd = async () => {
+  const handleAdd = useCallback(async () => {
     if (!selectedCampaign || selectedChars.size === 0) return;
     setLoading(true);
 
@@ -412,7 +488,28 @@ function CampaignCharactersTab({
     } finally {
       setLoading(false);
     }
-  };
+  }, [
+    selectedCampaign,
+    selectedChars,
+    queryClient,
+    user,
+    mode,
+    onAdd,
+    onAddParticipants,
+    onClose,
+    showToast,
+  ]);
+
+  useStickyAddFooter(
+    setAddFooter,
+    addHandlerRef,
+    Boolean(selectedCampaign) && selectedChars.size > 0,
+    loading
+      ? 'Loading characters...'
+      : `Add ${selectedChars.size} Character${selectedChars.size > 1 ? 's' : ''}`,
+    handleAdd,
+    loading,
+  );
 
   if (isLoading) {
     return <LoadingState message="Loading campaigns..." size="md" padding="sm" />;
@@ -498,14 +595,6 @@ function CampaignCharactersTab({
               );
             })}
           </div>
-
-          {selectedChars.size > 0 && (
-            <Button onClick={handleAdd} disabled={loading} className="mt-4 w-full">
-              {loading
-                ? 'Loading characters...'
-                : `Add ${selectedChars.size} Character${selectedChars.size > 1 ? 's' : ''}`}
-            </Button>
-          )}
         </div>
       )}
     </div>

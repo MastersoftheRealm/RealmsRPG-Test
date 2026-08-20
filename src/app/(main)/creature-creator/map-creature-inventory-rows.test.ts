@@ -154,9 +154,35 @@ describe('mapCreatureSelectedInventoryRows (TASK-817)', () => {
     expect(torch.totalTp).toBeUndefined();
     expect(rope.columns?.find((c) => c.key === 'quantity')?.value).toBe('2');
     expect(torch.columns?.find((c) => c.key === 'quantity')?.value).toBe('-');
+    expect(
+      chipLabelsFromDetailSections(rope.detailSections).some((l) => /training points/i.test(l)),
+    ).toBe(false);
+  });
+
+  it('equipment play chips Training Points when valued and omits totalTp (TASK-825)', () => {
+    const { equipment } = mapCreatureSelectedInventoryRows({
+      sortedArmaments: [
+        baseRow({
+          id: 'e-tp',
+          type: 'equipment',
+          name: 'Spyglass',
+          category: 'Adventuring',
+          rarity: 'uncommon',
+          tp: 2,
+          currency: '20c',
+        }),
+      ],
+      creature: { abilities, martialProficiency: 0 },
+      onRemoveArmament: vi.fn(),
+    });
+    const row = defined(equipment[0]);
+    expect(row.totalTp).toBeUndefined();
+    expect(row.columns?.some((c) => c.key === 'tp')).toBe(false);
+    const chips = chipLabelsFromDetailSections(row.detailSections);
+    expect(chips.some((l) => /training points\s+2/i.test(l))).toBe(true);
     assertRowFactCoverage('character-sheet-gear', {
-      columnKeys: rope.columns?.map((c) => c.key) ?? [],
-      chipLabels: chipLabelsFromDetailSections(rope.detailSections),
+      columnKeys: row.columns?.map((c) => c.key) ?? [],
+      chipLabels: chips,
     });
   });
 });

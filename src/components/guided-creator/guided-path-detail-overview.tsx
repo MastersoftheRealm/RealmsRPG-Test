@@ -88,11 +88,7 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
         <GuidedOverviewSection
           title={copy.pathAbilitiesTitle}
           titleAddon={
-            <InfoTippy
-              content={guidedArchetypeAbilityHelp}
-              label="About Path Abilities"
-              size="inline"
-            />
+            <InfoTippy content={guidedArchetypeAbilityHelp} label="About Path Abilities" />
           }
         >
           <div className="flex flex-wrap gap-2">
@@ -112,11 +108,7 @@ export function GuidedPathDetailOverview({ path, pathData }: GuidedPathDetailOve
       <GuidedOverviewSection
         title={copy.weaponsAndArmorTitle}
         titleAddon={
-          <InfoTippy
-            content={armamentProficiencyHelp}
-            label="About Armament Proficiency"
-            size="inline"
-          />
+          <InfoTippy content={armamentProficiencyHelp} label="About Armament Proficiency" />
         }
       >
         <p className={o.body}>{weaponsAndArmorLine}</p>

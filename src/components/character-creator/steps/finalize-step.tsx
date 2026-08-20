@@ -300,12 +300,7 @@ export function FinalizeStep() {
 
       <div className="mb-2 flex items-center gap-1">
         <h2 className="text-2xl font-bold text-text-primary">Meet Your Character</h2>
-        <InfoTippy
-          content={finalizeSummaryHelp}
-          allowHTML
-          label="Finalize checklist help"
-          size="inline"
-        />
+        <InfoTippy content={finalizeSummaryHelp} label="Finalize checklist help" />
       </div>
       <p className="mb-6 text-text-secondary">
         Review your build, add identity details, then create your character.
@@ -426,12 +421,13 @@ export function FinalizeStep() {
         backDisabled={saving}
         primaryAction={
           <Button
+            size="lg"
             onClick={handleValidateAndSave}
             disabled={saving || showLoginPrompt}
             isLoading={saving}
             variant={validationIssues.some((i) => i.severity === 'error') ? 'secondary' : 'primary'}
             className={cn(
-              'min-h-11 min-w-11 px-8',
+              'px-8',
               !saving &&
                 validationIssues.some((i) => i.severity === 'error') &&
                 'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600',

@@ -51,12 +51,7 @@ export function PowersStepChrome({
       <div className="mb-8 text-center">
         <div className="mb-2 flex items-center justify-center gap-1">
           <h2 className="text-2xl font-bold text-text-primary">Powers & Techniques</h2>
-          <InfoTippy
-            content={powersSelectionHelp}
-            allowHTML
-            label="Powers and techniques help"
-            size="inline"
-          />
+          <InfoTippy content={powersSelectionHelp} label="Powers and techniques help" />
         </div>
         <p className="text-text-muted">
           Select powers and techniques from your library for your character to know.

@@ -37,9 +37,9 @@ export function LargeStatBlock({
   const tint = tempModifierTintFromDelta(tempDelta);
 
   return (
-    <Card className="flex min-w-[100px] flex-col items-center bg-surface-alt p-4 shadow-none">
-      <div className="flex w-full items-center justify-center gap-1.5">
-        <span className="text-center text-sm font-semibold tracking-wide text-text-secondary uppercase">
+    <Card className="flex h-full w-full min-w-0 flex-col items-center bg-surface-alt p-3 shadow-none sm:p-4">
+      <div className="flex w-full min-w-0 flex-wrap items-center justify-center gap-1.5">
+        <span className="min-w-0 text-center text-sm leading-tight font-semibold tracking-wide break-words text-text-secondary uppercase">
           {label}
         </span>
         {canTemp && (

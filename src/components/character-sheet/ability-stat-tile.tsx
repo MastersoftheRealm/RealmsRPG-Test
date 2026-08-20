@@ -91,7 +91,7 @@ export function AbilityStatTile({
         label={`About ${info.name}`}
         className={SHEET_STAT_TIP_CLASS}
       >
-        {info.name}
+        <span className="w-full min-w-0 text-center break-words">{info.name}</span>
       </WordHelpTip>
 
       {showSpendControls ? (

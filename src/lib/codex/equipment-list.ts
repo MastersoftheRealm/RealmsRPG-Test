@@ -1,12 +1,16 @@
 /**
  * Shared Codex + Admin equipment list helpers (TASK-723 / TASK-806).
- * Gear GLR: Category / Currency / Rarity only (ADR-0016). Named property chips stay.
+ * Gear GLR: Category / Currency / Rarity columns. Named property chips stay.
  */
 
 import type { ColumnValue } from '@/components/patterns/list/grid-list-row-types';
-import { type MetadataDetailSection } from '@/lib/chip/list-row-metadata';
+import { glrSurfaceDetailSections, type MetadataDetailSection } from '@/lib/chip/list-row-metadata';
 import { namedPropertyDescriptorChips } from '@/lib/detail-option/compact-facts';
-import type { ItemPropertyTpRow } from '@/lib/calculators/item-calc';
+import {
+  calculateItemCosts,
+  type ItemPropertyPayload,
+  type ItemPropertyTpRow,
+} from '@/lib/calculators/item-calc';
 import { applyArmamentFilters, type ArmamentFilterState } from '@/lib/library/armament-filters';
 import type { ArmamentCharacterContext } from '@/lib/library/armament-character-context';
 import type { CodexEquipmentItem } from '@/types/codex';
@@ -51,12 +55,19 @@ export function buildCodexEquipmentDetailSections(
   item: CodexEquipmentItem,
   propertiesDb: ItemPropertyTpRow[] = [],
 ): MetadataDetailSection[] {
-  const sections: MetadataDetailSection[] = [];
+  const payloads: ItemPropertyPayload[] = (item.properties ?? []).map((name) => ({ name }));
+  const costs = calculateItemCosts(payloads, propertiesDb);
+  const tp = Math.round(costs.totalTP);
   const propertyChips = namedPropertyDescriptorChips(item.properties, propertiesDb);
-  if (propertyChips.length > 0) {
-    sections.push({ label: 'Properties', chips: propertyChips, hideLabelIfSingle: true });
-  }
-  return sections;
+  const extra: MetadataDetailSection[] | undefined =
+    propertyChips.length > 0
+      ? [{ label: 'Properties', chips: propertyChips, hideLabelIfSingle: true }]
+      : undefined;
+  return glrSurfaceDetailSections(
+    'codex-equipment',
+    { trainingPoints: tp > 0 ? tp : undefined },
+    extra,
+  );
 }
 
 export function collectCodexEquipmentFilterOptions(items: CodexEquipmentItem[] | undefined): {

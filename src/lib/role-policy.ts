@@ -5,11 +5,8 @@
  */
 
 import { createClient } from '@/lib/supabase/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import type { Json, Tables } from '@/lib/supabase/database';
+import type { Json, Tables, TypedSupabaseClient } from '@/lib/supabase/database';
 import { ROLE_LIMITS, type RoleLimits, type UserRole } from './role-limits';
-
-type SupabaseClientLike = SupabaseClient;
 
 export interface RolePolicy extends RoleLimits {
   role: UserRole;
@@ -87,7 +84,7 @@ function rowToPolicy(row: RolePolicyRow): RolePolicy {
 
 export async function getRolePolicyForRole(
   role: UserRole | string | null | undefined,
-  supabaseClient?: SupabaseClientLike,
+  supabaseClient?: TypedSupabaseClient,
 ): Promise<RolePolicy> {
   const safeRole = isUserRole(role) ? role : DEFAULT_ROLE;
   const fallback = getDefaultRolePolicy(safeRole);
@@ -106,7 +103,7 @@ export async function getRolePolicyForRole(
 
 export async function getRolePolicyForUser(
   uid: string,
-  supabaseClient?: SupabaseClientLike,
+  supabaseClient?: TypedSupabaseClient,
 ): Promise<RolePolicy> {
   const supabase = supabaseClient ?? (await createClient());
   const { data: profile } = await supabase
@@ -115,7 +112,5 @@ export async function getRolePolicyForUser(
     .eq('id', uid)
     .maybeSingle();
 
-  const role = ((profile as { role?: string | undefined } | null)?.role ??
-    DEFAULT_ROLE) as UserRole;
-  return getRolePolicyForRole(role, supabase);
+  return getRolePolicyForRole(profile?.role ?? DEFAULT_ROLE, supabase);
 }

@@ -208,7 +208,7 @@ export function RecoveryModal({
           <Button variant="secondary" onClick={onClose}>
             Cancel
           </Button>
-          <Button variant="primary" onClick={handleConfirm}>
+          <Button variant="primary" size="lg" onClick={handleConfirm}>
             {mode === 'full' ? 'Full Recovery' : `Recover (${hours}h)`}
           </Button>
         </div>

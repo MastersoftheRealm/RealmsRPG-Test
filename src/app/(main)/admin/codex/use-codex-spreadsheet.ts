@@ -32,6 +32,7 @@ import {
   stringToCellValue,
 } from './codex-spreadsheet-helpers';
 
+/** Spreadsheet copy-suffix stays tab-local (TASK-849). Entity tabs share admin-codex-copy-suffix. */
 const COPY_NAME_SUFFIX = ' copy';
 
 export type CodexSpreadsheetRow = {

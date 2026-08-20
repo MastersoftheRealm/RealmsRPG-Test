@@ -1,11 +1,12 @@
 import type { MDXComponents } from 'mdx/types';
 import type { ComponentPropsWithoutRef } from 'react';
+import { TableScroll } from '@/components/ui/table-scroll';
 
 function MdxTable(props: ComponentPropsWithoutRef<'table'>) {
   return (
-    <div className="mb-4 overflow-x-auto">
+    <TableScroll className="mb-4">
       <table className="w-full min-w-[32rem] border-collapse text-sm" {...props} />
-    </div>
+    </TableScroll>
   );
 }
 

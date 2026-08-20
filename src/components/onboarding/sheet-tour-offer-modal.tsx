@@ -40,13 +40,13 @@ export function SheetTourOfferModal({ isOpen, onStart, onDismiss }: SheetTourOff
       fullScreenOnMobile
       footer={
         <div className="flex flex-col gap-2 border-t border-border-light sm:flex-row sm:justify-end">
-          <Button variant="ghost" onClick={handleNever} className="min-h-11">
+          <Button variant="ghost" onClick={handleNever}>
             {copy.dontShowAgain}
           </Button>
-          <Button variant="secondary" onClick={handleSkip} className="min-h-11">
+          <Button variant="secondary" onClick={handleSkip}>
             {copy.skip}
           </Button>
-          <Button variant="primary" onClick={handleStart} className="min-h-11">
+          <Button variant="primary" size="lg" onClick={handleStart}>
             {copy.start}
           </Button>
         </div>

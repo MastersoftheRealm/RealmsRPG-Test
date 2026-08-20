@@ -361,7 +361,7 @@ export function GridListRowCollapsed({
         {inlineSelectable && (
           <div
             className={cn(
-              'flex min-h-[44px] w-11 min-w-[44px] items-center justify-center',
+              'flex items-center justify-center',
               disabled && 'cursor-not-allowed opacity-50',
             )}
             onClick={(e) => e.stopPropagation()}
@@ -454,11 +454,7 @@ export function GridListRowExternalChrome({
             'flex flex-shrink-0 items-center justify-center',
             disabled && 'cursor-not-allowed opacity-50',
           )}
-          style={{
-            width: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
-            minWidth: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
-            minHeight: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH,
-          }}
+          style={{ width: GRID_LIST_ROW_SELECTION_COLUMN_WIDTH }}
           onClick={(e) => e.stopPropagation()}
           role="presentation"
           title={disabled && warningMessage ? warningMessage : undefined}

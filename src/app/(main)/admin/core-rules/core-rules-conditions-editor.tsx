@@ -1,7 +1,12 @@
 'use client';
 
 import { Plus, Trash2 } from 'lucide-react';
-import { FieldRow, SectionTitle, TextInput } from './core-rules-field-editors';
+import {
+  CORE_RULES_ADD_ROW_CLASS,
+  FieldRow,
+  SectionTitle,
+  TextInput,
+} from './core-rules-field-editors';
 
 type ConditionRow = { name: string; leveled: boolean; description: string };
 
@@ -48,7 +53,7 @@ export function ConditionsEditor({
                 const updated = standard.filter((_, idx) => idx !== i);
                 set('standard', updated);
               }}
-              className="touch-target-md-compact shrink-0 p-1 text-text-muted transition-colors hover:text-danger-fg"
+              className="hit-area-dense-square shrink-0 p-1 text-text-muted transition-colors hover:text-danger-fg"
               aria-label={`Remove standard condition ${c.name || i + 1}`}
               title="Remove condition"
             >
@@ -62,7 +67,7 @@ export function ConditionsEditor({
         onClick={() =>
           set('standard', [...standard, { name: 'New Condition', leveled: false, description: '' }])
         }
-        className="mt-2 flex min-h-[44px] items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover md:min-h-0"
+        className={CORE_RULES_ADD_ROW_CLASS}
       >
         <Plus className="h-3.5 w-3.5" /> Add Standard Condition
       </button>
@@ -98,7 +103,7 @@ export function ConditionsEditor({
                 const updated = leveled.filter((_, idx) => idx !== i);
                 set('leveled', updated);
               }}
-              className="touch-target-md-compact shrink-0 p-1 text-text-muted transition-colors hover:text-danger-fg"
+              className="hit-area-dense-square shrink-0 p-1 text-text-muted transition-colors hover:text-danger-fg"
               aria-label={`Remove leveled condition ${c.name || i + 1}`}
               title="Remove condition"
             >
@@ -112,7 +117,7 @@ export function ConditionsEditor({
         onClick={() =>
           set('leveled', [...leveled, { name: 'New Condition', leveled: true, description: '' }])
         }
-        className="mt-2 flex min-h-[44px] items-center gap-1 text-xs text-primary-link-fg hover:text-primary-fg-hover md:min-h-0"
+        className={CORE_RULES_ADD_ROW_CLASS}
       >
         <Plus className="h-3.5 w-3.5" /> Add Leveled Condition
       </button>

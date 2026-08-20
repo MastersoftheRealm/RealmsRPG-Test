@@ -30,12 +30,7 @@ export function AncestryStep() {
       <div className="mx-auto max-w-2xl text-center">
         <div className="mb-2 flex items-center justify-center gap-1">
           <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
-          <InfoTippy
-            content={chooseYourAncestryTraits}
-            allowHTML
-            label="Ancestry trait rules"
-            size="inline"
-          />
+          <InfoTippy content={chooseYourAncestryTraits} label="Ancestry trait rules" />
         </div>
         <p className="mb-6 text-text-secondary">
           Customize your character with ancestry traits and an optional flaw.
@@ -53,7 +48,7 @@ export function AncestryStep() {
         <CreatorStepFooter
           onBack={prevStep}
           primaryAction={
-            <Button disabled className="min-h-11 min-w-11">
+            <Button disabled size="lg">
               Continue →
             </Button>
           }

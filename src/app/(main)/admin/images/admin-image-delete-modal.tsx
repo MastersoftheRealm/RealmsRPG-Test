@@ -55,7 +55,13 @@ export function AdminImageDeleteModal({
           <Button variant="outline" onClick={onClose} disabled={isDeleting}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={onConfirm} disabled={isDeleting} isLoading={isDeleting}>
+          <Button
+            size="lg"
+            variant="danger"
+            onClick={onConfirm}
+            disabled={isDeleting}
+            isLoading={isDeleting}
+          >
             {isDeleting ? 'Deleting...' : 'Delete image'}
           </Button>
         </div>

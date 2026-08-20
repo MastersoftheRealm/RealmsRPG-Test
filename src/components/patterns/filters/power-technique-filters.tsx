@@ -264,11 +264,7 @@ export function PowerTechniqueFilters({
               disabled={thresholdLockedByCharacter}
               disabledHint={thresholdLockedByCharacter ? SET_BY_CHARACTER_HINT : undefined}
               labelAccessory={
-                <InfoTippy
-                  content={INNATE_THRESHOLD_HELP}
-                  label="Innate threshold filter help"
-                  size="inline"
-                />
+                <InfoTippy content={INNATE_THRESHOLD_HELP} label="Innate threshold filter help" />
               }
             />
 

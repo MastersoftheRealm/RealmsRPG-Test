@@ -67,9 +67,9 @@ Standalone creators (power, technique, empowered technique, item/armament, speci
 
 Ability, defense, skill, and health/energy allocation should use shared components everywhere:
 
-- **Ability / defense editing:** `AbilityScoreEditor` (creators, character sheet) or `AbilitiesSection` (sheet) — both use `PointStatus`, `DecrementButton`, `IncrementButton` from `@/components/shared`.
+- **Ability / defense editing:** `AbilityScoreEditor` (creators, character sheet) or `AbilitiesSection` (sheet) — both use `PointStatus`, `DecrementButton`, `IncrementButton` from `@/components/patterns`.
 - **Skill point allocation:** `SkillsAllocationPage` (character/creature creator) or skills section with `PointStatus` (character sheet).
 - **Health/Energy pool:** `HealthEnergyAllocator` (creators, character sheet) with `ValueStepper` (ADR-0002 neutral button chrome; `colorVariant` colors the value only); pool remaining/total is shared **`PointStatus`** (TASK-729 — Auto-allocate ticks the same chrome as Ability/Skill/TP). Card labels **Health / Energy** on `md+`, **HP / EN** on inline sheet / narrow. `enableHoldRepeat` only for pool allocation, not for ability/defense steppers. Auto-allocate math: `allocateHealthEnergyPool` in `lib/game/formulas.ts`; named highest-cost tip: `getGuidedAutoAllocateHelp` in `tooltip-text.tsx`.
-- **Powered-martial proficiency:** `PoweredMartialSlider` from `@/components/shared` in creature creator and character sheet (ArchetypeSection) when both power and martial proficiency are present.
+- **Powered-martial proficiency:** `PoweredMartialSlider` from `@/components/patterns` in creature creator and character sheet (ArchetypeSection) when both power and martial proficiency are present.
 
 Use design tokens for colors; avoid raw `blue-*` / `green-*` outside auth.

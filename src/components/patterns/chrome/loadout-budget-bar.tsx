@@ -56,9 +56,7 @@ export function LoadoutBudgetBar({
   const showRow = showCurrency || showTp || leading != null || trailing != null;
   if (!showRow && !children) return null;
 
-  const tpHelp = (
-    <InfoTippy content={trainingPointsHelp} label="Training Points help" size="inline" tone="tp" />
-  );
+  const tpHelp = <InfoTippy content={trainingPointsHelp} label="Training Points help" tone="tp" />;
 
   return (
     <div

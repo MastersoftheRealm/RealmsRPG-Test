@@ -51,7 +51,7 @@ export function SheetHeaderResources({
 }) {
   return (
     /* Right: Action Points (left, spans vertically) + Health & Energy (right) */
-    <div className="flex w-full min-w-0 flex-col md:min-w-[260px] lg:w-1/3">
+    <div className="flex w-full min-w-0 flex-col">
       <div className="flex flex-col items-stretch gap-3 sm:flex-row">
         {/* Action Points - left column, spans full height of Health+Energy */}
         <div

@@ -47,7 +47,7 @@ export function UnarmedProwessPanel({
       ) : (
         <div className="mb-6 flex items-start gap-4">
           <div className="rounded-full bg-warning-light p-3">
-            <Swords className="h-8 w-8 text-martial-dark" />
+            <Swords className="h-8 w-8 text-martial-fg" />
           </div>
           <div className="flex-1">
             <h3 className="mb-1 text-lg font-bold text-text-primary">Unarmed Prowess</h3>

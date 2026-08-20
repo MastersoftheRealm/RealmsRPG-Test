@@ -12,13 +12,13 @@ import {
 } from '@/components/patterns/filters';
 import { CodexFeatRow } from '@/components/codex';
 import { CodexBrowseListShell, ErrorDisplay as ErrorState, InfoTippy } from '@/components/patterns';
-import { Button, IconButton, useToast } from '@/components/ui';
+import { IconButton, useToast } from '@/components/ui';
 import { useCodexFeats, useCodexSkills, usePathListFilter, type Feat, type Skill } from '@/hooks';
 import { useSort } from '@/hooks/use-sort';
-import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc } from './actions';
-import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
-import { Pencil, Copy, X, Layers } from 'lucide-react';
+import { useAdminCodexEntity } from './use-admin-codex-entity';
+import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { updateCodexDoc } from './actions';
+import { Layers } from 'lucide-react';
 import {
   groupFeatFamilies,
   formatFeatName,
@@ -37,8 +37,8 @@ import { pathFilterEmptyTitle } from '@/lib/game/path-recommendation-index';
 import { STATE_FEAT_RESTRICTION_NOTICE } from '@/lib/codex/feat-restriction-notice';
 import { buildSkillIdToName } from '@/lib/codex/skill-list';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
+import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
-  COPY_NAME_SUFFIX,
   EMPTY_FEAT_FORM,
   computeNextLevelFormState,
   featFormToSavePayload,
@@ -57,14 +57,25 @@ export function AdminFeatsTab() {
   const { data: feats, isLoading, error, refetch } = useCodexFeats();
   const { data: skills = [] } = useCodexSkills();
   const { sortState, handleSort, sortItems } = useSort('name');
-  const queryClient = useQueryClient();
   const maxLevelFilterId = useId();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Feat | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [copySourceName, setCopySourceName] = useState<string | null>(null);
+  const {
+    modalOpen,
+    editing,
+    saving,
+    copySourceName,
+    openAdd: beginAdd,
+    openDuplicate: beginDuplicate,
+    openEdit: beginEdit,
+    closeModal,
+    save,
+    refreshCodex,
+    setSaving,
+    askDelete,
+    deleteModals,
+  } = useAdminCodexEntity<Feat>({
+    collection: 'codex_feats',
+    entityLabel: 'feat',
+  });
   const [filters, setFilters] = useState<FeatFilters>({
     search: '',
     maxLevel: null,
@@ -99,94 +110,68 @@ export function AdminFeatsTab() {
 
   const skillIdToName = useMemo(() => buildSkillIdToName(skills as Skill[]), [skills]);
 
-  const openAdd = () => {
-    setEditing(null);
-    setCopySourceName(null);
-    setModalInitialForm(EMPTY_FEAT_FORM);
-    setModalInitialEditId(null);
-    setModalLevelFeats([]);
-    setModalSessionKey((k) => k + 1);
-    setModalOpen(true);
-  };
+  const bumpModal = () => setModalSessionKey((k) => k + 1);
 
-  const openDuplicate = (feat: Feat) => {
-    setEditing(null);
-    setCopySourceName(feat.name);
-    setModalInitialForm({
-      ...featToFormState(feat),
-      name: (feat.name || '').trim() + COPY_NAME_SUFFIX,
+  const openAdd = () =>
+    beginAdd(() => {
+      setModalInitialForm(EMPTY_FEAT_FORM);
+      setModalInitialEditId(null);
+      setModalLevelFeats([]);
+      bumpModal();
     });
-    setModalInitialEditId(null);
-    setModalLevelFeats([]);
-    setModalSessionKey((k) => k + 1);
-    setModalOpen(true);
-  };
 
-  const openEdit = (feat: Feat) => {
-    setEditing(feat);
-    setCopySourceName(null);
-    setModalInitialForm(featToFormState(feat));
-    setModalInitialEditId(String(feat.id));
-    const familyId = getFeatFamilyId(feat);
-    const familyFeats = (feats ?? []).filter((f) => getFeatFamilyId(f) === familyId);
-    familyFeats.sort((a, b) => getFeatLevel(a) - getFeatLevel(b));
-    setModalLevelFeats(familyFeats);
-    setModalSessionKey((k) => k + 1);
-    setModalOpen(true);
-  };
+  const openDuplicate = (feat: Feat) =>
+    beginDuplicate(feat, () => {
+      setModalInitialForm({
+        ...featToFormState(feat),
+        name: (feat.name || '').trim() + COPY_NAME_SUFFIX,
+      });
+      setModalInitialEditId(null);
+      setModalLevelFeats([]);
+      bumpModal();
+    });
 
-  const openAddLevel = (sourceFeat: Feat) => {
-    setEditing(null);
-    setCopySourceName(null);
-    setModalInitialForm(
-      computeNextLevelFormState(featToFormState(sourceFeat), String(sourceFeat.id)),
-    );
-    setModalInitialEditId(null);
-    setModalLevelFeats([]);
-    setModalSessionKey((k) => k + 1);
-    setModalOpen(true);
-  };
+  const openEdit = (feat: Feat) =>
+    beginEdit(feat, () => {
+      setModalInitialForm(featToFormState(feat));
+      setModalInitialEditId(String(feat.id));
+      const familyId = getFeatFamilyId(feat);
+      const familyFeats = (feats ?? []).filter((f) => getFeatFamilyId(f) === familyId);
+      familyFeats.sort((a, b) => getFeatLevel(a) - getFeatLevel(b));
+      setModalLevelFeats(familyFeats);
+      bumpModal();
+    });
+
+  const openAddLevel = (sourceFeat: Feat) =>
+    beginAdd(() => {
+      setModalInitialForm(
+        computeNextLevelFormState(featToFormState(sourceFeat), String(sourceFeat.id)),
+      );
+      setModalInitialEditId(null);
+      setModalLevelFeats([]);
+      bumpModal();
+    });
 
   const openAddLevelFromEditModal = useCallback(
     (sourceForm: FeatFormState, sourceDbFeatId: string) => {
-      setEditing(null);
-      setCopySourceName(null);
-      setModalInitialForm(computeNextLevelFormState(sourceForm, sourceDbFeatId));
-      setModalInitialEditId(null);
-      setModalLevelFeats([]);
-      setModalSessionKey((k) => k + 1);
+      beginAdd(() => {
+        setModalInitialForm(computeNextLevelFormState(sourceForm, sourceDbFeatId));
+        setModalInitialEditId(null);
+        setModalLevelFeats([]);
+        bumpModal();
+      });
     },
-    [],
+    [beginAdd],
   );
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setEditing(null);
-    setCopySourceName(null);
-    setDeleteConfirm(null);
-  };
 
   const handleSave = async (editId: string | null, form: FeatFormState) => {
     if (!form.name.trim()) return;
-    setSaving(true);
-    const data = featFormToSavePayload(form);
-
-    const savingId = editId ?? editing?.id;
-    const result = editing
-      ? await updateCodexDoc('codex_feats', savingId ?? editing.id, data, {
-          expectedUpdatedAt: (feats ?? []).find((f) => String(f.id) === String(savingId))
-            ?.updated_at,
-        })
-      : await createCodexDoc('codex_feats', undefined, data);
-
-    setSaving(false);
-    if (result.success) {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
+    const savingId = editing ? (editId ?? editing.id) : null;
+    await save({
+      payload: featFormToSavePayload(form),
+      editId: savingId,
+      expectedUpdatedAt: (feats ?? []).find((f) => String(f.id) === String(savingId))?.updated_at,
+    });
   };
 
   const handleSaveAllLevels = async (editsById: Record<string, FeatFormState>) => {
@@ -218,39 +203,8 @@ export function AdminFeatsTab() {
       return;
     }
 
-    queryClient.invalidateQueries({ queryKey: ['codex'] });
-    await queryClient.refetchQueries({ queryKey: ['codex'] });
+    await refreshCodex();
     closeModal();
-  };
-
-  const codexDelete = useAdminCodexDelete({
-    collection: 'codex_feats',
-    onDeleted: async () => {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-      closeModal();
-    },
-    onError: (message) => {
-      setPendingDeleteId(null);
-      showToast(message, 'error');
-    },
-  });
-
-  const handleDelete = async (id: string) => {
-    if (deleteConfirm !== id) {
-      setDeleteConfirm(id);
-      return;
-    }
-    await codexDelete.requestDelete(id);
-  };
-
-  const handleInlineDelete = async (id: string) => {
-    if (pendingDeleteId !== id) {
-      setPendingDeleteId(id);
-      return;
-    }
-    await codexDelete.requestDelete(id);
   };
 
   if (error)
@@ -412,73 +366,25 @@ export function AdminFeatsTab() {
               pathFilterActive ? featPathChipNames(pathIndex, feat, selectedPathIds) : undefined
             }
             rightSlot={
-              <div className="flex items-center gap-1 pr-2">
-                {pendingDeleteId === feat.id ? (
-                  <div className="flex items-center gap-1 text-xs">
-                    <span className="font-medium whitespace-nowrap text-danger-700 dark:text-danger-400">
-                      Remove?
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={() => handleInlineDelete(feat.id)}
-                      className="h-6 px-2 py-0.5 text-xs"
-                    >
-                      Yes
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setPendingDeleteId(null)}
-                      className="h-6 px-2 py-0.5 text-xs"
-                    >
-                      No
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    {!(feat as Feat & { base_feat_id?: string | undefined }).base_feat_id &&
-                      (feat.feat_lvl == null || feat.feat_lvl === 1) && (
-                        <IconButton
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => openAddLevel(feat)}
-                          label="Add level"
-                          aria-label="Add level"
-                        >
-                          <Layers className="h-4 w-4" />
-                        </IconButton>
-                      )}
+              <AdminCodexRowActions
+                entity={feat}
+                onEdit={openEdit}
+                onDuplicate={openDuplicate}
+                onDelete={askDelete}
+                extraBefore={
+                  !(feat as Feat & { base_feat_id?: string | undefined }).base_feat_id &&
+                  (feat.feat_lvl == null || feat.feat_lvl === 1) ? (
                     <IconButton
                       variant="ghost"
                       size="sm"
-                      onClick={() => openEdit(feat)}
-                      label="Edit"
-                      aria-label="Edit"
+                      onClick={() => openAddLevel(feat)}
+                      label="Add level"
                     >
-                      <Pencil className="h-4 w-4" />
+                      <Layers className="h-4 w-4" />
                     </IconButton>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openDuplicate(feat)}
-                      label="Duplicate"
-                      aria-label="Duplicate"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </IconButton>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPendingDeleteId(feat.id)}
-                      label="Delete"
-                      className="text-danger-fg hover:bg-transparent hover:opacity-80"
-                    >
-                      <X className="h-4 w-4" />
-                    </IconButton>
-                  </>
-                )}
-              </div>
+                  ) : null
+                }
+              />
             }
           />
         ))}
@@ -498,8 +404,7 @@ export function AdminFeatsTab() {
           abilityOptions={ABILITY_OPTIONS}
           saving={saving}
           canDelete={Boolean(editing)}
-          deleteConfirm={deleteConfirm}
-          onRequestDelete={() => editing && handleDelete(editing.id)}
+          onDelete={editing ? () => askDelete(editing) : undefined}
           onSave={handleSave}
           onSaveAll={handleSaveAllLevels}
           initialForm={modalInitialForm}
@@ -509,7 +414,7 @@ export function AdminFeatsTab() {
         />
       ) : null}
 
-      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="feat" />
+      {deleteModals}
     </div>
   );
 }

@@ -19,7 +19,7 @@ export function RulebookNav({
             <Link
               href={`/rules/${chapter.slug}`}
               className={cn(
-                'flex min-h-[44px] items-center rounded-md px-3 py-2 md:min-h-0 md:py-1.5',
+                'touch-tier-standard flex items-center rounded-md px-3 py-1.5',
                 active
                   ? 'bg-primary-subtle-bg font-medium text-text-primary'
                   : 'text-text-secondary hover:bg-surface-alt hover:text-text-primary',
@@ -46,7 +46,7 @@ export function RulebookNav({
             <li key={heading.id}>
               <a
                 href={`#${heading.id}`}
-                className="flex min-h-[44px] items-center rounded-md px-3 py-2 text-text-secondary hover:bg-surface-alt hover:text-text-primary md:min-h-0 md:py-1.5"
+                className="touch-tier-standard flex items-center rounded-md px-3 py-1.5 text-text-secondary hover:bg-surface-alt hover:text-text-primary"
               >
                 {heading.title}
               </a>
@@ -59,7 +59,7 @@ export function RulebookNav({
   return (
     <>
       <details className="mb-6 rounded-lg border border-border-light bg-surface md:hidden">
-        <summary className="flex min-h-[44px] cursor-pointer items-center px-4 font-medium text-text-primary">
+        <summary className="touch-tier-standard flex cursor-pointer items-center px-4 font-medium text-text-primary">
           Chapters
         </summary>
         <div className="border-t border-border-light px-1 py-2">

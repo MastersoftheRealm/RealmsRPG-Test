@@ -75,12 +75,12 @@ export function CombatantCardResourceQuickActions({
           value={damageInput}
           onChange={(e) => setDamageInput(e.target.value)}
           placeholder="−"
-          className="min-h-[var(--touch-target-min,44px)] w-10 rounded border border-danger-300 bg-surface px-1 py-0.5 text-center text-xs md:min-h-0"
+          className="touch-tier-standard w-10 rounded border border-danger-300 bg-surface px-1 py-0.5 text-center text-xs"
           onKeyDown={(e) => e.key === 'Enter' && handleDamage()}
         />
         <button
           onClick={handleDamage}
-          className="touch-target-md-compact inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium text-danger-fg hover:opacity-80"
+          className="hit-area-dense inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium text-danger-fg hover:opacity-80"
           title="Apply damage"
         >
           Dmg
@@ -91,12 +91,12 @@ export function CombatantCardResourceQuickActions({
           value={healInput}
           onChange={(e) => setHealInput(e.target.value)}
           placeholder="+"
-          className="min-h-[var(--touch-target-min,44px)] w-10 rounded border border-success-300 bg-surface px-1 py-0.5 text-center text-xs md:min-h-0"
+          className="touch-tier-standard w-10 rounded border border-success-300 bg-surface px-1 py-0.5 text-center text-xs"
           onKeyDown={(e) => e.key === 'Enter' && handleHeal()}
         />
         <button
           onClick={handleHeal}
-          className="touch-target-md-compact inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium text-success-fg hover:opacity-80"
+          className="hit-area-dense inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium text-success-fg hover:opacity-80"
           title="Apply healing"
         >
           Heal
@@ -109,12 +109,12 @@ export function CombatantCardResourceQuickActions({
           value={energyDrainInput}
           onChange={(e) => setEnergyDrainInput(e.target.value)}
           placeholder="−"
-          className="min-h-[var(--touch-target-min,44px)] w-10 rounded border border-energy-border bg-surface px-1 py-0.5 text-center text-xs md:min-h-0"
+          className="touch-tier-standard w-10 rounded border border-energy-border bg-surface px-1 py-0.5 text-center text-xs"
           onKeyDown={(e) => e.key === 'Enter' && handleEnergyDrain()}
         />
         <button
           onClick={handleEnergyDrain}
-          className="touch-target-md-compact inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium text-energy-text hover:opacity-80"
+          className="hit-area-dense inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium text-energy-text hover:opacity-80"
           title="Drain energy"
         >
           Use
@@ -125,12 +125,12 @@ export function CombatantCardResourceQuickActions({
           value={energyRestoreInput}
           onChange={(e) => setEnergyRestoreInput(e.target.value)}
           placeholder="+"
-          className="min-h-[var(--touch-target-min,44px)] w-10 rounded border border-info-border bg-surface px-1 py-0.5 text-center text-xs md:min-h-0"
+          className="touch-tier-standard w-10 rounded border border-info-border bg-surface px-1 py-0.5 text-center text-xs"
           onKeyDown={(e) => e.key === 'Enter' && handleEnergyRestore()}
         />
         <button
           onClick={handleEnergyRestore}
-          className="touch-target-md-compact inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium text-info-fg hover:opacity-80"
+          className="hit-area-dense inline-flex items-center justify-center px-1.5 py-0.5 text-xs font-medium text-info-fg hover:opacity-80"
           title="Restore energy"
         >
           Rest

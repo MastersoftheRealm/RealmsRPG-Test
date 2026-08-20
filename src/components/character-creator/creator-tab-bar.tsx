@@ -25,7 +25,7 @@ import {
   type ValidationIssue,
 } from '@/lib/character-creator-validation';
 import { ConfirmActionModal } from '@/components/patterns';
-import { Modal, Button } from '@/components/ui';
+import { Modal, Button, TabNavOverflowScroller } from '@/components/ui';
 
 const STEP_NAMES: Record<CreatorStep, string> = {
   archetype: 'Archetype',
@@ -136,56 +136,62 @@ export function CreatorTabBar() {
   };
 
   return (
-    <div
-      className="mb-4 flex min-w-0 scrollbar-thin flex-nowrap items-center gap-1 overflow-x-auto rounded-lg bg-surface-alt p-2 md:flex-wrap"
-      style={{ WebkitOverflowScrolling: 'touch' }}
-    >
-      {visibleSteps.map((step, stepIndex) => {
-        const stepLabel = `${stepIndex + 1}. ${STEP_NAMES[step]}`;
-        const isActive = currentStep === step;
-        const completion = completionByStep[step];
-        // A step reads as "complete" once visited AND its requirements are met.
-        const isComplete = completedSteps.includes(step) && completion.done;
-        const canNavigate = canOpenStep(step);
+    <div className="mb-4 flex min-w-0 items-center gap-1 rounded-lg bg-surface-alt p-2">
+      <TabNavOverflowScroller
+        className="min-w-0 flex-1"
+        listClassName="md:flex-wrap"
+        overflowSignature={`${visibleSteps.join('|')}|${currentStep}`}
+        listAriaLabel="Creation steps"
+        previousAriaLabel="Show previous steps"
+        nextAriaLabel="Show more steps"
+      >
+        {visibleSteps.map((step, stepIndex) => {
+          const stepLabel = `${stepIndex + 1}. ${STEP_NAMES[step]}`;
+          const isActive = currentStep === step;
+          const completion = completionByStep[step];
+          // A step reads as "complete" once visited AND its requirements are met.
+          const isComplete = completedSteps.includes(step) && completion.done;
+          const canNavigate = canOpenStep(step);
 
-        return (
-          <button
-            key={step}
-            type="button"
-            onClick={() => handleTabClick(step)}
-            disabled={!canNavigate}
-            aria-current={isActive ? 'step' : undefined}
-            className={cn(
-              'min-h-11 min-w-11 shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-all',
-              isActive && 'bg-primary-button text-text-on-dark shadow-md',
-              !isActive &&
-                isComplete &&
-                'bg-success-light text-success-fg hover:bg-success-200/80 dark:bg-success-900/30 dark:hover:bg-success-800/40',
-              !isActive &&
-                !isComplete &&
-                canNavigate &&
-                'bg-surface text-text-secondary hover:bg-surface-alt',
-              !isActive &&
-                !isComplete &&
-                !canNavigate &&
-                'cursor-not-allowed bg-surface text-text-muted',
-            )}
-          >
-            {isComplete && !isActive && '✓ '}
-            {stepLabel}
-            {isActive && completion.required > 0 && !completion.done && (
-              <span className="ml-1.5 text-xs font-semibold opacity-90">
-                ({completion.made}/{completion.required})
-              </span>
-            )}
-          </button>
-        );
-      })}
+          return (
+            <button
+              key={step}
+              type="button"
+              onClick={() => handleTabClick(step)}
+              disabled={!canNavigate}
+              aria-current={isActive ? 'step' : undefined}
+              className={cn(
+                'min-h-11 min-w-11 shrink-0 rounded-lg px-3 py-2 text-sm font-medium transition-all',
+                isActive && 'bg-primary-button text-text-on-dark shadow-md',
+                !isActive &&
+                  isComplete &&
+                  'bg-success-light text-success-fg hover:bg-success-200/80 dark:bg-success-900/30 dark:hover:bg-success-800/40',
+                !isActive &&
+                  !isComplete &&
+                  canNavigate &&
+                  'bg-surface text-text-secondary hover:bg-surface-alt',
+                !isActive &&
+                  !isComplete &&
+                  !canNavigate &&
+                  'cursor-not-allowed bg-surface text-text-muted',
+              )}
+            >
+              {isComplete && !isActive && '✓ '}
+              {stepLabel}
+              {isActive && completion.required > 0 && !completion.done && (
+                <span className="ml-1.5 text-xs font-semibold opacity-90">
+                  ({completion.made}/{completion.required})
+                </span>
+              )}
+            </button>
+          );
+        })}
+      </TabNavOverflowScroller>
 
       <button
         type="button"
         onClick={() => setShowRestartConfirm(true)}
-        className="ml-auto min-h-11 min-w-11 shrink-0 rounded-lg bg-danger-light px-3 py-2 text-sm font-medium text-danger-fg transition-colors hover:bg-danger-200/80 dark:bg-danger-900/30 dark:hover:bg-danger-800/40"
+        className="min-h-11 shrink-0 rounded-lg bg-danger-light px-3 py-2 text-sm font-medium text-danger-fg transition-colors hover:bg-danger-200/80 dark:bg-danger-900/30 dark:hover:bg-danger-800/40"
       >
         Restart
       </button>
@@ -217,7 +223,7 @@ export function CreatorTabBar() {
             <Button variant="secondary" onClick={() => setPendingStep(null)}>
               Stay & fix
             </Button>
-            <Button variant="primary" onClick={handleContinueAnyway}>
+            <Button variant="primary" size="lg" onClick={handleContinueAnyway}>
               Continue anyway
             </Button>
           </div>

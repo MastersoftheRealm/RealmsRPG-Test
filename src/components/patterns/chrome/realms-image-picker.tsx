@@ -306,31 +306,22 @@ export function RealmsImagePicker({
               )}
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button
-                variant="outline"
-                onClick={handleClose}
-                disabled={isUploading}
-                className="min-h-11"
-              >
+              <Button variant="outline" onClick={handleClose} disabled={isUploading}>
                 Cancel
               </Button>
               {!showUploadPanel && (
-                <Button
-                  onClick={handleConfirmSelect}
-                  disabled={!pendingId || isLoading}
-                  className="min-h-11"
-                >
+                <Button size="lg" onClick={handleConfirmSelect} disabled={!pendingId || isLoading}>
                   Select image
                 </Button>
               )}
               {showUploadPanel && canUpload && (
                 <Button
+                  size="lg"
                   onClick={() => {
                     void handleUploadAndSelect();
                   }}
                   disabled={isUploading || !uploadName.trim()}
                   isLoading={isUploading}
-                  className="min-h-11"
                 >
                   Upload &amp; select
                 </Button>

@@ -112,7 +112,7 @@ export function GuidedHealthEnergySection() {
           >
             {copy.autoAllocate}
           </Button>
-          <InfoTippy content={autoAllocateHelp} label="How auto-allocate works" size="inline" />
+          <InfoTippy content={autoAllocateHelp} label="How auto-allocate works" />
         </div>
       </div>
 

@@ -185,7 +185,6 @@ export function CodexFeatsTab({
                   <InfoTippy
                     content="Hide feats requiring higher levels."
                     label="Max required level filter help"
-                    size="inline"
                   />
                 </div>
                 <FilterInput

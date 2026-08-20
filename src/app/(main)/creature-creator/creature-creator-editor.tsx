@@ -251,22 +251,9 @@ export function CreatureCreatorEditor(props: CreatureCreatorEditorProps) {
         onDefenseChange={onDefenseChange}
         abilityDefenseBonuses={abilityDefenseBonuses}
         className="max-w-none"
-        headingAddon={
-          <InfoTippy
-            content={skillPointsHelp}
-            allowHTML
-            label="Skill allocation help"
-            size="inline"
-          />
-        }
+        headingAddon={<InfoTippy content={skillPointsHelp} label="Skill allocation help" />}
         addSubSkillAddon={
-          <InfoTippy
-            content={subSkillsHelp}
-            allowHTML
-            label="Sub-skill help"
-            placement="top"
-            size="inline"
-          />
+          <InfoTippy content={subSkillsHelp} label="Sub-skill help" placement="top" />
         }
       />
 

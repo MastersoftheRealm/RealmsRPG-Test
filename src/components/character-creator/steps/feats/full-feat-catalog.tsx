@@ -1,10 +1,11 @@
 'use client';
 
+import { useId } from 'react';
 import { cn } from '@/lib/utils';
 import { statusPanel } from '@/lib/ui/status-surface-classes';
-import { EmptyState, SearchInput } from '@/components/ui';
-import { ListHeader, SegmentedControl } from '@/components/patterns';
-import { FilterSection, ChipSelect } from '@/components/patterns/filters';
+import { EmptyState } from '@/components/ui';
+import { ListHeader, ListSearchToolbar, SegmentedControl } from '@/components/patterns';
+import { ChipSelect } from '@/components/patterns/filters';
 import type { Feat } from '@/hooks';
 import { FEAT_GRID_COLUMNS, FEAT_HEADER_COLUMNS } from './feat-list-columns';
 import type { FeatFilters, SelectedFeat } from './feat-list-columns';
@@ -44,6 +45,7 @@ export function FullFeatCatalog({
   checkRequirements,
   onToggleFeat,
 }: FullFeatCatalogProps) {
+  const qualificationFilterId = useId();
   const featRowProps = {
     selectedArchetypeFeats,
     selectedCharacterFeats,
@@ -71,64 +73,73 @@ export function FullFeatCatalog({
           className="min-w-0 flex-1 sm:flex-initial"
         />
       </div>
-      <div className="mb-4">
-        <SearchInput
-          value={filters.search}
-          onChange={(v) => onFiltersChange((f) => ({ ...f, search: v }))}
-          placeholder="Search feats by name, description, or tags..."
-        />
-      </div>
-      <FilterSection>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <ChipSelect
-            label="Category"
-            placeholder="All categories"
-            options={categories.map((c) => ({ value: c, label: c }))}
-            selectedValues={filters.categories}
-            onSelect={(v) => onFiltersChange((f) => ({ ...f, categories: [...f.categories, v] }))}
-            onRemove={(v) =>
-              onFiltersChange((f) => ({ ...f, categories: f.categories.filter((c) => c !== v) }))
-            }
-          />
-          <ChipSelect
-            label="Ability"
-            placeholder="All abilities"
-            options={abilityOptions.map((a) => ({ value: a, label: a }))}
-            selectedValues={filters.abilityFilter}
-            onSelect={(v) =>
-              onFiltersChange((f) => ({ ...f, abilityFilter: [...f.abilityFilter, v] }))
-            }
-            onRemove={(v) =>
-              onFiltersChange((f) => ({
-                ...f,
-                abilityFilter: f.abilityFilter.filter((a) => a !== v),
-              }))
-            }
-          />
-          <div className="filter-group">
-            <label className="mb-1 block text-sm font-medium text-text-secondary">
-              Qualification
-            </label>
-            <button
-              type="button"
-              onClick={() =>
-                onFiltersChange((f) => ({ ...f, hideUnqualified: !f.hideUnqualified }))
+      <ListSearchToolbar
+        search={filters.search}
+        onSearchChange={(v) => onFiltersChange((f) => ({ ...f, search: v }))}
+        placeholder="Search feats by name, description, or tags..."
+        searchAriaLabel="Search feats by name, description, or tags"
+        filterActiveCount={
+          filters.categories.length +
+          filters.abilityFilter.length +
+          (filters.hideUnqualified ? 1 : 0)
+        }
+        filters={
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <ChipSelect
+              label="Category"
+              placeholder="All categories"
+              options={categories.map((c) => ({ value: c, label: c }))}
+              selectedValues={filters.categories}
+              onSelect={(v) => onFiltersChange((f) => ({ ...f, categories: [...f.categories, v] }))}
+              onRemove={(v) =>
+                onFiltersChange((f) => ({ ...f, categories: f.categories.filter((c) => c !== v) }))
               }
-              className={cn(
-                'min-h-11 w-full rounded-lg border px-3 py-2 text-left text-sm font-medium transition-colors',
-                filters.hideUnqualified
-                  ? cn(statusPanel.complete, 'text-success-fg')
-                  : 'border-border-light bg-surface text-text-secondary hover:bg-surface-alt',
-              )}
-            >
-              {filters.hideUnqualified ? '✓ Hiding unqualified' : 'Showing all feats'}
-            </button>
-            <p className="mt-1 text-xs text-text-muted">
-              {filters.hideUnqualified ? 'Only feats you qualify for' : 'Including unqualified'}
-            </p>
+            />
+            <ChipSelect
+              label="Ability"
+              placeholder="All abilities"
+              options={abilityOptions.map((a) => ({ value: a, label: a }))}
+              selectedValues={filters.abilityFilter}
+              onSelect={(v) =>
+                onFiltersChange((f) => ({ ...f, abilityFilter: [...f.abilityFilter, v] }))
+              }
+              onRemove={(v) =>
+                onFiltersChange((f) => ({
+                  ...f,
+                  abilityFilter: f.abilityFilter.filter((a) => a !== v),
+                }))
+              }
+            />
+            <div className="filter-group">
+              <label
+                htmlFor={qualificationFilterId}
+                className="mb-1 block text-sm font-medium text-text-secondary"
+              >
+                Qualification
+              </label>
+              <button
+                id={qualificationFilterId}
+                type="button"
+                aria-pressed={filters.hideUnqualified}
+                onClick={() =>
+                  onFiltersChange((f) => ({ ...f, hideUnqualified: !f.hideUnqualified }))
+                }
+                className={cn(
+                  'min-h-11 w-full rounded-lg border px-3 py-2 text-left text-sm font-medium transition-colors',
+                  filters.hideUnqualified
+                    ? cn(statusPanel.complete, 'text-success-fg')
+                    : 'border-border-light bg-surface text-text-secondary hover:bg-surface-alt',
+                )}
+              >
+                {filters.hideUnqualified ? '✓ Hiding unqualified' : 'Showing all feats'}
+              </button>
+              <p className="mt-1 text-xs text-text-muted">
+                {filters.hideUnqualified ? 'Only feats you qualify for' : 'Including unqualified'}
+              </p>
+            </div>
           </div>
-        </div>
-      </FilterSection>
+        }
+      />
       <ListHeader
         columns={FEAT_HEADER_COLUMNS}
         gridColumns={FEAT_GRID_COLUMNS}

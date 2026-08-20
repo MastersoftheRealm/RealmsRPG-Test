@@ -2,14 +2,12 @@
  * Realms Image Library — server-only row mapping + category writes.
  */
 
-import type { createServiceRoleClient } from '@/lib/supabase/server';
+import type { TypedSupabaseClient } from '@/lib/supabase/database';
 import {
   isRealmsImageCategory,
   type RealmsImage,
   type RealmsImageCategory,
 } from '@/lib/realms-images';
-
-type ServiceClient = ReturnType<typeof createServiceRoleClient>;
 
 export type RealmsImageRow = {
   id: string;
@@ -44,7 +42,7 @@ export const REALMS_IMAGE_SELECT =
   'id, name, storage_path, public_url, created_at, updated_at, created_by, realms_image_categories(category)';
 
 export async function replaceImageCategories(
-  supabase: ServiceClient,
+  supabase: TypedSupabaseClient,
   imageId: string,
   categories: RealmsImageCategory[],
 ): Promise<{ ok: true } | { ok: false; message: string }> {
@@ -70,7 +68,7 @@ export async function replaceImageCategories(
 }
 
 export async function fetchRealmsImageById(
-  supabase: ServiceClient,
+  supabase: TypedSupabaseClient,
   id: string,
 ): Promise<RealmsImage | null> {
   const { data, error } = await supabase

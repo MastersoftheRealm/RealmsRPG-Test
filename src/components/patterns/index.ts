@@ -59,8 +59,6 @@ export type { ExpandableImageProps } from './help/expandable-image';
 export { DetailOptionList } from './list/detail-option-list';
 export type { DetailOptionItem, DetailOptionListProps } from './list/detail-option-list';
 
-export { ChoiceTraitOptionListPicker } from './select/choice-trait-option-select';
-
 // SectionCostBadge - EN/TP/IP cost display next to section labels
 export { SectionCostBadge } from './chrome/section-cost-badge';
 export type { SectionCostBadgeProps } from './chrome/section-cost-badge';
@@ -163,14 +161,9 @@ export type {
   CharacterSkillForSubModal,
 } from './select/add-sub-skill-modal';
 
-// List components (shared between Codex and Library)
-export {
-  SearchInput,
-  EmptyState as ListEmptyState,
-  LoadingState,
-  ErrorDisplay,
-} from './list/list-components';
-export type { SearchInputProps, EmptyStateProps, ErrorDisplayProps } from './list/list-components';
+// List error display (SearchInput / EmptyState / LoadingState live in `@/components/ui`)
+export { ErrorDisplay } from './list/list-components';
+export type { ErrorDisplayProps } from './list/list-components';
 
 // SortState canonical export — from list-header.tsx
 export type { SortState } from './list/list-header';
@@ -308,6 +301,5 @@ export { MixedSpeciesSkillPicker } from './select/mixed-species-skill-picker';
 export { CreatorPortraitUpload } from './chrome/creator-portrait-upload';
 export { TraitSection } from './chrome/trait-section';
 export { ErrorBoundary } from './chrome/error-boundary';
-export { DiscordIcon } from './chrome/discord-icon';
 export { PathHelpCard, PathNotes } from './help/path-help-card';
 export type { PathHelpCardProps, PathNotesProps } from './help/path-help-card';

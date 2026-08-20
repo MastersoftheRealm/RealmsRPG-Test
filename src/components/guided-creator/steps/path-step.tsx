@@ -144,7 +144,6 @@ export function PathStep() {
         <InfoTippy
           content={isCustomLayer ? guidedCustomArchetypeHelp : guidedArchetypePathHelp}
           label={isCustomLayer ? 'About Custom Archetype' : 'About Archetype Path'}
-          size="inline"
         />
       }
       description={isCustomLayer ? stepCopy.customDescription : stepCopy.description}
@@ -185,11 +184,7 @@ export function PathStep() {
                     <GuidedSectionTitle
                       className="mb-3"
                       titleAddon={
-                        <InfoTippy
-                          content={PATH_GROUP_TIP[group]}
-                          label={`About ${title}`}
-                          size="inline"
-                        />
+                        <InfoTippy content={PATH_GROUP_TIP[group]} label={`About ${title}`} />
                       }
                     >
                       {title}

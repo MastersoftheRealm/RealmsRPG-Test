@@ -25,6 +25,7 @@ import {
   formatTrainingPointsFact,
   formatWeaponAbilityFact,
   formatWeaponAbilityFactFromProperties,
+  isBlank,
   isMechanicPropertyName,
   namedPropertyDescriptorChips,
   propertyDescriptorChip,
@@ -34,6 +35,14 @@ import {
 } from './compact-facts';
 
 describe('compact-facts formatters', () => {
+  it('treats empty, dash, and none as unvalued compact facts', () => {
+    expect(isBlank(undefined)).toBe(true);
+    expect(isBlank('—')).toBe(true);
+    expect(isBlank('-')).toBe(true);
+    expect(isBlank('none')).toBe(true);
+    expect(isBlank('Sphere')).toBe(false);
+  });
+
   it('formats Abilityname Requirement without Ability/Weapon/Armor prefix', () => {
     expect(formatAbilityRequirementFact({ name: 'strength', level: 3 })).toBe(
       'Strength Requirement 3+',

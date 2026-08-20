@@ -4,8 +4,6 @@
 
 import type { Part } from '@/hooks';
 
-export const COPY_NAME_SUFFIX = ' copy';
-
 export type PartFormState = {
   name: string;
   description: string;

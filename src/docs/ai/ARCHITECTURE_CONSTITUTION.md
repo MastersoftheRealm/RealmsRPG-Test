@@ -79,7 +79,7 @@ Implementation **`status`** and product **`verification_status`** are separate:
 
 Require owner review before merging:
 
-- New files under `src/components/shared/` or `src/components/ui/` (**CI:** `npm run tasks:validate-shared-ui` — update `scripts/shared-ui-allowlist.json` + ADR)
+- New files under `src/components/patterns/` or `src/components/ui/` (**CI:** `npm run tasks:validate-shared-ui` — update `scripts/shared-ui-allowlist.json` + ADR)
 - New zustand stores or new state-management approach
 - API contract changes (request/response shapes clients depend on)
 - Live codex `UPDATE`/`INSERT`/`DELETE`

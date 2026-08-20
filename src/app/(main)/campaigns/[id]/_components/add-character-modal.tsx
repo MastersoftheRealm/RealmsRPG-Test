@@ -30,17 +30,38 @@ export function AddCharacterModal({
 }) {
   if (characters.length === 0) {
     return (
-      <Modal isOpen onClose={onClose} title="Add Character" fullScreenOnMobile>
+      <Modal
+        isOpen
+        onClose={onClose}
+        title="Add Character"
+        fullScreenOnMobile
+        footer={
+          <div className="flex justify-end">
+            <Button variant="secondary" onClick={onClose}>
+              Close
+            </Button>
+          </div>
+        }
+      >
         <p className="text-text-secondary">You have no more characters to add.</p>
-        <Button className="mt-4" onClick={onClose}>
-          Close
-        </Button>
       </Modal>
     );
   }
 
   return (
-    <Modal isOpen onClose={onClose} title="Add Character to Campaign" fullScreenOnMobile>
+    <Modal
+      isOpen
+      onClose={onClose}
+      title="Add Character to Campaign"
+      fullScreenOnMobile
+      footer={
+        <div className="flex justify-end">
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+        </div>
+      }
+    >
       <div className="max-h-64 space-y-2 overflow-y-auto">
         {characters.map((c) => (
           <button
@@ -62,9 +83,6 @@ export function AddCharacterModal({
           </button>
         ))}
       </div>
-      <Button variant="ghost" className="mt-4" onClick={onClose}>
-        Cancel
-      </Button>
     </Modal>
   );
 }

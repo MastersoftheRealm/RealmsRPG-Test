@@ -1,5 +1,8 @@
+import type { ColumnValue } from '@/components/patterns/list/grid-list-row-types';
 import type { ListColumn } from '@/components/patterns/list/list-header';
+import { formatCreatureEquipmentQuantity } from '@/lib/game/creature-inventory';
 import { glrListChrome } from '@/lib/glr';
+import { formatListCellLabel } from '@/lib/utils';
 
 function toListColumns(chrome: ReturnType<typeof glrListChrome>): ListColumn[] {
   return chrome.headers.map((h) => ({
@@ -129,6 +132,17 @@ export const ARMOR_GRID = playArmorChrome.grid;
 
 export const EQUIPMENT_COLUMNS: ListColumn[] = toListColumns(playGearChrome);
 export const EQUIPMENT_GRID = playGearChrome.grid;
+
+/** Creature / stat-block Qty: stored number or "-"; never fake 1 (TASK-813). */
+export function buildCreatureEquipmentColumns(
+  type: string | undefined,
+  quantity: unknown,
+): ColumnValue[] {
+  return [
+    { key: 'type', value: formatListCellLabel(type), align: 'center' },
+    { key: 'quantity', value: formatCreatureEquipmentQuantity(quantity), align: 'center' },
+  ];
+}
 
 // Feats/Traits (matches Character Sheet -> FeatsTab columns)
 export const FEAT_COLUMNS: ListColumn[] = toListColumns(playFeatChrome);

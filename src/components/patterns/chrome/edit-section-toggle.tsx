@@ -42,7 +42,7 @@ export function sheetModeToggleClassName({
 }): string {
   const showIdleGlow = Boolean(colors.glow) && (glowWhenInactiveOnly ? !isActive : true);
   return cn(
-    'touch-target-md-compact inline-flex items-center justify-center',
+    'hit-area-dense-square inline-flex items-center justify-center',
     'rounded-md p-1 md:p-0.5',
     'duration-base transition-all ease-standard',
     'max-md:hover:scale-110',

@@ -15,6 +15,7 @@ import {
   validateGlrGridColumnSource,
   validateGlrListClassName,
   validateMyLibraryEntityTabSource,
+  validateCodexBrowseShellSource,
   validateUsmListShellSource,
   validateUsmQuantityChromeSource,
   validateGlrRowLayoutSource,
@@ -109,7 +110,7 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
   it('parses expected vs actual rowChrome flags', () => {
     const source = `
       const X = { edit: true, delete: true, rightSlot: true } as const;
-      <Shell rowChrome={X}><Row onEdit={() => {}} rightSlot={x} /></Shell>
+      <Shell rowChrome={X}><GridListRow onEdit={() => {}} rightSlot={x} /></Shell>
     `;
     expect(expectedRowChromeFromRowActions(source)).toEqual({
       edit: true,
@@ -123,6 +124,25 @@ describe('GLR chrome + spacing norms (TASK-631, TASK-637)', () => {
       leftSlot: false,
       rightSlot: true,
     });
+  });
+
+  it('does not treat AdminCodexRowActions onEdit as GridListRow edit chrome', () => {
+    const source = `
+      <CodexBrowseListShell rowChrome={{ rightSlot: true }}>
+        <GridListRow
+          rightSlot={
+            <AdminCodexRowActions onEdit={openEdit} onDelete={askDelete} />
+          }
+        />
+      </CodexBrowseListShell>
+    `;
+    expect(expectedRowChromeFromRowActions(source)).toEqual({
+      edit: false,
+      delete: false,
+      leftSlot: false,
+      rightSlot: true,
+    });
+    expect(validateCodexBrowseShellSource('AdminPartsTab.tsx', source)).toEqual([]);
   });
 
   it('flags creator embedded lists with 40px action tracks', () => {

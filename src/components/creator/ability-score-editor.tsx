@@ -53,7 +53,7 @@ export interface AbilityScoreEditorProps {
   secondaryAbility?: AbilityName | undefined;
   /** DEPRECATED: Use powerAbility/martialAbility instead */
   highlightedAbilities?: AbilityName[] | undefined;
-  /** Compact layout - 3 columns with short names (default: false) */
+  /** Compact layout — short names; 2-col phone / 3-col sm / 6-col lg (default: false) */
   compact?: boolean | undefined;
   /** Hide the points status bar for custom header (default: false) */
   hidePointsStatus?: boolean | undefined;
@@ -167,12 +167,7 @@ export function AbilityScoreEditor({
           }
         />
       ) : (
-        <div
-          className={cn(
-            'grid gap-3',
-            compact ? 'grid-cols-3 md:grid-cols-6' : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6',
-          )}
-        >
+        <div className="grid min-w-0 grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           {ABILITY_ORDER.map((ability) => {
             const value = abilities[ability] || 0;
             const info = ABILITY_INFO[ability];
@@ -198,10 +193,10 @@ export function AbilityScoreEditor({
             }
 
             return (
-              <div key={ability} className="flex flex-col">
+              <div key={ability} className="flex min-w-0 flex-col">
                 <div
                   className={cn(
-                    'flex-1 rounded-xl border-2 p-3 transition-all',
+                    'min-w-0 flex-1 rounded-xl border-2 p-3 transition-all',
                     borderClass,
                     bgClass,
                     !isEditMode && 'text-text-muted',
@@ -217,18 +212,19 @@ export function AbilityScoreEditor({
                     </WordHelpTip>
                   </div>
 
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex min-w-0 items-center justify-center gap-2">
                     {isEditMode && (
                       <DecrementButton
                         onClick={() => onAbilityChange(ability, value - 1)}
                         disabled={!canDec}
-                        size="md"
+                        size={compact ? 'sm' : 'md'}
                       />
                     )}
 
                     <div
                       className={cn(
-                        'min-w-[3rem] text-center text-2xl font-bold',
+                        'text-center font-bold',
+                        compact ? 'min-w-[2.25rem] text-xl' : 'min-w-[3rem] text-2xl',
                         value > 0
                           ? 'text-success-fg'
                           : value < 0
@@ -243,7 +239,7 @@ export function AbilityScoreEditor({
                       <IncrementButton
                         onClick={() => onAbilityChange(ability, value + 1)}
                         disabled={!canInc}
-                        size="md"
+                        size={compact ? 'sm' : 'md'}
                         title={
                           canInc && increaseCost > 1 ? `Cost: ${increaseCost} points` : undefined
                         }

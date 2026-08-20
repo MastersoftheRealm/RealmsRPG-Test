@@ -64,7 +64,7 @@ export function CharacterFilter({
 
   return (
     <div className={cn('filter-group min-w-0', className)}>
-      <div className="relative mb-1 flex min-h-[44px] items-center gap-1.5 md:min-h-5">
+      <div className="touch-tier-standard relative mb-1 flex items-center gap-1.5">
         <button
           type="button"
           aria-expanded={expanded}
@@ -84,7 +84,6 @@ export function CharacterFilter({
           <InfoTippy
             content={helpContent}
             label="Character filter help"
-            size="inline"
             className="relative z-10"
           />
         ) : null}

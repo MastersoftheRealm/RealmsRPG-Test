@@ -338,9 +338,7 @@ export function SkillsStep() {
         remainingPoints > 0 ? (
           <span className="font-nunito">{stepCopy.pointsRemaining(remainingPoints)}</span>
         ) : (
-          <span className="font-nunito text-success-700 dark:text-success-400">
-            {stepCopy.pointsComplete}
-          </span>
+          <span className="font-nunito text-success-fg">{stepCopy.pointsComplete}</span>
         )
       }
     >

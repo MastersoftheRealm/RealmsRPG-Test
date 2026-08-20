@@ -1,4 +1,4 @@
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Page, devices } from '@playwright/test';
 import {
   isUpdateMode,
   keyFor,
@@ -165,6 +165,61 @@ test.describe('responsive layout contracts', () => {
           `Layout regressions on ${path} @${size.width}px:\n  ${regressions.join('\n  ')}\n` +
             `If this is an intentional new exception, run: npm run verify:responsive:update`,
         ).toEqual([]);
+      });
+    }
+  }
+});
+
+const CREATOR_FORM_ROUTES = ['/power-creator', '/item-creator', '/creature-creator'] as const;
+const CREATOR_FORM_WIDTHS = [
+  { width: 360, height: 800 },
+  { width: 390, height: 844 },
+] as const;
+
+test.describe('creator form fields Standard 44 (TASK-830)', () => {
+  test.use({ ...devices['iPhone 13'] });
+
+  for (const size of CREATOR_FORM_WIDTHS) {
+    for (const path of CREATOR_FORM_ROUTES) {
+      test(`${path} @${size.width} visible input/select/textarea ≥44`, async ({ page }) => {
+        await page.setViewportSize({ width: size.width, height: size.height });
+        await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' });
+        await page.goto(path, { waitUntil: 'domcontentloaded', timeout: 45_000 });
+        await page.waitForTimeout(1500);
+
+        const short = await page.evaluate(() => {
+          const SKIP = new Set([
+            'hidden',
+            'checkbox',
+            'radio',
+            'file',
+            'button',
+            'submit',
+            'reset',
+            'range',
+            'color',
+            'image',
+          ]);
+          const MIN = 44;
+          const slack = 0.5;
+          const out: string[] = [];
+          for (const el of document.querySelectorAll('input, select, textarea')) {
+            if (el.closest('nextjs-portal')) continue;
+            if (el instanceof HTMLInputElement && SKIP.has(el.type)) continue;
+            const r = el.getBoundingClientRect();
+            const cs = getComputedStyle(el);
+            if (r.width <= 0 || r.height <= 0) continue;
+            if (cs.visibility === 'hidden' || cs.display === 'none' || cs.opacity === '0') continue;
+            if (el.classList.contains('sr-only')) continue;
+            if (r.height + slack < MIN) {
+              const id = el.id ? `#${el.id}` : '';
+              out.push(`${el.tagName.toLowerCase()}${id} ${Math.round(r.height)}px`);
+            }
+          }
+          return out;
+        });
+
+        expect(short, `Sub-44px form controls on ${path} @${size.width}px`).toEqual([]);
       });
     }
   }

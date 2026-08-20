@@ -49,8 +49,8 @@ export const GRID_LIST_ROW_ACTION_ICON_CLASS = 'w-5 h-5';
  */
 export const GRID_LIST_ROW_EXPANDED_BAND_CLASS = 'border-t border-border-light bg-surface-alt';
 
-/** Matches min-w-[44px] w-11 selection column */
-export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = '2.75rem';
+/** Matches GridListRow selection column (IconButton md / 2.25rem). */
+export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = GRID_LIST_ROW_ICON_COLUMN_WIDTH;
 
 /**
  * Grid track appended for inline selection toggles — pair with `ListHeader hasSelectionColumn`
@@ -60,7 +60,7 @@ export const GRID_LIST_ROW_SELECTION_COLUMN_WIDTH = '2.75rem';
  * is `rowChrome.externalSelection` (TASK-702), not an inline grid track. Quantity mode
  * uses matching `rightSlotWidth` (`USM_QUANTITY_RIGHT_SLOT_WIDTH`) on header + row.
  * Encounter participant pick uses `AddCombatantModal` (non-USM; no GridListRow selection column).
- * Matches `GridListRow` inline selection wrapper (`min-w-[44px] w-11`).
+ * Matches `GridListRow` inline selection wrapper.
  */
 export const GRID_LIST_INLINE_SELECTION_COLUMN_TRACK = GRID_LIST_ROW_SELECTION_COLUMN_WIDTH;
 

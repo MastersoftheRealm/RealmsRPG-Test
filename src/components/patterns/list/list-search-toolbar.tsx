@@ -1,11 +1,12 @@
 /**
  * ListSearchToolbar — full-span search row with optional trailing control (ADR-0011).
  *
- * When `filters` is set, composes FilterSection compact `toolbarStart` so Search +
+ * When `filters` is set, composes FilterSection `toolbarStart` so Search +
  * Filters share one row (guided/USM pattern). `trailing` is FilterSection
  * `toolbarEnd` (right of Filters) — it must not steal the Filters slot (TASK-721).
  *
- * Used by CodexBrowseListShell, UserLibraryEntityTabShell, OfficialEntityList.
+ * Used by CodexBrowseListShell, UserLibraryEntityTabShell, OfficialEntityList,
+ * and Legacy feat / equipment catalogs.
  */
 
 'use client';
@@ -53,12 +54,10 @@ export function ListSearchToolbar({
   if (filters) {
     return (
       <FilterSection
-        variant="compact"
         toolbarStart={searchField}
         toolbarEnd={trailing}
         toolbarStartClassName="min-w-[200px]"
         toolbarClassName="flex-wrap"
-        toggleClassName="max-md:min-h-[44px] max-md:min-w-[44px]"
         activeCount={filterActiveCount}
         className={cn('mb-4', className)}
       >

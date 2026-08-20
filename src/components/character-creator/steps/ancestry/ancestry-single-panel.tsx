@@ -76,12 +76,7 @@ export function AncestrySinglePanel({
         <div>
           <div className="mb-2 flex items-center gap-1">
             <h2 className="text-2xl font-bold text-text-primary">Choose Your Ancestry Traits</h2>
-            <InfoTippy
-              content={chooseYourAncestryTraits}
-              allowHTML
-              label="Ancestry trait rules"
-              size="inline"
-            />
+            <InfoTippy content={chooseYourAncestryTraits} label="Ancestry trait rules" />
           </div>
           <p className="text-text-secondary">
             As a <strong>{selectedSpecies.name}</strong>, customize your heritage with traits and
@@ -262,7 +257,7 @@ export function AncestrySinglePanel({
         <TraitSection
           title="Ancestry Traits"
           subtitle={`Select ${maxAncestryTraits} trait${maxAncestryTraits > 1 ? 's' : ''}`}
-          icon={<Star className="h-5 w-5 text-warning-700 dark:text-warning-400" />}
+          icon={<Star className="h-5 w-5 text-warning-fg" />}
           traits={ancestryTraits}
           selectable
           selectedIds={selectedTraitIds}
@@ -276,7 +271,7 @@ export function AncestrySinglePanel({
         <TraitSection
           title="Characteristics"
           subtitle="Select 1 characteristic (optional)"
-          icon={<Sparkles className="h-5 w-5 text-info-fg dark:text-info-400" />}
+          icon={<Sparkles className="h-5 w-5 text-info-fg" />}
           traits={characteristics}
           selectable
           selectedIds={selectedCharacteristic ? [selectedCharacteristic] : []}
@@ -290,7 +285,7 @@ export function AncestrySinglePanel({
         <TraitSection
           title="Flaws"
           subtitle="Select 1 flaw to gain an extra ancestry trait (optional)"
-          icon={<AlertTriangle className="h-5 w-5 text-danger-700 dark:text-danger-400" />}
+          icon={<AlertTriangle className="h-5 w-5 text-danger-fg" />}
           traits={flaws}
           selectable
           selectedIds={selectedFlaw ? [selectedFlaw] : []}

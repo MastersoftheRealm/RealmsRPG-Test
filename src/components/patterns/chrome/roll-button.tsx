@@ -29,8 +29,8 @@ import { cn } from '@/lib/utils/cn';
 import { formatBonus } from '@/lib/utils';
 
 const rollButtonVariants = cva(
-  // Base styles - consistent across all variants
-  'inline-flex items-center justify-center font-bold rounded-lg transition-all duration-base ease-standard cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 min-h-[var(--touch-target-min,44px)] md:min-h-0',
+  // ADR-0023: Standard height under coarse pointer.
+  'inline-flex items-center justify-center font-bold rounded-lg transition-all duration-base ease-standard cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 touch-tier-standard',
   {
     variants: {
       variant: {

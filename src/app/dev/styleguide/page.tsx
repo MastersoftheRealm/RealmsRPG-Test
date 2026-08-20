@@ -427,6 +427,10 @@ export default function StyleguidePage() {
             <Chip variant="danger">Danger</Chip>
             <Chip variant="info">Info</Chip>
           </Row>
+          <Row label="Power / martial">
+            <Chip variant="power">Power</Chip>
+            <Chip variant="technique">Technique</Chip>
+          </Row>
           <Row label="GridListRow list chips">
             <Chip variant="list">List neutral</Chip>
             <Chip variant="listCost">List cost</Chip>

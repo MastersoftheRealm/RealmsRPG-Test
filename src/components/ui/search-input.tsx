@@ -88,7 +88,12 @@ export function SearchInput({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
-        className={cn('search-input', sizes.input, showClear && value && 'pr-10', className)}
+        className={cn(
+          'search-input touch-tier-standard',
+          sizes.input,
+          showClear && value && 'pr-10',
+          className,
+        )}
         {...props}
         ref={setInputRef}
       />

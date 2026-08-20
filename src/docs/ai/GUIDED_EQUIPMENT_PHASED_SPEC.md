@@ -11,6 +11,8 @@ Within the guided **Loadout** chapter (`loadout` sub-step), users complete **vis
 2. **Armor** (if `armorStep` is not `none` and options exist) — pick from path cards; skip when absent. **Power archetypes always skip armor** (path + custom), even if path metadata sets `armorStep: required` (TASK-689).
 3. **Equipment** — recommended items + remaining currency; optional **Add all recommended Equipment**
 
+When a **path-based Power** Loadout skipped the weapon phase, the Equipment screen shows **See weapons** as `GuidedLayerNav` `trailingExpand` on the same row as See more options, opening the existing capped weapon L2 modal (`shouldShowPowerWeaponsHatch` in `equipment-phase-nav.ts`). Custom/fullCatalog and flows that already showed weapons do not duplicate it. Do not stack a second nav.
+
 Chapter rail title is **Loadout** (weapons, armor, Equipment, then Powers or Techniques). Internal phase id remains `gear`.
 
 **Entry timing (TASK-527):** Do not commit `equipmentPhase` from visibility until item catalogs (and path data) are loaded. Unresolved pool refs must not count as Equipment — otherwise a cold cache collapses visible phases to `['gear']` and locks the entry jump onto Equipment.

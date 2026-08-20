@@ -1,4 +1,5 @@
 import type { ChipData } from '@/components/patterns/list/grid-list-row';
+import { DEFENSE_DISPLAY_NAMES } from '@/lib/game/constants';
 import type { ListColumn } from './list-header';
 import type { CreatureAbilities, CreatureDefenses } from './creature-stat-block-types';
 
@@ -29,17 +30,27 @@ export const DEFENSES_BY_ABILITY: Array<{
   abbr: string;
   label: string;
 }> = [
-  { ability: 'strength', defenseKey: 'might', abbr: 'MGT', label: 'Might' },
-  { ability: 'vitality', defenseKey: 'fortitude', abbr: 'FRT', label: 'Fortitude' },
-  { ability: 'agility', defenseKey: 'reflex', abbr: 'RFL', label: 'Reflex' },
-  { ability: 'acuity', defenseKey: 'discernment', abbr: 'DSC', label: 'Discernment' },
+  { ability: 'strength', defenseKey: 'might', abbr: 'MGT', label: DEFENSE_DISPLAY_NAMES.might },
+  {
+    ability: 'vitality',
+    defenseKey: 'fortitude',
+    abbr: 'FRT',
+    label: DEFENSE_DISPLAY_NAMES.fortitude,
+  },
+  { ability: 'agility', defenseKey: 'reflex', abbr: 'RFL', label: DEFENSE_DISPLAY_NAMES.reflex },
+  {
+    ability: 'acuity',
+    defenseKey: 'discernment',
+    abbr: 'DSC',
+    label: DEFENSE_DISPLAY_NAMES.discernment,
+  },
   {
     ability: 'intelligence',
     defenseKey: 'mentalFortitude',
     abbr: 'MFO',
-    label: 'Mental Fortitude',
+    label: DEFENSE_DISPLAY_NAMES.mentalFortitude,
   },
-  { ability: 'charisma', defenseKey: 'resolve', abbr: 'RSV', label: 'Resolve' },
+  { ability: 'charisma', defenseKey: 'resolve', abbr: 'RSV', label: DEFENSE_DISPLAY_NAMES.resolve },
 ];
 const LEGACY_ABILITY_MAP: Record<string, string> = {
   intellect: 'intelligence',

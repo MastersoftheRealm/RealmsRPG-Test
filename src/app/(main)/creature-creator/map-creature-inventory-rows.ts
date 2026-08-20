@@ -16,10 +16,8 @@ import type {
   EntityShieldRow,
   EntityWeaponRow,
 } from '@/components/patterns/list/entity-library-sections';
-import {
-  formatCreatureEquipmentQuantity,
-  normalizeCreatureInventoryType,
-} from '@/lib/game/creature-inventory';
+import { buildCreatureEquipmentColumns } from '@/components/patterns/list/entity-library-sections-columns';
+import { normalizeCreatureInventoryType } from '@/lib/game/creature-inventory';
 import type { Item } from '@/types';
 import type { CreatureArmamentRow } from './creature-creator-feat-armament-display';
 import type { CreatureState } from './creature-creator-types';
@@ -99,20 +97,6 @@ function creatureInventoryRowContext(
   };
 }
 
-function withCreatureEquipmentQuantity(
-  row: EntityEquipmentRow,
-  quantity: number | undefined,
-): EntityEquipmentRow {
-  return {
-    ...row,
-    columns: (row.columns ?? []).map((col) =>
-      col.key === 'quantity'
-        ? { ...col, value: formatCreatureEquipmentQuantity(quantity), align: 'center' as const }
-        : col,
-    ),
-  };
-}
-
 export function mapCreatureSelectedInventoryRows(opts: {
   sortedArmaments: CreatureArmamentRow[];
   creature: Pick<CreatureState, 'abilities' | 'martialProficiency'>;
@@ -142,8 +126,14 @@ export function mapCreatureSelectedInventoryRows(opts: {
     weapons: mapWeaponRows(weapons as Item[], ctx),
     shields: mapShieldRows(shields as Item[], ctx),
     armor: mapArmorRows(armor as Item[], ctx),
-    equipment: mapEquipmentRows(equipment as Item[], ctx).map((row, index) =>
-      withCreatureEquipmentQuantity(row, equipment[index]?.quantity),
-    ),
+    equipment: mapEquipmentRows(equipment as Item[], ctx).map((row, index) => {
+      const item = equipment[index];
+      return {
+        ...row,
+        type: item?.type,
+        quantity: item?.quantity,
+        columns: buildCreatureEquipmentColumns(item?.type, item?.quantity),
+      };
+    }),
   };
 }

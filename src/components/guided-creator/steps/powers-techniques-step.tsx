@@ -631,7 +631,6 @@ export function PowersTechniquesStep() {
           <div className="space-y-2">
             <SourceFilter value={librarySource} onChange={setLibrarySource} />
             <FilterSection
-              variant="compact"
               label="Filters"
               expanded={ptFiltersExpanded}
               onExpandedChange={setPtFiltersExpanded}

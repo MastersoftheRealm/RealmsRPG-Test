@@ -101,8 +101,6 @@ export interface MechanicContext {
 // Damage Helpers
 // =============================================================================
 
-export { computeSplits } from './dice-splits';
-
 /**
  * Format damage object as a string like "+2d6".
  */

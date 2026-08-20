@@ -5,10 +5,12 @@
  * Missing columns are skipped (probe + cache) for forward/backward safety.
  */
 
-import type { createServiceRoleClient } from '@/lib/supabase/server';
+import {
+  fromPublicTable,
+  type PublicTableName,
+  type TypedSupabaseClient,
+} from '@/lib/supabase/database';
 import type { RealmsImageUsageRef } from '@/lib/realms-images';
-
-type ServiceClient = ReturnType<typeof createServiceRoleClient>;
 
 /** Art-capable entity tables that will (or do) reference realms_images via image_id. */
 export const REALMS_IMAGE_CONSUMER_TABLES = [
@@ -29,11 +31,14 @@ export const REALMS_IMAGE_CONSUMER_TABLES = [
 
 const columnPresenceCache = new Map<string, boolean>();
 
-async function tableHasImageIdColumn(supabase: ServiceClient, table: string): Promise<boolean> {
+async function tableHasImageIdColumn(
+  supabase: TypedSupabaseClient,
+  table: PublicTableName,
+): Promise<boolean> {
   const cached = columnPresenceCache.get(table);
   if (cached !== undefined) return cached;
 
-  const { error } = await supabase.from(table).select('image_id').limit(0);
+  const { error } = await fromPublicTable(supabase, table).select('image_id').limit(0);
 
   let result: boolean;
   if (!error) {
@@ -52,7 +57,7 @@ async function tableHasImageIdColumn(supabase: ServiceClient, table: string): Pr
 }
 
 export async function listRealmsImageUsages(
-  supabase: ServiceClient,
+  supabase: TypedSupabaseClient,
   imageId: string,
 ): Promise<RealmsImageUsageRef[]> {
   const usages: RealmsImageUsageRef[] = [];
@@ -60,8 +65,7 @@ export async function listRealmsImageUsages(
   for (const consumer of REALMS_IMAGE_CONSUMER_TABLES) {
     if (!(await tableHasImageIdColumn(supabase, consumer.table))) continue;
 
-    const { data, error } = await supabase
-      .from(consumer.table)
+    const { data, error } = await fromPublicTable(supabase, consumer.table)
       .select('id, name')
       .eq('image_id', imageId);
 
@@ -85,13 +89,13 @@ export async function listRealmsImageUsages(
 }
 
 async function updateConsumerRows(
-  supabase: ServiceClient,
-  table: string,
+  supabase: TypedSupabaseClient,
+  table: PublicTableName,
   imageId: string,
   patch: Record<string, string | null>,
 ): Promise<{ count: number; error: string | null }> {
   const attempt = async (body: Record<string, string | null>) =>
-    supabase.from(table).update(body).eq('image_id', imageId).select('id');
+    fromPublicTable(supabase, table).update(body).eq('image_id', imageId).select('id');
 
   let { data, error } = await attempt(patch);
   if (error && /updated_at/i.test(error.message ?? '') && 'updated_at' in patch) {
@@ -115,7 +119,7 @@ async function updateConsumerRows(
 
 /** Clear image_id (+ image_url cache when present) on all consumers. */
 export async function clearRealmsImageRefs(
-  supabase: ServiceClient,
+  supabase: TypedSupabaseClient,
   imageId: string,
 ): Promise<{ cleared: number; errors: string[] }> {
   let cleared = 0;
@@ -143,7 +147,7 @@ export async function clearRealmsImageRefs(
 
 /** Sync denormalized image_url cache on consumers after master file replace. */
 export async function syncRealmsImageCacheUrls(
-  supabase: ServiceClient,
+  supabase: TypedSupabaseClient,
   imageId: string,
   publicUrl: string,
 ): Promise<{ updated: number; errors: string[] }> {
@@ -155,15 +159,13 @@ export async function syncRealmsImageCacheUrls(
     if (!(await tableHasImageIdColumn(supabase, consumer.table))) continue;
 
     const withTs = { image_url: publicUrl, updated_at: new Date().toISOString() };
-    let { data, error } = await supabase
-      .from(consumer.table)
+    let { data, error } = await fromPublicTable(supabase, consumer.table)
       .update(withTs)
       .eq('image_id', imageId)
       .select('id');
 
     if (error && /updated_at/i.test(error.message ?? '')) {
-      ({ data, error } = await supabase
-        .from(consumer.table)
+      ({ data, error } = await fromPublicTable(supabase, consumer.table)
         .update({ image_url: publicUrl })
         .eq('image_id', imageId)
         .select('id'));

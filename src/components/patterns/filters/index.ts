@@ -14,7 +14,7 @@
  * - CharacterFilter: Filter list content by a user's character (collapsible, default collapsed)
  * - PowerTechniqueFilters: Category / Energy / TP / Action / Innate — panel body only
  * - ArmamentFilters: Character + currency affordability; Codex mixed extras — panel body only
- * - FilterSection: Collapsible container (`page` for Advanced creator; `compact` + toolbarStart for USM/L3 and ListSearchToolbar browse lists)
+ * - FilterSection: Collapsible container (toolbarStart for USM/L3 and ListSearchToolbar browse lists)
  * - SourceFilter: All / Realms Library / My Library scope
  */
 

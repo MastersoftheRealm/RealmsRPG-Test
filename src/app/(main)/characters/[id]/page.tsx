@@ -146,7 +146,8 @@ export default function CharacterSheetPage({ params }: PageParams) {
             <PageContainer
               size="tool"
               padded={false}
-              className="pt-4 max-md:flex max-md:min-h-0 max-md:flex-1 max-md:flex-col"
+              centered={false}
+              className="pt-4 max-md:flex max-md:min-h-0 max-md:w-full max-md:min-w-0 max-md:flex-1 max-md:flex-col md:mx-auto"
             >
               {calculatedStats && (
                 <CharacterSheetColumn>

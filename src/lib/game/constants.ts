@@ -5,7 +5,7 @@
  * Ported from public/js/shared/game-formulas.js
  */
 
-import type { ArchetypeCategory, ArchetypeConfig } from '@/types';
+import type { ArchetypeCategory, ArchetypeConfig, DefenseName } from '@/types';
 
 /** Shared constants for characters and creatures */
 export const SHARED_CONSTANTS = {
@@ -144,3 +144,23 @@ export const ABILITIES_AND_DEFENSES = [
 export const ABILITY_DISPLAY_NAMES: Record<string, string> = Object.fromEntries(
   ABILITIES_AND_DEFENSES.slice(0, 6).map((name) => [name.toLowerCase(), name]),
 );
+
+/** Defense keys in GAME_RULES / `ABILITIES_AND_DEFENSES` order. */
+export const DEFENSE_DISPLAY_ORDER: readonly DefenseName[] = [
+  'might',
+  'fortitude',
+  'reflex',
+  'discernment',
+  'mentalFortitude',
+  'resolve',
+] as const;
+
+/** Defense display names — SoT is `ABILITIES_AND_DEFENSES` (no "Mental Fort." / "Reflex"). */
+export const DEFENSE_DISPLAY_NAMES: Record<DefenseName, string> = {
+  might: ABILITIES_AND_DEFENSES[6],
+  fortitude: ABILITIES_AND_DEFENSES[7],
+  reflex: ABILITIES_AND_DEFENSES[8],
+  discernment: ABILITIES_AND_DEFENSES[9],
+  mentalFortitude: ABILITIES_AND_DEFENSES[10],
+  resolve: ABILITIES_AND_DEFENSES[11],
+};

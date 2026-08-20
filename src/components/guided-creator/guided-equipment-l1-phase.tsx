@@ -295,7 +295,7 @@ export function GuidedEquipmentL1Phase({
   return (
     <div className="space-y-3">
       {handMessage ? (
-        <p className="font-nunito text-sm text-warning-700 dark:text-warning-400" role="status">
+        <p className="font-nunito text-sm text-warning-fg" role="status">
           {handMessage}
         </p>
       ) : null}

@@ -248,6 +248,23 @@ export function ImageUploadModal({
       size="lg"
       className="max-h-[90vh]"
       fullScreenOnMobile
+      footer={
+        imageSrc ? (
+          <div className="flex justify-end gap-3">
+            <Button variant="secondary" onClick={handleClose}>
+              Cancel
+            </Button>
+            <Button
+              size="lg"
+              onClick={handleConfirm}
+              disabled={isProcessing || !croppedAreaPixels}
+              isLoading={isProcessing}
+            >
+              Confirm
+            </Button>
+          </div>
+        ) : undefined
+      }
     >
       <div className="space-y-4">
         {error && <Alert variant="danger">{error}</Alert>}
@@ -417,18 +434,6 @@ export function ImageUploadModal({
               >
                 Choose Different Image
               </Button>
-              <div className="flex gap-3">
-                <Button variant="secondary" onClick={handleClose}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleConfirm}
-                  disabled={isProcessing || !croppedAreaPixels}
-                  isLoading={isProcessing}
-                >
-                  Confirm
-                </Button>
-              </div>
             </div>
           </>
         )}

@@ -114,7 +114,6 @@ export function CreatureCreatorEditorInventorySection({
           emptyMessage="No armor"
         />
         <EquipmentListSection
-          layout="characterSheet"
           title="Equipment"
           headingLevel={3}
           items={selected.equipment}

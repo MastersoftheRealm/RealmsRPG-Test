@@ -108,7 +108,7 @@ export default async function NewCharacterChooserPage({
                       className="flex items-start gap-2 font-nunito text-sm text-text-secondary"
                     >
                       <Check
-                        className="mt-0.5 h-4 w-4 shrink-0 text-success-700 dark:text-success-400"
+                        className="mt-0.5 h-4 w-4 shrink-0 text-success-fg"
                         aria-hidden="true"
                       />
                       <span>{b}</span>

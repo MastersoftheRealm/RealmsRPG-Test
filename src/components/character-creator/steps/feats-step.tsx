@@ -440,12 +440,7 @@ export function FeatsStep() {
           <div>
             <div className="mb-2 flex items-center gap-1">
               <h2 className="text-2xl font-bold text-text-primary">Select Feats</h2>
-              <InfoTippy
-                content={featSelectionHelp}
-                allowHTML
-                label="Feat selection help"
-                size="inline"
-              />
+              <InfoTippy content={featSelectionHelp} label="Feat selection help" />
             </div>
             <p className="text-text-secondary">
               Choose feats that grant special abilities and bonuses. Your archetype ({archetypeType}
@@ -474,14 +469,7 @@ export function FeatsStep() {
         <GuidedChoiceShell
           layer={layer}
           title="Select Feats"
-          titleAddon={
-            <InfoTippy
-              content={featSelectionHelp}
-              allowHTML
-              label="Feat selection help"
-              size="inline"
-            />
-          }
+          titleAddon={<InfoTippy content={featSelectionHelp} label="Feat selection help" />}
           description={`Choose feats that grant special abilities and bonuses. Your archetype (${archetypeType}) allows ${maxArchetypeFeats} archetype feat${maxArchetypeFeats !== 1 ? 's' : ''} and ${maxCharacterFeats} character feat.`}
           guidance={pathGuidance}
           completionState={completion}

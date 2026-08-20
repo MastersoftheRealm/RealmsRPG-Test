@@ -97,14 +97,10 @@ export function MixedSpeciesModal({
       contentClassName="p-0"
       footer={
         <div className="flex shrink-0 justify-end gap-2 border-t border-border-light">
-          <Button variant="outline" onClick={onClose} className="min-h-[44px] min-w-[44px]">
+          <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button
-            onClick={handleConfirm}
-            disabled={!canConfirm}
-            className="min-h-[44px] min-w-[44px]"
-          >
+          <Button size="lg" onClick={handleConfirm} disabled={!canConfirm}>
             Confirm mixed species
           </Button>
         </div>

@@ -46,13 +46,14 @@ export function ValidationModal({
       </Button>
       {/* Show Save button when valid */}
       {isValid && onSave && (
-        <Button onClick={onSave} disabled={isSaving} isLoading={isSaving}>
+        <Button size="lg" onClick={onSave} disabled={isSaving} isLoading={isSaving}>
           ✓ Create Character
         </Button>
       )}
       {/* Show Continue Anyway when there are warnings but no errors */}
       {!hasErrors && !isValid && onContinueAnyway && (
         <Button
+          size="lg"
           onClick={onContinueAnyway}
           disabled={isSaving}
           className="bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-500 dark:hover:bg-warning-600"

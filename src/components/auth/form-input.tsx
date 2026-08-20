@@ -41,7 +41,7 @@ const FormInput = forwardRef<HTMLInputElement, FormInputProps>(
           )}
           {...props}
         />
-        {error && <p className="text-sm text-danger-700 dark:text-danger-400">{error}</p>}
+        {error && <p className="text-sm text-danger-fg">{error}</p>}
         {helperText && !error && <p className="text-sm text-text-secondary">{helperText}</p>}
       </div>
     );

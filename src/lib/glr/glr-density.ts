@@ -53,6 +53,9 @@ export const GLR_DENSITY: Record<GlrDensityMode, GlrModeSpec> = {
       feat: 5,
       gear: 3,
     },
+    demoteFacts: {
+      gear: ['trainingPoints'],
+    },
     nameTrack: {
       power: '1.4fr',
       technique: '1.4fr',
@@ -80,7 +83,7 @@ export const GLR_DENSITY: Record<GlrDensityMode, GlrModeSpec> = {
       armor: ['rarity', 'currency', 'trainingPoints'],
       shield: ['rarity', 'currency', 'trainingPoints'],
       feat: ['reqLevel', 'category', 'abilityRequirement'],
-      gear: ['category', 'currency', 'rarity'],
+      gear: ['category', 'currency', 'rarity', 'trainingPoints'],
     },
     orderInBandOverrides: {
       power: { duration: 1, area: 2, range: 3 },
@@ -127,6 +130,7 @@ export const GLR_DENSITY: Record<GlrDensityMode, GlrModeSpec> = {
       weapon: ['rarity', 'currency', 'trainingPoints'],
       armor: ['rarity', 'currency', 'trainingPoints'],
       shield: ['rarity', 'currency', 'trainingPoints'],
+      gear: ['trainingPoints'],
     },
     orderInBandOverrides: {
       power: { duration: 1, area: 2, range: 3 },

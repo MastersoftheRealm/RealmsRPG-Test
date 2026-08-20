@@ -11,20 +11,18 @@
  * rather than failing the request.
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import type { CoreRulesMap } from '@/types/core-rules';
-
-type CoreRulesRow = { id: string | null; data: unknown };
+import type { TypedSupabaseClient } from '@/lib/supabase/database';
 
 export async function fetchCoreRules(
-  supabase: Pick<SupabaseClient, 'from'>,
+  supabase: Pick<TypedSupabaseClient, 'from'>,
 ): Promise<Partial<CoreRulesMap>> {
   const { data, error } = await supabase.from('core_rules').select('id, data');
   if (error || !data) return {};
 
   const rules: Record<string, unknown> = {};
-  for (const row of data as CoreRulesRow[]) {
-    if (row?.id != null) rules[row.id] = row.data;
+  for (const row of data) {
+    rules[row.id] = row.data;
   }
   return rules as Partial<CoreRulesMap>;
 }

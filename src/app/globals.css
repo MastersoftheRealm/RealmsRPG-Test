@@ -380,6 +380,8 @@
   --dock-fab-size: 3.5rem;
   --dock-bottom: var(--dock-gap);
   --sheet-mobile-dock-height: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  /* Same length as the owner dock; used as panel end-pad when no toolbar (TASK-843). */
+  --sheet-mobile-fab-gutter: var(--sheet-mobile-dock-height);
   --dock-reserved-end: calc(var(--dock-fab-size) + var(--dock-gap) * 2);
 }
 
@@ -710,6 +712,19 @@
     );
   }
 
+  /* C1 frame vs C4 reserve (TASK-843): height-bound class stays shared.
+     Owner `.has-sheet-mobile-dock` keeps the opaque action-dock strip.
+     RM / other frames pad scrollable panels with the FAB gutter instead. */
+  .character-sheet-mobile-frame {
+    --sheet-mobile-bottom-reserve: 0px;
+    --sheet-panel-end-pad: var(--sheet-mobile-fab-gutter);
+  }
+
+  .has-sheet-mobile-dock .character-sheet-mobile-frame {
+    --sheet-mobile-bottom-reserve: var(--sheet-mobile-dock-height);
+    --sheet-panel-end-pad: 1rem;
+  }
+
   @media (min-width: 768px) {
     .sheet-mobile-action-dock {
       inset: auto;
@@ -745,6 +760,14 @@
     visibility: hidden;
     pointer-events: none;
   }
+
+  /* C1: the sheet frame is viewport-bounded. Hide the site footer below md so
+     the document does not grow a marketing strip under the play surface. */
+  @media (max-width: 767px) {
+    body:has(.character-sheet-mobile-frame) footer {
+      display: none;
+    }
+  }
 }
 
 /* Animations */
@@ -760,11 +783,6 @@
     }
   }
 
-  /*
-    Deprecated (ADR-0023): was viewport 44 then md compact.
-    Painted min-size is a no-op; Dense hit is shared with .hit-area-dense.
-  */
-  .touch-target-md-compact,
   .hit-area-dense,
   .hit-area-dense-square {
     position: relative;
@@ -772,7 +790,6 @@
   }
 
   @media (pointer: coarse) {
-    .touch-target-md-compact::after,
     .hit-area-dense::after,
     .hit-area-dense-square::after {
       content: '';
@@ -781,7 +798,6 @@
     }
 
     /* Height-first: text buttons, links, row steppers — no min-w slab. */
-    .touch-target-md-compact::after,
     .hit-area-dense::after {
       top: 50%;
       right: 0;
@@ -800,8 +816,6 @@
     }
   }
 
-  .touch-target-md-compact:hover,
-  .touch-target-md-compact:focus-visible,
   .hit-area-dense:hover,
   .hit-area-dense:focus-visible,
   .hit-area-dense-square:hover,
@@ -962,11 +976,88 @@
 @layer components {
   /* Generic tab navigation for Codex, Library, etc. */
   .tab-nav {
-    @apply border-b border-border-light;
+    @apply min-w-0 border-b border-border-light;
+  }
+
+  /* C1 overflow chrome (TASK-840): fade + chevrons on the wrapper, not in trailing.
+     Fade is chevron width + 8px so Dense/Standard hits do not overlap unfaded tabs. */
+  .tab-nav-scroll {
+    --tab-nav-overflow-fade: 2.5rem;
+    @apply relative min-w-0;
   }
 
   .tab-nav-list {
-    @apply flex gap-1 overflow-x-auto;
+    @apply m-0 flex min-w-0 list-none gap-1 overflow-x-auto p-0;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    scroll-padding-inline: var(--tab-nav-overflow-fade);
+  }
+
+  .tab-nav-list[data-overflow-end='true'] {
+    mask-image: linear-gradient(
+      to right,
+      black 0,
+      black calc(100% - var(--tab-nav-overflow-fade)),
+      transparent 100%
+    );
+  }
+
+  .tab-nav-list[data-overflow-start='true'] {
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black var(--tab-nav-overflow-fade),
+      black 100%
+    );
+  }
+
+  .tab-nav-list[data-overflow-start='true'][data-overflow-end='true'] {
+    mask-image: linear-gradient(
+      to right,
+      transparent 0,
+      black var(--tab-nav-overflow-fade),
+      black calc(100% - var(--tab-nav-overflow-fade)),
+      transparent 100%
+    );
+  }
+
+  .tab-nav-scroll-btn {
+    @apply absolute top-0 bottom-0 z-10 flex w-8 items-center justify-center text-text-muted hover:text-text-primary focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none;
+  }
+
+  @media (pointer: coarse) {
+    .tab-nav-scroll {
+      --tab-nav-overflow-fade: 3.25rem;
+    }
+
+    .tab-nav-scroll-btn {
+      width: 2.75rem;
+    }
+  }
+
+  .tab-nav-scroll-start {
+    left: 0;
+  }
+
+  .tab-nav-scroll-end {
+    right: 0;
+  }
+
+  /* Trailing control (Codex Advanced) is outside the tablist scrollport — TASK-827 */
+  .tab-nav-with-trailing {
+    @apply flex flex-col border-b-0 md:flex-row md:items-stretch md:border-b;
+  }
+
+  .tab-nav-with-trailing .tab-nav-scroll {
+    @apply min-w-0 flex-1 border-b md:border-b-0;
+  }
+
+  .tab-nav-with-trailing .tab-nav-list {
+    @apply min-w-0;
+  }
+
+  .tab-nav-trailing {
+    @apply flex shrink-0 items-center justify-end py-2 md:py-0 md:pl-2;
   }
 
   .tab-nav-trigger {

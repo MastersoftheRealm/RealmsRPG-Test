@@ -75,7 +75,7 @@ export function DefenseStatTile({
         label={`About ${defenseInfo.name}`}
         className={SHEET_STAT_TIP_CLASS}
       >
-        {defenseInfo.name}
+        <span className="w-full min-w-0 text-center break-words">{defenseInfo.name}</span>
       </WordHelpTip>
 
       <WordHelpTip

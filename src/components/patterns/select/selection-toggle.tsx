@@ -27,15 +27,15 @@ export interface IconPairToggleProps {
   onIconClassName?: string | undefined;
   pressedClassName?: string | undefined;
   idleClassName?: string | undefined;
-  /** `always` = 44px min on every pointer (Selection/Innate). `coarse` = 44px only on touch (Equip). */
+  /** `always` = 44px min on every pointer. `coarse` = 44px square only on touch (SelectionToggle). */
   touchFloor?: IconPairToggleFloor | undefined;
   paintedSize?: Record<IconPairToggleSize, string> | undefined;
 }
 
 const SELECT_PAINTED: Record<IconPairToggleSize, string> = {
-  sm: 'h-11 w-11',
-  md: 'h-11 w-11',
-  lg: 'h-12 w-12',
+  sm: 'h-8 w-8',
+  md: 'h-8 w-8',
+  lg: 'h-10 w-10',
 };
 
 const ICON_SIZES: Record<IconPairToggleSize, string> = {
@@ -127,6 +127,7 @@ export function SelectionToggle({
       size={size}
       className={className}
       label={label || (isSelected ? 'Remove selection' : 'Add selection')}
+      touchFloor="coarse"
       offIcon={Plus}
       onIcon={Check}
     />

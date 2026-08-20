@@ -1,6 +1,7 @@
 'use client';
 
 import { Input } from '@/components/ui';
+import { AdminCodexCopySourceBanner } from './admin-codex-copy-source-banner';
 import { ABILITY_OPTIONS } from './admin-archetype-path-form';
 import type { AdminArchetypeEditorProps } from './admin-archetype-editor-config';
 
@@ -16,12 +17,7 @@ export function AdminArchetypeEditorMeta({
 }: AdminArchetypeEditorMetaProps) {
   return (
     <>
-      {copySourceName && (
-        <p className="rounded-md border border-border-light bg-surface-alt px-3 py-2 text-sm text-text-secondary">
-          Creating a copy of <strong className="text-text-primary">{copySourceName}</strong>. Change
-          the name and details as needed, then save to add the new archetype.
-        </p>
-      )}
+      <AdminCodexCopySourceBanner copySourceName={copySourceName} entityLabel="archetype" />
       <div>
         <label className="mb-1 block text-sm font-medium text-text-secondary">Name *</label>
         <Input

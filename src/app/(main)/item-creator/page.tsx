@@ -243,7 +243,7 @@ function ItemCreatorWorkspace({
                           {
                             label: 'Agility Reduction',
                             value: `-${ws.agilityReduction}`,
-                            valueColor: 'text-danger-700 dark:text-danger-400',
+                            valueColor: 'text-danger-fg',
                           },
                         ]
                       : []),

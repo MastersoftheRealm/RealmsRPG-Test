@@ -4,8 +4,9 @@
  * Displays the six core abilities in a row with clickable roll buttons,
  * followed by a separate defenses row with defense scores and roll buttons.
  *
- * // DESIGN_INTENT: Dense like sheet-header LargeStatBlock — label glued to value,
- * content-height tiles (no equal-height empty cards). Ability play = RollButton;
+ * // DESIGN_INTENT: Dense like sheet-header LargeStatBlock — label glued to value.
+ * C3 equal-track 2/3/6 grid; tiles in a row share height (`h-full`); labels are
+ * GAME_RULES full names that wrap inside the tile. Ability play = RollButton;
  * defense glance = Score, play = smaller bonus RollButton.
  * Sheet Edit = rules spend; sheet Temp Modifier = layered deltas (ADR-0006 / TASK-782).
  */
@@ -15,6 +16,7 @@
 import { useMemo, useState } from 'react';
 import { EditSectionToggle, PointStatus, TempModifierToggle } from '@/components/patterns';
 import { Card } from '@/components/ui';
+import { cn } from '@/lib/utils';
 import { DEFENSE_INCREASE_COST } from '@/lib/game/skill-allocation';
 import { calculateAbilityScoreCost } from '@/lib/game/formulas';
 import {
@@ -29,7 +31,12 @@ import type {
   DefenseName,
   DefenseSkills,
 } from '@/types';
-import { ABILITY_INFO, ABILITY_ORDER, ABILITY_CONSTRAINTS } from './abilities-section-model';
+import {
+  ABILITY_INFO,
+  ABILITY_ORDER,
+  ABILITY_CONSTRAINTS,
+  SHEET_STAT_GRID_CLASS,
+} from './abilities-section-model';
 import { AbilityStatTile } from './ability-stat-tile';
 import { DefenseStatTile } from './defense-stat-tile';
 
@@ -233,7 +240,7 @@ export function AbilitiesSection({
       )}
 
       {/* Abilities — label + roll; equal gap + tile padding (not squashed, not empty) */}
-      <div className="mb-4 grid grid-cols-3 gap-2.5 sm:grid-cols-6 md:gap-3">
+      <div className={cn('mb-4', SHEET_STAT_GRID_CLASS)}>
         {ABILITY_ORDER.map((ability) => (
           <AbilityStatTile
             key={ability}
@@ -257,7 +264,7 @@ export function AbilitiesSection({
 
       {/* Defenses — Score glance + roll; same tip/tile rhythm as abilities */}
       <div className="border-t border-border-light pt-4">
-        <div className="grid grid-cols-3 gap-2.5 sm:grid-cols-6 md:gap-3">
+        <div className={SHEET_STAT_GRID_CLASS}>
           {ABILITY_ORDER.map((ability) => (
             <DefenseStatTile
               key={ABILITY_INFO[ability].defenseKey}

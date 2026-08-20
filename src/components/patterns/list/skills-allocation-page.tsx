@@ -47,26 +47,9 @@ import { AddSubSkillModal } from '../select/add-sub-skill-modal';
 import { ValueStepper } from '../select/value-stepper';
 import { WordHelpTip } from '../help/info-tippy';
 import { Button, Spinner, Alert, Card, PageHeader, TableScroll } from '@/components/ui';
+import { DEFENSE_DISPLAY_NAMES, DEFENSE_DISPLAY_ORDER } from '@/lib/game/constants';
 import { getDefenseHelp } from '../../../../public/tooltip-text';
 import type { Abilities, DefenseSkills } from '@/types';
-
-const DEFENSE_KEYS: (keyof DefenseSkills)[] = [
-  'might',
-  'fortitude',
-  'reflex',
-  'discernment',
-  'mentalFortitude',
-  'resolve',
-];
-
-const DEFENSE_LABELS: Record<keyof DefenseSkills, string> = {
-  might: 'Might',
-  fortitude: 'Fortitude',
-  reflex: 'Reflex',
-  discernment: 'Discernment',
-  mentalFortitude: 'Mental Fort.',
-  resolve: 'Resolve',
-};
 
 export interface DefenseBonusesCardProps {
   defenseSkills: DefenseSkills;
@@ -109,10 +92,11 @@ export function DefenseBonusesCard({
         Defense bonus from Skill points cannot exceed your level.
       </p>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
-        {DEFENSE_KEYS.map((key) => {
+        {DEFENSE_DISPLAY_ORDER.map((key) => {
           const current = defenseSkills[key] ?? 0;
           const abilityBonus = abilityDefenseBonuses[key] ?? 0;
           const totalBonus = abilityBonus + current;
+          const name = DEFENSE_DISPLAY_NAMES[key];
           const canInc = canIncreaseDefense(
             current,
             level,
@@ -127,10 +111,10 @@ export function DefenseBonusesCard({
             >
               <WordHelpTip
                 content={getDefenseHelp(key)}
-                label={`About ${DEFENSE_LABELS[key]}`}
+                label={`About ${name}`}
                 className="mb-1 font-medium text-text-primary normal-case"
               >
-                {DEFENSE_LABELS[key]}
+                {name}
               </WordHelpTip>
               <div className="flex items-center justify-between gap-2">
                 <ValueStepper
@@ -140,11 +124,11 @@ export function DefenseBonusesCard({
                   max={canInc ? Infinity : current}
                   size="sm"
                   formatValue={() => formatBonus(totalBonus)}
-                  decrementTitle={`Decrease ${DEFENSE_LABELS[key]}`}
+                  decrementTitle={`Decrease ${name}`}
                   incrementTitle={
                     canInc
-                      ? `Increase ${DEFENSE_LABELS[key]} (Cost: ${skillRules.defenseIncreaseCost} Skill points)`
-                      : `Increase ${DEFENSE_LABELS[key]} (Max at level ${level})`
+                      ? `Increase ${name} (Cost: ${skillRules.defenseIncreaseCost} Skill points)`
+                      : `Increase ${name} (Max at level ${level})`
                   }
                   className="w-full justify-between"
                 />

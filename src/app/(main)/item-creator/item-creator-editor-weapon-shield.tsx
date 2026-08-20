@@ -4,8 +4,7 @@
 
 'use client';
 
-import { cn } from '@/lib/utils';
-import { ValueStepper, SectionCostBadge } from '@/components/patterns';
+import { SegmentedControl, ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import { WEAPON_DAMAGE_TYPES, DIE_SIZES } from '@/lib/game/creator-constants';
 import type { ArmamentType, ItemDamageConfig as DamageConfig } from './item-creator-bootstrap';
@@ -53,32 +52,15 @@ export function ItemCreatorEditorWeaponShield({
                 tp={itemSectionCosts.handedness.totalTP}
                 currency={itemSectionCosts.handedness.totalCurrency}
               />
-              <div className="flex overflow-hidden rounded-lg border border-border-light">
-                <button
-                  type="button"
-                  onClick={() => onIsTwoHandedChange(false)}
-                  className={cn(
-                    'min-h-[44px] px-4 py-2 text-sm font-medium transition-colors',
-                    !isTwoHanded
-                      ? 'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600'
-                      : 'bg-surface-alt text-text-primary hover:bg-surface dark:bg-surface',
-                  )}
-                >
-                  One-Handed
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onIsTwoHandedChange(true)}
-                  className={cn(
-                    'min-h-[44px] px-4 py-2 text-sm font-medium transition-colors',
-                    isTwoHanded
-                      ? 'bg-warning-600 text-text-on-dark hover:bg-warning-700 dark:bg-warning-700 dark:text-text-on-dark dark:hover:bg-warning-600'
-                      : 'bg-surface-alt text-text-primary hover:bg-surface dark:bg-surface',
-                  )}
-                >
-                  Two-Handed
-                </button>
-              </div>
+              <SegmentedControl
+                value={isTwoHanded ? 'two' : 'one'}
+                onChange={(value) => onIsTwoHandedChange(value === 'two')}
+                aria-label="Handedness"
+                options={[
+                  { value: 'one', label: 'One-Handed' },
+                  { value: 'two', label: 'Two-Handed' },
+                ]}
+              />
             </div>
 
             {armamentType === 'Weapon' && (
@@ -131,7 +113,7 @@ export function ItemCreatorEditorWeaponShield({
               <select
                 value={damage.size}
                 onChange={(e) => onDamageChange((d) => ({ ...d, size: parseInt(e.target.value) }))}
-                className="rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
+                className="touch-tier-standard rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
                 aria-label="Damage die size"
               >
                 {DIE_SIZES.map((size) => (
@@ -144,7 +126,7 @@ export function ItemCreatorEditorWeaponShield({
             <select
               value={damage.type}
               onChange={(e) => onDamageChange((d) => ({ ...d, type: e.target.value }))}
-              className="rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
+              className="touch-tier-standard rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
               aria-label="Damage type"
             >
               {WEAPON_DAMAGE_TYPES.map((type) => (

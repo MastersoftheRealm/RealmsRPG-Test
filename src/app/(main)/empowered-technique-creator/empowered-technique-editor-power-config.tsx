@@ -3,12 +3,8 @@
 import { ValueStepper, SectionCostBadge } from '@/components/patterns';
 import { CollapsibleSection } from '@/components/creator';
 import { Checkbox } from '@/components/ui';
-import {
-  formatAreaForDisplay,
-  formatDurationFromTypeAndValue,
-  type AreaConfig,
-  type DurationConfig,
-} from '@/lib/calculators';
+import { formatAreaForDisplay, type AreaConfig, type DurationConfig } from '@/lib/calculators';
+import { formatDurationFromTypeAndValue } from '@/lib/utils/duration';
 import { AREA_TYPES, DURATION_TYPES, DURATION_VALUES } from '@/lib/game/creator-constants';
 import type { EmpoweredTechniqueCreatorEditorProps } from './empowered-technique-editor-config';
 

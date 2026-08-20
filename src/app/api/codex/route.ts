@@ -5,8 +5,8 @@
  */
 
 import { NextResponse } from 'next/server';
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { isAdmin } from '@/lib/admin';
+import { fromPublicTable, type TypedSupabaseClient } from '@/lib/supabase/database';
 import { createClient } from '@/lib/supabase/server';
 import { logApiError } from '@/lib/api-error';
 import { getSession } from '@/lib/supabase/session';
@@ -93,16 +93,16 @@ type TableResult = { data: Row[] | null; error: TableError };
 
 /** Skipped tables resolve empty so the mapping below stays one code path. */
 function selectTable(
-  supabase: SupabaseClient,
+  supabase: TypedSupabaseClient,
   table: CodexTable,
   needed: ReadonlySet<CodexTable>,
 ): PromiseLike<TableResult> {
   if (!needed.has(table)) return Promise.resolve({ data: [], error: null });
-  return supabase.from(table).select('*') as unknown as PromiseLike<TableResult>;
+  return fromPublicTable(supabase, table).select('*') as PromiseLike<TableResult>;
 }
 
 async function fetchCodexFromClient(
-  supabase: SupabaseClient,
+  supabase: TypedSupabaseClient,
   keys: ReadonlySet<CodexPayloadKey>,
 ): Promise<Partial<CodexPayload>> {
   const needed = new Set<CodexTable>();

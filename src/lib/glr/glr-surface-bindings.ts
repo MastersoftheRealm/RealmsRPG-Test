@@ -60,6 +60,7 @@ export const GLR_SURFACE_BINDINGS = {
   },
   'guided-equipment-gear-l3': { entityType: 'gear', mode: 'browse' },
   'detail-option-power': { entityType: 'power', mode: 'detail' },
+  'detail-option-technique': { entityType: 'technique', mode: 'detail' },
 } as const satisfies Record<string, GlrSurfaceBinding>;
 
 export type GlrSurfaceId = keyof typeof GLR_SURFACE_BINDINGS;

@@ -10,17 +10,17 @@
 
 | Piece | Location | Role |
 |-------|----------|------|
-| **ExpandableImage** | `src/components/shared/expandable-image.tsx` | **Default** for any meaningful inline image — wraps visible image, click opens `ExpandableImageModal` (`object-contain`, `fullScreenOnMobile`, soft `bg-image-matte` behind art). Use `stopPropagation` inside selectable cards/rows. |
+| **ExpandableImage** | `src/components/patterns/help/expandable-image.tsx` | **Default** for any meaningful inline image — wraps visible image, click opens `ExpandableImageModal` (`object-contain`, `fullScreenOnMobile`, soft `bg-image-matte` behind art). Use `stopPropagation` inside selectable cards/rows. |
 | **ExpandableImageModal** | same file | Controlled preview only (rare); prefer `ExpandableImage`. |
 | **readRecordImageUrl** / **resolveChoiceCardImage** | `guided-choice-image.ts` → `entity-image-url.ts`; placeholders via `lib/placeholder-art.ts` (`getPlaceholderCardArtPath`, dark `-dark.svg` pairs) | Read `image_url` / bank join; fall back to typed SVG placeholders (theme via `usePlaceholderTheme` in client surfaces). |
 | **resolveListRowThumbnail** / **resolveSpeciesListRowThumbnail** | `src/lib/list-row-image.ts` | Wraps `resolveChoiceCardImage` (light path) → `ListRowThumbnail` applies dark swap via `getThemedPlaceholderSrc` |
-| **ListRowThumbnail** | `src/components/shared/list-row-thumbnail.tsx` | 44×44 list thumb — thin wrapper over `ExpandableImage` for `GridListRow.thumbnail` |
-| **GridListRow** `thumbnail` | `src/components/shared/grid-list-row.tsx` | D&D Beyond list style + `ListHeader` `hasThumbnailColumn` |
+| **ListRowThumbnail** | `src/components/patterns/list/list-row-thumbnail.tsx` | 44×44 list thumb — thin wrapper over `ExpandableImage` for `GridListRow.thumbnail` |
+| **GridListRow** `thumbnail` | `src/components/patterns/list/grid-list-row.tsx` | D&D Beyond list style + `ListHeader` `hasThumbnailColumn` |
 | **GuidedChoiceCard** | `src/components/guided-creator/guided-choice-card.tsx` | Choice cards — hero art via `ExpandableImage` inside card |
 | **realms-images.ts** | `src/lib/realms-images.ts` | Bank types, category enum, client CRUD helpers (`apiUpload` / `apiFetch`) — TASK-492; sole authoring upload path after TASK-498 |
 | **`/api/images*`** | `src/app/api/images/` | Bank list (public), create/replace/delete/usage (admin) |
 | **Admin Image Library** | `/admin/images` (TASK-493) | Admin browse/upload/rename/retag/replace/delete for bank assets; dashboard card under **Admin** |
-| **RealmsImagePicker / RealmsImageField** | `src/components/shared/realms-image-picker.tsx` | Shared bank browse + select and compact entity binding; admin-only upload-into-bank. Set `image_id` plus URL cache. Filter with `categories` or `'empowered-technique'` / `'portrait'`. |
+| **RealmsImagePicker / RealmsImageField** | `src/components/patterns/chrome/realms-image-picker.tsx` | Shared bank browse + select and compact entity binding; admin-only upload-into-bank. Set `image_id` plus URL cache. Filter with `categories` or `'empowered-technique'` / `'portrait'`. |
 
 ## Decision matrix — which surface?
 

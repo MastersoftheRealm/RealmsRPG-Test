@@ -62,7 +62,7 @@ export function DescriptorChipWithTip({
     >
       <DescriptorChip size={size} variant={variant} className="gap-1 pr-1.5">
         <span className="min-w-0 truncate">{label}</span>
-        <InfoTippy content={tip} label={`${chip.name} details`} size="inline" tone="current" />
+        <InfoTippy content={tip} label={`${chip.name} details`} tone="current" />
       </DescriptorChip>
     </span>
   );

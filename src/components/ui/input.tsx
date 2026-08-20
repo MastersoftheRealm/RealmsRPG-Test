@@ -3,7 +3,9 @@
  * =================
  * Text input with label and error handling.
  * Filter panels (Codex/Library number fields next to FilterNativeSelect) use
- * `FilterInput` from `@/components/patterns/filters` — do not restyle this default h-10 chrome per page.
+ * `FilterInput` from `@/components/patterns/filters` — do not restyle this default
+ * h-10 chrome per page. Coarse pointer uses Standard 44 via `touch-tier-standard`
+ * (ADR-0023 / TASK-830); fine pointer stays compact h-10.
  */
 
 import * as React from 'react';
@@ -33,7 +35,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           type={type}
           id={inputId}
           className={cn(
-            'flex h-10 w-full rounded-lg border bg-surface px-4 py-2.5 text-sm',
+            'touch-tier-standard flex h-10 w-full rounded-lg border bg-surface px-4 py-2.5 text-sm',
             'text-text-primary placeholder:text-text-muted',
             'focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none',
             'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:opacity-50',

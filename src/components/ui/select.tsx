@@ -45,7 +45,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             id={selectId}
             ref={ref}
             className={cn(
-              'flex h-10 w-full min-w-0 appearance-none truncate rounded-lg border bg-surface px-4 py-2.5 pr-10 text-sm',
+              'touch-tier-standard flex h-10 w-full min-w-0 appearance-none truncate rounded-lg border bg-surface px-4 py-2.5 pr-10 text-sm',
               'text-text-primary',
               'focus:border-primary-outline-border focus:ring-2 focus:ring-primary-outline-border focus:outline-none',
               'disabled:cursor-not-allowed disabled:bg-surface-alt disabled:opacity-50',

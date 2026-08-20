@@ -385,7 +385,7 @@ export function AddCreatureFeatModal({
             id={categorySelectId}
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:ring-2 focus:ring-primary-outline-border focus:outline-none"
+            className="touch-tier-standard rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:ring-2 focus:ring-primary-outline-border focus:outline-none"
           >
             <option value="">All</option>
             {categories.map((cat) => (
@@ -403,7 +403,7 @@ export function AddCreatureFeatModal({
             id={abilitySelectId}
             value={selectedAbility}
             onChange={(e) => setSelectedAbility(e.target.value)}
-            className="min-h-[44px] rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:ring-2 focus:ring-primary-outline-border focus:outline-none"
+            className="touch-tier-standard rounded-lg border border-border-light bg-surface px-2 py-1 text-sm text-text-primary focus:ring-2 focus:ring-primary-outline-border focus:outline-none"
           >
             <option value="">All</option>
             {abilities.map((abil) => (

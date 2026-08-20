@@ -106,7 +106,7 @@ export function HealthEnergyAllocationSection() {
           >
             Auto-allocate to match highest cost
           </Button>
-          <InfoTippy content={autoAllocateHelp} label="How auto-allocate works" size="inline" />
+          <InfoTippy content={autoAllocateHelp} label="How auto-allocate works" />
         </div>
       </div>
       <HealthEnergyAllocator

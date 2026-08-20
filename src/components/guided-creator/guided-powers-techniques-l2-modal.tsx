@@ -98,9 +98,7 @@ export function InnateEnergyPointStatus({ total, spent }: { total: number; spent
       total={total}
       spent={spent}
       label={ptCopy.innateEnergyLabel}
-      labelAccessory={
-        <InfoTippy content={innateEnergyHelp} label="Innate Energy help" size="inline" />
-      }
+      labelAccessory={<InfoTippy content={innateEnergyHelp} label="Innate Energy help" />}
       variant="inline"
     />
   );
@@ -108,7 +106,7 @@ export function InnateEnergyPointStatus({ total, spent }: { total: number; spent
 
 /** Innate Powers heading (i) — L1 cards + L3 inline catalog (TASK-726). */
 export function InnatePowersHelpTip() {
-  return <InfoTippy content={innatePowersHelp} label="Innate Powers help" size="inline" />;
+  return <InfoTippy content={innatePowersHelp} label="Innate Powers help" />;
 }
 
 export function GuidedPowersTechniquesL2Modal({

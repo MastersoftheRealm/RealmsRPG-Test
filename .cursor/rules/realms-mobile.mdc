@@ -9,7 +9,7 @@ When **creating or editing** any page, modal, or layout:
 
 1. **Read** `src/docs/MOBILE_UX.md` (authority: ADR-0023). The file covers **every viewport**, not just phones. The worst failures in the 2026-08-18 audit were at **1024px**.
 
-2. **Input method vs layout:** `@media (pointer: coarse)` decides hit-area size. Viewport breakpoints decide arrangement. Do not use `md:` to shrink a touch target (`.touch-target-md-compact` is deprecated).
+2. **Input method vs layout:** `@media (pointer: coarse)` decides hit-area size. Viewport breakpoints decide arrangement. Do not use `md:` to shrink a touch target. Dense expanded hit is `.hit-area-dense` (height-first) or `.hit-area-dense-square` (icon-only).
 
 3. **Touch tiers (coarse pointer):** Primary 48px · Standard 44px · Dense 32px painted + 44px expanded hit (`.hit-area-layout-neutral`) with 8px gap. **No `min-w` on text buttons.** Fine pointer stays compact. Owner feedback is desktop-first unless labeled `mobile feedback:`.
 

@@ -5,8 +5,6 @@
 import type { Feat } from '@/hooks';
 import { normalizeFeatAbilities } from '@/lib/codex/feat-ability';
 
-export const COPY_NAME_SUFFIX = ' copy';
-
 export type FeatFormState = {
   name: string;
   description: string;

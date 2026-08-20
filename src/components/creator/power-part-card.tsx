@@ -157,7 +157,7 @@ export function PowerPartCard({
                     onUpdate({ selectedCategory: newCategory });
                   }
                 }}
-                className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-text-primary"
+                className="touch-tier-standard w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-text-primary"
               >
                 {categories.map((cat) => (
                   <option key={cat} value={cat}>
@@ -188,7 +188,7 @@ export function PowerPartCard({
                     });
                   }
                 }}
-                className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-text-primary"
+                className="touch-tier-standard w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-sm text-text-primary"
               >
                 {filteredParts.map((p, idx) => (
                   <option key={p.id} value={idx}>

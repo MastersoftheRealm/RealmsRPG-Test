@@ -1,5 +1,6 @@
 /**
  * Codex Spreadsheet — toolbar (TASK-617)
+ * Hit area follows pointer tiers (ADR-0023 / TASK-847), not viewport `md:` slabs.
  */
 
 'use client';
@@ -47,18 +48,18 @@ export function CodexSpreadsheetToolbar({
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-surface-alt/50 px-4 py-3">
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex min-h-[44px] items-center gap-1 rounded border border-border-light bg-surface px-2 py-1.5 md:min-h-0">
+        <div className="flex items-center gap-1 rounded border border-border-light bg-surface px-2 py-1.5">
           <Search className="h-4 w-4 shrink-0 text-text-muted" aria-hidden />
           <input
             type="text"
             value={findValue}
             onChange={(e) => onFindValueChange(e.target.value)}
             placeholder="Find..."
-            className="min-h-[32px] w-40 bg-transparent text-sm outline-none"
+            className="touch-tier-standard h-8 w-40 bg-transparent text-sm outline-none"
             aria-label="Find in spreadsheet"
           />
         </div>
-        <label className="flex min-h-[44px] cursor-pointer items-center gap-2 text-xs text-text-secondary select-none md:min-h-0">
+        <label className="touch-tier-standard flex cursor-pointer items-center gap-2 text-xs text-text-secondary select-none">
           <input
             type="checkbox"
             checked={findWholeCell}
@@ -71,7 +72,7 @@ export function CodexSpreadsheetToolbar({
         <select
           value={findLimitToColumn}
           onChange={(e) => onFindLimitToColumnChange(e.target.value)}
-          className="min-h-[44px] rounded border border-border-light bg-surface px-2 py-1.5 text-sm md:min-h-[32px]"
+          className="touch-tier-standard h-8 rounded border border-border-light bg-surface px-2 py-1.5 text-sm"
           aria-label="Limit find/replace to column"
         >
           <option value="">All columns</option>
@@ -83,67 +84,37 @@ export function CodexSpreadsheetToolbar({
         </select>
         {replaceMode ? (
           <>
-            <div className="flex min-h-[44px] items-center gap-1 rounded border border-border-light bg-surface px-2 py-1.5 md:min-h-0">
+            <div className="flex items-center gap-1 rounded border border-border-light bg-surface px-2 py-1.5">
               <Replace className="h-4 w-4 shrink-0 text-text-muted" aria-hidden />
               <input
                 type="text"
                 value={replaceValue}
                 onChange={(e) => onReplaceValueChange(e.target.value)}
                 placeholder="Replace with..."
-                className="min-h-[32px] w-40 bg-transparent text-sm outline-none"
+                className="touch-tier-standard h-8 w-40 bg-transparent text-sm outline-none"
                 aria-label="Replace with"
               />
             </div>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => onFindReplace(false)}
-              className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0"
-            >
+            <Button size="sm" variant="secondary" onClick={() => onFindReplace(false)}>
               Replace
             </Button>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => onFindReplace(true)}
-              className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0"
-            >
+            <Button size="sm" variant="secondary" onClick={() => onFindReplace(true)}>
               Replace all
             </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => onReplaceModeChange(false)}
-              className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0"
-            >
+            <Button size="sm" variant="ghost" onClick={() => onReplaceModeChange(false)}>
               Cancel
             </Button>
           </>
         ) : (
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => onReplaceModeChange(true)}
-            className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0"
-          >
+          <Button size="sm" variant="ghost" onClick={() => onReplaceModeChange(true)}>
             <Replace className="mr-1 h-4 w-4" /> Replace
           </Button>
         )}
-        <Button
-          size="sm"
-          variant="secondary"
-          onClick={onAddNewRow}
-          className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0"
-        >
+        <Button size="sm" variant="secondary" onClick={onAddNewRow}>
           Add row
         </Button>
       </div>
-      <Button
-        size="sm"
-        onClick={onSaveAllClick}
-        disabled={saving || !hasDirty}
-        className="min-h-[44px] min-w-[44px] md:min-h-0 md:min-w-0"
-      >
+      <Button size="sm" onClick={onSaveAllClick} disabled={saving || !hasDirty}>
         {saving ? (
           <Loader2 className="mr-1 h-4 w-4 animate-spin" />
         ) : (

@@ -291,7 +291,7 @@ export function EquipmentStep() {
   if (error) {
     return (
       <div className="mx-auto max-w-5xl py-12 text-center">
-        <p className="mb-4 text-danger-700 dark:text-danger-400">Failed to load equipment data.</p>
+        <p className="mb-4 text-danger-fg">Failed to load equipment data.</p>
         <Button variant="secondary" onClick={prevStep}>
           ← Back
         </Button>

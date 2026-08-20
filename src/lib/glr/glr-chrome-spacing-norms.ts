@@ -58,7 +58,8 @@ export const GLR_GRID_COLUMN_SOURCES = [
   'src/lib/codex/skill-list.ts',
 ] as const;
 
-/** Codex/Admin browse shells — `rowChrome.rightSlot` must match row `rightSlot` when present. */
+/** Codex/Admin browse shells — `rowChrome.rightSlot` must match row `rightSlot` when present.
+ * Admin Edit/Duplicate/Delete is `AdminCodexRowActions` in that slot, not GridListRow onEdit. */
 export const CODEX_BROWSE_SHELL_SOURCES = [
   'src/app/(main)/admin/codex/AdminFeatsTab.tsx',
   'src/app/(main)/admin/codex/AdminPartsTab.tsx',

@@ -4,7 +4,7 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 
 ## When required
 
-- New shared component under `src/components/shared/` or `src/components/ui/`
+- New shared component under `src/components/patterns/` or primitive under `src/components/ui/`
 - New zustand store or new state-management approach
 - Breaking or cross-client API contract change
 - Choosing between two durable patterns (not a one-file bugfix)
@@ -47,3 +47,4 @@ Lightweight process for **Architect**-role changes. Keep each ADR short.
 | 0022 | Enable `noUncheckedIndexedAccess` | Accepted (TASK-797) |
 | 0023 | Responsive layout contracts and tiered touch targets | Accepted (TASK-831) |
 | 0024 | Enable `exactOptionalPropertyTypes` | Accepted (TASK-824) |
+| 0025 | Admin Codex CRUD chrome stays tab-local | Accepted (TASK-842 / TASK-845) |

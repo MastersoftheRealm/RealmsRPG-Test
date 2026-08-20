@@ -74,7 +74,7 @@ export function CombatantCardHeader({
         title="Change side"
         aria-label="Combatant side (Ally, Enemy, or Companion)"
         className={cn(
-          'min-h-[var(--touch-target-min,44px)] cursor-pointer rounded border px-1.5 py-0.5 text-[10px] font-medium md:min-h-0',
+          'touch-tier-standard cursor-pointer rounded border px-1.5 py-0.5 text-[10px] font-medium',
           combatant.combatantType === 'ally' && 'border-ally bg-ally-light text-ally-text',
           combatant.combatantType === 'enemy' && 'border-enemy bg-enemy-light text-enemy-text',
           combatant.combatantType === 'companion' &&
@@ -86,7 +86,7 @@ export function CombatantCardHeader({
         <option value="companion">Companion</option>
       </select>
       <label
-        className="flex min-h-[var(--touch-target-min,44px)] cursor-pointer items-center gap-1 select-none"
+        className="touch-tier-standard flex cursor-pointer items-center gap-1 select-none"
         title="Surprised (goes last in round 1)"
       >
         <input

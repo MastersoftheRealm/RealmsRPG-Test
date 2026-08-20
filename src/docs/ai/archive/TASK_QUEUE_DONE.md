@@ -1,3 +1,1305 @@
+- id: TASK-859
+  title: Fix BUILD_VALIDATION archive link (create archive or drop the href)
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/archive/BUILD_VALIDATION_ARCHIVE.md
+  description: |
+    DEVELOPER_TASK_QUEUE Build validation index says full steps live in BUILD_VALIDATION.md
+    or `archive/BUILD_VALIDATION_ARCHIVE.md`. That archive file does not exist. Suites
+    marked Status Archived still live in BUILD_VALIDATION.md (anchors work). Either create
+    the archive and move only Status=Archived suites (update every href), or remove the
+    dead link and keep Archived suites in the live catalog.
+  acceptance_criteria:
+    - No href in DEVELOPER_TASK_QUEUE / BUILD_VALIDATION points at a missing file.
+    - Suites with Status Ready stay in `BUILD_VALIDATION.md` (pending-qa rows keep working).
+    - If an archive is created, it lives at `src/docs/ai/archive/BUILD_VALIDATION_ARCHIVE.md`
+      and the index links match.
+    - `npm run tasks:validate` passes.
+  notes: |
+    Filed from /global-audit 2026-08-20. Docs-only. Prefer creating the archive only if
+    moving Archived suites is cheaper than leaving them; do not dump Ready suites.
+  completed_work: |
+    The archive file already existed at src/docs/ai/archive/BUILD_VALIDATION_ARCHIVE.md
+    (cursorignored, still in git); /global-audit could not Read it. Pointed the DEV-queue
+    index Archived open-suite links at that file. Restored the missing DEV-V-005 stub
+    heading in BUILD_VALIDATION.md. Ready / Pending QA suites unchanged. Did not move
+    Ready suites into the archive.
+
+---
+
+- id: TASK-860
+  title: Auth/IDOR vitest for remaining API routes (images, invite, official/codex, leftover admin)
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  parent_task: TASK-713
+  related_files:
+    - src/app/api/admin/check/route.test.ts
+    - src/app/api/admin/changelogs/route.test.ts
+    - src/app/api/admin/role-policies/route.test.ts
+    - src/app/api/admin/users/update-role/route.test.ts
+    - src/app/api/campaigns/invite/[code]/route.test.ts
+    - src/app/api/campaigns/[id]/rolls/route.test.ts
+    - src/app/api/images/route.test.ts
+    - src/app/api/images/[id]/route.test.ts
+    - src/app/api/images/[id]/replace/route.test.ts
+    - src/app/api/images/[id]/usage/route.test.ts
+    - src/app/api/upload/portrait/route.test.ts
+    - src/app/api/upload/profile-picture/route.test.ts
+    - src/app/api/official/[type]/route.test.ts
+    - src/app/api/official/enhanced-items/route.test.ts
+    - src/app/api/codex/route.test.ts
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  automated_check: |
+    npm test -- --run src/app/api
+  description: |
+    TASK-658 / TASK-713 covered characters, campaigns (incl. encounter vs RM view),
+    admin/users list, user library, enhanced items, encounters, and crafting. The DEV
+    queue still lists routes without an auth/IDOR vitest: images + usage/replace,
+    portrait/profile uploads, campaign invite + rolls, leftover admin (check /
+    changelogs / role-policies / update-role), and official/codex. Copy the existing
+    route.test.ts pattern; do not change production auth unless a test finds a hole.
+  acceptance_criteria:
+    - Each route family in the DEV-queue gap table has a vitest that unauthenticated
+      and wrong-user (or non-admin) requests are rejected as the route already intends.
+    - No new parallel test harness — extend the existing API route test style.
+    - DEVELOPER_TASK_QUEUE gap table shrinks or points at the new tests.
+    - npm test -- --run src/app/api and npm run build pass.
+  notes: |
+    Filed from /global-audit 2026-08-20 + DEVELOPER_TASK_QUEUE deferred list.
+    Not DEV-V-002/003/004 (those are Planned human campaign/admin/storage suites).
+    Not TASK-326/353 HIBP (WAITING, Dashboard).
+  completed_work: |
+    Added co-located route.test.ts for leftover admin (check/changelogs/role-policies/
+    update-role), campaign invite + rolls, images list/[id]/replace/usage, portrait and
+    profile-picture uploads, official/[type] + official/enhanced-items. Extended GET
+    /api/codex tests (public collection + production debug leak). Production auth
+    unchanged. DEV-queue gap table replaced with a coverage pointer. npm test src/app/api,
+    typecheck, lint on new tests, and npm run build passed.
+
+---
+
+- id: TASK-857
+  title: Replace .touch-target-md-compact with .hit-area-dense and delete the alias
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  parent_task: TASK-841
+  related_files:
+    - src/app/globals.css
+    - src/components/ui/chip.tsx
+    - src/components/ui/expandable-chip.tsx
+    - src/components/ui/button-tiers.test.ts
+    - src/lib/chip/chip-options-panel.tsx
+    - src/components/patterns/chrome/edit-section-toggle.tsx
+    - src/components/patterns/chrome/segmented-control.tsx
+    - src/components/patterns/chrome/temp-modifier-toggle.tsx
+    - src/components/patterns/help/expandable-image.tsx
+    - src/components/patterns/list/grid-list-chip.tsx
+    - src/components/encounters/CombatantCard.tsx
+    - src/components/encounters/combatant-card-initiative.tsx
+    - src/components/encounters/combatant-card-quick-actions.tsx
+    - src/components/encounters/combatant-card-conditions.tsx
+    - src/app/(main)/admin/core-rules/core-rules-armament-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-sizes-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-rarities-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-crafting-rules-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-conditions-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-ability-skills-editors.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ACCESSIBILITY.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ai/UI_UNIFICATION_PLAN.md
+  build_validation: |
+    suite: DEV-V-055
+    tests:
+      - DEV-V-055-T006
+  developer_test_plan: |
+    Suite DEV-V-055 T006 — see BUILD_VALIDATION.md
+  description: |
+    ADR-0023 deprecated viewport-based `.touch-target-md-compact`. TASK-841 made it a
+    no-op alias of `.hit-area-dense`. Call sites and docs still teach two names for one
+    Dense-hit behavior. Replace the class at remaining TSX/CSS uses, delete the alias
+    from `globals.css`, and point MOBILE_UX / DESIGN_SYSTEM / ACCESSIBILITY / ADR-0023
+    at `.hit-area-dense` only.
+  acceptance_criteria:
+    - No `.touch-target-md-compact` in `src/` (grep).
+    - Former call sites use `.hit-area-dense` (or `.hit-area-dense-square` where the painted box is square).
+    - SoT docs name the canonical class; ACCESSIBILITY no longer documents an alias as live API.
+    - Coarse Dense hit stays 32px paint + 44 expanded; fine pointer stays compact.
+    - `npm run build` + `button-tiers.test.ts` pass.
+  notes: |
+    Filed from /global-audit 2026-08-20 gated list. Do not change Primary/Standard tiers.
+    Do not retag list thumbs, image mattes, or innate-toggle.
+  completed_work: |
+    Deleted the `.touch-target-md-compact` CSS alias from globals.css. Wired remaining
+    control call sites onto `.hit-area-dense` (text/chips) or `.hit-area-dense-square`
+    (icon-only pencils, chip dismiss, core-rules trash). Dropped the no-op Dense overlay
+    on ExpandableImage (image matte already >44px) and the duplicate skills-section
+    alias assertion (walker covers TSX/CSS). SoT docs and DEV-V-055 T006 name the
+    canonical classes only. Historical ADR/changelog mentions remain. List thumbs /
+    innate-toggle unchanged. Primary/Standard tiers unchanged.
+
+---
+
+- id: TASK-856
+  title: Legacy feat and equipment catalogs use ListSearchToolbar
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-creator/steps/feats/full-feat-catalog.tsx
+    - src/components/character-creator/steps/equipment/equipment-catalog-panel.tsx
+    - src/components/patterns/list/list-search-toolbar.tsx
+    - src/components/patterns/filters/filter-section.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  build_validation: |
+    suite: DEV-V-001
+    tests:
+      - DEV-V-001-T021
+  developer_test_plan: |
+    Suite DEV-V-001 T021 - Legacy feat + equipment Search + Filters share ListSearchToolbar compact grammar. Desktop + ~360px.
+  description: |
+    Codex/Library/USM browse use ListSearchToolbar (Search + Filters one row). Legacy
+    full-feat-catalog.tsx and equipment-catalog-panel.tsx still stack a separate SearchInput
+    above FilterSection. Wire them onto the existing compact toolbar; do not invent a fourth shell.
+  acceptance_criteria:
+    - Both catalogs use ListSearchToolbar compact Filters (same grammar as CodexBrowseListShell).
+    - No new shared/ui file.
+    - /characters/new/advanced still loads; feat and equipment lists still search/filter.
+    - Desktop + ~360px; npm run build passes.
+  notes: |
+    Filed from /global-audit 2026-08-20. GuidedInlineCatalogList FilterSection toolbarStart is intentional (ADR-0012) - do not migrate that in this task.
+  completed_work: |
+    Deleted stacked SearchInput above page FilterSection on FullFeatCatalog and EquipmentCatalogPanel.
+    Wired both onto existing ListSearchToolbar compact Search + Filters (filter bodies unchanged).
+    GuidedInlineCatalogList left on its own compact toolbarStart (ADR-0012). FEATURE_INDEX + DEV-V-001 T021.
+
+- id: TASK-854
+  title: Align ACCESSIBILITY and DESIGN_SYSTEM contrast onto theme-aware *-fg tokens
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/docs/ACCESSIBILITY.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/guide/01-verification-and-ui-gates.md
+    - src/components/auth/form-input.tsx
+    - src/components/auth/password-input.tsx
+    - src/components/character-creator/steps/ancestry/ancestry-mixed-panel.tsx
+    - src/components/character-creator/steps/ancestry/ancestry-single-panel.tsx
+    - src/components/character-creator/steps/equipment-step.tsx
+    - src/components/character-creator/steps/equipment/path-loadout-section.tsx
+    - src/components/character-creator/steps/equipment/unarmed-prowess-panel.tsx
+    - src/components/character-sheet/character-sheet-settings-modal.tsx
+    - src/components/character-sheet/edit-species-ancestry-step.tsx
+    - src/components/character-sheet/level-up-modal.tsx
+    - src/components/guided-creator/guided-equipment-l1-phase.tsx
+    - src/components/guided-creator/guided-unarmed-prowess-panel.tsx
+    - src/components/guided-creator/steps/skills-step.tsx
+    - src/components/patterns/chrome/section-header.tsx
+    - src/app/(main)/admin/core-rules/page.tsx
+    - src/app/(main)/characters/new/page.tsx
+    - src/app/(main)/item-creator/page.tsx
+    - src/app/(main)/species-creator/species-creator-editor.tsx
+  description: |
+    Constitution and guide/01 prefer `text-success-fg` / `text-danger-fg` / `text-warning-fg` /
+    `text-info-fg` / `text-power-fg` / `text-martial-fg` over numbered ramp + ad-hoc `dark:`.
+    ACCESSIBILITY.md and DESIGN_SYSTEM still teach `text-success-700 dark:text-success-400` and
+    `text-power-dark`. Rewrite those SoT rows, then migrate remaining UI call sites that still
+    pair numbered ramps for status/archetype body text.
+  acceptance_criteria:
+    - ACCESSIBILITY + DESIGN_SYSTEM contrast tables name `*-fg` as the default for status/archetype text.
+    - Numbered ramps stay documented only as compat / non-text uses (fills, borders), not as the body-text recipe.
+    - Remaining `text-success-700 dark:text-success-400` / `text-power-dark` body-text call sites in TSX migrate or are listed as explicit exceptions.
+    - `npm run build` + contrast check pass if tokens/classes change.
+  notes: |
+    Filed from /global-audit 2026-08-20. /debt aligned the Dense-alias touch-target line only; token SoT rewrite is this task.
+  completed_work: |
+    Rewrote ACCESSIBILITY + DESIGN_SYSTEM contrast tables onto `*-fg`; numbered ramps documented
+    as fills/borders only. Migrated remaining TSX status/archetype body and icon text (no leftover
+    `text-success-700 dark:text-success-400` / `text-power-dark` in src TSX). Contrast check 0
+    regressions; typecheck; lint; build.
+
+- id: TASK-853
+  title: Restore /rules chapter index per ADR-0021 (drop leftover Google Doc iframe)
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  parent_task: TASK-796
+  related_files:
+    - src/app/(main)/rules/page.tsx
+    - src/lib/constants/copy/rules-copy.ts
+    - src/lib/rules/rulebook.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+    - src/docs/ACCESSIBILITY.md
+  build_validation: |
+    suite: DEV-V-053
+    tests:
+      - DEV-V-053-T006
+  developer_test_plan: |
+    Suite DEV-V-053 T006 - /rules is the chapter index; Google Doc is view-source only (see BUILD_VALIDATION.md)
+  description: |
+    TASK-796 / ADR-0021 shipped first-party MDX at `/rules/[slug]` and decided `/rules` is a chapter
+    index with the Google Doc as a view-source link only. `rules/page.tsx` still embeds the iframe
+    (likely TASK-834 checkout recovery). FEATURE_INDEX pages row still says WAITING TASK-796;
+    DEV-V-053-T006 and the pending-qa T006 row disagree (iframe vs removed). Restore the index.
+  acceptance_criteria:
+    - `/rules` lists MDX chapters (RulebookNav / chapter links); no Google Doc iframe on the index.
+    - `RULES_COPY.viewUrl` remains a view-source / open-in-new-tab link only.
+    - FEATURE_INDEX pages row matches ADR-0021 (MDX live; TASK-796 done; TASK-823 is glossary/The Realms only).
+    - DEV-V-053-T006 Expected and DEVELOPER_TASK_QUEUE pending-qa T006 agree (no iframe).
+    - Check TASK-834 unmatched set before inventing missing index markup.
+    - `npm run build` passes.
+  notes: |
+    Filed from /global-audit 2026-08-20. Do not fold into /debt. Do not delete `/characters/new/advanced`.
+  completed_work: |
+    Deleted leftover Google Doc iframe and embed copy. Wired `/rules` onto existing RulebookNav +
+    RULEBOOK_CHAPTERS; viewUrl is open-in-new-tab only. FEATURE_INDEX + DEV-V-053-T006 + pending-qa
+    T006 agree. TASK-834 unmatched set did not include this page. vitest; typecheck; lint; build.
+
+- id: TASK-825
+  title: Gear play catalog — Training Points chip (sheet + creature)
+  created_at: 2026-08-18
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/glr/glr-fact-catalog.ts
+    - src/lib/glr/glr-density.ts
+    - src/lib/glr/glr-fact-catalog.test.ts
+    - src/lib/glr/resolve-glr-fact-layout.test.ts
+    - src/lib/codex/equipment-list.ts
+    - src/lib/codex/equipment-list.test.ts
+    - src/lib/guided-creator/guided-equipment-l2.ts
+    - src/lib/guided-creator/guided-equipment-l2.test.ts
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/components/character-sheet/library-entity-rows.tsx
+    - src/app/(main)/creature-creator/map-creature-inventory-rows.ts
+    - src/app/(main)/creature-creator/map-creature-inventory-rows.test.ts
+    - src/docs/ai/ADR/0016-glr-fact-catalog.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T028
+  developer_test_plan: |
+    Suite DEV-V-016 T028 — see BUILD_VALIDATION.md
+  description: |
+    TASK-817 dropped creature equipment Total TP footers and reused character-sheet-gear.
+    trainingPoints was not a gear catalog fact, so valued equipment TP was nowhere (never-neither).
+    Sheet mapEquipmentRows already passes trainingPoints into glrSurfaceDetailSections, but
+    ranked chips skipped it. Add trainingPoints to gear; keep Codex/USM columns Category /
+    Currency / Rarity (demote TP on browse/select).
+  acceptance_criteria:
+    - Gear play (sheet Library equipment + creature selected equipment) shows a Training Points
+      chip when TP is valued; still no Total TP footer and no TP column.
+    - Codex/Admin browse and add-modal gear stay Category / Currency / Rarity columns (TP chip
+      only, not a fourth dense column).
+    - Extend glr-fact-catalog + glr-density; do not add a new shared/ui file or surface id.
+    - Tests: glr-fact-catalog.test coverage for character-sheet-gear TP chip; npm run build.
+      Add a DEV-V-016 case when implementing. Skip Legacy /characters/new/advanced.
+  notes: |
+    Filed from TASK-817 /cleanup. Do not fold TASK-813 Qty. Do not put TP on Codex equipment
+    as a column (FEATURE_INDEX gear is Category / Currency / Rarity).
+  completed_work: |
+    Wired trainingPoints onto gear in the GLR catalog (secondary; browse/select/play demote
+    to chip). Sheet mapEquipmentRows already passed TP into glrSurfaceDetailSections.
+    Codex/Admin/guided gear expand emit the ranked TP chip when valued. No new shared/ui or
+    surface id. vitest glr-fact-catalog + density + creature mapper + equipment-list.
+    DEV-V-016 T028. /characters/new/advanced kept.
+- id: TASK-851
+  title: Header hamburger, grid selection, and combatant compact use pointer tiers
+  created_at: 2026-08-19
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/layout/header.tsx
+    - src/components/patterns/select/selection-toggle.tsx
+    - src/components/patterns/list/grid-list-row-collapsed.tsx
+    - src/components/patterns/list/grid-list-row-chrome.ts
+    - src/components/encounters/combatant-card-resources.tsx
+    - src/components/encounters/combatant-card-header.tsx
+    - src/components/encounters/combatant-card-quick-actions.tsx
+    - src/components/encounters/combatant-card-conditions.tsx
+    - src/components/ui/button-tiers.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/MOBILE_UX.md
+  follow_up_tasks:
+    - TASK-847
+  build_validation: |
+    suite: DEV-V-055
+    tests:
+      - DEV-V-055-T005
+  developer_test_plan: |
+    Suite DEV-V-055 T005 � see BUILD_VALIDATION.md
+  description: |
+    TASK-847 AC explicitly deferred three named surfaces: site header hamburger (always-on
+    min-w-[44px] below xl), GridListRow selection column (min-w-[44px] w-11 wrapper around
+    SelectionToggle), and encounter combatant compact number fields (min-h 44 + md:min-h-0).
+    Move those onto IconButton / SelectionToggle coarse square / touch-tier-standard. Do not
+    retag list thumbs, image mattes, or innate-star icon squares.
+  acceptance_criteria:
+    - Header hamburger below xl is IconButton (or equivalent pointer-coarse square), not a
+      painted min-w-[44px] slab on fine pointer at 1280.
+    - GridListRow selection column is not an always-on min-w-[44px] w-11 layout slab;
+      SelectionToggle keeps its pointer-coarse square.
+    - Combatant compact Health/Energy (and sibling compact number fields in the same cards)
+      use touch-tier-standard (or Input Standard); no md:min-h-0.
+    - Do not retag list-row-thumbnail, RealmsImagePicker mattes, or innate-toggle. Do not fold
+      TASK-850 RollButton. Do not delete /characters/new/advanced.
+    - Tests: npm run typecheck; npm run lint; npm run build; DEV-V-055 T005.
+  notes: |
+    Filed from TASK-847 /cleanup. These three names were the 847 out-of-scope list � not a
+    catch-all of every remaining min-w-[44px] in the repo.
+  completed_work: |
+    Deleted always-on min-w-[44px] hamburger, GridListRow min-w-[44px] w-11 selection wrapper,
+    and combatant min-h 44 + md:min-h-0. Wired header hamburger onto IconButton md,
+    SelectionToggle coarse square (32px fine / 44 coarse), and combatant compact fields onto
+    touch-tier-standard. List thumbs / image mattes / innate-toggle unchanged. vitest
+    button-tiers TASK-851; DEV-V-055 T005. /characters/new/advanced kept.
+    /cleanup: dropped TASK-851 clones on FEATURE_INDEX Encounters / UI-primitives and the
+    MOBILE_UX migrated paragraph; FEATURE_INDEX SelectionToggle + MOBILE_UX Header row are SoT.
+    Dropped false Equip/Innate IconPairToggle-preset claim and header/chrome lecture comments.
+- id: TASK-850
+  title: RollButton hit area uses pointer tiers, not viewport md:min-h-0
+  created_at: 2026-08-19
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/patterns/chrome/roll-button.tsx
+    - src/components/ui/button-tiers.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-847
+  build_validation: |
+    suite: DEV-V-055
+    tests:
+      - DEV-V-055-T004
+  developer_test_plan: |
+    Suite DEV-V-055 T004 — see BUILD_VALIDATION.md
+  description: |
+    TASK-847 dropped viewport 44 slabs on spreadsheet / list Filters / RollLog send. Shared
+    RollButton still uses min-h-[var(--touch-target-min,44px)] md:min-h-0 — the same deprecated
+    viewport-compact hit pattern. Pointer should drive hit area (Standard 44 coarse, compact fine).
+  acceptance_criteria:
+    - RollButton has no md:min-h-0 and no blanket min-h 44 that also paints on fine pointer.
+    - Coarse pointer Standard height; fine pointer stays compact. Reuse touch-tier-standard or
+      Button size md; do not add a new shared/ui file.
+    - Do not retag header hamburger, grid selection, or combatant compact (TASK-851). Do not
+      fold TASK-830 form fields. Do not delete /characters/new/advanced.
+    - Tests: npm run typecheck; npm run lint; npm run build; DEV-V-055 T004.
+  notes: |
+    Filed from TASK-847 /cleanup. Named leftover, not a repo-wide 44 hunt.
+  completed_work: |
+    Deleted min-h-[var(--touch-target-min,44px)] md:min-h-0 on shared RollButton.
+    Wired Standard touch-tier-standard (coarse 44, fine compact). Header hamburger / grid
+    selection / combatant compact unchanged (TASK-851). vitest button-tiers; DEV-V-055 T004.
+    /cleanup: dropped TASK-850 clones on MOBILE_UX / DESIGN_SYSTEM / ADR-0023; FEATURE_INDEX Dice roll is SoT.
+- id: TASK-813
+  title: Unify EquipmentListSection creature Qty with formatCreatureEquipmentQuantity
+  created_at: 2026-08-17
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/patterns/list/entity-library-inventory.tsx
+    - src/components/patterns/list/entity-library-sections-columns.ts
+    - src/components/patterns/list/entity-library-sections-columns.test.ts
+    - src/components/patterns/list/creature-stat-block-panels.tsx
+    - src/app/(main)/creature-creator/creature-creator-editor-inventory-section.tsx
+    - src/app/(main)/creature-creator/map-creature-inventory-rows.ts
+    - src/app/(main)/creature-creator/map-creature-inventory-rows.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-812
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T025
+  developer_test_plan: |
+    Suite DEV-V-016 T025 - see BUILD_VALIDATION.md
+  description: |
+    TASK-812 creator selected rows already pass layout="characterSheet" plus an explicit Qty column that uses formatCreatureEquipmentQuantity. Stat-block equipment Qty already uses that helper (hand-rolled GridListRow, not EquipmentListSection). Remaining: EquipmentListSection's default layout="creature" still does e.quantity ?? 1 (and a no-op QuantitySelector) — unused today because creature creator overrides layout. Unify the default creature path + prefer routing the stat-block list through the shared section; do not change sheet characterSheet Qty steppers that default missing quantity to 1.
+  acceptance_criteria:
+    - EquipmentListSection layout="creature" shows stored quantity or "-" (formatCreatureEquipmentQuantity); it does not fake Qty 1.
+    - Character sheet EquipmentListSection layout="characterSheet" still uses quantity steppers and may default missing quantity to 1.
+    - Prefer routing creature/stat-block equipment lists through EquipmentListSection instead of a second Qty column, without a new shared/ui file.
+    - Tests: targeted vitest if a helper is extracted; npm run build. Add DEV-V-016-T025 when implementing.
+  notes: |
+    Filed from TASK-812 /cleanup. Creator Inventory already meets TASK-812 AC via custom columns. Stat block no longer fakes Qty 1 — leftover is the unused default section path + hand-rolled columns. Do not delete /characters/new/advanced.
+  completed_work: |
+    Deleted no-op QuantitySelector (quantity ?? 1) on EquipmentListSection layout=creature, the stat-block hand-rolled Equipment list, and withCreatureEquipmentQuantity.
+    Wired creator + stat-block Equipment onto layout=creature + buildCreatureEquipmentColumns.
+    Sheet characterSheet quantity steppers unchanged. vitest columns helper; DEV-V-016 T025.
+- id: TASK-818
+  title: Path More details combat chips from GLR catalog
+  created_at: 2026-08-17
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/detail-option/combat-builder.ts
+    - src/lib/detail-option/combat-builder.test.ts
+    - src/lib/glr/glr-surface-bindings.ts
+    - src/lib/glr/glr-fact-catalog.test.ts
+    - src/lib/glr/resolve-glr-fact-layout.test.ts
+    - src/lib/chip/list-row-metadata.ts
+    - src/components/guided-creator/guided-path-detail-modal.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0016-glr-fact-catalog.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-814
+  build_validation: |
+    suite: DEV-V-016
+    tests:
+      - DEV-V-016-T027
+  developer_test_plan: |
+    Suite DEV-V-016 T027 — see BUILD_VALIDATION.md
+  description: |
+    detail-option-power is registered in glr-surface-bindings but powerToDetailOption / techniqueToDetailOption still hand-roll Energy/Action/Range/Area/Duration/Damage/TP chips. Wire DetailOptionList combat rows onto glrSurfaceDetailSections('detail-option-power') (and a technique binding if needed) so path More details follows ADR-0016 instead of a parallel chip table.
+  acceptance_criteria:
+    - Guided path More details power/technique chips come from layout.chipFacts (detail density), not combat-builder pushFact.
+    - A valued catalog fact is column XOR chip XOR rightSlot; DetailOptionList may keep name+description columns with all facts as chips.
+    - Reuse compact-facts formatters via rankedGlrFactChips; do not add a new shared/ui file.
+    - Skip Legacy /characters/new/advanced. Tests: vitest on combat-builder; npm run build. Add a DEV-V-016 case when implementing.
+  notes: |
+    Filed from TASK-814 /cleanup. Out of scope on purpose (deep-dive catalogs).
+  completed_work: |
+    Deleted combat-builder pushFact and hand-rolled Energy/Action/Range/Area/Duration/Damage/TP chips.
+    Wired powerToDetailOption onto glrSurfaceDetailSections('detail-option-power') and added detail-option-technique.
+    DetailOptionList still uses name+description columns; all valued catalog facts are chips.
+    vitest combat-builder + GLR surface bindings; DEV-V-016 T027.
+- id: TASK-849
+  title: One Admin Codex copy-suffix + extract leftover inline edit modals
+  created_at: 2026-08-19
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/admin/codex/admin-codex-copy-suffix.ts
+    - src/app/(main)/admin/codex/admin-skill-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-equipment-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-creature-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/admin-feat-form.ts
+    - src/app/(main)/admin/codex/admin-part-form.ts
+    - src/app/(main)/admin/codex/admin-species-form.ts
+    - src/app/(main)/admin/codex/admin-trait-form.ts
+    - src/app/(main)/admin/codex/admin-property-form.ts
+    - src/app/(main)/admin/codex/admin-archetype-path-form.ts
+    - src/app/(main)/admin/codex/admin-archetype-workspace-open.ts
+    - src/app/(main)/admin/codex/use-codex-spreadsheet.ts
+    - src/app/(main)/admin/codex/admin-codex-crud.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0025-admin-codex-crud-chrome.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-842
+  build_validation: |
+    suite: DEV-V-028
+    tests:
+      - DEV-V-028-T001
+  developer_test_plan: |
+    Suite DEV-V-028 T001 — see BUILD_VALIDATION.md
+  description: |
+    ADR-0025 Cluster B leftover after TASK-842. Duplicate ' copy' suffix constants
+    remain on the nine entity tabs/form modules, and Skills / Equipment / Creature Feats
+    still inline their edit Modal bodies instead of an dmin-*-edit-modal like Feats
+    and Species. Do not merge OfficialEntityList (ADR-0001) or CodexBrowseListShell
+    (ADR-0005). Spreadsheet copy-suffix stays tab-local.
+  acceptance_criteria:
+    - One co-located COPY_NAME_SUFFIX (or equivalent) under dmin/codex/ for the
+      nine entity tabs; delete the weaker per-tab/form copies. Not shared/ / ui/.
+    - Skills, Equipment, and Creature Feats edit chrome lives in co-located
+      dmin-*-edit-modal files using AdminCodexEditModalFooter (same as Species/Feats).
+    - Duplicate / add still append the same suffix; Save / Delete / Cancel behavior
+      unchanged. Do not delete /characters/new/advanced.
+    - Tests: npm run typecheck; npm run lint; npm run build; DEV-V-028 T001.
+  notes: |
+    Filed from TASK-842 /cleanup. Do not reopen TASK-842 / TASK-845. Do not fold
+    TASK-821. Architect ack only if a new shared/ui file is proposed.
+  completed_work: |
+    One COPY_NAME_SUFFIX in admin-codex-copy-suffix.ts; nine entity tabs/forms import it.
+    Spreadsheet suffix stays local. Skills/Equipment/Creature Feat edit chrome extracted
+    to admin-*-edit-modal using AdminCodexEditModalFooter. vitest source-scan; typecheck;
+    eslint admin/codex. DEV-V-028 T001.
+- id: TASK-847
+  title: Replace leftover viewport hit slabs on Codex spreadsheet, list Filters, and RollLog send
+  created_at: 2026-08-19
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/admin/codex/codex-spreadsheet-toolbar.tsx
+    - src/components/patterns/list/list-search-toolbar.tsx
+    - src/components/patterns/filters/filter-section.tsx
+    - src/components/rolls/roll-log.tsx
+    - src/components/ui/button-tiers.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-841
+    - TASK-830
+    - TASK-850
+    - TASK-851
+  build_validation: |
+    suite: DEV-V-055
+    tests:
+      - DEV-V-055-T002
+  developer_test_plan: |
+    Suite DEV-V-055 T002 - see BUILD_VALIDATION.md
+  description: |
+    ADR-0023 / TASK-841 moved Button/IconButton/ValueStepper onto pointer-coarse tiers, but three
+    leftover chrome hits still use viewport `md:` / `max-md:` 44px slabs (or a raw RollLog send
+    button with min-w-[44px]). Pointer should drive hit area; viewport should drive layout.
+  acceptance_criteria:
+    - Codex spreadsheet toolbar drops `md:min-h-0` / `min-w-[44px]` hit hacks; use IconButton or
+      `@media (pointer: coarse)` tiers.
+    - list-search-toolbar Filters toggle is not `max-md:min-h-[44px] min-w-[44px]`.
+    - RollLog send uses shared `Button` (no raw min-w slab).
+    - Do not retag every remaining min-w-[44px] icon in the repo (header menu, grid selection
+      column, combatant compact inputs). Do not fold TASK-830 form fields or TASK-836 sheet dots.
+    - Tests: npm run typecheck; npm run lint; npm run build; DEV-V-055 T002.
+  notes: |
+    Filed from TASK-841 /cleanup. Narrow leftover of the deprecated viewport-compact hit pattern.
+    Do not delete `/characters/new/advanced`.
+  completed_work: |
+    Dropped spreadsheet md:min-h-0 / min-w-[44px] slabs (touch-tier-standard + Dense size sm).
+    Deleted list Filters max-md 44 and FilterSection toggleClassName + always-on min-h-11;
+    compact Filters is Standard size md. RollLog Retry raw 44 button deleted; send wired onto
+    shared Button (send was already slab-free in this tree). Source-scan in button-tiers.test.ts.
+    DEV-V-055 T002.
+- id: TASK-848
+  title: C1 overflow affordance on creator step rails
+  created_at: 2026-08-19
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/ui/tab-navigation.tsx
+    - src/components/ui/tab-navigation.test.ts
+    - src/components/ui/index.ts
+    - src/components/character-creator/creator-tab-bar.tsx
+    - src/components/guided-creator/guided-creator-shell.tsx
+    - src/app/globals.css
+    - src/docs/MOBILE_UX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-840
+  build_validation: |
+    suite: DEV-V-001
+    tests:
+      - DEV-V-001-T020
+      - DEV-V-013-T092
+  developer_test_plan: |
+    Suite DEV-V-001 T020 and DEV-V-013 T092 - see BUILD_VALIDATION.md
+  description: |
+    TASK-840 landed fade + chevrons on shared underline TabNavigation. Legacy CreatorTabBar
+    (`overflow-x-auto` below md) and Guided ChapterRail still side-scroll with no C1
+    affordance. Do not migrate those wizard rails onto TabNavigation (Continue-anyway /
+    chapter completion is not a catalog tablist).
+  acceptance_criteria:
+    - At 360 and 390, overflowing creator step / guided chapter rails show a fade or chevron
+      that hides when the rail does not overflow.
+    - Reuse `tabListOverflowState` / `scrollDeltaToRevealChild` and existing `.tab-nav-scroll`
+      CSS; do not add a new shared/ui file or a second overflow helper.
+    - List-local scroll only (no `scrollIntoView` on the sheet or creator page).
+    - Tests: npm run typecheck; npm run lint; npm run build. Add a DEV-V-001 / DEV-V-013 case
+      when implementing.
+  notes: |
+    Filed from TASK-840 /cleanup. Skip character-preview-panel chips and pill TabNavigation.
+    Do not delete `/characters/new/advanced`.
+  completed_work: |
+    Exported TabNavOverflowScroller from tab-navigation (same tabListOverflowState /
+    scrollDeltaToRevealChild / .tab-nav-scroll CSS). CreatorTabBar and Guided ChapterRail
+    use it; Legacy Restart stays outside the scrollport. No new shared/ui file. vitest
+    source-scan; DEV-V-001 T020 + DEV-V-013 T092.
+- id: TASK-830
+  title: Raise Input/Select/Textarea to the button touch height on phones
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/ui/input.tsx
+    - src/components/ui/select.tsx
+    - src/components/ui/textarea.tsx
+    - src/components/ui/search-input.tsx
+    - src/components/ui/button-tiers.test.ts
+    - src/app/(main)/item-creator/item-creator-editor-meta.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/app/(main)/power-creator/power-creator-editor-action-profile.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-config.tsx
+    - src/app/(main)/power-creator/power-creator-editor-power-damage.tsx
+    - src/app/(main)/item-creator/item-creator-editor-ability-properties.tsx
+    - src/app/(main)/item-creator/item-creator-editor-shield-panels.tsx
+    - src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx
+    - src/app/(main)/item-creator/item-creator-helpers.tsx
+    - src/app/(main)/creature-creator/CreatureCreatorHelpers.tsx
+    - src/app/(main)/creature-creator/AddCreatureFeatModal.tsx
+    - src/components/creator/power-part-card.tsx
+    - tests/visual/responsive-layout.pw.ts
+  build_validation: |
+    suite: DEV-V-055
+    tests:
+      - DEV-V-055-T003
+  developer_test_plan: |
+    Suite DEV-V-055 T003 - see BUILD_VALIDATION.md
+  description: |
+    Mobile audit 2026-08-18 (§1). Button and IconButton apply a 44px minimum under @media(pointer:coarse);
+    Input, Select, and Textarea are a fixed h-10 (40px) with no touch handling at all. On every creator form a
+    40px field sits directly beside a 44px button, which is the most visible source of the "not clean" feel and
+    also fails our own MOBILE_UX touch-target rule for form controls.
+  acceptance_criteria:
+    - Under `@media (pointer: coarse)`, Input, Select, and Textarea meet the ADR-0023 Standard tier (44px min-height).
+    - Fine pointer keeps the current compact h-10 chrome.
+    - FilterInput and the Codex/Library filter rows still align with their sibling selects.
+    - Audit probe reports 0 sub-44px form controls on /power-creator, /item-creator, /creature-creator.
+    - Tests: npm run typecheck; npm run lint; npm run build.
+  notes: |
+    ADR-0023 decided: pointer:coarse for hit area, viewport for layout. Implement this as the Standard
+    tier (44px min-h, no min-w). TASK-841 already aligned Button height; keep field height on the same
+    Standard 44 under coarse pointer.
+  completed_work: |
+    Input, Select, Textarea, and SearchInput use touch-tier-standard (Standard 44 under coarse; h-10 on
+    fine pointer; no min-w). Item creator Name uses shared Input. Native creator selects on the three
+    routes got the same class. Filter rows stay FILTER_CONTROL_CLASS h-11. Item Description uses shared Textarea.
+    iPhone form-height probe (same asserts as the new pw tests) on /power-creator,
+    /item-creator, /creature-creator. vitest button-tiers TASK-830 cases.
+
+- id: TASK-846
+  title: Move AddCombatantModal primary Add into the sticky Modal footer
+  created_at: 2026-08-19
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/encounters/add-combatant-modal.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/guide/02-components-and-lists.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-841
+  build_validation: |
+    suite: DEV-V-030
+    tests:
+      - DEV-V-030-T004
+  developer_test_plan: |
+    Suite DEV-V-030 T004 - see BUILD_VALIDATION.md
+  description: |
+    TASK-841 retagged AddCombatant **Add** to size=lg but left it in scrollable children on both
+    Creature Library and Campaign Characters tabs. MOBILE_UX already requires add-X primaries in
+    Modal footer so they stay pinned under fullScreenOnMobile. This modal stays an intentional
+    non-USM (TASK-571).
+  acceptance_criteria:
+    - Library and Campaign **Add** buttons live in Modal footer (sticky, size=lg); quantity /
+      combatant-type radios stay in content.
+    - Add still inserts combatants/participants in combat and skill modes. Do not migrate onto USM.
+    - Tests: npm run typecheck; npm run lint; npm run build; DEV-V-030 T004.
+  notes: |
+    Filed from TASK-841 /cleanup. Do not fold TASK-828/830/836. Do not delete
+    /characters/new/advanced.
+  completed_work: |
+    Creature Library and Campaign Characters Add buttons render in Modal footer (size=lg, sticky
+    under fullScreenOnMobile). Quantity stepper and enemy/ally/companion radios stay in scrollable
+    content. Insert behavior unchanged; modal stays non-USM.
+
+- id: TASK-829
+  title: Guided creator sticky footer is translucent so content reads through it
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/guided-creator/guided-step-footer.tsx
+    - src/components/guided-creator/guided-step-footer.test.ts
+    - src/components/guided-creator/guided-step-layout.tsx
+    - src/components/guided-creator/guided-creator-shell.tsx
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-013
+    tests:
+      - DEV-V-013-T091
+  developer_test_plan: |
+    Suite DEV-V-013 T091 - see BUILD_VALIDATION.md
+  description: |
+    Mobile audit 2026-08-18 (section 2.4, shots/creator-guided@390.png). GuidedStepFooter is
+    fixed inset-x-0 bottom-0 with bg-surface/95 backdrop-blur-md. On a phone the Continue
+    button appears to hover over a choice card rather than sit in a footer, because card
+    content shows through the 95% bar.
+  acceptance_criteria:
+    - Below md the footer bar is opaque; no scrolling content is visible through it.
+    - The reserved bottom padding in GuidedStepLayout still matches the rendered footer height (no dead strip,
+      no clipped last control).
+    - Desktop appearance is unchanged.
+    - Tests: npm run typecheck; npm run lint; npm run build.
+  notes: |
+    Keep the frosted look on md+ if desired; this is a phone-only legibility fix.
+  completed_work: |
+    GuidedStepFooter uses opaque bg-surface below md and frosted bg-surface/95 from md+.
+    Dropped C4/dock overclaim. Chapter rail sticky chrome uses opaque bg-background below md.
+    GuidedStepLayout pb-24 / pb-32 sm:pb-24 unchanged. vitest guided-step-footer.test.ts.
+
+- id: TASK-836
+  title: Skill proficiency dots are 16px tap targets on the sheet
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/patterns/list/skill-row.tsx
+    - src/components/character-sheet/skills-section.tsx
+    - src/components/character-sheet/sheet-resource-input.tsx
+    - src/components/ui/button-tiers.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T063
+  developer_test_plan: |
+    Suite DEV-V-009 T063 - see BUILD_VALIDATION.md
+  description: |
+    Mobile audit 2026-08-18, authenticated pass (§2.9). SkillRow renders the proficiency toggle as
+    `inline-block h-4 w-4 rounded-full` — a 16x16 button. The sheet shows 24 of them stacked in a narrow
+    column, which is the single largest cluster of sub-minimum tap targets in the app and sits directly beside
+    other interactive skill controls.
+
+    Loaded-character re-run 2026-08-18 (§5.4) raised the count to 36 sub-44px controls on the sheet at 390px
+    and found two more in the same panel:
+      - `input#sheet-skills-sub-skills` (the "Sub-Skills" checkbox) is **13x13** — smaller than the dots.
+      - the "Current Health" input is **48x34**, so it is under the minimum on height.
+  acceptance_criteria:
+    - The proficiency toggle meets the ADR-0023 Dense tier (16px painted + 44px expanded hit, 8px gap)
+      while the painted dot stays 16px.
+    - The Sub-Skills checkbox and the Current Health input meet the same minimum on touch viewports.
+    - The Skills column does not get wider on desktop, and no fifth column or forced table min-width appears
+      (TASK-800 constraint).
+    - Adjacent skill controls do not overlap the enlarged hit area.
+    - Tests: npm run typecheck; npm run lint; npm run build.
+  notes: |
+    `.hit-area-layout-neutral` (globals.css) already solves exactly this: 16px layout box, 44px `::after` hit
+    area below md. Reuse it rather than growing the dot. Watch for the overlap caveat noted in the audit §3.
+    Do not delete /characters/new/advanced.
+  completed_work: |
+    SkillRow table dots use hit-area-layout-neutral (16px paint) with coarse py-4 + overflow-hidden on the
+    Prof cell so stacked 44px hits keep an 8px gap. Sub-Skills checkbox uses the same overlay; label stays
+    hit-area-dense; filter row gap-x-6. ResourceInput current value is touch-tier-standard (no min-w).
+    vitest button-tiers.test.ts (TASK-836 describe separate from TASK-841).
+
+- id: TASK-842
+  title: Admin Codex CRUD tab scaffolding (save/search/row actions)
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/admin/codex/use-admin-codex-entity.tsx
+    - src/app/(main)/admin/codex/admin-codex-save-target.ts
+    - src/app/(main)/admin/codex/admin-codex-row-actions.tsx
+    - src/app/(main)/admin/codex/admin-codex-edit-modal-footer.tsx
+    - src/app/(main)/admin/codex/admin-codex-crud.test.ts
+    - src/app/(main)/admin/codex/use-admin-codex-delete.tsx
+    - src/app/(main)/admin/codex/use-admin-archetype-workspace.ts
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/admin-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-species-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-trait-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-part-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-property-edit-modal.tsx
+    - src/docs/ai/ADR/0025-admin-codex-crud-chrome.md
+    - src/docs/ai/ADR/0005-codex-browse-list-shell.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-028
+    tests:
+      - DEV-V-028-T005
+  developer_test_plan: |
+    Suite DEV-V-028 T005 — see BUILD_VALIDATION.md
+  description: |
+    Report 08 Cluster A leftover after TASK-799. Delete confirm now uses
+    ConfirmActionModal (F-14). Remaining: duplicated openAdd/openEdit/handleSave,
+    row-action chrome, and edit-modal Cancel/Save footers across nine Codex tabs
+    (F-18). Do not merge OfficialEntityList with My Library (ADR-0001) or
+    CodexBrowseListShell (ADR-0005).
+  acceptance_criteria:
+    - Inventory remaining forks against FEATURE_INDEX before any move.
+    - Delete the weaker copy; do not add a third wrapper.
+    - Architect ack if a new shared hook/shell file is required.
+    - Do not delete /characters/new/advanced.
+  notes: |
+    Filed from TASK-799. Owner ack in chat. Folded TASK-845 (askDelete / drop requestDelete).
+    Do not fold TASK-821. ADR-0025 Accepted. Do not delete /characters/new/advanced.
+  completed_work: |
+    Co-located useAdminCodexEntity + AdminCodexRowActions + AdminCodexEditModalFooter +
+    AdminCodexDeleteModals under admin/codex/. Nine tabs + archetype workspace wired.
+    Two-click / inline Remove? / requestDelete gone. vitest admin-codex-crud.test.ts.
+
+- id: TASK-845
+  title: Wire Admin Codex tabs to askDelete and drop requestDelete
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/admin/codex/use-admin-codex-delete.tsx
+    - src/app/(main)/admin/codex/use-admin-codex-entity.tsx
+    - src/app/(main)/admin/codex/AdminFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminPartsTab.tsx
+    - src/app/(main)/admin/codex/AdminPropertiesTab.tsx
+    - src/app/(main)/admin/codex/AdminSpeciesTab.tsx
+    - src/app/(main)/admin/codex/AdminTraitsTab.tsx
+    - src/app/(main)/admin/codex/AdminSkillsTab.tsx
+    - src/app/(main)/admin/codex/AdminEquipmentTab.tsx
+    - src/app/(main)/admin/codex/AdminCreatureFeatsTab.tsx
+    - src/app/(main)/admin/codex/AdminArchetypesTab.tsx
+    - src/app/(main)/admin/codex/use-admin-archetype-workspace.ts
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-028
+    tests:
+      - DEV-V-028-T005
+  developer_test_plan: |
+    Suite DEV-V-028 T005 — see BUILD_VALIDATION.md
+  description: |
+    TASK-824 recovered truncated Admin Codex tabs from HEAD. Those tabs still call
+    requestDelete(id) (confirm copy uses the id) and keep two-click deleteConfirm.
+    TASK-799 already landed askDelete(id, name) + DeleteConfirmModal.
+  acceptance_criteria:
+    - requestDelete is gone from AdminCodexDelete and no caller remains.
+    - Row trash and edit-modal Delete on all nine Codex entity surfaces open
+      DeleteConfirmModal titled with the entity name.
+    - Referential-integrity second modal (still referenced / Delete anyway) is unchanged.
+    - Tests: npm run typecheck; npm run lint; DEV-V-028 T005 (existing).
+  notes: |
+    Completed with TASK-842 (owner ack). Canonical path is useAdminCodexEntity.askDelete.
+    Do not delete /characters/new/advanced.
+  completed_work: |
+    requestDelete alias removed. All nine tabs + archetype workspace use askDelete +
+    AdminCodexDeleteModals. Confirm copy uses entity name.
+
+- id: TASK-835
+  title: Character sheet name and ability tile labels clip mid-word on phones
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/sheet-header-identity.tsx
+    - src/components/character-sheet/abilities-section.tsx
+    - src/components/character-sheet/abilities-section-model.ts
+    - src/components/character-sheet/abilities-section-model.test.ts
+    - src/components/character-sheet/ability-stat-tile.tsx
+    - src/components/character-sheet/defense-stat-tile.tsx
+    - src/components/patterns/list/skills-allocation-page.tsx
+    - src/components/patterns/list/creature-stat-block-helpers.ts
+    - src/lib/game/constants.ts
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T062
+  developer_test_plan: |
+    Suite DEV-V-009 T062 - see BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-836
+  description: |
+    Mobile audit 2026-08-18, authenticated pass (§2.8). At 390px the sheet h1 carries `truncate` but still
+    overflows its container (measured 196px box, 229px content) and renders "E2E Baseline Knig" with no visible
+    ellipsis. In the ability and defense grids, "INTELLIGENCE" and "DISCERNMENT" touch or cross their tile
+    edges, while "MENTAL FORT." is pre-abbreviated and wraps to two lines — so tiles in the same row have
+    different heights and different labelling conventions.
+  acceptance_criteria:
+    - Character names longer than the header width truncate with a visible ellipsis at 360px and 390px.
+    - Ability and defense tile labels stay inside their tile at 360px; tiles in a row share a consistent height.
+    - One labelling convention across the grid (either all full words with a smaller type ramp, or a documented
+      abbreviation set) — not a mix of full and hand-abbreviated labels.
+    - Tests: npm run typecheck; npm run lint; npm run build.
+  notes: |
+    `truncate` alone does not work when an ancestor flex item lacks `min-w-0`; check the header flex chain.
+    Header name ellipsis landed in TASK-839 /cleanup. Do not delete /characters/new/advanced.
+  completed_work: |
+    Header `h1` uses `span.truncate` + `min-w-0` (TASK-839 /cleanup). Ability/defense tiles use GAME_RULES
+    full names (Mental Fortitude, Reflexes) on a C3 2/3/6 grid with wrapping `w-full min-w-0` labels and
+    `h-full` row height. DefenseBonusesCard labels match. vitest abilities-section-model.test.ts.
+
+- id: TASK-827
+  title: Codex Advanced button covers the last tab in the tab strip
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/ui/tab-navigation.tsx
+    - src/components/ui/tab-navigation.test.ts
+    - src/app/globals.css
+    - src/app/(main)/codex/page.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-028
+    tests:
+      - DEV-V-028-T006
+  developer_test_plan: |
+    Suite DEV-V-028 T006 — see BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-840
+  description: |
+    Mobile audit 2026-08-18 (§2.2). On /codex the Advanced button sat in the same flex row as the
+    scrollable tab strip and covered Archetypes (~75x44 overlap). labelMobile was defined but unused.
+  acceptance_criteria:
+    - At 390px and 360px no tab trigger overlaps the Advanced control (audit probe reports 0 overlaps for those pairs).
+    - Either the Advanced control moves out of the tab row, or the tab strip gets scroll padding / an edge fade so
+      the last tab is never obscured.
+    - labelMobile is actually used below md, or is removed as dead config.
+    - Do not introduce a page-local tab strip; extend TabNavigation.
+    - Tests: npm run typecheck; npm run lint; npm run build.
+  notes: |
+    ListSearchToolbar trailing is Search+Filters, not this tab-row control. Fade/peek is TASK-840.
+    Do not delete /characters/new/advanced.
+  completed_work: |
+    TabNavigation trailing (stacked below md; in-bar from md, outside the tablist) plus labelMobile
+    below md. Codex Advanced uses trailing; dropped the sibling overlay and min-h-[44px] slab.
+    Guest probe /codex 360/390: 0 Advanced-vs-tab overlaps (advancedY=417 below the strip).
+    Admin/changelogs already passed labelMobile. vitest tab-navigation.test.ts. No new shared/ui.
+
+- id: TASK-839
+  title: Sheet header stat block collapses at every width except 768 and 1440+
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/sheet-header.tsx
+    - src/components/character-sheet/sheet-header-identity.tsx
+    - src/components/character-sheet/sheet-header-resources.tsx
+    - src/components/character-sheet/sheet-large-stat-block.tsx
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T060
+  developer_test_plan: |
+    Suite DEV-V-009 T060 — see BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-835
+  description: |
+    Mobile audit 2026-08-18, loaded-character pass (§5.2) + desktop verification pass (§6.1).
+    Worst at 1024px: flex-wrap content-width cards plus an lg three-column that starved stats to ~119px.
+  acceptance_criteria:
+    - The four stat cards are equal width and form an even grid at 360, 390, 768, 1024, 1280, and 1440.
+    - The stat row never exceeds two rows at any width >= 360px.
+    - The header three-column layout only engages at a width where all three columns actually fit; below that
+      it falls back to a stacked or two-column arrangement.
+    - Header height at 1024px is comparable to 1440px, not ~2.5x it.
+    - Tests: npm run typecheck; npm run lint; npm run build; re-run the multi-width probe.
+  notes: |
+    Longest label is Damage Reduction. Header name C2 ellipsis is in this task; ability/defense tile
+    labels remain TASK-835. Do not bump verify:responsive for creature-creator overflow (826/828).
+  completed_work: |
+    Equal-track stat grid (2-col / 4-col / lg+ 2x2). Three-column header from lg as equal minmax(0,1fr)
+    tracks; xl caps side tracks. Stopped PageContainer mx-auto below md so the C1 carousel cannot size
+    the header to ~1226px. Frame/column/carousel min-w-0. Header h1 uses span.truncate. T060 E2E Baseline
+    Knight: 360/390 cards 141/156 in-viewport 2x2; 1024 header 310 vs 257 at 1440 (~1.2x); labels wrap.
+    typecheck, lint, build green. No new shared/ui. /characters/new/advanced kept.
+- id: TASK-826
+  title: RollLog fixed panel causes horizontal page scroll on phones
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/rolls/roll-log.tsx
+    - src/components/rolls/roll-log.test.ts
+    - src/components/ui/table-scroll.tsx
+    - src/components/ui/table-scroll.test.ts
+    - tests/visual/responsive-baseline.json
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+  build_validation: |
+    suite: DEV-V-018
+    tests:
+      - DEV-V-018-T017
+  developer_test_plan: |
+    Suite DEV-V-018 T017 — see BUILD_VALIDATION.md
+  description: |
+    Mobile audit 2026-08-18: /creature-creator was the only audited route with horizontal
+    page scroll. Closed RollLog still laid out a w-0 Card; children reported past the
+    viewport (overflowRight: 9 at every width).
+  acceptance_criteria:
+    - At 390px and 360px with touch emulation, /creature-creator has documentElement.scrollWidth <= clientWidth.
+    - RollLog panel fits the viewport on phones (width driven by available space, not a fixed 360px).
+    - The 56px toggle FAB stays reachable and does not overlap the guided/creator sticky footers.
+    - Re-run `node scripts/mobile-audit.mjs --only creature-creator` and confirm horizontalPageScroll is false.
+    - Tests: npm run typecheck; npm run lint; npm run build.
+  notes: |
+    Do not fork a mobile-only roll log. TASK-837 already moved RollLog onto
+    `.floating-dock-bottom-right`. Closed panel must unmount; w-0 is not enough (C6).
+  completed_work: |
+    Unmounted the RollLog Card when closed. Open panel stays min(22.5rem, 100svw-2*gap).
+    TableScroll is relative min-w-0 so sr-only headers cannot expand the ICB. FAB has
+    aria-expanded. Source vitest locks unmount + no w-[360px]. No new shared/ui.
+    /characters/new/advanced kept.
+- id: TASK-828
+  title: Creature Creator ability steppers overflow their tiles at phone widths
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/creator/ability-score-editor.tsx
+    - src/components/creator/ability-score-editor.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-018
+    tests:
+      - DEV-V-018-T016
+  developer_test_plan: |
+    Suite DEV-V-018 T016 — see BUILD_VALIDATION.md
+  description: |
+    Mobile audit 2026-08-18: compact={true} forced grid-cols-3 below md so STR/VIT
+    steppers escaped their tiles.
+  acceptance_criteria:
+    - At 390px and 360px the STR/VIT/AGI/ACU/INT/CHA steppers stay inside their tile; no interactive overlap
+      between adjacent ability cells.
+    - Either compact drops to grid-cols-2 below sm, or the stepper row uses the dense tier (see TASK-830).
+    - Character sheet and Advanced creator ability grids are unchanged.
+    - Tests: npm run typecheck; npm run lint; npm run build; re-run the audit probe on /creature-creator.
+  notes: |
+    Both: 2-col below sm (honest 2/3/6 with non-compact) and Dense size=sm plus a
+    smaller compact value min-width. Sheet variant=sheet is unchanged.
+  completed_work: |
+    Compact and default creator grids share grid-cols-2 sm:grid-cols-3 lg:grid-cols-6.
+    Compact steppers use size=sm and min-w-[2.25rem]. Tiles get min-w-0. Source vitest
+    locks the grid + Dense sizes. No new shared/ui. /characters/new/advanced kept.
+- id: TASK-841
+  title: Apply ADR-0023 touch tiers to Button, IconButton, ValueStepper, and CSS utilities
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/ui/button.tsx
+    - src/components/ui/button-tiers.test.ts
+    - src/components/ui/icon-button.tsx
+    - src/components/patterns/select/value-stepper.tsx
+    - src/components/patterns/select/unified-selection-modal-footer.tsx
+    - src/components/patterns/select/unified-selection-modal-leave-prompt.tsx
+    - src/components/patterns/chrome/confirm-action-modal.tsx
+    - src/components/patterns/chrome/delete-confirm-modal.tsx
+    - src/components/patterns/chrome/image-upload-modal.tsx
+    - src/components/character-creator/creator-step-footer.tsx
+    - src/components/character-creator/creator-tab-bar.tsx
+    - src/app/(main)/campaigns/[id]/_components/add-character-modal.tsx
+    - src/components/onboarding/play-together-modal.tsx
+    - src/components/character-sheet/recovery-modal.tsx
+    - src/components/character-sheet/level-up-modal.tsx
+    - src/components/character-sheet/character-sheet-settings-modal.tsx
+    - src/components/patterns/select/mixed-species-modal.tsx
+    - src/components/guided-creator/guided-entity-detail-modal.tsx
+    - src/app/globals.css
+    - src/components/layout/footer.tsx
+    - src/components/patterns/help/info-tippy.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - reports/mobile-audit-2026-08-18/compare/metrics.json
+  follow_up_tasks:
+    - TASK-828
+    - TASK-830
+    - TASK-846
+    - TASK-847
+  build_validation: |
+    suite: DEV-V-055
+    tests:
+      - DEV-V-055-T001
+  developer_test_plan: |
+    Suite DEV-V-055 T001 — see BUILD_VALIDATION.md
+  description: |
+    Follow-up to TASK-831 / ADR-0023. Shared controls still used a blanket 44x44 under
+    pointer:coarse; tab compact utilities answered a pointer question with a viewport.
+  acceptance_criteria:
+    - Coarse-pointer Primary actions are >=48px tall; Standard standalone buttons >=44px tall; Dense
+      Button/IconButton/ValueStepper paint <=36px with a 44px expanded hit. Creature-creator compact
+      grid overlaps remain TASK-828.
+    - Fine-pointer / desktop chrome stays compact (no empty 44px padding around icons).
+    - variant=link and footer nav links are no longer 167x44 slabs.
+    - Primary CTAs (USM Add Selected, modal Save/Confirm/Continue, creator Continue anyway) use
+      Button size=lg; Cancel stays Standard md. DeleteConfirmModal wraps ConfirmActionModal.
+    - Tests: npm run typecheck; npm run lint; npm run build; vitest button-tiers.test.ts.
+  notes: |
+    Do not change Input/Select (TASK-830). Owner ack 2026-08-19 to retag USM/modal footers
+    to size=lg. Dense overlap leftover is TASK-828. AddCombatant sticky Add is TASK-846.
+    Leftover viewport md:min-h-0 hit slabs (Codex spreadsheet toolbar, list Filters, RollLog
+    send) are TASK-847. First slice recorded verify:responsive 48/48 and contrast green; the
+    CTA retag / cleanup slice did not re-run those gates.
+  completed_work: |
+    Dropped Button/IconButton global coarse min-w/min-h 44. Wired Primary (lg/xl 48), Standard
+    (md height-only 44), Dense (sm/link hit-area-dense; IconButton sm square). ValueStepper compact
+    paint + height-first hit. Tab triggers and hit-area-layout-neutral use pointer:coarse.
+    Footer links dropped min-h 44 slabs. Owner-acked Primary CTA retag: USM Add Selected,
+    confirm/delete, creator Continue, sheet Recovery/Level Up/Settings, admin Save use size=lg;
+    Cancel stays md. Dropped USM [&_button]:min-h-11 and modal min-w-[44px] slabs.
+    Confirm/Delete/Level Up/Settings actions moved into Modal footer. Deleted the duplicate
+    DeleteConfirm Modal/Button body; DeleteConfirmModal wraps ConfirmActionModal. Continue
+    anyway, Play Together View, image crop Confirm, and Add Character Close/Cancel sit in
+    Modal footer. button-tiers vitest locks USM confirm and the ConfirmActionModal wrap.
+    Codex median still 44 vs DDB 36. Deleted unused .touch-target CSS; WordHelpTip compact
+    uses .hit-area-dense. /characters/new/advanced kept. Dense leftover overlaps are TASK-828.
 - id: TASK-824
   title: exactOptionalPropertyTypes burn-down
   created_at: 2026-08-18
@@ -23283,3 +24585,604 @@ Firebase/RTDB - the project is Supabase-only.
     - lint-staged runs prettier on staged JS/TS/CSS/JSON after eslint.
   completed_work: |
     Format pass on src/tests/config. lint-staged: eslint then prettier. Ignore also .github and a11y baselines going forward.
+- id: TASK-838
+  title: Mobile sheet panels stretch to the tallest panel, adding up to 2332px of dead scroll
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/app/globals.css
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - scripts/mobile-audit-auth.mjs
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T058
+  developer_test_plan: |
+    Suite DEV-V-009 T058 - see BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-843
+  description: |
+    Mobile audit 2026-08-18, loaded-character pass (reports/mobile-audit-2026-08-18/MOBILE_AUDIT.md §5.1).
+    Below md the sheet carousel stretched every panel to the tallest sibling (Library ~3051px).
+  acceptance_criteria:
+    - At 390px and 360px, scrolling any mobile sheet panel reaches the end of that panel's own content with no
+      more than one viewport of trailing blank space.
+    - Document height is viewport-bounded (C1); it does not follow the tallest sibling. Panels scroll internally.
+    - Horizontal snap between the four panels still works, and `[scroll-snap-stop:always]` behaviour is unchanged.
+    - The md+ grid layout (`md:grid lg:grid-cols-[1fr_1fr_2fr]`) is visually unchanged.
+    - Tests: npm run typecheck; npm run lint; npm run build; npm run verify:responsive;
+      re-run scripts/mobile-audit-auth.mjs.
+  notes: |
+    Loaded level-20 header was crushing the carousel to 16px inside the viewport-bound frame.
+    Column now scrolls; carousel keeps min(50dvh, leftover). Site footer hidden below md on sheet.
+    Probe: reports/mobile-audit-2026-08-18/sheet-c1-c4.json (docExtra 0; abilities clientH 406/384).
+
+- id: TASK-837
+  title: Sheet action toolbar and RollLog FAB overlap sheet content and modal footers
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/globals.css
+    - src/components/character-sheet/sheet-action-toolbar.tsx
+    - src/components/rolls/roll-log.tsx
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/components/character-sheet/index.ts
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/docs/MOBILE_UX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - scripts/mobile-audit-auth.mjs
+  follow_up_tasks:
+    - TASK-843
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T059
+  developer_test_plan: |
+    Suite DEV-V-009 T059 — see BUILD_VALIDATION.md
+  description: |
+    Mobile audit 2026-08-18: sheet toolbar (fixed bottom-4 left-4 right-4) and RollLog
+    (fixed bottom-5 right-5) stacked on each other and on Recovery/Level Up/Add Feat footers.
+  acceptance_criteria:
+    - At 390px and 360px no sheet content is permanently obscured by the action toolbar.
+    - The RollLog FAB and the sheet action toolbar do not overlap each other at any audited width.
+    - No floating control overlaps a Modal footer action at 360px.
+    - Audit probe reports 0 overlaps involving toolbar buttons and the RollLog FAB.
+    - Tests: npm run typecheck; npm run lint; npm run build; re-run scripts/mobile-audit-auth.mjs.
+  notes: |
+    E2E probe 2026-08-19: toolbar vs FAB overlaps 0; Recovery/Level Up/Add Feat docksHidden;
+    auth-sheet@390 general overlaps 0. 360 Add Feat click is blocked by Next.js dev badge, not the dock.
+
+- id: TASK-844
+  title: Re-check sheet tour Next against the C4 action dock
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/lib/sheet-tour-highlight.ts
+    - src/components/onboarding/sheet-tour.tsx
+    - src/components/rolls/roll-log.tsx
+    - src/app/globals.css
+    - scripts/mobile-audit-auth.mjs
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-029
+    tests:
+      - DEV-V-029-T004
+  developer_test_plan: |
+    Suite DEV-V-029 T004 — see BUILD_VALIDATION.md
+  description: |
+    2026-08-06 feedback: tour Next was behind the dice FAB. TASK-388 raised z-tour and
+    used bottom-20 / right-20. TASK-837 replaced the FAB with a 4.5rem opaque bottom
+    dock; ONBOARDING_FLOATING_CARD_CLASS still uses bottom-20. Re-measure after the
+    dock — do not assume the old fix still clears Next.
+  acceptance_criteria:
+    - At 360/390 with the tour running, Next is fully tappable (not under the dock or FAB).
+    - Tour card stays visible; body:has([aria-modal=true]) must not hide the dock during
+      the tour (SheetTour is role=dialog without aria-modal).
+    - Desktop tour card still clears the FAB.
+    - Re-run DEV-V-029-T004 after any geometry change.
+    - Tests: npm run typecheck; npm run lint; npm run build.
+  notes: |
+    Probe 2026-08-19: Next fully in view at 360/390; nextVsDock and nextVsFab null.
+    bottom-20 still clears the 4.5rem C4 dock. Cleanup: geometry folded into
+    mobile-audit-auth.mjs --only sheet; desktop 1280 Next vs FAB null
+    (Next x:333 y:807, FAB x:1208 y:828). No tour geometry change.
+
+- id: TASK-843
+  title: RM campaign sheet reserves owner action-dock height without a toolbar
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/campaigns/[id]/view/[userId]/[characterId]/page.tsx
+    - src/app/(main)/characters/[id]/page.tsx
+    - src/components/character-sheet/character-sheet-body.tsx
+    - src/app/globals.css
+    - src/docs/MOBILE_UX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+  build_validation: |
+    suite: DEV-V-009
+    tests:
+      - DEV-V-009-T061
+  developer_test_plan: |
+    Suite DEV-V-009 T061 - see BUILD_VALIDATION.md
+  description: |
+    TASK-837 C4 frame class CHARACTER_SHEET_MOBILE_FRAME_CLASSNAME always applies
+    max-md:pb-[var(--sheet-mobile-dock-height)] (~4.5rem). The RM campaign view uses
+    that frame but has no SheetActionToolbar and no has-sheet-mobile-dock, so phones
+    keep an empty owner-dock strip while the FAB sits at --dock-gap.
+  acceptance_criteria:
+    - At 360/390 the RM campaign character view does not reserve a full owner-dock
+      strip when no action toolbar is mounted.
+    - RollLog FAB stays reachable and does not cover sheet content (FAB-only gutter is enough).
+    - Owner /characters/[id] dock reservation is unchanged.
+    - Tests: npm run typecheck; npm run lint; npm run build.
+  notes: |
+    Split C1 frame padding from owner-dock reserve. RM/no-toolbar frames keep
+    --sheet-mobile-bottom-reserve at 0 and pad panels with --sheet-mobile-fab-gutter.
+    Owner .has-sheet-mobile-dock still reserves --sheet-mobile-dock-height. No new
+    shared/ui dock.
+
+- id: TASK-840
+  title: Tab strips hide tabs with no scroll affordance, on desktop as well as phones
+  created_at: 2026-08-18
+  completed_at: 2026-08-19
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/components/ui/tab-navigation.tsx
+    - src/components/ui/tab-navigation.test.ts
+    - src/app/globals.css
+    - src/docs/MOBILE_UX.md
+    - src/docs/DESIGN_SYSTEM.md
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+  build_validation: |
+    suite: DEV-V-028
+    tests:
+      - DEV-V-028-T007
+  developer_test_plan: |
+    Suite DEV-V-028 T007 - see BUILD_VALIDATION.md
+  description: |
+    Mobile audit 2026-08-18, loaded-character pass (section 5.3) + desktop verification pass (section 6.2).
+    Not mobile-only - /library still hides tabs at 1280px. Shared .tab-nav-list scrolled
+    with no fade, chevron, or peek, so hidden tabs needed a trackpad gesture users had no
+    reason to attempt.
+  acceptance_criteria:
+    - At 360, 390, 768, 1024, and 1280 it is visually obvious the tab strip continues past the right edge
+      (edge fade, chevron, or a deliberate partial-tab peek).
+    - The affordance disappears when the strip is fully scrolled or does not overflow.
+    - Applies to the shared tab-nav pattern, not just the sheet, so every side-scrolling tab strip benefits.
+    - Keyboard and trackpad users can reach the hidden tabs without a horizontal swipe gesture.
+    - Tests: npm run typecheck; npm run lint; npm run build.
+  follow_up_tasks:
+    - TASK-848
+  notes: |
+    Underline TabNavigation: scroll-driven mask, Show more/previous chevrons in the fade
+    (32px fine / 44px coarse, 8px gap). List-local scrollDeltaToRevealChild (no
+    scrollIntoView). Codex Advanced stays in trailing. Cleanup extracted
+    UnderlineTabScroller. No new shared/ui. /characters/new/advanced kept.
+
+- id: TASK-852
+  title: One Admin Codex copy-source banner
+  created_at: 2026-08-19
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/admin/codex/admin-codex-copy-source-banner.tsx
+    - src/app/(main)/admin/codex/admin-skill-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-equipment-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-creature-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-feat-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-species-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-trait-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-part-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-property-edit-modal.tsx
+    - src/app/(main)/admin/codex/admin-archetype-editor-meta.tsx
+    - src/app/(main)/admin/codex/admin-codex-crud.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0025-admin-codex-crud-chrome.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  follow_up_tasks:
+    - TASK-849
+  build_validation: |
+    suite: DEV-V-028
+    tests:
+      - DEV-V-028-T001
+  developer_test_plan: |
+    Suite DEV-V-028 T001 - Duplicate still shows the copy-source banner; see BUILD_VALIDATION.md
+  description: |
+    TASK-849 extracted Skills/Equipment/Creature Feat edit modals but left nine copies of the
+    Creating a copy of {name} callout (eight edit modals + archetype editor meta). One
+    co-located banner under admin/codex/ (entity label prop). Not shared/ui. Do not fold
+    COPY_NAME_SUFFIX or spreadsheet copy.
+  acceptance_criteria:
+    - One co-located copy-source banner under admin/codex/; the nine callouts use it.
+    - Duplicate still shows the source name and entity-specific save to add the new line.
+    - Not shared/ / ui/. Do not delete /characters/new/advanced.
+    - Tests: npm run typecheck; npm run lint; npm run build; DEV-V-028 T001.
+  notes: |
+    Filed from TASK-849 /cleanup. Architect ack only if a new shared/ui file is proposed.
+    Do not retag native selects (visual change) or equipment/creature-feat 3-col grids.
+  completed_work: |
+    One AdminCodexCopySourceBanner (entityLabel) under admin/codex/; nine Duplicate callouts
+    use it. vitest source-scan; typecheck; lint; build. DEV-V-028 T001.
+
+- id: TASK-822
+  title: Type helper SupabaseClient params with Database
+  created_at: 2026-08-18
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/lib/supabase/database.ts
+    - src/lib/role-policy.ts
+    - src/lib/core-rules-server.ts
+    - src/lib/core-rules-server.test.ts
+    - src/app/api/codex/route.ts
+    - src/lib/character-view-enrichment-server.ts
+    - src/lib/entity-image-enrich-server.ts
+    - src/lib/game/archetype-display.ts
+    - src/lib/codex/id-allocation.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/ai/ADR/0020-generated-supabase-database-types.md
+    - src/docs/ai/ADR/0022-nouncheckedindexedaccess.md
+    - src/docs/ai/ADR/0024-exact-optional-property-types.md
+  description: |
+    TASK-795 typed the app factories with generated Database. Helpers that take
+    unparameterized SupabaseClient (or Pick<SupabaseClient, 'from'>) still strip
+    that typing at the function boundary, so .from() inside those helpers is
+    loosely typed again. Thread TypedSupabaseClient / SupabaseClient<Database>
+    (or Tables<'core_rules'> for CoreRulesRow) through the existing helpers.
+  acceptance_criteria:
+    - Helper params that accept a Supabase client use Database (TypedSupabaseClient
+      or equivalent); unparameterized SupabaseClient is not used for .from() helpers.
+    - asLibraryCountsClient stays (TS2589). asDbJson / fromPublicTable stay (ADR-0020).
+    - No behavior change; no new shared/ui file; do not delete /characters/new/advanced.
+    - Tests: npm run typecheck; npm run lint; targeted helper/API tests.
+  notes: |
+    Filed from TASK-795 /cleanup (longevity). Do not fold TASK-797
+    (noUncheckedIndexedAccess — done ADR-0022) or Zod-parse /api/codex (report 10 P1-7).
+    Do not remove the JSONB / dynamic-table shims.
+  completed_work: |
+    Threaded TypedSupabaseClient through role-policy, core-rules-server (Tables<'core_rules'>
+    rows), entity-image-enrich, archetype-display, id-allocation, character-view-enrichment,
+    and GET /api/codex. Variable tables use fromPublicTable. asLibraryCountsClient / asDbJson
+    kept. vitest helper/API tests; typecheck; lint. verification_status n/a.
+
+- id: TASK-855
+  title: Slim FEATURE_INDEX mega-cells (Characters CRUD / Guided equipment)
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/docs/ai/FEATURE_INDEX.md
+  automated_check: |
+    npm run tasks:validate
+  description: |
+    Several FEATURE_INDEX cells (Characters CRUD, Guided equipment phased sub-flow, Guided L3) are
+    unreadable restatements of many TASK-###. Split or trim to canonical path + one-line behavior;
+    keep TASK ids in archive, not in the map.
+  acceptance_criteria:
+    - Those cells stay a map (path + what to extend), not a changelog.
+    - No collapsed table cells (`||`).
+    - `npm run tasks:validate` passes if the validator checks FEATURE_INDEX.
+  notes: |
+    Filed from /global-audit 2026-08-20. Docs-only. Do not rewrite ADR history.
+  completed_work: |
+    Trimmed Characters CRUD, Guided L3, and Guided equipment cells to canonical path +
+    one-line extend-this. Dropped TASK-### restatements from those cells (history stays
+    in archive/ADRs). No collapsed table cells. tasks:validate. verification_status n/a.
+
+- id: TASK-858
+  title: Remove unused deprecated Chip CVA variants
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/components/ui/chip.tsx
+    - src/lib/chip/descriptor-chip-variants.ts
+    - src/lib/chip/chip-variants.test.ts
+    - src/app/dev/styleguide/page.tsx
+  automated_check: |
+    npx vitest run src/lib/chip/chip-variants.test.ts; npm run typecheck; npm run lint; npm run build
+  description: |
+    `chipVariants` still lists deprecated equipment/content keys (`weapon`, `armor`,
+    `shield`, `feat`, `proficiency`, `secondary`, `outline`) that nothing in `src/`
+    passes to `<Chip>`. `info` / `power` / `technique` stay - DescriptorChip,
+    `itemBadgeToDescriptorVariant`, trait-category chips, and the styleguide Chip
+    demo use them. This is a CVA diet, not a chip-role redesign.
+  acceptance_criteria:
+    - Unused deprecated keys are gone from `chipVariants` (grep confirms no remaining callers).
+    - `info` / `power` / `technique` / status / list / rarity / category variants remain.
+    - Button `variant="secondary|outline"` is untouched.
+    - Styleguide Chip/DescriptorChip demos still render; `npm run build` passes.
+  notes: |
+    Filed from /global-audit 2026-08-20. Do not fold DescriptorChip into a new primitive.
+    Do not migrate AddCombatant / AddCharacter / MixedSpecies onto USM in this task.
+  completed_work: |
+    Deleted unused chipVariants keys weapon/armor/shield/feat/proficiency/secondary/outline.
+    Kept info/power/technique and status/list/rarity/category. Button secondary|outline
+    untouched. Styleguide Chip demos still render (power/technique row). vitest
+    chip-variants.test; typecheck; lint; build. verification_status n/a.
+
+- id: TASK-861
+  title: Process docs name @/components/patterns, not deleted shared/
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/docs/ai/ADR/README.md
+    - src/docs/ai/AI_REQUEST_TEMPLATE.md
+  automated_check: |
+    npm run tasks:validate
+  description: |
+    Hot-path docs were rewritten in /debt (FEATURE_INDEX, AGENT_GUIDE, DESIGN_SYSTEM,
+    constitution). ADR README still says new files go under `src/components/shared/`
+    (deleted folder). The request template example `related_files` still names that
+    old skill-row path. Agents copy those paths. Point them at `src/components/patterns/`
+    (or `ui/` for primitives). Do not rewrite historical ADR Decision bodies.
+  acceptance_criteria:
+    - ADR README "When required" names `src/components/patterns/` or `src/components/ui/`.
+    - Template example `related_files` use a path that exists today.
+    - Individual ADR history paragraphs that say "move to shared/" stay as history.
+    - `npm run tasks:validate` passes.
+  notes: |
+    Filed from /global-audit 2026-08-20 leftover process-doc drift. Docs-only.
+  completed_work: |
+    ADR README When required now names src/components/patterns/ (or ui/ primitives).
+    Request-template example related_files uses src/components/patterns/list/skill-row.tsx.
+    Historical ADR Decision bodies that say move to shared/ left as history.
+    tasks:validate. verification_status n/a.
+
+- id: TASK-862
+  title: Slim remaining FEATURE_INDEX mega-cells (sheet / guided powers / shell / Legacy)
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - src/docs/ai/FEATURE_INDEX.md
+  automated_check: |
+    npm run tasks:validate
+  description: |
+    TASK-855 trimmed Characters CRUD, Guided L3, and Guided equipment. Four more cells are still
+    TASK-### changelogs: Character sheet (view + edit), Guided powers/techniques L1 + L2,
+    Cohesive character creator (guided shell), Legacy character creator. Same diet � canonical
+    path + one-line extend-this; keep TASK ids in archive, not in the map.
+  acceptance_criteria:
+    - Those four cells stay a map (path + what to extend), not a changelog.
+    - No collapsed table cells (`||`).
+    - `npm run tasks:validate` passes.
+  notes: |
+    Filed from TASK-855 /cleanup. Docs-only. Do not rewrite ADR history. Do not reopen
+    TASK-855 cells unless a map pointer is wrong.
+  completed_work: |
+    Trimmed Character sheet, Guided powers/techniques L1+L2, Guided shell, and Legacy
+    creator cells to canonical path + one-line extend-this. Dropped TASK-### restatements
+    from those cells (history stays in archive/ADRs). Deleted leftover Character creator
+    map row (duplicate of Legacy). No collapsed table cells. tasks:validate.
+    verification_status n/a.
+
+- id: TASK-863
+  title: validate-agent-docs scans BUILD_VALIDATION and DEV-queue hrefs
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  follow_up_tasks:
+    - TASK-864
+  related_files:
+    - scripts/validate-agent-docs.js
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  automated_check: |
+    npm run tasks:validate
+  description: |
+    TASK-859 found that /global-audit cannot Read cursorignored
+    archive/BUILD_VALIDATION_ARCHIVE.md, so it filed a false missing-file task.
+    validate-agent-docs.js uses fs.existsSync (cursorignore-safe) but does not
+    scan BUILD_VALIDATION.md or DEVELOPER_TASK_QUEUE.md. Add those two catalogs
+    so dead local hrefs fail tasks:validate instead of a lecture in the index.
+  acceptance_criteria:
+    - scripts/validate-agent-docs.js includes src/docs/ai/BUILD_VALIDATION.md
+      and src/docs/ai/DEVELOPER_TASK_QUEUE.md.
+    - npm run tasks:validate-docs passes. If the new scan finds broken local
+      hrefs, fix those paths; do not move Ready suites into the archive.
+    - Drop the leftover cursorignore parenthetical from the DEV-queue index intro
+      once CI is the ratchet.
+    - npm run tasks:validate passes.
+  notes: |
+    Filed from TASK-859 /cleanup. Docs/CI only. Do not add the whole src/docs/ai/
+    tree. Planned-table omission of DEV-V-010/011 is out of scope (already in the
+    index). Archive file stays cursorignored.
+  completed_work: |
+    Wired BUILD_VALIDATION.md and DEVELOPER_TASK_QUEUE.md onto validate-agent-docs.js
+    (15 files). Deleted the leftover cursorignore parenthetical from the DEV-queue
+    index intro. Rewrote the guided unit-suite glob to src/lib/guided-creator/.
+    Bare-path hints skip glob * / ?. Ready suites left in BUILD_VALIDATION.
+    tasks:validate. verification_status n/a.
+- id: TASK-864
+  title: validate-agent-docs checks markdown heading fragments
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: low
+  status: done
+  verification_status: n/a
+  related_files:
+    - scripts/validate-agent-docs.js
+    - src/docs/ai/BUILD_VALIDATION.md
+    - src/docs/ai/DEVELOPER_TASK_QUEUE.md
+  automated_check: |
+    npm run tasks:validate-docs
+  description: |
+    TASK-863 ratchets missing local files on BUILD_VALIDATION + DEV-queue, but
+    strips `#fragment` before existsSync. Index "open suite" links are almost
+    entirely heading hashes (e.g. DEV-V-001 `#dev-v-001--advanced-character-creator-step-guards`).
+    TASK-859 already had to restore a stub heading so `#dev-v-005-…` still
+    resolved. Fail `tasks:validate-docs` when a local markdown href's fragment
+    does not match a GitHub-GFM heading id in the target file.
+  acceptance_criteria:
+    - `validate-agent-docs.js` still scans the existing 15-file list (do not add
+      the whole `src/docs/ai/` tree).
+    - Local markdown hrefs with a `#fragment` (including same-file `#…`) fail
+      when that id is missing on the target file. File existence stays required.
+    - Slug algorithm matches the hashes already in the DEV-queue index (GitHub
+      GFM; em dash in `## DEV-V-001 — …` → `--`). Duplicate headings follow GFM
+      `-1` / `-2` suffixes. No new npm dependency unless a tiny inline slug is
+      proven wrong against those existing hrefs.
+    - `npm run tasks:validate-docs` passes. If the scan finds broken fragments,
+      fix the href or the heading; do not move Ready suites into the archive.
+    - `npm run tasks:validate` passes.
+  notes: |
+    Filed from TASK-863 /cleanup. Docs/CI only. Archive
+    `BUILD_VALIDATION_ARCHIVE.md` stays cursorignored; use fs.existsSync so
+    those hashes are still checkable. Planned-table rows with no href stay out
+    of scope. Do not reuse `slugifyCodexName` (different rules).
+  completed_work: |
+    Wired GitHub-GFM heading-id checks onto local markdown #fragment hrefs in the
+    existing 15-file catalog (same-file # included; no new dependency). Restored
+    suite H2 titles so DEV-queue hashes resolve: added missing DEV-V-008 / DEV-V-043
+    headings; trimmed drifted TASK lists off other suite H2s. Ready suites stay
+    in BUILD_VALIDATION. tasks:validate. verification_status n/a.
+
+---
+
+- id: TASK-865
+  title: Remaining ADR-0023 viewport 44 slabs use pointer tiers
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/admin/core-rules/core-rules-field-editors.tsx
+    - src/app/(main)/admin/core-rules/core-rules-armament-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-sizes-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-rarities-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-ability-skills-editors.tsx
+    - src/app/(main)/admin/core-rules/core-rules-conditions-editor.tsx
+    - src/app/(main)/admin/core-rules/core-rules-crafting-rules-editor.tsx
+    - src/components/rules/rulebook-nav.tsx
+    - src/app/(main)/rules/[slug]/page.tsx
+    - src/components/patterns/filters/character-filter.tsx
+    - src/app/(main)/admin/codex/codex-spreadsheet-table.tsx
+    - src/components/ui/button-tiers.test.ts
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/ADR/0023-responsive-layout-contracts.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-055
+    tests:
+      - DEV-V-055-T007
+  developer_test_plan: |
+    Suite DEV-V-055 T007 — see BUILD_VALIDATION.md
+  description: |
+    Leftover `min-h-[44px]` + `md:min-h-0` (or `md:min-h-5` / `md:min-h-[36px]`) slabs still shrink hits by viewport. Wire those named surfaces onto pointer tiers / `.hit-area-*` / Button-IconButton sizes so coarse stays tappable and fine stays compact. Do not use `md:` to shrink a touch target.
+  acceptance_criteria:
+    - Behavior: Core-rules add-row links, rulebook nav + chapter prev/next, CharacterFilter header, and Codex spreadsheet table hits follow pointer — no `md:min-h-0` / `md:min-h-5` / `md:min-w-[36px]` shrink. `/characters/new/advanced` still loads.
+    - Tests: Extend `button-tiers.test.ts` ratchet for these files; owner QA DEV-V-055 T007 at 360/390 coarse vs fine desktop.
+    - Deployment: none
+  notes: |
+    Grep evidence 2026-08-20: core-rules-sizes/rarities/armament/conditions/ability-skills/crafting-rules editors; rulebook-nav; rules/[slug] prev/next; character-filter `md:min-h-5`; codex-spreadsheet-table `md:min-h-[36px]` / `md:min-w-[36px]`. Do not retag list thumbs / image mattes / innate-toggle. Always-on 44 (no `md:` shrink) on crafting options, edit-archetype-modal cards, skill-participant-card, encounters hub icons is out of scope pending owner ack. Keep `/characters/new/advanced`.
+  completed_work: |
+    Deleted leftover md:min-h-0 / md:min-h-5 / md:min-h-[36px] hit shrinks on the named surfaces. Wired add-row links, rulebook nav, chapter prev/next, and CharacterFilter header onto touch-tier-standard; spreadsheet checkbox onto touch-tier-standard and Save/Copy onto shared IconButton size md. Extended button-tiers.test.ts. /characters/new/advanced unchanged.
+
+---
+
+- id: TASK-866
+  title: Item creator handedness uses SegmentedControl
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: medium
+  status: done
+  verification_status: pending-qa
+  related_files:
+    - src/app/(main)/item-creator/item-creator-editor-weapon-shield.tsx
+    - src/components/patterns/chrome/segmented-control.tsx
+    - src/components/ui/button-tiers.test.ts
+    - src/docs/ai/FEATURE_INDEX.md
+    - src/docs/MOBILE_UX.md
+    - src/docs/ai/BUILD_VALIDATION.md
+  build_validation: |
+    suite: DEV-V-018
+    tests:
+      - DEV-V-018-T018
+  developer_test_plan: |
+    Suite DEV-V-018 T018 — see BUILD_VALIDATION.md
+  description: |
+    Item creator Weapon Configuration One/Two-Handed is a custom two-button pair with always-on `min-h-[44px]` and warning fill. Replace it with shared `SegmentedControl` from `@/components/patterns` (already used on item-creator type tabs). Pointer tiers, not always-on 44.
+  acceptance_criteria:
+    - Behavior: Handedness is `SegmentedControl`; coarse Standard 44, fine compact; One/Two-Handed still sets `isTwoHanded` and IP/TP/currency badge. `/characters/new/advanced` still loads.
+    - Tests: Owner QA DEV-V-018 T018 at 360/390 coarse vs fine desktop.
+    - Deployment: none
+  notes: |
+    Do not invent a second segmented primitive. Keep `/characters/new/advanced`. Always-on 44 elsewhere stays TASK-865 notes (owner ack), not this task.
+  completed_work: |
+    Deleted the custom One/Two-Handed min-h-[44px] warning-fill pair. Wired handedness onto shared SegmentedControl. Default SegmentedControl size is now touch-tier-standard (coarse 44, fine compact) instead of always-on min-h-[44px]. Extended button-tiers.test.ts. /characters/new/advanced unchanged.
+

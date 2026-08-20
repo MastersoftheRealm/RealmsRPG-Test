@@ -110,6 +110,18 @@ export function CharacterSheetSettingsModal({
       size="md"
       showCloseButton
       fullScreenOnMobile
+      footer={
+        canSave ? (
+          <div className="flex justify-end gap-2">
+            <Button variant="secondary" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button size="lg" onClick={() => void handleConfirm()}>
+              {hasChanged ? 'Confirm & save' : 'Done'}
+            </Button>
+          </div>
+        ) : undefined
+      }
     >
       <div className="space-y-4">
         <div className="rounded-lg border border-border-light bg-surface-alt p-3">
@@ -139,7 +151,7 @@ export function CharacterSheetSettingsModal({
             members&apos; sheets when set to Campaign or Public.
           </p>
           {isInCampaign && (
-            <p className="mb-2 text-xs text-warning-700 dark:text-warning-400">
+            <p className="mb-2 text-xs text-warning-fg">
               This character is in a campaign. To set visibility to Private, remove them from the
               campaign first.
             </p>
@@ -177,14 +189,6 @@ export function CharacterSheetSettingsModal({
             >
               {tourCopy.tourRetake}
             </Button>
-          </div>
-        )}
-        {canSave && (
-          <div className="flex justify-end gap-2">
-            <Button variant="secondary" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button onClick={handleConfirm}>{hasChanged ? 'Confirm & save' : 'Done'}</Button>
           </div>
         )}
       </div>

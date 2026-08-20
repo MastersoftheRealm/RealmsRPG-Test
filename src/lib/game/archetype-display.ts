@@ -1,5 +1,5 @@
-import type { SupabaseClient } from '@supabase/supabase-js';
 import { parseArchetypePathData, parseLevel1LoadoutsField } from '@/lib/game/archetype-path';
+import type { TypedSupabaseClient } from '@/lib/supabase/database';
 import type { Archetype, ArchetypeCategory, Character, CharacterArchetype } from '@/types';
 
 const FORGE_ARCHETYPE_IDS = new Set(['power', 'martial', 'powered-martial']);
@@ -52,7 +52,7 @@ export function resolveArchetypeDisplayName(
 }
 
 export async function fetchArchetypeNameMap(
-  supabase: SupabaseClient,
+  supabase: TypedSupabaseClient,
 ): Promise<Map<string, string>> {
   const { data, error } = await supabase.from('codex_archetypes').select('id, name');
   if (error) {
@@ -86,7 +86,7 @@ function rowToArchetype(row: Record<string, unknown>): Archetype {
 
 /** Fetch a single archetype with path_data composed like GET /api/codex (minimal columns). */
 export async function fetchCodexArchetypeById(
-  supabase: SupabaseClient,
+  supabase: TypedSupabaseClient,
   id: string,
 ): Promise<Archetype | null> {
   if (!id.trim()) return null;

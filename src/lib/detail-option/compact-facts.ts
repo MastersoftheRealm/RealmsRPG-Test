@@ -60,7 +60,8 @@ export const MECHANIC_PROPERTY_NAMES = new Set([
   'shield base',
 ]);
 
-function isBlank(value: string | number | null | undefined): boolean {
+/** True when a compact-fact value should not become a chip (empty, dash, none). */
+export function isBlank(value: string | number | null | undefined): boolean {
   if (value == null) return true;
   const text = String(value).trim();
   return !text || text === '-' || text === '—' || text.toLowerCase() === 'none';

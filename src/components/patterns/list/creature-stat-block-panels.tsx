@@ -10,6 +10,7 @@ import {
   WeaponsListSection,
   ShieldsListSection,
   ArmorListSection,
+  EquipmentListSection,
   type EntityFeatRow,
   type EntityPowerRow,
   type EntityTechniqueRow,
@@ -21,8 +22,7 @@ import { ListHeader } from './list-header';
 import { RollButton } from '../chrome/roll-button';
 import type { useRollsOptional } from '@/components/rolls';
 import { getWeaponAttackBonusFromProperties } from '@/lib/game/weapon-attack-ability';
-import { formatCreatureEquipmentQuantity } from '@/lib/game/creature-inventory';
-import { formatListCellLabel, normalizeRangeDisplay } from '@/lib/utils';
+import { normalizeRangeDisplay } from '@/lib/utils';
 import type { Abilities } from '@/types';
 import type { CreatureData, CreatureStatBlockArmament } from './creature-stat-block-types';
 import { StatBlockSection } from './creature-stat-block-section';
@@ -502,36 +502,19 @@ export function CreatureStatBlockExpandedContent({
 
           {hasEquipment && (
             <StatBlockSection title="Equipment" defaultExpanded>
-              <ListHeader
-                columns={[
-                  { key: 'name', label: 'Name', width: '1fr' },
-                  { key: 'type', label: 'Type', width: '0.6fr', align: 'center' },
-                  { key: 'quantity', label: 'Qty', width: '4rem', align: 'center' },
-                ]}
-                gridColumns="1fr 0.6fr 4rem"
-                hasThumbnailColumn
+              <EquipmentListSection
+                showTitle={false}
+                items={equipment.map((e, idx) => ({
+                  id: `${creature.id}-equipment-${idx}`,
+                  name: e.name,
+                  description: e.description,
+                  thumbnail: resolveListRowThumbnail('equipment', e, e.name),
+                  type: e.type,
+                  quantity: e.quantity,
+                }))}
+                showListHeader
+                compactRows
               />
-              <div className="mt-2 space-y-1">
-                {equipment.map((e, idx) => (
-                  <GridListRow
-                    key={`${creature.id}-equipment-${idx}`}
-                    id={`${creature.id}-equipment-${idx}`}
-                    name={e.name}
-                    description={e.description}
-                    thumbnail={resolveListRowThumbnail('equipment', e, e.name)}
-                    gridColumns="1fr 0.6fr 4rem"
-                    columns={[
-                      { key: 'type', value: formatListCellLabel(e.type), align: 'center' },
-                      {
-                        key: 'quantity',
-                        value: formatCreatureEquipmentQuantity(e.quantity),
-                        align: 'center',
-                      },
-                    ]}
-                    compact
-                  />
-                ))}
-              </div>
             </StatBlockSection>
           )}
         </div>

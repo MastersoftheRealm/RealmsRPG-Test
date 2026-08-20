@@ -247,7 +247,7 @@ export function ExpandableChip({
           interactiveHover && canExpand && 'hover:shadow-md',
           isExpanded && interactiveHover && 'shadow-md',
           canExpand && 'cursor-pointer',
-          !useButtonHeader && canExpand && !isExpanded && 'touch-target-md-compact',
+          !useButtonHeader && canExpand && !isExpanded && 'hit-area-dense',
           className,
         ),
       })}
@@ -264,7 +264,7 @@ export function ExpandableChip({
           onClick={canExpand ? toggleExpanded : (e) => e.stopPropagation()}
           disabled={!canExpand && !onToggle}
           className={cn(
-            'touch-target-md-compact flex w-full items-center gap-1.5 text-left',
+            'hit-area-dense flex w-full items-center gap-1.5 text-left',
             canExpand ? 'cursor-pointer hover:opacity-90' : 'cursor-default',
           )}
           aria-expanded={canExpand ? isExpanded : undefined}

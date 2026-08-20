@@ -17,7 +17,7 @@ Onboarding map for contributors who worked on **PR #14 (`Collin-tooltipExperimen
 **Start here after a fresh pull:**
 
 1. `src/lib/tooltips/floating-help.tsx` — shared panel + `getTooltipFallbackPlacements` (your placement order)
-2. `src/components/shared/info-tippy.tsx` — product help trigger (hover, focus, touch-hold, `safePolygon` for interactive lists)
+2. `src/components/patterns/help/info-tippy.tsx` — product help trigger (hover, focus, touch-hold, `safePolygon` for interactive lists)
 3. `public/tooltip-text.tsx` — all help copy and level-aware helpers
 4. `src/components/ui/tooltip.tsx` — generic demo/styleguide tooltip only (not for product help)
 
@@ -39,7 +39,7 @@ Full agent rules: `src/docs/ai/AGENT_GUIDE.md` § Floating UI & contextual help.
 **After:**
 
 ```tsx
-import { InfoTippy } from '@/components/shared';
+import { InfoTippy } from '@/components/patterns';
 import { getAbilityPointsHelp } from '../../../../public/tooltip-text';
 
 <InfoTippy

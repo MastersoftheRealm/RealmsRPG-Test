@@ -24,6 +24,7 @@ import {
   damageReductionFactChip,
   energyFactChip,
   formatActionTypeFact,
+  isBlank,
   isMechanicPropertyName,
   rangeFactChip,
   trainingPointsFactChip,
@@ -229,9 +230,8 @@ function labeledFactChip(
   label: string,
   value: string | number | null | undefined,
 ): ChipData | null {
-  if (value == null) return null;
+  if (isBlank(value)) return null;
   const text = String(value).trim();
-  if (!text || text === '-') return null;
   const alreadyLabeled = text.toLowerCase().startsWith(label.toLowerCase());
   return compactFactChip(alreadyLabeled ? text : `${label} ${text}`);
 }

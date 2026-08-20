@@ -76,6 +76,23 @@ describe('codex equipment-list', () => {
     expect(labels.some((n) => /weight/i.test(n))).toBe(false);
   });
 
+  it('chips Training Points when properties have valued TP (TASK-825)', () => {
+    const sections = buildCodexEquipmentDetailSections(
+      item({
+        id: 't',
+        name: 'Kit',
+        category: 'Tools',
+        currency: 10,
+        rarity: 'Common',
+        properties: ['Grapple'],
+      }),
+      [{ id: 1, name: 'Grapple', base_tp: 2 }],
+    );
+    const labels = sections.flatMap((s) => s.chips.map((c) => c.name));
+    expect(labels.some((n) => /training points\s+2/i.test(n))).toBe(true);
+    expect(CODEX_EQUIPMENT_HEADER_COLUMNS.map((h) => h.key)).not.toContain('tp');
+  });
+
   it('applies search, category, min currency, and optional affordability without TP gates', () => {
     const items = [
       item({ id: 'a', name: 'Cheap kit', category: 'Tools', currency: 10, rarity: 'Common' }),

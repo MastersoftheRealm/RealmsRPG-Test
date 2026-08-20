@@ -38,11 +38,7 @@ export interface InfoTippyProps {
   content: ReactNode;
   /** Accessible name for the trigger (required). */
   label: string;
-  /** @deprecated JSX and strings render natively; kept for existing call sites. */
-  allowHTML?: boolean | undefined;
   placement?: TooltipPlacement | undefined;
-  /** @deprecated No-op; layout is always the 16px icon + overlay hit (TASK-725). Kept for existing call sites. */
-  size?: 'inline' | 'icon' | undefined;
   /** Trigger icon color. Default `info` (link blue). Prefer this over one-off `text-*` class fights. */
   tone?: InfoTippyTone | undefined;
   className?: string | undefined;

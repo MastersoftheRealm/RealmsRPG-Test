@@ -3,7 +3,7 @@
 > **Do not edit by hand.** Run `npm run tasks:generate-index` after changing barrel exports.
 > Curated narrative map: [`FEATURE_INDEX.md`](FEATURE_INDEX.md).
 
-Generated: 2026-08-19
+Generated: 2026-08-20
 
 ## `src/components/patterns/index.ts`
 
@@ -17,7 +17,6 @@ Generated: 2026-08-19
 - CHARACTER_SHEET_ENERGY_SPEND_ROW_CHROME
 - CharacterFilter
 - ChipSelect
-- ChoiceTraitOptionListPicker
 - CodexBrowseListShell
 - ConfirmActionModal
 - CreatorPortraitUpload
@@ -29,7 +28,6 @@ Generated: 2026-08-19
 - DeleteConfirmModal
 - DescriptorChipWithTip
 - DetailOptionList
-- DiscordIcon
 - EditSectionToggle
 - EquipmentListSection
 - EquipToggle
@@ -57,11 +55,9 @@ Generated: 2026-08-19
 - LibraryAddToLibraryButton
 - LibraryCollapsibleSection
 - LibraryRowActionSlot
-- ListEmptyState
 - ListHeader
 - ListRowThumbnail
 - ListSearchToolbar
-- LoadingState
 - LoadoutBudgetBar
 - LoginPromptModal
 - MixedSpeciesModal
@@ -88,7 +84,6 @@ Generated: 2026-08-19
 - RealmsImagePicker
 - resolveDistinctSecondaryAbility
 - RollButton
-- SearchInput
 - SectionCostBadge
 - SectionHeader
 - SegmentedControl
@@ -151,6 +146,7 @@ Generated: 2026-08-19
 - TabContentPanel
 - TableScroll
 - TabNavigation
+- TabNavOverflowScroller
 - Textarea
 - ToastProvider
 - Tooltip

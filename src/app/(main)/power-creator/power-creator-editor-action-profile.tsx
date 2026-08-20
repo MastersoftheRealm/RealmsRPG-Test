@@ -52,7 +52,7 @@ export function PowerCreatorEditorActionProfile({
             aria-label="Action type"
             value={actionType}
             onChange={(e) => onActionTypeChange(e.target.value)}
-            className="rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+            className="touch-tier-standard rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
           >
             {ACTION_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -82,7 +82,7 @@ export function PowerCreatorEditorActionProfile({
         <select
           value={attackMode}
           onChange={(e) => onAttackModeChange(e.target.value as AttackMode)}
-          className="min-h-[44px] w-full rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+          className="touch-tier-standard w-full rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
           aria-label="Attack"
         >
           {ATTACK_MODE_SELECT_OPTIONS.map((option) => (

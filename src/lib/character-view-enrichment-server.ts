@@ -6,7 +6,6 @@
  * `getOwnerLibraryForView` (audit P0-1).
  */
 
-import type { SupabaseClient } from '@supabase/supabase-js';
 import {
   collectCharacterLibraryRefIds,
   collectCharacterViewRefIds,
@@ -26,6 +25,11 @@ import {
 } from '@/lib/codex/row-map';
 import { fetchCodexArchetypeById } from '@/lib/game/archetype-display';
 import { getOwnerLibraryForView, type LibraryForView } from '@/lib/owner-library-for-view';
+import {
+  fromPublicTable,
+  type PublicTableName,
+  type TypedSupabaseClient,
+} from '@/lib/supabase/database';
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { columnarViewSelect, rowToItem, rowToItemSpecies } from '@/lib/library-columnar';
 import type { Archetype } from '@/types';
@@ -34,27 +38,26 @@ import type { LibraryItem, LibraryPower, LibraryTechnique } from '@/types/librar
 type Row = Record<string, unknown>;
 
 async function fetchByIds(
-  client: SupabaseClient,
-  table: string,
+  client: TypedSupabaseClient,
+  table: PublicTableName,
   ids: string[],
   columns = '*',
 ): Promise<Row[]> {
   if (ids.length === 0) return [];
-  const { data, error } = await client.from(table).select(columns).in('id', ids);
+  const { data, error } = await fromPublicTable(client, table).select(columns).in('id', ids);
   if (error) throw error;
   return (data ?? []) as unknown as Row[];
 }
 
 async function fetchOwnerByIds(
-  client: ReturnType<typeof createServiceRoleClient>,
-  table: string,
+  client: TypedSupabaseClient,
+  table: PublicTableName,
   ownerUserId: string,
   ids: string[],
   columns: string,
 ): Promise<Row[]> {
   if (ids.length === 0) return [];
-  const { data, error } = await client
-    .from(table)
+  const { data, error } = await fromPublicTable(client, table)
     .select(columns)
     .eq('user_id', ownerUserId)
     .in('id', ids);
@@ -78,7 +81,7 @@ function mergeUniqueById<T extends { id?: string | number | undefined }>(rows: T
  * Fetch referenced catalog + official + owner empowered/species rows for a read-only view.
  */
 export async function getCharacterViewEnrichment(
-  publicClient: SupabaseClient,
+  publicClient: TypedSupabaseClient,
   ownerUserId: string,
   characterData: unknown,
   libraryForView: LibraryForView,
@@ -197,7 +200,7 @@ export async function getCharacterViewEnrichment(
 
 /** Owner library + referenced enrichment for a verified other-user / RM view. */
 export async function getOwnerLibraryAndEnrichmentForView(
-  publicClient: SupabaseClient,
+  publicClient: TypedSupabaseClient,
   ownerUserId: string,
   characterData: unknown,
 ): Promise<{ libraryForView: LibraryForView; enrichment: CharacterViewEnrichment }> {

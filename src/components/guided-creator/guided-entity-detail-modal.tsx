@@ -84,21 +84,16 @@ export function GuidedEntityDetailModal({
 
   const defaultFooter = onSelect ? (
     <div className="flex shrink-0 justify-between gap-2 border-t border-border-light bg-surface">
-      <Button variant="secondary" onClick={onClose} className="min-h-[44px] min-w-[44px]">
+      <Button variant="secondary" onClick={onClose}>
         {copy.close}
       </Button>
-      <Button
-        variant="primary"
-        onClick={handleSelect}
-        disabled={selectDisabled}
-        className="min-h-[44px] min-w-[44px]"
-      >
+      <Button variant="primary" size="lg" onClick={handleSelect} disabled={selectDisabled}>
         {selectLabel ?? copy.select}
       </Button>
     </div>
   ) : (
     <div className="flex shrink-0 justify-end gap-2 border-t border-border-light bg-surface">
-      <Button variant="secondary" onClick={onClose} className="min-h-[44px] min-w-[44px]">
+      <Button variant="secondary" onClick={onClose}>
         {copy.close}
       </Button>
     </div>
@@ -143,7 +138,7 @@ export function GuidedEntityDetailModal({
                 headingLevel={3}
                 titleAddon={
                   section.tip ? (
-                    <InfoTippy content={section.tip} label={`About ${section.title}`} size="icon" />
+                    <InfoTippy content={section.tip} label={`About ${section.title}`} />
                   ) : undefined
                 }
               >

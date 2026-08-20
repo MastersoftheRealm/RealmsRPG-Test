@@ -65,7 +65,7 @@ function GridListSelectChip({ chip }: { chip: ChipData }) {
           e.stopPropagation();
           chip.onSelect?.();
         }}
-        className="touch-target-md-compact inline-flex items-center rounded-md focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
+        className="hit-area-dense inline-flex items-center rounded-md focus-visible:ring-2 focus-visible:ring-primary-outline-border focus-visible:outline-none"
         aria-label={chip.selectAriaLabel ?? `Select ${chip.name}`}
       >
         <DescriptorChip
@@ -77,7 +77,7 @@ function GridListSelectChip({ chip }: { chip: ChipData }) {
       </button>
       {showTip ? (
         <span className="inline-flex shrink-0" onClick={(e) => e.stopPropagation()}>
-          <InfoTippy content={tip!} label={`${chip.name} details`} size="inline" />
+          <InfoTippy content={tip!} label={`${chip.name} details`} />
         </span>
       ) : null}
     </span>

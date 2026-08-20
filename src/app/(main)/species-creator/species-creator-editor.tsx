@@ -213,7 +213,7 @@ export function SpeciesCreatorEditor({
         <ChipList
           items={form.languages}
           onRemove={onRemoveLanguage}
-          color="bg-info-100 dark:bg-info-900/30 text-info-800 dark:text-info-300"
+          color="bg-info-100 dark:bg-info-900/30 text-info-fg"
         />
         <div className="mt-2 flex gap-2">
           <Input
@@ -553,12 +553,14 @@ export function TraitListModal({
           ? (selected) => (
               <>
                 <Button
+                  size="lg"
                   onClick={() => addIds(selected, 'species_traits')}
                   disabled={selected.length === 0 || !canAddSpecies}
                 >
                   Add selected as species trait{selected.length !== 1 ? 's' : ''}
                 </Button>
                 <Button
+                  size="lg"
                   onClick={() => addIds(selected, 'ancestry_traits')}
                   disabled={selected.length === 0 || !canAddAncestry}
                 >

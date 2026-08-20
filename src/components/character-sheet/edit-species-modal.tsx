@@ -39,31 +39,23 @@ export function EditSpeciesModal({ isOpen, onClose, character, onSave }: EditSpe
       footer={
         m.step === 'species' ? (
           <div className="flex justify-between gap-2">
-            <Button variant="secondary" onClick={onClose} className="min-h-[44px]">
+            <Button variant="secondary" onClick={onClose}>
               Cancel
             </Button>
             <Button
+              size="lg"
               onClick={() => m.setStep('ancestry')}
               disabled={!m.canContinueSpecies}
-              className="min-h-[44px]"
             >
               Next: Ancestry
             </Button>
           </div>
         ) : (
           <div className="flex justify-between gap-2">
-            <Button
-              variant="secondary"
-              onClick={() => m.setStep('species')}
-              className="min-h-[44px]"
-            >
+            <Button variant="secondary" onClick={() => m.setStep('species')}>
               Back
             </Button>
-            <Button
-              onClick={m.handleSave}
-              disabled={!m.canContinueAncestry}
-              className="min-h-[44px]"
-            >
+            <Button size="lg" onClick={m.handleSave} disabled={!m.canContinueAncestry}>
               Save species & ancestry
             </Button>
           </div>

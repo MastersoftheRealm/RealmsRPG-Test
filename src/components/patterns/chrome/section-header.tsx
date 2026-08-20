@@ -36,7 +36,7 @@ interface SectionHeaderBasePropsFields {
   addLabel?: string | undefined;
   /** Additional content to render on the right side (before add button) */
   rightContent?: ReactNode | undefined;
-  /** Optional className for the add button (e.g. text-danger-700 when over budget) */
+  /** Optional className for the add button (e.g. text-danger-fg when over budget) */
   addButtonClassName?: string | undefined;
   /** Custom className for container */
   className?: string | undefined;

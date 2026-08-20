@@ -1,46 +1,12 @@
 'use client';
 
 /**
- * List Components
- * ================
- * Shared components for displaying sorted, searchable lists
- * Used by both Codex and Library pages
- *
- * NOTE: SearchInput is re-exported from ui/search-input.tsx for backward compatibility
+ * List error display (Codex / Library / Official lists).
+ * SearchInput, EmptyState, and LoadingState live in `@/components/ui` (TASK-821).
  */
 
 import { RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-// Re-export SearchInput from UI for backward compatibility
-// Use the fully-featured version from ui/search-input
-export { SearchInput } from '@/components/ui/search-input';
-
-// Create a type alias for backward compatibility
-export interface SearchInputProps {
-  value: string;
-  onChange: (value: string) => void;
-  placeholder?: string | undefined;
-  className?: string | undefined;
-}
-
-// =============================================================================
-// Empty State - Re-export from ui/ for backward compatibility
-// =============================================================================
-
-// Re-export unified EmptyState from ui/
-// The ui/empty-state has more features (action buttons, sizes)
-export { EmptyState } from '@/components/ui/empty-state';
-export type { EmptyStateProps } from '@/components/ui/empty-state';
-
-// =============================================================================
-// Loading State - Re-export from ui/ for backward compatibility
-// =============================================================================
-export { LoadingState } from '@/components/ui/spinner';
-
-// =============================================================================
-// Error State
-// =============================================================================
 
 export interface ErrorDisplayProps {
   message: string;

@@ -69,11 +69,7 @@ export function ArchetypePathFilter({
       onSelect={(id) => onChange([...selectedPathIds, id])}
       onRemove={(id) => onChange(selectedPathIds.filter((value) => value !== id))}
       labelAccessory={
-        <InfoTippy
-          content={ARCHETYPE_PATH_FILTER_HELP}
-          label="Archetype path filter help"
-          size="inline"
-        />
+        <InfoTippy content={ARCHETYPE_PATH_FILTER_HELP} label="Archetype path filter help" />
       }
       className={cn(ARCHETYPE_PATH_FILTER_CLASS, className)}
     />

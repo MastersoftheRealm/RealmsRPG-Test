@@ -13,6 +13,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useAuth, useAdmin, useProfile } from '@/hooks';
 import { ThemeToggle, InfoTippy } from '@/components/patterns';
+import { IconButton } from '@/components/ui';
 import { navbarCodex, navbarLibrary } from '../../../public/tooltip-text';
 import { NAV_COPY, type NavLink } from '@/lib/constants/site-copy';
 
@@ -190,17 +191,19 @@ export function Header() {
             )}
 
             {/* Compact / tablet menu (below xl) */}
-            <button
+            <IconButton
               ref={mobileMenuButtonRef}
               type="button"
+              variant="ghost"
+              size="md"
               aria-expanded={mobileMenuOpen}
               aria-controls={MOBILE_NAV_ID}
-              aria-label="Toggle navigation menu"
-              className="flex min-h-[44px] min-w-[44px] items-center justify-center p-2 text-text-secondary xl:hidden"
+              label="Toggle navigation menu"
+              className="text-text-secondary xl:hidden"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              {mobileMenuOpen ? <XIcon className="h-6 w-6" /> : <MenuIcon className="h-6 w-6" />}
-            </button>
+              {mobileMenuOpen ? <XIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
+            </IconButton>
           </div>
         </div>
       </div>

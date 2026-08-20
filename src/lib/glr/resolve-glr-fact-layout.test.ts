@@ -41,10 +41,22 @@ describe('resolveGlrFactLayout (ADR-0016)', () => {
     expect(layout.chipFacts).toEqual(['category', 'range', 'trainingPoints']);
   });
 
-  it('gear browse is Category / Currency / Rarity only', () => {
+  it('gear browse is Category / Currency / Rarity columns and chips TP', () => {
     const layout = resolveGlrFactLayout({ entityType: 'gear', mode: 'browse' });
     expect(layout.columnFacts).toEqual(['category', 'currency', 'rarity']);
-    expect(layout.chipFacts).toEqual([]);
+    expect(layout.chipFacts).toEqual(['trainingPoints']);
+  });
+
+  it('play gear chips category / currency / rarity / TP (TASK-825)', () => {
+    const layout = resolveGlrFactLayout({ entityType: 'gear', mode: 'play' });
+    expect(layout.columnFacts).toEqual([]);
+    expect(layout.chipFacts).toEqual(['category', 'currency', 'rarity', 'trainingPoints']);
+  });
+
+  it('select gear keeps Category / Currency / Rarity and chips TP (TASK-825)', () => {
+    const layout = resolveGlrFactLayout({ entityType: 'gear', mode: 'select' });
+    expect(layout.columnFacts).toEqual(['category', 'currency', 'rarity']);
+    expect(layout.chipFacts).toEqual(['trainingPoints']);
   });
 
   it('characterCreate omits feat reqLevel', () => {
@@ -76,5 +88,18 @@ describe('resolveGlrFactLayout (ADR-0016)', () => {
     const layout = resolveGlrFactLayout({ entityType: 'power', mode: 'detail' });
     expect(layout.columnFacts).toEqual([]);
     expect(layout.chipFacts.length).toBeGreaterThan(0);
+  });
+
+  it('detail technique chips every applicable fact (TASK-818)', () => {
+    const layout = resolveGlrFactLayout({ entityType: 'technique', mode: 'detail' });
+    expect(layout.columnFacts).toEqual([]);
+    expect(layout.chipFacts).toEqual([
+      'category',
+      'energy',
+      'trainingPoints',
+      'actionType',
+      'weapon',
+      'damage',
+    ]);
   });
 });

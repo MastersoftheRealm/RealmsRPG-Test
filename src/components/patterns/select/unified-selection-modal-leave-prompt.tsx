@@ -39,14 +39,15 @@ export function UnifiedSelectionModalLeavePrompt({
       showCloseButton
     >
       <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button variant="secondary" onClick={onDiscard} className="min-h-11 w-full sm:w-auto">
+        <Button variant="secondary" onClick={onDiscard} className="w-full sm:w-auto">
           {discardLabel}
         </Button>
         {showConfirm ? (
           <Button
+            size="lg"
             onClick={onConfirm}
             disabled={isConfirmDisabled}
-            className="min-h-11 w-full sm:w-auto"
+            className="w-full sm:w-auto"
           >
             {confirmLabel}
             {selectedCount > 0 ? ` (${selectedCount})` : ''}

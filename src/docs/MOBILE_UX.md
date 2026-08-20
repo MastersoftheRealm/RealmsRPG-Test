@@ -20,7 +20,7 @@ Single reference for breakpoints, touch targets, and layout contracts.
 
 Viewport width is a *proxy* for input method, and it is wrong at both ends — a touchscreen laptop at 1400px needs a big hit area; a 700px-wide desktop window does not.
 
-**Migrated (TASK-841):** `Button` / `IconButton` / `ValueStepper` / tab triggers / `.hit-area-layout-neutral` use `@media (pointer: coarse)`. `.touch-target-md-compact` is a no-op painted min — it aliases `.hit-area-dense` (height-first expanded hit). Remaining viewport answers: form fields (TASK-830) and leftover `md:min-h-0` on a few feature controls.
+**Migrated (TASK-841):** `Button` / `IconButton` / `ValueStepper` / tab triggers / `.hit-area-layout-neutral` use `@media (pointer: coarse)`. Modal/screen Primary CTAs (Add Selected, Save, Continue, Confirm) use `Button size="lg"` (48px under coarse). Dense expanded hit is `.hit-area-dense` (height-first) or `.hit-area-dense-square` (icon-only). **TASK-836:** sheet proficiency dots stay 16px paint + `.hit-area-layout-neutral`; Sub-Skills label is Dense; `ResourceInput` current value is Standard 44 under coarse. **TASK-830:** shared `Input` / `Select` / `Textarea` / `SearchInput` use Standard 44 (`touch-tier-standard`, no `min-w`) under coarse pointer; fine pointer keeps compact `h-10` (Textarea keeps `min-h-[100px]`). Filter rows stay `FILTER_CONTROL_CLASS` `h-11`. **TASK-847:** Codex spreadsheet toolbar, list **Filters**, and RollLog send dropped viewport `md:` / `max-md:` 44 slabs (pointer tiers / shared `Button`). **TASK-865:** core-rules add-row links, rulebook nav + chapter prev/next, CharacterFilter header, and Codex spreadsheet row hits dropped `md:min-h-0` / `md:min-h-5` / `md:min-h-[36px]` slabs (`touch-tier-standard` / `IconButton`). **TASK-866:** `SegmentedControl` default size is Standard 44 under coarse (`touch-tier-standard`); item-creator handedness uses that control, not a custom always-on 44 pair.
 
 ---
 
@@ -73,7 +73,7 @@ A horizontal panel carousel must:
 - **show a visible affordance** that more content exists horizontally (edge fade, chevron, or deliberate partial-item peek);
 - **be reachable without a swipe** — keyboard and trackpad users must be able to get to off-screen items.
 
-Gutters: bleed the scroller with matching negative margin + padding (`-mx-4 px-4` / `sm:-mx-6 sm:px-6` to match `PageContainer`), set the same values as `scroll-padding-inline` (`scroll-px-4 sm:scroll-px-6`), size panels with `basis-full` (not `min-w-full`), and leave `gap-4` between panels so snap stops stay aligned with the header above. Within a panel: vertical scroll only.
+Gutters: bleed the scroller with matching negative margin + padding (`-mx-4 px-4` / `sm:-mx-6 sm:px-6` to match `PageContainer`), set the same values as `scroll-padding-inline` (`scroll-px-4 sm:scroll-px-6`), size panels with `basis-full` (not `min-w-full`), and leave `gap-4` between panels so snap stops stay aligned with the header above. Within a panel: vertical scroll only. The height-bound column and the carousel flex item also need `min-w-0` so `min-width: auto` from those panels cannot widen the header (C6). Below `md`, the sheet `PageContainer` must not use `mx-auto`: auto side margins on a column-flex item cancel stretch, so the carousel sizes the header to its scroll width.
 
 **When to collapse instead:** few sections, lighter content, or sub-sections inside a panel. Use the domain's collapsible pattern (for creator sections, `creator/collapsible-section.tsx`).
 
@@ -89,26 +89,28 @@ A known-length set of sibling cards uses `grid` with equal tracks. `flex-wrap` w
 
 One dock owns each screen corner. Components **register** with the dock; they do not each declare their own `position: fixed` coordinates. The dock reserves page padding so content is never permanently covered. Two components independently choosing `bottom-4` and `bottom-5` is how the sheet toolbar and roll-log FAB ended up stacked on each other.
 
-**Landed (TASK-837):** `--dock-*` tokens + `.floating-dock-bottom-right` (RollLog) and `.sheet-mobile-action-dock` (sheet actions below `md`, FAB-sized end slot). `#main-content:has(.floating-dock-bottom-right)` reserves `--dock-reserved-end` from `md` up; the sheet mobile frame uses `pb-[var(--sheet-mobile-dock-height)]`. `body:has([aria-modal='true'])` hides both so Recovery / Level Up / Add Feat footers stay tappable. Do not add a third `fixed bottom-*`.
+**Landed (TASK-837 / TASK-843):** `--dock-*` tokens + `.floating-dock-bottom-right` (RollLog) and `.sheet-mobile-action-dock` (sheet actions below `md`, FAB-sized end slot). `#main-content:has(.floating-dock-bottom-right)` reserves `--dock-reserved-end` from `md` up. The C1 sheet frame uses `--sheet-mobile-bottom-reserve` (owner `.has-sheet-mobile-dock` → `--sheet-mobile-dock-height`; RM / no-toolbar frames stay 0 and pad panels with `--sheet-mobile-fab-gutter`). `body:has([aria-modal='true'])` hides both so Recovery / Level Up / Add Feat footers stay tappable. Do not add a third `fixed bottom-*`.
 
 ### C5 — Breakpoint honesty
 
-A layout switch happens at a width where the target arrangement **actually fits**, not at a nominal breakpoint name. The sheet header switches to three columns at `lg` (1024px) but the columns do not fit until ~1500px, so 1024–1280 is the most broken band in the app.
+A layout switch happens at a width where the target arrangement **actually fits**, not at a nominal breakpoint name. Verify every layout switch at **360 / 390 / 768 / 1024 / 1280 / 1440**.
 
-Verify every layout switch at **360 / 390 / 768 / 1024 / 1280 / 1440**.
+**Landed (TASK-839):** Speed / Evasion / DR / Crit sit in an equal-track `grid` (C3: 2-col below `md`, 4-col from `md`, 2×2 in the middle column). Three-column identity | stats | resources engages at `lg` (1024) as equal `minmax(0,1fr)` tracks — not leftover flex — so stats are never a 119px column. From `xl`, side tracks cap (`minmax(0,20rem)` / `minmax(16rem,20rem)`). Below `lg`: identity | resources, stats spanning. The mobile frame/column/carousel use `min-w-0` so the C1 scroller cannot stretch the header past the viewport.
 
 ### C6 — Overflow
 
 No horizontal page scroll at any audited width. Horizontal scroll exists only inside explicit scroll containers that satisfy C1's affordance requirement.
+
+Closed floating panels must be **unmounted** or `display: none`. `w-0` / `opacity-0` / `overflow-hidden` still lays out children; those boxes report past the viewport right edge (`overflowRight` on `/creature-creator` — TASK-826). `TableScroll` is `relative min-w-0` so `sr-only` table headers cannot use the initial containing block and widen `documentElement.scrollWidth`.
 
 ---
 
 ## Modals
 
 - **Full-screen on mobile:** for selection/add modals, wizards, recovery, level-up, settings, and other large dialogs set **`fullScreenOnMobile`** on `Modal`. Below `md` it renders full-screen (sticky header/footer, scrollable content); `md+` keeps existing size behaviour.
-- **Sticky action buttons:** primary actions (**Add Selected**, Confirm, Load, Pick Me) go in the Modal **`footer`** prop — never inside `children`. The footer is `shrink-0` outside the scroll region. Modal applies footer inset (`px-4 py-3` / `md:px-6 md:py-4`) — do not add a second `p-4`/`px-6`. `UnifiedSelectionModal` already wires Cancel / Add Selected (or `confirmLabel` / `primaryActions`) through `footer`. Avoid bottom padding on scroll content that creates a blank strip above the sticky footer (`pb-0` on USM content — TASK-574).
-- **List-first selection chrome (TASK-564 / TASK-815):** the scrollable list is the primary focus. Search and a **Filters** toggle share one compact toolbar row. **Primary mode tabs** (Powers/Empowered, Armaments/Equipment, feat-source, inventory type) and the sheet **Add equipment custom-item form** stay always visible via `scopeExtra` under search. SourceFilter and advanced filters live in a collapsed-by-default `FilterSection` (`variant="compact"`) as `headerExtra` / `filterContent`. Optional `optionsSummary` / `optionsActiveCount` show secondary options when Filters are closed.
-- **List-first browse chrome (TASK-721):** Codex, Library (Official + My), and Admin Codex/Images GLR filter pages use the same Search + Filters row via `ListSearchToolbar` composing FilterSection compact. Create/sync (`searchTrailing`) sits after Filters, not in the Filters slot. USM/L3 unchanged.
+- **Sticky action buttons:** primary actions (**Add Selected**, Confirm, Load, Pick Me) go in the Modal **`footer`** prop — never inside `children`. Those Primary CTAs use **`Button size="lg"`** (48px min-h under coarse pointer); Cancel / secondary stay default `md` (Standard 44). The footer is `shrink-0` outside the scroll region. Modal applies footer inset (`px-4 py-3` / `md:px-6 md:py-4`) — do not add a second `p-4`/`px-6`. `UnifiedSelectionModal` already wires Cancel / Add Selected (or `confirmLabel` / `primaryActions`) through `footer`. **AddCombatantModal** (non-USM) puts Library/Campaign **Add** in `footer` the same way (qty + combatant-type radios stay in content — TASK-846). Avoid bottom padding on scroll content that creates a blank strip above the sticky footer (`pb-0` on USM content — TASK-574).
+- **List-first selection chrome (TASK-564 / TASK-815):** the scrollable list is the primary focus. Search and a **Filters** toggle share one compact toolbar row. **Primary mode tabs** (Powers/Empowered, Armaments/Equipment, feat-source, inventory type) and the sheet **Add equipment custom-item form** stay always visible via `scopeExtra` under search. SourceFilter and advanced filters live in a collapsed-by-default `FilterSection` as `headerExtra` / `filterContent`. Optional `optionsSummary` / `optionsActiveCount` show secondary options when Filters are closed.
+- **List-first browse chrome (TASK-721):** Codex, Library (Official + My), and Admin Codex/Images GLR filter pages use the same Search + Filters row via `ListSearchToolbar` composing FilterSection. Create/sync (`searchTrailing`) sits after Filters, not in the Filters slot. USM/L3 unchanged.
 - **Add-modal header help (TASK-574):** prefer **no** `description` under the title, or one short sentence. No multi-sentence "click row / Add Selected" instructions — the list + sticky footer teach the grammar.
 - **Leave with selection (TASK-574):** `UnifiedSelectionModal` prompts **Add selected?** (or **Load selected?**) when Cancel / X / backdrop / Escape would discard unconfirmed picks.
 - **Which modals:** add/load/settings/level-up/recovery, unified selection, add feat/skill/library item, confirm-action and delete-confirm when tall, login prompt (`LoginPromptModal` actions in `footer` so **Continue Without Saving** stays pinned). Small confirmations can stay centered.
@@ -120,7 +122,7 @@ No horizontal page scroll at any audited width. Horizontal scroll exists only in
 
 Side-scroll between section panels is the preferred pattern — subject to **C1**, which is not optional.
 
-**Character sheet:** below `md`, side-scroll of Abilities, Skills, Archetype, Library (`character-sheet-body.tsx`). The carousel is height-bounded to the remaining viewport minus the C4 action dock (C1 / TASK-838, C4 / TASK-837) so each panel scrolls internally instead of stretching to the tallest sibling. The dock is an opaque bottom strip; the RollLog FAB sits in its end slot (not a second `fixed bottom-*`). Panels share PageContainer gutters with the sheet header; gap between panels during swipe (TASK-538). Library → Inventory summary stacks Currency and Armament Proficiency below `sm` so labels do not overlap (TASK-537). Skills spend/temp steppers sit in the Bonus/Value cell (`editControlsPlacement="inline"`) so the narrow desktop Skills column needs no fifth column, forced table min-width, or inner `TableScroll` (TASK-800). Skill names use `WordHelpTip` `compact` for Codex descriptions (TASK-803).
+**Character sheet:** below `md`, side-scroll of Abilities, Skills, Archetype, Library (`character-sheet-body.tsx`). The sheet frame is viewport-bounded (`calc(100svh-5rem)` minus the C4 dock). The carousel keeps a `min(50dvh, leftover)` floor and each panel scrolls internally instead of stretching to the tallest sibling (C1 / TASK-838). When the sheet header is taller than leftover viewport, the column scrolls so the panels stay usable and are not parked under the dock (C4 / TASK-837). Below `md` the site footer is hidden while `.character-sheet-mobile-frame` is mounted so the document stays viewport-bounded. The dock is an opaque bottom strip; the RollLog FAB sits in its end slot (not a second `fixed bottom-*`). Header Speed / Evasion / DR / Crit cards are an equal-track grid; three-column identity | stats | resources starts at `lg` with equal tracks, capped sides from `xl` (C3/C5 / TASK-839). The mobile column/carousel use `min-w-0` so the scroller cannot widen the header. Panels share PageContainer gutters with the sheet header; gap between panels during swipe (TASK-538). Library → Inventory summary stacks Currency and Armament Proficiency below `sm` so labels do not overlap (TASK-537). Skills spend/temp steppers sit in the Bonus/Value cell (`editControlsPlacement="inline"`) so the narrow desktop Skills column needs no fifth column, forced table min-width, or inner `TableScroll` (TASK-800). Skill names use `WordHelpTip` `compact` for Codex descriptions (TASK-803).
 
 **Other dense pages:** same idea for encounter tracker and campaign detail; collapse when sections are few.
 
@@ -130,7 +132,7 @@ Side-scroll between section panels is the preferred pattern — subject to **C1*
 
 - **ListHeader:** desktop shows column headers in a grid (`hidden lg:grid`). Mobile shows no column headers — instead an expandable **"Sort by"** control using the same `sortState` / `onSort`. Tap to expand and choose; tapping the same option toggles A→Z / Z→A.
 - **GridListRow:** use `hideOnMobile` on non-essential columns. Below `lg` the row collapses empty desktop data-column tracks (`buildMobileCollapsedGridColumns`) so the name keeps `minmax(0, 1fr)` beside X/+ actions. Apply data-column templates via `--glr-desktop-grid` / `--glr-mobile-grid` classes — **never** inline `gridTemplateColumns` on the name/column grid (inline styles override the mobile media query). The chrome stretch-grid (TASK-710) may set its own template inline; that is not the data-column template. **Expand hit target:** header trigger, mobile summary body, and non-interactive expanded-panel areas all toggle expand/collapse (buttons, links, chip groups excluded).
-- **Tabs:** `TabNavigation` uses `overflow-x-auto`. Per **C1** an overflowing strip needs a visible affordance and non-swipe reachability — this is not satisfied today (TASK-840).
+- **Tabs:** `TabNavigation` uses `overflow-x-auto` with a C1 overflow affordance (edge fade + chevrons that hide when the strip does not overflow; chevrons sit in the fade with an 8px gap to unfaded labels; arrow keys and chevrons scroll **the tablist only**, not ancestor carousels). A control beside the strip (Codex **Advanced**) is `trailing` — stacked below `md`, in-bar from `md` outside the tablist (TASK-827). `labelMobile` is the below-`md` label. Legacy `CreatorTabBar` and Guided chapter rail reuse the same `.tab-nav-scroll` chrome (`TabNavOverflowScroller`) — TASK-848.
 
 ---
 
@@ -159,14 +161,16 @@ Side-scroll between section panels is the preferred pattern — subject to **C1*
 
 | Component | Location | Responsive behavior |
 |-----------|----------|---------------------|
-| Header | `src/components/layout/header.tsx` | Menu button below `xl`; inline nav `xl+` only (avoids mid-width overflow). |
+| Header | `src/components/layout/header.tsx` | Menu button below `xl` is `IconButton` md (coarse square, compact on fine — TASK-851); inline nav `xl+` only (avoids mid-width overflow). |
 | Modal | `src/components/ui/modal.tsx` | `fullScreenOnMobile` → full-screen below `md`; actions in `footer` (sticky). |
 | Collapsible section | `src/components/creator/collapsible-section.tsx` | Within-panel sub-sections or lighter pages. |
 | ListHeader | `src/components/patterns/list/list-header.tsx` | Desktop column grid; mobile expandable "Sort by". |
 | ExpandableChip / ChipGroup | `src/components/ui/expandable-chip.tsx` | Wrap groups use `items-start`; expand keeps its row, moves left, takes full group width. |
 | GridListRow | `src/components/patterns/list/grid-list-row.tsx` | `hideOnMobile` columns; mobile grid collapses vacated `fr` tracks; summary/body toggle expand. |
-| TabNavigation | `src/components/ui/tab-navigation.tsx` | `overflow-x-auto`; needs a C1 affordance (TASK-840). |
+| TabNavigation | `src/components/ui/tab-navigation.tsx` | `overflow-x-auto` + C1 edge fade/chevrons (TASK-840). Wizard rails reuse `TabNavOverflowScroller` (TASK-848). |
 | RollLog | `src/components/rolls/roll-log.tsx` | `.floating-dock-bottom-right` (C4 / TASK-837). Panel width `min(22.5rem, 100svw − 2×gap)`; hidden while `aria-modal` is open. |
 | SheetActionToolbar | `src/components/character-sheet/sheet-action-toolbar.tsx` | `.sheet-mobile-action-dock` below `md`; top-right column from `md`. |
-| TableScroll | `src/components/ui/table-scroll.tsx` | Horizontal scroll wrapper for data tables. |
+| GuidedStepFooter | `src/components/guided-creator/guided-step-footer.tsx` | Opaque `bg-surface` below `md`; frosted from `md+` (TASK-829). Layout `pb-24` / `pb-32` matches bar height. |
+| TableScroll | `src/components/ui/table-scroll.tsx` | Horizontal scroll wrapper for data tables (`relative min-w-0` so `sr-only` headers cannot expand the page — TASK-826 / C6). |
+| Sheet ability/defense tiles | `character-sheet/abilities-section.tsx` | C3 equal-track 2-col phone / 3-col `sm` / 6-col `lg`; GAME_RULES full names wrap inside the tile (TASK-835). |
 | PageContainer | `src/components/ui/page-container.tsx` | `px-4 sm:px-6 lg:px-8`. |

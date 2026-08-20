@@ -175,14 +175,10 @@ export function SpeciesModal({ species, traits, isOpen, onSelect, onClose }: Spe
       contentClassName="p-0"
       footer={
         <div className="flex shrink-0 justify-between gap-3 border-t border-border-light">
-          <Button
-            variant="secondary"
-            onClick={onClose}
-            className="min-h-[44px] min-w-[44px] flex-1"
-          >
+          <Button variant="secondary" onClick={onClose} className="flex-1">
             Nah...
           </Button>
-          <Button onClick={onSelect} className="min-h-[44px] min-w-[44px] flex-1">
+          <Button size="lg" onClick={onSelect} className="flex-1">
             Pick Me!
           </Button>
         </div>

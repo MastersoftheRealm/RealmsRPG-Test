@@ -6,7 +6,7 @@
 
 import { cn } from '@/lib/utils';
 import { RealmsImageField } from '@/components/patterns';
-import { Card } from '@/components/ui';
+import { Card, Input, Textarea } from '@/components/ui';
 import type { ArmamentType } from './item-creator-bootstrap';
 import { ARMAMENT_TYPES } from './item-creator-helpers';
 
@@ -41,13 +41,18 @@ export function ItemCreatorEditorMeta({
     <Card className="p-6 shadow-md">
       <div className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-text-secondary">Item Name *</label>
-          <input
+          <label
+            htmlFor="item-creator-name"
+            className="mb-1 block text-sm font-medium text-text-secondary"
+          >
+            Item Name *
+          </label>
+          <Input
+            id="item-creator-name"
             type="text"
             value={name}
             onChange={(e) => onNameChange(e.target.value)}
             placeholder="Enter item name..."
-            className="w-full rounded-lg border border-border-light px-4 py-2 focus:border-warning-500 focus:ring-2 focus:ring-warning-500"
           />
         </div>
 
@@ -86,13 +91,19 @@ export function ItemCreatorEditorMeta({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-text-secondary">Description</label>
-          <textarea
+          <label
+            htmlFor="item-creator-description"
+            className="mb-1 block text-sm font-medium text-text-secondary"
+          >
+            Description
+          </label>
+          <Textarea
+            id="item-creator-description"
             value={description}
             onChange={(e) => onDescriptionChange(e.target.value)}
             placeholder="Describe your item..."
             rows={2}
-            className="w-full rounded-lg border border-border-light px-4 py-2 focus:border-warning-500 focus:ring-2 focus:ring-warning-500"
+            className="min-h-0"
           />
         </div>
       </div>

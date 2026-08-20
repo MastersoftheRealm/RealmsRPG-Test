@@ -140,12 +140,7 @@ export function SpeciesStep() {
     <div className="mx-auto flex min-h-0 max-w-4xl flex-1 flex-col">
       <div className="mb-2 flex items-center gap-1">
         <h2 className="text-2xl font-bold text-text-primary">Choose Your Species</h2>
-        <InfoTippy
-          content={chooseYourSpecies}
-          allowHTML
-          label="Species selection help"
-          size="inline"
-        />
+        <InfoTippy content={chooseYourSpecies} label="Species selection help" />
       </div>
       <p className="mb-4 text-text-secondary">
         Your species defines your character&apos;s physical traits and inherent abilities. Pick one

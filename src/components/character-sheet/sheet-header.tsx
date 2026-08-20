@@ -197,24 +197,34 @@ export function SheetHeader({
   const showCriticalRange = isTempModifierMode || critIncrease > 0 || critTemp !== 0;
 
   return (
-    <Card className="mb-4 p-4 shadow-md md:p-6" data-tour-id="sheet-tour-header">
-      <div className="flex flex-col gap-6 lg:flex-row">
-        <SheetHeaderIdentity
-          character={character}
-          isEditMode={isEditMode}
-          healthColor={healthColor}
-          onPortraitChange={onPortraitChange}
-          onPortraitUrlChange={onPortraitUrlChange}
-          isUploadingPortrait={isUploadingPortrait}
-          portraitRefreshKey={portraitRefreshKey}
-          onNameChange={onNameChange}
-          onExperienceChange={onExperienceChange}
-          onEditArchetype={onEditArchetype}
-          onEditSpecies={onEditSpecies}
-        />
+    <Card className="mb-4 w-full min-w-0 p-4 shadow-md md:p-6" data-tour-id="sheet-tour-header">
+      {/*
+        C3/C5 (TASK-839): equal-track stat cards, not flex-wrap content-width children.
+        3-col identity | stats | resources from lg (1024) as equal `minmax(0,1fr)` tracks
+        so stats are never a leftover flex column (~119px). From xl, cap the side tracks.
+        Below lg: identity | resources, stats span (2-col phones, 4-col from md).
+      */}
+      <div className="grid min-w-0 grid-cols-1 items-stretch gap-6 md:grid-cols-2 lg:grid-cols-3 lg:items-center xl:grid-cols-[minmax(0,20rem)_minmax(0,1fr)_minmax(16rem,20rem)]">
+        <div className="min-w-0">
+          <SheetHeaderIdentity
+            character={character}
+            isEditMode={isEditMode}
+            healthColor={healthColor}
+            onPortraitChange={onPortraitChange}
+            onPortraitUrlChange={onPortraitUrlChange}
+            isUploadingPortrait={isUploadingPortrait}
+            portraitRefreshKey={portraitRefreshKey}
+            onNameChange={onNameChange}
+            onExperienceChange={onExperienceChange}
+            onEditArchetype={onEditArchetype}
+            onEditSpecies={onEditSpecies}
+          />
+        </div>
 
-        {/* Center section with Speed/Evasion - grows to fill available space */}
-        <div className="flex flex-1 flex-wrap items-center justify-center gap-3 md:gap-4">
+        <div
+          className="grid min-w-0 grid-cols-2 gap-3 md:col-span-2 md:grid-cols-4 md:gap-4 lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:grid-cols-2"
+          data-sheet-stat-grid
+        >
           <LargeStatBlock
             label="Speed"
             value={speedDisplayValue}
@@ -258,30 +268,32 @@ export function SheetHeader({
           )}
         </div>
 
-        <SheetHeaderResources
-          actionPoints={actionPoints}
-          onActionPointsChange={onActionPointsChange}
-          currentHealth={currentHealth}
-          maxHealth={displayStats.maxHealth}
-          onHealthChange={onHealthChange}
-          currentEnergy={currentEnergy}
-          maxEnergy={displayStats.maxEnergy}
-          onEnergyChange={onEnergyChange}
-          terminal={displayStats.terminal}
-          terminalTempDelta={terminalTemp}
-          onTerminalTempChange={
-            onTempModifiersChange ? (d) => setScalarTemp('terminal', d) : undefined
-          }
-          innateThreshold={innateThreshold}
-          innatePools={innatePools}
-          isEditMode={isEditMode}
-          isTempModifierMode={isTempModifierMode}
-          healthPoints={healthPoints}
-          energyPoints={energyPoints}
-          totalHEPool={totalHEPool}
-          onHealthPointsChange={onHealthPointsChange}
-          onEnergyPointsChange={onEnergyPointsChange}
-        />
+        <div className="min-w-0">
+          <SheetHeaderResources
+            actionPoints={actionPoints}
+            onActionPointsChange={onActionPointsChange}
+            currentHealth={currentHealth}
+            maxHealth={displayStats.maxHealth}
+            onHealthChange={onHealthChange}
+            currentEnergy={currentEnergy}
+            maxEnergy={displayStats.maxEnergy}
+            onEnergyChange={onEnergyChange}
+            terminal={displayStats.terminal}
+            terminalTempDelta={terminalTemp}
+            onTerminalTempChange={
+              onTempModifiersChange ? (d) => setScalarTemp('terminal', d) : undefined
+            }
+            innateThreshold={innateThreshold}
+            innatePools={innatePools}
+            isEditMode={isEditMode}
+            isTempModifierMode={isTempModifierMode}
+            healthPoints={healthPoints}
+            energyPoints={energyPoints}
+            totalHEPool={totalHEPool}
+            onHealthPointsChange={onHealthPointsChange}
+            onEnergyPointsChange={onEnergyPointsChange}
+          />
+        </div>
       </div>
     </Card>
   );

@@ -61,7 +61,7 @@ Example:
   status: not-started
   related_files:
     - src/components/character-sheet/skills-section.tsx
-    - src/components/shared/skill-row.tsx
+    - src/components/patterns/list/skill-row.tsx
   description: |
     Replace inline skill implementations in character creator and creature creator with the shared `SkillRow` component. Keep business logic in parents and ensure variant styling for creator vs sheet.
   acceptance_criteria:

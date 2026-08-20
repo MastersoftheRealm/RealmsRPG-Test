@@ -120,7 +120,7 @@ export const CombatantCard = memo(function CombatantCard({
             <button
               onClick={() => setShowConditions(!showConditions)}
               className={cn(
-                'touch-target-md-compact inline-flex items-center justify-center rounded px-2 py-0.5 text-xs',
+                'hit-area-dense inline-flex items-center justify-center rounded px-2 py-0.5 text-xs',
                 showConditions
                   ? 'bg-warning-500 text-text-on-dark'
                   : 'bg-warning-light text-warning-fg hover:opacity-90',
@@ -132,7 +132,7 @@ export const CombatantCard = memo(function CombatantCard({
             <div className="ml-auto flex items-center gap-1">
               <button
                 onClick={onDuplicate}
-                className="touch-target-md-compact inline-flex items-center justify-center rounded bg-surface-alt px-2 py-0.5 text-xs text-text-secondary hover:bg-surface"
+                className="hit-area-dense inline-flex items-center justify-center rounded bg-surface-alt px-2 py-0.5 text-xs text-text-secondary hover:bg-surface"
                 title="Duplicate this combatant"
                 aria-label={`Duplicate ${combatant.name}`}
               >
@@ -140,7 +140,7 @@ export const CombatantCard = memo(function CombatantCard({
               </button>
               <button
                 onClick={onRemove}
-                className="touch-target-md-compact inline-flex items-center justify-center rounded bg-surface-alt px-2 py-0.5 text-xs text-text-secondary hover:bg-danger-light hover:text-danger-fg"
+                className="hit-area-dense inline-flex items-center justify-center rounded bg-surface-alt px-2 py-0.5 text-xs text-text-secondary hover:bg-danger-light hover:text-danger-fg"
                 title="Remove combatant"
                 aria-label={`Remove ${combatant.name}`}
               >

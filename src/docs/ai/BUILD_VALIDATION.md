@@ -67,7 +67,7 @@ Moved (TASK-718): DEV-V-005, DEV-V-010, DEV-V-011, DEV-V-014, DEV-V-015, DEV-V-0
 
 ## DEV-V-001 — Advanced character creator step guards
 
-**Related tasks:** TASK-356, TASK-717, TASK-804  
+**Related tasks:** TASK-356, TASK-717, TASK-804, **TASK-856**  
 **Chooser vs Advanced:** `/characters/new` is the Guided / Custom / Legacy chooser (DEV-V-013-T001 / T075). Numbered steps (**1. Archetype** … **9. Finalize**), **Forge Your Own**, and **Choose a Path** live at `/characters/new/advanced` (chooser **Legacy**). Do not treat the chooser as step 1 Archetype.  
 **Start URL:** `/characters/new/advanced`  
 **Needs:** Logged-in test account  
@@ -516,6 +516,52 @@ Reach Advanced via **Characters** → **Add Character** → **Legacy**, or open 
 - Nothing is created. No navigation to a character sheet.
 - A second Create opens the same login prompt again (guest still cannot save).
 - Desktop + ~360px (Continue sits in the sticky modal footer on the phone).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-001-T020 — Legacy step rail shows a C1 overflow affordance (TASK-848)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-001 |
+| **Section** | Entry chrome |
+| **Related task** | TASK-848 |
+| **Where** | `/characters/new/advanced` at **360** and **390** |
+| **Needs** | — |
+
+**Steps**
+1. Open the Legacy creator at **360px**. Confirm the numbered step rail (1. Archetype …) is a side-scroll with an edge fade and a **Show more steps** chevron when later steps are off-screen. **Restart** stays visible (not inside the scrolling steps).
+2. Click the chevron (or scroll the rail). Confirm the fade/chevron on the start edge appears once you have scrolled, and both hide when every step is in view.
+3. Repeat at **390px**. Resize to `md+` (768+): steps wrap; chevrons are gone when nothing overflows.
+4. Confirm the page itself does not side-scroll (C6). `/characters/new/advanced` still loads.
+
+**Expected**
+- Overflowing step rails use the same `.tab-nav-scroll` fade + chevrons as underline `TabNavigation`. Affordance unmounts when the rail does not overflow. Chevrons scroll the step list only.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
+#### DEV-V-001-T021 — Legacy feat and equipment Search + Filters share one row (TASK-856)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-001 |
+| **Section** | 4. Feats / 6. Equipment |
+| **Related task** | TASK-856 |
+| **Where** | `/characters/new/advanced` → **6. Feats** and **7. Equipment** |
+| **Needs** | Logged-in; Forge Your Own through Skills so Feats and Equipment catalogs load |
+
+**Steps**
+1. Open `/characters/new/advanced`, complete through **5. Skills**, and open **6. Feats**. Confirm **Search** and **Filters** sit on one row (Filters to the right of search), not a Search field stacked above a separate Show Filters block. Archetype / Character feat pills stay above that row.
+2. Open **Filters**. Category, Ability, and Qualification still apply. Type in Search and confirm the feat list still filters.
+3. Continue to **7. Equipment**. On Weapons / Armor / Equipment (not Unarmed Prowess), confirm the same Search + Filters row. Source and Budget live inside **Filters**. Search and source still change the list.
+4. Repeat at **~360px**: the search row may wrap; the page itself does not side-scroll (C6). `/characters/new/advanced` still loads.
+
+**Expected**
+- Both catalogs use the same compact Search + Filters grammar as Codex/Library (`ListSearchToolbar`). Lists still search and filter. Guided L3 catalogs are unchanged.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -1137,7 +1183,7 @@ Path-created characters: hydration, level-up guidance, sheet identity, public co
 
 ---
 
-## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478, TASK-508–513, TASK-537, TASK-538, TASK-542, TASK-543, TASK-546, TASK-547, TASK-582, TASK-583, TASK-584, TASK-585, TASK-586, TASK-587, TASK-594, TASK-602, TASK-611, TASK-667, TASK-733, TASK-736, TASK-741, TASK-747, TASK-750, TASK-761, TASK-773, TASK-778, TASK-779, TASK-782, TASK-783, TASK-786, TASK-787, TASK-788, TASK-800, TASK-803, TASK-805, TASK-838, TASK-837)
+## DEV-V-009 — Character sheet refactor (TASK-317, TASK-348, TASK-365, TASK-375, TASK-483, TASK-485, TASK-486, TASK-502, TASK-478)
 
 Manual QA for library/feats modularization and shared part display. **Needs:** character with powers, techniques, equipment, and feats. TASK-611 smoke: T002 / T011 / T013 / T031 (+ creature Library / `CreatureStatBlock` nested lists) after shared hot-module co-located splits.
 
@@ -1428,7 +1474,7 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Suite** | DEV-V-009 — Character sheet refactor |
 | **Task** | TASK-547 |
 | **Where** | `/characters/[id]` → Abilities & Defenses section |
-| **Steps** | 1. Open a character sheet. 2. Hover (desktop) or touch-hold ~400ms (mobile ~360px) the **Strength** ability name — confirm a tip opens with the Strength definition (no Info icon; tip is on the word). 3. Repeat for at least one other ability (e.g. **Charisma**). 4. Hover/touch-hold **Might** (or **Mental Fort.**) in the defenses row — confirm the matching defense tip (e.g. Might mentions Strength; Mental Fortitude mentions Intelligence). 5. Confirm roll buttons and edit steppers still work (tip does not block play controls). 6. Keyboard: Tab to an ability name and confirm the tip opens on focus. |
+| **Steps** | 1. Open a character sheet. 2. Hover (desktop) or touch-hold ~400ms (mobile ~360px) the **Strength** ability name — confirm a tip opens with the Strength definition (no Info icon; tip is on the word). 3. Repeat for at least one other ability (e.g. **Charisma**). 4. Hover/touch-hold **Might** (or **Mental Fortitude**) in the defenses row — confirm the matching defense tip (e.g. Might mentions Strength; Mental Fortitude mentions Intelligence). 5. Confirm roll buttons and edit steppers still work (tip does not block play controls). 6. Keyboard: Tab to an ability name and confirm the tip opens on focus. |
 | **Expected** | All six ability names and six defense names are word-tied help triggers; copy matches `tooltip-text.tsx` (`getAbilityHelp` / `getDefenseHelp`) without repeating the name (e.g. “Acuity reflects…”, “Might (Strength) resists…”); no separate Info icons beside the names. |
 | **Report** | DEV-V-009-T026: PASS / FAIL / SKIP — |
 
@@ -1451,7 +1497,7 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Suite** | DEV-V-009 — Character sheet refactor |
 | **Task** | TASK-582 |
 | **Where** | `/characters/[id]` → Abilities & Defenses (desktop) |
-| **Steps** | 1. Open a character sheet at desktop width. 2. Compare ability names (STRENGTH…CHARISMA) to defense names (MIGHT…RESOLVE) — same label size (`text-sm`, like Speed/Evasion). 3. Confirm ability tiles are compact (label glued to `md` roll chip; no tall empty card). 4. Confirm defense tiles show a large Score with a smaller roll chip under it (content-height; not equal-height empty boxes). 5. Optional ~360px: 3-col grid still readable; Mental Fort. does not overflow badly. |
+| **Steps** | 1. Open a character sheet at desktop width. 2. Compare ability names (STRENGTH…CHARISMA) to defense names (MIGHT…RESOLVE) — same label size (`text-sm`, like Speed/Evasion). 3. Confirm ability tiles are compact (label glued to `md` roll chip; no tall empty card). 4. Confirm defense tiles show a large Score with a smaller roll chip under it (content packed to the top; tiles in a row share height). 5. Optional ~360px: 2-col grid; **Intelligence** / **Discernment** / **Mental Fortitude** stay inside their tiles (wrap, never mid-glyph clip). |
 | **Expected** | Matching labels; dense header-stat density; Score is defense glance primary; no large empty band in ability tiles. |
 | **Report** | DEV-V-009-T028: PASS / FAIL / SKIP — |
 
@@ -1475,7 +1521,7 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 | **Task** | TASK-582 |
 | **Where** | `/characters/[id]` → Edit mode → Abilities / Skills pencils (desktop `md+`) |
 | **Steps** | 1. Enter sheet edit mode at ≥768px. 2. Inspect Abilities and Skills pencil icons. 3. Confirm the control hugs the icon (no large empty button chrome). 4. Optional below `md`: confirm tap target is still comfortable (~44px). |
-| **Expected** | Desktop pencils are icon-dense; coarse-pointer tap uses Dense expanded hit (`.hit-area-dense` / `.touch-target-md-compact` alias), not a 44px painted slab. |
+| **Expected** | Desktop pencils are icon-dense; coarse-pointer tap uses Dense expanded hit (`.hit-area-dense-square`), not a 44px painted slab. |
 | **Report** | DEV-V-009-T030: PASS / FAIL / SKIP — |
 
 #### DEV-V-009-T031 — Parts/Properties & Proficiencies default collapsed + InfoTippy (TASK-583)
@@ -2050,7 +2096,94 @@ Manual QA for library/feats modularization and shared part display. **Needs:** c
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-009-T060 — Sheet header stat cards stay an even grid (TASK-839)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-839 |
+| **Where** | `/characters/[id]` at 360 / 390 / 768 / 1024 / 1280 / 1440 |
+| **Needs** | A character that shows all four header stats (Speed, Evasion, Damage Reduction, Critical Range) — equipped armor that changes DR and crit |
+
+**Steps**
+1. Open the sheet at ~1024px (small laptop / iPad landscape). Confirm Speed / Evasion / DR / Critical Range are equal-width cards in the **middle** column (2×2), not a 119px single column, and the header height is comparable to 1440 (not ~530px / ~2.5×).
+2. Confirm identity, stats, and resources **are** three columns at 1024 (equal tracks). From ~1280, side columns may cap while stats stay 2×2.
+3. At ~1280 and ~1440: confirm the three-column identity | stats | resources layout. Stat cards are equal width and at most two rows (2×2 in the middle column).
+4. At ~360 and ~390: confirm a 2×2 (or 2-wide) even grid **inside the viewport** (no off-canvas cards); labels wrap instead of clipping mid-word. At ~768: four equal cards in one row is fine.
+5. Optional: Temp mode still shows DR and Critical Range cards with their own sliders.
+
+**Expected**
+- Equal-track stat cards at every listed width. Stat grid never exceeds two rows. Three-column header from `lg` (1024). 1024 header height is comparable to 1440, not ~2.5× it. Phone widths do not horizontally overflow the header.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T061 — RM campaign view has no empty owner-dock strip (TASK-843)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-843 |
+| **Where** | `/campaigns/[id]/view/[userId]/[characterId]` at 360px and 390px; compare `/characters/[id]` |
+| **Needs** | Logged-in Realm Master of a campaign with a roster character; same character available as owner sheet |
+
+**Steps**
+1. Open the RM campaign character view at ~390px. Confirm there is **no** opaque (or empty) full-width action bar under the sheet. The dice FAB sits at the bottom-right gutter.
+2. Scroll the last library/abilities content: the FAB must not permanently cover the last rows (panel end padding clears it).
+3. Open the **owner** `/characters/[id]` sheet at the same width. Confirm the opaque Edit / Temp / Recovery / Level Up / Settings dock is still reserved (unchanged from T059).
+4. Optional ~360px: same as steps 1–3.
+
+**Expected**
+- RM view: no owner-dock strip; FAB reachable; sheet content can use the bottom of the frame.
+- Owner sheet: dock reservation unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T062 — Ability and defense tile labels stay inside the tile (TASK-835)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-835 |
+| **Where** | `/characters/[id]` Abilities & Defenses at 360 / 390 / 768 / 1024 / 1280 / 1440 |
+| **Needs** | Any owned character (E2E Baseline Knight is enough) |
+
+**Steps**
+1. Open the sheet at ~360px and ~390px. Confirm abilities and defenses are a **2-column** equal-track grid (not 3-col). **Intelligence**, **Discernment**, and **Mental Fortitude** stay inside their tiles — wrap to a second line if needed; never clip mid-glyph.
+2. Confirm every tile in a row is the same height, and labels use one convention: full GAME_RULES words (Mental Fortitude, Reflexes) — not a mix with **Mental Fort.**
+3. At ~768: 3-col is fine. From ~1024: 6-col is fine. Desktop labels stay `text-sm` like Speed/Evasion (T028).
+4. Header character name still truncates with a visible ellipsis when longer than the identity column (TASK-839 /cleanup).
+
+**Expected**
+- Full names only. Labels inside tiles at 360/390. Equal row height. Desktop label size unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-009-T063 — Sheet skill dots, Sub-Skills, and Current Health meet Dense/Standard (TASK-836)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-009 — Character sheet refactor |
+| **Related task** | TASK-836 |
+| **Where** | `/characters/[id]` Skills panel + header Health at 360 / 390 (touch) and a fine-pointer desktop window |
+| **Needs** | Any owned character (E2E Baseline Knight is enough). Touch emulation (`pointer: coarse`). |
+| **CI** | Partial — `button-tiers.test.ts` (SkillRow layout-neutral + ResourceInput `touch-tier-standard` + Sub-Skills `hit-area-layout-neutral`) |
+
+**Steps**
+1. Open the sheet at ~390px with **touch** emulation. In Skills, proficiency dots stay **16px** painted circles (not 44px slabs). Tap a toggleable dot in Edit — it still toggles. Adjacent skill name / roll / stepper still receive their own taps (no stolen hits).
+2. Confirm **Sub-Skills** is easy to tap (label + checkbox) and still shows/hides sub-skill rows. The Prof column is not a fifth column and the Skills card is not wider on desktop.
+3. Header **Health** current input is ≥44px tall under coarse pointer (Energy matches). Fine-pointer desktop: dots, checkbox, and Health input stay compact (`h-4` / `py-0.5`).
+4. Optional ~360px: same as steps 1–3.
+
+**Expected**
+- Dense dots: 16px paint + 44px expanded hit; coarse rows have enough vertical gap that overlays do not overlap neighbours.
+- Sub-Skills checkbox uses the same `.hit-area-layout-neutral` overlay as skill dots (16px paint); the wrapping label stays Dense. Not a 13px naked checkbox.
+- Current Health (and Energy) Standard 44 min-h under coarse; `w-12` unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
+
+## DEV-V-005 — RLS policy consolidation (TASK-352, TASK-327)
 
 Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATION_ARCHIVE.md`](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-005--rls-policy-consolidation-task-352-task-327).
 
@@ -2155,7 +2288,7 @@ Verifies play-together after first save, optional sheet tour, level-up milestone
 
 ---
 
-## DEV-V-012 — Landing page rebuild (TASK-387, TASK-763, TASK-789)
+## DEV-V-012 — Landing page rebuild (TASK-387)
 
 Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Section 4). One dominant primary CTA, AIDA scroll story, removed onboarding tour / welcome link-farm / Codex-Library CTAs. TASK-763: guest CTA is **Create Character**; how-it-works steps are create / find a table / start playing (no system jargon).
 
@@ -2351,7 +2484,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 
 ---
 
-## DEV-V-013 — Guided Simple character creator (TASK-394–403+, TASK-790)
+## DEV-V-013 — Guided Simple character creator (TASK-394–403)
 
 **Category:** End-to-end guided creator funnel — entry chooser, chapters, save.  
 **Prerequisite:** Run **DEV-004** (`sql/guided-creator-schema-seed.sql`) so starter species and Berserker loadouts/abilities exist.  
@@ -4257,7 +4390,7 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 | **Needs** | A path with remaining Skill Points; a multi-ability skill (e.g. Lockpick) if present |
 
 **Steps**
-1. Reach **Your Skills**. Confirm a **Defense Bonuses** grid below the skill list (Might / Fortitude / Reflex / Discernment / Mental Fort. / Resolve).
+1. Reach **Your Skills**. Confirm a **Defense Bonuses** grid below the skill list (Might / Fortitude / Reflexes / Discernment / Mental Fortitude / Resolve).
 2. Spend 2 Skill Points on a Defense (+1). Confirm the Skill Point counter drops by 2 and Continue stays gated until remaining is 0.
 3. If a skill shows more than one governing Ability, change the picker. Confirm the Skill Bonus updates.
 4. Finish the funnel and save. On the sheet, confirm the Defense bonus and the chosen Ability persist.
@@ -4307,8 +4440,50 @@ Verifies the rebuilt marketing landing page at `/` (REALMS_PRODUCT_OVERVIEW Sect
 3. Confirm `/characters/new/advanced` still loads (do not treat this as a delete). Desktop + ~360px.
 
 **Expected**
-- One shared `MixedSpeciesSkillPicker` from `@/components/shared`; no copy under `character-creator/`.
+- One shared `MixedSpeciesSkillPicker` from `@/components/patterns`; no copy under `character-creator/`.
 - Guided mixed skills stay `GuidedChoiceCard` (T079). Behavior unchanged from pre-move.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T091 — Guided sticky footer is opaque on phones (TASK-829)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-829 |
+| **Where** | `/characters/new/guided` Path L1 (choice cards + sticky Back/Continue + chapter rail) |
+| **Needs** | DevTools ~360px / ~390px; also `md+` (768+) |
+
+**Steps**
+1. Open Guided Path at ~390px (and 360px). Scroll a choice card under the sticky footer.
+2. Confirm the footer bar is solid — no card title, art, or body text is visible through Continue / Back.
+3. Confirm the last choice card can still scroll fully above the bar (no clipped control, no large empty strip).
+4. Scroll a card under the sticky chapter rail. Confirm the rail is solid — no card content reads through it.
+5. Resize to `md+` (768+). Confirm the frosted/translucent footer and rail look is unchanged from before this task.
+
+**Expected**
+- Below `md`: opaque footer (`bg-surface`) and chapter rail (`bg-background`); content does not read through either.
+- `GuidedStepLayout` bottom padding still matches footer height (`pb-24` / `pb-32` with hints).
+- Desktop/tablet `md+`: frosted `bg-surface/95` / `bg-background/95` unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-013-T092 — Chapter rail shows a C1 overflow affordance (TASK-848)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-013 |
+| **Related task** | TASK-848 |
+| **Where** | `/characters/new/guided` at **360** and **390** |
+| **Needs** | — |
+
+**Steps**
+1. Open Guided Path at **360px**. Confirm the chapter rail (Foundation … Your Hero) side-scrolls with an edge fade and a **Show more chapters** chevron when later chapters are off-screen.
+2. Click the chevron (or scroll the rail). Confirm the start fade/chevron appears after scrolling, and both hide when every chapter is in view.
+3. Repeat at **390px**. Confirm the page itself does not side-scroll. Sticky footer (T091) still opaque.
+
+**Expected**
+- Overflowing chapter rails reuse `.tab-nav-scroll` / `TabNavOverflowScroller` (same chrome as underline tabs). Affordance unmounts when the rail fits. List-local scroll only.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -4347,7 +4522,7 @@ Archived (TASK-718; not cited by Pending owner QA). Full steps: [`BUILD_VALIDATI
 
 ---
 
-## DEV-V-024 — Client error handling (TASK-479, TASK-540)
+## DEV-V-024 — Client error handling (TASK-479)
 
 Convention: `ARCHITECTURE.md` § Client error handling. Automated helper coverage via `src/lib/api-client.test.ts` and `src/lib/auth-errors.test.ts`.
 
@@ -4648,7 +4823,7 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Where** | `/library` Official Powers/Weapons; `/characters/[id]` Library Powers + Inventory weapons; sheet Add Power; `/codex` Equipment |
 | **Needs** | Signed-in character with at least one power and one weapon; Codex equipment rows |
 | **Steps** | 1. Official Library Powers: Category / Energy / Action / Duration / Range / Area / Damage columns (TP not a dense column). 2. Sheet Powers play: Action / Damage / Area / Duration columns; Energy is the far-right spend control, not a value column. 3. Add Power: Energy / Action / Duration / Area / Damage columns; expand → Range chip when ranged (not a `Range —` leftover). 4. Codex Equipment: Category / Currency / Rarity only; expand does **not** require Damage/DR/Weight chips. 5. Guided gear L2/L3 matches those three gear headers. ~360px + desktop. |
-| **Expected** | One catalog + density mode drives column vs chip. Gear stays the closed three-fact set. Armament combat facts stay on Official/sheet/guided loadout, not mixed Codex browse. |
+| **Expected** | One catalog + density mode drives column vs chip. Gear stays Category / Currency / Rarity columns. Armament combat facts stay on Official/sheet/guided loadout, not mixed Codex browse. |
 | **Report** | DEV-V-016-T021: PASS / FAIL / SKIP — |
 
 #### DEV-V-016-T022 — GLR never-both + chipFacts-driven add-modal chips (TASK-808 / TASK-809)
@@ -4687,6 +4862,19 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Expected** | Saved document uses kind buckets, not a mixed armaments dump. Legacy `armaments[]` still loads. Stat block and creator lists stay in sync. Equipment Qty is blank/`-` until quantity is real data. |
 | **Report** | DEV-V-016-T024: PASS / FAIL / SKIP — |
 
+#### DEV-V-016-T025 — Creature EquipmentListSection Qty (TASK-813)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-813 |
+| **Where** | `/creature-creator`; Library → Creatures expand |
+| **Needs** | Signed-in user; a creature with one equipment item that has no stored quantity and one with Qty 2 (or set Qty on save) |
+| **Steps** | 1. Library → Creatures → expand: Equipment is the shared list section (Type + Qty, not a second Qty column). Missing quantity shows `-` (not a fake 1 / stepper). Stored Qty 2 shows `2`. 2. Creature Creator → Inventory → Equipment: same `-` / `2` (also `layout="creature"`). Sheet Inventory equipment steppers still default missing qty to 1. 3. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
+| **Expected** | Creator and stat-block Equipment Qty both use `EquipmentListSection` `layout="creature"` (`buildCreatureEquipmentColumns`). Character sheet steppers unchanged. |
+| **Automated** | `npm test` — `entity-library-sections-columns.test.ts` + `map-creature-inventory-rows.test.ts` + `creature-inventory.test.ts` |
+| **Report** | DEV-V-016-T025: PASS / FAIL / SKIP — |
+
 #### DEV-V-016-T026 — GLR never-neither: demoted chips on sheet / Add Feat / Official (TASK-814)
 
 | Field | Value |
@@ -4698,6 +4886,32 @@ Unified `SelectableItem` shaping via `library-selectable-builders` + `LoadFromLi
 | **Steps** | 1. Sheet Library → Powers: expand a power → **Category**, **Range**, **Training Points** descriptor chips (Energy stays the spend control, not a column or Total TP footer). 2. Inventory equipment: expand → rarity / currency / TP chips; no `Cost Nc` badge. 3. Feats play: expand → Req. Level / Category / Ability chips (Uses/Recovery stay columns when present). 4. Add Feat: Category / Ability / Uses / Recovery columns; expand → Req. Level chip. 5. Official Powers: TP is an expand chip, not a dense column and not Total TP in the expanded footer. Desktop + ~360px. |
 | **Expected** | Overflow/demoted catalog facts appear as chips. A valued fact is a column **or** a chip **or** rightSlot, never both and never nowhere. Guided L2 still uses TP `rightSlot`/`totalCost` (`creatorBudget`). Skip Legacy `/characters/new/advanced`. |
 | **Report** | DEV-V-016-T026: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T027 — Path More details power/technique chips from GLR catalog (TASK-818)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-818 |
+| **Where** | Guided creator → Path → **More details** on a Power path (Powers section) and a Martial path (Techniques section) |
+| **Needs** | Codex paths that list at least one power and one technique with Energy / Action / Damage (and Range or Attack as applicable) |
+| **Steps** | 1. Open More details on a Power path → expand a listed power. Confirm Name + Description columns only; Energy / Action / Duration / Range / Area / Damage / Category / Training Points appear as labeled descriptor chips when valued (not a Stats column, not `pushFact` leftovers like bare numbers). 2. Open More details on a Martial path → expand a listed technique. Confirm Attack / Energy / Action / Damage / Category / Training Points chips when valued. 3. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
+| **Expected** | Path More details combat rows use `detail-option-power` / `detail-option-technique` (`layout.chipFacts`). A valued catalog fact is a chip here (detail density has no ranked columns). Name+description stay identity columns. |
+| **Automated** | `npm test` — `combat-builder.test.ts` |
+| **Report** | DEV-V-016-T027: PASS / FAIL / SKIP — |
+
+#### DEV-V-016-T028 — Gear play Training Points chip (TASK-825)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Task** | TASK-825 |
+| **Where** | `/characters/[id]` Library → Inventory equipment; `/creature-creator` selected Equipment; `/codex` Equipment; sheet Add equipment |
+| **Needs** | Signed-in character with an equipment item that costs Training Points; a creature with selected equipment that has stored TP; Codex equipment rows |
+| **Steps** | 1. Sheet Library → Inventory → Equipment: expand an item with valued TP → **Training Points N** chip. No TP column. No Total TP footer. 2. Creature Creator → Inventory → Equipment: same chip when stored TP is valued; Qty still `-` / stored number (TASK-813). 3. Codex + Admin Equipment: headers stay Category / Currency / Rarity. Expand a row with valued TP → Training Points chip, not a fourth dense column. Add equipment modal: same three columns; expand → TP chip when valued. 4. An item with 0 TP has no Training Points chip. Desktop + ~360px. Skip Legacy `/characters/new/advanced`. |
+| **Expected** | Gear play shows valued TP as a ranked chip (`character-sheet-gear`). Browse/select keep the three gear columns and demote TP. No new GLR surface id. |
+| **Automated** | `npm test` — `glr-fact-catalog.test.ts` + `resolve-glr-fact-layout.test.ts` + `map-creature-inventory-rows.test.ts` + `equipment-list.test.ts` |
+| **Report** | DEV-V-016-T028: PASS / FAIL / SKIP — |
 
 ---
 
@@ -4721,18 +4935,18 @@ Admin Official Enhanced uses the same OfficialEntityList chrome as peer Official
 
 ## DEV-V-028 — Codex browse list shell (TASK-576)
 
-Admin Codex tabs, Codex browse tabs (including Codex Archetypes header chrome), and Admin Images share `CodexBrowseListShell` (SectionHeader when admin + Search + filters + ListHeader + loading/empty/rows). Official* library grids stay on `OfficialEntityList`. **Admin** Archetypes path rows stay tab-local (ADR-0005).
+Admin Codex tabs, Codex browse tabs (including Codex Archetypes header chrome), and Admin Images share `CodexBrowseListShell` (SectionHeader when admin + Search + filters + ListHeader + loading/empty/rows). Official* library grids stay on `OfficialEntityList`. **Admin** Archetypes path rows stay tab-local (ADR-0005). Admin entity CRUD (save / row actions / edit-modal footer) is ADR-0025 (TASK-842 / TASK-845), not an extension of the browse shell. TASK-849: one `COPY_NAME_SUFFIX`. TASK-827: Codex **Advanced** is `TabNavigation` `trailing` (T006). TASK-840: overflowing tab strips fade + chevron (T007).
 
 #### DEV-V-028-T001 — Admin Codex Skills list chrome
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-028 — Codex browse list shell |
-| **Task** | TASK-576 |
-| **Where** | `/admin/codex` → Skills |
+| **Task** | TASK-576 / TASK-849 / TASK-852 |
+| **Where** | `/admin/codex` → Skills (spot-check Equipment + Creature Feats the same way) |
 | **Needs** | Admin account |
-| **Steps** | 1. Open Skills. 2. Confirm SectionHeader (+ Add) + Search + filters + sortable ListHeader. 3. Search/filter still narrows rows. 4. Add opens create modal; Cancel closes. 5. Empty filters: empty state still offers Add Skill. |
-| **Expected** | Same chrome as peer admin codex tabs; no hand-rolled Search/ListHeader fork; create/edit/delete unchanged. |
+| **Steps** | 1. Open Skills. 2. Confirm SectionHeader (+ Add) + Search + filters + sortable ListHeader. 3. Search/filter still narrows rows. 4. Add opens create modal; Cancel closes. 5. Empty filters: empty state still offers Add Skill. 6. Duplicate a skill — name ends with ` copy`; a “Creating a copy of {source}” banner includes “save to add the new skill”; Save / Delete / Cancel stay in the sticky footer. |
+| **Expected** | Same chrome as peer admin codex tabs; Skills / Equipment / Creature Feat edit lives in co-located `admin-*-edit-modal` with `AdminCodexEditModalFooter`. Duplicate still appends ` copy` and shows `AdminCodexCopySourceBanner` (entity-specific “save to add the new …”). Create/edit/delete behavior unchanged. |
 | **Report** | DEV-V-028-T001: PASS / FAIL / SKIP — |
 
 #### DEV-V-028-T002 — Codex browse Skills peer
@@ -4771,17 +4985,57 @@ Admin Codex tabs, Codex browse tabs (including Codex Archetypes header chrome), 
 | **Expected** | Shell chrome; path-card bodies unchanged. Admin `/admin/codex` Archetypes may still use bordered non-ListHeader layout. |
 | **Report** | DEV-V-028-T004: PASS / FAIL / SKIP — |
 
-#### DEV-V-028-T005 — Admin Codex delete uses DeleteConfirmModal (TASK-799)
+#### DEV-V-028-T005 — Admin Codex delete uses DeleteConfirmModal (TASK-799 / TASK-845 / TASK-842)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-028 — Codex browse list shell |
-| **Task** | TASK-799 / TASK-845 |
+| **Task** | TASK-799 / TASK-845 / TASK-842 |
 | **Where** | `/admin/codex` → any entity tab (Skills is enough) |
 | **Needs** | Admin account |
-| **Steps** | 1. Open Skills (or Feats). 2. Click a row’s trash icon. 3. Confirm a delete modal titled **Delete {name}?** with Cancel / Delete and copy that the entry is removed from your Codex — not “Click again to confirm delete” and not an inline **Remove? Yes/No** row. 4. Cancel — row remains. 5. Open the same row’s edit modal → footer **Delete** — same confirm modal. 6. Confirm Delete on an unreferenced row — it disappears. 7. If you have a referenced row: confirm Delete, then the existing **still referenced / Delete anyway** modal still appears. |
-| **Expected** | First-step delete is `DeleteConfirmModal` on row trash and edit-modal Delete. Referential-integrity gate unchanged. `/characters/new/advanced` still loads. |
+| **Steps** | 1. Open Skills (or Feats). 2. Click a row’s trash icon. 3. Confirm a delete modal titled **Delete {name}?** with Cancel / Delete and copy that the entry is removed from your Codex — not “Click again to confirm delete” and not an inline **Remove? Yes/No** row. 4. Cancel — row remains. 5. Open the same row’s edit modal → footer **Delete** — same confirm modal. Footer **Save** is the Primary large button. 6. Confirm Delete on an unreferenced row — it disappears. 7. If you have a referenced row: confirm Delete, then the existing **still referenced / Delete anyway** modal still appears. 8. Add / Duplicate / Edit still open the same modal chrome. |
+| **Expected** | First-step delete is `DeleteConfirmModal` on row trash and edit-modal Delete. Shared `AdminCodexRowActions` + `AdminCodexEditModalFooter` (ADR-0025). Referential-integrity gate unchanged. `/characters/new/advanced` still loads. |
 | **Report** | DEV-V-028-T005: PASS / FAIL / SKIP — |
+
+#### DEV-V-028-T006 — Codex Advanced does not cover the last tab (TASK-827)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-028 — Codex browse list shell |
+| **Task** | TASK-827 |
+| **Where** | `/codex` (Realms Codex) |
+| **Needs** | Guest is enough. Check 360px, 390px, and a desktop window. |
+
+**Steps**
+1. Open `/codex` at **360px** and **390px**. Confirm **Advanced** sits **below** the tab strip, not on top of **Archetypes** (or any other tab).
+2. Tap **Archetypes** — it activates. Tap **Advanced** — extra tabs appear; **Parts** / **Properties** / **Creature** use the short labels (not “Power & Technique Parts” etc.).
+3. Resize to **md+** (~768 and 1280): **Advanced** sits in the tab bar to the right of the strip. Scroll the tabs if needed; **Advanced** does not cover a tab trigger.
+4. Confirm `/characters/new/advanced` still loads.
+
+**Expected**
+- 0 overlap between tab triggers and **Advanced** at 360/390. `labelMobile` is used below `md`. Desktop bar is one row with Advanced outside the scrollport. No page-local tab strip.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-028-T007 — Tab strips show a C1 overflow affordance (TASK-840)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-028 — Codex browse list shell |
+| **Task** | TASK-840 |
+| **Where** | `/library` at 768 / 1024 / 1280; sheet Library tablist at 360 / 390 / 1024; `/codex` at 360 |
+| **Needs** | Guest is enough for `/library` and `/codex`. Sheet check needs a loaded character with the Library section. |
+
+**Steps**
+1. Open `/library` at **1280px**. If a tab is cut off at the right edge, confirm a fade and a **Show more tabs** chevron — not a mid-word clip with no signal. Click the chevron (or use arrow keys) to reach the hidden tab. The chevron disappears when the strip is fully scrolled or does not overflow.
+2. Repeat at **768** and **1024** (more tabs hidden). Keyboard: with a tab focused, ArrowRight selects the next tab and scrolls it into view.
+3. Open a character sheet Library strip at **360** and **390**. Same fade/chevron when Feats/Powers/Techniques leave Inventory/Notes off-screen.
+4. Confirm `/characters/new/advanced` still loads.
+
+**Expected**
+- Overflowing underline tab strips show an edge fade and a chevron (coarse chevron is 44px wide inside the fade, with ~8px of faded tab before unfaded labels). Affordance gone when fully scrolled or when everything fits. Arrow keys / chevrons scroll **the tablist only** (the sheet C1 carousel does not move). Codex **Advanced** still sits outside the tablist (T006).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
 ---
 
@@ -4827,7 +5081,7 @@ Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and s
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-017-T003 — Rules page copy + embed
+#### DEV-V-017-T003 — Rules page copy + view-source link
 
 | Field | Value |
 |-------|-------|
@@ -4839,10 +5093,10 @@ Verifies owner-editable marketing prose lives in `src/lib/constants/copy/` and s
 **Steps**
 1. Open `/rules`.
 2. Confirm page title/description and “open in new tab” link text match `rules-copy.ts`.
-3. Confirm iframe loads (or trouble link opens the view URL).
+3. Confirm the Google Doc is only that new-tab / view-source link (no iframe on the index).
 
 **Expected**
-- Copy and URLs come from `RULES_COPY`; iframe `title` is accessible.
+- Copy and URLs come from `RULES_COPY`; `viewUrl` opens in a new tab. Chapter list uses first-party MDX routes.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -5205,6 +5459,64 @@ islands (Phase 4) and workspace hook (Phase 5). **T012–T014** cover expanded h
 
 **Expected**
 - Overflowing select values use `text-overflow: ellipsis`. Codex browse placeholders are short or ellipsized. Desktop is unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T016 — Creature ability steppers stay inside their tiles (TASK-828)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | TASK-828 |
+| **Where** | `/creature-creator` at 360px and 390px (touch emulation) |
+| **Needs** | DevTools responsive + coarse pointer |
+
+**Steps**
+1. Open Creature Creator at 390px with touch emulation. Scroll to Abilities.
+2. Confirm STR/VIT/AGI/ACU/INT/CHA ± controls sit inside their tiles and do not overlap the neighbouring cell.
+3. Repeat at 360px. At `sm` (640px+) the grid is three-across; six-across starts at `lg` (1024px), not 768. Advanced `/characters/new/advanced` Abilities stay full names (not compact short codes).
+
+**Expected**
+- Compact tiles use 2 columns below `sm`, 3 from `sm`, 6 from `lg`. Painted steppers stay inside the tile. Sheet ability grid is unchanged.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T017 — Creature Creator has no page overflow from Roll Log (TASK-826)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | TASK-826 |
+| **Where** | `/creature-creator` at 360px and 390px |
+| **Needs** | DevTools responsive; FAB visible |
+
+**Steps**
+1. Open Creature Creator at 360px. Confirm the page does not scroll horizontally (`document.documentElement.scrollWidth <= clientWidth`).
+2. Confirm the dice FAB is tappable in the bottom-right dock. Open the Roll Log — the panel fits the viewport (gap on both sides); close it and confirm no off-screen “Roll Log” heading remains in the accessibility tree.
+3. Repeat at 390px.
+
+**Expected**
+- Closed Roll Log is unmounted. Open panel width is `min(22.5rem, 100svw − 2×gap)`. FAB stays reachable. Skills table scrolls inside TableScroll; the page does not. No new shared/ui dock.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-018-T018 — Item creator handedness is SegmentedControl (TASK-866)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-018 — CreatorPageShell parity |
+| **Related task** | TASK-866 |
+| **Where** | `/item-creator` Weapon Configuration (Handedness) |
+| **Needs** | DevTools responsive + coarse pointer at 360/390; a fine-pointer desktop window |
+
+**Steps**
+1. Open `/item-creator`, choose Weapon, expand Weapon Configuration. Confirm One-Handed / Two-Handed is shared `SegmentedControl` (same chrome as SourceFilter / the Load Armament type tabs), not two custom `min-h-[44px]` warning-fill buttons.
+2. Toggle both options: IP/TP/currency badge and `isTwoHanded` still update; save/load still persist handedness.
+3. Touch emulation at 390px: the control is ≥44px tall (Standard). Fine-pointer desktop stays compact (no always-on 44 slab).
+4. Confirm `/characters/new/advanced` still loads.
+
+**Expected**
+- One SegmentedControl; pointer tiers, not viewport or always-on 44. No second segmented primitive.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6152,6 +6464,26 @@ Smoke suite for combat/skill encounter view splits. Routes and AddCombatantModal
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
+#### DEV-V-030-T004 — AddCombatantModal Add stays in the sticky footer (TASK-846)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-030 — Encounter play facades |
+| **Related task** | TASK-846 |
+| **Where** | `/encounters/<id>/combat` → **Add From Library / Campaign** |
+| **Needs** | Signed-in; a combat encounter; at least one library creature |
+
+**Steps**
+1. Open **Add From Library / Campaign** at 390px touch (full-screen modal).
+2. Select a creature so the primary **Add** appears. Scroll the list — **Add** must stay visible in the sticky Modal footer (not below the list).
+3. Confirm **Add** is ≥48px tall (`size="lg"`). Quantity stepper and enemy/ally/companion radios stay in the scrollable content.
+4. Switch to **Campaign Characters**, select one or more, confirm **Add** is also in the sticky footer. Confirm still inserts combatants. Do not migrate this modal onto USM (TASK-571).
+
+**Expected**
+- Primary Add is Modal `footer` on both tabs. Intentional non-USM. Close still works with no selection.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
 ---
 
 ## DEV-V-031 — API route smoke (TASK-613)
@@ -6838,7 +7170,7 @@ My Library entity tabs: Search + Filters on one row (guided/USM pattern); sync a
 6. Spot-check USM Add Power — Search + Filters unchanged (do not regress L3/USM).
 
 **Expected**
-- Browse lists reuse FilterSection compact `toolbarStart` via ListSearchToolbar; no third toolbar; USM/L3 unchanged.
+- Browse lists reuse FilterSection `toolbarStart` via ListSearchToolbar; no third toolbar; USM/L3 unchanged.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -6871,7 +7203,7 @@ Empowered Attack mode must prefer the cheaper live Energy part when power and te
 
 ---
 
-## DEV-V-050 — Guided creator L3 inline catalog lists (TASK-684 / TASK-685 / TASK-686–690 / **TASK-709** / **TASK-727** / **TASK-724** / **TASK-728** / **TASK-758** / **TASK-759**)
+## DEV-V-050 — Guided creator L3 inline catalog lists (TASK-684)
 
 Full Customize (L3, no archetype path) on archetype feats, character feat, loadout (weapon/armor/gear), and powers/techniques must render the filtered catalog inline in the step body (selected items as removable rows above the list) instead of auto-opening a modal. Guided paths (L1, has an archetype path) must be unchanged — curated cards + "See more" still opens the L2 modal. TASK-685 follow-up: hide unmet feats; custom loadout always shows weapons (Power-only skips armor); gear quantity-first; powers sequential screens (TASK-756; no innate-scope filter) + max EN filter. TASK-686–690: preview strip parity, Energy kind fix, equipment Codex columns + qty spacing, Power armor skip regardless of path `armorStep`.
 
@@ -7169,6 +7501,8 @@ Post-apply smoke for anon grant hardening, public read paths, and guest characte
 
 ---
 
+## DEV-V-043 — Wave 5 page facade splits (TASK-666)
+
 Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC; verify routes still load and core actions work after splits (no behavior change intended).
 
 #### DEV-V-043-T001 — Combat encounter play after Wave 5 hook split
@@ -7329,7 +7663,7 @@ Smoke suite for Wave 5 hook/section extracts. Listed facades are under ~500 LOC;
 
 ---
 
-## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754 / TASK-804)
+## DEV-V-051 — Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754)
 
 Audit report 03 P1-6 through P1-10, plus TASK-754 create 500 / error copy, plus TASK-804 guest **Continue Without Saving**. Automated cover: `character-legality.test.ts`, `src/app/api/characters/route.test.ts`, `creator-entry-mode.test.ts`, `feat-selection.test.ts`, `character-save.test.ts` (create-error copy). Guest Continue Without Saving is human-only (T011). These tests are the parts only a browser can show.
 
@@ -7704,7 +8038,7 @@ Filters browse lists by what an archetype path recommends, read live from `path_
 
 ---
 
-## DEV-V-053 — Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771 / TASK-793)
+## DEV-V-053 — Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771)
 
 Public crawl metadata and the muted-token strip. Automated: `src/lib/site-url.test.ts`, `src/app/robots-sitemap.test.ts`.
 
@@ -7804,22 +8138,22 @@ Public crawl metadata and the muted-token strip. Automated: `src/lib/site-url.te
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
-#### DEV-V-053-T006 — Crafting / My Account titles + crawlable Rules intro (TASK-793)
+#### DEV-V-053-T006 — Crafting / My Account titles + Rules chapter index (TASK-793 / TASK-853)
 
 | Field | Value |
 |-------|-------|
 | **Suite** | DEV-V-053 — Wave 3A SEO |
-| **Related task** | TASK-793 |
+| **Related task** | TASK-793 / TASK-853 |
 | **Where** | `/crafting`, `/my-account`, `/rules` |
 | **Needs** | Signed-in account for `/my-account` |
 
 **Steps**
 1. Open `/crafting` — document title includes **Crafting**.
 2. Open `/my-account` — document title includes **My Account**; view-source is noindex.
-3. Open `/rules` — confirm crawlable intro text (seo description) above the Google Doc iframe; iframe still works.
+3. Open `/rules` — confirm crawlable intro text (seo description), a chapter list / RulebookNav, and that the Google Doc is a view-source / open-in-new-tab link only (no iframe). Open one chapter.
 
 **Expected**
-- Missing layout titles from the Aug audit are filled. `/rules` has indexable prose plus the embed. Desktop + ~360px.
+- Missing layout titles from the Aug audit are filled. `/rules` is the MDX chapter index (ADR-0021); Google Doc is view-source only. Desktop + ~360px.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7895,7 +8229,7 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 
 ## DEV-V-055 — ADR-0023 control touch tiers (TASK-841)
 
-**Related tasks:** TASK-841  
+**Related tasks:** TASK-841, TASK-847, TASK-830, TASK-850, TASK-851, TASK-857, TASK-865  
 **Start URL:** `/dev/styleguide` (Buttons row); also `/` footer and `/creature-creator` ability tiles  
 **Needs:** Coarse pointer (phone or DevTools touch emulation). Fine-pointer desktop is a separate check.
 
@@ -7906,7 +8240,7 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 | **Suite** | DEV-V-055 — ADR-0023 control touch tiers |
 | **Section** | Shared controls |
 | **Related task** | TASK-841 |
-| **Where** | `/dev/styleguide` Buttons; site footer; Creature Creator STR/VIT tiles |
+| **Where** | `/dev/styleguide` Buttons; site footer; Creature Creator STR/VIT tiles; any add-X USM (e.g. sheet Add Feat) |
 | **Needs** | Touch emulation at 390px and a fine-pointer desktop window |
 
 **Steps**
@@ -7915,11 +8249,130 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 3. Switch to a fine-pointer / desktop window: icon buttons and Small stay compact (no empty 44px padding).
 4. Open `/` and check footer nav links: compact painted height, tappable on touch, not 44px-tall slabs on desktop.
 5. Open `/creature-creator` at 390px: ability ± glyphs stay inside their tile (Dense painted size, not 44×44 layout).
+6. Open any add-X USM (sheet **Add Feat** or Library load) at 390px touch: **Add Selected** is ≥48px tall; **Cancel** stays Standard (~44px), not a matching 48px slab.
 
 **Expected**
-- Coarse Primary (`size="lg"`) ≥48px tall; Standard standalone ≥44px tall; Dense (`sm` / `link` / steppers) paint ≤36px with a 44px expanded hit.
+- Coarse Primary (`size="lg"`, including USM **Add Selected** / modal Save / Continue) ≥48px tall; Standard standalone and Cancel ≥44px tall; Dense (`sm` / `link` / steppers) paint ≤36px with a 44px expanded hit.
 - Fine pointer stays compact. Footer links and `variant="link"` are not 167×44 boxes.
 - Creature ability steppers do not overflow their tile from a 44px min-w.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-055-T006 — Dense hit class is `.hit-area-dense` only (TASK-857)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-055 — ADR-0023 control touch tiers |
+| **Related task** | TASK-857 |
+| **Where** | Sheet Edit/Temp pencils; CombatantCard Dmg/Heal; Chip dismiss; `/dev/styleguide` Small/Link |
+| **Needs** | Touch emulation at 390px plus a fine-pointer desktop window |
+
+**Steps**
+1. Open a loaded sheet in Edit at 390px touch: Abilities/Skills pencils stay icon-dense (not a 44px painted slab) and remain tappable (Dense expanded hit).
+2. Open an encounter combatant: Dmg/Heal/Use/Rest stay compact paint with a tappable expanded hit. Fine-pointer desktop stays compact.
+3. Confirm Compact SegmentedControl (sheet Skills All/Proficient) and Chip dismiss stay Dense, not Standard 44 painted.
+
+**Expected**
+- Coarse Dense hit stays 32px paint + 44 expanded; fine pointer stays compact. Call sites use `.hit-area-dense` or `.hit-area-dense-square`. Do not change Primary/Standard tiers. Do not retag list thumbs, image mattes, or innate-toggle.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-055-T002 — Leftover viewport hit slabs on Codex spreadsheet, list Filters, RollLog send (TASK-847)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-055 — ADR-0023 control touch tiers |
+| **Related task** | TASK-847 |
+| **Where** | Admin Codex spreadsheet toolbar; Library/Codex list **Filters**; character-sheet RollLog send |
+| **Needs** | Admin for spreadsheet; any sheet with RollLog; touch emulation at 390px plus a fine-pointer desktop window |
+
+**Steps**
+1. Open an Admin Codex spreadsheet at 390px touch vs desktop: toolbar icon hits use `@media (pointer: coarse)` or `IconButton` tiers — not `md:min-h-0` shrinking because the viewport is wide.
+2. Open a list with **Filters** (Library or Codex browse): the Filters toggle is Standard under coarse pointer and compact under fine pointer (`max-md:` 44 is gone).
+3. Open a character sheet RollLog: **send** uses shared `Button` (not a raw `min-h-[44px] min-w-[44px]` slab).
+
+**Expected**
+- Those three surfaces match ADR-0023 (pointer for hit area, viewport for layout). Header hamburger / grid selection / combatant compact are TASK-851 (DEV-V-055 T005). Do not retag list thumbs, image mattes, or innate-toggle.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-055-T004 — RollButton hit area is pointer-tier, not viewport `md:min-h-0` (TASK-850)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-055 — ADR-0023 control touch tiers |
+| **Related task** | TASK-850 |
+| **Where** | Character sheet ability/skill/defense `RollButton`; `/dev/styleguide` if a roll sample exists |
+| **Needs** | Touch emulation at 390px plus a fine-pointer desktop window |
+
+**Steps**
+1. Open a loaded character sheet with **touch** emulation at 390px. Ability or skill **RollButton** is ≥44px tall (`touch-tier-standard` or shared Button Standard).
+2. Switch to a fine-pointer desktop window: the same button is compact (no empty 44px padding from a leftover `min-h-[44px]`).
+3. Confirm a wide desktop window does **not** shrink the hit because of `md:min-h-0` — pointer, not viewport.
+
+**Expected**
+- `RollButton` has no `md:min-h-0` / blanket `min-h-[var(--touch-target-min,44px)]`. Coarse = Standard 44 height; fine = compact paint. Header hamburger / grid selection / combatant compact are TASK-851 (T005).
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-055-T005 — Header hamburger, grid selection, combatant compact use pointer tiers (TASK-851)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-055 — ADR-0023 control touch tiers |
+| **Related task** | TASK-851 |
+| **Where** | Site header below `xl`; any GridListRow with a selection checkbox; encounter combatant compact Health/Energy |
+| **Needs** | Touch emulation at 390px plus a fine-pointer desktop window (header also at 1280 vs 1440) |
+
+**Steps**
+1. Header below `xl` at 390px touch: hamburger is a tappable `IconButton` square (or equivalent pointer-coarse square) — not a painted `min-w-[44px]` slab that also inflates fine-pointer chrome at 1280.
+2. A selectable library/Codex row: the selection column is not an always-on `min-w-[44px] w-11` layout slab; `SelectionToggle` pointer-coarse square remains.
+3. Encounter combatant compact Health/Energy (and sibling compact number fields): Standard 44 under coarse, compact under fine — no `md:min-h-0`.
+
+**Expected**
+- Those three named surfaces match ADR-0023. Do not retag every remaining `min-w-[44px]` (list thumbs, image mattes, innate star). Do not fold TASK-850 RollButton.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-055-T003 — Creator form fields are Standard 44 under coarse pointer (TASK-830)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-055 — ADR-0023 control touch tiers |
+| **Related task** | TASK-830 |
+| **Where** | `/power-creator`, `/item-creator`, `/creature-creator` |
+| **Needs** | Touch emulation at 360 and 390; a fine-pointer desktop window |
+
+**Steps**
+1. Open `/power-creator` with **touch** emulation at 390px. Name (and any visible dropdowns beside steppers) are ≥44px tall — not a 40px field next to a 44px button.
+2. Repeat on `/item-creator` (Name) and `/creature-creator` (Name, Level, Type, Size).
+3. Switch to a fine-pointer desktop window: those fields stay compact `h-10` (~40px). Codex/Library Filters **Max Energy** / **Max TP** still match sibling selects (`h-11`).
+4. Optional ~360px touch: same as steps 1–2.
+
+**Expected**
+- Coarse: visible `input` / `select` / `textarea` on those three routes are ≥44px tall (`touch-tier-standard`; no `min-w` slab).
+- Fine pointer keeps compact chrome. Filter rows stay aligned on `FILTER_CONTROL_CLASS` `h-11`.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+#### DEV-V-055-T007 — Remaining viewport 44 slabs use pointer tiers (TASK-865)
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-055 — ADR-0023 control touch tiers |
+| **Related task** | TASK-865 |
+| **Where** | `/admin/core-rules` add-row links; `/rules` nav + `/rules/[slug]` prev/next; Codex/Library CharacterFilter header; Admin Codex spreadsheet table hits |
+| **Needs** | Touch emulation at 360 and 390; a fine-pointer desktop window |
+
+**Steps**
+1. Open `/admin/core-rules` with **touch** emulation at 390px. Add-row links (sizes, rarities, armaments, conditions, abilities/skills, crafting) are ≥44px tall and do **not** shrink via `md:min-h-0`.
+2. Open `/rules` and a chapter (`/rules/[slug]`): nav items and prev/next are tappable under coarse pointer; fine-pointer desktop stays compact (no leftover `md:min-h-0`).
+3. Codex or Library CharacterFilter header: coarse ≥44, fine compact — not `md:min-h-5`.
+4. Admin Codex spreadsheet: row/checkbox/icon hits follow pointer — not `md:min-h-[36px]` / `md:min-w-[36px]`.
+5. Confirm `/characters/new/advanced` still loads.
+
+**Expected**
+- Named surfaces match ADR-0023 (pointer for hit area, viewport for layout). Do not retag list thumbs, image mattes, or innate-toggle. Always-on 44 on crafting options / Edit Archetype cards / skill-participant / encounters hub is out of scope.
 
 **Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
 
@@ -7939,7 +8392,7 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 | DEV-V-015 | Library API typing (TASK-420) | — | Archived (CI) — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-015--library-api-typing-task-420) |
 | DEV-V-016 | Library add/load selection parity (TASK-379, TASK-437, TASK-475, TASK-536, TASK-541, TASK-712) | — | Manual — see suite above (T001–T028) |
 | DEV-V-017 | Site copy modules (TASK-390) | — | Manual — see suite above |
-| DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431) | — | Manual — see suite above |
+| DEV-V-018 | CreatorPageShell parity (TASK-380 / TASK-431 / TASK-826 / TASK-828 / TASK-866) | — | Manual DEV-V-018 T001–T018 (+ vitest `roll-log.test.ts`, `ability-score-editor.test.ts`) |
 | DEV-V-019 | React Compiler hook cleanup (TASK-430) | — | Manual — see suite above |
 | DEV-V-020 | Sitewide copy compliance (TASK-439) | — | Manual — see suite above |
 | DEV-V-022 | Characters list page (TASK-469) | — | Archived — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-022--characters-list-page-task-469) |
@@ -7948,7 +8401,7 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 | DEV-V-025 | ExpandableImage adoption (TASK-478) | — | Manual — see suite above |
 | DEV-V-026 | Realms Image Library wiring (TASK-496–499, TASK-531–533) | — | Manual — see suite above |
 | DEV-V-027 | Admin Official Enhanced list shell (TASK-575) | — | Manual — see suite above |
-| DEV-V-030 | Encounter play facades (TASK-608) | — | Manual — see suite above |
+| DEV-V-030 | Encounter play facades (TASK-608, TASK-819, TASK-846) | — | Manual — see suite above (T001–T004) |
 | DEV-V-031 | API route smoke (TASK-613) | — | Archived (CI) — [archive](archive/BUILD_VALIDATION_ARCHIVE.md#dev-v-031--api-route-smoke-task-613) |
 | DEV-V-032 | Realms Library creature stat blocks (TASK-620) | — | Manual — see suite above |
 | DEV-V-033 | Library armaments split (TASK-621, TASK-628) | — | Manual — see suite above |
@@ -7968,8 +8421,8 @@ Codex browse fetches only the open tab's collection (`GET /api/codex?collection=
 | DEV-V-043 | Wave 5 page facade splits (TASK-666 / TASK-762) | — | Manual — see suite above |
 | DEV-V-051 | Guided funnel entry, trusted create, feat choice (TASK-738 / TASK-754) | — | Automated (`character-legality`, characters route, `creator-entry-mode`, `feat-selection`, `character-save` create-error copy) + manual DEV-V-051 T001–T010 |
 | DEV-V-052 | Archetype Path list filter (TASK-751 / TASK-752 / TASK-753) | — | Automated (`path-recommendation-index`, `feat-list`, `skill-list`, `equipment-list`) + manual DEV-V-052 T001–T006 |
-| DEV-V-053 | Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771 / TASK-793) | — | Automated (`site-url`, `robots-sitemap`) + manual DEV-V-053 T001–T006 |
+| DEV-V-053 | Wave 3A SEO + token hygiene (TASK-769 / TASK-770 / TASK-771 / TASK-793 / TASK-853) | — | Automated (`site-url`, `robots-sitemap`, `rulebook`) + manual DEV-V-053 T001–T006 |
 | DEV-V-054 | Codex per-collection fetch + virtualized browse rows (TASK-775) | — | Automated (`api/codex/route.test`, `use-codex.keys.test`) + manual DEV-V-054 T001–T003 |
-| DEV-V-055 | ADR-0023 control touch tiers (TASK-841) | — | Automated (`button-tiers.test.ts`) + manual DEV-V-055 T001 |
+| DEV-V-055 | ADR-0023 control touch tiers (TASK-841, TASK-847, TASK-830, TASK-850, TASK-851, TASK-857, TASK-865) | — | Automated (`button-tiers.test.ts` + `verify:responsive` creator form-height probe) + manual DEV-V-055 T001–T007 |
 
 When implementing a related task, replace the legacy **DEV-T-###** block with granular **DEV-V-###** tests in this file.

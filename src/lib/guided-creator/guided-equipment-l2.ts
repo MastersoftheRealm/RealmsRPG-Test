@@ -34,7 +34,10 @@ import {
   type OfficialItemRow,
 } from '@/lib/library/official-item-list';
 import { glrListChrome } from '@/lib/glr';
-import { propertiesProficienciesSection } from '@/lib/chip/list-row-metadata';
+import {
+  glrSurfaceDetailSections,
+  propertiesProficienciesSection,
+} from '@/lib/chip/list-row-metadata';
 import { formatListCellLabel, normalizeId } from '@/lib/utils';
 import type { ItemProperty } from '@/hooks/codex-types';
 
@@ -241,7 +244,20 @@ export function buildGuidedEquipmentL2Items(
             ? 'shield'
             : 'weapon';
     const propertySection = propertiesProficienciesSection(officialRow.parts, family);
-    const detailSections = propertySection ? [propertySection] : undefined;
+    const propertyExtra = propertySection ? [propertySection] : undefined;
+    const detailSections =
+      phase === 'gear'
+        ? glrSurfaceDetailSections(
+            'guided-equipment-gear-l3',
+            {
+              trainingPoints:
+                typeof row.trainingPoints === 'number' && row.trainingPoints > 0
+                  ? row.trainingPoints
+                  : undefined,
+            },
+            propertyExtra,
+          )
+        : propertyExtra;
     const columns = buildL2Columns(phase, row, unitCost, officialRow);
 
     return {
@@ -249,7 +265,7 @@ export function buildGuidedEquipmentL2Items(
       name: row.name,
       description,
       columns,
-      detailSections,
+      detailSections: detailSections && detailSections.length > 0 ? detailSections : undefined,
       disabled: !eligibleNow,
       warningMessage: ineligibilityReason(row, ctx),
       data: {

@@ -49,7 +49,7 @@ export function CombatantCardResources({
                   value={combatant.currentHealth}
                   onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
                   className={cn(
-                    'min-h-[var(--touch-target-min,44px)] w-10 rounded border px-0.5 py-0 text-center text-sm font-bold md:min-h-0',
+                    'touch-tier-standard w-10 rounded border px-0.5 py-0 text-center text-sm font-bold',
                     'border-health-border text-health-text',
                   )}
                 />
@@ -97,7 +97,7 @@ export function CombatantCardResources({
                   type="number"
                   value={combatant.currentEnergy}
                   onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
-                  className="min-h-[var(--touch-target-min,44px)] w-10 rounded border border-energy-border px-0.5 py-0 text-center text-sm font-bold text-energy-text md:min-h-0"
+                  className="touch-tier-standard w-10 rounded border border-energy-border px-0.5 py-0 text-center text-sm font-bold text-energy-text"
                 />
                 <span className="text-xs text-energy-text">/ {combatant.maxEnergy}</span>
                 <ValueStepper
@@ -139,7 +139,7 @@ export function CombatantCardResources({
               value={combatant.currentHealth}
               onChange={(e) => onUpdate({ currentHealth: parseInt(e.target.value) || 0 })}
               className={cn(
-                'min-h-[var(--touch-target-min,44px)] w-12 rounded border px-1 py-0.5 text-center text-xs font-medium md:min-h-0',
+                'touch-tier-standard w-12 rounded border px-1 py-0.5 text-center text-xs font-medium',
                 combatant.currentHealth <= 0
                   ? 'border-danger-300 bg-danger-light text-danger-fg'
                   : 'border-border-light',
@@ -150,7 +150,7 @@ export function CombatantCardResources({
               type="number"
               value={combatant.maxHealth}
               onChange={(e) => onUpdate({ maxHealth: parseInt(e.target.value) || 1 })}
-              className="min-h-[var(--touch-target-min,44px)] w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs md:min-h-0"
+              className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs"
             />
             <ValueStepper
               value={combatant.currentHealth}
@@ -187,14 +187,14 @@ export function CombatantCardResources({
               type="number"
               value={combatant.currentEnergy}
               onChange={(e) => onUpdate({ currentEnergy: parseInt(e.target.value) || 0 })}
-              className="min-h-[var(--touch-target-min,44px)] w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs font-medium md:min-h-0"
+              className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs font-medium"
             />
             <span className="text-xs text-text-muted">/</span>
             <input
               type="number"
               value={combatant.maxEnergy}
               onChange={(e) => onUpdate({ maxEnergy: parseInt(e.target.value) || 0 })}
-              className="min-h-[var(--touch-target-min,44px)] w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs md:min-h-0"
+              className="touch-tier-standard w-12 rounded border border-border-light px-1 py-0.5 text-center text-xs"
             />
             <ValueStepper
               value={combatant.currentEnergy}

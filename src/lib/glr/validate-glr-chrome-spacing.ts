@@ -121,12 +121,20 @@ export function resolvedRowChromeFlagsInBlock(
   return flags;
 }
 
+function sourceWithoutAdminRowActions(source: string): string {
+  return source.replace(/<AdminCodexRowActions\b[\s\S]*?\/>/g, '');
+}
+
 export function expectedRowChromeFromRowActions(source: string): RowChromeFlags {
+  // Admin Codex Edit/Duplicate/Delete live in `rightSlot` (`AdminCodexRowActions`).
+  // Nested JSX inside GridListRow's opening tag would otherwise look like row `onEdit`.
+  const scan = sourceWithoutAdminRowActions(source);
+  const rowActionTag = String.raw`<(?:GridListRow|CreatureStatBlock|OfficialEntityList)\b[^>]*`;
   return {
-    edit: /\bonEdit\s*[=:{]/.test(source),
-    delete: /\bonDelete\s*[=:{]/.test(source),
-    leftSlot: /\bleftSlot\s*[=:{]/.test(source),
-    rightSlot: /\brightSlot\s*[=:{]/.test(source),
+    edit: new RegExp(`${rowActionTag}\\bonEdit\\s*[=:{]`).test(scan),
+    delete: new RegExp(`${rowActionTag}\\bonDelete\\s*[=:{]`).test(scan),
+    leftSlot: /\bleftSlot\s*[=:{]/.test(scan),
+    rightSlot: /\brightSlot\s*[=:{]/.test(scan),
   };
 }
 

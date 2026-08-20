@@ -317,6 +317,36 @@ describe('guided-equipment-l2', () => {
     ).toBe('-');
   });
 
+  it('gear L2 expand chips valued Training Points without a TP column (TASK-825)', () => {
+    const items = buildGuidedEquipmentL2Items(
+      'gear',
+      new Map([
+        ...catalog,
+        [
+          'g-tp',
+          {
+            id: 'g-tp',
+            name: 'Spyglass',
+            type: 'equipment',
+            itemCategory: 'Adventuring',
+            rarity: 'common',
+            trainingPoints: 2,
+            gold_cost: 20,
+            properties: [],
+          },
+        ],
+      ]),
+      { ...ctx, phase: 'gear', remainingCurrency: 200 },
+      [],
+      [],
+    );
+    const spyglass = items.find((i) => i.id === 'g-tp');
+    expect(spyglass).toBeTruthy();
+    expect((spyglass!.columns ?? []).map((c) => c.key)).not.toContain('tp');
+    const chips = spyglass!.detailSections?.flatMap((s) => s.chips.map((c) => c.name)) ?? [];
+    expect(chips.some((l) => /training points\s+2/i.test(l))).toBe(true);
+  });
+
   it('does not add a type-duplicate Category column on weapon/armor phases (TASK-724)', () => {
     const items = buildGuidedEquipmentL2Items('weapon', catalog, ctx, [], []);
     const axe = items.find((i) => i.id === 'w1');

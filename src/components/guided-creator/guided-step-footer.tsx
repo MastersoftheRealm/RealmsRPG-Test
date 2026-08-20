@@ -1,6 +1,6 @@
 /**
  * GuidedStepFooter — landing-cohesive sticky actions for the guided creator.
- * Frosted bar + larger touch targets; distinct from the Advanced creator chrome.
+ * Distinct from the Advanced creator chrome.
  * Mobile: completionHint sits above Back/Continue (one React mount; CSS reorders on sm+).
  */
 
@@ -79,7 +79,8 @@ export function GuidedStepFooter({
       <div
         className={cn(
           'pointer-events-auto border-t border-border-light dark:border-border',
-          'bg-surface/95 shadow-raised backdrop-blur-md',
+          // DESIGN_INTENT: opaque below md so cards cannot read through Continue; frost from md+.
+          'bg-surface shadow-raised md:bg-surface/95 md:backdrop-blur-md',
         )}
       >
         <div

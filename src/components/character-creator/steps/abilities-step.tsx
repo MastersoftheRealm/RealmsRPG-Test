@@ -156,12 +156,7 @@ export function AbilitiesStep() {
       {!pathMode && (
         <div className="mb-2 flex items-center gap-1">
           <h2 className="text-2xl font-bold text-text-primary">Assign Abilities</h2>
-          <InfoTippy
-            content={abilityPointsHelp}
-            allowHTML
-            label="Ability point rules"
-            size="inline"
-          />
+          <InfoTippy content={abilityPointsHelp} label="Ability point rules" />
         </div>
       )}
 
@@ -169,14 +164,7 @@ export function AbilitiesStep() {
         <GuidedChoiceShell
           layer={layer}
           title="Assign Abilities"
-          titleAddon={
-            <InfoTippy
-              content={abilityPointsHelp}
-              allowHTML
-              label="Ability point rules"
-              size="inline"
-            />
-          }
+          titleAddon={<InfoTippy content={abilityPointsHelp} label="Ability point rules" />}
           description="Distribute ability points. Path abilities are highlighted; expand for full point-buy."
           guidance={guidance}
           completionState={completion}

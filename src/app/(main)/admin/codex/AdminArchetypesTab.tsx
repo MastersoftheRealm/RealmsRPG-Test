@@ -7,18 +7,12 @@
 
 'use client';
 
-import {
-  SectionHeader,
-  SearchInput,
-  LoadingState,
-  ErrorDisplay as ErrorState,
-  GridListRow,
-  ListEmptyState as EmptyState,
-} from '@/components/patterns';
-import { Modal, Button, IconButton } from '@/components/ui';
+import { SectionHeader, ErrorDisplay as ErrorState, GridListRow } from '@/components/patterns';
+import { Modal, SearchInput, LoadingState, EmptyState } from '@/components/ui';
 import { AdminArchetypeEditor } from './admin-archetype-editor';
 import { useAdminArchetypeWorkspace, type ArchetypeItem } from './use-admin-archetype-workspace';
-import { Pencil, Copy, X } from 'lucide-react';
+import { AdminCodexRowActions } from './admin-codex-row-actions';
+import { AdminCodexEditModalFooter } from './admin-codex-edit-modal-footer';
 import { formatListCellLabel } from '@/lib/utils';
 
 export function AdminArchetypesTab() {
@@ -32,9 +26,6 @@ export function AdminArchetypesTab() {
     modalOpen,
     editing,
     saving,
-    deleteConfirm,
-    pendingDeleteId,
-    setPendingDeleteId,
     copySourceName,
     form,
     setForm,
@@ -69,8 +60,8 @@ export function AdminArchetypesTab() {
     openEdit,
     closeModal,
     handleSave,
-    handleDelete,
-    handleInlineDelete,
+    askDelete,
+    deleteModals,
   } = useAdminArchetypeWorkspace();
 
   if (error)
@@ -107,60 +98,13 @@ export function AdminArchetypesTab() {
                   columns={[{ key: 'Type', value: formatListCellLabel(a.type) }]}
                 />
               </div>
-              <div className="flex items-center gap-1 pr-2">
-                {pendingDeleteId === a.id ? (
-                  <div className="flex items-center gap-1 text-xs">
-                    <span className="font-medium whitespace-nowrap text-danger-700 dark:text-danger-400">
-                      Remove?
-                    </span>
-                    <Button
-                      size="sm"
-                      variant="danger"
-                      onClick={() => handleInlineDelete(a.id)}
-                      className="h-6 px-2 py-0.5 text-xs"
-                    >
-                      Yes
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setPendingDeleteId(null)}
-                      className="h-6 px-2 py-0.5 text-xs"
-                    >
-                      No
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openEdit(a)}
-                      label="Edit"
-                      aria-label="Edit"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </IconButton>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => openDuplicate(a)}
-                      label="Duplicate"
-                      aria-label="Duplicate"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </IconButton>
-                    <IconButton
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => setPendingDeleteId(a.id)}
-                      label="Delete"
-                      className="text-danger-fg hover:bg-transparent hover:opacity-80"
-                    >
-                      <X className="h-4 w-4" />
-                    </IconButton>
-                  </>
-                )}
+              <div className="min-w-0">
+                <AdminCodexRowActions
+                  entity={a}
+                  onEdit={openEdit}
+                  onDuplicate={openDuplicate}
+                  onDelete={askDelete}
+                />
               </div>
             </div>
           ))}
@@ -182,34 +126,13 @@ export function AdminArchetypesTab() {
         size="full"
         fullScreenOnMobile
         footer={
-          <div className="flex justify-between">
-            <div>
-              {editing && (
-                <Button
-                  variant="outline"
-                  onClick={() => handleDelete(editing.id)}
-                  className={
-                    deleteConfirm === editing.id
-                      ? 'border-danger-500 text-danger-700 dark:text-danger-400'
-                      : ''
-                  }
-                >
-                  {deleteConfirm === editing.id ? 'Click again to confirm delete' : 'Delete'}
-                </Button>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" onClick={closeModal}>
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={saving || !form.name.trim() || isSelectionDataLoading}
-              >
-                {saving ? 'Saving...' : 'Save'}
-              </Button>
-            </div>
-          </div>
+          <AdminCodexEditModalFooter
+            onDelete={editing ? () => askDelete(editing) : undefined}
+            onClose={closeModal}
+            onSave={handleSave}
+            saveDisabled={saving || !form.name.trim() || isSelectionDataLoading}
+            saving={saving}
+          />
         }
       >
         <AdminArchetypeEditor
@@ -244,6 +167,7 @@ export function AdminArchetypesTab() {
           removeLevel1Armament={removeLevel1Armament}
         />
       </Modal>
+      {deleteModals}
     </div>
   );
 }

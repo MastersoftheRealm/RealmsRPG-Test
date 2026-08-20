@@ -199,7 +199,7 @@ export function ResourceInput({
           onBlur={handleBlur}
           onKeyDown={handleKeyDown}
           className={cn(
-            'w-12 rounded border bg-surface px-1 py-0.5 text-center text-lg font-bold dark:bg-surface-alt',
+            'touch-tier-standard w-12 rounded border bg-surface px-1 py-0.5 text-center text-lg font-bold dark:bg-surface-alt',
             'focus:ring-2 focus:ring-primary-outline-border focus:outline-none dark:focus:ring-primary-outline-border',
             inputBorderText,
           )}

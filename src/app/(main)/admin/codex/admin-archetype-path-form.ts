@@ -23,7 +23,6 @@ import type {
 
 export type ArchetypeItem = CodexArchetype;
 
-export const COPY_NAME_SUFFIX = ' copy';
 export const ABILITY_OPTIONS = [
   'strength',
   'vitality',

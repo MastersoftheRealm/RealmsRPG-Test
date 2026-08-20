@@ -223,11 +223,7 @@ export function ArchetypeStep() {
         <h2 className="text-2xl font-bold text-text-primary">
           {creationChoice === 'forge' ? 'Forge Your Own Character' : 'Choose Your Path'}
         </h2>
-        <InfoTippy
-          content={chooseCharacterCreationStyle}
-          label="Path vs Forge help"
-          size="inline"
-        />
+        <InfoTippy content={chooseCharacterCreationStyle} label="Path vs Forge help" />
       </div>
       <p className="mb-6 text-text-secondary">
         {creationChoice === 'forge'
@@ -373,7 +369,7 @@ export function ArchetypeStep() {
                   <div>
                     <div className="mb-2 flex items-center gap-1">
                       <h4 className="text-sm font-medium text-power-fg">Power Ability</h4>
-                      <InfoTippy content={powerAbility} label="Power ability help" size="inline" />
+                      <InfoTippy content={powerAbility} label="Power ability help" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
@@ -392,11 +388,7 @@ export function ArchetypeStep() {
                   <div>
                     <div className="mb-2 flex items-center gap-1">
                       <h4 className="text-sm font-medium text-martial-fg">Martial Ability</h4>
-                      <InfoTippy
-                        content={martialAbility}
-                        label="Martial ability help"
-                        size="inline"
-                      />
+                      <InfoTippy content={martialAbility} label="Martial ability help" />
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                       {ARCHETYPE_ABILITY_OPTIONS.map((ability) => (
@@ -434,7 +426,7 @@ export function ArchetypeStep() {
       {/* Confirm Archetype */}
       <CreatorStepFooter
         primaryAction={
-          <Button onClick={handleConfirm} disabled={!canConfirm} className="min-h-11 min-w-11">
+          <Button size="lg" onClick={handleConfirm} disabled={!canConfirm}>
             {creationChoice === 'path' ? 'Confirm Archetype Path' : 'Confirm Archetype'}
           </Button>
         }

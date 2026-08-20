@@ -1,23 +1,24 @@
 /**
- * Rules Page
- * ===========
- * Core rulebook embedded from Google Docs — edit prose in rules-copy.ts.
+ * Rulebook chapter index (ADR-0021).
  */
 
-import { PageContainer, PageHeader, Card } from '@/components/ui';
+import Link from 'next/link';
+import { PageContainer, PageHeader } from '@/components/ui';
+import { RulebookNav } from '@/components/rules/rulebook-nav';
 import { RULES_COPY } from '@/lib/constants/site-copy';
+import { RULEBOOK_CHAPTERS } from '@/lib/rules/rulebook';
 
 export default function RulesPage() {
   return (
-    <PageContainer size="xl">
+    <PageContainer size="content">
       <PageHeader title={RULES_COPY.pageTitle} description={RULES_COPY.pageDescription} />
 
       <p className="mb-4 font-nunito text-base leading-relaxed text-text-secondary">
         {RULES_COPY.seoDescription}
       </p>
 
-      <p className="mb-4 text-sm text-text-secondary">
-        {RULES_COPY.embedTroublePrefix}{' '}
+      <p className="mb-6 text-sm text-text-secondary">
+        {RULES_COPY.viewSourcePrefix}{' '}
         <a
           href={RULES_COPY.viewUrl}
           target="_blank"
@@ -28,17 +29,25 @@ export default function RulesPage() {
         </a>
       </p>
 
-      <Card className="overflow-hidden border-0 p-0 shadow-lg">
-        <iframe
-          src={RULES_COPY.embedUrl}
-          className="w-full border-0"
-          style={{ height: 'min(900px, calc(100vh - 220px))' }}
-          allowFullScreen
-          title={RULES_COPY.iframeTitle}
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-        />
-      </Card>
+      <div className="md:grid md:grid-cols-[16rem_minmax(0,1fr)] md:items-start md:gap-8">
+        <RulebookNav chapters={RULEBOOK_CHAPTERS} />
+        <ol className="min-w-0 space-y-3">
+          {RULEBOOK_CHAPTERS.map((chapter, index) => (
+            <li key={chapter.slug}>
+              <Link
+                href={`/rules/${chapter.slug}`}
+                className="block min-w-0 rounded-md px-3 py-2 hover:bg-surface-alt"
+              >
+                <h2 className="font-display text-lg font-bold text-text-primary">
+                  <span className="mr-2 text-text-muted tabular-nums">{index + 1}.</span>
+                  {chapter.title}
+                </h2>
+                <p className="mt-1 text-sm text-text-secondary">{chapter.description}</p>
+              </Link>
+            </li>
+          ))}
+        </ol>
+      </div>
     </PageContainer>
   );
 }

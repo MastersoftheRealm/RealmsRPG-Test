@@ -78,7 +78,7 @@ the exact same operational sentence. Do not duplicate it in `tooltip-text.tsx`.
 
 ## When to use `@floating-ui/react` directly
 
-Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad hoc on feature pages, when:
+Use the dependency **inside `@/components/patterns` or `@/components/ui`**, not ad hoc on feature pages, when:
 
 - Adding a **new reusable** anchored pattern (popover, menu, combobox, context menu)
 - Refactoring an existing **manual `absolute` + portal** floater that appears in **multiple** places (e.g. header dropdowns)
@@ -91,7 +91,7 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 
 | Surface | Status | Notes |
 |---------|--------|-------|
-| Character creator (all steps) | ✅ Wired | `size="inline"` on step headings; archetype ability buttons use `children` |
+| Character creator (all steps) | ✅ Wired | step headings; archetype ability buttons use `children` |
 | `characters/new` page header | ✅ Wired | |
 | Navbar Library / Codex | ✅ Wired | `placement="bottom"` |
 | Campaigns hub | ✅ Wired | |
@@ -103,8 +103,8 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 
 1. **Search** — grep `tooltip-text.tsx` and existing `InfoTippy` on the same surface; reuse or extend copy.
 2. **Copy** — add a string, JSX export, or helper to `public/tooltip-text.tsx` (one file; no DB).
-3. **Wire** — import `InfoTippy` / `WordHelpTip` from `@/components/shared`:
-   - Page/step title: `<InfoTippy content={…} label="…" size="inline" />` (layout-neutral hit; do not add `min-h-*` className)
+3. **Wire** — import `InfoTippy` / `WordHelpTip` from `@/components/patterns`:
+   - Page/step title: `<InfoTippy content={…} label="…" />` (layout-neutral hit; do not add `min-h-*` className)
    - Default icon trigger: omit `children`; **`label` is required** (becomes `aria-label`).
    - Custom trigger: pass `children` (single element); child needs its own `aria-label`; keep `label` for consistency.
    - Label-word tip (no icon): `<WordHelpTip content={getAbilityHelp(…)} label="About Strength">Strength</WordHelpTip>` (ability/defense names; tip copy names the term once). Dense table labels: `compact` (Dense tier — 44px expanded hit under coarse pointer).
@@ -127,13 +127,11 @@ Use the dependency **inside `@/components/shared` or `@/components/ui`**, not ad
 |------|---------|
 | `content` | `string` or JSX from `tooltip-text.tsx` |
 | `label` | Accessible name (required) |
-| `size` | **Deprecated** no-op (TASK-725) — kept for call-site compat. Trigger is always the 16px icon + `.hit-area-layout-neutral`. Do not pass `min-h-*` className fights. |
 | `tone` | `InfoTippy` only (TASK-707): `'info'` (default, `text-primary-link-fg`) · `'tp'` (`text-tp-text` on Training Points PointStatus) · `'current'` (inherit chip/status text). Prefer `tone` over `className` color fights. |
 | `placement` | `'top' \| 'bottom' \| 'left' \| 'right'` |
 | `children` | `InfoTippy`: optional custom trigger element. `WordHelpTip`: visible label text/spans |
-| `allowHTML` | **Deprecated** — no-op; kept for call-site compat |
 
-Implementation: `src/components/shared/info-tippy.tsx` (`InfoTippy` + `WordHelpTip`) + shared Floating UI chrome in `src/lib/tooltips/floating-help.tsx` (arrow, transitions, placement — ported from Collin PR #14). Styleguide `Tooltip` in `@/components/ui` reuses the same primitive. Types: `InfoTippyProps` / `InfoTippyTone` / `WordHelpTipProps` exported from `@/components/shared`.
+Implementation: `src/components/patterns/help/info-tippy.tsx` (`InfoTippy` + `WordHelpTip`) + shared Floating UI chrome in `src/lib/tooltips/floating-help.tsx` (arrow, transitions, placement — ported from Collin PR #14). Styleguide `Tooltip` in `@/components/ui` reuses the same primitive. Types: `InfoTippyProps` / `InfoTippyTone` / `WordHelpTipProps` exported from `@/components/patterns`.
 
 ## Do not use (removed / wrong tool)
 
@@ -177,9 +175,9 @@ Implementation: `src/components/shared/info-tippy.tsx` (`InfoTippy` + `WordHelpT
     | Currency / Training Points | `Currency 12` / `Training Points 4` (full words in L1/L2) |
   - **Do not repeat if already represented:** When a dedicated compact-fact / column covers a mechanic (Damage, Damage Reduction, Range, Ability Requirement), omit the matching named property chip. **Armor Base** / **Shield Base** are calculation-only — never user-facing chips.
   - **L1 named property chips:** property **name only** (Graze, Cleave) — do not append Training Points on those desc chips; budgets stay in title-adjacent Currency / Training Points. Pass `includeCost: true` only for dense browse surfaces that still need TP on the chip.
-  - **Non-mechanic properties** (Graze, Cleave, …): non-expanding `kind: 'descriptor'` chips via `namedPropertyDescriptorChips` / `propertyDescriptorChip`. When a description exists, render with **`DescriptorChipWithTip`** — InfoTippy `size="inline"` **inside** the chip (not a sibling beside it). Guided cards: `GuidedFactChipRow`. GridListRow: `GridListChip` routes descriptors through `DescriptorChipWithTip`. Same inside-pattern for section help (e.g. Training Points `InfoTippy` via `PointStatus.labelAccessory` in `LoadoutBudgetBar`).
+  - **Non-mechanic properties** (Graze, Cleave, …): non-expanding `kind: 'descriptor'` chips via `namedPropertyDescriptorChips` / `propertyDescriptorChip`. When a description exists, render with **`DescriptorChipWithTip`** — InfoTippy **inside** the chip (not a sibling beside it). Guided cards: `GuidedFactChipRow`. GridListRow: `GridListChip` routes descriptors through `DescriptorChipWithTip`. Same inside-pattern for section help (e.g. Training Points `InfoTippy` via `PointStatus.labelAccessory` in `LoadoutBudgetBar`).
   - **Character sheet parts/properties (TASK-505 / TASK-583):** Always expandable chips with dense `TP: N` (`partDataToChips` + `TP_COST_LABEL`). Do **not** use descriptor + InfoTippy *on the chips* for sheet Parts & Proficiencies — the sheet is a play surface where users expand chips to delve deeper. The **section** (Parts/Properties & Proficiencies) defaults collapsed sitewide with a chevron + label InfoTippy (`labelHelpKey` / `tooltip-text` family tips). Guided L1/L2 keeps spelled-out **Training Points** and descriptor tips for metadata facts.
-  - **Loadout budgets (Guided + Advanced):** reuse `LoadoutBudgetBar` from `@/components/shared` (Currency optional + Training Points + tip inside label) — Guided phase layout / L2 footer / powers; Advanced equipment / powers / finalize (TASK-606 / TASK-614 / TASK-706). Put extra trackers in `leading` (Innate Energy + `innateEnergyHelp` via `labelAccessory` — TASK-726) or `trailing` (finalize Energy) — same inline PointStatus size. Do not fork PointStatus chrome. Innate Powers section titles use `GuidedSectionTitle` `titleAddon={<InnatePowersHelpTip />}` (same module as `InnateEnergyPointStatus`). Advanced powers has no Innate Energy tracker / Innate Powers heading — skip.
+  - **Loadout budgets (Guided + Advanced):** reuse `LoadoutBudgetBar` from `@/components/patterns` (Currency optional + Training Points + tip inside label) — Guided phase layout / L2 footer / powers; Advanced equipment / powers / finalize (TASK-606 / TASK-614 / TASK-706). Put extra trackers in `leading` (Innate Energy + `innateEnergyHelp` via `labelAccessory` — TASK-726) or `trailing` (finalize Energy) — same inline PointStatus size. Do not fork PointStatus chrome. Innate Powers section titles use `GuidedSectionTitle` `titleAddon={<InnatePowersHelpTip />}` (same module as `InnateEnergyPointStatus`). Advanced powers has no Innate Energy tracker / Innate Powers heading — skip.
   - **Deep-dive / progressive-disclosure catalogs** (`DetailOptionList`, choice-card More details): Name + Description only is fine (`showColumnHeaders={false}`); every omitted column fact must appear as a self-describing chip in the expanded row.
   - **Card anatomy / disclosure boundary:** Supporting facts, chips, and controls belong **above** See more / See less / More details. Do **not** append orphan facts or controls below that disclosure row. Guided weapon/armor cards (TASK-457): **Currency** / **Training Points** are `titleMeta` beside the name; mechanic + named-property chips live in `expandedExtra` (See more) via `DescriptorChipWithTip` — never expandable chips in the collapsed body, never chips under the disclosure row.
   - **Audit inventory (TASK-437 / TASK-461 / TASK-505 / TASK-629 / TASK-806 / TASK-807):** Required quick-ref facts: `lib/glr/glr-fact-catalog.ts` + density/resolver (ADR-0016). Bind a surface in `glr-surface-bindings.ts`; CI `glr-fact-catalog.test.ts`. Library / Official / sheet sections column-complete; sheet expandable part/property chips use `TP`; guided L1/L2 keep Training Points cost labels. Codex + Admin Equipment: Category / Currency / Rarity columns only — mixed browse is gear (no Damage / Damage Reduction / Weight fact chips; named property chips stay when present). Add/load powers: Energy/Action/Duration/Area/Damage + Range chip from `buildSelectableItem` detailSections. Creator powers: Official browse columns + TP `rightSlot` (`creatorBudget`); techniques keep Action; empowered remap preserves Duration/Area as chips. Creature creator: power/technique select density. Sheet inventory: rarity/currency/TP as demoted chips (not `Cost Nc` badges). Play power expand: category/range/TP chips. Density `demoteFacts` (not omit) so overflow still chips. Equipment-step weapons: Range chip. Sheet armor: DR/Crit columns + ability/agility descriptor chips in expanded metadata. Do not strip browse columns to chip-ify them.

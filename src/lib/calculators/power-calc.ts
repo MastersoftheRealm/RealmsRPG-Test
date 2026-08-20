@@ -22,9 +22,6 @@ import {
   POWER_AUTO_MECHANIC_PART_NAMES,
 } from './power-mechanic-constants';
 
-// Re-export for backwards compatibility
-export { PART_IDS, findByIdOrName };
-
 // =============================================================================
 // Types
 // =============================================================================

@@ -88,7 +88,7 @@ export function ItemCreatorEditorAbilityProperties({
                   }
                 }
               }}
-              className="w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
+              className="touch-tier-standard w-full rounded-lg border border-border-light bg-surface px-3 py-2 text-text-primary"
               aria-label="Ability requirement"
             >
               <option value="">None</option>

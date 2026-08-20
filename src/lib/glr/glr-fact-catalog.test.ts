@@ -159,11 +159,6 @@ describe('GLR fact catalog — surface column configs (ADR-0016)', () => {
     assertSurfaceColumnConfig('add-modal-gear', headerKeys(getListHeaderColumns('equipment')));
   });
 
-  it('add-modal feat/gear columns satisfy select density', () => {
-    assertSurfaceColumnConfig('add-modal-feat', headerKeys(featSelectHeaderColumns()));
-    assertSurfaceColumnConfig('add-modal-gear', headerKeys(getListHeaderColumns('equipment')));
-  });
-
   it('creature stat-block power columns match select density', () => {
     assertSurfaceColumnConfig('creature-stat-block-power', headerKeys(POWER_COLUMNS_WITH_ENERGY));
   });
@@ -213,6 +208,11 @@ describe('GLR fact catalog — surface column configs (ADR-0016)', () => {
       headerKeys(GUIDED_TECHNIQUES_L2_HEADER_COLUMNS),
     );
     assertSurfaceColumnConfig('guided-feats-l3', headerKeys(FEATS_L2_HEADER_COLUMNS));
+  });
+
+  it('path More details combat catalogs have no ranked columns (TASK-818)', () => {
+    assertSurfaceColumnConfig('detail-option-power', []);
+    assertSurfaceColumnConfig('detail-option-technique', []);
   });
 
   it('guided equipment L3 headers satisfy catalog bindings (TASK-688)', () => {
@@ -472,7 +472,36 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
     expect(chipLabels.some((l) => /training points\s+\d+/i.test(l))).toBe(true);
   });
 
-  it('character-sheet gear play chips category / currency / rarity', () => {
+  it('character-sheet gear play chips category / currency / rarity / TP when valued (TASK-825)', () => {
+    const row = defined(
+      mapEquipmentRows(
+        [
+          {
+            id: 'e1',
+            name: 'Spyglass',
+            type: 'equipment',
+            category: 'Adventuring',
+            rarity: 'uncommon',
+            cost: 20,
+            tp: 2,
+          } as Item,
+        ],
+        sheetCtx,
+      )[0],
+    );
+    expect(row.totalTp).toBeUndefined();
+    expect(columnValueKeys(row.columns ?? [])).not.toContain('tp');
+    const chipLabels = chipLabelsFromDetailSections(row.detailSections);
+    assertRowFactCoverage('character-sheet-gear', {
+      columnKeys: columnValueKeys(row.columns ?? []),
+      chipLabels,
+    });
+    expect(chipLabels.some((l) => /training points\s+2/i.test(l))).toBe(true);
+    expect(chipLabels.some((l) => /^category\b/i.test(l))).toBe(true);
+    expect(chipLabels.some((l) => /^currency\s+20$/i.test(l))).toBe(true);
+  });
+
+  it('character-sheet gear play omits Training Points chip when TP is 0', () => {
     const row = defined(
       mapEquipmentRows(
         [
@@ -488,10 +517,34 @@ describe('GLR fact catalog — row coverage (ADR-0016)', () => {
         sheetCtx,
       )[0],
     );
-    assertRowFactCoverage('character-sheet-gear', {
-      columnKeys: columnValueKeys(row.columns ?? []),
-      chipLabels: chipLabelsFromDetailSections(row.detailSections),
+    const chipLabels = chipLabelsFromDetailSections(row.detailSections);
+    expect(chipLabels.some((l) => /training points/i.test(l))).toBe(false);
+  });
+
+  it('add-modal gear chips TP and keeps Category / Currency / Rarity columns (TASK-825)', () => {
+    const selectable = buildSelectableItem(
+      {
+        id: 'e1',
+        docId: 'e1',
+        name: 'Spyglass',
+        type: 'equipment',
+        description: 'A glass.',
+        rarity: 'uncommon',
+        properties: [],
+        costs: { totalCurrency: 20, totalTP: 2 },
+      },
+      'equipment',
+      emptyCodex,
+    );
+    const columnKeys = selectable.columns?.map((c) => c.key) ?? [];
+    expect(columnKeys).not.toContain('tp');
+    expect(columnKeys).not.toContain('Training Pts');
+    const chipLabels = chipLabelsFromDetailSections(selectable.detailSections);
+    assertRowFactCoverage('add-modal-gear', {
+      columnKeys,
+      chipLabels,
     });
+    expect(chipLabels.some((l) => /training points\s+2/i.test(l))).toBe(true);
   });
 
   it('character-sheet feat play chips Req. Level / Category / Ability', () => {

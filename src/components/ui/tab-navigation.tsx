@@ -11,11 +11,43 @@
 'use client';
 
 import * as React from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+
+/** Pixels past which a tablist edge counts as overflowing (TASK-840). */
+export function tabListOverflowState(
+  scrollLeft: number,
+  clientWidth: number,
+  scrollWidth: number,
+  threshold = 2,
+): { start: boolean; end: boolean } {
+  const maxScroll = Math.max(0, scrollWidth - clientWidth);
+  return {
+    start: scrollLeft > threshold,
+    end: maxScroll - scrollLeft > threshold,
+  };
+}
+
+/** List-local delta so a hidden tab never scrolls ancestor C1 carousels. */
+export function scrollDeltaToRevealChild(
+  list: { left: number; right: number },
+  child: { left: number; right: number },
+  paddingPx: number,
+): number {
+  if (child.left < list.left + paddingPx) {
+    return child.left - list.left - paddingPx;
+  }
+  if (child.right > list.right - paddingPx) {
+    return child.right - (list.right - paddingPx);
+  }
+  return 0;
+}
 
 interface Tab {
   id: string;
   label: string;
+  /** Viewport label below `md` (layout, not hit area). Falls back to `label`. */
+  labelMobile?: string | undefined;
   icon?: React.ReactNode | undefined;
   count?: number | undefined;
   disabled?: boolean | undefined;
@@ -122,6 +154,149 @@ interface TabNavigationProps {
   sharedTabPanelId?: string | undefined;
   /** When false, omit `aria-controls` (demo tabs without panels). Default true. */
   associatePanels?: boolean | undefined;
+  /**
+   * Control beside the underline tab strip (Codex Advanced). Lives outside `role="tablist"`.
+   * Stacks under the strip below `md`; sits in the bar from `md` without overlapping tabs.
+   * Unused on pill tabs.
+   */
+  trailing?: React.ReactNode | undefined;
+}
+
+type OverflowListTag = 'nav' | 'ol';
+
+export interface TabNavOverflowScrollerProps {
+  /** Scrollport tag. Wizard rails may use `ol`; underline tabs and Legacy steps use `nav`. */
+  as?: OverflowListTag | undefined;
+  children: React.ReactNode;
+  className?: string | undefined;
+  listClassName?: string | undefined;
+  /** Re-bind observers when the item set or layout chrome changes. */
+  overflowSignature: string;
+  /** Active child to reveal by scrolling this list only (list-local; no ancestor carousel jump). */
+  getActiveElement?: ((list: HTMLElement) => Element | null) | undefined;
+  previousAriaLabel?: string | undefined;
+  nextAriaLabel?: string | undefined;
+  listRole?: string | undefined;
+  listAriaLabel?: string | undefined;
+}
+
+/** C1 fade + chevrons for `.tab-nav-list` (underline tabs, creator step rails). */
+export function TabNavOverflowScroller({
+  as = 'nav',
+  children,
+  className,
+  listClassName,
+  overflowSignature,
+  getActiveElement,
+  previousAriaLabel = 'Show previous tabs',
+  nextAriaLabel = 'Show more tabs',
+  listRole,
+  listAriaLabel,
+}: TabNavOverflowScrollerProps) {
+  const listRef = React.useRef<HTMLElement>(null);
+  const [overflow, setOverflow] = React.useState({ start: false, end: false });
+
+  const updateOverflow = React.useCallback(() => {
+    const list = listRef.current;
+    if (!list) return;
+    setOverflow(tabListOverflowState(list.scrollLeft, list.clientWidth, list.scrollWidth));
+  }, []);
+
+  React.useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    updateOverflow();
+    list.addEventListener('scroll', updateOverflow, { passive: true });
+    const ro = new ResizeObserver(updateOverflow);
+    ro.observe(list);
+    return () => {
+      list.removeEventListener('scroll', updateOverflow);
+      ro.disconnect();
+    };
+  }, [updateOverflow, overflowSignature]);
+
+  React.useLayoutEffect(() => {
+    const list = listRef.current;
+    if (!list) return;
+    const activeEl = getActiveElement
+      ? getActiveElement(list)
+      : list.querySelector('[aria-current="step"]');
+    if (!activeEl || !list.contains(activeEl)) return;
+    const pad = Number.parseFloat(getComputedStyle(list).scrollPaddingInlineStart) || 0;
+    const delta = scrollDeltaToRevealChild(
+      list.getBoundingClientRect(),
+      activeEl.getBoundingClientRect(),
+      pad,
+    );
+    if (delta !== 0) {
+      list.scrollLeft += delta;
+    }
+    updateOverflow();
+  }, [getActiveElement, overflowSignature, updateOverflow]);
+
+  const scrollList = (direction: -1 | 1) => {
+    const list = listRef.current;
+    if (!list) return;
+    const amount = Math.max(list.clientWidth * 0.7, 120) * direction;
+    list.scrollBy({ left: amount, behavior: 'smooth' });
+  };
+
+  const setListNode = React.useCallback((node: HTMLElement | null) => {
+    listRef.current = node;
+  }, []);
+
+  const listClass = cn('tab-nav-list', listClassName);
+  const overflowStart = overflow.start ? 'true' : 'false';
+  const overflowEnd = overflow.end ? 'true' : 'false';
+  const listEl =
+    as === 'ol' ? (
+      <ol
+        ref={setListNode}
+        className={listClass}
+        aria-label={listAriaLabel}
+        data-overflow-start={overflowStart}
+        data-overflow-end={overflowEnd}
+      >
+        {children}
+      </ol>
+    ) : (
+      <nav
+        ref={setListNode}
+        className={listClass}
+        role={listRole}
+        aria-label={listAriaLabel}
+        data-overflow-start={overflowStart}
+        data-overflow-end={overflowEnd}
+      >
+        {children}
+      </nav>
+    );
+
+  return (
+    <div className={cn('tab-nav-scroll', className)}>
+      {overflow.start ? (
+        <button
+          type="button"
+          className="tab-nav-scroll-btn tab-nav-scroll-start"
+          aria-label={previousAriaLabel}
+          onClick={() => scrollList(-1)}
+        >
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+        </button>
+      ) : null}
+      {listEl}
+      {overflow.end ? (
+        <button
+          type="button"
+          className="tab-nav-scroll-btn tab-nav-scroll-end"
+          aria-label={nextAriaLabel}
+          onClick={() => scrollList(1)}
+        >
+          <ChevronRight className="h-4 w-4" aria-hidden />
+        </button>
+      ) : null}
+    </div>
+  );
 }
 
 export function TabNavigation({
@@ -135,9 +310,21 @@ export function TabNavigation({
   tabGroupId: tabGroupIdProp,
   sharedTabPanelId,
   associatePanels = true,
+  trailing,
 }: TabNavigationProps) {
   const generatedGroupId = React.useId();
   const tabGroupId = tabGroupIdProp ?? generatedGroupId;
+  const tabSignature = tabs.map((t) => t.id).join('|');
+  const hasTrailing = Boolean(trailing);
+  const overflowSignature = `${tabSignature}|${size ?? 'md'}|${hasTrailing ? 't' : ''}|${activeTab}`;
+
+  const getActiveTabElement = React.useCallback(
+    (list: HTMLElement) => {
+      const el = document.getElementById(tabButtonId(tabGroupId, activeTab));
+      return el && list.contains(el) ? el : null;
+    },
+    [activeTab, tabGroupId],
+  );
 
   const panelControlsId = (tabId: string) =>
     sharedTabPanelId ?? tabPanelIdForTab(tabGroupId, tabId);
@@ -176,6 +363,16 @@ export function TabNavigation({
     onKeyDown: (e: React.KeyboardEvent) => handleTabKeyDown(e, tab.id),
   });
 
+  const renderLabelText = (tab: Tab) =>
+    tab.labelMobile ? (
+      <>
+        <span className="md:hidden">{tab.labelMobile}</span>
+        <span className="hidden md:inline">{tab.label}</span>
+      </>
+    ) : (
+      tab.label
+    );
+
   if (variant === 'pill') {
     return (
       <div className={cn('tab-pill-list', fullWidth && 'w-full', className)} role="tablist">
@@ -195,7 +392,7 @@ export function TabNavigation({
           >
             <span className="flex items-center gap-2">
               {tab.icon}
-              {tab.label}
+              {renderLabelText(tab)}
               {typeof tab.count === 'number' && (
                 <span className="ml-1 rounded-full bg-surface-alt px-1.5 py-0.5 text-xs text-text-muted">
                   {tab.count}
@@ -212,7 +409,7 @@ export function TabNavigation({
   const renderTabLabel = (tab: Tab) => (
     <>
       {tab.icon}
-      {tab.label}
+      {renderLabelText(tab)}
       {typeof tab.count === 'number' && (
         <span
           className={cn(
@@ -240,8 +437,12 @@ export function TabNavigation({
 
   // Underline variant (default)
   return (
-    <div className={cn('tab-nav', className)}>
-      <nav className="tab-nav-list" role="tablist">
+    <div className={cn('tab-nav', trailing && 'tab-nav-with-trailing', className)}>
+      <TabNavOverflowScroller
+        overflowSignature={overflowSignature}
+        getActiveElement={getActiveTabElement}
+        listRole="tablist"
+      >
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
           if (tab.suffix) {
@@ -269,7 +470,8 @@ export function TabNavigation({
             </button>
           );
         })}
-      </nav>
+      </TabNavOverflowScroller>
+      {trailing ? <div className="tab-nav-trailing">{trailing}</div> : null}
     </div>
   );
 }

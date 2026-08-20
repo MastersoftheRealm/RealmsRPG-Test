@@ -133,7 +133,6 @@ export function LibraryInventoryPanel({
                     <InfoTippy
                       content={armamentProficiencyHelp}
                       label="About Armament Proficiency"
-                      size="inline"
                     />
                   }
                   value={`${calculateArmamentProficiency(martialProficiency)} TP`}

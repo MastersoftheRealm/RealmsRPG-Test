@@ -6,6 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { asDbInsert, type TypedSupabaseClient } from '@/lib/supabase/database';
 import { getSession } from '@/lib/supabase/session';
 import { ensureUserProfile } from '@/lib/ensure-user-profile';
 import { getRolePolicyForUser } from '@/lib/role-policy';
@@ -37,11 +38,9 @@ const FEAT_REQUIREMENT_COLUMNS =
 /** Live column is `base_skill` (TEXT). App types still use `base_skill_id` after mapping. */
 const SKILL_REQUIREMENT_COLUMNS = 'id, name, base_skill, ability';
 
-type SupabaseLike = Awaited<ReturnType<typeof createClient>>;
-
 /** The character this user already created with this idempotency key, if any. */
 async function findCharacterByRequestId(
-  supabase: SupabaseLike,
+  supabase: TypedSupabaseClient,
   userId: string,
   clientRequestId: string,
 ): Promise<string | null> {
@@ -66,13 +65,13 @@ type CharacterInsertRow = {
  * `client_request_id` recover the winner instead of 500ing.
  */
 async function insertCharacterRow(
-  supabase: SupabaseLike,
+  supabase: TypedSupabaseClient,
   row: CharacterInsertRow,
 ): Promise<{ id: string } | { uniqueViolation: true }> {
   const now = new Date().toISOString();
   const { data: created, error: insertErr } = await supabase
     .from('characters')
-    .insert({ created_at: now, updated_at: now, ...row })
+    .insert(asDbInsert<'characters'>({ created_at: now, updated_at: now, ...row }))
     .select('id')
     .single();
   if (insertErr) {
@@ -88,7 +87,7 @@ async function insertCharacterRow(
 }
 
 async function jsonForInsertResult(
-  supabase: SupabaseLike,
+  supabase: TypedSupabaseClient,
   userId: string,
   clientRequestId: string | undefined,
   result: { id: string } | { uniqueViolation: true },
@@ -101,7 +100,7 @@ async function jsonForInsertResult(
   throw new Error('Character insert unique violation without a replay row');
 }
 
-async function fetchFeatRequirementCatalog(supabase: SupabaseLike) {
+async function fetchFeatRequirementCatalog(supabase: TypedSupabaseClient) {
   const [featRes, skillRes] = await Promise.all([
     supabase.from('codex_feats').select(FEAT_REQUIREMENT_COLUMNS),
     supabase.from('codex_skills').select(SKILL_REQUIREMENT_COLUMNS),

@@ -15,9 +15,6 @@ export const CROPPED_IMAGE_MIME = 'image/png';
 /** Default filename extension for cropped blobs. */
 export const CROPPED_IMAGE_EXTENSION = extensionForImageMime(CROPPED_IMAGE_MIME);
 
-/** @deprecated Matte is no longer baked at encode time; kept for tests/docs referencing display token. */
-export const IMAGE_MATTE_FALLBACK = '#e8f1f8';
-
 /** Build a File from a cropped blob using detected type/extension. */
 export function fileFromCroppedBlob(blob: Blob, baseName: string): File {
   const ext = extensionForImageMime(blob.type || CROPPED_IMAGE_MIME);

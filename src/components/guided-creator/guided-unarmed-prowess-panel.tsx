@@ -33,9 +33,7 @@ export function GuidedUnarmedProwessPanel({ level, onChange }: GuidedUnarmedProw
           {selected ? copy.remove : copy.add}
         </Button>
         {selected ? (
-          <span className="font-nunito text-sm text-success-700 dark:text-success-400">
-            {copy.addedHint}
-          </span>
+          <span className="font-nunito text-sm text-success-fg">{copy.addedHint}</span>
         ) : null}
       </div>
     </section>

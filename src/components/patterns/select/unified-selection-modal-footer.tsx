@@ -38,7 +38,7 @@ export function UnifiedSelectionModalFooter({
           {selectedCount !== 1 ? 's' : ''} selected
           {maxSelections !== undefined && maxSelections !== 1 && ` (max ${maxSelections})`}
         </span>
-        <div className="flex w-full gap-2 sm:w-auto [&_button]:min-h-11 [&_button]:flex-1 sm:[&_button]:flex-initial">
+        <div className="flex w-full gap-2 sm:w-auto [&_button]:flex-1 sm:[&_button]:flex-initial">
           <Button variant="secondary" onClick={onRequestClose}>
             Cancel
           </Button>
@@ -49,7 +49,7 @@ export function UnifiedSelectionModalFooter({
               primaryActions
             )
           ) : (
-            <Button onClick={onConfirm} disabled={isConfirmDisabled}>
+            <Button size="lg" onClick={onConfirm} disabled={isConfirmDisabled}>
               {confirmLabel}
               {selectedCount > 0 ? ` (${selectedCount})` : ''}
             </Button>

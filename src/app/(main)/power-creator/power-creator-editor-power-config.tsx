@@ -81,7 +81,7 @@ export function PowerCreatorEditorPowerConfig({
             onChange={(e) =>
               onAreaChange((a) => ({ ...a, type: e.target.value as AreaConfig['type'] }))
             }
-            className="rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+            className="touch-tier-standard rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
           >
             {AREA_TYPES.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -157,7 +157,7 @@ export function PowerCreatorEditorPowerConfig({
                 onDurationChange((d) => ({ ...d, type: newType, value: newValue }));
               }
             }}
-            className="rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+            className="touch-tier-standard rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
           >
             {DURATION_TYPES.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -185,7 +185,7 @@ export function PowerCreatorEditorPowerConfig({
                   onDurationChange((d) => ({ ...d, value: newValue }));
                 }
               }}
-              className="rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
+              className="touch-tier-standard rounded-lg border border-border-light bg-surface px-4 py-2 text-text-primary"
             >
               {durationValueOptions.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -233,7 +233,7 @@ export function PowerCreatorEditorPowerConfig({
                   onChange={(e) =>
                     onDurationChange((d) => ({ ...d, sustain: parseInt(e.target.value) }))
                   }
-                  className="rounded border border-border-light bg-surface px-2 py-1 text-sm text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                  className="touch-tier-standard rounded border border-border-light bg-surface px-2 py-1 text-sm text-text-primary disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={isShortDuration}
                 >
                   <option value={0}>None</option>

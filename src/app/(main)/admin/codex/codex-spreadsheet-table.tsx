@@ -6,6 +6,7 @@
 
 import { useRef } from 'react';
 import { Copy, Save, Loader2, ChevronUp, ChevronDown } from 'lucide-react';
+import { IconButton } from '@/components/ui';
 import { BOOLEAN_COLUMNS, NUMERIC_COLUMNS, READONLY_COLUMNS } from './codex-spreadsheet-config';
 import {
   cellValueToString,
@@ -167,7 +168,7 @@ export function CodexSpreadsheetTable({
                           aria-label={`${colKey}, row ${displayIndex + 1} (read only)`}
                         />
                       ) : isBool ? (
-                        <label className="flex min-h-[44px] cursor-pointer items-center justify-center px-2 md:min-h-[36px]">
+                        <label className="touch-tier-standard flex cursor-pointer items-center justify-center px-2">
                           <input
                             type="checkbox"
                             checked={value === true}
@@ -240,30 +241,29 @@ export function CodexSpreadsheetTable({
                 <td className="sticky right-0 z-10 border-l border-border-subtle bg-surface p-1 text-center align-middle">
                   <div className="flex items-center justify-center gap-0.5">
                     {isDirty && (
-                      <button
+                      <IconButton
                         type="button"
+                        variant="primary"
+                        size="md"
                         onClick={() => onSaveRow(row.key)}
                         disabled={savingRowKey === row.key}
-                        className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded p-1.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-primary-fg-hover md:min-h-[36px] md:min-w-[36px]"
-                        title="Save this row"
-                        aria-label="Save this row"
+                        label="Save this row"
                       >
                         {savingRowKey === row.key ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
                         ) : (
                           <Save className="h-4 w-4" />
                         )}
-                      </button>
+                      </IconButton>
                     )}
-                    <button
+                    <IconButton
                       type="button"
+                      size="md"
                       onClick={() => onCopyRow(row.key)}
-                      className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded p-1.5 text-text-muted transition-colors hover:bg-surface-alt hover:text-text-primary md:min-h-[36px] md:min-w-[36px]"
-                      title="Copy row below (new ID and name copy)"
-                      aria-label="Copy row below (new ID and name copy)"
+                      label="Copy row below (new ID and name copy)"
                     >
                       <Copy className="h-4 w-4" />
-                    </button>
+                    </IconButton>
                   </div>
                 </td>
               </tr>

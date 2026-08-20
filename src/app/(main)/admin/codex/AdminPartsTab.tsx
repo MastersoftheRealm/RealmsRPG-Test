@@ -6,18 +6,14 @@ import {
   ErrorDisplay as ErrorState,
   GridListRow,
 } from '@/components/patterns';
-import { Button, IconButton, useToast } from '@/components/ui';
+import { useToast } from '@/components/ui';
 import { SelectFilter } from '@/components/patterns/filters';
 import { useParts, type Part } from '@/hooks';
 import { ABILITIES_AND_DEFENSES } from '@/lib/game/constants';
 import { formatListCellLabel } from '@/lib/utils';
 import { useSort } from '@/hooks/use-sort';
-import { useQueryClient } from '@tanstack/react-query';
-import { createCodexDoc, updateCodexDoc } from './actions';
-import { AdminCodexDeleteReferenceModal, useAdminCodexDelete } from './use-admin-codex-delete';
-import { Pencil, Copy, X } from 'lucide-react';
+import { COPY_NAME_SUFFIX } from './admin-codex-copy-suffix';
 import {
-  COPY_NAME_SUFFIX,
   EMPTY_PART_FORM,
   formatDecimalPreserve,
   formatEnergyCost,
@@ -29,6 +25,8 @@ import {
   type PartOption,
 } from './admin-part-form';
 import { AdminPartEditModal } from './admin-part-edit-modal';
+import { useAdminCodexEntity } from './use-admin-codex-entity';
+import { AdminCodexRowActions } from './admin-codex-row-actions';
 
 const ADMIN_PART_COLUMNS = [
   { key: 'name', label: 'NAME' },
@@ -49,7 +47,23 @@ interface PartFilters {
 export function AdminPartsTab() {
   const { showToast } = useToast();
   const { data: parts, isLoading, error, refetch } = useParts();
-  const queryClient = useQueryClient();
+  const {
+    modalOpen,
+    editing,
+    saving,
+    copySourceName,
+    queryClient,
+    openAdd: beginAdd,
+    openDuplicate: beginDuplicate,
+    openEdit: beginEdit,
+    closeModal,
+    save,
+    askDelete,
+    deleteModals,
+  } = useAdminCodexEntity<Part>({
+    collection: 'codex_parts',
+    entityLabel: 'part',
+  });
   const { sortState, handleSort } = useSort('name');
   const [filters, setFilters] = useState<PartFilters>({
     search: '',
@@ -57,12 +71,6 @@ export function AdminPartsTab() {
     typeFilter: 'all',
     mechanicMode: '',
   });
-  const [modalOpen, setModalOpen] = useState(false);
-  const [editing, setEditing] = useState<Part | null>(null);
-  const [saving, setSaving] = useState(false);
-  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-  const [copySourceName, setCopySourceName] = useState<string | null>(null);
   const [optionSlotCount, setOptionSlotCount] = useState(0);
   const [form, setForm] = useState<PartFormState>(EMPTY_PART_FORM);
 
@@ -144,106 +152,50 @@ export function AdminPartsTab() {
     });
   }, [parts, filters, sortState]);
 
-  const openAdd = () => {
-    setEditing(null);
-    setCopySourceName(null);
-    setOptionSlotCount(0);
-    setForm(EMPTY_PART_FORM);
-    setModalOpen(true);
-  };
+  const openAdd = () =>
+    beginAdd(() => {
+      setOptionSlotCount(0);
+      setForm(EMPTY_PART_FORM);
+    });
 
-  const openDuplicate = (p: Part & { defense?: string[] | undefined }) => {
-    setEditing(null);
-    setCopySourceName(p.name);
-    const next = partToFormState(p);
-    setOptionSlotCount(optionSlotCountFromForm(next));
-    setForm({ ...next, name: (p.name || '').trim() + COPY_NAME_SUFFIX });
-    setModalOpen(true);
-  };
+  const openDuplicate = (p: Part & { defense?: string[] | undefined }) =>
+    beginDuplicate(p, () => {
+      const next = partToFormState(p);
+      setOptionSlotCount(optionSlotCountFromForm(next));
+      setForm({ ...next, name: (p.name || '').trim() + COPY_NAME_SUFFIX });
+    });
 
-  const openEdit = (p: Part & { defense?: string[] | undefined }) => {
-    setEditing(p);
-    setCopySourceName(null);
-    const next = partToFormState(p);
-    setOptionSlotCount(optionSlotCountFromForm(next));
-    setForm(next);
-    setModalOpen(true);
-  };
-
-  const closeModal = () => {
-    setModalOpen(false);
-    setEditing(null);
-    setCopySourceName(null);
-    setDeleteConfirm(null);
-  };
+  const openEdit = (p: Part & { defense?: string[] | undefined }) =>
+    beginEdit(p, () => {
+      const next = partToFormState(p);
+      setOptionSlotCount(optionSlotCountFromForm(next));
+      setForm(next);
+    });
 
   const handleSave = async () => {
     if (!form.name.trim()) return;
-    setSaving(true);
     const data = partFormToSavePayload(form);
-
-    const result = editing
-      ? await updateCodexDoc('codex_parts', editing.id, data, {
-          expectedUpdatedAt: editing.updated_at,
-        })
-      : await createCodexDoc('codex_parts', undefined, data);
-
-    setSaving(false);
-    if (result.success) {
-      const savedId = editing ? editing.id : (result as { id?: string | undefined }).id;
-      if (!savedId) {
-        showToast('Save succeeded but no ID was returned. Please refresh.', 'warning');
-        closeModal();
-        return;
-      }
-      const savedPart = savedPartFromPayload(savedId, data);
-
-      queryClient.setQueryData(['codex'], (prev: unknown) => {
-        if (!prev || typeof prev !== 'object') return prev;
-        const prevCodex = prev as Record<string, unknown>;
-        const prevParts = (prevCodex.parts as Part[] | undefined) ?? [];
-        const nextParts = prevParts.some((p) => p.id === savedId)
-          ? prevParts.map((p) => (p.id === savedId ? { ...p, ...savedPart } : p))
-          : [...prevParts, savedPart];
-        return { ...prevCodex, parts: nextParts };
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      await queryClient.refetchQueries({ queryKey: ['codex'] });
-      closeModal();
-    } else {
-      showToast(result.error ?? 'Operation failed', 'error');
-    }
-  };
-
-  const codexDelete = useAdminCodexDelete({
-    collection: 'codex_parts',
-    onDeleted: async () => {
-      queryClient.invalidateQueries({ queryKey: ['codex'] });
-      setPendingDeleteId(null);
-      setDeleteConfirm(null);
-      closeModal();
-    },
-    onError: (message) => {
-      setPendingDeleteId(null);
-      showToast(message, 'error');
-    },
-  });
-
-  const handleDelete = async (id: string) => {
-    if (deleteConfirm !== id) {
-      setDeleteConfirm(id);
-      return;
-    }
-    await codexDelete.requestDelete(id);
-  };
-
-  const handleInlineDelete = async (id: string) => {
-    if (pendingDeleteId !== id) {
-      setPendingDeleteId(id);
-      return;
-    }
-    await codexDelete.requestDelete(id);
+    await save({
+      payload: data,
+      expectedUpdatedAt: editing?.updated_at,
+      onSuccess: async ({ id }) => {
+        const savedId = editing ? editing.id : id;
+        if (!savedId) {
+          showToast('Save succeeded but no ID was returned. Please refresh.', 'warning');
+          return;
+        }
+        const savedPart = savedPartFromPayload(savedId, data);
+        queryClient.setQueryData(['codex'], (prev: unknown) => {
+          if (!prev || typeof prev !== 'object') return prev;
+          const prevCodex = prev as Record<string, unknown>;
+          const prevParts = (prevCodex.parts as Part[] | undefined) ?? [];
+          const nextParts = prevParts.some((row) => row.id === savedId)
+            ? prevParts.map((row) => (row.id === savedId ? { ...row, ...savedPart } : row))
+            : [...prevParts, savedPart];
+          return { ...prevCodex, parts: nextParts };
+        });
+      },
+    });
   };
 
   if (error)
@@ -389,61 +341,12 @@ export function AdminPartsTab() {
               ]}
               detailSections={detailSections}
               rightSlot={
-                <div className="flex items-center gap-1 pr-2">
-                  {pendingDeleteId === p.id ? (
-                    <div className="flex items-center gap-1 text-xs">
-                      <span className="font-medium whitespace-nowrap text-danger-700 dark:text-danger-400">
-                        Remove?
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="danger"
-                        onClick={() => handleInlineDelete(p.id)}
-                        className="h-6 px-2 py-0.5 text-xs"
-                      >
-                        Yes
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setPendingDeleteId(null)}
-                        className="h-6 px-2 py-0.5 text-xs"
-                      >
-                        No
-                      </Button>
-                    </div>
-                  ) : (
-                    <>
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openEdit(p)}
-                        label="Edit"
-                        aria-label="Edit"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </IconButton>
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => openDuplicate(p)}
-                        label="Duplicate"
-                        aria-label="Duplicate"
-                      >
-                        <Copy className="h-4 w-4" />
-                      </IconButton>
-                      <IconButton
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setPendingDeleteId(p.id)}
-                        label="Delete"
-                        className="text-danger-fg hover:bg-transparent hover:opacity-80"
-                      >
-                        <X className="h-4 w-4" />
-                      </IconButton>
-                    </>
-                  )}
-                </div>
+                <AdminCodexRowActions
+                  entity={p}
+                  onEdit={openEdit}
+                  onDuplicate={openDuplicate}
+                  onDelete={askDelete}
+                />
               }
             />
           );
@@ -464,12 +367,11 @@ export function AdminPartsTab() {
         setOptionSlotCount={setOptionSlotCount}
         deleteOptionAndCompact={deleteOptionAndCompact}
         saving={saving}
-        deleteConfirm={deleteConfirm}
-        onRequestDelete={() => editing && handleDelete(editing.id)}
+        onDelete={editing ? () => askDelete(editing) : undefined}
         onSave={handleSave}
       />
 
-      <AdminCodexDeleteReferenceModal state={codexDelete} entityLabel="part" />
+      {deleteModals}
     </div>
   );
 }

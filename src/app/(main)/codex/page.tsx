@@ -115,31 +115,32 @@ export default function CodexPage() {
       </div>
 
       <div className="mb-6 min-w-0">
-        <div className="flex min-w-0 items-center gap-2">
-          <div className="min-w-0 flex-1">
-            <TabNavigation
-              tabs={tabs}
-              activeTab={activeTab}
-              onTabChange={onTabChange}
-              variant="underline"
-              tabGroupId={tabGroupId}
-              sharedTabPanelId={sharedPanelId}
-            />
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={toggleAdvanced}
-            className={cn(
-              'min-h-[44px] flex-shrink-0 gap-1.5',
-              showAdvanced && 'border-primary-subtle-border bg-primary-subtle-bg',
-            )}
-            aria-pressed={showAdvanced}
-          >
-            {showAdvanced ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            Advanced
-          </Button>
-        </div>
+        <TabNavigation
+          tabs={tabs}
+          activeTab={activeTab}
+          onTabChange={onTabChange}
+          variant="underline"
+          tabGroupId={tabGroupId}
+          sharedTabPanelId={sharedPanelId}
+          trailing={
+            <Button
+              variant="outline"
+              onClick={toggleAdvanced}
+              className={cn(
+                'gap-1.5',
+                showAdvanced && 'border-primary-subtle-border bg-primary-subtle-bg',
+              )}
+              aria-pressed={showAdvanced}
+            >
+              {showAdvanced ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+              Advanced
+            </Button>
+          }
+        />
       </div>
 
       <TabContentPanel tabGroupId={tabGroupId} id={sharedPanelId} activeTab={activeTab}>

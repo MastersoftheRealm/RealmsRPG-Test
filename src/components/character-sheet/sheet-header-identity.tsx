@@ -139,7 +139,7 @@ export function SheetHeaderIdentity({
   return (
     <>
       {/* Left: Portrait and Identity */}
-      <div className="flex flex-shrink-0 items-center gap-4">
+      <div className="flex min-w-0 items-center gap-4">
         {/* Portrait — ExpandableImage in play view; edit mode click opens upload */}
         {canChangePortrait ? (
           <div
@@ -171,7 +171,7 @@ export function SheetHeaderIdentity({
         )}
 
         {/* Character Identity - Clean unified format */}
-        <div className="flex min-w-0 flex-col justify-center">
+        <div className="flex min-w-0 flex-1 flex-col justify-center">
           {/* Editable Name - Always available with pencil icon */}
           {isEditingName && onNameChange ? (
             <input
@@ -190,13 +190,17 @@ export function SheetHeaderIdentity({
               autoFocus
             />
           ) : (
-            <h1 className="flex items-center gap-2 truncate text-2xl font-bold text-text-primary md:text-3xl">
-              {character.name}
+            <h1
+              className="flex min-w-0 items-center gap-2 text-2xl font-bold text-text-primary md:text-3xl"
+              title={character.name}
+            >
+              <span className="min-w-0 truncate">{character.name}</span>
               {onNameChange && isEditMode && (
                 <button
                   onClick={() => setIsEditingName(true)}
-                  className="text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
+                  className="shrink-0 text-primary-fg transition-colors hover:scale-110 hover:text-primary-fg-hover"
                   title="Edit name"
+                  aria-label="Edit name"
                 >
                   <Pencil className="h-4 w-4" />
                 </button>

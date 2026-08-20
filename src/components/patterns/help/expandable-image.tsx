@@ -66,7 +66,7 @@ export interface ExpandableImageProps {
 }
 
 const EXPAND_TRIGGER_CLASS =
-  'cursor-pointer overflow-hidden transition-shadow hover:ring-2 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary touch-target-md-compact';
+  'cursor-pointer overflow-hidden transition-shadow hover:ring-2 hover:ring-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary';
 
 export function ExpandableImage({
   src,

@@ -41,12 +41,7 @@ export function CreatorStepFooter({
   const actions = (
     <>
       {onBack ? (
-        <Button
-          variant="secondary"
-          onClick={onBack}
-          disabled={backDisabled}
-          className="min-h-11 min-w-11"
-        >
+        <Button variant="secondary" onClick={onBack} disabled={backDisabled}>
           {backLabel}
         </Button>
       ) : !soloPrimary ? (
@@ -59,7 +54,7 @@ export function CreatorStepFooter({
       )}
       {primaryAction ??
         (onContinue ? (
-          <Button onClick={onContinue} disabled={continueDisabled} className="min-h-11 min-w-11">
+          <Button size="lg" onClick={onContinue} disabled={continueDisabled}>
             {continueLabel}
           </Button>
         ) : null)}

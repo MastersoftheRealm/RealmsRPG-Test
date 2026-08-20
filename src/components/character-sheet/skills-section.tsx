@@ -367,7 +367,7 @@ export function SkillsSection({
             </span>
           )}
         </div>
-        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+        <div className="mt-2 flex flex-wrap items-center gap-x-6 gap-y-1">
           <SegmentedControl<SkillProficiencyFilter>
             size="compact"
             aria-label="Skill proficiency filter"
@@ -380,14 +380,14 @@ export function SkillsSection({
           />
           <label
             htmlFor="sheet-skills-sub-skills"
-            className="touch-target-md-compact inline-flex cursor-pointer items-center gap-1.5 text-xs text-text-secondary select-none"
+            className="hit-area-dense inline-flex cursor-pointer items-center gap-1.5 text-xs text-text-secondary select-none"
           >
             <input
               id="sheet-skills-sub-skills"
               type="checkbox"
               checked={showSubSkills}
               onChange={(e) => setShowSubSkills(e.target.checked)}
-              className="rounded border-border-light"
+              className="hit-area-layout-neutral size-4 shrink-0 rounded border-border-light"
             />
             Sub-Skills
           </label>
@@ -429,12 +429,14 @@ export function SkillsSection({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b-2 border-border-light text-xs tracking-wider text-text-muted uppercase">
-            <th className="w-10 min-w-10 py-2 text-center">Prof</th>
-            <th className="py-2 pl-2 text-left">Skill</th>
-            <th className="w-16 min-w-16 py-2 text-center">Ability</th>
+            <th className="w-10 min-w-10 py-2 text-center [@media(pointer:coarse)]:py-4">Prof</th>
+            <th className="py-2 pl-2 text-left [@media(pointer:coarse)]:py-4">Skill</th>
+            <th className="w-16 min-w-16 py-2 text-center [@media(pointer:coarse)]:py-4">
+              Ability
+            </th>
             <th
               className={cn(
-                'py-2 text-center',
+                'py-2 text-center [@media(pointer:coarse)]:py-4',
                 showEditControls ? 'min-w-[7.25rem] md:w-20 md:min-w-20' : 'w-20 min-w-20',
               )}
             >

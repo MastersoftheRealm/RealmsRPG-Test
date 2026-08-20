@@ -1,3 +1,4 @@
+import { DEFENSE_DISPLAY_NAMES } from '@/lib/game/constants';
 import { cn } from '@/lib/utils';
 import type { Abilities, AbilityName, DefenseSkills } from '@/types';
 
@@ -10,13 +11,15 @@ export const ABILITY_ORDER: AbilityName[] = [
   'charisma',
 ];
 
-/** Sheet tip touch: hug on desktop; 44px below md (overrides WordHelpTip default min size). */
+/** Sheet tip touch: hug on fine pointer; Standard min-h (no min-w) on coarse — ADR-0023. */
 const SHEET_TIP_TOUCH_CLASS =
-  'min-h-0 min-w-0 max-md:min-h-[var(--touch-target-min,44px)] max-md:min-w-[var(--touch-target-min,44px)]';
+  'min-h-0 min-w-0 [@media(pointer:coarse)]:min-h-[var(--touch-target-min,44px)]';
 
-/** Sheet tip: defense/ability name labels. */
+/** Sheet tip: defense/ability name labels. Full GAME_RULES words; wrap inside the tile (C2). */
 export const SHEET_STAT_TIP_CLASS = cn(
-  'text-sm font-semibold uppercase tracking-wide text-text-secondary text-center leading-none px-0.5',
+  'flex w-full min-w-0 self-stretch flex-col items-center justify-center',
+  'min-h-[2.5em] px-0.5 text-center text-sm font-semibold uppercase leading-tight tracking-wide',
+  'text-text-secondary whitespace-normal',
   SHEET_TIP_TOUCH_CLASS,
 );
 
@@ -26,9 +29,13 @@ export const SHEET_SCORE_TIP_CLASS = cn(
   SHEET_TIP_TOUCH_CLASS,
 );
 
-/** Shared tile chrome — breathing room without tall empty cards. */
+/** Shared tile chrome — label glued to value; row siblings share height via grid stretch. */
 export const SHEET_STAT_TILE_CLASS =
-  'flex flex-col items-center justify-center gap-2 px-2.5 py-3 rounded-xl border';
+  'flex h-full min-w-0 flex-col items-center justify-start gap-2 px-2.5 py-3 rounded-xl border';
+
+/** C3/C5: full names fit at 2-col phone / 3-col sm / 6-col lg (same tracks as AbilityScoreGrid). */
+export const SHEET_STAT_GRID_CLASS =
+  'grid min-w-0 grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-6 md:gap-3';
 
 export const ABILITY_INFO: Record<
   AbilityName,
@@ -43,12 +50,12 @@ export const ABILITY_INFO: Record<
 };
 
 export const DEFENSE_INFO: Record<keyof DefenseSkills, { name: string; shortName: string }> = {
-  might: { name: 'Might', shortName: 'MGT' },
-  fortitude: { name: 'Fortitude', shortName: 'FOR' },
-  reflex: { name: 'Reflex', shortName: 'REF' },
-  discernment: { name: 'Discernment', shortName: 'DIS' },
-  mentalFortitude: { name: 'Mental Fort.', shortName: 'MNT' },
-  resolve: { name: 'Resolve', shortName: 'RES' },
+  might: { name: DEFENSE_DISPLAY_NAMES.might, shortName: 'MGT' },
+  fortitude: { name: DEFENSE_DISPLAY_NAMES.fortitude, shortName: 'FOR' },
+  reflex: { name: DEFENSE_DISPLAY_NAMES.reflex, shortName: 'REF' },
+  discernment: { name: DEFENSE_DISPLAY_NAMES.discernment, shortName: 'DIS' },
+  mentalFortitude: { name: DEFENSE_DISPLAY_NAMES.mentalFortitude, shortName: 'MNT' },
+  resolve: { name: DEFENSE_DISPLAY_NAMES.resolve, shortName: 'RES' },
 };
 
 // Ability constraints
