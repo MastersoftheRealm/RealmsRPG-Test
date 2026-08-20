@@ -2,6 +2,8 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-08-20 | agent | TASK-867 — nested Playwright test.use cannot spread iPhone 13 | files: responsive-layout.pw.ts, AI_CHANGELOG | Summary: **Deleted** `test.use({ ...devices['iPhone 13'] })` from the TASK-830 creator-form describe (Playwright rejects `defaultBrowserType` inside a group). **Wired** `hasTouch` + `isMobile` so `@media (pointer: coarse)` still applies. verification_status n/a.
+
 - 2026-08-20 | agent | TASK-867 — catch up Linux visual baselines after ADR-0023 landing | files: screenshots.pw.ts-snapshots (22 linux PNGs), ACTIVE→archive, AI_CHANGELOG | Summary: **Replaced** the 22 Linux Playwright baselines that failed UI Verify on master (9 guest routes × mobile light/dark, plus styleguide tablet/desktop) with CI actuals from run 32412275354. Windows snapshots were already refreshed in the TASK-813 landing; Linux was not. verification_status n/a.
 
 - 2026-08-20 | agent | TASK-866 /cleanup — drop duplicate SegmentedControl SoT lines | files: segmented-control, ADR-0023, DESIGN_SYSTEM, guide/02, archive related_files, AI_CHANGELOG | Summary: **Deleted** the TASK-866 restatements on ADR-0023 / DESIGN_SYSTEM / guide/02 and the duplicate file-header size lecture on `SegmentedControl`. Pointer-tier default stays on FEATURE_INDEX + MOBILE_UX. verification_status pending-qa (DEV-V-018 T018).

@@ -1,4 +1,4 @@
-import { test, expect, type Page, devices } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import {
   isUpdateMode,
   keyFor,
@@ -177,7 +177,11 @@ const CREATOR_FORM_WIDTHS = [
 ] as const;
 
 test.describe('creator form fields Standard 44 (TASK-830)', () => {
-  test.use({ ...devices['iPhone 13'] });
+  // Coarse pointer only — do not spread devices['iPhone 13'] here. That descriptor
+  // sets defaultBrowserType, and Playwright forbids that inside a describe
+  // (forces a new worker). Viewport is set per test; hasTouch drives
+  // `@media (pointer: coarse)` for Standard 44 fields.
+  test.use({ hasTouch: true, isMobile: true });
 
   for (const size of CREATOR_FORM_WIDTHS) {
     for (const path of CREATOR_FORM_ROUTES) {
