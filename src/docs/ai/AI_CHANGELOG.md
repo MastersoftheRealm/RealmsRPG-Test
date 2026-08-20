@@ -2,6 +2,8 @@
 
 Newest **150** entries. Older: [`archive/AI_CHANGELOG_ARCHIVE.md`](archive/AI_CHANGELOG_ARCHIVE.md).
 
+- 2026-08-20 | agent | TASK-867 — catch up Linux visual baselines after ADR-0023 landing | files: screenshots.pw.ts-snapshots (22 linux PNGs), ACTIVE→archive, AI_CHANGELOG | Summary: **Replaced** the 22 Linux Playwright baselines that failed UI Verify on master (9 guest routes × mobile light/dark, plus styleguide tablet/desktop) with CI actuals from run 32412275354. Windows snapshots were already refreshed in the TASK-813 landing; Linux was not. verification_status n/a.
+
 - 2026-08-20 | agent | TASK-866 /cleanup — drop duplicate SegmentedControl SoT lines | files: segmented-control, ADR-0023, DESIGN_SYSTEM, guide/02, archive related_files, AI_CHANGELOG | Summary: **Deleted** the TASK-866 restatements on ADR-0023 / DESIGN_SYSTEM / guide/02 and the duplicate file-header size lecture on `SegmentedControl`. Pointer-tier default stays on FEATURE_INDEX + MOBILE_UX. verification_status pending-qa (DEV-V-018 T018).
 
 - 2026-08-20 | agent | TASK-866 — item creator handedness uses SegmentedControl | files: item-creator-editor-weapon-shield, segmented-control, button-tiers.test, FEATURE_INDEX, MOBILE_UX, ADR-0023, DESIGN_SYSTEM, guide/02, BUILD_VALIDATION T018, DEVELOPER_TASK_QUEUE, ACTIVE→archive, AI_CHANGELOG | Summary: **Deleted** the custom One/Two-Handed `min-h-[44px]` warning-fill pair and SegmentedControl’s always-on `min-h-[44px]`. **Wired** handedness onto shared `SegmentedControl`; default size is Standard `touch-tier-standard` (coarse 44, fine compact). `/characters/new/advanced` kept. verification_status pending-qa (DEV-V-018 T018).
