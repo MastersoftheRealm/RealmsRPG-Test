@@ -7,7 +7,7 @@ const mdxSource = readFileSync(path.join(import.meta.dirname, '../../mdx-compone
 
 describe('TableScroll (TASK-826 / C6)', () => {
   it('is a positioned overflow container so sr-only headers cannot expand the page', () => {
-    expect(source).toMatch(/relative min-w-0 max-w-full overflow-x-auto/);
+    expect(source).toMatch(/relative max-w-full min-w-0 overflow-x-auto/);
   });
 
   it('is the MDX table overflow wrapper (no local overflow-x-auto fork)', () => {
