@@ -1,3 +1,37 @@
+- id: TASK-867
+  title: Catch up Linux visual baselines after ADR-0023 landing
+  created_at: 2026-08-20
+  completed_at: 2026-08-20
+  created_by: agent
+  implemented_by: agent
+  priority: high
+  status: done
+  verification_status: n/a
+  related_files:
+    - tests/visual/screenshots.pw.ts-snapshots
+    - tests/visual/responsive-layout.pw.ts
+    - src/docs/ai/AI_CHANGELOG.md
+  automated_check: |
+    npm run verify:visual && npx playwright test -c playwright.responsive.config.ts --list
+  description: |
+    Master UI Verify failed on Visual + accessibility: 22 Playwright screenshot
+    diffs after the ADR-0023 / TASK-813 landing. Windows baselines were updated
+    in that landing; Linux CI baselines were not. Guest copy (New to TTRPGs,
+    Core Rulebook, Armament Creator) and styleguide height (~70px) are intentional.
+  acceptance_criteria:
+    - The 22 failing Linux snapshots match CI Chromium actuals.
+    - Tablet/desktop guest-page Linux baselines that already passed are unchanged.
+    - `npm run tasks:validate` passes.
+  completed_work: |
+    Replaced 18 mobile Linux PNGs (home, about, resources, terms, privacy, login,
+    register, forgot-password × light/dark) and 4 styleguide Linux PNGs (tablet +
+    desktop × light/dark; mobile styleguide included in the 18) from GitHub Actions
+    run 32412275354 actuals. Visual + a11y then passed on PR #120. Replaced the
+    TASK-830 `test.use({ ...devices['iPhone 13'] })` (illegal defaultBrowserType
+    inside a describe) with `hasTouch` + `isMobile` so the responsive gate loads.
+
+---
+
 - id: TASK-859
   title: Fix BUILD_VALIDATION archive link (create archive or drop the href)
   created_at: 2026-08-20
