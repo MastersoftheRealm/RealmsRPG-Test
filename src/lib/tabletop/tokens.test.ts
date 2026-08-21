@@ -2,7 +2,12 @@ import { describe, expect, it } from 'vitest';
 import type { Campaign } from '@/types/campaign';
 import type { TrackedCombatant } from '@/types/encounter';
 import { DEFAULT_VTT_GRID } from './grid';
-import { buildCampaignTokenImageUpdates, buildMissingTokensFromCombatants, buildTokenFromCreature } from './tokens';
+import {
+  buildCampaignTokenImageUpdates,
+  buildMissingTokensFromCombatants,
+  buildTokenFromCreature,
+  mergeLiveCharacterImagesIntoCampaign,
+} from './tokens';
 
 const campaign = {
   id: 'campaign-1',
@@ -65,6 +70,60 @@ const combatants: TrackedCombatant[] = [
 ];
 
 describe('tabletop token seeding', () => {
+  it('defaults campaign-character token images to the current character portrait', () => {
+    const campaignWithStalePortrait = {
+      ...campaign,
+      characters: campaign.characters.map((character) => ({
+        ...character,
+        portrait: 'https://example.test/old-mara.jpg',
+      })),
+    } satisfies Campaign;
+
+    const enrichedCampaign = mergeLiveCharacterImagesIntoCampaign(campaignWithStalePortrait, [
+      {
+        id: 'char-1',
+        user_id: 'player-1',
+        data: { portrait: 'https://example.test/current-mara.jpg' },
+      },
+    ]);
+
+    const tokens = buildMissingTokensFromCombatants({
+      sceneId: 'scene-1',
+      combatants,
+      existingTokens: [],
+      grid: DEFAULT_VTT_GRID,
+      campaign: enrichedCampaign,
+    });
+
+    expect(tokens[0]?.imageUrl).toBe('https://example.test/current-mara.jpg');
+  });
+
+  it('keeps the roster portrait fallback when the live character row has no image', () => {
+    const enrichedCampaign = mergeLiveCharacterImagesIntoCampaign(campaign, [
+      {
+        id: 'char-1',
+        user_id: 'player-1',
+        data: { portrait: '' },
+      },
+    ]);
+
+    const updates = buildCampaignTokenImageUpdates({
+      campaign: enrichedCampaign,
+      existingTokens: [
+        {
+          id: 'token-1',
+          combatantId: 'c-1',
+          sourceType: 'campaign-character',
+          sourceId: 'char-1',
+          sourceUserId: 'player-1',
+          imageUrl: undefined,
+        },
+      ],
+    });
+
+    expect(updates).toEqual([{ id: 'token-1', imageUrl: 'https://example.test/mara.jpg' }]);
+  });
+
   it('creates only missing combatant tokens and copies campaign portraits', () => {
     const tokens = buildMissingTokensFromCombatants({
       sceneId: 'scene-1',

@@ -6,7 +6,7 @@ What **you** need to do that AI cannot (Dashboard, prod validation, decisions). 
 
 **Agents:** When you finish a user-facing task (`done` or `partial`), add granular tests to `BUILD_VALIDATION.md` and index the suite below. See `[ARCHITECTURE_CONSTITUTION.md](ARCHITECTURE_CONSTITUTION.md)`.
 
-**Last updated:** 2026-08-20
+**Last updated:** 2026-08-21
 
 ---
 
@@ -151,6 +151,7 @@ Archived tasks waiting on owner manual validation. Implementation is complete (`
 
 | Task | Suite / tests | What to verify |
 | ---- | ------------- | -------------- |
+| **User request — VTT portrait tokens** | BUILD_VALIDATION “Character tokens render portraits on the tabletop” | `/campaigns/[id]/tabletop`: campaign-character token image defaults to the current character portrait; **Sync** backfills missing/stale token images; tokens without images still fall back to initials; RM/player views stay consistent. |
 | **TASK-866** | DEV-V-018 **T018** | `/item-creator` Weapon Configuration: One/Two-Handed is shared `SegmentedControl` (not custom `min-h-[44px]` warning buttons). Toggle updates IP/TP/currency; persist on save/load. 360/390 coarse ≥44px tall; fine-pointer desktop compact. `/characters/new/advanced` still loads. |
 | **TASK-865** | DEV-V-055 **T007** | `/admin/core-rules` add-row links, `/rules` nav + chapter prev/next, Codex/Library CharacterFilter header, and Admin Codex spreadsheet row/checkbox/icon hits at 360/390 coarse vs fine desktop: pointer tiers (`touch-tier-standard` / `IconButton`), not `md:min-h-0` / `md:min-h-5` / `md:min-h-[36px]`. `/characters/new/advanced` still loads. Do not retag list thumbs / image mattes / innate-toggle. |
 | **TASK-856** | DEV-V-001 **T021** | `/characters/new/advanced` Feats + Equipment: Search and Filters share one compact row (Filters right of search). Lists still search/filter. Desktop + ~360px. Guided L3 catalogs unchanged. |

@@ -1,6 +1,13 @@
 # ALL_FEEDBACK — Consolidated & Curated
 
-Last updated: 2026-08-17 (Sheet Inventory: custom equipment add missing)
+Last updated: 2026-08-21 (VTT token icon defaults to character image)
+
+**Raw Feedback Log — 2026-08-21 (VTT token icon defaults to character image)**
+- Context: Virtual tabletop — campaign-character tokens on `/campaigns/[id]/tabletop`
+- Priority: Medium
+- Feedback (verbatim summary): I'm working on the virtual tabletop. Please make the icon image default to the character image.
+- Expected: Campaign-character token images use the current character portrait by default; existing token sync backfills stale/missing token images; tokens without a character image still fall back to initials.
+- Disposition: Implemented directly — VTT campaign access enriches roster portraits from live character rows before token seeding/backfill; fallback roster portrait behavior preserved. Covered by `src/lib/tabletop/tokens.test.ts`; manual QA DEV-V-016-T011.
 
 **Raw Feedback Log — 2026-08-17 (Sheet Inventory: custom item add gone)**
 - Context: Character sheet Library → Inventory → Equipment → Add equipment

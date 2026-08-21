@@ -15,6 +15,13 @@ const TOKEN_COLORS: Record<TrackedCombatant['combatantType'], string> = {
   companion: '#7c3aed',
 };
 
+export type CampaignCharacterTokenImageRow = {
+  id: string;
+  user_id: string;
+  data?: unknown;
+  portrait?: string | null | undefined;
+};
+
 function initials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
   const first = parts[0];
@@ -22,6 +29,54 @@ function initials(name: string): string {
   const second = parts[1];
   if (!second) return first.slice(0, 2).toUpperCase();
   return `${first[0] ?? ''}${second[0] ?? ''}`.toUpperCase();
+}
+
+function imageUrlFrom(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value.trim() : undefined;
+}
+
+function readCharacterImageUrl(row: CampaignCharacterTokenImageRow): string | undefined {
+  const data =
+    typeof row.data === 'object' && row.data !== null ? (row.data as Record<string, unknown>) : {};
+  return (
+    imageUrlFrom(data.portrait) ??
+    imageUrlFrom(data.portraitUrl) ??
+    imageUrlFrom(data.portrait_url) ??
+    imageUrlFrom(row.portrait)
+  );
+}
+
+function campaignCharacterRefKey(
+  userId: string | undefined,
+  characterId: string | undefined,
+): string {
+  return `${userId ?? ''}:${characterId ?? ''}`;
+}
+
+export function mergeLiveCharacterImagesIntoCampaign(
+  campaign: Campaign,
+  rows: CampaignCharacterTokenImageRow[],
+): Campaign {
+  const imageByRef = new Map<string, string>();
+  for (const row of rows) {
+    const imageUrl = readCharacterImageUrl(row);
+    if (!imageUrl) continue;
+    imageByRef.set(campaignCharacterRefKey(row.user_id, row.id), imageUrl);
+  }
+
+  if (imageByRef.size === 0) return campaign;
+
+  let changed = false;
+  const characters = campaign.characters.map((character) => {
+    const imageUrl = imageByRef.get(
+      campaignCharacterRefKey(character.userId, character.characterId),
+    );
+    if (!imageUrl || imageUrl === character.portrait) return character;
+    changed = true;
+    return { ...character, portrait: imageUrl };
+  });
+
+  return changed ? { ...campaign, characters } : campaign;
 }
 
 function readRosterPortrait(
@@ -81,7 +136,7 @@ function readCreatureImageUrl(creature: LibraryCreature): string | undefined {
     image_url?: string | null;
     imageUrl?: string | null;
   };
-  return record.image_url ?? record.imageUrl ?? undefined;
+  return imageUrlFrom(record.image_url) ?? imageUrlFrom(record.imageUrl);
 }
 
 function creatureSizeMultiplier(size: string | undefined): number {

@@ -1,7 +1,11 @@
 import { createServiceRoleClient } from '@/lib/supabase/server';
 import { normalizeCampaignRosterCharacters } from '@/lib/campaign-roster';
 import { DEFAULT_VTT_GRID, normalizeGridConfig } from '@/lib/tabletop/grid';
-import { buildCampaignTokenImageUpdates } from '@/lib/tabletop/tokens';
+import {
+  buildCampaignTokenImageUpdates,
+  mergeLiveCharacterImagesIntoCampaign,
+  type CampaignCharacterTokenImageRow,
+} from '@/lib/tabletop/tokens';
 import { filterTabletopStateForRole } from '@/lib/tabletop/visibility';
 import type { Campaign } from '@/types/campaign';
 import type { TrackedCombatant } from '@/types/encounter';
@@ -18,7 +22,9 @@ import type {
 
 export const VTT_MAPS_BUCKET = 'vtt-maps';
 
-type SupabaseServerClient = Awaited<ReturnType<typeof import('@/lib/supabase/server').createClient>>;
+type SupabaseServerClient = Awaited<
+  ReturnType<typeof import('@/lib/supabase/server').createClient>
+>;
 
 export type VttSceneRow = {
   id: string;
@@ -82,7 +88,10 @@ function objectFrom<T extends object>(value: unknown, fallback: T): T {
 }
 
 export function sceneFromRow(row: VttSceneRow, signedUrl?: string): VttScene {
-  const rawMap = typeof row.map === 'object' && row.map !== null ? (row.map as Record<string, unknown>) : undefined;
+  const rawMap =
+    typeof row.map === 'object' && row.map !== null
+      ? (row.map as Record<string, unknown>)
+      : undefined;
   const map = rawMap?.storagePath
     ? ({
         storagePath: String(rawMap.storagePath),
@@ -132,9 +141,14 @@ export function tokenFromRow(row: VttTokenRow): VttToken {
     imageUrl: row.image_url ?? undefined,
     visible: row.visible ?? true,
     locked: row.locked ?? false,
-    combatantType: row.combatant_type === 'ally' || row.combatant_type === 'companion' ? row.combatant_type : 'enemy',
+    combatantType:
+      row.combatant_type === 'ally' || row.combatant_type === 'companion'
+        ? row.combatant_type
+        : 'enemy',
     sourceType:
-      row.source_type === 'campaign-character' || row.source_type === 'creature-library' || row.source_type === 'manual'
+      row.source_type === 'campaign-character' ||
+      row.source_type === 'creature-library' ||
+      row.source_type === 'manual'
         ? row.source_type
         : undefined,
     sourceId: row.source_id ?? undefined,
@@ -166,7 +180,9 @@ export function actionFromRow(row: VttActionRow): VttAction {
   };
 }
 
-export function tokenToInsertRow(token: Omit<VttToken, 'createdAt' | 'updatedAt'>): Record<string, unknown> {
+export function tokenToInsertRow(
+  token: Omit<VttToken, 'createdAt' | 'updatedAt'>,
+): Record<string, unknown> {
   return {
     id: token.id,
     scene_id: token.sceneId,
@@ -193,11 +209,11 @@ export async function updateCampaignTokenImages(
   sceneId: string,
   tokens: VttToken[],
   campaign: Campaign,
-  combatants: TrackedCombatant[] = []
+  combatants: TrackedCombatant[] = [],
 ): Promise<void> {
-  console.log("UPDATING IMAGES")
+  console.log('UPDATING IMAGES');
   const updates = buildCampaignTokenImageUpdates({ campaign, existingTokens: tokens, combatants });
-  console.log("updates length: " + updates.length)
+  console.log('updates length: ' + updates.length);
   if (updates.length === 0) return;
 
   const updatedAt = new Date().toISOString();
@@ -207,15 +223,17 @@ export async function updateCampaignTokenImages(
         .from('vtt_tokens')
         .update({ image_url: update.imageUrl, updated_at: updatedAt })
         .eq('scene_id', sceneId)
-        .eq('id', update.id)
-    )
+        .eq('id', update.id),
+    ),
   );
   const failed = results.find((result) => result.error);
-  console.log("SHOULD HAVE UPDATED IMAGES")
+  console.log('SHOULD HAVE UPDATED IMAGES');
   if (failed?.error) throw failed.error;
 }
 
-export async function createMapSignedUrl(map: VttMapAsset | undefined): Promise<string | undefined> {
+export async function createMapSignedUrl(
+  map: VttMapAsset | undefined,
+): Promise<string | undefined> {
   if (!map?.storagePath) return undefined;
   const service = createServiceRoleClient();
   const { data, error } = await service.storage
@@ -228,10 +246,36 @@ export async function createMapSignedUrl(map: VttMapAsset | undefined): Promise<
   return data.signedUrl;
 }
 
+async function enrichCampaignCharacterImages(campaign: Campaign): Promise<Campaign> {
+  const characterIds = [
+    ...new Set(campaign.characters.map((character) => character.characterId).filter(Boolean)),
+  ];
+  if (characterIds.length === 0) return campaign;
+
+  try {
+    const service = createServiceRoleClient();
+    const { data, error } = await service
+      .from('characters')
+      .select('id, user_id, data')
+      .in('id', characterIds);
+    if (error) {
+      console.warn('[VTT] Could not load character images for token defaults:', error.message);
+      return campaign;
+    }
+    return mergeLiveCharacterImagesIntoCampaign(
+      campaign,
+      (data ?? []) as CampaignCharacterTokenImageRow[],
+    );
+  } catch (err) {
+    console.warn('[VTT] Could not load character images for token defaults:', err);
+    return campaign;
+  }
+}
+
 export async function getCampaignForAccess(
   supabase: SupabaseServerClient,
   campaignId: string,
-  userId: string
+  userId: string,
 ): Promise<{ campaign: Campaign; role: VttRole } | null> {
   const { data } = await supabase
     .from('campaigns')
@@ -240,18 +284,21 @@ export async function getCampaignForAccess(
     .maybeSingle();
 
   if (!data) return null;
+  const campaign: Campaign = {
+    id: data.id,
+    name: data.name ?? 'Campaign',
+    ownerId: data.owner_id,
+    ownerUsername: data.owner_username ?? undefined,
+    inviteCode: data.invite_code ?? '',
+    characters: normalizeCampaignRosterCharacters(data.characters),
+    memberIds: [],
+    createdAt: data.created_at ?? undefined,
+    updatedAt: data.updated_at ?? undefined,
+  };
+  const campaignWithCurrentImages = await enrichCampaignCharacterImages(campaign);
+
   return {
-    campaign: {
-      id: data.id,
-      name: data.name ?? 'Campaign',
-      ownerId: data.owner_id,
-      ownerUsername: data.owner_username ?? undefined,
-      inviteCode: data.invite_code ?? '',
-      characters: normalizeCampaignRosterCharacters(data.characters),
-      memberIds: [],
-      createdAt: data.created_at ?? undefined,
-      updatedAt: data.updated_at ?? undefined,
-    },
+    campaign: campaignWithCurrentImages,
     role: data.owner_id === userId ? 'realm-master' : 'player',
   };
 }
@@ -259,7 +306,7 @@ export async function getCampaignForAccess(
 export async function getSceneAccess(
   supabase: SupabaseServerClient,
   sceneId: string,
-  userId: string
+  userId: string,
 ): Promise<{ sceneRow: VttSceneRow; scene: VttScene; campaign: Campaign; role: VttRole } | null> {
   const { data: row } = await supabase
     .from('vtt_scenes')
@@ -284,14 +331,23 @@ export async function getSceneAccess(
 export async function getTabletopState(
   supabase: SupabaseServerClient,
   sceneId: string,
-  userId: string
+  userId: string,
 ): Promise<VttTabletopState | null> {
   const access = await getSceneAccess(supabase, sceneId, userId);
   if (!access) return null;
 
   const [{ data: tokenRows }, { data: actionRows }] = await Promise.all([
-    supabase.from('vtt_tokens').select('*').eq('scene_id', sceneId).order('created_at', { ascending: true }),
-    supabase.from('vtt_actions').select('*').eq('scene_id', sceneId).order('created_at', { ascending: false }).limit(80),
+    supabase
+      .from('vtt_tokens')
+      .select('*')
+      .eq('scene_id', sceneId)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('vtt_actions')
+      .select('*')
+      .eq('scene_id', sceneId)
+      .order('created_at', { ascending: false })
+      .limit(80),
   ]);
 
   return filterTabletopStateForRole(
@@ -301,6 +357,6 @@ export async function getTabletopState(
       tokens: (tokenRows ?? []).map((row) => tokenFromRow(row as VttTokenRow)),
       actions: (actionRows ?? []).map((row) => actionFromRow(row as VttActionRow)),
     },
-    userId
+    userId,
   );
 }
