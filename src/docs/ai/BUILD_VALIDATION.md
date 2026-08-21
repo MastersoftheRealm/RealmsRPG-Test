@@ -1511,6 +1511,34 @@ Automated via `npm test` (`src/lib/library-types.test.ts`).
 
 ---
 
+#### DEV-V-016-T011 — Character tokens render portraits on the tabletop
+
+| Field | Value |
+|-------|-------|
+| **Suite** | DEV-V-016 |
+| **Section** | Tokens and actions |
+| **Related task** | User request — VTT character token portraits |
+| **Where** | `/campaigns/[id]/tabletop` |
+| **Needs** | Realm Master and non-RM player signed in to separate browser sessions; campaign character with a portrait; active tabletop scene seeded from an encounter |
+
+**Steps**
+1. Add a character with a portrait to a campaign-linked combat encounter.
+2. Open the tabletop as the Realm Master.
+3. Confirm the character token on the canvas.
+4. If testing an older scene, click **Sync** in **Scene Tools**.
+5. Open the same tabletop as the player.
+
+**Expected**
+- The character token shows the character portrait inside the circular token instead of name initials.
+- Selecting, dragging, hiding, and player move requests still work on portrait tokens.
+- **Sync** backfills a missing or stale portrait URL for existing campaign-character tokens.
+- Tokens without an image still fall back to initials.
+- The player sees the same visible portrait token without a manual refresh.
+
+**Report** — `[ ] PASS` · `[ ] FAIL` · `[ ] SKIP` — Notes:
+
+---
+
 ## DEV-V-017 — Encounter duplicate campaign characters
 
 **Related task:** User request — encounter duplicate campaign characters

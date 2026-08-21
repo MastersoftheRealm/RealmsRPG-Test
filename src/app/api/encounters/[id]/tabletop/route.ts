@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { getSession } from '@/lib/supabase/session';
 import { normalizeGridConfig } from '@/lib/tabletop/grid';
 import { buildMissingTokensFromCombatants } from '@/lib/tabletop/tokens';
-import { getCampaignForAccess, getTabletopState, tokenFromRow, tokenToInsertRow, type VttTokenRow } from '@/lib/tabletop/server';
+import { getCampaignForAccess, tokenFromRow, tokenToInsertRow, updateCampaignTokenImages, type VttTokenRow } from '@/lib/tabletop/server';
 import type { Encounter, TrackedCombatant } from '@/types/encounter';
 
 export async function POST(
@@ -75,9 +75,10 @@ export async function POST(
 
     const { data: tokenRows } = await supabase.from('vtt_tokens').select('*').eq('scene_id', sceneId);
     const existingTokens = (tokenRows ?? []).map((row) => tokenFromRow(row as VttTokenRow));
+    const combatants = ((encounter?.combatants ?? []) as TrackedCombatant[]);
     const missing = buildMissingTokensFromCombatants({
       sceneId,
-      combatants: ((encounter?.combatants ?? []) as TrackedCombatant[]),
+      combatants,
       existingTokens,
       grid: normalizeGridConfig(existing?.grid as Record<string, unknown> | undefined),
       campaign: campaignAccess.campaign,
@@ -86,6 +87,7 @@ export async function POST(
       const { error: insertTokensErr } = await supabase.from('vtt_tokens').insert(missing.map(tokenToInsertRow));
       if (insertTokensErr) throw insertTokensErr;
     }
+    await updateCampaignTokenImages(supabase, sceneId, existingTokens, campaignAccess.campaign, combatants);
 
     return NextResponse.json({ sceneId, campaignId });
   } catch (err) {

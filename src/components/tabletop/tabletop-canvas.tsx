@@ -47,10 +47,19 @@ function useImage(src: string | undefined) {
   const [loaded, setLoaded] = useState<{ src: string; image: HTMLImageElement } | null>(null);
   useEffect(() => {
     if (!src) return;
+    let active = true;
     const img = new window.Image();
     img.crossOrigin = 'anonymous';
-    img.onload = () => setLoaded({ src, image: img });
+    img.onload = () => {
+      if (active) setLoaded({ src, image: img });
+    };
+    img.onerror = () => {
+      if (active) setLoaded(null);
+    };
     img.src = src;
+    return () => {
+      active = false;
+    };
   }, [src]);
   if (!loaded || loaded.src !== src) return null;
   return loaded.image;
@@ -66,6 +75,111 @@ function buildGridLines(width: number, height: number, cellSize: number, offsetX
 
 function tokenTextColor(token: VttToken): string {
   return token.combatantType === 'enemy' ? '#fef2f2' : '#eff6ff';
+}
+
+function imageCoverCrop(image: HTMLImageElement) {
+  const sourceWidth = image.naturalWidth || image.width;
+  const sourceHeight = image.naturalHeight || image.height;
+  if (sourceWidth <= 0 || sourceHeight <= 0) return undefined;
+
+  const cropSize = Math.min(sourceWidth, sourceHeight);
+  return {
+    x: Math.max(0, (sourceWidth - cropSize) / 2),
+    y: Math.max(0, (sourceHeight - cropSize) / 2),
+    width: cropSize,
+    height: cropSize,
+  };
+}
+
+function TokenNode({
+  token,
+  selected,
+  canMoveTokens,
+  grid,
+  mapWidth,
+  mapHeight,
+  onSelectToken,
+  onMoveToken,
+}: {
+  token: VttToken;
+  selected: boolean;
+  canMoveTokens: boolean;
+  grid: VttTabletopState['scene']['grid'];
+  mapWidth: number;
+  mapHeight: number;
+  onSelectToken: (tokenId: string | undefined) => void;
+  onMoveToken: (tokenId: string, point: VttPoint) => void;
+}) {
+  const tokenImage = useImage(token.imageUrl);
+  const crop = useMemo(() => (tokenImage ? imageCoverCrop(tokenImage) : undefined), [tokenImage]);
+  const borderWidth = selected ? 5 : 2;
+
+  return (
+    <Group
+      x={token.x}
+      y={token.y}
+      draggable={canMoveTokens && !token.locked}
+      onClick={(event) => {
+        event.cancelBubble = true;
+        onSelectToken(token.id);
+      }}
+      onTap={(event) => {
+        event.cancelBubble = true;
+        onSelectToken(token.id);
+      }}
+      onDragEnd={(event) => {
+        const next = clampPointToMap(
+          snapPointToGrid({ x: event.target.x(), y: event.target.y() }, grid),
+          mapWidth,
+          mapHeight
+        );
+        event.target.position(next);
+        onMoveToken(token.id, next);
+      }}
+    >
+      <Circle
+        radius={token.size / 2}
+        fill={token.color}
+        shadowColor="#000000"
+        shadowBlur={selected ? 12 : 5}
+        shadowOpacity={0.35}
+      />
+      {tokenImage ? (
+        <Group
+          clipFunc={(context) => {
+            context.beginPath();
+            context.arc(0, 0, Math.max(0, token.size / 2 - borderWidth / 2), 0, Math.PI * 2, false);
+            context.closePath();
+          }}
+        >
+          <KonvaImage
+            image={tokenImage}
+            crop={crop}
+            x={-token.size / 2}
+            y={-token.size / 2}
+            width={token.size}
+            height={token.size}
+          />
+        </Group>
+      ) : (
+        <Text
+          text={token.label}
+          width={token.size}
+          x={-token.size / 2}
+          y={-8}
+          align="center"
+          fill={tokenTextColor(token)}
+          fontSize={16}
+          fontStyle="bold"
+        />
+      )}
+      <Circle
+        radius={token.size / 2}
+        stroke={selected ? '#facc15' : '#ffffff'}
+        strokeWidth={borderWidth}
+      />
+    </Group>
+  );
 }
 
 function pingExpiresAt(action: VttAction): number {
@@ -324,49 +438,17 @@ export function TabletopCanvas({
           {state.tokens.map((token) => {
             const selected = token.id === selectedTokenId;
             return (
-              <Group
+              <TokenNode
                 key={token.id}
-                x={token.x}
-                y={token.y}
-                draggable={canMoveTokens && !token.locked}
-                onClick={(event) => {
-                  event.cancelBubble = true;
-                  onSelectToken(token.id);
-                }}
-                onTap={(event) => {
-                  event.cancelBubble = true;
-                  onSelectToken(token.id);
-                }}
-                onDragEnd={(event) => {
-                  const next = clampPointToMap(
-                    snapPointToGrid({ x: event.target.x(), y: event.target.y() }, grid),
-                    mapWidth,
-                    mapHeight
-                  );
-                  event.target.position(next);
-                  onMoveToken(token.id, next);
-                }}
-              >
-                <Circle
-                  radius={token.size / 2}
-                  fill={token.color}
-                  stroke={selected ? '#facc15' : '#ffffff'}
-                  strokeWidth={selected ? 5 : 2}
-                  shadowColor="#000000"
-                  shadowBlur={selected ? 12 : 5}
-                  shadowOpacity={0.35}
-                />
-                <Text
-                  text={token.label}
-                  width={token.size}
-                  x={-token.size / 2}
-                  y={-8}
-                  align="center"
-                  fill={tokenTextColor(token)}
-                  fontSize={16}
-                  fontStyle="bold"
-                />
-              </Group>
+                token={token}
+                selected={selected}
+                canMoveTokens={canMoveTokens}
+                grid={grid}
+                mapWidth={mapWidth}
+                mapHeight={mapHeight}
+                onSelectToken={onSelectToken}
+                onMoveToken={onMoveToken}
+              />
             );
           })}
         </Layer>

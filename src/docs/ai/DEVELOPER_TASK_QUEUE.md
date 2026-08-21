@@ -44,7 +44,7 @@ Each suite is a **category** of step-by-step tests. Full steps live in [`BUILD_V
 | **DEV-V-011** | UI verification safety net | TASK-383, TASK-385 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-011--ui-verification-safety-net-task-383) |
 | **DEV-V-012** | Landing page rebuild | TASK-387 | T001–T006 (6) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-012--landing-page-rebuild-task-387) |
 | **DEV-V-013** | Guided Simple character creator | TASK-394–403, TASK-422 | T001–T007 (7) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-013--guided-simple-character-creator-task-394403) |
-| **DEV-V-016** | Virtual tabletop V1 | User request, TASK-424 | T001–T010 (10) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-016--virtual-tabletop-v1) |
+| **DEV-V-016** | Virtual tabletop V1 | User request, TASK-424 | T001–T011 (11) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-016--virtual-tabletop-v1) |
 | **DEV-V-017** | Encounter duplicate campaign characters | User request | T001–T003 (3) | Ready — [open suite](BUILD_VALIDATION.md#dev-v-017--encounter-duplicate-campaign-characters) |
 | DEV-V-002 | Campaign & rolls security | TASK-329 | — | Planned (legacy DEV-T-002) |
 | DEV-V-003 | Admin role change safety | TASK-330 | — | Planned |

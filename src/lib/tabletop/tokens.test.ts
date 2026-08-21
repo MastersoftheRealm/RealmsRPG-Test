@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { Campaign } from '@/types/campaign';
 import type { TrackedCombatant } from '@/types/encounter';
 import { DEFAULT_VTT_GRID } from './grid';
-import { buildMissingTokensFromCombatants, buildTokenFromCreature } from './tokens';
+import { buildCampaignTokenImageUpdates, buildMissingTokensFromCombatants, buildTokenFromCreature } from './tokens';
 
 const campaign = {
   id: 'campaign-1',
@@ -78,6 +78,59 @@ describe('tabletop token seeding', () => {
     expect(tokens[0]?.combatantId).toBe('c-1');
     expect(tokens[0]?.imageUrl).toBe('https://example.test/mara.jpg');
     expect(tokens[0]?.metadata.currentHealth).toBe(18);
+  });
+
+  it('builds image updates for existing campaign character tokens', () => {
+    const updates = buildCampaignTokenImageUpdates({
+      campaign,
+      existingTokens: [
+        {
+          id: 'token-1',
+          combatantId: 'c-1',
+          sourceType: 'campaign-character',
+          sourceId: 'char-1',
+          sourceUserId: 'player-1',
+          imageUrl: undefined,
+        },
+        {
+          id: 'token-2',
+          combatantId: 'c-1',
+          sourceType: 'campaign-character',
+          sourceId: 'char-1',
+          sourceUserId: 'player-1',
+          imageUrl: 'https://example.test/mara.jpg',
+        },
+        {
+          id: 'token-3',
+          combatantId: undefined,
+          sourceType: 'manual',
+          sourceId: undefined,
+          sourceUserId: undefined,
+          imageUrl: undefined,
+        },
+      ],
+    });
+
+    expect(updates).toEqual([{ id: 'token-1', imageUrl: 'https://example.test/mara.jpg' }]);
+  });
+
+  it('uses linked combatants to update older tokens with missing source refs', () => {
+    const updates = buildCampaignTokenImageUpdates({
+      campaign,
+      combatants,
+      existingTokens: [
+        {
+          id: 'token-1',
+          combatantId: 'c-1',
+          sourceType: undefined,
+          sourceId: undefined,
+          sourceUserId: undefined,
+          imageUrl: undefined,
+        },
+      ],
+    });
+
+    expect(updates).toEqual([{ id: 'token-1', imageUrl: 'https://example.test/mara.jpg' }]);
   });
 
   it('creates hidden enemy tokens from library creatures with resource metadata', () => {

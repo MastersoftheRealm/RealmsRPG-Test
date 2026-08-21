@@ -22,9 +22,35 @@ function readRosterPortrait(campaign: Campaign | undefined, combatant: TrackedCo
   if (!campaign || combatant.sourceType !== 'campaign-character' || !combatant.sourceId || !combatant.sourceUserId) {
     return undefined;
   }
+  return readCampaignCharacterTokenImageUrl(campaign, {
+    sourceType: combatant.sourceType,
+    sourceId: combatant.sourceId,
+    sourceUserId: combatant.sourceUserId,
+  });
+}
+
+export function readCampaignCharacterTokenImageUrl(
+  campaign: Campaign | undefined,
+  ref: Pick<VttToken, 'sourceType' | 'sourceId' | 'sourceUserId'>
+): string | undefined {
+  if (!campaign || ref.sourceType !== 'campaign-character' || !ref.sourceId || !ref.sourceUserId) {
+    return undefined;
+  }
   return campaign.characters?.find(
-    (c) => c.characterId === combatant.sourceId && c.userId === combatant.sourceUserId
+    (c) => c.characterId === ref.sourceId && c.userId === ref.sourceUserId
   )?.portrait;
+}
+
+export function buildCampaignTokenImageUpdates(params: {
+  campaign?: Campaign;
+  existingTokens: Array<Pick<VttToken, 'id' | 'sourceType' | 'sourceId' | 'sourceUserId' | 'imageUrl'>>;
+}): Array<{ id: string; imageUrl: string }> {
+  return params.existingTokens.flatMap((token) => {
+    const imageUrl = readCampaignCharacterTokenImageUrl(params.campaign, token);
+
+    if (!imageUrl || token.imageUrl === imageUrl) return [];
+    return [{ id: token.id, imageUrl }];
+  });
 }
 
 function readCreatureImageUrl(creature: LibraryCreature): string | undefined {

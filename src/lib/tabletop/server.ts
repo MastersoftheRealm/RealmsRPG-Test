@@ -1,7 +1,10 @@
 import { createServiceRoleClient } from '@/lib/supabase/server';
+import { normalizeCampaignRosterCharacters } from '@/lib/campaign-roster';
 import { DEFAULT_VTT_GRID, normalizeGridConfig } from '@/lib/tabletop/grid';
+import { buildCampaignTokenImageUpdates } from '@/lib/tabletop/tokens';
 import { filterTabletopStateForRole } from '@/lib/tabletop/visibility';
 import type { Campaign } from '@/types/campaign';
+import type { TrackedCombatant } from '@/types/encounter';
 import type {
   VttAction,
   VttFogState,
@@ -185,6 +188,33 @@ export function tokenToInsertRow(token: Omit<VttToken, 'createdAt' | 'updatedAt'
   };
 }
 
+export async function updateCampaignTokenImages(
+  supabase: SupabaseServerClient,
+  sceneId: string,
+  tokens: VttToken[],
+  campaign: Campaign,
+  combatants: TrackedCombatant[] = []
+): Promise<void> {
+  console.log("UPDATING IMAGES")
+  const updates = buildCampaignTokenImageUpdates({ campaign, existingTokens: tokens, combatants });
+  console.log("updates length: " + updates.length)
+  if (updates.length === 0) return;
+
+  const updatedAt = new Date().toISOString();
+  const results = await Promise.all(
+    updates.map((update) =>
+      supabase
+        .from('vtt_tokens')
+        .update({ image_url: update.imageUrl, updated_at: updatedAt })
+        .eq('scene_id', sceneId)
+        .eq('id', update.id)
+    )
+  );
+  const failed = results.find((result) => result.error);
+  console.log("SHOULD HAVE UPDATED IMAGES")
+  if (failed?.error) throw failed.error;
+}
+
 export async function createMapSignedUrl(map: VttMapAsset | undefined): Promise<string | undefined> {
   if (!map?.storagePath) return undefined;
   const service = createServiceRoleClient();
@@ -217,7 +247,7 @@ export async function getCampaignForAccess(
       ownerId: data.owner_id,
       ownerUsername: data.owner_username ?? undefined,
       inviteCode: data.invite_code ?? '',
-      characters: Array.isArray(data.characters) ? data.characters : [],
+      characters: normalizeCampaignRosterCharacters(data.characters),
       memberIds: [],
       createdAt: data.created_at ?? undefined,
       updatedAt: data.updated_at ?? undefined,

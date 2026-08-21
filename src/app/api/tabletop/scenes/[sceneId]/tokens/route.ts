@@ -5,7 +5,7 @@ import { getSession } from '@/lib/supabase/session';
 import { validateJson } from '@/lib/api-validation';
 import { rowToItem } from '@/lib/library-columnar';
 import { buildMissingTokensFromCombatants, buildTokenFromCreature } from '@/lib/tabletop/tokens';
-import { getSceneAccess, tokenFromRow, tokenToInsertRow, type VttTokenRow } from '@/lib/tabletop/server';
+import { getSceneAccess, tokenFromRow, tokenToInsertRow, updateCampaignTokenImages, type VttTokenRow } from '@/lib/tabletop/server';
 import type { Encounter, TrackedCombatant } from '@/types/encounter';
 import type { LibraryCreature } from '@/types/library';
 
@@ -60,6 +60,7 @@ export async function POST(
   { params }: { params: Promise<{ sceneId: string }> }
 ) {
   try {
+    // console.log("IN POST")
     const { user, error } = await getSession();
     if (error || !user?.uid) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -76,6 +77,7 @@ export async function POST(
     }
 
     if (validation.data.action === 'sync-combatants') {
+      console.log("ACTION IS TO SYNC COMBATANTS")
       if (!access.scene.encounterId) {
         return NextResponse.json({ error: 'This scene is not linked to an encounter.' }, { status: 400 });
       }
@@ -88,9 +90,10 @@ export async function POST(
 
       const existingTokens = (tokenRows ?? []).map((row) => tokenFromRow(row as VttTokenRow));
       const encounter = (encounterRow.data as Encounter | null) ?? null;
+      const combatants = ((encounter?.combatants ?? []) as TrackedCombatant[]);
       const missing = buildMissingTokensFromCombatants({
         sceneId,
-        combatants: ((encounter?.combatants ?? []) as TrackedCombatant[]),
+        combatants,
         existingTokens,
         grid: access.scene.grid,
         campaign: access.campaign,
@@ -99,10 +102,14 @@ export async function POST(
         const { error: insertErr } = await supabase.from('vtt_tokens').insert(missing.map(tokenToInsertRow));
         if (insertErr) throw insertErr;
       }
+      await updateCampaignTokenImages(supabase, sceneId, existingTokens, access.campaign, combatants);
 
       const { data: nextRows } = await supabase.from('vtt_tokens').select('*').eq('scene_id', sceneId).order('created_at', { ascending: true });
+      console.log("RETURNING VTTTOKENROWS")
       return NextResponse.json((nextRows ?? []).map((row) => tokenFromRow(row as VttTokenRow)));
     }
+
+    console.log("MADE IT PAST THE RETURN")
 
     const addCreatureRequest = validation.data;
     const creatureId = addCreatureRequest.creatureId;

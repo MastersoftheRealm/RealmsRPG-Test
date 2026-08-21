@@ -1780,3 +1780,19 @@ Notes
 - Feedback: "Please add the ability for RMs to add monster tokens to the map"
 - Expected: Realm Masters can choose a creature from Realms Library or My Library, set quantity, and add enemy monster tokens to the tabletop; players cannot add monster tokens.
 - Disposition: Implemented directly 2026-07-24 — Scene Tools now includes an RM-only Monster action backed by an RM-only `add-creature` tabletop token API path.
+
+**Raw Feedback Log — 2026-07-30 (VTT character token portraits)**
+- Date: 2026-07-30
+- Context: Virtual tabletop — campaign character tokens on the canvas
+- Priority: High
+- Feedback: "On the VTT, can you make the tokens have the pictures of the characters instead of abbreviations of their names?"
+- Expected: Campaign-character tokens render character portraits on the VTT canvas when available; older synced tokens can pick up missing portrait URLs; tokens without an image still have a readable fallback.
+- Disposition: Implemented directly 2026-07-30 — tabletop canvas renders circular token images from `imageUrl` with initials fallback, and combatant sync/open tabletop backfills missing or stale campaign-character token portraits from the campaign roster.
+
+**Raw Feedback Log — 2026-07-30 (VTT portrait backfill empty updates)**
+- Date: 2026-07-30
+- Context: Virtual tabletop — sync combatants portrait backfill
+- Priority: High
+- Feedback: After syncing, `vtt_tokens.image_url` values were not populating because `buildCampaignTokenImageUpdates` returned an empty array.
+- Expected: Sync should find campaign-character portraits even when campaign roster JSON uses legacy key shapes or older token rows are missing source refs.
+- Disposition: Implemented directly 2026-07-30 — VTT campaign access now normalizes roster JSON; token image update detection can fall back through linked encounter combatants by `combatantId`.
